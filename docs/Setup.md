@@ -70,10 +70,11 @@ If needed, fix dependencies:
 sudo apt-get install -f
 ```
 
-The `.deb` package installs only the Litex executable. To verify it, run:
+The `.deb` package installs the Litex executable together with its standard
+library. Verify the executable with a checked statement:
 
 ```bash
-litex -e '1 = 1' | grep '"type": "equality fact"'
+litex -e '1 = 1' | grep '"result": "success"'
 ```
 
 ### Upgrade Litex on Linux
@@ -91,7 +92,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -e '1 = 1' | grep '"type": "equality fact"'
+litex -e '1 = 1' | grep '"result": "success"'
 ```
 
 ---
@@ -131,7 +132,7 @@ Write-Host "Open a new terminal and run: litex -version"
 What this command changes on the user machine:
 
 1. Downloads `litex_<tag>_windows_amd64.zip` from GitHub Releases.
-2. Writes `litex.exe` to `%LOCALAPPDATA%\litex\litex.exe`.
+2. Extracts `litex.exe` and the `std` directory into `%LOCALAPPDATA%\litex`.
 3. Appends `%LOCALAPPDATA%\litex` to the **User** `Path` environment variable.
 4. Updates `Path` in the current PowerShell session.
 
@@ -144,7 +145,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -e "1 = 1" | Select-String '"type": "equality fact"'
+litex -e "1 = 1" | Select-String '"result": "success"'
 ```
 
 Now users can run `litex` directly in terminal.
@@ -174,14 +175,14 @@ if ($userPath -notlike "*$dir*") {
 
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "1 = 1" | Select-String '"type": "equality fact"'
+litex -e "1 = 1" | Select-String '"result": "success"'
 ```
 
 ### Upgrade Litex on Windows
 
 If you installed by **Option A** (PowerShell one-command install), run the same command again.
-It downloads the newer zip, overwrites `%LOCALAPPDATA%\litex\litex.exe`, refreshes
-the installed executable, and keeps your existing user `Path` entry:
+It downloads the newer zip, refreshes `%LOCALAPPDATA%\litex\litex.exe` and its
+`std` directory, and keeps your existing user `Path` entry:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
@@ -191,7 +192,8 @@ $name = "litex_${tag}_windows_amd64.zip"
 $url = "https://github.com/$repo/releases/download/$tag/$name"
 $dir = Join-Path $env:LOCALAPPDATA 'litex'
 $zip = Join-Path $env:TEMP $name
-$exe = Join-Path $dir 'litex.exe'New-Item -ItemType Directory -Force -Path $dir | Out-Null
+$exe = Join-Path $dir 'litex.exe'
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Invoke-WebRequest -Uri $url -OutFile $zip
 Expand-Archive -Path $zip -DestinationPath $dir -Force
 Remove-Item -Force $zip
@@ -203,7 +205,7 @@ if ($userPath -notlike "*$dir*") {
 }
 $env:Path = "$dir;$env:Path"
 litex -version
-litex -e "1 = 1" | Select-String '"type": "equality fact"'
+litex -e "1 = 1" | Select-String '"result": "success"'
 ```
 
 ---
@@ -216,10 +218,9 @@ Start REPL:
 litex
 ```
 
-When run directly inside a project directory containing `litex.config`, the
-REPL discovers its exports without executing the project's `[run]` plan. You
-can then enter `local import chapter_name` and continue entering statements in
-the same environment. Use `litex -isolated` when you need a standalone REPL.
+The ordinary REPL is always isolated, including when the current directory
+contains `litex.config`. It is a persistent terminal environment, not a
+project run.
 
 Typical successful output:
 
@@ -267,7 +268,7 @@ litex [OPTION...]
 
 Basic behavior:
 
-- **No arguments**: starts the interactive REPL; a `litex.config` directly in the current directory enables its root `local import` exports without running its `[run]` plan.
+- **No arguments**: starts an isolated persistent interactive REPL; it does not discover a current-directory project.
 - **With options**: runs code, files, repositories, or helper commands as described below.
 - **Unknown options**: print an error message and exit.
 
@@ -277,10 +278,10 @@ Basic behavior:
 | `-version` | Print the Litex version and exit. |
 | `-upgrade` | Print platform upgrade instructions and exit. |
 | `-e <code>` | Run a Litex source string. |
-| `-f <file>` | Run a registered project file when `litex.config` declares it; otherwise run an isolated file. The path may be relative to the current working directory or absolute. |
+| `-f <file>` | Require `litex.config` in the direct parent, trace to the module, and run the recursive export prefix through this file. Use `-isolated -f <file>` for a standalone file and its continued isolated REPL. |
 | `-isolated -f <file>` | Force a file to run without project discovery. |
-| `-isolated` | Force the interactive REPL to ignore a `litex.config` in the current directory. |
-| `-r <project>` | Run the ordered `[run]` plan declared by `<project>/litex.config`. |
+| `-isolated` | Compatibility spelling for the ordinary isolated REPL. |
+| `-r <project>` | Run a module's whole recursive export tree, or the root prefix through a selected submodule's whole subtree. |
 | `-runner -e <code>` | Run a source string and return one wrapper JSON object. |
 | `-runner -f <file>` | Run a file and return one wrapper JSON object. |
 | `-runner -r <project>` | Run a project and return one wrapper JSON object. |

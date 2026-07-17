@@ -14,7 +14,7 @@ pub(super) fn print_known_forall_profile_summary(label: &str) {
     }
     let p = crate::verify::known_forall_profile::snapshot();
     println!(
-        "--- known_forall profile: {} ---\n  entries={} success={} unknown={} candidates={} exact={} fallback={} other={} env_user={} env_builtin={} arg_matches={} requirement_failures={}",
+        "--- known_forall profile: {} ---\n  entries={} success={} unknown={} candidates={} exact={} fallback={} other={} arg_matches={} requirement_failures={}",
         label,
         p.entries,
         p.successes,
@@ -23,8 +23,6 @@ pub(super) fn print_known_forall_profile_summary(label: &str) {
         p.exact_candidate_attempts,
         p.fallback_candidate_attempts,
         p.other_candidate_attempts,
-        p.user_candidate_attempts,
-        p.builtin_candidate_attempts,
         p.arg_matches,
         p.requirement_failures,
     );
@@ -218,12 +216,6 @@ pub(super) fn litex_snippets_from_markdown_files(
         }
     }
     out
-}
-
-/// All `*.lit` files under `manifest_dir/subdir`, recursively (e.g. `examples/subdir/foo.lit`).
-/// Sorted by full path after collection. Empty if `subdir` is missing or has no `.lit` files.
-pub(super) fn collect_lit_files_recursive_under(manifest_dir: &Path, subdir: &str) -> Vec<PathBuf> {
-    collect_lit_files_recursive_under_excluding(manifest_dir, subdir, &[])
 }
 
 pub(super) fn collect_lit_files_recursive_under_excluding(

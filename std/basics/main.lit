@@ -1,0 +1,1042 @@
+
+# Named operator-type interfaces keep the source-level package boundary
+# explicit in standalone examples and imported modules. The verifier provides
+# the operator typing facts directly.
+thm real_add_operator_type:
+    ? forall:
+        + $in fn(a, b R) R
+    + $in fn(a, b R) R
+
+thm real_sub_operator_type:
+    ? forall:
+        - $in fn(a, b R) R
+    - $in fn(a, b R) R
+
+thm real_mul_operator_type:
+    ? forall:
+        * $in fn(a, b R) R
+    * $in fn(a, b R) R
+
+thm real_div_operator_type:
+    ? forall:
+        / $in fn(a R, b R: b != 0) R
+    / $in fn(a R, b R: b != 0) R
+
+thm integer_mod_operator_type:
+    ? forall:
+        % $in fn(a Z, b Z: b != 0) Z
+    % $in fn(a Z, b Z: b != 0) Z
+
+thm real_pow_operator_type:
+    ? forall:
+        ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
+    ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
+
+# A nonempty family of nonempty sets is available as a basic set-theoretic
+# witness. Example: `by thm basics::nonempty_family_of_nonempty_sets_exists()`.
+thm nonempty_family_of_nonempty_sets_exists:
+    ? forall:
+        exist X nonempty_set st {forall! x X => {$is_nonempty_set(x)}}
+    claim:
+        ? forall x {{0}}:
+            $is_nonempty_set(x)
+        x = {0}
+        $is_nonempty_set(x)
+    witness exist X nonempty_set st {forall! x X => {$is_nonempty_set(x)}} from {{0}}
+
+thm positive_real_power_add_one:
+    ? forall a R_pos, b R:
+        a * a^b = a^(b+1)
+        a^b * a = a^(b+1)
+    a * a^b = a^(b+1)
+    a^b * a = a^(b+1)
+
+thm nonzero_integer_power_add_one:
+    ? forall a R_nz, b Z:
+        a * a^b = a^(b+1)
+        a^b * a = a^(b+1)
+    a * a^b = a^(b+1)
+    a^b * a = a^(b+1)
+
+thm integer_mod_neg:
+    ? forall n Z, k N_pos:
+        (-n) % k = (k - (n % k)) % k
+    (-n) % k = (k - (n % k)) % k
+
+thm positive_real_power_addition:
+    ? forall a R_pos, b, c R:
+        a^(b+c) = a^b * a^c
+    a^(b+c) = a^b * a^c
+
+thm positive_real_power_of_power:
+    ? forall a R_pos, b, c R:
+        (a^b)^c = a^(b*c)
+    (a^b)^c = a^(b*c)
+
+# Named finite max/min interfaces for source files that need explicit calls.
+thm max_least_upper_bound:
+    ? forall a, b, c R:
+        a <= c
+        b <= c
+        =>:
+            max(a, b) <= c
+    max(a, b) <= c
+
+thm min_greatest_lower_bound:
+    ? forall a, b, c R:
+        c <= a
+        c <= b
+        =>:
+            c <= min(a, b)
+    c <= min(a, b)
+
+# Public Analysis/rational interfaces retained for current clients.
+thm archimedean_property:
+    ? forall e R_pos:
+        exist n N_pos st {1/n < e}
+    exist n N_pos st {1/n < e}
+
+# Named interfaces for the Euclidean quotient/remainder facts.
+thm integer_mod_quotient_remainder:
+    ? forall a Z, d N_pos:
+        exist q Z st {a = d * q + a % d}
+    witness exist q Z st {a = d * q + a % d} from integer_quotient(a, d):
+        a = d * integer_quotient(a, d) + a % d
+
+thm integer_mod_is_natural:
+    ? forall a Z, d N_pos:
+        a % d $in N
+    a % d >= 0
+    a % d $in N
+
+thm integer_mod_bounds:
+    ? forall a Z, d N_pos:
+        0 <= a % d < d
+    a % d $in N
+    a % d < d
+    0 <= a % d < d
+
+thm natural_mod_zero_has_natural_quotient:
+    ? forall a N, d N_pos:
+        a % d = 0
+        =>:
+            exist q N st {a = d * q}
+    witness exist q N st {a = d * q} from integer_quotient(a, d):
+        integer_quotient(a, d) $in N
+        a = d * integer_quotient(a, d) + a % d
+        a % d = 0
+        a = d * integer_quotient(a, d)
+
+thm integer_mod_pow:
+    ? forall a Z, n N, d N_pos:
+        a^n % d = ((a % d)^n) % d
+    n = 0 or n > 0
+    by cases:
+        ? a^n % d = ((a % d)^n) % d
+        case n = 0:
+            a^n % d = a^0 % d = 1 % d
+            ((a % d)^n) % d = ((a % d)^0) % d = 1 % d
+            a^n % d = ((a % d)^n) % d
+        case n > 0:
+            n $in N_pos
+            a^n % d = ((a % d)^n) % d
+
+thm integer_mod_add:
+    ? forall a, b Z, d N_pos:
+        (a + b) % d = ((a % d) + (b % d)) % d
+    (a + b) % d = ((a % d) + (b % d)) % d
+
+thm integer_mod_sub:
+    ? forall a, b Z, d N_pos:
+        (a - b) % d = ((a % d) - (b % d)) % d
+    (a - b) % d = ((a % d) - (b % d)) % d
+
+thm integer_mod_eq_remainder_of_quotient_remainder:
+    ? forall a Z, d N_pos, q Z, r N:
+        r < d
+        a = d * q + r
+        =>:
+            a % d = r
+    witness exist z Z st {a = d * z + r} from q:
+        a = d * q + r
+    a % d = r
+
+thm even_power_abs_bound:
+    ? forall x, y R, k N_pos:
+        k % 2 = 0
+        x^k <= y^k
+        =>:
+            abs(x) <= abs(y)
+    abs(x) <= abs(y)
+
+thm even_power_bound_by_nonnegative_rhs:
+    ? forall x, y R, k N_pos:
+        k % 2 = 0
+        x^k <= y^k
+        y >= 0
+        =>:
+            -y <= x
+            x <= y
+    by thm even_power_abs_bound(x, y, k)
+    abs(x) <= abs(y)
+    -y <= x
+    x <= y
+
+thm even_power_bound_by_nonpositive_rhs:
+    ? forall x, y R, k N_pos:
+        k % 2 = 0
+        x^k <= y^k
+        y <= 0
+        =>:
+            y <= x
+            x <= -y
+    by thm even_power_abs_bound(x, y, k)
+    abs(x) <= abs(y)
+    y <= x
+    x <= -y
+
+
+trust have pi R:
+    pi > 0
+
+trust have euler_e R:
+    euler_e > 0
+        
+thm pos_pow_strict_order_reflects:
+    ? forall a, b, k R_pos:
+        a^k < b^k
+        k >= 1
+        =>:
+            a < b
+    a < b
+
+thm pos_pow_order_reflects:
+    ? forall a, b, k R_pos:
+        a^k <= b^k
+        k >= 1
+        =>:
+            a <= b
+    a <= b
+
+# Reusable monotonicity predicates; these are interfaces, not automation.
+
+prop increasing(s power_set(R), f fn(x s) R):
+    forall x, y s:
+        x < y
+        =>:
+            f(x) < f(y)
+
+prop decreasing(s power_set(R), f fn(x s) R):
+    forall x, y s:
+        x < y
+        =>:
+            f(x) > f(y)
+
+prop nondecreasing(s power_set(R), f fn(x s) R):
+    forall x, y s:
+        x < y
+        =>:
+            f(x) <= f(y)
+
+prop nonincreasing(s power_set(R), f fn(x s) R):
+    forall x, y s:
+        x < y
+        =>:
+            f(x) >= f(y)
+
+prop finite_nonempty_set(s power_set(R)):
+    $is_finite_set(s)
+    $is_nonempty_set(s)
+
+trust have max_of_finite_set fn(s power_set(R): $finite_nonempty_set(s)) R
+trust have min_of_finite_set fn(s power_set(R): $finite_nonempty_set(s)) R
+
+trust:
+    forall s power_set(R), item s:
+        $finite_nonempty_set(s)
+        =>:
+            item <= max_of_finite_set(s)
+            min_of_finite_set(s) <= item
+
+    forall s power_set(R):
+        $finite_nonempty_set(s)
+        =>:
+            max_of_finite_set(s) $in s
+            min_of_finite_set(s) $in s
+
+# Core integer order, rational representation, and range interfaces.
+thm integer_successor_le_of_lt:
+    ? forall x, y Z:
+        y < x
+        =>:
+            y + 1 <= x
+    x - y > 0
+    x - y $in N_pos
+    x - y >= 1
+    1 - (x - y) <= 0
+    y + 1 - x = 1 - (x - y)
+    y + 1 - x <= 0
+    y + 1 <= x
+
+thm integer_predecessor_le_of_lt:
+    ? forall x, y Z:
+        x < y
+        =>:
+            x <= y - 1
+    by thm integer_successor_le_of_lt(y, x)
+    x + 1 <= y
+    x + 1 - y <= 0
+    x - (y - 1) = x + 1 - y
+    x - (y - 1) <= 0
+    x <= y - 1
+
+thm integer_le_or_ge_successor:
+    ? forall n, m Z:
+        n <= m or n >= m + 1
+    by cases:
+        ? n <= m or n >= m + 1
+        case n <= m:
+            n <= m or n >= m + 1
+        case n > m:
+            by thm integer_successor_le_of_lt(n, m)
+            m + 1 <= n
+            n >= m + 1
+            n <= m or n >= m + 1
+
+trust:
+    forall x Q:
+        exist p, q Z st {q > 0, x = p / q}
+
+    forall x, y R:
+        x < y
+        =>:
+            exist z Q st {x < z < y}
+
+    forall a, b Z:
+        closed_range(a, b) = {x Z: a <= x <= b}
+
+    forall a, b Z:
+        range(a, b) = {x Z: a <= x < b}
+
+    forall a, b Z:
+        b != 0
+        a % b = 0
+        =>:
+            exist k Z st {a = k * b}
+
+    # Litex evaluates `1 % 1 = 0`. For modulus `k` in `N_pos` with `k >= 2`, the remainder of 1 is 1.
+    forall k N_pos:
+        k >= 2 or k != 1
+        =>:
+            1 % k = 1
+
+thm one_mod_eq_one_of_two_le:
+    ? forall k N_pos:
+        k >= 2
+        =>:
+            1 % k = 1
+    k >= 2 or k != 1
+    1 % k = 1
+
+# Rationals are dense in the real line.
+# Example: from `a < b`, `by thm has_rational_between(a, b)` gives
+# `exist q Q st {a < q < b}`.
+thm has_rational_between, exists_rat_between, exists_rat_btwn:
+    ? forall a, b R:
+        a < b
+        =>:
+            exist q Q st {a < q < b}
+    exist q Q st {a < q < b}
+
+# Rational representation by integer numerator and nonzero integer denominator.
+# Example: `forall q Q: exist a Z, b Z_nz st {q = a / b}`.
+thm rational_as_integer_ratio:
+    ? forall x Q:
+        exist p Z, q Z_nz st {x = p / q}
+    exist p Z, q Z_nz st {x = p / q}
+
+# A reduced fraction has no positive common divisor other than 1.
+prop is_reduced_fraction(a Z, b N_pos):
+    forall k N_pos:
+        a % k = 0
+        b % k = 0
+        =>:
+            k = 1
+
+# Every rational has one reduced fraction with an integer numerator and a
+# positive denominator. Example: `by thm rational_has_unique_reduced_fraction(q)`.
+thm rational_has_unique_reduced_fraction:
+    ? forall q Q:
+        exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
+    trust exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
+
+thm in_intersect_is_in_both:
+    ? forall z set, A set, B set:
+        $in(z, intersect(A, B))
+        =>:
+            $in(z, A)
+            $in(z, B)
+    $in(z, A)
+    $in(z, B)
+
+thm in_set_minus_is_in_first_operand:
+    ? forall z set, A set, B set:
+        $in(z, set_minus(A, B))
+        =>:
+            $in(z, A)
+    $in(z, A)
+
+thm in_set_minus_is_not_in_second_operand:
+    ? forall z set, A set, B set:
+        $in(z, set_minus(A, B))
+        =>:
+            not $in(z, B)
+    not $in(z, B)
+
+thm in_cup_via_member_set:
+    ? forall z set, F set, Y set:
+        $in(Y, F)
+        $in(z, Y)
+        =>:
+            $in(z, cup(F))
+    $in(z, cup(F))
+
+trust:
+    forall A finite_set, B set:
+        B $subset A
+        =>:
+            $is_finite_set(B)
+            $is_finite_set(set_minus(A, B))
+            finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)
+
+    forall A, B finite_set:
+        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+        finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
+        finite_set_size(B) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(B, A))
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+        finite_set_size(set_minus(B, A)) = finite_set_size(B) - finite_set_size(intersect(A, B))
+        finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
+
+    forall A, B finite_set:
+        A $subset B
+        =>:
+            finite_set_size(A) <= finite_set_size(B)
+
+    forall A, B finite_set:
+        A $superset B
+        =>:
+            finite_set_size(A) >= finite_set_size(B)
+
+    forall A, B finite_set:
+        finite_set_size(intersect(A, B)) <= finite_set_size(A)
+        finite_set_size(intersect(A, B)) <= finite_set_size(B)
+        finite_set_size(set_minus(A, B)) <= finite_set_size(A)
+        finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
+        finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
+
+# The anonymous finite-set facts above are the implementation boundary for
+# these explicit package interfaces. Callers use `by thm basics::...` rather
+# than relying on an imported package to inject facts into bare-name lookup.
+thm subset_of_finite_set_is_finite:
+    ? forall A set, B finite_set:
+        A $subset B
+        =>:
+            $is_finite_set(A)
+    $is_finite_set(A)
+
+thm in_union_from_left:
+    ? forall z set, A set, B set:
+        $in(z, A)
+        =>:
+            $in(z, union(A, B))
+    $in(z, union(A, B))
+
+thm in_union_from_right:
+    ? forall z set, A set, B set:
+        $in(z, B)
+        =>:
+            $in(z, union(A, B))
+    $in(z, union(A, B))
+
+thm finite_set_size_zero_is_empty:
+    ? forall A finite_set:
+        finite_set_size(A) = 0
+        =>:
+            not $is_nonempty_set(A)
+            A = {}
+    not $is_nonempty_set(A)
+    A = {}
+
+thm finite_set_size_union:
+    ? forall A, B finite_set:
+        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+
+thm finite_set_size_set_minus:
+    ? forall A, B finite_set:
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+    finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+
+thm finite_set_size_set_diff:
+    ? forall A, B finite_set:
+        finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
+    finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
+
+thm finite_set_size_intersect_le_left:
+    ? forall A, B finite_set:
+        finite_set_size(intersect(A, B)) <= finite_set_size(A)
+    finite_set_size(intersect(A, B)) <= finite_set_size(A)
+
+thm finite_set_size_intersect_le_right:
+    ? forall A, B finite_set:
+        finite_set_size(intersect(A, B)) <= finite_set_size(B)
+    finite_set_size(intersect(A, B)) <= finite_set_size(B)
+
+thm finite_set_size_set_minus_le_left:
+    ? forall A, B finite_set:
+        finite_set_size(set_minus(A, B)) <= finite_set_size(A)
+    finite_set_size(set_minus(A, B)) <= finite_set_size(A)
+
+thm finite_set_size_union_le_sum:
+    ? forall A, B finite_set:
+        finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
+    finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
+
+thm finite_set_size_set_diff_le_sum:
+    ? forall A, B finite_set:
+        finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
+    finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
+
+thm finite_set_size_subset_le:
+    ? forall A, B finite_set:
+        A $subset B
+        =>:
+            finite_set_size(A) <= finite_set_size(B)
+    finite_set_size(A) <= finite_set_size(B)
+
+thm in_union_is_in_left_or_right:
+    ? forall z set, A set, B set:
+        $in(z, union(A, B))
+        =>:
+            $in(z, A) or $in(z, B)
+    $in(z, A) or $in(z, B)
+
+thm in_intersect_from_both:
+    ? forall z set, A set, B set:
+        $in(z, A)
+        $in(z, B)
+        =>:
+            $in(z, intersect(A, B))
+    $in(z, intersect(A, B))
+
+thm in_set_minus_from_first_and_not_second:
+    ? forall z set, A set, B set:
+        $in(z, A)
+        not $in(z, B)
+        =>:
+            $in(z, set_minus(A, B))
+    $in(z, set_minus(A, B))
+
+thm not_in_intersect_from_not_in_left:
+    ? forall z set, A set, B set:
+        not $in(z, A)
+        =>:
+            not $in(z, intersect(A, B))
+    not $in(z, intersect(A, B))
+
+thm not_in_intersect_from_not_in_right:
+    ? forall z set, A set, B set:
+        not $in(z, B)
+        =>:
+            not $in(z, intersect(A, B))
+    not $in(z, intersect(A, B))
+
+# Finite maxima in N are source-level library mathematics, rather than a
+# kernel selection primitive.  `S power_set(N)` carries the subset-of-N part
+# of the interface; finiteness and nonemptiness remain explicit below.
+prop is_maximum_of_finite_N_set(S finite_set, m N):
+    S $subset N
+    m $in S
+    forall n S:
+        n <= m
+
+prop has_maximum_of_finite_N_set(S finite_set):
+    exist m N st {$is_maximum_of_finite_N_set(S, m)}
+
+thm union_of_N_subsets_is_N_subset:
+    ? forall A, B set:
+        A $subset N
+        B $subset N
+        =>:
+            union(A, B) $subset N
+    claim:
+        ? forall z union(A, B):
+            z $in N
+        z $in union(A, B)
+        by thm in_union_is_in_left_or_right(z, A, B)
+        z $in A or z $in B
+        by cases:
+            ? z $in N
+            case z $in A:
+                z $in N
+            case z $in B:
+                z $in N
+    union(A, B) $subset N
+
+thm singleton_of_N_is_N_subset:
+    ? forall x N:
+        {x} $subset N
+    claim:
+        ? forall y {x}:
+            y $in N
+        y = x
+        x $in N
+        y $in N
+    {x} $subset N
+
+thm insertion_of_N_maximum:
+    ? forall x N, T finite_set:
+        T $subset N
+        $has_maximum_of_finite_N_set(T)
+        =>:
+            $has_maximum_of_finite_N_set(union({x}, T))
+    obtain m from exist m N st {$is_maximum_of_finite_N_set(T, m)}
+    x <= m or x > m
+    by cases:
+        ? $has_maximum_of_finite_N_set(union({x}, T))
+        case x <= m:
+            witness exist q N st {$is_maximum_of_finite_N_set(union({x}, T), q)} from m:
+                by thm singleton_of_N_is_N_subset(x)
+                {x} $subset N
+                by thm union_of_N_subsets_is_N_subset({x}, T)
+                union({x}, T) $subset N
+                by thm in_union_from_right(m, {x}, T)
+                m $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        y <= m
+                    y $in union({x}, T)
+                    by thm in_union_is_in_left_or_right(y, {x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? y <= m
+                        case y $in {x}:
+                            y = x
+                            y <= m
+                        case y $in T:
+                            forall n T:
+                                n <= m
+                            y <= m
+                $is_maximum_of_finite_N_set(union({x}, T), m)
+        case x > m:
+            witness exist q N st {$is_maximum_of_finite_N_set(union({x}, T), q)} from x:
+                by thm singleton_of_N_is_N_subset(x)
+                {x} $subset N
+                by thm union_of_N_subsets_is_N_subset({x}, T)
+                union({x}, T) $subset N
+                by thm in_union_from_left(x, {x}, T)
+                x $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        y <= x
+                    y $in union({x}, T)
+                    by thm in_union_is_in_left_or_right(y, {x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? y <= x
+                        case y $in {x}:
+                            y = x
+                            y <= x
+                        case y $in T:
+                            forall n T:
+                                n <= m
+                            y <= m < x
+                $is_maximum_of_finite_N_set(union({x}, T), x)
+
+thm insertion_into_empty_N_has_maximum:
+    ? forall x N:
+        $has_maximum_of_finite_N_set(union({x}, {}))
+    witness exist q N st {$is_maximum_of_finite_N_set(union({x}, {}), q)} from x:
+        by thm singleton_of_N_is_N_subset(x)
+        {x} $subset N
+        {} $subset N
+        by thm union_of_N_subsets_is_N_subset({x}, {})
+        union({x}, {}) $subset N
+        by thm in_union_from_left(x, {x}, {})
+        x $in union({x}, {})
+        claim:
+            ? forall y union({x}, {}):
+                y <= x
+            y $in union({x}, {})
+            by thm in_union_is_in_left_or_right(y, {x}, {})
+            y $in {x} or y $in {}
+            by cases:
+                ? y <= x
+                case y $in {x}:
+                    y = x
+                    y <= x
+                case y $in {}:
+                    impossible y $in {}
+        $is_maximum_of_finite_N_set(union({x}, {}), x)
+
+thm finite_nonempty_N_set_has_maximum_by_induction:
+    ? forall S finite_set:
+        S $subset N
+        $is_nonempty_set(S)
+        =>:
+            $has_maximum_of_finite_N_set(S)
+    by induc P in S:
+        ? P = {} or $has_maximum_of_finite_N_set(P)
+        ? from P = {}:
+            P = {}
+        ? induc x, T:
+            T = {} or $has_maximum_of_finite_N_set(T)
+            by cases:
+                ? union({x}, T) = {} or $has_maximum_of_finite_N_set(union({x}, T))
+                case T = {}:
+                    union({x}, T) = union({x}, {})
+                    by thm insertion_into_empty_N_has_maximum(x)
+                    $has_maximum_of_finite_N_set(union({x}, T))
+                case $has_maximum_of_finite_N_set(T):
+                    T $subset N
+                    by thm insertion_of_N_maximum(x, T)
+                    $has_maximum_of_finite_N_set(union({x}, T))
+    S = {} or $has_maximum_of_finite_N_set(S)
+    by cases:
+        ? $has_maximum_of_finite_N_set(S)
+        case S = {}:
+            have a S
+            a $in S
+            a $in {}
+            impossible a $in {}
+        case $has_maximum_of_finite_N_set(S):
+            $has_maximum_of_finite_N_set(S)
+
+prop finite_nonempty_N_set(S power_set(N)):
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+
+thm finite_nonempty_N_set_has_maximum:
+    ? forall S power_set(N):
+        $finite_nonempty_N_set(S)
+        =>:
+            exist m N st {$is_maximum_of_finite_N_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset N
+    by thm finite_nonempty_N_set_has_maximum_by_induction(S)
+    $has_maximum_of_finite_N_set(S)
+    obtain m from exist m N st {$is_maximum_of_finite_N_set(S, m)}
+    witness exist q N st {$is_maximum_of_finite_N_set(S, q)} from m:
+        $is_maximum_of_finite_N_set(S, m)
+
+thm finite_nonempty_N_set_has_unique_maximum:
+    ? forall S power_set(N):
+        $finite_nonempty_N_set(S)
+        =>:
+            exist! m N st {$is_maximum_of_finite_N_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset N
+    by thm finite_nonempty_N_set_has_maximum(S)
+    obtain m from exist m N st {$is_maximum_of_finite_N_set(S, m)}
+    claim:
+        ? forall m1, m2 N:
+            $is_maximum_of_finite_N_set(S, m1)
+            $is_maximum_of_finite_N_set(S, m2)
+            =>:
+                m1 = m2
+        m1 $in S
+        m2 $in S
+        forall n S:
+            n <= m1
+        forall n S:
+            n <= m2
+        m1 <= m2 <= m1
+        m1 = m2
+    exist! m N st {$is_maximum_of_finite_N_set(S, m)}
+
+have fn finite_set_max by exist!:
+    ? forall S power_set(N):
+        $finite_nonempty_N_set(S)
+        =>:
+            exist! m N st {$is_maximum_of_finite_N_set(S, m)}
+    by thm finite_nonempty_N_set_has_unique_maximum(S)
+
+thm finite_set_max_is_maximum:
+    ? forall S power_set(N):
+        $finite_nonempty_N_set(S)
+        =>:
+            $is_maximum_of_finite_N_set(S, finite_set_max(S))
+    $is_maximum_of_finite_N_set(S, finite_set_max(S))
+
+# Natural-number well-ordering is source-level library mathematics. First
+# choose a minimum in a finite subset, then intersect any nonempty subset of
+# N with the finite initial interval from 0 to one of its members.
+prop is_minimum_of_finite_N_set(S finite_set, m N):
+    S $subset N
+    m $in S
+    forall n S:
+        m <= n
+
+prop has_minimum_of_finite_N_set(S finite_set):
+    exist m N st {$is_minimum_of_finite_N_set(S, m)}
+
+thm insertion_of_N_minimum:
+    ? forall x N, T finite_set:
+        T $subset N
+        $has_minimum_of_finite_N_set(T)
+        =>:
+            $has_minimum_of_finite_N_set(union({x}, T))
+    obtain m from exist m N st {$is_minimum_of_finite_N_set(T, m)}
+    m <= x or m > x
+    by cases:
+        ? $has_minimum_of_finite_N_set(union({x}, T))
+        case m <= x:
+            witness exist q N st {$is_minimum_of_finite_N_set(union({x}, T), q)} from m:
+                by thm singleton_of_N_is_N_subset(x)
+                {x} $subset N
+                by thm union_of_N_subsets_is_N_subset({x}, T)
+                union({x}, T) $subset N
+                by thm in_union_from_right(m, {x}, T)
+                m $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        m <= y
+                    y $in union({x}, T)
+                    by thm in_union_is_in_left_or_right(y, {x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? m <= y
+                        case y $in {x}:
+                            y = x
+                            m <= x = y
+                        case y $in T:
+                            forall n T:
+                                m <= n
+                            m <= y
+                $is_minimum_of_finite_N_set(union({x}, T), m)
+        case m > x:
+            witness exist q N st {$is_minimum_of_finite_N_set(union({x}, T), q)} from x:
+                by thm singleton_of_N_is_N_subset(x)
+                {x} $subset N
+                by thm union_of_N_subsets_is_N_subset({x}, T)
+                union({x}, T) $subset N
+                by thm in_union_from_left(x, {x}, T)
+                x $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        x <= y
+                    y $in union({x}, T)
+                    by thm in_union_is_in_left_or_right(y, {x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? x <= y
+                        case y $in {x}:
+                            y = x
+                            x <= y
+                        case y $in T:
+                            forall n T:
+                                m <= n
+                            x < m <= y
+                $is_minimum_of_finite_N_set(union({x}, T), x)
+
+thm insertion_into_empty_N_has_minimum:
+    ? forall x N:
+        $has_minimum_of_finite_N_set(union({x}, {}))
+    witness exist q N st {$is_minimum_of_finite_N_set(union({x}, {}), q)} from x:
+        by thm singleton_of_N_is_N_subset(x)
+        {x} $subset N
+        {} $subset N
+        by thm union_of_N_subsets_is_N_subset({x}, {})
+        union({x}, {}) $subset N
+        by thm in_union_from_left(x, {x}, {})
+        x $in union({x}, {})
+        claim:
+            ? forall y union({x}, {}):
+                x <= y
+            y $in union({x}, {})
+            by thm in_union_is_in_left_or_right(y, {x}, {})
+            y $in {x} or y $in {}
+            by cases:
+                ? x <= y
+                case y $in {x}:
+                    y = x
+                    x <= y
+                case y $in {}:
+                    impossible y $in {}
+        $is_minimum_of_finite_N_set(union({x}, {}), x)
+
+thm finite_nonempty_N_set_has_minimum_by_induction:
+    ? forall S finite_set:
+        S $subset N
+        $is_nonempty_set(S)
+        =>:
+            $has_minimum_of_finite_N_set(S)
+    by induc P in S:
+        ? P = {} or $has_minimum_of_finite_N_set(P)
+        ? from P = {}:
+            P = {}
+        ? induc x, T:
+            T = {} or $has_minimum_of_finite_N_set(T)
+            by cases:
+                ? union({x}, T) = {} or $has_minimum_of_finite_N_set(union({x}, T))
+                case T = {}:
+                    union({x}, T) = union({x}, {})
+                    by thm insertion_into_empty_N_has_minimum(x)
+                    $has_minimum_of_finite_N_set(union({x}, T))
+                case $has_minimum_of_finite_N_set(T):
+                    T $subset N
+                    by thm insertion_of_N_minimum(x, T)
+                    $has_minimum_of_finite_N_set(union({x}, T))
+    S = {} or $has_minimum_of_finite_N_set(S)
+    by cases:
+        ? $has_minimum_of_finite_N_set(S)
+        case S = {}:
+            have a S
+            a $in S
+            a $in {}
+            impossible a $in {}
+        case $has_minimum_of_finite_N_set(S):
+            $has_minimum_of_finite_N_set(S)
+
+thm finite_nonempty_N_set_has_minimum:
+    ? forall S power_set(N):
+        $finite_nonempty_N_set(S)
+        =>:
+            exist m N st {$is_minimum_of_finite_N_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset N
+    by thm finite_nonempty_N_set_has_minimum_by_induction(S)
+    $has_minimum_of_finite_N_set(S)
+    obtain m from exist m N st {$is_minimum_of_finite_N_set(S, m)}
+    witness exist q N st {$is_minimum_of_finite_N_set(S, q)} from m:
+        $is_minimum_of_finite_N_set(S, m)
+
+thm finite_nonempty_N_set_has_unique_minimum:
+    ? forall S power_set(N):
+        $finite_nonempty_N_set(S)
+        =>:
+            exist! m N st {$is_minimum_of_finite_N_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset N
+    by thm finite_nonempty_N_set_has_minimum(S)
+    obtain m from exist m N st {$is_minimum_of_finite_N_set(S, m)}
+    claim:
+        ? forall m1, m2 N:
+            $is_minimum_of_finite_N_set(S, m1)
+            $is_minimum_of_finite_N_set(S, m2)
+            =>:
+                m1 = m2
+        m1 $in S
+        m2 $in S
+        forall n S:
+            m1 <= n
+        forall n S:
+            m2 <= n
+        m1 <= m2 <= m1
+        m1 = m2
+    exist! m N st {$is_minimum_of_finite_N_set(S, m)}
+
+prop is_minimum_of_N_set(S power_set(N), m N):
+    m $in S
+    forall n S:
+        m <= n
+
+thm nonempty_N_set_has_unique_minimum:
+    ? forall S power_set(N):
+        $is_nonempty_set(S)
+        =>:
+            exist! m N st {$is_minimum_of_N_set(S, m)}
+    have a S
+    a $in N
+    have T set = intersect(S, closed_range(0, a))
+    T = intersect(S, closed_range(0, a))
+    T $subset closed_range(0, a)
+    by thm subset_of_finite_set_is_finite(T, closed_range(0, a))
+    $is_finite_set(T)
+    a >= 0
+    a $in closed_range(0, a)
+    by thm in_intersect_from_both(a, S, closed_range(0, a))
+    a $in intersect(S, closed_range(0, a))
+    a $in T
+    T $subset N
+    witness $is_nonempty_set(T) from a
+    $finite_nonempty_N_set(T)
+    by thm finite_nonempty_N_set_has_unique_minimum(T)
+    obtain m from exist m N st {$is_minimum_of_finite_N_set(T, m)}
+    witness exist q N st {$is_minimum_of_N_set(S, q)} from m:
+        m $in T
+        m $in S
+        claim:
+            ? forall x S:
+                m <= x
+            x $in N
+            x <= a or x > a
+            by cases:
+                ? m <= x
+                case x <= a:
+                    x >= 0
+                    x $in closed_range(0, a)
+                    by thm in_intersect_from_both(x, S, closed_range(0, a))
+                    x $in intersect(S, closed_range(0, a))
+                    x $in T
+                    forall n T:
+                        m <= n
+                    m <= x
+                case x > a:
+                    m <= a < x
+        $is_minimum_of_N_set(S, m)
+    claim:
+        ? forall m1, m2 N:
+            $is_minimum_of_N_set(S, m1)
+            $is_minimum_of_N_set(S, m2)
+            =>:
+                m1 = m2
+        m1 $in S
+        m2 $in S
+        forall n S:
+            m1 <= n
+        forall n S:
+            m2 <= n
+        m1 <= m2 <= m1
+        m1 = m2
+    exist! m N st {$is_minimum_of_N_set(S, m)}
+
+have fn min_of_N_set by exist!:
+    ? forall S power_set(N):
+        $is_nonempty_set(S)
+        =>:
+            exist! m N st {$is_minimum_of_N_set(S, m)}
+    by thm nonempty_N_set_has_unique_minimum(S)
+
+thm min_of_N_set_is_minimum:
+    ? forall S power_set(N):
+        $is_nonempty_set(S)
+        =>:
+            $is_minimum_of_N_set(S, min_of_N_set(S))
+    $is_minimum_of_N_set(S, min_of_N_set(S))
+
+thm min_of_N_set_is_member:
+    ? forall S power_set(N):
+        $is_nonempty_set(S)
+        =>:
+            min_of_N_set(S) $in S
+    by thm min_of_N_set_is_minimum(S)
+    min_of_N_set(S) $in S
+
+thm min_of_N_set_le_member:
+    ? forall S power_set(N), item S:
+        $is_nonempty_set(S)
+        =>:
+            min_of_N_set(S) <= item
+    by thm min_of_N_set_is_minimum(S)
+    min_of_N_set(S) <= item
+
+forall S power_set(N), item S:
+    $is_nonempty_set(S)
+    =>:
+        min_of_N_set(S) $in S
+        min_of_N_set(S) <= item

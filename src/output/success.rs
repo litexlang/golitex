@@ -23,7 +23,7 @@ use super::fields::{
 use super::normalize::{finalize_display_text_with_optional_strip, json_value_for_output};
 use super::phases::execution_phases_value;
 use super::source::stmt_text_for_json;
-use super::store_facts::store_fact_json_values;
+use super::store_facts::{store_fact_json_values, store_fact_output_json_values};
 use super::{fact_unknown_json_value, stmt_unknown_json_value};
 
 pub fn display_stmt_exec_result_json(
@@ -129,6 +129,13 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
 
     if let Some(verification) = non_factual_verification_value(runtime, x) {
         fields.push((JSON_KEY_VERIFICATION.to_string(), verification));
+    }
+
+    if !x.reported_store_facts.is_empty() {
+        fields.push((
+            "store_facts".to_string(),
+            JsonValue::Array(store_fact_output_json_values(&x.reported_store_facts)),
+        ));
     }
 
     fields.push((
@@ -754,7 +761,9 @@ fn by_induc_verification_value(
     verification: &ByInducVerificationResult,
     inside_results: &[StmtResult],
 ) -> JsonValue {
-    let proof_type = if verification.strong {
+    let proof_type = if verification.finite_set {
+        "by finite-set induction proof"
+    } else if verification.strong {
         "by strong_induc proof"
     } else {
         "by induc proof"
@@ -1461,22 +1470,6 @@ fn statement_environment_effects(stmt: &Stmt, trace: &StatementExecutionTrace) -
         Stmt::DefAlgoStmt(_) => vec![statement_environment_effect("define_algorithm", stmt)],
         Stmt::DefThmStmt(_) => vec![statement_environment_effect("define_theorem", stmt)],
         Stmt::DefStrategyStmt(_) => vec![statement_environment_effect("define_strategy", stmt)],
-        Stmt::Command(CommandStmt::ImportStmt(_))
-        | Stmt::Command(CommandStmt::LocalImportStmt(_)) => {
-            vec![statement_environment_effect("load_module", stmt)]
-        }
-        Stmt::Command(CommandStmt::TrustImportStmt(_))
-        | Stmt::Command(CommandStmt::TrustLocalImportStmt(_)) => {
-            let mut effect = statement_environment_effect("load_module", stmt);
-            let JsonValue::Object(fields) = &mut effect else {
-                return vec![effect];
-            };
-            fields.push((
-                "mode".to_string(),
-                JsonValue::JsonString("trusted".to_string()),
-            ));
-            vec![effect]
-        }
         Stmt::Command(CommandStmt::ClearStmt(_)) => {
             vec![statement_environment_effect("clear_environment", stmt)]
         }

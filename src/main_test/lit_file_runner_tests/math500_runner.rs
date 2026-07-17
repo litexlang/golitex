@@ -99,7 +99,7 @@ fn run_math500_tmp() {
         None => panic!("{:?} must be valid UTF-8", math500_tmp_path),
     };
 
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(path_for_runtime);
 
     let mut durations_ms: Vec<(String, f64)> = Vec::new();
@@ -230,9 +230,9 @@ fn run_math500_litex_lit_dir(base_dir: &Path) {
 
     let base_dir_str = base_dir.to_string_lossy().to_string();
 
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
     runtime.new_file_path_new_env_new_name_scope(base_dir_str.as_str());
 
     let run_wall_start = Instant::now();
@@ -285,7 +285,10 @@ fn run_math500_litex_lit_dir(base_dir: &Path) {
 
     let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
     println!("--- math500-litex simple timing (summary) ---");
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     println!(
         "  snippets: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
         total_count, total_solution_duration_ms, run_wall_ms

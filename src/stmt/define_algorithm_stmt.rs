@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::fmt;
 
-// algo f(a, b):
+// have algo for f(a, b):
 //     case a > b: a
 //     case a <= b: b
 #[derive(Clone)]
@@ -79,34 +79,28 @@ impl fmt::Display for AlgoCase {
 
 impl fmt::Display for DefAlgoStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut body = self
+            .cases
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>();
         if let Some(default_return) = &self.default_return {
-            write!(
-                f,
-                "{} {}{}{}\n{}\n{}",
-                ALGO,
-                self.name,
-                braced_vec_to_string(&self.params),
-                COLON,
-                to_string_and_add_four_spaces_at_beginning_of_each_line(
-                    &vec_to_string_with_sep(&self.cases, "\n".to_string()),
-                    1
-                ),
-                default_return
-            )
-        } else {
-            write!(
-                f,
-                "{} {}{}{}\n{}",
-                ALGO,
-                self.name,
-                braced_vec_to_string(&self.params),
-                COLON,
-                to_string_and_add_four_spaces_at_beginning_of_each_line(
-                    &vec_to_string_with_sep(&self.cases, "\n".to_string()),
-                    1
-                )
-            )
+            body.push(default_return.to_string());
         }
+        write!(
+            f,
+            "{} {} {} {}{}{}\n{}",
+            HAVE,
+            ALGO,
+            FOR,
+            self.name,
+            braced_vec_to_string(&self.params),
+            COLON,
+            to_string_and_add_four_spaces_at_beginning_of_each_line(
+                &vec_to_string_with_sep(&body, "\n".to_string()),
+                1
+            )
+        )
     }
 }
 

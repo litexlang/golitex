@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 use super::exec_have_fn_equal_shared::{
-    build_function_obj_with_param_names, forall_param_defs_dom_and_map_from_have_fn_clause,
+    build_declared_function_obj_with_param_names, forall_param_defs_dom_and_map_from_have_fn_clause,
 };
 
 impl Runtime {
@@ -38,10 +38,10 @@ impl Runtime {
         )?;
 
         let function_identifier_obj =
-            Identifier::new(have_fn_equal_case_by_case_stmt.name.clone()).into();
+            self.declared_identifier_obj(&have_fn_equal_case_by_case_stmt.name);
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
-            function_identifier_obj,
+            function_identifier_obj.clone(),
             function_set_obj,
             have_fn_equal_case_by_case_stmt.line_file.clone(),
         )
@@ -71,10 +71,8 @@ impl Runtime {
                 .fn_set_clause
                 .params_def_with_set,
         );
-        let function_obj = build_function_obj_with_param_names(
-            &have_fn_equal_case_by_case_stmt.name,
-            &param_names,
-        );
+        let function_obj =
+            build_declared_function_obj_with_param_names(function_identifier_obj, &param_names);
 
         for case_index in 0..have_fn_equal_case_by_case_stmt.cases.len() {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
@@ -206,15 +204,10 @@ impl Runtime {
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
     ) -> Result<InferResult, RuntimeError> {
-        let infer_result = self.store_have_fn_equal_case_by_case_stmt_facts(
+        self.store_have_fn_equal_case_by_case_stmt_facts(
             have_fn_equal_case_by_case_stmt,
             fn_set_stored,
-        )?;
-        if have_fn_equal_case_by_case_stmt.as_algo {
-            self.exec_have_fn_equal_case_by_case_stmt_as_algo(have_fn_equal_case_by_case_stmt)?;
-        }
-
-        Ok(infer_result)
+        )
     }
 
     pub(crate) fn exec_have_fn_equal_case_by_case_stmt_affect_environment_only(

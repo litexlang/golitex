@@ -175,14 +175,39 @@ Remark 2.1.13. (Informal) One interesting feature about the natural numbers is t
 # The formal statement here is that the set `N` is not finite; it uses Litex's
 # finite-set and cardinality interfaces.
 
+# Background interface: a subset of a finite set is finite and has no larger
+# cardinality.  The finite-set counting proof is outside this introductory
+# natural-number discussion.
+thm finite_set_size_subset_le:
+    ? forall A, B set:
+        $is_finite_set(B)
+        A $subset B
+        =>:
+            $is_finite_set(A)
+            finite_set_size(A) <= finite_set_size(B)
+    trust:
+        $is_finite_set(A)
+        finite_set_size(A) <= finite_set_size(B)
+
+# Background interface: a closed natural-number interval has one element for
+# each integer from its lower endpoint through its upper endpoint.
+thm finite_set_size_closed_range:
+    ? forall a, b N:
+        a <= b
+        =>:
+            finite_set_size(closed_range(a, b)) = b - a + 1
+    trust finite_set_size(closed_range(a, b)) = b - a + 1
+
 by contra:
     ? not $is_finite_set(N)
     $is_finite_set(N)
-    forall x 0...count(N):
+    forall x 0...finite_set_size(N):
         x $in N
-    0...count(N) $subset N
-    count(N) + 1 = count(N) - 0 + 1 = count(0...count(N)) <= count(N)
-    impossible count(N) + 1 <= count(N)
+    0...finite_set_size(N) $subset N
+    by thm finite_set_size_subset_le(0...finite_set_size(N), N)
+    by thm finite_set_size_closed_range(0, finite_set_size(N))
+    finite_set_size(N) + 1 = finite_set_size(N) - 0 + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
+    impossible finite_set_size(N) + 1 <= finite_set_size(N)
 
 """
 Remark 2.1.14. Note that our definition of the natural numbers is ax- iomatic rather than constructive. We have not told you what the natural numbers are (so we do not address such questions as what the numbers are made of, are they physical objects, what do they measure, etc.) - we have only listed some things you can do with them (in fact, the only operation we have defined on them right now is the increment one) and some of the properties that they have. This is how mathematics works - it treats its objects abstractly, caring only about what properties the objects have, not what the objects are or what they mean. If one wants to do mathematics, it does not matter whether a natural number means a certain arrangement of beads on an abacus, or a certain organization of bits in a computer’s memory, or some more abstract concept with no physical substance; as long as you can increment them, see if two of them are equal, and later on do other arithmetic operations such as add and multiply, they qualify as numbers for mathematical purposes (provided they obey the requisite axioms, of course). It is possible to construct the natural numbers from other mathematical objects - from sets, for instance - but there are multiple ways to construct a working model of the natural numbers, and it is pointless, at least from a mathematician’s standpoint, as to argue about which model is the “true” one - as long as it obeys all the axioms and does all the right things, that’s good enough to do maths.
@@ -624,6 +649,8 @@ claim:
                         (m * q + r) + 1 = m * q + (r + 1)
                         $is_euclidean_division(n + 1, q, m, r + 1)
                 case r + 1 >= q:
+                    r + 1 <= q
+                    q <= r + 1
                     r + 1 = q
                     witness exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)} from m + 1, 0:
                         n + 1 = (m * q + r) + 1

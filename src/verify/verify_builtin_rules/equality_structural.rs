@@ -394,6 +394,18 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::IntegerQuotient(l), Obj::IntegerQuotient(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.dividend, &r.dividend),
+                    (&l.divisor, &r.divisor),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::Pow(l), Obj::Pow(r)) => {
                 if self.arg_pairs_share_known_equality_class(&[
                     (&l.base, &r.base),
@@ -534,7 +546,7 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
-            (Obj::Count(l), Obj::Count(r)) => {
+            (Obj::FiniteSetSize(l), Obj::FiniteSetSize(r)) => {
                 if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
                     Some(factual_equal_success_by_builtin_reason(
                         left, right, line_file, reason,
@@ -545,18 +557,6 @@ impl Runtime {
             }
             (Obj::FnRange(l), Obj::FnRange(r)) => {
                 if self.objs_have_same_known_equality_rc_in_some_env(&l.function, &r.function) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::FnRangeOn(l), Obj::FnRangeOn(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.function, &r.function),
-                    (&l.set, &r.set),
-                ]) {
                     Some(factual_equal_success_by_builtin_reason(
                         left, right, line_file, reason,
                     ))

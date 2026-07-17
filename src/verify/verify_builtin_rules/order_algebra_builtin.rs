@@ -1,4 +1,4 @@
-// Structural order on R (+, -, *, /) moved from Lit `BUILTIN_ENV_CODE_FOR_COMMON_COMPARISON_PROPERTIES`.
+// Structural order on R (+, -, *, /) is implemented as a kernel verification rule.
 // Called from `verify_order_atomic_fact_numeric_builtin_only` before the `0 <=` cone rules.
 //
 // Addition (weak): `a <= b + c` from (`a <= b` and `0 <= c`) or (`a <= c` and `0 <= b`); and
@@ -66,6 +66,62 @@ impl Runtime {
             &in_n_pos,
             &VerifyState::new(0, true),
         )
+    }
+
+    fn verify_positive_real_power_operands(
+        &mut self,
+        left_base: &Obj,
+        right_base: &Obj,
+        exponent: &Obj,
+        lf: &LineFile,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let verify_state = VerifyState::new(0, true);
+        let mut positive_membership_steps = Vec::new();
+        let mut all_are_positive_reals = true;
+        for obj in [left_base, right_base, exponent] {
+            let positive_real: AtomicFact =
+                InFact::new(obj.clone(), StandardSet::RPos.into(), lf.clone()).into();
+            let result = self.verify_non_equational_known_then_builtin_rules_only(
+                &positive_real,
+                &verify_state,
+            )?;
+            if !result.is_true() {
+                all_are_positive_reals = false;
+                break;
+            }
+            positive_membership_steps.push(result);
+        }
+        if all_are_positive_reals {
+            return Ok(Some(positive_membership_steps));
+        }
+
+        let exponent_in_r: AtomicFact =
+            InFact::new(exponent.clone(), StandardSet::R.into(), lf.clone()).into();
+        let mut exponent_result = self.verify_order_subgoal(exponent_in_r)?;
+        if !exponent_result.is_true() {
+            let exponent_in_q: AtomicFact =
+                InFact::new(exponent.clone(), StandardSet::Q.into(), lf.clone()).into();
+            exponent_result = self.verify_order_subgoal(exponent_in_q)?;
+        }
+        if !exponent_result.is_true() {
+            return Ok(None);
+        }
+
+        let zero = Self::literal_zero_obj();
+        let subgoals: [AtomicFact; 3] = [
+            LessFact::new(zero.clone(), exponent.clone(), lf.clone()).into(),
+            LessFact::new(zero.clone(), left_base.clone(), lf.clone()).into(),
+            LessFact::new(zero, right_base.clone(), lf.clone()).into(),
+        ];
+        let mut steps = vec![exponent_result];
+        for subgoal in subgoals {
+            let result = self.verify_order_subgoal(subgoal)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            steps.push(result);
+        }
+        Ok(Some(steps))
     }
 
     fn obj_is_nonnegative_integer_number(obj: &Obj) -> bool {
@@ -289,6 +345,38 @@ impl Runtime {
         candidates
     }
 
+    fn collect_known_power_lt_candidates(
+        &self,
+        left_base: &Obj,
+        right_base: &Obj,
+    ) -> Vec<AtomicFact> {
+        let mut candidates = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+                for known_fact in known_facts_map.values() {
+                    let AtomicFact::LessFact(known_lt) = known_fact else {
+                        continue;
+                    };
+                    let (Obj::Pow(left_pow), Obj::Pow(right_pow)) =
+                        (&known_lt.left, &known_lt.right)
+                    else {
+                        continue;
+                    };
+                    if !Self::objs_same_by_display(
+                        left_pow.exponent.as_ref(),
+                        right_pow.exponent.as_ref(),
+                    ) || !Self::objs_same_by_display(left_pow.base.as_ref(), left_base)
+                        || !Self::objs_same_by_display(right_pow.base.as_ref(), right_base)
+                    {
+                        continue;
+                    }
+                    candidates.push(known_fact.clone());
+                }
+            }
+        }
+        candidates
+    }
+
     // a <= b from 0 <= a, 0 <= b, a^n <= b^n, and n in N_pos.
     // Example: from `0 <= x`, `0 <= y`, `m $in N_pos`, and `x^m <= y^m`, prove `x <= y`.
     fn try_base_le_from_pow_le_same_positive_integer_exponent_nonnegative_base(
@@ -329,6 +417,48 @@ impl Runtime {
                     ),
                 )));
             }
+        }
+        Ok(None)
+    }
+
+    // Positive-real powers reflect weak order on positive bases.
+    // Example: `0 < a`, `0 < b`, `0 < q`, and `a^q <= b^q` imply `a <= b`.
+    fn try_base_le_from_pow_le_same_positive_real_exponent_positive_base(
+        &mut self,
+        f: &LessEqualFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let candidates = self.collect_known_power_le_candidates(&f.left, &f.right);
+        for candidate in candidates {
+            let AtomicFact::LessEqualFact(power_le) = &candidate else {
+                continue;
+            };
+            let (Obj::Pow(left_pow), Obj::Pow(_)) = (&power_le.left, &power_le.right) else {
+                continue;
+            };
+            let Some(mut steps) = self.verify_positive_real_power_operands(
+                &f.left,
+                &f.right,
+                left_pow.exponent.as_ref(),
+                &f.line_file,
+            )?
+            else {
+                continue;
+            };
+
+            let power_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+            if !power_result.is_true() {
+                continue;
+            }
+            steps.push(power_result);
+            return Ok(Some(StmtResult::from(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    "a <= b from positive bases and exponent, and a^q <= b^q".to_string(),
+                    steps,
+                ),
+            )));
         }
         Ok(None)
     }
@@ -488,6 +618,63 @@ impl Runtime {
         )))
     }
 
+    // Even powers compare absolute values: x^k <= y^k gives abs(x) <= abs(y).
+    // Example: `k % 2 = 0`, `x^k <= y^k` => `abs(x) <= abs(y)`.
+    fn try_abs_le_from_even_power_le(
+        &mut self,
+        f: &LessEqualFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (&f.left, &f.right) else {
+            return Ok(None);
+        };
+        let candidates =
+            self.collect_known_power_le_candidates(left_abs.arg.as_ref(), right_abs.arg.as_ref());
+        for candidate in candidates {
+            let AtomicFact::LessEqualFact(power_le) = &candidate else {
+                continue;
+            };
+            let Obj::Pow(left_pow) = &power_le.left else {
+                continue;
+            };
+            let Some(mut steps) = self
+                .verify_even_exponent_in_n_pos_subgoal(left_pow.exponent.as_ref(), &f.line_file)?
+            else {
+                continue;
+            };
+            let x_in_r: AtomicFact = InFact::new(
+                left_abs.arg.as_ref().clone(),
+                StandardSet::R.into(),
+                f.line_file.clone(),
+            )
+            .into();
+            let y_in_r: AtomicFact = InFact::new(
+                right_abs.arg.as_ref().clone(),
+                StandardSet::R.into(),
+                f.line_file.clone(),
+            )
+            .into();
+            let x_result = self.verify_order_subgoal(x_in_r)?;
+            let y_result = self.verify_order_subgoal(y_in_r)?;
+            let power_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+            if !x_result.is_true() || !y_result.is_true() || !power_result.is_true() {
+                continue;
+            }
+            steps.push(x_result);
+            steps.push(y_result);
+            steps.push(power_result);
+            return Ok(Some(StmtResult::from(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    "abs(x) <= abs(y) from x^k <= y^k and even k in N_pos".to_string(),
+                    steps,
+                ),
+            )));
+        }
+        Ok(None)
+    }
+
     // Positive-real powers are strictly increasing in the base for a fixed positive real exponent.
     // Example: from `0 < a`, `0 < b`, `a < b`, `0 < q`, and `q $in R` or `q $in Q`,
     // prove `a^q < b^q`.
@@ -543,6 +730,48 @@ impl Runtime {
                 step_results,
             ),
         )))
+    }
+
+    // Positive-real powers reflect strict order on positive bases.
+    // Example: `0 < a`, `0 < b`, `0 < q`, and `a^q < b^q` imply `a < b`.
+    fn try_base_lt_from_pow_lt_same_positive_real_exponent_positive_base(
+        &mut self,
+        f: &LessFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let candidates = self.collect_known_power_lt_candidates(&f.left, &f.right);
+        for candidate in candidates {
+            let AtomicFact::LessFact(power_lt) = &candidate else {
+                continue;
+            };
+            let (Obj::Pow(left_pow), Obj::Pow(_)) = (&power_lt.left, &power_lt.right) else {
+                continue;
+            };
+            let Some(mut steps) = self.verify_positive_real_power_operands(
+                &f.left,
+                &f.right,
+                left_pow.exponent.as_ref(),
+                &f.line_file,
+            )?
+            else {
+                continue;
+            };
+
+            let power_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+            if !power_result.is_true() {
+                continue;
+            }
+            steps.push(power_result);
+            return Ok(Some(StmtResult::from(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    "a < b from positive bases and exponent, and a^q < b^q".to_string(),
+                    steps,
+                ),
+            )));
+        }
+        Ok(None)
     }
 
     // a^n < b^n from a < b when n is a positive odd integer.
@@ -1246,6 +1475,16 @@ impl Runtime {
             return Ok(Some(r));
         }
 
+        if let Some(r) =
+            self.try_base_le_from_pow_le_same_positive_real_exponent_positive_base(f, atomic_fact)?
+        {
+            return Ok(Some(r));
+        }
+
+        if let Some(r) = self.try_abs_le_from_even_power_le(f, atomic_fact)? {
+            return Ok(Some(r));
+        }
+
         if let Some(r) = self.try_less_equal_sum_pointwise_on_same_integer_range(f, atomic_fact)? {
             return Ok(Some(r));
         }
@@ -1255,6 +1494,14 @@ impl Runtime {
         }
 
         if let Some(r) = self.try_less_equal_finite_set_summand_nonnegative_sum(f, atomic_fact)? {
+            return Ok(Some(r));
+        }
+
+        if let Some(r) = self.try_less_equal_from_positive_division_product_bound(f, atomic_fact)? {
+            return Ok(Some(r));
+        }
+
+        if let Some(r) = self.try_less_equal_from_positive_denominator_bound(f, atomic_fact)? {
             return Ok(Some(r));
         }
 
@@ -1420,6 +1667,25 @@ impl Runtime {
         }
 
         if f.right.to_string() == z.to_string() {
+            // A sum of nonpositive real terms is nonpositive.
+            // Example: `a <= 0, b <= 0 => a + b <= 0`.
+            if let Obj::Add(add) = &f.left {
+                let left_nonpositive: AtomicFact =
+                    LessEqualFact::new(add.left.as_ref().clone(), z.clone(), lf.clone()).into();
+                let right_nonpositive: AtomicFact =
+                    LessEqualFact::new(add.right.as_ref().clone(), z.clone(), lf.clone()).into();
+                let left_result = self.verify_order_subgoal(left_nonpositive)?;
+                let right_result = self.verify_order_subgoal(right_nonpositive)?;
+                if left_result.is_true() && right_result.is_true() {
+                    return Ok(Some(StmtResult::from(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "a + b <= 0 from a <= 0 and b <= 0".to_string(),
+                            vec![left_result, right_result],
+                        ),
+                    )));
+                }
+            }
             if let Obj::Pow(pow) = &f.left {
                 if let Some(r) =
                     self.try_pow_le_zero_odd_exponent_from_nonpositive_base(pow, lf, atomic_fact)?
@@ -1620,6 +1886,110 @@ impl Runtime {
         Ok(None)
     }
 
+    // A positive factor can be moved across a weak inequality and expressed as division.
+    // Example: from `0 < c` and `c * a <= b or a * c <= b`, prove `a <= b / c`.
+    fn try_less_equal_from_positive_division_product_bound(
+        &mut self,
+        f: &LessEqualFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::Div(quotient) = &f.right else {
+            return Ok(None);
+        };
+
+        let denominator = quotient.right.as_ref().clone();
+        let numerator = quotient.left.as_ref().clone();
+        let line_file = f.line_file.clone();
+        let positive_denominator: AtomicFact = LessFact::new(
+            Self::literal_zero_obj(),
+            denominator.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let positive_result = self.verify_order_subgoal(positive_denominator)?;
+        if !positive_result.is_true() {
+            return Ok(None);
+        }
+
+        let left_product: Obj = Mul::new(denominator.clone(), f.left.clone()).into();
+        let right_product: Obj = Mul::new(f.left.clone(), denominator).into();
+        let left_product_bound: AtomicFact =
+            LessEqualFact::new(left_product, numerator.clone(), line_file.clone()).into();
+        let right_product_bound: AtomicFact =
+            LessEqualFact::new(right_product, numerator, line_file).into();
+        let product_bound_or = OrFact::new(
+            vec![left_product_bound.into(), right_product_bound.into()],
+            f.line_file.clone(),
+        );
+        let product_bound_result = self.verify_or_fact_known_then_builtin_rules_only(
+            &product_bound_or,
+            &VerifyState::new(0, true),
+        )?;
+        if !product_bound_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(StmtResult::from(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "a <= b / c from 0 < c and (c * a <= b or a * c <= b)".to_string(),
+                vec![positive_result, product_bound_result],
+            ),
+        )))
+    }
+
+    // A positive denominator can be moved across a weak quotient inequality.
+    // Example: from `0 < c` and `a / c <= b`, prove `a <= b * c`.
+    fn try_less_equal_from_positive_denominator_bound(
+        &mut self,
+        f: &LessEqualFact,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::Mul(product) = &f.right else {
+            return Ok(None);
+        };
+
+        let line_file = f.line_file.clone();
+        let candidates = [
+            (
+                product.left.as_ref().clone(),
+                product.right.as_ref().clone(),
+            ),
+            (
+                product.right.as_ref().clone(),
+                product.left.as_ref().clone(),
+            ),
+        ];
+        for (denominator, other_factor) in candidates {
+            let positive_denominator: AtomicFact = LessFact::new(
+                Self::literal_zero_obj(),
+                denominator.clone(),
+                line_file.clone(),
+            )
+            .into();
+            let positive_result = self.verify_order_subgoal(positive_denominator)?;
+            if !positive_result.is_true() {
+                continue;
+            }
+
+            let quotient: Obj = Div::new(f.left.clone(), denominator).into();
+            let quotient_bound: AtomicFact =
+                LessEqualFact::new(quotient, other_factor, line_file.clone()).into();
+            let quotient_bound_result = self.verify_order_subgoal(quotient_bound)?;
+            if quotient_bound_result.is_true() {
+                return Ok(Some(StmtResult::from(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a <= b * c from 0 < c and a / c <= b".to_string(),
+                        vec![positive_result, quotient_bound_result],
+                    ),
+                )));
+            }
+        }
+
+        Ok(None)
+    }
+
     fn try_less_algebra(
         &mut self,
         f: &LessFact,
@@ -1659,6 +2029,12 @@ impl Runtime {
             )? {
                 return Ok(Some(r));
             }
+        }
+
+        if let Some(r) =
+            self.try_base_lt_from_pow_lt_same_positive_real_exponent_positive_base(f, atomic_fact)?
+        {
+            return Ok(Some(r));
         }
 
         if let (Obj::Add(left_add), Obj::Add(right_add)) = (&f.left, &f.right) {
@@ -1928,6 +2304,35 @@ impl Runtime {
         }
 
         if f.right.to_string() == z.to_string() {
+            // A sum is strictly negative when one term is negative and the other is nonpositive.
+            // Example: `a < 0, b <= 0 => a + b < 0`.
+            if let Obj::Add(add) = &f.left {
+                let cases: [(AtomicFact, AtomicFact); 2] = [
+                    (
+                        LessFact::new(add.left.as_ref().clone(), z.clone(), lf.clone()).into(),
+                        LessEqualFact::new(add.right.as_ref().clone(), z.clone(), lf.clone())
+                            .into(),
+                    ),
+                    (
+                        LessEqualFact::new(add.left.as_ref().clone(), z.clone(), lf.clone()).into(),
+                        LessFact::new(add.right.as_ref().clone(), z.clone(), lf.clone()).into(),
+                    ),
+                ];
+                for (negative, nonpositive) in cases {
+                    let negative_result = self.verify_order_subgoal(negative)?;
+                    let nonpositive_result = self.verify_order_subgoal(nonpositive)?;
+                    if negative_result.is_true() && nonpositive_result.is_true() {
+                        return Ok(Some(StmtResult::from(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                atomic_fact.clone().into(),
+                                "a + b < 0 from one negative term and one nonpositive term"
+                                    .to_string(),
+                                vec![negative_result, nonpositive_result],
+                            ),
+                        )));
+                    }
+                }
+            }
             if let Obj::Pow(pow) = &f.left {
                 if let Some(r) =
                     self.try_pow_lt_zero_odd_exponent_from_negative_base(pow, lf, atomic_fact)?

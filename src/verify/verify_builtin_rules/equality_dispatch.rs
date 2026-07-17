@@ -103,6 +103,24 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_square_sum_zero_from_zero_components(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_square_sum_component_zero_from_known_sum_zero(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         // Direct calculation: if both sides normalize to the same computed value, close the
         // equality before falling back to two-sided order. Example: `(-1 * sqrt(2)) ^ 2 = 2`.
         let (result, calculated_left, calculated_right) = self
@@ -173,19 +191,28 @@ impl Runtime {
             }
         }
 
+        if let Some(done) =
+            self.try_verify_intersection_from_subset(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_set_minus_equalities(left, right, line_file.clone()) {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_cart_count_product_equality(left, right, line_file.clone())
+            self.try_verify_cart_finite_set_size_product_equality(left, right, line_file.clone())
         {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_power_set_count_equality(left, right, line_file.clone(), verify_state)?
-        {
+        if let Some(done) = self.try_verify_power_set_finite_set_size_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
@@ -198,6 +225,15 @@ impl Runtime {
         if let Some(done) =
             self.try_verify_equality_from_two_sided_weak_order(left, right, line_file.clone())?
         {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_integer_singleton_interval_equality_builtin_rule(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
@@ -545,6 +581,24 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_finite_set_product_fresh_insertion(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_product_remove_member(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_finite_set_product_closed_range_bridge(
             left,
             right,
@@ -575,9 +629,12 @@ impl Runtime {
         // Empty set rule: `S = {}` follows from `not $is_nonempty_set(S)`.
         // This replaces the old common fact `S = {} <=> not $is_nonempty_set(S)`.
         // Example: after `not $is_nonempty_set(S)`, prove `S = {}`.
-        if let Some(done) =
-            self.try_verify_empty_set_equality_from_not_nonempty(left, right, line_file.clone())?
-        {
+        if let Some(done) = self.try_verify_empty_set_equality_from_not_nonempty(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
@@ -607,6 +664,24 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_integer_quotient_defining_equation(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_mod_eq_remainder_from_euclidean_division(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_mod_peel_nested_same_modulus(
             left,
             right,
@@ -617,6 +692,21 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_mod_congruence_from_inner_binary(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_integer_mod_negation_rule(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_integer_mod_natural_power_rule(
             left,
             right,
             line_file.clone(),
@@ -673,6 +763,15 @@ impl Runtime {
             right,
             right,
             left,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_indexed_fn_set_definition_equality(
+            left,
+            right,
             line_file.clone(),
             verify_state,
         )? {
@@ -891,6 +990,19 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
     ) -> Option<StmtResult> {
+        // A symmetric difference is the union of its two asymmetric differences.
+        // Example: `set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))`.
+        if Self::set_diff_as_union_of_asymmetric_differences_shape(left, right)
+            || Self::set_diff_as_union_of_asymmetric_differences_shape(right, left)
+        {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "set_diff_as_union_of_asymmetric_differences",
+            ));
+        }
+
         // Set-minus distributes over union by De Morgan's law, accepted in either direction.
         // Example: `set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))`.
         if Self::set_minus_union_de_morgan_shape(left, right)
@@ -920,29 +1032,29 @@ impl Runtime {
         None
     }
 
-    fn try_verify_cart_count_product_equality(
+    fn try_verify_cart_finite_set_size_product_equality(
         &self,
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
     ) -> Option<StmtResult> {
         // Cardinality of a finite Cartesian product is the product of factor cardinalities.
-        // Example: `count(cart(A, B)) = count(A) * count(B)`.
-        if Self::cart_count_product_shape(left, right)
-            || Self::cart_count_product_shape(right, left)
+        // Example: `finite_set_size(cart(A, B)) = finite_set_size(A) * finite_set_size(B)`.
+        if Self::cart_finite_set_size_product_shape(left, right)
+            || Self::cart_finite_set_size_product_shape(right, left)
         {
             return Some(Self::set_equality_success(
                 left,
                 right,
                 line_file,
-                "cart_count_product",
+                "cart_finite_set_size_product",
             ));
         }
 
         None
     }
 
-    fn try_verify_power_set_count_equality(
+    fn try_verify_power_set_finite_set_size_equality(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -950,9 +1062,9 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // Cardinality of a finite power set is `2` to the cardinality of the base set.
-        // Example: from `$is_finite_set(S)`, prove `count(power_set(S)) = 2^count(S)`.
-        let Some(base_set) = Self::power_set_count_shape(left, right)
-            .or_else(|| Self::power_set_count_shape(right, left))
+        // Example: from `$is_finite_set(S)`, prove `finite_set_size(power_set(S)) = 2^finite_set_size(S)`.
+        let Some(base_set) = Self::power_set_finite_set_size_shape(left, right)
+            .or_else(|| Self::power_set_finite_set_size_shape(right, left))
         else {
             return Ok(None);
         };
@@ -967,7 +1079,7 @@ impl Runtime {
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                "power_set_count_two_pow_count_base".to_string(),
+                "power_set_finite_set_size_two_pow_finite_set_size_base".to_string(),
                 vec![base_result],
             )
             .into(),
@@ -1091,6 +1203,25 @@ impl Runtime {
         )
     }
 
+    fn set_diff_as_union_of_asymmetric_differences_shape(left: &Obj, right: &Obj) -> bool {
+        let Obj::SetDiff(set_diff) = left else {
+            return false;
+        };
+        let Obj::Union(union) = right else {
+            return false;
+        };
+        let Obj::SetMinus(left_set_minus) = union.left.as_ref() else {
+            return false;
+        };
+        let Obj::SetMinus(right_set_minus) = union.right.as_ref() else {
+            return false;
+        };
+        verify_equality_by_they_are_the_same(&set_diff.left, &left_set_minus.left)
+            && verify_equality_by_they_are_the_same(&set_diff.right, &left_set_minus.right)
+            && verify_equality_by_they_are_the_same(&set_diff.right, &right_set_minus.left)
+            && verify_equality_by_they_are_the_same(&set_diff.left, &right_set_minus.right)
+    }
+
     fn set_minus_intersect_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
         let Obj::SetMinus(left_set_minus) = left else {
             return false;
@@ -1135,11 +1266,11 @@ impl Runtime {
             )
     }
 
-    fn cart_count_product_shape(count_side: &Obj, product_side: &Obj) -> bool {
-        let Obj::Count(count) = count_side else {
+    fn cart_finite_set_size_product_shape(finite_set_size_side: &Obj, product_side: &Obj) -> bool {
+        let Obj::FiniteSetSize(finite_set_size) = finite_set_size_side else {
             return false;
         };
-        let Obj::Cart(cart) = count.set.as_ref() else {
+        let Obj::Cart(cart) = finite_set_size.set.as_ref() else {
             return false;
         };
         let Some(expected_product) = Self::count_product_for_cart_args(&cart.args) else {
@@ -1148,16 +1279,16 @@ impl Runtime {
         verify_equality_by_they_are_the_same(&expected_product, product_side)
     }
 
-    fn power_set_count_shape(count_side: &Obj, pow_side: &Obj) -> Option<Obj> {
-        let Obj::Count(count) = count_side else {
+    fn power_set_finite_set_size_shape(finite_set_size_side: &Obj, pow_side: &Obj) -> Option<Obj> {
+        let Obj::FiniteSetSize(finite_set_size) = finite_set_size_side else {
             return None;
         };
-        let Obj::PowerSet(power_set) = count.set.as_ref() else {
+        let Obj::PowerSet(power_set) = finite_set_size.set.as_ref() else {
             return None;
         };
         let two: Obj = Number::new("2".to_string()).into();
-        let base_count: Obj = Count::new(power_set.set.as_ref().clone()).into();
-        let expected_pow: Obj = Pow::new(two, base_count).into();
+        let base_finite_set_size: Obj = FiniteSetSize::new(power_set.set.as_ref().clone()).into();
+        let expected_pow: Obj = Pow::new(two, base_finite_set_size).into();
         if verify_equality_by_they_are_the_same(&expected_pow, pow_side) {
             Some(power_set.set.as_ref().clone())
         } else {
@@ -1168,10 +1299,10 @@ impl Runtime {
     fn count_product_for_cart_args(args: &[Box<Obj>]) -> Option<Obj> {
         let mut iter = args.iter();
         let first = iter.next()?;
-        let mut product: Obj = Count::new(first.as_ref().clone()).into();
+        let mut product: Obj = FiniteSetSize::new(first.as_ref().clone()).into();
         for arg in iter {
-            let factor_count: Obj = Count::new(arg.as_ref().clone()).into();
-            product = Mul::new(product, factor_count).into();
+            let factor_finite_set_size: Obj = FiniteSetSize::new(arg.as_ref().clone()).into();
+            product = Mul::new(product, factor_finite_set_size).into();
         }
         Some(product)
     }
@@ -1206,6 +1337,58 @@ impl Runtime {
             || matches!(intersection.right.as_ref(), Obj::ListSet(_))
     }
 
+    // Proves intersection absorption from a known subset fact.
+    // Example: from `B $subset A`, prove `intersect(A, B) = B`.
+    fn try_verify_intersection_from_subset(
+        &mut self,
+        statement_left: &Obj,
+        statement_right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (intersection_side, target_side) in [
+            (statement_left, statement_right),
+            (statement_right, statement_left),
+        ] {
+            let Obj::Intersect(intersection) = intersection_side else {
+                continue;
+            };
+
+            let (subset, superset) =
+                if verify_equality_by_they_are_the_same(target_side, &intersection.right) {
+                    (&intersection.right, &intersection.left)
+                } else if verify_equality_by_they_are_the_same(target_side, &intersection.left) {
+                    (&intersection.left, &intersection.right)
+                } else {
+                    continue;
+                };
+
+            let subset_fact: AtomicFact = SubsetFact::new(
+                subset.as_ref().clone(),
+                superset.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
+            let subset_result = self
+                .verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+            if !subset_result.is_true() {
+                continue;
+            }
+
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(statement_left.clone(), statement_right.clone(), line_file)
+                        .into(),
+                    "intersect_from_subset".to_string(),
+                    vec![subset_result],
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
+    }
+
     // Filters a literal set through an intersection using known membership facts.
     // Example: from `x $in S` and `not y $in S`, prove `intersect(S, {x, y}) = {x}`.
     fn try_verify_literal_set_intersection_filter(
@@ -1217,10 +1400,6 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if self.loading_builtin_code {
-            return Ok(None);
-        }
-
         let Obj::Intersect(intersection) = intersection_side else {
             return Ok(None);
         };
@@ -1592,6 +1771,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let set = match (left, right) {
             (Obj::ListSet(list), set) if list.list.is_empty() => set.clone(),
@@ -1600,7 +1780,8 @@ impl Runtime {
         };
 
         let not_nonempty: AtomicFact = NotIsNonemptySetFact::new(set, line_file.clone()).into();
-        let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&not_nonempty)?;
+        let sub =
+            self.verify_non_equational_known_then_builtin_rules_only(&not_nonempty, verify_state)?;
         if !sub.is_true() {
             return Ok(None);
         }
@@ -1657,6 +1838,12 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let verify_state = VerifyState::new(0, true);
+        let Some(mut steps) =
+            self.verify_objects_are_known_reals(&[left, right], &line_file, &verify_state)?
+        else {
+            return Ok(None);
+        };
         let Some(left_ge_right) = self.verify_weak_order_subgoal(left, right, line_file.clone())?
         else {
             return Ok(None);
@@ -1665,12 +1852,14 @@ impl Runtime {
         else {
             return Ok(None);
         };
+        steps.push(left_ge_right);
+        steps.push(right_ge_left);
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "equality from a >= b and b >= a".to_string(),
-                vec![left_ge_right, right_ge_left],
+                steps,
             )
             .into(),
         ))
@@ -2089,6 +2278,55 @@ impl Runtime {
             verify_equality_by_they_are_the_same(&in_fact.element, &expected_element)
                 && verify_equality_by_they_are_the_same(&in_fact.set, &expected_set),
         )
+    }
+
+    // Sequence-shaped spaces are exactly their corresponding function spaces.
+    // Example: `matrix(R, 2, 3) = fn(i, j N_pos: i <= 2, j <= 3) R`.
+    fn try_verify_indexed_fn_set_definition_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (indexed_set_side, fn_set_side) in [(left, right), (right, left)] {
+            let Obj::FnSet(fn_set) = fn_set_side else {
+                continue;
+            };
+
+            let (expanded, rule) = match indexed_set_side {
+                Obj::FiniteSeqSet(finite_seq) => (
+                    self.finite_seq_set_to_fn_set(finite_seq, line_file.clone()),
+                    "equality: finite_seq is its bounded positive-index function space",
+                ),
+                Obj::SeqSet(seq) => (
+                    self.seq_set_to_fn_set(seq, line_file.clone()),
+                    "equality: seq is its positive-index function space",
+                ),
+                Obj::MatrixSet(matrix) => (
+                    self.matrix_set_to_fn_set(matrix, line_file.clone()),
+                    "equality: matrix is its bounded positive-index function space",
+                ),
+                _ => continue,
+            };
+            let expanded_equality = self.verify_fn_set_with_params_equality_by_builtin_rules(
+                &expanded,
+                fn_set,
+                line_file.clone(),
+                verify_state,
+            )?;
+            if expanded_equality.is_true() {
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                    left,
+                    right,
+                    line_file,
+                    rule,
+                    vec![expanded_equality],
+                )));
+            }
+        }
+
+        Ok(None)
     }
 
     // Antisymmetry rule for registered user-defined props.

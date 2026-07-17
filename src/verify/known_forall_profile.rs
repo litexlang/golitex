@@ -10,8 +10,6 @@ static CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
 static EXACT_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
 static FALLBACK_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
 static OTHER_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
-static BUILTIN_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
-static USER_CANDIDATE_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
 static ARG_MATCHES: AtomicU64 = AtomicU64::new(0);
 static REQUIREMENT_FAILURES: AtomicU64 = AtomicU64::new(0);
 
@@ -24,8 +22,6 @@ pub struct KnownForallProfileSnapshot {
     pub exact_candidate_attempts: u64,
     pub fallback_candidate_attempts: u64,
     pub other_candidate_attempts: u64,
-    pub builtin_candidate_attempts: u64,
-    pub user_candidate_attempts: u64,
     pub arg_matches: u64,
     pub requirement_failures: u64,
 }
@@ -35,12 +31,6 @@ pub(crate) enum KnownForallSearchPhase {
     ExactShape,
     Fallback,
     OtherShape,
-}
-
-#[derive(Clone, Copy)]
-pub(crate) enum KnownForallEnvKind {
-    Builtin,
-    User,
 }
 
 pub fn enabled() -> bool {
@@ -58,8 +48,6 @@ pub fn reset() {
     EXACT_CANDIDATE_ATTEMPTS.store(0, Ordering::Relaxed);
     FALLBACK_CANDIDATE_ATTEMPTS.store(0, Ordering::Relaxed);
     OTHER_CANDIDATE_ATTEMPTS.store(0, Ordering::Relaxed);
-    BUILTIN_CANDIDATE_ATTEMPTS.store(0, Ordering::Relaxed);
-    USER_CANDIDATE_ATTEMPTS.store(0, Ordering::Relaxed);
     ARG_MATCHES.store(0, Ordering::Relaxed);
     REQUIREMENT_FAILURES.store(0, Ordering::Relaxed);
 }
@@ -73,8 +61,6 @@ pub fn snapshot() -> KnownForallProfileSnapshot {
         exact_candidate_attempts: EXACT_CANDIDATE_ATTEMPTS.load(Ordering::Relaxed),
         fallback_candidate_attempts: FALLBACK_CANDIDATE_ATTEMPTS.load(Ordering::Relaxed),
         other_candidate_attempts: OTHER_CANDIDATE_ATTEMPTS.load(Ordering::Relaxed),
-        builtin_candidate_attempts: BUILTIN_CANDIDATE_ATTEMPTS.load(Ordering::Relaxed),
-        user_candidate_attempts: USER_CANDIDATE_ATTEMPTS.load(Ordering::Relaxed),
         arg_matches: ARG_MATCHES.load(Ordering::Relaxed),
         requirement_failures: REQUIREMENT_FAILURES.load(Ordering::Relaxed),
     }
@@ -98,10 +84,7 @@ pub(crate) fn record_unknown() {
     }
 }
 
-pub(crate) fn record_candidate_attempt(
-    phase: KnownForallSearchPhase,
-    env_kind: KnownForallEnvKind,
-) {
+pub(crate) fn record_candidate_attempt(phase: KnownForallSearchPhase) {
     if !enabled() {
         return;
     }
@@ -115,14 +98,6 @@ pub(crate) fn record_candidate_attempt(
         }
         KnownForallSearchPhase::OtherShape => {
             OTHER_CANDIDATE_ATTEMPTS.fetch_add(1, Ordering::Relaxed);
-        }
-    }
-    match env_kind {
-        KnownForallEnvKind::Builtin => {
-            BUILTIN_CANDIDATE_ATTEMPTS.fetch_add(1, Ordering::Relaxed);
-        }
-        KnownForallEnvKind::User => {
-            USER_CANDIDATE_ATTEMPTS.fetch_add(1, Ordering::Relaxed);
         }
     }
 }

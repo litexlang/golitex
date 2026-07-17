@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-use super::exec_have_fn_equal_shared::build_function_obj_with_param_names;
+use super::exec_have_fn_equal_shared::build_declared_function_obj_with_param_names;
 
 struct HaveFnByForallExistUniqueShape {
     fn_set_clause: FnSetClause,
@@ -174,8 +174,9 @@ impl Runtime {
                 ParamObjType::Identifier,
             )
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+        let function_identifier_obj = self.declared_identifier_obj(&stmt.fn_name);
         let bind_fact: Fact = InFact::new(
-            Identifier::new(stmt.fn_name.clone()).into(),
+            function_identifier_obj,
             fn_set.clone().into(),
             stmt.line_file.clone(),
         )
@@ -324,7 +325,10 @@ impl Runtime {
         shape: &HaveFnByForallExistUniqueShape,
     ) -> Result<ForallFact, RuntimeError> {
         let forall_param_names = stmt.forall.params_def_with_type.collect_param_names();
-        let function_obj = build_function_obj_with_param_names(&stmt.fn_name, &forall_param_names);
+        let function_obj = build_declared_function_obj_with_param_names(
+            self.declared_identifier_obj(&stmt.fn_name),
+            &forall_param_names,
+        );
         let mut witness_map = HashMap::new();
         witness_map.insert(shape.witness_name.clone(), function_obj);
 
@@ -356,7 +360,10 @@ impl Runtime {
         shape: &HaveFnByForallExistUniqueShape,
     ) -> Result<ForallFact, RuntimeError> {
         let forall_param_names = stmt.forall.params_def_with_type.collect_param_names();
-        let function_obj = build_function_obj_with_param_names(&stmt.fn_name, &forall_param_names);
+        let function_obj = build_declared_function_obj_with_param_names(
+            self.declared_identifier_obj(&stmt.fn_name),
+            &forall_param_names,
+        );
         let witness_obj =
             obj_for_bound_param_in_scope(shape.witness_name.clone(), ParamObjType::Forall);
 

@@ -30,12 +30,6 @@ impl EvalStmt {
     }
 }
 
-impl EvalByStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "EvalByStmt".to_string()
-    }
-}
-
 impl DefAlgoStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefAlgoStmt".to_string()
@@ -48,35 +42,13 @@ impl DefTemplateStmt {
     }
 }
 
-impl ImportGlobalModuleStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ImportGlobalModuleStmt".to_string()
-    }
-}
-
 impl ImportStmt {
     pub fn stmt_type_name(&self) -> String {
-        match self {
-            ImportStmt::ImportGlobalModule(stmt) => stmt.stmt_type_name(),
-        }
+        "ImportStmt".to_string()
     }
-}
 
-impl TrustImportStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "TrustImportStmt".to_string()
-    }
-}
-
-impl LocalImportStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "LocalImportStmt".to_string()
-    }
-}
-
-impl TrustLocalImportStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "TrustLocalImportStmt".to_string()
+    pub fn output_type_string(&self) -> String {
+        "import statement".to_string()
     }
 }
 
@@ -110,6 +82,12 @@ impl ByEnumerateFiniteSetStmt {
     }
 }
 
+impl ByFiniteSetInducStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByFiniteSetInducStmt".to_string()
+    }
+}
+
 impl ByCasesStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByCasesStmt".to_string()
@@ -125,6 +103,12 @@ impl ByContraStmt {
 impl ByInducStmt {
     pub fn stmt_type_name(&self) -> String {
         "ByInducStmt".to_string()
+    }
+}
+
+impl ByFiniteSetInducStmt {
+    pub fn output_type_string() -> String {
+        "proof by finite-set induction".to_string()
     }
 }
 
@@ -368,53 +352,15 @@ impl EvalStmt {
     }
 }
 
-impl EvalByStmt {
-    pub fn output_type_string() -> String {
-        "evaluation by statement".to_string()
-    }
-}
-
 impl DefAlgoStmt {
     pub fn output_type_string() -> String {
-        "algorithm definition".to_string()
+        "function implementation".to_string()
     }
 }
 
 impl DefTemplateStmt {
     pub fn output_type_string() -> String {
         "template definition".to_string()
-    }
-}
-
-impl ImportGlobalModuleStmt {
-    pub fn output_type_string() -> String {
-        "import statement".to_string()
-    }
-}
-
-impl ImportStmt {
-    pub fn output_type_string(&self) -> String {
-        match self {
-            ImportStmt::ImportGlobalModule(_) => ImportGlobalModuleStmt::output_type_string(),
-        }
-    }
-}
-
-impl LocalImportStmt {
-    pub fn output_type_string() -> String {
-        "local import statement".to_string()
-    }
-}
-
-impl TrustImportStmt {
-    pub fn output_type_string() -> String {
-        "trusted import statement".to_string()
-    }
-}
-
-impl TrustLocalImportStmt {
-    pub fn output_type_string() -> String {
-        "trusted local import statement".to_string()
     }
 }
 

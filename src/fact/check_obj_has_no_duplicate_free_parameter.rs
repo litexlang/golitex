@@ -67,6 +67,12 @@ fn check_obj_has_no_duplicate_free_parameter(
         Obj::Mod(obj) => {
             check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
         }
+        Obj::IntegerQuotient(obj) => check_two_objs(
+            &obj.dividend,
+            &obj.divisor,
+            free_param_type,
+            params_already_used,
+        ),
         Obj::Pow(obj) => check_two_objs(
             &obj.base,
             &obj.exponent,
@@ -190,7 +196,7 @@ fn check_obj_has_no_duplicate_free_parameter(
             }
             Ok(())
         }
-        Obj::Count(obj) => check_obj_has_no_duplicate_free_parameter(
+        Obj::FiniteSetSize(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.set,
             free_param_type,
             params_already_used,
@@ -200,18 +206,6 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
-        Obj::FnRangeOn(obj) => {
-            check_obj_has_no_duplicate_free_parameter(
-                &obj.function,
-                free_param_type,
-                params_already_used,
-            )?;
-            check_obj_has_no_duplicate_free_parameter(
-                &obj.set,
-                free_param_type,
-                params_already_used,
-            )
-        }
         Obj::Replacement(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.source_set,
             free_param_type,

@@ -7,6 +7,39 @@ impl Runtime {
         subset_fact: &SubsetFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        // Fundamental set containments follow directly from membership definitions.
+        // Examples: `intersect(A, B) $subset A`, `A $subset union(A, B)`.
+        let elementary_set_subset_reason = match (&subset_fact.left, &subset_fact.right) {
+            (Obj::Intersect(intersect), right)
+                if intersect.left.to_string() == right.to_string()
+                    || intersect.right.to_string() == right.to_string() =>
+            {
+                Some("intersection_subset_operand")
+            }
+            (left, Obj::Union(union))
+                if union.left.to_string() == left.to_string()
+                    || union.right.to_string() == left.to_string() =>
+            {
+                Some("operand_subset_union")
+            }
+            (Obj::SetMinus(set_minus), right)
+                if set_minus.left.to_string() == right.to_string() =>
+            {
+                Some("set_minus_subset_left_operand")
+            }
+            _ => None,
+        };
+        if let Some(reason) = elementary_set_subset_reason {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    subset_fact.clone().into(),
+                    reason.to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+
         // Standard number sets form a fixed inclusion chain. Example: `N $subset R`.
         if let (Obj::StandardSet(left), Obj::StandardSet(right)) =
             (&subset_fact.left, &subset_fact.right)
@@ -34,6 +67,21 @@ impl Runtime {
             );
         }
 
+        // Every finite real interval is a subset of R once its endpoints are
+        // well-defined reals. Example: `'[a, b] $subset R`.
+        if matches!(subset_fact.left, Obj::IntervalObj(_))
+            && matches!(subset_fact.right, Obj::StandardSet(StandardSet::R))
+        {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    subset_fact.clone().into(),
+                    "real_interval_subset_R".to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+
         // The range of `f : ... -> T` is a subset of `T`, and of any known superset of `T`.
         // Example: `have f fn(x S) T` proves `fn_range(f) $subset T`.
         if let Obj::FnRange(fn_range) = &subset_fact.left {
@@ -53,33 +101,6 @@ impl Runtime {
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             subset_fact.clone().into(),
                             "fn_range_subset_codomain".to_string(),
-                            vec![ret_subset_result],
-                        ))
-                        .into(),
-                    );
-                }
-            }
-        }
-
-        // The restricted range of `f : ... -> T` is a subset of `T`, and of any known superset of `T`.
-        // Example: `have a seq(R)` proves `fn_range_on(a, 1...3) $subset R`.
-        if let Obj::FnRangeOn(fn_range_on) = &subset_fact.left {
-            if let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) {
-                let ret_subset: AtomicFact = SubsetFact::new(
-                    body.ret_set.as_ref().clone(),
-                    subset_fact.right.clone(),
-                    subset_fact.line_file.clone(),
-                )
-                .into();
-                let ret_subset_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &ret_subset,
-                    verify_state,
-                )?;
-                if ret_subset_result.is_true() {
-                    return Ok(
-                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            subset_fact.clone().into(),
-                            "fn_range_on_subset_codomain".to_string(),
                             vec![ret_subset_result],
                         ))
                         .into(),
