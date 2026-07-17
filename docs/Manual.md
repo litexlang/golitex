@@ -2078,9 +2078,8 @@ the fact with `claim`, `thm`, or ordinary factual steps, or keep it visible as a
 trusted assumption with a clear reason.
 
 If the run uses `-strict`, user `trust`, `trust have`, and `axiom` statements
-are rejected instead of being stored. Configured imports still load normally,
-so strict mode is an audit boundary for the current run rather than a claim
-that every imported interface is assumption-free.
+are rejected instead of being stored. It also verifies every configured import
+and export, so a successful strict run audits the complete loaded source graph.
 
 ```litex
 # three primitive terms:
@@ -2270,6 +2269,8 @@ basics::some_fact
 The quoted path must be an independently runnable `module` folder. Each such
 terminal import runs the target module's static `[import]`, `[import std]`, and
 ordered `[export]` plan; its module source still cannot dynamically import.
+Imports are trusted by default for speed. Litex reports them as
+`unverified_imports`; rerun with `-strict` to verify all loaded code.
 
 Each import declaration creates a private module instance identified by its
 mount path. If a module imports the same physical folder as `First` and
@@ -2278,18 +2279,18 @@ mount path. If a module imports the same physical folder as `First` and
 inside `First` are available to First and its exported submodules, but are not
 automatically public to First's importer.
 
-Prefix `trust` in `[export]` marks one project entry as deliberately trusted in
-ordinary runs:
+Project configuration entries are trusted by default in ordinary runs:
 
 ```ini
 [export]
-trust background = "./background.lit"
+background = "./background.lit"
 main = "./main.lit"
 ```
 
-The same prefix is available for non-standard `[import]` entries. `-strict`
-ignores this configuration trust and verifies the target normally. Standard
-packages in `[import std]` have no trust modifier.
+The same rule applies to `[import]` and `[import std]`. Litex emits an
+`unverified_import` warning with each loaded entry; `-strict` verifies them.
+Older `trust name = "path"` entries are rejected with a migration message:
+remove `trust` rather than keeping a redundant marker.
 
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. Prefer local definitions, local
@@ -3132,7 +3133,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
 | cite an earlier project file inside a source | `chapter3::local` |
 | order project dependencies for `-r` and `-f` | place dependencies earlier in recursive `[export]` order |
-| mark a project entry as trusted | `trust chapter3 = "./chapter03.lit"` in `[export]` |
+| audit every imported/exported project source | run the project with `litex -strict -r <project>` |
 | explicit no-op | `do_nothing` |
 | clear the current user environment | `clear` |
 | evaluate an object expression | `eval 1 + 2` |

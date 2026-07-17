@@ -4249,7 +4249,7 @@ thm lhopital_rule_second_limit:
     # compare its intermediate derivative quotient with the right-hand limit.
     # trust: the checked transport and cross-product lemmas reduce the
     # remaining work to applying Cauchy's theorem on each restricted `[a,x]`.
-    trust $chap9::has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
+    by thm chap10citation::lhopital_second_quotient_limit(a, L, R, b, f, g)
 
 """
 Remark 10.5.3.  This version is a right-hand limit theorem.  Left-hand and

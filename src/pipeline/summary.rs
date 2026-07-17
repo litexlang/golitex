@@ -38,7 +38,16 @@ pub struct RunSummary {
     inferred_builtin_rule_counts: BTreeMap<String, usize>,
     inferred_infer_rule_counts: BTreeMap<String, usize>,
     trust_dependency_counts: BTreeMap<String, usize>,
+    unverified_imports: Vec<UnverifiedImportSummary>,
     main_environment: Option<EnvironmentSummary>,
+}
+
+#[derive(Clone, Debug)]
+struct UnverifiedImportSummary {
+    kind: String,
+    name: String,
+    line: usize,
+    file: String,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -75,12 +84,16 @@ impl RunSummary {
         runtime_error: &Option<RuntimeError>,
     ) -> RunSummary {
         let mut summary = Self::from_run(stmt_results, runtime_error);
-        for dependency in runtime.trusted_import_summary.dependencies.iter() {
-            bump_count(
-                &mut summary.trust_dependency_counts,
-                dependency.kind.as_str(),
-            );
-        }
+        summary.unverified_imports = runtime
+            .unverified_imports
+            .iter()
+            .map(|entry| UnverifiedImportSummary {
+                kind: entry.kind.clone(),
+                name: entry.name.clone(),
+                line: entry.line_file.0,
+                file: entry.line_file.1.to_string(),
+            })
+            .collect();
         if let Some(entry_module_id) = runtime.module_manager.entry_module_id {
             if let Some(module) = runtime.module_manager.module(entry_module_id) {
                 summary.main_environment = Some(EnvironmentSummary::from_environment(
@@ -405,6 +418,15 @@ impl RunSummary {
                 count_map_json_value(&self.trust_dependency_counts),
             ),
             (
+                "unverified_imports".to_string(),
+                JsonValue::Array(
+                    self.unverified_imports
+                        .iter()
+                        .map(UnverifiedImportSummary::json_value)
+                        .collect(),
+                ),
+            ),
+            (
                 "main_environment".to_string(),
                 self.main_environment_json_value(),
             ),
@@ -416,6 +438,17 @@ impl RunSummary {
             Some(summary) => summary.json_value(),
             None => JsonValue::Null,
         }
+    }
+}
+
+impl UnverifiedImportSummary {
+    fn json_value(&self) -> JsonValue {
+        JsonValue::Object(vec![
+            ("kind".to_string(), JsonValue::JsonString(self.kind.clone())),
+            ("name".to_string(), JsonValue::JsonString(self.name.clone())),
+            ("line".to_string(), JsonValue::Number(self.line)),
+            ("file".to_string(), JsonValue::JsonString(self.file.clone())),
+        ])
     }
 }
 

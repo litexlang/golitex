@@ -161,6 +161,52 @@ fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFactEnum) 
     Some(&less_fact.right)
 }
 
+fn dense_order_exist_fact_endpoints(
+    exist_fact: &ExistFactEnum,
+    witness_carrier: StandardSet,
+) -> Option<(Obj, Obj)> {
+    if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
+        return None;
+    }
+
+    let params = exist_fact
+        .params_def_with_type()
+        .collect_param_names_with_types();
+    let [(witness_name, ParamType::Obj(Obj::StandardSet(carrier)))] = params.as_slice() else {
+        return None;
+    };
+    let carrier_matches = matches!(
+        (carrier, witness_carrier),
+        (StandardSet::Q, StandardSet::Q) | (StandardSet::R, StandardSet::R)
+    );
+    if !carrier_matches {
+        return None;
+    }
+
+    let ExistBodyFact::ChainFact(chain) = &exist_fact.facts()[0] else {
+        return None;
+    };
+    let chain_facts = chain.facts().ok()?;
+    let [AtomicFact::LessFact(left_less), AtomicFact::LessFact(right_less)] =
+        chain_facts.as_slice()
+    else {
+        return None;
+    };
+
+    let is_witness =
+        |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name);
+    if !is_witness(&left_less.right) || !is_witness(&right_less.left) {
+        return None;
+    }
+    if Runtime::obj_depends_on_given_exist_param(&left_less.left, &[witness_name.clone()])
+        || Runtime::obj_depends_on_given_exist_param(&right_less.right, &[witness_name.clone()])
+    {
+        return None;
+    }
+
+    Some((left_less.left.clone(), right_less.right.clone()))
+}
+
 impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
@@ -255,6 +301,62 @@ impl Runtime {
                     )
                     .into(),
                 );
+            }
+        }
+
+        // Rational density: every nonempty real interval contains a rational.
+        // Example: `a < b` => `exist q Q st {a < q < b}`.
+        if let Some((left, right)) = dense_order_exist_fact_endpoints(exist_fact, StandardSet::Q) {
+            if let Some(mut steps) = self.verify_objects_are_known_reals(
+                &[&left, &right],
+                &exist_fact.line_file(),
+                verify_state,
+            )? {
+                let interval_nonempty: AtomicFact =
+                    LessFact::new(left, right, exist_fact.line_file()).into();
+                let interval_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &interval_nonempty,
+                    verify_state,
+                )?;
+                if interval_result.is_true() {
+                    steps.push(interval_result);
+                    return Ok(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            exist_fact.clone().into(),
+                            "exist: rational density in the real line".to_string(),
+                            steps,
+                        )
+                        .into(),
+                    );
+                }
+            }
+        }
+
+        // Real density: the midpoint of two ordered reals lies strictly between them.
+        // Example: `a < b` => `exist r R st {a < r < b}`.
+        if let Some((left, right)) = dense_order_exist_fact_endpoints(exist_fact, StandardSet::R) {
+            if let Some(mut steps) = self.verify_objects_are_known_reals(
+                &[&left, &right],
+                &exist_fact.line_file(),
+                verify_state,
+            )? {
+                let interval_nonempty: AtomicFact =
+                    LessFact::new(left, right, exist_fact.line_file()).into();
+                let interval_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &interval_nonempty,
+                    verify_state,
+                )?;
+                if interval_result.is_true() {
+                    steps.push(interval_result);
+                    return Ok(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            exist_fact.clone().into(),
+                            "exist: real density by the midpoint principle".to_string(),
+                            steps,
+                        )
+                        .into(),
+                    );
+                }
             }
         }
 

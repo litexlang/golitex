@@ -1529,13 +1529,13 @@ prop is_reduced_fraction(a Z, b N_pos):
         =>:
             k = 1
 
-# proof_debt: reducing a rational fraction is textbook background, not a
-# semantic rule of the Q carrier.  Keep precisely the interface used by this
-# source proof local until the reduction construction itself is formalized.
+# The reduced-fraction existence interface is cited from `chap4citation`.
+# Its finite-divisor construction is explicit proof debt there; the source
+# definition remains here because the following parity proof uses it directly.
 thm rational_has_reduced_fraction:
     ? forall x Q:
         exist p Z, q N_pos st {x = p / q, $is_reduced_fraction(p, q)}
-    trust exist p Z, q N_pos st {x = p / q, $is_reduced_fraction(p, q)}
+    by thm chap4citation::rational_has_reduced_fraction(x)
 
 # A square divisible by two has even base.  This is the source's residue
 # argument, expressed through the Euclidean quotient/remainder primitives.

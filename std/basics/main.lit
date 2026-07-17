@@ -1,248 +1,9 @@
 
-# Named operator-type interfaces keep the source-level package boundary
-# explicit in standalone examples and imported modules. The verifier provides
-# the operator typing facts directly.
-thm real_add_operator_type:
-    ? forall:
-        + $in fn(a, b R) R
-    + $in fn(a, b R) R
-
-thm real_sub_operator_type:
-    ? forall:
-        - $in fn(a, b R) R
-    - $in fn(a, b R) R
-
-thm real_mul_operator_type:
-    ? forall:
-        * $in fn(a, b R) R
-    * $in fn(a, b R) R
-
-thm real_div_operator_type:
-    ? forall:
-        / $in fn(a R, b R: b != 0) R
-    / $in fn(a R, b R: b != 0) R
-
-thm integer_mod_operator_type:
-    ? forall:
-        % $in fn(a Z, b Z: b != 0) Z
-    % $in fn(a Z, b Z: b != 0) Z
-
-thm real_pow_operator_type:
-    ? forall:
-        ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
-    ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
-
-# A nonempty family of nonempty sets is available as a basic set-theoretic
-# witness. Example: `by thm basics::nonempty_family_of_nonempty_sets_exists()`.
-thm nonempty_family_of_nonempty_sets_exists:
-    ? forall:
-        exist X nonempty_set st {forall! x X => {$is_nonempty_set(x)}}
-    claim:
-        ? forall x {{0}}:
-            $is_nonempty_set(x)
-        x = {0}
-        $is_nonempty_set(x)
-    witness exist X nonempty_set st {forall! x X => {$is_nonempty_set(x)}} from {{0}}
-
-thm positive_real_power_add_one:
-    ? forall a R_pos, b R:
-        a * a^b = a^(b+1)
-        a^b * a = a^(b+1)
-    a * a^b = a^(b+1)
-    a^b * a = a^(b+1)
-
-thm nonzero_integer_power_add_one:
-    ? forall a R_nz, b Z:
-        a * a^b = a^(b+1)
-        a^b * a = a^(b+1)
-    a * a^b = a^(b+1)
-    a^b * a = a^(b+1)
-
-thm integer_mod_neg:
-    ? forall n Z, k N_pos:
-        (-n) % k = (k - (n % k)) % k
-    (-n) % k = (k - (n % k)) % k
-
-thm positive_real_power_addition:
-    ? forall a R_pos, b, c R:
-        a^(b+c) = a^b * a^c
-    a^(b+c) = a^b * a^c
-
-thm positive_real_power_of_power:
-    ? forall a R_pos, b, c R:
-        (a^b)^c = a^(b*c)
-    (a^b)^c = a^(b*c)
-
-# Named finite max/min interfaces for source files that need explicit calls.
-thm max_least_upper_bound:
-    ? forall a, b, c R:
-        a <= c
-        b <= c
-        =>:
-            max(a, b) <= c
-    max(a, b) <= c
-
-thm min_greatest_lower_bound:
-    ? forall a, b, c R:
-        c <= a
-        c <= b
-        =>:
-            c <= min(a, b)
-    c <= min(a, b)
-
-# Public Analysis/rational interfaces retained for current clients.
-thm archimedean_property:
-    ? forall e R_pos:
-        exist n N_pos st {1/n < e}
-    exist n N_pos st {1/n < e}
-
-# Named interfaces for the Euclidean quotient/remainder facts.
-thm integer_mod_quotient_remainder:
-    ? forall a Z, d N_pos:
-        exist q Z st {a = d * q + a % d}
-    witness exist q Z st {a = d * q + a % d} from integer_quotient(a, d):
-        a = d * integer_quotient(a, d) + a % d
-
-thm integer_mod_is_natural:
-    ? forall a Z, d N_pos:
-        a % d $in N
-    a % d >= 0
-    a % d $in N
-
-thm integer_mod_bounds:
-    ? forall a Z, d N_pos:
-        0 <= a % d < d
-    a % d $in N
-    a % d < d
-    0 <= a % d < d
-
-thm natural_mod_zero_has_natural_quotient:
-    ? forall a N, d N_pos:
-        a % d = 0
-        =>:
-            exist q N st {a = d * q}
-    witness exist q N st {a = d * q} from integer_quotient(a, d):
-        integer_quotient(a, d) $in N
-        a = d * integer_quotient(a, d) + a % d
-        a % d = 0
-        a = d * integer_quotient(a, d)
-
-thm integer_mod_pow:
-    ? forall a Z, n N, d N_pos:
-        a^n % d = ((a % d)^n) % d
-    n = 0 or n > 0
-    by cases:
-        ? a^n % d = ((a % d)^n) % d
-        case n = 0:
-            a^n % d = a^0 % d = 1 % d
-            ((a % d)^n) % d = ((a % d)^0) % d = 1 % d
-            a^n % d = ((a % d)^n) % d
-        case n > 0:
-            n $in N_pos
-            a^n % d = ((a % d)^n) % d
-
-thm integer_mod_add:
-    ? forall a, b Z, d N_pos:
-        (a + b) % d = ((a % d) + (b % d)) % d
-    (a + b) % d = ((a % d) + (b % d)) % d
-
-thm integer_mod_sub:
-    ? forall a, b Z, d N_pos:
-        (a - b) % d = ((a % d) - (b % d)) % d
-    (a - b) % d = ((a % d) - (b % d)) % d
-
-thm integer_mod_eq_remainder_of_quotient_remainder:
-    ? forall a Z, d N_pos, q Z, r N:
-        r < d
-        a = d * q + r
-        =>:
-            a % d = r
-    witness exist z Z st {a = d * z + r} from q:
-        a = d * q + r
-    a % d = r
-
-thm even_power_abs_bound:
-    ? forall x, y R, k N_pos:
-        k % 2 = 0
-        x^k <= y^k
-        =>:
-            abs(x) <= abs(y)
-    abs(x) <= abs(y)
-
-thm even_power_bound_by_nonnegative_rhs:
-    ? forall x, y R, k N_pos:
-        k % 2 = 0
-        x^k <= y^k
-        y >= 0
-        =>:
-            -y <= x
-            x <= y
-    by thm even_power_abs_bound(x, y, k)
-    abs(x) <= abs(y)
-    -y <= x
-    x <= y
-
-thm even_power_bound_by_nonpositive_rhs:
-    ? forall x, y R, k N_pos:
-        k % 2 = 0
-        x^k <= y^k
-        y <= 0
-        =>:
-            y <= x
-            x <= -y
-    by thm even_power_abs_bound(x, y, k)
-    abs(x) <= abs(y)
-    y <= x
-    x <= -y
-
-
 trust have pi R:
     pi > 0
 
 trust have euler_e R:
     euler_e > 0
-
-thm pos_pow_strict_order_reflects:
-    ? forall a, b, k R_pos:
-        a^k < b^k
-        k >= 1
-        =>:
-            a < b
-    a < b
-
-thm pos_pow_order_reflects:
-    ? forall a, b, k R_pos:
-        a^k <= b^k
-        k >= 1
-        =>:
-            a <= b
-    a <= b
-
-# Reusable monotonicity predicates; these are interfaces, not automation.
-
-prop increasing(s power_set(R), f fn(x s) R):
-    forall x, y s:
-        x < y
-        =>:
-            f(x) < f(y)
-
-prop decreasing(s power_set(R), f fn(x s) R):
-    forall x, y s:
-        x < y
-        =>:
-            f(x) > f(y)
-
-prop nondecreasing(s power_set(R), f fn(x s) R):
-    forall x, y s:
-        x < y
-        =>:
-            f(x) <= f(y)
-
-prop nonincreasing(s power_set(R), f fn(x s) R):
-    forall x, y s:
-        x < y
-        =>:
-            f(x) >= f(y)
 
 prop finite_nonempty_set(s power_set(R)):
     $is_finite_set(s)
@@ -263,45 +24,6 @@ trust:
         =>:
             max_of_finite_set(s) $in s
             min_of_finite_set(s) $in s
-
-# Core integer order, rational representation, and range interfaces.
-thm integer_successor_le_of_lt:
-    ? forall x, y Z:
-        y < x
-        =>:
-            y + 1 <= x
-    x - y > 0
-    x - y $in N_pos
-    x - y >= 1
-    1 - (x - y) <= 0
-    y + 1 - x = 1 - (x - y)
-    y + 1 - x <= 0
-    y + 1 <= x
-
-thm integer_predecessor_le_of_lt:
-    ? forall x, y Z:
-        x < y
-        =>:
-            x <= y - 1
-    by thm integer_successor_le_of_lt(y, x)
-    x + 1 <= y
-    x + 1 - y <= 0
-    x - (y - 1) = x + 1 - y
-    x - (y - 1) <= 0
-    x <= y - 1
-
-thm integer_le_or_ge_successor:
-    ? forall n, m Z:
-        n <= m or n >= m + 1
-    by cases:
-        ? n <= m or n >= m + 1
-        case n <= m:
-            n <= m or n >= m + 1
-        case n > m:
-            by thm integer_successor_le_of_lt(n, m)
-            m + 1 <= n
-            n >= m + 1
-            n <= m or n >= m + 1
 
 trust:
     forall x Q:
@@ -337,16 +59,6 @@ thm one_mod_eq_one_of_two_le:
             1 % k = 1
     k >= 2 or k != 1
     1 % k = 1
-
-# Rationals are dense in the real line.
-# Example: from `a < b`, `by thm has_rational_between(a, b)` gives
-# `exist q Q st {a < q < b}`.
-thm has_rational_between, exists_rat_between, exists_rat_btwn:
-    ? forall a, b R:
-        a < b
-        =>:
-            exist q Q st {a < q < b}
-    exist q Q st {a < q < b}
 
 # Rational representation by integer numerator and nonzero integer denominator.
 # Example: `forall q Q: exist a Z, b Z_nz st {q = a / b}`.
@@ -507,12 +219,33 @@ thm finite_set_size_set_diff_le_sum:
         finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
     finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
 
-thm finite_set_size_subset_le:
-    ? forall A, B finite_set:
+"""
+Finite-set subset cardinality.  This is a foundational set-theoretic
+interface: a subset of a finite set is finite, and its cardinality is no
+larger than that of the containing set.
+"""
+axiom finite_set_size_subset_le:
+    ? forall A set, B finite_set:
         A $subset B
         =>:
+            $is_finite_set(A)
             finite_set_size(A) <= finite_set_size(B)
-    finite_set_size(A) <= finite_set_size(B)
+
+"""
+Cardinality of integer intervals.  Concrete endpoint instances are reduced
+by the evaluator; these foundational interfaces cover symbolic endpoints.
+"""
+axiom finite_set_size_closed_range:
+    ? forall a, b N:
+        a <= b
+        =>:
+            finite_set_size(closed_range(a, b)) = b - a + 1
+
+axiom finite_set_size_range:
+    ? forall a, b N:
+        a <= b
+        =>:
+            finite_set_size(range(a, b)) = b - a
 
 thm in_union_is_in_left_or_right:
     ? forall z set, A set, B set:

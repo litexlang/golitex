@@ -1,3 +1,4 @@
+use crate::common::json_value::{render_json_value, JsonValue};
 use crate::pipeline::display::{display_runtime_error_json, display_stmt_exec_result_json};
 use crate::pipeline::summary::display_run_summary_json_with_runtime;
 use crate::pipeline::{run_repository_file_target, run_stmt_at_global_env};
@@ -366,6 +367,12 @@ pub fn render_run_source_code_output(
         output_text.push('\n');
     }
 
+    if ok && !runtime.unverified_imports.is_empty() {
+        output_text.push('\n');
+        output_text.push_str(unverified_import_warning_json(runtime).as_str());
+        output_text.push('\n');
+    }
+
     let output_text = if strip_free_param_tags {
         strip_free_param_numeric_tags_in_display(&output_text)
     } else {
@@ -377,4 +384,49 @@ pub fn render_run_source_code_output(
     } else {
         (false, output_text)
     }
+}
+
+fn unverified_import_warning_json(runtime: &Runtime) -> String {
+    let imports = runtime
+        .unverified_imports
+        .iter()
+        .map(|entry| {
+            JsonValue::Object(vec![
+                (
+                    "kind".to_string(),
+                    JsonValue::JsonString(entry.kind.clone()),
+                ),
+                (
+                    "name".to_string(),
+                    JsonValue::JsonString(entry.name.clone()),
+                ),
+                ("line".to_string(), JsonValue::Number(entry.line_file.0)),
+                (
+                    "file".to_string(),
+                    JsonValue::JsonString(entry.line_file.1.to_string()),
+                ),
+            ])
+        })
+        .collect();
+    render_json_value(
+        &JsonValue::Object(vec![
+            (
+                "result".to_string(),
+                JsonValue::JsonString("success".to_string()),
+            ),
+            (
+                "type".to_string(),
+                JsonValue::JsonString("unverified import warning".to_string()),
+            ),
+            (
+                "message".to_string(),
+                JsonValue::JsonString(
+                    "imports and exports are trusted by default for faster runs; rerun with -strict to verify loaded code"
+                        .to_string(),
+                ),
+            ),
+            ("unverified_imports".to_string(), JsonValue::Array(imports)),
+        ]),
+        0,
+    )
 }

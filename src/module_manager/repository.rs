@@ -408,7 +408,6 @@ fn discover_module_config(
         if already_discovered {
             continue;
         }
-        let trusted = export.trusted;
         let line_file = (
             export.line,
             Rc::from(config_path.to_string_lossy().to_string()),
@@ -419,9 +418,7 @@ fn discover_module_config(
             .module_mut(module_id)
             .expect("manifest owner module should exist");
         module.run_targets.push(target);
-        if trusted {
-            module.trusted_run_targets.insert(target, line_file);
-        }
+        module.run_target_lines.insert(target, line_file);
     }
     if module_flatten {
         let module = runtime
@@ -566,7 +563,6 @@ fn discover_config_import(
             import.line,
             Rc::from(config_path.to_string_lossy().to_string()),
         ),
-        trusted: import.trusted,
     })
 }
 
@@ -594,7 +590,6 @@ fn discover_config_std_import(
             import.line,
             Rc::from(config_path.to_string_lossy().to_string()),
         ),
-        trusted: false,
     })
 }
 
@@ -603,9 +598,11 @@ fn append_config_import(runtime: &mut Runtime, module_id: ModuleId, config_impor
         .module_manager
         .module_mut(module_id)
         .expect("manifest owner module should exist");
-    if module.config_imports.iter().any(|existing| {
-        existing.module_id == config_import.module_id && existing.trusted == config_import.trusted
-    }) {
+    if module
+        .config_imports
+        .iter()
+        .any(|existing| existing.module_id == config_import.module_id)
+    {
         return;
     }
     module.config_imports.push(config_import);
@@ -1565,7 +1562,14 @@ tail = "./tail.lit"
             );
             write_file(&root.join("B/C/tail.lit"), "1 = 0\n");
 
-            let (tail_ok, _) = run_repository(&root.join("B/C"));
+            let target_path = path_string_for_test(&root.join("B/C"));
+            let (tail_ok, _) = run_repository_with_output(
+                target_path.as_str(),
+                false,
+                true,
+                OutputLanguage::English,
+                false,
+            );
             assert!(
                 !tail_ok,
                 "running a submodule must run its complete subtree"
@@ -1575,7 +1579,13 @@ tail = "./tail.lit"
                 &root.join("B/C/tail.lit"),
                 "B::C::target::c_value = 1\nhave tail_value R = 1\n",
             );
-            let (ok, output) = run_repository(&root.join("B/C"));
+            let (ok, output) = run_repository_with_output(
+                target_path.as_str(),
+                false,
+                true,
+                OutputLanguage::English,
+                false,
+            );
             assert!(ok, "{output}");
             assert!(output.contains("tail_value"), "{output}");
         });
@@ -1715,7 +1725,41 @@ main = "./main.lit"
                     render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
                 assert!(ok, "{output}");
                 assert!(output.contains("import std basics"), "{output}");
+                assert!(output.contains("unverified import warning"), "{output}");
+                assert!(output.contains("isolated_import"), "{output}");
+                assert!(output.contains("isolated_std_import"), "{output}");
             });
+        });
+    }
+
+    #[test]
+    fn strict_isolated_import_verifies_the_loaded_module() {
+        run_repository_test_with_large_stack("strict-isolated-source-import", || {
+            let fixture = Fixture::new("strict-isolated-source-import");
+            let module_root = fixture.path("external-module");
+            let file_path = fixture.path("scratch/session.lit");
+            write_file(
+                &module_root.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[export]
+assumption = "./assumption.lit"
+"#,
+            );
+            write_file(&module_root.join("assumption.lit"), "1 = 0\n");
+            write_file(&file_path, "have seed R = 1\n");
+
+            let mut runtime = Runtime::new();
+            runtime.strict_mode = true;
+            let file = path_string_for_test(&file_path);
+            let (_, file_error) = run_file_with_project_context(file.as_str(), &mut runtime, true);
+            assert!(file_error.is_none(), "{file_error:?}");
+            let module_path = path_string_for_test(&module_root);
+            let source = format!("import \"{}\" as External", module_path);
+            let (_, import_error) = run_source_code(source.as_str(), &mut runtime);
+            let import_error = import_error.expect("strict import must verify its target");
+            assert!(format!("{import_error:?}").contains("1 = 0"));
         });
     }
 
@@ -2027,7 +2071,14 @@ main = "./main.lit"
                 "First::implementation::token = Second::implementation::token\n",
             );
 
-            let (ok, output) = run_repository(&root);
+            let root_string = path_string_for_test(&root);
+            let (ok, output) = run_repository_with_output(
+                root_string.as_str(),
+                false,
+                true,
+                OutputLanguage::English,
+                false,
+            );
             assert!(!ok, "distinct import instances must not collapse: {output}");
         });
     }
@@ -2170,9 +2221,9 @@ main = "./main.lit"
     }
 
     #[test]
-    fn trusted_exports_still_respect_strict_mode() {
-        run_repository_test_with_large_stack("trusted-export", || {
-            let fixture = Fixture::new("trusted-export");
+    fn exports_are_trusted_by_default_and_strict_mode_verifies_them() {
+        run_repository_test_with_large_stack("default-trusted-export", || {
+            let fixture = Fixture::new("default-trusted-export");
             let root = fixture.path("root");
             write_file(
                 &root.join("litex.config"),
@@ -2180,7 +2231,7 @@ main = "./main.lit"
 module
 
 [export]
-trust assumption = "./assumption.lit"
+assumption = "./assumption.lit"
 main = "./main.lit"
 "#,
             );
@@ -2193,9 +2244,65 @@ main = "./main.lit"
                 false,
                 false,
                 OutputLanguage::English,
-                false,
+                true,
             );
             assert!(ordinary_ok, "{ordinary_output}");
+            assert!(ordinary_output.contains("unverified import warning"));
+            assert!(ordinary_output.contains("project_export"));
+            assert!(ordinary_output.contains("\"name\": \"assumption\""));
+            let (strict_ok, strict_output) = run_repository_with_output(
+                root_string.as_str(),
+                false,
+                true,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!strict_ok);
+            assert!(strict_output.contains("1 = 0"), "{strict_output}");
+        });
+    }
+
+    #[test]
+    fn imports_are_trusted_by_default_and_strict_mode_verifies_them() {
+        run_repository_test_with_large_stack("default-trusted-import", || {
+            let fixture = Fixture::new("default-trusted-import");
+            let root = fixture.path("root");
+            let dependency = fixture.path("dependency");
+            write_file(
+                &root.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[import]
+Dependency = "../dependency"
+
+[export]
+main = "./main.lit"
+"#,
+            );
+            write_file(&root.join("main.lit"), "have value R = 1\n");
+            write_file(
+                &dependency.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[export]
+assumption = "./assumption.lit"
+"#,
+            );
+            write_file(&dependency.join("assumption.lit"), "1 = 0\n");
+
+            let root_string = path_string_for_test(&root);
+            let (ordinary_ok, ordinary_output) = run_repository_with_output(
+                root_string.as_str(),
+                false,
+                false,
+                OutputLanguage::English,
+                true,
+            );
+            assert!(ordinary_ok, "{ordinary_output}");
+            assert!(ordinary_output.contains("\"kind\": \"project_import\""));
+            assert!(ordinary_output.contains("\"name\": \"Dependency\""));
             let (strict_ok, strict_output) = run_repository_with_output(
                 root_string.as_str(),
                 false,

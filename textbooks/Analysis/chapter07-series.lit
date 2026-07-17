@@ -163,14 +163,13 @@ thm intersect_with_singleton:
             z $in s
             z $in {a}
 
-# Background interface.  Removing one finite subset changes the cardinality
-# by the cardinality of its intersection.  This finite-set counting rule is
-# not yet a direct core inference, so the source keeps it as visible local
-# trust at its first use.
+# The finite-deletion cardinality interface is cited from
+# `chap7citation`; its finite-set counting proof is outside this
+# section's enumeration construction.
 thm finite_set_size_set_minus:
     ? forall s, t finite_set:
         finite_set_size(set_minus(s, t)) = finite_set_size(s) - finite_set_size(intersect(s, t))
-    trust finite_set_size(set_minus(s, t)) = finite_set_size(s) - finite_set_size(intersect(s, t))
+    by thm chap7citation::finite_set_size_set_minus(s, t)
 
 thm remove_singleton_from_singleton_sized_set_is_empty:
     ? forall s finite_set, a set:

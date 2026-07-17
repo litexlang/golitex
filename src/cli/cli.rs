@@ -1151,7 +1151,7 @@ litex -upgrade : show upgrade instructions for this platform
 litex -compact : show only result, type, line, and statement for each result
 litex : show normal output with internal statements and direct verification reasons
 litex -detail : include full audit trace details and raw source paths in JSON output
-litex -strict : reject user trust, trust have, and axiom statements; configured imports still load normally
+litex -strict : verify all imports and exports, and reject user trust, trust have, and axiom statements
 litex -summarize : append one run summary JSON object after ordinary verifier command output
 litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 litex -fmt : format the given code

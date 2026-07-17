@@ -62,9 +62,26 @@ fn run_isolated_import(
             return Err(error);
         }
     };
+    let import_target = ImportTarget::Module(module_id);
+    let execution_mode = if runtime.strict_mode {
+        ExecutionMode::Verified
+    } else {
+        let name = runtime
+            .module_manager
+            .canonical_name_for_target(import_target)
+            .unwrap_or("isolated import")
+            .to_string();
+        let kind = match import {
+            ImportStmt::Module(_) => "isolated_import",
+            ImportStmt::Std(_) => "isolated_std_import",
+        };
+        runtime.record_unverified_import(kind, name, import.line_file());
+        ExecutionMode::Trusted
+    };
     let isolated_before = runtime.isolated;
     runtime.isolated = false;
-    let (_, runtime_error) = run_repository_module_target(runtime, module_id);
+    let (_, runtime_error) =
+        run_repository_module_target_with_mode(runtime, module_id, execution_mode);
     runtime.isolated = isolated_before;
     if let Some(error) = runtime_error {
         runtime.module_manager = module_manager_before;
@@ -262,10 +279,10 @@ fn run_repository_module_prefix_with_mode(
 fn run_repository_module_plan_to_target(
     runtime: &mut Runtime,
     module_id: ModuleId,
-    execution_mode: ExecutionMode,
+    _execution_mode: ExecutionMode,
     selected_target: RepositoryFileTarget,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let (mut results, import_error) = run_config_imports(runtime, module_id, execution_mode);
+    let (mut results, import_error) = run_config_imports(runtime, module_id);
     if let Some(error) = import_error {
         return (results, Some(error));
     }
@@ -286,8 +303,7 @@ fn run_repository_module_plan_to_target(
     }
     let run_targets = module.run_targets.clone();
     for target in run_targets {
-        let target_execution_mode =
-            project_target_execution_mode(runtime, module_id, target, execution_mode);
+        let target_execution_mode = project_target_execution_mode(runtime, module_id, target);
         let target_matches = repository_target_matches_import_target(selected_target, target);
         let target_contains = match target {
             ImportTarget::Module(child_module_id) => {
@@ -327,9 +343,9 @@ fn run_repository_module_plan_to_target(
 fn run_repository_module_plan(
     runtime: &mut Runtime,
     module_id: ModuleId,
-    execution_mode: ExecutionMode,
+    _execution_mode: ExecutionMode,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let (mut results, import_error) = run_config_imports(runtime, module_id, execution_mode);
+    let (mut results, import_error) = run_config_imports(runtime, module_id);
     if let Some(error) = import_error {
         return (results, Some(error));
     }
@@ -350,8 +366,7 @@ fn run_repository_module_plan(
     }
     let run_targets = module.run_targets.clone();
     for target in run_targets {
-        let target_execution_mode =
-            project_target_execution_mode(runtime, module_id, target, execution_mode);
+        let target_execution_mode = project_target_execution_mode(runtime, module_id, target);
         let (mut target_results, runtime_error) =
             run_repository_import_target(runtime, target, target_execution_mode);
         results.append(&mut target_results);
@@ -435,7 +450,6 @@ fn module_is_descendant_of(
 fn run_config_imports(
     runtime: &mut Runtime,
     module_id: ModuleId,
-    execution_mode: ExecutionMode,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(module) = runtime.module_manager.module(module_id) else {
         return (
@@ -448,14 +462,7 @@ fn run_config_imports(
     let config_imports = module.config_imports.clone();
     let mut results = vec![];
     for config_import in config_imports {
-        let import_target = ImportTarget::Module(config_import.module_id);
-        let import_execution_mode = config_import_execution_mode(
-            runtime,
-            module_id,
-            import_target,
-            &config_import,
-            execution_mode,
-        );
+        let import_execution_mode = config_import_execution_mode(runtime, &config_import);
         let (mut import_results, import_error) = run_repository_module_target_with_mode(
             runtime,
             config_import.module_id,
@@ -474,29 +481,18 @@ fn run_config_imports(
 
 fn config_import_execution_mode(
     runtime: &mut Runtime,
-    owner_module_id: ModuleId,
-    import_target: ImportTarget,
     config_import: &ConfigImport,
-    inherited_mode: ExecutionMode,
 ) -> ExecutionMode {
-    if inherited_mode == ExecutionMode::Trusted || runtime.strict_mode || !config_import.trusted {
-        return inherited_mode;
+    if runtime.strict_mode {
+        return ExecutionMode::Verified;
     }
-    if !project_target_is_loaded(runtime, import_target) {
-        let name = runtime
-            .module_manager
-            .canonical_name_for_target(import_target)
-            .unwrap_or("project import")
-            .to_string();
-        runtime.record_trusted_import(
-            "trust_project_import",
-            name,
-            config_import.line_file.clone(),
-        );
-    }
-    runtime
+    let import_target = ImportTarget::Module(config_import.module_id);
+    let name = runtime
         .module_manager
-        .record_import_dependency(owner_module_id, config_import.module_id);
+        .canonical_name_for_target(import_target)
+        .unwrap_or("project import")
+        .to_string();
+    runtime.record_unverified_import("project_import", name, config_import.line_file.clone());
     ExecutionMode::Trusted
 }
 
@@ -504,42 +500,23 @@ fn project_target_execution_mode(
     runtime: &mut Runtime,
     module_id: ModuleId,
     target: ImportTarget,
-    inherited_mode: ExecutionMode,
 ) -> ExecutionMode {
-    if inherited_mode == ExecutionMode::Trusted || runtime.strict_mode {
-        return inherited_mode;
+    if runtime.strict_mode {
+        return ExecutionMode::Verified;
     }
-    let trusted_line = runtime
+    let line_file = runtime
         .module_manager
         .module(module_id)
-        .and_then(|module| module.trusted_run_targets.get(&target))
-        .cloned();
-    let Some(line_file) = trusted_line else {
-        return ExecutionMode::Verified;
-    };
-    if !project_target_is_loaded(runtime, target) {
-        let name = runtime
-            .module_manager
-            .canonical_name_for_target(target)
-            .unwrap_or("project entry")
-            .to_string();
-        runtime.record_trusted_import("trust_project_export", name, line_file);
-    }
+        .and_then(|module| module.run_target_lines.get(&target))
+        .cloned()
+        .expect("every project run target should retain its config location");
+    let name = runtime
+        .module_manager
+        .canonical_name_for_target(target)
+        .unwrap_or("project export")
+        .to_string();
+    runtime.record_unverified_import("project_export", name, line_file);
     ExecutionMode::Trusted
-}
-
-fn project_target_is_loaded(runtime: &Runtime, target: ImportTarget) -> bool {
-    match target {
-        ImportTarget::File { module_id, file_id } => runtime
-            .module_manager
-            .module(module_id)
-            .and_then(|module| module.file(file_id))
-            .is_some_and(|file| file.status == FileStatus::Loaded),
-        ImportTarget::Module(module_id) => runtime
-            .module_manager
-            .module(module_id)
-            .is_some_and(|module| module.status == ModuleStatus::Loaded),
-    }
 }
 
 fn run_repository_exported_file_target_with_mode(
@@ -685,7 +662,7 @@ mod path_import_tests {
         let (_, runtime_error) = run_source_code("trust import std basics", &mut runtime);
 
         let runtime_error = runtime_error.expect("trust import should fail");
-        assert!(format!("{runtime_error:?}").contains("trust import has been removed"));
+        assert!(format!("{runtime_error:?}").contains("import is trusted by default"));
         assert!(runtime.module_manager.module_by_name.is_empty());
     }
 

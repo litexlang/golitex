@@ -97,7 +97,7 @@ thm infinite_at_most_countable_is_countably_infinite:
         $is_at_most_countable(X)
         =>:
             $is_countably_infinite(X)
-    trust $is_countably_infinite(X)
+    by thm chap8citation::infinite_at_most_countable_is_countably_infinite(X)
 
 thm uncountable_is_not_at_most_countable:
     ? forall X set:
@@ -221,9 +221,9 @@ thm natural_subset_has_unique_minimum:
         $is_nonempty_set(X)
         =>:
             exist! n N st {$is_minimum_of_natural_subset(X, n)}
-    # Source handling: this is the well-ordering principle itself.  The later
-    # local selector is derived from this explicit source-facing interface.
-    trust exist! n N st {$is_minimum_of_natural_subset(X, n)}
+    # The well-ordering interface is cited from `chap8citation`.
+    # The later local selector is derived from this explicit source-facing form.
+    by thm chap8citation::natural_subset_has_unique_minimum(X)
 
 # Write `min(X)` for the unique least element of a non-empty subset `X` of `N`.
 
@@ -433,7 +433,7 @@ thm infinite_natural_subset_has_tail_above:
                         impossible $is_nonempty_set({x N: x $in X and a < x})
             X $subset closed_range(0, a)
         $is_finite_set(closed_range(0, a))
-        by thm chap3::subset_of_finite_set_is_finite(X, closed_range(0, a))
+        by thm basics::subset_of_finite_set_is_finite(X, closed_range(0, a))
         $is_finite_set(X)
         by thm finite_set_has_cardinality_count(X)
         witness exist n N st {$chap3::has_cardinality(X, n)} from finite_set_size(X):
@@ -777,7 +777,7 @@ thm increasing_bijection_successor_is_least_above:
         by cases:
             ? f(n + 1) <= z
             case m < n + 1:
-                by thm basics::integer_predecessor_le_of_lt(m, n + 1)
+                m <= n + 1 - 1
                 m <= n + 1 - 1 = n
                 m < n or m >= n
                 by cases:
@@ -1096,8 +1096,7 @@ claim:
         case n % 2 = 1:
             (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
             n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
-    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
-    trust exist r N st {n * (n + 1) = 2 * r}
+    by thm chap8citation::consecutive_product_is_even(n)
     obtain r from exist r N st {n * (n + 1) = 2 * r}
     witness exist y N st {2 * y = n * (n + 1)} from r
     forall y1, y2 N:
@@ -1355,7 +1354,7 @@ thm proposition_3_6_14_N_embedding_implies_infinite:
         $embeds_into(N, X)
         =>:
             $chap3::has_infinite_cardinality(X)
-    trust $chap3::has_infinite_cardinality(X)
+    by thm chap8citation::natural_embedding_gives_infinite_cardinality(X)
 
 thm at_most_countable_with_N_embedding_is_countably_infinite:
     ? forall X set:

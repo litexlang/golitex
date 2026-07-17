@@ -96,7 +96,7 @@ impl Runtime {
 
 fn removed_source_import_error(tb: &TokenBlock) -> RuntimeError {
     ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-        "trust import has been removed; use terminal `import` in an isolated REPL, or declare a module dependency in litex.config [import] or [import std]"
+        "trust import is invalid: import is trusted by default. Use terminal `import` in an isolated REPL, or declare a module dependency in litex.config [import] or [import std]; use `litex -strict` to verify loaded code"
             .to_string(),
         tb.line_file.clone(),
     ))

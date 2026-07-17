@@ -265,23 +265,15 @@ forall A, B set, x set:
     =>:
         x $in union(A, B)
 
-# Background interface: a finite union is finite, and its cardinality is at
-# most the sum of the two cardinalities.  The counting proof is background to
-# this first set-theory example.
-thm finite_set_size_union_le_sum:
-    ? forall A, B finite_set:
-        $is_finite_set(union(A, B))
-        finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
-    trust:
-        $is_finite_set(union(A, B))
-        finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
+# The finite-union counting interface is cited from `basics`; its
+# finite induction proof is background to this first set-theory example.
 
 sketch:
     1 $in union({1, 2}, {2, 3})
     2 $in union({1, 2}, {2, 3})
     3 $in union({1, 2}, {2, 3})
     $is_finite_set(union({1, 2}, {2, 3}))
-    by thm finite_set_size_union_le_sum({1, 2}, {2, 3})
+    by thm basics::finite_set_size_union_le_sum({1, 2}, {2, 3})
 
 """
 Example 3.1.11. {1, 2} union {2, 3} is {1, 2, 3}.
@@ -691,21 +683,13 @@ addition depending on context; mathematical symbols remove that ambiguity.
 # prevents confusing a "boys and girls" union with a "single and male"
 # intersection.
 
-# Background interface: an intersection of finite sets is finite and cannot
-# have more elements than either input set.
-thm finite_set_size_intersect_le_left:
-    ? forall A, B finite_set:
-        $is_finite_set(intersect(A, B))
-        finite_set_size(intersect(A, B)) <= finite_set_size(A)
-    trust:
-        $is_finite_set(intersect(A, B))
-        finite_set_size(intersect(A, B)) <= finite_set_size(A)
+# The finite-intersection counting interface is cited from `basics`.
 
 sketch:
     2 $in intersect({1, 2, 4}, {2, 3, 4})
     4 $in intersect({1, 2, 4}, {2, 3, 4})
     $is_finite_set(intersect({1, 2, 4}, {2, 3, 4}))
-    by thm finite_set_size_intersect_le_left({1, 2, 4}, {2, 3, 4})
+    by thm basics::finite_set_size_intersect_le_left({1, 2, 4}, {2, 3, 4})
     intersect({1, 2, 4}, {2, 3, 4}) = {2, 4}
     finite_set_size(intersect({1, 2, 4}, {2, 3, 4})) = finite_set_size({2, 4}) = 2
     not 1 $in {2, 4}
@@ -737,18 +721,10 @@ forall A, B set, x set:
     =>:
         x $in set_minus(A, B)
 
-# Background interface: deleting elements from a finite set leaves a finite
-# set of no greater cardinality.
-thm finite_set_size_set_minus_le_left:
-    ? forall A finite_set, B set:
-        $is_finite_set(set_minus(A, B))
-        finite_set_size(set_minus(A, B)) <= finite_set_size(A)
-    trust:
-        $is_finite_set(set_minus(A, B))
-        finite_set_size(set_minus(A, B)) <= finite_set_size(A)
+# The finite-deletion counting interface is cited from `basics`.
 
 $is_finite_set(set_minus({1, 2, 3}, {2}))
-by thm finite_set_size_set_minus_le_left({1, 2, 3}, {2})
+by thm basics::finite_set_size_set_minus_le_left({1, 2, 3}, {2})
 
 forall A, B set:
     intersect(A, B) = intersect(B, A)
@@ -3197,8 +3173,8 @@ sketch:
 
         0...finite_set_size(N) $subset N
 
-        by thm chap2::finite_set_size_subset_le(0...finite_set_size(N), N)
-        by thm chap2::finite_set_size_closed_range(0, finite_set_size(N))
+        by thm basics::finite_set_size_subset_le(0...finite_set_size(N), N)
+        by thm chap2citation::finite_set_size_closed_range(0, finite_set_size(N))
         finite_set_size(N) + 1 = finite_set_size(N) - 0 + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
 
         impossible finite_set_size(N) + 1 <= finite_set_size(N)
@@ -3227,34 +3203,22 @@ are finite with the expected cardinality bounds or formulas.
 # and finite-set sizes.  Exact image sizes and function-space size formulas
 # need their own later lemmas.
 
-# Background interfaces: inclusion-exclusion for two finite sets and the
-# finiteness of a subset are used only to state these cardinality examples.
-thm finite_set_size_union:
-    ? forall A, B finite_set:
-        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
-    trust finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
-
-thm subset_of_finite_set_is_finite:
-    ? forall A, B set:
-        $is_finite_set(B)
-        A $subset B
-        =>:
-            $is_finite_set(A)
-    trust $is_finite_set(A)
+# The inclusion-exclusion and finite-subset interfaces are cited from
+# `basics`; they are used only by these cardinality examples.
 
 sketch:
     claim:
         ? forall X, Y finite_set:
             $is_finite_set(union(X, Y))
             finite_set_size(union(X, Y)) <= finite_set_size(X) + finite_set_size(Y)
-        by thm finite_set_size_union_le_sum(X, Y)
+        by thm basics::finite_set_size_union_le_sum(X, Y)
 
     claim:
         ? forall X, Y finite_set:
             intersect(X, Y) = {}
             =>:
                 finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y)
-        by thm finite_set_size_union(X, Y)
+        by thm basics::finite_set_size_union(X, Y)
         finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size(intersect(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size({}) = finite_set_size(X) + finite_set_size(Y)
 
     intersect({1, 2}, {3}) = {}
@@ -3266,8 +3230,8 @@ sketch:
             =>:
                 $is_finite_set(Y)
                 finite_set_size(Y) <= finite_set_size(X)
-        by thm subset_of_finite_set_is_finite(Y, X)
-        by thm chap2::finite_set_size_subset_le(Y, X)
+        by thm basics::subset_of_finite_set_is_finite(Y, X)
+        by thm basics::finite_set_size_subset_le(Y, X)
 
     have fn double_on_three(n {1, 2, 3}) {2, 4, 6} by cases:
         case n = 1: 2

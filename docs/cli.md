@@ -36,7 +36,7 @@ parser.
 | `-compact` | Show only `result`, `type`, `line`, and `statement` for each execution result. |
 | *(no output flag)* | Use the normal reading view: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. |
 | `-detail` | Include fuller JSON trace details, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
-| `-strict` | Reject user `trust`, `trust have`, and `axiom`. Configured imports still load normally. This is useful for CI or benchmark runs where user-introduced unsafe assumptions should fail. |
+| `-strict` | Verify every configured import and export, then reject user `trust`, `trust have`, and `axiom`. Use it for CI or a complete source audit. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
@@ -286,11 +286,11 @@ Each `[import]` declaration creates a private module instance. Two aliases of
 one physical folder remain distinct, and imports internal to an imported module
 do not become public to its importer.
 
-For an explicitly trusted project entry, write
-`trust chap7 = "./chap7.lit"` in `[export]`. Ordinary runs skip its proof
-processing but preserve direct environment effects; `-strict` verifies it
-normally. For a trusted non-standard package, use the same `trust` prefix in
-`[import]`. Standard package declarations have no trust modifier.
+Every `[import]`, `[import std]`, and `[export]` entry is trusted by default so
+ordinary project runs do not re-verify every loaded file. Litex reports these
+entries as `unverified_imports`; rerun with `-strict` to verify all configured
+packages and exports. Do not write `trust` in `litex.config`: remove that
+prefix when migrating an older project.
 
 ## Reserved Helper Commands
 

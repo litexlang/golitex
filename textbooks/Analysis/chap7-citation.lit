@@ -1,0 +1,6 @@
+# Chapter 7 cited finite-set interface.
+
+thm finite_set_size_set_minus:
+    ? forall s, t finite_set:
+        finite_set_size(set_minus(s, t)) = finite_set_size(s) - finite_set_size(intersect(s, t))
+    trust finite_set_size(set_minus(s, t)) = finite_set_size(s) - finite_set_size(intersect(s, t))

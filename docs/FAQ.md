@@ -359,6 +359,37 @@ In systems such as Lean or Isabelle, the large-library route is often excellent
 formal engineering. Litex is exploring whether a lighter base can make the
 book's own proof cheap enough to write and check directly.
 
+## Why can an elementary-looking result still need a cite interface or explicit trust?
+
+Ordinary mathematical prose omits a great deal of supporting infrastructure.
+That does not make a result impossible to formalize, nor does it make an
+unfinished Litex proof a language failure. It means the file must say which
+interface the prose took for granted. Mature libraries often already contain
+many such interfaces; a source-local development may not yet have the one its
+current theorem needs.
+
+For example:
+
+- A nonempty finite subset of `R` having a maximum can require a finite-set
+  induction or enumeration interface, a nonempty witness, and the fact that
+  inserting one real preserves a chosen maximum.
+- Defining `gcd` requires more than its familiar name: choose whether the
+  public interface is a function or a relation, then account for divisibility,
+  sign conventions, Euclidean reduction or an equivalent existence argument,
+  and the intended specification.
+- The bound `|S union T| <= |S| + |T|` can require a cardinality interface:
+  a decomposition into disjoint pieces, or an injection/bijection argument
+  that makes overlap visible.
+
+Do not mark an entire result `trust` merely because it feels obvious. Preserve
+the source-facing theorem, make the smallest natural Litex attempt, and record
+the exact missing bridge plus the verifier feedback. Keep a one-off bridge as
+the smallest local proof debt. When the same background fact genuinely recurs,
+give it a named source-local cite interface. Consider a shared `std` interface
+only after its meaning is stable and several independent uses show that it is
+really common background. The rest of the source proof should remain checked
+wherever possible.
+
 ## What are the boundaries of Litex's type system?
 
 Litex deliberately does not try to be a full dependent type theory in the Lean,
