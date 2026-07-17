@@ -1,6 +1,42 @@
 use super::*;
 
 #[test]
+fn dense_real_intervals_have_rational_and_real_witnesses_as_builtin_rules() {
+    run_with_large_stack(
+        "dense_real_intervals_have_rational_and_real_witnesses_as_builtin_rules",
+        || {
+            let source_code = r#"
+have a, b R:
+    a < b
+
+have q Q:
+    a < q < b
+
+have r R:
+    a < r < b
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "dense_real_intervals_have_rational_and_real_witnesses_as_builtin_rules",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "dense real interval witnesses should be builtin:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("exist: rational density in the real line")
+                    && run_output.contains("exist: real density by the midpoint principle"),
+                "the result should expose both density rules:\n{run_output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn direct_order_semantics_builtin_rules_cover_transitivity_bounds_and_integer_discreteness() {
     run_with_large_stack(
         "direct_order_semantics_builtin_rules_cover_transitivity_bounds_and_integer_discreteness",

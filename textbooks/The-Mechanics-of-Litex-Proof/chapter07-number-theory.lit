@@ -65,10 +65,11 @@ claim:
             product(1, a, fn(x N_pos) N_pos {x}) % a = 0
             product(1, a, fn(x N_pos) N_pos {x}) % k = product(1, a, fn(x N_pos) N_pos {x}) % a = 0
         case k < a:
-            by thm basics::integer_successor_le_of_lt(a, k)
+            k + 1 <= a
             product(1, a, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * product(k + 1, a, fn(x N_pos) N_pos {x})
             product(1, k, fn(x N_pos) N_pos {x}) % k = 0
-            by thm basics::integer_mod_quotient_remainder(product(1, k, fn(x N_pos) N_pos {x}), k)
+            witness exist q Z st {product(1, k, fn(x N_pos) N_pos {x}) = k * q + product(1, k, fn(x N_pos) N_pos {x}) % k} from integer_quotient(product(1, k, fn(x N_pos) N_pos {x}), k):
+                product(1, k, fn(x N_pos) N_pos {x}) = k * integer_quotient(product(1, k, fn(x N_pos) N_pos {x}), k) + product(1, k, fn(x N_pos) N_pos {x}) % k
             obtain r from exist q Z st {product(1, k, fn(x N_pos) N_pos {x}) = k * q + product(1, k, fn(x N_pos) N_pos {x}) % k}
             product(1, k, fn(x N_pos) N_pos {x}) = k * r + product(1, k, fn(x N_pos) N_pos {x}) % k = k * r = r * k
             witness exist t Z st {product(1, a, fn(x N_pos) N_pos {x}) = t * k} from r * product(k + 1, a, fn(x N_pos) N_pos {x}):
@@ -100,7 +101,8 @@ claim:
         $citation::prime(2)
 
         witness exist t Z st {2 = t * 2} from 1
-        by thm basics::integer_mod_eq_remainder_of_quotient_remainder(2, 2, 1, 0)
+        0 < 2
+        2 = 2 * 1 + 0
         2 % 2 = 0
         witness exist k N_pos st {$citation::prime(k), 2 % k = 0} from 2
 
@@ -118,7 +120,8 @@ claim:
             by cases exist k N_pos st {$citation::prime(k), (n + 1) % k = 0}:
                 case $citation::prime(n+1):
                     witness exist t Z st {n + 1 = t * (n + 1)} from 1
-                    by thm basics::integer_mod_eq_remainder_of_quotient_remainder(n + 1, n + 1, 1, 0)
+                    0 < n + 1
+                    n + 1 = (n + 1) * 1 + 0
                     (n + 1) % (n + 1) = 0
                     witness exist k N_pos st {$citation::prime(k), (n + 1) % k = 0} from n+1
                 case not $citation::prime(n+1):
@@ -136,7 +139,7 @@ claim:
                     2 <= c < n+1
 
                     (n+1) % c = 0
-                    by thm basics::integer_le_or_ge_successor(c, n)
+                    c <= n or c >= n + 1
                     by cases:
                         ? c <= n
                         case c <= n:
@@ -146,20 +149,24 @@ claim:
 
                     obtain d from exist k N_pos st {$citation::prime(k), c % k = 0}
 
-                    by thm basics::integer_mod_quotient_remainder(n + 1, c)
+                    witness exist q Z st {n + 1 = c * q + (n + 1) % c} from integer_quotient(n + 1, c):
+                        n + 1 = c * integer_quotient(n + 1, c) + (n + 1) % c
                     obtain e from exist q Z st {n + 1 = c * q + (n + 1) % c}
                     n + 1 = c * e + (n + 1) % c = c * e = e * c
 
-                    by thm basics::integer_mod_quotient_remainder(c, d)
+                    witness exist q Z st {c = d * q + c % d} from integer_quotient(c, d):
+                        c = d * integer_quotient(c, d) + c % d
                     obtain f from exist r Z st {c = d * r + c % d}
                     c = d * f + c % d = d * f = f * d
 
                     witness exist t Z st {e * f * d = t * d} from e * f
-                    by thm basics::integer_mod_eq_remainder_of_quotient_remainder(e * f * d, d, e * f, 0)
+                    0 < d
+                    e * f * d = d * (e * f) + 0
                     (e * f * d) % d = 0
 
                     n + 1 = e * c = e * (f * d) = (e * f) * d
-                    by thm basics::integer_mod_eq_remainder_of_quotient_remainder(n + 1, d, e * f, 0)
+                    0 < d
+                    n + 1 = d * (e * f) + 0
                     (n + 1) % d = 0
                     witness exist k N_pos st {$citation::prime(k), (n + 1) % k = 0} from d:
                         (n + 1) % d = 0
@@ -173,7 +180,7 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}
         case k <= a:
             product(1, a, fn(x N_pos) N_pos {x}) % k = 0
             2 <= k
-            by thm basics::integer_mod_add(product(1, a, fn(x N_pos) N_pos {x}), 1, k)
+            (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k
             by thm basics::one_mod_eq_one_of_two_le(k)
             (0 + 1) % k = 1 % k = 1
             (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
@@ -460,21 +467,24 @@ sketch:
     by contra not 2^(1/2) $in Q:
         by thm citation::positive_rational_has_reduced_gcd_fraction(2^(1/2))
         obtain p, q from exist p, q N_pos st {2^(1/2) = p / q, citation::gcd(p, q) = 1}
-        by thm basics::positive_real_power_of_power(2, 1 / 2, 2)
+        (2^(1 / 2))^2 = 2^(1 / 2 * 2)
         p^2 / q^2 = (p/q)^2 = (2^(1/2))^2 = 2^(1/2 * 2) = 2^(1) = 2
         p^2 = 2 * q^2
         witness exist k Z st {p^2 = 2 * k} from q^2
-        by thm basics::integer_mod_eq_remainder_of_quotient_remainder(p^2, 2, q^2, 0)
+        0 < 2
+        p^2 = 2 * q^2 + 0
         p^2 % 2 = 0
         by thm citation::prime_two(2)
         by thm citation::prime_divides_square(2, p)
         p % 2 = 0
-        by thm basics::integer_mod_quotient_remainder(p, 2)
+        witness exist q Z st {p = 2 * q + p % 2} from integer_quotient(p, 2):
+            p = 2 * integer_quotient(p, 2) + p % 2
         obtain c from exist k Z st {p = 2 * k + p % 2}
         p = 2 * c + p % 2 = 2 * c
         q^2 = p^2 / 2 = (2 * c)^2 / 2 = 4 * c^2 / 2 = 2 * c^2
         witness exist k Z st {q^2 = 2 * k} from c^2
-        by thm basics::integer_mod_eq_remainder_of_quotient_remainder(q^2, 2, c^2, 0)
+        0 < 2
+        q^2 = 2 * c^2 + 0
         q^2 % 2= 0
         by thm citation::prime_divides_square(2, q)
         q % 2 = 0

@@ -1596,7 +1596,11 @@ sketch:
             case n % 2 = 1:
                 (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
                 n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
-        by thm basics::natural_mod_zero_has_natural_quotient(n * (n + 1), 2)
+        witness exist q N st {n * (n + 1) = 2 * q} from integer_quotient(n * (n + 1), 2):
+            integer_quotient(n * (n + 1), 2) $in N
+            n * (n + 1) = 2 * integer_quotient(n * (n + 1), 2) + n * (n + 1) % 2
+            n * (n + 1) % 2 = 0
+            n * (n + 1) = 2 * integer_quotient(n * (n + 1), 2)
         obtain r from exist r N st {n * (n + 1) = 2 * r}
         witness exist y N st {2 * y = n * (n + 1)} from r:
             n * (n + 1) = 2 * r
@@ -1645,7 +1649,7 @@ sketch:
             a < b
             =>:
                 tri(a + 1) <= tri(b)
-        by thm basics::integer_successor_le_of_lt(b, a)
+        a + 1 <= b
         2 * tri(a + 1) = (a + 1) * ((a + 1) + 1) <= b * (b + 1) = 2 * tri(b)
         tri(a + 1) = (2 * tri(a + 1)) / 2 <= (2 * tri(b)) / 2 = tri(b)
 
@@ -1720,7 +1724,7 @@ sketch:
             =>:
                 n - tri(s) <= s
         n < tri(s + 1) = tri(s) + s + 1
-        by thm basics::integer_predecessor_le_of_lt(n, tri(s) + s + 1)
+        n <= tri(s) + s + 1 - 1
         n <= (tri(s) + s + 1) - 1 = tri(s) + s
         n - tri(s) <= (tri(s) + s) - tri(s) = s
 

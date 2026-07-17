@@ -846,15 +846,15 @@ thm cauchy_sequence_representative_in_Q_exists:
         $has_cauchy_sequence_representative_in_Q(x)
     trust $has_cauchy_sequence_representative_in_Q(x)
 
-# Background interface.  Rational density supplies an intermediate rational
-# between two ordered real bounds.  It is a local trusted field fact, not a
-# replacement for the chapter's Cauchy-sequence construction of reals.
+# Litex exposes rational density as a builtin rule: every nonempty real
+# interval contains a rational.  Chapter 5 keeps this source-facing theorem
+# so the textbook dependency remains visible without reproving density here.
 thm has_rational_between:
     ? forall x, y R:
         x < y
         =>:
             exist q Q st {x < q < y}
-    trust exist q Q st {x < q < y}
+    exist q Q st {x < q < y}
 
 thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
     ? forall a, b seq(Q), x R:

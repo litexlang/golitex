@@ -41,7 +41,6 @@ pub struct ConfigImport {
     pub name: String,
     pub module_id: ModuleId,
     pub line_file: LineFile,
-    pub trusted: bool,
 }
 
 impl ExportEntry {
@@ -96,7 +95,7 @@ pub struct ModuleRunner {
     pub flattened_export_file: Option<FileId>,
     pub exports: HashMap<String, ExportEntry>,
     pub run_targets: Vec<ImportTarget>,
-    pub trusted_run_targets: HashMap<ImportTarget, LineFile>,
+    pub run_target_lines: HashMap<ImportTarget, LineFile>,
     pub config_imports: Vec<ConfigImport>,
     pub imports: Vec<ModuleId>,
     pub status: ModuleStatus,
@@ -126,7 +125,7 @@ impl ModuleRunner {
             flattened_export_file: None,
             exports: HashMap::new(),
             run_targets: vec![],
-            trusted_run_targets: HashMap::new(),
+            run_target_lines: HashMap::new(),
             config_imports: vec![],
             imports: vec![],
             status,

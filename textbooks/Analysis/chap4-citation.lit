@@ -1,0 +1,17 @@
+# Chapter 4 cited rational-representation interface.
+#
+# The predicate is mirrored so the source-facing local definition remains in
+# Chapter 4 at its original position.  Both definitions unfold to the same
+# coprimality condition when the cited theorem is used.
+
+prop is_reduced_fraction(a Z, b N_pos):
+    forall k N_pos:
+        a % k = 0
+        b % k = 0
+        =>:
+            k = 1
+
+thm rational_has_reduced_fraction:
+    ? forall x Q:
+        exist p Z, q N_pos st {x = p / q, $is_reduced_fraction(p, q)}
+    trust exist p Z, q N_pos st {x = p / q, $is_reduced_fraction(p, q)}

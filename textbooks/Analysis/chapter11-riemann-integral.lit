@@ -9414,7 +9414,7 @@ thm stieltjes_piecewise_constant_as_riemann_integral:
     # of `alpha'`.
     # proof_debt: connect the piecewise-constant Stieltjes sum construction to
     # the Darboux Riemann-Stieltjes integrability definition.
-    trust $is_riemann_stieltjes_integrable_on('[a, b], alpha, f)
+    by thm chap11citation::stieltjes_piecewise_integrable(a, b, alpha, f)
     by thm non_degenerate_interval_forms_are_bounded_intervals(a, b)
     $is_bounded_interval('[a, b])
     by thm piecewise_constant_on_bounded_interval_is_riemann_integrable('[a, b], f)
@@ -9540,7 +9540,7 @@ thm change_of_variables_piecewise_constant:
     # `h=f o phi` is constant; the Stieltjes sum over preimage pieces equals
     # the ordinary Riemann sum over the image pieces.
     # proof_debt: build the preimage partition and prove its interval pieces.
-    trust $is_piecewise_constant_on('[a, b], h)
+    by thm chap11citation::piecewise_constant_on_interval(a, b, h)
     by thm interval_endpoint_forms_are_bounded_intervals(u, v)
     $is_bounded_interval('[u, v])
     by thm piecewise_constant_on_bounded_interval_is_riemann_integrable('[u, v], f)

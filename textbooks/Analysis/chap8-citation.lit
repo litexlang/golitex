@@ -1,0 +1,42 @@
+# Chapter 8 cited countability and well-ordering interfaces.
+
+prop embeds_into(S, T set):
+    exist f fn(x S) T st {$chap3::is_injective_fn(S, T, f)}
+
+prop is_countably_infinite(X set):
+    $chap3::has_equal_cardinality(N, X)
+
+prop is_at_most_countable(X set):
+    $embeds_into(X, N)
+
+prop is_minimum_of_natural_subset(X power_set(N), n N):
+    n $in X
+    forall m X:
+        n <= m
+
+thm infinite_at_most_countable_is_countably_infinite:
+    ? forall X set:
+        $chap3::has_infinite_cardinality(X)
+        $is_at_most_countable(X)
+        =>:
+            $is_countably_infinite(X)
+    trust $is_countably_infinite(X)
+
+thm natural_subset_has_unique_minimum:
+    ? forall X power_set(N):
+        $is_nonempty_set(X)
+        =>:
+            exist! n N st {$is_minimum_of_natural_subset(X, n)}
+    trust exist! n N st {$is_minimum_of_natural_subset(X, n)}
+
+thm consecutive_product_is_even:
+    ? forall n N:
+        exist r N st {n * (n + 1) = 2 * r}
+    trust exist r N st {n * (n + 1) = 2 * r}
+
+thm natural_embedding_gives_infinite_cardinality:
+    ? forall X set:
+        $embeds_into(N, X)
+        =>:
+            $chap3::has_infinite_cardinality(X)
+    trust $chap3::has_infinite_cardinality(X)

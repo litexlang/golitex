@@ -15,6 +15,13 @@ pub enum OutputStyle {
     Detailed,
 }
 
+#[derive(Clone, Debug)]
+pub struct UnverifiedImport {
+    pub kind: String,
+    pub name: String,
+    pub line_file: LineFile,
+}
+
 impl OutputStyle {
     pub fn is_detailed(self) -> bool {
         self == OutputStyle::Detailed
@@ -34,7 +41,7 @@ pub struct Runtime {
     pub strict_mode: bool,
     pub isolated: bool,
     pub output_language: OutputLanguage,
-    pub trusted_import_summary: ProofTrustSummary,
+    pub unverified_imports: Vec<UnverifiedImport>,
 }
 
 impl Runtime {
@@ -50,7 +57,7 @@ impl Runtime {
             strict_mode: false,
             isolated: false,
             output_language: OutputLanguage::English,
-            trusted_import_summary: ProofTrustSummary::new(),
+            unverified_imports: vec![],
         }
     }
 }
@@ -192,9 +199,19 @@ impl Runtime {
         self.current_execution_mode() == ExecutionMode::Trusted
     }
 
-    pub fn record_trusted_import(&mut self, kind: &str, name: String, line_file: LineFile) {
-        self.trusted_import_summary
-            .add_dependency(kind, Some(name), line_file);
+    pub fn record_unverified_import(&mut self, kind: &str, name: String, line_file: LineFile) {
+        if self
+            .unverified_imports
+            .iter()
+            .any(|entry| entry.kind == kind && entry.name == name && entry.line_file == line_file)
+        {
+            return;
+        }
+        self.unverified_imports.push(UnverifiedImport {
+            kind: kind.to_string(),
+            name,
+            line_file,
+        });
     }
 
     fn current_execution_target(&self) -> (ModuleId, ExecutionLayer) {
@@ -325,7 +342,7 @@ impl Runtime {
         self.module_manager = Box::new(ModuleManager::new());
         self.execution_stack.clear();
         self.parsing_free_param_collection.clear();
-        self.trusted_import_summary = ProofTrustSummary::new();
+        self.unverified_imports.clear();
         self.new_file_path_new_env_new_name_scope(path.as_str());
     }
 }

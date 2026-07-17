@@ -213,56 +213,18 @@ sketch:
                     =>:
                         x + y >= -3
                 (x + y)^2 <= (x + y)^2 + (x - y)^2 = 2 * (x^2 + y^2) <= 2 * 4 = 8 <= 9 = 3^2
-                by thm basics::even_power_bound_by_nonnegative_rhs(x + y, 3, 2)
+                abs(x + y) <= abs(3)
+                -3 <= x + y
 
 # The calculation shows `(x + y)^2 <= 3^2`. The known fact about squares then
 # turns that into `x + y >= -3`. This is a typical Litex pattern: write the
 # estimate you would write on paper, and let the previously stated rule bridge
 # from the squared inequality to the final inequality.
 
-# The line
-
-# ```text
-# by thm even_power_bound_by_nonnegative_rhs(x + y, 3, 2)
-# ```
-
-# uses a named theorem from the builtin common facts. Its meaning is that if
-# `(x + y)^2 <= 3^2` and `3 >= 0`, then `x + y` lies between `-3` and `3`. After
-# this theorem call is verified, it releases the concrete facts
-# `-3 <= x + y` and `x + y <= 3`, so the claim can verify the lower bound.
-
-# This is exactly where `thm` is the better interface than an anonymous stored
-# fact: the theorem is important enough to remember by name, and the proof wants
-# to call that one theorem with the specific objects and exponent.
-
-# The Litex kernel defines the corresponding common fact in this shape:
-
-# ```text
-# thm even_power_bound_by_nonnegative_rhs:
-#     prove:
-#         forall x, y R, k N_pos:
-#             k % 2 = 0
-#             x^k <= y^k
-#             y >= 0
-#             =>:
-#                 -y <= x
-#                 x <= y
-# ```
-
-# This theorem also illustrates a useful design pattern for `forall` facts.
-
-# Sometimes a theorem needs parameters that do not all appear in the final
-# conclusion. Here the exponent `2` is needed to match the hypothesis
-# `(x + y)^2 <= 3^2`, but it would not appear in a plain conclusion such as
-# `-3 <= x + y`. If a `forall` has more parameters than its conclusion shows,
-# Litex cannot reliably recover the hidden parameters by matching the goal.
-
-# The usual solution is to give the `forall` fact a theorem name and call it
-# with all the parameters needed for matching. Instead of trying to store a bare
-# rule that concludes `-y <= x` and `x <= y`, the proof calls
-# `by thm even_power_bound_by_nonnegative_rhs(x, y, k)`. The call carries `x`,
-# `y`, and `k` explicitly, then releases the ordinary bounds that the proof
-# needs.
+# The two direct lines use the verifier's even-power and absolute-value order
+# rules. The first records the important bridge from the squared estimate to
+# `abs(x + y) <= abs(3)`; the second turns it into the required lower bound.
+# No named source theorem is needed for this kernel-supported move.
 
 # 4.1.7
 
@@ -725,7 +687,9 @@ sketch:
         by contra not $dvdN(3, 13):
             obtain a from exist k N st {13 = 3 * k}
             witness exist k Z st {13 = 3 * k + 0} from a
-            by thm basics::integer_mod_eq_remainder_of_quotient_remainder(13, 3, a, 0)
+            0 < 3
+            13 = 3 * a + 0
+            13 % 3 = 0
             impossible 13 % 3 = 0
 
 # The witness line writes `13 = 3 * k + 0` on purpose. The builtin modulo facts
@@ -739,7 +703,8 @@ claim:
         a % m = k
         =>:
             exist r Z st {a = m * r + k}
-    by thm basics::integer_mod_quotient_remainder(a, m)
+    witness exist q Z st {a = m * q + a % m} from integer_quotient(a, m):
+        a = m * integer_quotient(a, m) + a % m
     obtain r from exist q Z st {a = m * q + a % m}
     witness exist q Z st {a = m * q + k} from r:
         a = m * r + a % m = m * r + k
@@ -748,10 +713,9 @@ claim:
     ? forall a Z, m N_pos, k N:
         k < m
         exist r Z st {a = m * r + k}
-        =>:
+    =>:
             a % m = k
     obtain r from exist q Z st {a = m * q + k}
-    by thm basics::integer_mod_eq_remainder_of_quotient_remainder(a, m, r, k)
     a % m = k
 
 # 4.5.3
@@ -784,7 +748,7 @@ claim:
 claim:
     ? forall n N:
         n^2 != 2
-    by thm basics::integer_le_or_ge_successor(n, 1)
+    n <= 1 or n >= 1 + 1
     by cases:
         ? n^2 != 2
         case n <= 1:

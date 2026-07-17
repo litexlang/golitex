@@ -1,0 +1,8 @@
+# Chapter 10 differentiation citations.
+
+thm lhopital_second_quotient_limit:
+    ? forall a, L R, b R, f, g fn(x '(a, b]) R:
+        $chap9::has_function_limit('(a, b], fn(x '(a, b]) R {df(x) / dg(x)}, a, L)
+        =>:
+            $chap9::has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
+    trust $chap9::has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)

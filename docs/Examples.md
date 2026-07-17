@@ -3613,9 +3613,9 @@ These examples are syntax only because they depend on local project files.
   and `[import std]`, direct-child `[export]` entries, and complete configured
   folder contents are validated during discovery; `clear` has no structural
   checks.
-- Truth verification: project entries verify in `[export]` order. A `trust`
-  entry deliberately skips this phase in an ordinary run; strict mode verifies
-  it normally.
+- Truth verification: `[import]`, `[import std]`, and `[export]` entries load
+  trusted by default in an ordinary run. Litex reports each as an
+  `unverified_import`; `-strict` verifies the complete configured load graph.
 - Environment effects: configured imports update the module manager; `clear`
   removes the current user environment. Configured packages remain registered.
 

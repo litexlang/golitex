@@ -24,7 +24,6 @@ pub struct ProjectImport {
     pub name: String,
     pub path: String,
     pub line: usize,
-    pub trusted: bool,
 }
 
 #[derive(Clone)]
@@ -38,7 +37,6 @@ pub struct ProjectExport {
     pub name: String,
     pub path: String,
     pub line: usize,
-    pub trusted: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -158,33 +156,33 @@ pub fn parse_project_config(
                     return Err(config_error(
                         config_path,
                         line,
-                        "[import] expects `name = \"path\"` or `trust name = \"path\"`",
+                        "[import] expects `name = \"path\"`",
                     ));
                 };
                 let raw_key = raw_key.trim();
-                let (trusted, key) = if let Some(name) = raw_key.strip_prefix("trust ") {
-                    (true, name.trim())
-                } else {
-                    (false, raw_key)
-                };
+                if raw_key.starts_with("trust ") {
+                    return Err(config_trust_removed_error(config_path, line));
+                }
                 let value = parse_quoted_path(raw_value.trim(), config_path, line)?;
-                is_valid_litex_name(key)
+                is_valid_litex_name(raw_key)
                     .map_err(|message| config_error(config_path, line, message.as_str()))?;
-                if !import_names.insert(key.to_string()) {
+                if !import_names.insert(raw_key.to_string()) {
                     return Err(config_error(
                         config_path,
                         line,
-                        format!("duplicate import name `{}`", key).as_str(),
+                        format!("duplicate import name `{}`", raw_key).as_str(),
                     ));
                 }
                 imports.push(ProjectImport {
-                    name: key.to_string(),
+                    name: raw_key.to_string(),
                     path: value,
                     line,
-                    trusted,
                 });
             }
             Some(ConfigTable::ImportStd) => {
+                if text.starts_with("trust ") {
+                    return Err(config_trust_removed_error(config_path, line));
+                }
                 if text.contains('=') || text.split_whitespace().count() != 1 {
                     return Err(config_error(
                         config_path,
@@ -211,30 +209,27 @@ pub fn parse_project_config(
                     return Err(config_error(
                         config_path,
                         line,
-                        "[export] expects `name = \"path\"` or `trust name = \"path\"`",
+                        "[export] expects `name = \"path\"`",
                     ));
                 };
                 let raw_key = raw_key.trim();
-                let (trusted, key) = if let Some(name) = raw_key.strip_prefix("trust ") {
-                    (true, name.trim())
-                } else {
-                    (false, raw_key)
-                };
+                if raw_key.starts_with("trust ") {
+                    return Err(config_trust_removed_error(config_path, line));
+                }
                 let value = parse_quoted_path(raw_value.trim(), config_path, line)?;
-                is_valid_litex_name(key)
+                is_valid_litex_name(raw_key)
                     .map_err(|message| config_error(config_path, line, message.as_str()))?;
-                if !export_names.insert(key.to_string()) {
+                if !export_names.insert(raw_key.to_string()) {
                     return Err(config_error(
                         config_path,
                         line,
-                        format!("duplicate export name `{}`", key).as_str(),
+                        format!("duplicate export name `{}`", raw_key).as_str(),
                     ));
                 }
                 exports.push(ProjectExport {
-                    name: key.to_string(),
+                    name: raw_key.to_string(),
                     path: value,
                     line,
-                    trusted,
                 });
             }
             None => return Err(config_error(
@@ -358,23 +353,29 @@ fn config_error(config_path: &str, line: usize, message: &str) -> RuntimeError {
     .into()
 }
 
+fn config_trust_removed_error(config_path: &str, line: usize) -> RuntimeError {
+    config_error(
+        config_path,
+        line,
+        "`trust` has been removed from litex.config: imports and exports are trusted by default. Remove `trust`; use `litex -strict` to verify loaded code",
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn parses_an_ordered_export_plan_with_trusted_entries() {
+    fn parses_an_ordered_export_plan() {
         let config = parse_project_config(
-            "[hierarchy]\nmodule\n\n[export]\nchapter1 = \"./chapter01.lit\"\ntrust Algebra = \"./Algebra\"\n",
+            "[hierarchy]\nmodule\n\n[export]\nchapter1 = \"./chapter01.lit\"\nAlgebra = \"./Algebra\"\n",
             "litex.config",
         )
         .expect("parse ordered export plan");
         assert_eq!(config.hierarchy, ProjectHierarchy::Module);
         assert_eq!(config.exports.len(), 2);
         assert_eq!(config.exports[0].name, "chapter1");
-        assert!(!config.exports[0].trusted);
         assert_eq!(config.exports[1].name, "Algebra");
-        assert!(config.exports[1].trusted);
     }
 
     #[test]
@@ -413,7 +414,7 @@ mod tests {
             ),
             (
                 "[hierarchy]\nmodule\n\n[import std]\ntrust basics\n\n[export]\nmain = \"./main.lit\"\n",
-                "expects exactly one standard package name",
+                "`trust` has been removed from litex.config",
             ),
             (
                 "[hierarchy]\nmodule\n\n[import std]\nbasics number_theory\n\n[export]\nmain = \"./main.lit\"\n",
@@ -493,6 +494,14 @@ mod tests {
                 "[requires] has been removed",
             ),
             ("[run]\n./main.lit\n", "[run] has been removed"),
+            (
+                "[hierarchy]\nmodule\n\n[import]\ntrust Algebra = \"../algebra\"\n\n[export]\nmain = \"./main.lit\"\n",
+                "`trust` has been removed from litex.config",
+            ),
+            (
+                "[hierarchy]\nmodule\n\n[export]\ntrust main = \"./main.lit\"\n",
+                "`trust` has been removed from litex.config",
+            ),
         ] {
             let Err(error) = parse_project_config(source, "litex.config") else {
                 panic!("removed configuration syntax must be rejected");
