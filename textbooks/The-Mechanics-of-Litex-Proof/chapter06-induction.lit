@@ -156,7 +156,7 @@ sketch:
     # The base residue is `1`. Multiplying a residue `1` by `4` gives `4`,
     # while multiplying a residue `4` gives `16`, which is congruent to `1`.
     claim:
-        forall n N:
+        ? forall n N:
             $residue_is_one_or_four(n)
         by induc n from 0:
             ? $residue_is_one_or_four(n)
@@ -243,7 +243,7 @@ sketch:
     # Start at `4`. In the step, `m^2 >= 4m` makes the difference
     # `2m^2 - (m+1)^2` positive, so doubling the induction bound is enough.
     claim:
-        $sufficiently_large_power_bound(4)
+        ? $sufficiently_large_power_bound(4)
         by induc n from 4:
             ? 2^n >= n^2
             2^4 = 16 = 4^2
@@ -537,7 +537,7 @@ sketch:
     # Expand each successor power, then collect the two `2^m` terms and the
     # two alternating-sign terms.
     claim:
-        forall m Z:
+        ? forall m Z:
             m >= 0
             =>:
                 2^(m + 1) + (-1)^(m + 1) + 2 * (2^m + (-1)^m) = 2^(m + 2) + (-1)^(m + 2)
@@ -809,7 +809,7 @@ sketch:
     # The sign changes when the exponent increases by one; this is the
     # successor-power rule for the base `-1`.
     claim:
-        forall m Z:
+        ? forall m Z:
             -1 * (-((-1)^m)) = -((-1)^(m + 1))
         -1 * (-((-1)^m)) = -((-1)^(m + 1))
 

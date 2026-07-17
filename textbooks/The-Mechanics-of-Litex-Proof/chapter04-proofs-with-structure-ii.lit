@@ -713,7 +713,7 @@ claim:
     ? forall a Z, m N_pos, k N:
         k < m
         exist r Z st {a = m * r + k}
-    =>:
+        =>:
             a % m = k
     obtain r from exist q Z st {a = m * q + k}
     a % m = k

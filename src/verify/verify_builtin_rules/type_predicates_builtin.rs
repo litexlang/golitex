@@ -528,12 +528,6 @@ impl Runtime {
         is_finite_set_fact: &IsFiniteSetFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(result) =
-            self.try_verify_subset_of_finite_set_is_finite(is_finite_set_fact, _verify_state)?
-        {
-            return Ok(result);
-        }
-
         match &is_finite_set_fact.set {
             Obj::ListSet(_) => Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -788,63 +782,6 @@ impl Runtime {
             }
             _ => Ok((StmtUnknown::new()).into()),
         }
-    }
-
-    // A subset of a finite set is finite.
-    // Example: from `A $subset B` and `$is_finite_set(B)`, prove `$is_finite_set(A)`.
-    fn try_verify_subset_of_finite_set_is_finite(
-        &mut self,
-        is_finite_set_fact: &IsFiniteSetFact,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let mut subset_candidates = Vec::new();
-        for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
-                for known_fact in known_facts_map.values() {
-                    let AtomicFact::SubsetFact(subset_fact) = known_fact else {
-                        continue;
-                    };
-                    if subset_fact.left.to_string() == is_finite_set_fact.set.to_string() {
-                        subset_candidates.push(known_fact.clone());
-                    }
-                }
-            }
-        }
-
-        for subset_candidate in subset_candidates {
-            let AtomicFact::SubsetFact(subset_fact) = &subset_candidate else {
-                unreachable!();
-            };
-            let subset_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&subset_candidate)?;
-            if !subset_result.is_true() {
-                continue;
-            }
-
-            let container_finite: AtomicFact = IsFiniteSetFact::new(
-                subset_fact.right.clone(),
-                is_finite_set_fact.line_file.clone(),
-            )
-            .into();
-            let container_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &container_finite,
-                verify_state,
-            )?;
-            if !container_result.is_true() {
-                continue;
-            }
-
-            return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    is_finite_set_fact.clone().into(),
-                    "finite_set_subset_is_finite".to_string(),
-                    vec![subset_result, container_result],
-                )
-                .into(),
-            ));
-        }
-
-        Ok(None)
     }
 
     pub fn _verify_is_cart_fact_with_builtin_rules(

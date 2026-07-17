@@ -1,5 +1,6 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
+use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
 
 impl Runtime {
     // The nonnegative / positive cone under field operations is checked here on normalized
@@ -56,6 +57,11 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_finite_set_size_subset_le(atomic_fact, &vs)? {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_finite_set_size_union_or_set_diff_le_sum(atomic_fact, &vs)?
+        {
             return Ok(result);
         }
         if let Some(result) =
@@ -737,20 +743,22 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let AtomicFact::LessEqualFact(less_equal_fact) = atomic_fact else {
+        let (left_size, right_size, line_file) = match atomic_fact {
+            AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right, fact.line_file.clone()),
+            AtomicFact::GreaterEqualFact(fact) => (&fact.right, &fact.left, fact.line_file.clone()),
+            _ => return Ok(None),
+        };
+        let Obj::FiniteSetSize(left_size) = left_size else {
             return Ok(None);
         };
-        let Obj::FiniteSetSize(left_size) = &less_equal_fact.left else {
-            return Ok(None);
-        };
-        let Obj::FiniteSetSize(right_size) = &less_equal_fact.right else {
+        let Obj::FiniteSetSize(right_size) = right_size else {
             return Ok(None);
         };
 
         let subset: AtomicFact = SubsetFact::new(
             left_size.set.as_ref().clone(),
             right_size.set.as_ref().clone(),
-            less_equal_fact.line_file.clone(),
+            line_file.clone(),
         )
         .into();
         let subset_result =
@@ -759,22 +767,16 @@ impl Runtime {
             return Ok(None);
         }
 
-        let left_finite: AtomicFact = IsFiniteSetFact::new(
-            left_size.set.as_ref().clone(),
-            less_equal_fact.line_file.clone(),
-        )
-        .into();
+        let left_finite: AtomicFact =
+            IsFiniteSetFact::new(left_size.set.as_ref().clone(), line_file.clone()).into();
         let left_result =
             self.verify_non_equational_known_then_builtin_rules_only(&left_finite, verify_state)?;
         if !left_result.is_true() {
             return Ok(None);
         }
 
-        let right_finite: AtomicFact = IsFiniteSetFact::new(
-            right_size.set.as_ref().clone(),
-            less_equal_fact.line_file.clone(),
-        )
-        .into();
+        let right_finite: AtomicFact =
+            IsFiniteSetFact::new(right_size.set.as_ref().clone(), line_file).into();
         let right_result =
             self.verify_non_equational_known_then_builtin_rules_only(&right_finite, verify_state)?;
         if !right_result.is_true() {
@@ -787,6 +789,75 @@ impl Runtime {
                 InferResult::new(),
                 "finite_set_size_subset_le".to_string(),
                 vec![subset_result, left_result, right_result],
+            )
+            .into(),
+        ))
+    }
+
+    // A union or symmetric difference has at most the sum of its two finite inputs.
+    // Examples: `finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)`
+    // and `finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)`.
+    fn try_verify_finite_set_size_union_or_set_diff_le_sum(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (smaller, larger, line_file) = match atomic_fact {
+            AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right, fact.line_file.clone()),
+            AtomicFact::GreaterEqualFact(fact) => (&fact.right, &fact.left, fact.line_file.clone()),
+            _ => return Ok(None),
+        };
+        let Obj::FiniteSetSize(combined_size) = smaller else {
+            return Ok(None);
+        };
+        let Obj::Add(sum) = larger else {
+            return Ok(None);
+        };
+        let Obj::FiniteSetSize(left_size) = sum.left.as_ref() else {
+            return Ok(None);
+        };
+        let Obj::FiniteSetSize(right_size) = sum.right.as_ref() else {
+            return Ok(None);
+        };
+
+        let (left_set, right_set, rule) = match combined_size.set.as_ref() {
+            Obj::Union(union) => (
+                union.left.as_ref().clone(),
+                union.right.as_ref().clone(),
+                "finite_set_size_union_le_sum",
+            ),
+            Obj::SetDiff(set_diff) => (
+                set_diff.left.as_ref().clone(),
+                set_diff.right.as_ref().clone(),
+                "finite_set_size_set_diff_le_sum",
+            ),
+            _ => return Ok(None),
+        };
+        if !verify_equality_by_they_are_the_same(&left_set, &left_size.set)
+            || !verify_equality_by_they_are_the_same(&right_set, &right_size.set)
+        {
+            return Ok(None);
+        }
+
+        let left_finite: AtomicFact = IsFiniteSetFact::new(left_set, line_file.clone()).into();
+        let left_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&left_finite, verify_state)?;
+        if !left_result.is_true() {
+            return Ok(None);
+        }
+        let right_finite: AtomicFact = IsFiniteSetFact::new(right_set, line_file).into();
+        let right_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&right_finite, verify_state)?;
+        if !right_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                atomic_fact.clone().into(),
+                InferResult::new(),
+                rule.to_string(),
+                vec![left_result, right_result],
             )
             .into(),
         ))

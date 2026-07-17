@@ -1,3 +1,17 @@
+# Small shared mathematical interfaces.
+#
+# Public finite-extrema API:
+#   finite_set_max, finite_set_min
+#   finite_set_max_singleton, finite_set_min_singleton
+#   finite_set_max_remove, finite_set_min_remove
+#
+# Names beginning with `_` are construction details: they prove unique existence for the two
+# selectors.  New clients should use the six names above.
+
+# ---------------------------------------------------------------------------
+# Named real constants
+# ---------------------------------------------------------------------------
+# Their mathematical constructions remain explicit proof debt for now.
 
 trust have pi R:
     pi > 0
@@ -5,427 +19,19 @@ trust have pi R:
 trust have euler_e R:
     euler_e > 0
 
-prop finite_nonempty_set(s power_set(R)):
-    $is_finite_set(s)
-    $is_nonempty_set(s)
-
-# Finite real extrema are source-level library mathematics.  The subset facts
-# below retain the real carrier while the finite-set induction exposes an
-# arbitrary intermediate finite set.
-prop is_maximum_of_finite_real_set(S finite_set, m R):
-    S $subset R
-    m $in S
-    forall n S:
-        n <= m
-
-prop has_maximum_of_finite_real_set(S finite_set):
-    exist m R st {$is_maximum_of_finite_real_set(S, m)}
-
-thm union_of_R_subsets_is_R_subset:
-    ? forall A, B set:
-        A $subset R
-        B $subset R
+# A subset of a finite set is finite. This is a standard-library axiom rather
+# than a verifier builtin, so ordinary theorem matching supplies the fact.
+axiom subset_of_finite_set_is_finite:
+    ? forall A set, B finite_set:
+        A $subset B
         =>:
-            union(A, B) $subset R
-    claim:
-        ? forall z union(A, B):
-            z $in R
-        z $in union(A, B)
-        z $in A or z $in B
-        by cases:
-            ? z $in R
-            case z $in A:
-                z $in R
-            case z $in B:
-                z $in R
-    union(A, B) $subset R
+            $is_finite_set(A)
 
-thm singleton_of_R_is_R_subset:
-    ? forall x R:
-        {x} $subset R
-    claim:
-        ? forall y {x}:
-            y $in R
-        y = x
-        x $in R
-        y $in R
-    {x} $subset R
-
-thm insertion_of_real_maximum:
-    ? forall x R, T finite_set:
-        $has_maximum_of_finite_real_set(T)
-        =>:
-            $has_maximum_of_finite_real_set(union({x}, T))
-    obtain m from exist m R st {$is_maximum_of_finite_real_set(T, m)}
-    x <= m or x > m
-    by cases:
-        ? $has_maximum_of_finite_real_set(union({x}, T))
-        case x <= m:
-            witness exist q R st {$is_maximum_of_finite_real_set(union({x}, T), q)} from m:
-                by thm singleton_of_R_is_R_subset(x)
-                {x} $subset R
-                by thm union_of_R_subsets_is_R_subset({x}, T)
-                union({x}, T) $subset R
-                m $in T
-                m $in union({x}, T)
-                claim:
-                    ? forall y union({x}, T):
-                        y <= m
-                    y $in union({x}, T)
-                    y $in {x} or y $in T
-                    by cases:
-                        ? y <= m
-                        case y $in {x}:
-                            y = x
-                            y <= m
-                        case y $in T:
-                            forall n T:
-                                n <= m
-                            y <= m
-                $is_maximum_of_finite_real_set(union({x}, T), m)
-        case x > m:
-            witness exist q R st {$is_maximum_of_finite_real_set(union({x}, T), q)} from x:
-                by thm singleton_of_R_is_R_subset(x)
-                {x} $subset R
-                by thm union_of_R_subsets_is_R_subset({x}, T)
-                union({x}, T) $subset R
-                x $in union({x}, T)
-                claim:
-                    ? forall y union({x}, T):
-                        y <= x
-                    y $in union({x}, T)
-                    y $in {x} or y $in T
-                    by cases:
-                        ? y <= x
-                        case y $in {x}:
-                            y = x
-                            y <= x
-                        case y $in T:
-                            forall n T:
-                                n <= m
-                            y <= m < x
-                            y <= x
-                $is_maximum_of_finite_real_set(union({x}, T), x)
-
-thm insertion_into_empty_real_has_maximum:
-    ? forall x R:
-        $has_maximum_of_finite_real_set(union({x}, {}))
-    witness exist q R st {$is_maximum_of_finite_real_set(union({x}, {}), q)} from x:
-        by thm singleton_of_R_is_R_subset(x)
-        {x} $subset R
-        {} $subset R
-        by thm union_of_R_subsets_is_R_subset({x}, {})
-        union({x}, {}) $subset R
-        x $in union({x}, {})
-        claim:
-            ? forall y union({x}, {}):
-                y <= x
-            y $in union({x}, {})
-            y $in {x} or y $in {}
-            by cases:
-                ? y <= x
-                case y $in {x}:
-                    y = x
-                    y <= x
-                case y $in {}:
-                    impossible y $in {}
-        $is_maximum_of_finite_real_set(union({x}, {}), x)
-
-thm finite_nonempty_real_set_has_maximum_by_induction:
-    ? forall S finite_set:
-        S $subset R
-        $is_nonempty_set(S)
-        =>:
-            $has_maximum_of_finite_real_set(S)
-    by induc P in S:
-        ? P = {} or $has_maximum_of_finite_real_set(P)
-        ? from P = {}:
-            P = {}
-        ? induc x, T:
-            T = {} or $has_maximum_of_finite_real_set(T)
-            by cases:
-                ? union({x}, T) = {} or $has_maximum_of_finite_real_set(union({x}, T))
-                case T = {}:
-                    union({x}, T) = union({x}, {})
-                    by thm insertion_into_empty_real_has_maximum(x)
-                    $has_maximum_of_finite_real_set(union({x}, T))
-                case $has_maximum_of_finite_real_set(T):
-                    T $subset R
-                    by thm insertion_of_real_maximum(x, T)
-                    $has_maximum_of_finite_real_set(union({x}, T))
-    S = {} or $has_maximum_of_finite_real_set(S)
-    by cases:
-        ? $has_maximum_of_finite_real_set(S)
-        case S = {}:
-            have a S
-            a $in S
-            a $in {}
-            impossible a $in {}
-        case $has_maximum_of_finite_real_set(S):
-            $has_maximum_of_finite_real_set(S)
-
-thm finite_nonempty_real_set_has_maximum:
-    ? forall S power_set(R):
-        $finite_nonempty_set(S)
-        =>:
-            exist m R st {$is_maximum_of_finite_real_set(S, m)}
-    $is_finite_set(S)
-    $is_nonempty_set(S)
-    S $subset R
-    by thm finite_nonempty_real_set_has_maximum_by_induction(S)
-    $has_maximum_of_finite_real_set(S)
-    obtain m from exist m R st {$is_maximum_of_finite_real_set(S, m)}
-    witness exist q R st {$is_maximum_of_finite_real_set(S, q)} from m:
-        $is_maximum_of_finite_real_set(S, m)
-
-thm finite_nonempty_real_set_has_unique_maximum:
-    ? forall S power_set(R):
-        $finite_nonempty_set(S)
-        =>:
-            exist! m R st {$is_maximum_of_finite_real_set(S, m)}
-    $is_finite_set(S)
-    $is_nonempty_set(S)
-    S $subset R
-    by thm finite_nonempty_real_set_has_maximum(S)
-    obtain m from exist m R st {$is_maximum_of_finite_real_set(S, m)}
-    claim:
-        ? forall m1, m2 R:
-            $is_maximum_of_finite_real_set(S, m1)
-            $is_maximum_of_finite_real_set(S, m2)
-            =>:
-                m1 = m2
-        m1 $in S
-        m2 $in S
-        forall n S:
-            n <= m1
-        forall n S:
-            n <= m2
-        m1 <= m2 <= m1
-        m1 = m2
-    exist! m R st {$is_maximum_of_finite_real_set(S, m)}
-
-have fn max_of_finite_set by exist!:
-    ? forall S power_set(R):
-        $finite_nonempty_set(S)
-        =>:
-            exist! m R st {$is_maximum_of_finite_real_set(S, m)}
-    by thm finite_nonempty_real_set_has_unique_maximum(S)
-
-thm max_of_finite_set_is_maximum:
-    ? forall S power_set(R):
-        $finite_nonempty_set(S)
-        =>:
-            $is_maximum_of_finite_real_set(S, max_of_finite_set(S))
-    $is_maximum_of_finite_real_set(S, max_of_finite_set(S))
-
-thm max_of_finite_set_is_member:
-    ? forall S power_set(R):
-        $finite_nonempty_set(S)
-        =>:
-            max_of_finite_set(S) $in S
-    by thm max_of_finite_set_is_maximum(S)
-    max_of_finite_set(S) $in S
-
-thm member_le_max_of_finite_set:
-    ? forall S power_set(R), item S:
-        $finite_nonempty_set(S)
-        =>:
-            item <= max_of_finite_set(S)
-    by thm max_of_finite_set_is_maximum(S)
-    item <= max_of_finite_set(S)
-
-prop is_minimum_of_finite_real_set(S finite_set, m R):
-    S $subset R
-    m $in S
-    forall n S:
-        m <= n
-
-prop has_minimum_of_finite_real_set(S finite_set):
-    exist m R st {$is_minimum_of_finite_real_set(S, m)}
-
-thm insertion_of_real_minimum:
-    ? forall x R, T finite_set:
-        $has_minimum_of_finite_real_set(T)
-        =>:
-            $has_minimum_of_finite_real_set(union({x}, T))
-    obtain m from exist m R st {$is_minimum_of_finite_real_set(T, m)}
-    m <= x or m > x
-    by cases:
-        ? $has_minimum_of_finite_real_set(union({x}, T))
-        case m <= x:
-            witness exist q R st {$is_minimum_of_finite_real_set(union({x}, T), q)} from m:
-                by thm singleton_of_R_is_R_subset(x)
-                {x} $subset R
-                by thm union_of_R_subsets_is_R_subset({x}, T)
-                union({x}, T) $subset R
-                m $in T
-                m $in union({x}, T)
-                claim:
-                    ? forall y union({x}, T):
-                        m <= y
-                    y $in union({x}, T)
-                    y $in {x} or y $in T
-                    by cases:
-                        ? m <= y
-                        case y $in {x}:
-                            y = x
-                            m <= x = y
-                        case y $in T:
-                            forall n T:
-                                m <= n
-                            m <= y
-                $is_minimum_of_finite_real_set(union({x}, T), m)
-        case m > x:
-            witness exist q R st {$is_minimum_of_finite_real_set(union({x}, T), q)} from x:
-                by thm singleton_of_R_is_R_subset(x)
-                {x} $subset R
-                by thm union_of_R_subsets_is_R_subset({x}, T)
-                union({x}, T) $subset R
-                x $in union({x}, T)
-                claim:
-                    ? forall y union({x}, T):
-                        x <= y
-                    y $in union({x}, T)
-                    y $in {x} or y $in T
-                    by cases:
-                        ? x <= y
-                        case y $in {x}:
-                            y = x
-                            x <= y
-                        case y $in T:
-                            forall n T:
-                                m <= n
-                            x < m <= y
-                            x <= y
-                $is_minimum_of_finite_real_set(union({x}, T), x)
-
-thm insertion_into_empty_real_has_minimum:
-    ? forall x R:
-        $has_minimum_of_finite_real_set(union({x}, {}))
-    witness exist q R st {$is_minimum_of_finite_real_set(union({x}, {}), q)} from x:
-        by thm singleton_of_R_is_R_subset(x)
-        {x} $subset R
-        {} $subset R
-        by thm union_of_R_subsets_is_R_subset({x}, {})
-        union({x}, {}) $subset R
-        x $in union({x}, {})
-        claim:
-            ? forall y union({x}, {}):
-                x <= y
-            y $in union({x}, {})
-            y $in {x} or y $in {}
-            by cases:
-                ? x <= y
-                case y $in {x}:
-                    y = x
-                    x <= y
-                case y $in {}:
-                    impossible y $in {}
-        $is_minimum_of_finite_real_set(union({x}, {}), x)
-
-thm finite_nonempty_real_set_has_minimum_by_induction:
-    ? forall S finite_set:
-        S $subset R
-        $is_nonempty_set(S)
-        =>:
-            $has_minimum_of_finite_real_set(S)
-    by induc P in S:
-        ? P = {} or $has_minimum_of_finite_real_set(P)
-        ? from P = {}:
-            P = {}
-        ? induc x, T:
-            T = {} or $has_minimum_of_finite_real_set(T)
-            by cases:
-                ? union({x}, T) = {} or $has_minimum_of_finite_real_set(union({x}, T))
-                case T = {}:
-                    union({x}, T) = union({x}, {})
-                    by thm insertion_into_empty_real_has_minimum(x)
-                    $has_minimum_of_finite_real_set(union({x}, T))
-                case $has_minimum_of_finite_real_set(T):
-                    T $subset R
-                    by thm insertion_of_real_minimum(x, T)
-                    $has_minimum_of_finite_real_set(union({x}, T))
-    S = {} or $has_minimum_of_finite_real_set(S)
-    by cases:
-        ? $has_minimum_of_finite_real_set(S)
-        case S = {}:
-            have a S
-            a $in S
-            a $in {}
-            impossible a $in {}
-        case $has_minimum_of_finite_real_set(S):
-            $has_minimum_of_finite_real_set(S)
-
-thm finite_nonempty_real_set_has_minimum:
-    ? forall S power_set(R):
-        $finite_nonempty_set(S)
-        =>:
-            exist m R st {$is_minimum_of_finite_real_set(S, m)}
-    $is_finite_set(S)
-    $is_nonempty_set(S)
-    S $subset R
-    by thm finite_nonempty_real_set_has_minimum_by_induction(S)
-    $has_minimum_of_finite_real_set(S)
-    obtain m from exist m R st {$is_minimum_of_finite_real_set(S, m)}
-    witness exist q R st {$is_minimum_of_finite_real_set(S, q)} from m:
-        $is_minimum_of_finite_real_set(S, m)
-
-thm finite_nonempty_real_set_has_unique_minimum:
-    ? forall S power_set(R):
-        $finite_nonempty_set(S)
-        =>:
-            exist! m R st {$is_minimum_of_finite_real_set(S, m)}
-    $is_finite_set(S)
-    $is_nonempty_set(S)
-    S $subset R
-    by thm finite_nonempty_real_set_has_minimum(S)
-    obtain m from exist m R st {$is_minimum_of_finite_real_set(S, m)}
-    claim:
-        ? forall m1, m2 R:
-            $is_minimum_of_finite_real_set(S, m1)
-            $is_minimum_of_finite_real_set(S, m2)
-            =>:
-                m1 = m2
-        m1 $in S
-        m2 $in S
-        forall n S:
-            m1 <= n
-        forall n S:
-            m2 <= n
-        m1 <= m2 <= m1
-        m1 = m2
-    exist! m R st {$is_minimum_of_finite_real_set(S, m)}
-
-have fn min_of_finite_set by exist!:
-    ? forall S power_set(R):
-        $finite_nonempty_set(S)
-        =>:
-            exist! m R st {$is_minimum_of_finite_real_set(S, m)}
-    by thm finite_nonempty_real_set_has_unique_minimum(S)
-
-thm min_of_finite_set_is_minimum:
-    ? forall S power_set(R):
-        $finite_nonempty_set(S)
-        =>:
-            $is_minimum_of_finite_real_set(S, min_of_finite_set(S))
-    $is_minimum_of_finite_real_set(S, min_of_finite_set(S))
-
-thm min_of_finite_set_is_member:
-    ? forall S power_set(R):
-        $finite_nonempty_set(S)
-        =>:
-            min_of_finite_set(S) $in S
-    by thm min_of_finite_set_is_minimum(S)
-    min_of_finite_set(S) $in S
-
-thm min_of_finite_set_le_member:
-    ? forall S power_set(R), item S:
-        $finite_nonempty_set(S)
-        =>:
-            min_of_finite_set(S) <= item
-    by thm min_of_finite_set_is_minimum(S)
-    min_of_finite_set(S) <= item
-
+# ---------------------------------------------------------------------------
+# Rational normalization
+# ---------------------------------------------------------------------------
+# This interface is independent of finite extrema and remains here because the
+# Mechanics number-theory citation currently uses it.
 # A reduced fraction has no positive common divisor other than 1.
 prop is_reduced_fraction(a Z, b N_pos):
     forall k N_pos:
@@ -441,94 +47,26 @@ thm rational_has_unique_reduced_fraction:
         exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
     trust exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
 
-trust:
-    forall A finite_set, B set:
-        B $subset A
-        =>:
-            $is_finite_set(B)
-            finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)
-
-    forall A, B finite_set:
-        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
-        finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
-        finite_set_size(B) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(B, A))
-        finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
-
-    forall A, B finite_set:
-        A $subset B
-        =>:
-            finite_set_size(A) <= finite_set_size(B)
-
-    forall A, B finite_set:
-        A $superset B
-        =>:
-            finite_set_size(A) >= finite_set_size(B)
-
-    forall A, B finite_set:
-        finite_set_size(intersect(A, B)) <= finite_set_size(A)
-        finite_set_size(intersect(A, B)) <= finite_set_size(B)
-        finite_set_size(set_minus(A, B)) <= finite_set_size(A)
-        finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
-        finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
-
-# The anonymous finite-set facts above are the implementation boundary for
-# these explicit package interfaces. Callers use `by thm basics::...` rather
-# than relying on an imported package to inject facts into bare-name lookup.
-thm subset_of_finite_set_is_finite:
-    ? forall A set, B finite_set:
-        A $subset B
-        =>:
-            $is_finite_set(A)
-    $is_finite_set(A)
-
-thm finite_set_size_union:
-    ? forall A, B finite_set:
-        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
-    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
-
-thm finite_set_size_set_diff:
-    ? forall A, B finite_set:
-        finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
-    finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
-
-thm finite_set_size_intersect_le_left:
-    ? forall A, B finite_set:
-        finite_set_size(intersect(A, B)) <= finite_set_size(A)
-    finite_set_size(intersect(A, B)) <= finite_set_size(A)
-
-thm finite_set_size_intersect_le_right:
-    ? forall A, B finite_set:
-        finite_set_size(intersect(A, B)) <= finite_set_size(B)
-    finite_set_size(intersect(A, B)) <= finite_set_size(B)
-
-thm finite_set_size_set_minus_le_left:
-    ? forall A, B finite_set:
-        finite_set_size(set_minus(A, B)) <= finite_set_size(A)
-    finite_set_size(set_minus(A, B)) <= finite_set_size(A)
-
-thm finite_set_size_union_le_sum:
-    ? forall A, B finite_set:
-        finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
-    finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
-
-thm finite_set_size_set_diff_le_sum:
-    ? forall A, B finite_set:
-        finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
-    finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
+# ---------------------------------------------------------------------------
+# Finite extrema over N: unique-existence proofs
+# ---------------------------------------------------------------------------
+# These predicates and induction lemmas construct the two selectors below.
+# They are deliberately kept in one contiguous block so the mathematical
+# implementation is inspectable without mixing it with the public API.
 
 # Finite maxima in N are source-level library mathematics, rather than a
 # kernel selection primitive.  `S power_set(N)` carries the subset-of-N part
 # of the interface; finiteness and nonemptiness remain explicit below.
-prop is_maximum_of_finite_N_set(S finite_set, m N):
+prop _is_maximum_of_finite_N_set(S finite_set, m N):
     S $subset N
     m $in S
     forall n S:
         n <= m
 
-prop has_maximum_of_finite_N_set(S finite_set):
-    exist m N st {$is_maximum_of_finite_N_set(S, m)}
+prop _has_maximum_of_finite_N_set(S finite_set):
+    exist m N st {$_is_maximum_of_finite_N_set(S, m)}
 
-thm union_of_N_subsets_is_N_subset:
+thm _union_of_N_subsets_is_N_subset:
     ? forall A, B set:
         A $subset N
         B $subset N
@@ -547,7 +85,7 @@ thm union_of_N_subsets_is_N_subset:
                 z $in N
     union(A, B) $subset N
 
-thm singleton_of_N_is_N_subset:
+thm _singleton_of_N_is_N_subset:
     ? forall x N:
         {x} $subset N
     claim:
@@ -558,21 +96,21 @@ thm singleton_of_N_is_N_subset:
         y $in N
     {x} $subset N
 
-thm insertion_of_N_maximum:
+thm _insertion_of_N_maximum:
     ? forall x N, T finite_set:
         T $subset N
-        $has_maximum_of_finite_N_set(T)
+        $_has_maximum_of_finite_N_set(T)
         =>:
-            $has_maximum_of_finite_N_set(union({x}, T))
-    obtain m from exist m N st {$is_maximum_of_finite_N_set(T, m)}
+            $_has_maximum_of_finite_N_set(union({x}, T))
+    obtain m from exist m N st {$_is_maximum_of_finite_N_set(T, m)}
     x <= m or x > m
     by cases:
-        ? $has_maximum_of_finite_N_set(union({x}, T))
+        ? $_has_maximum_of_finite_N_set(union({x}, T))
         case x <= m:
-            witness exist q N st {$is_maximum_of_finite_N_set(union({x}, T), q)} from m:
-                by thm singleton_of_N_is_N_subset(x)
+            witness exist q N st {$_is_maximum_of_finite_N_set(union({x}, T), q)} from m:
+                by thm _singleton_of_N_is_N_subset(x)
                 {x} $subset N
-                by thm union_of_N_subsets_is_N_subset({x}, T)
+                by thm _union_of_N_subsets_is_N_subset({x}, T)
                 union({x}, T) $subset N
                 m $in union({x}, T)
                 claim:
@@ -589,12 +127,12 @@ thm insertion_of_N_maximum:
                             forall n T:
                                 n <= m
                             y <= m
-                $is_maximum_of_finite_N_set(union({x}, T), m)
+                $_is_maximum_of_finite_N_set(union({x}, T), m)
         case x > m:
-            witness exist q N st {$is_maximum_of_finite_N_set(union({x}, T), q)} from x:
-                by thm singleton_of_N_is_N_subset(x)
+            witness exist q N st {$_is_maximum_of_finite_N_set(union({x}, T), q)} from x:
+                by thm _singleton_of_N_is_N_subset(x)
                 {x} $subset N
-                by thm union_of_N_subsets_is_N_subset({x}, T)
+                by thm _union_of_N_subsets_is_N_subset({x}, T)
                 union({x}, T) $subset N
                 x $in union({x}, T)
                 claim:
@@ -611,16 +149,16 @@ thm insertion_of_N_maximum:
                             forall n T:
                                 n <= m
                             y <= m < x
-                $is_maximum_of_finite_N_set(union({x}, T), x)
+                $_is_maximum_of_finite_N_set(union({x}, T), x)
 
-thm insertion_into_empty_N_has_maximum:
+thm _insertion_into_empty_N_has_maximum:
     ? forall x N:
-        $has_maximum_of_finite_N_set(union({x}, {}))
-    witness exist q N st {$is_maximum_of_finite_N_set(union({x}, {}), q)} from x:
-        by thm singleton_of_N_is_N_subset(x)
+        $_has_maximum_of_finite_N_set(union({x}, {}))
+    witness exist q N st {$_is_maximum_of_finite_N_set(union({x}, {}), q)} from x:
+        by thm _singleton_of_N_is_N_subset(x)
         {x} $subset N
         {} $subset N
-        by thm union_of_N_subsets_is_N_subset({x}, {})
+        by thm _union_of_N_subsets_is_N_subset({x}, {})
         union({x}, {}) $subset N
         x $in union({x}, {})
         claim:
@@ -635,73 +173,74 @@ thm insertion_into_empty_N_has_maximum:
                     y <= x
                 case y $in {}:
                     impossible y $in {}
-        $is_maximum_of_finite_N_set(union({x}, {}), x)
+        $_is_maximum_of_finite_N_set(union({x}, {}), x)
 
-thm finite_nonempty_N_set_has_maximum_by_induction:
+thm _finite_nonempty_N_set_has_maximum_by_induction:
     ? forall S finite_set:
         S $subset N
         $is_nonempty_set(S)
         =>:
-            $has_maximum_of_finite_N_set(S)
+            $_has_maximum_of_finite_N_set(S)
     by induc P in S:
-        ? P = {} or $has_maximum_of_finite_N_set(P)
+        ? P = {} or $_has_maximum_of_finite_N_set(P)
         ? from P = {}:
             P = {}
         ? induc x, T:
-            T = {} or $has_maximum_of_finite_N_set(T)
+            T = {} or $_has_maximum_of_finite_N_set(T)
             by cases:
-                ? union({x}, T) = {} or $has_maximum_of_finite_N_set(union({x}, T))
+                ? union({x}, T) = {} or $_has_maximum_of_finite_N_set(union({x}, T))
                 case T = {}:
                     union({x}, T) = union({x}, {})
-                    by thm insertion_into_empty_N_has_maximum(x)
-                    $has_maximum_of_finite_N_set(union({x}, T))
-                case $has_maximum_of_finite_N_set(T):
+                    by thm _insertion_into_empty_N_has_maximum(x)
+                    $_has_maximum_of_finite_N_set(union({x}, T))
+                case $_has_maximum_of_finite_N_set(T):
                     T $subset N
-                    by thm insertion_of_N_maximum(x, T)
-                    $has_maximum_of_finite_N_set(union({x}, T))
-    S = {} or $has_maximum_of_finite_N_set(S)
+                    by thm _insertion_of_N_maximum(x, T)
+                    $_has_maximum_of_finite_N_set(union({x}, T))
+    S = {} or $_has_maximum_of_finite_N_set(S)
     by cases:
-        ? $has_maximum_of_finite_N_set(S)
+        ? $_has_maximum_of_finite_N_set(S)
         case S = {}:
             have a S
             a $in S
             a $in {}
             impossible a $in {}
-        case $has_maximum_of_finite_N_set(S):
-            $has_maximum_of_finite_N_set(S)
+        case $_has_maximum_of_finite_N_set(S):
+            $_has_maximum_of_finite_N_set(S)
 
-prop finite_nonempty_N_set(S power_set(N)):
+prop _finite_nonempty_N_set(S set):
+    S $subset N
     $is_finite_set(S)
     $is_nonempty_set(S)
 
-thm finite_nonempty_N_set_has_maximum:
-    ? forall S power_set(N):
-        $finite_nonempty_N_set(S)
+thm _finite_nonempty_N_set_has_maximum:
+    ? forall S set:
+        $_finite_nonempty_N_set(S)
         =>:
-            exist m N st {$is_maximum_of_finite_N_set(S, m)}
+            exist m N st {$_is_maximum_of_finite_N_set(S, m)}
     $is_finite_set(S)
     $is_nonempty_set(S)
     S $subset N
-    by thm finite_nonempty_N_set_has_maximum_by_induction(S)
-    $has_maximum_of_finite_N_set(S)
-    obtain m from exist m N st {$is_maximum_of_finite_N_set(S, m)}
-    witness exist q N st {$is_maximum_of_finite_N_set(S, q)} from m:
-        $is_maximum_of_finite_N_set(S, m)
+    by thm _finite_nonempty_N_set_has_maximum_by_induction(S)
+    $_has_maximum_of_finite_N_set(S)
+    obtain m from exist m N st {$_is_maximum_of_finite_N_set(S, m)}
+    witness exist q N st {$_is_maximum_of_finite_N_set(S, q)} from m:
+        $_is_maximum_of_finite_N_set(S, m)
 
-thm finite_nonempty_N_set_has_unique_maximum:
-    ? forall S power_set(N):
-        $finite_nonempty_N_set(S)
+thm _finite_nonempty_N_set_has_unique_maximum:
+    ? forall S set:
+        $_finite_nonempty_N_set(S)
         =>:
-            exist! m N st {$is_maximum_of_finite_N_set(S, m)}
+            exist! m N st {$_is_maximum_of_finite_N_set(S, m)}
     $is_finite_set(S)
     $is_nonempty_set(S)
     S $subset N
-    by thm finite_nonempty_N_set_has_maximum(S)
-    obtain m from exist m N st {$is_maximum_of_finite_N_set(S, m)}
+    by thm _finite_nonempty_N_set_has_maximum(S)
+    obtain m from exist m N st {$_is_maximum_of_finite_N_set(S, m)}
     claim:
         ? forall m1, m2 N:
-            $is_maximum_of_finite_N_set(S, m1)
-            $is_maximum_of_finite_N_set(S, m2)
+            $_is_maximum_of_finite_N_set(S, m1)
+            $_is_maximum_of_finite_N_set(S, m2)
             =>:
                 m1 = m2
         m1 $in S
@@ -712,49 +251,32 @@ thm finite_nonempty_N_set_has_unique_maximum:
             n <= m2
         m1 <= m2 <= m1
         m1 = m2
-    exist! m N st {$is_maximum_of_finite_N_set(S, m)}
+    exist! m N st {$_is_maximum_of_finite_N_set(S, m)}
 
-have fn finite_set_max by exist!:
-    ? forall S power_set(N):
-        $finite_nonempty_N_set(S)
-        =>:
-            exist! m N st {$is_maximum_of_finite_N_set(S, m)}
-    by thm finite_nonempty_N_set_has_unique_maximum(S)
-
-thm finite_set_max_is_maximum:
-    ? forall S power_set(N):
-        $finite_nonempty_N_set(S)
-        =>:
-            $is_maximum_of_finite_N_set(S, finite_set_max(S))
-    $is_maximum_of_finite_N_set(S, finite_set_max(S))
-
-# Natural-number well-ordering is source-level library mathematics. First
-# choose a minimum in a finite subset, then intersect any nonempty subset of
-# N with the finite initial interval from 0 to one of its members.
-prop is_minimum_of_finite_N_set(S finite_set, m N):
+prop _is_minimum_of_finite_N_set(S finite_set, m N):
     S $subset N
     m $in S
     forall n S:
         m <= n
 
-prop has_minimum_of_finite_N_set(S finite_set):
-    exist m N st {$is_minimum_of_finite_N_set(S, m)}
+prop _has_minimum_of_finite_N_set(S finite_set):
+    exist m N st {$_is_minimum_of_finite_N_set(S, m)}
 
-thm insertion_of_N_minimum:
+thm _insertion_of_N_minimum:
     ? forall x N, T finite_set:
         T $subset N
-        $has_minimum_of_finite_N_set(T)
+        $_has_minimum_of_finite_N_set(T)
         =>:
-            $has_minimum_of_finite_N_set(union({x}, T))
-    obtain m from exist m N st {$is_minimum_of_finite_N_set(T, m)}
+            $_has_minimum_of_finite_N_set(union({x}, T))
+    obtain m from exist m N st {$_is_minimum_of_finite_N_set(T, m)}
     m <= x or m > x
     by cases:
-        ? $has_minimum_of_finite_N_set(union({x}, T))
+        ? $_has_minimum_of_finite_N_set(union({x}, T))
         case m <= x:
-            witness exist q N st {$is_minimum_of_finite_N_set(union({x}, T), q)} from m:
-                by thm singleton_of_N_is_N_subset(x)
+            witness exist q N st {$_is_minimum_of_finite_N_set(union({x}, T), q)} from m:
+                by thm _singleton_of_N_is_N_subset(x)
                 {x} $subset N
-                by thm union_of_N_subsets_is_N_subset({x}, T)
+                by thm _union_of_N_subsets_is_N_subset({x}, T)
                 union({x}, T) $subset N
                 m $in union({x}, T)
                 claim:
@@ -771,12 +293,12 @@ thm insertion_of_N_minimum:
                             forall n T:
                                 m <= n
                             m <= y
-                $is_minimum_of_finite_N_set(union({x}, T), m)
+                $_is_minimum_of_finite_N_set(union({x}, T), m)
         case m > x:
-            witness exist q N st {$is_minimum_of_finite_N_set(union({x}, T), q)} from x:
-                by thm singleton_of_N_is_N_subset(x)
+            witness exist q N st {$_is_minimum_of_finite_N_set(union({x}, T), q)} from x:
+                by thm _singleton_of_N_is_N_subset(x)
                 {x} $subset N
-                by thm union_of_N_subsets_is_N_subset({x}, T)
+                by thm _union_of_N_subsets_is_N_subset({x}, T)
                 union({x}, T) $subset N
                 x $in union({x}, T)
                 claim:
@@ -793,16 +315,16 @@ thm insertion_of_N_minimum:
                             forall n T:
                                 m <= n
                             x < m <= y
-                $is_minimum_of_finite_N_set(union({x}, T), x)
+                $_is_minimum_of_finite_N_set(union({x}, T), x)
 
-thm insertion_into_empty_N_has_minimum:
+thm _insertion_into_empty_N_has_minimum:
     ? forall x N:
-        $has_minimum_of_finite_N_set(union({x}, {}))
-    witness exist q N st {$is_minimum_of_finite_N_set(union({x}, {}), q)} from x:
-        by thm singleton_of_N_is_N_subset(x)
+        $_has_minimum_of_finite_N_set(union({x}, {}))
+    witness exist q N st {$_is_minimum_of_finite_N_set(union({x}, {}), q)} from x:
+        by thm _singleton_of_N_is_N_subset(x)
         {x} $subset N
         {} $subset N
-        by thm union_of_N_subsets_is_N_subset({x}, {})
+        by thm _union_of_N_subsets_is_N_subset({x}, {})
         union({x}, {}) $subset N
         x $in union({x}, {})
         claim:
@@ -817,69 +339,69 @@ thm insertion_into_empty_N_has_minimum:
                     x <= y
                 case y $in {}:
                     impossible y $in {}
-        $is_minimum_of_finite_N_set(union({x}, {}), x)
+        $_is_minimum_of_finite_N_set(union({x}, {}), x)
 
-thm finite_nonempty_N_set_has_minimum_by_induction:
+thm _finite_nonempty_N_set_has_minimum_by_induction:
     ? forall S finite_set:
         S $subset N
         $is_nonempty_set(S)
         =>:
-            $has_minimum_of_finite_N_set(S)
+            $_has_minimum_of_finite_N_set(S)
     by induc P in S:
-        ? P = {} or $has_minimum_of_finite_N_set(P)
+        ? P = {} or $_has_minimum_of_finite_N_set(P)
         ? from P = {}:
             P = {}
         ? induc x, T:
-            T = {} or $has_minimum_of_finite_N_set(T)
+            T = {} or $_has_minimum_of_finite_N_set(T)
             by cases:
-                ? union({x}, T) = {} or $has_minimum_of_finite_N_set(union({x}, T))
+                ? union({x}, T) = {} or $_has_minimum_of_finite_N_set(union({x}, T))
                 case T = {}:
                     union({x}, T) = union({x}, {})
-                    by thm insertion_into_empty_N_has_minimum(x)
-                    $has_minimum_of_finite_N_set(union({x}, T))
-                case $has_minimum_of_finite_N_set(T):
+                    by thm _insertion_into_empty_N_has_minimum(x)
+                    $_has_minimum_of_finite_N_set(union({x}, T))
+                case $_has_minimum_of_finite_N_set(T):
                     T $subset N
-                    by thm insertion_of_N_minimum(x, T)
-                    $has_minimum_of_finite_N_set(union({x}, T))
-    S = {} or $has_minimum_of_finite_N_set(S)
+                    by thm _insertion_of_N_minimum(x, T)
+                    $_has_minimum_of_finite_N_set(union({x}, T))
+    S = {} or $_has_minimum_of_finite_N_set(S)
     by cases:
-        ? $has_minimum_of_finite_N_set(S)
+        ? $_has_minimum_of_finite_N_set(S)
         case S = {}:
             have a S
             a $in S
             a $in {}
             impossible a $in {}
-        case $has_minimum_of_finite_N_set(S):
-            $has_minimum_of_finite_N_set(S)
+        case $_has_minimum_of_finite_N_set(S):
+            $_has_minimum_of_finite_N_set(S)
 
-thm finite_nonempty_N_set_has_minimum:
-    ? forall S power_set(N):
-        $finite_nonempty_N_set(S)
+thm _finite_nonempty_N_set_has_minimum:
+    ? forall S set:
+        $_finite_nonempty_N_set(S)
         =>:
-            exist m N st {$is_minimum_of_finite_N_set(S, m)}
+            exist m N st {$_is_minimum_of_finite_N_set(S, m)}
     $is_finite_set(S)
     $is_nonempty_set(S)
     S $subset N
-    by thm finite_nonempty_N_set_has_minimum_by_induction(S)
-    $has_minimum_of_finite_N_set(S)
-    obtain m from exist m N st {$is_minimum_of_finite_N_set(S, m)}
-    witness exist q N st {$is_minimum_of_finite_N_set(S, q)} from m:
-        $is_minimum_of_finite_N_set(S, m)
+    by thm _finite_nonempty_N_set_has_minimum_by_induction(S)
+    $_has_minimum_of_finite_N_set(S)
+    obtain m from exist m N st {$_is_minimum_of_finite_N_set(S, m)}
+    witness exist q N st {$_is_minimum_of_finite_N_set(S, q)} from m:
+        $_is_minimum_of_finite_N_set(S, m)
 
-thm finite_nonempty_N_set_has_unique_minimum:
-    ? forall S power_set(N):
-        $finite_nonempty_N_set(S)
+thm _finite_nonempty_N_set_has_unique_minimum:
+    ? forall S set:
+        $_finite_nonempty_N_set(S)
         =>:
-            exist! m N st {$is_minimum_of_finite_N_set(S, m)}
+            exist! m N st {$_is_minimum_of_finite_N_set(S, m)}
     $is_finite_set(S)
     $is_nonempty_set(S)
     S $subset N
-    by thm finite_nonempty_N_set_has_minimum(S)
-    obtain m from exist m N st {$is_minimum_of_finite_N_set(S, m)}
+    by thm _finite_nonempty_N_set_has_minimum(S)
+    obtain m from exist m N st {$_is_minimum_of_finite_N_set(S, m)}
     claim:
         ? forall m1, m2 N:
-            $is_minimum_of_finite_N_set(S, m1)
-            $is_minimum_of_finite_N_set(S, m2)
+            $_is_minimum_of_finite_N_set(S, m1)
+            $_is_minimum_of_finite_N_set(S, m2)
             =>:
                 m1 = m2
         m1 $in S
@@ -890,103 +412,100 @@ thm finite_nonempty_N_set_has_unique_minimum:
             m2 <= n
         m1 <= m2 <= m1
         m1 = m2
-    exist! m N st {$is_minimum_of_finite_N_set(S, m)}
+    exist! m N st {$_is_minimum_of_finite_N_set(S, m)}
 
-prop is_minimum_of_N_set(S power_set(N), m N):
-    m $in S
-    forall n S:
-        m <= n
+# ---------------------------------------------------------------------------
+# Public finite extrema API
+# ---------------------------------------------------------------------------
+# The public contract is intentionally small: two selectors, singleton bases,
+# and one-element removal recurrences.  The construction predicates above are
+# proof machinery for unique existence; new clients should use this section.
 
-thm nonempty_N_set_has_unique_minimum:
+have fn finite_set_max by exist!:
     ? forall S power_set(N):
+        $is_finite_set(S)
         $is_nonempty_set(S)
         =>:
-            exist! m N st {$is_minimum_of_N_set(S, m)}
-    have a S
-    a $in N
-    have T set = intersect(S, closed_range(0, a))
-    T = intersect(S, closed_range(0, a))
-    T $subset closed_range(0, a)
-    by thm subset_of_finite_set_is_finite(T, closed_range(0, a))
-    $is_finite_set(T)
-    a >= 0
-    a $in closed_range(0, a)
-    a $in intersect(S, closed_range(0, a))
-    a $in T
-    T $subset N
-    witness $is_nonempty_set(T) from a
-    $finite_nonempty_N_set(T)
-    by thm finite_nonempty_N_set_has_unique_minimum(T)
-    obtain m from exist m N st {$is_minimum_of_finite_N_set(T, m)}
-    witness exist q N st {$is_minimum_of_N_set(S, q)} from m:
-        m $in T
-        m $in S
-        claim:
-            ? forall x S:
-                m <= x
-            x $in N
-            x <= a or x > a
-            by cases:
-                ? m <= x
-                case x <= a:
-                    x >= 0
-                    x $in closed_range(0, a)
-                    x $in intersect(S, closed_range(0, a))
-                    x $in T
-                    forall n T:
-                        m <= n
-                    m <= x
-                case x > a:
-                    m <= a < x
-        $is_minimum_of_N_set(S, m)
-    claim:
-        ? forall m1, m2 N:
-            $is_minimum_of_N_set(S, m1)
-            $is_minimum_of_N_set(S, m2)
-            =>:
-                m1 = m2
-        m1 $in S
-        m2 $in S
-        forall n S:
-            m1 <= n
-        forall n S:
-            m2 <= n
-        m1 <= m2 <= m1
-        m1 = m2
-    exist! m N st {$is_minimum_of_N_set(S, m)}
+            exist! m N st {$_is_maximum_of_finite_N_set(S, m)}
+    $_finite_nonempty_N_set(S)
+    by thm _finite_nonempty_N_set_has_unique_maximum(S)
 
-have fn min_of_N_set by exist!:
+thm finite_set_max_singleton:
+    ? forall x N:
+        finite_set_max({x}) = x
+    $_is_maximum_of_finite_N_set({x}, finite_set_max({x}))
+    finite_set_max({x}) $in {x}
+    finite_set_max({x}) = x
+
+thm finite_set_max_remove:
+    ? forall S power_set(N), x S:
+        $_finite_nonempty_N_set(S)
+        $_finite_nonempty_N_set(set_minus(S, {x}))
+        =>:
+            finite_set_max(S) = max(finite_set_max(set_minus(S, {x})), x)
+    $_is_maximum_of_finite_N_set(S, finite_set_max(S))
+    $_is_maximum_of_finite_N_set(set_minus(S, {x}), finite_set_max(set_minus(S, {x})))
+    finite_set_max(S) $in S
+    finite_set_max(set_minus(S, {x})) $in set_minus(S, {x})
+    finite_set_max(set_minus(S, {x})) $in S
+    finite_set_max(set_minus(S, {x})) <= finite_set_max(S)
+    x <= finite_set_max(S)
+    max(finite_set_max(set_minus(S, {x})), x) <= finite_set_max(S)
+    finite_set_max(S) = x or finite_set_max(S) != x
+    by cases:
+        ? finite_set_max(S) <= max(finite_set_max(set_minus(S, {x})), x)
+        case finite_set_max(S) = x:
+            finite_set_max(S) = x <= max(finite_set_max(set_minus(S, {x})), x)
+        case finite_set_max(S) != x:
+            not finite_set_max(S) $in {x}
+            finite_set_max(S) $in set_minus(S, {x})
+            finite_set_max(S) <= finite_set_max(set_minus(S, {x}))
+            finite_set_max(S) <= finite_set_max(set_minus(S, {x})) <= max(finite_set_max(set_minus(S, {x})), x)
+    finite_set_max(S) <= max(finite_set_max(set_minus(S, {x})), x) <= finite_set_max(S)
+    finite_set_max(S) = max(finite_set_max(set_minus(S, {x})), x)
+
+# Public finite-set minimum selector.  The existence/uniqueness proof remains
+# source-level mathematics; callers only depend on this function and its
+# recursive characterization below.
+have fn finite_set_min by exist!:
     ? forall S power_set(N):
+        $is_finite_set(S)
         $is_nonempty_set(S)
         =>:
-            exist! m N st {$is_minimum_of_N_set(S, m)}
-    by thm nonempty_N_set_has_unique_minimum(S)
+            exist! m N st {$_is_minimum_of_finite_N_set(S, m)}
+    $_finite_nonempty_N_set(S)
+    by thm _finite_nonempty_N_set_has_unique_minimum(S)
 
-thm min_of_N_set_is_minimum:
-    ? forall S power_set(N):
-        $is_nonempty_set(S)
+thm finite_set_min_singleton:
+    ? forall x N:
+        finite_set_min({x}) = x
+    $_is_minimum_of_finite_N_set({x}, finite_set_min({x}))
+    finite_set_min({x}) $in {x}
+    finite_set_min({x}) = x
+
+thm finite_set_min_remove:
+    ? forall S power_set(N), x S:
+        $_finite_nonempty_N_set(S)
+        $_finite_nonempty_N_set(set_minus(S, {x}))
         =>:
-            $is_minimum_of_N_set(S, min_of_N_set(S))
-    $is_minimum_of_N_set(S, min_of_N_set(S))
-
-thm min_of_N_set_is_member:
-    ? forall S power_set(N):
-        $is_nonempty_set(S)
-        =>:
-            min_of_N_set(S) $in S
-    by thm min_of_N_set_is_minimum(S)
-    min_of_N_set(S) $in S
-
-thm min_of_N_set_le_member:
-    ? forall S power_set(N), item S:
-        $is_nonempty_set(S)
-        =>:
-            min_of_N_set(S) <= item
-    by thm min_of_N_set_is_minimum(S)
-    min_of_N_set(S) <= item
-
-forall S power_set(N), item S:
-    $is_nonempty_set(S)
-    =>:
-        min_of_N_set(S) $in S
-        min_of_N_set(S) <= item
+            finite_set_min(S) = min(finite_set_min(set_minus(S, {x})), x)
+    $_is_minimum_of_finite_N_set(S, finite_set_min(S))
+    $_is_minimum_of_finite_N_set(set_minus(S, {x}), finite_set_min(set_minus(S, {x})))
+    finite_set_min(S) $in S
+    finite_set_min(set_minus(S, {x})) $in set_minus(S, {x})
+    finite_set_min(set_minus(S, {x})) $in S
+    finite_set_min(S) <= finite_set_min(set_minus(S, {x}))
+    finite_set_min(S) <= x
+    finite_set_min(S) <= min(finite_set_min(set_minus(S, {x})), x)
+    finite_set_min(S) = x or finite_set_min(S) != x
+    by cases:
+        ? min(finite_set_min(set_minus(S, {x})), x) <= finite_set_min(S)
+        case finite_set_min(S) = x:
+            min(finite_set_min(set_minus(S, {x})), x) <= x = finite_set_min(S)
+        case finite_set_min(S) != x:
+            not finite_set_min(S) $in {x}
+            finite_set_min(S) $in set_minus(S, {x})
+            finite_set_min(set_minus(S, {x})) <= finite_set_min(S)
+            min(finite_set_min(set_minus(S, {x})), x) <= finite_set_min(set_minus(S, {x})) <= finite_set_min(S)
+    finite_set_min(S) <= min(finite_set_min(set_minus(S, {x})), x) <= finite_set_min(S)
+    finite_set_min(S) = min(finite_set_min(set_minus(S, {x})), x)

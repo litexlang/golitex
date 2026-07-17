@@ -633,7 +633,7 @@ If a struct has no `<=>:` filter facts, Litex can prove `&Name<args>` is nonempt
 
 #### Finite-set size
 
-`finite_set_size(S)` is the size of a finite set, and Litex knows it is a natural number. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` (symmetric difference) are finite; a Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `finite_set_size(cart(A_1,...,A_n))` reduces to `finite_set_size(A_1) * ... * finite_set_size(A_n)` in calculations. It also knows basic upper bounds such as `finite_set_size(intersect(A, B)) <= finite_set_size(A)` and `finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)`, plus finite-set-size identities for `union`, `set_minus`, and `set_diff`.
+`finite_set_size(S)` is the size of a finite set, and Litex knows it is a natural number. The `std/basics` axiom `subset_of_finite_set_is_finite` supplies the fact that a subset of a finite set is finite; cardinality monotonicity remains a direct verifier rule. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` (symmetric difference) are finite; Litex checks inclusion-exclusion, the intersection-plus-remainder partition, and the symmetric-difference formula directly. It also checks the standard cardinality upper bounds and the sizes of natural-number `closed_range` and `range` intervals. A Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `finite_set_size(cart(A_1,...,A_n))` reduces to `finite_set_size(A_1) * ... * finite_set_size(A_n)` in calculations.
 
 ```litex
 finite_set_size({1, 2, 3}) = 3
@@ -644,6 +644,14 @@ $is_finite_set(intersect({1, 2}, {2, 3}))
 forall A, B finite_set:
     $is_finite_set(union(A, B))
     $is_finite_set(intersect(A, B))
+    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+    finite_set_size(intersect(A, B)) <= finite_set_size(A)
+    finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
+forall a, b N:
+    a <= b
+    =>:
+        finite_set_size(closed_range(a, b)) = b - a + 1
+        finite_set_size(range(a, b)) = b - a
 ```
 
 #### Finite `sum` and `product`
