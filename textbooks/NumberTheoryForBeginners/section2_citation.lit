@@ -1,3 +1,6 @@
+# section2 citation package.
+# Reusable source-facing interfaces and proof-debt boundaries for section2.
+
 # Number Theory for Beginners, Section II.
 #
 # source: Weil and Rosenlicht, Number Theory for Beginners, Section II.
@@ -1060,3 +1063,5 @@ and positive denominator.
 sketch:
     # Exercise retained as source text; exercises are outside this theorem-only
     # translation scope.
+
+

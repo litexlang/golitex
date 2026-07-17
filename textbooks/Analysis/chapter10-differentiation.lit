@@ -4247,9 +4247,38 @@ thm lhopital_rule_second_limit:
             $chap9::has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
     # Source handling: apply Cauchy's mean value theorem on `[a,x]`, then
     # compare its intermediate derivative quotient with the right-hand limit.
-    # proof_debt: the checked transport and cross-product lemmas reduce the
-    # remaining work to applying Cauchy's theorem on each restricted `[a,x]`.
-    trust $chap9::has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
+    # The epsilon witness uses the same intermediate point supplied by the
+    # checked Cauchy quotient lemma for each nearby x.
+    have fn q(x '(a, b]) R = df(x) / dg(x)
+    by thm chap9::closure_of_open_closed_interval(a, b)
+    a $in '[a, b]
+    a $in closure_of_real_set('(a, b])
+    by thm chap9::closure_member_is_adherent('(a, b], a)
+    $is_adherent_point('(a, b], a)
+    claim:
+        ? forall epsilon R_pos:
+            $chap9::is_locally_epsilon_close_to('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L, epsilon)
+        by thm function_limit_controls_between_points(a, b, L, q)
+        $right_limit_controls_between_points(a, b, L, q)
+        obtain delta from exist delta R_pos st {$right_limit_controls_between_points(a, b, L, q, epsilon, delta)}
+        witness exist delta0 R_pos st {$chap9::is_delta_neighborhood_close_to('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L, epsilon, delta0)} from delta:
+            claim:
+                ? forall x '(a, b]:
+                    abs(x - a) < delta
+                    =>:
+                        abs(f(x) / g(x) - L) <= epsilon
+                by thm cauchy_mean_value_quotient_at(a, b, f, g, df, dg, x)
+                obtain c from exist c '(a, b] st {c $in '(a, x), dg(c) != 0, f(x) / g(x) = df(c) / dg(c)}
+                c $in '(a, b]
+                x - a != 0
+                by thm right_limit_controls_between_points_at(a, b, L, q, epsilon, delta)
+                abs(q(c) - L) <= epsilon
+                q(c) = df(c) / dg(c)
+                abs(f(x) / g(x) - L) = abs(q(c) - L)
+                abs(f(x) / g(x) - L) <= epsilon
+            $chap9::is_delta_neighborhood_close_to('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L, epsilon, delta)
+        $chap9::is_locally_epsilon_close_to('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L, epsilon)
+    $chap9::has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
 
 """
 Remark 10.5.3.  This version is a right-hand limit theorem.  Left-hand and

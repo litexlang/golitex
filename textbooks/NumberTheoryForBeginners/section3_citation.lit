@@ -1,0 +1,285 @@
+# section3 citation package.
+# Reusable source-facing interfaces and proof-debt boundaries for section3.
+
+# Number Theory for Beginners, Section III.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section III.
+# problem: Formalize relative primality, Bezout's criterion, Euclid's lemma,
+# the product corollaries, and the Section III exercises.
+# proof_idea: Reuse Section II's gcd and Bezout interface.  Relative primality
+# for a pair is expressed as `gcd_Z(a,b)=1`; finite mutual relative primality is
+# stated through common divisors.  The forward Bezout direction and Euclid's
+# lemma are written in the same algebraic shape as the source proof.
+# litex_code: This file runs Sections I-II first and then adds Section III.
+# comments: Hard exercise statements remain local checked sketches with
+# explicit proof debt.
+
+"""
+Definition. Integers a,b,...,c are mutually relatively prime if their gcd is 1.
+For two integers, a is prime to b when gcd(a,b)=1.
+"""
+
+prop relatively_prime_Z(a, b Z):
+    section2::gcd_Z(a, b) = 1
+
+prop mutually_relatively_prime_integer_set(A finite_set):
+    A $subset Z
+    forall d Z:
+        d > 0
+        forall a A:
+            a $in Z
+            $section1::divides_Z(d, a)
+        =>:
+            d = 1
+
+forall a, b Z:
+    $relatively_prime_Z(a, b)
+    =>:
+        section2::gcd_Z(a, b) = 1
+
+"""
+Theorem III.1. Integers a,b,...,c are mutually relatively prime if and only if
+a suitable integral linear combination equals 1.
+"""
+
+thm theorem_III_1_relprime_implies_bezout_pair:
+    ? forall a, b Z:
+        $relatively_prime_Z(a, b)
+        =>:
+            exist x, y Z st {a * x + b * y = 1}
+    by thm section2::gcd_Z_bezout(a, b)
+    obtain x, y from exist x, y Z st {section2::gcd_Z(a, b) = a * x + b * y}
+    1 = section2::gcd_Z(a, b) = a * x + b * y
+    witness exist u, v Z st {a * u + b * v = 1} from x, y:
+        a * x + b * y = 1
+
+# Source handling: the Bezout equality gives the last clause of the gcd
+# definition for 1, and every common divisor divides that same equality.
+thm bezout_pair_has_gcd_one:
+    ? forall a, b, x, y Z:
+        a * x + b * y = 1
+        =>:
+            $section2::is_gcd_Z(a, b, 1)
+    witness exist u Z st {a = 1 * u} from a:
+        a = 1 * a
+    $section1::divides_Z(1, a)
+    witness exist v Z st {b = 1 * v} from b:
+        b = 1 * b
+    $section1::divides_Z(1, b)
+    claim:
+        ? forall e Z:
+            e > 0
+            $section1::divides_Z(e, a)
+            $section1::divides_Z(e, b)
+            =>:
+                $section1::divides_Z(e, 1)
+        obtain p from exist p Z st {a = e * p}
+        obtain q from exist q Z st {b = e * q}
+        witness exist t Z st {1 = e * t} from p * x + q * y:
+            1 = a * x + b * y = (e * p) * x + (e * q) * y = e * (p * x + q * y)
+        $section1::divides_Z(e, 1)
+    witness exist u, v Z st {1 = a * u + b * v} from x, y:
+        1 = a * x + b * y
+    $section2::is_gcd_Z(a, b, 1)
+
+# This is the source's direct reverse endpoint, recorded separately from the
+# gcd-characterization proof above: any positive common divisor divides the
+# displayed Bézout combination and hence divides 1.
+thm positive_common_divisor_of_bezout_pair_is_one:
+    ? forall a, b, x, y, e Z:
+        e > 0
+        $section1::divides_Z(e, a)
+        $section1::divides_Z(e, b)
+        a * x + b * y = 1
+        =>:
+            e = 1
+    by thm section1::divides_Z_linear_combination(e, a, b, x, y)
+    x * a + y * b = a * x + b * y = 1
+    $section1::divides_Z(e, 1)
+    by thm section1::positive_divisor_of_one_is_one(e)
+    e = 1
+
+thm theorem_III_1_bezout_implies_relprime_pair:
+    ? forall a, b Z:
+        exist x, y Z st {a * x + b * y = 1}
+        =>:
+            $relatively_prime_Z(a, b)
+    obtain x, y from exist x, y Z st {a * x + b * y = 1}
+    by thm bezout_pair_has_gcd_one(a, b, x, y)
+    section2::gcd_Z(a, b) = 1
+    $relatively_prime_Z(a, b)
+
+"""
+Corollary. If d is the gcd of a,b,...,c, then a/d,b/d,...,c/d are mutually
+relatively prime.
+"""
+
+# Divide the gcd Bezout identity by the nonzero gcd.
+thm gcd_quotients_are_relatively_prime:
+    ? forall a, b Z:
+        section2::gcd_Z(a, b) != 0
+        =>:
+            $relatively_prime_Z(a / section2::gcd_Z(a, b), b / section2::gcd_Z(a, b))
+    by thm section2::gcd_Z_dvd_left(a, b)
+    obtain p from exist p Z st {a = section2::gcd_Z(a, b) * p}
+    by thm section2::gcd_Z_dvd_right(a, b)
+    obtain q from exist q Z st {b = section2::gcd_Z(a, b) * q}
+    by thm section2::gcd_Z_bezout(a, b)
+    obtain x, y from exist x, y Z st {section2::gcd_Z(a, b) = a * x + b * y}
+    a / section2::gcd_Z(a, b) = section2::gcd_Z(a, b) * p / section2::gcd_Z(a, b) = p
+    b / section2::gcd_Z(a, b) = section2::gcd_Z(a, b) * q / section2::gcd_Z(a, b) = q
+    section2::gcd_Z(a, b) = a * x + b * y = section2::gcd_Z(a, b) * p * x + section2::gcd_Z(a, b) * q * y = section2::gcd_Z(a, b) * (p * x + q * y)
+    p * x + q * y = section2::gcd_Z(a, b) * (p * x + q * y) / section2::gcd_Z(a, b) = section2::gcd_Z(a, b) / section2::gcd_Z(a, b) = 1
+    witness exist u, v Z st {(a / section2::gcd_Z(a, b)) * u + (b / section2::gcd_Z(a, b)) * v = 1} from x, y:
+        (a / section2::gcd_Z(a, b)) * x + (b / section2::gcd_Z(a, b)) * y = p * x + q * y = 1
+    by thm theorem_III_1_bezout_implies_relprime_pair(a / section2::gcd_Z(a, b), b / section2::gcd_Z(a, b))
+    $relatively_prime_Z(a / section2::gcd_Z(a, b), b / section2::gcd_Z(a, b))
+
+"""
+Theorem III.2. If a is prime to b and a divides bc, then a divides c.
+"""
+
+thm theorem_III_2_euclid_lemma:
+    ? forall a, b, c Z:
+        $relatively_prime_Z(a, b)
+        $section1::divides_Z(a, b * c)
+        =>:
+            $section1::divides_Z(a, c)
+    by thm theorem_III_1_relprime_implies_bezout_pair(a, b)
+    obtain x, y from exist x, y Z st {a * x + b * y = 1}
+    obtain u from exist u Z st {b * c = a * u}
+    c = c * 1 = c * (a * x + b * y) = a * (c * x) + (b * c) * y
+    (b * c) * y = (a * u) * y
+    a * (c * x) + (b * c) * y = a * (c * x) + (a * u) * y
+    a * (c * x) + (a * u) * y = a * (c * x + u * y)
+    c = a * (c * x + u * y)
+    witness exist t Z st {c = a * t} from c * x + u * y:
+        c = a * (c * x + u * y)
+    $section1::divides_Z(a, c)
+
+"""
+Corollary 1. If a is prime to b and to c, then a is prime to bc.
+"""
+
+# Multiply the two Bezout identities and collect the terms containing a.
+thm theorem_III_2_corollary_1:
+    ? forall a, b, c Z:
+        $relatively_prime_Z(a, b)
+        $relatively_prime_Z(a, c)
+        =>:
+            $relatively_prime_Z(a, b * c)
+    by thm theorem_III_1_relprime_implies_bezout_pair(a, b)
+    obtain x, y from exist x, y Z st {a * x + b * y = 1}
+    by thm theorem_III_1_relprime_implies_bezout_pair(a, c)
+    obtain u, v from exist u, v Z st {a * u + c * v = 1}
+    witness exist r, s Z st {a * r + (b * c) * s = 1} from a * x * u + c * x * v + b * y * u, y * v:
+        1 = 1 * 1 = (a * x + b * y) * (a * u + c * v) = a * (a * x * u + c * x * v + b * y * u) + (b * c) * (y * v)
+    by thm theorem_III_1_bezout_implies_relprime_pair(a, b * c)
+    $relatively_prime_Z(a, b * c)
+
+# Finite products are introduced here, before the later prime-factorization
+# chapter uses them.  The recursive value is the reusable interface; the
+# finite-set enumeration theorem below remains a separate source-level debt.
+have fn finite_product_from_one(a fn(i N_pos) Z, n N) Z by induc n from 0:
+    case n = 0: 1
+    case n > 0: finite_product_from_one(a, n - 1) * a(n)
+
+"""
+Corollary 2. If an integer is prime to each of finitely many integers, then it
+is prime to their product.
+"""
+
+prop finite_product_of_integer_set(A finite_set, p Z):
+    A $subset Z
+    p = finite_set_product(A, fn(x A) Z {x})
+
+thm relatively_prime_Z_one:
+    ? forall a Z:
+        $relatively_prime_Z(a, 1)
+    witness exist x, y Z st {a * x + 1 * y = 1} from 0, 1:
+        a * 0 + 1 * 1 = 1
+    by thm theorem_III_1_bezout_implies_relprime_pair(a, 1)
+    $relatively_prime_Z(a, 1)
+
+# Induct over finite subsets of the given A.  The carrier keeps each inserted
+# factor inside the original hypothesis, so Corollary 1 supplies the step.
+thm theorem_III_2_corollary_2:
+    ? forall a Z, A finite_set, p Z:
+        A $subset Z
+        $finite_product_of_integer_set(A, p)
+        forall x A:
+            x $in Z
+            $relatively_prime_Z(a, x)
+        =>:
+            $relatively_prime_Z(a, p)
+    by induc P in A:
+        ? $relatively_prime_Z(a, finite_set_product(P, fn(x P) Z {x}))
+        ? from P = {}:
+            by thm relatively_prime_Z_one(a)
+            $relatively_prime_Z(a, 1)
+            finite_set_product({}, fn(x {}) Z {x}) = 1
+            $relatively_prime_Z(a, finite_set_product({}, fn(x {}) Z {x}))
+        ? induc z, S:
+            $relatively_prime_Z(a, finite_set_product(S, fn(x S) Z {x}))
+            $relatively_prime_Z(a, z)
+            finite_set_product(union({z}, S), fn(x union({z}, S)) Z {x}) = finite_set_product(S, fn(x S) Z {x}) * z
+            by thm theorem_III_2_corollary_1(a, finite_set_product(S, fn(x S) Z {x}), z)
+            $relatively_prime_Z(a, finite_set_product(S, fn(x S) Z {x}) * z)
+            $relatively_prime_Z(a, finite_set_product(union({z}, S), fn(x union({z}, S)) Z {x}))
+    $relatively_prime_Z(a, finite_set_product(A, fn(x A) Z {x}))
+    p = finite_set_product(A, fn(x A) Z {x})
+    $relatively_prime_Z(a, p)
+
+"""
+Exercise III.1. If (a,b)=1 and both a and b divide c, then ab divides c.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise III.2. Multiplication by a residue prime to m permutes the nonzero
+remainders modulo m.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise III.3. A positive integer is either a perfect square or has irrational
+square root.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise III.4. Every integer >1 that is not a power of 2 is a sum of two or
+more consecutive integers.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise III.5. If a,b are positive and coprime, every integer >= ab is
+ax+by with positive x,y.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise III.6. For finitely many positive integers with gcd d, every
+sufficiently large multiple of d is a positive linear combination.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+

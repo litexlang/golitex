@@ -1,3 +1,6 @@
+# section12 citation package.
+# Reusable source-facing interfaces and proof-debt boundaries for section12.
+
 # Section XII: Gauss's lemma, Legendre symbols, and quadratic reciprocity.
 
 # The Legendre symbol is a selected integer-valued object.  Its specification
@@ -20,10 +23,14 @@ prop legendre_symbol_nonresidue_case(p N_pos, a Z, s Z):
 prop legendre_symbol_spec(p N_pos, a Z, s Z):
     $legendre_symbol_zero_case(p, a, s) or $legendre_symbol_residue_case(p, a, s) or $legendre_symbol_nonresidue_case(p, a, s)
 
+thm legendre_symbol_exists_background:
+    ? forall p N_pos, a Z:
+        exist! s Z st {$legendre_symbol_spec(p, a, s)}
+    trust: finite Legendre classification background
+
 have fn legendre_symbol_Z by exist!:
     ? forall p N_pos, a Z:
         exist! s Z st {$legendre_symbol_spec(p, a, s)}
-    by thm section12citation::legendre_symbol_exists_background(p, a)
 
 # Divisibility forces the zero value, while prime-to-p inputs are nonzero by
 # the two quadratic cases in the specification.
@@ -88,6 +95,20 @@ prop quadratic_reciprocity_conclusion(p, q N_pos, h1 N, h2 N):
 # Gauss's excess-count identity and quadratic reciprocity share the finite
 # signed-product/lattice-counting proof package, so they form one trust
 # boundary while retaining separate source-facing propositions.
+thm gauss_lemma_background:
+    ? forall p N_pos, a Z:
+        $section4::is_prime_Z(p)
+        p > 2
+        $section3::relatively_prime_Z(a, p)
+        =>:
+            $gauss_lemma_conclusion(p, a)
+    trust: Gauss excess-count background
+
+thm quadratic_reciprocity_background:
+    ? forall p, q N_pos, h1, h2 N:
+        $quadratic_reciprocity_conclusion(p, q, h1, h2)
+    trust: quadratic reciprocity background
+
 thm theorem_XII_Gauss_lemma:
     ? forall p N_pos, a Z:
         $section4::is_prime_Z(p)
@@ -95,7 +116,6 @@ thm theorem_XII_Gauss_lemma:
         $section3::relatively_prime_Z(a, p)
         =>:
             $gauss_lemma_conclusion(p, a)
-    by thm section12citation::gauss_lemma_background(p, a)
     $gauss_lemma_conclusion(p, a)
 
 thm theorem_XII_quadratic_reciprocity:
@@ -107,5 +127,7 @@ thm theorem_XII_quadratic_reciprocity:
         2 * h2 = q - 1
         =>:
             $quadratic_reciprocity_conclusion(p, q, h1, h2)
-    by thm section12citation::quadratic_reciprocity_background(p, q, h1, h2)
     $quadratic_reciprocity_conclusion(p, q, h1, h2)
+
+
+

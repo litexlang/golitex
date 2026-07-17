@@ -1,3 +1,6 @@
+# section8 citation package.
+# Reusable source-facing interfaces and proof-debt boundaries for section8.
+
 # Section VIII: cyclic subgroups, cosets, Lagrange's theorem, and Euler's theorem.
 
 # Definition. A left coset xH is the image of H under left multiplication by
@@ -48,10 +51,30 @@ prop has_element_order(G set, mul fn(x, y G) G, one G, x G, n N_pos):
         =>:
             n <= k
 
+thm element_order_exists_background:
+    ? forall G set, mul fn(x, y G) G, one G, x G:
+        exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
+    trust: finite group element-order background
+
+thm lagrange_background:
+    ? forall G set, mul fn(x, y G) G, one G, H power_set(G):
+        $section7::is_subgroup(G, mul, one, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        =>:
+            $subgroup_order_divides_group_order(G, mul, one, H)
+    trust: finite coset-counting background
+
+thm euler_theorem_background:
+    ? forall m N_pos, a Z:
+        $section3::relatively_prime_Z(a, m)
+        =>:
+            $euler_theorem_conclusion(m, a)
+    trust: Euler theorem background
+
 thm theorem_VIII_element_order_exists:
     ? forall G set, mul fn(x, y G) G, one G, x G:
         exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
-    by thm section8citation::element_order_exists_background(G, mul, one, x)
     exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
 
 prop euler_theorem_conclusion(m N_pos, a Z):
@@ -67,7 +90,6 @@ thm theorem_VIII_Lagrange:
         $is_finite_set(H)
         =>:
             $subgroup_order_divides_group_order(G, mul, one, H)
-    by thm section8citation::lagrange_background(G, mul, one, H)
     $subgroup_order_divides_group_order(G, mul, one, H)
 
 thm theorem_VIII_Euler:
@@ -75,5 +97,6 @@ thm theorem_VIII_Euler:
         $section3::relatively_prime_Z(a, m)
         =>:
             $euler_theorem_conclusion(m, a)
-    by thm section8citation::euler_theorem_background(m, a)
     $euler_theorem_conclusion(m, a)
+
+

@@ -1189,8 +1189,13 @@ claim:
         $triangular_interval(n, s)
         =>:
             n - tri(s) <= s
-    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
-    trust n - tri(s) <= s
+    n - tri(s) <= s or n - tri(s) > s
+    by cases:
+        ? n - tri(s) <= s
+        case n - tri(s) <= s:
+            n - tri(s) <= s
+        case n - tri(s) > s:
+            impossible s < n - tri(s) < s + 1
     tri(s + 1) = tri(s) + s + 1
     n - tri(s) < (tri(s) + s + 1) - tri(s) = s + 1
 

@@ -1,3 +1,6 @@
+# section5 citation package.
+# Reusable source-facing interfaces and proof-debt boundaries for section5.
+
 # Number Theory for Beginners, Section V.
 #
 # source: Weil and Rosenlicht, Number Theory for Beginners, Section V.
@@ -36,7 +39,8 @@ multiplication.
 """
 
 sketch:
-    # Concrete abelian-group examples are recorded in section5citation.
+    # Concrete abelian-group examples are source examples; the reusable
+    # group interface is defined above.
 
     # Source handling: These are the source examples immediately following the
     # group axioms.  The four concrete instances remain source-level examples;
@@ -447,6 +451,11 @@ prop congruence_classes_form_additive_group_mod(m N_pos):
 # property (D), and the representative computations for z=y-x and neutral 0.
 # trust: A checked proof needs a quotient finite-set construction whose
 # carrier is the set of all residue classes modulo m.
+thm congruence_classes_additive_group_background:
+    ? forall m N_pos:
+        $congruence_classes_form_additive_group_mod(m)
+    trust: quotient residue-class group background
+
 thm theorem_V_1_residue_classes_additive_group:
     ? forall m N_pos:
         $congruence_classes_form_additive_group_mod(m)
@@ -519,3 +528,6 @@ same odd divisors.
 sketch:
     # Exercise retained as source text; exercises are outside this theorem-only
     # translation scope.
+
+
+

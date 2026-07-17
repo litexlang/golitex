@@ -1,3 +1,6 @@
+# section10 citation package.
+# Reusable source-facing interfaces and proof-debt boundaries for section10.
+
 # Section X: finite multiplicative subgroups, roots of unity, and primitive roots.
 
 # A finite multiplicative subgroup is a finite carrier with the group
@@ -45,13 +48,34 @@ prop index_mod_spec(m N_pos, g Z, a Z, x N):
     g ^ x % m = a % m
     x < section6::euler_phi(m)
 
+thm index_mod_exists_background:
+    ? forall m N_pos, g, a Z:
+        $primitive_root_mod(m, g)
+        $section3::relatively_prime_Z(a, m)
+        =>:
+            exist! x N st {$index_mod_spec(m, g, a, x)}
+    trust: finite cyclic index background
+
+thm finite_subgroup_generator_background:
+    ? forall G set, mul fn(x, y G) G, one G:
+        $finite_multiplicative_subgroup(G, mul, one)
+        =>:
+            $finite_subgroup_has_generator(G, mul, one)
+    trust: finite subgroup cyclicity background
+
+thm prime_primitive_root_background:
+    ? forall p N_pos:
+        $section4::is_prime_Z(p)
+        =>:
+            exist g Z st {$primitive_root_mod(p, g)}
+    trust: prime primitive-root background
+
 have fn index_mod by exist!:
     ? forall m N_pos, g, a Z:
         $primitive_root_mod(m, g)
         $section3::relatively_prime_Z(a, m)
         =>:
             exist! x N st {$index_mod_spec(m, g, a, x)}
-    by thm section10citation::index_mod_exists_background(m, g, a)
 
 # The roots-of-unity version of cyclicity states directly that every root is
 # an integral power of one chosen root, so later statements can use the set
@@ -83,3 +107,5 @@ thm theorem_X_primitive_root_prime_modulus:
         =>:
             exist g Z st {$primitive_root_mod(p, g)}
     exist g Z st {$primitive_root_mod(p, g)}
+
+

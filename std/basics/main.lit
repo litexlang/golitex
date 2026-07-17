@@ -6,6 +6,8 @@
 #   finite_set_min_in_set, finite_set_min_le_member
 # Secondary singleton computation rules:
 #   finite_set_max_singleton, finite_set_min_singleton
+# Finite-set indexing:
+#   finite_set_has_bijective_index
 #
 # Names beginning with `_` are construction details: they prove unique existence for the two
 # selectors.  New clients should use the six core names above; the singleton equations are
@@ -497,6 +499,164 @@ thm finite_set_min_singleton:
     finite_set_min({x}) = x
 
 # ---------------------------------------------------------------------------
+# Finite-set indexing
+# ---------------------------------------------------------------------------
+# Every finite set has a zero-based bijection from `range(0, finite_set_size(s))`.
+# The public theorem is intentionally existential: clients can obtain the
+# enumeration they need without depending on this proof's induction machinery.
+thm finite_set_has_bijective_index:
+    ? forall s finite_set:
+        exist idx fn(i range(0, finite_set_size(s))) s st {forall! x s => {exist! i range(0, finite_set_size(s)) st {idx(i) = x}}}
+
+    prop zero_index(U finite_set, f fn(i range(0, finite_set_size(U))) U):
+        forall x U:
+            exist! i range(0, finite_set_size(U)) st {f(i) = x}
+
+    prop zero_index_set(U finite_set):
+        exist f fn(i range(0, finite_set_size(U))) U st {$zero_index(U, f)}
+
+    thm extend_zero_index:
+        ? forall a set, T finite_set, prev fn(i range(0, finite_set_size(T))) T:
+            not a $in T
+            $zero_index(T, prev)
+            =>:
+                exist idx fn(i range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$zero_index(union({a}, T), idx)}
+        by extension intersect({a}, T) = {}:
+            forall z intersect({a}, T):
+                z $in {a}
+                z = a
+                z $in T
+                a $in T
+                not a $in T
+        intersect({a}, T) = {}
+        finite_set_size({a}) = 1
+        finite_set_size(intersect({a}, T)) = finite_set_size({}) = 0
+        finite_set_size(union({a}, T)) = finite_set_size({a}) + finite_set_size(T) - finite_set_size(intersect({a}, T)) = 1 + finite_set_size(T) - 0 = finite_set_size(T) + 1
+        have fn idx(i range(0, finite_set_size(union({a}, T)))) union({a}, T) by cases:
+            case i < finite_set_size(T): prev(i)
+            case i = finite_set_size(T): a
+        claim:
+            ? forall i range(0, finite_set_size(union({a}, T))):
+                idx(i) = a
+                =>:
+                    i = finite_set_size(T)
+            i < finite_set_size(T) or i >= finite_set_size(T)
+            by cases:
+                ? i = finite_set_size(T)
+                case i < finite_set_size(T):
+                    i $in range(0, finite_set_size(T))
+                    idx(i) = prev(i)
+                    prev(i) $in T
+                    idx(i) $in T
+                    idx(i) = a
+                    a $in T
+                    impossible not a $in T
+                case i >= finite_set_size(T):
+                    i < finite_set_size(union({a}, T)) = finite_set_size(T) + 1
+                    i = finite_set_size(T)
+        claim:
+            ? forall y union({a}, T):
+                y != a
+                =>:
+                    y $in T
+            y $in {a} or y $in T
+            by cases:
+                ? y $in T
+                case y $in {a}:
+                    y = a
+                    impossible y != a
+                case y $in T:
+                    y $in T
+        claim:
+            ? forall y union({a}, T), i range(0, finite_set_size(union({a}, T))):
+                y != a
+                idx(i) = y
+                =>:
+                    i < finite_set_size(T)
+            i < finite_set_size(T) or i >= finite_set_size(T)
+            by cases:
+                ? i < finite_set_size(T)
+                case i < finite_set_size(T):
+                    i < finite_set_size(T)
+                case i >= finite_set_size(T):
+                    i = finite_set_size(T)
+                    idx(i) = a
+                    y = idx(i) = a
+                    impossible y != a
+        witness exist idx0 fn(i range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$zero_index(union({a}, T), idx0)} from idx:
+            claim:
+                ? forall y union({a}, T):
+                    exist! i range(0, finite_set_size(union({a}, T))) st {idx0(i) = y}
+                y = a or y != a
+                by cases:
+                    ? exist! i range(0, finite_set_size(union({a}, T))) st {idx0(i) = y}
+                    case y = a:
+                        finite_set_size(T) >= 0
+                        finite_set_size(T) < finite_set_size(T) + 1
+                        finite_set_size(T) < finite_set_size(union({a}, T))
+                        idx0(finite_set_size(T)) = idx(finite_set_size(T)) = a = y
+                        witness exist! i range(0, finite_set_size(union({a}, T))) st {idx0(i) = y} from finite_set_size(T):
+                            idx0(finite_set_size(T)) = y
+                            forall i1, i2 range(0, finite_set_size(union({a}, T))):
+                                idx0(i1) = y
+                                idx0(i2) = y
+                                =>:
+                                    idx(i1) = idx0(i1) = y = a
+                                    idx(i2) = idx0(i2) = y = a
+                                    i1 = finite_set_size(T)
+                                    i2 = finite_set_size(T)
+                                    i1 = i2
+                    case y != a:
+                        y $in T
+                        exist! j range(0, finite_set_size(T)) st {prev(j) = y}
+                        obtain j from exist! j range(0, finite_set_size(T)) st {prev(j) = y}
+                        j >= 0
+                        j < finite_set_size(T)
+                        finite_set_size(T) < finite_set_size(T) + 1
+                        finite_set_size(T) < finite_set_size(union({a}, T))
+                        j < finite_set_size(union({a}, T))
+                        idx0(j) = idx(j) = prev(j) = y
+                        witness exist! i range(0, finite_set_size(union({a}, T))) st {idx0(i) = y} from j:
+                            idx0(j) = y
+                            forall i1, i2 range(0, finite_set_size(union({a}, T))):
+                                idx0(i1) = y
+                                idx0(i2) = y
+                                =>:
+                                    idx(i1) = idx0(i1) = y
+                                    idx(i2) = idx0(i2) = y
+                                    i1 < finite_set_size(T)
+                                    i2 < finite_set_size(T)
+                                    i1 $in range(0, finite_set_size(T))
+                                    i2 $in range(0, finite_set_size(T))
+                                    prev(i1) = idx(i1) = y = idx(i2) = prev(i2)
+                                    i1 = i2
+            $zero_index(union({a}, T), idx0)
+
+    by induc P:
+        ? $zero_index_set(P)
+        ? from P = {}:
+            finite_set_size({}) = 0
+            range(0, finite_set_size({})) = {}
+            have fn empty_index(i range(0, finite_set_size({}))) {} = i
+            witness exist idx fn(i range(0, finite_set_size({}))) {} st {$zero_index({}, idx)} from empty_index:
+                forall x {}:
+                    exist! i range(0, finite_set_size({})) st {idx(i) = x}
+                $zero_index({}, idx)
+            $zero_index_set({})
+        ? induc a, T:
+            $zero_index_set(T)
+            exist prev fn(i range(0, finite_set_size(T))) T st {$zero_index(T, prev)}
+            obtain prev from exist prev fn(i range(0, finite_set_size(T))) T st {$zero_index(T, prev)}
+            by thm extend_zero_index(a, T, prev)
+            $zero_index_set(union({a}, T))
+    $zero_index_set(s)
+    exist w fn(i range(0, finite_set_size(s))) s st {$zero_index(s, w)}
+    obtain w from exist w fn(i range(0, finite_set_size(s))) s st {$zero_index(s, w)}
+    $zero_index(s, w)
+    witness exist idx fn(i range(0, finite_set_size(s))) s st {forall! x s => {exist! i range(0, finite_set_size(s)) st {idx(i) = x}}} from w
+    exist idx fn(i range(0, finite_set_size(s))) s st {forall! x s => {exist! i range(0, finite_set_size(s)) st {idx(i) = x}}}
+
+# ---------------------------------------------------------------------------
 # gcd related
 # ---------------------------------------------------------------------------
 
@@ -507,6 +667,7 @@ thm finite_set_min_singleton:
 #   gcd_positive, gcd_divides_left, gcd_divides_right
 #   common_divisor_le_gcd
 #   gcd_euclidean_base, gcd_euclidean_step, bezout_identity
+#   rational_has_reduced_fraction
 #   gcd_of_prime_is_one_or_prime
 #
 # These are general number-theory interfaces that can later move together into
@@ -918,6 +1079,142 @@ thm bezout_identity:
     euclid_bezout_l(a, b) * a + euclid_bezout_r(a, b) * b = gcd(a, b)
     witness exist x Z, y Z st {gcd(a, b) = x * a + y * b} from euclid_bezout_l(a, b), euclid_bezout_r(a, b):
         gcd(a, b) = euclid_bezout_l(a, b) * a + euclid_bezout_r(a, b) * b
+
+# Weil, Exercise II.8: every rational number has a reduced fraction.
+# A negative rational needs an integer numerator, so the denominator is chosen
+# positive and the reducedness condition is `gcd(p, d) = 1`.
+thm rational_has_reduced_fraction:
+    ? forall q Q:
+        exist p Z, d N_pos st {q = p / d, gcd(p, d) = 1}
+    obtain a, b from exist a Z, b Z_nz st {q = a / b}
+    have g N_pos = gcd(a, b)
+    g = gcd(a, b)
+    by thm gcd_divides_left(a, b)
+    $divides(g, a)
+    obtain p from exist p Z st {a = g * p}
+    by thm gcd_divides_right(a, b)
+    $divides(g, b)
+    obtain d from exist d Z st {b = g * d}
+    by thm bezout_identity(a, b)
+    obtain x, y from exist x Z, y Z st {gcd(a, b) = x * a + y * b}
+    gcd(a, b) = g
+    g = x * a + y * b
+    by contra:
+        ? d != 0
+        d = 0
+        b = g * d = g * 0 = 0
+        impossible b != 0
+    d >= 0 or d < 0
+    by cases:
+        ? d > 0 or d < 0
+        case d >= 0:
+            d = 0 or d > 0
+            by cases:
+                ? d > 0 or d < 0
+                case d = 0:
+                    impossible d != 0
+                case d > 0:
+                    d > 0 or d < 0
+        case d < 0:
+            d > 0 or d < 0
+    by cases:
+        ? exist p0 Z, d0 N_pos st {q = p0 / d0, gcd(p0, d0) = 1}
+        case d > 0:
+            d $in N_pos
+            claim:
+                ? gcd(p, d) = 1
+                have h N_pos = gcd(p, d)
+                h = gcd(p, d)
+                by thm gcd_divides_left(p, d)
+                $divides(h, p)
+                obtain r from exist r Z st {p = h * r}
+                by thm gcd_divides_right(p, d)
+                $divides(h, d)
+                obtain s from exist s Z st {d = h * s}
+                g = x * a + y * b = x * (g * p) + y * (g * d) = g * (x * p + y * d)
+                g / g = (g * (x * p + y * d)) / g = x * p + y * d
+                g / g = 1
+                1 = x * p + y * d = x * (h * r) + y * (h * s) = h * (x * r + y * s)
+                have t Z = x * r + y * s
+                1 = h * t
+                t > 0 or t <= 0
+                by cases:
+                    ? h = 1
+                    case t > 0:
+                        t >= 1
+                        h * 1 <= h * t
+                        h = h * 1 <= h * t
+                        h * t = 1
+                        h <= 1
+                        h >= 1
+                        h = 1
+                    case t <= 0:
+                        h * t <= 0
+                        1 = h * t <= 0
+                        impossible 1 <= 0
+                h = gcd(p, d)
+                gcd(p, d) = 1
+            witness exist p0 Z, d0 N_pos st {q = p0 / d0, gcd(p0, d0) = 1} from p, d:
+                q = a / b = (g * p) / (g * d) = p / d
+                gcd(p, d) = 1
+        case d < 0:
+            have p0 Z = -p
+            have d0 Z = -d
+            p0 = -p
+            d0 = -d
+            p = -p0
+            d = -d0
+            -d > 0
+            d0 = -d > 0
+            d0 $in N_pos
+            claim:
+                ? gcd(p0, d0) = 1
+                have h N_pos = gcd(p0, d0)
+                h = gcd(p0, d0)
+                by thm gcd_divides_left(p0, d0)
+                $divides(h, p0)
+                obtain r from exist r Z st {p0 = h * r}
+                by thm gcd_divides_right(p0, d0)
+                $divides(h, d0)
+                obtain s from exist s Z st {d0 = h * s}
+                x * (g * p) = x * (g * (-p0))
+                x * (g * (-p0)) = (-x) * (g * p0)
+                x * (g * p) = (-x) * (g * p0)
+                y * (g * d) = y * (g * (-d0))
+                y * (g * (-d0)) = (-y) * (g * d0)
+                y * (g * d) = (-y) * (g * d0)
+                x * (g * p) + y * (g * d) = (-x) * (g * p0) + (-y) * (g * d0)
+                g = x * a + y * b = x * (g * p) + y * (g * d)
+                x * (g * p) + y * (g * d) = (-x) * (g * p0) + (-y) * (g * d0) = g * ((-x) * p0 + (-y) * d0)
+                g = g * ((-x) * p0 + (-y) * d0)
+                g / g = (g * ((-x) * p0 + (-y) * d0)) / g = (-x) * p0 + (-y) * d0
+                g / g = 1
+                1 = (-x) * p0 + (-y) * d0 = (-x) * (h * r) + (-y) * (h * s) = h * ((-x) * r + (-y) * s)
+                have t Z = (-x) * r + (-y) * s
+                1 = h * t
+                t > 0 or t <= 0
+                by cases:
+                    ? h = 1
+                    case t > 0:
+                        t >= 1
+                        h * 1 <= h * t
+                        h = h * 1 <= h * t
+                        h * t = 1
+                        h <= 1
+                        h >= 1
+                        h = 1
+                    case t <= 0:
+                        h * t <= 0
+                        1 = h * t <= 0
+                        impossible 1 <= 0
+                h = gcd(p0, d0)
+                gcd(p0, d0) = 1
+            witness exist p1 Z, d1 N_pos st {q = p1 / d1, gcd(p1, d1) = 1} from p0, d0:
+                q = a / b = (g * p) / (g * d) = p / d
+                p / d = (-p) / (-d)
+                (-p) / (-d) = p0 / d0
+                q = p0 / d0
+                gcd(p0, d0) = 1
 
 thm gcd_of_prime_is_one_or_prime:
     ? forall a Z, p N_pos:

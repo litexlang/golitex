@@ -1,3 +1,6 @@
+# section13 citation package.
+# Reusable source-facing interfaces and proof-debt boundaries for section13.
+
 # Section XIII: Gaussian integers, norm, division, and sums of two squares.
 
 # We use the concrete coordinate carrier Z x Z.  The operations are genuine
@@ -78,12 +81,33 @@ prop rational_prime_split_statement(p N_pos):
 # Gaussian division, prime-factor descent, and the rational-prime split all
 # share the missing Euclidean Gaussian-integer package.  Their source-facing
 # clauses remain separate inside this single trust boundary.
+thm gaussian_division_background:
+    ? forall ax, ay, bx, b_y Z:
+        gaussian_norm(bx, b_y) != 0
+        =>:
+            exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
+    trust: gaussian-integer Euclidean division background
+
+thm gaussian_prime_factor_background:
+    ? forall x, y Z:
+        gaussian_norm(x, y) > 1
+        =>:
+            $gaussian_prime_factor_claim(x, y)
+    trust: Gaussian prime factorization background
+
+thm rational_prime_split_background:
+    ? forall p N_pos:
+        $section4::is_prime_Z(p)
+        =>:
+            $rational_prime_split_statement(p)
+    trust: rational-prime two-squares background
+
 thm theorem_XIII_gaussian_division:
     ? forall ax, ay, bx, b_y Z:
         gaussian_norm(bx, b_y) != 0
         =>:
             exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
-    by thm section13citation::gaussian_division_background(ax, ay, bx, b_y)
+    by thm gaussian_division_background(ax, ay, bx, b_y)
     exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
 
 thm theorem_XIII_sum_of_two_squares:
@@ -92,3 +116,10 @@ thm theorem_XIII_sum_of_two_squares:
         =>:
             $rational_prime_split_statement(p)
     $rational_prime_split_statement(p)
+
+
+
+
+
+
+

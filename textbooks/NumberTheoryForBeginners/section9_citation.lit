@@ -1,3 +1,6 @@
+# section9 citation package.
+# Reusable source-facing interfaces and proof-debt boundaries for section9.
+
 # Section IX: polynomials over a field.
 
 # A polynomial is represented by its coefficient function and a finite degree
@@ -32,11 +35,17 @@ have fn polynomial_root_set_Z(coeff fn(k N) Z, n N) power_set(Z) = {x Z: $polyno
 # first-class Litex object, so the missing relation is kept as a narrow
 # background interface rather than replacing the polynomial by a tautological
 # `prop`.
+# This is the one remaining external carrier interface.  It packages the
+# missing generic polynomial type, finite support, coefficient convolution,
+# degree, and Euclidean division data over an arbitrary coefficient field.
+# The two source-facing relations below are ordinary props derived from it.
+abstract_prop polynomial_euclidean_data(K, f, g, q, r, d)
+
 prop polynomial_division_statement(K set, f set, g set, q set, r set):
-    $section9citation::polynomial_division_statement(K, f, g, q, r)
+    exist d set st {$polynomial_euclidean_data(K, f, g, q, r, d)}
 
 prop polynomial_gcd_statement(K set, f set, g set, d set):
-    $section9citation::polynomial_gcd_statement(K, f, g, d)
+    exist q, r set st {$polynomial_euclidean_data(K, f, g, q, r, d)}
 
 # Theorem IX.1. A nonempty addition/multiple-closed family of polynomials is
 # the set of multiples of one normalized gcd.  The carrier-level theorem is
@@ -44,7 +53,7 @@ prop polynomial_gcd_statement(K set, f set, g set, d set):
 prop polynomial_multiple_ideal(K set, family set, generator set):
     generator $in family
     forall f family:
-        $section9citation::polynomial_division_statement(K, f, generator, f, generator)
+        $polynomial_division(K, f, generator, f, generator)
 
 prop polynomial_gcd_generator_claim(K set, family set):
     exist generator set st {$polynomial_multiple_ideal(K, family, generator)}
@@ -66,6 +75,21 @@ prop polynomial_root_bound_Z(coeff fn(k N) Z, n N, roots power_set(Z)):
 # The gcd-generator, division, and root-count theorems all depend on the same
 # missing typed polynomial carrier and Euclidean operation package.  Keep the
 # three source-facing statements in one explicit trust boundary.
+thm polynomial_gcd_generator_background:
+    ? forall K set, family set:
+        $polynomial_gcd_generator_claim(K, family)
+    trust: polynomial gcd-generator background
+
+thm polynomial_division_background:
+    ? forall K set, f set, g set:
+        $polynomial_division_claim(K, f, g)
+    trust: polynomial division background
+
+thm polynomial_root_bound_background:
+    ? forall coeff fn(k N) Z, n N:
+        $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
+    trust: polynomial root-count background
+
 thm theorem_IX_polynomial_gcd_generator:
     ? forall K set, family set:
         $polynomial_gcd_generator_claim(K, family)
@@ -80,3 +104,6 @@ thm theorem_IX_root_bound:
     ? forall coeff fn(k N) Z, n N:
         $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
     $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
+
+
+

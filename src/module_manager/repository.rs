@@ -246,7 +246,7 @@ fn discover_std_module_with_mount_stack(
     )?;
     let std_module_id = runtime
         .module_manager
-        .create_discovered_module(
+        .create_discovered_standard_module(
             module_name,
             package_root_string,
             config_path_string,
@@ -290,7 +290,7 @@ fn discover_std_single_file_module(
     )?;
     let module_id = runtime
         .module_manager
-        .create_discovered_module(
+        .create_discovered_standard_module(
             module_name,
             source_path_string.clone(),
             source_path_string,
@@ -1309,10 +1309,16 @@ fn validate_config_directory_contents(
         if name == LITEX_CONFIG {
             continue;
         }
+        let path = entry.path();
+        let is_litex_source =
+            path.extension().and_then(|extension| extension.to_str()) == Some("lit");
+        if !path.is_dir() && !is_litex_source {
+            continue;
+        }
         if !exported_children.contains_key(&name) {
             return Err(repository_error(
                 format!(
-                    "configured folder contains unexported path `{}`; every direct child except litex.config must appear in [export]",
+                    "configured folder contains unexported Litex module path `{}`; every direct child directory or .lit file must appear in [export]",
                     name
                 ),
                 &config_path.to_string_lossy(),
@@ -1787,7 +1793,7 @@ main = "./main.lit"
     }
 
     #[test]
-    fn configured_folder_rejects_every_unexported_child() {
+    fn configured_folder_allows_non_litex_artifacts() {
         let fixture = Fixture::new("unexported-child");
         let root = fixture.path("root");
         write_file(
@@ -1803,8 +1809,7 @@ main = "./main.lit"
         write_file(&root.join("README.md"), "not exported\n");
 
         let (ok, output) = run_repository(&root);
-        assert!(!ok);
-        assert!(output.contains("unexported path `README.md`"), "{output}");
+        assert!(ok, "{output}");
     }
 
     #[test]
@@ -1982,7 +1987,10 @@ main = "./main.lit"
         let extra = path_string_for_test(&root.join("extra.lit"));
         let (ok, output) = run_source_code_in_file_with_ok(extra.as_str());
         assert!(!ok);
-        assert!(output.contains("unexported path `extra.lit`"), "{output}");
+        assert!(
+            output.contains("unexported Litex module path `extra.lit`"),
+            "{output}"
+        );
     }
 
     #[test]
@@ -2312,6 +2320,99 @@ assumption = "./assumption.lit"
             );
             assert!(!strict_ok);
             assert!(strict_output.contains("1 = 0"), "{strict_output}");
+        });
+    }
+
+    #[test]
+    fn strict_mode_rejects_user_trust_in_project_imports() {
+        run_repository_test_with_large_stack("strict-project-import-trust", || {
+            let fixture = Fixture::new("strict-project-import-trust");
+            let root = fixture.path("root");
+            let dependency = fixture.path("dependency");
+            write_file(
+                &root.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[import]
+Dependency = "../dependency"
+
+[export]
+main = "./main.lit"
+"#,
+            );
+            write_file(&root.join("main.lit"), "have value R = 1\n");
+            write_file(
+                &dependency.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[export]
+main = "./main.lit"
+"#,
+            );
+            write_file(&dependency.join("main.lit"), "trust 1 = 1\n");
+
+            let root_string = path_string_for_test(&root);
+            let (strict_ok, strict_output) = run_repository_with_output(
+                root_string.as_str(),
+                false,
+                true,
+                OutputLanguage::English,
+                false,
+            );
+            assert!(!strict_ok, "{strict_output}");
+            assert!(
+                strict_output.contains("strict mode rejects user trust"),
+                "{strict_output}"
+            );
+        });
+    }
+
+    #[test]
+    fn strict_mode_preserves_standard_library_trust_boundary() {
+        run_repository_test_with_large_stack("strict-standard-trust", || {
+            let fixture = Fixture::new("strict-standard-trust");
+            let root = fixture.path("root");
+            let std_root = fixture.path("std");
+            write_file(
+                &std_root.join("basics/litex.config"),
+                r#"[hierarchy]
+module
+
+[module]
+flatten = true
+
+[export]
+main = "./main.lit"
+"#,
+            );
+            write_file(&std_root.join("basics/main.lit"), "trust 1 = 0\n");
+            write_file(
+                &root.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[import std]
+basics
+
+[export]
+main = "./main.lit"
+"#,
+            );
+            write_file(&root.join("main.lit"), "have value R = 1\n");
+
+            with_standard_library_root(&std_root, || {
+                let root_string = path_string_for_test(&root);
+                let (strict_ok, strict_output) = run_repository_with_output(
+                    root_string.as_str(),
+                    false,
+                    true,
+                    OutputLanguage::English,
+                    false,
+                );
+                assert!(strict_ok, "{strict_output}");
+            });
         });
     }
 

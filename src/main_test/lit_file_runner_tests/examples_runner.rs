@@ -9,7 +9,7 @@ use super::helper::{
     collect_lit_files_recursive_under_excluding, collect_markdown_files_under_dir_sorted,
     format_litex_failure_location, litex_snippets_from_markdown_files,
     print_known_forall_profile_summary, print_slowest_run_labels, run_with_large_stack,
-    spawn_with_large_stack, REPOSITORY_EXAMPLES_SUBDIR,
+    source_has_isolated_import, spawn_with_large_stack, REPOSITORY_EXAMPLES_SUBDIR,
 };
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
@@ -474,6 +474,7 @@ fn run_examples_phase1_sequential_with_runtime(
             }
 
             let normalized_source = remove_windows_carriage_return(item.source.as_str());
+            runtime.isolated = source_has_isolated_import(normalized_source.as_str());
 
             let start_time_for_one_file = Instant::now();
             let (stmt_results, runtime_error) =
@@ -772,6 +773,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
         }
 
         let normalized_source = remove_windows_carriage_return(item.source.as_str());
+        runtime.isolated = source_has_isolated_import(normalized_source.as_str());
         let start_time_for_one_file = Instant::now();
         let run_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             run_source_code(normalized_source.as_str(), &mut runtime)

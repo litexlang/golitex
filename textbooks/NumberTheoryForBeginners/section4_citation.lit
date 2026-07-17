@@ -1,3 +1,6 @@
+# section4 citation package.
+# Reusable source-facing interfaces and proof-debt boundaries for section4.
+
 # Number Theory for Beginners, Section IV.
 #
 # source: Weil and Rosenlicht, Number Theory for Beginners, Section IV.
@@ -212,6 +215,27 @@ prop exact_prime_power_divides(p, a Z, n N):
 # proof-debt boundary. Finite maximum selection is not yet a kernel object, so
 # the exact-prime-power debt also includes selecting the maximum of the relevant
 # finite nonempty exponent set.
+thm prime_divides_some_factor_background:
+    ? forall p Z, n N_pos, f fn(i N_pos) Z:
+        $is_prime_Z(p)
+        $section1::divides_Z(p, section3::finite_product_from_one(fn(i N_pos) Z {f(i)}, n))
+        =>:
+            $prime_divides_some_factor(p, n, f)
+    trust: finite product prime-divisor background
+
+thm prime_factorization_background:
+    ? forall a Z:
+        $prime_factorization_statement(a)
+    trust: finite prime factorization background
+
+thm exact_prime_power_background:
+    ? forall p, a Z:
+        $is_prime_Z(p)
+        a > 1
+        =>:
+            exist! n N st {$exact_prime_power_divides(p, a, n)}
+    trust: finite maximum exponent background
+
 thm theorem_IV_2_prime_factorization_exists:
     ? forall a Z:
         a > 1
@@ -241,6 +265,11 @@ prop primes_are_unbounded():
 # Source handling: Euclid's proof takes a prime divisor of pqr...+1.
 # trust: The checked proof needs the finite product interface and the
 # prime-divisor theorem above.
+thm primes_unbounded_background:
+    ? forall n N_pos:
+        exist p Z st {p > n, $is_prime_Z(p)}
+    trust: Euclid prime-divisor background
+
 thm theorem_IV_3_infinitely_many_primes:
     ? forall n N_pos:
         exist p Z st {p > n, $is_prime_Z(p)}
@@ -307,3 +336,5 @@ are either both squares or both twice squares.
 sketch:
     # Exercise retained as source text; exercises are outside this theorem-only
     # translation scope.
+
+

@@ -1,0 +1,7 @@
+# Weil, Exercise II.8: reduced-fraction existence through std/basics.
+import std basics
+
+thm rational_has_reduced_fraction_from_basics:
+    ? forall q Q:
+        exist p Z, d N_pos st {q = p / d, basics::gcd(p, d) = 1}
+    by thm basics::rational_has_reduced_fraction(q)
