@@ -179,7 +179,7 @@ Proposition 5.1.11. The sequence 1/n is Cauchy.
 thm archimedean_property:
     ? forall epsilon R_pos:
         exist n N_pos st {1 / n < epsilon}
-    trust exist n N_pos st {1 / n < epsilon}
+    exist n N_pos st {1 / n < epsilon}
 
 claim:
     ? $is_cauchy_sequence_in_Q(fn(n N_pos) Q {1 / n})

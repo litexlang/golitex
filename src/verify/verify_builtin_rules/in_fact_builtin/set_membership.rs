@@ -80,6 +80,43 @@ impl Runtime {
         )
     }
 
+    // A non-member of either side is outside the intersection.
+    // Example: `not x $in A` proves `not x $in intersect(A, B)`.
+    pub(super) fn verify_not_in_fact_not_in_intersect_by_non_member_of_either_side(
+        &mut self,
+        not_in_fact: &NotInFact,
+        intersect: &Intersect,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        for (side, side_name) in [
+            (intersect.left.as_ref(), "left"),
+            (intersect.right.as_ref(), "right"),
+        ] {
+            let non_member_fact: AtomicFact = NotInFact::new(
+                not_in_fact.element.clone(),
+                side.clone(),
+                not_in_fact.line_file.clone(),
+            )
+            .into();
+            let non_member_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &non_member_fact,
+                verify_state,
+            )?;
+            if non_member_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        not_in_fact.clone().into(),
+                        format!("intersection non-membership: non-member of the {side_name} side"),
+                        vec![non_member_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        Ok((StmtUnknown::new()).into())
+    }
+
     // Set-difference introduction: a left member excluded from the right side is in the difference.
     // Example: `x $in A`, `not x $in B` prove `x $in set_minus(A, B)`.
     pub(super) fn verify_in_fact_in_set_minus_by_member_and_non_member(

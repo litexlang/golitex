@@ -277,6 +277,13 @@ fn run_repository_module_plan_to_target(
             )),
         );
     };
+    let source_path = module.main_file_path.clone();
+    if source_path.ends_with(".lit") {
+        let (mut source_results, source_error) =
+            run_repository_source_file(runtime, source_path.as_str());
+        results.append(&mut source_results);
+        return (results, source_error);
+    }
     let run_targets = module.run_targets.clone();
     for target in run_targets {
         let target_execution_mode =
@@ -334,6 +341,13 @@ fn run_repository_module_plan(
             )),
         );
     };
+    let source_path = module.main_file_path.clone();
+    if source_path.ends_with(".lit") {
+        let (mut source_results, source_error) =
+            run_repository_source_file(runtime, source_path.as_str());
+        results.append(&mut source_results);
+        return (results, source_error);
+    }
     let run_targets = module.run_targets.clone();
     for target in run_targets {
         let target_execution_mode =

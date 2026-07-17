@@ -2308,15 +2308,13 @@ mod module_qualification_parse_tests {
     fn standard_library_namespace_is_valid_only_as_a_qualified_module_root() {
         let mut rt = Runtime::new();
 
-        let thm_stmt =
-            parse_one_stmt_line_with_runtime(&mut rt, "by thm std::basics::implementation::T(a)");
+        let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm std::basics::T(a)");
         let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
             panic!("expected by thm stmt");
         };
         assert_with_mod(&thm_stmt.name, "std::basics::implementation", "T");
 
-        let template_obj =
-            parse_one_obj_line_with_runtime(&mut rt, "\\std::basics::implementation::Template<2>");
+        let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\std::basics::Template<2>");
         let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
             panic!("expected instantiated template object");
         };
@@ -2326,17 +2324,14 @@ mod module_qualification_parse_tests {
             "Template",
         );
 
-        let struct_obj =
-            parse_one_obj_line_with_runtime(&mut rt, "&std::basics::implementation::Struct");
+        let struct_obj = parse_one_obj_line_with_runtime(&mut rt, "&std::basics::Struct");
         let Obj::StructObj(struct_obj) = struct_obj else {
             panic!("expected struct object");
         };
         assert_with_mod(&struct_obj.name, "std::basics::implementation", "Struct");
 
-        let replacement_obj = parse_one_obj_line_with_runtime(
-            &mut rt,
-            "replacement(std::basics::implementation::P, A)",
-        );
+        let replacement_obj =
+            parse_one_obj_line_with_runtime(&mut rt, "replacement(std::basics::P, A)");
         let Obj::Replacement(replacement_obj) = replacement_obj else {
             panic!("expected replacement object");
         };
@@ -2346,14 +2341,14 @@ mod module_qualification_parse_tests {
             "P",
         );
 
-        let obj = parse_one_obj_line_with_runtime(&mut rt, "std::basics::implementation::value");
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "std::basics::value");
         let Obj::Atom(AtomObj::IdentifierWithMod(obj)) = obj else {
             panic!("expected module-qualified identifier");
         };
         assert_eq!(obj.mod_name, "std::basics::implementation");
         assert_eq!(obj.name, "value");
 
-        let fact = parse_one_fact_line_with_runtime(&mut rt, "$std::basics::implementation::P(a)");
+        let fact = parse_one_fact_line_with_runtime(&mut rt, "$std::basics::P(a)");
         let Fact::AtomicFact(AtomicFact::NormalAtomicFact(fact)) = fact else {
             panic!("expected normal atomic fact");
         };

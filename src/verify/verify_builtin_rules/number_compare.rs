@@ -1339,8 +1339,8 @@ impl Runtime {
         )))
     }
 
-    // `(-1)*x` order vs 0: e.g. `x < 0` or `x <= 0` implies `(-1)*x >= 0`; `x > 0` implies `(-1)*x < 0`.
-    // Also handles `0 <= (-1)*x` (equivalently `0 <= -x` when `-x` parses as `(-1)*x`).
+    // Negation reverses order; it also specializes to sign facts at zero.
+    // Example: `x < -5` implies `-x > 5`.
     fn try_verify_order_opposite_sign_mul_minus_one(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -1356,6 +1356,77 @@ impl Runtime {
                 ),
             )))
         };
+        match atomic_fact {
+            AtomicFact::GreaterFact(f) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let negative_right: Obj =
+                        Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
+                    let reverse: AtomicFact =
+                        LessFact::new(x, negative_right, f.line_file.clone()).into();
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &reverse,
+                            verify_state,
+                        )?
+                        .is_true()
+                    {
+                        return success("order: -x > y from x < -y");
+                    }
+                }
+            }
+            AtomicFact::GreaterEqualFact(f) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let negative_right: Obj =
+                        Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
+                    let reverse: AtomicFact =
+                        LessEqualFact::new(x, negative_right, f.line_file.clone()).into();
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &reverse,
+                            verify_state,
+                        )?
+                        .is_true()
+                    {
+                        return success("order: -x >= y from x <= -y");
+                    }
+                }
+            }
+            AtomicFact::LessFact(f) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let negative_right: Obj =
+                        Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
+                    let reverse: AtomicFact =
+                        GreaterFact::new(x, negative_right, f.line_file.clone()).into();
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &reverse,
+                            verify_state,
+                        )?
+                        .is_true()
+                    {
+                        return success("order: -x < y from x > -y");
+                    }
+                }
+            }
+            AtomicFact::LessEqualFact(f) => {
+                if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
+                    let negative_right: Obj =
+                        Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
+                    let reverse: AtomicFact =
+                        GreaterEqualFact::new(x, negative_right, f.line_file.clone()).into();
+                    if self
+                        .verify_non_equational_known_then_builtin_rules_only(
+                            &reverse,
+                            verify_state,
+                        )?
+                        .is_true()
+                    {
+                        return success("order: -x <= y from x >= -y");
+                    }
+                }
+            }
+            _ => {}
+        }
         match atomic_fact {
             AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {

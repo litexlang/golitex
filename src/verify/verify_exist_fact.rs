@@ -135,6 +135,32 @@ fn rational_integer_ratio_exist_fact_non_witness_operand(
     Some(other)
 }
 
+fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFactEnum) -> Option<&Obj> {
+    if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
+        return None;
+    }
+    let params = exist_fact
+        .params_def_with_type()
+        .collect_param_names_with_types();
+    let [(witness_name, ParamType::Obj(Obj::StandardSet(StandardSet::NPos)))] = params.as_slice()
+    else {
+        return None;
+    };
+    let ExistBodyFact::AtomicFact(AtomicFact::LessFact(less_fact)) = &exist_fact.facts()[0] else {
+        return None;
+    };
+    let Obj::Div(div) = &less_fact.left else {
+        return None;
+    };
+    if !matches!(div.left.as_ref(), Obj::Number(number) if number.normalized_value == "1")
+        || !matches!(div.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name)
+        || Runtime::obj_depends_on_given_exist_param(&less_fact.right, &[witness_name.clone()])
+    {
+        return None;
+    }
+    Some(&less_fact.right)
+}
+
 impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
@@ -201,6 +227,31 @@ impl Runtime {
                         exist_fact.clone().into(),
                         "exist: rational integer ratio representation".to_string(),
                         vec![rational_membership],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        // Every positive real has a reciprocal positive-natural bound.
+        // Example: `exist n N_pos st {1 / n < epsilon}` for `epsilon $in R_pos`.
+        if let Some(bound) = archimedean_reciprocal_bound_non_witness_operand(exist_fact) {
+            let positive_bound: AtomicFact = InFact::new(
+                bound.clone(),
+                StandardSet::RPos.into(),
+                exist_fact.line_file(),
+            )
+            .into();
+            let positive_bound_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &positive_bound,
+                verify_state,
+            )?;
+            if positive_bound_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        exist_fact.clone().into(),
+                        "exist: Archimedean reciprocal bound".to_string(),
+                        vec![positive_bound_result],
                     )
                     .into(),
                 );

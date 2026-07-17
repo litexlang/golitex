@@ -246,7 +246,7 @@ thm in_union_is_in_left_or_right:
         x $in union(A, B)
         =>:
             x $in A or x $in B
-    trust x $in A or x $in B
+    x $in A or x $in B
 
 claim:
     ? forall A, B set, x set:
@@ -2599,7 +2599,8 @@ thm finite_set_size_zero_is_empty:
         finite_set_size(A) = 0
         =>:
             A = {}
-    trust A = {}
+    not $is_nonempty_set(A)
+    A = {}
 
 sketch:
     claim:

@@ -13,3 +13,18 @@ forall A, B set, x intersect(A, B):
 forall A, B set, x set_minus(A, B):
     x $in A
     not x $in B
+
+# Elementary subset and non-membership consequences are builtin rules too.
+
+forall A, B set, x set:
+    not x $in A
+    =>:
+        not x $in intersect(A, B)
+
+forall A, B set:
+    intersect(A, B) $subset A
+    intersect(A, B) $subset B
+    A $subset union(A, B)
+    B $subset union(A, B)
+    set_minus(A, B) $subset A
+    set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))

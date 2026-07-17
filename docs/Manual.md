@@ -2196,7 +2196,7 @@ These manifests obey four structural rules:
    descendant of the importing module.
 
 `[import std]` names installed standard-library modules. For example, `basics`
-loads `std/basics/litex.config`. A standard package is an ordinary `module`;
+loads `std/basics.lit`. A standard package is an ordinary `module`;
 there is no separate `std/litex.config` package root.
 
 Execution follows one recursive, left-to-right `[export]` order:
@@ -2218,7 +2218,7 @@ There is no `[requires]` table and no `[run]` table. Dependency availability is
 the recursive export prefix itself. There is also no flatten mode: every folder
 alias and file alias remains in the canonical name. With the manifests above,
 examples include `chap1::name`, `Part2::lemma1::name`, and
-`std::basics::implementation::name`.
+`std::basics::name`.
 
 Earlier exported entries can be cited by canonical name:
 
@@ -2239,7 +2239,7 @@ import "../Algebra" as Algebra
 Algebra::implementation::some_fact
 
 import std basics
-std::basics::implementation::some_fact
+std::basics::some_fact
 ```
 
 The quoted path must be an independently runnable `module` folder. Each such

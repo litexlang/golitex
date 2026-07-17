@@ -862,6 +862,26 @@ impl Runtime {
                 );
             }
         }
+        // A finite set of size zero has no member.
+        // Example: `finite_set_size(S) = 0` => `not $is_nonempty_set(S)`.
+        let finite_set_size: Obj = FiniteSetSize::new(not_is_nonempty_set_fact.set.clone()).into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let size_zero_result = self.verify_objs_are_equal_known_only(
+            &finite_set_size,
+            &zero,
+            not_is_nonempty_set_fact.line_file.clone(),
+        );
+        if size_zero_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    not_is_nonempty_set_fact.clone().into(),
+                    InferResult::new(),
+                    "finite_set_size_zero_is_not_nonempty".to_string(),
+                    vec![size_zero_result],
+                )
+                .into(),
+            );
+        }
         // Empty set rule: `not $is_nonempty_set(S)` follows from known `S = {}`.
         // Example: after `S = {}`, prove `not $is_nonempty_set(S)`.
         let empty_set: Obj = ListSet::new(vec![]).into();

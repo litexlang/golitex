@@ -579,18 +579,18 @@ forall x, y Z:
 # We first record a standard bound as a known fact, then use it to prove the
 # target statement.
 
-# Source handling: this source item records the displayed fact as background mathematics.
-# trust: its supporting proof is not expanded in this chapter.
-trust:
-    forall x R:
-        x^2 <= 8
+claim:
+    ? forall p R:
+        p^2 <= 8
         =>:
-            x >= -5
-
-forall p R:
-    p^2 <= 8
-    =>:
-        p >= -5
+            p >= -5
+    by contra:
+        ? p >= -5
+        p < -5
+        -p > 5
+        p^2 = (-p)^2 >= 5^2 = 25
+        25 > 8
+        impossible p^2 <= 8
 
 # 2.4.3
 

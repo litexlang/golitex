@@ -584,7 +584,7 @@ sketch:
     claim:
         ? forall n N:
             n^2 != 2
-        by thm std::basics::implementation::integer_le_or_ge_successor(n, 1)
+        by thm std::basics::integer_le_or_ge_successor(n, 1)
         by cases:
             ? n^2 != 2
             case n <= 1:

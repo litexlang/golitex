@@ -104,7 +104,7 @@ Declare local project files and child submodules in recursive ordered
 `[export]` entries. Only a `[hierarchy] module` declares non-standard packages
 in `[import]` or installed packages in `[import std]`. Files cite canonical
 names such as `Part2::chap3::theorem` or
-`std::basics::implementation::theorem`. Module source files cannot write
+`std::basics::theorem`. Module source files cannot write
 source-level imports.
 
 The ordinary REPL, and the continued terminal after a successful isolated
@@ -116,7 +116,7 @@ import "../Algebra" as Algebra
 Algebra::implementation::some_fact
 
 import std basics
-std::basics::implementation::some_fact
+std::basics::some_fact
 ```
 
 The quoted target must be a folder whose `litex.config` declares
@@ -262,7 +262,7 @@ Use `litex.config` to organize a folder tree:
 - declare external module folders under `[import]` and installed packages under
   `[import std]`, only in the top-level module;
 - cite earlier entries with their full folder/file aliases, such as
-  `Part2::chap7::name` or `std::basics::implementation::name`.
+  `Part2::chap7::name` or `std::basics::name`.
 
 A configured folder may contain only `litex.config` and the direct children
 listed in `[export]`. Exported folders must be submodules. Imported targets must

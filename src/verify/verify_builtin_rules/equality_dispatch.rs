@@ -990,6 +990,19 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
     ) -> Option<StmtResult> {
+        // A symmetric difference is the union of its two asymmetric differences.
+        // Example: `set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))`.
+        if Self::set_diff_as_union_of_asymmetric_differences_shape(left, right)
+            || Self::set_diff_as_union_of_asymmetric_differences_shape(right, left)
+        {
+            return Some(Self::set_equality_success(
+                left,
+                right,
+                line_file,
+                "set_diff_as_union_of_asymmetric_differences",
+            ));
+        }
+
         // Set-minus distributes over union by De Morgan's law, accepted in either direction.
         // Example: `set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))`.
         if Self::set_minus_union_de_morgan_shape(left, right)
@@ -1188,6 +1201,25 @@ impl Runtime {
             right_left_set_minus,
             right_right_set_minus,
         )
+    }
+
+    fn set_diff_as_union_of_asymmetric_differences_shape(left: &Obj, right: &Obj) -> bool {
+        let Obj::SetDiff(set_diff) = left else {
+            return false;
+        };
+        let Obj::Union(union) = right else {
+            return false;
+        };
+        let Obj::SetMinus(left_set_minus) = union.left.as_ref() else {
+            return false;
+        };
+        let Obj::SetMinus(right_set_minus) = union.right.as_ref() else {
+            return false;
+        };
+        verify_equality_by_they_are_the_same(&set_diff.left, &left_set_minus.left)
+            && verify_equality_by_they_are_the_same(&set_diff.right, &left_set_minus.right)
+            && verify_equality_by_they_are_the_same(&set_diff.right, &right_set_minus.left)
+            && verify_equality_by_they_are_the_same(&set_diff.left, &right_set_minus.right)
     }
 
     fn set_minus_intersect_de_morgan_shape(left: &Obj, right: &Obj) -> bool {

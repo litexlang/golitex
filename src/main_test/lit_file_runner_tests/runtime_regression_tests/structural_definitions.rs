@@ -264,6 +264,122 @@ exist a, b R st {b <= a}
 }
 
 #[test]
+fn archimedean_reciprocal_bound_is_a_builtin_rule() {
+    let source_code = r#"
+forall epsilon R_pos:
+    exist n N_pos st {1 / n < epsilon}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("archimedean_reciprocal_bound_is_a_builtin_rule");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "the Archimedean reciprocal bound should verify without std facts:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("exist: Archimedean reciprocal bound"),
+        "the Archimedean reciprocal bound should expose builtin provenance:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn finite_set_size_zero_is_not_nonempty_is_a_builtin_rule() {
+    let source_code = r#"
+forall S finite_set:
+    finite_set_size(S) = 0
+    =>:
+        not $is_nonempty_set(S)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "finite_set_size_zero_is_not_nonempty_is_a_builtin_rule",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "a zero-size finite set should be empty:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("finite set size zero is not nonempty"),
+        "the zero-size finite-set rule should expose builtin provenance:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn negation_reverses_order_as_a_builtin_rule() {
+    let source_code = r#"
+forall x R:
+    x < -5
+    =>:
+        -x > 5
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("negation_reverses_order_as_a_builtin_rule");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "negation should reverse a strict order:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("order: -x > y from x < -y"),
+        "negation reversal should expose builtin provenance:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn positive_real_powers_reflect_order_as_builtin_rules() {
+    let source_code = r#"
+forall a, b, q R_pos:
+    a^q < b^q
+    =>:
+        a < b
+
+forall a, b, q R_pos:
+    a^q <= b^q
+    =>:
+        a <= b
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "positive_real_powers_reflect_order_as_builtin_rules",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "positive-real powers should reflect order on positive bases:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("a < b from positive bases and exponent, and a^q < b^q")
+            && run_output.contains("a <= b from positive bases and exponent, and a^q <= b^q"),
+        "the positive-power inverse rules should expose builtin provenance:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn rational_integer_ratio_representation_is_a_builtin_rule() {
     let source_code = r#"
 forall q Q:
@@ -840,4 +956,50 @@ have fn f by exist!:
             );
         },
     );
+}
+
+#[test]
+fn elementary_set_elimination_and_subset_rules_are_builtin() {
+    let source_code = r#"
+have A, B, x set
+trust x $in union(A, B)
+x $in A or x $in B
+
+trust not x $in A
+not x $in intersect(A, B)
+
+intersect(A, B) $subset A
+intersect(A, B) $subset B
+A $subset union(A, B)
+B $subset union(A, B)
+set_minus(A, B) $subset A
+set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "elementary_set_elimination_and_subset_rules_are_builtin",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "elementary set rules should verify without std facts:\n{}",
+        run_output
+    );
+    for rule in [
+        "intersection non-membership: non-member of the left side",
+        "intersection subset operand",
+        "operand subset union",
+        "set minus subset left operand",
+        "set diff as union of asymmetric differences",
+    ] {
+        assert!(
+            run_output.contains(rule),
+            "missing builtin rule `{rule}`:\n{}",
+            run_output
+        );
+    }
 }
