@@ -1,5 +1,19 @@
-forall a, b Z:
-    b <= a
+forall A set, B finite_set:
+    A $subset B
     =>:
-        not $is_nonempty_set(range(a, b))
-        range(a, b) = {}
+        $is_finite_set(A)
+
+forall A, B finite_set:
+    A $subset B
+    =>:
+        finite_set_size(A) <= finite_set_size(B)
+
+forall a, b N:
+    a <= b
+    =>:
+        finite_set_size(closed_range(a, b)) = b - a + 1
+
+forall a, b N:
+    a <= b
+    =>:
+        finite_set_size(range(a, b)) = b - a

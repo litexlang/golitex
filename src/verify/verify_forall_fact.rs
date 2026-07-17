@@ -207,10 +207,38 @@ impl Runtime {
             .iter()
             .any(|group| match &group.param_type {
                 ParamType::Obj(Obj::ListSet(list_set)) => list_set.list.is_empty(),
-                ParamType::Obj(Obj::Range(range)) => {
-                    range.start.to_string() == range.end.to_string()
-                }
+                ParamType::Obj(Obj::Range(range)) => integer_range_has_no_literal_points(
+                    range.start.as_ref(),
+                    range.end.as_ref(),
+                    false,
+                ),
+                ParamType::Obj(Obj::ClosedRange(range)) => integer_range_has_no_literal_points(
+                    range.start.as_ref(),
+                    range.end.as_ref(),
+                    true,
+                ),
                 _ => false,
             })
+    }
+}
+
+/// A `forall` over a concrete empty integer range is valid without checking its body.
+fn integer_range_has_no_literal_points(start: &Obj, end: &Obj, end_is_included: bool) -> bool {
+    let Some(start) = start.evaluate_to_normalized_decimal_number() else {
+        return false;
+    };
+    let Some(end) = end.evaluate_to_normalized_decimal_number() else {
+        return false;
+    };
+    let Ok(start) = start.normalized_value.parse::<i128>() else {
+        return false;
+    };
+    let Ok(end) = end.normalized_value.parse::<i128>() else {
+        return false;
+    };
+    if end_is_included {
+        end < start
+    } else {
+        end <= start
     }
 }

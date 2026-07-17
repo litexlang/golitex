@@ -292,6 +292,23 @@ forall a Z, d N_pos:
     a = d * integer_quotient(a, d) + a % d
 ```
 
+The same kernel rules expose the canonical interval and division interfaces:
+
+```litex
+forall x Q:
+    exist p, q Z st {q > 0, x = p / q}
+
+forall a, b Z:
+    closed_range(a, b) = {x Z: a <= x <= b}
+    range(a, b) = {x Z: a <= x < b}
+
+forall a, b Z:
+    b != 0
+    a % b = 0
+    =>:
+        exist k Z st {a = b * k}
+```
+
 ---
 
 ## Objects
@@ -901,9 +918,9 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | Indexing `t[i]` | The target must be a tuple, `i` must be provably in `N_pos`, and Litex must prove `i <= tuple_dim(t)`. Concrete numeric indices are normalized before this check. If a function application has a Cartesian-product return set, Litex can use that return information for tuple projections. |
 | `finite_set_size(S)` | Litex must prove `$is_finite_set(S)`. |
 | `fn_range(f)` | `f` must be well-defined and must have a known function set. To image a larger-domain function on `S`, pass the explicit restriction `fn(x S) T {f(x)}`. |
-| `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers. If the endpoints resolve to concrete numbers, Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
+| `sum(start, end, f)` and `product(start, end, f)` | The endpoints must be integers, and Litex must prove `start <= end`. The summand/product function must be unary and well-defined on the integer range, including its return set and body. |
 | `finite_set_sum(S, f)` and `finite_set_product(S, f)` | Litex must prove `$is_finite_set(S)`. For displayed finite sets, `f` must be well-defined at each listed element. For closed integer ranges, Litex reuses the corresponding range sum/product well-definedness check. For other finite sets, pass a unary function declared on `S`; for a larger-domain function, use `fn(x S) T {f(x)}`. |
-| `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. If they resolve to concrete numbers, Litex must prove `start <= end`. |
+| `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. These are total finite-set objects: `range(a, b)` is empty when `b <= a`, while `closed_range(a, b)` is empty when `b < a`. |
 | Real intervals `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]`, `'(,a)`, `'(,a]`, `'(a,)`, `'[a,)` | Endpoints must be real-number objects. |
 | `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
 | `matrix(S, rows, cols)` and matrix literal `[[...], ...]` | For matrix types, `S` must be a set and both dimensions must be in `N_pos`. Matrix literals must be rectangular and all entries must be well-defined. |

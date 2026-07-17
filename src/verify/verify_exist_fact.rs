@@ -135,6 +135,103 @@ fn rational_integer_ratio_exist_fact_non_witness_operand(
     Some(other)
 }
 
+fn rational_positive_denominator_exist_fact_non_witness_operand(
+    exist_fact: &ExistFactEnum,
+) -> Option<&Obj> {
+    if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 2 {
+        return None;
+    }
+    let params = exist_fact
+        .params_def_with_type()
+        .collect_param_names_with_types();
+    let [(numerator_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z))), (denominator_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] =
+        params.as_slice()
+    else {
+        return None;
+    };
+
+    let is_numerator = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name == *numerator_name);
+    let is_denominator = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name == *denominator_name);
+    let is_zero = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "0");
+    let denominator_is_positive = exist_fact.facts().iter().any(|fact| match fact {
+        ExistBodyFact::AtomicFact(AtomicFact::GreaterFact(fact)) => {
+            is_denominator(&fact.left) && is_zero(&fact.right)
+        }
+        ExistBodyFact::AtomicFact(AtomicFact::LessFact(fact)) => {
+            is_zero(&fact.left) && is_denominator(&fact.right)
+        }
+        _ => false,
+    });
+    if !denominator_is_positive {
+        return None;
+    }
+
+    let ratio_other = exist_fact.facts().iter().find_map(|fact| {
+        let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = fact else {
+            return None;
+        };
+        let is_selected_ratio = |obj: &Obj| match obj {
+            Obj::Div(div) => is_numerator(div.left.as_ref()) && is_denominator(div.right.as_ref()),
+            _ => false,
+        };
+        if is_selected_ratio(&equal_fact.left) {
+            Some(&equal_fact.right)
+        } else if is_selected_ratio(&equal_fact.right) {
+            Some(&equal_fact.left)
+        } else {
+            None
+        }
+    })?;
+    if Runtime::obj_depends_on_given_exist_param(
+        ratio_other,
+        &[numerator_name.clone(), denominator_name.clone()],
+    ) {
+        return None;
+    }
+    Some(ratio_other)
+}
+
+fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFactEnum) -> Option<(Obj, Obj)> {
+    if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
+        return None;
+    }
+    let params = exist_fact
+        .params_def_with_type()
+        .collect_param_names_with_types();
+    let [(witness_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
+    else {
+        return None;
+    };
+    let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = &exist_fact.facts()[0]
+    else {
+        return None;
+    };
+
+    let extract_divisor = |candidate: &Obj| match candidate {
+        Obj::Mul(product) if matches!(product.left.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name) => {
+            Some(product.right.as_ref().clone())
+        }
+        Obj::Mul(product) if matches!(product.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name) => {
+            Some(product.left.as_ref().clone())
+        }
+        _ => None,
+    };
+
+    let (dividend, divisor) = if let Some(divisor) = extract_divisor(&equal_fact.right) {
+        (equal_fact.left.clone(), divisor)
+    } else if let Some(divisor) = extract_divisor(&equal_fact.left) {
+        (equal_fact.right.clone(), divisor)
+    } else {
+        return None;
+    };
+    if Runtime::obj_depends_on_given_exist_param(&dividend, &[witness_name.clone()])
+        || Runtime::obj_depends_on_given_exist_param(&divisor, &[witness_name.clone()])
+    {
+        return None;
+    }
+    Some((dividend, divisor))
+}
+
 fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFactEnum) -> Option<&Obj> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
         return None;
@@ -207,6 +304,52 @@ fn dense_order_exist_fact_endpoints(
     Some((left_less.left.clone(), right_less.right.clone()))
 }
 
+fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(Obj, Obj, bool)> {
+    if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
+        return None;
+    }
+
+    let params = exist_fact
+        .params_def_with_type()
+        .collect_param_names_with_types();
+    let [(witness_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
+    else {
+        return None;
+    };
+
+    let ExistBodyFact::ChainFact(chain) = &exist_fact.facts()[0] else {
+        return None;
+    };
+    let chain_facts = chain.facts().ok()?;
+    let [left_bound, right_bound] = chain_facts.as_slice() else {
+        return None;
+    };
+
+    let is_witness =
+        |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name);
+    let (left, right, strict) = match (left_bound, right_bound) {
+        (AtomicFact::LessFact(left_bound), AtomicFact::LessFact(right_bound))
+            if is_witness(&left_bound.right) && is_witness(&right_bound.left) =>
+        {
+            (&left_bound.left, &right_bound.right, true)
+        }
+        (AtomicFact::LessEqualFact(left_bound), AtomicFact::LessEqualFact(right_bound))
+            if is_witness(&left_bound.right) && is_witness(&right_bound.left) =>
+        {
+            (&left_bound.left, &right_bound.right, false)
+        }
+        _ => return None,
+    };
+
+    if Runtime::obj_depends_on_given_exist_param(left, &[witness_name.clone()])
+        || Runtime::obj_depends_on_given_exist_param(right, &[witness_name.clone()])
+    {
+        return None;
+    }
+
+    Some((left.clone(), right.clone(), strict))
+}
+
 impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
@@ -255,6 +398,32 @@ impl Runtime {
             }
         }
 
+        // Every rational has an integer fraction form with a positive denominator.
+        // Example: `exist a, b Z st {b > 0, q = a / b}` for `q Q`.
+        if let Some(rational) =
+            rational_positive_denominator_exist_fact_non_witness_operand(exist_fact)
+        {
+            let in_q: AtomicFact = InFact::new(
+                rational.clone(),
+                StandardSet::Q.into(),
+                exist_fact.line_file(),
+            )
+            .into();
+            let rational_membership =
+                self.verify_non_equational_known_then_builtin_rules_only(&in_q, verify_state)?;
+            if rational_membership.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        exist_fact.clone().into(),
+                        "exist: rational representation with positive integer denominator"
+                            .to_string(),
+                        vec![rational_membership],
+                    )
+                    .into(),
+                );
+            }
+        }
+
         // Every rational is represented by an integer numerator and a nonzero
         // integer denominator. Example: `exist a Z, b Z_nz st {q = a / b}`
         // for `q Q`.
@@ -273,6 +442,67 @@ impl Runtime {
                         exist_fact.clone().into(),
                         "exist: rational integer ratio representation".to_string(),
                         vec![rational_membership],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        // A zero Euclidean remainder means a nonzero integer modulus divides the integer.
+        // Example: `a % b = 0`, `b != 0` => `exist k Z st {a = b * k}`.
+        if let Some((dividend, divisor)) = integer_divisibility_exist_fact_operands(exist_fact) {
+            let dividend_in_z: AtomicFact = InFact::new(
+                dividend.clone(),
+                StandardSet::Z.into(),
+                exist_fact.line_file(),
+            )
+            .into();
+            let divisor_in_z: AtomicFact = InFact::new(
+                divisor.clone(),
+                StandardSet::Z.into(),
+                exist_fact.line_file(),
+            )
+            .into();
+            let divisor_nonzero: AtomicFact = NotEqualFact::new(
+                divisor.clone(),
+                Number::new("0".to_string()).into(),
+                exist_fact.line_file(),
+            )
+            .into();
+            let zero_remainder: AtomicFact = EqualFact::new(
+                Mod::new(dividend, divisor).into(),
+                Number::new("0".to_string()).into(),
+                exist_fact.line_file(),
+            )
+            .into();
+            let dividend_result = self
+                .verify_atomic_fact_by_known_atomic_or_builtin_only(&dividend_in_z, verify_state)?;
+            let divisor_result = self
+                .verify_atomic_fact_by_known_atomic_or_builtin_only(&divisor_in_z, verify_state)?;
+            let divisor_nonzero_result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
+                &divisor_nonzero,
+                verify_state,
+            )?;
+            let remainder_result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
+                &zero_remainder,
+                verify_state,
+            )?;
+            if dividend_result.is_true()
+                && divisor_result.is_true()
+                && divisor_nonzero_result.is_true()
+                && remainder_result.is_true()
+            {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        exist_fact.clone().into(),
+                        "exist: zero remainder gives an integer multiple of a nonzero modulus"
+                            .to_string(),
+                        vec![
+                            dividend_result,
+                            divisor_result,
+                            divisor_nonzero_result,
+                            remainder_result,
+                        ],
                     )
                     .into(),
                 );
@@ -352,6 +582,47 @@ impl Runtime {
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: real density by the midpoint principle".to_string(),
+                            steps,
+                        )
+                        .into(),
+                    );
+                }
+            }
+        }
+
+        // An interval of real length greater than one has a strict integer witness; length at
+        // least one has a closed integer witness. These can also be proved by induction on an
+        // integer interval, but are builtin bridges for routine interval arithmetic.
+        // Examples: `b - a > 1 => exist c Z st {a < c < b}` and
+        // `b - a >= 1 => exist c Z st {a <= c <= b}`.
+        if let Some((left, right, strict)) = integer_interval_exist_fact_endpoints(exist_fact) {
+            if let Some(mut steps) = self.verify_objects_are_known_reals(
+                &[&left, &right],
+                &exist_fact.line_file(),
+                verify_state,
+            )? {
+                let one: Obj = Number::new("1".to_string()).into();
+                let gap = Sub::new(right.clone(), left.clone()).into();
+                let gap_requirement: AtomicFact = if strict {
+                    GreaterFact::new(gap, one, exist_fact.line_file()).into()
+                } else {
+                    GreaterEqualFact::new(gap, one, exist_fact.line_file()).into()
+                };
+                let gap_result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &gap_requirement,
+                    verify_state,
+                )?;
+                if gap_result.is_true() {
+                    steps.push(gap_result);
+                    let rule = if strict {
+                        "exist: integer strictly inside a real interval wider than 1"
+                    } else {
+                        "exist: integer inside a real interval of length at least 1"
+                    };
+                    return Ok(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            exist_fact.clone().into(),
+                            rule.to_string(),
                             steps,
                         )
                         .into(),

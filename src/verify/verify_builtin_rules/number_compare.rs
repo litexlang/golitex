@@ -55,6 +55,9 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) = self.try_verify_finite_set_size_subset_le(atomic_fact, &vs)? {
+            return Ok(result);
+        }
         if let Some(result) =
             self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, &vs)?
         {
@@ -721,6 +724,69 @@ impl Runtime {
                 InferResult::new(),
                 "finite_nonempty_set_size_at_least_one".to_string(),
                 vec![finite_result, nonempty_result],
+            )
+            .into(),
+        ))
+    }
+
+    // The cardinality of a finite subset is at most that of its finite container.
+    // Example: `A $subset B` with finite `A` and `B` gives
+    // `finite_set_size(A) <= finite_set_size(B)`.
+    fn try_verify_finite_set_size_subset_le(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let AtomicFact::LessEqualFact(less_equal_fact) = atomic_fact else {
+            return Ok(None);
+        };
+        let Obj::FiniteSetSize(left_size) = &less_equal_fact.left else {
+            return Ok(None);
+        };
+        let Obj::FiniteSetSize(right_size) = &less_equal_fact.right else {
+            return Ok(None);
+        };
+
+        let subset: AtomicFact = SubsetFact::new(
+            left_size.set.as_ref().clone(),
+            right_size.set.as_ref().clone(),
+            less_equal_fact.line_file.clone(),
+        )
+        .into();
+        let subset_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&subset, verify_state)?;
+        if !subset_result.is_true() {
+            return Ok(None);
+        }
+
+        let left_finite: AtomicFact = IsFiniteSetFact::new(
+            left_size.set.as_ref().clone(),
+            less_equal_fact.line_file.clone(),
+        )
+        .into();
+        let left_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&left_finite, verify_state)?;
+        if !left_result.is_true() {
+            return Ok(None);
+        }
+
+        let right_finite: AtomicFact = IsFiniteSetFact::new(
+            right_size.set.as_ref().clone(),
+            less_equal_fact.line_file.clone(),
+        )
+        .into();
+        let right_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&right_finite, verify_state)?;
+        if !right_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                atomic_fact.clone().into(),
+                InferResult::new(),
+                "finite_set_size_subset_le".to_string(),
+                vec![subset_result, left_result, right_result],
             )
             .into(),
         ))

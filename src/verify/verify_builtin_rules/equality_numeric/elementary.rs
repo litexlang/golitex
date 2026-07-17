@@ -317,6 +317,59 @@ impl Runtime {
         )))
     }
 
+    // One has remainder one modulo every integer modulus at least two.
+    // Example: `k >= 2` => `1 % k = 1`.
+    pub(crate) fn try_verify_one_mod_equals_one_for_modulus_at_least_two(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let modulus = if Self::obj_is_builtin_literal_one(left) {
+            let Obj::Mod(mod_obj) = right else {
+                return Ok(None);
+            };
+            if !Self::obj_is_builtin_literal_one(mod_obj.left.as_ref()) {
+                return Ok(None);
+            }
+            mod_obj.right.as_ref().clone()
+        } else if Self::obj_is_builtin_literal_one(right) {
+            let Obj::Mod(mod_obj) = left else {
+                return Ok(None);
+            };
+            if !Self::obj_is_builtin_literal_one(mod_obj.left.as_ref()) {
+                return Ok(None);
+            }
+            mod_obj.right.as_ref().clone()
+        } else {
+            return Ok(None);
+        };
+
+        let modulus_at_least_two: AtomicFact = LessEqualFact::new(
+            Number::new("2".to_string()).into(),
+            modulus,
+            line_file.clone(),
+        )
+        .into();
+        let modulus_result = self.verify_non_equational_known_then_builtin_rules_only(
+            &modulus_at_least_two,
+            verify_state,
+        )?;
+        if !modulus_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "equality: 1 % k = 1 for k >= 2".to_string(),
+                vec![modulus_result],
+            )
+            .into(),
+        ))
+    }
+
     // Subtracting the Euclidean remainder leaves a multiple of the positive modulus.
     // Example: `forall a Z, b N_pos: (a - a % b) % b = 0`.
     pub(crate) fn try_verify_mod_dividend_minus_remainder_equals_zero(

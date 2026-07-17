@@ -9,63 +9,422 @@ prop finite_nonempty_set(s power_set(R)):
     $is_finite_set(s)
     $is_nonempty_set(s)
 
-trust have max_of_finite_set fn(s power_set(R): $finite_nonempty_set(s)) R
-trust have min_of_finite_set fn(s power_set(R): $finite_nonempty_set(s)) R
+# Finite real extrema are source-level library mathematics.  The subset facts
+# below retain the real carrier while the finite-set induction exposes an
+# arbitrary intermediate finite set.
+prop is_maximum_of_finite_real_set(S finite_set, m R):
+    S $subset R
+    m $in S
+    forall n S:
+        n <= m
 
-trust:
-    forall s power_set(R), item s:
-        $finite_nonempty_set(s)
+prop has_maximum_of_finite_real_set(S finite_set):
+    exist m R st {$is_maximum_of_finite_real_set(S, m)}
+
+thm union_of_R_subsets_is_R_subset:
+    ? forall A, B set:
+        A $subset R
+        B $subset R
         =>:
-            item <= max_of_finite_set(s)
-            min_of_finite_set(s) <= item
+            union(A, B) $subset R
+    claim:
+        ? forall z union(A, B):
+            z $in R
+        z $in union(A, B)
+        z $in A or z $in B
+        by cases:
+            ? z $in R
+            case z $in A:
+                z $in R
+            case z $in B:
+                z $in R
+    union(A, B) $subset R
 
-    forall s power_set(R):
-        $finite_nonempty_set(s)
+thm singleton_of_R_is_R_subset:
+    ? forall x R:
+        {x} $subset R
+    claim:
+        ? forall y {x}:
+            y $in R
+        y = x
+        x $in R
+        y $in R
+    {x} $subset R
+
+thm insertion_of_real_maximum:
+    ? forall x R, T finite_set:
+        $has_maximum_of_finite_real_set(T)
         =>:
-            max_of_finite_set(s) $in s
-            min_of_finite_set(s) $in s
+            $has_maximum_of_finite_real_set(union({x}, T))
+    obtain m from exist m R st {$is_maximum_of_finite_real_set(T, m)}
+    x <= m or x > m
+    by cases:
+        ? $has_maximum_of_finite_real_set(union({x}, T))
+        case x <= m:
+            witness exist q R st {$is_maximum_of_finite_real_set(union({x}, T), q)} from m:
+                by thm singleton_of_R_is_R_subset(x)
+                {x} $subset R
+                by thm union_of_R_subsets_is_R_subset({x}, T)
+                union({x}, T) $subset R
+                m $in T
+                m $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        y <= m
+                    y $in union({x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? y <= m
+                        case y $in {x}:
+                            y = x
+                            y <= m
+                        case y $in T:
+                            forall n T:
+                                n <= m
+                            y <= m
+                $is_maximum_of_finite_real_set(union({x}, T), m)
+        case x > m:
+            witness exist q R st {$is_maximum_of_finite_real_set(union({x}, T), q)} from x:
+                by thm singleton_of_R_is_R_subset(x)
+                {x} $subset R
+                by thm union_of_R_subsets_is_R_subset({x}, T)
+                union({x}, T) $subset R
+                x $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        y <= x
+                    y $in union({x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? y <= x
+                        case y $in {x}:
+                            y = x
+                            y <= x
+                        case y $in T:
+                            forall n T:
+                                n <= m
+                            y <= m < x
+                            y <= x
+                $is_maximum_of_finite_real_set(union({x}, T), x)
 
-trust:
-    forall x Q:
-        exist p, q Z st {q > 0, x = p / q}
+thm insertion_into_empty_real_has_maximum:
+    ? forall x R:
+        $has_maximum_of_finite_real_set(union({x}, {}))
+    witness exist q R st {$is_maximum_of_finite_real_set(union({x}, {}), q)} from x:
+        by thm singleton_of_R_is_R_subset(x)
+        {x} $subset R
+        {} $subset R
+        by thm union_of_R_subsets_is_R_subset({x}, {})
+        union({x}, {}) $subset R
+        x $in union({x}, {})
+        claim:
+            ? forall y union({x}, {}):
+                y <= x
+            y $in union({x}, {})
+            y $in {x} or y $in {}
+            by cases:
+                ? y <= x
+                case y $in {x}:
+                    y = x
+                    y <= x
+                case y $in {}:
+                    impossible y $in {}
+        $is_maximum_of_finite_real_set(union({x}, {}), x)
 
-    forall x, y R:
-        x < y
+thm finite_nonempty_real_set_has_maximum_by_induction:
+    ? forall S finite_set:
+        S $subset R
+        $is_nonempty_set(S)
         =>:
-            exist z Q st {x < z < y}
+            $has_maximum_of_finite_real_set(S)
+    by induc P in S:
+        ? P = {} or $has_maximum_of_finite_real_set(P)
+        ? from P = {}:
+            P = {}
+        ? induc x, T:
+            T = {} or $has_maximum_of_finite_real_set(T)
+            by cases:
+                ? union({x}, T) = {} or $has_maximum_of_finite_real_set(union({x}, T))
+                case T = {}:
+                    union({x}, T) = union({x}, {})
+                    by thm insertion_into_empty_real_has_maximum(x)
+                    $has_maximum_of_finite_real_set(union({x}, T))
+                case $has_maximum_of_finite_real_set(T):
+                    T $subset R
+                    by thm insertion_of_real_maximum(x, T)
+                    $has_maximum_of_finite_real_set(union({x}, T))
+    S = {} or $has_maximum_of_finite_real_set(S)
+    by cases:
+        ? $has_maximum_of_finite_real_set(S)
+        case S = {}:
+            have a S
+            a $in S
+            a $in {}
+            impossible a $in {}
+        case $has_maximum_of_finite_real_set(S):
+            $has_maximum_of_finite_real_set(S)
 
-    forall a, b Z:
-        closed_range(a, b) = {x Z: a <= x <= b}
-
-    forall a, b Z:
-        range(a, b) = {x Z: a <= x < b}
-
-    forall a, b Z:
-        b != 0
-        a % b = 0
+thm finite_nonempty_real_set_has_maximum:
+    ? forall S power_set(R):
+        $finite_nonempty_set(S)
         =>:
-            exist k Z st {a = k * b}
+            exist m R st {$is_maximum_of_finite_real_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset R
+    by thm finite_nonempty_real_set_has_maximum_by_induction(S)
+    $has_maximum_of_finite_real_set(S)
+    obtain m from exist m R st {$is_maximum_of_finite_real_set(S, m)}
+    witness exist q R st {$is_maximum_of_finite_real_set(S, q)} from m:
+        $is_maximum_of_finite_real_set(S, m)
 
-    # Litex evaluates `1 % 1 = 0`. For modulus `k` in `N_pos` with `k >= 2`, the remainder of 1 is 1.
-    forall k N_pos:
-        k >= 2 or k != 1
+thm finite_nonempty_real_set_has_unique_maximum:
+    ? forall S power_set(R):
+        $finite_nonempty_set(S)
         =>:
-            1 % k = 1
+            exist! m R st {$is_maximum_of_finite_real_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset R
+    by thm finite_nonempty_real_set_has_maximum(S)
+    obtain m from exist m R st {$is_maximum_of_finite_real_set(S, m)}
+    claim:
+        ? forall m1, m2 R:
+            $is_maximum_of_finite_real_set(S, m1)
+            $is_maximum_of_finite_real_set(S, m2)
+            =>:
+                m1 = m2
+        m1 $in S
+        m2 $in S
+        forall n S:
+            n <= m1
+        forall n S:
+            n <= m2
+        m1 <= m2 <= m1
+        m1 = m2
+    exist! m R st {$is_maximum_of_finite_real_set(S, m)}
 
-thm one_mod_eq_one_of_two_le:
-    ? forall k N_pos:
-        k >= 2
+have fn max_of_finite_set by exist!:
+    ? forall S power_set(R):
+        $finite_nonempty_set(S)
         =>:
-            1 % k = 1
-    k >= 2 or k != 1
-    1 % k = 1
+            exist! m R st {$is_maximum_of_finite_real_set(S, m)}
+    by thm finite_nonempty_real_set_has_unique_maximum(S)
 
-# Rational representation by integer numerator and nonzero integer denominator.
-# Example: `forall q Q: exist a Z, b Z_nz st {q = a / b}`.
-thm rational_as_integer_ratio:
-    ? forall x Q:
-        exist p Z, q Z_nz st {x = p / q}
-    exist p Z, q Z_nz st {x = p / q}
+thm max_of_finite_set_is_maximum:
+    ? forall S power_set(R):
+        $finite_nonempty_set(S)
+        =>:
+            $is_maximum_of_finite_real_set(S, max_of_finite_set(S))
+    $is_maximum_of_finite_real_set(S, max_of_finite_set(S))
+
+thm max_of_finite_set_is_member:
+    ? forall S power_set(R):
+        $finite_nonempty_set(S)
+        =>:
+            max_of_finite_set(S) $in S
+    by thm max_of_finite_set_is_maximum(S)
+    max_of_finite_set(S) $in S
+
+thm member_le_max_of_finite_set:
+    ? forall S power_set(R), item S:
+        $finite_nonempty_set(S)
+        =>:
+            item <= max_of_finite_set(S)
+    by thm max_of_finite_set_is_maximum(S)
+    item <= max_of_finite_set(S)
+
+prop is_minimum_of_finite_real_set(S finite_set, m R):
+    S $subset R
+    m $in S
+    forall n S:
+        m <= n
+
+prop has_minimum_of_finite_real_set(S finite_set):
+    exist m R st {$is_minimum_of_finite_real_set(S, m)}
+
+thm insertion_of_real_minimum:
+    ? forall x R, T finite_set:
+        $has_minimum_of_finite_real_set(T)
+        =>:
+            $has_minimum_of_finite_real_set(union({x}, T))
+    obtain m from exist m R st {$is_minimum_of_finite_real_set(T, m)}
+    m <= x or m > x
+    by cases:
+        ? $has_minimum_of_finite_real_set(union({x}, T))
+        case m <= x:
+            witness exist q R st {$is_minimum_of_finite_real_set(union({x}, T), q)} from m:
+                by thm singleton_of_R_is_R_subset(x)
+                {x} $subset R
+                by thm union_of_R_subsets_is_R_subset({x}, T)
+                union({x}, T) $subset R
+                m $in T
+                m $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        m <= y
+                    y $in union({x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? m <= y
+                        case y $in {x}:
+                            y = x
+                            m <= x = y
+                        case y $in T:
+                            forall n T:
+                                m <= n
+                            m <= y
+                $is_minimum_of_finite_real_set(union({x}, T), m)
+        case m > x:
+            witness exist q R st {$is_minimum_of_finite_real_set(union({x}, T), q)} from x:
+                by thm singleton_of_R_is_R_subset(x)
+                {x} $subset R
+                by thm union_of_R_subsets_is_R_subset({x}, T)
+                union({x}, T) $subset R
+                x $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        x <= y
+                    y $in union({x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? x <= y
+                        case y $in {x}:
+                            y = x
+                            x <= y
+                        case y $in T:
+                            forall n T:
+                                m <= n
+                            x < m <= y
+                            x <= y
+                $is_minimum_of_finite_real_set(union({x}, T), x)
+
+thm insertion_into_empty_real_has_minimum:
+    ? forall x R:
+        $has_minimum_of_finite_real_set(union({x}, {}))
+    witness exist q R st {$is_minimum_of_finite_real_set(union({x}, {}), q)} from x:
+        by thm singleton_of_R_is_R_subset(x)
+        {x} $subset R
+        {} $subset R
+        by thm union_of_R_subsets_is_R_subset({x}, {})
+        union({x}, {}) $subset R
+        x $in union({x}, {})
+        claim:
+            ? forall y union({x}, {}):
+                x <= y
+            y $in union({x}, {})
+            y $in {x} or y $in {}
+            by cases:
+                ? x <= y
+                case y $in {x}:
+                    y = x
+                    x <= y
+                case y $in {}:
+                    impossible y $in {}
+        $is_minimum_of_finite_real_set(union({x}, {}), x)
+
+thm finite_nonempty_real_set_has_minimum_by_induction:
+    ? forall S finite_set:
+        S $subset R
+        $is_nonempty_set(S)
+        =>:
+            $has_minimum_of_finite_real_set(S)
+    by induc P in S:
+        ? P = {} or $has_minimum_of_finite_real_set(P)
+        ? from P = {}:
+            P = {}
+        ? induc x, T:
+            T = {} or $has_minimum_of_finite_real_set(T)
+            by cases:
+                ? union({x}, T) = {} or $has_minimum_of_finite_real_set(union({x}, T))
+                case T = {}:
+                    union({x}, T) = union({x}, {})
+                    by thm insertion_into_empty_real_has_minimum(x)
+                    $has_minimum_of_finite_real_set(union({x}, T))
+                case $has_minimum_of_finite_real_set(T):
+                    T $subset R
+                    by thm insertion_of_real_minimum(x, T)
+                    $has_minimum_of_finite_real_set(union({x}, T))
+    S = {} or $has_minimum_of_finite_real_set(S)
+    by cases:
+        ? $has_minimum_of_finite_real_set(S)
+        case S = {}:
+            have a S
+            a $in S
+            a $in {}
+            impossible a $in {}
+        case $has_minimum_of_finite_real_set(S):
+            $has_minimum_of_finite_real_set(S)
+
+thm finite_nonempty_real_set_has_minimum:
+    ? forall S power_set(R):
+        $finite_nonempty_set(S)
+        =>:
+            exist m R st {$is_minimum_of_finite_real_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset R
+    by thm finite_nonempty_real_set_has_minimum_by_induction(S)
+    $has_minimum_of_finite_real_set(S)
+    obtain m from exist m R st {$is_minimum_of_finite_real_set(S, m)}
+    witness exist q R st {$is_minimum_of_finite_real_set(S, q)} from m:
+        $is_minimum_of_finite_real_set(S, m)
+
+thm finite_nonempty_real_set_has_unique_minimum:
+    ? forall S power_set(R):
+        $finite_nonempty_set(S)
+        =>:
+            exist! m R st {$is_minimum_of_finite_real_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset R
+    by thm finite_nonempty_real_set_has_minimum(S)
+    obtain m from exist m R st {$is_minimum_of_finite_real_set(S, m)}
+    claim:
+        ? forall m1, m2 R:
+            $is_minimum_of_finite_real_set(S, m1)
+            $is_minimum_of_finite_real_set(S, m2)
+            =>:
+                m1 = m2
+        m1 $in S
+        m2 $in S
+        forall n S:
+            m1 <= n
+        forall n S:
+            m2 <= n
+        m1 <= m2 <= m1
+        m1 = m2
+    exist! m R st {$is_minimum_of_finite_real_set(S, m)}
+
+have fn min_of_finite_set by exist!:
+    ? forall S power_set(R):
+        $finite_nonempty_set(S)
+        =>:
+            exist! m R st {$is_minimum_of_finite_real_set(S, m)}
+    by thm finite_nonempty_real_set_has_unique_minimum(S)
+
+thm min_of_finite_set_is_minimum:
+    ? forall S power_set(R):
+        $finite_nonempty_set(S)
+        =>:
+            $is_minimum_of_finite_real_set(S, min_of_finite_set(S))
+    $is_minimum_of_finite_real_set(S, min_of_finite_set(S))
+
+thm min_of_finite_set_is_member:
+    ? forall S power_set(R):
+        $finite_nonempty_set(S)
+        =>:
+            min_of_finite_set(S) $in S
+    by thm min_of_finite_set_is_minimum(S)
+    min_of_finite_set(S) $in S
+
+thm min_of_finite_set_le_member:
+    ? forall S power_set(R), item S:
+        $finite_nonempty_set(S)
+        =>:
+            min_of_finite_set(S) <= item
+    by thm min_of_finite_set_is_minimum(S)
+    min_of_finite_set(S) <= item
 
 # A reduced fraction has no positive common divisor other than 1.
 prop is_reduced_fraction(a Z, b N_pos):
@@ -82,51 +441,17 @@ thm rational_has_unique_reduced_fraction:
         exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
     trust exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
 
-thm in_intersect_is_in_both:
-    ? forall z set, A set, B set:
-        $in(z, intersect(A, B))
-        =>:
-            $in(z, A)
-            $in(z, B)
-    $in(z, A)
-    $in(z, B)
-
-thm in_set_minus_is_in_first_operand:
-    ? forall z set, A set, B set:
-        $in(z, set_minus(A, B))
-        =>:
-            $in(z, A)
-    $in(z, A)
-
-thm in_set_minus_is_not_in_second_operand:
-    ? forall z set, A set, B set:
-        $in(z, set_minus(A, B))
-        =>:
-            not $in(z, B)
-    not $in(z, B)
-
-thm in_cup_via_member_set:
-    ? forall z set, F set, Y set:
-        $in(Y, F)
-        $in(z, Y)
-        =>:
-            $in(z, cup(F))
-    $in(z, cup(F))
-
 trust:
     forall A finite_set, B set:
         B $subset A
         =>:
             $is_finite_set(B)
-            $is_finite_set(set_minus(A, B))
             finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)
 
     forall A, B finite_set:
         finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
         finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
         finite_set_size(B) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(B, A))
-        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
-        finite_set_size(set_minus(B, A)) = finite_set_size(B) - finite_set_size(intersect(A, B))
         finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
 
     forall A, B finite_set:
@@ -156,38 +481,10 @@ thm subset_of_finite_set_is_finite:
             $is_finite_set(A)
     $is_finite_set(A)
 
-thm in_union_from_left:
-    ? forall z set, A set, B set:
-        $in(z, A)
-        =>:
-            $in(z, union(A, B))
-    $in(z, union(A, B))
-
-thm in_union_from_right:
-    ? forall z set, A set, B set:
-        $in(z, B)
-        =>:
-            $in(z, union(A, B))
-    $in(z, union(A, B))
-
-thm finite_set_size_zero_is_empty:
-    ? forall A finite_set:
-        finite_set_size(A) = 0
-        =>:
-            not $is_nonempty_set(A)
-            A = {}
-    not $is_nonempty_set(A)
-    A = {}
-
 thm finite_set_size_union:
     ? forall A, B finite_set:
         finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
     finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
-
-thm finite_set_size_set_minus:
-    ? forall A, B finite_set:
-        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
-    finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
 
 thm finite_set_size_set_diff:
     ? forall A, B finite_set:
@@ -219,71 +516,6 @@ thm finite_set_size_set_diff_le_sum:
         finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
     finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
 
-"""
-Finite-set subset cardinality.  This is a foundational set-theoretic
-interface: a subset of a finite set is finite, and its cardinality is no
-larger than that of the containing set.
-"""
-axiom finite_set_size_subset_le:
-    ? forall A set, B finite_set:
-        A $subset B
-        =>:
-            $is_finite_set(A)
-            finite_set_size(A) <= finite_set_size(B)
-
-"""
-Cardinality of integer intervals.  Concrete endpoint instances are reduced
-by the evaluator; these foundational interfaces cover symbolic endpoints.
-"""
-axiom finite_set_size_closed_range:
-    ? forall a, b N:
-        a <= b
-        =>:
-            finite_set_size(closed_range(a, b)) = b - a + 1
-
-axiom finite_set_size_range:
-    ? forall a, b N:
-        a <= b
-        =>:
-            finite_set_size(range(a, b)) = b - a
-
-thm in_union_is_in_left_or_right:
-    ? forall z set, A set, B set:
-        $in(z, union(A, B))
-        =>:
-            $in(z, A) or $in(z, B)
-    $in(z, A) or $in(z, B)
-
-thm in_intersect_from_both:
-    ? forall z set, A set, B set:
-        $in(z, A)
-        $in(z, B)
-        =>:
-            $in(z, intersect(A, B))
-    $in(z, intersect(A, B))
-
-thm in_set_minus_from_first_and_not_second:
-    ? forall z set, A set, B set:
-        $in(z, A)
-        not $in(z, B)
-        =>:
-            $in(z, set_minus(A, B))
-    $in(z, set_minus(A, B))
-
-thm not_in_intersect_from_not_in_left:
-    ? forall z set, A set, B set:
-        not $in(z, A)
-        =>:
-            not $in(z, intersect(A, B))
-    not $in(z, intersect(A, B))
-
-thm not_in_intersect_from_not_in_right:
-    ? forall z set, A set, B set:
-        not $in(z, B)
-        =>:
-            not $in(z, intersect(A, B))
-    not $in(z, intersect(A, B))
-
 # Finite maxima in N are source-level library mathematics, rather than a
 # kernel selection primitive.  `S power_set(N)` carries the subset-of-N part
 # of the interface; finiteness and nonemptiness remain explicit below.
@@ -306,7 +538,6 @@ thm union_of_N_subsets_is_N_subset:
         ? forall z union(A, B):
             z $in N
         z $in union(A, B)
-        by thm in_union_is_in_left_or_right(z, A, B)
         z $in A or z $in B
         by cases:
             ? z $in N
@@ -343,13 +574,11 @@ thm insertion_of_N_maximum:
                 {x} $subset N
                 by thm union_of_N_subsets_is_N_subset({x}, T)
                 union({x}, T) $subset N
-                by thm in_union_from_right(m, {x}, T)
                 m $in union({x}, T)
                 claim:
                     ? forall y union({x}, T):
                         y <= m
                     y $in union({x}, T)
-                    by thm in_union_is_in_left_or_right(y, {x}, T)
                     y $in {x} or y $in T
                     by cases:
                         ? y <= m
@@ -367,13 +596,11 @@ thm insertion_of_N_maximum:
                 {x} $subset N
                 by thm union_of_N_subsets_is_N_subset({x}, T)
                 union({x}, T) $subset N
-                by thm in_union_from_left(x, {x}, T)
                 x $in union({x}, T)
                 claim:
                     ? forall y union({x}, T):
                         y <= x
                     y $in union({x}, T)
-                    by thm in_union_is_in_left_or_right(y, {x}, T)
                     y $in {x} or y $in T
                     by cases:
                         ? y <= x
@@ -395,13 +622,11 @@ thm insertion_into_empty_N_has_maximum:
         {} $subset N
         by thm union_of_N_subsets_is_N_subset({x}, {})
         union({x}, {}) $subset N
-        by thm in_union_from_left(x, {x}, {})
         x $in union({x}, {})
         claim:
             ? forall y union({x}, {}):
                 y <= x
             y $in union({x}, {})
-            by thm in_union_is_in_left_or_right(y, {x}, {})
             y $in {x} or y $in {}
             by cases:
                 ? y <= x
@@ -531,13 +756,11 @@ thm insertion_of_N_minimum:
                 {x} $subset N
                 by thm union_of_N_subsets_is_N_subset({x}, T)
                 union({x}, T) $subset N
-                by thm in_union_from_right(m, {x}, T)
                 m $in union({x}, T)
                 claim:
                     ? forall y union({x}, T):
                         m <= y
                     y $in union({x}, T)
-                    by thm in_union_is_in_left_or_right(y, {x}, T)
                     y $in {x} or y $in T
                     by cases:
                         ? m <= y
@@ -555,13 +778,11 @@ thm insertion_of_N_minimum:
                 {x} $subset N
                 by thm union_of_N_subsets_is_N_subset({x}, T)
                 union({x}, T) $subset N
-                by thm in_union_from_left(x, {x}, T)
                 x $in union({x}, T)
                 claim:
                     ? forall y union({x}, T):
                         x <= y
                     y $in union({x}, T)
-                    by thm in_union_is_in_left_or_right(y, {x}, T)
                     y $in {x} or y $in T
                     by cases:
                         ? x <= y
@@ -583,13 +804,11 @@ thm insertion_into_empty_N_has_minimum:
         {} $subset N
         by thm union_of_N_subsets_is_N_subset({x}, {})
         union({x}, {}) $subset N
-        by thm in_union_from_left(x, {x}, {})
         x $in union({x}, {})
         claim:
             ? forall y union({x}, {}):
                 x <= y
             y $in union({x}, {})
-            by thm in_union_is_in_left_or_right(y, {x}, {})
             y $in {x} or y $in {}
             by cases:
                 ? x <= y
@@ -692,7 +911,6 @@ thm nonempty_N_set_has_unique_minimum:
     $is_finite_set(T)
     a >= 0
     a $in closed_range(0, a)
-    by thm in_intersect_from_both(a, S, closed_range(0, a))
     a $in intersect(S, closed_range(0, a))
     a $in T
     T $subset N
@@ -713,7 +931,6 @@ thm nonempty_N_set_has_unique_minimum:
                 case x <= a:
                     x >= 0
                     x $in closed_range(0, a)
-                    by thm in_intersect_from_both(x, S, closed_range(0, a))
                     x $in intersect(S, closed_range(0, a))
                     x $in T
                     forall n T:

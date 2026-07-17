@@ -181,7 +181,7 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}
             product(1, a, fn(x N_pos) N_pos {x}) % k = 0
             2 <= k
             (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k
-            by thm basics::one_mod_eq_one_of_two_le(k)
+            1 % k = 1
             (0 + 1) % k = 1 % k = 1
             (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
             impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
@@ -320,12 +320,9 @@ claim:
 # induction to extend Euclid's lemma from a product of two factors to a power:
 # if `p` divides `a^k`, then `p` divides `a`.
 
-# The `gcd`, `egcd_l`, and `egcd_r` objects are treated abstractly here. Chapter
-# 6 is where Euclid's algorithm constructs these objects and proves their basic
-# properties, so this section does not repeat that construction. The `proof_debt`
-# blocks record exactly the facts from that earlier development that we need:
-# Bézout's identity, positivity of the gcd in the prime case, and the facts that
-# `citation::gcd(a, p)` divides both `a` and `p`.
+# The `gcd` object is treated abstractly here. Its finite-maximum construction
+# and Euclidean descent live in `citation.lit`, so this section uses only the
+# resulting Bézout and divisibility laws.
 
 # This is a common proof pattern in Litex and in mathematics. Many times we do
 # not need to know a concept's internal definition or where it came from; it is
@@ -335,9 +332,8 @@ claim:
 # time we use it.
 
 sketch:
-    # The objects and their number-theoretic laws are named in `citation.lit`.
-    # This keeps the chapter proof-facing while recording one promotable library
-    # boundary for the missing gcd/extended-gcd implementation.
+    # The gcd laws are named in `citation.lit`; Bézout exposes only the
+    # existence of coefficients, not a separate public extended-gcd object.
 
     claim:
         ? forall d, a, b Z:
@@ -346,11 +342,11 @@ sketch:
             =>:
                 $citation::divides(d, b)
 
+        by thm citation::bezout_of_coprime(a, d)
+        obtain u, v from exist u Z, v Z st {1 = u * a + v * d}
         obtain z from exist z Z st {a * b = d * z}
-        by thm citation::gcd_bezout_identity(a, d)
-        citation::egcd_l(a, d) * a + citation::egcd_r(a, d) * d = citation::gcd(a, d)
-        witness exist k Z st {b = d * k} from citation::egcd_l(a, d) * z + b * citation::egcd_r(a, d):
-            b = b * 1 = b * citation::gcd(a, d) = b * (citation::egcd_l(a, d) * a + citation::egcd_r(a, d) * d) = citation::egcd_l(a, d) * (a * b) + b * citation::egcd_r(a, d) * d = citation::egcd_l(a, d) * (d * z) + b * citation::egcd_r(a, d) * d = d * (citation::egcd_l(a, d) * z + b * citation::egcd_r(a, d))
+        witness exist k Z st {b = d * k} from u * z + b * v:
+            b = b * 1 = b * (u * a + v * d) = u * (a * b) + b * v * d = u * (d * z) + b * v * d = d * (u * z + b * v)
 
     claim:
         ? forall a, b N, p N_pos:
@@ -371,11 +367,11 @@ sketch:
         by cases:
             ? $citation::divides(p, a) or $citation::divides(p, b)
             case citation::gcd(a, p) = 1:
+                by thm citation::bezout_of_coprime(a, p)
+                obtain u, v from exist u Z, v Z st {1 = u * a + v * p}
                 obtain z from exist z Z st {a * b = p * z}
-                by thm citation::gcd_bezout_identity(a, p)
-                citation::egcd_l(a, p) * a + citation::egcd_r(a, p) * p = citation::gcd(a, p)
-                witness exist k Z st {b = p * k} from citation::egcd_l(a, p) * z + b * citation::egcd_r(a, p):
-                    b = b * 1 = b * citation::gcd(a, p) = b * (citation::egcd_l(a, p) * a + citation::egcd_r(a, p) * p) = citation::egcd_l(a, p) * (a * b) + b * citation::egcd_r(a, p) * p = citation::egcd_l(a, p) * (p * z) + b * citation::egcd_r(a, p) * p = p * (citation::egcd_l(a, p) * z + b * citation::egcd_r(a, p))
+                witness exist k Z st {b = p * k} from u * z + b * v:
+                    b = b * 1 = b * (u * a + v * p) = u * (a * b) + b * v * p = u * (p * z) + b * v * p = p * (u * z + b * v)
                 $citation::divides(p, a) or $citation::divides(p, b)
             case citation::gcd(a, p) = p:
                 by thm citation::gcd_divides_left(a, p)
