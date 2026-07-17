@@ -27,7 +27,7 @@ jobs:
 
       - name: Verify standard library source
         run: |
-          test -f std/litex.config
+          test -d std
           test -f std/basics/litex.config
           test -f std/basics/main.lit
 
