@@ -1,3 +1,0 @@
-# The Chapter 6 extended-real carrier and its complete-order interfaces are
-# now the explicit citation boundary at `chap6ereal-citation.lit`.
-# They are exported as `chap6ereal` from `litex.config`.

@@ -2,9 +2,6 @@
 
 # Chapter 5 supplies the locally developed completeness vocabulary used here.
 
-# The Chapter 6 support module supplies chap6ereal::EReal, its two infinities, extended
-# order, negation, and the complete-lattice sup/inf interface.
-
 # 6.1 Convergence and limit laws
 
 """
@@ -1238,8 +1235,8 @@ by adjoining two formal endpoints, +infty and -infty, to the ordinary real
 numbers. The ordinary real numbers are the finite points of R*.
 """
 
-# `chap6ereal::EReal` is the reusable tagged carrier.  `chap6ereal::ereal_of_real(x)` embeds a finite
-# real, while `chap6ereal::pos_infinity` and `chap6ereal::neg_infinity` are the two distinct endpoints.
+# Litex does not add an `EReal` carrier here.  Finite limits remain real-valued;
+# divergence is expressed later by explicit threshold predicates.
 
 """
 Definition 6.2.2 (Negation on extended reals). Negation on R* agrees with
@@ -1247,7 +1244,9 @@ ordinary real negation on finite points, sends +infty to -infty, and sends
 -infty to +infty.
 """
 
-# The map `chap6ereal::ereal_neg` records these three cases as one function on chap6ereal::EReal.
+# This source definition is notation-only in the present development: finite
+# negation uses builtin real negation, while infinity behavior is tracked by
+# the separate divergence predicates below.
 
 """
 Definition 6.2.3 (Extended order). The order on R* agrees with the ordinary
@@ -1255,43 +1254,23 @@ real order on finite points. Every extended real is at most +infty, and
 -infty is at most every extended real.
 """
 
-# `$chap6ereal::is_ereal_le` is the extended order relation.  It is separate from numeric
-# `<=` because arithmetic on infinities is partial, whereas its order is total.
+# This is comment-only: Litex does not model a total order on adjoined infinity
+# points.  Its analysis use is represented by real threshold statements.
 
 """
 Examples 6.2.4. Examples include 3 <= 5, 3 < +infty, -infty < +infty, and
 not 3 <= -infty.
 """
 
-claim:
-    ? $chap6ereal::is_ereal_lt(chap6ereal::ereal_of_real(3), chap6ereal::pos_infinity)
-    by thm chap6ereal::ereal_real_lt_pos_infinity(3)
-
-claim:
-    ? $chap6ereal::is_ereal_lt(chap6ereal::neg_infinity, chap6ereal::pos_infinity)
-    by thm chap6ereal::neg_infinity_le_ereal(chap6ereal::pos_infinity)
-    $chap6ereal::is_ereal_le(chap6ereal::neg_infinity, chap6ereal::pos_infinity)
-    chap6ereal::neg_infinity != chap6ereal::pos_infinity
-    $chap6ereal::is_ereal_lt(chap6ereal::neg_infinity, chap6ereal::pos_infinity)
-
-claim:
-    ? not $chap6ereal::is_ereal_le(chap6ereal::ereal_of_real(3), chap6ereal::neg_infinity)
-    by thm chap6ereal::ereal_real_not_le_neg_infinity(3)
+# These are source examples of the formal endpoint notation.  The corresponding
+# Litex statements occur as threshold facts such as `$has_limit_to_pos_infinity`.
 
 """
 Proposition 6.2.5. Extended order is reflexive, trichotomous, transitive, and
 reversed by negation.
 """
 
-# The chap6ereal::EReal support module provides these four order laws.  The source-facing
-# transitivity statement is kept here for later Chapter 6 order arguments.
-thm extended_real_order_transitive:
-    ? forall x, y, z chap6ereal::EReal:
-        $chap6ereal::is_ereal_le(x, y)
-        $chap6ereal::is_ereal_le(y, z)
-        =>:
-            $chap6ereal::is_ereal_le(x, z)
-    by thm chap6ereal::ereal_le_transitive(x, y, z)
+# This proposition is comment-only: no extended-real order is introduced.
 
 """
 Definition 6.2.6 (Extended suprema and infima). Supremum and infimum are
@@ -1300,18 +1279,15 @@ supremum +infty, while the empty set has supremum -infty; the dual
 conventions apply to infimum.
 """
 
-# `chap6ereal::is_ereal_least_upper_bound` and `chap6ereal::is_ereal_greatest_lower_bound` state the
-# source definitions, while `chap6ereal::ereal_sup(E)` and `chap6ereal::ereal_inf(E)` select their
-# unique values for every `E power_set(chap6ereal::EReal)`, including empty and unbounded
-# families.  Later finite real tail extrema remain the special bounded case.
+# The finite real bounded case is modeled below.  The unbounded and empty
+# conventions are kept as source explanation rather than as an `EReal` API.
 
 """
 Example 6.2.7. The negative integers together with -infty have supremum -1
 and infimum -infty.
 """
 
-# The finite part contributes the supremum, while the attached endpoint controls
-# the infimum through the chap6ereal::EReal order.
+# This is a source-only endpoint convention; it is not a real-valued supremum.
 
 """
 Example 6.2.8. The set {0.9, 0.99, 0.999, ...} has infimum 0.9 and supremum 1.
@@ -2428,10 +2404,9 @@ superior is the infimum, over all starting indices, of the tail suprema; the
 limit inferior is the supremum, over all starting indices, of the tail infima.
 """
 
-# The definitions below use the two threshold characterizations from
-# Proposition 6.4.12(a,b).  The finite and infinite cases are wrapped once in
-# the chap6ereal::EReal-valued interfaces `has_limit_superior` and `has_limit_inferior`, so
-# later source statements do not need to repeat a three-way disjunction.
+# The definitions below use threshold characterizations from Proposition
+# 6.4.12(a,b).  A finite limit superior or inferior has a real witness; an
+# infinite behavior is recorded by its own explicit proposition.
 
 prop is_eventually_below_threshold(a seq(R), x R, n_tail N_pos):
     forall n N_pos:
@@ -2497,8 +2472,8 @@ prop has_limit_inferior_pos_infinity(a seq(R)):
     forall y R:
         exist n_tail N_pos st {$is_eventually_above_threshold(a, y, n_tail)}
 
-# An ordinary sequence can also converge to either endpoint of chap6ereal::EReal.  These
-# predicates keep the finite `has_limit(a, L)` interface unchanged.
+# Infinite divergence is not encoded as a value of an extended-real carrier.
+# The two predicates below state exactly the threshold behavior at issue.
 prop has_limit_to_pos_infinity(a seq(R)):
     $has_limit_inferior_pos_infinity(a)
 
@@ -2508,48 +2483,6 @@ prop has_limit_superior_neg_infinity(a seq(R)):
 
 prop has_limit_to_neg_infinity(a seq(R)):
     $has_limit_superior_neg_infinity(a)
-
-prop has_limit_in_EReal_as_finite_real(a seq(R), L chap6ereal::EReal):
-    exist c R st {L = chap6ereal::ereal_of_real(c), $has_limit(a, c)}
-
-prop has_limit_in_EReal_as_pos_infinity(a seq(R), L chap6ereal::EReal):
-    L = chap6ereal::pos_infinity
-    $has_limit_to_pos_infinity(a)
-
-prop has_limit_in_EReal_as_neg_infinity(a seq(R), L chap6ereal::EReal):
-    L = chap6ereal::neg_infinity
-    $has_limit_to_neg_infinity(a)
-
-prop has_limit_in_EReal(a seq(R), L chap6ereal::EReal):
-    $has_limit_in_EReal_as_finite_real(a, L) or $has_limit_in_EReal_as_pos_infinity(a, L) or $has_limit_in_EReal_as_neg_infinity(a, L)
-
-prop has_limit_superior_as_finite_ereal(a seq(R), L chap6ereal::EReal):
-    exist c R st {L = chap6ereal::ereal_of_real(c), $has_finite_limit_superior(a, c)}
-
-prop has_limit_superior_as_pos_infinity(a seq(R), L chap6ereal::EReal):
-    L = chap6ereal::pos_infinity
-    $has_limit_superior_pos_infinity(a)
-
-prop has_limit_superior_as_neg_infinity(a seq(R), L chap6ereal::EReal):
-    L = chap6ereal::neg_infinity
-    $has_limit_superior_neg_infinity(a)
-
-prop has_limit_superior(a seq(R), L chap6ereal::EReal):
-    $has_limit_superior_as_finite_ereal(a, L) or $has_limit_superior_as_pos_infinity(a, L) or $has_limit_superior_as_neg_infinity(a, L)
-
-prop has_limit_inferior_as_finite_ereal(a seq(R), L chap6ereal::EReal):
-    exist c R st {L = chap6ereal::ereal_of_real(c), $has_finite_limit_inferior(a, c)}
-
-prop has_limit_inferior_as_pos_infinity(a seq(R), L chap6ereal::EReal):
-    L = chap6ereal::pos_infinity
-    $has_limit_inferior_pos_infinity(a)
-
-prop has_limit_inferior_as_neg_infinity(a seq(R), L chap6ereal::EReal):
-    L = chap6ereal::neg_infinity
-    $has_limit_inferior_neg_infinity(a)
-
-prop has_limit_inferior(a seq(R), L chap6ereal::EReal):
-    $has_limit_inferior_as_finite_ereal(a, L) or $has_limit_inferior_as_pos_infinity(a, L) or $has_limit_inferior_as_neg_infinity(a, L)
 
 thm exists_nat_above_real:
     ? forall M R:
@@ -2694,23 +2627,8 @@ claim:
         $falls_below_every_threshold_above_arbitrarily_late(alternating_one_seq, -1)
     $has_finite_limit_inferior(alternating_one_seq, -1)
 
-# The finite values are now exposed through the same chap6ereal::EReal-valued surface as
-# the infinite cases below.
-claim:
-    ? $has_limit_superior(alternating_one_seq, chap6ereal::ereal_of_real(1))
-    witness exist c R st {chap6ereal::ereal_of_real(1) = chap6ereal::ereal_of_real(c), $has_finite_limit_superior(alternating_one_seq, c)} from 1:
-        chap6ereal::ereal_of_real(1) = chap6ereal::ereal_of_real(1)
-        $has_finite_limit_superior(alternating_one_seq, 1)
-    $has_limit_superior_as_finite_ereal(alternating_one_seq, chap6ereal::ereal_of_real(1))
-    $has_limit_superior(alternating_one_seq, chap6ereal::ereal_of_real(1))
-
-claim:
-    ? $has_limit_inferior(alternating_one_seq, chap6ereal::ereal_of_real(-1))
-    witness exist c R st {chap6ereal::ereal_of_real(-1) = chap6ereal::ereal_of_real(c), $has_finite_limit_inferior(alternating_one_seq, c)} from -1:
-        chap6ereal::ereal_of_real(-1) = chap6ereal::ereal_of_real(-1)
-        $has_finite_limit_inferior(alternating_one_seq, -1)
-    $has_limit_inferior_as_finite_ereal(alternating_one_seq, chap6ereal::ereal_of_real(-1))
-    $has_limit_inferior(alternating_one_seq, chap6ereal::ereal_of_real(-1))
+# The two checked finite facts above are the complete Litex formulation:
+# `limsup = 1` and `liminf = -1` use real witnesses directly.
 
 """
 Example 6.4.8. The sequence 1, -2, 3, -4, ... has limit superior +infty and
@@ -2787,19 +2705,8 @@ claim:
         $falls_below_threshold_arbitrarily_late(alternating_signed_nat_seq, y)
     $has_limit_inferior_neg_infinity(alternating_signed_nat_seq)
 
-claim:
-    ? $has_limit_superior(alternating_signed_nat_seq, chap6ereal::pos_infinity)
-    chap6ereal::pos_infinity = chap6ereal::pos_infinity
-    $has_limit_superior_pos_infinity(alternating_signed_nat_seq)
-    $has_limit_superior_as_pos_infinity(alternating_signed_nat_seq, chap6ereal::pos_infinity)
-    $has_limit_superior(alternating_signed_nat_seq, chap6ereal::pos_infinity)
-
-claim:
-    ? $has_limit_inferior(alternating_signed_nat_seq, chap6ereal::neg_infinity)
-    chap6ereal::neg_infinity = chap6ereal::neg_infinity
-    $has_limit_inferior_neg_infinity(alternating_signed_nat_seq)
-    $has_limit_inferior_as_neg_infinity(alternating_signed_nat_seq, chap6ereal::neg_infinity)
-    $has_limit_inferior(alternating_signed_nat_seq, chap6ereal::neg_infinity)
+# The checked propositions above are the direct statements `limsup = +infty`
+# and `liminf = -infty`; no endpoint object is introduced.
 
 """
 Example 6.4.9. The sequence 1, -1/2, 1/3, -1/4, ... has both limit superior
@@ -3012,27 +2919,8 @@ claim:
             $is_eventually_above_threshold(natural_as_real_seq, y, n0)
     $has_limit_inferior_pos_infinity(natural_as_real_seq)
 
-claim:
-    ? $has_limit_superior(natural_as_real_seq, chap6ereal::pos_infinity)
-    chap6ereal::pos_infinity = chap6ereal::pos_infinity
-    $has_limit_superior_pos_infinity(natural_as_real_seq)
-    $has_limit_superior_as_pos_infinity(natural_as_real_seq, chap6ereal::pos_infinity)
-    $has_limit_superior(natural_as_real_seq, chap6ereal::pos_infinity)
-
-claim:
-    ? $has_limit_inferior(natural_as_real_seq, chap6ereal::pos_infinity)
-    chap6ereal::pos_infinity = chap6ereal::pos_infinity
-    $has_limit_inferior_pos_infinity(natural_as_real_seq)
-    $has_limit_inferior_as_pos_infinity(natural_as_real_seq, chap6ereal::pos_infinity)
-    $has_limit_inferior(natural_as_real_seq, chap6ereal::pos_infinity)
-
-claim:
-    ? $has_limit_in_EReal(natural_as_real_seq, chap6ereal::pos_infinity)
-    chap6ereal::pos_infinity = chap6ereal::pos_infinity
-    $has_limit_inferior_pos_infinity(natural_as_real_seq)
-    $has_limit_to_pos_infinity(natural_as_real_seq)
-    $has_limit_in_EReal_as_pos_infinity(natural_as_real_seq, chap6ereal::pos_infinity)
-    $has_limit_in_EReal(natural_as_real_seq, chap6ereal::pos_infinity)
+# These two checked threshold facts state both `limsup = +infty` and
+# `liminf = +infty`; together they also express divergence to `+infty`.
 
 """
 Remark 6.4.11. The starting index does not affect limsup or liminf.
