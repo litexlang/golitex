@@ -654,6 +654,33 @@ forall a, b N:
         finite_set_size(range(a, b)) = b - a
 ```
 
+#### Finite-set extrema
+
+The `std/basics` functions `finite_set_max` and `finite_set_min` select the
+maximum and minimum of a finite nonempty subset of `N`. Their primary public
+interfaces state that the selected value belongs to the set and bounds every
+member. These are source-level theorems, not builtin verifier rules. The
+singleton equations are secondary computation rules.
+
+<!-- litex:skip-test -->
+```litex
+import std basics
+
+thm finite_set_extrema_interfaces:
+    ? forall S power_set(N), x S:
+        $is_finite_set(S)
+        $is_nonempty_set(S)
+        =>:
+            basics::finite_set_max(S) $in S
+            x <= basics::finite_set_max(S)
+            basics::finite_set_min(S) $in S
+            basics::finite_set_min(S) <= x
+    by thm basics::finite_set_max_in_set(S)
+    by thm basics::finite_set_member_le_max(S, x)
+    by thm basics::finite_set_min_in_set(S)
+    by thm basics::finite_set_min_le_member(S, x)
+```
+
 #### Finite `sum` and `product`
 
 `sum(start, end, f)` is a finite summation over a bounded integer index. The

@@ -17,37 +17,40 @@
 
 # 5.1.1
 
-# These examples show logical patterns using proposition names with no
-# parameters. They are not meant to prove a special mathematical theorem; they
-# show how Litex handles `or`, `not`, and implication-shaped facts.
+# We use a concrete running example: a natural number is even or odd. The
+# claims below isolate the logical moves; they do not need a separate proof of
+# the parity dichotomy in order to use it as a premise.
 
-# If P ∨ Q and ¬ Q, then P.
+prop is_even(n N):
+    n % 2 = 0
 
-abstract_prop p()
+prop is_odd(n N):
+    n % 2 = 1
 
-abstract_prop q()
+# If `n` is even or odd, and it is not odd, then it is even.
 
 claim:
-    ? forall:
-        $p() or $q()
-        not $q()
+    ? forall n N:
+        $is_even(n) or $is_odd(n)
+        not $is_odd(n)
         =>:
-            $p()
+            $is_even(n)
     by cases:
-        ? $p()
-        case $p():
+        ? $is_even(n)
+        case $is_even(n):
             do_nothing
-        case $q():
-            impossible not $q()
+        case $is_odd(n):
+            impossible not $is_odd(n)
 
-# Here `p` and `q` are abstract propositions, and can be replaced with any other propositions with any number of parameters. Throughout this chapter, we will use similar way to formalize logical patterns.
+# The same proof shape works for any alternatives. Here the alternatives carry
+# an ordinary mathematical meaning, so every branch can be read concretely.
 
-# P implies P ∨ (not Q).
+# Being even implies being even or not odd.
 
-forall:
-    $p()
+forall n N:
+    $is_even(n)
     =>:
-        $p() or not $q()
+        $is_even(n) or not $is_odd(n)
 
 # 5.1.2/5.1.3
 
@@ -58,13 +61,13 @@ forall:
 # For example, in the row where both `P` and `Q` are false, the following are the
 # true facts available from that row.
 
-forall:
-    not $p()
-    not $q()
+forall n N:
+    not $is_even(n)
+    not $is_odd(n)
     =>:
-        not $p()
-        not $q()
-        not $p() or not $q() # this is true because not $p() is true
+        not $is_even(n)
+        not $is_odd(n)
+        not $is_even(n) or not $is_odd(n) # this is true because the left branch holds
 
 # 5.1.4
 
@@ -75,20 +78,20 @@ forall:
 # `P or P` is immediate. The other direction is a case split, but both cases are
 # the same.
 
-forall:
-    $p()
+forall n N:
+    $is_even(n)
     =>:
-        $p() or $p()
+        $is_even(n) or $is_even(n)
 
 claim:
-    ? forall:
-        $p() or $p()
+    ? forall n N:
+        $is_even(n) or $is_even(n)
         =>:
-            $p()
-    by cases $p():
-        case $p():
+            $is_even(n)
+    by cases $is_even(n):
+        case $is_even(n):
             do_nothing
-        case $p():
+        case $is_even(n):
             do_nothing
 
 # 5.1.5
@@ -104,75 +107,85 @@ claim:
 # The first direction splits on `Q or R`. The reverse direction splits on whether
 # we have `P and Q` or `P and R`.
 
-prop p_and_q():
-    $p()
-    $q()
+prop is_even_and_odd(n N):
+    $is_even(n)
+    $is_odd(n)
 
 sketch:
-    abstract_prop r()
+    prop is_multiple_of_three(n N):
+        n % 3 = 0
 
-    prop q_or_r():
-        $q() or $r()
+    prop is_odd_or_multiple_of_three(n N):
+        $is_odd(n) or $is_multiple_of_three(n)
 
-    prop p_and_r():
-        $p()
-        $r()
-
-    claim:
-        ? forall:
-            $p()
-            $q_or_r()
-            =>:
-                $p_and_q() or $p_and_r()
-        by cases:
-            ? $p_and_q() or $p_and_r()
-            case $q():
-                $p_and_q()
-            case $r():
-                $p_and_r()
+    prop is_even_and_multiple_of_three(n N):
+        $is_even(n)
+        $is_multiple_of_three(n)
 
     claim:
-        ? forall:
-            $p_and_q() or $p_and_r()
+        ? forall n N:
+            $is_even(n)
+            $is_odd_or_multiple_of_three(n)
             =>:
-                $p()
-                $q_or_r()
+                $is_even_and_odd(n) or $is_even_and_multiple_of_three(n)
         by cases:
-            ? $p()
-            case $p_and_q():
-                $p()
-            case $p_and_r():
-                $p()
+            ? $is_even_and_odd(n) or $is_even_and_multiple_of_three(n)
+            case $is_odd(n):
+                $is_even_and_odd(n)
+            case $is_multiple_of_three(n):
+                $is_even_and_multiple_of_three(n)
+
+    claim:
+        ? forall n N:
+            $is_even_and_odd(n) or $is_even_and_multiple_of_three(n)
+            =>:
+                $is_even(n)
+                $is_odd_or_multiple_of_three(n)
         by cases:
-            ? $q_or_r()
-            case $p_and_q():
-                $q()
-                $q_or_r()
-            case $p_and_r():
-                $r()
-                $q_or_r()
+            ? $is_even(n)
+            case $is_even_and_odd(n):
+                $is_even(n)
+            case $is_even_and_multiple_of_three(n):
+                $is_even(n)
+        by cases:
+            ? $is_odd_or_multiple_of_three(n)
+            case $is_even_and_odd(n):
+                $is_odd(n)
+                $is_odd_or_multiple_of_three(n)
+            case $is_even_and_multiple_of_three(n):
+                $is_multiple_of_three(n)
+                $is_odd_or_multiple_of_three(n)
 
 # 5.1.6
+
+# The remaining quantifier examples use the concrete equation whose
+# impossibility will be proved in Section 5.3.5.
+
+prop is_square_two(n N):
+    n^2 = 2
 
 # The same idea works for predicates. If `P(x)` holds for every integer `x`, and
 # `Q(x)` holds for every integer `x`, then for any particular integer `a`, both
 # `P(a)` and `Q(a)` hold.
 
 sketch:
-    abstract_prop p(x)
-    abstract_prop q(x)
+    prop square_is_nonnegative(x Z):
+        x^2 >= 0
+
+    prop successor_is_greater(x Z):
+        x + 1 > x
 
     claim:
         ? forall a Z:
             forall x Z:
-                $p(x)
+                $square_is_nonnegative(x)
             forall x Z:
-                $q(x)
+                $successor_is_greater(x)
             =>:
-                $p(a) and $q(a)
-        $p(a)
-        $q(a)
-        $p(a) and $q(a)
+                $square_is_nonnegative(a) and $successor_is_greater(a)
+        $square_is_nonnegative(a)
+        $successor_is_greater(a)
+        $square_is_nonnegative(a) and $successor_is_greater(a)
 
 # Next, suppose there is one integer `x` that works for every integer `y`. Then,
 # for each chosen `y`, there exists an `x` that works for that `y`: use the same
@@ -184,20 +197,21 @@ sketch:
 # top level.
 
 sketch:
-    abstract_prop pxy(x, y)
+    prop is_at_most_square(x, y Z):
+        x <= y^2
 
-    prop p_for_all_y(x Z):
+    prop is_at_most_every_square(x Z):
         forall y Z:
-            $pxy(x, y)
+            $is_at_most_square(x, y)
 
     claim:
         ? forall y Z:
-            exist x Z st {$p_for_all_y(x)}
+            exist x Z st {$is_at_most_every_square(x)}
             =>:
-                exist x Z st {$pxy(x, y)}
-        obtain x0 from exist x Z st {$p_for_all_y(x)}
-        witness exist x Z st {$pxy(x, y)} from x0:
-            $pxy(x0, y)
+                exist x Z st {$is_at_most_square(x, y)}
+        obtain x0 from exist x Z st {$is_at_most_every_square(x)}
+        witness exist x Z st {$is_at_most_square(x, y)} from x0:
+            $is_at_most_square(x0, y)
 
 # Finally, here is the common equivalence between "there is no `x` satisfying
 # `P(x)`" and "every `x` fails to satisfy `P(x)`." We again name the existential
@@ -205,31 +219,29 @@ sketch:
 # inside every proof shape.
 
 sketch:
-    abstract_prop p(x)
-
-    prop some_p():
-        exist x Z st {$p(x)}
+    prop some_square_two():
+        exist n N st {$is_square_two(n)}
 
     claim:
-        ? forall a Z:
-            not $some_p()
+        ? forall a N:
+            not $some_square_two()
             =>:
-                not $p(a)
-        by contra not $p(a):
-            witness exist x Z st {$p(x)} from a:
-                $p(a)
-            impossible $some_p()
+                not $is_square_two(a)
+        by contra not $is_square_two(a):
+            witness exist n N st {$is_square_two(n)} from a:
+                $is_square_two(a)
+            impossible $some_square_two()
 
     claim:
         ? forall:
-            forall x Z:
-                not $p(x)
+            forall n N:
+                not $is_square_two(n)
             =>:
-                not $some_p()
-        by contra not $some_p():
-            obtain x0 from exist x Z st {$p(x)}
-            not $p(x0)
-            impossible $p(x0)
+                not $some_square_two()
+        by contra not $some_square_two():
+            obtain n0 from exist n N st {$is_square_two(n)}
+            not $is_square_two(n0)
+            impossible $is_square_two(n0)
 
 # 5.2 The Law Of The Excluded Middle
 
@@ -328,17 +340,17 @@ sketch:
 # but the written proof still displays the intended excluded-middle structure.
 
 claim:
-    ? forall:
-        not not $p()
+    ? forall n N:
+        not not $is_even(n)
         =>:
-            $p()
-    $p() or not $p()
+            $is_even(n)
+    $is_even(n) or not $is_even(n)
     by cases:
-        ? $p()
-        case $p():
-            $p()
-        case not $p():
-            impossible not $p()
+        ? $is_even(n)
+        case $is_even(n):
+            $is_even(n)
+        case not $is_even(n):
+            impossible not $is_even(n)
 
 # 5.3 Normal Forms For Negation
 
@@ -364,44 +376,44 @@ claim:
 
 # 5.3.1
 
-# First, here is De Morgan's law for `or`: `not (P or Q)` is equivalent to
-# `not P` and `not Q`. We name `P or Q` as `$p_or_q()` so the negation is easy to
+# First, here is De Morgan's law for `or`: “not even or odd” is equivalent to
+# “not even and not odd.” Naming the disjunction keeps the negation easy to
 # write and reuse.
 
 sketch:
-    prop p_or_q():
-        $p() or $q()
+    prop is_even_or_odd(n N):
+        $is_even(n) or $is_odd(n)
 
     claim:
-        ? forall:
-            not $p_or_q()
+        ? forall n N:
+            not $is_even_or_odd(n)
             =>:
-                not $p()
-                not $q()
-        by contra not $p():
-            $p()
-            $p_or_q()
-            impossible $p_or_q()
-        by contra not $q():
-            $q()
-            $p_or_q()
-            impossible $p_or_q()
+                not $is_even(n)
+                not $is_odd(n)
+        by contra not $is_even(n):
+            $is_even(n)
+            $is_even_or_odd(n)
+            impossible $is_even_or_odd(n)
+        by contra not $is_odd(n):
+            $is_odd(n)
+            $is_even_or_odd(n)
+            impossible $is_even_or_odd(n)
 
     claim:
-        ? forall:
-            not $p()
-            not $q()
+        ? forall n N:
+            not $is_even(n)
+            not $is_odd(n)
             =>:
-                not $p_or_q()
-        by contra not $p_or_q():
-            $p_or_q()
+                not $is_even_or_odd(n)
+        by contra not $is_even_or_odd(n):
+            $is_even_or_odd(n)
             by cases:
-                ? $p()
-                case $p():
-                    $p()
-                case $q():
-                    impossible $q()
-            impossible $p()
+                ? $is_even(n)
+                case $is_even(n):
+                    $is_even(n)
+                case $is_odd(n):
+                    impossible $is_odd(n)
+            impossible $is_even(n)
 
 # Next, `not (P and Q)` is equivalent to `not P or not Q`. One direction is
 # constructive: if either `not P` or `not Q` is known, then `P and Q` is
@@ -409,64 +421,62 @@ sketch:
 # true.
 
 claim:
-    ? forall:
-        not $p() or not $q()
+    ? forall n N:
+        not $is_even(n) or not $is_odd(n)
         =>:
-            not $p_and_q()
+            not $is_even_and_odd(n)
     by cases:
-        ? not $p_and_q()
-        case not $p():
-            by contra not $p_and_q():
-                impossible $p()
-        case not $q():
-            by contra not $p_and_q():
-                impossible $q()
+        ? not $is_even_and_odd(n)
+        case not $is_even(n):
+            by contra not $is_even_and_odd(n):
+                impossible $is_even(n)
+        case not $is_odd(n):
+            by contra not $is_even_and_odd(n):
+                impossible $is_odd(n)
 
 claim:
-    ? forall:
-        not $p_and_q()
+    ? forall n N:
+        not $is_even_and_odd(n)
         =>:
-            not $p() or not $q()
-    $p() or not $p()
+            not $is_even(n) or not $is_odd(n)
+    $is_even(n) or not $is_even(n)
     by cases:
-        ? not $p() or not $q()
-        case not $p():
-            not $p() or not $q()
-        case $p():
-            by contra not $q():
-                $p_and_q()
-                impossible $p_and_q()
-            not $p() or not $q()
+        ? not $is_even(n) or not $is_odd(n)
+        case not $is_even(n):
+            not $is_even(n) or not $is_odd(n)
+        case $is_even(n):
+            by contra not $is_odd(n):
+                $is_even_and_odd(n)
+                impossible $is_even_and_odd(n)
+            not $is_even(n) or not $is_odd(n)
 
-# Finally, here is the existential rule from Section 5.1 again. Naming the
-# existential statement as `$some_p()` makes both directions straightforward.
+# Finally, here is the existential rule from Section 5.1 again, now using the
+# concrete assertion that a natural-number square equals `2`.
 
 sketch:
-    abstract_prop p(x)
-
-    prop some_p():
-        exist x Z st {$p(x)}
+    prop some_square_two_again():
+        exist n N st {$is_square_two(n)}
 
     claim:
-        ? forall a Z:
-            not $some_p()
+        ? forall a N:
+            not $some_square_two_again()
             =>:
-                not $p(a)
-        by contra not $p(a):
-            witness exist x Z st {$p(x)} from a:
-                $p(a)
-            impossible $some_p()
+                not $is_square_two(a)
+        by contra not $is_square_two(a):
+            witness exist n N st {$is_square_two(n)} from a:
+                $is_square_two(a)
+            impossible $some_square_two_again()
 
     claim:
         ? forall:
-            forall x Z:
-                not $p(x)
+            forall n N:
+                not $is_square_two(n)
             =>:
-                not $some_p()
-        by contra not $some_p():
-            obtain x0 from exist x Z st {$p(x)}
-            not $p(x0)
-            impossible $p(x0)
+                not $some_square_two_again()
+        by contra not $some_square_two_again():
+            obtain n0 from exist n N st {$is_square_two(n)}
+            not $is_square_two(n0)
+            impossible $is_square_two(n0)
 
 # 5.3.2
 
@@ -553,23 +563,23 @@ sketch:
 # Naming the compound subformulas keeps the statement readable.
 
 sketch:
-    abstract_prop p(a)
-    abstract_prop q(a, b)
+    prop is_additive_inverse_pair(a N, b Z):
+        a + b = 0
 
-    prop all_not_q(a Z):
+    prop has_no_additive_inverse(a N):
         forall b Z:
-            not $q(a, b)
+            not $is_additive_inverse_pair(a, b)
 
-    prop has_p_or_all_not_q(a Z):
-        $p(a) or $all_not_q(a)
+    prop is_square_two_or_has_no_inverse(a N):
+        $is_square_two(a) or $has_no_additive_inverse(a)
 
-    prop original_exists():
-        exist a Z st {$has_p_or_all_not_q(a)}
+    prop square_two_or_no_inverse_exists():
+        exist a N st {$is_square_two_or_has_no_inverse(a)}
 
-    prop pushed_neg():
-        forall a Z:
-            not $p(a)
-            exist b Z st {$q(a, b)}
+    prop every_number_is_not_square_two_and_has_inverse():
+        forall a N:
+            not $is_square_two(a)
+            exist b Z st {$is_additive_inverse_pair(a, b)}
 
 # 5.3.5
 
@@ -579,27 +589,27 @@ sketch:
 
 sketch:
     prop square_two_exists():
-        exist n N st {n^2 = 2}
+        exist n N st {$is_square_two(n)}
 
     claim:
         ? forall n N:
-            n^2 != 2
+            not $is_square_two(n)
         n <= 1 or n >= 1 + 1
         by cases:
-            ? n^2 != 2
+            ? not $is_square_two(n)
             case n <= 1:
                 n^2 <= 1^2 = 1 < 2
-                n^2 != 2
+                not $is_square_two(n)
             case n >= 1 + 1:
                 n^2 >= 2^2 = 4 > 2
-                n^2 != 2
+                not $is_square_two(n)
 
     claim:
         ? not $square_two_exists()
         by contra not $square_two_exists():
-            obtain w from exist n N st {n^2 = 2}
-            w^2 != 2
-            impossible w^2 = 2
+            obtain w from exist n N st {$is_square_two(n)}
+            not $is_square_two(w)
+            impossible $is_square_two(w)
 
 # 5.4 Summary: Litex statements and ideas in this chapter
 
@@ -627,18 +637,10 @@ sketch:
 #    cite a separate theorem saying "from `A`, infer `A or B`." Similarly, `and`,
 #    `or`, case splits, and contradictions are handled as ordinary fact shapes.
 
-#    When this chapter needs schematic propositions, it uses `abstract_prop`
-#    names. For pure propositional patterns, the names can have no parameters:
-
-#    ```text
-#    abstract_prop p()
-#    abstract_prop q()
-#    abstract_prop r()
-#    ```
-
-#    The names are not important. Any `abstract_prop` or ordinary `prop` with the
-#    same arity would do; these names only give Litex facts such as `$p()` and
-#    `$q()` to manipulate.
+#    This chapter therefore presents propositional patterns through ordinary
+#    mathematical predicates: `is_even(n)`, `is_odd(n)`, and
+#    `is_square_two(n)`. The proofs are instances of general logical moves, but
+#    every proposition has a concrete reading and later uses in the chapter.
 
 # 2. Basic propositional moves are built in. If `A` is known, then `A or B` can be
 #    checked directly; if both a fact and its reverse are known, `impossible`

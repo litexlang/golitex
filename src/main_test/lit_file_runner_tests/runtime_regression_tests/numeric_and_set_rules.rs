@@ -2125,3 +2125,46 @@ forall A, B set:
         },
     );
 }
+
+#[test]
+fn finite_set_extrema_are_public_source_level_interfaces() {
+    let source_code = r#"
+import std basics
+
+thm finite_set_extrema_have_defining_properties:
+    ? forall S power_set(N), x S:
+        $is_finite_set(S)
+        $is_nonempty_set(S)
+        =>:
+            basics::finite_set_max(S) $in S
+            x <= basics::finite_set_max(S)
+            basics::finite_set_min(S) $in S
+            basics::finite_set_min(S) <= x
+    by thm basics::finite_set_max_in_set(S)
+    by thm basics::finite_set_member_le_max(S, x)
+    by thm basics::finite_set_min_in_set(S)
+    by thm basics::finite_set_min_le_member(S, x)
+"#;
+    let mut runtime = Runtime::new();
+    runtime.isolated = true;
+    runtime.new_file_path_new_env_new_name_scope("finite_set_extrema_public_interfaces");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "finite-set extrema should be available through public basics theorems:\n{run_output}"
+    );
+    for theorem_name in [
+        "basics::finite_set_max_in_set",
+        "basics::finite_set_member_le_max",
+        "basics::finite_set_min_in_set",
+        "basics::finite_set_min_le_member",
+    ] {
+        assert!(
+            run_output.contains(theorem_name),
+            "missing public finite-set extrema theorem `{theorem_name}`:\n{run_output}"
+        );
+    }
+}

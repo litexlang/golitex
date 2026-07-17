@@ -267,7 +267,7 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}
 
 # The next useful number-theoretic move is Gauss's lemma. In Lean, after one has
 # Bézout's identity, the proof is a short calculation: if `d | a * b` and
-# `citation::gcd(a, d) = 1`, take integers `x` and `y` with
+# `a != 0 or d != 0` and `citation::gcd(a, d) = 1`, take integers `x` and `y` with
 # `1 = x * a + y * d`, take `z` with `a * b = d * z`, and then rewrite
 
 # ```text
@@ -281,9 +281,10 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}
 # So the witness for `d | b` is `x * z + b * y`.
 
 # In the current Litex file we do not need to rebuild the Euclidean algorithm.
-# The root citation package supplies its stable `gcd` and Bézout interfaces.
+# The root citation package supplies the stable gcd and Bézout interfaces.
 
 prop gcd_eq_one(a, d Z):
+    a != 0 or d != 0
     citation::gcd(a, d) = 1
 
 thm bezout_of_coprime:
@@ -291,7 +292,10 @@ thm bezout_of_coprime:
         $gcd_eq_one(a, d)
         =>:
             exist x Z, y Z st {1 = x * a + y * d}
-    by thm citation::bezout_of_coprime(a, d)
+    by thm citation::bezout_identity(a, d)
+    obtain x, y from exist x Z, y Z st {citation::gcd(a, d) = x * a + y * d}
+    witness exist u Z, v Z st {1 = u * a + v * d} from x, y:
+        1 = citation::gcd(a, d) = x * a + y * d
 
 # With Bézout in context, Gauss's lemma is just an existential witness proof.
 # The two `have by exist` lines extract the Bézout coefficients and the quotient
@@ -314,7 +318,8 @@ claim:
 # 7.3 Gauss's and Euclid's Lemmas
 
 # This section proves two standard number-theoretic tools. The first is Gauss's
-# lemma in a Bézout-style form: if `d` divides `a * b` and `citation::gcd(a, d) = 1`, then
+# lemma in a Bézout-style form: if `d` divides `a * b` and `a != 0 or d != 0`
+# with `citation::gcd(a, d) = 1`, then
 # `d` divides `b`. The second is Euclid's lemma for primes: if a prime `p`
 # divides `a * b`, then `p` divides `a` or `p` divides `b`. After that, we use
 # induction to extend Euclid's lemma from a product of two factors to a power:
@@ -338,11 +343,11 @@ sketch:
     claim:
         ? forall d, a, b Z:
             $citation::divides(d, a * b)
-            citation::gcd(a, d) = 1
+            $gcd_eq_one(a, d)
             =>:
                 $citation::divides(d, b)
 
-        by thm citation::bezout_of_coprime(a, d)
+        by thm bezout_of_coprime(a, d)
         obtain u, v from exist u Z, v Z st {1 = u * a + v * d}
         obtain z from exist z Z st {a * b = d * z}
         witness exist k Z st {b = d * k} from u * z + b * v:
@@ -358,7 +363,7 @@ sketch:
         a $in Z
         b $in Z
         p $in Z
-        by thm citation::gcd_positive_for_prime(a, p)
+        by thm citation::gcd_positive(a, p)
         1 <= citation::gcd(a, p)
         by thm citation::gcd_divides_right(a, p)
         $citation::divides(citation::gcd(a, p), p)
@@ -367,7 +372,7 @@ sketch:
         by cases:
             ? $citation::divides(p, a) or $citation::divides(p, b)
             case citation::gcd(a, p) = 1:
-                by thm citation::bezout_of_coprime(a, p)
+                by thm bezout_of_coprime(a, p)
                 obtain u, v from exist u Z, v Z st {1 = u * a + v * p}
                 obtain z from exist z Z st {a * b = p * z}
                 witness exist k Z st {b = p * k} from u * z + b * v:
@@ -455,13 +460,84 @@ sketch:
 # then gives `q^2 = 2 * c^2`, so `2` also divides `q`. This contradicts the
 # choice of `p / q` as a fraction with `citation::gcd(p, q) = 1`.
 
-# The proof uses the cited gcd, reduced-fraction, and prime-square interfaces.
-# Their debt lives once in the root `citation.lit`, rather than as local opaque
-# predicates in this source-facing derivation.
+# The citation package supplies only the general gcd laws. The three facts used
+# only by this example -- a positive reduced fraction, prime divisibility of a
+# square, and primality of 2 -- are proved locally below.
 
 sketch:
+    claim:
+        ? forall a Q:
+            a > 0
+            =>:
+                exist p, q N_pos st {a = p / q, citation::gcd(p, q) = 1}
+        by thm basics::rational_has_unique_reduced_fraction(a)
+        obtain p, q from exist! p Z, q N_pos st {a = p / q, $basics::is_reduced_fraction(p, q)}
+        q > 0
+        a * q = (p / q) * q = p
+        a * q > 0
+        p > 0
+        p $in N_pos
+        by thm citation::gcd_positive(p, q)
+        by thm citation::gcd_divides_left(p, q)
+        by thm citation::gcd_divides_right(p, q)
+        obtain x from exist x Z st {p = citation::gcd(p, q) * x}
+        obtain y from exist y Z st {q = citation::gcd(p, q) * y}
+        p = citation::gcd(p, q) * x + 0
+        q = citation::gcd(p, q) * y + 0
+        p % citation::gcd(p, q) = 0
+        q % citation::gcd(p, q) = 0
+        $basics::is_reduced_fraction(p, q)
+        citation::gcd(p, q) = 1
+        witness exist r, s N_pos st {a = r / s, citation::gcd(r, s) = 1} from p, q:
+            a = p / q
+            citation::gcd(p, q) = 1
+
+    claim:
+        ? forall a, k N_pos:
+            $citation::prime(a)
+            k^2 % a = 0
+            =>:
+                k % a = 0
+        by thm citation::gcd_of_prime_is_one_or_prime(k, a)
+        citation::gcd(k, a) = 1 or citation::gcd(k, a) = a
+        by cases:
+            ? k % a = 0
+            case citation::gcd(k, a) = 1:
+                by contra:
+                    ? k % a = 0
+                    k % a != 0
+                    by thm bezout_of_coprime(k, a)
+                    obtain x, y from exist x Z, y Z st {1 = x * k + y * a}
+                    witness exist q Z st {k^2 = a * q + k^2 % a} from integer_quotient(k^2, a):
+                        k^2 = a * integer_quotient(k^2, a) + k^2 % a
+                    obtain q from exist q Z st {k^2 = a * q + k^2 % a}
+                    k^2 = a * q + k^2 % a = a * q
+                    witness exist t Z st {k = a * t} from x * q + y * k:
+                        k = 1 * k = (x * k + y * a) * k = x * k^2 + y * a * k = x * (a * q) + y * a * k = a * (x * q + y * k)
+                    obtain t from exist t Z st {k = a * t}
+                    k = a * t + 0
+                    k % a = 0
+                    impossible k % a != 0
+            case citation::gcd(k, a) = a:
+                by contra:
+                    ? k % a = 0
+                    k % a != 0
+                    by thm citation::gcd_divides_left(k, a)
+                    obtain t from exist t Z st {k = citation::gcd(k, a) * t}
+                    k = citation::gcd(k, a) * t = a * t
+                    k = a * t + 0
+                    k % a = 0
+                    impossible k % a != 0
+
+    claim:
+        ? $citation::prime(2)
+        2 <= 2
+        by for:
+            ? forall d range(2, 2):
+                2 % d != 0
+        $citation::prime(2)
+
     by contra not 2^(1/2) $in Q:
-        by thm citation::positive_rational_has_reduced_gcd_fraction(2^(1/2))
         obtain p, q from exist p, q N_pos st {2^(1/2) = p / q, citation::gcd(p, q) = 1}
         (2^(1 / 2))^2 = 2^(1 / 2 * 2)
         p^2 / q^2 = (p/q)^2 = (2^(1/2))^2 = 2^(1/2 * 2) = 2^(1) = 2
@@ -470,8 +546,6 @@ sketch:
         0 < 2
         p^2 = 2 * q^2 + 0
         p^2 % 2 = 0
-        by thm citation::prime_two(2)
-        by thm citation::prime_divides_square(2, p)
         p % 2 = 0
         witness exist q Z st {p = 2 * q + p % 2} from integer_quotient(p, 2):
             p = 2 * integer_quotient(p, 2) + p % 2
@@ -482,8 +556,15 @@ sketch:
         0 < 2
         q^2 = 2 * c^2 + 0
         q^2 % 2= 0
-        by thm citation::prime_divides_square(2, q)
         q % 2 = 0
+        witness exist t Z st {p = 2 * t} from c
+        $citation::divides(2, p)
+        witness exist t Z st {q = 2 * t + q % 2} from integer_quotient(q, 2):
+            q = 2 * integer_quotient(q, 2) + q % 2
+        obtain d from exist t Z st {q = 2 * t + q % 2}
+        q = 2 * d + q % 2 = 2 * d
+        witness exist t Z st {q = 2 * t} from d
+        $citation::divides(2, q)
         by thm citation::common_divisor_le_gcd(p, q, 2)
         2 <= citation::gcd(p, q) = 1
         impossible 2 <= 1
