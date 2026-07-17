@@ -1,43 +1,951 @@
-forall A, B finite_set:
-    A $subset B
-    =>:
-        finite_set_size(A) <= finite_set_size(B)
+# Small shared mathematical interfaces.
+#
+# Public finite-extrema API:
+#   finite_set_max, finite_set_min
+#   finite_set_max_in_set, finite_set_member_le_max
+#   finite_set_min_in_set, finite_set_min_le_member
+# Secondary singleton computation rules:
+#   finite_set_max_singleton, finite_set_min_singleton
+#
+# Names beginning with `_` are construction details: they prove unique existence for the two
+# selectors.  New clients should use the six core names above; the singleton equations are
+# optional computation rules.
 
-forall a, b N:
-    a <= b
-    =>:
-        finite_set_size(closed_range(a, b)) = b - a + 1
+# ---------------------------------------------------------------------------
+# Named real constants
+# ---------------------------------------------------------------------------
+# Their mathematical constructions remain explicit proof debt for now.
 
-forall a, b N:
-    a <= b
-    =>:
-        finite_set_size(range(a, b)) = b - a
+trust have pi R:
+    pi > 0
 
-forall A, B finite_set:
-    B $subset A
-    =>:
-        $is_finite_set(set_minus(A, B))
-        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)
+trust have euler_e R:
+    euler_e > 0
 
-forall A, B finite_set:
-    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
-    finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
-    finite_set_size(B) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(B, A))
-    finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
+# A subset of a finite set is finite. This is a standard-library axiom rather
+# than a verifier builtin, so ordinary theorem matching supplies the fact.
+axiom subset_of_finite_set_is_finite:
+    ? forall A set, B finite_set:
+        A $subset B
+        =>:
+            $is_finite_set(A)
 
-forall A, B finite_set:
-    A $subset B
-    =>:
-        finite_set_size(A) <= finite_set_size(B)
+# ---------------------------------------------------------------------------
+# Rational normalization
+# ---------------------------------------------------------------------------
+# This interface is independent of finite extrema and remains here because the
+# Mechanics number-theory citation currently uses it.
+# A reduced fraction has no positive common divisor other than 1.
+prop is_reduced_fraction(a Z, b N_pos):
+    forall k N_pos:
+        a % k = 0
+        b % k = 0
+        =>:
+            k = 1
 
-forall A, B finite_set:
-    A $superset B
-    =>:
-        finite_set_size(A) >= finite_set_size(B)
+# Every rational has one reduced fraction with an integer numerator and a
+# positive denominator. Example: `by thm rational_has_unique_reduced_fraction(q)`.
+thm rational_has_unique_reduced_fraction:
+    ? forall q Q:
+        exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
+    trust exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
 
-forall A, B finite_set:
-    finite_set_size(intersect(A, B)) <= finite_set_size(A)
-    finite_set_size(intersect(A, B)) <= finite_set_size(B)
-    finite_set_size(set_minus(A, B)) <= finite_set_size(A)
-    finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
-    finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
+# ---------------------------------------------------------------------------
+# Finite extrema over N: unique-existence proofs
+# ---------------------------------------------------------------------------
+# These predicates and induction lemmas construct the two selectors below.
+# They are deliberately kept in one contiguous block so the mathematical
+# implementation is inspectable without mixing it with the public API.
+
+# Finite maxima in N are source-level library mathematics, rather than a
+# kernel selection primitive.  `S power_set(N)` carries the subset-of-N part
+# of the interface; finiteness and nonemptiness remain explicit below.
+prop _is_maximum_of_finite_N_set(S finite_set, m N):
+    S $subset N
+    m $in S
+    forall n S:
+        n <= m
+
+prop _has_maximum_of_finite_N_set(S finite_set):
+    exist m N st {$_is_maximum_of_finite_N_set(S, m)}
+
+thm _union_of_N_subsets_is_N_subset:
+    ? forall A, B set:
+        A $subset N
+        B $subset N
+        =>:
+            union(A, B) $subset N
+    claim:
+        ? forall z union(A, B):
+            z $in N
+        z $in union(A, B)
+        z $in A or z $in B
+        by cases:
+            ? z $in N
+            case z $in A:
+                z $in N
+            case z $in B:
+                z $in N
+    union(A, B) $subset N
+
+thm _singleton_of_N_is_N_subset:
+    ? forall x N:
+        {x} $subset N
+    claim:
+        ? forall y {x}:
+            y $in N
+        y = x
+        x $in N
+        y $in N
+    {x} $subset N
+
+thm _insertion_of_N_maximum:
+    ? forall x N, T finite_set:
+        T $subset N
+        $_has_maximum_of_finite_N_set(T)
+        =>:
+            $_has_maximum_of_finite_N_set(union({x}, T))
+    obtain m from exist m N st {$_is_maximum_of_finite_N_set(T, m)}
+    x <= m or x > m
+    by cases:
+        ? $_has_maximum_of_finite_N_set(union({x}, T))
+        case x <= m:
+            witness exist q N st {$_is_maximum_of_finite_N_set(union({x}, T), q)} from m:
+                by thm _singleton_of_N_is_N_subset(x)
+                {x} $subset N
+                by thm _union_of_N_subsets_is_N_subset({x}, T)
+                union({x}, T) $subset N
+                m $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        y <= m
+                    y $in union({x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? y <= m
+                        case y $in {x}:
+                            y = x
+                            y <= m
+                        case y $in T:
+                            forall n T:
+                                n <= m
+                            y <= m
+                $_is_maximum_of_finite_N_set(union({x}, T), m)
+        case x > m:
+            witness exist q N st {$_is_maximum_of_finite_N_set(union({x}, T), q)} from x:
+                by thm _singleton_of_N_is_N_subset(x)
+                {x} $subset N
+                by thm _union_of_N_subsets_is_N_subset({x}, T)
+                union({x}, T) $subset N
+                x $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        y <= x
+                    y $in union({x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? y <= x
+                        case y $in {x}:
+                            y = x
+                            y <= x
+                        case y $in T:
+                            forall n T:
+                                n <= m
+                            y <= m < x
+                $_is_maximum_of_finite_N_set(union({x}, T), x)
+
+thm _insertion_into_empty_N_has_maximum:
+    ? forall x N:
+        $_has_maximum_of_finite_N_set(union({x}, {}))
+    witness exist q N st {$_is_maximum_of_finite_N_set(union({x}, {}), q)} from x:
+        by thm _singleton_of_N_is_N_subset(x)
+        {x} $subset N
+        {} $subset N
+        by thm _union_of_N_subsets_is_N_subset({x}, {})
+        union({x}, {}) $subset N
+        x $in union({x}, {})
+        claim:
+            ? forall y union({x}, {}):
+                y <= x
+            y $in union({x}, {})
+            y $in {x} or y $in {}
+            by cases:
+                ? y <= x
+                case y $in {x}:
+                    y = x
+                    y <= x
+                case y $in {}:
+                    impossible y $in {}
+        $_is_maximum_of_finite_N_set(union({x}, {}), x)
+
+thm _finite_nonempty_N_set_has_maximum_by_induction:
+    ? forall S finite_set:
+        S $subset N
+        $is_nonempty_set(S)
+        =>:
+            $_has_maximum_of_finite_N_set(S)
+    by induc P in S:
+        ? P = {} or $_has_maximum_of_finite_N_set(P)
+        ? from P = {}:
+            P = {}
+        ? induc x, T:
+            T = {} or $_has_maximum_of_finite_N_set(T)
+            by cases:
+                ? union({x}, T) = {} or $_has_maximum_of_finite_N_set(union({x}, T))
+                case T = {}:
+                    union({x}, T) = union({x}, {})
+                    by thm _insertion_into_empty_N_has_maximum(x)
+                    $_has_maximum_of_finite_N_set(union({x}, T))
+                case $_has_maximum_of_finite_N_set(T):
+                    T $subset N
+                    by thm _insertion_of_N_maximum(x, T)
+                    $_has_maximum_of_finite_N_set(union({x}, T))
+    S = {} or $_has_maximum_of_finite_N_set(S)
+    by cases:
+        ? $_has_maximum_of_finite_N_set(S)
+        case S = {}:
+            have a S
+            a $in S
+            a $in {}
+            impossible a $in {}
+        case $_has_maximum_of_finite_N_set(S):
+            $_has_maximum_of_finite_N_set(S)
+
+prop _finite_nonempty_N_set(S set):
+    S $subset N
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+
+thm _finite_nonempty_N_set_has_maximum:
+    ? forall S set:
+        $_finite_nonempty_N_set(S)
+        =>:
+            exist m N st {$_is_maximum_of_finite_N_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset N
+    by thm _finite_nonempty_N_set_has_maximum_by_induction(S)
+    $_has_maximum_of_finite_N_set(S)
+    obtain m from exist m N st {$_is_maximum_of_finite_N_set(S, m)}
+    witness exist q N st {$_is_maximum_of_finite_N_set(S, q)} from m:
+        $_is_maximum_of_finite_N_set(S, m)
+
+thm _finite_nonempty_N_set_has_unique_maximum:
+    ? forall S set:
+        $_finite_nonempty_N_set(S)
+        =>:
+            exist! m N st {$_is_maximum_of_finite_N_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset N
+    by thm _finite_nonempty_N_set_has_maximum(S)
+    obtain m from exist m N st {$_is_maximum_of_finite_N_set(S, m)}
+    claim:
+        ? forall m1, m2 N:
+            $_is_maximum_of_finite_N_set(S, m1)
+            $_is_maximum_of_finite_N_set(S, m2)
+            =>:
+                m1 = m2
+        m1 $in S
+        m2 $in S
+        forall n S:
+            n <= m1
+        forall n S:
+            n <= m2
+        m1 <= m2 <= m1
+        m1 = m2
+    exist! m N st {$_is_maximum_of_finite_N_set(S, m)}
+
+prop _is_minimum_of_finite_N_set(S finite_set, m N):
+    S $subset N
+    m $in S
+    forall n S:
+        m <= n
+
+prop _has_minimum_of_finite_N_set(S finite_set):
+    exist m N st {$_is_minimum_of_finite_N_set(S, m)}
+
+thm _insertion_of_N_minimum:
+    ? forall x N, T finite_set:
+        T $subset N
+        $_has_minimum_of_finite_N_set(T)
+        =>:
+            $_has_minimum_of_finite_N_set(union({x}, T))
+    obtain m from exist m N st {$_is_minimum_of_finite_N_set(T, m)}
+    m <= x or m > x
+    by cases:
+        ? $_has_minimum_of_finite_N_set(union({x}, T))
+        case m <= x:
+            witness exist q N st {$_is_minimum_of_finite_N_set(union({x}, T), q)} from m:
+                by thm _singleton_of_N_is_N_subset(x)
+                {x} $subset N
+                by thm _union_of_N_subsets_is_N_subset({x}, T)
+                union({x}, T) $subset N
+                m $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        m <= y
+                    y $in union({x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? m <= y
+                        case y $in {x}:
+                            y = x
+                            m <= x = y
+                        case y $in T:
+                            forall n T:
+                                m <= n
+                            m <= y
+                $_is_minimum_of_finite_N_set(union({x}, T), m)
+        case m > x:
+            witness exist q N st {$_is_minimum_of_finite_N_set(union({x}, T), q)} from x:
+                by thm _singleton_of_N_is_N_subset(x)
+                {x} $subset N
+                by thm _union_of_N_subsets_is_N_subset({x}, T)
+                union({x}, T) $subset N
+                x $in union({x}, T)
+                claim:
+                    ? forall y union({x}, T):
+                        x <= y
+                    y $in union({x}, T)
+                    y $in {x} or y $in T
+                    by cases:
+                        ? x <= y
+                        case y $in {x}:
+                            y = x
+                            x <= y
+                        case y $in T:
+                            forall n T:
+                                m <= n
+                            x < m <= y
+                $_is_minimum_of_finite_N_set(union({x}, T), x)
+
+thm _insertion_into_empty_N_has_minimum:
+    ? forall x N:
+        $_has_minimum_of_finite_N_set(union({x}, {}))
+    witness exist q N st {$_is_minimum_of_finite_N_set(union({x}, {}), q)} from x:
+        by thm _singleton_of_N_is_N_subset(x)
+        {x} $subset N
+        {} $subset N
+        by thm _union_of_N_subsets_is_N_subset({x}, {})
+        union({x}, {}) $subset N
+        x $in union({x}, {})
+        claim:
+            ? forall y union({x}, {}):
+                x <= y
+            y $in union({x}, {})
+            y $in {x} or y $in {}
+            by cases:
+                ? x <= y
+                case y $in {x}:
+                    y = x
+                    x <= y
+                case y $in {}:
+                    impossible y $in {}
+        $_is_minimum_of_finite_N_set(union({x}, {}), x)
+
+thm _finite_nonempty_N_set_has_minimum_by_induction:
+    ? forall S finite_set:
+        S $subset N
+        $is_nonempty_set(S)
+        =>:
+            $_has_minimum_of_finite_N_set(S)
+    by induc P in S:
+        ? P = {} or $_has_minimum_of_finite_N_set(P)
+        ? from P = {}:
+            P = {}
+        ? induc x, T:
+            T = {} or $_has_minimum_of_finite_N_set(T)
+            by cases:
+                ? union({x}, T) = {} or $_has_minimum_of_finite_N_set(union({x}, T))
+                case T = {}:
+                    union({x}, T) = union({x}, {})
+                    by thm _insertion_into_empty_N_has_minimum(x)
+                    $_has_minimum_of_finite_N_set(union({x}, T))
+                case $_has_minimum_of_finite_N_set(T):
+                    T $subset N
+                    by thm _insertion_of_N_minimum(x, T)
+                    $_has_minimum_of_finite_N_set(union({x}, T))
+    S = {} or $_has_minimum_of_finite_N_set(S)
+    by cases:
+        ? $_has_minimum_of_finite_N_set(S)
+        case S = {}:
+            have a S
+            a $in S
+            a $in {}
+            impossible a $in {}
+        case $_has_minimum_of_finite_N_set(S):
+            $_has_minimum_of_finite_N_set(S)
+
+thm _finite_nonempty_N_set_has_minimum:
+    ? forall S set:
+        $_finite_nonempty_N_set(S)
+        =>:
+            exist m N st {$_is_minimum_of_finite_N_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset N
+    by thm _finite_nonempty_N_set_has_minimum_by_induction(S)
+    $_has_minimum_of_finite_N_set(S)
+    obtain m from exist m N st {$_is_minimum_of_finite_N_set(S, m)}
+    witness exist q N st {$_is_minimum_of_finite_N_set(S, q)} from m:
+        $_is_minimum_of_finite_N_set(S, m)
+
+thm _finite_nonempty_N_set_has_unique_minimum:
+    ? forall S set:
+        $_finite_nonempty_N_set(S)
+        =>:
+            exist! m N st {$_is_minimum_of_finite_N_set(S, m)}
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    S $subset N
+    by thm _finite_nonempty_N_set_has_minimum(S)
+    obtain m from exist m N st {$_is_minimum_of_finite_N_set(S, m)}
+    claim:
+        ? forall m1, m2 N:
+            $_is_minimum_of_finite_N_set(S, m1)
+            $_is_minimum_of_finite_N_set(S, m2)
+            =>:
+                m1 = m2
+        m1 $in S
+        m2 $in S
+        forall n S:
+            m1 <= n
+        forall n S:
+            m2 <= n
+        m1 <= m2 <= m1
+        m1 = m2
+    exist! m N st {$_is_minimum_of_finite_N_set(S, m)}
+
+# ---------------------------------------------------------------------------
+# Public finite extrema API
+# ---------------------------------------------------------------------------
+# The public contract exposes the two selectors and their defining mathematical
+# properties.  The construction predicates above remain proof machinery for
+# unique existence; new clients should use the theorems in this section.
+
+have fn finite_set_max by exist!:
+    ? forall S power_set(N):
+        $is_finite_set(S)
+        $is_nonempty_set(S)
+        =>:
+            exist! m N st {$_is_maximum_of_finite_N_set(S, m)}
+    $_finite_nonempty_N_set(S)
+    by thm _finite_nonempty_N_set_has_unique_maximum(S)
+
+thm finite_set_max_in_set:
+    ? forall S power_set(N):
+        $is_finite_set(S)
+        $is_nonempty_set(S)
+        =>:
+            finite_set_max(S) $in S
+    $_is_maximum_of_finite_N_set(S, finite_set_max(S))
+    finite_set_max(S) $in S
+
+thm finite_set_member_le_max:
+    ? forall S power_set(N), x S:
+        $is_finite_set(S)
+        $is_nonempty_set(S)
+        =>:
+            x <= finite_set_max(S)
+    $_is_maximum_of_finite_N_set(S, finite_set_max(S))
+    x <= finite_set_max(S)
+
+# Singleton evaluation is a secondary computation rule.
+thm finite_set_max_singleton:
+    ? forall x N:
+        finite_set_max({x}) = x
+    $_is_maximum_of_finite_N_set({x}, finite_set_max({x}))
+    finite_set_max({x}) $in {x}
+    finite_set_max({x}) = x
+
+# Public finite-set minimum selector.  The existence/uniqueness proof remains
+# source-level mathematics.
+have fn finite_set_min by exist!:
+    ? forall S power_set(N):
+        $is_finite_set(S)
+        $is_nonempty_set(S)
+        =>:
+            exist! m N st {$_is_minimum_of_finite_N_set(S, m)}
+    $_finite_nonempty_N_set(S)
+    by thm _finite_nonempty_N_set_has_unique_minimum(S)
+
+thm finite_set_min_in_set:
+    ? forall S power_set(N):
+        $is_finite_set(S)
+        $is_nonempty_set(S)
+        =>:
+            finite_set_min(S) $in S
+    $_is_minimum_of_finite_N_set(S, finite_set_min(S))
+    finite_set_min(S) $in S
+
+thm finite_set_min_le_member:
+    ? forall S power_set(N), x S:
+        $is_finite_set(S)
+        $is_nonempty_set(S)
+        =>:
+            finite_set_min(S) <= x
+    $_is_minimum_of_finite_N_set(S, finite_set_min(S))
+    finite_set_min(S) <= x
+
+# Singleton evaluation is a secondary computation rule.
+thm finite_set_min_singleton:
+    ? forall x N:
+        finite_set_min({x}) = x
+    $_is_minimum_of_finite_N_set({x}, finite_set_min({x}))
+    finite_set_min({x}) $in {x}
+    finite_set_min({x}) = x
+
+# ---------------------------------------------------------------------------
+# gcd related
+# ---------------------------------------------------------------------------
+
+# Shared standard-library candidates for The Mechanics of Litex Proof.
+#
+# Public API:
+#   prime, divides, gcd
+#   gcd_positive, gcd_divides_left, gcd_divides_right
+#   common_divisor_le_gcd
+#   gcd_euclidean_base, gcd_euclidean_step, bezout_identity
+#   gcd_of_prime_is_one_or_prime
+#
+# These are general number-theory interfaces that can later move together into
+# std/basics. Textbook-specific consequences stay in Chapter 7.
+
+prop prime(p N_pos):
+    2 <= p
+    forall d range(2, p):
+        p % d != 0
+
+prop divides(a Z, b Z):
+    exist k Z st {b = a * k}
+
+# A positive divisor of a nonzero integer is at most its absolute value.
+# This is proof machinery shared by the gcd construction and its basic laws.
+thm _positive_divisor_le_abs:
+    ? forall d N_pos, a Z:
+        $divides(d, a)
+        a != 0
+        =>:
+            d <= abs(a)
+    obtain k from exist k Z st {a = d * k}
+    by contra:
+        ? k != 0
+        k = 0
+        a = d * k = d * 0 = 0
+        impossible a != 0
+    abs(k) > 0
+    abs(k) $in N_pos
+    d * 1 <= d * abs(k)
+    abs(d) = d
+    abs(a) = abs(d * k) = abs(d) * abs(k) = d * abs(k)
+    d = d * 1 <= d * abs(k) = abs(a)
+
+# For a nonzero pair, the positive common divisors form a finite nonempty set.
+thm _gcd_divisor_set_is_finite_and_nonempty:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
+            $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
+    have C power_set(N) = {d N_pos: $divides(d, a), $divides(d, b)}
+    claim:
+        ? $is_finite_set(C)
+        by cases:
+            ? $is_finite_set(C)
+            case a != 0:
+                claim:
+                    ? forall d C:
+                        d $in closed_range(1, abs(a))
+                    d $in C
+                    d $in N_pos
+                    d >= 1
+                    $divides(d, a)
+                    by thm _positive_divisor_le_abs(d, a)
+                    d <= abs(a)
+                    d $in closed_range(1, abs(a))
+                C $subset closed_range(1, abs(a))
+                $is_finite_set(C)
+            case b != 0:
+                claim:
+                    ? forall d C:
+                        d $in closed_range(1, abs(b))
+                    d $in C
+                    d $in N_pos
+                    d >= 1
+                    $divides(d, b)
+                    by thm _positive_divisor_le_abs(d, b)
+                    d <= abs(b)
+                    d $in closed_range(1, abs(b))
+                C $subset closed_range(1, abs(b))
+                $is_finite_set(C)
+    witness $is_nonempty_set(C) from 1:
+        1 $in N_pos
+        witness exist k Z st {a = 1 * k} from a:
+            a = 1 * a
+        $divides(1, a)
+        witness exist k Z st {b = 1 * k} from b:
+            b = 1 * b
+        $divides(1, b)
+        1 $in {d N_pos: $divides(d, a), $divides(d, b)}
+        1 $in C
+    $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
+    $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
+
+# The ordinary gcd is defined only for a nonzero integer pair.
+have fn gcd(a, b Z: a != 0 or b != 0) N = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+
+thm gcd_positive:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            gcd(a, b) $in N_pos
+    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
+    by thm finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    gcd(a, b) $in N_pos
+
+thm gcd_divides_left:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $divides(gcd(a, b), a)
+    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
+    by thm finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    $divides(gcd(a, b), a)
+
+thm gcd_divides_right:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $divides(gcd(a, b), b)
+    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
+    by thm finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    $divides(gcd(a, b), b)
+
+thm common_divisor_le_gcd:
+    ? forall a, b Z, d N_pos:
+        a != 0 or b != 0
+        $divides(d, a)
+        $divides(d, b)
+        =>:
+            d <= gcd(a, b)
+    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
+    d $in {d N_pos: $divides(d, a), $divides(d, b)}
+    by thm finite_set_member_le_max({d N_pos: $divides(d, a), $divides(d, b)}, d)
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    d <= gcd(a, b)
+
+thm gcd_euclidean_base:
+    ? forall a Z:
+        a != 0
+        =>:
+            gcd(a, 0) = abs(a)
+    by thm gcd_positive(a, 0)
+    by thm gcd_divides_left(a, 0)
+    by thm _positive_divisor_le_abs(gcd(a, 0), a)
+    gcd(a, 0) <= abs(a)
+    abs(a) > 0
+    abs(a) $in N_pos
+    by cases:
+        ? $divides(abs(a), a)
+        case a >= 0:
+            abs(a) = a
+            a = a * 1
+            abs(a) * 1 = a * 1
+            a = abs(a) * 1
+            witness exist k Z st {a = abs(a) * k} from 1
+        case a < 0:
+            abs(a) = -a
+            a = abs(a) * (-1)
+            witness exist k Z st {a = abs(a) * k} from -1
+    witness exist k Z st {0 = abs(a) * k} from 0:
+        0 = abs(a) * 0
+    $divides(abs(a), 0)
+    by thm common_divisor_le_gcd(a, 0, abs(a))
+    abs(a) <= gcd(a, 0)
+    gcd(a, 0) = abs(a)
+
+thm gcd_euclidean_step:
+    ? forall a, b Z:
+        b != 0
+        =>:
+            gcd(a, b) = gcd(b, a % abs(b))
+
+    claim:
+        ? forall d N_pos, z Z:
+            $divides(d, z)
+            =>:
+                $divides(d, abs(z))
+        obtain k from exist k Z st {z = d * k}
+        by cases:
+            ? $divides(d, abs(z))
+            case z >= 0:
+                abs(z) = z = d * k
+                witness exist t Z st {abs(z) = d * t} from k
+            case z < 0:
+                abs(z) = -z = -(d * k) = d * (-k)
+                witness exist t Z st {abs(z) = d * t} from -k
+
+    by thm gcd_positive(b, a % abs(b))
+    by thm gcd_divides_left(b, a % abs(b))
+    by thm gcd_divides_right(b, a % abs(b))
+    $divides(gcd(b, a % abs(b)), abs(b))
+    obtain x from exist k Z st {abs(b) = gcd(b, a % abs(b)) * k}
+    obtain y from exist k Z st {a % abs(b) = gcd(b, a % abs(b)) * k}
+    witness exist q Z st {a = abs(b) * q + a % abs(b)} from integer_quotient(a, abs(b)):
+        a = abs(b) * integer_quotient(a, abs(b)) + a % abs(b)
+    obtain q from exist q Z st {a = abs(b) * q + a % abs(b)}
+    witness exist t Z st {a = gcd(b, a % abs(b)) * t} from x * q + y:
+        a = abs(b) * q + a % abs(b) = (gcd(b, a % abs(b)) * x) * q + gcd(b, a % abs(b)) * y = gcd(b, a % abs(b)) * (x * q + y)
+    $divides(gcd(b, a % abs(b)), a)
+    by thm common_divisor_le_gcd(a, b, gcd(b, a % abs(b)))
+    gcd(b, a % abs(b)) <= gcd(a, b)
+
+    by thm gcd_positive(a, b)
+    by thm gcd_divides_left(a, b)
+    by thm gcd_divides_right(a, b)
+    $divides(gcd(a, b), abs(b))
+    obtain u from exist k Z st {a = gcd(a, b) * k}
+    obtain v from exist k Z st {abs(b) = gcd(a, b) * k}
+    witness exist r Z st {a = abs(b) * r + a % abs(b)} from integer_quotient(a, abs(b)):
+        a = abs(b) * integer_quotient(a, abs(b)) + a % abs(b)
+    obtain r from exist r Z st {a = abs(b) * r + a % abs(b)}
+    witness exist t Z st {a % abs(b) = gcd(a, b) * t} from u - v * r:
+        a % abs(b) = a - abs(b) * r = gcd(a, b) * u - (gcd(a, b) * v) * r = gcd(a, b) * (u - v * r)
+    $divides(gcd(a, b), a % abs(b))
+    by thm common_divisor_le_gcd(b, a % abs(b), gcd(a, b))
+    gcd(a, b) <= gcd(b, a % abs(b))
+    gcd(a, b) = gcd(b, a % abs(b))
+
+# The Euclidean remainder has strictly smaller absolute value than a nonzero divisor.
+# This must be available before the recursive Bezout coefficient definition.
+thm _euclidean_remainder_abs_lt_abs:
+    ? forall u, v Z:
+        v != 0
+        =>:
+            abs(u % abs(v)) < abs(v)
+    abs(v) > 0
+    abs(v) $in N_pos
+    u % abs(v) >= 0
+    abs(u % abs(v)) = u % abs(v)
+    u % abs(v) < abs(v)
+    abs(u % abs(v)) < abs(v)
+
+thm bezout_identity:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            exist x Z, y Z st {gcd(a, b) = x * a + y * b}
+
+    have fn euclid_bezout_pair(u, v Z) cart(Z, Z) by induc abs(v) from 0:
+        case v = 0:
+            case u >= 0: (1, 0)
+            case u < 0: (-1, 0)
+        case v != 0:
+            case v >= 0: (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])
+            case v < 0: (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])
+
+    have fn euclid_bezout_l(u, v Z) Z = euclid_bezout_pair(u, v)[1]
+    have fn euclid_bezout_r(u, v Z) Z = euclid_bezout_pair(u, v)[2]
+
+    prop euclid_bezout_identity_at_measure(m Z):
+        forall u, v Z:
+            u != 0 or v != 0
+            abs(v) = m
+            =>:
+                euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
+
+    claim:
+        ? forall u, v Z:
+            u != 0 or v != 0
+            abs(v) = 0
+            =>:
+                euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
+        v = 0
+        by cases:
+            ? u != 0
+            case u != 0:
+                do_nothing
+            case v != 0:
+                impossible v = 0
+        by thm gcd_euclidean_base(u)
+        by cases:
+            ? euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
+            case u >= 0:
+                euclid_bezout_pair(u, v) = (1, 0)
+                euclid_bezout_l(u, v) = 1
+                euclid_bezout_r(u, v) = 0
+                abs(u) = u
+                euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = 1 * u + 0 * v = u = abs(u) = gcd(u, v)
+            case u < 0:
+                euclid_bezout_pair(u, v) = (-1, 0)
+                euclid_bezout_l(u, v) = -1
+                euclid_bezout_r(u, v) = 0
+                abs(u) = -u
+                euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = -1 * u + 0 * v = -u = abs(u) = gcd(u, v)
+    $euclid_bezout_identity_at_measure(0)
+
+    claim:
+        ? forall m Z:
+            m >= 0
+            forall y Z:
+                y >= 0
+                y <= m
+                =>:
+                    $euclid_bezout_identity_at_measure(y)
+            =>:
+                $euclid_bezout_identity_at_measure(m + 1)
+        claim:
+            ? forall u, v Z:
+                u != 0 or v != 0
+                abs(v) = m + 1
+                =>:
+                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
+            m + 1 > 0
+            by contra:
+                ? v != 0
+                v = 0
+                abs(v) = 0 = m + 1
+                impossible m + 1 > 0
+            have r Z = u % abs(v)
+            abs(v) > 0
+            abs(v) $in N_pos
+            r = u % abs(v)
+            u % abs(v) >= 0
+            r = u % abs(v) >= 0
+            abs(r) >= 0
+            abs(r) = r
+            r $in Z
+            abs(r) $in Z
+            u % abs(v) < abs(v)
+            r = u % abs(v) < abs(v)
+            abs(r) < abs(v)
+            abs(v) = m + 1
+            abs(r) < m + 1
+            abs(r) + 1 <= m + 1
+            abs(r) <= m or abs(r) >= m + 1
+            by cases:
+                ? abs(r) <= m
+                case abs(r) <= m:
+                    abs(r) <= m
+                case abs(r) >= m + 1:
+                    impossible abs(r) < m + 1
+            v != 0 or r != 0
+            abs(r) = abs(r)
+            $euclid_bezout_identity_at_measure(abs(r))
+            by thm gcd_euclidean_step(u, v)
+            by cases:
+                ? euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
+                case v >= 0:
+                    abs(v) = v
+                    euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r = gcd(v, r)
+                    euclid_bezout_l(v, r) = euclid_bezout_l(v, u % abs(v))
+                    euclid_bezout_r(v, r) = euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_l(v, u % abs(v)) = euclid_bezout_l(v, r)
+                    euclid_bezout_r(v, u % abs(v)) = euclid_bezout_r(v, r)
+                    gcd(v, r) = gcd(v, u % abs(v))
+                    euclid_bezout_pair(u, v) = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])
+                    euclid_bezout_l(u, v) = euclid_bezout_pair(u, v)[1] = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])[1] = euclid_bezout_pair(v, u % abs(v))[2]
+                    euclid_bezout_r(v, u % abs(v)) = euclid_bezout_pair(v, u % abs(v))[2]
+                    euclid_bezout_l(u, v) = euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_l(u, v) = euclid_bezout_r(v, r)
+                    euclid_bezout_r(u, v) = euclid_bezout_pair(u, v)[2] = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])[2] = euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2]
+                    euclid_bezout_l(v, u % abs(v)) = euclid_bezout_pair(v, u % abs(v))[1]
+                    euclid_bezout_pair(v, u % abs(v))[1] = euclid_bezout_l(v, u % abs(v))
+                    euclid_bezout_pair(v, u % abs(v))[2] = euclid_bezout_r(v, u % abs(v))
+                    integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2] = integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2] = euclid_bezout_l(v, u % abs(v)) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_r(u, v) = euclid_bezout_l(v, u % abs(v)) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
+                    integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    euclid_bezout_l(v, u % abs(v)) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = euclid_bezout_l(v, r) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    euclid_bezout_r(u, v) = euclid_bezout_l(v, u % abs(v)) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = euclid_bezout_l(v, r) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    u = abs(v) * integer_quotient(u, abs(v)) + u % abs(v)
+                    u - v * integer_quotient(u, abs(v)) = u - abs(v) * integer_quotient(u, abs(v)) = u % abs(v)
+                    u - v * integer_quotient(u, abs(v)) = r
+                    gcd(u, v) = gcd(v, u % abs(v)) = gcd(v, r)
+                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_r(v, r) * u + (euclid_bezout_l(v, r) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)) * v
+                    euclid_bezout_r(v, r) * u + (euclid_bezout_l(v, r) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)) * v = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * (u - v * integer_quotient(u, abs(v)))
+                    euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * (u - v * integer_quotient(u, abs(v))) = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r
+                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r = gcd(v, r) = gcd(u, v)
+                case v < 0:
+                    abs(v) = -v
+                    euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r = gcd(v, r)
+                    euclid_bezout_l(v, r) = euclid_bezout_l(v, u % abs(v))
+                    euclid_bezout_r(v, r) = euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_l(v, u % abs(v)) = euclid_bezout_l(v, r)
+                    euclid_bezout_r(v, u % abs(v)) = euclid_bezout_r(v, r)
+                    gcd(v, r) = gcd(v, u % abs(v))
+                    euclid_bezout_pair(u, v) = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])
+                    euclid_bezout_l(u, v) = euclid_bezout_pair(u, v)[1] = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])[1] = euclid_bezout_pair(v, u % abs(v))[2]
+                    euclid_bezout_r(v, u % abs(v)) = euclid_bezout_pair(v, u % abs(v))[2]
+                    euclid_bezout_l(u, v) = euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_l(u, v) = euclid_bezout_r(v, r)
+                    euclid_bezout_r(u, v) = euclid_bezout_pair(u, v)[2] = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])[2] = euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2]
+                    euclid_bezout_l(v, u % abs(v)) = euclid_bezout_pair(v, u % abs(v))[1]
+                    euclid_bezout_pair(v, u % abs(v))[1] = euclid_bezout_l(v, u % abs(v))
+                    euclid_bezout_pair(v, u % abs(v))[2] = euclid_bezout_r(v, u % abs(v))
+                    integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2] = integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2] = euclid_bezout_l(v, u % abs(v)) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_r(u, v) = euclid_bezout_l(v, u % abs(v)) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
+                    integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    euclid_bezout_l(v, u % abs(v)) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = euclid_bezout_l(v, r) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    euclid_bezout_r(u, v) = euclid_bezout_l(v, u % abs(v)) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = euclid_bezout_l(v, r) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    u = abs(v) * integer_quotient(u, abs(v)) + u % abs(v)
+                    u + v * integer_quotient(u, abs(v)) = u - abs(v) * integer_quotient(u, abs(v)) = u % abs(v)
+                    u + v * integer_quotient(u, abs(v)) = r
+                    gcd(u, v) = gcd(v, u % abs(v)) = gcd(v, r)
+                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_r(v, r) * u + (euclid_bezout_l(v, r) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)) * v
+                    euclid_bezout_r(v, r) * u + (euclid_bezout_l(v, r) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)) * v = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * (u + v * integer_quotient(u, abs(v)))
+                    euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * (u + v * integer_quotient(u, abs(v))) = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r
+                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r = gcd(v, r) = gcd(u, v)
+        $euclid_bezout_identity_at_measure(m + 1)
+
+    by strong_induc m from 0:
+        ? $euclid_bezout_identity_at_measure(m)
+        ? from m = 0:
+            $euclid_bezout_identity_at_measure(0)
+        ? strong_induc:
+            $euclid_bezout_identity_at_measure(m + 1)
+
+    abs(b) >= 0
+    $euclid_bezout_identity_at_measure(abs(b))
+    euclid_bezout_l(a, b) * a + euclid_bezout_r(a, b) * b = gcd(a, b)
+    witness exist x Z, y Z st {gcd(a, b) = x * a + y * b} from euclid_bezout_l(a, b), euclid_bezout_r(a, b):
+        gcd(a, b) = euclid_bezout_l(a, b) * a + euclid_bezout_r(a, b) * b
+
+thm gcd_of_prime_is_one_or_prime:
+    ? forall a Z, p N_pos:
+        $prime(p)
+        =>:
+            gcd(a, p) = 1 or gcd(a, p) = p
+    by thm gcd_positive(a, p)
+    by thm gcd_divides_right(a, p)
+    obtain k from exist k Z st {p = gcd(a, p) * k}
+    p = gcd(a, p) * k + 0
+    p % gcd(a, p) = 0
+    by thm _positive_divisor_le_abs(gcd(a, p), p)
+    abs(p) = p
+    gcd(a, p) <= p
+    gcd(a, p) = p or gcd(a, p) < p
+    by cases:
+        ? gcd(a, p) = 1 or gcd(a, p) = p
+        case gcd(a, p) = p:
+            gcd(a, p) = 1 or gcd(a, p) = p
+        case gcd(a, p) < p:
+            gcd(a, p) = 1 or gcd(a, p) > 1
+            by cases:
+                ? gcd(a, p) = 1 or gcd(a, p) = p
+                case gcd(a, p) = 1:
+                    gcd(a, p) = 1 or gcd(a, p) = p
+                case gcd(a, p) > 1:
+                    gcd(a, p) >= 2
+                    gcd(a, p) $in range(2, p)
+                    $prime(p)
+                    p % gcd(a, p) != 0
+                    impossible p % gcd(a, p) = 0

@@ -1722,7 +1722,7 @@ impl Runtime {
                     let second_inst = this.inst_obj(&second, &empty, ParamObjType::SetBuilder)?;
 
                     let mut facts_inst = Vec::new();
-                    while tb.current()? != RIGHT_CURLY_BRACE {
+                    loop {
                         let f = this.parse_exist_body_fact(tb)?;
                         facts_inst.push(this.inst_exist_body_fact(
                             &f,
@@ -1730,6 +1730,10 @@ impl Runtime {
                             ParamObjType::SetBuilder,
                             None,
                         )?);
+                        if tb.current()? == RIGHT_CURLY_BRACE {
+                            break;
+                        }
+                        tb.skip_token(COMMA)?;
                     }
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
@@ -2109,6 +2113,17 @@ mod module_qualification_parse_tests {
 
         let field_call = parse_one_obj_line_with_runtime(&mut rt, "&Group<s>{p}.op(x, y)");
         assert_eq!(format!("{}", field_call), "&Group<s>{p}.op(x, y)");
+    }
+
+    #[test]
+    fn parses_comma_separated_set_builder_facts() {
+        let mut rt = Runtime::new();
+
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "{d N_pos: d > 0, d < 2}");
+        let Obj::SetBuilder(set_builder) = obj else {
+            panic!("expected set builder");
+        };
+        assert_eq!(set_builder.facts.len(), 2);
     }
 
     #[test]
