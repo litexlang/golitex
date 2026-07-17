@@ -80,8 +80,8 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
         case k <= a:
             product(1, a, fn(x N_pos) N_pos {x}) % k = 0
             2 <= k
-            by thm std::basics::integer_mod_add(product(1, a, fn(x N_pos) N_pos {x}), 1, k)
-            by thm std::basics::one_mod_eq_one_of_two_le(k)
+            by thm basics::integer_mod_add(product(1, a, fn(x N_pos) N_pos {x}), 1, k)
+            by thm basics::one_mod_eq_one_of_two_le(k)
             (0 + 1) % k = 1 % k = 1
             (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
             impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
@@ -263,10 +263,10 @@ claim:
             product(1, a, fn(x N_pos) N_pos {x}) % a = 0
             product(1, a, fn(x N_pos) N_pos {x}) % k = product(1, a, fn(x N_pos) N_pos {x}) % a = 0
         case k < a:
-            by thm std::basics::integer_successor_le_of_lt(a, k)
+            by thm basics::integer_successor_le_of_lt(a, k)
             product(1, a, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * product(k + 1, a, fn(x N_pos) N_pos {x})
             product(1, k, fn(x N_pos) N_pos {x}) % k = 0
-            by thm std::basics::integer_mod_quotient_remainder(product(1, k, fn(x N_pos) N_pos {x}), k)
+            by thm basics::integer_mod_quotient_remainder(product(1, k, fn(x N_pos) N_pos {x}), k)
             obtain r from exist q Z st {product(1, k, fn(x N_pos) N_pos {x}) = k * q + product(1, k, fn(x N_pos) N_pos {x}) % k}
             product(1, k, fn(x N_pos) N_pos {x}) = k * r + product(1, k, fn(x N_pos) N_pos {x}) % k = k * r = r * k
             witness exist t Z st {product(1, a, fn(x N_pos) N_pos {x}) = t * k} from r * product(k + 1, a, fn(x N_pos) N_pos {x}):
@@ -298,7 +298,7 @@ claim:
         $prime(2)
 
         witness exist t Z st {2 = t * 2} from 1
-        by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(2, 2, 1, 0)
+        by thm basics::integer_mod_eq_remainder_of_quotient_remainder(2, 2, 1, 0)
         2 % 2 = 0
         witness exist k N_pos st {$prime(k), 2 % k = 0} from 2
 
@@ -316,7 +316,7 @@ claim:
             by cases exist k N_pos st {$prime(k), (n + 1) % k = 0}:
                 case $prime(n+1):
                     witness exist t Z st {n + 1 = t * (n + 1)} from 1
-                    by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(n + 1, n + 1, 1, 0)
+                    by thm basics::integer_mod_eq_remainder_of_quotient_remainder(n + 1, n + 1, 1, 0)
                     (n + 1) % (n + 1) = 0
                     witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from n+1
                 case not $prime(n+1):
@@ -334,7 +334,7 @@ claim:
                     2 <= c < n+1
 
                     (n+1) % c = 0
-                    by thm std::basics::integer_le_or_ge_successor(c, n)
+                    by thm basics::integer_le_or_ge_successor(c, n)
                     by cases:
                         ? c <= n
                         case c <= n:
@@ -344,20 +344,20 @@ claim:
 
                     obtain d from exist k N_pos st {$prime(k), c % k = 0}
 
-                    by thm std::basics::integer_mod_quotient_remainder(n + 1, c)
+                    by thm basics::integer_mod_quotient_remainder(n + 1, c)
                     obtain e from exist q Z st {n + 1 = c * q + (n + 1) % c}
                     n + 1 = c * e + (n + 1) % c = c * e = e * c
 
-                    by thm std::basics::integer_mod_quotient_remainder(c, d)
+                    by thm basics::integer_mod_quotient_remainder(c, d)
                     obtain f from exist r Z st {c = d * r + c % d}
                     c = d * f + c % d = d * f = f * d
 
                     witness exist t Z st {e * f * d = t * d} from e * f
-                    by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(e * f * d, d, e * f, 0)
+                    by thm basics::integer_mod_eq_remainder_of_quotient_remainder(e * f * d, d, e * f, 0)
                     (e * f * d) % d = 0
 
                     n + 1 = e * c = e * (f * d) = (e * f) * d
-                    by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(n + 1, d, e * f, 0)
+                    by thm basics::integer_mod_eq_remainder_of_quotient_remainder(n + 1, d, e * f, 0)
                     (n + 1) % d = 0
                     witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from d:
                         (n + 1) % d = 0
@@ -368,7 +368,7 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
     by cases k > a:
         case k <= a:
             product(1, a, fn(x N_pos) N_pos {x}) % k = 0
-            by thm std::basics::one_mod_eq_one_of_two_le(k)
+            by thm basics::one_mod_eq_one_of_two_le(k)
             1 % k = 1
             (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
             impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
@@ -603,19 +603,19 @@ sketch:
 
     by contra not 2^(1/2) $in Q:
         obtain p, q from exist p, q N_pos st {2^(1/2) = p / q, gcd_sqrt2(p, q) = 1}
-        by thm std::basics::positive_real_power_of_power(2, 1 / 2, 2)
+        by thm basics::positive_real_power_of_power(2, 1 / 2, 2)
         p^2 / q^2 = (p/q)^2 = (2^(1/2))^2 = 2^(1/2 * 2) = 2^(1) = 2
         p^2 = 2 * q^2
         witness exist k Z st {p^2 = 2 * k} from q^2
-        by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(p^2, 2, q^2, 0)
+        by thm basics::integer_mod_eq_remainder_of_quotient_remainder(p^2, 2, q^2, 0)
         p^2 % 2 = 0
         p % 2 = 0
-        by thm std::basics::integer_mod_quotient_remainder(p, 2)
+        by thm basics::integer_mod_quotient_remainder(p, 2)
         obtain c from exist k Z st {p = 2 * k + p % 2}
         p = 2 * c + p % 2 = 2 * c
         q^2 = p^2 / 2 = (2 * c)^2 / 2 = 4 * c^2 / 2 = 2 * c^2
         witness exist k Z st {q^2 = 2 * k} from c^2
-        by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(q^2, 2, c^2, 0)
+        by thm basics::integer_mod_eq_remainder_of_quotient_remainder(q^2, 2, c^2, 0)
         q^2 % 2= 0
         q % 2 = 0
         2 <= gcd_sqrt2(p, q) = 1

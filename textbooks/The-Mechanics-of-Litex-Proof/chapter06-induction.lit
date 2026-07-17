@@ -65,14 +65,14 @@ sketch:
         by cases:
             ? $even(n) or $odd(n)
             case n % 2 = 0:
-                by thm std::basics::integer_mod_quotient_remainder(n, 2)
+                by thm basics::integer_mod_quotient_remainder(n, 2)
                 obtain k from exist k Z st {n = 2 * k + n % 2}
                 witness exist l Z st {n = 2 * l} from k:
                     n = 2 * k + 0 = 2 * k
                 $even(n)
                 $even(n) or $odd(n)
             case n % 2 = 1:
-                by thm std::basics::integer_mod_quotient_remainder(n, 2)
+                by thm basics::integer_mod_quotient_remainder(n, 2)
                 obtain k from exist k Z st {n = 2 * k + n % 2}
                 witness exist l Z st {n = 2 * l + 1} from k:
                     n = 2 * k + 1
@@ -387,7 +387,7 @@ sketch:
                         d <= m + 1
                         =>:
                             $divides(d, f(m + 1))
-                    by thm std::basics::integer_le_or_ge_successor(d, m)
+                    by thm basics::integer_le_or_ge_successor(d, m)
                     by cases:
                         ? $divides(d, f(m + 1))
                         case d <= m:
@@ -927,7 +927,7 @@ claim:
             by cases:
                 ? fib(k + 1) <= 2^(k + 1)
                 case k < 1:
-                    by thm std::basics::integer_le_or_ge_successor(k, 0)
+                    by thm basics::integer_le_or_ge_successor(k, 0)
                     by cases:
                         ? k = 0
                         case k <= 0:
@@ -985,7 +985,7 @@ sketch:
                     impossible b < 2
             $prime(2)
             witness exist t Z st {2 = t * 2} from 1
-            by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(2, 2, 1, 0)
+            by thm basics::integer_mod_eq_remainder_of_quotient_remainder(2, 2, 1, 0)
             2 % 2 = 0
             witness exist p N_pos st {$prime(p), 2 % p = 0} from 2
 
@@ -1003,7 +1003,7 @@ sketch:
                 by cases exist p N_pos st {$prime(p), (n + 1) % p = 0}:
                     case $prime(n + 1):
                         witness exist t Z st {n + 1 = t * (n + 1)} from 1
-                        by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(n + 1, n + 1, 1, 0)
+                        by thm basics::integer_mod_eq_remainder_of_quotient_remainder(n + 1, n + 1, 1, 0)
                         (n + 1) % (n + 1) = 0
                         witness exist p N_pos st {$prime(p), (n + 1) % p = 0} from n + 1
                     case not $prime(n + 1):
@@ -1021,7 +1021,7 @@ sketch:
                         2 <= c < n + 1
 
                         (n + 1) % c = 0
-                        by thm std::basics::integer_le_or_ge_successor(c, n)
+                        by thm basics::integer_le_or_ge_successor(c, n)
                         by cases:
                             ? c <= n
                             case c <= n:
@@ -1031,20 +1031,20 @@ sketch:
 
                         obtain d from exist p N_pos st {$prime(p), c % p = 0}
 
-                        by thm std::basics::integer_mod_quotient_remainder(n + 1, c)
+                        by thm basics::integer_mod_quotient_remainder(n + 1, c)
                         obtain e from exist q Z st {n + 1 = c * q + (n + 1) % c}
                         n + 1 = c * e + (n + 1) % c = c * e = e * c
 
-                        by thm std::basics::integer_mod_quotient_remainder(c, d)
+                        by thm basics::integer_mod_quotient_remainder(c, d)
                         obtain f from exist r Z st {c = d * r + c % d}
                         c = d * f + c % d = d * f = f * d
 
                         witness exist t Z st {e * f * d = t * d} from e * f
-                        by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(e * f * d, d, e * f, 0)
+                        by thm basics::integer_mod_eq_remainder_of_quotient_remainder(e * f * d, d, e * f, 0)
                         (e * f * d) % d = 0
 
                         n + 1 = e * c = e * (f * d) = (e * f) * d
-                        by thm std::basics::integer_mod_eq_remainder_of_quotient_remainder(n + 1, d, e * f, 0)
+                        by thm basics::integer_mod_eq_remainder_of_quotient_remainder(n + 1, d, e * f, 0)
                         (n + 1) % d = 0
                         witness exist p N_pos st {$prime(p), (n + 1) % p = 0} from d:
                             (n + 1) % d = 0
@@ -1056,7 +1056,7 @@ sketch:
                 exist p N_pos st {$prime(p), $dvdN(p, n)}
         obtain p from exist p N_pos st {$prime(p), n % p = 0}
         p != 0
-        by thm std::basics::integer_mod_quotient_remainder(n, p)
+        by thm basics::integer_mod_quotient_remainder(n, p)
         obtain k from exist q Z st {n = p * q + n % p}
         n = p * k + n % p = p * k = k * p
         witness exist c Z st {n = p * c} from k:
@@ -1441,7 +1441,7 @@ sketch:
                 case n * d < 0:
                     abs(2 * (n + d) - d) >= 0
                     abs(2 * (n + d) - d) < abs(2 * n - d) = m + 1
-                    by thm std::basics::integer_le_or_ge_successor(abs(2 * (n + d) - d), m)
+                    by thm basics::integer_le_or_ge_successor(abs(2 * (n + d) - d), m)
                     by cases:
                         ? abs(2 * (n + d) - d) <= m
                         case abs(2 * (n + d) - d) <= m:
@@ -1461,7 +1461,7 @@ sketch:
                         case 0 < d * (n - d):
                             abs(2 * (n - d) - d) >= 0
                             abs(2 * (n - d) - d) < abs(2 * n - d) = m + 1
-                            by thm std::basics::integer_le_or_ge_successor(abs(2 * (n - d) - d), m)
+                            by thm basics::integer_le_or_ge_successor(abs(2 * (n - d) - d), m)
                             by cases:
                                 ? abs(2 * (n - d) - d) <= m
                                 case abs(2 * (n - d) - d) <= m:
@@ -1631,7 +1631,7 @@ sketch:
                 case a * b < 0:
                     abs(2 * (a + b) - b) >= 0
                     abs(2 * (a + b) - b) < abs(2 * a - b) = m + 1
-                    by thm std::basics::integer_le_or_ge_successor(abs(2 * (a + b) - b), m)
+                    by thm basics::integer_le_or_ge_successor(abs(2 * (a + b) - b), m)
                     by cases:
                         ? abs(2 * (a + b) - b) <= m
                         case abs(2 * (a + b) - b) <= m:
@@ -1654,7 +1654,7 @@ sketch:
                         case 0 < b * (a - b):
                             abs(2 * (a - b) - b) >= 0
                             abs(2 * (a - b) - b) < abs(2 * a - b) = m + 1
-                            by thm std::basics::integer_le_or_ge_successor(abs(2 * (a - b) - b), m)
+                            by thm basics::integer_le_or_ge_successor(abs(2 * (a - b) - b), m)
                             by cases:
                                 ? abs(2 * (a - b) - b) <= m
                                 case abs(2 * (a - b) - b) <= m:
@@ -1816,7 +1816,7 @@ sketch:
                 case 0 < b:
                     abs(fmod(a, b)) >= 0
                     abs(fmod(a, b)) < abs(b) = m + 1
-                    by thm std::basics::integer_le_or_ge_successor(abs(fmod(a, b)), m)
+                    by thm basics::integer_le_or_ge_successor(abs(fmod(a, b)), m)
                     by cases:
                         ? abs(fmod(a, b)) <= m
                         case abs(fmod(a, b)) <= m:
@@ -1847,7 +1847,7 @@ sketch:
                         case b < 0:
                             abs(fmod(a, -b)) >= 0
                             abs(fmod(a, -b)) < abs(b) = m + 1
-                            by thm std::basics::integer_le_or_ge_successor(abs(fmod(a, -b)), m)
+                            by thm basics::integer_le_or_ge_successor(abs(fmod(a, -b)), m)
                             by cases:
                                 ? abs(fmod(a, -b)) <= m
                                 case abs(fmod(a, -b)) <= m:

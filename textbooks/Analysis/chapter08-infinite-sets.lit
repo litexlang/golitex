@@ -777,7 +777,7 @@ thm increasing_bijection_successor_is_least_above:
         by cases:
             ? f(n + 1) <= z
             case m < n + 1:
-                by thm std::basics::integer_predecessor_le_of_lt(m, n + 1)
+                by thm basics::integer_predecessor_le_of_lt(m, n + 1)
                 m <= n + 1 - 1 = n
                 m < n or m >= n
                 by cases:

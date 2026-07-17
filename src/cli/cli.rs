@@ -1121,8 +1121,8 @@ fn upgrade_message(version: &str) -> String {
 
 fn help_message() -> String {
     let result = r#"litex : start an isolated persistent REPL; terminal import is available
-litex -f <file> : use a direct-parent litex.config to run the module prefix through this file; otherwise run it and continue in an isolated REPL
-litex -isolated -f <file> : force isolated file mode
+litex -f <file> : require a direct-parent litex.config and run the module prefix through this file
+litex -isolated -f <file> : run any standalone file and continue in an isolated REPL
 litex -r <folder> : run a module's recursive [export] tree, or the root prefix through a selected submodule
 litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object

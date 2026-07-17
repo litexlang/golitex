@@ -19,8 +19,8 @@ before the primary command is parsed, so they may appear before or after the
 primary command. Prefer putting them before the command for readability:
 
 ```bash
-litex -detail -strict -f examples/tmp.lit
-litex -summarize -f examples/tmp.lit
+litex -detail -strict -isolated -f examples/tmp.lit
+litex -summarize -isolated -f examples/tmp.lit
 litex -lang zh -runner -e "1 = 1"
 ```
 
@@ -78,7 +78,7 @@ Examples:
 
 ```bash
 litex -e "1 = 1"
-litex -f examples/tmp.lit
+litex -isolated -f examples/tmp.lit
 litex -r examples/08_module_repository
 ```
 
@@ -96,15 +96,15 @@ those flags. `-lang` also consumes the next token globally.
 | `litex` | Start an isolated interactive verifier REPL. |
 | `litex -isolated` | Compatibility spelling for the same isolated interactive REPL. |
 | `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | If the direct parent has `litex.config`, trace to its module and run the recursive `[export]` prefix through this file. Otherwise run the file, then continue in an isolated REPL with that file's environment. |
-| `litex -isolated -f <file>` | Force one Litex file to run as an isolated script. |
+| `litex -f <file>` | Require `litex.config` in the direct parent, trace to the module root, and run the recursive `[export]` prefix through this file. It fails if that direct configuration is absent. |
+| `litex -isolated -f <file>` | Run one Litex file as an isolated script, without project discovery; a successful ordinary CLI run then continues in an isolated REPL. |
 | `litex -r <project>` | Run a module's complete recursive `[export]` tree, or trace to the module and run the prefix through a selected submodule's complete subtree. |
 
 Declare local project files and child submodules in recursive ordered
 `[export]` entries. Only a `[hierarchy] module` declares non-standard packages
 in `[import]` or installed packages in `[import std]`. Files cite canonical
 names such as `Part2::chap3::theorem` or
-`std::basics::theorem`. Module source files cannot write
+`basics::theorem`. Module source files cannot write
 source-level imports.
 
 The ordinary REPL, and the continued terminal after a successful isolated
@@ -116,7 +116,7 @@ import "../Algebra" as Algebra
 Algebra::implementation::some_fact
 
 import std basics
-std::basics::some_fact
+basics::some_fact
 ```
 
 The quoted target must be a folder whose `litex.config` declares
@@ -139,7 +139,7 @@ stack/runner warnings. It also includes `statement_type_counts`,
 statement text for editor-side cursor selection. Prefer:
 
 ```bash
-litex -summarize -f examples/tmp.lit
+litex -summarize -isolated -f examples/tmp.lit
 ```
 
 Ordinary verifier commands are designed for interactive inspection. Programs
@@ -262,7 +262,7 @@ Use `litex.config` to organize a folder tree:
 - declare external module folders under `[import]` and installed packages under
   `[import std]`, only in the top-level module;
 - cite earlier entries with their full folder/file aliases, such as
-  `Part2::chap7::name` or `std::basics::name`.
+  `Part2::chap7::name` or `basics::name`.
 
 A configured folder may contain only `litex.config` and the direct children
 listed in `[export]`. Exported folders must be submodules. Imported targets must
@@ -272,12 +272,15 @@ descendants of the importing module.
 `-r` and `-f` share one recursive left-to-right order. Running a top-level
 module runs the whole tree. Running a submodule traces back to its module,
 executes every preceding entry, then executes the selected submodule in full.
-Running a registered file follows the same prefix and stops after that file. A
-file whose direct parent has no `litex.config` runs in isolation.
+Running a registered file follows the same prefix and stops after that file.
+`litex -f` requires the file's direct parent to have `litex.config`; use
+`litex -isolated -f` for a standalone file.
 
-There is no `[requires]`, `[run]`, or flatten mode. Every folder and file alias
-stays in the canonical namespace. Source-level `import` is reserved for the
-isolated terminal; module source uses its manifest instead.
+There is no `[requires]` or `[run]`. A `module` with exactly one `.lit` export
+may write `[module]` then `flatten = true`; its public interface omits that
+file alias. `std/basics` uses this form, so `[import std] basics` exposes
+`basics::name`. Source-level `import` is reserved for isolated runtimes; module
+source uses its manifest instead.
 
 Each `[import]` declaration creates a private module instance. Two aliases of
 one physical folder remain distinct, and imports internal to an imported module
@@ -316,7 +319,7 @@ litex -e "1 = 1"
 Run a file with fuller output:
 
 ```bash
-litex -detail -f examples/tmp.lit
+litex -detail -isolated -f examples/tmp.lit
 ```
 
 Run a project plan:
@@ -328,7 +331,7 @@ litex -r examples/08_module_repository
 Run a strict CI-style check:
 
 ```bash
-litex -strict -runner -f examples/tmp.lit
+litex -strict -runner -isolated -f examples/tmp.lit
 ```
 
 Generate a relation graph:
@@ -340,7 +343,7 @@ litex -graph -f textbooks/Analysis/chapter06-sequential-limits.lit tmp/graphs/ch
 Generate a fact-only verification chain:
 
 ```bash
-litex -factgraph -f examples/tmp.lit tmp/graphs/tmp_fact_graph.json
+litex -factgraph -isolated -f examples/tmp.lit tmp/graphs/tmp_fact_graph.json
 ```
 
 Run with Chinese output labels:
@@ -352,5 +355,5 @@ litex -lang zh -runner -e "1 = 1"
 Compile a file to LaTeX:
 
 ```bash
-litex -latex -f examples/tmp.lit
+litex -latex -isolated -f examples/tmp.lit
 ```
