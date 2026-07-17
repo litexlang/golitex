@@ -192,6 +192,17 @@ fn discover_std_module_with_mount_stack(
 ) -> Result<ModuleId, RuntimeError> {
     let canonical_std_root =
         canonical_directory(&std_root.to_string_lossy(), &std_root.to_string_lossy(), 0)?;
+    let single_file_path = canonical_std_root.join(format!("{}.lit", package_name));
+    if single_file_path.is_file() {
+        return discover_std_single_file_module(
+            runtime,
+            owner_module_id,
+            &canonical_std_root,
+            &single_file_path,
+            package_name,
+            mount_stack,
+        );
+    }
     let package_root = canonical_std_root.join(package_name);
     let canonical_package_root = canonical_directory(
         &package_root.to_string_lossy(),
@@ -249,6 +260,47 @@ fn discover_std_module_with_mount_stack(
     mount_stack.pop();
     discovery?;
     Ok(std_module_id)
+}
+
+fn discover_std_single_file_module(
+    runtime: &mut Runtime,
+    owner_module_id: ModuleId,
+    std_root: &Path,
+    source_path: &Path,
+    package_name: &str,
+    mount_stack: &mut Vec<ModuleId>,
+) -> Result<ModuleId, RuntimeError> {
+    let canonical_source_path = canonical_file(source_path, &std_root.to_string_lossy(), 0)?;
+    let source_path_string = path_string(&canonical_source_path, &std_root.to_string_lossy(), 0)?;
+    let owner_name = runtime
+        .module_manager
+        .module(owner_module_id)
+        .map(|module| module.module_name.clone())
+        .unwrap_or_default();
+    let local_name = format!("std{}{}", MOD_SIGN, package_name);
+    let module_name = join_module_name(owner_name.as_str(), local_name.as_str());
+    reject_active_mount_cycle(
+        runtime,
+        mount_stack,
+        source_path_string.as_str(),
+        module_name.as_str(),
+        "cyclic standard package import",
+        &canonical_source_path,
+        0,
+    )?;
+    let module_id = runtime
+        .module_manager
+        .create_discovered_module(
+            module_name,
+            source_path_string.clone(),
+            source_path_string,
+            ProjectHierarchy::Module,
+            None,
+        )
+        .map_err(|message| {
+            repository_error(message, &canonical_source_path.to_string_lossy(), 0)
+        })?;
+    Ok(module_id)
 }
 
 pub fn discover_repository_for_file(
@@ -1603,16 +1655,7 @@ api = "./api.lit"
 "#,
             );
             write_file(&module_root.join("api.lit"), "have value R = 7\n");
-            write_file(
-                &std_root.join("basics/litex.config"),
-                r#"[hierarchy]
-module
-
-[export]
-implementation = "./main.lit"
-"#,
-            );
-            write_file(&std_root.join("basics/main.lit"), "have std_value R = 2\n");
+            write_file(&std_root.join("basics.lit"), "have std_value R = 2\n");
             write_file(&file_path, "have seed R = 1\n");
 
             with_standard_library_root(&std_root, || {
@@ -1633,7 +1676,7 @@ implementation = "./main.lit"
 
                 let module_path = path_string_for_test(&module_root);
                 let source = format!(
-                    "import \"{}\" as yy\nyy::api::value = 7\nimport std basics\nstd::basics::implementation::std_value = 2\nseed = 1\n",
+                    "import \"{}\" as yy\nyy::api::value = 7\nimport std basics\nstd::basics::std_value = 2\nseed = 1\n",
                     module_path
                 );
                 let (stmt_results, runtime_error) = run_source_code(source.as_str(), &mut runtime);
@@ -2058,17 +2101,7 @@ main = "./main.lit"
             let fixture = Fixture::new("standard-import");
             let root = fixture.path("root");
             let std_root = fixture.path("std");
-            let basics = std_root.join("basics");
-            write_file(
-                &basics.join("litex.config"),
-                r#"[hierarchy]
-module
-
-[export]
-implementation = "./main.lit"
-"#,
-            );
-            write_file(&basics.join("main.lit"), "have value R = 1\n");
+            write_file(&std_root.join("basics.lit"), "have value R = 1\n");
             write_file(
                 &root.join("litex.config"),
                 r#"[hierarchy]
@@ -2083,7 +2116,7 @@ main = "./main.lit"
             );
             write_file(
                 &root.join("main.lit"),
-                "std::basics::implementation::value = 1\nhave answer R = 1\n",
+                "std::basics::value = 1\nhave answer R = 1\n",
             );
 
             with_standard_library_root(&std_root, || {

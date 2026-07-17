@@ -1213,6 +1213,39 @@ impl Runtime {
         )
     }
 
+    // A Euclidean quotient of a natural by a positive natural is a natural.
+    // Example: `integer_quotient(a, d) $in N` for `a $in N` and `d $in N_pos`.
+    pub(super) fn verify_in_fact_nonnegative_integer_quotient_in_n(
+        &mut self,
+        in_fact: &InFact,
+        quotient: &IntegerQuotient,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let dividend_in_n: AtomicFact = InFact::new(
+            quotient.dividend.as_ref().clone(),
+            StandardSet::N.into(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let divisor_in_n_pos: AtomicFact = InFact::new(
+            quotient.divisor.as_ref().clone(),
+            StandardSet::NPos.into(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let dividend_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&dividend_in_n, verify_state)?;
+        let divisor_result = self
+            .verify_non_equational_known_then_builtin_rules_only(&divisor_in_n_pos, verify_state)?;
+        if !dividend_result.is_true() || !divisor_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            "N: Euclidean quotient of a natural by a positive natural",
+        ))
+    }
+
     // Builtin closure of `Q` under `+`, `-`, `*`, `/` when both operands are in `Q`. For `^`, require
     // `base` in `Q` and `exponent` in `Z` (rational base with integer exponent stays in `Q`).
     pub(super) fn verify_in_fact_arithmetic_expression_in_q(

@@ -15,6 +15,7 @@ mod dispatch;
 mod general_cart;
 mod numeric_membership;
 mod numeric_values;
+mod operator_signature;
 mod set_membership;
 mod structured_membership;
 

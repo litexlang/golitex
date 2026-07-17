@@ -1,15 +1,7 @@
 
-# Core operator typing and scalar identities.
-trust:
-    + $in fn(a, b R) R
-    - $in fn(a, b R) R
-    * $in fn(a, b R) R
-    / $in fn(a R, b R: b != 0) R
-    % $in fn(a Z, b Z: b != 0) Z
-    ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
-
 # Named operator-type interfaces keep the source-level package boundary
-# explicit in standalone examples and imported modules.
+# explicit in standalone examples and imported modules. The verifier provides
+# the operator typing facts directly.
 thm real_add_operator_type:
     ? forall:
         + $in fn(a, b R) R
@@ -41,7 +33,7 @@ thm real_pow_operator_type:
     ^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
 
 # A nonempty family of nonempty sets is available as a basic set-theoretic
-# witness. Example: `by thm std::basics::implementation::nonempty_family_of_nonempty_sets_exists()`.
+# witness. Example: `by thm std::basics::nonempty_family_of_nonempty_sets_exists()`.
 thm nonempty_family_of_nonempty_sets_exists:
     ? forall:
         exist X nonempty_set st {forall! x X => {$is_nonempty_set(x)}}
@@ -51,63 +43,6 @@ thm nonempty_family_of_nonempty_sets_exists:
         x = {0}
         $is_nonempty_set(x)
     witness exist X nonempty_set st {forall! x X => {$is_nonempty_set(x)}} from {{0}}
-
-trust:
-    forall a, b R:
-        a <= max(a, b)
-        b <= max(a, b)
-
-    # Max is the least upper bound of two real numbers.
-    # Example: if a <= c and b <= c, then max(a, b) <= c.
-    forall a, b, c R:
-        a <= c
-        b <= c
-        =>:
-            max(a, b) <= c
-
-    forall a, b R:
-        min(a, b) <= a
-        min(a, b) <= b
-
-    # Min is the greatest lower bound of two real numbers.
-    # Example: if c <= a and c <= b, then c <= min(a, b).
-    forall a, b, c R:
-        c <= a
-        c <= b
-        =>:
-            c <= min(a, b)
-
-    forall a, b R:
-        max(a, b) = max(b, a)
-        min(a, b) = min(b, a)
-
-    forall a R_pos, b R_nz:
-        0 < a ^ b
-
-    forall a R_pos, b R:
-        a * a^b = a^(b+1)
-        a^b * a = a^(b+1)
-
-    forall a R_nz, b Z:
-        a * a^b = a^(b+1)
-        a^b * a = a^(b+1)
-
-    forall a R_pos, b R_pos:
-        a != 1
-        =>:
-            a ^ (log(a, b)) = b
-
-    # Integer modulo identities and order complements.
-    forall a, b, c Z:
-        c != 0
-        =>:
-            (a + b) % c = ((a % c) + (b % c)) % c
-            (a - b) % c = ((a % c) - (b % c)) % c
-
-    forall n Z, m Z:
-        n <= m or n >= m + 1
-        n < m or n >= m
-        n > m or n <= m
 
 thm positive_real_power_add_one:
     ? forall a R_pos, b R:
@@ -159,118 +94,19 @@ thm min_greatest_lower_bound:
 thm archimedean_property:
     ? forall e R_pos:
         exist n N_pos st {1/n < e}
-    trust:
-        exist n N_pos st {1/n < e}
+    exist n N_pos st {1/n < e}
 
-trust:
-    forall a Z, m N_pos:
-        (a % m) $in N
-        (a % m) < m
-
-    forall a Z, m N_pos, k N:
-        a % m = k
-        =>:
-            exist r Z st {a = m * r + k}
-
-    forall a Z, m N_pos, k N:
-        k < m
-        exist r Z st {a = m * r + k}
-        =>:
-            a % m = k
-
-    forall a Z, m N_pos:
-        exist r Z st {a = m * r}
-        =>:
-            a % m = 0
-
-    forall a Z, m N_pos:
-        exist r Z st {a = r * m}
-        =>:
-            a % m = 0
-
-    forall a Z, m N_pos:
-        a % m = 0
-        =>:
-            exist r Z st {a = m * r}
-
-    forall a Z, m N_pos:
-        a % m = 0
-        =>:
-            exist r Z st {a = r * m}
-
-    forall a Z, m N_pos, k N:
-        k < m
-        exist r Z st {a = r * m + k}
-        =>:
-            a % m = k
-
-    forall a N, m N_pos, k N:
-        a % m = k
-        =>:
-            exist r N st {a = m * r + k}
-
-    forall a N, m N_pos, k N:
-        k < m
-        exist r N st {a = m * r + k}
-        =>:
-            a % m = k
-
-    forall a N, m N_pos:
-        exist r N st {a = m * r}
-        =>:
-            a % m = 0
-
-    forall a N, m N_pos:
-        exist r N st {a = r * m}
-        =>:
-            a % m = 0
-
-    forall a N, m N_pos:
-        a % m = 0
-        =>:
-            exist r N st {a = m * r}
-
-    forall a N, m N_pos:
-        a % m = 0
-        =>:
-            exist r N st {a = r * m}
-
-    forall a N, m N_pos, k N:
-        k < m
-        exist r N st {a = r * m + k}
-        =>:
-            a % m = k
-
-    forall a finite_set:
-        finite_set_size(a) = 0
-        =>:
-            not $is_nonempty_set(a)
-            a = {}
-
-    forall a, b N_pos:
-        a % b = 0
-        =>:
-            b <= a
-
-    forall a Q:
-        exist p Z, q N_pos st {a = p / q}
-
-    forall a Q:
-        a >= 0
-        =>:
-            exist p N, q N_pos st {a = p / q}
-
-# Named interfaces for the quotient-remainder facts above.  They keep the
-# standard trust boundary visible to importing source files.
+# Named interfaces for the Euclidean quotient/remainder facts.
 thm integer_mod_quotient_remainder:
     ? forall a Z, d N_pos:
         exist q Z st {a = d * q + a % d}
-    a % d $in N
-    exist q Z st {a = d * q + a % d}
+    witness exist q Z st {a = d * q + a % d} from integer_quotient(a, d):
+        a = d * integer_quotient(a, d) + a % d
 
 thm integer_mod_is_natural:
     ? forall a Z, d N_pos:
         a % d $in N
+    a % d >= 0
     a % d $in N
 
 thm integer_mod_bounds:
@@ -285,7 +121,11 @@ thm natural_mod_zero_has_natural_quotient:
         a % d = 0
         =>:
             exist q N st {a = d * q}
-    exist q N st {a = d * q}
+    witness exist q N st {a = d * q} from integer_quotient(a, d):
+        integer_quotient(a, d) $in N
+        a = d * integer_quotient(a, d) + a % d
+        a % d = 0
+        a = d * integer_quotient(a, d)
 
 thm integer_mod_pow:
     ? forall a Z, n N, d N_pos:
@@ -327,8 +167,7 @@ thm even_power_abs_bound:
         x^k <= y^k
         =>:
             abs(x) <= abs(y)
-    trust:
-        abs(x) <= abs(y)
+    abs(x) <= abs(y)
 
 thm even_power_bound_by_nonnegative_rhs:
     ? forall x, y R, k N_pos:
@@ -338,9 +177,10 @@ thm even_power_bound_by_nonnegative_rhs:
         =>:
             -y <= x
             x <= y
-    trust:
-        -y <= x
-        x <= y
+    by thm even_power_abs_bound(x, y, k)
+    abs(x) <= abs(y)
+    -y <= x
+    x <= y
 
 thm even_power_bound_by_nonpositive_rhs:
     ? forall x, y R, k N_pos:
@@ -350,9 +190,10 @@ thm even_power_bound_by_nonpositive_rhs:
         =>:
             y <= x
             x <= -y
-    trust:
-        y <= x
-        x <= -y
+    by thm even_power_abs_bound(x, y, k)
+    abs(x) <= abs(y)
+    y <= x
+    x <= -y
 
 
 trust have pi R:
@@ -361,25 +202,13 @@ trust have pi R:
 trust have euler_e R:
     euler_e > 0
         
-trust:
-    forall a, b R_pos:
-        a^2 < b^2 or a^3 < b^3 or a^4 < b^4 or a^5 < b^5
-        =>:
-            a < b
-
-    forall a, b R_pos:
-        a^2 <= b^2 or a^3 <= b^3 or a^4 <= b^4 or a^5 <= b^5
-        =>:
-            a <= b
-        
 thm pos_pow_strict_order_reflects:
     ? forall a, b, k R_pos:
         a^k < b^k
         k >= 1
         =>:
             a < b
-    trust:
-        a < b
+    a < b
 
 thm pos_pow_order_reflects:
     ? forall a, b, k R_pos:
@@ -387,8 +216,7 @@ thm pos_pow_order_reflects:
         k >= 1
         =>:
             a <= b
-    trust:
-        a <= b
+    a <= b
 
 # Reusable monotonicity predicates; these are interfaces, not automation.
 
@@ -478,9 +306,6 @@ thm integer_le_or_ge_successor:
 trust:
     forall x Q:
         exist p, q Z st {q > 0, x = p / q}
-
-    forall x Q:
-        exist p Z, q Z_nz st {x = p / q}
 
     forall x, y R:
         x < y
@@ -577,96 +402,6 @@ thm in_cup_via_member_set:
     $in(z, cup(F))
 
 trust:
-    forall z set, A set, B set:
-        $in(z, union(A, B))
-        =>:
-            $in(z, A) or $in(z, B)
-
-    forall z set, A set, B set:
-        $in(z, A)
-        $in(z, B)
-        =>:
-            $in(z, intersect(A, B))
-
-    forall z set, A set, B set:
-        not $in(z, A)
-        =>:
-            not $in(z, intersect(A, B))
-
-    forall z set, A set, B set:
-        not $in(z, B)
-        =>:
-            not $in(z, intersect(A, B))
-
-    forall A, B set:
-        intersect(A, B) $subset A
-
-    forall A, B set:
-        intersect(A, B) $subset B
-
-    forall A, B set:
-        A $subset union(A, B)
-
-    forall A, B set:
-        B $subset union(A, B)
-
-    forall A, B set:
-        union(A, B) = union(B, A)
-
-    forall A, B set:
-        intersect(A, B) = intersect(B, A)
-
-    forall A, B, C set:
-        union(union(A, B), C) = union(A, union(B, C))
-
-    forall A, B, C set:
-        intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
-
-    forall A, B set:
-        union(A, intersect(A, B)) = A
-
-    forall A, B set:
-        intersect(A, union(A, B)) = A
-
-    forall A set:
-        union(A, A) = A
-
-    forall A set:
-        intersect(A, A) = A
-
-    forall A set:
-        union(A, {}) = A
-
-    forall A set:
-        intersect(A, {}) = {}
-
-    forall A, B, C set:
-        intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
-
-    forall A, B, C set:
-        union(A, intersect(B, C)) = intersect(union(A, B), union(A, C))
-
-    forall z set, A set, B set:
-        $in(z, A)
-        not $in(z, B)
-        =>:
-            $in(z, set_minus(A, B))
-
-    forall A, B set:
-        set_minus(A, B) $subset A
-
-    forall A, B set:
-        set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
-
-    forall A, B finite_set:
-        $is_finite_set(union(A, B))
-        $is_finite_set(intersect(A, B))
-        $is_finite_set(set_minus(A, B))
-        $is_finite_set(set_diff(A, B))
-
-    forall A finite_set:
-        finite_set_size(A) $in N
-
     forall A finite_set, B set:
         B $subset A
         =>:
@@ -700,7 +435,7 @@ trust:
         finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
 
 # The anonymous finite-set facts above are the implementation boundary for
-# these explicit package interfaces. Callers use `by thm std::basics::implementation::...` rather
+# these explicit package interfaces. Callers use `by thm std::basics::...` rather
 # than relying on an imported package to inject facts into bare-name lookup.
 thm subset_of_finite_set_is_finite:
     ? forall A set, B finite_set:
@@ -714,7 +449,6 @@ thm in_union_from_left:
         $in(z, A)
         =>:
             $in(z, union(A, B))
-    A $subset union(A, B)
     $in(z, union(A, B))
 
 thm in_union_from_right:
@@ -722,7 +456,6 @@ thm in_union_from_right:
         $in(z, B)
         =>:
             $in(z, union(A, B))
-    B $subset union(A, B)
     $in(z, union(A, B))
 
 thm finite_set_size_zero_is_empty:

@@ -50,6 +50,12 @@ impl Runtime {
                     list_set,
                     _verify_state,
                 ),
+            (_, Obj::Intersect(intersect)) => self
+                .verify_not_in_fact_not_in_intersect_by_non_member_of_either_side(
+                    not_in_fact,
+                    intersect,
+                    _verify_state,
+                ),
             _ => Ok((StmtUnknown::new()).into()),
         }
     }
@@ -91,6 +97,9 @@ impl Runtime {
         if let Some(result) =
             self.maybe_verify_in_fact_max_min_pair_closed_standard_set(in_fact, verify_state)?
         {
+            return Ok(result);
+        }
+        if let Some(result) = self.maybe_verify_in_fact_builtin_operator_signature(in_fact) {
             return Ok(result);
         }
         if let Some(result) =
@@ -223,6 +232,8 @@ impl Runtime {
             (Obj::FnObj(fn_obj), Obj::FnRange(fn_range)) => {
                 self.verify_in_fact_fn_application_in_fn_range(in_fact, fn_obj, fn_range)
             }
+            (Obj::IntegerQuotient(quotient), Obj::StandardSet(StandardSet::N)) => self
+                .verify_in_fact_nonnegative_integer_quotient_in_n(in_fact, quotient, verify_state),
             (_, Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_n_by_nonnegative_integer(in_fact, verify_state)
             }

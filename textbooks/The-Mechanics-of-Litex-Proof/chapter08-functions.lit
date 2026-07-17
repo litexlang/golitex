@@ -1196,11 +1196,6 @@ sketch:
 # Therefore the original function is bijective.
 
 sketch:
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust forall t cart(Z, Z):
-        t = (t[1], t[2])
-
     have fn F_Z2(t cart(Z, Z)) cart(Z, Z) = (t[1] + t[2], t[1] + 2 * t[2])
     have fn Finv_Z2(s cart(Z, Z)) cart(Z, Z) = (2 * s[1] - s[2], s[2] - s[1])
 
@@ -1262,11 +1257,6 @@ sketch:
 # This inverse is valid over `R`.
 
 sketch:
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust forall t cart(R, R):
-        t = (t[1], t[2])
-
     have fn F_R2(t cart(R, R)) cart(R, R) = (t[1] + t[2], t[1] - t[2])
     have fn Finv_R2(s cart(R, R)) cart(R, R) = ((s[1] + s[2]) / 2, (s[1] - s[2]) / 2)
 
@@ -1346,14 +1336,6 @@ sketch:
 # `(x1, y1) = (x2, y2)`, so the function is injective.
 
 sketch:
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust forall u, v cart(R, R):
-        u[1] = v[1]
-        u[2] = v[2]
-        =>:
-            u = v
-
     have fn rho_R3(t cart(R, R)) cart(R, R, R) = (t[1] + t[2], t[1] - t[2], t[2])
 
     claim:
@@ -1368,6 +1350,9 @@ sketch:
             u[2] = rho_R3(u)[3] = rho_R3(v)[3] = v[2]
             u[1] + u[2] = rho_R3(u)[1] = rho_R3(v)[1] = v[1] + v[2]
             u[1] = (u[1] + u[2]) - u[2] = (v[1] + v[2]) - v[2] = v[1]
+            u = (u[1], u[2])
+            (u[1], u[2]) = (v[1], v[2])
+            v = (v[1], v[2])
             u = v
         $injective_fn(cart(R, R), cart(R, R, R), rho_R3)
 
@@ -1577,10 +1562,6 @@ sketch:
         swap_R2(t) = (t[2], t[1])
         swap_swap_R2(t) = (t[1], t[2])
         id_R2(t) = t
-        # Source handling: this source item records the displayed fact as background mathematics.
-        # trust: its supporting proof is not expanded in this chapter.
-        trust forall u cart(R, R):
-            u = (u[1], u[2])
         swap_swap_R2(t) = (t[1], t[2]) = t = id_R2(t)
 
 # 8.4.9 Example: A Bijection From `N^2` To `N`
@@ -1630,7 +1611,7 @@ sketch:
             case n % 2 = 1:
                 (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
                 n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
-        by thm std::basics::implementation::natural_mod_zero_has_natural_quotient(n * (n + 1), 2)
+        by thm std::basics::natural_mod_zero_has_natural_quotient(n * (n + 1), 2)
         obtain r from exist r N st {n * (n + 1) = 2 * r}
         witness exist y N st {2 * y = n * (n + 1)} from r:
             n * (n + 1) = 2 * r
@@ -1679,7 +1660,7 @@ sketch:
             a < b
             =>:
                 tri(a + 1) <= tri(b)
-        by thm std::basics::implementation::integer_successor_le_of_lt(b, a)
+        by thm std::basics::integer_successor_le_of_lt(b, a)
         2 * tri(a + 1) = (a + 1) * ((a + 1) + 1) <= b * (b + 1) = 2 * tri(b)
         tri(a + 1) = (2 * tri(a + 1)) / 2 <= (2 * tri(b)) / 2 = tri(b)
 
@@ -1754,7 +1735,7 @@ sketch:
             =>:
                 n - tri(s) <= s
         n < tri(s + 1) = tri(s) + s + 1
-        by thm std::basics::implementation::integer_predecessor_le_of_lt(n, tri(s) + s + 1)
+        by thm std::basics::integer_predecessor_le_of_lt(n, tri(s) + s + 1)
         n <= (tri(s) + s + 1) - 1 = tri(s) + s
         n - tri(s) <= (tri(s) + s) - tri(s) = s
 

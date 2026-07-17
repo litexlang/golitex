@@ -281,8 +281,7 @@ thm empty_set_has_cardinality_zero:
     ? forall:
         $chap3::has_cardinality({}, 0)
     by thm empty_set_has_equal_cardinality_self()
-    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
-    trust range(0, 0) = {}
+    range(0, 0) = {}
 
 thm empty_set_has_finite_cardinality:
     ? forall:
@@ -387,8 +386,8 @@ thm finite_set_has_cardinality_count:
     by cases:
         ? $chap3::has_cardinality(s, finite_set_size(s))
         case finite_set_size(s) = 0:
-            # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
-            trust s = {}
+            by thm chap3::finite_set_size_zero_is_empty(s)
+            s = {}
             by thm empty_set_has_cardinality_zero()
             $chap3::has_cardinality({}, 0)
             $chap3::has_cardinality(s, finite_set_size(s))
@@ -778,8 +777,8 @@ thm increasing_bijection_successor_is_least_above:
         by cases:
             ? f(n + 1) <= z
             case m < n + 1:
-                # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
-                trust m <= n
+                by thm std::basics::integer_predecessor_le_of_lt(m, n + 1)
+                m <= n + 1 - 1 = n
                 m < n or m >= n
                 by cases:
                     ? f(n + 1) <= z
@@ -2621,8 +2620,9 @@ claim:
     ? forall n N:
         $is_less_than_in_order(N, natural_order_relation, n, n + 1)
     n < n + 1
-    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
-    trust (n, n + 1) $in {p cart(N, N): p[1] <= p[2]}
+    n + 1 $in N
+    n <= n + 1
+    (n, n + 1) $in {p cart(N, N): p[1] <= p[2]}
     (n, n + 1) $in natural_order_relation
 
 claim:
@@ -3190,22 +3190,25 @@ claim:
     ? forall z Z:
         $is_less_than_in_order(Z, integer_order_relation, z - 1, z)
     z - 1 < z
-    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
-    trust (z - 1, z) $in {p cart(Z, Z): p[1] <= p[2]}
+    z - 1 $in Z
+    z - 1 <= z
+    (z - 1, z) $in {p cart(Z, Z): p[1] <= p[2]}
 
 claim:
     ? forall q Q:
         $is_less_than_in_order(Q, rational_order_relation, q - 1, q)
     q - 1 < q
-    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
-    trust (q - 1, q) $in {p cart(Q, Q): p[1] <= p[2]}
+    q - 1 $in Q
+    q - 1 <= q
+    (q - 1, q) $in {p cart(Q, Q): p[1] <= p[2]}
 
 claim:
     ? forall x R:
         $is_less_than_in_order(R, real_line_order_relation, x - 1, x)
     x - 1 < x
-    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
-    trust (x - 1, x) $in {p cart(R, R): p[1] <= p[2]}
+    x - 1 $in R
+    x - 1 <= x
+    (x - 1, x) $in {p cart(R, R): p[1] <= p[2]}
 
 claim:
     ? not $is_well_ordered_subset(Z, integer_order_relation, Z)

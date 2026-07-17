@@ -1,0 +1,15 @@
+# Builtin arithmetic operator signatures are explicit first-class facts.
++ $in fn(a, b R) R
+/ $in fn(a R, b R: b != 0) R
+% $in fn(a Z, b Z: b != 0) Z
+^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
+
+# The Archimedean property supplies a reciprocal natural bound for every positive real.
+forall epsilon R_pos:
+    exist n N_pos st {1 / n < epsilon}
+
+# Positive-real powers preserve and reflect the order of positive bases.
+forall a, b, q R_pos:
+    a^q < b^q
+    =>:
+        a < b

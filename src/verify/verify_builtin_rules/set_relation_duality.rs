@@ -7,6 +7,39 @@ impl Runtime {
         subset_fact: &SubsetFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        // Fundamental set containments follow directly from membership definitions.
+        // Examples: `intersect(A, B) $subset A`, `A $subset union(A, B)`.
+        let elementary_set_subset_reason = match (&subset_fact.left, &subset_fact.right) {
+            (Obj::Intersect(intersect), right)
+                if intersect.left.to_string() == right.to_string()
+                    || intersect.right.to_string() == right.to_string() =>
+            {
+                Some("intersection_subset_operand")
+            }
+            (left, Obj::Union(union))
+                if union.left.to_string() == left.to_string()
+                    || union.right.to_string() == left.to_string() =>
+            {
+                Some("operand_subset_union")
+            }
+            (Obj::SetMinus(set_minus), right)
+                if set_minus.left.to_string() == right.to_string() =>
+            {
+                Some("set_minus_subset_left_operand")
+            }
+            _ => None,
+        };
+        if let Some(reason) = elementary_set_subset_reason {
+            return Ok(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    subset_fact.clone().into(),
+                    reason.to_string(),
+                    Vec::new(),
+                ))
+                .into(),
+            );
+        }
+
         // Standard number sets form a fixed inclusion chain. Example: `N $subset R`.
         if let (Obj::StandardSet(left), Obj::StandardSet(right)) =
             (&subset_fact.left, &subset_fact.right)
