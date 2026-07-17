@@ -587,12 +587,13 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
         witness exist k Z st {b = 1 * k} from b:
             b = 1 * b
         $divides(1, b)
+        1 $in {d N_pos: $divides(d, a), $divides(d, b)}
         1 $in C
     $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
     $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
 
 # The ordinary gcd is defined only for a nonzero integer pair.
-have fn gcd(a, b Z: a != 0 or b != 0) N = basics::finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+have fn gcd(a, b Z: a != 0 or b != 0) N = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
 
 thm gcd_positive:
     ? forall a, b Z:
@@ -600,8 +601,8 @@ thm gcd_positive:
         =>:
             gcd(a, b) $in N_pos
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    by thm basics::finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) = basics::finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    by thm finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
     gcd(a, b) $in N_pos
 
@@ -611,8 +612,8 @@ thm gcd_divides_left:
         =>:
             $divides(gcd(a, b), a)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    by thm basics::finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) = basics::finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    by thm finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
     $divides(gcd(a, b), a)
 
@@ -622,8 +623,8 @@ thm gcd_divides_right:
         =>:
             $divides(gcd(a, b), b)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    by thm basics::finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) = basics::finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    by thm finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
     $divides(gcd(a, b), b)
 
@@ -635,9 +636,9 @@ thm common_divisor_le_gcd:
         =>:
             d <= gcd(a, b)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    d $in {c N_pos: $divides(c, a), $divides(c, b)}
-    by thm basics::finite_set_member_le_max({c N_pos: $divides(c, a), $divides(c, b)}, d)
-    gcd(a, b) = basics::finite_set_max({c N_pos: $divides(c, a), $divides(c, b)})
+    d $in {d N_pos: $divides(d, a), $divides(d, b)}
+    by thm finite_set_member_le_max({d N_pos: $divides(d, a), $divides(d, b)}, d)
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     d <= gcd(a, b)
 
 thm gcd_euclidean_base:
@@ -654,7 +655,10 @@ thm gcd_euclidean_base:
     by cases:
         ? $divides(abs(a), a)
         case a >= 0:
-            abs(a) = a = abs(a) * 1
+            abs(a) = a
+            a = a * 1
+            abs(a) * 1 = a * 1
+            a = abs(a) * 1
             witness exist k Z st {a = abs(a) * k} from 1
         case a < 0:
             abs(a) = -a
@@ -718,6 +722,20 @@ thm gcd_euclidean_step:
     by thm common_divisor_le_gcd(b, a % abs(b), gcd(a, b))
     gcd(a, b) <= gcd(b, a % abs(b))
     gcd(a, b) = gcd(b, a % abs(b))
+
+# The Euclidean remainder has strictly smaller absolute value than a nonzero divisor.
+# This must be available before the recursive Bezout coefficient definition.
+thm _euclidean_remainder_abs_lt_abs:
+    ? forall u, v Z:
+        v != 0
+        =>:
+            abs(u % abs(v)) < abs(v)
+    abs(v) > 0
+    abs(v) $in N_pos
+    u % abs(v) >= 0
+    abs(u % abs(v)) = u % abs(v)
+    u % abs(v) < abs(v)
+    abs(u % abs(v)) < abs(v)
 
 thm bezout_identity:
     ? forall a, b Z:
@@ -795,29 +813,97 @@ thm bezout_identity:
                 v = 0
                 abs(v) = 0 = m + 1
                 impossible m + 1 > 0
+            have r Z = u % abs(v)
             abs(v) > 0
             abs(v) $in N_pos
-            abs(u % abs(v)) >= 0
-            abs(u % abs(v)) = u % abs(v)
+            r = u % abs(v)
+            u % abs(v) >= 0
+            r = u % abs(v) >= 0
+            abs(r) >= 0
+            abs(r) = r
+            r $in Z
+            abs(r) $in Z
             u % abs(v) < abs(v)
-            abs(u % abs(v)) < abs(v) = m + 1
-            abs(u % abs(v)) <= m
-            $euclid_bezout_identity_at_measure(abs(u % abs(v)))
+            r = u % abs(v) < abs(v)
+            abs(r) < abs(v)
+            abs(v) = m + 1
+            abs(r) < m + 1
+            abs(r) + 1 <= m + 1
+            abs(r) <= m or abs(r) >= m + 1
+            by cases:
+                ? abs(r) <= m
+                case abs(r) <= m:
+                    abs(r) <= m
+                case abs(r) >= m + 1:
+                    impossible abs(r) < m + 1
+            v != 0 or r != 0
+            abs(r) = abs(r)
+            $euclid_bezout_identity_at_measure(abs(r))
             by thm gcd_euclidean_step(u, v)
             by cases:
                 ? euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
                 case v >= 0:
                     abs(v) = v
+                    euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r = gcd(v, r)
+                    euclid_bezout_l(v, r) = euclid_bezout_l(v, u % abs(v))
+                    euclid_bezout_r(v, r) = euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_l(v, u % abs(v)) = euclid_bezout_l(v, r)
+                    euclid_bezout_r(v, u % abs(v)) = euclid_bezout_r(v, r)
+                    gcd(v, r) = gcd(v, u % abs(v))
+                    euclid_bezout_pair(u, v) = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])
+                    euclid_bezout_l(u, v) = euclid_bezout_pair(u, v)[1] = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])[1] = euclid_bezout_pair(v, u % abs(v))[2]
+                    euclid_bezout_r(v, u % abs(v)) = euclid_bezout_pair(v, u % abs(v))[2]
                     euclid_bezout_l(u, v) = euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_l(u, v) = euclid_bezout_r(v, r)
+                    euclid_bezout_r(u, v) = euclid_bezout_pair(u, v)[2] = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])[2] = euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2]
+                    euclid_bezout_l(v, u % abs(v)) = euclid_bezout_pair(v, u % abs(v))[1]
+                    euclid_bezout_pair(v, u % abs(v))[1] = euclid_bezout_l(v, u % abs(v))
+                    euclid_bezout_pair(v, u % abs(v))[2] = euclid_bezout_r(v, u % abs(v))
+                    integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2] = integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2] = euclid_bezout_l(v, u % abs(v)) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
                     euclid_bezout_r(u, v) = euclid_bezout_l(v, u % abs(v)) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
-                    u - v * integer_quotient(u, abs(v)) = u % abs(v)
-                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_l(v, u % abs(v)) * v + euclid_bezout_r(v, u % abs(v)) * (u % abs(v)) = gcd(v, u % abs(v)) = gcd(u, v)
+                    integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    euclid_bezout_l(v, u % abs(v)) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = euclid_bezout_l(v, r) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    euclid_bezout_r(u, v) = euclid_bezout_l(v, u % abs(v)) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = euclid_bezout_l(v, r) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    u = abs(v) * integer_quotient(u, abs(v)) + u % abs(v)
+                    u - v * integer_quotient(u, abs(v)) = u - abs(v) * integer_quotient(u, abs(v)) = u % abs(v)
+                    u - v * integer_quotient(u, abs(v)) = r
+                    gcd(u, v) = gcd(v, u % abs(v)) = gcd(v, r)
+                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_r(v, r) * u + (euclid_bezout_l(v, r) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)) * v
+                    euclid_bezout_r(v, r) * u + (euclid_bezout_l(v, r) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)) * v = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * (u - v * integer_quotient(u, abs(v)))
+                    euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * (u - v * integer_quotient(u, abs(v))) = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r
+                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r = gcd(v, r) = gcd(u, v)
                 case v < 0:
                     abs(v) = -v
+                    euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r = gcd(v, r)
+                    euclid_bezout_l(v, r) = euclid_bezout_l(v, u % abs(v))
+                    euclid_bezout_r(v, r) = euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_l(v, u % abs(v)) = euclid_bezout_l(v, r)
+                    euclid_bezout_r(v, u % abs(v)) = euclid_bezout_r(v, r)
+                    gcd(v, r) = gcd(v, u % abs(v))
+                    euclid_bezout_pair(u, v) = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])
+                    euclid_bezout_l(u, v) = euclid_bezout_pair(u, v)[1] = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])[1] = euclid_bezout_pair(v, u % abs(v))[2]
+                    euclid_bezout_r(v, u % abs(v)) = euclid_bezout_pair(v, u % abs(v))[2]
                     euclid_bezout_l(u, v) = euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_l(u, v) = euclid_bezout_r(v, r)
+                    euclid_bezout_r(u, v) = euclid_bezout_pair(u, v)[2] = (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])[2] = euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2]
+                    euclid_bezout_l(v, u % abs(v)) = euclid_bezout_pair(v, u % abs(v))[1]
+                    euclid_bezout_pair(v, u % abs(v))[1] = euclid_bezout_l(v, u % abs(v))
+                    euclid_bezout_pair(v, u % abs(v))[2] = euclid_bezout_r(v, u % abs(v))
+                    integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2] = integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
+                    euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2] = euclid_bezout_l(v, u % abs(v)) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
                     euclid_bezout_r(u, v) = euclid_bezout_l(v, u % abs(v)) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
-                    u + v * integer_quotient(u, abs(v)) = u % abs(v)
-                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_l(v, u % abs(v)) * v + euclid_bezout_r(v, u % abs(v)) * (u % abs(v)) = gcd(v, u % abs(v)) = gcd(u, v)
+                    integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    euclid_bezout_l(v, u % abs(v)) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = euclid_bezout_l(v, r) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    euclid_bezout_r(u, v) = euclid_bezout_l(v, u % abs(v)) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v)) = euclid_bezout_l(v, r) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)
+                    u = abs(v) * integer_quotient(u, abs(v)) + u % abs(v)
+                    u + v * integer_quotient(u, abs(v)) = u - abs(v) * integer_quotient(u, abs(v)) = u % abs(v)
+                    u + v * integer_quotient(u, abs(v)) = r
+                    gcd(u, v) = gcd(v, u % abs(v)) = gcd(v, r)
+                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_r(v, r) * u + (euclid_bezout_l(v, r) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)) * v
+                    euclid_bezout_r(v, r) * u + (euclid_bezout_l(v, r) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)) * v = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * (u + v * integer_quotient(u, abs(v)))
+                    euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * (u + v * integer_quotient(u, abs(v))) = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r
+                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r = gcd(v, r) = gcd(u, v)
         $euclid_bezout_identity_at_measure(m + 1)
 
     by strong_induc m from 0:
