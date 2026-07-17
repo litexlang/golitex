@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="APPLICATIONFOLDER">
+      <Directory Id="StandardLibrary" Name="std">
+        <Directory Id="StandardLibraryBasics" Name="basics">
+          <Component Id="StandardLibraryBasicsConfig" Guid="*">
+            <File Id="StandardLibraryBasicsConfigFile" Source="..\std\basics\litex.config" KeyPath="yes" />
+          </Component>
+          <Component Id="StandardLibraryBasicsMain" Guid="*">
+            <File Id="StandardLibraryBasicsMainFile" Source="..\std\basics\main.lit" KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+    </DirectoryRef>
+  </Fragment>
+
+  <Fragment>
+    <FeatureRef Id="Binaries">
+      <ComponentRef Id="StandardLibraryBasicsConfig" />
+      <ComponentRef Id="StandardLibraryBasicsMain" />
+    </FeatureRef>
+  </Fragment>
+</Wix>
