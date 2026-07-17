@@ -1,0 +1,404 @@
+# Section I citation package: divisibility, well-ordering, and induction.
+#
+# This module is self-contained and exposes reusable interfaces used by later
+# sections. Remaining broad finite-set background is named explicitly.
+
+prop divides_Z(a, b Z):
+    exist x Z st {b = a * x}
+
+claim:
+    ? forall a Z:
+        $divides_Z(a, a)
+    witness exist x Z st {a = a * x} from 1:
+        a = a * 1
+    $divides_Z(a, a)
+
+claim:
+    ? forall a, b, c Z:
+        $divides_Z(a, b)
+        $divides_Z(a, c)
+        =>:
+            $divides_Z(a, b + c)
+    obtain x from exist x Z st {b = a * x}
+    obtain y from exist y Z st {c = a * y}
+    witness exist t Z st {b + c = a * t} from x + y:
+        b + c = a * x + a * y = a * (x + y)
+    $divides_Z(a, b + c)
+
+# Any common divisor also divides every integer linear combination.  This is
+# the direct algebraic move behind the concrete gcd computations in Section II.
+thm divides_Z_linear_combination:
+    ? forall d, a, b, x, y Z:
+        $divides_Z(d, a)
+        $divides_Z(d, b)
+        =>:
+            $divides_Z(d, x * a + y * b)
+    obtain p from exist p Z st {a = d * p}
+    obtain q from exist q Z st {b = d * q}
+    witness exist k Z st {x * a + y * b = d * k} from x * p + y * q:
+        x * a + y * b = x * (d * p) + y * (d * q) = d * (x * p + y * q)
+    $divides_Z(d, x * a + y * b)
+
+# This is the small endpoint used by the reverse direction of Bézout's
+# criterion: a positive integer divisor of 1 cannot be anything but 1.
+thm positive_divisor_of_one_is_one:
+    ? forall d Z:
+        d > 0
+        $divides_Z(d, 1)
+        =>:
+            d = 1
+    obtain k from exist k Z st {1 = d * k}
+    claim:
+        ? k > 0
+        by contra:
+            ? k > 0
+            k <= 0
+            d * k <= 0
+            1 <= 0
+            impossible 1 <= 0
+    k >= 1
+    d = d * 1
+    d <= d * 1
+    d * 1 <= d * k
+    d * 1 <= d * k = 1
+    d <= 1
+    d >= 1
+    d = 1
+
+"""
+Principle (6). Every nonempty set of positive integers has a least element.
+The text then derives a strong induction formulation from this principle.
+"""
+
+prop is_positive_integer_set(S power_set(Z)):
+    S $subset Z
+    forall x S:
+        x $in Z
+        x > 0
+
+prop is_least_element_of_integer_set(S power_set(Z), m Z):
+    S $subset Z
+    m $in S
+    forall x S:
+        x $in Z
+        m <= x
+
+prop is_least_element_of_N_set(T set, m N):
+    m $in T
+    forall x T:
+        m <= x
+
+# This is the requested finite-set formulation: every nonempty finite subset
+# of N with n elements has a least element.  The explicit nonempty premise
+# makes the proposition well-defined also at n = 0.
+prop every_N_finite_subset_of_n_elements_has_least(n Z):
+    forall T finite_set:
+        T $subset N
+        finite_set_size(T) = n
+        $is_nonempty_set(T)
+        =>:
+            exist m N st {$is_least_element_of_N_set(T, m)}
+
+# Source handling: the finite-cardinality identities used by the following
+# induction are not kernel rules. They remain local, explicit background debt
+# for this source rather than a global compatibility package.
+thm finite_set_minus_cardinality_background:
+    ? forall A, B finite_set:
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+    trust: finite-set cardinality background
+
+thm finite_set_zero_empty_background:
+    ? forall A finite_set:
+        finite_set_size(A) = 0
+        =>:
+            not $is_nonempty_set(A)
+            A = {}
+    trust: finite-set zero-cardinality background
+
+thm subset_finite_background:
+    ? forall A set, B finite_set:
+        A $subset B
+        =>:
+            $is_finite_set(A)
+    trust: finite-set subset background
+
+thm intersect_with_singleton:
+    ? forall T set, a set:
+        a $in T
+        =>:
+            intersect(T, {a}) = {a}
+    by extension intersect(T, {a}) = {a}:
+        forall z intersect(T, {a}):
+            z $in T
+            z $in {a}
+            z = a
+        forall z {a}:
+            z = a
+            a $in T
+            z $in T
+            z $in {a}
+
+thm finite_N_subset_size_one_has_least:
+    ? forall T finite_set:
+        T $subset N
+        finite_set_size(T) = 1
+        =>:
+            exist a N st {$is_least_element_of_N_set(T, a)}
+    finite_set_size(T) >= 1
+    $is_nonempty_set(T)
+    have a T
+    a $in T
+    a $in N
+    by thm intersect_with_singleton(T, a)
+    intersect(T, {a}) = {a}
+    finite_set_size({a}) = 1
+    $is_finite_set(set_minus(T, {a}))
+    finite_set_size(set_minus(T, {a})) = finite_set_size(T) - finite_set_size(intersect(T, {a})) = 1 - 1 = 0
+    set_minus(T, {a}) = {}
+    witness exist x N st {$is_least_element_of_N_set(T, x)} from a:
+        a $in T
+        claim:
+            ? forall y T:
+                a <= y
+            by contra:
+                ? a <= y
+                y < a
+                y != a
+                not y $in {a}
+                y $in set_minus(T, {a})
+                finite_set_size(set_minus(T, {a})) = 0
+                not $is_nonempty_set(set_minus(T, {a}))
+                witness $is_nonempty_set(set_minus(T, {a})) from y:
+                    y $in set_minus(T, {a})
+                impossible not $is_nonempty_set(set_minus(T, {a}))
+        $is_least_element_of_N_set(T, a)
+
+thm finite_N_subset_successor_has_least:
+    ? forall n Z, T finite_set:
+        n >= 1
+        T $subset N
+        finite_set_size(T) = n + 1
+        $every_N_finite_subset_of_n_elements_has_least(n)
+        $is_nonempty_set(T)
+        =>:
+            exist a N st {$is_least_element_of_N_set(T, a)}
+    n $in N_pos
+    have a T
+    a $in T
+    a $in N
+    by thm intersect_with_singleton(T, a)
+    intersect(T, {a}) = {a}
+    finite_set_size({a}) = 1
+    $is_finite_set(set_minus(T, {a}))
+    finite_set_size(set_minus(T, {a})) = finite_set_size(T) - finite_set_size(intersect(T, {a})) = (n + 1) - 1 = n
+    finite_set_size(set_minus(T, {a})) = n >= 1
+    $is_nonempty_set(set_minus(T, {a}))
+    set_minus(T, {a}) $subset T
+    set_minus(T, {a}) $subset N
+    $every_N_finite_subset_of_n_elements_has_least(n)
+    exist b N st {$is_least_element_of_N_set(set_minus(T, {a}), b)}
+    obtain b from exist b N st {$is_least_element_of_N_set(set_minus(T, {a}), b)}
+    b $in set_minus(T, {a})
+    b $in T
+    b <= a or b > a
+    by cases:
+        ? exist x N st {$is_least_element_of_N_set(T, x)}
+        case b <= a:
+            witness exist x N st {$is_least_element_of_N_set(T, x)} from b:
+                b $in T
+                claim:
+                    ? forall y T:
+                        b <= y
+                    y = a or y != a
+                    by cases:
+                        ? b <= y
+                        case y = a:
+                            b <= a = y
+                        case y != a:
+                            not y $in {a}
+                            y $in set_minus(T, {a})
+                            b <= y
+                $is_least_element_of_N_set(T, b)
+        case b > a:
+            a <= b
+            witness exist x N st {$is_least_element_of_N_set(T, x)} from a:
+                a $in T
+                claim:
+                    ? forall y T:
+                        a <= y
+                    y = a or y != a
+                    by cases:
+                        ? a <= y
+                        case y = a:
+                            a <= y
+                        case y != a:
+                            not y $in {a}
+                            y $in set_minus(T, {a})
+                            b <= y
+                            a <= b <= y
+                $is_least_element_of_N_set(T, a)
+
+thm every_N_finite_subset_has_least_by_count_induction:
+    ? forall n N_pos:
+        $every_N_finite_subset_of_n_elements_has_least(n)
+    by induc n from 1:
+        ? $every_N_finite_subset_of_n_elements_has_least(n)
+        ? from n = 1:
+            claim:
+                ? forall T finite_set:
+                    T $subset N
+                    finite_set_size(T) = 1
+                    $is_nonempty_set(T)
+                    =>:
+                        exist a N st {$is_least_element_of_N_set(T, a)}
+                by thm finite_N_subset_size_one_has_least(T)
+                exist a N st {$is_least_element_of_N_set(T, a)}
+            $every_N_finite_subset_of_n_elements_has_least(1)
+            $every_N_finite_subset_of_n_elements_has_least(n)
+        ? induc:
+            $every_N_finite_subset_of_n_elements_has_least(n)
+            claim:
+                ? forall T finite_set:
+                    T $subset N
+                    finite_set_size(T) = n + 1
+                    $is_nonempty_set(T)
+                    =>:
+                        exist a N st {$is_least_element_of_N_set(T, a)}
+                by thm finite_N_subset_successor_has_least(n, T)
+                exist a N st {$is_least_element_of_N_set(T, a)}
+            $every_N_finite_subset_of_n_elements_has_least(n + 1)
+
+# Start with any a in S and restrict S to the finite interval 0,...,a.
+# The cardinality induction above supplies a least point of that finite part;
+# anything outside the interval is larger than a and hence larger than it.
+thm positive_integer_set_has_least_element:
+    ? forall S power_set(Z):
+        $is_nonempty_set(S)
+        $is_positive_integer_set(S)
+        =>:
+            exist m Z st {$is_least_element_of_integer_set(S, m)}
+    have a S
+    a $in S
+    a $in Z
+    a > 0
+    have aN N_pos = a
+    aN = a
+    have T set = intersect(S, 0...aN)
+    T = intersect(S, 0...aN)
+    T $subset 0...aN
+    $is_finite_set(T)
+    a $in 0...aN
+    a $in intersect(S, 0...aN)
+    a $in T
+    T $subset N
+    witness $is_nonempty_set(T) from a:
+        a $in T
+    finite_set_size(T) >= 1
+    finite_set_size(T) $in N_pos
+    by thm every_N_finite_subset_has_least_by_count_induction(finite_set_size(T))
+    $every_N_finite_subset_of_n_elements_has_least(finite_set_size(T))
+    exist m N st {$is_least_element_of_N_set(T, m)}
+    obtain m from exist m N st {$is_least_element_of_N_set(T, m)}
+    m $in T
+    m $in S
+    m <= a
+    witness exist z Z st {$is_least_element_of_integer_set(S, z)} from m:
+        S $subset Z
+        m $in S
+        claim:
+            ? forall x S:
+                x $in Z
+                m <= x
+            x $in Z
+            x > 0
+            x <= aN or x > aN
+            by cases:
+                ? m <= x
+                case x <= aN:
+                    x $in 0...aN
+                    x $in intersect(S, 0...aN)
+                    x $in T
+                    m <= x
+                case x > aN:
+                    m <= aN < x
+        $is_least_element_of_integer_set(S, m)
+
+"""
+Induction principle. If a statement about positive integers is true at the
+base and truth below n implies truth at n, then it is true for all positive
+integers.
+"""
+
+# Source proof: the counterexample set is positive because zero is the base
+# case.  Apply Principle (6), then its least element cannot be a counterexample.
+thm section_I_strong_induction:
+    ? forall S set, n N:
+        0 $in S
+        forall m N_pos:
+            forall k N:
+                k < m
+                =>:
+                    k $in S
+            =>:
+                m $in S
+        =>:
+            n $in S
+    by contra:
+        ? n $in S
+        not n $in S
+        have bad power_set(Z) = {t N: not t $in S}
+        bad = {t N: not t $in S}
+        n $in {t N: not t $in S}
+        n $in bad
+        witness $is_nonempty_set(bad) from n
+        claim:
+            ? $is_positive_integer_set(bad)
+            bad $subset Z
+            claim:
+                ? forall x bad:
+                    x $in Z
+                    x > 0
+                x $in Z
+                x $in {t N: not t $in S}
+                x $in N
+                not x $in S
+                by contra:
+                    ? x > 0
+                    x = 0
+                    0 $in S
+                    $section_I_induction_statement(x)
+                    impossible not x $in S
+            $is_positive_integer_set(bad)
+        $is_positive_integer_set(bad)
+        by thm positive_integer_set_has_least_element(bad)
+        exist m Z st {$is_least_element_of_integer_set(bad, m)}
+        obtain m from exist m Z st {$is_least_element_of_integer_set(bad, m)}
+        m $in bad
+        m $in {t N: not t $in S}
+        m $in N
+        not m $in S
+        claim:
+            ? forall k N:
+                k < m
+                =>:
+                    k $in S
+            by contra:
+                ? k $in S
+                not k $in S
+                k $in {t N: not t $in S}
+                k $in bad
+                m <= k
+                impossible k < m
+        m = 0 or m > 0
+        by cases:
+            ? m $in S
+            case m = 0:
+                0 $in S
+                m $in S
+            case m > 0:
+                m $in N_pos
+                m $in S
+        impossible not m $in S
+
+
+

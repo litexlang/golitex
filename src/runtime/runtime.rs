@@ -179,9 +179,16 @@ impl Runtime {
     }
 
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
-        self.strict_mode
-            && self.execution_stack.last().map(|frame| frame.module_id)
-                == self.module_manager.entry_module_id
+        if !self.strict_mode {
+            return false;
+        }
+        let Some(frame) = self.execution_stack.last() else {
+            return false;
+        };
+        !self
+            .module_manager
+            .module(frame.module_id)
+            .is_some_and(|module| module.is_standard_library)
     }
 
     pub(crate) fn has_active_execution_frame(&self) -> bool {

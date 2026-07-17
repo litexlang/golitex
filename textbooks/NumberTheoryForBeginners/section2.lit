@@ -797,6 +797,33 @@ thm gcd_Z_bezout:
     $is_gcd_Z(a, b, gcd_Z(a, b))
     exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
 
+# Ordinary mathematical interface: gcd is defined only for a nonzero pair.
+prop gcd_Z_domain(a, b Z):
+    a != 0 or b != 0
+
+have fn gcd_Z_partial(a, b Z: a != 0 or b != 0) N = gcd_Z(a, b)
+
+thm gcd_Z_partial_dvd_left:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $section1::divides_Z(gcd_Z_partial(a, b), a)
+    by thm gcd_Z_dvd_left(a, b)
+
+thm gcd_Z_partial_dvd_right:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $section1::divides_Z(gcd_Z_partial(a, b), b)
+    by thm gcd_Z_dvd_right(a, b)
+
+thm gcd_Z_partial_bezout:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            exist x, y Z st {gcd_Z_partial(a, b) = a * x + b * y}
+    by thm gcd_Z_bezout(a, b)
+
 """
 Exercise II.1. Prove associativity of gcd for three integers:
 (a,b,c)=((a,b),c)=(a,(b,c)).

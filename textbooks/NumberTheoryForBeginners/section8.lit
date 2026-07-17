@@ -48,13 +48,10 @@ prop has_element_order(G set, mul fn(x, y G) G, one G, x G, n N_pos):
         =>:
             n <= k
 
-trust:
-    forall G set, mul fn(x, y G) G, one G, x G:
-        exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
-
 thm theorem_VIII_element_order_exists:
     ? forall G set, mul fn(x, y G) G, one G, x G:
         exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
+    by thm section8citation::element_order_exists_background(G, mul, one, x)
     exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
 
 prop euler_theorem_conclusion(m N_pos, a Z):
@@ -63,18 +60,6 @@ prop euler_theorem_conclusion(m N_pos, a Z):
 
 # Theorem VIII.2 and Euler's corollary share the finite coset partition/counting
 # package, so their two source-facing clauses live in one trust boundary.
-trust:
-    forall G set, mul fn(x, y G) G, one G, H power_set(G):
-        $section7::is_subgroup(G, mul, one, H)
-        $is_finite_set(G)
-        $is_finite_set(H)
-        =>:
-            $subgroup_order_divides_group_order(G, mul, one, H)
-    forall m N_pos, a Z:
-        $section3::relatively_prime_Z(a, m)
-        =>:
-            $euler_theorem_conclusion(m, a)
-
 thm theorem_VIII_Lagrange:
     ? forall G set, mul fn(x, y G) G, one G, H power_set(G):
         $section7::is_subgroup(G, mul, one, H)
@@ -82,6 +67,7 @@ thm theorem_VIII_Lagrange:
         $is_finite_set(H)
         =>:
             $subgroup_order_divides_group_order(G, mul, one, H)
+    by thm section8citation::lagrange_background(G, mul, one, H)
     $subgroup_order_divides_group_order(G, mul, one, H)
 
 thm theorem_VIII_Euler:
@@ -89,4 +75,5 @@ thm theorem_VIII_Euler:
         $section3::relatively_prime_Z(a, m)
         =>:
             $euler_theorem_conclusion(m, a)
+    by thm section8citation::euler_theorem_background(m, a)
     $euler_theorem_conclusion(m, a)

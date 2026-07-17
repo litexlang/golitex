@@ -321,7 +321,7 @@ mod tests {
         fs::create_dir_all(&root).expect("create project fixture");
         fs::write(
             root.join("litex.config"),
-            "[export]\nmain = \"./main.lit\"\n",
+            "[hierarchy]\nmodule\n\n[export]\nmain = \"./main.lit\"\n",
         )
         .expect("write config");
         fs::write(root.join("main.lit"), "have planned_value R = 9\n").expect("write plan file");

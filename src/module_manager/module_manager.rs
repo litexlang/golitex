@@ -110,6 +110,27 @@ impl ModuleManager {
         Ok(id)
     }
 
+    pub fn create_discovered_standard_module(
+        &mut self,
+        module_name: String,
+        module_root_path: String,
+        main_file_path: String,
+        hierarchy: ProjectHierarchy,
+        parent_module_id: Option<ModuleId>,
+    ) -> Result<ModuleId, String> {
+        let module_id = self.create_discovered_module(
+            module_name,
+            module_root_path,
+            main_file_path,
+            hierarchy,
+            parent_module_id,
+        )?;
+        self.module_mut(module_id)
+            .expect("new standard-library module should exist")
+            .is_standard_library = true;
+        Ok(module_id)
+    }
+
     pub fn register_root_export(
         &mut self,
         name: String,

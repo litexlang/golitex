@@ -45,19 +45,13 @@ prop index_mod_spec(m N_pos, g Z, a Z, x N):
     g ^ x % m = a % m
     x < section6::euler_phi(m)
 
-trust:
-    forall m N_pos, g, a Z:
-        $primitive_root_mod(m, g)
-        $section3::relatively_prime_Z(a, m)
-        =>:
-            exist! x N st {$index_mod_spec(m, g, a, x)}
-
 have fn index_mod by exist!:
     ? forall m N_pos, g, a Z:
         $primitive_root_mod(m, g)
         $section3::relatively_prime_Z(a, m)
         =>:
             exist! x N st {$index_mod_spec(m, g, a, x)}
+    by thm section10citation::index_mod_exists_background(m, g, a)
 
 # The roots-of-unity version of cyclicity states directly that every root is
 # an integral power of one chosen root, so later statements can use the set
@@ -76,16 +70,6 @@ prop roots_of_unity_form_cyclic_group(n N_pos):
 
 # The finite subgroup cyclicity theorem and the prime-modulus primitive-root
 # theorem share the finite-field unit-group/cyclotomic counting package.
-trust:
-    forall G set, mul fn(x, y G) G, one G:
-        $finite_multiplicative_subgroup(G, mul, one)
-        =>:
-            $finite_subgroup_has_generator(G, mul, one)
-    forall p N_pos:
-        $section4::is_prime_Z(p)
-        =>:
-            exist g Z st {$primitive_root_mod(p, g)}
-
 thm theorem_X_finite_subgroups_are_cyclic:
     ? forall G set, mul fn(x, y G) G, one G:
         $finite_multiplicative_subgroup(G, mul, one)

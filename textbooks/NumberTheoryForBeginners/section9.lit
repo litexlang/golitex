@@ -32,14 +32,11 @@ have fn polynomial_root_set_Z(coeff fn(k N) Z, n N) power_set(Z) = {x Z: $polyno
 # first-class Litex object, so the missing relation is kept as a narrow
 # background interface rather than replacing the polynomial by a tautological
 # `prop`.
-abstract_prop polynomial_division(K, f, g, q, r)
-abstract_prop polynomial_gcd(K, f, g, d)
-
 prop polynomial_division_statement(K set, f set, g set, q set, r set):
-    $polynomial_division(K, f, g, q, r)
+    $section9citation::polynomial_division_statement(K, f, g, q, r)
 
 prop polynomial_gcd_statement(K set, f set, g set, d set):
-    $polynomial_gcd(K, f, g, d)
+    $section9citation::polynomial_gcd_statement(K, f, g, d)
 
 # Theorem IX.1. A nonempty addition/multiple-closed family of polynomials is
 # the set of multiples of one normalized gcd.  The carrier-level theorem is
@@ -47,7 +44,7 @@ prop polynomial_gcd_statement(K set, f set, g set, d set):
 prop polynomial_multiple_ideal(K set, family set, generator set):
     generator $in family
     forall f family:
-        $polynomial_division(K, f, generator, f, generator)
+        $section9citation::polynomial_division_statement(K, f, generator, f, generator)
 
 prop polynomial_gcd_generator_claim(K set, family set):
     exist generator set st {$polynomial_multiple_ideal(K, family, generator)}
@@ -69,14 +66,6 @@ prop polynomial_root_bound_Z(coeff fn(k N) Z, n N, roots power_set(Z)):
 # The gcd-generator, division, and root-count theorems all depend on the same
 # missing typed polynomial carrier and Euclidean operation package.  Keep the
 # three source-facing statements in one explicit trust boundary.
-trust:
-    forall K set, family set:
-        $polynomial_gcd_generator_claim(K, family)
-    forall K set, f set, g set:
-        $polynomial_division_claim(K, f, g)
-    forall coeff fn(k N) Z, n N:
-        $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
-
 thm theorem_IX_polynomial_gcd_generator:
     ? forall K set, family set:
         $polynomial_gcd_generator_claim(K, family)

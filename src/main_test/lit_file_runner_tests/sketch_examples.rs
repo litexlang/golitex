@@ -5,7 +5,7 @@ use std::time::Instant;
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
-use super::helper::{run_with_large_stack, SKETCH_EXAMPLES_SUBDIR};
+use super::helper::{run_with_large_stack, source_has_isolated_import, SKETCH_EXAMPLES_SUBDIR};
 
 fn run_tmp_lit_file(file_name: &str) {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -50,6 +50,7 @@ fn run_tmp_lit_file(file_name: &str) {
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(path_str);
     let normalized_source = remove_windows_carriage_return(tmp_lit_content.as_str());
+    runtime.isolated = source_has_isolated_import(normalized_source.as_str());
 
     let start_time = Instant::now();
     let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);

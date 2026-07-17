@@ -73,6 +73,12 @@ pub(super) fn format_litex_failure_location(
     }
 }
 
+pub(super) fn source_has_isolated_import(source: &str) -> bool {
+    source
+        .lines()
+        .any(|line| line.trim_start().starts_with("import "))
+}
+
 fn deepest_runtime_error_line(error: &RuntimeError) -> usize {
     let (line_number, previous_error) = runtime_error_line_and_previous(error);
     match previous_error {

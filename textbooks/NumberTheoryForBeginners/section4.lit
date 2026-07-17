@@ -212,20 +212,6 @@ prop exact_prime_power_divides(p, a Z, n N):
 # proof-debt boundary. Finite maximum selection is not yet a kernel object, so
 # the exact-prime-power debt also includes selecting the maximum of the relevant
 # finite nonempty exponent set.
-trust:
-    forall p Z, n N_pos, f fn(i N_pos) Z:
-        $is_prime_Z(p)
-        $section1::divides_Z(p, section3::finite_product_from_one(fn(i N_pos) Z {f(i)}, n))
-        =>:
-            $prime_divides_some_factor(p, n, f)
-    forall a Z:
-        $prime_factorization_statement(a)
-    forall p, a Z:
-        $is_prime_Z(p)
-        a > 1
-        =>:
-            exist! n N st {$exact_prime_power_divides(p, a, n)}
-
 thm theorem_IV_2_prime_factorization_exists:
     ? forall a Z:
         a > 1
@@ -255,9 +241,6 @@ prop primes_are_unbounded():
 # Source handling: Euclid's proof takes a prime divisor of pqr...+1.
 # trust: The checked proof needs the finite product interface and the
 # prime-divisor theorem above.
-trust:
-    $primes_are_unbounded()
-
 thm theorem_IV_3_infinitely_many_primes:
     ? forall n N_pos:
         exist p Z st {p > n, $is_prime_Z(p)}

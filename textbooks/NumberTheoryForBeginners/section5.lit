@@ -36,10 +36,7 @@ multiplication.
 """
 
 sketch:
-    abstract_prop integers_are_abelian_group_under_addition()
-    abstract_prop rationals_are_abelian_group_under_addition()
-    abstract_prop reals_are_abelian_group_under_addition()
-    abstract_prop nonzero_rationals_are_abelian_group_under_multiplication()
+    # Concrete abelian-group examples are recorded in section5citation.
 
     # Source handling: These are the source examples immediately following the
     # group axioms.  The four concrete instances remain source-level examples;
@@ -450,10 +447,6 @@ prop congruence_classes_form_additive_group_mod(m N_pos):
 # property (D), and the representative computations for z=y-x and neutral 0.
 # trust: A checked proof needs a quotient finite-set construction whose
 # carrier is the set of all residue classes modulo m.
-trust:
-    forall m N_pos:
-        $congruence_classes_form_additive_group_mod(m)
-
 thm theorem_V_1_residue_classes_additive_group:
     ? forall m N_pos:
         $congruence_classes_form_additive_group_mod(m)
