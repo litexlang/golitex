@@ -1,8 +1,3 @@
-forall A set, B finite_set:
-    A $subset B
-    =>:
-        $is_finite_set(A)
-
 forall A, B finite_set:
     A $subset B
     =>:
@@ -17,3 +12,32 @@ forall a, b N:
     a <= b
     =>:
         finite_set_size(range(a, b)) = b - a
+
+forall A, B finite_set:
+    B $subset A
+    =>:
+        $is_finite_set(set_minus(A, B))
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)
+
+forall A, B finite_set:
+    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+    finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
+    finite_set_size(B) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(B, A))
+    finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
+
+forall A, B finite_set:
+    A $subset B
+    =>:
+        finite_set_size(A) <= finite_set_size(B)
+
+forall A, B finite_set:
+    A $superset B
+    =>:
+        finite_set_size(A) >= finite_set_size(B)
+
+forall A, B finite_set:
+    finite_set_size(intersect(A, B)) <= finite_set_size(A)
+    finite_set_size(intersect(A, B)) <= finite_set_size(B)
+    finite_set_size(set_minus(A, B)) <= finite_set_size(A)
+    finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
+    finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)

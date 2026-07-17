@@ -386,7 +386,6 @@ thm finite_set_has_cardinality_count:
     by cases:
         ? $chap3::has_cardinality(s, finite_set_size(s))
         case finite_set_size(s) = 0:
-            by thm chap3::finite_set_size_zero_is_empty(s)
             s = {}
             by thm empty_set_has_cardinality_zero()
             $chap3::has_cardinality({}, 0)

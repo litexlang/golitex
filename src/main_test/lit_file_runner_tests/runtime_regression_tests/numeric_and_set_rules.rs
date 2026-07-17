@@ -1920,13 +1920,71 @@ forall s, t finite_set:
 }
 
 #[test]
-fn finite_subset_and_integer_interval_cardinalities_are_builtin_rules() {
-    let source_code = r#"
-forall A set, B finite_set:
-    A $subset B
+fn finite_set_cardinality_interfaces_are_builtin_rules() {
+    run_with_large_stack(
+        "finite_set_cardinality_interfaces_are_builtin_rules",
+        || {
+            let source_code = r#"
+forall A, B finite_set:
+    B $subset A
     =>:
-        $is_finite_set(A)
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)
 
+forall A, B finite_set:
+    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+    finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
+    finite_set_size(B) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(B, A))
+    finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
+    finite_set_size(intersect(A, B)) <= finite_set_size(A)
+    finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
+    finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
+
+forall A, B finite_set:
+    A $superset B
+    =>:
+        finite_set_size(A) >= finite_set_size(B)
+
+forall a, b N:
+    a <= b
+    =>:
+        finite_set_size(closed_range(a, b)) = b - a + 1
+        finite_set_size(range(a, b)) = b - a
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "finite_set_cardinality_interfaces_are_builtin_rules",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "finite-set cardinality interfaces should be builtin:\n{run_output}"
+            );
+            for rule in [
+                "finite set size set minus finite subset",
+                "finite set size union inclusion exclusion",
+                "finite set size partition by intersection and difference",
+                "finite set size symmetric difference",
+                "finite set size subset le",
+                "finite set size union le sum",
+                "finite set size set diff le sum",
+                "finite set size closed range",
+                "finite set size range",
+            ] {
+                assert!(
+                    run_output.contains(rule),
+                    "missing finite-set cardinality builtin provenance `{rule}`:\n{run_output}"
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn finite_set_size_subset_and_integer_interval_cardinalities_are_builtin_rules() {
+    let source_code = r#"
 forall A, B finite_set:
     A $subset B
     =>:
@@ -1940,7 +1998,7 @@ forall a, b N:
 "#;
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "finite_subset_and_integer_interval_cardinalities_are_builtin_rules",
+        "finite_set_size_subset_and_integer_interval_cardinalities_are_builtin_rules",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -1948,10 +2006,9 @@ forall a, b N:
 
     assert!(
         run_succeeded,
-        "finite subset and integer interval cardinalities should be builtin:\n{run_output}"
+        "finite-set size and integer interval cardinalities should be builtin:\n{run_output}"
     );
     for rule in [
-        "finite set subset is finite",
         "finite set size subset le",
         "finite set size closed range",
         "finite set size range",
@@ -1961,4 +2018,110 @@ forall a, b N:
             "missing finite-set cardinality builtin provenance `{rule}`:\n{run_output}"
         );
     }
+}
+
+#[test]
+fn finite_subset_uses_axiom_matching_and_cyclic_subsets_terminate() {
+    run_with_large_stack(
+        "finite_subset_uses_axiom_matching_and_cyclic_subsets_terminate",
+        || {
+            let builtin_only_source = r#"
+forall A set, B finite_set:
+    A $subset B
+    =>:
+        $is_finite_set(A)
+"#;
+            let mut builtin_only_runtime = Runtime::new();
+            builtin_only_runtime
+                .new_file_path_new_env_new_name_scope("finite_subset_is_not_builtin");
+            let (builtin_only_results, builtin_only_error) =
+                run_source_code(builtin_only_source, &mut builtin_only_runtime);
+            let (builtin_only_succeeded, builtin_only_output) = render_run_source_code_output(
+                &builtin_only_runtime,
+                &builtin_only_results,
+                &builtin_only_error,
+                false,
+            );
+
+            assert!(
+                !builtin_only_succeeded,
+                "arbitrary subset finiteness must not be a builtin:\n{builtin_only_output}"
+            );
+            assert!(
+                !builtin_only_output.contains("finite set subset is finite"),
+                "removed builtin provenance must not appear:\n{builtin_only_output}"
+            );
+
+            let finite_chain_source = r#"
+axiom subset_of_finite_set_is_finite:
+    ? forall A set, B finite_set:
+        A $subset B
+        =>:
+            $is_finite_set(A)
+
+thm finite_subset_chain:
+    ? forall A, B set, C finite_set:
+        A $subset B
+        B $subset C
+        =>:
+            $is_finite_set(A)
+    by thm subset_of_finite_set_is_finite(B, C)
+    $is_finite_set(B)
+    by thm subset_of_finite_set_is_finite(A, B)
+    $is_finite_set(A)
+"#;
+            let mut finite_chain_runtime = Runtime::new();
+            finite_chain_runtime.new_file_path_new_env_new_name_scope("finite_subset_axiom_chain");
+            let (finite_chain_results, finite_chain_error) =
+                run_source_code(finite_chain_source, &mut finite_chain_runtime);
+            let (finite_chain_succeeded, finite_chain_output) = render_run_source_code_output(
+                &finite_chain_runtime,
+                &finite_chain_results,
+                &finite_chain_error,
+                false,
+            );
+
+            assert!(
+                finite_chain_succeeded,
+                "explicit axiom matching should follow a finite subset chain:\n{finite_chain_output}"
+            );
+            assert!(
+                !finite_chain_output.contains("finite set subset is finite"),
+                "the finite chain must not use removed builtin provenance:\n{finite_chain_output}"
+            );
+
+            let cyclic_source = r#"
+axiom subset_of_finite_set_is_finite:
+    ? forall A set, B finite_set:
+        A $subset B
+        =>:
+            $is_finite_set(A)
+
+forall A, B set:
+    A $subset B
+    B $subset A
+    =>:
+        $is_finite_set(A)
+"#;
+            let mut cyclic_runtime = Runtime::new();
+            cyclic_runtime.new_file_path_new_env_new_name_scope("cyclic_finite_subset_axiom");
+            let (cyclic_results, cyclic_error) =
+                run_source_code(cyclic_source, &mut cyclic_runtime);
+            let (cyclic_succeeded, cyclic_output) = render_run_source_code_output(
+                &cyclic_runtime,
+                &cyclic_results,
+                &cyclic_error,
+                false,
+            );
+
+            assert!(
+                !cyclic_succeeded,
+                "cyclic subset assumptions without a finite base must fail normally:\n{cyclic_output}"
+            );
+            assert!(
+                !cyclic_output.contains("finite set subset is finite"),
+                "the cycle must not re-enter removed builtin provenance:\n{cyclic_output}"
+            );
+        },
+    );
 }

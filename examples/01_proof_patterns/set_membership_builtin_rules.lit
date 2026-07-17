@@ -33,3 +33,19 @@ forall A, B set:
 
 forall A, B finite_set:
     finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+
+# The following cardinality identities and bounds are builtin rules. Arbitrary
+# subset finiteness is instead an explicit axiom in `std/basics`.
+
+forall A, B finite_set:
+    B $subset A
+    =>:
+        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)
+
+forall A, B finite_set:
+    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+    finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
+    finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
+    finite_set_size(intersect(A, B)) <= finite_set_size(A)
+    finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
+    finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)

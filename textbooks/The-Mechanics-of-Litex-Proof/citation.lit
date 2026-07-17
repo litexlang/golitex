@@ -240,9 +240,6 @@ thm gcd_satisfies_greatest_common_divisor:
                     $positive_common_divisor(a, b, 1)
                     1 $in C
                 $is_nonempty_set(C)
-                $basics::finite_nonempty_N_set(C)
-                by thm basics::finite_set_max_is_maximum(C)
-                $basics::is_maximum_of_finite_N_set(C, basics::finite_set_max(C))
                 nonzero_gcd(a, b) = basics::finite_set_max(C)
                 nonzero_gcd(a, b) $in C
                 nonzero_gcd(a, b) $in N_pos

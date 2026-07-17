@@ -225,6 +225,42 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_finite_set_size_union_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_size_partition_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_size_set_diff_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_size_set_minus_of_subset_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) =
             self.try_verify_cart_finite_set_size_product_equality(left, right, line_file.clone())
         {
@@ -1126,6 +1162,155 @@ impl Runtime {
         ))
     }
 
+    // Inclusion-exclusion counts the union of two finite sets.
+    // Example: `finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))`.
+    fn try_verify_finite_set_size_union_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some((first_set, second_set)) = Self::finite_set_size_union_shape(left, right)
+            .or_else(|| Self::finite_set_size_union_shape(right, left))
+        else {
+            return Ok(None);
+        };
+        let Some(step_results) = self.verify_two_sets_are_finite(
+            first_set,
+            second_set,
+            line_file.clone(),
+            verify_state,
+        )?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "finite_set_size_union_inclusion_exclusion".to_string(),
+                step_results,
+            )
+            .into(),
+        ))
+    }
+
+    // A finite set partitions into its overlap with another set and the remainder.
+    // Example: `finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))`.
+    fn try_verify_finite_set_size_partition_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some((first_set, second_set)) = Self::finite_set_size_partition_shape(left, right)
+            .or_else(|| Self::finite_set_size_partition_shape(right, left))
+        else {
+            return Ok(None);
+        };
+        let Some(step_results) = self.verify_two_sets_are_finite(
+            first_set,
+            second_set,
+            line_file.clone(),
+            verify_state,
+        )?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "finite_set_size_partition_by_intersection_and_difference".to_string(),
+                step_results,
+            )
+            .into(),
+        ))
+    }
+
+    // The symmetric difference is the sum of the two disjoint directed differences.
+    // Example: `finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))`.
+    fn try_verify_finite_set_size_set_diff_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some((first_set, second_set)) = Self::finite_set_size_set_diff_shape(left, right)
+            .or_else(|| Self::finite_set_size_set_diff_shape(right, left))
+        else {
+            return Ok(None);
+        };
+        let Some(step_results) = self.verify_two_sets_are_finite(
+            first_set,
+            second_set,
+            line_file.clone(),
+            verify_state,
+        )?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "finite_set_size_symmetric_difference".to_string(),
+                step_results,
+            )
+            .into(),
+        ))
+    }
+
+    // Removing a finite subset subtracts exactly that subset's cardinality.
+    // Example: `B $subset A` gives `finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(B)`.
+    fn try_verify_finite_set_size_set_minus_of_subset_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some((container, subset)) =
+            Self::finite_set_size_set_minus_of_subset_shape(left, right)
+                .or_else(|| Self::finite_set_size_set_minus_of_subset_shape(right, left))
+        else {
+            return Ok(None);
+        };
+
+        let subset_fact: AtomicFact =
+            SubsetFact::new(subset.clone(), container.clone(), line_file.clone()).into();
+        let subset_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+        if !subset_result.is_true() {
+            return Ok(None);
+        }
+        let container_finite: AtomicFact =
+            IsFiniteSetFact::new(container, line_file.clone()).into();
+        let container_result = self
+            .verify_non_equational_known_then_builtin_rules_only(&container_finite, verify_state)?;
+        if !container_result.is_true() {
+            return Ok(None);
+        }
+        let subset_finite: AtomicFact = IsFiniteSetFact::new(subset, line_file.clone()).into();
+        let subset_finite_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&subset_finite, verify_state)?;
+        if !subset_finite_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "finite_set_size_set_minus_finite_subset".to_string(),
+                vec![subset_result, container_result, subset_finite_result],
+            )
+            .into(),
+        ))
+    }
+
     // Integer interval cardinalities are determined by their natural endpoints.
     // Examples: `finite_set_size(closed_range(a, b)) = b - a + 1` and
     // `finite_set_size(range(a, b)) = b - a` when `a <= b` and both endpoints are natural.
@@ -1442,6 +1627,184 @@ impl Runtime {
         } else {
             None
         }
+    }
+
+    fn finite_set_size_union_shape(
+        finite_set_size_side: &Obj,
+        inclusion_exclusion_side: &Obj,
+    ) -> Option<(Obj, Obj)> {
+        let Obj::FiniteSetSize(union_size) = finite_set_size_side else {
+            return None;
+        };
+        let Obj::Union(union) = union_size.set.as_ref() else {
+            return None;
+        };
+        let Obj::Sub(subtraction) = inclusion_exclusion_side else {
+            return None;
+        };
+        let Obj::Add(sum) = subtraction.left.as_ref() else {
+            return None;
+        };
+        let Obj::FiniteSetSize(first_size) = sum.left.as_ref() else {
+            return None;
+        };
+        let Obj::FiniteSetSize(second_size) = sum.right.as_ref() else {
+            return None;
+        };
+        let Obj::FiniteSetSize(intersection_size) = subtraction.right.as_ref() else {
+            return None;
+        };
+        let Obj::Intersect(intersection) = intersection_size.set.as_ref() else {
+            return None;
+        };
+
+        if verify_equality_by_they_are_the_same(&union.left, &first_size.set)
+            && verify_equality_by_they_are_the_same(&union.right, &second_size.set)
+            && verify_equality_by_they_are_the_same(&union.left, &intersection.left)
+            && verify_equality_by_they_are_the_same(&union.right, &intersection.right)
+        {
+            Some((union.left.as_ref().clone(), union.right.as_ref().clone()))
+        } else {
+            None
+        }
+    }
+
+    fn finite_set_size_partition_shape(
+        finite_set_size_side: &Obj,
+        partition_side: &Obj,
+    ) -> Option<(Obj, Obj)> {
+        let Obj::FiniteSetSize(main_size) = finite_set_size_side else {
+            return None;
+        };
+        let Obj::Add(sum) = partition_side else {
+            return None;
+        };
+        let Obj::FiniteSetSize(intersection_size) = sum.left.as_ref() else {
+            return None;
+        };
+        let Obj::Intersect(intersection) = intersection_size.set.as_ref() else {
+            return None;
+        };
+        let Obj::FiniteSetSize(remainder_size) = sum.right.as_ref() else {
+            return None;
+        };
+        let Obj::SetMinus(remainder) = remainder_size.set.as_ref() else {
+            return None;
+        };
+
+        if verify_equality_by_they_are_the_same(&main_size.set, &intersection.left)
+            && verify_equality_by_they_are_the_same(&main_size.set, &remainder.left)
+            && verify_equality_by_they_are_the_same(&intersection.right, &remainder.right)
+        {
+            Some((
+                main_size.set.as_ref().clone(),
+                intersection.right.as_ref().clone(),
+            ))
+        } else if verify_equality_by_they_are_the_same(&main_size.set, &intersection.right)
+            && verify_equality_by_they_are_the_same(&main_size.set, &remainder.left)
+            && verify_equality_by_they_are_the_same(&intersection.left, &remainder.right)
+        {
+            Some((
+                main_size.set.as_ref().clone(),
+                intersection.left.as_ref().clone(),
+            ))
+        } else {
+            None
+        }
+    }
+
+    fn finite_set_size_set_diff_shape(
+        finite_set_size_side: &Obj,
+        directed_differences_side: &Obj,
+    ) -> Option<(Obj, Obj)> {
+        let Obj::FiniteSetSize(set_diff_size) = finite_set_size_side else {
+            return None;
+        };
+        let Obj::SetDiff(set_diff) = set_diff_size.set.as_ref() else {
+            return None;
+        };
+        let Obj::Add(sum) = directed_differences_side else {
+            return None;
+        };
+        let Obj::FiniteSetSize(first_difference_size) = sum.left.as_ref() else {
+            return None;
+        };
+        let Obj::SetMinus(first_difference) = first_difference_size.set.as_ref() else {
+            return None;
+        };
+        let Obj::FiniteSetSize(second_difference_size) = sum.right.as_ref() else {
+            return None;
+        };
+        let Obj::SetMinus(second_difference) = second_difference_size.set.as_ref() else {
+            return None;
+        };
+
+        if verify_equality_by_they_are_the_same(&set_diff.left, &first_difference.left)
+            && verify_equality_by_they_are_the_same(&set_diff.right, &first_difference.right)
+            && verify_equality_by_they_are_the_same(&set_diff.right, &second_difference.left)
+            && verify_equality_by_they_are_the_same(&set_diff.left, &second_difference.right)
+        {
+            Some((
+                set_diff.left.as_ref().clone(),
+                set_diff.right.as_ref().clone(),
+            ))
+        } else {
+            None
+        }
+    }
+
+    fn finite_set_size_set_minus_of_subset_shape(
+        finite_set_size_side: &Obj,
+        subtraction_side: &Obj,
+    ) -> Option<(Obj, Obj)> {
+        let Obj::FiniteSetSize(remainder_size) = finite_set_size_side else {
+            return None;
+        };
+        let Obj::SetMinus(remainder) = remainder_size.set.as_ref() else {
+            return None;
+        };
+        let Obj::Sub(subtraction) = subtraction_side else {
+            return None;
+        };
+        let Obj::FiniteSetSize(container_size) = subtraction.left.as_ref() else {
+            return None;
+        };
+        let Obj::FiniteSetSize(subset_size) = subtraction.right.as_ref() else {
+            return None;
+        };
+
+        if verify_equality_by_they_are_the_same(&remainder.left, &container_size.set)
+            && verify_equality_by_they_are_the_same(&remainder.right, &subset_size.set)
+        {
+            Some((
+                remainder.left.as_ref().clone(),
+                remainder.right.as_ref().clone(),
+            ))
+        } else {
+            None
+        }
+    }
+
+    fn verify_two_sets_are_finite(
+        &mut self,
+        first_set: Obj,
+        second_set: Obj,
+        line_file: LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
+        let first_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&first_finite, verify_state)?;
+        if !first_result.is_true() {
+            return Ok(None);
+        }
+        let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file).into();
+        let second_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&second_finite, verify_state)?;
+        if !second_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(vec![first_result, second_result]))
     }
 
     fn finite_set_size_integer_range_shape(

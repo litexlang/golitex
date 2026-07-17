@@ -6148,7 +6148,7 @@ thm positive_base_exponentiation_continuous:
     # exponentiation estimates.
     # proof_debt: those local epsilon-delta estimates have not been packaged
     # as a checked exponential-continuity theorem.
-    by thm chap9citation::positive_base_exponentiation_continuous(a)
+    trust $is_continuous_on(R, fn(x R) R {a^x})
 
 """
 Proposition 9.4.11 (Exponentiation is continuous, II). For a fixed real
@@ -6168,7 +6168,7 @@ thm positive_domain_power_function_continuous:
     # Source handling: Exercise 9.4.4 reduces this to exponentiation
     # continuity and the real-power limit laws.
     # proof_debt: that positive-domain reduction is not yet checked locally.
-    by thm chap9citation::positive_domain_power_function_continuous(p)
+    trust $is_continuous_on(R_pos, fn(x R_pos) R {x^p})
 
 """
 Proposition 9.4.12 (Absolute value is continuous). The function `x |-> abs(x)`

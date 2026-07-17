@@ -1,9 +1,5 @@
-# Finite-set cardinality facts checked directly by the verifier.
-
-forall A set, B finite_set:
-    A $subset B
-    =>:
-        $is_finite_set(A)
+# Finite-set cardinality facts checked directly by the verifier. Subset
+# finiteness itself is the `subset_of_finite_set_is_finite` axiom in `basics`.
 
 forall A, B finite_set:
     A $subset B

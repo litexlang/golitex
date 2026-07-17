@@ -4247,9 +4247,9 @@ thm lhopital_rule_second_limit:
             $chap9::has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
     # Source handling: apply Cauchy's mean value theorem on `[a,x]`, then
     # compare its intermediate derivative quotient with the right-hand limit.
-    # trust: the checked transport and cross-product lemmas reduce the
+    # proof_debt: the checked transport and cross-product lemmas reduce the
     # remaining work to applying Cauchy's theorem on each restricted `[a,x]`.
-    by thm chap10citation::lhopital_second_quotient_limit(a, L, R, b, f, g)
+    trust $chap9::has_function_limit('(a, b], fn(x '(a, b]) R {f(x) / g(x)}, a, L)
 
 """
 Remark 10.5.3.  This version is a right-hand limit theorem.  Left-hand and

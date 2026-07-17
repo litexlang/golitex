@@ -163,12 +163,6 @@ thm intersect_with_singleton:
             z $in s
             z $in {a}
 
-# Finite deletion cardinality is checked directly by the verifier.
-thm finite_set_size_set_minus:
-    ? forall s, t finite_set:
-        finite_set_size(set_minus(s, t)) = finite_set_size(s) - finite_set_size(intersect(s, t))
-    finite_set_size(set_minus(s, t)) = finite_set_size(s) - finite_set_size(intersect(s, t))
-
 thm remove_singleton_from_singleton_sized_set_is_empty:
     ? forall s finite_set, a set:
         $is_finite_set(s)
@@ -180,9 +174,7 @@ thm remove_singleton_from_singleton_sized_set_is_empty:
     intersect(s, {a}) = {a}
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
-    by thm finite_set_size_set_minus(s, {a})
     finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = 1 - 1 = 0
-    by thm chap3::finite_set_size_zero_is_empty(set_minus(s, {a}))
     set_minus(s, {a}) = {}
 
 thm index_function_for_singleton:
@@ -247,7 +239,6 @@ thm index_function_step:
     intersect(s, {a}) = {a}
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
-    by thm finite_set_size_set_minus(s, {a})
     finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = (n + 1) - 1 = n
     $finite_set_size_has_index(n)
     $is_finite_set(set_minus(s, {a}))
