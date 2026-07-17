@@ -281,13 +281,17 @@ sketch:
             =>:
                 n^3 >= 4 * n^2 + 7
 
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust:
-        forall n Z:
+    # Factor the excess over `4 * n^2` as `n^2 * (n - 4)`. For `n >= 5`,
+    # this is at least `25`, which is more than the required constant `7`.
+    claim:
+        ? forall n Z:
             n >= 5
             =>:
                 n^3 >= 4 * n^2 + 7
+        n - 4 >= 1
+        n^2 >= 5^2 = 25
+        n^2 * (n - 4) >= 25 * 1 = 25
+        n^3 = n^2 * n = n^2 * ((n - 4) + 4) = n^2 * (n - 4) + 4 * n^2 >= 25 + 4 * n^2 >= 7 + 4 * n^2 = 4 * n^2 + 7
 
     claim:
         ? exist M Z st {$cubic_eventually_large(M)}

@@ -111,13 +111,34 @@ sketch:
         forall n N_pos:
             $mod_eq(a^n, b^n, d)
 
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust:
-        forall a, b, d Z:
+    # At the base exponent the original congruence is the claim itself. In the
+    # step, factor `a^(m+1) - b^(m+1)` using the quotient witnesses for both
+    # the induction hypothesis and `a - b`.
+    claim:
+        ? forall a, b, d Z:
             $mod_eq(a, b, d)
             =>:
                 $congruence_power_rule(a, b, d)
+        by induc n from 1:
+            ? $mod_eq(a^n, b^n, d)
+            obtain k from exist k Z st {a - b = d * k}
+            d != 0
+            witness exist q Z st {a^1 - b^1 = d * q} from k:
+                a^1 - b^1 = a - b = d * k
+            $mod_eq(a^1, b^1, d)
+
+            claim:
+                ? forall m Z:
+                    m >= 1
+                    $mod_eq(a^m, b^m, d)
+                    =>:
+                        $mod_eq(a^(m + 1), b^(m + 1), d)
+                obtain x from exist x Z st {a^m - b^m = d * x}
+                obtain y from exist y Z st {a - b = d * y}
+                d != 0
+                witness exist q Z st {a^(m + 1) - b^(m + 1) = d * q} from x * a + b^m * y:
+                    a^(m + 1) - b^(m + 1) = a^m * a - b^m * b = (a^m - b^m) * a + b^m * (a - b) = d * x * a + b^m * (d * y) = d * (x * a + b^m * y)
+                $mod_eq(a^(m + 1), b^(m + 1), d)
 
 # 6.1.4
 
@@ -130,11 +151,41 @@ sketch:
     prop residue_is_one_or_four(n N):
         $mod_eq(4^n, 1, 15) or $mod_eq(4^n, 4, 15)
 
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust:
+    # The base residue is `1`. Multiplying a residue `1` by `4` gives `4`,
+    # while multiplying a residue `4` gives `16`, which is congruent to `1`.
+    claim:
         forall n N:
             $residue_is_one_or_four(n)
+        by induc n from 0:
+            ? $residue_is_one_or_four(n)
+            15 != 0
+            witness exist k Z st {4^0 - 1 = 15 * k} from 0:
+                4^0 - 1 = 1 - 1 = 15 * 0
+            $mod_eq(4^0, 1, 15)
+            $mod_eq(4^0, 1, 15) or $mod_eq(4^0, 4, 15)
+            $residue_is_one_or_four(0)
+
+            claim:
+                ? forall m Z:
+                    m >= 0
+                    $residue_is_one_or_four(m)
+                    =>:
+                        $residue_is_one_or_four(m + 1)
+                15 != 0
+                by cases:
+                    ? $residue_is_one_or_four(m + 1)
+                    case $mod_eq(4^m, 1, 15):
+                        obtain x from exist x Z st {4^m - 1 = 15 * x}
+                        witness exist q Z st {4^(m + 1) - 4 = 15 * q} from 4 * x:
+                            4^(m + 1) - 4 = 4^m * 4 - 4 = 4 * (4^m - 1) = 4 * (15 * x) = 15 * (4 * x)
+                        $mod_eq(4^(m + 1), 4, 15)
+                        $mod_eq(4^(m + 1), 1, 15) or $mod_eq(4^(m + 1), 4, 15)
+                    case $mod_eq(4^m, 4, 15):
+                        obtain x from exist x Z st {4^m - 4 = 15 * x}
+                        witness exist q Z st {4^(m + 1) - 1 = 15 * q} from 4 * x + 1:
+                            4^(m + 1) - 1 = 4^m * 4 - 1 = 4 * (4^m - 4) + 15 = 4 * (15 * x) + 15 = 15 * (4 * x + 1)
+                        $mod_eq(4^(m + 1), 1, 15)
+                        $mod_eq(4^(m + 1), 1, 15) or $mod_eq(4^(m + 1), 4, 15)
 
     claim:
         ? forall n N:
@@ -187,10 +238,24 @@ sketch:
             =>:
                 2^n >= n^2
 
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust:
+    # Start at `4`. In the step, `m^2 >= 4m` makes the difference
+    # `2m^2 - (m+1)^2` positive, so doubling the induction bound is enough.
+    claim:
         $sufficiently_large_power_bound(4)
+        by induc n from 4:
+            ? 2^n >= n^2
+            2^4 = 16 = 4^2
+
+            claim:
+                ? forall m Z:
+                    m >= 4
+                    2^m >= m^2
+                    =>:
+                        2^(m + 1) >= (m + 1)^2
+                m^2 = m * m >= 4 * m
+                m^2 - 2 * m - 1 >= 4 * m - 2 * m - 1 = 2 * m - 1 >= 2 * 4 - 1 = 7 > 0
+                2 * m^2 = (m^2 - 2 * m - 1) + (m + 1)^2 >= 0 + (m + 1)^2 = (m + 1)^2
+                2^(m + 1) = 2^m * 2^1 = 2 * 2^m >= 2 * m^2 >= (m + 1)^2
 
     claim:
         ? exist N0 Z st {$sufficiently_large_power_bound(N0)}
@@ -467,13 +532,20 @@ sketch:
         $seq_formula(a, n)
         $seq_formula(a, n + 1)
 
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust:
+    # Expand each successor power, then collect the two `2^m` terms and the
+    # two alternating-sign terms.
+    claim:
         forall m Z:
             m >= 0
             =>:
                 2^(m + 1) + (-1)^(m + 1) + 2 * (2^m + (-1)^m) = 2^(m + 2) + (-1)^(m + 2)
+        2^(m + 1) = 2^m * 2^1 = 2 * 2^m
+        (-1)^(m + 1) = (-1)^m * (-1)^1 = -((-1)^m)
+        2^(m + 2) = 2^m * 2^2 = 4 * 2^m
+        (-1)^(m + 2) = (-1)^m * (-1)^2 = (-1)^m
+        2^(m + 1) + (-1)^(m + 1) + 2 * (2^m + (-1)^m) = 2^m * 2^1 + (-1)^m * (-1)^1 + 2 * (2^m + (-1)^m) = 4 * 2^m + (-1)^m
+        2^(m + 2) + (-1)^(m + 2) = 2^m * 2^2 + (-1)^m * (-1)^2 = 4 * 2^m + (-1)^m
+        2^(m + 1) + (-1)^(m + 1) + 2 * (2^m + (-1)^m) = 4 * 2^m + (-1)^m = 2^(m + 2) + (-1)^(m + 2)
 
     claim:
         ? forall a fn(n Z: n >= 0) Z, n Z:
@@ -732,11 +804,12 @@ sketch:
         n >= 0
         Fibonacci(n + 1)^2 - Fibonacci(n + 1) * Fibonacci(n) - Fibonacci(n)^2 = -((-1)^n)
 
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust:
+    # The sign changes when the exponent increases by one; this is the
+    # successor-power rule for the base `-1`.
+    claim:
         forall m Z:
             -1 * (-((-1)^m)) = -((-1)^(m + 1))
+        -1 * (-((-1)^m)) = -((-1)^(m + 1))
 
     forall x, y, m Z:
         x^2 - x * y - y^2 = -((-1)^m)

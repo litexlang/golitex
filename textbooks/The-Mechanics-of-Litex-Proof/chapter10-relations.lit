@@ -10,7 +10,7 @@
 
 # 10.1 Reflexive, symmetric, antisymmetric, transitive
 
-# Let a relation (prop) R be defined on a set or type X. You can read "x $R y" as
+# A relation (prop) is defined on a set or type X. You can read "x $R y" as
 # "x is related to y under R, in that order."
 
 # - Reflexive means: every element of X is related to itself under R.
@@ -42,26 +42,29 @@
 #   Litex can later prove `a = b` from `$p(a, b)` and `$p(b, a)` without
 #   repeating the proof.
 
-# Here is the basic pattern:
+# Here is the basic pattern, made executable with the equality relation on sets.
+# For a different user-defined relation, first prove the property that actually
+# holds for that relation; Litex does not assume these properties for an arbitrary
+# `abstract_prop`.
 
-abstract_prop rel(x, y)
+prop rel(x, y set):
+    x = y
 
 sketch:
     by reflexive_prop:
         ? forall x set:
             $rel(x, x)
-        # Source handling: this source item records the displayed fact as background mathematics.
-        # trust: its supporting proof is not expanded in this chapter.
-        trust $rel(x, x)
+        x = x
+        $rel(x, x)
 
     by symmetric_prop:
         ? forall x, y set:
             $rel(x, y)
             =>:
                 $rel(y, x)
-        # Source handling: this source item records the displayed fact as background mathematics.
-        # trust: its supporting proof is not expanded in this chapter.
-        trust $rel(y, x)
+        x = y
+        y = x
+        $rel(y, x)
 
     by transitive_prop:
         ? forall x, y, z set:
@@ -69,9 +72,8 @@ sketch:
             $rel(y, z)
             =>:
                 $rel(x, z)
-        # Source handling: this source item records the displayed fact as background mathematics.
-        # trust: its supporting proof is not expanded in this chapter.
-        trust $rel(x, z)
+        x = y = z
+        $rel(x, z)
 
     by antisymmetric_prop:
         ? forall x, y set:
@@ -79,9 +81,8 @@ sketch:
             $rel(y, x)
             =>:
                 x = y
-        # Source handling: this source item records the displayed fact as background mathematics.
-        # trust: its supporting proof is not expanded in this chapter.
-        trust x = y
+        $rel(x, y)
+        x = y
 
     have a, b, c set
 
@@ -421,18 +422,18 @@ sketch:
 
 # This particular fact only needs symmetry and transitivity. Reflexivity is needed
 # for the larger statement that every element belongs to its own class. The
-# `by symmetric_prop` and `by transitive_prop` registrations below mean that, after
-# we have proved those two properties once, Litex can use them automatically in the
-# two short inner claims.
+# executable instance below uses the equality relation from the first section.
+# Its two registrations show the same proof shape that applies after another
+# relation's symmetry and transitivity have been established.
 
 by symmetric_prop:
     ? forall x, y set:
         $rel(x, y)
         =>:
             $rel(y, x)
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust $rel(y, x)
+    x = y
+    y = x
+    $rel(y, x)
 
 by transitive_prop:
     ? forall x, y, z set:
@@ -440,9 +441,8 @@ by transitive_prop:
         $rel(y, z)
         =>:
             $rel(x, z)
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust $rel(x, z)
+    x = y = z
+    $rel(x, z)
 
 claim:
     ? forall X set, a1, a2 X:
@@ -556,13 +556,50 @@ sketch:
         forall y T:
             y = f(g(y))
 
-    # Fact from chapter 9: If a function is bijective, then there exists an inverse function.
-    # Source handling: this source item records the displayed fact as background mathematics.
-    # trust: its supporting proof is not expanded in this chapter.
-    trust forall A, B set, f fn(x A) B:
-        $bijective_fn(A, B, f)
-        =>:
-            exist g fn(x B) A st {$is_inverse_of_fn(A, B, f, g)}
+    # A bijection has an inverse: surjectivity supplies a preimage for each
+    # output, and injectivity makes that preimage unique.
+    claim:
+        ? forall A, B set, f fn(x A) B:
+            $bijective_fn(A, B, f)
+            =>:
+                exist g fn(x B) A st {$is_inverse_of_fn(A, B, f, g)}
+        $injective_fn(A, B, f)
+        $surjective_fn(A, B, f)
+
+        claim:
+            ? forall y B:
+                exist! x A st {y = f(x)}
+            obtain x from exist x A st {y = f(x)}
+            claim:
+                ? forall x1, x2 A:
+                    y = f(x1)
+                    y = f(x2)
+                    =>:
+                        x1 = x2
+                f(x1) = y = f(x2)
+                x1 = x2
+            exist! x A st {y = f(x)}
+
+        have fn g by exist!:
+            ? forall y B:
+                exist! x A st {y = f(x)}
+
+        claim:
+            ? forall y B:
+                y = f(g(y))
+
+        claim:
+            ? forall x A:
+                g(f(x)) = x
+            f(x) = f(g(f(x)))
+            x = g(f(x))
+            g(f(x)) = x
+
+        forall x A:
+            g(f(x)) = x
+        forall y B:
+            y = f(g(y))
+        witness exist g1 fn(x B) A st {$is_inverse_of_fn(A, B, f, g1)} from g
 
     # The relation "there exists a bijection between the two sets" is an
     # equivalence relation on sets.
