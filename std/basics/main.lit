@@ -201,7 +201,7 @@ trust have pi R:
 
 trust have euler_e R:
     euler_e > 0
-        
+
 thm pos_pow_strict_order_reflects:
     ? forall a, b, k R_pos:
         a^k < b^k
