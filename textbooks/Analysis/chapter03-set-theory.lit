@@ -3174,7 +3174,7 @@ sketch:
         0...finite_set_size(N) $subset N
 
         by thm basics::finite_set_size_subset_le(0...finite_set_size(N), N)
-        by thm chap2citation::finite_set_size_closed_range(0, finite_set_size(N))
+        by thm basics::finite_set_size_closed_range(0, finite_set_size(N))
         finite_set_size(N) + 1 = finite_set_size(N) - 0 + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
 
         impossible finite_set_size(N) + 1 <= finite_set_size(N)

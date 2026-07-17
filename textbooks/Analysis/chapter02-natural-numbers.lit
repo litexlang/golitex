@@ -175,8 +175,8 @@ Remark 2.1.13. (Informal) One interesting feature about the natural numbers is t
 # The formal statement here is that the set `N` is not finite; it uses Litex's
 # finite-set and cardinality interfaces.
 
-# The finite-set counting interfaces used below are cited from
-# `chap2citation`; their induction proofs are not part of this introductory
+# The finite-set counting interfaces used below are foundational `basics`
+# rules; their induction proofs are not part of this introductory
 # natural-number discussion.
 
 by contra:
