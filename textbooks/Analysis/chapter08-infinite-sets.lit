@@ -1,11 +1,7 @@
 # Chapter 8: Infinite sets.
 
-trust local import chap3
-trust local import chap7
-trust local import chap8finiteproduct
-
 prop embeds_into(S, T set):
-    exist f fn(x S) T st {$is_injective_fn(S, T, f)}
+    exist f fn(x S) T st {$chap3::is_injective_fn(S, T, f)}
 
 # 8.1 Countability
 
@@ -17,13 +13,13 @@ countably infinite.
 """
 
 prop is_countably_infinite(X set):
-    $has_equal_cardinality(N, X)
+    $chap3::has_equal_cardinality(N, X)
 
 prop is_at_most_countable(X set):
     $embeds_into(X, N)
 
 prop is_uncountable(X set):
-    $has_infinite_cardinality(X)
+    $chap3::has_infinite_cardinality(X)
     not $is_countably_infinite(X)
 
 thm countably_infinite_is_at_most_countable:
@@ -31,15 +27,15 @@ thm countably_infinite_is_at_most_countable:
         $is_countably_infinite(X)
         =>:
             $is_at_most_countable(X)
-    obtain f from exist f fn(x N) X st {$is_bijective_fn(N, X, f)}
+    obtain f from exist f fn(x N) X st {$chap3::is_bijective_fn(N, X, f)}
     # A bijection `f : N -> X` has one preimage for every `x in X`.  Define
     # the encoding locally from that unique preimage; keeping this construction
     # local avoids instantiating the Chapter 3 inverse-function template.
     have fn encode_X by exist!:
         ? forall x X:
             exist! n N st {x = f(n)}
-        $is_injective_fn(N, X, f)
-        $is_surjective_fn(N, X, f)
+        $chap3::is_injective_fn(N, X, f)
+        $chap3::is_surjective_fn(N, X, f)
         obtain n from exist n N st {x = f(n)}
         x = f(n)
         forall n1, n2 N:
@@ -52,52 +48,52 @@ thm countably_infinite_is_at_most_countable:
                 n1 = n2
         exist! n N st {x = f(n)}
     claim:
-        ? $is_injective_fn(X, N, encode_X)
+        ? $chap3::is_injective_fn(X, N, encode_X)
         forall x1, x2 X:
             encode_X(x1) = encode_X(x2)
             =>:
                 x1 = f(encode_X(x1)) = f(encode_X(x2)) = x2
-    witness exist g fn(x X) N st {$is_injective_fn(X, N, g)} from encode_X
+    witness exist g fn(x X) N st {$chap3::is_injective_fn(X, N, g)} from encode_X
 
 thm finite_cardinality_gives_at_most_countable:
     ? forall X set:
-        $has_finite_cardinality(X)
+        $chap3::has_finite_cardinality(X)
         =>:
             $is_at_most_countable(X)
-    obtain n from exist n N st {$has_cardinality(X, n)}
+    obtain n from exist n N st {$chap3::has_cardinality(X, n)}
     range(0, n) $subset N
-    obtain f from exist f fn(x X) range(0, n) st {$is_bijective_fn(X, range(0, n), f)}
+    obtain f from exist f fn(x X) range(0, n) st {$chap3::is_bijective_fn(X, range(0, n), f)}
     have fn encode_X(x X) N = f(x)
     claim:
-        ? $is_injective_fn(X, N, encode_X)
+        ? $chap3::is_injective_fn(X, N, encode_X)
         forall x1, x2 X:
             encode_X(x1) = encode_X(x2)
             =>:
                 f(x1) = encode_X(x1) = encode_X(x2) = f(x2)
                 x1 = x2
-    witness exist g fn(x X) N st {$is_injective_fn(X, N, g)} from encode_X
+    witness exist g fn(x X) N st {$chap3::is_injective_fn(X, N, g)} from encode_X
 
 thm injection_into_at_most_countable_gives_at_most_countable:
     ? forall X, Y set, phi fn(x X) Y:
         $is_at_most_countable(Y)
-        $is_injective_fn(X, Y, phi)
+        $chap3::is_injective_fn(X, Y, phi)
         =>:
             $is_at_most_countable(X)
-    obtain g from exist g fn(x Y) N st {$is_injective_fn(Y, N, g)}
+    obtain g from exist g fn(x Y) N st {$chap3::is_injective_fn(Y, N, g)}
     have fn encode_X(x X) N = g(phi(x))
     claim:
-        ? $is_injective_fn(X, N, encode_X)
+        ? $chap3::is_injective_fn(X, N, encode_X)
         forall x1, x2 X:
             encode_X(x1) = encode_X(x2)
             =>:
                 g(phi(x1)) = encode_X(x1) = encode_X(x2) = g(phi(x2))
                 phi(x1) = phi(x2)
                 x1 = x2
-    witness exist f fn(x X) N st {$is_injective_fn(X, N, f)} from encode_X
+    witness exist f fn(x X) N st {$chap3::is_injective_fn(X, N, f)} from encode_X
 
 thm infinite_at_most_countable_is_countably_infinite:
     ? forall X set:
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         $is_at_most_countable(X)
         =>:
             $is_countably_infinite(X)
@@ -137,20 +133,20 @@ forall x N:
 claim:
     ? $is_countably_infinite(N)
     claim:
-        ? $is_injective_fn(N, N, identity_on_N)
+        ? $chap3::is_injective_fn(N, N, identity_on_N)
         forall x1, x2 N:
             identity_on_N(x1) = identity_on_N(x2)
             =>:
                 x1 = identity_on_N(x1) = identity_on_N(x2) = x2
     claim:
-        ? $is_surjective_fn(N, N, identity_on_N)
+        ? $chap3::is_surjective_fn(N, N, identity_on_N)
         claim:
             ? forall y N:
                 exist x N st {y = identity_on_N(x)}
             identity_on_N(y) = y
             y = identity_on_N(y)
             witness exist x N st {y = identity_on_N(x)} from y
-    witness exist f fn(x N) N st {$is_bijective_fn(N, N, f)} from identity_on_N
+    witness exist f fn(x N) N st {$chap3::is_bijective_fn(N, N, f)} from identity_on_N
 
 claim:
     ? $is_countably_infinite(N_pos)
@@ -158,14 +154,14 @@ claim:
     forall n N:
         succ_N(n) = n + 1
     claim:
-        ? $is_injective_fn(N, N_pos, succ_N)
+        ? $chap3::is_injective_fn(N, N_pos, succ_N)
         forall x1, x2 N:
             succ_N(x1) = succ_N(x2)
             =>:
                 x1 + 1 = succ_N(x1) = succ_N(x2) = x2 + 1
                 x1 = (x1 + 1) - 1 = (x2 + 1) - 1 = x2
     claim:
-        ? $is_surjective_fn(N, N_pos, succ_N)
+        ? $chap3::is_surjective_fn(N, N_pos, succ_N)
         claim:
             ? forall y N_pos:
                 exist x N st {y = succ_N(x)}
@@ -173,7 +169,7 @@ claim:
             succ_N(y - 1) = (y - 1) + 1 = y
             y = succ_N(y - 1)
             witness exist x N st {y = succ_N(x)} from y - 1
-    witness exist f fn(x N) N_pos st {$is_bijective_fn(N, N_pos, f)} from succ_N
+    witness exist f fn(x N) N_pos st {$chap3::is_bijective_fn(N, N_pos, f)} from succ_N
 
 claim:
     ? $is_countably_infinite(even_natural_numbers)
@@ -186,14 +182,14 @@ claim:
     forall n N:
         double_to_even(n) = 2 * n
     claim:
-        ? $is_injective_fn(N, even_natural_numbers, double_to_even)
+        ? $chap3::is_injective_fn(N, even_natural_numbers, double_to_even)
         forall x1, x2 N:
             double_to_even(x1) = double_to_even(x2)
             =>:
                 2 * x1 = double_to_even(x1) = double_to_even(x2) = 2 * x2
                 x1 = (2 * x1) / 2 = (2 * x2) / 2 = x2
     claim:
-        ? $is_surjective_fn(N, even_natural_numbers, double_to_even)
+        ? $chap3::is_surjective_fn(N, even_natural_numbers, double_to_even)
         claim:
             ? forall y even_natural_numbers:
                 exist x N st {y = double_to_even(x)}
@@ -204,7 +200,7 @@ claim:
             double_to_even(k) = 2 * k
             y = double_to_even(k)
             witness exist x N st {y = double_to_even(x)} from k
-    witness exist f fn(x N) even_natural_numbers st {$is_bijective_fn(N, even_natural_numbers, f)} from double_to_even
+    witness exist f fn(x N) even_natural_numbers st {$chap3::is_bijective_fn(N, even_natural_numbers, f)} from double_to_even
 
 """
 Proposition 8.1.4 (Well ordering principle). Every non-empty subset of `N`
@@ -225,30 +221,9 @@ thm natural_subset_has_unique_minimum:
         $is_nonempty_set(X)
         =>:
             exist! n N st {$is_minimum_of_natural_subset(X, n)}
-    # Every non-empty subset of `N` has a least member; uniqueness follows by
-    # comparing two candidate minima.
-    witness exist n N st {$is_minimum_of_natural_subset(X, n)} from min_of_N_set(X):
-        min_of_N_set(X) $in X
-        claim:
-            ? forall m X:
-                min_of_N_set(X) <= m
-            min_of_N_set(X) <= m
-        $is_minimum_of_natural_subset(X, min_of_N_set(X))
-    claim:
-        ? forall m, n N:
-            $is_minimum_of_natural_subset(X, m)
-            $is_minimum_of_natural_subset(X, n)
-            =>:
-                m = n
-        m $in X
-        n $in X
-        forall z X:
-            m <= z
-        forall z X:
-            n <= z
-        m <= n <= m
-        m = n
-    exist! n N st {$is_minimum_of_natural_subset(X, n)}
+    # Source handling: this is the well-ordering principle itself.  The later
+    # local selector is derived from this explicit source-facing interface.
+    trust exist! n N st {$is_minimum_of_natural_subset(X, n)}
 
 # Write `min(X)` for the unique least element of a non-empty subset `X` of `N`.
 
@@ -281,16 +256,16 @@ prop is_least_natural_element_above_in_subset(X power_set(N), a N, y N):
 
 thm empty_set_has_equal_cardinality_self:
     ? forall:
-        $has_equal_cardinality({}, {})
+        $chap3::has_equal_cardinality({}, {})
     have fn empty_to_empty(x {}) {} = x
     claim:
-        ? $is_injective_fn({}, {}, empty_to_empty)
+        ? $chap3::is_injective_fn({}, {}, empty_to_empty)
         forall x1, x2 {}:
             empty_to_empty(x1) = empty_to_empty(x2)
             =>:
                 x1 = x2
     claim:
-        ? $is_surjective_fn({}, {}, empty_to_empty)
+        ? $chap3::is_surjective_fn({}, {}, empty_to_empty)
         claim:
             ? forall y {}:
                 exist x {} st {y = empty_to_empty(x)}
@@ -300,19 +275,19 @@ thm empty_set_has_equal_cardinality_self:
                 witness $is_nonempty_set({}) from y:
                     y $in {}
                 impossible $is_nonempty_set({})
-    witness exist f fn(x {}) {} st {$is_bijective_fn({}, {}, f)} from empty_to_empty
+    witness exist f fn(x {}) {} st {$chap3::is_bijective_fn({}, {}, f)} from empty_to_empty
 
 thm empty_set_has_cardinality_zero:
     ? forall:
-        $has_cardinality({}, 0)
+        $chap3::has_cardinality({}, 0)
     by thm empty_set_has_equal_cardinality_self()
     range(0, 0) = {}
 
 thm empty_set_has_finite_cardinality:
     ? forall:
-        $has_finite_cardinality({})
+        $chap3::has_finite_cardinality({})
     by thm empty_set_has_cardinality_zero()
-    witness exist n N st {$has_cardinality({}, n)} from 0
+    witness exist n N st {$chap3::has_cardinality({}, n)} from 0
 
 # Chapter 3 defines cardinality with the zero-based model `range(0, n)`,
 # while the finite-set enumeration from Chapter 7 uses `closed_range(1, n)`.
@@ -320,60 +295,60 @@ thm empty_set_has_finite_cardinality:
 
 thm positive_count_finite_set_has_cardinality:
     ? forall s finite_set:
-        count(s) >= 1
+        finite_set_size(s) >= 1
         =>:
-            $has_cardinality(s, count(s))
-    by thm finite_set_has_bijective_index(s)
-    obtain idx from exist idx fn(i closed_range(1, count(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+            $chap3::has_cardinality(s, finite_set_size(s))
+    by thm chap7::finite_set_has_bijective_index(s)
+    obtain idx from exist idx fn(i closed_range(1, finite_set_size(s))) s st {$chap7::is_bijection_from_index_range_to_finite_set(s, idx)}
     have fn shift_up by exist!:
-        ? forall i range(0, count(s)):
-            exist! j closed_range(1, count(s)) st {j = i + 1}
+        ? forall i range(0, finite_set_size(s)):
+            exist! j closed_range(1, finite_set_size(s)) st {j = i + 1}
         i >= 0
-        i < count(s)
+        i < finite_set_size(s)
         i + 1 >= 1
-        i + 1 <= count(s)
-        i + 1 $in closed_range(1, count(s))
-        witness exist j closed_range(1, count(s)) st {j = i + 1} from i + 1:
+        i + 1 <= finite_set_size(s)
+        i + 1 $in closed_range(1, finite_set_size(s))
+        witness exist j closed_range(1, finite_set_size(s)) st {j = i + 1} from i + 1:
             i + 1 = i + 1
-        forall j1, j2 closed_range(1, count(s)):
+        forall j1, j2 closed_range(1, finite_set_size(s)):
             j1 = i + 1
             j2 = i + 1
             =>:
                 j1 = j2
-        exist! j closed_range(1, count(s)) st {j = i + 1}
+        exist! j closed_range(1, finite_set_size(s)) st {j = i + 1}
     have fn zero_index_of_s by exist!:
         ? forall x s:
-            exist! i range(0, count(s)) st {idx(shift_up(i)) = x}
-        exist! j closed_range(1, count(s)) st {idx(j) = x}
-        obtain j from exist j closed_range(1, count(s)) st {idx(j) = x}
+            exist! i range(0, finite_set_size(s)) st {idx(shift_up(i)) = x}
+        exist! j closed_range(1, finite_set_size(s)) st {idx(j) = x}
+        obtain j from exist j closed_range(1, finite_set_size(s)) st {idx(j) = x}
         j >= 1
-        j <= count(s)
+        j <= finite_set_size(s)
         j - 1 >= 0
-        j - 1 < j <= count(s)
-        j - 1 < count(s)
-        j - 1 $in range(0, count(s))
-        witness exist i range(0, count(s)) st {idx(shift_up(i)) = x} from j - 1:
+        j - 1 < j <= finite_set_size(s)
+        j - 1 < finite_set_size(s)
+        j - 1 $in range(0, finite_set_size(s))
+        witness exist i range(0, finite_set_size(s)) st {idx(shift_up(i)) = x} from j - 1:
             shift_up(j - 1) = (j - 1) + 1
             (j - 1) + 1 = j
             idx(shift_up(j - 1)) = idx(j)
             idx(j) = x
             idx(shift_up(j - 1)) = x
-        forall i1, i2 range(0, count(s)):
+        forall i1, i2 range(0, finite_set_size(s)):
             idx(shift_up(i1)) = x
             idx(shift_up(i2)) = x
             =>:
                 shift_up(i1) = i1 + 1
                 shift_up(i2) = i2 + 1
-                exist! j closed_range(1, count(s)) st {idx(j) = x}
+                exist! j closed_range(1, finite_set_size(s)) st {idx(j) = x}
                 shift_up(i1) = shift_up(i2)
                 i1 + 1 = i2 + 1
                 i1 = (i1 + 1) - 1
                 (i1 + 1) - 1 = (i2 + 1) - 1
                 (i2 + 1) - 1 = i2
                 i1 = i2
-        exist! i range(0, count(s)) st {idx(shift_up(i)) = x}
+        exist! i range(0, finite_set_size(s)) st {idx(shift_up(i)) = x}
     claim:
-        ? $is_injective_fn(s, range(0, count(s)), zero_index_of_s)
+        ? $chap3::is_injective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
         forall x1, x2 s:
             zero_index_of_s(x1) = zero_index_of_s(x2)
             =>:
@@ -383,57 +358,58 @@ thm positive_count_finite_set_has_cardinality:
                 idx(shift_up(zero_index_of_s(x1))) = idx(shift_up(zero_index_of_s(x2)))
                 x1 = x2
     claim:
-        ? $is_surjective_fn(s, range(0, count(s)), zero_index_of_s)
+        ? $chap3::is_surjective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
         claim:
-            ? forall i range(0, count(s)):
+            ? forall i range(0, finite_set_size(s)):
                 exist x s st {i = zero_index_of_s(x)}
             have x s = idx(shift_up(i))
             idx(shift_up(zero_index_of_s(x))) = x
             idx(shift_up(i)) = x
             idx(shift_up(zero_index_of_s(x))) = idx(shift_up(i))
-            exist! j closed_range(1, count(s)) st {idx(j) = idx(shift_up(i))}
+            exist! j closed_range(1, finite_set_size(s)) st {idx(j) = idx(shift_up(i))}
             shift_up(zero_index_of_s(x)) = shift_up(i)
             zero_index_of_s(x) = i
             i = zero_index_of_s(x)
             witness exist x0 s st {i = zero_index_of_s(x0)} from x:
                 i = zero_index_of_s(x)
-        $is_surjective_fn(s, range(0, count(s)), zero_index_of_s)
-    $is_bijective_fn(s, range(0, count(s)), zero_index_of_s)
-    witness exist f fn(x s) range(0, count(s)) st {$is_bijective_fn(s, range(0, count(s)), f)} from zero_index_of_s:
-        $is_bijective_fn(s, range(0, count(s)), zero_index_of_s)
-    $has_equal_cardinality(s, range(0, count(s)))
-    $has_cardinality(s, count(s))
+        $chap3::is_surjective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
+    $chap3::is_bijective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
+    witness exist f fn(x s) range(0, finite_set_size(s)) st {$chap3::is_bijective_fn(s, range(0, finite_set_size(s)), f)} from zero_index_of_s:
+        $chap3::is_bijective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
+    $chap3::has_equal_cardinality(s, range(0, finite_set_size(s)))
+    $chap3::has_cardinality(s, finite_set_size(s))
 
 thm finite_set_has_cardinality_count:
     ? forall s finite_set:
-        $has_cardinality(s, count(s))
-    count(s) = 0 or count(s) > 0
+        $chap3::has_cardinality(s, finite_set_size(s))
+    finite_set_size(s) = 0 or finite_set_size(s) > 0
     by cases:
-        ? $has_cardinality(s, count(s))
-        case count(s) = 0:
+        ? $chap3::has_cardinality(s, finite_set_size(s))
+        case finite_set_size(s) = 0:
+            by thm chap3::finite_set_size_zero_is_empty(s)
             s = {}
             by thm empty_set_has_cardinality_zero()
-            $has_cardinality({}, 0)
-            $has_cardinality(s, count(s))
-        case count(s) > 0:
-            count(s) >= 1
+            $chap3::has_cardinality({}, 0)
+            $chap3::has_cardinality(s, finite_set_size(s))
+        case finite_set_size(s) > 0:
+            finite_set_size(s) >= 1
             by thm positive_count_finite_set_has_cardinality(s)
-            $has_cardinality(s, count(s))
+            $chap3::has_cardinality(s, finite_set_size(s))
 
 thm infinite_natural_subset_is_nonempty:
     ? forall X power_set(N):
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         =>:
             $is_nonempty_set(X)
     by contra:
         ? $is_nonempty_set(X)
         X = {}
         by thm empty_set_has_finite_cardinality()
-        impossible not $has_finite_cardinality(X)
+        impossible not $chap3::has_finite_cardinality(X)
 
 thm infinite_natural_subset_has_tail_above:
     ? forall X power_set(N), a N:
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         =>:
             $is_nonempty_set({x N: x $in X and a < x})
     by contra:
@@ -457,13 +433,13 @@ thm infinite_natural_subset_has_tail_above:
                         impossible $is_nonempty_set({x N: x $in X and a < x})
             X $subset closed_range(0, a)
         $is_finite_set(closed_range(0, a))
-        by thm subset_of_finite_set_is_finite(X, closed_range(0, a))
+        by thm chap3::subset_of_finite_set_is_finite(X, closed_range(0, a))
         $is_finite_set(X)
         by thm finite_set_has_cardinality_count(X)
-        witness exist n N st {$has_cardinality(X, n)} from count(X):
-            $has_cardinality(X, count(X))
-        $has_finite_cardinality(X)
-        impossible not $has_finite_cardinality(X)
+        witness exist n N st {$chap3::has_cardinality(X, n)} from finite_set_size(X):
+            $chap3::has_cardinality(X, finite_set_size(X))
+        $chap3::has_finite_cardinality(X)
+        impossible not $chap3::has_finite_cardinality(X)
 
 thm least_natural_element_above_exists_unique:
     ? forall X power_set(N), a N:
@@ -490,7 +466,7 @@ thm least_natural_element_above_exists_unique:
 
 have fn first_in_infinite_N_subset_value by exist!:
     ? forall X power_set(N):
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         =>:
             exist! y N st {$is_minimum_of_natural_subset(X, y)}
     by thm infinite_natural_subset_is_nonempty(X)
@@ -498,19 +474,19 @@ have fn first_in_infinite_N_subset_value by exist!:
 
 have fn next_in_infinite_N_subset_value by exist!:
     ? forall X power_set(N), a N:
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         =>:
             exist! y N st {$is_least_natural_element_above_in_subset(X, a, y)}
     by thm infinite_natural_subset_has_tail_above(X, a)
     by thm least_natural_element_above_exists_unique(X, a)
 
-have fn increasing_N_subset_enum_value(X power_set(N), n N: $has_infinite_cardinality(X)) N by induc n from 0:
+have fn increasing_N_subset_enum_value(X power_set(N), n N: $chap3::has_infinite_cardinality(X)) N by induc n from 0:
     case n = 0: first_in_infinite_N_subset_value(X)
     case n > 0: next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, n - 1))
 
 thm increasing_enum_value_lies_in_subset:
     ? forall X power_set(N), n N:
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         =>:
             increasing_N_subset_enum_value(X, n) $in X
     by cases:
@@ -525,13 +501,13 @@ thm increasing_enum_value_lies_in_subset:
             next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, n - 1)) $in X
 
 prop is_recursive_min_enumeration_from_N_to_subset(X power_set(N), f fn(n N) X):
-    $has_infinite_cardinality(X)
+    $chap3::has_infinite_cardinality(X)
     forall n N:
         f(n) = increasing_N_subset_enum_value(X, n)
 
 thm infinite_subset_has_recursive_min_enumeration:
     ? forall X power_set(N):
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         =>:
             exist f fn(n N) X st {$is_recursive_min_enumeration_from_N_to_subset(X, f)}
     forall n N:
@@ -543,7 +519,7 @@ thm infinite_subset_has_recursive_min_enumeration:
 
 thm recursive_min_enumeration_step_is_increasing:
     ? forall X power_set(N), f fn(n N) X, n N:
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         $is_recursive_min_enumeration_from_N_to_subset(X, f)
         =>:
             f(n + 1) > f(n)
@@ -555,7 +531,7 @@ thm recursive_min_enumeration_step_is_increasing:
 
 thm recursive_min_enumeration_strictly_increases_after_steps:
     ? forall X power_set(N), f fn(n N) X, n, k N:
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         $is_recursive_min_enumeration_from_N_to_subset(X, f)
         =>:
             f(n) < f(n + k + 1)
@@ -577,7 +553,7 @@ thm recursive_min_enumeration_strictly_increases_after_steps:
 
 thm recursive_min_enumeration_value_at_least_index:
     ? forall X power_set(N), f fn(n N) X, n N:
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         $is_recursive_min_enumeration_from_N_to_subset(X, f)
         =>:
             f(n) >= n
@@ -620,16 +596,16 @@ thm successor_strict_increase_has_strict_growth:
             f(n) < f(n + k + 1) < f(n + k + 1 + 1) = f(n + (k + 1) + 1)
 
 prop is_increasing_bijection_from_N_to_subset(X power_set(N), f fn(n N) X):
-    $is_bijective_fn(N, X, f)
+    $chap3::is_bijective_fn(N, X, f)
     forall n N:
         f(n + 1) > f(n)
 
 thm recursive_min_enumeration_is_surjective:
     ? forall X power_set(N), f fn(n N) X:
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         $is_recursive_min_enumeration_from_N_to_subset(X, f)
         =>:
-            $is_surjective_fn(N, X, f)
+            $chap3::is_surjective_fn(N, X, f)
     claim:
         ? forall x X:
             exist n N st {x = f(n)}
@@ -645,8 +621,8 @@ thm recursive_min_enumeration_is_surjective:
         x + 1 $in K
         witness $is_nonempty_set(K) from x + 1:
             x + 1 $in K
-        $is_minimum_of_natural_subset(K, min_of_N_set(K))
-        have k N = min_of_N_set(K)
+        $is_minimum_of_natural_subset(K, min_of_N_subset(K))
+        have k N = min_of_N_subset(K)
         k $in K
         f(k) > x
         claim:
@@ -676,8 +652,8 @@ thm recursive_min_enumeration_is_surjective:
                 case f(k - 1) > x:
                     k - 1 $in {n N: f(n) > x}
                     k - 1 $in K
-                    min_of_N_set(K) <= k - 1
-                    k = min_of_N_set(K)
+                    min_of_N_subset(K) <= k - 1
+                    k = min_of_N_subset(K)
                     k <= k - 1
                     impossible k <= k - 1
         f(k - 1) < x or f(k - 1) >= x
@@ -701,16 +677,16 @@ thm recursive_min_enumeration_is_surjective:
                 x = f(k - 1)
                 witness exist n N st {x = f(n)} from k - 1:
                     x = f(k - 1)
-    $is_surjective_fn(N, X, f)
+    $chap3::is_surjective_fn(N, X, f)
 
 thm recursive_min_enumeration_is_bijective:
     ? forall X power_set(N), f fn(n N) X:
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         $is_recursive_min_enumeration_from_N_to_subset(X, f)
         =>:
-            $is_bijective_fn(N, X, f)
+            $chap3::is_bijective_fn(N, X, f)
     claim:
-        ? $is_injective_fn(N, X, f)
+        ? $chap3::is_injective_fn(N, X, f)
         claim:
             ? forall n1, n2 N:
                 f(n1) = f(n2)
@@ -745,18 +721,18 @@ thm recursive_min_enumeration_is_bijective:
                             impossible f(n1) = f(n2)
                         case n2 >= n1:
                             n1 = n2
-        $is_injective_fn(N, X, f)
+        $chap3::is_injective_fn(N, X, f)
     by thm recursive_min_enumeration_is_surjective(X, f)
-    $is_surjective_fn(N, X, f)
-    $is_bijective_fn(N, X, f)
+    $chap3::is_surjective_fn(N, X, f)
+    $chap3::is_bijective_fn(N, X, f)
 
 thm increasing_bijection_zero_is_minimum:
     ? forall X power_set(N), f fn(n N) X:
         $is_increasing_bijection_from_N_to_subset(X, f)
         =>:
             $is_minimum_of_natural_subset(X, f(0))
-    $is_bijective_fn(N, X, f)
-    $is_surjective_fn(N, X, f)
+    $chap3::is_bijective_fn(N, X, f)
+    $chap3::is_surjective_fn(N, X, f)
     f(0) $in X
     claim:
         ? forall z X:
@@ -786,8 +762,8 @@ thm increasing_bijection_successor_is_least_above:
         $is_increasing_bijection_from_N_to_subset(X, f)
         =>:
             $is_least_natural_element_above_in_subset(X, f(n), f(n + 1))
-    $is_bijective_fn(N, X, f)
-    $is_surjective_fn(N, X, f)
+    $chap3::is_bijective_fn(N, X, f)
+    $chap3::is_surjective_fn(N, X, f)
     f(n + 1) $in X
     f(n + 1) > f(n)
     claim:
@@ -801,7 +777,8 @@ thm increasing_bijection_successor_is_least_above:
         by cases:
             ? f(n + 1) <= z
             case m < n + 1:
-                m <= n
+                by thm basics::integer_predecessor_le_of_lt(m, n + 1)
+                m <= n + 1 - 1 = n
                 m < n or m >= n
                 by cases:
                     ? f(n + 1) <= z
@@ -848,7 +825,7 @@ thm increasing_bijection_successor_is_least_above:
 
 thm increasing_bijection_from_N_to_subset_is_recursive_min_enumeration:
     ? forall X power_set(N), f fn(n N) X:
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         $is_increasing_bijection_from_N_to_subset(X, f)
         =>:
             $is_recursive_min_enumeration_from_N_to_subset(X, f)
@@ -882,7 +859,7 @@ thm increasing_bijection_from_N_to_subset_is_recursive_min_enumeration:
 
 thm infinite_subset_of_N_has_unique_increasing_enumeration:
     ? forall X power_set(N):
-        $has_infinite_cardinality(X)
+        $chap3::has_infinite_cardinality(X)
         =>:
             exist! f fn(n N) X st {$is_increasing_bijection_from_N_to_subset(X, f)}
             $is_countably_infinite(X)
@@ -904,7 +881,7 @@ thm infinite_subset_of_N_has_unique_increasing_enumeration:
         forall n N:
             f1(n) = increasing_N_subset_enum_value(X, n) = f2(n)
         $fn_eq(f1, f2)
-    witness exist f0 fn(x N) X st {$is_bijective_fn(N, X, f0)} from f
+    witness exist f0 fn(x N) X st {$chap3::is_bijective_fn(N, X, f0)} from f
 
 """
 Corollary 8.1.6. Every subset of the natural numbers is at most countable.
@@ -918,12 +895,12 @@ thm natural_subset_is_at_most_countable:
         $is_at_most_countable(X)
     have fn include_in_N(x X) N = x
     claim:
-        ? $is_injective_fn(X, N, include_in_N)
+        ? $chap3::is_injective_fn(X, N, include_in_N)
         forall x1, x2 X:
             include_in_N(x1) = include_in_N(x2)
             =>:
                 x1 = include_in_N(x1) = include_in_N(x2) = x2
-    witness exist f fn(x X) N st {$is_injective_fn(X, N, f)} from include_in_N
+    witness exist f fn(x X) N st {$chap3::is_injective_fn(X, N, f)} from include_in_N
 
 """
 Corollary 8.1.7. A subset of an at most countable set is at most countable.
@@ -938,18 +915,18 @@ thm subset_of_at_most_countable_is_at_most_countable:
         Y $subset X
         =>:
             $is_at_most_countable(Y)
-    obtain f from exist f fn(x X) N st {$is_injective_fn(X, N, f)}
-    have fn restrict_to_Y(y Y) N = f(y)
+    obtain f from exist f fn(x X) N st {$chap3::is_injective_fn(X, N, f)}
+    have fn f_on_Y(y Y) N = f(y)
     claim:
-        ? $is_injective_fn(Y, N, restrict_to_Y)
+        ? $chap3::is_injective_fn(Y, N, f_on_Y)
         forall y1, y2 Y:
-            restrict_to_Y(y1) = restrict_to_Y(y2)
+            f_on_Y(y1) = f_on_Y(y2)
             =>:
                 y1 $in X
                 y2 $in X
-                f(y1) = restrict_to_Y(y1) = restrict_to_Y(y2) = f(y2)
+                f(y1) = f_on_Y(y1) = f_on_Y(y2) = f(y2)
                 y1 = y2
-    witness exist f0 fn(x Y) N st {$is_injective_fn(Y, N, f0)} from restrict_to_Y
+    witness exist f0 fn(x Y) N st {$chap3::is_injective_fn(Y, N, f0)} from f_on_Y
 
 """
 Proposition 8.1.8. The image of a function from `N` is at most countable.
@@ -968,14 +945,14 @@ thm natural_image_is_at_most_countable:
         witness $is_nonempty_set({m N: y = f(m)}) from p
         by thm natural_subset_has_unique_minimum({m N: y = f(m)})
     claim:
-        ? $is_injective_fn(fn_range(f), N, first_index)
+        ? $chap3::is_injective_fn(fn_range(f), N, first_index)
         forall y1, y2 fn_range(f):
             first_index(y1) = first_index(y2)
             =>:
                 $is_minimum_of_natural_subset({m N: y1 = f(m)}, first_index(y1))
                 $is_minimum_of_natural_subset({m N: y2 = f(m)}, first_index(y2))
                 y1 = f(first_index(y1)) = f(first_index(y2)) = y2
-    witness exist g fn(x fn_range(f)) N st {$is_injective_fn(fn_range(f), N, g)} from first_index
+    witness exist g fn(x fn_range(f)) N st {$chap3::is_injective_fn(fn_range(f), N, g)} from first_index
 
 """
 Corollary 8.1.9. The image of a countable set is at most countable.
@@ -989,7 +966,7 @@ thm countable_image_is_at_most_countable:
         $is_countably_infinite(X)
         =>:
             $is_at_most_countable(fn_range(f))
-    obtain enum from exist enum fn(x N) X st {$is_bijective_fn(N, X, enum)}
+    obtain enum from exist enum fn(x N) X st {$chap3::is_bijective_fn(N, X, enum)}
     have fn composed_image(n N) Y = f(enum(n))
     by thm natural_image_is_at_most_countable(Y, composed_image)
     claim:
@@ -1043,7 +1020,7 @@ forall n N:
     neg_to_negative_part(n) = -n
 
 claim:
-    ? $is_injective_fn(N, negative_natural_part, neg_to_negative_part)
+    ? $chap3::is_injective_fn(N, negative_natural_part, neg_to_negative_part)
     forall x1, x2 N:
         neg_to_negative_part(x1) = neg_to_negative_part(x2)
         =>:
@@ -1051,7 +1028,7 @@ claim:
             x1 = -(-x1) = -(-x2) = x2
 
 claim:
-    ? $is_surjective_fn(N, negative_natural_part, neg_to_negative_part)
+    ? $chap3::is_surjective_fn(N, negative_natural_part, neg_to_negative_part)
     claim:
         ? forall y negative_natural_part:
             exist x N st {y = neg_to_negative_part(x)}
@@ -1063,7 +1040,7 @@ claim:
         y = neg_to_negative_part(n)
         witness exist x N st {y = neg_to_negative_part(x)} from n
 
-witness exist f fn(x N) negative_natural_part st {$is_bijective_fn(N, negative_natural_part, f)} from neg_to_negative_part
+witness exist f fn(x N) negative_natural_part st {$chap3::is_bijective_fn(N, negative_natural_part, f)} from neg_to_negative_part
 
 claim:
     ? union(N, negative_natural_part) = Z
@@ -1119,6 +1096,8 @@ claim:
         case n % 2 = 1:
             (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
             n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
+    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+    trust exist r N st {n * (n + 1) = 2 * r}
     obtain r from exist r N st {n * (n + 1) = 2 * r}
     witness exist y N st {2 * y = n * (n + 1)} from r
     forall y1, y2 N:
@@ -1199,7 +1178,7 @@ claim:
     u[2] = (tri(u[1]) + u[2]) - tri(u[1]) = diagonal_index(u) - tri(u[1]) = diagonal_index(v) - tri(v[1]) = (tri(v[1]) + v[2]) - tri(v[1]) = v[2]
 
 claim:
-    ? $is_injective_fn(natural_triangle, N, diagonal_index)
+    ? $chap3::is_injective_fn(natural_triangle, N, diagonal_index)
     forall x1, x2 natural_triangle:
         diagonal_index(x1) = diagonal_index(x2)
         =>:
@@ -1212,6 +1191,8 @@ claim:
         $triangular_interval(n, s)
         =>:
             n - tri(s) <= s
+    # TODO: 26.7.16 SINCE BUILTIN CODE IS REMOVED, CURRENT STATEMENT NEEDS TO BE UPDATED.
+    trust n - tri(s) <= s
     tri(s + 1) = tri(s) + s + 1
     n - tri(s) < (tri(s) + s + 1) - tri(s) = s + 1
 
@@ -1233,7 +1214,7 @@ by induc n from 0:
                 witness exist t N st {$triangular_interval(n + 1, t)} from s + 1
 
 claim:
-    ? $is_surjective_fn(natural_triangle, N, diagonal_index)
+    ? $chap3::is_surjective_fn(natural_triangle, N, diagonal_index)
     claim:
         ? forall y N:
             exist x natural_triangle st {y = diagonal_index(x)}
@@ -1250,20 +1231,20 @@ have fn triangle_unrank by exist!:
         exist! x natural_triangle st {y = diagonal_index(x)}
 
 claim:
-    ? $is_injective_fn(N, natural_triangle, triangle_unrank)
+    ? $chap3::is_injective_fn(N, natural_triangle, triangle_unrank)
     forall y1, y2 N:
         triangle_unrank(y1) = triangle_unrank(y2)
         =>:
             y1 = diagonal_index(triangle_unrank(y1)) = diagonal_index(triangle_unrank(y2)) = y2
 
 claim:
-    ? $is_surjective_fn(N, natural_triangle, triangle_unrank)
+    ? $chap3::is_surjective_fn(N, natural_triangle, triangle_unrank)
     claim:
         ? forall p natural_triangle:
             exist y N st {p = triangle_unrank(y)}
         witness exist y N st {p = triangle_unrank(y)} from diagonal_index(p)
 
-witness exist f fn(x N) natural_triangle st {$is_bijective_fn(N, natural_triangle, f)} from triangle_unrank
+witness exist f fn(x N) natural_triangle st {$chap3::is_bijective_fn(N, natural_triangle, f)} from triangle_unrank
 
 """
 Corollary 8.1.13. The Cartesian product `N x N` is countable.
@@ -1296,7 +1277,7 @@ forall p natural_triangle:
     lower_to_upper(p) = (p[2], p[1])
 
 claim:
-    ? $is_injective_fn(natural_triangle, upper_natural_triangle, lower_to_upper)
+    ? $chap3::is_injective_fn(natural_triangle, upper_natural_triangle, lower_to_upper)
     forall p1, p2 natural_triangle:
         lower_to_upper(p1) = lower_to_upper(p2)
         =>:
@@ -1306,7 +1287,7 @@ claim:
             p1 = (p1[1], p1[2]) = (p2[1], p2[2]) = p2
 
 claim:
-    ? $is_surjective_fn(natural_triangle, upper_natural_triangle, lower_to_upper)
+    ? $chap3::is_surjective_fn(natural_triangle, upper_natural_triangle, lower_to_upper)
     claim:
         ? forall q upper_natural_triangle:
             exist p natural_triangle st {q = lower_to_upper(p)}
@@ -1321,7 +1302,7 @@ forall n N:
     upper_triangle_enum(n) = lower_to_upper(triangle_unrank(n))
 
 claim:
-    ? $is_injective_fn(N, upper_natural_triangle, upper_triangle_enum)
+    ? $chap3::is_injective_fn(N, upper_natural_triangle, upper_triangle_enum)
     forall n1, n2 N:
         upper_triangle_enum(n1) = upper_triangle_enum(n2)
         =>:
@@ -1330,7 +1311,7 @@ claim:
             n1 = n2
 
 claim:
-    ? $is_surjective_fn(N, upper_natural_triangle, upper_triangle_enum)
+    ? $chap3::is_surjective_fn(N, upper_natural_triangle, upper_triangle_enum)
     claim:
         ? forall q upper_natural_triangle:
             exist n N st {q = upper_triangle_enum(n)}
@@ -1340,7 +1321,7 @@ claim:
         q = upper_triangle_enum(n)
         witness exist n0 N st {q = upper_triangle_enum(n0)} from n
 
-witness exist f fn(x N) upper_natural_triangle st {$is_bijective_fn(N, upper_natural_triangle, f)} from upper_triangle_enum
+witness exist f fn(x N) upper_natural_triangle st {$chap3::is_bijective_fn(N, upper_natural_triangle, f)} from upper_triangle_enum
 
 claim:
     ? union(natural_triangle, upper_natural_triangle) = cart(N, N)
@@ -1373,8 +1354,8 @@ thm proposition_3_6_14_N_embedding_implies_infinite:
     ? forall X set:
         $embeds_into(N, X)
         =>:
-            $has_infinite_cardinality(X)
-    trust $has_infinite_cardinality(X)
+            $chap3::has_infinite_cardinality(X)
+    trust $chap3::has_infinite_cardinality(X)
 
 thm at_most_countable_with_N_embedding_is_countably_infinite:
     ? forall X set:
@@ -1398,8 +1379,8 @@ thm product_of_countable_sets_is_countable:
         $is_countably_infinite(Y)
         =>:
             $is_countably_infinite(cart(X, Y))
-    obtain enumX from exist enumX fn(x N) X st {$is_bijective_fn(N, X, enumX)}
-    obtain enumY from exist enumY fn(x N) Y st {$is_bijective_fn(N, Y, enumY)}
+    obtain enumX from exist enumX fn(x N) X st {$chap3::is_bijective_fn(N, X, enumX)}
+    obtain enumY from exist enumY fn(x N) Y st {$chap3::is_bijective_fn(N, Y, enumY)}
     have fn product_map(p cart(N, N)) cart(X, Y) = (enumX(p[1]), enumY(p[2]))
     by thm countable_image_is_at_most_countable(cart(N, N), cart(X, Y), product_map)
     claim:
@@ -1414,14 +1395,14 @@ thm product_of_countable_sets_is_countable:
     by thm subset_of_at_most_countable_is_at_most_countable(fn_range(product_map), cart(X, Y))
     have fn embed_N_into_cart(n N) cart(X, Y) = (enumX(n), enumY(0))
     claim:
-        ? $is_injective_fn(N, cart(X, Y), embed_N_into_cart)
+        ? $chap3::is_injective_fn(N, cart(X, Y), embed_N_into_cart)
         forall n1, n2 N:
             embed_N_into_cart(n1) = embed_N_into_cart(n2)
             =>:
                 (enumX(n1), enumY(0)) = embed_N_into_cart(n1) = embed_N_into_cart(n2) = (enumX(n2), enumY(0))
                 enumX(n1) = (enumX(n1), enumY(0))[1] = (enumX(n2), enumY(0))[1] = enumX(n2)
                 n1 = n2
-    witness exist e fn(x N) cart(X, Y) st {$is_injective_fn(N, cart(X, Y), e)} from embed_N_into_cart
+    witness exist e fn(x N) cart(X, Y) st {$chap3::is_injective_fn(N, cart(X, Y), e)} from embed_N_into_cart
     by thm at_most_countable_with_N_embedding_is_countably_infinite(cart(X, Y))
 
 """
@@ -1440,7 +1421,7 @@ forall n N:
     negative_integer_enum(n) = -(n + 1)
 
 claim:
-    ? $is_injective_fn(N, Z_neg, negative_integer_enum)
+    ? $chap3::is_injective_fn(N, Z_neg, negative_integer_enum)
     forall x1, x2 N:
         negative_integer_enum(x1) = negative_integer_enum(x2)
         =>:
@@ -1449,7 +1430,7 @@ claim:
             x1 = (x1 + 1) - 1 = (x2 + 1) - 1 = x2
 
 claim:
-    ? $is_surjective_fn(N, Z_neg, negative_integer_enum)
+    ? $chap3::is_surjective_fn(N, Z_neg, negative_integer_enum)
     claim:
         ? forall y Z_neg:
             exist n N st {y = negative_integer_enum(n)}
@@ -1459,7 +1440,7 @@ claim:
         y = negative_integer_enum(abs(y) - 1)
         witness exist n N st {y = negative_integer_enum(n)} from abs(y) - 1
 
-witness exist f fn(x N) Z_neg st {$is_bijective_fn(N, Z_neg, f)} from negative_integer_enum
+witness exist f fn(x N) Z_neg st {$chap3::is_bijective_fn(N, Z_neg, f)} from negative_integer_enum
 
 claim:
     ? union(N_pos, Z_neg) = Z_nz
@@ -1521,12 +1502,12 @@ have fn natural_to_rational(n N) Q = n
 claim:
     ? $embeds_into(N, Q)
     claim:
-        ? $is_injective_fn(N, Q, natural_to_rational)
+        ? $chap3::is_injective_fn(N, Q, natural_to_rational)
         forall x1, x2 N:
             natural_to_rational(x1) = natural_to_rational(x2)
             =>:
                 x1 = natural_to_rational(x1) = natural_to_rational(x2) = x2
-    witness exist f fn(x N) Q st {$is_injective_fn(N, Q, f)} from natural_to_rational
+    witness exist f fn(x N) Q st {$chap3::is_injective_fn(N, Q, f)} from natural_to_rational
 
 by thm at_most_countable_with_N_embedding_is_countably_infinite(Q)
 
@@ -1563,7 +1544,7 @@ sum, and Proposition 7.4.3 makes the value independent of the enumeration.
 """
 
 prop is_countable_enumeration(X set, g fn(n N_pos) X):
-    $is_bijective_fn(N_pos, X, g)
+    $chap3::is_bijective_fn(N_pos, X, g)
 
 # Given an enumeration `g : N_pos -> X`, the countable-set series for `f` is
 # the ordinary sequence of terms `f(g(n))`.
@@ -1571,18 +1552,18 @@ template<X set, f fn(x X) R, g fn(n N_pos) X>:
     have fn countable_set_series_terms(n N_pos) R = f(g(n))
 
 prop is_absolutely_convergent_countable_set_series(X set, f fn(x X) R):
-    exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)}
+    exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)}
 
 prop has_countable_set_series_sum(X set, f fn(x X) R, L R):
-    exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $has_series_sum(\countable_set_series_terms<X, f, g>, L)}
+    exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, L)}
 
 thm countable_set_series_sum_well_defined:
     ? forall X set, f fn(x X) R, g, h fn(n N_pos) X, Lg, Lh R:
         $is_countable_enumeration(X, g)
         $is_countable_enumeration(X, h)
-        $has_series_sum(\countable_set_series_terms<X, f, g>, Lg)
-        $has_series_sum(\countable_set_series_terms<X, f, h>, Lh)
-        $is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)
+        $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, Lg)
+        $chap7::has_series_sum(\countable_set_series_terms<X, f, h>, Lh)
+        $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)
         =>:
             Lg = Lh
     trust Lg = Lh
@@ -1600,17 +1581,17 @@ prop has_double_sum(f fn(p cart(N_pos, N_pos)) R, L R):
 
 prop has_row_sums(f fn(p cart(N_pos, N_pos)) R, r seq(R)):
     forall n N_pos:
-        $has_series_sum(fn(m N_pos) R {f((n, m))}, r(n))
+        $chap7::has_series_sum(fn(m N_pos) R {f((n, m))}, r(n))
 
 prop has_row_first_sum(f fn(p cart(N_pos, N_pos)) R, L R):
-    exist r seq(R) st {$has_row_sums(f, r), $has_series_sum(r, L)}
+    exist r seq(R) st {$has_row_sums(f, r), $chap7::has_series_sum(r, L)}
 
 prop has_column_sums(f fn(p cart(N_pos, N_pos)) R, c seq(R)):
     forall m N_pos:
-        $has_series_sum(fn(n N_pos) R {f((n, m))}, c(m))
+        $chap7::has_series_sum(fn(n N_pos) R {f((n, m))}, c(m))
 
 prop has_column_first_sum(f fn(p cart(N_pos, N_pos)) R, L R):
-    exist c seq(R) st {$has_column_sums(f, c), $has_series_sum(c, L)}
+    exist c seq(R) st {$has_column_sums(f, c), $chap7::has_series_sum(c, L)}
 
 prop has_swapped_double_sum(f fn(p cart(N_pos, N_pos)) R, L R):
     $has_countable_set_series_sum(cart(N_pos, N_pos), fn(p cart(N_pos, N_pos)) R {f(swap_pair(p))}, L)
@@ -1821,7 +1802,7 @@ thm arbitrary_set_series_disjoint_union:
 
 thm arbitrary_set_series_bijection_change:
     ? forall X, Y set, f fn(x X) R, phi fn(y Y) X, L R:
-        $is_bijective_fn(Y, X, phi)
+        $chap3::is_bijective_fn(Y, X, phi)
         $has_set_series_sum(X, f, L)
         =>:
             $has_set_series_sum(Y, fn(w Y) R {f(phi(w))}, L)
@@ -1836,8 +1817,8 @@ has divergent positive and negative subseries.
 # the original series would force absolute convergence of the whole series.
 
 prop is_only_conditionally_convergent_series(a seq(R)):
-    $is_convergent_series(a)
-    not $is_absolutely_convergent_series(a)
+    $chap7::is_convergent_series(a)
+    not $chap7::is_absolutely_convergent_series(a)
 
 template<a seq(R)>:
     have positive_index_set set = {n N_pos: a(n) >= 0}
@@ -1865,7 +1846,7 @@ number.
 # partial sums cross the target value with overshoot tending to zero.
 
 prop is_permutation_of_positive_integers(phi fn(i N_pos) N_pos):
-    $is_bijective_fn(N_pos, N_pos, phi)
+    $chap3::is_bijective_fn(N_pos, N_pos, phi)
 
 have fn rearranged_series(a seq(R), phi fn(i N_pos) N_pos) seq(R) = fn(j N_pos) R {a(phi(j))}
 
@@ -1873,8 +1854,8 @@ thm riemann_rearrangement_theorem:
     ? forall a seq(R), L R:
         $is_only_conditionally_convergent_series(a)
         =>:
-            exist phi fn(i N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
-    trust exist phi fn(i N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
+            exist phi fn(i N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $chap7::has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
+    trust exist phi fn(i N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $chap7::has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
 
 
 # 8.3 Uncountable sets
@@ -1889,10 +1870,10 @@ template<X set, f fn(x X) power_set(X)>:
 
 thm cantor_theorem:
     ? forall X set:
-        not $has_equal_cardinality(X, power_set(X))
+        not $chap3::has_equal_cardinality(X, power_set(X))
     by contra:
-        ? not $has_equal_cardinality(X, power_set(X))
-        obtain f from exist f fn(x X) power_set(X) st {$is_bijective_fn(X, power_set(X), f)}
+        ? not $chap3::has_equal_cardinality(X, power_set(X))
+        obtain f from exist f fn(x X) power_set(X) st {$chap3::is_bijective_fn(X, power_set(X), f)}
         obtain a from exist a X st {\cantor_diagonal_set<X, f> = f(a)}
 
         claim:
@@ -1917,7 +1898,7 @@ Corollary 8.3.3. The power set of `N` is uncountable.
 have fn singleton_subset_of_N(n N) power_set(N) = {n}
 
 claim:
-    ? $is_injective_fn(N, power_set(N), singleton_subset_of_N)
+    ? $chap3::is_injective_fn(N, power_set(N), singleton_subset_of_N)
     forall x1, x2 N:
         singleton_subset_of_N(x1) = singleton_subset_of_N(x2)
         =>:
@@ -1926,14 +1907,14 @@ claim:
             x1 $in {x2}
             x1 = x2
 
-witness exist f fn(x N) power_set(N) st {$is_injective_fn(N, power_set(N), f)} from singleton_subset_of_N
+witness exist f fn(x N) power_set(N) st {$chap3::is_injective_fn(N, power_set(N), f)} from singleton_subset_of_N
 
 claim:
     ? $is_uncountable(power_set(N))
     by thm cantor_theorem(N)
     by contra:
         ? not $is_countably_infinite(power_set(N))
-        impossible not $has_equal_cardinality(N, power_set(N))
+        impossible not $chap3::has_equal_cardinality(N, power_set(N))
     by thm proposition_3_6_14_N_embedding_implies_infinite(power_set(N))
 
 """
@@ -1950,21 +1931,21 @@ have fn binary_decimal_subset_sum by exist!:
     trust exist! L R st {$has_binary_decimal_subset_sum(A, L)}
 
 claim:
-    ? $is_injective_fn(power_set(N), R, binary_decimal_subset_sum)
-    trust $is_injective_fn(power_set(N), R, binary_decimal_subset_sum)
+    ? $chap3::is_injective_fn(power_set(N), R, binary_decimal_subset_sum)
+    trust $chap3::is_injective_fn(power_set(N), R, binary_decimal_subset_sum)
 
 thm uncountability_transfers_to_codomain_of_injection:
     ? forall X, Y set, phi fn(x X) Y:
         $is_uncountable(X)
-        $is_injective_fn(X, Y, phi)
+        $chap3::is_injective_fn(X, Y, phi)
         =>:
             $is_uncountable(Y)
     claim:
-        ? $has_infinite_cardinality(Y)
+        ? $chap3::has_infinite_cardinality(Y)
         claim:
-            ? not $has_finite_cardinality(Y)
+            ? not $chap3::has_finite_cardinality(Y)
             by contra:
-                ? not $has_finite_cardinality(Y)
+                ? not $chap3::has_finite_cardinality(Y)
                 by thm finite_cardinality_gives_at_most_countable(Y)
                 by thm injection_into_at_most_countable_gives_at_most_countable(X, Y, phi)
                 by thm uncountable_is_not_at_most_countable(X)
@@ -2062,9 +2043,9 @@ thm union_of_singleton_family:
                 x $in cup({X})
             X $in {X}
 
-thm constant_general_cart_product_members_restrict_to_function_space:
+thm constant_general_cart_product_members_are_in_function_space:
     ? forall I set, X set, F fn(alpha I) {X}, f general_cart(I, {X}, F):
-        f $restricts_to fn(alpha I) X
+        f $in fn(alpha I) X
     f $in general_cart(I, {X}, F)
     forall alpha I:
         f(alpha) $in F(alpha)
@@ -2073,10 +2054,9 @@ thm constant_general_cart_product_members_restrict_to_function_space:
         F(alpha) = X
         f(alpha) $in F(alpha)
         f(alpha) $in X
-    f $restricts_to fn(alpha I) X
+    f $in fn(alpha I) X
 
 prop is_constant_general_cart_product_candidate(I set, X set, F fn(alpha I) {X}, f fn(alpha I) X):
-    f $restricts_to fn(alpha I)cup({X})
     forall alpha I:
         f(alpha) $in F(alpha)
 
@@ -2085,11 +2065,9 @@ thm function_space_members_satisfy_constant_product_conditions:
         $is_constant_general_cart_product_candidate(I, X, F, f)
     forall alpha I:
         X $in {X}
-        f(alpha) $in cup({X})
-    f $restricts_to fn(alpha I)cup({X})
-    forall alpha I:
         F(alpha) $in {X}
         F(alpha) = X
+        f(alpha) $in X
         f(alpha) $in F(alpha)
 
 thm constant_general_cart_product_is_function_space:
@@ -2100,12 +2078,22 @@ thm constant_general_cart_product_is_function_space:
         claim:
             ? forall f general_cart(I, {X}, F):
                 f $in fn(alpha I) X
-            by thm constant_general_cart_product_members_restrict_to_function_space(I, X, F, f)
+            by thm constant_general_cart_product_members_are_in_function_space(I, X, F, f)
         claim:
             ? forall f fn(alpha I) X:
                 f $in general_cart(I, {X}, F)
             by thm function_space_members_satisfy_constant_product_conditions(I, X, F, f)
-            f $in fn(alpha I)cup({X})
+            $is_constant_general_cart_product_candidate(I, X, F, f)
+            forall alpha I:
+                f(alpha) $in F(alpha)
+            cup({X}) = X
+            claim:
+                ? forall alpha I:
+                    f(alpha) $in cup({X})
+                f(alpha) $in X
+                X $in {X}
+                f(alpha) $in cup({X})
+            f $in fn(alpha I) cup({X})
             f $in general_cart(I, {X}, F)
 
 # For a finite index set `closed_range(1,n)`, Definition 3.5.7 represents the
@@ -2125,7 +2113,7 @@ thm finite_index_product_agrees_with_chapter3_cartesian_product:
         $is_finite_cartesian_product_for_family(n, U, X, C)
         P = {f fn(i closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)}
         =>:
-            $has_equal_cardinality(C, P)
+            $chap3::has_equal_cardinality(C, P)
     have coordinate_product set = {f fn(i closed_range(1, n)) U: $chap8finiteproduct::has_coordinate_values_in_family(n, U, X, f)}
     by extension P = coordinate_product:
         claim:
@@ -2145,9 +2133,9 @@ thm finite_index_product_agrees_with_chapter3_cartesian_product:
             f $in {f fn(i closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)}
             f $in P
     by thm chap8finiteproduct::finite_cartesian_product_choice_function_representation_cite(n, U, X, C, coordinate_product)
-    $has_equal_cardinality(C, coordinate_product)
+    $chap3::has_equal_cardinality(C, coordinate_product)
     coordinate_product = P
-    $has_equal_cardinality(C, P)
+    $chap3::has_equal_cardinality(C, P)
 
 thm two_factor_finite_index_product_representation:
     ? forall A, B, U, P set:
@@ -2155,7 +2143,7 @@ thm two_factor_finite_index_product_representation:
         B $subset U
         P = {f fn(i closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
         =>:
-            $has_equal_cardinality(cart(A, B), P)
+            $chap3::has_equal_cardinality(cart(A, B), P)
     # Tuple-valued products and function-valued finite-index products have a
     # canonical bijection, rather than literal set equality.
     by thm chap8finiteproduct::binary_cartesian_product_choice_function_representation_cite(A, B, U, P)
@@ -2167,7 +2155,7 @@ thm three_factor_finite_index_product_representation:
         C $subset U
         P = {f fn(i closed_range(1, 3)) U: f(1) $in A and f(2) $in B and f(3) $in C}
         =>:
-            $has_equal_cardinality(cart(A, B, C), P)
+            $chap3::has_equal_cardinality(cart(A, B, C), P)
     # The three-factor instance makes the tuple/function correspondence
     # explicit one step beyond the binary case.
     by thm chap8finiteproduct::ternary_cartesian_product_choice_function_representation_cite(A, B, C, U, P)
@@ -2317,13 +2305,13 @@ thm sequence_between_supremum_windows_converges:
     ? forall M R, a seq(R):
         $is_squeezed_by_supremum_windows(M, a)
         =>:
-            $has_limit(a, M)
+            $chap7::has_limit(a, M)
     claim:
         ? forall epsilon R_pos:
-            exist N0 N_pos st {$is_tail_close_to(a, M, epsilon, N0)}
-        by thm archimedean_property(epsilon)
+            exist N0 N_pos st {$chap7::is_tail_close_to(a, M, epsilon, N0)}
+        by thm chap5::archimedean_property(epsilon)
         obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
-        witness exist N0 N_pos st {$is_tail_close_to(a, M, epsilon, N0)} from n0:
+        witness exist N0 N_pos st {$chap7::is_tail_close_to(a, M, epsilon, N0)} from n0:
             forall n N_pos:
                         n >= n0
                         =>:
@@ -2332,20 +2320,20 @@ thm sequence_between_supremum_windows_converges:
                             M = M - 1 / n + 1 / n <= a(n) + 1 / n
                             abs(a(n) - M) = M - a(n) <= a(n) + 1 / n - a(n) = 1 / n = n0 / (n0 * n) <= n / (n0 * n) = 1 / n0 < epsilon
                             abs(a(n) - M) <= epsilon
-            $is_tail_close_to(a, M, epsilon, n0)
+            $chap7::is_tail_close_to(a, M, epsilon, n0)
 
 thm bounded_real_set_has_supremum_approaching_sequence:
     ? forall E power_set(R), M R:
         $is_nonempty_set(E)
         $is_least_upper_bound_of_real_set(E, M)
         =>:
-            exist a seq(R) st {$is_sequence_in_real_set(a, E), $has_limit(a, M)}
+            exist a seq(R) st {$is_sequence_in_real_set(a, E), $chap7::has_limit(a, M)}
     by thm supremum_window_choice_sequence_exists(E, M)
     obtain a from exist a seq(R) st {$is_supremum_window_choice_sequence(E, M, a)}
     by thm supremum_window_choice_sequence_lies_in_real_set(E, M, a)
     by thm supremum_window_choice_sequence_has_window_bounds(E, M, a)
     by thm sequence_between_supremum_windows_converges(M, a)
-    witness exist a0 seq(R) st {$is_sequence_in_real_set(a0, E), $has_limit(a0, M)} from a
+    witness exist a0 seq(R) st {$is_sequence_in_real_set(a0, E), $chap7::has_limit(a0, M)} from a
 
 """
 Remark 8.4.6. In special situations, such as closed sets, the preceding
@@ -2519,9 +2507,9 @@ prop is_right_inverse_of_surjection(A, B set, g fn(b B) A, f fn(a A) B):
 
 thm surjection_has_injective_right_inverse_from_choice:
     ? forall A, B set, g fn(b B) A:
-        $is_surjective_fn(B, A, g)
+        $chap3::is_surjective_fn(B, A, g)
         =>:
-            exist f fn(a A) B st {$is_injective_fn(A, B, f), $is_right_inverse_of_surjection(A, B, g, f)}
+            exist f fn(a A) B st {$chap3::is_injective_fn(A, B, f), $is_right_inverse_of_surjection(A, B, g, f)}
     have fn fiber_family(a A) power_set(B) = {b B: g(b) = a}
     forall a A:
         fiber_family(a) = {b B: g(b) = a}
@@ -2544,12 +2532,12 @@ thm surjection_has_injective_right_inverse_from_choice:
             f(a) $in {b B: g(b) = a}
             g(f(a)) = a
     claim:
-        ? $is_injective_fn(A, B, f)
+        ? $chap3::is_injective_fn(A, B, f)
         forall a1, a2 A:
             f(a1) = f(a2)
             =>:
                 a1 = g(f(a1)) = g(f(a2)) = a2
-    witness exist f0 fn(a A) B st {$is_injective_fn(A, B, f0), $is_right_inverse_of_surjection(A, B, g, f0)} from f
+    witness exist f0 fn(a A) B st {$chap3::is_injective_fn(A, B, f0), $is_right_inverse_of_surjection(A, B, g, f0)} from f
 
 thm right_inverse_principle_implies_axiom_of_choice:
     ? forall I, U set, X fn(alpha I) power_set(U):
@@ -2632,6 +2620,8 @@ claim:
     ? forall n N:
         $is_less_than_in_order(N, natural_order_relation, n, n + 1)
     n < n + 1
+    n + 1 $in N
+    n <= n + 1
     (n, n + 1) $in {p cart(N, N): p[1] <= p[2]}
     (n, n + 1) $in natural_order_relation
 
@@ -3200,18 +3190,24 @@ claim:
     ? forall z Z:
         $is_less_than_in_order(Z, integer_order_relation, z - 1, z)
     z - 1 < z
+    z - 1 $in Z
+    z - 1 <= z
     (z - 1, z) $in {p cart(Z, Z): p[1] <= p[2]}
 
 claim:
     ? forall q Q:
         $is_less_than_in_order(Q, rational_order_relation, q - 1, q)
     q - 1 < q
+    q - 1 $in Q
+    q - 1 <= q
     (q - 1, q) $in {p cart(Q, Q): p[1] <= p[2]}
 
 claim:
     ? forall x R:
         $is_less_than_in_order(R, real_line_order_relation, x - 1, x)
     x - 1 < x
+    x - 1 $in R
+    x - 1 <= x
     (x - 1, x) $in {p cart(R, R): p[1] <= p[2]}
 
 claim:

@@ -82,16 +82,15 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => self.exec_claim_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => self.exec_sketch_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => self.exec_try_stmt(s),
-            Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
-            Stmt::Command(CommandStmt::TrustImportStmt(s)) => self.exec_trust_import_stmt(s),
-            Stmt::Command(CommandStmt::LocalImportStmt(s)) => self.exec_local_import_stmt(s),
-            Stmt::Command(CommandStmt::TrustLocalImportStmt(s)) => {
-                self.exec_trust_local_import_stmt(s)
-            }
+            Stmt::Command(CommandStmt::ImportStmt(_)) => Err(short_exec_error(
+                stmt.clone(),
+                "import is only valid as a top-level isolated terminal statement".to_string(),
+                None,
+                vec![],
+            )),
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
             Stmt::Command(CommandStmt::EvalStmt(s)) => self.exec_eval_stmt(s),
-            Stmt::Command(CommandStmt::EvalByStmt(s)) => self.exec_eval_by_stmt(s),
             Stmt::Command(CommandStmt::UseStrategyStmt(s)) => self.exec_use_strategy_stmt(s),
             Stmt::Command(CommandStmt::StopStrategyStmt(s)) => self.exec_stop_strategy_stmt(s),
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => self.exec_witness_exist_fact(s),
@@ -101,6 +100,7 @@ impl Runtime {
             Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(s)) => {
                 self.exec_by_enumerate_finite_set_stmt(s)
             }
+            Stmt::By(ByStmt::ByFiniteSetInducStmt(s)) => self.exec_by_finite_set_induc_stmt(s),
             Stmt::By(ByStmt::ByInducStmt(s)) => self.exec_by_induc_stmt(s),
             Stmt::By(ByStmt::ByForStmt(s)) => self.exec_by_for_stmt(s),
             Stmt::By(ByStmt::ByExtensionStmt(s)) => self.exec_by_extension_stmt(s),
@@ -203,16 +203,15 @@ impl Runtime {
             }
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_))
             | Stmt::ProofBlock(ProofBlockStmt::TryStmt(_))
-            | Stmt::Command(CommandStmt::EvalStmt(_))
-            | Stmt::Command(CommandStmt::EvalByStmt(_)) => {
+            | Stmt::Command(CommandStmt::EvalStmt(_)) => {
                 Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
             }
-            Stmt::Command(CommandStmt::ImportStmt(s)) => self.exec_import_stmt(s),
-            Stmt::Command(CommandStmt::TrustImportStmt(s)) => self.exec_trust_import_stmt(s),
-            Stmt::Command(CommandStmt::LocalImportStmt(s)) => self.exec_local_import_stmt(s),
-            Stmt::Command(CommandStmt::TrustLocalImportStmt(s)) => {
-                self.exec_trust_local_import_stmt(s)
-            }
+            Stmt::Command(CommandStmt::ImportStmt(_)) => Err(short_exec_error(
+                stmt.clone(),
+                "import is only valid as a top-level isolated terminal statement".to_string(),
+                None,
+                vec![],
+            )),
             Stmt::Command(CommandStmt::DoNothingStmt(s)) => self.exec_do_nothing_stmt(s),
             Stmt::Command(CommandStmt::ClearStmt(s)) => self.exec_clear_stmt(s),
             Stmt::Command(CommandStmt::UseStrategyStmt(s)) => self.exec_use_strategy_stmt(s),
@@ -229,6 +228,9 @@ impl Runtime {
             }
             Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(s)) => {
                 self.exec_by_enumerate_finite_set_stmt_affect_environment_only(s)
+            }
+            Stmt::By(ByStmt::ByFiniteSetInducStmt(s)) => {
+                self.exec_by_finite_set_induc_stmt_affect_environment_only(s)
             }
             Stmt::By(ByStmt::ByInducStmt(s)) => self.exec_by_induc_stmt_affect_environment_only(s),
             Stmt::By(ByStmt::ByForStmt(s)) => self.exec_by_for_stmt_affect_environment_only(s),

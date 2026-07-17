@@ -58,7 +58,7 @@ impl Runtime {
                 .inst_fact(
                     dom_fact,
                     &param_to_arg_map,
-                    ParamObjType::Forall,
+                    ParamObjType::TheoremInstantiation,
                     Some(stmt.line_file.clone()),
                 )
                 .map_err(|e| {
@@ -107,7 +107,7 @@ impl Runtime {
                 .inst_exist_or_and_chain_atomic_fact(
                     then_fact,
                     &param_to_arg_map,
-                    ParamObjType::Forall,
+                    ParamObjType::TheoremInstantiation,
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| {
@@ -185,7 +185,7 @@ impl Runtime {
                 .inst_exist_or_and_chain_atomic_fact(
                     then_fact,
                     &param_to_arg_map,
-                    ParamObjType::Forall,
+                    ParamObjType::TheoremInstantiation,
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| {

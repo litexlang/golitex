@@ -1,0 +1,243 @@
+# The Mechanics of Litex Proof
+
+# Jiachen Shen, Yunwen Guo, and The Litex Team, 2026-05-14. Email: litexlang@outlook.com
+
+# What is Litex?
+
+# _Truth is ever to be found in simplicity, and not in the multiplicity and confusion of things._
+
+# _– Isaac Newton_
+
+# Litex is an open-source language for writing checked mathematical proof code.
+# The basic loop is:
+
+# 1. Write the next mathematical fact.
+# 2. Let Litex check it against the current context.
+# 3. Reuse the verified fact on later lines.
+
+# For example:
+
+forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+        x^2 = 4
+
+# Read this as ordinary mathematics: if a real number `x` is equal to `2`, then
+# `x + 1 = 3` and `x^2 = 4`. Litex checks the two conclusions from the assumption
+# and stores accepted facts for later use.
+
+# The central idea is: **users write facts; Litex grows a verified context**. This
+# book teaches that idea gradually.
+
+# About This Book
+
+# _A mathematician, like a painter or a poet, is a maker of patterns._
+
+# _– G. H. Hardy, *A Mathematician's Apology*_
+
+# This book studies introductory proof patterns in Litex, using Heather Macbeth's
+# **The Mechanics of Proof** as the motivating source and point of comparison.
+# The original book is written around Lean; this unofficial Litex case study asks
+# what similar mathematical training looks like when proofs are written in a
+# language whose surface is closer to ordinary textbook reasoning.
+
+# The goal is not to replace the Lean version. Lean has a broad, mature ecosystem,
+# and Mathlib gives it far more coverage of advanced mathematics today. This book
+# explores a different interface for proof writing: one where the user writes the
+# mathematical argument as a sequence of facts, and the checker reports why each
+# accepted fact follows.
+
+# If this is your first proof language, you do not need to understand proof
+# assistants before starting. Treat Litex like checked mathematical notes. The
+# chapters begin with calculations and slowly add more ways to create a
+# mathematical world.
+
+# Reader path
+
+# Start here:
+
+# 1. **Chapter 1:** create checked calculation chains.
+# 2. **Chapter 2:** reuse facts you proved earlier.
+# 3. **Chapter 3:** create small predicates such as evenness and divisibility.
+# 4. **Chapter 5:** understand the logical patterns behind proof steps.
+# 5. **Chapter 8:** create functions and prove their behavior.
+# 6. **Chapter 9 and Chapter 10:** create sets, relations, and cardinality
+#    arguments.
+
+# The goal is not to memorize syntax. The goal is to learn how to grow a verified
+# mathematical world one fact at a time.
+
+# How to read the proofs in this book
+
+# Many proofs here are written **longer and more completely than necessary** on
+# purpose. The goal is to help new readers see how Litex checks each step, and
+# how a mathematical argument is assembled from verified facts.
+
+# In everyday use, you often do **not** need to write every intermediate line. Once
+# a fact is verified or introduced, Litex stores it and may **infer** useful
+# consequences automatically: sign information from membership, substitutions
+# from known equalities, routine order steps, and similar background facts. When
+# you run an example, the output often shows both the facts you wrote and the
+# facts Litex inferred or matched from the earlier context.
+
+# Every factual statement has exactly one of three outcomes: **true**,
+# **unknown**, or **error**.
+
+# - `true` means Litex found a proof path, such as a builtin rule, a known fact,
+#   or a known `forall` fact.
+# - `unknown` means the statement is meaningful, but Litex did not find enough
+#   verified information to prove it.
+# - `error` means the syntax or well-definedness check failed, for example
+#   because an object was not declared, a function argument is outside its domain,
+#   or the statement contains `1 / 0`.
+
+# So treat the book proofs as **pedagogical full versions**. As you get
+# comfortable, try leaving out steps that Litex already closes for you.
+
+# Checked facts and assumptions
+
+# Most lines in this book are meant to be checked facts: Litex verifies them from
+# the current context. Later chapters also introduce explicit assumptions for
+# background mathematics and unfinished proof skeletons. The distinction matters:
+# a checked fact is something Litex has justified, while an assumption is
+# something the file intentionally takes as given.
+
+# When the book uses assumptions, it says so locally and uses them to keep the
+# mathematical structure visible. A finished proof should minimize broad
+# assumptions; a developing proof may use precise assumptions as temporary
+# scaffolding while the surrounding argument is made checkable.
+
+# Reusing earlier work
+
+# Once a general fact is checked, later lines can use it as a reusable pattern:
+
+sketch:
+    forall x R:
+        x = 2
+        =>:
+            x + 1 = 3
+
+    have a R = 2
+    a + 1 = 3
+
+# The first block teaches Litex a general pattern. The last line is a concrete
+# fact; Litex matches it against the earlier pattern and checks that the needed
+# condition `a = 2` is already in context.
+
+# Claims and named theorems
+
+# This book uses many `claim` blocks because they show the basic Litex habit:
+# prove a fact, store it in the current context, and let later facts reuse it by
+# matching their shape. This is the right style for short, common, or local facts
+# where the later goal already makes the intended rule clear.
+
+# Named theorems have a different job. A `thm` gives an important `forall` fact a
+# name, and later code calls it explicitly with `by thm name(args...)`. Use that
+# style when the theorem is long, standard, classic, or needs parameters that do
+# not all appear in the final conclusion. In those cases, remembering the theorem
+# name is useful: the call says exactly which result is being used.
+
+# Later chapters introduce named theorems, explicit assumptions, abstract
+# predicates, and larger proof skeletons. You do not need those tools for the
+# first pass. Start by getting comfortable with the smaller loop: write a fact,
+# run the checker, and add the missing context when a line is `unknown`.
+
+# Using this book with AI agents
+
+# The examples in this book are useful for human readers, and they are also useful
+# context for AI agents. A good agent workflow follows the same beginner path:
+
+# 1. solve the theorem in natural language,
+# 2. translate the solution into small Litex facts,
+# 3. run the checker,
+# 4. split each failed line into smaller facts,
+# 5. keep the finished proof close to the mathematical explanation.
+
+# This mirrors how Litex proofs grow: from a readable mathematical plan, to a
+# checked context, to a cleaner proof where broad assumptions have been replaced
+# by smaller verified steps. The interesting signal is that Litex gives an agent a
+# feedback loop that looks like ordinary mathematical debugging: state the next
+# fact, check it, read why it failed or succeeded, and refine the proof.
+
+# Chapters
+
+# Chapter 1 — Proofs by calculation
+
+# After Chapter 1, you can create checked calculation chains over the familiar
+# number systems `N`, `Z`, `Q`, and `R`.
+
+# Chapter 2 — Proofs with structure
+
+# After Chapter 2, you can create structured proofs from smaller verified facts:
+# universal statements, implications, local claims, witnesses, contradiction, and
+# case splits.
+
+# Chapter 3 — Parity and divisibility
+
+# After Chapter 3, you can create reusable predicates such as evenness and
+# divisibility, then use them in short forward proofs.
+
+# Chapter 4 — Proofs with structure II
+
+# After Chapter 4, you can combine several hypotheses, prove equivalences, prove
+# uniqueness, and handle impossible branches.
+
+# Chapter 5 — Logic
+
+# After Chapter 5, you can recognize and create the logical patterns behind
+# `and`, `or`, `not`, implication, bounded universal proofs, and negation-normal
+# forms.
+
+# Chapter 6 — Induction
+
+# After Chapter 6, you can create induction proofs, recursive definitions, and
+# proofs by decreasing measures.
+
+# Chapter 7 — Number theory
+
+# After Chapter 7, you can assemble number-theoretic arguments, including
+# divisibility, primes, gcd facts, and Euclid's theorem.
+
+# Chapter 8 — Functions
+
+# After Chapter 8, you can create functions as mathematical objects and prove
+# injectivity, surjectivity, bijectivity, inverses, and a pairing bijection from
+# `N^2` to `N`.
+
+# Chapter 9 — Sets
+
+# After Chapter 9, you can create sets and prove membership, subset, equality,
+# union, intersection, complement, and product facts.
+
+# Chapter 10 — Relations and cardinality
+
+# After Chapter 10, you can create relations, bijections, finite and infinite set
+# arguments, countability proofs, and cardinality comparisons.
+
+# Important Notice: Unofficial Research Case Study
+
+# This book is an **unofficial Litex research case study** inspired by Heather
+# Macbeth's **The Mechanics of Proof**. Macbeth's textbook is the source that
+# motivated this project and shaped many of the proof-pattern topics studied
+# here.
+
+# This project is not an official adaptation, translation, replacement, or
+# companion volume for Macbeth's book. Its purpose is narrower: to test how
+# Litex handles similar introductory proof patterns through fact-level verifier
+# feedback, and to provide runnable examples for evaluating Litex as a proof
+# interface.
+
+# All credit for the original textbook project belongs to Heather Macbeth. If any
+# part of this repository's naming, attribution, or presentation is inappropriate,
+# please contact us at litexlang@outlook.com and we will revise it.
+
+# Acknowledgments
+
+# This book is inspired by Heather Macbeth's **The Mechanics of Proof**.
+
+# The book is written in Litex, a new proof assistant that is designed to be close to ordinary mathematical writing.
+
+# The book is written by Jiachen Shen, Yunwen Guo, and The Litex Team. Special thanks to Heather Macbeth for her inspiring work.
+
+# The book is released under the MIT license.

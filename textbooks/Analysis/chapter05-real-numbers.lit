@@ -1,7 +1,6 @@
 # Chapter 5: The real numbers.
 
 # Chapter 4 establishes the rational distance and epsilon-closeness vocabulary.
-trust local import chap4
 
 # 5.1 Cauchy sequences
 
@@ -80,7 +79,7 @@ terms in the sequence has rational distance at most epsilon.
 
 prop is_epsilon_steady_in_Q(a seq(Q), epsilon Q_pos):
     forall j, k N_pos:
-        $is_close_in_Q(epsilon, a(j), a(k))
+        $chap4::is_close_in_Q(epsilon, a(j), a(k))
 
 """
 Remark 5.1.4. The terms "epsilon-steady" and "eventually epsilon-steady" are
@@ -102,10 +101,10 @@ sketch:
         forall j, k N_pos:
             fn(n N_pos) Q {c}(j) = c
             fn(n N_pos) Q {c}(k) = c
-            dist_Q(fn(n N_pos) Q {c}(j), fn(n N_pos) Q {c}(k)) = dist_Q(c, c)
-            dist_Q(c, c) = 0
-            dist_Q(fn(n N_pos) Q {c}(j), fn(n N_pos) Q {c}(k)) <= epsilon
-            $is_close_in_Q(epsilon, fn(n N_pos) Q {c}(j), fn(n N_pos) Q {c}(k))
+            chap4::dist_Q(fn(n N_pos) Q {c}(j), fn(n N_pos) Q {c}(k)) = chap4::dist_Q(c, c)
+            chap4::dist_Q(c, c) = 0
+            chap4::dist_Q(fn(n N_pos) Q {c}(j), fn(n N_pos) Q {c}(k)) <= epsilon
+            $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {c}(j), fn(n N_pos) Q {c}(k))
         $is_epsilon_steady_in_Q(fn(n N_pos) Q {c}, epsilon)
 
 # `fn(x s1) s2 {object}` denotes a function from `s1` to `s2` whose value at `x`
@@ -127,7 +126,7 @@ prop is_tail_epsilon_steady_in_Q(a seq(Q), epsilon Q_pos, n0 N_pos):
         j >= n0
         k >= n0
         =>:
-            $is_close_in_Q(epsilon, a(j), a(k))
+            $chap4::is_close_in_Q(epsilon, a(j), a(k))
 
 prop has_eventual_epsilon_steadiness_in_Q(a seq(Q), epsilon Q_pos):
     exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(a, epsilon, n0)}
@@ -173,6 +172,14 @@ Proposition 5.1.11. The sequence 1/n is Cauchy.
 # `n0` with `1/n0 < epsilon/2`.  If `j,k >= n0`, then both `1/j` and `1/k` are
 # at most `1/n0 < epsilon/2`; hence both `1/j - 1/k` and its negative are bounded
 # by `epsilon`, so `|1/j - 1/k| <= epsilon`.
+
+# Background interface.  The Archimedean property supplies the reciprocal
+# cutoff used by the rational-sequence estimates below.  The source uses this
+# ordered-field fact as background; its proof remains explicit local trust.
+thm archimedean_property:
+    ? forall epsilon R_pos:
+        exist n N_pos st {1 / n < epsilon}
+    exist n N_pos st {1 / n < epsilon}
 
 claim:
     ? $is_cauchy_sequence_in_Q(fn(n N_pos) Q {1 / n})
@@ -221,10 +228,10 @@ claim:
                     abs(1 / j - 1 / k) <= epsilon
                     fn(n N_pos) Q {1 / n}(j) = 1 / j
                     fn(n N_pos) Q {1 / n}(k) = 1 / k
-                    dist_Q(fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k)) = abs(fn(n N_pos) Q {1 / n}(j) - fn(n N_pos) Q {1 / n}(k))
+                    chap4::dist_Q(fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k)) = abs(fn(n N_pos) Q {1 / n}(j) - fn(n N_pos) Q {1 / n}(k))
                     abs(fn(n N_pos) Q {1 / n}(j) - fn(n N_pos) Q {1 / n}(k)) = abs(1 / j - 1 / k)
-                    dist_Q(fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k)) <= epsilon
-                    $is_close_in_Q(epsilon, fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k))
+                    chap4::dist_Q(fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k))
             $is_tail_epsilon_steady_in_Q(fn(n N_pos) Q {1 / n}, epsilon, n0)
         $has_eventual_epsilon_steadiness_in_Q(fn(n N_pos) Q {1 / n}, epsilon)
     $is_cauchy_sequence_in_Q(fn(n N_pos) Q {1 / n})
@@ -372,9 +379,9 @@ claim:
     forall i N_pos:
         i >= n0
         =>:
-            $is_close_in_Q(1, a(i), a(n0))
-            dist_Q(a(i), a(n0)) <= 1
-            dist_Q(a(i), a(n0)) = abs(a(i) - a(n0))
+            $chap4::is_close_in_Q(1, a(i), a(n0))
+            chap4::dist_Q(a(i), a(n0)) <= 1
+            chap4::dist_Q(a(i), a(n0)) = abs(a(i) - a(n0))
             abs(a(i) - a(n0)) <= 1
             a(i) - a(n0) <= abs(a(i) - a(n0))
             a(i) - a(n0) <= abs(a(i) - a(n0)) <= 1
@@ -429,7 +436,7 @@ condition.
 
 prop is_sequence_close_in_Q(a, b seq(Q), epsilon Q_pos):
     forall n N_pos:
-        $is_close_in_Q(epsilon, a(n), b(n))
+        $chap4::is_close_in_Q(epsilon, a(n), b(n))
 
 """
 Example 5.2.2. The alternating sequences 1, -1, 1, -1, ... and
@@ -456,27 +463,27 @@ sketch:
         =>:
             alternating_one(n) = 1
             alternating_one_point_one(n) = 1.1
-            dist_Q(alternating_one(n), alternating_one_point_one(n)) = abs(1 - 1.1) = abs(-0.1) = 0.1
+            chap4::dist_Q(alternating_one(n), alternating_one_point_one(n)) = abs(1 - 1.1) = abs(-0.1) = 0.1
             0.1 <= 0.1
-            $is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
+            $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
 
     forall n N_pos:
         n % 2 = 0
         =>:
             alternating_one(n) = -1
             alternating_one_point_one(n) = -1.1
-            dist_Q(alternating_one(n), alternating_one_point_one(n)) = abs(-1 - (-1.1)) = abs(0.1) = 0.1
+            chap4::dist_Q(alternating_one(n), alternating_one_point_one(n)) = abs(-1 - (-1.1)) = abs(0.1) = 0.1
             0.1 <= 0.1
-            $is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
+            $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
 
     alternating_one(1) = 1
     alternating_one(2) = -1
-    dist_Q(alternating_one(1), alternating_one(2)) = abs(1 - (-1)) = 2
+    chap4::dist_Q(alternating_one(1), alternating_one(2)) = abs(1 - (-1)) = 2
     2 > 0.1
 
     alternating_one_point_one(1) = 1.1
     alternating_one_point_one(2) = -1.1
-    dist_Q(alternating_one_point_one(1), alternating_one_point_one(2)) = abs(1.1 - (-1.1)) = 2.2
+    chap4::dist_Q(alternating_one_point_one(1), alternating_one_point_one(2)) = abs(1.1 - (-1.1)) = 2.2
     2.2 > 0.1
 
 """
@@ -493,7 +500,7 @@ prop is_tail_close_in_Q(a, b seq(Q), epsilon Q_pos, n0 N_pos):
     forall n N_pos:
         n >= n0
         =>:
-            $is_close_in_Q(epsilon, a(n), b(n))
+            $chap4::is_close_in_Q(epsilon, a(n), b(n))
 
 prop has_eventual_closeness_in_Q(a, b seq(Q), epsilon Q_pos):
     exist n0 N_pos st {$is_tail_close_in_Q(a, b, epsilon, n0)}
@@ -552,10 +559,10 @@ claim:
             forall n N_pos:
                 n >= 1
                 =>:
-                    dist_Q(a(n), a(n)) = abs(a(n) - a(n)) = abs(0) = 0
+                    chap4::dist_Q(a(n), a(n)) = abs(a(n) - a(n)) = abs(0) = 0
                     0 <= epsilon
-                    dist_Q(a(n), a(n)) <= epsilon
-                    $is_close_in_Q(epsilon, a(n), a(n))
+                    chap4::dist_Q(a(n), a(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, a(n), a(n))
             $is_tail_close_in_Q(a, a, epsilon, 1)
     $is_equivalent_cauchy_sequence_in_Q(a, a)
 
@@ -573,10 +580,10 @@ claim:
             forall n N_pos:
                 n >= n0
                 =>:
-                    $is_close_in_Q(epsilon, a(n), b(n))
-                    dist_Q(a(n), b(n)) <= epsilon
-                    dist_Q(b(n), a(n)) = abs(b(n) - a(n))
-                    dist_Q(a(n), b(n)) = abs(a(n) - b(n))
+                    $chap4::is_close_in_Q(epsilon, a(n), b(n))
+                    chap4::dist_Q(a(n), b(n)) <= epsilon
+                    chap4::dist_Q(b(n), a(n)) = abs(b(n) - a(n))
+                    chap4::dist_Q(a(n), b(n)) = abs(a(n) - b(n))
                     -(a(n) - b(n)) <= abs(a(n) - b(n))
                     b(n) - a(n) = -(a(n) - b(n))
                     b(n) - a(n) <= abs(a(n) - b(n))
@@ -592,9 +599,9 @@ claim:
                     -(a(n) - b(n)) <= abs(b(n) - a(n))
                     abs(a(n) - b(n)) <= abs(b(n) - a(n))
                     abs(b(n) - a(n)) = abs(a(n) - b(n))
-                    dist_Q(b(n), a(n)) = dist_Q(a(n), b(n))
-                    dist_Q(b(n), a(n)) <= epsilon
-                    $is_close_in_Q(epsilon, b(n), a(n))
+                    chap4::dist_Q(b(n), a(n)) = chap4::dist_Q(a(n), b(n))
+                    chap4::dist_Q(b(n), a(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, b(n), a(n))
             $is_tail_close_in_Q(b, a, epsilon, n0)
         $has_eventual_closeness_in_Q(b, a, epsilon)
     $is_equivalent_cauchy_sequence_in_Q(b, a)
@@ -624,10 +631,10 @@ claim:
                     n >= n1
                     n2 <= max(n1, n2) <= n
                     n >= n2
-                    $is_close_in_Q(epsilon / 2, a(n), b(n))
-                    $is_close_in_Q(epsilon / 2, b(n), c(n))
-                    dist_Q(a(n), b(n)) <= epsilon / 2
-                    dist_Q(b(n), c(n)) <= epsilon / 2
+                    $chap4::is_close_in_Q(epsilon / 2, a(n), b(n))
+                    $chap4::is_close_in_Q(epsilon / 2, b(n), c(n))
+                    chap4::dist_Q(a(n), b(n)) <= epsilon / 2
+                    chap4::dist_Q(b(n), c(n)) <= epsilon / 2
                     a(n) - b(n) <= abs(a(n) - b(n))
                     b(n) - c(n) <= abs(b(n) - c(n))
                     (a(n) - b(n)) + (b(n) - c(n)) <= abs(a(n) - b(n)) + abs(b(n) - c(n))
@@ -639,17 +646,17 @@ claim:
                     -(a(n) - c(n)) = -(a(n) - b(n)) + -(b(n) - c(n))
                     -(a(n) - c(n)) <= abs(a(n) - b(n)) + abs(b(n) - c(n))
                     abs(a(n) - c(n)) <= abs(a(n) - b(n)) + abs(b(n) - c(n))
-                    dist_Q(a(n), b(n)) = abs(a(n) - b(n))
-                    dist_Q(b(n), c(n)) = abs(b(n) - c(n))
-                    abs(a(n) - b(n)) + abs(b(n) - c(n)) = dist_Q(a(n), b(n)) + dist_Q(b(n), c(n))
-                    abs(a(n) - c(n)) <= dist_Q(a(n), b(n)) + dist_Q(b(n), c(n))
-                    dist_Q(a(n), c(n)) = abs(a(n) - c(n))
-                    dist_Q(a(n), c(n)) <= dist_Q(a(n), b(n)) + dist_Q(b(n), c(n))
-                    dist_Q(a(n), b(n)) + dist_Q(b(n), c(n)) <= epsilon / 2 + epsilon / 2
+                    chap4::dist_Q(a(n), b(n)) = abs(a(n) - b(n))
+                    chap4::dist_Q(b(n), c(n)) = abs(b(n) - c(n))
+                    abs(a(n) - b(n)) + abs(b(n) - c(n)) = chap4::dist_Q(a(n), b(n)) + chap4::dist_Q(b(n), c(n))
+                    abs(a(n) - c(n)) <= chap4::dist_Q(a(n), b(n)) + chap4::dist_Q(b(n), c(n))
+                    chap4::dist_Q(a(n), c(n)) = abs(a(n) - c(n))
+                    chap4::dist_Q(a(n), c(n)) <= chap4::dist_Q(a(n), b(n)) + chap4::dist_Q(b(n), c(n))
+                    chap4::dist_Q(a(n), b(n)) + chap4::dist_Q(b(n), c(n)) <= epsilon / 2 + epsilon / 2
                     epsilon / 2 + epsilon / 2 = epsilon
-                    dist_Q(a(n), c(n)) <= dist_Q(a(n), b(n)) + dist_Q(b(n), c(n)) <= epsilon / 2 + epsilon / 2 = epsilon
-                    dist_Q(a(n), c(n)) <= epsilon
-                    $is_close_in_Q(epsilon, a(n), c(n))
+                    chap4::dist_Q(a(n), c(n)) <= chap4::dist_Q(a(n), b(n)) + chap4::dist_Q(b(n), c(n)) <= epsilon / 2 + epsilon / 2 = epsilon
+                    chap4::dist_Q(a(n), c(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, a(n), c(n))
             $is_tail_close_in_Q(a, c, epsilon, max(n1, n2))
         $has_eventual_closeness_in_Q(a, c, epsilon)
     $is_equivalent_cauchy_sequence_in_Q(a, c)
@@ -728,10 +735,10 @@ claim:
                     fn(n N_pos) Q {1 - 1 / 10^n}(n) = 1 - 1 / 10^n
                     (1 + 1 / 10^n) - (1 - 1 / 10^n) = 2 / 10^n
                     abs((1 + 1 / 10^n) - (1 - 1 / 10^n)) = abs(2 / 10^n) = 2 / 10^n
-                    dist_Q(fn(n N_pos) Q {1 + 1 / 10^n}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n)) = abs(fn(n N_pos) Q {1 + 1 / 10^n}(n) - fn(n N_pos) Q {1 - 1 / 10^n}(n))
+                    chap4::dist_Q(fn(n N_pos) Q {1 + 1 / 10^n}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n)) = abs(fn(n N_pos) Q {1 + 1 / 10^n}(n) - fn(n N_pos) Q {1 - 1 / 10^n}(n))
                     abs(fn(n N_pos) Q {1 + 1 / 10^n}(n) - fn(n N_pos) Q {1 - 1 / 10^n}(n)) = abs((1 + 1 / 10^n) - (1 - 1 / 10^n))
-                    dist_Q(fn(n N_pos) Q {1 + 1 / 10^n}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n)) <= epsilon
-                    $is_close_in_Q(epsilon, fn(n N_pos) Q {1 + 1 / 10^n}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n))
+                    chap4::dist_Q(fn(n N_pos) Q {1 + 1 / 10^n}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 + 1 / 10^n}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n))
             $is_tail_close_in_Q(fn(n N_pos) Q {1 + 1 / 10^n}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon, n0)
         $has_eventual_closeness_in_Q(fn(n N_pos) Q {1 + 1 / 10^n}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon)
     $is_equivalent_cauchy_sequence_in_Q(fn(n N_pos) Q {1 + 1 / 10^n}, fn(n N_pos) Q {1 - 1 / 10^n})
@@ -776,10 +783,10 @@ claim:
                     fn(n N_pos) Q {1 - 1 / 10^n}(n) = 1 - 1 / 10^n
                     1 - (1 - 1 / 10^n) = 1 / 10^n
                     abs(1 - (1 - 1 / 10^n)) = abs(1 / 10^n) = 1 / 10^n
-                    dist_Q(fn(n N_pos) Q {1}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n)) = abs(fn(n N_pos) Q {1}(n) - fn(n N_pos) Q {1 - 1 / 10^n}(n))
+                    chap4::dist_Q(fn(n N_pos) Q {1}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n)) = abs(fn(n N_pos) Q {1}(n) - fn(n N_pos) Q {1 - 1 / 10^n}(n))
                     abs(fn(n N_pos) Q {1}(n) - fn(n N_pos) Q {1 - 1 / 10^n}(n)) = abs(1 - (1 - 1 / 10^n))
-                    dist_Q(fn(n N_pos) Q {1}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n)) <= epsilon
-                    $is_close_in_Q(epsilon, fn(n N_pos) Q {1}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n))
+                    chap4::dist_Q(fn(n N_pos) Q {1}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n))
             $is_tail_close_in_Q(fn(n N_pos) Q {1}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon, n0)
         $has_eventual_closeness_in_Q(fn(n N_pos) Q {1}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon)
     $is_equivalent_cauchy_sequence_in_Q(fn(n N_pos) Q {1}, fn(n N_pos) Q {1 - 1 / 10^n})
@@ -793,10 +800,10 @@ sequence of rationals. Two formal limits are equal when their Cauchy
 sequences are equivalent.
 """
 
-# This is the main bridge in Chapter 5.  A rational Cauchy sequence represents
-# a real number, and `has_formal_limit_in_Q(a, x)` records that the sequence
-# `a` represents the real `x`.  The rest of the chapter can then use ordinary
-# real arithmetic while still remembering the Cauchy-sequence origin.
+# This chapter records Tao's rational-Cauchy presentation using Litex's builtin
+# `R`.  A rational Cauchy sequence represents a real number when
+# `has_formal_limit_in_Q(a, x)`.  This is a compatibility surface, not a new
+# definition of the builtin real-number carrier.
 
 have fn dist_R(x, y R) R = abs(x - y)
 
@@ -829,10 +836,25 @@ prop has_formal_limit_in_Q(a seq(Q), x R):
 prop has_cauchy_sequence_representative_in_Q(x R):
     exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x)}
 
+# Tao defines reals as equivalence classes of rational Cauchy sequences.  Litex
+# currently supplies `R` as a builtin carrier, so this is an explicit trusted
+# compatibility bridge: it states that every builtin real has such a
+# representative.  It is deliberately local to this chapter, not a builtin
+# axiom and not a definition of `R`.
 thm cauchy_sequence_representative_in_Q_exists:
     ? forall x R:
         $has_cauchy_sequence_representative_in_Q(x)
     trust $has_cauchy_sequence_representative_in_Q(x)
+
+# Background interface.  Rational density supplies an intermediate rational
+# between two ordered real bounds.  It is a local trusted field fact, not a
+# replacement for the chapter's Cauchy-sequence construction of reals.
+thm has_rational_between:
+    ? forall x, y R:
+        x < y
+        =>:
+            exist q Q st {x < q < y}
+    trust exist q Q st {x < q < y}
 
 thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
     ? forall a, b seq(Q), x R:
@@ -860,14 +882,14 @@ thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
                     n >= max(n1, n2)
                     =>:
                         abs(b(n) - x) < epsilon
+                max(n1, n2) >= n1
                 n >= n1
                 max(n1, n2) >= n2
-                n >= max(n1, n2) >= n2
                 n >= n2
                 abs(a(n) - x) < epsilon / 2
-                $is_close_in_Q(eta, a(n), b(n))
-                dist_Q(a(n), b(n)) <= eta
-                dist_Q(a(n), b(n)) = abs(a(n) - b(n))
+                $chap4::is_close_in_Q(eta, a(n), b(n))
+                chap4::dist_Q(a(n), b(n)) <= eta
+                chap4::dist_Q(a(n), b(n)) = abs(a(n) - b(n))
                 abs(a(n) - b(n)) <= eta
                 eta < epsilon / 2
                 abs(a(n) - b(n)) <= eta < epsilon / 2
@@ -933,6 +955,18 @@ thm formal_limit_in_Q_unique:
         abs(x - y) != abs(x - y)
         impossible abs(x - y) = abs(x - y)
 
+# Equivalent rational Cauchy representatives determine the same builtin real:
+# transfer the formal limit along equivalence, then use uniqueness of limits.
+thm equivalent_cauchy_sequences_have_same_formal_limit_in_Q:
+    ? forall a, b seq(Q), x, y R:
+        $has_formal_limit_in_Q(a, x)
+        $has_formal_limit_in_Q(b, y)
+        $is_equivalent_cauchy_sequence_in_Q(a, b)
+        =>:
+            x = y
+    by thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q(a, b, x)
+    by thm formal_limit_in_Q_unique(b, x, y)
+
 """
 Example 5.3.2. Informal decimal approximations suggest how a real number such
 as sqrt(2) can be represented by rational Cauchy data.
@@ -997,27 +1031,27 @@ claim:
                     j >= n2
                     n2 <= max(n1, n2) <= k
                     k >= n2
-                    $is_close_in_Q(epsilon / 2, a(j), a(k))
-                    $is_close_in_Q(epsilon / 2, b(j), b(k))
-                    dist_Q(a(j), a(k)) <= epsilon / 2
-                    dist_Q(b(j), b(k)) <= epsilon / 2
-                    dist_Q(a(j), a(k)) = abs(a(j) - a(k))
-                    dist_Q(b(j), b(k)) = abs(b(j) - b(k))
+                    $chap4::is_close_in_Q(epsilon / 2, a(j), a(k))
+                    $chap4::is_close_in_Q(epsilon / 2, b(j), b(k))
+                    chap4::dist_Q(a(j), a(k)) <= epsilon / 2
+                    chap4::dist_Q(b(j), b(k)) <= epsilon / 2
+                    chap4::dist_Q(a(j), a(k)) = abs(a(j) - a(k))
+                    chap4::dist_Q(b(j), b(k)) = abs(b(j) - b(k))
                     seq_add_Q(a, b)(j) = a(j) + b(j)
                     seq_add_Q(a, b)(k) = a(k) + b(k)
-                    dist_Q(seq_add_Q(a, b)(j), seq_add_Q(a, b)(k)) = abs(seq_add_Q(a, b)(j) - seq_add_Q(a, b)(k))
+                    chap4::dist_Q(seq_add_Q(a, b)(j), seq_add_Q(a, b)(k)) = abs(seq_add_Q(a, b)(j) - seq_add_Q(a, b)(k))
                     seq_add_Q(a, b)(j) - seq_add_Q(a, b)(k) = (a(j) + b(j)) - (a(k) + b(k))
                     (a(j) + b(j)) - (a(k) + b(k)) = (a(j) - a(k)) + (b(j) - b(k))
                     abs(seq_add_Q(a, b)(j) - seq_add_Q(a, b)(k)) = abs((a(j) - a(k)) + (b(j) - b(k)))
                     abs((a(j) - a(k)) + (b(j) - b(k))) <= abs(a(j) - a(k)) + abs(b(j) - b(k))
                     abs(seq_add_Q(a, b)(j) - seq_add_Q(a, b)(k)) <= abs(a(j) - a(k)) + abs(b(j) - b(k))
-                    abs(a(j) - a(k)) + abs(b(j) - b(k)) = dist_Q(a(j), a(k)) + dist_Q(b(j), b(k))
-                    dist_Q(seq_add_Q(a, b)(j), seq_add_Q(a, b)(k)) <= dist_Q(a(j), a(k)) + dist_Q(b(j), b(k))
-                    dist_Q(a(j), a(k)) + dist_Q(b(j), b(k)) <= epsilon / 2 + epsilon / 2
+                    abs(a(j) - a(k)) + abs(b(j) - b(k)) = chap4::dist_Q(a(j), a(k)) + chap4::dist_Q(b(j), b(k))
+                    chap4::dist_Q(seq_add_Q(a, b)(j), seq_add_Q(a, b)(k)) <= chap4::dist_Q(a(j), a(k)) + chap4::dist_Q(b(j), b(k))
+                    chap4::dist_Q(a(j), a(k)) + chap4::dist_Q(b(j), b(k)) <= epsilon / 2 + epsilon / 2
                     epsilon / 2 + epsilon / 2 = epsilon
-                    dist_Q(seq_add_Q(a, b)(j), seq_add_Q(a, b)(k)) <= dist_Q(a(j), a(k)) + dist_Q(b(j), b(k)) <= epsilon / 2 + epsilon / 2 = epsilon
-                    dist_Q(seq_add_Q(a, b)(j), seq_add_Q(a, b)(k)) <= epsilon
-                    $is_close_in_Q(epsilon, seq_add_Q(a, b)(j), seq_add_Q(a, b)(k))
+                    chap4::dist_Q(seq_add_Q(a, b)(j), seq_add_Q(a, b)(k)) <= chap4::dist_Q(a(j), a(k)) + chap4::dist_Q(b(j), b(k)) <= epsilon / 2 + epsilon / 2 = epsilon
+                    chap4::dist_Q(seq_add_Q(a, b)(j), seq_add_Q(a, b)(k)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(j), seq_add_Q(a, b)(k))
             $is_tail_epsilon_steady_in_Q(seq_add_Q(a, b), epsilon, max(n1, n2))
         $has_eventual_epsilon_steadiness_in_Q(seq_add_Q(a, b), epsilon)
     $is_cauchy_sequence_in_Q(seq_add_Q(a, b))
@@ -1044,18 +1078,18 @@ claim:
             forall n N_pos:
                 n >= n0
                 =>:
-                    $is_close_in_Q(epsilon, a(n), a_prime(n))
-                    dist_Q(a(n), a_prime(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, a(n), a_prime(n))
+                    chap4::dist_Q(a(n), a_prime(n)) <= epsilon
                     seq_add_Q(a, b)(n) = a(n) + b(n)
                     seq_add_Q(a_prime, b)(n) = a_prime(n) + b(n)
-                    dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = abs(seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n))
+                    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = abs(seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n))
                     seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n) = (a(n) + b(n)) - (a_prime(n) + b(n))
                     (a(n) + b(n)) - (a_prime(n) + b(n)) = a(n) - a_prime(n)
                     abs(seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n)) = abs(a(n) - a_prime(n))
-                    dist_Q(a(n), a_prime(n)) = abs(a(n) - a_prime(n))
-                    dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = dist_Q(a(n), a_prime(n))
-                    dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) <= epsilon
-                    $is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n))
+                    chap4::dist_Q(a(n), a_prime(n)) = abs(a(n) - a_prime(n))
+                    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = chap4::dist_Q(a(n), a_prime(n))
+                    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n))
             $is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon, n0)
         $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon)
     $is_equivalent_cauchy_sequence_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b))
@@ -1077,18 +1111,18 @@ claim:
             forall n N_pos:
                 n >= n0
                 =>:
-                    $is_close_in_Q(epsilon, b(n), b_prime(n))
-                    dist_Q(b(n), b_prime(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, b(n), b_prime(n))
+                    chap4::dist_Q(b(n), b_prime(n)) <= epsilon
                     seq_add_Q(a, b)(n) = a(n) + b(n)
                     seq_add_Q(a, b_prime)(n) = a(n) + b_prime(n)
-                    dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = abs(seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n))
+                    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = abs(seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n))
                     seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n) = (a(n) + b(n)) - (a(n) + b_prime(n))
                     (a(n) + b(n)) - (a(n) + b_prime(n)) = b(n) - b_prime(n)
                     abs(seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n)) = abs(b(n) - b_prime(n))
-                    dist_Q(b(n), b_prime(n)) = abs(b(n) - b_prime(n))
-                    dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = dist_Q(b(n), b_prime(n))
-                    dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) <= epsilon
-                    $is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n))
+                    chap4::dist_Q(b(n), b_prime(n)) = abs(b(n) - b_prime(n))
+                    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = chap4::dist_Q(b(n), b_prime(n))
+                    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n))
             $is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon, n0)
         $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon)
     $is_equivalent_cauchy_sequence_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime))
@@ -1152,12 +1186,12 @@ claim:
                     j >= n2
                     n2 <= max(n1, n2) <= k
                     k >= n2
-                    $is_close_in_Q(epsilon / (2 * (M_b + 1)), a(j), a(k))
-                    $is_close_in_Q(epsilon / (2 * (M_a + 1)), b(j), b(k))
-                    dist_Q(a(j), a(k)) <= epsilon / (2 * (M_b + 1))
-                    dist_Q(b(j), b(k)) <= epsilon / (2 * (M_a + 1))
-                    dist_Q(a(j), a(k)) = abs(a(j) - a(k))
-                    dist_Q(b(j), b(k)) = abs(b(j) - b(k))
+                    $chap4::is_close_in_Q(epsilon / (2 * (M_b + 1)), a(j), a(k))
+                    $chap4::is_close_in_Q(epsilon / (2 * (M_a + 1)), b(j), b(k))
+                    chap4::dist_Q(a(j), a(k)) <= epsilon / (2 * (M_b + 1))
+                    chap4::dist_Q(b(j), b(k)) <= epsilon / (2 * (M_a + 1))
+                    chap4::dist_Q(a(j), a(k)) = abs(a(j) - a(k))
+                    chap4::dist_Q(b(j), b(k)) = abs(b(j) - b(k))
                     abs(a(j) - a(k)) <= epsilon / (2 * (M_b + 1))
                     abs(b(j) - b(k)) <= epsilon / (2 * (M_a + 1))
                     abs(b(j)) <= M_b
@@ -1170,7 +1204,7 @@ claim:
                     abs(a(k)) <= M_a + 1
                     seq_mul_Q(a, b)(j) = a(j) * b(j)
                     seq_mul_Q(a, b)(k) = a(k) * b(k)
-                    dist_Q(seq_mul_Q(a, b)(j), seq_mul_Q(a, b)(k)) = abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k))
+                    chap4::dist_Q(seq_mul_Q(a, b)(j), seq_mul_Q(a, b)(k)) = abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k))
                     seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k) = a(j) * b(j) - a(k) * b(k)
                     a(j) * b(j) - a(k) * b(k) = (a(j) - a(k)) * b(j) + a(k) * (b(j) - b(k))
                     abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) = abs((a(j) - a(k)) * b(j) + a(k) * (b(j) - b(k)))
@@ -1192,8 +1226,8 @@ claim:
                     abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) <= abs((a(j) - a(k)) * b(j)) + abs(a(k) * (b(j) - b(k)))
                     abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) <= abs((a(j) - a(k)) * b(j)) + abs(a(k) * (b(j) - b(k))) <= epsilon / 2 + epsilon / 2 = epsilon
                     abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) <= epsilon
-                    dist_Q(seq_mul_Q(a, b)(j), seq_mul_Q(a, b)(k)) <= epsilon
-                    $is_close_in_Q(epsilon, seq_mul_Q(a, b)(j), seq_mul_Q(a, b)(k))
+                    chap4::dist_Q(seq_mul_Q(a, b)(j), seq_mul_Q(a, b)(k)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(j), seq_mul_Q(a, b)(k))
             $is_tail_epsilon_steady_in_Q(seq_mul_Q(a, b), epsilon, max(n1, n2))
         $has_eventual_epsilon_steadiness_in_Q(seq_mul_Q(a, b), epsilon)
     $is_cauchy_sequence_in_Q(seq_mul_Q(a, b))
@@ -1222,9 +1256,9 @@ claim:
             forall n N_pos:
                 n >= n0
                 =>:
-                    $is_close_in_Q(epsilon / (M_b + 1), a(n), a_prime(n))
-                    dist_Q(a(n), a_prime(n)) <= epsilon / (M_b + 1)
-                    dist_Q(a(n), a_prime(n)) = abs(a(n) - a_prime(n))
+                    $chap4::is_close_in_Q(epsilon / (M_b + 1), a(n), a_prime(n))
+                    chap4::dist_Q(a(n), a_prime(n)) <= epsilon / (M_b + 1)
+                    chap4::dist_Q(a(n), a_prime(n)) = abs(a(n) - a_prime(n))
                     abs(a(n) - a_prime(n)) <= epsilon / (M_b + 1)
                     abs(b(n)) <= M_b
                     M_b <= M_b + 1
@@ -1232,7 +1266,7 @@ claim:
                     abs(b(n)) <= M_b + 1
                     seq_mul_Q(a, b)(n) = a(n) * b(n)
                     seq_mul_Q(a_prime, b)(n) = a_prime(n) * b(n)
-                    dist_Q(seq_mul_Q(a, b)(n), seq_mul_Q(a_prime, b)(n)) = abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n))
+                    chap4::dist_Q(seq_mul_Q(a, b)(n), seq_mul_Q(a_prime, b)(n)) = abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n))
                     seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n) = a(n) * b(n) - a_prime(n) * b(n)
                     a(n) * b(n) - a_prime(n) * b(n) = (a(n) - a_prime(n)) * b(n)
                     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n)) = abs((a(n) - a_prime(n)) * b(n))
@@ -1242,8 +1276,8 @@ claim:
                     abs(a(n) - a_prime(n)) * abs(b(n)) <= (epsilon / (M_b + 1)) * (M_b + 1)
                     (epsilon / (M_b + 1)) * (M_b + 1) = epsilon
                     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n)) <= epsilon
-                    dist_Q(seq_mul_Q(a, b)(n), seq_mul_Q(a_prime, b)(n)) <= epsilon
-                    $is_close_in_Q(epsilon, seq_mul_Q(a, b)(n), seq_mul_Q(a_prime, b)(n))
+                    chap4::dist_Q(seq_mul_Q(a, b)(n), seq_mul_Q(a_prime, b)(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(n), seq_mul_Q(a_prime, b)(n))
             $is_tail_close_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon, n0)
         $has_eventual_closeness_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon)
     $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b))
@@ -1269,9 +1303,9 @@ claim:
             forall n N_pos:
                 n >= n0
                 =>:
-                    $is_close_in_Q(epsilon / (M_a + 1), b(n), b_prime(n))
-                    dist_Q(b(n), b_prime(n)) <= epsilon / (M_a + 1)
-                    dist_Q(b(n), b_prime(n)) = abs(b(n) - b_prime(n))
+                    $chap4::is_close_in_Q(epsilon / (M_a + 1), b(n), b_prime(n))
+                    chap4::dist_Q(b(n), b_prime(n)) <= epsilon / (M_a + 1)
+                    chap4::dist_Q(b(n), b_prime(n)) = abs(b(n) - b_prime(n))
                     abs(b(n) - b_prime(n)) <= epsilon / (M_a + 1)
                     abs(a(n)) <= M_a
                     M_a <= M_a + 1
@@ -1279,7 +1313,7 @@ claim:
                     abs(a(n)) <= M_a + 1
                     seq_mul_Q(a, b)(n) = a(n) * b(n)
                     seq_mul_Q(a, b_prime)(n) = a(n) * b_prime(n)
-                    dist_Q(seq_mul_Q(a, b)(n), seq_mul_Q(a, b_prime)(n)) = abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n))
+                    chap4::dist_Q(seq_mul_Q(a, b)(n), seq_mul_Q(a, b_prime)(n)) = abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n))
                     seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n) = a(n) * b(n) - a(n) * b_prime(n)
                     a(n) * b(n) - a(n) * b_prime(n) = a(n) * (b(n) - b_prime(n))
                     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n)) = abs(a(n) * (b(n) - b_prime(n)))
@@ -1289,8 +1323,8 @@ claim:
                     abs(a(n)) * abs(b(n) - b_prime(n)) <= (M_a + 1) * (epsilon / (M_a + 1))
                     (M_a + 1) * (epsilon / (M_a + 1)) = epsilon
                     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n)) <= epsilon
-                    dist_Q(seq_mul_Q(a, b)(n), seq_mul_Q(a, b_prime)(n)) <= epsilon
-                    $is_close_in_Q(epsilon, seq_mul_Q(a, b)(n), seq_mul_Q(a, b_prime)(n))
+                    chap4::dist_Q(seq_mul_Q(a, b)(n), seq_mul_Q(a, b_prime)(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(n), seq_mul_Q(a, b_prime)(n))
             $is_tail_close_in_Q(seq_mul_Q(a, b), seq_mul_Q(a, b_prime), epsilon, n0)
         $has_eventual_closeness_in_Q(seq_mul_Q(a, b), seq_mul_Q(a, b_prime), epsilon)
     $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, b), seq_mul_Q(a, b_prime))
@@ -1326,10 +1360,10 @@ claim:
                     seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n) = a(n) * b(n) + a(n) * c(n)
                     a(n) * (b(n) + c(n)) = a(n) * b(n) + a(n) * c(n)
                     seq_mul_Q(a, seq_add_Q(b, c))(n) = seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n)
-                    dist_Q(seq_mul_Q(a, seq_add_Q(b, c))(n), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n)) = 0
+                    chap4::dist_Q(seq_mul_Q(a, seq_add_Q(b, c))(n), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n)) = 0
                     0 <= epsilon
-                    dist_Q(seq_mul_Q(a, seq_add_Q(b, c))(n), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n)) <= epsilon
-                    $is_close_in_Q(epsilon, seq_mul_Q(a, seq_add_Q(b, c))(n), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n))
+                    chap4::dist_Q(seq_mul_Q(a, seq_add_Q(b, c))(n), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, seq_add_Q(b, c))(n), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n))
             $is_tail_close_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon, 1)
         $has_eventual_closeness_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon)
     $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)))
@@ -1542,9 +1576,9 @@ thm finite_prefix_replacement_preserves_cauchy_and_formal_limit_in_Q:
                         j >= n1
                         n1 <= max(n0, n1) <= k
                         k >= n1
-                        $is_close_in_Q(epsilon, a(j), a(k))
-                        dist_Q(b(j), b(k)) = dist_Q(a(j), a(k))
-                        $is_close_in_Q(epsilon, b(j), b(k))
+                        $chap4::is_close_in_Q(epsilon, a(j), a(k))
+                        chap4::dist_Q(b(j), b(k)) = chap4::dist_Q(a(j), a(k))
+                        $chap4::is_close_in_Q(epsilon, b(j), b(k))
                 $is_tail_epsilon_steady_in_Q(b, epsilon, max(n0, n1))
             $has_eventual_epsilon_steadiness_in_Q(b, epsilon)
         $is_cauchy_sequence_in_Q(b)
@@ -1761,10 +1795,10 @@ claim:
                 j >= n0
                 k >= n0
                 =>:
-                    $is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(a)(k))
-            $is_close_in_Q(c^2 * epsilon, a(j), a(k))
-            dist_Q(a(j), a(k)) <= c^2 * epsilon
-            dist_Q(a(j), a(k)) = abs(a(j) - a(k))
+                    $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(a)(k))
+            $chap4::is_close_in_Q(c^2 * epsilon, a(j), a(k))
+            chap4::dist_Q(a(j), a(k)) <= c^2 * epsilon
+            chap4::dist_Q(a(j), a(k)) = abs(a(j) - a(k))
             abs(a(j) - a(k)) <= c^2 * epsilon
             c * c = c^2
             c * c * epsilon = c^2 * epsilon
@@ -1781,16 +1815,16 @@ claim:
             fn(n N_pos) Q {1 / a(n)}(k) = 1 / a(k)
             seq_recip_Q(a)(j) = 1 / a(j)
             seq_recip_Q(a)(k) = 1 / a(k)
-            dist_Q(seq_recip_Q(a)(j), seq_recip_Q(a)(k)) = abs(seq_recip_Q(a)(j) - seq_recip_Q(a)(k))
+            chap4::dist_Q(seq_recip_Q(a)(j), seq_recip_Q(a)(k)) = abs(seq_recip_Q(a)(j) - seq_recip_Q(a)(k))
             abs(seq_recip_Q(a)(j) - seq_recip_Q(a)(k)) = abs(1 / a(j) - 1 / a(k))
-            dist_Q(seq_recip_Q(a)(j), seq_recip_Q(a)(k)) <= epsilon
-            $is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(a)(k))
+            chap4::dist_Q(seq_recip_Q(a)(j), seq_recip_Q(a)(k)) <= epsilon
+            $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(a)(k))
         witness exist n1 N_pos st {$is_tail_epsilon_steady_in_Q(seq_recip_Q(a), epsilon, n1)} from n0:
             forall j, k N_pos:
                 j >= n0
                 k >= n0
                 =>:
-                    $is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(a)(k))
+                    $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(a)(k))
             $is_tail_epsilon_steady_in_Q(seq_recip_Q(a), epsilon, n0)
         $has_eventual_epsilon_steadiness_in_Q(seq_recip_Q(a), epsilon)
     $is_cauchy_sequence_in_Q(seq_recip_Q(a))
@@ -1833,10 +1867,10 @@ claim:
             ? forall n N_pos:
                 n >= n0
                 =>:
-                    $is_close_in_Q(epsilon, seq_recip_Q(a)(n), seq_recip_Q(b)(n))
-            $is_close_in_Q(c_a * c_b * epsilon, a(n), b(n))
-            dist_Q(a(n), b(n)) <= c_a * c_b * epsilon
-            dist_Q(a(n), b(n)) = abs(a(n) - b(n))
+                    $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(n), seq_recip_Q(b)(n))
+            $chap4::is_close_in_Q(c_a * c_b * epsilon, a(n), b(n))
+            chap4::dist_Q(a(n), b(n)) <= c_a * c_b * epsilon
+            chap4::dist_Q(a(n), b(n)) = abs(a(n) - b(n))
             abs(a(n) - b(n)) <= c_a * c_b * epsilon
             abs(a(n)) >= c_a
             abs(b(n)) >= c_b
@@ -1850,15 +1884,15 @@ claim:
             fn(k N_pos) Q {1 / b(k)}(n) = 1 / b(n)
             seq_recip_Q(a)(n) = 1 / a(n)
             seq_recip_Q(b)(n) = 1 / b(n)
-            dist_Q(seq_recip_Q(a)(n), seq_recip_Q(b)(n)) = abs(seq_recip_Q(a)(n) - seq_recip_Q(b)(n))
+            chap4::dist_Q(seq_recip_Q(a)(n), seq_recip_Q(b)(n)) = abs(seq_recip_Q(a)(n) - seq_recip_Q(b)(n))
             abs(seq_recip_Q(a)(n) - seq_recip_Q(b)(n)) = abs(1 / a(n) - 1 / b(n))
-            dist_Q(seq_recip_Q(a)(n), seq_recip_Q(b)(n)) <= epsilon
-            $is_close_in_Q(epsilon, seq_recip_Q(a)(n), seq_recip_Q(b)(n))
+            chap4::dist_Q(seq_recip_Q(a)(n), seq_recip_Q(b)(n)) <= epsilon
+            $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(n), seq_recip_Q(b)(n))
         witness exist n1 N_pos st {$is_tail_close_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon, n1)} from n0:
             forall n N_pos:
                 n >= n0
                 =>:
-                    $is_close_in_Q(epsilon, seq_recip_Q(a)(n), seq_recip_Q(b)(n))
+                    $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(n), seq_recip_Q(b)(n))
             $is_tail_close_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon, n0)
         $has_eventual_closeness_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon)
     $is_equivalent_cauchy_sequence_in_Q(seq_recip_Q(a), seq_recip_Q(b))
@@ -2397,10 +2431,10 @@ claim:
                     fn(k N_pos) Q {1 - 1 / k}(n) = 1 - 1 / n
                     (1 + 1 / n) - (1 - 1 / n) = 2 / n
                     abs((1 + 1 / n) - (1 - 1 / n)) = abs(2 / n) = 2 / n
-                    dist_Q(fn(k N_pos) Q {1 + 1 / k}(n), fn(k N_pos) Q {1 - 1 / k}(n)) = abs(fn(k N_pos) Q {1 + 1 / k}(n) - fn(k N_pos) Q {1 - 1 / k}(n))
+                    chap4::dist_Q(fn(k N_pos) Q {1 + 1 / k}(n), fn(k N_pos) Q {1 - 1 / k}(n)) = abs(fn(k N_pos) Q {1 + 1 / k}(n) - fn(k N_pos) Q {1 - 1 / k}(n))
                     abs(fn(k N_pos) Q {1 + 1 / k}(n) - fn(k N_pos) Q {1 - 1 / k}(n)) = abs((1 + 1 / n) - (1 - 1 / n))
-                    dist_Q(fn(k N_pos) Q {1 + 1 / k}(n), fn(k N_pos) Q {1 - 1 / k}(n)) <= epsilon
-                    $is_close_in_Q(epsilon, fn(k N_pos) Q {1 + 1 / k}(n), fn(k N_pos) Q {1 - 1 / k}(n))
+                    chap4::dist_Q(fn(k N_pos) Q {1 + 1 / k}(n), fn(k N_pos) Q {1 - 1 / k}(n)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, fn(k N_pos) Q {1 + 1 / k}(n), fn(k N_pos) Q {1 - 1 / k}(n))
             $is_tail_close_in_Q(fn(k N_pos) Q {1 + 1 / k}, fn(k N_pos) Q {1 - 1 / k}, epsilon, n0)
         $has_eventual_closeness_in_Q(fn(k N_pos) Q {1 + 1 / k}, fn(k N_pos) Q {1 - 1 / k}, epsilon)
     $is_equivalent_cauchy_sequence_in_Q(fn(k N_pos) Q {1 + 1 / k}, fn(k N_pos) Q {1 - 1 / k})
@@ -2503,11 +2537,11 @@ claim:
                 =>:
                     fn(n N_pos) Q {q}(j) = q
                     fn(n N_pos) Q {q}(k) = q
-                    dist_Q(q, q) = abs(q - q) = abs(0) = 0
-                    dist_Q(fn(n N_pos) Q {q}(j), fn(n N_pos) Q {q}(k)) = dist_Q(q, q) = 0
+                    chap4::dist_Q(q, q) = abs(q - q) = abs(0) = 0
+                    chap4::dist_Q(fn(n N_pos) Q {q}(j), fn(n N_pos) Q {q}(k)) = chap4::dist_Q(q, q) = 0
                     0 <= epsilon
-                    dist_Q(fn(n N_pos) Q {q}(j), fn(n N_pos) Q {q}(k)) <= epsilon
-                    $is_close_in_Q(epsilon, fn(n N_pos) Q {q}(j), fn(n N_pos) Q {q}(k))
+                    chap4::dist_Q(fn(n N_pos) Q {q}(j), fn(n N_pos) Q {q}(k)) <= epsilon
+                    $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {q}(j), fn(n N_pos) Q {q}(k))
             $is_tail_epsilon_steady_in_Q(fn(n N_pos) Q {q}, epsilon, 1)
         $has_eventual_epsilon_steadiness_in_Q(fn(n N_pos) Q {q}, epsilon)
     $is_cauchy_sequence_in_Q(fn(n N_pos) Q {q})
@@ -2987,11 +3021,11 @@ thm least_upper_bound_unique:
     M2 <= M1
     M1 = M2
 
-# The existence half of Theorem 5.5.9 is proved by bisection/bracketing from
-# sequential completeness of `R`: build lower endpoints in `E` and upper
-# endpoints, show the endpoints have a common limit, and prove that this common
-# limit is the least upper bound.  The local lemmas below isolate the epsilon
-# estimates, common-limit step, and order facts.
+# The checked recursive bisection core above keeps a lower endpoint that is not
+# an upper bound.  The older convergence-facing interface below still asks for
+# lower endpoints in `E`, global monotonicity, and eventual-width estimates;
+# its conversion from the checked core remains explicit proof debt.  The local
+# lemmas below isolate that legacy epsilon/common-limit route.
 
 prop is_cauchy_tail_in_R(a seq(R), epsilon R_pos, n0 N_pos):
     forall j, k N_pos:
@@ -3017,10 +3051,434 @@ prop is_bracket_width_below_after(lower, upper seq(R), epsilon R_pos, n0 N_pos):
         =>:
             upper(n) - lower(n) < epsilon
 
+# A recursive bisection needs no choice function from `E`: a lower endpoint is
+# recorded as a number which is not an upper bound.  When the midpoint is not
+# an upper bound it becomes the next lower endpoint; otherwise it becomes the
+# next upper endpoint.
+
+prop is_not_upper_bound(E set, M R):
+    not $is_upper_bound(E, M)
+
+prop is_bisection_pair_state(E set, p cart(R, R)):
+    not $is_upper_bound(E, p[1])
+    $is_upper_bound(E, p[2])
+    p[1] <= p[2]
+
+prop has_bisection_step_invariants(p, q cart(R, R)):
+    p[1] <= q[1]
+    q[2] <= p[2]
+    q[2] - q[1] = (p[2] - p[1]) / 2
+
+prop is_bisection_pair_state_sequence(E set, pair fn(n N) cart(R, R)):
+    forall n N:
+        $is_bisection_pair_state(E, pair(n))
+    forall n N:
+        $has_bisection_step_invariants(pair(n), pair(n + 1))
+
+thm bisection_left_below_midpoint:
+    ? forall x, y R:
+        x <= y
+        =>:
+            x <= (x + y) / 2
+    x + x <= x + y
+    (x + x) / 2 <= (x + y) / 2
+    (x + x) / 2 = x
+    x <= (x + y) / 2
+
+thm bisection_midpoint_below_right:
+    ? forall x, y R:
+        x <= y
+        =>:
+            (x + y) / 2 <= y
+    x + y <= y + y
+    (x + y) / 2 <= (y + y) / 2
+    (y + y) / 2 = y
+    (x + y) / 2 <= y
+
+thm upper_midpoint_step_preserves_bisection_state:
+    ? forall E set, p cart(R, R):
+        $is_bisection_pair_state(E, p)
+        $is_upper_bound(E, (p[1] + p[2]) / 2)
+        =>:
+            $is_bisection_pair_state(E, (p[1], (p[1] + p[2]) / 2))
+            p[1] <= (p[1] + p[2]) / 2
+            (p[1] + p[2]) / 2 <= p[2]
+            (p[1] + p[2]) / 2 - p[1] = (p[2] - p[1]) / 2
+    not $is_upper_bound(E, p[1])
+    $is_upper_bound(E, (p[1] + p[2]) / 2)
+    p[1] <= p[2]
+    by thm bisection_left_below_midpoint(p[1], p[2])
+    by thm bisection_midpoint_below_right(p[1], p[2])
+    (p[1] + p[2]) / 2 - p[1] = (p[2] - p[1]) / 2
+    $is_bisection_pair_state(E, (p[1], (p[1] + p[2]) / 2))
+
+thm nonupper_midpoint_step_preserves_bisection_state:
+    ? forall E set, p cart(R, R):
+        $is_bisection_pair_state(E, p)
+        $is_not_upper_bound(E, (p[1] + p[2]) / 2)
+        =>:
+            $is_bisection_pair_state(E, ((p[1] + p[2]) / 2, p[2]))
+            p[1] <= (p[1] + p[2]) / 2
+            (p[1] + p[2]) / 2 <= p[2]
+            p[2] - (p[1] + p[2]) / 2 = (p[2] - p[1]) / 2
+    not $is_upper_bound(E, (p[1] + p[2]) / 2)
+    $is_upper_bound(E, p[2])
+    p[1] <= p[2]
+    by thm bisection_left_below_midpoint(p[1], p[2])
+    by thm bisection_midpoint_below_right(p[1], p[2])
+    p[2] - (p[1] + p[2]) / 2 = (p[2] - p[1]) / 2
+    $is_bisection_pair_state(E, ((p[1] + p[2]) / 2, p[2]))
+
+thm recursive_bisection_pair_states_exist:
+    ? forall E set, a E, b R:
+        E $subset R
+        $is_upper_bound(E, b)
+        =>:
+            exist pair fn(n N) cart(R, R) st {$is_bisection_pair_state_sequence(E, pair)}
+    have fn step(p cart(R, R)) cart(R, R) by cases:
+        case $is_upper_bound(E, (p[1] + p[2]) / 2): (p[1], (p[1] + p[2]) / 2)
+        case $is_not_upper_bound(E, (p[1] + p[2]) / 2): ((p[1] + p[2]) / 2, p[2])
+    have fn pair(n N) cart(R, R) by induc n from 0:
+        case n = 0: (a - 1, b)
+        case n > 0: step(pair(n - 1))
+    claim:
+        ? $is_bisection_pair_state(E, pair(0))
+        pair(0) = (a - 1, b)
+        by contra:
+            ? not $is_upper_bound(E, pair(0)[1])
+            $is_upper_bound(E, pair(0)[1])
+            pair(0)[1] = (a - 1, b)[1] = a - 1
+            a <= pair(0)[1]
+            a <= a - 1
+            impossible a <= a - 1
+        $is_upper_bound(E, pair(0)[2])
+        pair(0)[2] = (a - 1, b)[2] = b
+        a <= b
+        pair(0)[1] = a - 1
+        a - 1 < a <= b
+        pair(0)[1] <= pair(0)[2]
+        $is_bisection_pair_state(E, pair(0))
+    claim:
+        ? forall n N:
+            $is_bisection_pair_state(E, pair(n))
+        by induc n from 0:
+            ? $is_bisection_pair_state(E, pair(n))
+            ? from n = 0:
+                $is_bisection_pair_state(E, pair(0))
+            ? induc:
+                $is_bisection_pair_state(E, pair(n))
+                n + 1 > 0
+                pair(n + 1) = step(pair((n + 1) - 1))
+                (n + 1) - 1 = n
+                pair((n + 1) - 1) = pair(n)
+                pair(n + 1) = step(pair(n))
+                by cases:
+                    ? $is_bisection_pair_state(E, pair(n + 1))
+                    case $is_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                        by thm upper_midpoint_step_preserves_bisection_state(E, pair(n))
+                        $is_bisection_pair_state(E, (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2))
+                        step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
+                        pair(n + 1) = step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
+                        $is_bisection_pair_state(E, pair(n + 1))
+                    case $is_not_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                        by thm nonupper_midpoint_step_preserves_bisection_state(E, pair(n))
+                        $is_bisection_pair_state(E, ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2]))
+                        step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
+                        pair(n + 1) = step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
+                        $is_bisection_pair_state(E, pair(n + 1))
+    claim:
+        ? forall n N:
+            $has_bisection_step_invariants(pair(n), pair(n + 1))
+        $is_bisection_pair_state(E, pair(n))
+        n + 1 > 0
+        pair(n + 1) = step(pair((n + 1) - 1))
+        (n + 1) - 1 = n
+        pair((n + 1) - 1) = pair(n)
+        pair(n + 1) = step(pair(n))
+        by cases:
+            ? $has_bisection_step_invariants(pair(n), pair(n + 1))
+            case $is_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                by thm upper_midpoint_step_preserves_bisection_state(E, pair(n))
+                pair(n)[1] <= (pair(n)[1] + pair(n)[2]) / 2
+                (pair(n)[1] + pair(n)[2]) / 2 <= pair(n)[2]
+                (pair(n)[1] + pair(n)[2]) / 2 - pair(n)[1] = (pair(n)[2] - pair(n)[1]) / 2
+                step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
+                pair(n + 1) = step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
+                pair(n)[1] <= pair(n + 1)[1]
+                pair(n + 1)[2] <= pair(n)[2]
+                pair(n + 1)[2] - pair(n + 1)[1] = (pair(n)[2] - pair(n)[1]) / 2
+                $has_bisection_step_invariants(pair(n), pair(n + 1))
+            case $is_not_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                by thm nonupper_midpoint_step_preserves_bisection_state(E, pair(n))
+                pair(n)[1] <= (pair(n)[1] + pair(n)[2]) / 2
+                (pair(n)[1] + pair(n)[2]) / 2 <= pair(n)[2]
+                pair(n)[2] - (pair(n)[1] + pair(n)[2]) / 2 = (pair(n)[2] - pair(n)[1]) / 2
+                step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
+                pair(n + 1) = step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
+                pair(n)[1] <= pair(n + 1)[1]
+                pair(n + 1)[2] <= pair(n)[2]
+                pair(n + 1)[2] - pair(n + 1)[1] = (pair(n)[2] - pair(n)[1]) / 2
+                $has_bisection_step_invariants(pair(n), pair(n + 1))
+    $is_bisection_pair_state_sequence(E, pair)
+    witness exist pair0 fn(n N) cart(R, R) st {$is_bisection_pair_state_sequence(E, pair0)} from pair:
+        $is_bisection_pair_state_sequence(E, pair)
+
+prop is_recursive_bisection_bracket_for_supremum(E set, lower, upper seq(R)):
+    E $subset R
+    forall n N_pos:
+        not $is_upper_bound(E, lower(n))
+        $is_upper_bound(E, upper(n))
+        lower(n) <= upper(n)
+    forall n N_pos:
+        lower(n) <= lower(n + 1)
+        upper(n + 1) <= upper(n)
+        upper(n + 1) - lower(n + 1) = (upper(n) - lower(n)) / 2
+
+thm recursive_bisection_bracket_exists:
+    ? forall E set, a E, b R:
+        E $subset R
+        $is_upper_bound(E, b)
+        =>:
+            exist lower, upper seq(R) st {$is_recursive_bisection_bracket_for_supremum(E, lower, upper)}
+    by thm recursive_bisection_pair_states_exist(E, a, b)
+    obtain pair from exist pair fn(n N) cart(R, R) st {$is_bisection_pair_state_sequence(E, pair)}
+    have fn lower(n N_pos) R = pair(n - 1)[1]
+    have fn upper(n N_pos) R = pair(n - 1)[2]
+    claim:
+        ? forall n N_pos:
+            not $is_upper_bound(E, lower(n))
+            $is_upper_bound(E, upper(n))
+            lower(n) <= upper(n)
+        $is_bisection_pair_state(E, pair(n - 1))
+        lower(n) = pair(n - 1)[1]
+        upper(n) = pair(n - 1)[2]
+        not $is_upper_bound(E, lower(n))
+        $is_upper_bound(E, upper(n))
+        lower(n) <= upper(n)
+    claim:
+        ? forall n N_pos:
+            lower(n) <= lower(n + 1)
+            upper(n + 1) <= upper(n)
+            upper(n + 1) - lower(n + 1) = (upper(n) - lower(n)) / 2
+        $has_bisection_step_invariants(pair(n - 1), pair((n - 1) + 1))
+        pair(n - 1)[1] <= pair((n - 1) + 1)[1]
+        pair((n - 1) + 1)[2] <= pair(n - 1)[2]
+        pair((n - 1) + 1)[2] - pair((n - 1) + 1)[1] = (pair(n - 1)[2] - pair(n - 1)[1]) / 2
+        (n - 1) + 1 = n
+        pair((n - 1) + 1) = pair(n)
+        lower(n) = pair(n - 1)[1]
+        upper(n) = pair(n - 1)[2]
+        lower(n + 1) = pair((n + 1) - 1)[1]
+        upper(n + 1) = pair((n + 1) - 1)[2]
+        (n + 1) - 1 = n
+        pair((n + 1) - 1) = pair(n)
+        lower(n + 1) = pair(n)[1]
+        upper(n + 1) = pair(n)[2]
+        pair((n - 1) + 1)[1] = pair(n)[1]
+        pair((n - 1) + 1)[2] = pair(n)[2]
+        upper(n + 1) - lower(n + 1) = pair(n)[2] - pair(n)[1]
+        pair(n)[2] - pair(n)[1] = pair((n - 1) + 1)[2] - pair((n - 1) + 1)[1]
+        pair((n - 1) + 1)[2] - pair((n - 1) + 1)[1] = (pair(n - 1)[2] - pair(n - 1)[1]) / 2
+        (pair(n - 1)[2] - pair(n - 1)[1]) / 2 = (upper(n) - lower(n)) / 2
+        lower(n) <= lower(n + 1)
+        upper(n + 1) <= upper(n)
+        upper(n + 1) - lower(n + 1) = (upper(n) - lower(n)) / 2
+    $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+    witness exist lower0, upper0 seq(R) st {$is_recursive_bisection_bracket_for_supremum(E, lower0, upper0)} from lower, upper:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+
+# The recursive midpoint construction has an explicit geometric width bound.
+thm bisection_width_after_n_steps:
+    ? forall E set, lower, upper seq(R), n N_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        =>:
+            upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+    by induc n from 1:
+        ? upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+        ? from n = 1:
+            1 - 1 = 0
+            2^0 = 1
+            (upper(1) - lower(1)) / 1 = upper(1) - lower(1)
+            upper(1) - lower(1) = (upper(1) - lower(1)) / 2^(1 - 1)
+        ? induc:
+            upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+            upper(n + 1) - lower(n + 1) = (upper(n) - lower(n)) / 2
+            n = (n - 1) + 1
+            2^n = 2^((n - 1) + 1)
+            2^((n - 1) + 1) = 2^(n - 1) * 2^1
+            2^1 = 2
+            2^n = 2^(n - 1) * 2
+            n + 1 - 1 = n
+            2^(n + 1 - 1) = 2^n = 2^(n - 1) * 2
+            2^(n - 1) > 0
+            2^(n - 1) != 0
+            2^(n - 1) * 2 != 0
+            (upper(1) - lower(1)) / (2^(n - 1) * 2) = ((upper(1) - lower(1)) / 2^(n - 1)) / 2
+            (upper(1) - lower(1)) / 2^(n + 1 - 1) = (upper(1) - lower(1)) / (2^(n - 1) * 2) = ((upper(1) - lower(1)) / 2^(n - 1)) / 2
+            upper(n + 1) - lower(n + 1) = (upper(1) - lower(1)) / 2^(n + 1 - 1)
+
+thm positive_natural_le_two_power_predecessor:
+    ? forall n N_pos:
+        n <= 2^(n - 1)
+    by induc n from 1:
+        ? n <= 2^(n - 1)
+        ? from n = 1:
+            1 - 1 = 0
+            2^0 = 1
+            1 <= 2^(1 - 1)
+        ? induc:
+            n <= 2^(n - 1)
+            n >= 1
+            2^(n - 1) >= 0
+            2^(n - 1) * 2 >= n * 2
+            n * 2 = n + n
+            n >= 1
+            n + n >= n + 1
+            2^(n - 1) * 2 >= n * 2 = n + n >= n + 1
+            2^(n - 1) * 2 >= n + 1
+            n = (n - 1) + 1
+            2^n = 2^((n - 1) + 1)
+            2^((n - 1) + 1) = 2^(n - 1) * 2^1
+            2^1 = 2
+            2^n = 2^(n - 1) * 2
+            n + 1 - 1 = n
+            2^(n + 1 - 1) = 2^n = 2^(n - 1) * 2
+            n + 1 <= 2^(n + 1 - 1)
+
+thm recursive_bisection_width_eventually_below:
+    ? forall E set, lower, upper seq(R), epsilon R_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        =>:
+            exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+    have D R = upper(1) - lower(1)
+    lower(1) <= upper(1)
+    upper(1) - lower(1) >= 0
+    D = upper(1) - lower(1)
+    D >= 0
+    D = 0 or D > 0
+    by cases:
+        ? exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+        case D = 0:
+            witness exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)} from 1:
+                claim:
+                    ? forall n N_pos:
+                        n >= 1
+                        =>:
+                            upper(n) - lower(n) < epsilon
+                    by thm bisection_width_after_n_steps(E, lower, upper, n)
+                    upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+                    upper(1) - lower(1) = D = 0
+                    upper(n) - lower(n) = 0 / 2^(n - 1) = 0
+                    0 < epsilon
+                    upper(n) - lower(n) < epsilon
+                $is_bracket_width_below_after(lower, upper, epsilon, 1)
+        case D > 0:
+            have Dpos R_pos = D
+            Dpos = D
+            epsilon / Dpos $in R_pos
+            by thm archimedean_property(epsilon / Dpos)
+            obtain n0 from exist n0 N_pos st {1 / n0 < epsilon / Dpos}
+            witness exist n1 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n1)} from n0:
+                claim:
+                    ? forall n N_pos:
+                        n >= n0
+                        =>:
+                            upper(n) - lower(n) < epsilon
+                    by thm bisection_width_after_n_steps(E, lower, upper, n)
+                    upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+                    upper(1) - lower(1) = D
+                    upper(n) - lower(n) = D / 2^(n - 1)
+                    by thm positive_natural_le_two_power_predecessor(n)
+                    n <= 2^(n - 1)
+                    n0 <= n <= 2^(n - 1)
+                    2^(n - 1) > 0
+                    n0 > 0
+                    2^(n - 1) * n0 > 0
+                    D * n0 <= D * 2^(n - 1)
+                    D / 2^(n - 1) = (D * n0) / (2^(n - 1) * n0)
+                    D / n0 = (D * 2^(n - 1)) / (2^(n - 1) * n0)
+                    (D * n0) / (2^(n - 1) * n0) <= (D * 2^(n - 1)) / (2^(n - 1) * n0)
+                    D / 2^(n - 1) <= D / n0
+                    n0 * Dpos > 0
+                    (1 / n0) * (n0 * Dpos) < (epsilon / Dpos) * (n0 * Dpos)
+                    (1 / n0) * (n0 * Dpos) = Dpos
+                    (epsilon / Dpos) * (n0 * Dpos) = epsilon * n0
+                    Dpos < epsilon * n0
+                    Dpos / n0 < (epsilon * n0) / n0
+                    (epsilon * n0) / n0 = epsilon
+                    Dpos / n0 < epsilon
+                    D / n0 = Dpos / n0 < epsilon
+                    upper(n) - lower(n) = D / 2^(n - 1) <= D / n0 < epsilon
+                $is_bracket_width_below_after(lower, upper, epsilon, n0)
+
+thm recursive_bisection_lower_le_add:
+    ? forall E set, lower, upper seq(R), k N, n N_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        =>:
+            lower(n) <= lower(n + k)
+    by induc k from 0:
+        ? lower(n) <= lower(n + k)
+        ? from k = 0:
+            n + 0 = n
+            lower(n + 0) = lower(n)
+            lower(n) <= lower(n)
+            lower(n) <= lower(n + 0)
+        ? induc:
+            lower(n) <= lower(n + k)
+            n + k $in N_pos
+            lower(n + k) <= lower(n + k + 1)
+            n + (k + 1) = n + k + 1
+            lower(n) <= lower(n + k) <= lower(n + k + 1) = lower(n + (k + 1))
+
+thm recursive_bisection_lower_le_of_le:
+    ? forall E set, lower, upper seq(R), j, k N_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        j <= k
+        =>:
+            lower(j) <= lower(k)
+    k - j $in N
+    j + (k - j) = k
+    by thm recursive_bisection_lower_le_add(E, lower, upper, k - j, j)
+    lower(j) <= lower(j + (k - j))
+    lower(j + (k - j)) = lower(k)
+    lower(j) <= lower(k)
+
+thm recursive_bisection_upper_le_add:
+    ? forall E set, lower, upper seq(R), k N, n N_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        =>:
+            upper(n + k) <= upper(n)
+    by induc k from 0:
+        ? upper(n + k) <= upper(n)
+        ? from k = 0:
+            n + 0 = n
+            upper(n + 0) = upper(n)
+            upper(n) <= upper(n)
+            upper(n + 0) <= upper(n)
+        ? induc:
+            upper(n + k) <= upper(n)
+            n + k $in N_pos
+            upper(n + k + 1) <= upper(n + k)
+            n + (k + 1) = n + k + 1
+            upper(n + (k + 1)) = upper(n + k + 1) <= upper(n + k) <= upper(n)
+
+thm recursive_bisection_upper_le_of_le:
+    ? forall E set, lower, upper seq(R), j, k N_pos:
+        $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
+        j <= k
+        =>:
+            upper(k) <= upper(j)
+    k - j $in N
+    j + (k - j) = k
+    by thm recursive_bisection_upper_le_add(E, lower, upper, k - j, j)
+    upper(j + (k - j)) <= upper(j)
+    upper(k) = upper(j + (k - j))
+    upper(k) <= upper(j)
+
 prop is_bisection_bracket_for_supremum(E set, lower, upper seq(R)):
     E $subset R
     forall n N_pos:
-        lower(n) $in E
+        not $is_upper_bound(E, lower(n))
         $is_upper_bound(E, upper(n))
         lower(n) <= upper(n)
     forall j, k N_pos:
@@ -3043,7 +3501,34 @@ thm bisection_bracket_exists:
             $has_bisection_bracket_for_supremum(E)
     have a0 E
     obtain b0 from exist b0 R st {$is_upper_bound(E, b0)}
-    trust exist lower, upper seq(R) st {$is_bisection_bracket_for_supremum(E, lower, upper)}
+    by thm recursive_bisection_bracket_exists(E, a0, b0)
+    obtain lower, upper from exist lower, upper seq(R) st {$is_recursive_bisection_bracket_for_supremum(E, lower, upper)}
+    claim:
+        ? forall n N_pos:
+            not $is_upper_bound(E, lower(n))
+            $is_upper_bound(E, upper(n))
+            lower(n) <= upper(n)
+        not $is_upper_bound(E, lower(n))
+        $is_upper_bound(E, upper(n))
+        lower(n) <= upper(n)
+    claim:
+        ? forall j, k N_pos:
+            j <= k
+            =>:
+                lower(j) <= lower(k)
+                upper(k) <= upper(j)
+        by thm recursive_bisection_lower_le_of_le(E, lower, upper, j, k)
+        lower(j) <= lower(k)
+        by thm recursive_bisection_upper_le_of_le(E, lower, upper, j, k)
+        upper(k) <= upper(j)
+    claim:
+        ? forall epsilon R_pos:
+            exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+        by thm recursive_bisection_width_eventually_below(E, lower, upper, epsilon)
+        exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+    $is_bisection_bracket_for_supremum(E, lower, upper)
+    witness exist lower0, upper0 seq(R) st {$is_bisection_bracket_for_supremum(E, lower0, upper0)} from lower, upper:
+        $is_bisection_bracket_for_supremum(E, lower, upper)
     $has_bisection_bracket_for_supremum(E)
 
 thm bisection_lower_endpoint_tail_close:
@@ -3332,19 +3817,30 @@ thm bisection_lower_limit_below_upper_bound:
         dist_R(lower(n0), L) <= (L - B) / 2
         dist_R(lower(n0), L) = abs(lower(n0) - L)
         abs(lower(n0) - L) <= (L - B) / 2
-        lower(n0) $in E
-        lower(n0) <= B
-        L - lower(n0) >= L - B
         L - B > 0
-        L - B > (L - B) / 2
-        L - lower(n0) >= L - B > (L - B) / 2
-        L - lower(n0) > (L - B) / 2
-        -(lower(n0) - L) = L - lower(n0)
-        -(lower(n0) - L) <= abs(lower(n0) - L)
+        (L - B) / 2 > 0
         abs(lower(n0) - L) >= -(lower(n0) - L)
-        abs(lower(n0) - L) >= L - lower(n0) > (L - B) / 2
-        abs(lower(n0) - L) > (L - B) / 2
-        impossible abs(lower(n0) - L) <= (L - B) / 2
+        -(lower(n0) - L) = L - lower(n0)
+        L - lower(n0) <= abs(lower(n0) - L) <= (L - B) / 2
+        L - lower(n0) <= (L - B) / 2
+        -1 * (L - lower(n0)) >= -1 * ((L - B) / 2)
+        -1 * (L - lower(n0)) = lower(n0) - L
+        -1 * ((L - B) / 2) = -((L - B) / 2)
+        lower(n0) - L >= -((L - B) / 2)
+        lower(n0) - B = (lower(n0) - L) + (L - B)
+        (lower(n0) - L) + (L - B) >= -((L - B) / 2) + (L - B)
+        -((L - B) / 2) + (L - B) = (L - B) / 2
+        lower(n0) - B >= (L - B) / 2 > 0
+        lower(n0) > B
+        claim:
+            ? $is_upper_bound(E, lower(n0))
+            forall y E:
+                y <= B
+                B < lower(n0)
+                y <= lower(n0)
+            $is_upper_bound(E, lower(n0))
+        not $is_upper_bound(E, lower(n0))
+        impossible $is_upper_bound(E, lower(n0))
 
 thm common_limit_of_bisection_bracket_is_lub:
     ? forall E set, lower, upper seq(R), L R:
@@ -4081,7 +4577,7 @@ thm nth_root_power_identity_nonnegative:
             x^(1 / n) = 0^(1 / n) = 0
             (x^(1 / n))^n = 0^n = 0 = x
         case x > 0:
-            (x^(1 / n))^n = x
+            (x^(1 / n))^n = x^((1 / n) * n) = x^1 = x
 
 thm nth_root_power_identity_from_equality:
     ? forall x, y R, n N_pos:

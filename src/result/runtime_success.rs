@@ -5,6 +5,10 @@ use std::fmt;
 pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
     pub infers: InferResult,
+    /// Stored facts selected for ordinary statement output. Most statements keep
+    /// their environment effects in the detailed execution trace only; value-
+    /// producing statements such as `eval` may expose their primary result.
+    pub reported_store_facts: Vec<StoreFactOutput>,
     pub inside_results: Vec<StmtResult>,
     pub execution_trace: Option<StatementExecutionTrace>,
     pub theorem_verification: Option<TheoremVerificationResult>,
@@ -108,6 +112,7 @@ pub struct ByEnumerateRangeVerificationResult {
 #[derive(Clone, Debug)]
 pub struct ByInducVerificationResult {
     pub strong: bool,
+    pub finite_set: bool,
     pub structured: bool,
     pub parameter: String,
     pub start: String,
@@ -570,6 +575,7 @@ impl NonFactualStmtSuccess {
         NonFactualStmtSuccess {
             stmt,
             infers,
+            reported_store_facts: vec![],
             inside_results,
             execution_trace: None,
             theorem_verification: None,
@@ -587,6 +593,7 @@ impl NonFactualStmtSuccess {
         NonFactualStmtSuccess {
             stmt,
             infers,
+            reported_store_facts: vec![],
             inside_results,
             execution_trace: None,
             theorem_verification: Some(theorem_verification),
@@ -604,6 +611,7 @@ impl NonFactualStmtSuccess {
         NonFactualStmtSuccess {
             stmt,
             infers,
+            reported_store_facts: vec![],
             inside_results,
             execution_trace: None,
             theorem_verification: None,
@@ -621,6 +629,7 @@ impl NonFactualStmtSuccess {
         NonFactualStmtSuccess {
             stmt,
             infers,
+            reported_store_facts: vec![],
             inside_results,
             execution_trace: None,
             theorem_verification: None,
@@ -631,6 +640,11 @@ impl NonFactualStmtSuccess {
 
     pub fn new_with_stmt(stmt: Stmt) -> Self {
         Self::new(stmt, InferResult::new(), vec![])
+    }
+
+    pub fn with_reported_store_facts(mut self, reported_store_facts: Vec<StoreFactOutput>) -> Self {
+        self.reported_store_facts = reported_store_facts;
+        self
     }
 }
 
@@ -802,6 +816,7 @@ impl ByEnumerateRangeVerificationResult {
 impl ByInducVerificationResult {
     pub fn new(
         strong: bool,
+        finite_set: bool,
         structured: bool,
         parameter: String,
         start: String,
@@ -817,6 +832,7 @@ impl ByInducVerificationResult {
     ) -> Self {
         ByInducVerificationResult {
             strong,
+            finite_set,
             structured,
             parameter,
             start,

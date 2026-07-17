@@ -15,6 +15,7 @@ pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
             | Obj::Atom(AtomObj::FnSet(_))
             | Obj::Atom(AtomObj::Induc(_))
             | Obj::Atom(AtomObj::DefAlgo(_))
+            | Obj::Atom(AtomObj::DefStructField(_))
             | Obj::ObjAtIndex(_)
             | Obj::ObjAsStructInstanceWithFieldAccess(_)
     )
@@ -31,6 +32,7 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
         Obj::Atom(AtomObj::FnSet(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::Induc(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::DefAlgo(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::DefStructField(p)) => vec![p.name.clone()],
         _ => vec![],
     }
 }
@@ -63,77 +65,6 @@ impl Runtime {
                 v.insert(KnownFnInfo::merge_fn_set_equal_to(body, equal_to));
             }
         }
-    }
-
-    fn upsert_known_fn_restrict_to_for_key(
-        map: &mut HashMap<ObjString, KnownFnInfo>,
-        key: ObjString,
-        restrict_body: FnSetBody,
-        line_file: LineFile,
-    ) {
-        match map.entry(key) {
-            Entry::Occupied(mut o) => {
-                o.get_mut()
-                    .update_restrict_to(restrict_body, line_file.clone());
-            }
-            Entry::Vacant(v) => {
-                let mut info = KnownFnInfo::default();
-                info.update_restrict_to(restrict_body, line_file);
-                v.insert(info);
-            }
-        }
-    }
-
-    /// Record `$restricts_to(f, fn …)` RHS body for `f` (overwrites prior `restrict_to` for that key).
-    pub(crate) fn register_known_fn_restrict_to_for_element(
-        &mut self,
-        element: &Obj,
-        restrict_body: FnSetBody,
-        line_file: LineFile,
-    ) {
-        if !obj_eligible_for_known_objs_in_fn_sets(element) {
-            return;
-        }
-        let key = element.to_string();
-        let env = self.top_level_env();
-        Self::upsert_known_fn_restrict_to_for_key(
-            &mut env.known_objs_in_fn_sets,
-            key.clone(),
-            restrict_body.clone(),
-            line_file.clone(),
-        );
-        for alias in extra_known_fn_set_keys_for_bare_name_lookup(element) {
-            if alias != key {
-                Self::upsert_known_fn_restrict_to_for_key(
-                    &mut env.known_objs_in_fn_sets,
-                    alias,
-                    restrict_body.clone(),
-                    line_file.clone(),
-                );
-            }
-        }
-    }
-
-    /// `$restricts_to(f, narrower_fn_set)` after the fact is stored: remember the narrowed `FnSetBody`.
-    /// If the RHS is a set, treat it as a unary real-valued restriction on that domain.
-    pub fn infer_restrict_fact(&mut self, rf: &RestrictFact) -> Result<InferResult, RuntimeError> {
-        let restrict_body = match &rf.obj_can_restrict_to_fn_set {
-            Obj::FnSet(fs) => fs.body.clone(),
-            domain => FnSetBody::new(
-                vec![ParamGroupWithSet::new(
-                    vec!["x".to_string()],
-                    domain.clone(),
-                )],
-                vec![],
-                StandardSet::R.into(),
-            ),
-        };
-        self.register_known_fn_restrict_to_for_element(
-            &rf.obj,
-            restrict_body,
-            rf.line_file.clone(),
-        );
-        Ok(InferResult::new())
     }
 
     /// Record `element` as having function signature `body` (same keys/aliases as `element $in fn ...` infer).
@@ -411,13 +342,6 @@ impl Runtime {
             // Example: if `f fn(x S) T`, storing `z $in fn_range(f)` infers
             // `z $in T` and `exist x S st {z = f(x)}`.
             Obj::FnRange(fn_range) => self.infer_membership_in_fn_range(in_fact, fn_range),
-            // Restricted function range: `z $in fn_range_on(f, S)` implies `z` is in
-            // the codomain of `f` and has a preimage in the restricted domain `S`.
-            // Example: if `a seq(R)`, storing `z $in fn_range_on(a, 1...3)` infers
-            // `z $in R` and `exist k 1...3 st {z = a(k)}`.
-            Obj::FnRangeOn(fn_range_on) => {
-                self.infer_membership_in_fn_range_on(in_fact, fn_range_on)
-            }
             // Replacement elimination: `y $in replacement(P, A)` infers a preimage witness exists.
             // Example: `y $in replacement(P, A)` infers `exist x A st {$P(x, y)}`.
             Obj::Replacement(replacement) => {
@@ -726,14 +650,16 @@ impl Runtime {
                         ParamObjType::DefStructField,
                         Some(in_fact.line_file.clone()),
                     )?;
-                    infer_result.new_fact(&instantiated_fact);
-                    let instantiated_fact_line_file = instantiated_fact.line_file();
-                    let instantiated_fact_string = instantiated_fact.to_string();
-                    self.top_level_env().store_fact(instantiated_fact)?;
-                    self.top_level_env().store_fact_to_cache_known_fact(
-                        instantiated_fact_string,
-                        instantiated_fact_line_file,
-                    )?;
+                    // Struct membership assumes each filter fact under the named field view,
+                    // then exposes its normal inference consequences.
+                    // Example: `g &Group<s>` and `$is_group(s, inv, op, e)` infer
+                    // `@G.op(@G.inv(x), x) = @G.e` for the same explicit field view.
+                    infer_result.new_infer_result_inside(
+                        self.store_fact_without_forall_coverage_check_and_infer_with_reason(
+                            instantiated_fact,
+                            "struct membership filter",
+                        )?,
+                    );
 
                     let projected_fact = self.inst_fact(
                         &after_header,
@@ -801,6 +727,32 @@ impl Runtime {
                 infer_result.new_infer_result_inside(
                     self.store_atomic_fact_without_well_defined_verified_and_infer(
                         expanded_atomic,
+                    )?,
+                );
+                Ok(infer_result)
+            }
+            // Binary union: storing `x $in union(A, B)` infers the disjunction
+            // `x $in A or x $in B`. Example: `x $in union(A, B)` can split into
+            // the two membership cases.
+            Obj::Union(union) => {
+                let lf = in_fact.line_file.clone();
+                let element_in_left: AtomicFact =
+                    InFact::new(in_fact.element.clone(), (*union.left).clone(), lf.clone()).into();
+                let element_in_right: AtomicFact =
+                    InFact::new(in_fact.element.clone(), (*union.right).clone(), lf.clone()).into();
+                let union_membership_cases: Fact = OrFact::new(
+                    vec![
+                        AndChainAtomicFact::AtomicFact(element_in_left),
+                        AndChainAtomicFact::AtomicFact(element_in_right),
+                    ],
+                    lf,
+                )
+                .into();
+                let mut infer_result = InferResult::new();
+                infer_result.new_fact(&union_membership_cases);
+                infer_result.new_infer_result_inside(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        union_membership_cases,
                     )?,
                 );
                 Ok(infer_result)
@@ -941,64 +893,6 @@ impl Runtime {
             );
         }
         Ok(infer_result)
-    }
-
-    fn infer_membership_in_fn_range_on(
-        &mut self,
-        in_fact: &InFact,
-        fn_range_on: &FnRangeOn,
-    ) -> Result<InferResult, RuntimeError> {
-        let Some(body) = self.get_fn_range_on_function_body(&fn_range_on.function) else {
-            return Ok(InferResult::new());
-        };
-        let Some(restricted_body) = self.fn_range_on_restricted_body(fn_range_on, &body) else {
-            return Ok(InferResult::new());
-        };
-        let codomain_fact: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            restricted_body.ret_set.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let mut infer_result = InferResult::new();
-        infer_result.push_atomic_fact(&codomain_fact);
-        infer_result.new_infer_result_inside(
-            self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_fact)?,
-        );
-        if let Some(exist_fact) = self.preimage_exist_fact_from_fn_body(
-            in_fact,
-            fn_range_on.function.as_ref(),
-            &restricted_body,
-        )? {
-            infer_result.new_fact(&exist_fact);
-            infer_result.new_infer_result_inside(
-                self.verify_well_defined_and_store_and_infer_with_default_verify_state(exist_fact)?,
-            );
-        }
-        Ok(infer_result)
-    }
-
-    fn fn_range_on_restricted_body(
-        &self,
-        fn_range_on: &FnRangeOn,
-        body: &FnSetBody,
-    ) -> Option<FnSetBody> {
-        if body.params_def_with_set.number_of_params() != 1 {
-            return None;
-        }
-        let param_name = body
-            .params_def_with_set
-            .collect_param_names()
-            .first()?
-            .clone();
-        Some(FnSetBody::new(
-            vec![ParamGroupWithSet::new(
-                vec![param_name],
-                fn_range_on.set.as_ref().clone(),
-            )],
-            vec![],
-            body.ret_set.as_ref().clone(),
-        ))
     }
 
     fn preimage_exist_fact_from_fn_body(

@@ -90,6 +90,7 @@ impl fmt::Display for ByStmt {
             ByStmt::ByCasesStmt(x) => write!(f, "{}", x),
             ByStmt::ByContraStmt(x) => write!(f, "{}", x),
             ByStmt::ByEnumerateFiniteSetStmt(x) => write!(f, "{}", x),
+            ByStmt::ByFiniteSetInducStmt(x) => write!(f, "{}", x),
             ByStmt::ByInducStmt(x) => write!(f, "{}", x),
             ByStmt::ByForStmt(x) => write!(f, "{}", x),
             ByStmt::ByExtensionStmt(x) => write!(f, "{}", x),
@@ -130,13 +131,9 @@ impl fmt::Display for CommandStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             CommandStmt::ImportStmt(x) => write!(f, "{}", x),
-            CommandStmt::TrustImportStmt(x) => write!(f, "{}", x),
-            CommandStmt::LocalImportStmt(x) => write!(f, "{}", x),
-            CommandStmt::TrustLocalImportStmt(x) => write!(f, "{}", x),
             CommandStmt::DoNothingStmt(x) => write!(f, "{}", x),
             CommandStmt::ClearStmt(x) => write!(f, "{}", x),
             CommandStmt::EvalStmt(x) => write!(f, "{}", x),
-            CommandStmt::EvalByStmt(x) => write!(f, "{}", x),
             CommandStmt::UseStrategyStmt(x) => write!(f, "{}", x),
             CommandStmt::StopStrategyStmt(x) => write!(f, "{}", x),
         }

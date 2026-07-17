@@ -70,6 +70,21 @@ impl Obj {
                     None
                 }
             }
+            Obj::IntegerQuotient(quotient) => {
+                let dividend_number = quotient.dividend.evaluate_to_normalized_decimal_number();
+                let divisor_number = quotient.divisor.evaluate_to_normalized_decimal_number();
+                if let (Some(dividend_number), Some(divisor_number)) =
+                    (dividend_number, divisor_number)
+                {
+                    integer_quotient_decimal_str_and_normalize(
+                        &dividend_number.normalized_value,
+                        &divisor_number.normalized_value,
+                    )
+                    .map(Number::new)
+                } else {
+                    None
+                }
+            }
             Obj::Pow(pow_obj) => {
                 let base_number = pow_obj.base.evaluate_to_normalized_decimal_number();
                 let exponent_number = pow_obj.exponent.evaluate_to_normalized_decimal_number();
@@ -154,7 +169,7 @@ impl Obj {
                 Obj::Tuple(tuple) => Some(Number::new(tuple.args.len().to_string())),
                 _ => None,
             },
-            Obj::Count(count) => match &*count.set {
+            Obj::FiniteSetSize(finite_set_size) => match &*finite_set_size.set {
                 Obj::ListSet(list_set) => Some(Number::new(list_set.list.len().to_string())),
                 Obj::ClosedRange(cr) => {
                     let a = cr.start.evaluate_to_normalized_decimal_number()?;
@@ -170,11 +185,12 @@ impl Obj {
                 Obj::Cart(cart) => {
                     let mut acc = "1".to_string();
                     for arg in cart.args.iter() {
-                        let factor_count = Obj::Count(Count::new((**arg).clone()))
-                            .evaluate_to_normalized_decimal_number()?;
+                        let factor_finite_set_size =
+                            Obj::FiniteSetSize(FiniteSetSize::new((**arg).clone()))
+                                .evaluate_to_normalized_decimal_number()?;
                         acc = mul_signed_decimal_str(
                             acc.trim(),
-                            factor_count.normalized_value.trim(),
+                            factor_finite_set_size.normalized_value.trim(),
                         );
                     }
                     Some(Number::new(acc))
@@ -471,8 +487,87 @@ pub fn mul_decimal_str_and_normalize(a: &str, b: &str) -> String {
     normalize_decimal_number_string(&result)
 }
 
-/// Computes integer remainder on decimal strings, using the integer part of `a`.
+/// Computes the Euclidean remainder on signed integer decimal strings.
+///
+/// The result is always non-negative and strictly smaller than the absolute
+/// value of a non-zero divisor. For example, `-7 % 3 = 2`.
 pub fn mod_decimal_str_and_normalize(a: &str, b: &str) -> String {
+    let normalized_a = normalize_decimal_number_string(a);
+    let normalized_b = normalize_decimal_number_string(b);
+    let (a_is_negative, a_magnitude) = split_sign_and_magnitude(&normalized_a);
+    let (_, b_magnitude) = split_sign_and_magnitude(&normalized_b);
+    let remainder = mod_nonnegative_decimal_str_and_normalize(&a_magnitude, &b_magnitude);
+
+    if a_is_negative && remainder != "0" {
+        sub_decimal_str_and_normalize(&b_magnitude, &remainder)
+    } else {
+        remainder
+    }
+}
+
+/// Computes the Euclidean integer quotient for an integer dividend and a
+/// positive integer divisor. The result satisfies `a = d * q + a % d`.
+pub fn integer_quotient_decimal_str_and_normalize(a: &str, d: &str) -> Option<String> {
+    let normalized_a = normalize_decimal_number_string(a);
+    let normalized_d = normalize_decimal_number_string(d);
+    if !is_number_string_literally_integer_without_dot(normalized_a.clone())
+        || !is_number_string_literally_integer_without_dot(normalized_d.clone())
+        || normalized_d.starts_with('-')
+        || normalized_d == "0"
+    {
+        return None;
+    }
+
+    let (a_is_negative, a_magnitude) = split_sign_and_magnitude(&normalized_a);
+    let quotient_magnitude =
+        div_nonnegative_integer_decimal_str_and_normalize(&a_magnitude, &normalized_d);
+    if !a_is_negative {
+        return Some(quotient_magnitude);
+    }
+
+    let remainder = mod_nonnegative_decimal_str_and_normalize(&a_magnitude, &normalized_d);
+    let negative_magnitude = if remainder == "0" {
+        quotient_magnitude
+    } else {
+        add_decimal_str_and_normalize(&quotient_magnitude, "1")
+    };
+    Some(normalize_decimal_number_string(&format!(
+        "-{}",
+        negative_magnitude
+    )))
+}
+
+fn div_nonnegative_integer_decimal_str_and_normalize(a: &str, b: &str) -> String {
+    let (int_a, _) = parse_decimal_parts(a);
+    let (int_b, _) = parse_decimal_parts(b);
+    let a_digits = trim_leading_zeros(&int_a);
+    let b_digits = trim_leading_zeros(&int_b);
+    if a_digits.is_empty() || b_digits.is_empty() {
+        return "0".to_string();
+    }
+
+    let mut current: Vec<u8> = vec![];
+    let mut quotient_digits: Vec<u8> = vec![];
+    for &digit in &a_digits {
+        current.push(digit);
+        current = trim_leading_zeros(&current);
+        let mut quotient_digit = 0u8;
+        for candidate in (0..=9).rev() {
+            let product = mul_digit(&b_digits, candidate);
+            if compare_digits(&current, &product) != std::cmp::Ordering::Less {
+                quotient_digit = candidate;
+                if candidate != 0 {
+                    current = sub_digits(&current, &product);
+                }
+                break;
+            }
+        }
+        quotient_digits.push(quotient_digit);
+    }
+    normalize_decimal_number_string(&digits_to_string(&quotient_digits))
+}
+
+fn mod_nonnegative_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let (int_a, _) = parse_decimal_parts(a);
     let (int_b, _) = parse_decimal_parts(b);
     let a_digits = trim_leading_zeros(&int_a);
@@ -796,5 +891,35 @@ mod tests {
             .evaluate_to_normalized_decimal_number()
             .map(|number| number.normalized_value);
         assert_eq!(result, Some("1".to_string()));
+    }
+
+    #[test]
+    fn signed_mod_uses_euclidean_remainders() {
+        assert_eq!(mod_decimal_str_and_normalize("7", "3"), "1");
+        assert_eq!(mod_decimal_str_and_normalize("-7", "3"), "2");
+        assert_eq!(mod_decimal_str_and_normalize("-6", "3"), "0");
+        assert_eq!(mod_decimal_str_and_normalize("-7", "-3"), "2");
+    }
+
+    #[test]
+    fn integer_quotient_uses_euclidean_signed_division() {
+        assert_eq!(
+            integer_quotient_decimal_str_and_normalize("7", "3"),
+            Some("2".to_string())
+        );
+        assert_eq!(
+            integer_quotient_decimal_str_and_normalize("-7", "3"),
+            Some("-3".to_string())
+        );
+        assert_eq!(
+            integer_quotient_decimal_str_and_normalize("-6", "3"),
+            Some("-2".to_string())
+        );
+        assert_eq!(
+            integer_quotient_decimal_str_and_normalize("123456789012345678901234567890", "10"),
+            Some("12345678901234567890123456789".to_string())
+        );
+        assert_eq!(integer_quotient_decimal_str_and_normalize("7", "-3"), None);
+        assert_eq!(integer_quotient_decimal_str_and_normalize("7.5", "3"), None);
     }
 }

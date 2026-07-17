@@ -66,9 +66,9 @@ mod local_debug_tests {
             None => panic!("{:?} must be valid UTF-8", debug_lit_path),
         };
 
-        let builtin_start = Instant::now();
-        let mut runtime = Runtime::new_with_builtin_code();
-        let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+        let runtime_setup_start = Instant::now();
+        let mut runtime = Runtime::new();
+        let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
         runtime.new_file_path_new_env_new_name_scope(path_for_runtime);
         let detail_output = env_flag_is_set("LITEX_DEBUG_DETAIL_OUTPUT");
         runtime.detail_output = detail_output;
@@ -111,7 +111,10 @@ mod local_debug_tests {
 
         let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
         println!("--- debug snippets timing (summary) ---");
-        println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+        println!(
+            "  runtime setup (once): {:.2} ms",
+            runtime_setup_duration_ms
+        );
         println!(
             "  snippets: {} run(s), sum of runs: {:.2} ms | wall: {:.2} ms",
             durations_ms.len(),

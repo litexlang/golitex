@@ -103,6 +103,9 @@ impl FreeParamCollection {
             ParamObjType::TupleIndex => TupleIndexFreeParamObj::new(name.to_string()).into(),
             ParamObjType::CartIndex => CartIndexFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Identifier => Identifier::new(name.to_string()).into(),
+            ParamObjType::TheoremInstantiation => unreachable!(
+                "resolve_identifier_to_free_param_obj: theorem instantiation is not a parser scope"
+            ),
         }
     }
 }

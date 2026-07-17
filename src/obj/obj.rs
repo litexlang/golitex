@@ -13,6 +13,7 @@ pub enum Obj {
     Mul(Mul),
     Div(Div),
     Mod(Mod),
+    IntegerQuotient(IntegerQuotient),
     Pow(Pow),
     Abs(Abs),
     Sqrt(Sqrt),
@@ -36,9 +37,8 @@ pub enum Obj {
     Proj(Proj),
     TupleDim(TupleDim),
     Tuple(Tuple),
-    Count(Count),
+    FiniteSetSize(FiniteSetSize),
     FnRange(FnRange),
-    FnRangeOn(FnRangeOn),
     Replacement(Replacement),
     Sum(Sum),
     SumOfFiniteSet(SumOfFiniteSet),
@@ -98,7 +98,7 @@ pub enum ObjKind {
     Proj = 27,
     TupleDim = 28,
     Tuple = 29,
-    Count = 30,
+    FiniteSetSize = 30,
     Sum = 31,
     SumOfFiniteSet = 32,
     Product = 33,
@@ -133,11 +133,11 @@ pub enum ObjKind {
     DefAlgoFreeParam = 62,
     DefStructFieldFreeParam = 63,
     FnRange = 64,
-    FnRangeOn = 65,
     Replacement = 66,
     TupleIndexFreeParam = 67,
     CartIndexFreeParam = 68,
     GeneralCart = 69,
+    IntegerQuotient = 70,
 }
 
 impl ObjKind {
@@ -464,19 +464,13 @@ pub struct FiniteSeqListObj {
 }
 
 #[derive(Clone)]
-pub struct Count {
+pub struct FiniteSetSize {
     pub set: Box<Obj>,
 }
 
 #[derive(Clone)]
 pub struct FnRange {
     pub function: Box<Obj>,
-}
-
-#[derive(Clone)]
-pub struct FnRangeOn {
-    pub function: Box<Obj>,
-    pub set: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -545,6 +539,13 @@ pub struct Div {
 pub struct Mod {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
+}
+
+/// Euclidean quotient of an integer dividend by a positive integer divisor.
+#[derive(Clone)]
+pub struct IntegerQuotient {
+    pub dividend: Box<Obj>,
+    pub divisor: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -702,6 +703,15 @@ impl Mod {
         Mod {
             left: Box::new(left),
             right: Box::new(right),
+        }
+    }
+}
+
+impl IntegerQuotient {
+    pub fn new(dividend: Obj, divisor: Obj) -> Self {
+        IntegerQuotient {
+            dividend: Box::new(dividend),
+            divisor: Box::new(divisor),
         }
     }
 }
@@ -891,9 +901,9 @@ impl Tuple {
     }
 }
 
-impl Count {
+impl FiniteSetSize {
     pub fn new(set: Obj) -> Self {
-        Count { set: Box::new(set) }
+        FiniteSetSize { set: Box::new(set) }
     }
 }
 
@@ -901,15 +911,6 @@ impl FnRange {
     pub fn new(function: Obj) -> Self {
         FnRange {
             function: Box::new(function),
-        }
-    }
-}
-
-impl FnRangeOn {
-    pub fn new(function: Obj, set: Obj) -> Self {
-        FnRangeOn {
-            function: Box::new(function),
-            set: Box::new(set),
         }
     }
 }
@@ -1075,6 +1076,7 @@ fn precedence(o: &Obj) -> u8 {
         Obj::Mul(_)
         | Obj::Div(_)
         | Obj::Mod(_)
+        | Obj::IntegerQuotient(_)
         | Obj::Max(_)
         | Obj::Min(_)
         | Obj::MatrixScalarMul(_) => 2,
@@ -1120,6 +1122,7 @@ impl Obj {
             Obj::Mul(_) => ObjKind::Mul,
             Obj::Div(_) => ObjKind::Div,
             Obj::Mod(_) => ObjKind::Mod,
+            Obj::IntegerQuotient(_) => ObjKind::IntegerQuotient,
             Obj::Pow(_) => ObjKind::Pow,
             Obj::Abs(_) => ObjKind::Abs,
             Obj::Sqrt(_) => ObjKind::Sqrt,
@@ -1143,9 +1146,8 @@ impl Obj {
             Obj::Proj(_) => ObjKind::Proj,
             Obj::TupleDim(_) => ObjKind::TupleDim,
             Obj::Tuple(_) => ObjKind::Tuple,
-            Obj::Count(_) => ObjKind::Count,
+            Obj::FiniteSetSize(_) => ObjKind::FiniteSetSize,
             Obj::FnRange(_) => ObjKind::FnRange,
-            Obj::FnRangeOn(_) => ObjKind::FnRangeOn,
             Obj::Replacement(_) => ObjKind::Replacement,
             Obj::Sum(_) => ObjKind::Sum,
             Obj::SumOfFiniteSet(_) => ObjKind::SumOfFiniteSet,
@@ -1191,6 +1193,7 @@ impl Obj {
             Obj::Mul(_) => MUL.to_string(),
             Obj::Div(_) => DIV.to_string(),
             Obj::Mod(_) => MOD.to_string(),
+            Obj::IntegerQuotient(_) => INTEGER_QUOTIENT.to_string(),
             Obj::Pow(_) => POW.to_string(),
             Obj::Abs(_) => ABS.to_string(),
             Obj::Sqrt(_) => SQRT.to_string(),
@@ -1209,9 +1212,8 @@ impl Obj {
             Obj::CartDim(_) => CART_DIM.to_string(),
             Obj::Proj(_) => PROJ.to_string(),
             Obj::TupleDim(_) => TUPLE_DIM.to_string(),
-            Obj::Count(_) => COUNT.to_string(),
+            Obj::FiniteSetSize(_) => FINITE_SET_SIZE.to_string(),
             Obj::FnRange(_) => FN_RANGE.to_string(),
-            Obj::FnRangeOn(_) => FN_RANGE_ON.to_string(),
             Obj::Replacement(_) => REPLACEMENT.to_string(),
             Obj::Sum(_) => SUM.to_string(),
             Obj::SumOfFiniteSet(_) => FINITE_SET_SUM.to_string(),
@@ -1271,6 +1273,13 @@ impl Obj {
                 m.left.fmt_with_precedence(f, 2)?;
                 write!(f, " {} ", MOD)?;
                 m.right.fmt_with_precedence(f, 2)?;
+            }
+            Obj::IntegerQuotient(q) => {
+                write!(f, "{} {}", INTEGER_QUOTIENT, LEFT_BRACE)?;
+                q.dividend.fmt_with_precedence(f, 0)?;
+                write!(f, "{} ", COMMA)?;
+                q.divisor.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
             }
             Obj::Pow(p) => {
                 p.base.fmt_with_precedence(f, 1)?;
@@ -1352,9 +1361,8 @@ impl Obj {
             Obj::Proj(x) => write!(f, "{}", x)?,
             Obj::TupleDim(x) => write!(f, "{}", x)?,
             Obj::Tuple(x) => write!(f, "{}", x)?,
-            Obj::Count(x) => write!(f, "{}", x)?,
+            Obj::FiniteSetSize(x) => write!(f, "{}", x)?,
             Obj::FnRange(x) => write!(f, "{}", x)?,
-            Obj::FnRangeOn(x) => write!(f, "{}", x)?,
             Obj::Replacement(x) => write!(f, "{}", x)?,
             Obj::Sum(x) => write!(f, "{}", x)?,
             Obj::SumOfFiniteSet(x) => write!(f, "{}", x)?,
@@ -1426,6 +1434,11 @@ impl Obj {
             Obj::Mod(x) => Mod::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::IntegerQuotient(x) => IntegerQuotient::new(
+                Obj::replace_bound_identifier(*x.dividend, from, to),
+                Obj::replace_bound_identifier(*x.divisor, from, to),
             )
             .into(),
             Obj::Pow(x) => Pow::new(
@@ -1589,15 +1602,12 @@ impl Obj {
                     .collect(),
             )
             .into(),
-            Obj::Count(x) => Count::new(Obj::replace_bound_identifier(*x.set, from, to)).into(),
+            Obj::FiniteSetSize(x) => {
+                FiniteSetSize::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
+            }
             Obj::FnRange(x) => {
                 FnRange::new(Obj::replace_bound_identifier(*x.function, from, to)).into()
             }
-            Obj::FnRangeOn(x) => FnRangeOn::new(
-                Obj::replace_bound_identifier(*x.function, from, to),
-                Obj::replace_bound_identifier(*x.set, from, to),
-            )
-            .into(),
             Obj::Replacement(x) => Replacement::new(
                 x.prop_name,
                 Obj::replace_bound_identifier(*x.source_set, from, to),
@@ -1866,6 +1876,14 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             };
             FnSetFreeParamObj::new(name).into()
         }
+        FnObjHead::DefStructField(p) => {
+            let name = if p.name == from {
+                to.to_string()
+            } else {
+                p.name
+            };
+            DefStructFieldFreeParamObj::new(name).into()
+        }
         FnObjHead::AnonymousFnLiteral(a) => {
             let inner = (*a).clone();
             let replaced = Obj::replace_bound_identifier(Obj::AnonymousFn(inner), from, to);
@@ -2128,12 +2146,12 @@ impl fmt::Display for MatrixListObj {
     }
 }
 
-impl fmt::Display for Count {
+impl fmt::Display for FiniteSetSize {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{}",
-            COUNT,
+            FINITE_SET_SIZE,
             braced_vec_to_string(&vec![self.set.as_ref()])
         )
     }
@@ -2146,17 +2164,6 @@ impl fmt::Display for FnRange {
             "{}{}",
             FN_RANGE,
             braced_vec_to_string(&vec![self.function.as_ref()])
-        )
-    }
-}
-
-impl fmt::Display for FnRangeOn {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}",
-            FN_RANGE_ON,
-            braced_vec_to_string(&vec![self.function.as_ref(), self.set.as_ref()])
         )
     }
 }
@@ -2315,6 +2322,16 @@ impl fmt::Display for Div {
 impl fmt::Display for Mod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} {}", self.left, MOD, self.right)
+    }
+}
+
+impl fmt::Display for IntegerQuotient {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{}{}{}{}",
+            INTEGER_QUOTIENT, LEFT_BRACE, self.dividend, COMMA, self.divisor, RIGHT_BRACE
+        )
     }
 }
 
@@ -2600,6 +2617,12 @@ impl From<Mod> for Obj {
     }
 }
 
+impl From<IntegerQuotient> for Obj {
+    fn from(q: IntegerQuotient) -> Self {
+        Obj::IntegerQuotient(q)
+    }
+}
+
 impl From<Pow> for Obj {
     fn from(p: Pow) -> Self {
         Obj::Pow(p)
@@ -2726,21 +2749,15 @@ impl From<Tuple> for Obj {
     }
 }
 
-impl From<Count> for Obj {
-    fn from(c: Count) -> Self {
-        Obj::Count(c)
+impl From<FiniteSetSize> for Obj {
+    fn from(c: FiniteSetSize) -> Self {
+        Obj::FiniteSetSize(c)
     }
 }
 
 impl From<FnRange> for Obj {
     fn from(r: FnRange) -> Self {
         Obj::FnRange(r)
-    }
-}
-
-impl From<FnRangeOn> for Obj {
-    fn from(r: FnRangeOn) -> Self {
-        Obj::FnRangeOn(r)
     }
 }
 

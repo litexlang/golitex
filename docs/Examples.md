@@ -312,7 +312,7 @@ by enumerate finite_set:
             b = 4
 
 by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1 and b > 3 => {(a, b) = (2, 4)}:
-    ...
+    do_nothing
 ```
 
 ### 8. Enumerating A Half-Open Range
@@ -378,7 +378,7 @@ by for:
     do_nothing
 
 by for forall! n range(0, 3) => {n < 3}:
-    ...
+    do_nothing
 
 by for:
     ? forall x cart({1, 2}, {3, 4}):
@@ -471,33 +471,9 @@ claim:
 ### 13. Induction For A Closed-Form Sum
 
 - Category: `proof pattern`
-- Purpose: Shows a larger induction proof with arithmetic state.
-
-```litex
-claim:
-    ? forall b fn(x Z: x >= 0) Z, i Z:
-        forall y Z:
-            y >= 0
-            =>:
-                b(y+1) = b(y)^ 2 - 2
-        b(0) = 3
-        i >= 0
-        =>:
-            b(i) % 2 = 1
-    by induc i from 0:
-        ? b(i) % 2 = 1
-        b(0) % 2 = 3 % 2 = 1
-
-        forall m Z:
-            m >= 0
-            b(m) % 2 = 1
-            =>:
-                b(m+1) = b(m)^ 2 - 2
-                b(m)^2 % 2 = (b(m) % 2)^2 % 2 = 1^2 % 2 = 1
-                b(m + 1) % 2 = (b(m)^ 2 - 2) % 2
-                (b(m)^ 2 - 2) % 2 = ((b(m)^2 %2) - (2 % 2)) % 2 = (1 - 0) % 2 = 1
-                b(m + 1) % 2 = 1
-```
+- Purpose: The former long parity recurrence depended on source-level modular
+  arithmetic background. Keep such a proof in the source's explicit cite
+  package rather than presenting it as a kernel example.
 
 ### 14. Registering Symmetry, Reflexivity, And Order Properties
 
@@ -1315,7 +1291,8 @@ claim:
         x = 8 * d
         8 * d = 2 * (4 * d)
 
-witness exist d Z st {8 = 1 * d} from 8
+witness exist d Z st {8 = 8 * d} from 1:
+    8 = 8 * 1
 $can_be_divided_by_8(8)
 $can_be_divided_by_2(8)
 ```
@@ -1460,10 +1437,10 @@ $thm_match_q(1)
 by thm thm_stored_forall(1)
 ```
 
-### 34. Using Builtin Facts Directly
+### 34. Facts Verified by Builtin Rules
 
 - Category: `builtin rule`
-- Purpose: Shows facts verified from builtin background code.
+- Purpose: Shows facts closed directly by verifier builtin rules.
 
 ```litex
 claim:
@@ -1816,21 +1793,16 @@ forall a, b R, k N_pos:
 
 ### 2. Basic Operators
 
-- Category: `builtin rule`
-- Purpose: Shows arithmetic operator typing and simplification.
+- Category: `builtin object`
+- Purpose: Shows arithmetic operator syntax and direct kernel checking.
 
 ```litex
-+ = +
-* = *
-/ = /
-% = %
-^ = ^
-+ $in fn(a, b R) R
-- $in fn(a, b R) R
-* $in fn(a, b R) R
-/ $in fn(a R, b R: b != 0) R
-% $in fn(a Z, b Z: b != 0) Z
-^ $in fn(a, b R: a $in R_pos or a = 0 and b $in R_pos or a $in R_nz and b $in Z or b $in N) R
+1 + 2 = 3
+7 - 3 = 4
+3 * 4 = 12
+6 / 3 = 2
+5 % 2 = 1
+2^3 = 8
 ```
 
 ### 3. Common Builtin Rules
@@ -1998,8 +1970,8 @@ forall i Z:
         i $in range(2, 6)
         i $in 2...5
 
-count(1...5) =  5
-count(range(1, 5)) = 4
+finite_set_size(1...5) =  5
+finite_set_size(range(1, 5)) = 4
 ```
 
 ### 7. Comparison And Chained Inequalities
@@ -2086,39 +2058,6 @@ forall a, b R:
     =>:
         a^3 < b^3
         b^5 > a^5
-
-by thm has_rational_between(0, 1)
-exist q Q st {0 < q < 1}
-```
-
-```litex
-sketch:
-    forall t R_pos:
-        t^2 < 4^2
-        =>:
-            t < 4
-
-    forall t R_pos:
-        t^3 < 4^3
-        =>:
-            t < 4
-
-    forall t R_pos:
-        t^4 < 4^4
-        =>:
-            t < 4
-
-    forall t R_pos:
-        t^5 < 4^5
-        =>:
-            t < 4
-
-claim:
-    ? forall t R_pos:
-        t^6 < 4^6
-        =>:
-            t < 4
-    by thm pos_pow_strict_order_reflects(t, 4, 6)
 ```
 
 ### 8. Products Under Small Bounds
@@ -2215,30 +2154,20 @@ forall u, v, w R:
 ### 12. Finite Sets
 
 - Category: `obj`
-- Purpose: Shows finite-set literals, membership, and count facts.
+- Purpose: Shows finite-set literals, membership, and finite-set-size facts.
 
 ```litex
 $is_finite_set({1, 2})
-count({1, 2, 3}) = 3
-count(cart({1, 2}, {3, 4, 5})) = count({1, 2}) * count({3, 4, 5})
+finite_set_size({1, 2, 3}) = 3
+finite_set_size(cart({1, 2}, {3, 4, 5})) = finite_set_size({1, 2}) * finite_set_size({3, 4, 5})
 
 $is_finite_set(union({1, 2}, {2, 3}))
 $is_finite_set(intersect({1, 2}, {2, 3}))
 $is_finite_set(set_minus({1, 2}, {2, 3}))
 $is_finite_set(set_diff({1, 2}, {2, 3}))
 
-count(intersect({1, 2}, {2, 3})) <= count({1, 2})
-count(intersect({1, 2}, {2, 3})) <= count({2, 3})
-count(set_minus({1, 2}, {2, 3})) <= count({1, 2})
-count(union({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
-count(set_diff({1, 2}, {2, 3})) <= count({1, 2}) + count({2, 3})
-
-count(union({1, 2}, {2, 3})) = count({1, 2}) + count({2, 3}) - count(intersect({1, 2}, {2, 3}))
-count(set_minus({1, 2}, {2, 3})) = count({1, 2}) - count(intersect({1, 2}, {2, 3}))
-count(set_diff({1, 2}, {2, 3})) = count(set_minus({1, 2}, {2, 3})) + count(set_minus({2, 3}, {1, 2}))
-
 forall X finite_set:
-    count(X) >= 1
+    finite_set_size(X) >= 1
     =>:
         $is_nonempty_set(X)
 
@@ -2247,8 +2176,8 @@ claim:
         $is_finite_set(X)
         $is_finite_set(Y)
         =>:
-            count(cart(X, Y)) = count(X) * count(Y)
-    count(cart(X, Y)) = count(X) * count(Y)
+            finite_set_size(cart(X, Y)) = finite_set_size(X) * finite_set_size(Y)
+    finite_set_size(cart(X, Y)) = finite_set_size(X) * finite_set_size(Y)
 ```
 
 ### 13. Intervals
@@ -2628,14 +2557,6 @@ forall a N, n N:
 forall a N_pos, n N:
     a^n $in N_pos
 
-forall a R_pos, m R:
-    a * a^m = a^(m + 1)
-    a^m * a = a^(m + 1)
-
-forall a R_nz, m Z:
-    a * a^m = a^(m + 1)
-    a^m * a = a^(m + 1)
-
 forall x, y R, m N_pos:
     x >= 0
     y >= 0
@@ -2690,16 +2611,6 @@ forall x, y R_pos, q Q:
     x > y
     =>:
         x^q > y^q
-
-forall x R_pos, q R:
-    x^q > 0
-    x^q != 0
-    x^q * x^(-q) = x^(q + (-q))
-    q + (-q) = 0
-    x^(q + (-q)) = x^0
-    x^0 = 1
-    x^q * x^(-q) = 1
-    x^(-q) = 1 / x^q
 
 forall x R_nz, n Z:
     x^n != 0
@@ -2862,7 +2773,7 @@ finite_set_sum({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
 sketch:
     have X finite_set
     have c Z
-    finite_set_sum(X, fn(x X) Z {c}) = count(X) * c
+    finite_set_sum(X, fn(x X) Z {c}) = finite_set_size(X) * c
 ```
 
 ```litex
@@ -2929,16 +2840,16 @@ thm finite_fubini_example:
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 
 ## A finite-set sum defined by a bijective enumeration is independent of the enumeration.
-prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, count(X))) X):
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, finite_set_size(X))) X):
     forall x X:
-        exist! i closed_range(1, count(X)) st {g(i) = x}
+        exist! i closed_range(1, finite_set_size(X)) st {g(i) = x}
 
-template<X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X: count(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
-    have self_finite_set_sum R = sum(1, count(X), fn(i closed_range(1, count(X))) R {f(g(i))})
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+    have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
 
 thm finite_set_sum_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, count(X))) X, h fn(i closed_range(1, count(X))) X:
-        count(X) >= 1
+    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
+        finite_set_size(X) >= 1
         $is_bijection_from_index_range_to_finite_set(X, g)
         $is_bijection_from_index_range_to_finite_set(X, h)
         =>:
@@ -2958,7 +2869,7 @@ finite_set_product({}, fn(x N_pos) N_pos {x}) $in N_pos
 sketch:
     have X finite_set
     have c R
-    finite_set_product(X, fn(x X) R {c}) = c ^ count(X)
+    finite_set_product(X, fn(x X) R {c}) = c ^ finite_set_size(X)
 ```
 
 ```litex
@@ -2985,27 +2896,6 @@ sketch:
 
     sum(1, 10, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x}) + sum(4, 8, fn(x Z) Z {x}) + sum(9, 10, fn(x Z) Z {x})
 
-```
-
-```litex
-sketch:
-    by induc a from 1:
-        ? product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
-
-        product(1, 1, fn(x N_pos) N_pos {x}) = 1
-        1 <= product(1, 1, fn(x N_pos) N_pos {x})
-
-        claim:
-            ? forall k Z:
-                k >= 1
-                product(1, k, fn(x N_pos) N_pos {x}) % k = 0 and k <= product(1, k, fn(x N_pos) N_pos {x})
-                =>:
-                    product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
-
-            product(1, k + 1, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * (k + 1)
-            witness exist t Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = t * (k + 1)} from product(1, k, fn(x N_pos) N_pos {x})
-            product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0
-            k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
 ```
 
 ---
@@ -3079,12 +2969,15 @@ have positive_reals set = {x R: x > 0}
 #### 4. Set Operations
 
 Mathematical meaning: `union`, `intersect`, and `set_minus` are the ordinary
-binary union, intersection, and relative complement of sets.  `set_diff` is the
-symmetric-difference style object used by the current library.
+binary union, intersection, and relative complement of sets. `set_diff` is
+symmetric difference.
 
 ```litex
 2 $in union({1, 2}, {2, 3})
+2 $in {1, 2}
+2 $in {2, 3}
 2 $in intersect({1, 2}, {2, 3})
+not 2 $in {1}
 2 $in set_minus({1, 2}, {1})
 $is_finite_set(set_diff({1, 2}, {2, 3}))
 {1, 2} $in power_set({1, 2, 3})
@@ -3134,9 +3027,9 @@ $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 
 #### 8. Function Images
 
-Mathematical meaning: `fn_range(f)` is the image of a function over its whole
-domain.  `fn_range_on(f, S)` is the image of a unary function restricted to a
-set `S`.
+Mathematical meaning: `fn_range(f)` is the image of a function over its
+declared domain. To image a larger-domain function only on `S`, first make the
+restriction explicit as `fn(x S) T {f(x)}`.
 
 ```litex
 have fn shift(x R) R = x + 1
@@ -3152,13 +3045,13 @@ shift(2) = shift(x)
 ```litex
 have a finite_seq(R, 3) = [1, 2, 3]
 
-a(2) $in fn_range_on(a, 1...3)
-fn_range_on(a, 1...3) $subset R
-$is_finite_set(fn_range_on(a, 1...3))
+fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
+fn_range(fn(x 1...3) R {a(x)}) $subset R
+$is_finite_set(fn_range(fn(x 1...3) R {a(x)}))
 
-have by preimage k from a(2) $in fn_range_on(a, 1...3)
+have by preimage k from fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
 k $in 1...3
-a(2) = a(k)
+fn(x 1...3) R {a(x)}(2) = fn(x 1...3) R {a(x)}(k)
 ```
 
 #### 9. Sequences, Finite Sequences, And Matrices
@@ -3383,21 +3276,21 @@ have fn count_from_zero(n Z: n >= 0) R by induc n from 0:
 count_from_zero(0) = 0
 ```
 
-#### 11. Algorithm Definition And Evaluation
+#### 11. Function Implementation And Evaluation
 
-Purpose: attach an executable algorithm to a function so Litex can evaluate
+Purpose: attach an executable implementation to a function so Litex can evaluate
 calls.
 
 - Well-definedness / structural checks: the target function must already exist
-  and the algorithm parameters must match the function set.
+  and the implementation parameters must match the function set.
 - Truth verification: verifies each return expression is valid; if no default
   return exists, verifies case coverage.
-- Environment effects: stores the algorithm definition for later `eval`.
+- Environment effects: stores the implementation for later `eval`.
 
 ```litex
 have fn f(x R) R = x + 1
 
-algo f(x):
+have algo for f(x):
     x + 1
 
 eval f(2)
@@ -3405,7 +3298,9 @@ f(2) = 3
 ```
 
 ```litex
-have fn as algo id_real(x R) R = x
+have fn id_real(x R) R = x
+have algo for id_real(x):
+    x
 
 eval id_real(3)
 id_real(3) = 3
@@ -3600,8 +3495,7 @@ Purpose: run checked exploratory code without committing it, or run a checked
 batch that commits only if every nested statement succeeds.
 
 - Well-definedness / structural checks: each nested statement performs its own
-  checks; `try` rejects control statements such as `clear`, `import`, and
-  `local import`.
+  checks; `try` rejects control statements such as `clear` and `import`.
 - Truth verification: nested statements verify normally.
 - Environment effects: `sketch` has no outer effect; `try` commits the child
   environment into the parent environment on success.
@@ -3711,38 +3605,27 @@ do_nothing
 
 #### 25. Module Commands
 
-Purpose: load modules, bind sources declared in `litex.config`,
-or clear the current environment. These examples are syntax only because they
-depend on local project files.
+Purpose: cite configured project sources by canonical name, or clear the
+current environment.
+These examples are syntax only because they depend on local project files.
 
-- Well-definedness / structural checks: `litex.config` declarations and
-  `local import` bindings are validated during discovery; `import` resolves a
-  module; `clear` has no structural checks. `trust import` and
-  `trust local import` use the same declared targets and validation.
-- Truth verification: imported modules and declared files verify normally when
-  loaded. A trusted import deliberately skips this phase for its target and
-  transitive imports, and is rejected by strict mode.
-- Environment effects: module commands update the module manager; `clear`
-  removes the current user environment. Imported modules and project export
-  nodes remain registered.
+- Well-definedness / structural checks: `[hierarchy]`, module-only `[import]`
+  and `[import std]`, direct-child `[export]` entries, and complete configured
+  folder contents are validated during discovery; `clear` has no structural
+  checks.
+- Truth verification: project entries verify in `[export]` order. A `trust`
+  entry deliberately skips this phase in an ordinary run; strict mode verifies
+  it normally.
+- Environment effects: configured imports update the module manager; `clear`
+  removes the current user environment. Configured packages remain registered.
 
 <!-- litex:skip-test -->
 ```litex
-import Algebra
 clear
 ```
 
 `clear` only resets the current environment; it does not change the module
 manager.
-
-<!-- litex:skip-test -->
-```litex
-import Algebra
-
-clear
-
-# Algebra remains active after clear
-```
 
 ---
 
@@ -3841,20 +3724,9 @@ forall P Point, L Line:
 ### 2. The Real Numbers Are Infinite
 
 - Category: `case study`
-- Purpose: Shows an infinity argument for R.
-
-```litex
-by contra not $is_finite_set(R):
-    forall x 0...count(R):
-        x $in Z
-        x $in R
-
-    0...count(R) $subset R
-
-    count(R) + 1 = count(R) - 0 + 1 = count(0...count(R)) <= count(R)
-
-    impossible count(R) + 1 <= count(R)
-```
+- Purpose: This former proof depended on finite-cardinality background
+  interfaces. Keep that development with its explicit source-local citation
+  rather than presenting it as a kernel-only case study.
 
 ### 3. A High-Level Cantor-Schroeder-Bernstein Sketch
 
@@ -3878,1008 +3750,30 @@ forall A, B set:
 ### 4. Euclid's Theorem On Arbitrarily Large Primes
 
 - Category: `case study`
-- Purpose: Detailed Euclid-style proof that there are arbitrarily large primes.
-
-```litex
-prop prime(a N_pos):
-    2 <= a
-    forall b N_pos:
-        2 <= b < a
-        =>:
-            a % b != 0
-
-claim:
-    ? forall a N_pos:
-        product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
-
-    by induc a from 1:
-        ? product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
-
-        product(1, 1, fn(x N_pos) N_pos {x}) = 1
-        1 <= product(1, 1, fn(x N_pos) N_pos {x})
-
-        claim:
-            ? forall k Z:
-                k >= 1
-                product(1, k, fn(x N_pos) N_pos {x}) % k = 0 and k <= product(1, k, fn(x N_pos) N_pos {x})
-                =>:
-                    product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
-
-            product(1, k + 1, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * (k + 1)
-            witness exist t Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = t * (k + 1)} from product(1, k, fn(x N_pos) N_pos {x})
-            product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0
-            k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
-
-claim:
-    ? forall a, k N_pos:
-        k <= a
-        =>:
-            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
-
-    by cases:
-        ? product(1, a, fn(x N_pos) N_pos {x}) % k = 0
-        case k = a:
-            product(1, a, fn(x N_pos) N_pos {x}) % a = 0
-            product(1, a, fn(x N_pos) N_pos {x}) % k = product(1, a, fn(x N_pos) N_pos {x}) % a = 0
-        case k < a:
-            product(1, a, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * product(k + 1, a, fn(x N_pos) N_pos {x})
-            product(1, k, fn(x N_pos) N_pos {x}) % k = 0
-            obtain r from exist r Z st {product(1, k, fn(x N_pos) N_pos {x}) = r * k}
-            witness exist t Z st {product(1, a, fn(x N_pos) N_pos {x}) = t * k} from r * product(k + 1, a, fn(x N_pos) N_pos {x}):
-                product(1, a, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * product(k + 1, a, fn(x N_pos) N_pos {x}) = (r * k) * product(k + 1, a, fn(x N_pos) N_pos {x}) = (r * product(k + 1, a, fn(x N_pos) N_pos {x})) * k
-            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
-
-claim:
-    ? forall a N_pos:
-        a <= product(1, a, fn(x N_pos) N_pos {x})
-
-    product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
-
-claim:
-    ? forall a N_pos:
-        2 <= a
-        =>:
-            exist k N_pos st {$prime(k), a % k = 0}
-
-    by strong_induc x from 2:
-        ? exist k N_pos st {$prime(k), x % k = 0}
-
-        claim:
-            ? forall b N_pos:
-                2 <= b < 2
-                =>:
-                    2 % b != 0
-            by contra 2 % b != 0:
-                impossible b < 2
-        $prime(2)
-
-        witness exist t Z st {2 = t * 2} from 1
-        2 % 2 = 0
-        witness exist k N_pos st {$prime(k), 2 % k = 0} from 2
-
-        claim:
-            ? forall n Z:
-                n >= 2
-                forall m Z:
-                    2 <= m
-                    m <= n
-                    =>:
-                        exist k N_pos st {$prime(k), m % k = 0}
-                =>:
-                    exist k N_pos st {$prime(k), (n + 1) % k = 0}
-
-            by cases exist k N_pos st {$prime(k), (n + 1) % k = 0}:
-                case $prime(n+1):
-                    witness exist t Z st {n + 1 = t * (n + 1)} from 1
-                    (n + 1) % (n + 1) = 0
-                    witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from n+1
-                case not $prime(n+1):
-                    by contra:
-                        ? not forall b N_pos:
-                            2 <= b < n + 1
-                            =>:
-                                (n + 1) % b != 0
-                        2 <= n + 1
-                        $prime(n+1)
-                        impossible $prime(n+1)
-
-                    obtain c from exist b N_pos st {2 <= b < n+1, not (n + 1) % b != 0}
-
-                    2 <= c < n+1
-
-                    (n+1) % c = 0
-                    c <= n or c >= n + 1
-                    by cases:
-                        ? c <= n
-                        case c <= n:
-                            ...
-                        case c >= n + 1:
-                            impossible c < n + 1
-
-                    obtain d from exist k N_pos st {$prime(k), c % k = 0}
-
-                    obtain e from exist k Z st {(n+1) = k * c}
-
-                    obtain f from exist k Z st {c = k * d}
-
-                    witness exist t Z st {e * f * d = t * d} from e * f
-                    (e * f * d) % d = 0
-
-                    witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from d:
-                        n + 1 = e * c = e * (f * d) = (e * f) * d
-                        (n + 1) % d = ((e * f) * d) % d = 0
-
-claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
-    2 <= a <= product(1, a, fn(x N_pos) N_pos {x}) <= product(1, a, fn(x N_pos) N_pos {x}) + 1
-    obtain k from exist k N_pos st {$prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
-    by cases k > a:
-        case k <= a:
-            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
-            (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
-        case k > a:
-            do_nothing
-    witness exist k N_pos st {k > a, $prime(k)} from k
-```
+- Purpose: The first-class `integer_quotient(a, d)` and Euclidean-remainder
+  interface is available. This historical case study remains withheld until
+  its own source proof is translated and checked.
 
 ### 5. The Euclidean Algorithm And Bezout Coefficients
 
 - Category: `case study`
-- Purpose: Large checked development of division, gcd, and extended gcd.
-
-```litex
-claim:
-    ? forall x, y R:
-        0 <= x
-        0 <= y
-        x^2 < y^2
-        =>:
-            x < y
-
-    by contra:
-        ? x < y
-        y <= x
-        y^2 <= x^2
-        impossible x^2 < y^2
-
-claim:
-    ? forall n, d Z:
-        n * d < 0
-        =>:
-            abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
-
-    0 < -(n * d)
-    0 < 8
-    0 < 8 * (-(n * d))
-    8 * (-(n * d)) = -8 * n * d
-    0 < -8 * n * d
-    (2 * (n + d) - d)^2 < (2 * (n + d) - d)^2 + (-8 * n * d) = (2 * n - d)^2
-    abs(2 * (n + d) - d)^2 = (2 * (n + d) - d)^2 < (2 * n - d)^2 = abs(2 * n - d)^2
-
-claim:
-    ? forall n, d Z:
-        n * d < 0
-        =>:
-            abs(2 * (n + d) - d) < abs(2 * n - d)
-
-    0 <= abs(2 * (n + d) - d)
-    0 <= abs(2 * n - d)
-    abs(2 * (n + d) - d)^2 < abs(2 * n - d)^2
-
-claim:
-    ? forall n, d Z:
-        n * d >= 0
-        0 < d * (n - d)
-        =>:
-            abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
-
-    0 < 8
-    0 < 8 * (d * (n - d))
-    8 * (d * (n - d)) = 8 * d * (n - d)
-    0 < 8 * d * (n - d)
-    (2 * (n - d) - d)^2 < (2 * (n - d) - d)^2 + 8 * d * (n - d) = (2 * n - d)^2
-    abs(2 * (n - d) - d)^2 = (2 * (n - d) - d)^2 < (2 * n - d)^2 = abs(2 * n - d)^2
-
-claim:
-    ? forall n, d Z:
-        n * d >= 0
-        0 < d * (n - d)
-        =>:
-            abs(2 * (n - d) - d) < abs(2 * n - d)
-
-    0 <= abs(2 * (n - d) - d)
-    0 <= abs(2 * n - d)
-    abs(2 * (n - d) - d)^2 < abs(2 * n - d)^2
-
-have fn fmod(n Z, d Z) Z by induc abs(2 * n - d) from 0:
-    case n * d < 0: fmod(n + d, d)
-    case n * d >= 0:
-        case 0 < d * (n - d): fmod(n - d, d)
-        case 0 >= d * (n - d):
-            case n = d: 0
-            case n != d: n
-
-have fn fdiv(n Z, d Z) Z by induc abs(2 * n - d) from 0:
-    case n * d < 0: fdiv(n + d, d) - 1
-    case n * d >= 0:
-        case 0 < d * (n - d): fdiv(n - d, d) + 1
-        case 0 >= d * (n - d):
-            case n = d: 1
-            case n != d: 0
-
-prop fmod_add_fdiv_at_measure(m Z):
-    forall u, v Z:
-        abs(2 * u - v) = m
-        =>:
-            fmod(u, v) + v * fdiv(u, v) = u
-
-claim:
-    ? forall n, d Z:
-        abs(2 * n - d) = 0
-        =>:
-            fmod(n, d) + d * fdiv(n, d) = n
-
-    by cases:
-        ? fmod(n, d) + d * fdiv(n, d) = n
-        case n * d < 0:
-            abs(2 * (n + d) - d) < abs(2 * n - d) = 0
-            0 <= abs(2 * (n + d) - d)
-            impossible abs(2 * (n + d) - d) < 0
-        case n * d >= 0:
-            by cases:
-                ? fmod(n, d) + d * fdiv(n, d) = n
-                case 0 < d * (n - d):
-                    abs(2 * (n - d) - d) < abs(2 * n - d) = 0
-                    0 <= abs(2 * (n - d) - d)
-                    impossible abs(2 * (n - d) - d) < 0
-                case 0 >= d * (n - d):
-                    by cases:
-                        ? fmod(n, d) + d * fdiv(n, d) = n
-                        case n = d:
-                            fmod(n, d) = 0
-                            fdiv(n, d) = 1
-                            fmod(n, d) + d * fdiv(n, d) = 0 + d * 1 = d = n
-                        case n != d:
-                            fmod(n, d) = n
-                            fdiv(n, d) = 0
-                            fmod(n, d) + d * fdiv(n, d) = n + d * 0 = n
-
-$fmod_add_fdiv_at_measure(0)
-
-claim:
-    ? forall m Z:
-        m >= 0
-        forall y Z:
-            y >= 0
-            y <= m
-            =>:
-                $fmod_add_fdiv_at_measure(y)
-        =>:
-            $fmod_add_fdiv_at_measure(m + 1)
-
-    claim:
-        ? forall n, d Z:
-            abs(2 * n - d) = m + 1
-            =>:
-                fmod(n, d) + d * fdiv(n, d) = n
-
-        by cases:
-            ? fmod(n, d) + d * fdiv(n, d) = n
-            case n * d < 0:
-                abs(2 * (n + d) - d) >= 0
-                abs(2 * (n + d) - d) < abs(2 * n - d) = m + 1
-                abs(2 * (n + d) - d) <= m or abs(2 * (n + d) - d) >= m + 1
-                by cases:
-                    ? abs(2 * (n + d) - d) <= m
-                    case abs(2 * (n + d) - d) <= m:
-                        do_nothing
-                    case abs(2 * (n + d) - d) >= m + 1:
-                        impossible abs(2 * (n + d) - d) < m + 1
-                $fmod_add_fdiv_at_measure(abs(2 * (n + d) - d))
-                n + d $in Z
-                abs(2 * (n + d) - d) = abs(2 * (n + d) - d)
-                fmod(n + d, d) + d * fdiv(n + d, d) = n + d
-                fmod(n, d) = fmod(n + d, d)
-                fdiv(n, d) = fdiv(n + d, d) - 1
-                fmod(n, d) + d * fdiv(n, d) = fmod(n + d, d) + d * (fdiv(n + d, d) - 1) = fmod(n + d, d) + d * fdiv(n + d, d) - d = n + d - d = n
-            case n * d >= 0:
-                by cases:
-                    ? fmod(n, d) + d * fdiv(n, d) = n
-                    case 0 < d * (n - d):
-                        abs(2 * (n - d) - d) >= 0
-                        abs(2 * (n - d) - d) < abs(2 * n - d) = m + 1
-                        abs(2 * (n - d) - d) <= m or abs(2 * (n - d) - d) >= m + 1
-                        by cases:
-                            ? abs(2 * (n - d) - d) <= m
-                            case abs(2 * (n - d) - d) <= m:
-                                do_nothing
-                            case abs(2 * (n - d) - d) >= m + 1:
-                                impossible abs(2 * (n - d) - d) < m + 1
-                        $fmod_add_fdiv_at_measure(abs(2 * (n - d) - d))
-                        n - d $in Z
-                        abs(2 * (n - d) - d) = abs(2 * (n - d) - d)
-                        fmod(n - d, d) + d * fdiv(n - d, d) = n - d
-                        fmod(n, d) = fmod(n - d, d)
-                        fdiv(n, d) = fdiv(n - d, d) + 1
-                        fmod(n, d) + d * fdiv(n, d) = fmod(n - d, d) + d * (fdiv(n - d, d) + 1) = fmod(n - d, d) + d * fdiv(n - d, d) + d = n - d + d = n
-                    case 0 >= d * (n - d):
-                        by cases:
-                            ? fmod(n, d) + d * fdiv(n, d) = n
-                            case n = d:
-                                fmod(n, d) = 0
-                                fdiv(n, d) = 1
-                                fmod(n, d) + d * fdiv(n, d) = 0 + d * 1 = d = n
-                            case n != d:
-                                fmod(n, d) = n
-                                fdiv(n, d) = 0
-                                fmod(n, d) + d * fdiv(n, d) = n + d * 0 = n
-
-    $fmod_add_fdiv_at_measure(m + 1)
-
-by strong_induc m from 0:
-    ? $fmod_add_fdiv_at_measure(m)
-
-    ? from m = 0:
-        $fmod_add_fdiv_at_measure(0)
-
-    ? strong_induc:
-        $fmod_add_fdiv_at_measure(m + 1)
-
-claim:
-    ? forall n, d Z:
-        fmod(n, d) + d * fdiv(n, d) = n
-
-    forall n1, d1 Z:
-        abs(2 * n1 - d1) >= 0
-        $fmod_add_fdiv_at_measure(abs(2 * n1 - d1))
-        fmod(n1, d1) + d1 * fdiv(n1, d1) = n1
-
-claim:
-    ? forall x, y Z:
-        0 < y
-        x * y >= 0
-        =>:
-            0 <= x
-
-    by contra:
-        ? 0 <= x
-        x < 0
-        x * y < 0
-        impossible x * y >= 0
-
-claim:
-    ? forall x, y Z:
-        0 < y
-        0 >= y * (x - y)
-        =>:
-            x <= y
-
-    by contra:
-        ? x <= y
-        y < x
-        0 < x - y
-        0 < y * (x - y)
-        impossible 0 >= y * (x - y)
-
-claim:
-    ? forall x, y Z:
-        x <= y
-        x != y
-        =>:
-            x < y
-
-    by contra:
-        ? x < y
-        x >= y
-        x = y
-        impossible x != y
-
-prop fmod_bound_at_measure(m Z):
-    forall u, v Z:
-        abs(2 * u - v) = m
-        0 < v
-        =>:
-            abs(fmod(u, v)) < abs(v)
-
-claim:
-    ? forall a, b Z:
-        abs(2 * a - b) = 0
-        0 < b
-        =>:
-            abs(fmod(a, b)) < abs(b)
-
-    by cases:
-        ? abs(fmod(a, b)) < abs(b)
-        case a * b < 0:
-            abs(2 * (a + b) - b) < abs(2 * a - b) = 0
-            0 <= abs(2 * (a + b) - b)
-            impossible abs(2 * (a + b) - b) < 0
-        case a * b >= 0:
-            by cases:
-                ? abs(fmod(a, b)) < abs(b)
-                case 0 < b * (a - b):
-                    abs(2 * (a - b) - b) < abs(2 * a - b) = 0
-                    0 <= abs(2 * (a - b) - b)
-                    impossible abs(2 * (a - b) - b) < 0
-                case 0 >= b * (a - b):
-                    by cases:
-                        ? abs(fmod(a, b)) < abs(b)
-                        case a = b:
-                            fmod(a, b) = 0
-                            abs(fmod(a, b)) = abs(0) = 0
-                            abs(b) = b
-                            0 < abs(b)
-                            abs(fmod(a, b)) < abs(b)
-                        case a != b:
-                            fmod(a, b) = a
-                            by contra:
-                                ? 0 <= a
-                                a < 0
-                                a * b < 0
-                                impossible a * b >= 0
-                            by contra:
-                                ? a <= b
-                                b < a
-                                0 < a - b
-                                0 < b * (a - b)
-                                impossible 0 >= b * (a - b)
-                            by contra:
-                                ? a < b
-                                a >= b
-                                a = b
-                                impossible a != b
-                            abs(a) = a
-                            abs(b) = b
-                            0 <= fmod(a, b)
-                            abs(fmod(a, b)) = fmod(a, b) = a < b = abs(b)
-
-$fmod_bound_at_measure(0)
-
-claim:
-    ? forall m Z:
-        m >= 0
-        forall y Z:
-            y >= 0
-            y <= m
-            =>:
-                $fmod_bound_at_measure(y)
-        =>:
-            $fmod_bound_at_measure(m + 1)
-
-    claim:
-        ? forall a, b Z:
-            abs(2 * a - b) = m + 1
-            0 < b
-            =>:
-                abs(fmod(a, b)) < abs(b)
-
-        by cases:
-            ? abs(fmod(a, b)) < abs(b)
-            case a * b < 0:
-                abs(2 * (a + b) - b) >= 0
-                abs(2 * (a + b) - b) < abs(2 * a - b) = m + 1
-                abs(2 * (a + b) - b) <= m or abs(2 * (a + b) - b) >= m + 1
-                by cases:
-                    ? abs(2 * (a + b) - b) <= m
-                    case abs(2 * (a + b) - b) <= m:
-                        do_nothing
-                    case abs(2 * (a + b) - b) >= m + 1:
-                        impossible abs(2 * (a + b) - b) < m + 1
-                $fmod_bound_at_measure(abs(2 * (a + b) - b))
-                a + b $in Z
-                abs(2 * (a + b) - b) = abs(2 * (a + b) - b)
-                abs(fmod(a + b, b)) < abs(b)
-                fmod(a, b) = fmod(a + b, b)
-                fmod(a, b) - fmod(a + b, b) = 0
-                abs(fmod(a, b)) - abs(fmod(a + b, b)) <= abs(fmod(a, b) - fmod(a + b, b)) = abs(0) = 0
-                abs(fmod(a, b)) <= abs(fmod(a + b, b))
-                abs(fmod(a, b)) <= abs(fmod(a + b, b)) < abs(b)
-                abs(fmod(a, b)) < abs(b)
-            case a * b >= 0:
-                by cases:
-                    ? abs(fmod(a, b)) < abs(b)
-                    case 0 < b * (a - b):
-                        abs(2 * (a - b) - b) >= 0
-                        abs(2 * (a - b) - b) < abs(2 * a - b) = m + 1
-                        abs(2 * (a - b) - b) <= m or abs(2 * (a - b) - b) >= m + 1
-                        by cases:
-                            ? abs(2 * (a - b) - b) <= m
-                            case abs(2 * (a - b) - b) <= m:
-                                do_nothing
-                            case abs(2 * (a - b) - b) >= m + 1:
-                                impossible abs(2 * (a - b) - b) < m + 1
-                        $fmod_bound_at_measure(abs(2 * (a - b) - b))
-                        a - b $in Z
-                        abs(2 * (a - b) - b) = abs(2 * (a - b) - b)
-                        abs(fmod(a - b, b)) < abs(b)
-                        fmod(a, b) = fmod(a - b, b)
-                        fmod(a, b) - fmod(a - b, b) = 0
-                        abs(fmod(a, b)) - abs(fmod(a - b, b)) <= abs(fmod(a, b) - fmod(a - b, b)) = abs(0) = 0
-                        abs(fmod(a, b)) <= abs(fmod(a - b, b))
-                        abs(fmod(a, b)) <= abs(fmod(a - b, b)) < abs(b)
-                        abs(fmod(a, b)) < abs(b)
-                    case 0 >= b * (a - b):
-                        by cases:
-                            ? abs(fmod(a, b)) < abs(b)
-                            case a = b:
-                                fmod(a, b) = 0
-                                abs(fmod(a, b)) = abs(0) = 0
-                                abs(b) = b
-                                0 < abs(b)
-                                abs(fmod(a, b)) < abs(b)
-                            case a != b:
-                                fmod(a, b) = a
-                                by contra:
-                                    ? 0 <= a
-                                    a < 0
-                                    a * b < 0
-                                    impossible a * b >= 0
-                                by contra:
-                                    ? a <= b
-                                    b < a
-                                    0 < a - b
-                                    0 < b * (a - b)
-                                    impossible 0 >= b * (a - b)
-                                by contra:
-                                    ? a < b
-                                    a >= b
-                                    a = b
-                                    impossible a != b
-                                abs(a) = a
-                                abs(b) = b
-                                0 <= fmod(a, b)
-                                abs(fmod(a, b)) = fmod(a, b) = a < b = abs(b)
-
-    $fmod_bound_at_measure(m + 1)
-
-by strong_induc m from 0:
-    ? $fmod_bound_at_measure(m)
-
-    ? from m = 0:
-        $fmod_bound_at_measure(0)
-
-    ? strong_induc:
-        $fmod_bound_at_measure(m + 1)
-
-claim:
-    ? forall a, b Z:
-        0 < b
-        =>:
-            abs(fmod(a, b)) < abs(b)
-
-    forall a1, b1 Z:
-        0 < b1
-        =>:
-            abs(2 * a1 - b1) >= 0
-            $fmod_bound_at_measure(abs(2 * a1 - b1))
-            abs(fmod(a1, b1)) < abs(b1)
-
-claim:
-    ? forall a, b Z:
-        b < 0
-        =>:
-            abs(fmod(a, -b)) < abs(b)
-
-    0 < -b
-    -b $in Z
-    abs(fmod(a, -b)) < abs(-b)
-    b <= 0
-    abs(b) = -b
-    abs(-b) = -b
-    abs(-b) = abs(b)
-    abs(fmod(a, -b)) < abs(b)
-
-have fn gcd(a Z, b Z) Z by induc abs(b) from 0:
-    case 0 < b: gcd(b, fmod(a, b))
-    case 0 >= b:
-        case b < 0: gcd(b, fmod(a, -b))
-        case b >= 0:
-            case 0 <= a: a
-            case 0 > a: -a
-
-have fn egcd_pair(a Z, b Z) cart(Z, Z) by induc abs(b) from 0:
-    case 0 < b: (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])
-    case 0 >= b:
-        case b < 0: (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])
-        case b >= 0:
-            case 0 <= a: (1, 0)
-            case 0 > a: (-1, 0)
-
-have fn egcd_l(a Z, b Z) Z = egcd_pair(a, b)[1]
-
-have fn egcd_r(a Z, b Z) Z = egcd_pair(a, b)[2]
-
-prop egcd_identity_at_measure(m Z):
-    forall u, v Z:
-        abs(v) = m
-        =>:
-            egcd_l(u, v) * u + egcd_r(u, v) * v = gcd(u, v)
-
-claim:
-    ? forall a, b Z:
-        abs(b) = 0
-        =>:
-            egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
-
-    b = 0
-    0 >= b
-    b >= 0
-    by cases:
-        ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
-        case 0 <= a:
-            egcd_pair(a, b) = (1, 0)
-            egcd_l(a, b) = egcd_pair(a, b)[1] = (1, 0)[1] = 1
-            egcd_r(a, b) = egcd_pair(a, b)[2] = (1, 0)[2] = 0
-            gcd(a, b) = a
-            egcd_l(a, b) * a + egcd_r(a, b) * b = 1 * a + 0 * b = a = gcd(a, b)
-        case 0 > a:
-            egcd_pair(a, b) = (-1, 0)
-            egcd_l(a, b) = egcd_pair(a, b)[1] = (-1, 0)[1] = -1
-            egcd_r(a, b) = egcd_pair(a, b)[2] = (-1, 0)[2] = 0
-            gcd(a, b) = -a
-            egcd_l(a, b) * a + egcd_r(a, b) * b = -1 * a + 0 * b = -a = gcd(a, b)
-
-$egcd_identity_at_measure(0)
-
-claim:
-    ? forall m Z:
-        m >= 0
-        forall y Z:
-            y >= 0
-            y <= m
-            =>:
-                $egcd_identity_at_measure(y)
-        =>:
-            $egcd_identity_at_measure(m + 1)
-
-    claim:
-        ? forall a, b Z:
-            abs(b) = m + 1
-            =>:
-                egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
-
-        by cases:
-            ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
-            case 0 < b:
-                abs(fmod(a, b)) >= 0
-                abs(fmod(a, b)) < abs(b) = m + 1
-                abs(fmod(a, b)) <= m or abs(fmod(a, b)) >= m + 1
-                by cases:
-                    ? abs(fmod(a, b)) <= m
-                    case abs(fmod(a, b)) <= m:
-                        do_nothing
-                    case abs(fmod(a, b)) >= m + 1:
-                        impossible abs(fmod(a, b)) < m + 1
-                $egcd_identity_at_measure(abs(fmod(a, b)))
-                fmod(a, b) $in Z
-                abs(fmod(a, b)) = abs(fmod(a, b))
-                egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = gcd(b, fmod(a, b))
-                egcd_pair(a, b) = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])
-                egcd_l(a, b) = egcd_pair(a, b)[1] = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])[1] = egcd_pair(b, fmod(a, b))[2]
-                egcd_r(b, fmod(a, b)) = egcd_pair(b, fmod(a, b))[2]
-                egcd_l(a, b) = egcd_r(b, fmod(a, b))
-                egcd_r(a, b) = egcd_pair(a, b)[2] = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])[2] = egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2]
-                egcd_l(b, fmod(a, b)) = egcd_pair(b, fmod(a, b))[1]
-                egcd_pair(b, fmod(a, b))[1] = egcd_l(b, fmod(a, b))
-                egcd_pair(b, fmod(a, b))[2] = egcd_r(b, fmod(a, b))
-                egcd_r(a, b) = egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2] = egcd_l(b, fmod(a, b)) - fdiv(a, b) * egcd_r(b, fmod(a, b))
-                fmod(a, b) + b * fdiv(a, b) = a
-                a = fmod(a, b) + b * fdiv(a, b)
-                a - b * fdiv(a, b) = fmod(a, b) + b * fdiv(a, b) - b * fdiv(a, b) = fmod(a, b)
-                gcd(a, b) = gcd(b, fmod(a, b))
-                egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, b)) * a + (egcd_l(b, fmod(a, b)) - fdiv(a, b) * egcd_r(b, fmod(a, b))) * b = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * (a - b * fdiv(a, b)) = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = gcd(b, fmod(a, b)) = gcd(a, b)
-            case 0 >= b:
-                by cases:
-                    ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
-                    case b < 0:
-                        abs(fmod(a, -b)) >= 0
-                        abs(fmod(a, -b)) < abs(b) = m + 1
-                        abs(fmod(a, -b)) <= m or abs(fmod(a, -b)) >= m + 1
-                        by cases:
-                            ? abs(fmod(a, -b)) <= m
-                            case abs(fmod(a, -b)) <= m:
-                                do_nothing
-                            case abs(fmod(a, -b)) >= m + 1:
-                                impossible abs(fmod(a, -b)) < m + 1
-                        $egcd_identity_at_measure(abs(fmod(a, -b)))
-                        fmod(a, -b) $in Z
-                        abs(fmod(a, -b)) = abs(fmod(a, -b))
-                        egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * fmod(a, -b) = gcd(b, fmod(a, -b))
-                        egcd_pair(a, b) = (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])
-                        egcd_l(a, b) = egcd_pair(a, b)[1] = (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])[1] = egcd_pair(b, fmod(a, -b))[2]
-                        egcd_r(b, fmod(a, -b)) = egcd_pair(b, fmod(a, -b))[2]
-                        egcd_l(a, b) = egcd_r(b, fmod(a, -b))
-                        egcd_r(a, b) = egcd_pair(a, b)[2] = (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])[2] = egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2]
-                        egcd_l(b, fmod(a, -b)) = egcd_pair(b, fmod(a, -b))[1]
-                        egcd_pair(b, fmod(a, -b))[1] = egcd_l(b, fmod(a, -b))
-                        egcd_pair(b, fmod(a, -b))[2] = egcd_r(b, fmod(a, -b))
-                        egcd_r(a, b) = egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2] = egcd_l(b, fmod(a, -b)) + fdiv(a, -b) * egcd_r(b, fmod(a, -b))
-                        fmod(a, -b) + (-b) * fdiv(a, -b) = a
-                        a = fmod(a, -b) + (-b) * fdiv(a, -b)
-                        a + b * fdiv(a, -b) = fmod(a, -b) + (-b) * fdiv(a, -b) + b * fdiv(a, -b) = fmod(a, -b)
-                        gcd(a, b) = gcd(b, fmod(a, -b))
-                        egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, -b)) * a + (egcd_l(b, fmod(a, -b)) + fdiv(a, -b) * egcd_r(b, fmod(a, -b))) * b = egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * (a + b * fdiv(a, -b)) = egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * fmod(a, -b) = gcd(b, fmod(a, -b)) = gcd(a, b)
-                    case b >= 0:
-                        b = 0
-                        by cases:
-                            ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
-                            case 0 <= a:
-                                egcd_pair(a, b) = (1, 0)
-                                egcd_l(a, b) = egcd_pair(a, b)[1] = (1, 0)[1] = 1
-                                egcd_r(a, b) = egcd_pair(a, b)[2] = (1, 0)[2] = 0
-                                gcd(a, b) = a
-                                egcd_l(a, b) * a + egcd_r(a, b) * b = 1 * a + 0 * b = a = gcd(a, b)
-                            case 0 > a:
-                                egcd_pair(a, b) = (-1, 0)
-                                egcd_l(a, b) = egcd_pair(a, b)[1] = (-1, 0)[1] = -1
-                                egcd_r(a, b) = egcd_pair(a, b)[2] = (-1, 0)[2] = 0
-                                gcd(a, b) = -a
-                                egcd_l(a, b) * a + egcd_r(a, b) * b = -1 * a + 0 * b = -a = gcd(a, b)
-
-    $egcd_identity_at_measure(m + 1)
-
-by strong_induc m from 0:
-    ? $egcd_identity_at_measure(m)
-
-    ? from m = 0:
-        $egcd_identity_at_measure(0)
-
-    ? strong_induc:
-        $egcd_identity_at_measure(m + 1)
-
-claim:
-    ? forall a, b Z:
-        egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
-
-    forall a1, b1 Z:
-        abs(b1) >= 0
-        $egcd_identity_at_measure(abs(b1))
-        egcd_l(a1, b1) * a1 + egcd_r(a1, b1) * b1 = gcd(a1, b1)
-```
+- Purpose: This historical development will use the first-class
+  `integer_quotient(a, d)` interface when its source proof is translated;
+  deprecated package calls are not retained as documentation.
 
 ### 6. A Bijection From `N^2` To `N`
 
 - Category: `case study`
-- Purpose: Shows a bijection between N^2 and N.
-
-```litex
-prop injective_fn(S, T set, f fn(x S) T):
-    forall x1, x2 S:
-        f(x1) = f(x2)
-        =>:
-            x1 = x2
-
-prop surjective_fn(S, T set, f fn(x S) T):
-    forall y T:
-        exist x S st {y = f(x)}
-
-prop bijective_fn(S, T set, f fn(x S) T):
-    $injective_fn(S, T, f)
-    $surjective_fn(S, T, f)
-
-prop exist_bijection(S, T set):
-    exist f fn(x S) T st {$bijective_fn(S, T, f)}
-
-claim:
-    ? forall n N:
-        exist! y N st {2 * y = n * (n + 1)}
-
-    by cases:
-        ? n * (n + 1) % 2 = 0
-        case n % 2 = 0:
-            n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 0 * ((n + 1) % 2) % 2 = 0 % 2 = 0
-        case n % 2 = 1:
-            (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
-            n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
-    obtain r from exist r N st {n * (n + 1) = 2 * r}
-    witness exist y N st {2 * y = n * (n + 1)} from r:
-        n * (n + 1) = 2 * r
-        2 * r = n * (n + 1)
-    forall y1, y2 N:
-        2 * y1 = n * (n + 1)
-        2 * y2 = n * (n + 1)
-        =>:
-            y1 = n * (n + 1) / 2 = y2
-    exist! y N st {2 * y = n * (n + 1)}
-
-have fn tri by exist!:
-    ? forall n N:
-        exist! y N st {2 * y = n * (n + 1)}
-
-claim:
-    ? tri(0) = 0
-    2 * tri(0) = 0 * (0 + 1)
-    tri(0) = (2 * tri(0)) / 2 = (0 * (0 + 1)) / 2 = 0
-
-claim:
-    ? forall n N:
-        tri(n + 1) = tri(n) + n + 1
-    2 * tri(n + 1) = (n + 1) * ((n + 1) + 1) = (n + 1) * (n + 2)
-    2 * tri(n) = n * (n + 1)
-    2 * (tri(n) + n + 1) = 2 * tri(n) + 2 * n + 2 = n * (n + 1) + 2 * n + 2 = (n + 1) * (n + 2)
-    tri(n + 1) = (2 * tri(n + 1)) / 2 = ((n + 1) * (n + 2)) / 2 = (2 * (tri(n) + n + 1)) / 2 = tri(n) + n + 1
-
-prop triangular_interval(n, s N):
-    tri(s) <= n
-    n < tri(s + 1)
-
-have fn diagonal_index(u cart(N, N)) N = tri(u[1]) + u[2]
-
-claim:
-    ? forall u cart(N, N):
-        u[2] <= u[1]
-        =>:
-            tri(u[1]) <= diagonal_index(u)
-            diagonal_index(u) < tri(u[1] + 1)
-    tri(u[1]) <= tri(u[1]) + u[2] = diagonal_index(u)
-    diagonal_index(u) = tri(u[1]) + u[2] <= tri(u[1]) + u[1] < tri(u[1]) + u[1] + 1 = tri(u[1] + 1)
-
-claim:
-    ? forall a, b N:
-        a < b
-        =>:
-            tri(a + 1) <= tri(b)
-    a + 1 <= b
-    2 * tri(a + 1) = (a + 1) * ((a + 1) + 1) <= b * (b + 1) = 2 * tri(b)
-    tri(a + 1) = (2 * tri(a + 1)) / 2 <= (2 * tri(b)) / 2 = tri(b)
-
-claim:
-    ? forall u, v cart(N, N):
-        u[2] <= u[1]
-        v[2] <= v[1]
-        u[1] < v[1]
-        =>:
-            diagonal_index(u) < diagonal_index(v)
-    diagonal_index(u) < tri(u[1] + 1) <= tri(v[1]) <= diagonal_index(v)
-
-## If two valid diagonal positions have the same number, they are on the same diagonal.
-claim:
-    ? forall u, v cart(N, N):
-        u[2] <= u[1]
-        v[2] <= v[1]
-        diagonal_index(u) = diagonal_index(v)
-        =>:
-            u[1] = v[1]
-    by contra:
-        ? not u[1] < v[1]
-        diagonal_index(u) < diagonal_index(v)
-        impossible diagonal_index(u) = diagonal_index(v)
-    by contra:
-        ? not v[1] < u[1]
-        diagonal_index(v) < diagonal_index(u)
-        impossible diagonal_index(u) = diagonal_index(v)
-    u[1] = v[1]
-
-have fn cantor_pair(t cart(N, N)) N = tri(t[1] + t[2]) + t[2]
-
-## On one diagonal, the offset determines the position.
-claim:
-    ? forall u, v cart(N, N):
-        u[1] = v[1]
-        diagonal_index(u) = diagonal_index(v)
-        =>:
-            u[2] = v[2]
-    tri(u[1]) + u[2] = diagonal_index(u) = diagonal_index(v) = tri(v[1]) + v[2]
-    u[2] = (tri(u[1]) + u[2]) - tri(u[1]) = (tri(v[1]) + v[2]) - tri(v[1]) = v[2]
-
-claim:
-    ? forall t1, t2 cart(N, N):
-        cantor_pair(t1) = cantor_pair(t2)
-        =>:
-            t1 = t2
-    have u cart(N, N) = (t1[1] + t1[2], t1[2])
-    have v cart(N, N) = (t2[1] + t2[2], t2[2])
-    u[2] = t1[2] <= t1[1] + t1[2] = u[1]
-    v[2] = t2[2] <= t2[1] + t2[2] = v[1]
-    diagonal_index(u) = tri(t1[1] + t1[2]) + t1[2] = cantor_pair(t1)
-    diagonal_index(v) = tri(t2[1] + t2[2]) + t2[2] = cantor_pair(t2)
-    u[1] = v[1]
-    u[2] = v[2]
-    t1[2] = u[2] = v[2] = t2[2]
-    t1[1] = (t1[1] + t1[2]) - t1[2] = u[1] - u[2] = v[1] - v[2] = (t2[1] + t2[2]) - t2[2] = t2[1]
-    t1 = (t1[1], t1[2]) = (t2[1], t2[2]) = t2
-
-claim:
-    ? forall a, b N:
-        b <= a
-        =>:
-            a - b $in N
-    a - b >= 0
-    a - b $in Z
-    a - b $in N
-
-claim:
-    ? forall n, s N:
-        $triangular_interval(n, s)
-        =>:
-            n - tri(s) <= s
-    n < tri(s + 1) = tri(s) + s + 1
-    n <= (tri(s) + s + 1) - 1 = tri(s) + s
-    n - tri(s) <= (tri(s) + s) - tri(s) = s
-
-by induc n from 0:
-    ? exist s N st {$triangular_interval(n, s)}
-
-    ? from n = 0:
-        tri(0) <= 0
-        tri(0 + 1) = tri(0) + 0 + 1 = 1
-        0 < 1 = tri(0 + 1)
-        witness exist s N st {$triangular_interval(0, s)} from 0:
-            $triangular_interval(0, 0)
-
-    ? induc:
-        obtain s from exist s N st {$triangular_interval(n, s)}
-        by cases:
-            ? exist t N st {$triangular_interval(n + 1, t)}
-            case n + 1 < tri(s + 1):
-                tri(s) <= n <= n + 1
-                witness exist t N st {$triangular_interval(n + 1, t)} from s:
-                    $triangular_interval(n + 1, s)
-            case n + 1 >= tri(s + 1):
-                tri((s + 1) + 1) = tri(s + 1) + (s + 1) + 1 = tri(s + 1) + s + 2
-                n + 1 < n + 2 <= tri(s + 1) + s + 2 = tri((s + 1) + 1)
-                witness exist t N st {$triangular_interval(n + 1, t)} from s + 1:
-                    $triangular_interval(n + 1, s + 1)
-
-claim:
-    ? forall n N:
-        exist t cart(N, N) st {n = cantor_pair(t)}
-    obtain s from exist s N st {$triangular_interval(n, s)}
-    have b N = n - tri(s)
-    n - tri(s) <= s
-    have a N = s - b
-    a + b = (s - b) + b = s
-    have p cart(N, N) = (a, b)
-    cantor_pair(p) = tri(p[1] + p[2]) + p[2] = tri(a + b) + b = tri(s) + b = tri(s) + (n - tri(s)) = n
-    witness exist t cart(N, N) st {n = cantor_pair(t)} from p:
-        n = cantor_pair(p)
-
-claim:
-    ? $exist_bijection(cart(N, N), N)
-    witness exist f fn(x cart(N, N)) N st {$bijective_fn(cart(N, N), N, f)} from cantor_pair
-```
+- Purpose: The former triangular-number construction needs a source-specific
+  divisibility-to-quotient proof. It will be rewritten against the first-class
+  quotient interface; no deprecated package code is retained here.
 
 ### 7. Every Integer Is Odd Or Even
 
 - Category: `case study`
-- Purpose: Shows an integer parity proof.
-
-```litex
-claim:
-    ? forall n Z:
-        n % 2 = 0 or n % 2 = 1
-    by induc n from 0:
-        ? n % 2 = 0 or n % 2 = 1
-        0 % 2 = 0
-        0 % 2 = 0 or 0 % 2 = 1
-
-        claim:
-            ? forall x Z:
-                x >= 0
-                x % 2 = 0 or x % 2 = 1
-                =>:
-                    (x + 1) % 2 = 0 or (x + 1) % 2 = 1
-
-            by cases:
-                ? (x + 1) % 2 = 0 or (x + 1) % 2 = 1
-                case x % 2 = 0:
-                    (x + 1) % 2 = (x % 2 + 1 % 2) % 2 = (0 + 1) % 2 = 1
-                case x % 2 = 1:
-                    (x + 1) % 2 = (x % 2 + 1 % 2) % 2 = (1 + 1) % 2 = 0
-    by cases:
-        ? n % 2 = 0 or n % 2 = 1
-        case n >= 0:
-            do_nothing
-        case n < 0:
-            -n >= 0
-            (-n) % 2 = 0 or (-n) % 2 = 1
-            by cases:
-                ? (n) % 2 = 0 or (n) % 2 = 1
-                case -n % 2 = 0:
-                    (n) % 2 = (-(-n)) % 2 = (2 - ((-n) % 2)) % 2 = (2 - 0) % 2 = 0
-                case -n % 2 = 1:
-                    (n) % 2 = (-(-n)) % 2 = (2 - (-n) % 2) % 2 = (2 - 1) % 2 = 1
-```
+- Purpose: This parity proof will use the Euclidean quotient/remainder
+  interface rather than older modular-normalization lemmas or a compatibility
+  package.
 
 ### 8. Nonnegative Integers Modulo 2
 

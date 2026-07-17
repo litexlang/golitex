@@ -5,8 +5,6 @@ pub struct KnownFnInfo {
     pub fn_set: Option<(FnSetBody, LineFile)>,
     /// Defining expression: `have fn … = rhs` or `name = '…{…}` anonymous body.
     pub equal_to: Option<(Obj, LineFile)>,
-    /// Narrower `$restricts_to` target signatures.
-    pub restrict_to: Option<Vec<(FnSetBody, LineFile)>>,
 }
 
 impl KnownFnInfo {
@@ -15,18 +13,7 @@ impl KnownFnInfo {
         fn_set: Option<(FnSetBody, LineFile)>,
         equal_to: Option<(Obj, LineFile)>,
     ) -> Self {
-        KnownFnInfo {
-            fn_set,
-            equal_to,
-            restrict_to: None,
-        }
-    }
-
-    pub fn update_restrict_to(&mut self, restrict_to: FnSetBody, line_file: LineFile) {
-        match self.restrict_to.as_mut() {
-            Some(v) => v.push((restrict_to, line_file)),
-            None => self.restrict_to = Some(vec![(restrict_to, line_file)]),
-        }
+        KnownFnInfo { fn_set, equal_to }
     }
 
     pub fn update_equal_to(&mut self, equal_to: Obj, line_file: LineFile) {

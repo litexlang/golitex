@@ -88,6 +88,14 @@ impl Runtime {
                 .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
+            Obj::IntegerQuotient(quotient) => {
+                let result: Obj = IntegerQuotient::new(
+                    self.resolve_obj(&quotient.dividend),
+                    self.resolve_obj(&quotient.divisor),
+                )
+                .into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
             Obj::Pow(pow) => {
                 let result = self.resolve_pow_after_children(
                     self.resolve_obj(&pow.base),
@@ -322,7 +330,7 @@ impl Runtime {
                     obj.clone()
                 }
             }
-            Obj::Count(count) => match &*count.set {
+            Obj::FiniteSetSize(finite_set_size) => match &*finite_set_size.set {
                 Obj::ListSet(list_set) => Number::new(list_set.list.len().to_string()).into(),
                 Obj::ClosedRange(cr) => {
                     if let (Some(a_num), Some(b_num)) = (
@@ -350,8 +358,9 @@ impl Runtime {
                     let mut acc = "1".to_string();
                     for arg in &cart.args {
                         let resolved_arg = self.resolve_obj(arg.as_ref());
-                        let count_obj = Obj::Count(Count::new(resolved_arg));
-                        let n = match self.resolve_obj_to_number(&count_obj) {
+                        let finite_set_size_obj =
+                            Obj::FiniteSetSize(FiniteSetSize::new(resolved_arg));
+                        let n = match self.resolve_obj_to_number(&finite_set_size_obj) {
                             Some(n) => n,
                             None => return obj.clone(),
                         };
@@ -362,11 +371,6 @@ impl Runtime {
                 _ => obj.clone(),
             },
             Obj::FnRange(fn_range) => FnRange::new(self.resolve_obj(&fn_range.function)).into(),
-            Obj::FnRangeOn(fn_range_on) => FnRangeOn::new(
-                self.resolve_obj(&fn_range_on.function),
-                self.resolve_obj(&fn_range_on.set),
-            )
-            .into(),
             Obj::Replacement(replacement) => Replacement::new(
                 replacement.prop_name.clone(),
                 self.resolve_obj(&replacement.source_set),

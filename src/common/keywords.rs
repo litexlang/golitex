@@ -61,9 +61,8 @@ pub const CART: &str = "cart";
 pub const CART_DIM: &str = "cart_dim";
 pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
-pub const COUNT: &str = "count";
+pub const FINITE_SET_SIZE: &str = "finite_set_size";
 pub const FN_RANGE: &str = "fn_range";
-pub const FN_RANGE_ON: &str = "fn_range_on";
 pub const REPLACEMENT: &str = "replacement";
 pub const FINITE_SEQ: &str = "finite_seq";
 pub const SEQ: &str = "seq";
@@ -129,6 +128,7 @@ pub const TUPLE: &str = "tuple";
 pub const CASE: &str = "case";
 pub const TRUST: &str = "trust";
 pub const IMPORT: &str = "import";
+pub const STD: &str = "std";
 pub const LOCAL: &str = "local";
 pub const AS: &str = "as";
 pub const HAVE: &str = "have";
@@ -142,6 +142,7 @@ pub const PREIMAGE: &str = "preimage";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const ALGO: &str = "algo";
 pub const ABS: &str = "abs";
+pub const INTEGER_QUOTIENT: &str = "integer_quotient";
 pub const SQRT: &str = "sqrt";
 pub const LOG: &str = "log";
 pub const MAX: &str = "max";
@@ -156,7 +157,6 @@ pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
 pub const STRUCT: &str = "struct";
 pub const TEMPLATE: &str = "template";
-pub const RESTRICTS_TO: &str = "restricts_to";
 pub const STRATEGY: &str = "strategy";
 /// `$fn_eq_in(f, g, S)`: f and g agree on domain set S (encoded as a forall; see verify builtin).
 pub const FN_EQ_IN: &str = "fn_eq_in";
@@ -236,9 +236,8 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CART_DIM,
         TUPLE_DIM,
         PROJ,
-        COUNT,
+        FINITE_SET_SIZE,
         FN_RANGE,
-        FN_RANGE_ON,
         REPLACEMENT,
         SUM,
         FINITE_SET_SUM,
@@ -263,8 +262,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         AND,
         SUBSET,
         SUPERSET,
-        SUCCESS_COLON,
-        UNKNOWN_COLON,
         ALIAS,
         PROP,
         ABSTRACT_PROP,
@@ -281,6 +278,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CASE,
         TRUST,
         IMPORT,
+        STD,
         LOCAL,
         AS,
         ENUMERATE,
@@ -303,6 +301,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE,
         ALGO,
         ABS,
+        INTEGER_QUOTIENT,
         SQRT,
         LOG,
         MAX,
@@ -317,7 +316,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R_NZ,
         STRUCT,
         TEMPLATE,
-        RESTRICTS_TO,
         STRATEGY,
         FN_EQ_IN,
         FN_EQ,
@@ -381,7 +379,6 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == SUBSET
         || atom_name == SUPERSET
         || atom_name == IN
-        || atom_name == RESTRICTS_TO
         || atom_name == FN_EQ_IN
         || atom_name == FN_EQ
 }
@@ -411,4 +408,16 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == Q
         || atom_name == Z
         || atom_name == R
+        || atom_name == FINITE_SET_SIZE
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn output_labels_are_not_source_keywords() {
+        assert!(!is_keyword(SUCCESS_COLON));
+        assert!(!is_keyword(UNKNOWN_COLON));
+    }
 }

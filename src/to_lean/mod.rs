@@ -2,4 +2,4 @@
 
 mod to_lean_pipeline;
 
-pub use to_lean_pipeline::{to_lean, to_lean_from_source_after_builtins};
+pub use to_lean_pipeline::{to_lean, to_lean_from_source};

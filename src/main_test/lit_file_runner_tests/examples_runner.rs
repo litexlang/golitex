@@ -2,21 +2,20 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use crate::pipeline::{render_run_source_code_output, run_source_code};
+use crate::pipeline::{render_run_source_code_output, run_repository_file_target, run_source_code};
 use crate::prelude::*;
 
 use super::helper::{
-    collect_lit_files_recursive_under, collect_lit_files_recursive_under_excluding,
-    collect_markdown_files_under_dir_sorted, format_litex_failure_location,
-    litex_snippets_from_markdown_files, print_known_forall_profile_summary,
-    print_slowest_run_labels, run_with_large_stack, spawn_with_large_stack,
-    REPOSITORY_EXAMPLES_SUBDIR,
+    collect_lit_files_recursive_under_excluding, collect_markdown_files_under_dir_sorted,
+    format_litex_failure_location, litex_snippets_from_markdown_files,
+    print_known_forall_profile_summary, print_slowest_run_labels, run_with_large_stack,
+    spawn_with_large_stack, REPOSITORY_EXAMPLES_SUBDIR,
 };
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
 const ANALYSIS_ONE_CHAPTERS_SUBDIR: &str = "textbooks/Analysis";
 const MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR: &str = "textbooks/The-Mechanics-of-Litex-Proof";
-const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/Number-Theory-For-Beginners";
+const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/NumberTheoryForBeginners";
 
 #[derive(Clone)]
 struct LitexRunItem {
@@ -46,9 +45,9 @@ struct TimedRunSummary {
     wall_ms: f64,
 }
 
-/// Single footer: builtin + per-phase sums/walls + `phase timing` line.
+/// Single footer: runtime setup + per-phase sums/walls + `phase timing` line.
 fn print_run_examples_timing_summary(
-    builtin_duration_ms: f64,
+    runtime_setup_duration_ms: f64,
     examples_ran: bool,
     example_runs_ms: &[(String, f64)],
     examples_phase_wall_ms: f64,
@@ -58,7 +57,10 @@ fn print_run_examples_timing_summary(
     let examples_sum_ms: f64 = example_runs_ms.iter().map(|(_, ms)| *ms).sum();
     let docs_sum_ms: f64 = doc_runs_ms.iter().map(|(_, ms)| *ms).sum();
     println!("--- timing (summary) ---");
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     if examples_ran {
         println!(
             "  phase 1 (selected examples/**/*.lit + examples/07_dataset_gallery/**/*.md ```litex``` + docs/Manual.md ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
@@ -244,126 +246,61 @@ fn run_number_theory_for_beginners_impl() {
 
 fn run_textbook_chapters_impl(chapters_subdir: &'static str, textbook_name: &'static str) {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let lit_file_paths = collect_lit_files_recursive_under(&manifest_dir, chapters_subdir);
+    let repository_path = manifest_dir.join(chapters_subdir);
+    let config_path = repository_path.join("litex.config");
     assert!(
-        !lit_file_paths.is_empty(),
-        "{} must contain at least one .lit file",
+        config_path.is_file(),
+        "{} must contain litex.config",
         chapters_subdir
     );
+    let repository_path = repository_path
+        .to_str()
+        .expect("textbook repository path must be valid UTF-8");
 
-    let mut groups = Vec::new();
-    for lit_file_path in lit_file_paths.iter() {
-        let lit_file_path_str = match lit_file_path.to_str() {
-            Some(path_string) => path_string,
-            None => panic!("{:?} must be valid UTF-8", lit_file_path),
-        };
-        let file_label_for_report = match lit_file_path.strip_prefix(&manifest_dir) {
-            Ok(rel) => rel.display().to_string(),
-            Err(_) => lit_file_path.display().to_string(),
-        };
-        let source_code = match fs::read_to_string(lit_file_path) {
-            Ok(content) => content,
-            Err(read_error) => panic!("failed to read {:?}: {}", lit_file_path, read_error),
-        };
-        let group_index = groups.len();
-        groups.push(LitexRunGroup {
-            group_index,
-            group_label: file_label_for_report.clone(),
-            items: vec![LitexRunItem {
-                report_label: file_label_for_report,
-                source: source_code,
-                path_for_runtime: lit_file_path_str.to_string(),
-                run_in_project_context: true,
-            }],
-        });
-    }
-
-    let group_count = groups.len();
     println!(
-        "--- {}: running {} .lit file(s) in parallel ---",
-        textbook_name, group_count
+        "--- {}: running one recursive -r project plan ---",
+        textbook_name
     );
     let wall_start = Instant::now();
-    let mut handles = Vec::new();
-    for group in groups {
-        let thread_name = format!("run_textbook_chapter_group_{}", group.group_index);
-        handles.push(spawn_with_large_stack(thread_name.as_str(), move || {
-            run_litex_run_group(group)
-        }));
-    }
+    let mut runtime = Runtime::new();
+    let target = discover_repository(&mut runtime, repository_path).unwrap_or_else(|error| {
+        panic!(
+            "{} discovery failed at {}: {:?}",
+            textbook_name, repository_path, error
+        )
+    });
+    let (stmt_results, runtime_error) = run_repository_file_target(&mut runtime, target);
+    let run_succeeded = runtime_error.is_none() && stmt_results.iter().all(StmtResult::is_true);
+    let duration_ms = wall_start.elapsed().as_secs_f64() * 1000.0;
 
-    let mut group_summaries = Vec::new();
-    for handle in handles {
-        match handle.join() {
-            Ok(summary) => group_summaries.push(summary),
-            Err(panic_payload) => {
-                let panic_message = panic_payload_to_string(panic_payload);
-                group_summaries.push(LitexRunGroupSummary {
-                    group_index: usize::MAX,
-                    run_durations_ms: Vec::new(),
-                    failed_labels: vec![format!("{} worker panic", textbook_name)],
-                    failure_outputs: vec![format!(
-                        "=== [PANICKED] {} worker ===\n{}",
-                        textbook_name, panic_message
-                    )],
-                });
-            }
-        }
-    }
-
-    group_summaries.sort_by_key(|summary| summary.group_index);
-    let mut run_durations_ms: Vec<(String, f64)> = Vec::new();
-    let mut failed_labels: Vec<String> = Vec::new();
-    let mut failure_outputs: Vec<String> = Vec::new();
-    for summary in group_summaries {
-        run_durations_ms.extend(summary.run_durations_ms);
-        failed_labels.extend(summary.failed_labels);
-        failure_outputs.extend(summary.failure_outputs);
-    }
-
-    if failed_labels.is_empty() {
-        println!(
-            "--- {}: {} .lit file(s), all OK ({:.2} ms wall) ---",
-            textbook_name,
-            run_durations_ms.len(),
-            wall_start.elapsed().as_secs_f64() * 1000.0,
+    if !run_succeeded {
+        let (_, output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        panic!(
+            "{} -r failed after {:.2} ms:\n{}",
+            textbook_name, duration_ms, output
         );
-        print_slowest_run_labels(
-            format!("{} runs", textbook_name).as_str(),
-            run_durations_ms.as_slice(),
-        );
-        for (label, duration_ms) in run_durations_ms.iter() {
-            println!("  OK  {:.2} ms  {}", duration_ms, label);
-        }
-    } else {
-        print_slowest_run_labels(
-            format!("{} runs before failure", textbook_name).as_str(),
-            run_durations_ms.as_slice(),
-        );
-        for output in failure_outputs.iter() {
-            println!("{}", output);
-        }
     }
 
-    assert!(
-        failed_labels.is_empty(),
-        "{} run(s) failed: {}",
+    println!(
+        "--- {}: one -r run, {} top-level result(s), all OK ({:.2} ms) ---",
         textbook_name,
-        failed_labels.join(", ")
+        stmt_results.len(),
+        duration_ms,
     );
 }
 
 fn run_examples_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
 
     let examples_summary = run_examples_phase1_with_runtime(&manifest_dir, &mut runtime, true);
     let docs_summary =
         run_docs_markdown_with_runtime(&manifest_dir, &mut runtime, false, !examples_summary.ran);
     print_run_examples_timing_summary(
-        builtin_duration_ms,
+        runtime_setup_duration_ms,
         examples_summary.ran,
         examples_summary.run_durations_ms.as_slice(),
         examples_summary.wall_ms,
@@ -374,21 +311,25 @@ fn run_examples_impl() {
 
 fn run_examples_dataset_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
     let examples_summary = run_examples_phase1_with_runtime(&manifest_dir, &mut runtime, false);
-    print_examples_dataset_timing_summary(builtin_duration_ms, &examples_summary, false);
+    print_examples_dataset_timing_summary(runtime_setup_duration_ms, &examples_summary, false);
 }
 
 fn run_docs_markdown_impl(include_manual_docs: bool) {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let builtin_start = Instant::now();
-    let mut runtime = Runtime::new_with_builtin_code();
-    let builtin_duration_ms = builtin_start.elapsed().as_secs_f64() * 1000.0;
+    let runtime_setup_start = Instant::now();
+    let mut runtime = Runtime::new();
+    let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
     let docs_summary =
         run_docs_markdown_with_runtime(&manifest_dir, &mut runtime, include_manual_docs, true);
-    print_docs_timing_summary(builtin_duration_ms, &docs_summary, include_manual_docs);
+    print_docs_timing_summary(
+        runtime_setup_duration_ms,
+        &docs_summary,
+        include_manual_docs,
+    );
 }
 
 fn run_examples_phase1_with_runtime(
@@ -799,7 +740,7 @@ fn push_markdown_run_groups(
 }
 
 fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     let mut run_durations_ms: Vec<(String, f64)> = Vec::new();
     let mut failed_labels: Vec<String> = Vec::new();
     let mut failure_outputs: Vec<String> = Vec::new();
@@ -876,7 +817,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
 }
 
 fn print_examples_dataset_timing_summary(
-    builtin_duration_ms: f64,
+    runtime_setup_duration_ms: f64,
     examples_summary: &TimedRunSummary,
     include_manual_docs: bool,
 ) {
@@ -887,7 +828,10 @@ fn print_examples_dataset_timing_summary(
         .map(|(_, ms)| *ms)
         .sum();
     println!("--- timing ({}) ---", phase_label);
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     if examples_summary.ran {
         println!(
             "  runs: sum of runs: {:.2} ms  |  wall: {:.2} ms",
@@ -897,7 +841,7 @@ fn print_examples_dataset_timing_summary(
 }
 
 fn print_docs_timing_summary(
-    builtin_duration_ms: f64,
+    runtime_setup_duration_ms: f64,
     docs_summary: &TimedRunSummary,
     include_manual_docs: bool,
 ) {
@@ -908,7 +852,10 @@ fn print_docs_timing_summary(
         .map(|(_, ms)| *ms)
         .sum();
     println!("--- timing ({}) ---", docs_label);
-    println!("  builtin init (once): {:.2} ms", builtin_duration_ms);
+    println!(
+        "  runtime setup (once): {:.2} ms",
+        runtime_setup_duration_ms
+    );
     if docs_summary.ran {
         println!(
             "  snippets: sum of runs: {:.2} ms  |  wall: {:.2} ms",

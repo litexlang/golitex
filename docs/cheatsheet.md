@@ -37,16 +37,16 @@ object-introduction family of `have` statements listed below.
 |---|---|---|
 | Numeric literals and arithmetic expressions | Exact natural, integer, rational, or real number objects, with arithmetic interpreted in the usual numeric structure. | Operands must be numeric enough for the operation; division and remainder require nonzero divisors where relevant. |
 | `N`, `Z`, `Q`, `R` and suffix subsets | Built-in number sets: naturals, integers, rationals, reals, and common subsets such as positive or nonzero values. | Membership facts such as `x $in R_pos` infer the corresponding ambient numeric membership. |
-| Displayed finite sets `{a, b, c}` | A finite set containing the displayed elements. | Elements must be well-defined; finite-set facts and `count` facts are inferred for displayed finite sets. |
+| Displayed finite sets `{a, b, c}` | A finite set containing the displayed elements. | Elements must be well-defined; finite-set facts and `finite_set_size` facts are inferred for displayed finite sets. |
 | Set builders `{x S: P(x)}` | The subset of `S` whose elements satisfy the predicate in the builder. | The base set and predicate body must be well-defined under the bound variable assumptions. |
-| `union(A, B)`, `intersect(A, B)`, `set_minus(A, B)`, `set_diff(A, B)` | Ordinary binary union, intersection, relative complement, and symmetric-difference style set objects. | Arguments must be well-defined sets when set facts about the result are used. |
+| `union(A, B)`, `intersect(A, B)`, `set_minus(A, B)`, `set_diff(A, B)` | Ordinary binary union, intersection, relative complement, and symmetric difference. | Arguments must be well-defined sets when set facts about the result are used. |
 | `power_set(A)` | The set of all subsets of `A`. | `A` must be well-defined; proving `B $in power_set(A)` amounts to proving `B $subset A`. |
 | `range(a, b)`, `closed_range(a, b)`, `a...b` | Integer-style ranges; `range` is half-open and `closed_range`/`...` are closed. | Endpoints must be integer-like where range enumeration facts are used. |
 | Tuple `(a, b, ...)` | An ordered tuple with one-based projection syntax such as `(a, b)[1]`. | Coordinates must be well-defined. |
 | `cart(A, B, ...)` | Cartesian product of the factor sets. | Factor objects must be well-defined sets; tuple membership checks each coordinate against its factor. |
 | `fn(x S) T` | Function-space object from inputs in `S` to values in `T`, possibly with domain side conditions. | Parameter sets, side conditions, and return set must be well-defined. |
 | Anonymous function `fn(x S) T {body}` | A function value written inline by binding `x` in `S` and returning `body`. | The body must be well-defined and must belong to `T` under the parameter and side-condition assumptions. |
-| `fn_range(f)` and `fn_range_on(f, S)` | The image of a function over its whole domain, or over a specified unary-domain subset. | `f` must be a supported function value; for larger-domain functions, pass an anonymous restriction such as `fn(x S) T {f(x)}` when an API expects a function on `S`. |
+| `fn_range(f)` | The image of a function over its declared domain. | `f` must be a supported function value. For an image restricted to `S`, use `fn_range(fn(x S) T {f(x)})`. |
 | `seq(S)`, `finite_seq(S, n)` | Infinite positive-integer-indexed sequences and finite length-`n` sequences with values in `S`. | `S` must be a set; finite-sequence length must be positive and match literal length when a literal is used. |
 | `matrix(S, r, c)` and matrix literals | Rectangular row-column indexed arrays with entries in `S`. | Row and column counts must be positive; literals must be rectangular and entries must belong to `S`. |
 | `&StructName` and `&StructName{obj}.field` | Struct membership as a record-shaped tuple type, and field access through a struct view. | Struct fields and equivalent facts must be well-defined; field access requires the object to be viewed as that struct. |
@@ -67,7 +67,7 @@ object-introduction family of `have` statements listed below.
 | `have fn = anonymous_fn` | Function body, function set, return set, and function name are checked. | Verifies the function value belongs to the return set. | Stores the function name, `f $in fn_set`, known function-body data, `f = anonymous_fn`, and inferred facts. |
 | `have fn case_by_case` | Function set, cases, equal-to expressions, and function name are checked. | Verifies case return values and related case obligations. | Stores the function name, function type, and generated case `forall` facts. |
 | `have fn by induc` | Function and induction shapes are checked. | Verifies base and step obligations. | Stores the function definition facts. |
-| `have fn as algo` | Function signature, generated algorithm shape, and function name are checked. | Verifies the function body or cases according to the algorithm-definition rules. | Stores the function definition and its associated algorithm so later `eval` can use it. |
+| `have algo for f(...)` | `f` must already be a function; parameters and case shape are checked against it. | Verifies every executable return and case against the function facts. | Stores the checked implementation so later `eval f(...)` can use it. |
 | `have fn ... by exist!` | The source `forall` must have the expected existence-uniqueness shape. | Verifies the source `forall` or the provided proof block. | Stores the function name, function type, property `forall`, and uniqueness fact. |
 | `have tuple` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N_pos` and `2 <= dimension`. | Stores tuple marker, dimension equality, and coordinate `forall` fact. |
 | `have cart` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N_pos` and `2 <= dimension`. | Stores set/cart markers, dimension equality, and projection `forall` fact. |
@@ -83,7 +83,7 @@ object-introduction family of `have` statements listed below.
 | `abstract_prop` | Abstract-prop and concrete-prop names must not conflict. | None. | Stores the abstract prop definition. |
 | `struct` | Parameter domains, field types, and equivalent facts must be well-defined; struct name must be unused. | Does not prove equivalent facts. | Stores the struct definition. |
 | `template` | Template parameters and domains must be well-defined; the template body must execute in a local environment. | The body is verified according to ordinary executor behavior. | Stores the template definition. |
-| `algo` | Target function must exist; algorithm parameters must match the function set. | Verifies every case implies the expected return; if there is no default return, verifies case coverage. | Stores the algorithm definition. |
+| `have algo for f(...)` | Target function must exist; implementation parameters must match the function set. | Verifies every case implies the expected return; if there is no default return, verifies case coverage. | Stores the checked implementation. |
 | `thm` | The theorem `forall` must be well-defined; theorem names must be unique. | Executes the proof and verifies every then-clause. | Stores the theorem definition and stores the theorem `forall` fact. |
 | `strategy` | The strategy `forall` must be well-defined; strategy names must be unique. | Executes the proof and verifies every then-clause. | Stores the strategy definition, stores the strategy `forall` fact, and activates the strategy. |
 | `alias prop` | Target prop must exist and must be concrete, not abstract; alias name must be storable. | None. | Stores a copied prop definition under the new name. |
@@ -96,7 +96,7 @@ object-introduction family of `have` statements listed below.
 | `claim` | The claimed fact must be well-defined. | Executes the proof and verifies the claimed target or then-clauses. | Stores the claimed fact and runs inference. |
 | `witness` | Witness count and witness types must match the existential target. | Verifies the existential body under the proposed witnesses. | Stores the existential fact and runs inference. |
 | `sketch` | Each nested statement performs its own checks in a child environment. | Nested statements verify normally. | No outer environment effect. |
-| `try` | Rejects control statements such as `clear`, `import`, `local import`, `trust import`, and `trust local import`. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
+| `try` | Rejects the `clear` control statement. Module imports are manifest declarations, not source statements. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
 
 ## By Statements
 
@@ -124,14 +124,10 @@ object-introduction family of `have` statements listed below.
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `litex.config` | Ordered bare paths in `[run]` select registered `.lit` files and child project plans; `[export]` declares their canonical names. Paths, names, order dependencies, and recursive configuration graphs are validated during discovery. | None during discovery. | Declares the project interface, execution plan, and canonical import graph. |
-| `import` | In project mode resolves a root module export; ordinary import does not load arbitrary `.lit` paths. Checks module cycles and cached status. | Runs the imported module's `[run]` plan once. | Registers import dependencies and reuses cached modules. |
-| `local import` | Project-only; the bare name must be declared by the current module's `litex.config`. Local file cycles are rejected during discovery. | Loads the declared file/module target once if needed. | Activates a source-local binding to the target's canonical identity; a uniquely supplied imported member may then be used bare, while local definitions shadow imports and ambiguous members need `module::name`. |
-| `trust import` / `trust local import` | Use the same declared targets, parsing, path validation, and cycle checks as their ordinary forms. They are rejected in strict mode. | Skip well-definedness and proof processing for the loaded target and its nested dependency closure. | Apply direct environment effects only, and mark the whole top-level run with an explicit trusted-import dependency. |
+| `litex.config` | `[hierarchy]` declares `module` or `submodule`; only modules may use `[import]` and `[import std]`; `[export]` lists every direct child in recursive execution order. Imported targets must be external modules, exported folders must be submodules, and no configured child may be omitted. | None during discovery. | Declares imports, canonical folder/file namespaces, full `-r` traversal, and the `-f` prefix through a registered file. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `do_nothing` | None. | None. | None. |
-| `eval` | The object must be evaluable. | Does not separately prove the original expression; it stores the evaluation equality. | Stores `expr = value` with evaluation reason. |
-| `eval by` | The left and right objects must be well-defined. | Verifies `lhs = rhs`. | Stores `lhs = rhs`, `rhs = value`, and `lhs = value`. |
+| `eval` | The expression must be evaluable, or a name with a known executable definition. | Does not separately prove the original expression; it stores the evaluation equality. | Stores and reports `expr = value` with evaluation-result reason. |
 | `macro` | The macro name and replacement text must be usable by later expansion sites. | None for the macro definition itself. | Stores the macro expansion rule for following statements in the same file. |
 | `use strategy` | The strategy must exist. | None. | Activates the strategy. |
 | `stop strategy` | The strategy must exist. | None. | Stops the strategy for its target atomic-fact key. |

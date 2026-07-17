@@ -55,7 +55,7 @@ fn run_session_loop_with_readers(
     output_language: OutputLanguage,
     force_isolated: bool,
 ) -> io::Result<()> {
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
@@ -204,11 +204,32 @@ fn run_session_loop_with_readers(
                     all_results.as_slice(),
                     None,
                 );
+                let (_, fact_graph) = render_fact_graph_from_stmt_results(
+                    "session",
+                    "entry",
+                    !output_style.is_detailed(),
+                    &runtime,
+                    all_results.as_slice(),
+                    None,
+                );
+                let (_, definition_graph) = render_definition_graph_from_stmt_results(
+                    "session",
+                    "entry",
+                    !output_style.is_detailed(),
+                    &mut runtime,
+                    all_results.as_slice(),
+                    None,
+                );
                 write_session_event(
                     stdout_writer,
                     "artifacts",
                     Some(id),
-                    &[('s', summary), ('g', graph)],
+                    &[
+                        ('s', summary),
+                        ('g', graph),
+                        ('f', fact_graph),
+                        ('d', definition_graph),
+                    ],
                 )?;
             }
             "close" if id.is_empty() && fields.next().is_none() => return Ok(()),
@@ -230,11 +251,13 @@ fn initialize_session_runtime(
     force_isolated: bool,
 ) -> Result<&'static str, RuntimeError> {
     if force_isolated || !directory.join("litex.config").is_file() {
+        runtime.isolated = true;
         runtime.new_file_path_new_env_new_name_scope("session");
         return Ok("isolated");
     }
 
     let root = directory.to_string_lossy().into_owned();
+    runtime.isolated = false;
     discover_repository(runtime, root.as_str())?;
     runtime.prepare_current_repository_for_repl(format!("{}/<session>", root).as_str());
     Ok("project")
@@ -258,6 +281,10 @@ fn write_session_event(
             't' => output.push_str(format!(",\"trace\":{}", json_string(value)).as_str()),
             's' => output.push_str(format!(",\"summary\":{}", json_string(value)).as_str()),
             'g' => output.push_str(format!(",\"graph\":{}", json_string(value)).as_str()),
+            'f' => output.push_str(format!(",\"fact_graph\":{}", json_string(value)).as_str()),
+            'd' => {
+                output.push_str(format!(",\"definition_graph\":{}", json_string(value)).as_str())
+            }
             'e' => output.push_str(format!(",\"error\":{}", json_string(value)).as_str()),
             _ => {}
         }
@@ -288,22 +315,21 @@ mod tests {
     }
 
     #[test]
-    fn project_session_keeps_local_imports_and_previous_blocks() {
+    fn project_session_keeps_previous_blocks() {
         let root = session_test_dir("project");
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).expect("create project fixture");
         fs::write(
             root.join("litex.config"),
-            "[run]\n./main.lit\n\n[export]\nmain = \"./main.lit\"\nfacts = \"./facts.lit\"\n",
+            "[export]\nmain = \"./main.lit\"\n",
         )
         .expect("write config");
         fs::write(root.join("main.lit"), "have planned_value R = 9\n").expect("write plan file");
-        fs::write(root.join("facts.lit"), "have x R = 1\n").expect("write export");
 
         let input = format!(
             "{}{}artifacts final\nclose\n",
-            run_frame("imports", "local import facts\n"),
-            run_frame("proof", "have y R = facts::x + 1\ny = 2\n"),
+            run_frame("definition", "have x R = 1\n"),
+            run_frame("proof", "have y R = x + 1\ny = 2\n"),
         );
         let mut stdin_reader = Cursor::new(input.into_bytes());
         let mut stdout_writer = Vec::new();
@@ -321,10 +347,12 @@ mod tests {
 
         let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
         assert!(output.contains("\"event\":\"ready\",\"mode\":\"project\""));
-        assert!(output.contains("\"id\":\"imports\",\"ok\":true"));
+        assert!(output.contains("\"id\":\"definition\",\"ok\":true"));
         assert!(output.contains("\"id\":\"proof\",\"ok\":true"));
         assert!(output.contains("y = 2"));
         assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
+        assert!(output.contains("litex-fact-graph"));
+        assert!(output.contains("litex-definition-graph"));
 
         let _ = fs::remove_dir_all(&root);
     }

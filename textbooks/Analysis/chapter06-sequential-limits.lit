@@ -1,8 +1,9 @@
 # Chapter 6: Limits of sequences.
 
 # Chapter 5 supplies the locally developed completeness vocabulary used here.
-trust local import chap5
-trust local import chap4
+
+# The Chapter 6 support module supplies chap6ereal::EReal, its two infinities, extended
+# order, negation, and the complete-lattice sup/inf interface.
 
 # 6.1 Convergence and limit laws
 
@@ -16,7 +17,7 @@ and is zero exactly when x=y.
 # because the chapter repeatedly talks about closeness.
 
 forall x, y R:
-    dist_R(x, y) = abs(x - y)
+    chap5::dist_R(x, y) = abs(x - y)
 
 """
 Definition 6.1.2 (epsilon-closeness). Let epsilon > 0 be a real number. Two
@@ -28,10 +29,10 @@ real numbers are epsilon-close when their distance is at most epsilon.
 # after shrinking or enlarging the permitted error.
 
 prop is_epsilon_close_in_R(epsilon R_pos, x, y R):
-    dist_R(x, y) <= epsilon
+    chap5::dist_R(x, y) <= epsilon
 
 forall epsilon R_pos, x R:
-    dist_R(x, x) = 0
+    chap5::dist_R(x, x) = 0
     0 <= epsilon
     $is_epsilon_close_in_R(epsilon, x, x)
 
@@ -78,7 +79,7 @@ prop is_rational_epsilon_below(delta Q_pos, epsilon R_pos):
 thm Archimedean_density_bridge:
     ? forall epsilon R_pos:
         exist delta Q_pos st {$is_rational_epsilon_below(delta, epsilon)}
-    by thm archimedean_property(epsilon)
+    by thm chap5::archimedean_property(epsilon)
     obtain m from exist m N_pos st {1 / m < epsilon}
     have delta Q_pos = 1 / m
     delta < epsilon
@@ -320,7 +321,7 @@ forall n N_pos:
 claim:
     ? forall epsilon R_pos:
         exist n_bound N_pos st {1 / n_bound < epsilon}
-    by thm archimedean_property(epsilon)
+    by thm chap5::archimedean_property(epsilon)
 
 claim:
     ? $has_limit(reciprocal_nat_seq, 0)
@@ -1237,11 +1238,16 @@ by adjoining two formal endpoints, +infty and -infty, to the ordinary real
 numbers. The ordinary real numbers are the finite points of R*.
 """
 
+# `chap6ereal::EReal` is the reusable tagged carrier.  `chap6ereal::ereal_of_real(x)` embeds a finite
+# real, while `chap6ereal::pos_infinity` and `chap6ereal::neg_infinity` are the two distinct endpoints.
+
 """
 Definition 6.2.2 (Negation on extended reals). Negation on R* agrees with
 ordinary real negation on finite points, sends +infty to -infty, and sends
 -infty to +infty.
 """
+
+# The map `chap6ereal::ereal_neg` records these three cases as one function on chap6ereal::EReal.
 
 """
 Definition 6.2.3 (Extended order). The order on R* agrees with the ordinary
@@ -1249,18 +1255,43 @@ real order on finite points. Every extended real is at most +infty, and
 -infty is at most every extended real.
 """
 
+# `$chap6ereal::is_ereal_le` is the extended order relation.  It is separate from numeric
+# `<=` because arithmetic on infinities is partial, whereas its order is total.
+
 """
 Examples 6.2.4. Examples include 3 <= 5, 3 < +infty, -infty < +infty, and
 not 3 <= -infty.
 """
+
+claim:
+    ? $chap6ereal::is_ereal_lt(chap6ereal::ereal_of_real(3), chap6ereal::pos_infinity)
+    by thm chap6ereal::ereal_real_lt_pos_infinity(3)
+
+claim:
+    ? $chap6ereal::is_ereal_lt(chap6ereal::neg_infinity, chap6ereal::pos_infinity)
+    by thm chap6ereal::neg_infinity_le_ereal(chap6ereal::pos_infinity)
+    $chap6ereal::is_ereal_le(chap6ereal::neg_infinity, chap6ereal::pos_infinity)
+    chap6ereal::neg_infinity != chap6ereal::pos_infinity
+    $chap6ereal::is_ereal_lt(chap6ereal::neg_infinity, chap6ereal::pos_infinity)
+
+claim:
+    ? not $chap6ereal::is_ereal_le(chap6ereal::ereal_of_real(3), chap6ereal::neg_infinity)
+    by thm chap6ereal::ereal_real_not_le_neg_infinity(3)
 
 """
 Proposition 6.2.5. Extended order is reflexive, trichotomous, transitive, and
 reversed by negation.
 """
 
-# to the real line.  Later arguments only need concrete threshold versions, so
-# the chapter does not build a full extended-order theory here.
+# The chap6ereal::EReal support module provides these four order laws.  The source-facing
+# transitivity statement is kept here for later Chapter 6 order arguments.
+thm extended_real_order_transitive:
+    ? forall x, y, z chap6ereal::EReal:
+        $chap6ereal::is_ereal_le(x, y)
+        $chap6ereal::is_ereal_le(y, z)
+        =>:
+            $chap6ereal::is_ereal_le(x, z)
+    by thm chap6ereal::ereal_le_transitive(x, y, z)
 
 """
 Definition 6.2.6 (Extended suprema and infima). Supremum and infimum are
@@ -1269,9 +1300,10 @@ supremum +infty, while the empty set has supremum -infty; the dual
 conventions apply to infimum.
 """
 
-# Later sections spell out finite supremum and infimum as least-bound
-# predicates. The `+infty`, `-infty`, and empty-set conventions should be
-# represented by separate unbounded or empty-family propositions when needed.
+# `chap6ereal::is_ereal_least_upper_bound` and `chap6ereal::is_ereal_greatest_lower_bound` state the
+# source definitions, while `chap6ereal::ereal_sup(E)` and `chap6ereal::ereal_inf(E)` select their
+# unique values for every `E power_set(chap6ereal::EReal)`, including empty and unbounded
+# families.  Later finite real tail extrema remain the special bounded case.
 
 """
 Example 6.2.7. The negative integers together with -infty have supremum -1
@@ -1279,7 +1311,7 @@ and infimum -infty.
 """
 
 # The finite part contributes the supremum, while the attached endpoint controls
-# the infimum. No `R*` term is introduced in the sketch.
+# the infimum through the chap6ereal::EReal order.
 
 """
 Example 6.2.8. The set {0.9, 0.99, 0.999, ...} has infimum 0.9 and supremum 1.
@@ -1451,7 +1483,7 @@ thm bounded_sequence_has_tail_supremum:
         witness $is_nonempty_set(tail_range) from a(m):
             a(m) $in tail_range
     claim:
-        ? $has_upper_bound(tail_range)
+        ? $chap5::has_upper_bound(tail_range)
         tail_range $subset R
         claim:
             ? forall x tail_range:
@@ -1462,14 +1494,14 @@ thm bounded_sequence_has_tail_supremum:
             a(n) <= abs(a(n))
             a(n) <= B
             x <= B
-        $is_upper_bound(tail_range, B)
-        witness exist M R st {$is_upper_bound(tail_range, M)} from B:
-            $is_upper_bound(tail_range, B)
-        $has_upper_bound(tail_range)
+        $chap5::is_upper_bound(tail_range, B)
+        witness exist M R st {$chap5::is_upper_bound(tail_range, M)} from B:
+            $chap5::is_upper_bound(tail_range, B)
+        $chap5::has_upper_bound(tail_range)
     tail_range $in power_set(R)
-    by thm least_upper_bound_existence(tail_range)
-    $has_least_upper_bound(tail_range)
-    obtain L from exist L R st {$is_least_upper_bound(tail_range, L)}
+    by thm chap5::least_upper_bound_existence(tail_range)
+    $chap5::has_least_upper_bound(tail_range)
+    obtain L from exist L R st {$chap5::is_least_upper_bound(tail_range, L)}
     claim:
         ? $is_tail_upper_bound(a, m, L)
         forall n N_pos:
@@ -1478,7 +1510,7 @@ thm bounded_sequence_has_tail_supremum:
                 $is_tail_value(a, m, a(n))
                 a(n) $in {x R: $is_tail_value(a, m, x)}
                 a(n) $in tail_range
-                $is_upper_bound(tail_range, L)
+                $chap5::is_upper_bound(tail_range, L)
                 a(n) <= L
         $is_tail_upper_bound(a, m, L)
     claim:
@@ -1487,7 +1519,7 @@ thm bounded_sequence_has_tail_supremum:
             =>:
                 L <= M
         claim:
-            ? $is_upper_bound(tail_range, M)
+            ? $chap5::is_upper_bound(tail_range, M)
             tail_range $subset R
             claim:
                 ? forall x tail_range:
@@ -1496,7 +1528,7 @@ thm bounded_sequence_has_tail_supremum:
                 obtain n from exist n N_pos st {n >= m and x = a(n)}
                 a(n) <= M
                 x <= M
-            $is_upper_bound(tail_range, M)
+            $chap5::is_upper_bound(tail_range, M)
         L <= M
     $is_tail_supremum(a, m, L)
     witness exist L0 R st {$is_tail_supremum(a, m, L0)} from L:
@@ -1694,7 +1726,7 @@ thm tail_supremum_is_upper_bound:
         =>:
             $is_tail_upper_bound(a, m, L)
 
-thm tail_upper_bound_restrict_to_later_tail:
+thm tail_upper_bound_on_later_tail:
     ? forall a seq(R), m, l N_pos, M R:
         $is_tail_upper_bound(a, m, M)
         l >= m
@@ -1903,7 +1935,7 @@ have fn geom_seq(x R) fn(k N_pos) R = fn(n N_pos) R {x^n}
 
 thm least_upper_bound_member_above:
     ? forall E set, M R, epsilon R_pos:
-        $is_least_upper_bound(E, M)
+        $chap5::is_least_upper_bound(E, M)
         =>:
             exist x E st {M - epsilon < x}
     by contra:
@@ -1914,9 +1946,9 @@ thm least_upper_bound_member_above:
             not M - epsilon < x
             x <= M - epsilon
         E $subset R
-        $is_upper_bound(E, M - epsilon)
+        $chap5::is_upper_bound(E, M - epsilon)
         forall B R:
-            $is_upper_bound(E, B)
+            $chap5::is_upper_bound(E, B)
             =>:
                 M <= B
         M <= M - epsilon < M
@@ -1989,7 +2021,7 @@ thm bounded_increasing_sequence_converges:
         a(1) $in fn_range(a)
     obtain M from exist M R st {$is_sequence_upper_bound(a, M)}
     claim:
-        ? $has_upper_bound(fn_range(a))
+        ? $chap5::has_upper_bound(fn_range(a))
         fn_range(a) $subset R
         claim:
             ? forall x fn_range(a):
@@ -1998,13 +2030,13 @@ thm bounded_increasing_sequence_converges:
             x = a(n)
             a(n) <= M
             x <= M
-        $is_upper_bound(fn_range(a), M)
-        witness exist B R st {$is_upper_bound(fn_range(a), B)} from M:
-            $is_upper_bound(fn_range(a), M)
-        $has_upper_bound(fn_range(a))
-    by thm least_upper_bound_existence(fn_range(a))
-    $has_least_upper_bound(fn_range(a))
-    obtain L from exist L R st {$is_least_upper_bound(fn_range(a), L)}
+        $chap5::is_upper_bound(fn_range(a), M)
+        witness exist B R st {$chap5::is_upper_bound(fn_range(a), B)} from M:
+            $chap5::is_upper_bound(fn_range(a), M)
+        $chap5::has_upper_bound(fn_range(a))
+    by thm chap5::least_upper_bound_existence(fn_range(a))
+    $chap5::has_least_upper_bound(fn_range(a))
+    obtain L from exist L R st {$chap5::is_least_upper_bound(fn_range(a), L)}
     claim:
         ? forall epsilon R_pos:
             $has_eventual_closeness_to(a, L, epsilon)
@@ -2033,7 +2065,7 @@ thm bounded_increasing_sequence_converges:
                     (a(n) + epsilon) - a(n) = epsilon
                     L - a(n) < epsilon
                     a(n) $in fn_range(a)
-                    $is_upper_bound(fn_range(a), L)
+                    $chap5::is_upper_bound(fn_range(a), L)
                     a(n) <= L
                     a(n) - L <= 0
                     a(n) - L < epsilon
@@ -2396,10 +2428,10 @@ superior is the infimum, over all starting indices, of the tail suprema; the
 limit inferior is the supremum, over all starting indices, of the tail infima.
 """
 
-# The full mathematical definition is extended-real-valued. For this first
-# sketch, the finite bounded substitutes below use the two key characterizations
-# from Proposition 6.4.12(a,b): eventual upper/lower control and infinitely
-# often crossing every stricter threshold.
+# The definitions below use the two threshold characterizations from
+# Proposition 6.4.12(a,b).  The finite and infinite cases are wrapped once in
+# the chap6ereal::EReal-valued interfaces `has_limit_superior` and `has_limit_inferior`, so
+# later source statements do not need to repeat a three-way disjunction.
 
 prop is_eventually_below_threshold(a seq(R), x R, n_tail N_pos):
     forall n N_pos:
@@ -2464,6 +2496,60 @@ prop has_limit_inferior_neg_infinity(a seq(R)):
 prop has_limit_inferior_pos_infinity(a seq(R)):
     forall y R:
         exist n_tail N_pos st {$is_eventually_above_threshold(a, y, n_tail)}
+
+# An ordinary sequence can also converge to either endpoint of chap6ereal::EReal.  These
+# predicates keep the finite `has_limit(a, L)` interface unchanged.
+prop has_limit_to_pos_infinity(a seq(R)):
+    $has_limit_inferior_pos_infinity(a)
+
+prop has_limit_superior_neg_infinity(a seq(R)):
+    forall y R:
+        exist n_tail N_pos st {$is_eventually_below_threshold(a, y, n_tail)}
+
+prop has_limit_to_neg_infinity(a seq(R)):
+    $has_limit_superior_neg_infinity(a)
+
+prop has_limit_in_EReal_as_finite_real(a seq(R), L chap6ereal::EReal):
+    exist c R st {L = chap6ereal::ereal_of_real(c), $has_limit(a, c)}
+
+prop has_limit_in_EReal_as_pos_infinity(a seq(R), L chap6ereal::EReal):
+    L = chap6ereal::pos_infinity
+    $has_limit_to_pos_infinity(a)
+
+prop has_limit_in_EReal_as_neg_infinity(a seq(R), L chap6ereal::EReal):
+    L = chap6ereal::neg_infinity
+    $has_limit_to_neg_infinity(a)
+
+prop has_limit_in_EReal(a seq(R), L chap6ereal::EReal):
+    $has_limit_in_EReal_as_finite_real(a, L) or $has_limit_in_EReal_as_pos_infinity(a, L) or $has_limit_in_EReal_as_neg_infinity(a, L)
+
+prop has_limit_superior_as_finite_ereal(a seq(R), L chap6ereal::EReal):
+    exist c R st {L = chap6ereal::ereal_of_real(c), $has_finite_limit_superior(a, c)}
+
+prop has_limit_superior_as_pos_infinity(a seq(R), L chap6ereal::EReal):
+    L = chap6ereal::pos_infinity
+    $has_limit_superior_pos_infinity(a)
+
+prop has_limit_superior_as_neg_infinity(a seq(R), L chap6ereal::EReal):
+    L = chap6ereal::neg_infinity
+    $has_limit_superior_neg_infinity(a)
+
+prop has_limit_superior(a seq(R), L chap6ereal::EReal):
+    $has_limit_superior_as_finite_ereal(a, L) or $has_limit_superior_as_pos_infinity(a, L) or $has_limit_superior_as_neg_infinity(a, L)
+
+prop has_limit_inferior_as_finite_ereal(a seq(R), L chap6ereal::EReal):
+    exist c R st {L = chap6ereal::ereal_of_real(c), $has_finite_limit_inferior(a, c)}
+
+prop has_limit_inferior_as_pos_infinity(a seq(R), L chap6ereal::EReal):
+    L = chap6ereal::pos_infinity
+    $has_limit_inferior_pos_infinity(a)
+
+prop has_limit_inferior_as_neg_infinity(a seq(R), L chap6ereal::EReal):
+    L = chap6ereal::neg_infinity
+    $has_limit_inferior_neg_infinity(a)
+
+prop has_limit_inferior(a seq(R), L chap6ereal::EReal):
+    $has_limit_inferior_as_finite_ereal(a, L) or $has_limit_inferior_as_pos_infinity(a, L) or $has_limit_inferior_as_neg_infinity(a, L)
 
 thm exists_nat_above_real:
     ? forall M R:
@@ -2608,6 +2694,24 @@ claim:
         $falls_below_every_threshold_above_arbitrarily_late(alternating_one_seq, -1)
     $has_finite_limit_inferior(alternating_one_seq, -1)
 
+# The finite values are now exposed through the same chap6ereal::EReal-valued surface as
+# the infinite cases below.
+claim:
+    ? $has_limit_superior(alternating_one_seq, chap6ereal::ereal_of_real(1))
+    witness exist c R st {chap6ereal::ereal_of_real(1) = chap6ereal::ereal_of_real(c), $has_finite_limit_superior(alternating_one_seq, c)} from 1:
+        chap6ereal::ereal_of_real(1) = chap6ereal::ereal_of_real(1)
+        $has_finite_limit_superior(alternating_one_seq, 1)
+    $has_limit_superior_as_finite_ereal(alternating_one_seq, chap6ereal::ereal_of_real(1))
+    $has_limit_superior(alternating_one_seq, chap6ereal::ereal_of_real(1))
+
+claim:
+    ? $has_limit_inferior(alternating_one_seq, chap6ereal::ereal_of_real(-1))
+    witness exist c R st {chap6ereal::ereal_of_real(-1) = chap6ereal::ereal_of_real(c), $has_finite_limit_inferior(alternating_one_seq, c)} from -1:
+        chap6ereal::ereal_of_real(-1) = chap6ereal::ereal_of_real(-1)
+        $has_finite_limit_inferior(alternating_one_seq, -1)
+    $has_limit_inferior_as_finite_ereal(alternating_one_seq, chap6ereal::ereal_of_real(-1))
+    $has_limit_inferior(alternating_one_seq, chap6ereal::ereal_of_real(-1))
+
 """
 Example 6.4.8. The sequence 1, -2, 3, -4, ... has limit superior +infty and
 limit inferior -infty.
@@ -2682,6 +2786,20 @@ claim:
                 -1 * (2 * max(n_tail, n0)) = -1 * 2 * max(n_tail, n0)
         $falls_below_threshold_arbitrarily_late(alternating_signed_nat_seq, y)
     $has_limit_inferior_neg_infinity(alternating_signed_nat_seq)
+
+claim:
+    ? $has_limit_superior(alternating_signed_nat_seq, chap6ereal::pos_infinity)
+    chap6ereal::pos_infinity = chap6ereal::pos_infinity
+    $has_limit_superior_pos_infinity(alternating_signed_nat_seq)
+    $has_limit_superior_as_pos_infinity(alternating_signed_nat_seq, chap6ereal::pos_infinity)
+    $has_limit_superior(alternating_signed_nat_seq, chap6ereal::pos_infinity)
+
+claim:
+    ? $has_limit_inferior(alternating_signed_nat_seq, chap6ereal::neg_infinity)
+    chap6ereal::neg_infinity = chap6ereal::neg_infinity
+    $has_limit_inferior_neg_infinity(alternating_signed_nat_seq)
+    $has_limit_inferior_as_neg_infinity(alternating_signed_nat_seq, chap6ereal::neg_infinity)
+    $has_limit_inferior(alternating_signed_nat_seq, chap6ereal::neg_infinity)
 
 """
 Example 6.4.9. The sequence 1, -1/2, 1/3, -1/4, ... has both limit superior
@@ -2894,6 +3012,28 @@ claim:
             $is_eventually_above_threshold(natural_as_real_seq, y, n0)
     $has_limit_inferior_pos_infinity(natural_as_real_seq)
 
+claim:
+    ? $has_limit_superior(natural_as_real_seq, chap6ereal::pos_infinity)
+    chap6ereal::pos_infinity = chap6ereal::pos_infinity
+    $has_limit_superior_pos_infinity(natural_as_real_seq)
+    $has_limit_superior_as_pos_infinity(natural_as_real_seq, chap6ereal::pos_infinity)
+    $has_limit_superior(natural_as_real_seq, chap6ereal::pos_infinity)
+
+claim:
+    ? $has_limit_inferior(natural_as_real_seq, chap6ereal::pos_infinity)
+    chap6ereal::pos_infinity = chap6ereal::pos_infinity
+    $has_limit_inferior_pos_infinity(natural_as_real_seq)
+    $has_limit_inferior_as_pos_infinity(natural_as_real_seq, chap6ereal::pos_infinity)
+    $has_limit_inferior(natural_as_real_seq, chap6ereal::pos_infinity)
+
+claim:
+    ? $has_limit_in_EReal(natural_as_real_seq, chap6ereal::pos_infinity)
+    chap6ereal::pos_infinity = chap6ereal::pos_infinity
+    $has_limit_inferior_pos_infinity(natural_as_real_seq)
+    $has_limit_to_pos_infinity(natural_as_real_seq)
+    $has_limit_in_EReal_as_pos_infinity(natural_as_real_seq, chap6ereal::pos_infinity)
+    $has_limit_in_EReal(natural_as_real_seq, chap6ereal::pos_infinity)
+
 """
 Remark 6.4.11. The starting index does not affect limsup or liminf.
 """
@@ -2926,7 +3066,7 @@ thm bounded_sequence_tail_sup_sequence_decreasing:
         $is_tail_supremum(a, n + 1, tail_sup(a, n + 1))
         $is_tail_upper_bound(a, n, tail_sup(a, n))
         n + 1 >= n
-        by thm tail_upper_bound_restrict_to_later_tail(a, n, n + 1, tail_sup(a, n))
+        by thm tail_upper_bound_on_later_tail(a, n, n + 1, tail_sup(a, n))
         $is_tail_upper_bound(a, n + 1, tail_sup(a, n))
         by thm tail_supremum_le_every_upper_bound(a, n + 1, tail_sup(a, n + 1), tail_sup(a, n))
         tail_sup(a, n + 1) <= tail_sup(a, n)
@@ -3782,7 +3922,7 @@ thm cauchy_sequence_converges:
         witness $is_nonempty_set(E) from a(n0) - 1:
             a(n0) - 1 $in E
     claim:
-        ? $has_upper_bound(E)
+        ? $chap5::has_upper_bound(E)
         E $subset R
         1 $in R_pos
         $has_eventual_epsilon_steadiness(a, 1)
@@ -3802,16 +3942,16 @@ thm cauchy_sequence_converges:
             1 + a(n0) = a(n0) + 1
             a(max(n0, n1)) < a(n0) + 1
             x <= a(max(n0, n1)) <= a(n0) + 1
-        $is_upper_bound(E, a(n0) + 1)
-        witness exist M R st {$is_upper_bound(E, M)} from a(n0) + 1:
-            $is_upper_bound(E, a(n0) + 1)
-        $has_upper_bound(E)
+        $chap5::is_upper_bound(E, a(n0) + 1)
+        witness exist M R st {$chap5::is_upper_bound(E, M)} from a(n0) + 1:
+            $chap5::is_upper_bound(E, a(n0) + 1)
+        $chap5::has_upper_bound(E)
     E $in power_set(R)
     $is_nonempty_set(E)
-    $has_upper_bound(E)
-    by thm least_upper_bound_existence(E)
-    $has_least_upper_bound(E)
-    obtain L from exist L R st {$is_least_upper_bound(E, L)}
+    $chap5::has_upper_bound(E)
+    by thm chap5::least_upper_bound_existence(E)
+    $chap5::has_least_upper_bound(E)
+    obtain L from exist L R st {$chap5::is_least_upper_bound(E, L)}
     claim:
         ? forall epsilon R_pos:
             $has_eventual_closeness_to(a, L, epsilon)
@@ -3845,7 +3985,7 @@ thm cauchy_sequence_converges:
                 $has_eventual_lower_bound(a, a(n) - epsilon / 2)
                 a(n) - epsilon / 2 $in {x R: $has_eventual_lower_bound(a, x)}
                 a(n) - epsilon / 2 $in E
-                $is_upper_bound(E, L)
+                $chap5::is_upper_bound(E, L)
                 a(n) - epsilon / 2 <= L
             claim:
                 ? L <= a(n) + epsilon / 2
@@ -3864,7 +4004,7 @@ thm cauchy_sequence_converges:
                     epsilon / 2 + a(n) = a(n) + epsilon / 2
                     a(max(n0, n1)) < a(n) + epsilon / 2
                     x <= a(max(n0, n1)) <= a(n) + epsilon / 2
-                $is_upper_bound(E, a(n) + epsilon / 2)
+                $chap5::is_upper_bound(E, a(n) + epsilon / 2)
                 L <= a(n) + epsilon / 2
             a(n) - epsilon / 2 + epsilon / 2 <= L + epsilon / 2
             a(n) - epsilon / 2 + epsilon / 2 = a(n)
@@ -3989,7 +4129,7 @@ thm reciprocal_kth_root_sequence_converges_to_zero:
         ? forall epsilon R_pos:
             $has_eventual_closeness_to(a, 0, epsilon)
         epsilon^k $in R_pos
-        by thm archimedean_property(epsilon^k)
+        by thm chap5::archimedean_property(epsilon^k)
         obtain n0 from exist n0 N_pos st {1 / n0 < epsilon^k}
         claim:
             ? forall n N_pos:
@@ -4472,6 +4612,17 @@ prop is_subsequence_along(a, b seq(R), phi fn(k N_pos) N_pos):
 prop has_subsequence(a, b seq(R)):
     exist phi fn(k N_pos) N_pos st {$is_subsequence_along(a, b, phi)}
 
+# Imported concrete predicates do not expose existential witnesses directly.
+# Keep this elimination interface next to the subsequence definition.
+thm subsequence_witness_exists:
+    ? forall a, b seq(R):
+        $has_subsequence(a, b)
+        =>:
+            exist phi fn(k N_pos) N_pos st {$is_subsequence_along(a, b, phi)}
+    obtain phi from exist phi fn(k N_pos) N_pos st {$is_subsequence_along(a, b, phi)}
+    witness exist phi0 fn(k N_pos) N_pos st {$is_subsequence_along(a, b, phi0)} from phi:
+        $is_subsequence_along(a, b, phi)
+
 """
 Example 6.6.2. The even-indexed terms of a sequence form a subsequence.
 """
@@ -4829,7 +4980,7 @@ thm limit_point_has_convergent_subsequence:
     claim:
         ? forall epsilon R_pos:
             $has_eventual_closeness_to(b, L, epsilon)
-        by thm archimedean_property(epsilon)
+        by thm chap5::archimedean_property(epsilon)
         obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
         max(n0, 2) $in N_pos
         witness exist n1 N_pos st {$is_tail_close_to(b, L, epsilon, n1)} from max(n0, 2):
@@ -5014,8 +5165,8 @@ thm rational_approximation_sequence_exists:
     # Each real has a rational Cauchy representative.  Regard its rational
     # values as real values and translate the same tail estimate into the
     # present convergence vocabulary.
-    by thm cauchy_sequence_representative_in_Q_exists(alpha)
-    obtain a from exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, alpha)}
+    by thm chap5::cauchy_sequence_representative_in_Q_exists(alpha)
+    obtain a from exist a seq(Q) st {$chap5::is_cauchy_sequence_in_Q(a), $chap5::has_formal_limit_in_Q(a, alpha)}
     have fn q(n N_pos) R = a(n)
     claim:
         ? forall n N_pos:
@@ -5028,9 +5179,9 @@ thm rational_approximation_sequence_exists:
         claim:
             ? forall epsilon R_pos:
                 $has_eventual_closeness_to(q, alpha, epsilon)
-            $has_formal_limit_in_Q(a, alpha)
-            $has_rational_sequence_limit_in_R(a, alpha)
-            obtain n0 from exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(a, alpha, epsilon, n0)}
+            $chap5::has_formal_limit_in_Q(a, alpha)
+            $chap5::has_rational_sequence_limit_in_R(a, alpha)
+            obtain n0 from exist n0 N_pos st {$chap5::is_rational_sequence_tail_close_to_real(a, alpha, epsilon, n0)}
             witness exist N0 N_pos st {$is_tail_close_to(q, alpha, epsilon, N0)} from n0:
                 claim:
                     ? forall n N_pos:

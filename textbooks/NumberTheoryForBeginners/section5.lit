@@ -1,0 +1,528 @@
+# Number Theory for Beginners, Section V.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section V.
+# problem: Formalize abelian groups, subgroups, integer congruence modulo m,
+# congruence classes, addition of classes, Theorem V.1, and the Section V
+# exercises.
+# proof_idea: Use an explicit operation-function interface for abelian groups,
+# define congruence as divisibility of x-y by m, check the elementary
+# congruence algebra directly, and record the quotient-set construction as
+# source-facing proof debt.
+# litex_code: This file runs Sections I-IV first and then adds Section V.
+# comments: The kernel Euclidean quotient and remainder rules provide the
+# standard representative construction used below; no source package is imported.
+
+"""
+Definition. A commutative, or abelian, group is a set G with a binary operation
+written additively, satisfying associativity, commutativity, unique solvability
+of x+z=y, and a neutral element 0.
+"""
+
+prop is_abelian_group(G set, add fn(x, y G) G, zero G):
+    $is_nonempty_set(G)
+    forall x, y, z G:
+        add(add(x, y), z) = add(x, add(y, z))
+    forall x, y G:
+        add(x, y) = add(y, x)
+    forall x, y G:
+        exist! z G st {add(x, z) = y}
+    forall x G:
+        add(zero, x) = x
+
+"""
+Examples. The integers, rational numbers, and real numbers are abelian groups
+under addition.  The nonzero rational numbers are an abelian group under
+multiplication.
+"""
+
+sketch:
+    abstract_prop integers_are_abelian_group_under_addition()
+    abstract_prop rationals_are_abelian_group_under_addition()
+    abstract_prop reals_are_abelian_group_under_addition()
+    abstract_prop nonzero_rationals_are_abelian_group_under_multiplication()
+
+    # Source handling: These are the source examples immediately following the
+    # group axioms.  The four concrete instances remain source-level examples;
+    # their operation functions and law proofs are not part of the theorem-only
+    # translation slice.
+
+"""
+Definition. A subgroup is a subset of a group that is a group under the same
+operation.  For additive groups, it is enough for a nonempty subset to be
+closed under subtraction; Theorem II.1 says every subgroup of Z is section2::mZ.
+"""
+
+prop is_subgroup_of_abelian_group(G set, add fn(x, y G) G, zero G, H power_set(G)):
+    $is_abelian_group(G, add, zero)
+    $is_nonempty_set(H)
+    forall x, y H:
+        exist z H st {add(x, z) = y}
+    forall x H:
+        add(zero, x) = x
+
+prop is_additive_subgroup_of_Z(H power_set(Z)):
+    $is_nonempty_set(H)
+    $section2::closed_under_subtraction(H)
+
+# Source handling: The text cites the proof of Theorem II.1.  The checked
+# Section II interface supplies the same cyclic-subgroup conclusion; this
+# local theorem keeps the source-facing predicate visible in Section V.
+thm theorem_V_subgroup_of_Z_is_cyclic:
+    ? forall H power_set(Z):
+        $is_additive_subgroup_of_Z(H)
+        =>:
+            exist! m N st {$section2::is_integer_multiple_set(H, m)}
+    by thm section2::theorem_II_1_subgroups_of_Z(H)
+    obtain m from exist m N st {H = section2::mZ(m)}
+    witness exist m1 N st {$section2::is_integer_multiple_set(H, m1)} from m:
+        H = section2::mZ(m)
+    claim:
+        ? forall m1, m2 N:
+            $section2::is_integer_multiple_set(H, m1)
+            $section2::is_integer_multiple_set(H, m2)
+            =>:
+                m1 = m2
+        H = section2::mZ(m1)
+        H = section2::mZ(m2)
+        section2::mZ(m1) = H = section2::mZ(m2)
+        m1 = m2
+    forall m1, m2 N:
+        $section2::is_integer_multiple_set(H, m1)
+        $section2::is_integer_multiple_set(H, m2)
+        =>:
+            m1 = m2
+    exist! m N st {$section2::is_integer_multiple_set(H, m)}
+
+"""
+Definition. For m>0, integers x and y are congruent modulo m when x-y is a
+multiple of m.
+"""
+
+prop congruent_mod(m N_pos, x, y Z):
+    $section1::divides_Z(m, x - y)
+
+"""
+The division lemma from Section II says every integer is congruent modulo m to
+exactly one of 0,1,...,m-1, and congruence is the same as having the same
+remainder.
+"""
+
+prop has_standard_remainder_mod(m N_pos, x, r Z):
+    r = x % m
+
+prop same_remainder_mod(m N_pos, x, y Z):
+    x % m = y % m
+
+# The first-class Euclidean quotient gives the multiple part of each integer,
+# while `%` gives the representative in the source interval. The two directions
+# below make the book's equivalence with divisibility explicit.
+thm standard_remainder_mod_exists_unique:
+    ? forall m N_pos, x Z:
+        exist! r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)}
+    x = m * integer_quotient(x, m) + x % m
+    x - x % m = (m * integer_quotient(x, m) + x % m) - x % m = m * integer_quotient(x, m)
+    witness exist r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)} from x % m:
+        0 <= x % m < m
+        $has_standard_remainder_mod(m, x, x % m)
+        x - x % m = m * integer_quotient(x, m)
+        witness exist k Z st {x - x % m = m * k} from integer_quotient(x, m):
+            x - x % m = m * integer_quotient(x, m)
+        $congruent_mod(m, x, x % m)
+    forall r, r1 Z:
+        0 <= r < m
+        0 <= r1 < m
+        $has_standard_remainder_mod(m, x, r)
+        $has_standard_remainder_mod(m, x, r1)
+        $congruent_mod(m, x, r)
+        $congruent_mod(m, x, r1)
+        =>:
+            r = x % m = r1
+    exist! r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)}
+
+thm congruent_mod_has_same_remainder:
+    ? forall m N_pos, x, y Z:
+        $congruent_mod(m, x, y)
+        =>:
+            $same_remainder_mod(m, x, y)
+    obtain k from exist k Z st {x - y = m * k}
+    y = m * integer_quotient(y, m) + y % m
+    x = (x - y) + y = m * k + y = y + m * k
+    x = y + m * k = (m * integer_quotient(y, m) + y % m) + m * k = m * (integer_quotient(y, m) + k) + y % m
+    0 <= y % m < m
+    x = m * (integer_quotient(y, m) + k) + y % m
+    x % m = y % m
+    $same_remainder_mod(m, x, y)
+
+thm same_remainder_mod_is_congruent:
+    ? forall m N_pos, x, y Z:
+        $same_remainder_mod(m, x, y)
+        =>:
+            $congruent_mod(m, x, y)
+    x = m * integer_quotient(x, m) + x % m
+    y = m * integer_quotient(y, m) + y % m
+    x % m = y % m
+    y = m * integer_quotient(y, m) + x % m
+    x - y = (m * integer_quotient(x, m) + x % m) - (m * integer_quotient(y, m) + x % m) = m * integer_quotient(x, m) - m * integer_quotient(y, m) = m * (integer_quotient(x, m) - integer_quotient(y, m))
+    witness exist k Z st {x - y = m * k} from integer_quotient(x, m) - integer_quotient(y, m):
+        x - y = m * (integer_quotient(x, m) - integer_quotient(y, m))
+    $congruent_mod(m, x, y)
+
+"""
+Properties (A), (B), (C). Congruence modulo m is reflexive, transitive, and
+symmetric.
+"""
+
+thm congruent_mod_reflexive:
+    ? forall m N_pos, x Z:
+        $congruent_mod(m, x, x)
+    x - x = 0 = m * 0
+    witness exist k Z st {x - x = m * k} from 0:
+        x - x = m * 0
+    $congruent_mod(m, x, x)
+
+thm congruent_mod_transitive:
+    ? forall m N_pos, x, y, z Z:
+        $congruent_mod(m, x, y)
+        $congruent_mod(m, y, z)
+        =>:
+            $congruent_mod(m, x, z)
+    obtain a from exist a Z st {x - y = m * a}
+    obtain b from exist b Z st {y - z = m * b}
+    x - z = (x - y) + (y - z) = m * a + m * b = m * (a + b)
+    witness exist k Z st {x - z = m * k} from a + b:
+        x - z = m * (a + b)
+    $congruent_mod(m, x, z)
+
+thm congruent_mod_symmetric:
+    ? forall m N_pos, x, y Z:
+        $congruent_mod(m, x, y)
+        =>:
+            $congruent_mod(m, y, x)
+    obtain a from exist a Z st {x - y = m * a}
+    y - x = -1 * (x - y) = -1 * (m * a) = m * (-1 * a)
+    witness exist k Z st {y - x = m * k} from -1 * a:
+        y - x = m * (-1 * a)
+    $congruent_mod(m, y, x)
+
+"""
+Property (D). Congruences may be added or subtracted.
+"""
+
+thm congruent_mod_add:
+    ? forall m N_pos, x, y, u, v Z:
+        $congruent_mod(m, x, y)
+        $congruent_mod(m, u, v)
+        =>:
+            $congruent_mod(m, x + u, y + v)
+    obtain a from exist a Z st {x - y = m * a}
+    obtain b from exist b Z st {u - v = m * b}
+    (x + u) - (y + v) = (x - y) + (u - v) = m * a + m * b = m * (a + b)
+    witness exist k Z st {(x + u) - (y + v) = m * k} from a + b:
+        (x + u) - (y + v) = m * (a + b)
+    $congruent_mod(m, x + u, y + v)
+
+thm congruent_mod_subtract:
+    ? forall m N_pos, x, y, u, v Z:
+        $congruent_mod(m, x, y)
+        $congruent_mod(m, u, v)
+        =>:
+            $congruent_mod(m, x - u, y - v)
+    obtain a from exist a Z st {x - y = m * a}
+    obtain b from exist b Z st {u - v = m * b}
+    (x - u) - (y - v) = (x - y) - (u - v) = m * a - m * b = m * (a - b)
+    witness exist k Z st {(x - u) - (y - v) = m * k} from a - b:
+        (x - u) - (y - v) = m * (a - b)
+    $congruent_mod(m, x - u, y - v)
+
+"""
+Property (E). Congruences may be multiplied.  The source uses the identity
+xx'-yy' = x(x'-y') + (x-y)y'.
+"""
+
+thm congruent_mod_multiply:
+    ? forall m N_pos, x, y, u, v Z:
+        $congruent_mod(m, x, y)
+        $congruent_mod(m, u, v)
+        =>:
+            $congruent_mod(m, x * u, y * v)
+    obtain a from exist a Z st {x - y = m * a}
+    obtain b from exist b Z st {u - v = m * b}
+    x * u - y * v = x * (u - v) + (x - y) * v
+    x * (u - v) + (x - y) * v = x * (m * b) + (m * a) * v
+    x * (m * b) + (m * a) * v = m * (x * b + a * v)
+    x * u - y * v = m * (x * b + a * v)
+    witness exist k Z st {x * u - y * v = m * k} from x * b + a * v:
+        x * u - y * v = m * (x * b + a * v)
+    $congruent_mod(m, x * u, y * v)
+
+"""
+Property (F). If d>0 divides m,x,y, then x=y modulo m is equivalent to
+x/d=y/d modulo m/d.
+"""
+
+# Cancel the positive common factor in the divisibility witness.
+thm congruent_mod_cancel_common_factor:
+    ? forall m, d, M N_pos, x, y, X, Y Z:
+        m = d * M
+        x = d * X
+        y = d * Y
+        $congruent_mod(m, x, y)
+        =>:
+            $congruent_mod(M, X, Y)
+    obtain q from exist q Z st {x - y = m * q}
+    d * (X - Y) = d * X - d * Y = x - y = m * q = d * M * q = d * (M * q)
+    X - Y = d * (X - Y) / d = d * (M * q) / d = M * q
+    witness exist k Z st {X - Y = M * k} from q:
+        X - Y = M * q
+    $congruent_mod(M, X, Y)
+
+thm congruent_mod_restore_common_factor:
+    ? forall m, d, M N_pos, x, y, X, Y Z:
+        m = d * M
+        x = d * X
+        y = d * Y
+        $congruent_mod(M, X, Y)
+        =>:
+            $congruent_mod(m, x, y)
+    obtain q from exist q Z st {X - Y = M * q}
+    m * q = (d * M) * q = d * M * q
+    d * M * q = m * q
+    witness exist k Z st {x - y = m * k} from q:
+        x - y = d * X - d * Y = d * (X - Y) = d * (M * q) = m * q
+    $congruent_mod(m, x, y)
+
+"""
+Definition. The congruence class (x mod m) is the set of all integers congruent
+to x modulo m.  By reflexivity, x is a representative of its own class.
+"""
+
+have fn residue_class_mod(m N_pos, x Z) power_set(Z) = {y Z: $congruent_mod(m, y, x)}
+
+prop is_congruence_class_mod(m N_pos, C power_set(Z)):
+    exist x Z st {C = residue_class_mod(m, x)}
+
+# The quotient carrier is a set of sets.  Keeping it as a value makes the
+# later finite-carrier statement talk about the actual residue classes rather
+# than an opaque placeholder.
+have fn residue_class_carrier_mod(m N_pos) power_set(power_set(Z)) = {C power_set(Z): $is_congruence_class_mod(m, C)}
+
+thm representative_belongs_to_residue_class:
+    ? forall m N_pos, x Z:
+        x $in residue_class_mod(m, x)
+    by thm congruent_mod_reflexive(m, x)
+    x $in residue_class_mod(m, x)
+
+thm residue_class_eq_of_congruent:
+    ? forall m N_pos, x, y Z:
+        $congruent_mod(m, x, y)
+        =>:
+            residue_class_mod(m, x) = residue_class_mod(m, y)
+    by extension residue_class_mod(m, x) = residue_class_mod(m, y):
+        claim:
+            ? forall z residue_class_mod(m, x):
+                z $in residue_class_mod(m, y)
+            by thm congruent_mod_transitive(m, z, x, y)
+            $congruent_mod(m, z, y)
+            z $in residue_class_mod(m, y)
+        forall z residue_class_mod(m, x):
+            z $in residue_class_mod(m, y)
+        claim:
+            ? forall z residue_class_mod(m, y):
+                z $in residue_class_mod(m, x)
+            by thm congruent_mod_symmetric(m, x, y)
+            by thm congruent_mod_transitive(m, z, y, x)
+            $congruent_mod(m, z, x)
+            z $in residue_class_mod(m, x)
+        forall z residue_class_mod(m, y):
+            z $in residue_class_mod(m, x)
+
+"""
+The equivalence-relation properties imply that two classes are equal when their
+representatives are congruent, and otherwise the classes are disjoint.  The
+integers split into the m classes (0 mod m),...,(m-1 mod m).
+"""
+
+prop congruence_classes_are_disjoint_mod(m N_pos, x, y Z):
+    forall z Z:
+        z $in residue_class_mod(m, x)
+        z $in residue_class_mod(m, y)
+        =>:
+            $congruent_mod(m, x, y)
+
+prop residue_classes_partition_Z_mod(m N_pos):
+    forall x Z:
+        exist r Z st {0 <= r < m, residue_class_mod(m, x) = residue_class_mod(m, r)}
+
+# Source handling: the first theorem is the overlap formulation of disjointness
+# (two classes can overlap only when their representatives are congruent), and
+# the second chooses the standard remainder representative for every class.
+thm theorem_V_residue_classes_disjoint:
+    ? forall m N_pos, x, y Z:
+        $congruence_classes_are_disjoint_mod(m, x, y)
+    claim:
+        ? forall z Z:
+            z $in residue_class_mod(m, x)
+            z $in residue_class_mod(m, y)
+            =>:
+                $congruent_mod(m, x, y)
+        obtain a from exist a Z st {z - x = m * a}
+        obtain b from exist b Z st {z - y = m * b}
+        x - z = -1 * (z - x) = -1 * (m * a) = m * (-a)
+        x - y = x - z + (z - y) = m * (-a) + m * b = m * (-a + b)
+        witness exist k Z st {x - y = m * k} from -a + b:
+            x - y = m * (-a + b)
+        $congruent_mod(m, x, y)
+    forall z Z:
+        z $in residue_class_mod(m, x)
+        z $in residue_class_mod(m, y)
+        =>:
+            $congruent_mod(m, x, y)
+
+thm theorem_V_residue_classes_partition:
+    ? forall m N_pos:
+        $residue_classes_partition_Z_mod(m)
+    claim:
+        ? forall x Z:
+            exist r Z st {0 <= r < m, residue_class_mod(m, x) = residue_class_mod(m, r)}
+        by thm standard_remainder_mod_exists_unique(m, x)
+        obtain r from exist r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)}
+        by thm residue_class_eq_of_congruent(m, x, r)
+        residue_class_mod(m, x) = residue_class_mod(m, r)
+        witness exist r1 Z st {0 <= r1 < m, residue_class_mod(m, x) = residue_class_mod(m, r1)} from r:
+            0 <= r < m
+            residue_class_mod(m, x) = residue_class_mod(m, r)
+    $residue_classes_partition_Z_mod(m)
+
+"""
+Addition of congruence classes is defined by
+(x mod m)+(y mod m) = (x+y mod m).  Property (D) makes this independent of the
+chosen representatives.
+"""
+
+have fn residue_class_add_mod(m N_pos, x, y Z) power_set(Z) = residue_class_mod(m, x + y)
+
+# Source handling: This is the well-definedness argument immediately following
+# the class-addition definition.  Equality of classes lets us move each
+# representative into the other class, then Property (D) finishes the proof.
+thm residue_class_addition_well_defined:
+    ? forall m N_pos, x, y, x1, y1 Z:
+        residue_class_mod(m, x) = residue_class_mod(m, x1)
+        residue_class_mod(m, y) = residue_class_mod(m, y1)
+        =>:
+            residue_class_add_mod(m, x, y) = residue_class_add_mod(m, x1, y1)
+    by thm representative_belongs_to_residue_class(m, x)
+    x $in residue_class_mod(m, x1)
+    $congruent_mod(m, x, x1)
+    by thm representative_belongs_to_residue_class(m, y)
+    y $in residue_class_mod(m, y1)
+    $congruent_mod(m, y, y1)
+    by thm congruent_mod_add(m, x, x1, y, y1)
+    $congruent_mod(m, x + y, x1 + y1)
+    by thm residue_class_eq_of_congruent(m, x + y, x1 + y1)
+    residue_class_mod(m, x + y) = residue_class_mod(m, x1 + y1)
+    residue_class_add_mod(m, x, y) = residue_class_mod(m, x + y)
+    residue_class_add_mod(m, x1, y1) = residue_class_mod(m, x1 + y1)
+    residue_class_add_mod(m, x, y) = residue_class_add_mod(m, x1, y1)
+
+"""
+Theorem V.1. For m>0, the congruence classes modulo m under addition form an
+abelian group of m elements.  The solution of (x)+(z)=(y) is (y-x), and
+(0 mod m) is the neutral element.
+"""
+
+prop is_set_of_all_residue_classes_mod(m N_pos, Classes finite_set):
+    Classes = residue_class_carrier_mod(m)
+
+prop is_residue_class_addition_operation(m N_pos, Classes finite_set, add fn(A, B Classes) Classes, zero Classes):
+    zero = residue_class_mod(m, 0)
+    forall A, B Classes:
+        exist x, y Z st {A = residue_class_mod(m, x), B = residue_class_mod(m, y), add(A, B) = residue_class_add_mod(m, x, y)}
+
+prop congruence_classes_form_additive_group_mod(m N_pos):
+    exist Classes finite_set st {$is_set_of_all_residue_classes_mod(m, Classes), finite_set_size(Classes) = m}
+    forall Classes finite_set:
+        $is_set_of_all_residue_classes_mod(m, Classes)
+        finite_set_size(Classes) = m
+        =>:
+            exist add fn(A, B Classes) Classes, zero Classes st {$is_residue_class_addition_operation(m, Classes, add, zero), $is_abelian_group(Classes, add, zero)}
+
+# Source handling: The source proof uses the class addition definition,
+# property (D), and the representative computations for z=y-x and neutral 0.
+# trust: A checked proof needs a quotient finite-set construction whose
+# carrier is the set of all residue classes modulo m.
+trust:
+    forall m N_pos:
+        $congruence_classes_form_additive_group_mod(m)
+
+thm theorem_V_1_residue_classes_additive_group:
+    ? forall m N_pos:
+        $congruence_classes_form_additive_group_mod(m)
+    $congruence_classes_form_additive_group_mod(m)
+
+"""
+Exercise V.1. Among m integers, a nonempty subset has sum divisible by m.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise V.2. Every perfect square is congruent to 0, 1, or 4 modulo 8.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise V.3. For n>0, 2^(2n+1) is congruent to 9n^2-3n+2 modulo 54.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise V.4. If x^2+y^2=z^2, then xyz is congruent to 0 modulo 60.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise V.5. A decimal integer is congruent modulo 9 to the sum of its digits.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise V.6. The pair x=a mod m, x=b mod n has a solution iff a=b mod
+gcd(m,n); when gcd(m,n)=1, the solution is unique modulo mn.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise V.7. Any n+1 of the first 2n positive integers contain two numbers
+whose ratio is a power of 2.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.
+
+"""
+Exercise V.8. For positive integers x,y, write x~y if y/x is a power of 2.
+This is an equivalence relation, and it is equivalent to x and y having the
+same odd divisors.
+"""
+
+sketch:
+    # Exercise retained as source text; exercises are outside this theorem-only
+    # translation scope.

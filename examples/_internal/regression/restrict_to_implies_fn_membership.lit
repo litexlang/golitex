@@ -1,9 +1,0 @@
-thm restrict_to_implies_fn_membership_regression:
-    ? forall I set, X set, f fn(alpha I)cup({X}):
-        forall alpha I:
-            f(alpha) $in X
-        =>:
-            f $restricts_to fn(alpha I) X
-            f $in fn(alpha I) X
-    f $restricts_to fn(alpha I) X
-    f $in fn(alpha I) X

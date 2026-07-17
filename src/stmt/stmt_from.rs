@@ -162,24 +162,6 @@ impl From<ImportStmt> for Stmt {
     }
 }
 
-impl From<TrustImportStmt> for Stmt {
-    fn from(v: TrustImportStmt) -> Self {
-        CommandStmt::TrustImportStmt(v).into()
-    }
-}
-
-impl From<LocalImportStmt> for Stmt {
-    fn from(v: LocalImportStmt) -> Self {
-        CommandStmt::LocalImportStmt(v).into()
-    }
-}
-
-impl From<TrustLocalImportStmt> for Stmt {
-    fn from(v: TrustLocalImportStmt) -> Self {
-        CommandStmt::TrustLocalImportStmt(v).into()
-    }
-}
-
 impl From<DoNothingStmt> for Stmt {
     fn from(v: DoNothingStmt) -> Self {
         CommandStmt::DoNothingStmt(v).into()
@@ -195,12 +177,6 @@ impl From<ClearStmt> for Stmt {
 impl From<EvalStmt> for Stmt {
     fn from(v: EvalStmt) -> Self {
         CommandStmt::EvalStmt(v).into()
-    }
-}
-
-impl From<EvalByStmt> for Stmt {
-    fn from(v: EvalByStmt) -> Self {
-        CommandStmt::EvalByStmt(v).into()
     }
 }
 
@@ -231,6 +207,12 @@ impl From<ByContraStmt> for Stmt {
 impl From<ByEnumerateFiniteSetStmt> for Stmt {
     fn from(v: ByEnumerateFiniteSetStmt) -> Self {
         ByStmt::ByEnumerateFiniteSetStmt(v).into()
+    }
+}
+
+impl From<ByFiniteSetInducStmt> for Stmt {
+    fn from(v: ByFiniteSetInducStmt) -> Self {
+        ByStmt::ByFiniteSetInducStmt(v).into()
     }
 }
 

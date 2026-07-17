@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title description">
+  <title id="title">Litex relation graph from Analysis I, Chapter 6</title>
+  <desc id="description">A relation graph connecting sequence concepts and theorems, generated from an Analysis I chapter in Litex.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0c151d"/><stop offset="1" stop-color="#171027"/></linearGradient>
+    <radialGradient id="tealGlow"><stop stop-color="#52d6ca" stop-opacity=".28"/><stop offset="1" stop-color="#52d6ca" stop-opacity="0"/></radialGradient>
+    <radialGradient id="roseGlow"><stop stop-color="#ff70a6" stop-opacity=".25"/><stop offset="1" stop-color="#ff70a6" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M 36 0 L 0 0 0 36" fill="none" stroke="#82d5d1" stroke-opacity=".09"/></pattern>
+    <filter id="softShadow" x="-30%" y="-40%" width="160%" height="180%"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#000" flood-opacity=".45"/></filter>
+    <filter id="nodeGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="tealArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#4bc6c1"/></marker>
+    <marker id="roseArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ef6e9d"/></marker>
+  </defs>
+  <rect width="1200" height="560" fill="url(#background)"/>
+  <rect y="82" width="1200" height="478" fill="url(#grid)"/>
+  <ellipse cx="210" cy="190" rx="300" ry="260" fill="url(#tealGlow)"/>
+  <ellipse cx="985" cy="250" rx="320" ry="275" fill="url(#roseGlow)"/>
+  <rect width="1200" height="82" fill="#fff" fill-opacity=".06"/>
+  <path d="M 0 82 H 1200" stroke="#fff" stroke-opacity=".13"/>
+  <text x="42" y="34" fill="#c8f3ef" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" letter-spacing="3">RELATION GRAPH</text>
+  <text x="42" y="60" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Analysis I · Chapter 6: Limits of sequences</text>
+  <text x="1155" y="49" fill="#a8bec1" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="end">397 nodes · 419 edges</text>
+  <g fill="none" stroke-linecap="round" stroke-width="5" opacity=".9">
+    <path d="M 292 202 Q 380 132 466 191" stroke="#4bc6c1" marker-end="url(#tealArrow)"/>
+    <path d="M 637 202 Q 734 121 836 188" stroke="#4bc6c1" marker-end="url(#tealArrow)"/>
+    <path d="M 354 400 Q 570 304 788 388" stroke="#ef6e9d" marker-end="url(#roseArrow)"/>
+    <path d="M 905 264 Q 907 319 869 353" stroke="#4bc6c1" marker-end="url(#tealArrow)"/>
+  </g>
+  <g fill="#d5f5f2" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#101216" stroke-width="7">
+    <text x="377" y="139">uses_prop</text><text x="738" y="128">uses_prop</text><text x="574" y="323">justified_by</text><text x="958" y="316">uses_prop</text>
+  </g>
+  <g filter="url(#softShadow)" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
+    <g transform="translate(210 230)"><circle r="78" fill="none" stroke="#4bc6c1" stroke-width="3" opacity=".25" filter="url(#nodeGlow)"/><circle r="64" fill="#dff7f2" stroke="#0f766e" stroke-width="4"/><text y="-7" fill="#16212b" font-size="17" font-weight="700">tail ε-steady</text><text y="21" fill="#526070" font-size="14" font-weight="700">prop · line 49</text></g>
+    <g transform="translate(552 230)"><circle r="91" fill="none" stroke="#4bc6c1" stroke-width="3" opacity=".25" filter="url(#nodeGlow)"/><circle r="76" fill="#dff7f2" stroke="#0f766e" stroke-width="4"/><text y="-7" fill="#16212b" font-size="17" font-weight="700">eventual ε-steady</text><text y="21" fill="#526070" font-size="14" font-weight="700">prop · line 56</text></g>
+    <g transform="translate(900 230)"><circle r="87" fill="none" stroke="#4bc6c1" stroke-width="3" opacity=".25" filter="url(#nodeGlow)"/><circle r="72" fill="#dff7f2" stroke="#0f766e" stroke-width="4"/><text y="-7" fill="#16212b" font-size="17" font-weight="700">Cauchy sequence</text><text y="21" fill="#526070" font-size="14" font-weight="700">prop · line 59</text></g>
+    <g transform="translate(342 430)"><circle r="88" fill="none" stroke="#ef6e9d" stroke-width="3" opacity=".25" filter="url(#nodeGlow)"/><circle r="73" fill="#ffe4ec" stroke="#9f1239" stroke-width="4"/><text y="-8" fill="#2a1923" font-size="17" font-weight="700">Archimedean</text><text y="13" fill="#2a1923" font-size="17" font-weight="700">bridge</text><text y="39" fill="#6e5360" font-size="14" font-weight="700">thm · line 78</text></g>
+    <g transform="translate(815 430)"><circle r="98" fill="none" stroke="#ef6e9d" stroke-width="3" opacity=".25" filter="url(#nodeGlow)"/><circle r="83" fill="#ffe4ec" stroke="#9f1239" stroke-width="4"/><text y="-8" fill="#2a1923" font-size="17" font-weight="700">rational ε ⇒</text><text y="13" fill="#2a1923" font-size="17" font-weight="700">Cauchy</text><text y="39" fill="#6e5360" font-size="14" font-weight="700">thm · line 88</text></g>
+  </g>
+  <g transform="translate(966 491)"><rect width="190" height="40" rx="8" fill="#101216" fill-opacity=".78" stroke="#fff" stroke-opacity=".18"/><text x="95" y="25" fill="#d7eeee" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" letter-spacing=".6">SOURCE-ALIGNED MAP</text></g>
+</svg>

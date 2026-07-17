@@ -4,11 +4,11 @@ use crate::prelude::{Fact, InferResult, StoreFactOutput};
 use super::fields::user_visible_stmt_or_msg_text;
 
 pub(crate) fn store_fact_json_values(infers: &InferResult) -> Vec<JsonValue> {
-    infers
-        .store_fact_outputs()
-        .iter()
-        .map(store_fact_json_value)
-        .collect::<Vec<_>>()
+    store_fact_output_json_values(infers.store_fact_outputs())
+}
+
+pub(crate) fn store_fact_output_json_values(outputs: &[StoreFactOutput]) -> Vec<JsonValue> {
+    outputs.iter().map(store_fact_json_value).collect()
 }
 
 fn store_fact_json_value(output: &StoreFactOutput) -> JsonValue {

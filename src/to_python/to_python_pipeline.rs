@@ -17,24 +17,21 @@ pub fn to_python(source_code: &str, runtime: &mut Runtime) -> Result<String, Run
         stmts.push(stmt);
     }
 
-    extract_python_from_stmts(&stmts)
+    extract_python_from_stmts(&stmts, runtime)
 }
 
-pub fn to_python_from_source_after_builtins(
-    source_code: &str,
-    entry_label: &str,
-) -> Result<String, RuntimeError> {
+pub fn to_python_from_source(source_code: &str, entry_label: &str) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(entry_label);
     to_python(normalized.as_str(), &mut runtime)
 }
 
-pub fn to_python_from_file_after_builtins(file_path: &str) -> Result<String, RuntimeError> {
+pub fn to_python_from_file(file_path: &str) -> Result<String, RuntimeError> {
     let resolved_path = resolve_file_path(file_path)?;
-    let mut runtime = Runtime::new_with_builtin_code();
+    let mut runtime = Runtime::new();
     match discover_repository_for_file(&mut runtime, resolved_path.as_str())? {
-        Some(target) => to_python_project_target(&mut runtime, target),
+        Some(target) => to_python_project_run(&mut runtime, target),
         None => {
             let source = read_source(resolved_path.as_str())?;
             runtime.new_file_path_new_env_new_name_scope(resolved_path.as_str());
@@ -43,13 +40,90 @@ pub fn to_python_from_file_after_builtins(file_path: &str) -> Result<String, Run
     }
 }
 
-pub fn to_python_from_repository_after_builtins(
-    repository_path: &str,
+pub fn to_python_from_repository(repository_path: &str) -> Result<String, RuntimeError> {
+    let mut runtime = Runtime::new();
+    let target = discover_repository(&mut runtime, repository_path)?;
+    to_python_project_run(&mut runtime, target)
+}
+
+fn to_python_project_run(
+    runtime: &mut Runtime,
+    target: RepositoryFileTarget,
 ) -> Result<String, RuntimeError> {
-    let mut runtime = Runtime::new_with_builtin_code();
-    discover_repository(&mut runtime, repository_path)?;
-    let entry_module_id = runtime.current_module_id();
-    to_python_project_target(&mut runtime, RepositoryFileTarget::Module(entry_module_id))
+    let root_module_id = runtime
+        .module_manager
+        .entry_module_id
+        .expect("discovered project should have an entry module");
+    if target == RepositoryFileTarget::Module(root_module_id) {
+        return to_python_project_target(runtime, target);
+    }
+    if !project_target_is_inside_module(runtime, target, root_module_id) {
+        return Err(file_error(
+            "litex.config",
+            "selected target is not inside the entry module export tree".to_string(),
+        ));
+    }
+    to_python_project_prefix(runtime, root_module_id, target)
+}
+
+fn to_python_project_prefix(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    selected_target: RepositoryFileTarget,
+) -> Result<String, RuntimeError> {
+    let (module_path, config_imports, run_targets) = {
+        let module = runtime
+            .module_manager
+            .module(module_id)
+            .expect("discovered module should exist");
+        (
+            module.main_file_path.clone(),
+            module.config_imports.clone(),
+            module.run_targets.clone(),
+        )
+    };
+    let pushed_frame = runtime.current_module_id() != module_id;
+    if pushed_frame {
+        runtime.push_module_execution_frame(module_id, module_path.as_str());
+    }
+    let output = (|| {
+        let mut fragments = vec![];
+        for config_import in config_imports {
+            let fragment = to_python_project_target(
+                runtime,
+                RepositoryFileTarget::Module(config_import.module_id),
+            )?;
+            push_python_fragment(&mut fragments, fragment);
+        }
+        for run_target in run_targets {
+            let target_matches = repository_target_matches(selected_target, run_target);
+            let target_contains = matches!(
+                run_target,
+                ImportTarget::Module(child_module_id)
+                    if project_target_is_inside_module(runtime, selected_target, child_module_id)
+            );
+            let fragment = if target_contains && !target_matches {
+                let ImportTarget::Module(child_module_id) = run_target else {
+                    unreachable!("only a module target can contain another target")
+                };
+                to_python_project_prefix(runtime, child_module_id, selected_target)?
+            } else {
+                to_python_project_target(runtime, repository_file_target(run_target))?
+            };
+            push_python_fragment(&mut fragments, fragment);
+            if target_matches || target_contains {
+                return Ok(fragments.join("\n"));
+            }
+        }
+        Err(file_error(
+            module_path.as_str(),
+            "selected target is missing from its recursive ordered [export] tree".to_string(),
+        ))
+    })();
+    if pushed_frame {
+        runtime.pop_execution_frame();
+    }
+    output
 }
 
 fn to_python_project_target(
@@ -58,12 +132,16 @@ fn to_python_project_target(
 ) -> Result<String, RuntimeError> {
     match target {
         RepositoryFileTarget::Module(module_id) => {
-            let (module_path, run_targets) = {
+            let (module_path, config_imports, run_targets) = {
                 let module = runtime
                     .module_manager
                     .module(module_id)
                     .expect("discovered module should exist");
-                (module.main_file_path.clone(), module.run_targets.clone())
+                (
+                    module.main_file_path.clone(),
+                    module.config_imports.clone(),
+                    module.run_targets.clone(),
+                )
             };
             let pushed_frame = runtime.current_module_id() != module_id;
             if pushed_frame {
@@ -71,6 +149,13 @@ fn to_python_project_target(
             }
             let output = (|| {
                 let mut fragments = vec![];
+                for config_import in config_imports {
+                    let fragment = to_python_project_target(
+                        runtime,
+                        RepositoryFileTarget::Module(config_import.module_id),
+                    )?;
+                    push_python_fragment(&mut fragments, fragment);
+                }
                 for run_target in run_targets {
                     let fragment = match run_target {
                         ImportTarget::File { module_id, file_id } => to_python_project_target(
@@ -82,9 +167,7 @@ fn to_python_project_target(
                             RepositoryFileTarget::Module(module_id),
                         ),
                     }?;
-                    if !fragment.trim().is_empty() {
-                        fragments.push(fragment);
-                    }
+                    push_python_fragment(&mut fragments, fragment);
                 }
                 Ok(fragments.join("\n"))
             })();
@@ -94,20 +177,100 @@ fn to_python_project_target(
             output
         }
         RepositoryFileTarget::File { module_id, file_id } => {
-            let source_path = runtime
+            let (source_path, status) = {
+                let file = runtime
+                    .module_manager
+                    .module(module_id)
+                    .and_then(|module| module.file(file_id))
+                    .expect("registered project file should exist");
+                (file.source_path.clone(), file.status)
+            };
+            if status == FileStatus::Loaded {
+                return Ok(String::new());
+            }
+            if status == FileStatus::Loading {
+                return Err(file_error(
+                    source_path.as_str(),
+                    "cyclic project entry while generating Python".to_string(),
+                ));
+            }
+            runtime
                 .module_manager
-                .module(module_id)
-                .and_then(|module| module.file(file_id))
+                .module_mut(module_id)
+                .and_then(|module| module.file_mut(file_id))
                 .expect("registered project file should exist")
-                .source_path
-                .clone();
+                .status = FileStatus::Loading;
             runtime.push_file_execution_frame(module_id, file_id, source_path.as_str());
             let output = read_source(source_path.as_str())
                 .and_then(|source| to_python(source.as_str(), runtime));
             runtime.pop_execution_frame();
+            runtime
+                .module_manager
+                .module_mut(module_id)
+                .and_then(|module| module.file_mut(file_id))
+                .expect("registered project file should exist")
+                .status = if output.is_ok() {
+                FileStatus::Loaded
+            } else {
+                FileStatus::Unloaded
+            };
             output
         }
     }
+}
+
+fn push_python_fragment(fragments: &mut Vec<String>, fragment: String) {
+    if !fragment.trim().is_empty()
+        && fragment.trim() != "# No Python-extractable Litex definitions."
+    {
+        fragments.push(fragment);
+    }
+}
+
+fn repository_target_matches(target: RepositoryFileTarget, import_target: ImportTarget) -> bool {
+    match (target, import_target) {
+        (RepositoryFileTarget::Module(target_module), ImportTarget::Module(module_id)) => {
+            target_module == module_id
+        }
+        (
+            RepositoryFileTarget::File {
+                module_id: target_module,
+                file_id: target_file,
+            },
+            ImportTarget::File { module_id, file_id },
+        ) => target_module == module_id && target_file == file_id,
+        _ => false,
+    }
+}
+
+fn repository_file_target(target: ImportTarget) -> RepositoryFileTarget {
+    match target {
+        ImportTarget::Module(module_id) => RepositoryFileTarget::Module(module_id),
+        ImportTarget::File { module_id, file_id } => {
+            RepositoryFileTarget::File { module_id, file_id }
+        }
+    }
+}
+
+fn project_target_is_inside_module(
+    runtime: &Runtime,
+    target: RepositoryFileTarget,
+    ancestor_module_id: ModuleId,
+) -> bool {
+    let mut module_id = Some(match target {
+        RepositoryFileTarget::Module(module_id) => module_id,
+        RepositoryFileTarget::File { module_id, .. } => module_id,
+    });
+    while let Some(current) = module_id {
+        if current == ancestor_module_id {
+            return true;
+        }
+        module_id = runtime
+            .module_manager
+            .module(current)
+            .and_then(|module| module.parent_module_id);
+    }
+    false
 }
 
 fn resolve_file_path(file_path: &str) -> Result<String, RuntimeError> {
@@ -161,27 +324,12 @@ impl PythonExtractor {
         }
     }
 
-    fn extract_stmt(&mut self, stmt: &Stmt) -> Result<(), RuntimeError> {
+    fn extract_stmt(&mut self, stmt: &Stmt, runtime: &Runtime) -> Result<(), RuntimeError> {
         match stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
                 self.extract_have_obj_equal_stmt(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(s)) if s.as_algo => {
-                self.extract_have_fn_equal_stmt(s)
-            }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(s)) if s.as_algo => {
-                self.extract_have_fn_equal_case_by_case_stmt(s)
-            }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(s)) if s.as_algo => {
-                Err(python_extract_error(
-                    &s.line_file,
-                    "python extractor v1 does not support `have fn as algo ... by induc`",
-                ))
-            }
-            Stmt::DefAlgoStmt(s) => Err(python_extract_error(
-                &s.line_file,
-                "python extractor v1 does not support standalone `algo`; use `have fn as algo ...`",
-            )),
+            Stmt::DefAlgoStmt(s) => self.extract_def_algo_stmt(s, runtime),
             _ => Ok(()),
         }
     }
@@ -216,85 +364,83 @@ impl PythonExtractor {
         Ok(())
     }
 
-    fn extract_have_fn_equal_stmt(&mut self, stmt: &HaveFnEqualStmt) -> Result<(), RuntimeError> {
-        let params_def = &stmt.equal_to_anonymous_fn.body.params_def_with_set;
-        let dom_facts = &stmt.equal_to_anonymous_fn.body.dom_facts;
-        let ret_set = stmt.equal_to_anonymous_fn.body.ret_set.as_ref();
-        self.validate_real_function_signature(
-            &stmt.name,
-            params_def,
-            dom_facts,
-            ret_set,
-            &stmt.line_file,
-        )?;
-
-        let params = ParamGroupWithSet::collect_param_names(params_def);
-        let params_in_scope: HashSet<String> = params.iter().cloned().collect();
-        let expr = self.python_expr(
-            stmt.equal_to_anonymous_fn.equal_to.as_ref(),
-            &params_in_scope,
-            &stmt.line_file,
-        )?;
-
-        self.push_blank_line_before_function();
-        self.lines
-            .push(format!("def {}({}):", stmt.name, params.join(", ")));
-        self.lines.push(format!("    return {}", expr));
-        self.functions.insert(stmt.name.clone());
-        Ok(())
-    }
-
-    fn extract_have_fn_equal_case_by_case_stmt(
+    fn extract_def_algo_stmt(
         &mut self,
-        stmt: &HaveFnEqualCaseByCaseStmt,
+        stmt: &DefAlgoStmt,
+        runtime: &Runtime,
     ) -> Result<(), RuntimeError> {
+        let function = runtime.declared_identifier_obj(&stmt.name);
+        let Some(fn_set) = runtime.get_fn_range_function_body(&function) else {
+            return Err(python_extract_error(
+                &stmt.line_file,
+                format!(
+                    "python extractor v1 cannot find the function declaration for implementation `{}`",
+                    stmt.name
+                ),
+            ));
+        };
         self.validate_real_function_signature(
             &stmt.name,
-            &stmt.fn_set_clause.params_def_with_set,
-            &stmt.fn_set_clause.dom_facts,
-            &stmt.fn_set_clause.ret_set,
+            &fn_set.params_def_with_set,
+            &fn_set.dom_facts,
+            fn_set.ret_set.as_ref(),
             &stmt.line_file,
         )?;
-        if stmt.cases.len() != stmt.equal_tos.len() {
+
+        let expected_params = ParamGroupWithSet::collect_param_names(&fn_set.params_def_with_set);
+        if stmt.params.len() != expected_params.len() {
             return Err(python_extract_error(
                 &stmt.line_file,
-                "python extractor internal error: case count does not match return count",
+                format!(
+                    "python extractor v1 found {} algorithm parameters for `{}`, but its function declaration has {}",
+                    stmt.params.len(),
+                    stmt.name,
+                    expected_params.len()
+                ),
             ));
         }
-        if stmt.cases.is_empty() {
+        for param in stmt.params.iter() {
+            validate_python_name(param, &stmt.line_file)?;
+        }
+        if stmt.cases.is_empty() && stmt.default_return.is_none() {
             return Err(python_extract_error(
                 &stmt.line_file,
-                "python extractor v1 needs at least one case for `have fn as algo ... by cases`",
+                format!(
+                    "python extractor v1 needs a return expression for function implementation `{}`",
+                    stmt.name
+                ),
             ));
         }
 
-        let params =
-            ParamGroupWithSet::collect_param_names(&stmt.fn_set_clause.params_def_with_set);
-        let params_in_scope: HashSet<String> = params.iter().cloned().collect();
+        let params_in_scope: HashSet<String> = stmt.params.iter().cloned().collect();
+        self.functions.insert(stmt.name.clone());
         self.push_blank_line_before_function();
         self.lines
-            .push(format!("def {}({}):", stmt.name, params.join(", ")));
+            .push(format!("def {}({}):", stmt.name, stmt.params.join(", ")));
 
-        for (index, (case, equal_to)) in stmt.cases.iter().zip(stmt.equal_tos.iter()).enumerate() {
-            let atomic_case = match case {
-                AndChainAtomicFact::AtomicFact(a) => a,
-                AndChainAtomicFact::AndFact(_) | AndChainAtomicFact::ChainFact(_) => {
-                    return Err(python_extract_error(
-                        &stmt.line_file,
-                        "python extractor v1 supports only atomic `case` conditions",
-                    ));
-                }
-            };
-            let condition = self.python_atomic_condition(atomic_case, &params_in_scope)?;
-            let expr = self.python_expr(equal_to, &params_in_scope, &stmt.line_file)?;
+        for (index, case) in stmt.cases.iter().enumerate() {
+            let condition = self.python_atomic_condition(&case.condition, &params_in_scope)?;
+            let expr = self.python_expr(
+                &case.return_stmt.value,
+                &params_in_scope,
+                &case.return_stmt.line_file,
+            )?;
             let keyword = if index == 0 { "if" } else { "elif" };
             self.lines.push(format!("    {} {}:", keyword, condition));
             self.lines.push(format!("        return {}", expr));
         }
 
-        self.lines
-            .push("    raise AssertionError(\"unreachable verified Litex cases\")".to_string());
-        self.functions.insert(stmt.name.clone());
+        if let Some(default_return) = &stmt.default_return {
+            let expr = self.python_expr(
+                &default_return.value,
+                &params_in_scope,
+                &default_return.line_file,
+            )?;
+            self.lines.push(format!("    return {}", expr));
+        } else {
+            self.lines
+                .push("    raise AssertionError(\"unreachable verified Litex cases\")".to_string());
+        }
         Ok(())
     }
 
@@ -442,6 +588,7 @@ impl PythonExtractor {
         let name = match atom {
             AtomObj::Identifier(i) => i.name.as_str(),
             AtomObj::FnSet(p) => p.name.as_str(),
+            AtomObj::DefAlgo(p) => p.name.as_str(),
             _ => {
                 return Err(python_extract_error(
                     line_file,
@@ -511,10 +658,10 @@ impl PythonExtractor {
     }
 }
 
-fn extract_python_from_stmts(stmts: &[Stmt]) -> Result<String, RuntimeError> {
+fn extract_python_from_stmts(stmts: &[Stmt], runtime: &Runtime) -> Result<String, RuntimeError> {
     let mut extractor = PythonExtractor::new();
     for stmt in stmts.iter() {
-        extractor.extract_stmt(stmt)?;
+        extractor.extract_stmt(stmt, runtime)?;
     }
     Ok(extractor.finish())
 }

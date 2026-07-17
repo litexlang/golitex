@@ -64,6 +64,7 @@ pub enum ByStmt {
     ByCasesStmt(ByCasesStmt),
     ByContraStmt(ByContraStmt),
     ByEnumerateFiniteSetStmt(ByEnumerateFiniteSetStmt),
+    ByFiniteSetInducStmt(ByFiniteSetInducStmt),
     ByInducStmt(ByInducStmt),
     ByForStmt(ByForStmt),
     ByExtensionStmt(ByExtensionStmt),
@@ -95,13 +96,9 @@ pub enum ProofBlockStmt {
 #[derive(Clone)]
 pub enum CommandStmt {
     ImportStmt(ImportStmt),
-    TrustImportStmt(TrustImportStmt),
-    LocalImportStmt(LocalImportStmt),
-    TrustLocalImportStmt(TrustLocalImportStmt),
     DoNothingStmt(DoNothingStmt),
     ClearStmt(ClearStmt),
     EvalStmt(EvalStmt),
-    EvalByStmt(EvalByStmt),
     UseStrategyStmt(UseStrategyStmt),
     StopStrategyStmt(StopStrategyStmt),
 }

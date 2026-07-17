@@ -25,7 +25,6 @@ pub struct HaveFnByInducStmt {
     pub measure: Obj,
     pub lower_bound: Obj,
     pub cases: Vec<HaveFnByInducCase>,
-    pub as_algo: bool,
     pub line_file: LineFile,
 }
 
@@ -91,7 +90,6 @@ pub struct HaveFnEqualCaseByCaseStmt {
     pub fn_set_clause: FnSetClause,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
-    pub as_algo: bool,
     pub line_file: LineFile,
 }
 
@@ -99,7 +97,6 @@ pub struct HaveFnEqualCaseByCaseStmt {
 pub struct HaveFnEqualStmt {
     pub name: String,
     pub equal_to_anonymous_fn: AnonymousFn,
-    pub as_algo: bool,
     pub line_file: LineFile,
 }
 
@@ -728,16 +725,10 @@ impl fmt::Display for HaveByPreimageStmt {
 }
 
 impl HaveFnEqualStmt {
-    pub fn new(
-        name: String,
-        equal_to_anonymous_fn: AnonymousFn,
-        as_algo: bool,
-        line_file: LineFile,
-    ) -> Self {
+    pub fn new(name: String, equal_to_anonymous_fn: AnonymousFn, line_file: LineFile) -> Self {
         HaveFnEqualStmt {
             name,
             equal_to_anonymous_fn,
-            as_algo,
             line_file,
         }
     }
@@ -757,14 +748,9 @@ impl fmt::Display for HaveFnEqualStmt {
         .expect("anonymous function signature was already validated");
         write!(
             f,
-            "{} {}{} {}{} {} {}",
+            "{} {} {}{} {} {}",
             HAVE,
             FN_LOWER_CASE,
-            if self.as_algo {
-                format!(" {} {}", AS, ALGO)
-            } else {
-                String::new()
-            },
             self.name,
             brace_vec_colon_vec_to_string(
                 &fn_set_clause.params_def_with_set,
@@ -944,14 +930,9 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 
         write!(
             f,
-            "{} {}{} {}{} {} {} {}{}\n{}",
+            "{} {} {}{} {} {} {} {}\n{}",
             HAVE,
             FN_LOWER_CASE,
-            if self.as_algo {
-                format!(" {} {}", AS, ALGO)
-            } else {
-                String::new()
-            },
             self.name,
             brace_vec_colon_vec_to_string(
                 &self.fn_set_clause.params_def_with_set,
@@ -972,7 +953,6 @@ impl HaveFnEqualCaseByCaseStmt {
         fn_set_clause: FnSetClause,
         cases: Vec<AndChainAtomicFact>,
         equal_tos: Vec<Obj>,
-        as_algo: bool,
         line_file: LineFile,
     ) -> Self {
         HaveFnEqualCaseByCaseStmt {
@@ -980,7 +960,6 @@ impl HaveFnEqualCaseByCaseStmt {
             fn_set_clause,
             cases,
             equal_tos,
-            as_algo,
             line_file,
         }
     }
@@ -1029,7 +1008,6 @@ impl HaveFnByInducStmt {
         measure: Obj,
         lower_bound: Obj,
         cases: Vec<HaveFnByInducCase>,
-        as_algo: bool,
         line_file: LineFile,
     ) -> Self {
         HaveFnByInducStmt {
@@ -1038,7 +1016,6 @@ impl HaveFnByInducStmt {
             measure,
             lower_bound,
             cases,
-            as_algo,
             line_file,
         }
     }
@@ -1058,7 +1035,6 @@ impl HaveFnByInducStmt {
             self.fn_set_clause.clone(),
             cases,
             equal_tos,
-            self.as_algo,
             line_file,
         )
     }
@@ -1095,14 +1071,9 @@ impl fmt::Display for HaveFnByInducStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}{} {}{} {} {} {} {} {} {}",
+            "{} {} {}{} {} {} {} {} {} {}",
             HAVE,
             FN_LOWER_CASE,
-            if self.as_algo {
-                format!(" {} {}", AS, ALGO)
-            } else {
-                String::new()
-            },
             self.name,
             brace_vec_colon_vec_to_string(
                 &self.fn_set_clause.params_def_with_set,

@@ -24,7 +24,6 @@ pub use alias_stmt::AliasThmStmt;
 pub use by_stmt::ByClosedRangeAsCasesStmt;
 pub use by_stmt::ByEnumerateRangeStmt;
 pub use by_stmt::ByThmStmt;
-pub use eval_stmt::EvalByStmt;
 pub use stmt::ByStmt;
 pub use stmt::CommandStmt;
 pub use stmt::DefAliasStmt;

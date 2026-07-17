@@ -147,6 +147,19 @@ impl Runtime {
                 )?;
                 Ok(Mod::new(l, r).into())
             }
+            Obj::IntegerQuotient(q) => {
+                let dividend = self.eval_reduce_nested_sum_product_in_obj(
+                    (*q.dividend).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let divisor = self.eval_reduce_nested_sum_product_in_obj(
+                    (*q.divisor).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                Ok(IntegerQuotient::new(dividend, divisor).into())
+            }
             Obj::Pow(p) => {
                 let base = self.eval_reduce_nested_sum_product_in_obj(
                     (*p.base).clone(),
@@ -1365,8 +1378,11 @@ impl Runtime {
         )?;
 
         let resolved_obj = self.resolve_obj(&stmt.obj_to_eval);
+        let executable_obj = self
+            .executable_definition_for_eval_identifier(&resolved_obj)
+            .unwrap_or(resolved_obj);
         self.run_in_local_env(|rt| {
-            if !Self::object_supported_by_eval_stmt(&resolved_obj) {
+            if !Self::object_supported_by_eval_stmt(&executable_obj) {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     "eval: need a function call, numeric expression (+ - * / ^), sum/product over a unary anonymous body, or matrix ++ -- ** *. ^^ / matrix literal"
@@ -1375,8 +1391,22 @@ impl Runtime {
                     vec![],
                 ));
             }
-            rt.evaluate_symbol_obj_iterative(resolved_obj.clone(), stmt)
+            rt.evaluate_symbol_obj_iterative(executable_obj, stmt)
         })
+    }
+
+    fn executable_definition_for_eval_identifier(&self, obj: &Obj) -> Option<Obj> {
+        if !matches!(obj, Obj::Atom(AtomObj::Identifier(_))) {
+            return None;
+        }
+
+        self.get_all_obj_representatives_equal_to_given(obj)
+            .into_iter()
+            .map(|candidate| self.resolve_obj(&candidate))
+            .find(|candidate| {
+                !matches!(candidate, Obj::Atom(AtomObj::Identifier(_)))
+                    && Self::object_supported_by_eval_stmt(candidate)
+            })
     }
 
     pub fn exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<StmtResult, RuntimeError> {
@@ -1394,53 +1424,11 @@ impl Runtime {
                 InferReason::Evaluation,
             )?;
 
-        Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])).into())
-    }
-
-    pub fn exec_eval_by_stmt(&mut self, stmt: &EvalByStmt) -> Result<StmtResult, RuntimeError> {
-        let lhs_equal_rhs: Fact =
-            EqualFact::new(stmt.lhs.clone(), stmt.rhs.clone(), stmt.line_file.clone()).into();
-        let lhs_equal_rhs_result =
-            self.verify_fact_return_err_if_not_true(&lhs_equal_rhs, &VerifyState::new(0, false))?;
-        let lhs_equal_rhs_infer = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
-                lhs_equal_rhs,
-                InferReason::Evaluation,
-            )?;
-
-        let eval_rhs_stmt = EvalStmt::new(stmt.rhs.clone(), stmt.line_file.clone());
-        let evaluated_obj = self.evaluate_obj_for_eval_stmt(&eval_rhs_stmt)?;
-
-        let rhs_equal_evaluated: Fact = EqualFact::new(
-            stmt.rhs.clone(),
-            evaluated_obj.clone(),
-            stmt.line_file.clone(),
+        let reported_store_facts = infer_result.store_fact_outputs().to_vec();
+        Ok(
+            (NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![])
+                .with_reported_store_facts(reported_store_facts))
+            .into(),
         )
-        .into();
-        let rhs_equal_evaluated_infer = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
-                rhs_equal_evaluated,
-                InferReason::Evaluation,
-            )?;
-
-        let lhs_equal_evaluated: Fact =
-            EqualFact::new(stmt.lhs.clone(), evaluated_obj, stmt.line_file.clone()).into();
-        let lhs_equal_evaluated_infer = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
-                lhs_equal_evaluated,
-                InferReason::Evaluation,
-            )?;
-
-        let mut infer_result = InferResult::new();
-        infer_result.new_infer_result_inside(lhs_equal_rhs_infer.clone());
-        infer_result.new_infer_result_inside(rhs_equal_evaluated_infer);
-        infer_result.new_infer_result_inside(lhs_equal_evaluated_infer);
-
-        Ok((NonFactualStmtSuccess::new(
-            stmt.clone().into(),
-            infer_result,
-            vec![lhs_equal_rhs_result.with_infers(lhs_equal_rhs_infer)],
-        ))
-        .into())
     }
 }
