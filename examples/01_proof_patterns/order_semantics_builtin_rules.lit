@@ -26,22 +26,22 @@ forall a, b, c Z:
         a <= c
 
 forall a, b R:
-    a <= max(a, b)
-    b <= max(a, b)
-    min(a, b) <= a
-    min(a, b) <= b
+    a <= finite_set_max(union({a}, { b}))
+    b <= finite_set_max(union({a}, { b}))
+    finite_set_min(union({a}, { b})) <= a
+    finite_set_min(union({a}, { b})) <= b
 
 forall a, b, c R:
     a <= c
     b <= c
     =>:
-        max(a, b) <= c
+        finite_set_max(union({a}, { b})) <= c
 
 forall a, b, c R:
     c <= a
     c <= b
     =>:
-        c <= min(a, b)
+        c <= finite_set_min(union({a}, { b}))
 
 forall a, b Z:
     a < b

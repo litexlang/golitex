@@ -1,0 +1,20 @@
+# Math23k_1000
+thm math23k_1000:
+    ? forall girls, boys, total R:
+        girls = 120 = (2/3) * boys - 24
+        total = girls + boys
+        =>:
+            girls = 120 
+            girls + 24 = (2/3) * boys - 24 + 24
+    girls + 24 = (2/3) * boys
+    (2/3) * boys = girls + 24
+    (2/3) * boys = girls + 24 = 120 + 24 = 144
+    boys = 144 * (3/2) = 216
+    total = 120 + 216 = 336
+            total = girls + boys 
+            total = 336
+    girls = 120 = (2/3) * boys - 24
+    girls = 120 
+    girls = (2/3) * boys - 24 
+    total = girls + boys 
+    total = 336

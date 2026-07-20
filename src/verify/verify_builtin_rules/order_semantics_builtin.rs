@@ -102,7 +102,7 @@ impl Runtime {
             return Ok(Some(result));
         }
         if let Some(result) =
-            self.try_verify_binary_max_min_order_builtin_rule(atomic_fact, verify_state)?
+            self.try_verify_finite_set_extrema_order_builtin_rule(atomic_fact, verify_state)?
         {
             return Ok(Some(result));
         }
@@ -196,9 +196,10 @@ impl Runtime {
         Ok(None)
     }
 
-    // Binary `max`/`min` are the least upper and greatest lower bound on R.
-    // Examples: `a <= max(a,b)` and `a <= c`, `b <= c` => `max(a,b) <= c`.
-    fn try_verify_binary_max_min_order_builtin_rule(
+    // A finite-set maximum bounds every member and a finite-set minimum is below every member.
+    // Examples: `x $in S` => `x <= finite_set_max(S)` and
+    // `x $in S` => `finite_set_min(S) <= x`.
+    fn try_verify_finite_set_extrema_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -208,118 +209,255 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let Some(type_steps) = self.verify_objects_are_known_reals(
-            &[&fact.left, &fact.right],
-            &fact.line_file,
+        if let Obj::FiniteSetMax(maximum) = &fact.right {
+            let member_fact: AtomicFact = InFact::new(
+                fact.left.clone(),
+                maximum.set.as_ref().clone(),
+                fact.line_file.clone(),
+            )
+            .into();
+            let member_result = self
+                .verify_non_equational_known_then_builtin_rules_only(&member_fact, verify_state)?;
+            if member_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "finite_set_max: every member is at most the maximum".to_string(),
+                        vec![member_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        if let Obj::FiniteSetMin(minimum) = &fact.left {
+            let member_fact: AtomicFact = InFact::new(
+                fact.right.clone(),
+                minimum.set.as_ref().clone(),
+                fact.line_file.clone(),
+            )
+            .into();
+            let member_result = self
+                .verify_non_equational_known_then_builtin_rules_only(&member_fact, verify_state)?;
+            if member_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "finite_set_min: the minimum is at most every member".to_string(),
+                        vec![member_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        if let Obj::FiniteSetMax(maximum) = &fact.left {
+            if let Some(steps) = self.verify_finite_set_members_are_at_most(
+                maximum.set.as_ref(),
+                &fact.right,
+                &fact.line_file,
+                verify_state,
+            )? {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "finite_set_max: least upper bound of a concrete finite-set expression"
+                            .to_string(),
+                        steps,
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        if let Obj::FiniteSetMin(minimum) = &fact.right {
+            if let Some(steps) = self.verify_finite_set_members_are_at_least(
+                minimum.set.as_ref(),
+                &fact.left,
+                &fact.line_file,
+                verify_state,
+            )? {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "finite_set_min: greatest lower bound of a concrete finite-set expression"
+                            .to_string(),
+                        steps,
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        Ok(None)
+    }
+
+    fn verify_finite_set_members_are_at_most(
+        &mut self,
+        set: &Obj,
+        upper_bound: &Obj,
+        line_file: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        match set {
+            Obj::ListSet(list_set) => {
+                let mut steps = Vec::new();
+                for element in &list_set.list {
+                    let fact: AtomicFact = LessEqualFact::new(
+                        element.as_ref().clone(),
+                        upper_bound.clone(),
+                        line_file.clone(),
+                    )
+                    .into();
+                    let result = self
+                        .verify_non_equational_known_then_builtin_rules_only(&fact, verify_state)?;
+                    if !result.is_true() {
+                        return Ok(None);
+                    }
+                    steps.push(result);
+                }
+                Ok(Some(steps))
+            }
+            Obj::Union(union) => self.verify_two_finite_set_parts_are_at_most(
+                union.left.as_ref(),
+                union.right.as_ref(),
+                upper_bound,
+                line_file,
+                verify_state,
+            ),
+            Obj::Intersect(intersect) => self.verify_finite_set_members_are_at_most(
+                intersect.left.as_ref(),
+                upper_bound,
+                line_file,
+                verify_state,
+            ),
+            Obj::SetMinus(set_minus) => self.verify_finite_set_members_are_at_most(
+                set_minus.left.as_ref(),
+                upper_bound,
+                line_file,
+                verify_state,
+            ),
+            Obj::SetDiff(set_diff) => self.verify_two_finite_set_parts_are_at_most(
+                set_diff.left.as_ref(),
+                set_diff.right.as_ref(),
+                upper_bound,
+                line_file,
+                verify_state,
+            ),
+            _ => Ok(None),
+        }
+    }
+
+    fn verify_two_finite_set_parts_are_at_most(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        upper_bound: &Obj,
+        line_file: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let Some(mut steps) =
+            self.verify_finite_set_members_are_at_most(left, upper_bound, line_file, verify_state)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_steps) = self.verify_finite_set_members_are_at_most(
+            right,
+            upper_bound,
+            line_file,
             verify_state,
         )?
         else {
             return Ok(None);
         };
+        steps.extend(right_steps);
+        Ok(Some(steps))
+    }
 
-        if let Obj::Max(max) = &fact.right {
-            if objs_equal_by_display_string(&fact.left, max.left.as_ref())
-                || objs_equal_by_display_string(&fact.left, max.right.as_ref())
-            {
-                return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        atomic_fact.clone().into(),
-                        "max: each operand is below the binary maximum".to_string(),
-                        type_steps,
+    fn verify_finite_set_members_are_at_least(
+        &mut self,
+        set: &Obj,
+        lower_bound: &Obj,
+        line_file: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        match set {
+            Obj::ListSet(list_set) => {
+                let mut steps = Vec::new();
+                for element in &list_set.list {
+                    let fact: AtomicFact = LessEqualFact::new(
+                        lower_bound.clone(),
+                        element.as_ref().clone(),
+                        line_file.clone(),
                     )
-                    .into(),
-                ));
-            }
-        }
-
-        if let Obj::Min(min) = &fact.left {
-            if objs_equal_by_display_string(&fact.right, min.left.as_ref())
-                || objs_equal_by_display_string(&fact.right, min.right.as_ref())
-            {
-                return Ok(Some(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        atomic_fact.clone().into(),
-                        "min: the binary minimum is below each operand".to_string(),
-                        type_steps,
-                    )
-                    .into(),
-                ));
-            }
-        }
-
-        if let Obj::Max(max) = &fact.left {
-            let prerequisites: Vec<AtomicFact> = vec![
-                LessEqualFact::new(
-                    max.left.as_ref().clone(),
-                    fact.right.clone(),
-                    fact.line_file.clone(),
-                )
-                .into(),
-                LessEqualFact::new(
-                    max.right.as_ref().clone(),
-                    fact.right.clone(),
-                    fact.line_file.clone(),
-                )
-                .into(),
-            ];
-            let mut steps = type_steps;
-            for prerequisite in prerequisites {
-                let result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &prerequisite,
-                    verify_state,
-                )?;
-                if result.is_unknown() {
-                    return Ok(None);
+                    .into();
+                    let result = self
+                        .verify_non_equational_known_then_builtin_rules_only(&fact, verify_state)?;
+                    if !result.is_true() {
+                        return Ok(None);
+                    }
+                    steps.push(result);
                 }
-                steps.push(result);
+                Ok(Some(steps))
             }
-            return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    atomic_fact.clone().into(),
-                    "max: least upper bound of two real operands".to_string(),
-                    steps,
-                )
-                .into(),
-            ));
+            Obj::Union(union) => self.verify_two_finite_set_parts_are_at_least(
+                union.left.as_ref(),
+                union.right.as_ref(),
+                lower_bound,
+                line_file,
+                verify_state,
+            ),
+            Obj::Intersect(intersect) => self.verify_finite_set_members_are_at_least(
+                intersect.left.as_ref(),
+                lower_bound,
+                line_file,
+                verify_state,
+            ),
+            Obj::SetMinus(set_minus) => self.verify_finite_set_members_are_at_least(
+                set_minus.left.as_ref(),
+                lower_bound,
+                line_file,
+                verify_state,
+            ),
+            Obj::SetDiff(set_diff) => self.verify_two_finite_set_parts_are_at_least(
+                set_diff.left.as_ref(),
+                set_diff.right.as_ref(),
+                lower_bound,
+                line_file,
+                verify_state,
+            ),
+            _ => Ok(None),
         }
+    }
 
-        if let Obj::Min(min) = &fact.right {
-            let prerequisites: Vec<AtomicFact> = vec![
-                LessEqualFact::new(
-                    fact.left.clone(),
-                    min.left.as_ref().clone(),
-                    fact.line_file.clone(),
-                )
-                .into(),
-                LessEqualFact::new(
-                    fact.left.clone(),
-                    min.right.as_ref().clone(),
-                    fact.line_file.clone(),
-                )
-                .into(),
-            ];
-            let mut steps = type_steps;
-            for prerequisite in prerequisites {
-                let result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &prerequisite,
-                    verify_state,
-                )?;
-                if result.is_unknown() {
-                    return Ok(None);
-                }
-                steps.push(result);
-            }
-            return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    atomic_fact.clone().into(),
-                    "min: greatest lower bound of two real operands".to_string(),
-                    steps,
-                )
-                .into(),
-            ));
-        }
-
-        Ok(None)
+    fn verify_two_finite_set_parts_are_at_least(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        lower_bound: &Obj,
+        line_file: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let Some(mut steps) = self.verify_finite_set_members_are_at_least(
+            left,
+            lower_bound,
+            line_file,
+            verify_state,
+        )?
+        else {
+            return Ok(None);
+        };
+        let Some(right_steps) = self.verify_finite_set_members_are_at_least(
+            right,
+            lower_bound,
+            line_file,
+            verify_state,
+        )?
+        else {
+            return Ok(None);
+        };
+        steps.extend(right_steps);
+        Ok(Some(steps))
     }
 
     // Integer discreteness at one successor/predecessor step.

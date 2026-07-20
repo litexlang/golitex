@@ -1,0 +1,378 @@
+# Chapter 2 — Basics
+
+# 2.1 Calculating
+
+# Representative polynomial calculation. The source presents several `rw`
+# and `ring` variants; Litex keeps the mathematical identity once and lets
+# exact polynomial normalization check it directly.
+forall a, b R:
+    (a + b) * (a + b) = a * a + 2 * (a * b) + b * b
+
+# 2.2 Proving Identities in Algebraic Structures
+
+# The source states its results for abstract rings and groups. We make the
+# carrier and every operation explicit before proving anything about them.
+
+# An additive commutative group has associative addition, a left identity, a
+# left inverse, and commutativity. Right-facing laws are derived below.
+prop is_additive_commutative_group(A set, add fn(x, y A) A, zero A, neg fn(x A) A):
+    forall x, y, z A:
+        add(add(x, y), z) = add(x, add(y, z))
+    forall x A:
+        add(zero, x) = x
+        add(neg(x), x) = zero
+    forall x, y A:
+        add(x, y) = add(y, x)
+
+# A ring adds associative multiplication, a multiplicative identity, and both
+# distributive laws to the additive carrier. Multiplication is not assumed to
+# be commutative.
+prop is_ring(A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A):
+    $is_additive_commutative_group(A, add, zero, neg)
+    forall x, y, z A:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+        mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+        mul(add(x, y), z) = add(mul(x, z), mul(y, z))
+    forall x A:
+        mul(one, x) = x
+        mul(x, one) = x
+
+# A multiplicative group uses only a left identity and left inverse as primitive
+# laws. The source's right-facing laws are mathematical consequences.
+prop is_group(A set, mul fn(x, y A) A, one A, inv fn(x A) A):
+    forall x, y, z A:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x A:
+        mul(one, x) = x
+        mul(inv(x), x) = one
+
+# Result (source label: add_zero). Commutativity turns the primitive left zero
+# law into the right zero law.
+thm add_zero:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        =>:
+            add(a, zero) = a
+    add(a, zero) = add(zero, a) = a
+
+# Result (source label: add_neg_cancel). The same symmetry turns the primitive
+# left inverse law into a right inverse law.
+thm add_neg_cancel:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        =>:
+            add(a, neg(a)) = zero
+    add(a, neg(a)) = add(neg(a), a) = zero
+
+# Result (source label: neg_add_cancel_left). Reassociate, cancel a on the
+# left, and use the identity law.
+thm neg_add_cancel_left:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        =>:
+            add(neg(a), add(a, b)) = b
+    add(neg(a), a) = zero
+    add(zero, b) = b
+    add(add(neg(a), a), b) = add(zero, b)
+    add(neg(a), add(a, b)) = add(add(neg(a), a), b) = add(zero, b) = b
+
+# Result (source label: add_neg_cancel_right). The companion calculation uses
+# the derived right inverse and right identity.
+thm add_neg_cancel_right:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        =>:
+            add(add(a, b), neg(b)) = a
+    by thm add_neg_cancel(A, add, zero, neg, b)
+    by thm add_zero(A, add, zero, neg, a)
+    add(add(a, b), neg(b)) = add(a, add(b, neg(b))) = add(a, zero) = a
+
+# Result (source label: add_left_cancel). Apply the same left inverse to both
+# sides and simplify.
+thm add_left_cancel:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b, c A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        add(a, b) = add(a, c)
+        =>:
+            b = c
+    by thm neg_add_cancel_left(A, add, zero, neg, a, b)
+    by thm neg_add_cancel_left(A, add, zero, neg, a, c)
+    add(neg(a), add(a, b)) = add(neg(a), add(a, c))
+    b = add(neg(a), add(a, b)) = add(neg(a), add(a, c)) = c
+
+# Result (source label: add_right_cancel). Commutativity reduces right
+# cancellation to the preceding theorem.
+thm add_right_cancel:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b, c A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        add(a, b) = add(c, b)
+        =>:
+            a = c
+    add(b, a) = add(a, b) = add(c, b) = add(b, c)
+    by thm add_left_cancel(A, add, zero, neg, b, a, c)
+    a = c
+
+# Result (source label: mul_zero). Distributivity gives a duplicated summand;
+# additive cancellation then removes it, exactly as in the source proof.
+thm mul_zero:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
+        $is_ring(A, add, zero, neg, mul, one)
+        =>:
+            mul(a, zero) = zero
+    add(zero, zero) = zero
+    mul(a, zero) = mul(a, add(zero, zero)) = add(mul(a, zero), mul(a, zero))
+    by thm add_zero(A, add, zero, neg, mul(a, zero))
+    add(mul(a, zero), mul(a, zero)) = mul(a, zero) = add(mul(a, zero), zero)
+    by thm add_left_cancel(A, add, zero, neg, mul(a, zero), mul(a, zero), zero)
+    mul(a, zero) = zero
+
+# Result (source label: zero_mul). Multiplication is not commutative, so the
+# companion proof uses the other distributive law before the same cancellation.
+thm zero_mul:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
+        $is_ring(A, add, zero, neg, mul, one)
+        =>:
+            mul(zero, a) = zero
+    add(zero, zero) = zero
+    mul(zero, a) = mul(add(zero, zero), a) = add(mul(zero, a), mul(zero, a))
+    by thm add_zero(A, add, zero, neg, mul(zero, a))
+    add(mul(zero, a), mul(zero, a)) = mul(zero, a) = add(mul(zero, a), zero)
+    by thm add_left_cancel(A, add, zero, neg, mul(zero, a), mul(zero, a), zero)
+    mul(zero, a) = zero
+
+# Result (source label: self_sub). Subtraction is addition of the explicit
+# inverse, so this is exactly add_neg_cancel.
+thm self_sub:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        =>:
+            add(a, neg(a)) = zero
+    by thm add_neg_cancel(A, add, zero, neg, a)
+    add(a, neg(a)) = zero
+
+# Result (source label: one_add_one_eq_two). With operations explicit, the ring
+# numeral two is represented by add(one, one), so the identity is definitional.
+thm one_add_one_eq_two:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A:
+        $is_ring(A, add, zero, neg, mul, one)
+        =>:
+            add(one, one) = add(one, one)
+    add(one, one) = add(one, one)
+
+# Result (source label: two_mul). Right distributivity expands the explicit
+# numeral two and the left identity removes both copies of one.
+thm two_mul:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
+        $is_ring(A, add, zero, neg, mul, one)
+        =>:
+            mul(add(one, one), a) = add(a, a)
+    mul(one, a) = a
+    add(mul(one, a), mul(one, a)) = add(a, a)
+    mul(add(one, one), a) = add(mul(one, a), mul(one, a)) = add(a, a)
+
+# Private proof machinery for the three source group results. Multiplying both
+# sides on the left by inv(a) proves left cancellation.
+thm _group_left_cancel:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a, b, c A:
+        $is_group(A, mul, one, inv)
+        mul(a, b) = mul(a, c)
+        =>:
+            b = c
+    mul(inv(a), mul(a, b)) = mul(inv(a), mul(a, c))
+    mul(inv(a), a) = one
+    mul(one, b) = b
+    mul(one, c) = c
+    mul(mul(inv(a), a), b) = mul(one, b)
+    mul(mul(inv(a), a), c) = mul(one, c)
+    mul(inv(a), mul(a, b)) = mul(mul(inv(a), a), b) = mul(one, b) = b
+    mul(inv(a), mul(a, c)) = mul(mul(inv(a), a), c) = mul(one, c) = c
+    b = c
+
+# The right identity follows by cancelling inv(a) from the two expressions.
+thm _group_mul_one:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        $is_group(A, mul, one, inv)
+        =>:
+            mul(a, one) = a
+    mul(inv(a), a) = one
+    mul(one, one) = one
+    mul(mul(inv(a), a), one) = mul(one, one)
+    mul(inv(a), mul(a, one)) = mul(mul(inv(a), a), one) = mul(one, one) = one
+    mul(inv(a), a) = one
+    mul(inv(a), mul(a, one)) = mul(inv(a), a)
+    by thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, one), a)
+    mul(a, one) = a
+
+# Result (source label: mul_inv_cancel). Apply left cancellation after deriving
+# the right identity for inv(a).
+thm mul_inv_cancel:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        $is_group(A, mul, one, inv)
+        =>:
+            mul(a, inv(a)) = one
+    mul(inv(a), a) = one
+    mul(one, inv(a)) = inv(a)
+    mul(mul(inv(a), a), inv(a)) = mul(one, inv(a))
+    mul(inv(a), mul(a, inv(a))) = mul(mul(inv(a), a), inv(a)) = mul(one, inv(a)) = inv(a)
+    by thm _group_mul_one(A, mul, one, inv, inv(a))
+    mul(inv(a), one) = inv(a)
+    mul(inv(a), mul(a, inv(a))) = mul(inv(a), one)
+    by thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, inv(a)), one)
+    mul(a, inv(a)) = one
+
+# Result (source label: mul_one). The public source theorem cites the checked
+# carrier-parametric identity calculation above.
+thm mul_one:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        $is_group(A, mul, one, inv)
+        =>:
+            mul(a, one) = a
+    by thm _group_mul_one(A, mul, one, inv, a)
+    mul(a, one) = a
+
+# Result (source label: mul_inv_rev). The inverse of a product reverses the
+# factors. First verify that inv(b)inv(a) is a left inverse of ab, then compare
+# it with the chosen inverse using the checked right inverse law.
+thm mul_inv_rev:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a, b A:
+        $is_group(A, mul, one, inv)
+        =>:
+            inv(mul(a, b)) = mul(inv(b), inv(a))
+    mul(inv(a), mul(a, b)) = mul(mul(inv(a), a), b)
+    mul(inv(b), mul(inv(a), mul(a, b))) = mul(inv(b), mul(mul(inv(a), a), b))
+    mul(inv(a), a) = one
+    mul(mul(inv(a), a), b) = mul(one, b)
+    mul(inv(b), mul(mul(inv(a), a), b)) = mul(inv(b), mul(one, b))
+    mul(one, b) = b
+    mul(inv(b), mul(one, b)) = mul(inv(b), b)
+    mul(inv(b), b) = one
+    mul(mul(inv(b), inv(a)), mul(a, b)) = mul(inv(b), mul(inv(a), mul(a, b)))
+    mul(mul(inv(b), inv(a)), mul(a, b)) = mul(inv(b), mul(inv(a), mul(a, b))) = mul(inv(b), mul(mul(inv(a), a), b)) = mul(inv(b), mul(one, b)) = mul(inv(b), b) = one
+    by thm mul_inv_cancel(A, mul, one, inv, mul(a, b))
+    mul(mul(a, b), inv(mul(a, b))) = one
+    by thm _group_mul_one(A, mul, one, inv, mul(inv(b), inv(a)))
+    mul(inv(b), inv(a)) = mul(mul(inv(b), inv(a)), one)
+    mul(mul(inv(b), inv(a)), one) = mul(mul(inv(b), inv(a)), mul(mul(a, b), inv(mul(a, b))))
+    mul(mul(inv(b), inv(a)), mul(mul(a, b), inv(mul(a, b)))) = mul(mul(mul(inv(b), inv(a)), mul(a, b)), inv(mul(a, b)))
+    mul(mul(inv(b), inv(a)), mul(a, b)) = one
+    mul(mul(mul(inv(b), inv(a)), mul(a, b)), inv(mul(a, b))) = mul(one, inv(mul(a, b)))
+    mul(one, inv(mul(a, b))) = inv(mul(a, b))
+    mul(mul(mul(inv(b), inv(a)), mul(a, b)), inv(mul(a, b))) = mul(one, inv(mul(a, b))) = inv(mul(a, b))
+    inv(mul(a, b)) = mul(inv(b), inv(a))
+
+# 2.3 Using Theorems and Lemmas
+
+# Representative mixed inequality chain. Weak and strict comparisons alternate
+# through four hypotheses; recording the chain exposes the source proof idea
+# without reproducing its several Lean application styles.
+claim:
+    ? forall a, b, c, d, e R:
+        a <= b
+        b < c
+        c <= d
+        d < e
+        =>:
+            a < e
+    a <= b < c <= d < e
+    a < e
+
+# 2.4 More on Order and Divisibility
+
+# The binary minimum is symmetric. The source's repeated tactic variants
+# collapse to this single direct real-order fact.
+forall a, b R:
+    finite_set_min(union({a}, {b})) = finite_set_min(union({b}, {a}))
+
+# Minimum is associative. Each direction shows that one nested minimum is a
+# lower bound for both inputs of the other, then antisymmetry gives equality.
+claim:
+    ? forall a, b, c R:
+        finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) = finite_set_min(union({a}, {finite_set_min(union({b}, {c}))}))
+    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) <= finite_set_min(union({a}, {b})) <= a
+    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) <= finite_set_min(union({a}, {b})) <= b
+    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) <= c
+    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) <= finite_set_min(union({b}, {c}))
+    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) <= finite_set_min(union({a}, {finite_set_min(union({b}, {c}))}))
+    finite_set_min(union({a}, {finite_set_min(union({b}, {c}))})) <= a
+    finite_set_min(union({a}, {finite_set_min(union({b}, {c}))})) <= finite_set_min(union({b}, {c})) <= b
+    finite_set_min(union({a}, {finite_set_min(union({b}, {c}))})) <= finite_set_min(union({b}, {c})) <= c
+    finite_set_min(union({a}, {finite_set_min(union({b}, {c}))})) <= finite_set_min(union({a}, {b}))
+    finite_set_min(union({a}, {finite_set_min(union({b}, {c}))})) <= finite_set_min(union({finite_set_min(union({a}, {b}))}, {c}))
+    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) = finite_set_min(union({a}, {finite_set_min(union({b}, {c}))}))
+
+# Translation preserves minimum. For the forward inequality, translate the two
+# defining lower bounds. For the reverse inequality, subtract c, form a lower
+# bound of finite_set_min(union({a}, {b})), and add c back.
+claim:
+    ? forall a, b, c R:
+        finite_set_min(union({a}, {b})) + c = finite_set_min(union({a + c}, {b + c}))
+    finite_set_min(union({a}, {b})) <= a
+    finite_set_min(union({a}, {b})) + c <= a + c
+    finite_set_min(union({a}, {b})) <= b
+    finite_set_min(union({a}, {b})) + c <= b + c
+    finite_set_min(union({a}, {b})) + c <= finite_set_min(union({a + c}, {b + c}))
+    finite_set_min(union({a + c}, {b + c})) <= a + c
+    finite_set_min(union({a + c}, {b + c})) - c <= a
+    finite_set_min(union({a + c}, {b + c})) <= b + c
+    finite_set_min(union({a + c}, {b + c})) - c <= b
+    finite_set_min(union({a + c}, {b + c})) - c <= finite_set_min(union({a}, {b}))
+    (finite_set_min(union({a + c}, {b + c})) - c) + c <= finite_set_min(union({a}, {b})) + c
+    finite_set_min(union({a + c}, {b + c})) = (finite_set_min(union({a + c}, {b + c})) - c) + c <= finite_set_min(union({a}, {b})) + c
+    finite_set_min(union({a}, {b})) + c = finite_set_min(union({a + c}, {b + c}))
+
+# Weak reverse triangle inequality. Subtracting |b| from the ordinary triangle
+# inequality yields the source result directly.
+forall a, b R:
+    abs(a) - abs(b) <= abs(a - b)
+
+# Divisibility transitivity on the source's natural-number carrier. The shared
+# std relation is integer-valued, so its witnesses remain integers while the
+# three visible inputs stay in N.
+claim:
+    ? forall x, y, z N:
+        $std::basics::divides(x, y)
+        $std::basics::divides(y, z)
+        =>:
+            $std::basics::divides(x, z)
+    obtain k from exist k Z st {y = x * k}
+    obtain l from exist l Z st {z = y * l}
+    witness exist m Z st {z = x * m} from k * l:
+        z = y * l = (x * k) * l = x * (k * l)
+
+# A factor divides any product containing it. Commutativity places x first and
+# exposes y*z as the witness.
+claim:
+    ? forall x, y, z N:
+        $std::basics::divides(x, y * x * z)
+    witness exist k Z st {y * x * z = x * k} from y * z:
+        y * x * z = x * (y * z)
+
+# Every natural number divides its square, witnessed by the number itself in Z.
+claim:
+    ? forall x N:
+        $std::basics::divides(x, x^2)
+    witness exist k Z st {x^2 = x * k} from x:
+        x^2 = x * x
+
+# Gcd symmetry on the nonzero natural pairs supported by the frozen std
+# interface. Unlike the source's total Nat.gcd, std::basics::gcd is undefined
+# at (0,0), so this is an explicit nonzero adaptation rather than a claim of
+# total-source equivalence. Both guard orientations make the two calls visibly
+# well-defined. Each gcd divides both inputs, hence each is at most the other.
+claim:
+    ? forall a, b N:
+        a != 0 or b != 0
+        b != 0 or a != 0
+        =>:
+            std::basics::gcd(a, b) = std::basics::gcd(b, a)
+    by thm std::basics::gcd_positive(a, b)
+    by thm std::basics::gcd_divides_left(a, b)
+    by thm std::basics::gcd_divides_right(a, b)
+    by thm std::basics::common_divisor_le_gcd(b, a, std::basics::gcd(a, b))
+    std::basics::gcd(a, b) <= std::basics::gcd(b, a)
+    by thm std::basics::gcd_positive(b, a)
+    by thm std::basics::gcd_divides_left(b, a)
+    by thm std::basics::gcd_divides_right(b, a)
+    by thm std::basics::common_divisor_le_gcd(a, b, std::basics::gcd(b, a))
+    std::basics::gcd(b, a) <= std::basics::gcd(a, b)
+    std::basics::gcd(a, b) = std::basics::gcd(b, a)

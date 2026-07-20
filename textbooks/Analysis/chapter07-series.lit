@@ -171,7 +171,6 @@ thm remove_singleton_from_singleton_sized_set_is_empty:
         =>:
             set_minus(s, {a}) = {}
     by thm intersect_with_singleton(s, a)
-    intersect(s, {a}) = {a}
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
     finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = 1 - 1 = 0
@@ -186,9 +185,7 @@ thm index_function_for_singleton:
     finite_set_size(s) >= 1
     $is_nonempty_set(s)
     have a s
-    a $in s
     by thm remove_singleton_from_singleton_sized_set_is_empty(s, a)
-    set_minus(s, {a}) = {}
     have fn idx(i closed_range(1, finite_set_size(s))) s = a
     witness exist idx0 fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
         claim:
@@ -248,7 +245,7 @@ thm index_function_step:
     set_minus(s, {a}) $subset s
     have fn idx(i closed_range(1, finite_set_size(s))) s by cases:
         case i <= n: prev(i)
-        case i = n + 1: a
+        case i > n: a
     idx(1) = prev(1)
     prev(1) $in set_minus(s, {a})
     prev(1) $in s
@@ -282,72 +279,69 @@ thm index_function_step:
                 i <= finite_set_size(s) = n + 1
                 i = n + 1
     claim:
-        ? $chap3::is_injective_fn(closed_range(1, finite_set_size(s)), s, idx)
-        claim:
-            ? forall i1, i2 closed_range(1, finite_set_size(s)):
-                idx(i1) = idx(i2)
-                =>:
-                    i1 = i2
-            i1 <= n or i1 > n
-            by cases:
-                ? i1 = i2
-                case i1 <= n:
-                    i2 <= n or i2 > n
-                    by cases:
-                        ? i1 = i2
-                        case i2 <= n:
-                            i1 >= 1
-                            i2 >= 1
-                            i1 <= n = finite_set_size(set_minus(s, {a}))
-                            i2 <= n = finite_set_size(set_minus(s, {a}))
-                            i1 $in closed_range(1, finite_set_size(set_minus(s, {a})))
-                            i2 $in closed_range(1, finite_set_size(set_minus(s, {a})))
-                            idx(i1) = prev(i1)
-                            idx(i2) = prev(i2)
-                            prev(i1) = prev(i2)
-                            exist! j closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(j) = prev(i1)}
-                            i1 = i2
-                        case i2 > n:
-                            i2 <= finite_set_size(s) = n + 1
-                            i2 = n + 1
-                            idx(i2) = a
-                            idx(i1) = idx(i2) = a
-                            i1 = n + 1
-                            impossible i1 <= n
-                case i1 > n:
-                    i1 <= finite_set_size(s) = n + 1
-                    i1 = n + 1
-                    idx(i1) = a
-                    idx(i2) = idx(i1) = a
-                    i2 = n + 1
-                    i1 = i2
-        $chap3::is_injective_fn(closed_range(1, finite_set_size(s)), s, idx)
+        ? forall i1, i2 closed_range(1, finite_set_size(s)):
+            idx(i1) = idx(i2)
+            =>:
+                i1 = i2
+        i1 <= n or i1 > n
+        by cases:
+            ? i1 = i2
+            case i1 <= n:
+                i2 <= n or i2 > n
+                by cases:
+                    ? i1 = i2
+                    case i2 <= n:
+                        i1 >= 1
+                        i2 >= 1
+                        i1 <= n = finite_set_size(set_minus(s, {a}))
+                        i2 <= n = finite_set_size(set_minus(s, {a}))
+                        i1 $in closed_range(1, finite_set_size(set_minus(s, {a})))
+                        i2 $in closed_range(1, finite_set_size(set_minus(s, {a})))
+                        idx(i1) = prev(i1)
+                        idx(i2) = prev(i2)
+                        prev(i1) = prev(i2)
+                        exist! j closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(j) = prev(i1)}
+                        i1 = i2
+                    case i2 > n:
+                        i2 <= finite_set_size(s) = n + 1
+                        i2 = n + 1
+                        idx(i2) = a
+                        idx(i1) = idx(i2) = a
+                        i1 = n + 1
+                        impossible i1 <= n
+            case i1 > n:
+                i1 <= finite_set_size(s) = n + 1
+                i1 = n + 1
+                idx(i1) = a
+                idx(i2) = idx(i1) = a
+                i2 = n + 1
+                i1 = i2
+    by def $chap3::is_injective_fn(closed_range(1, finite_set_size(s)), s, idx)
     claim:
-        ? $chap3::is_surjective_fn(closed_range(1, finite_set_size(s)), s, idx)
-        claim:
-            ? forall y s:
-                exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
-            y = a or y != a
-            by cases:
-                ? exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
-                case y = a:
+        ? forall y s:
+            exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
+        y = a or y != a
+        by cases:
+            ? exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
+            case y = a:
+                n + 1 <= finite_set_size(s)
+                y = a = idx(n + 1)
+                witness exist i closed_range(1, finite_set_size(s)) st {y = idx(i)} from n + 1:
                     n + 1 <= finite_set_size(s)
-                    y = a = idx(n + 1)
-                    witness exist i closed_range(1, finite_set_size(s)) st {y = idx(i)} from n + 1:
-                        n + 1 <= finite_set_size(s)
-                        y = idx(n + 1)
-                case y != a:
-                    y $in set_minus(s, {a})
-                    exist i closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(i) = y}
-                    obtain j from exist i closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(i) = y}
-                    j <= finite_set_size(set_minus(s, {a}))
-                    j <= n
-                    n <= n + 1
-                    j <= n <= n + 1 = finite_set_size(s)
-                    y = prev(j) = idx(j)
-                    witness exist i closed_range(1, finite_set_size(s)) st {y = idx(i)} from j:
-                        j <= finite_set_size(s)
-                        y = idx(j)
+                    y = idx(n + 1)
+            case y != a:
+                y $in set_minus(s, {a})
+                exist i closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(i) = y}
+                obtain j from exist i closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(i) = y}
+                j <= finite_set_size(set_minus(s, {a}))
+                j <= n
+                n <= n + 1
+                j <= n <= n + 1 = finite_set_size(s)
+                y = prev(j) = idx(j)
+                witness exist i closed_range(1, finite_set_size(s)) st {y = idx(i)} from j:
+                    j <= finite_set_size(s)
+                    y = idx(j)
+    by def $chap3::is_surjective_fn(closed_range(1, finite_set_size(s)), s, idx)
     witness exist idx0 fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
         claim:
             ? forall y s:
@@ -379,7 +373,6 @@ thm finite_set_size_has_index_for_all:
                     =>:
                         exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
                 by thm index_function_for_singleton(s)
-                exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
             $finite_set_size_has_index(1)
             $finite_set_size_has_index(n)
 
@@ -392,7 +385,6 @@ thm finite_set_size_has_index_for_all:
                     =>:
                         exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
                 by thm index_function_step(n, s)
-                exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
             $finite_set_size_has_index(n + 1)
 
 thm finite_set_has_bijective_index:
@@ -405,7 +397,6 @@ thm finite_set_has_bijective_index:
     have n N_pos = finite_set_size(s)
     finite_set_size(s) = n
     by thm finite_set_size_has_index_for_all(n)
-    $finite_set_size_has_index(n)
 
 # `finite_set_sum(X, f)` denotes the enumeration-independent value of summing
 # `f` over the finite set `X`.
@@ -499,10 +490,7 @@ thm finite_set_sum_exists:
         =>:
             $has_finite_set_sum(X, f)
     by thm finite_set_sum_satisfies_self_definition(X, f)
-    $is_finite_set_sum(X, f, finite_set_sum(X, f))
-    witness exist l R st {$is_finite_set_sum(X, f, l)} from finite_set_sum(X, f):
-        $is_finite_set_sum(X, f, finite_set_sum(X, f))
-    $has_finite_set_sum(X, f)
+    witness exist l R st {$is_finite_set_sum(X, f, l)} from finite_set_sum(X, f)
 
 # This construction chooses the unique value whose existence was just proved,
 # matching Tao's idea: once all enumerations give the same sum, that common
@@ -529,9 +517,7 @@ thm finite_set_sum_value_unique:
             l1 = l2
     finite_set_size(X) >= 1
     by thm finite_set_has_bijective_index(X)
-    exist g fn(i closed_range(1, finite_set_size(X))) X st {$is_bijection_from_index_range_to_finite_set(X, g)}
     obtain g from exist g fn(i closed_range(1, finite_set_size(X))) X st {$is_bijection_from_index_range_to_finite_set(X, g)}
-    $is_bijection_from_index_range_to_finite_set(X, g)
     sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l1
     sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l2
     l1 = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l2
@@ -543,11 +529,8 @@ thm self_finite_set_sum_matches_builtin:
         =>:
             \self_finite_set_sum<X, f> = finite_set_sum(X, f)
     by thm self_finite_set_sum_satisfies_definition(X, f)
-    $is_finite_set_sum(X, f, \self_finite_set_sum<X, f>)
     by thm finite_set_sum_satisfies_self_definition(X, f)
-    $is_finite_set_sum(X, f, finite_set_sum(X, f))
     by thm finite_set_sum_value_unique(X, f, \self_finite_set_sum<X, f>, finite_set_sum(X, f))
-    \self_finite_set_sum<X, f> = finite_set_sum(X, f)
 
 thm finite_set_sum_well_defined_under_permutation:
     ? forall X finite_set, f fn(x X) R, g fn(x X) X:
@@ -1006,25 +989,21 @@ thm geometric_series_from_one_formula:
     $chap6::has_limit(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, x - 0)
     x - 0 = x
     $chap6::has_limit(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, x)
-    claim:
-        ? $chap6::is_nonzero_sequence(constant_sequence(1 - x))
-        forall k N_pos:
-            constant_sequence(1 - x)(k) = 1 - x
-            1 - x != 0
-            constant_sequence(1 - x)(k) != 0
-        $chap6::is_nonzero_sequence(constant_sequence(1 - x))
+    forall k N_pos:
+        constant_sequence(1 - x)(k) = 1 - x
+        1 - x != 0
+        constant_sequence(1 - x)(k) != 0
+    by def $chap6::is_nonzero_sequence(constant_sequence(1 - x))
     by thm constant_sequence_has_strict_limit(1 - x)
     $chap6::has_limit(constant_sequence(1 - x), 1 - x)
     have fn geometric_series_from_one_remainder(n N_pos) R = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
     claim:
-        ? $chap6::has_limit(geometric_series_from_one_remainder, x)
-        claim:
-            ? forall n N_pos:
-                fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = geometric_series_from_one_remainder(n)
-            fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
-            geometric_series_from_one_remainder(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
+        ? forall n N_pos:
             fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = geometric_series_from_one_remainder(n)
-        by thm strict_limit_extensional(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, geometric_series_from_one_remainder, x)
+        fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
+        geometric_series_from_one_remainder(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
+        fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = geometric_series_from_one_remainder(n)
+    by thm strict_limit_extensional(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, geometric_series_from_one_remainder, x)
     by thm chap6::seq_div_converges_to(geometric_series_from_one_remainder, constant_sequence(1 - x), x, 1 - x)
     $chap6::has_limit(fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}, x / (1 - x))
     claim:
@@ -1170,19 +1149,19 @@ thm sequence_limit_unique_cite_from_chap6:
         abs(M1 - M2) / 3 $in R_pos
         obtain n1 from exist n1 N_pos st {$is_tail_close_to(b, M1, abs(M1 - M2) / 3, n1)}
         obtain n2 from exist n2 N_pos st {$is_tail_close_to(b, M2, abs(M1 - M2) / 3, n2)}
-        max(n1, n2) $in N_pos
-        max(n1, n2) >= n1
-        max(n1, n2) >= n2
-        abs(b(max(n1, n2)) - M1) <= abs(M1 - M2) / 3
-        abs(b(max(n1, n2)) - M2) <= abs(M1 - M2) / 3
-        abs(M1 - b(max(n1, n2))) = abs(b(max(n1, n2)) - M1)
-        abs(M1 - b(max(n1, n2))) <= abs(M1 - M2) / 3
-        M1 - M2 = (M1 - b(max(n1, n2))) + (b(max(n1, n2)) - M2)
-        abs(M1 - M2) = abs((M1 - b(max(n1, n2))) + (b(max(n1, n2)) - M2))
-        abs((M1 - b(max(n1, n2))) + (b(max(n1, n2)) - M2)) <= abs(M1 - b(max(n1, n2))) + abs(b(max(n1, n2)) - M2)
-        abs(M1 - M2) <= abs(M1 - b(max(n1, n2))) + abs(b(max(n1, n2)) - M2)
-        abs(M1 - b(max(n1, n2))) + abs(b(max(n1, n2)) - M2) <= abs(M1 - M2) / 3 + abs(M1 - M2) / 3
-        abs(M1 - M2) <= abs(M1 - b(max(n1, n2))) + abs(b(max(n1, n2)) - M2) <= abs(M1 - M2) / 3 + abs(M1 - M2) / 3
+        finite_set_max(union({n1}, { n2})) $in N_pos
+        finite_set_max(union({n1}, { n2})) >= n1
+        finite_set_max(union({n1}, { n2})) >= n2
+        abs(b(finite_set_max(union({n1}, { n2}))) - M1) <= abs(M1 - M2) / 3
+        abs(b(finite_set_max(union({n1}, { n2}))) - M2) <= abs(M1 - M2) / 3
+        abs(M1 - b(finite_set_max(union({n1}, { n2})))) = abs(b(finite_set_max(union({n1}, { n2}))) - M1)
+        abs(M1 - b(finite_set_max(union({n1}, { n2})))) <= abs(M1 - M2) / 3
+        M1 - M2 = (M1 - b(finite_set_max(union({n1}, { n2})))) + (b(finite_set_max(union({n1}, { n2}))) - M2)
+        abs(M1 - M2) = abs((M1 - b(finite_set_max(union({n1}, { n2})))) + (b(finite_set_max(union({n1}, { n2}))) - M2))
+        abs((M1 - b(finite_set_max(union({n1}, { n2})))) + (b(finite_set_max(union({n1}, { n2}))) - M2)) <= abs(M1 - b(finite_set_max(union({n1}, { n2})))) + abs(b(finite_set_max(union({n1}, { n2}))) - M2)
+        abs(M1 - M2) <= abs(M1 - b(finite_set_max(union({n1}, { n2})))) + abs(b(finite_set_max(union({n1}, { n2}))) - M2)
+        abs(M1 - b(finite_set_max(union({n1}, { n2})))) + abs(b(finite_set_max(union({n1}, { n2}))) - M2) <= abs(M1 - M2) / 3 + abs(M1 - M2) / 3
+        abs(M1 - M2) <= abs(M1 - b(finite_set_max(union({n1}, { n2})))) + abs(b(finite_set_max(union({n1}, { n2}))) - M2) <= abs(M1 - M2) / 3 + abs(M1 - M2) / 3
         abs(M1 - M2) <= abs(M1 - M2) / 3 + abs(M1 - M2) / 3
         abs(M1 - M2) / 3 + abs(M1 - M2) / 3 = 2 * abs(M1 - M2) / 3
         2 / 3 < 1
@@ -1236,15 +1215,13 @@ sketch:
         two_power_terms(k) = geometric_series_terms_from_one(2)(k)
         geometric_series_terms_from_one(2)(k) = 2^k
 
-    claim:
-        ? $has_series_sum(half_power_terms, 1)
-        abs(1 / 2) < 1
-        1 - 1 / 2 != 0
-        by thm geometric_series_from_one_formula(1 / 2)
-        $has_series_sum(geometric_series_terms_from_one(1 / 2), (1 / 2) / (1 - 1 / 2))
-        (1 / 2) / (1 - 1 / 2) = 1
-        $has_series_sum(geometric_series_terms_from_one(1 / 2), 1)
-        $has_series_sum(half_power_terms, 1)
+    abs(1 / 2) < 1
+    1 - 1 / 2 != 0
+    by thm geometric_series_from_one_formula(1 / 2)
+    $has_series_sum(geometric_series_terms_from_one(1 / 2), (1 / 2) / (1 - 1 / 2))
+    (1 / 2) / (1 - 1 / 2) = 1
+    $has_series_sum(geometric_series_terms_from_one(1 / 2), 1)
+    $has_series_sum(half_power_terms, 1)
 
     claim:
         ? not $is_convergent_series(two_power_terms)
@@ -1791,10 +1768,10 @@ thm absolute_convergence_triangle_bound:
         $has_limit(fn(k N_pos) R {partial_sum(fn(j N_pos) R {abs(a(j))}, k)}, A)
         obtain n1 from exist n1 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(a, k)}, L, eta, n1)}
         obtain n2 from exist n2 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(fn(j N_pos) R {abs(a(j))}, k)}, A, eta, n2)}
-        max(n1, n2) $in N_pos
-        max(n1, n2) >= n1
-        max(n1, n2) >= n2
-        have n3 N_pos = max(n1, n2)
+        finite_set_max(union({n1}, { n2})) $in N_pos
+        finite_set_max(union({n1}, { n2})) >= n1
+        finite_set_max(union({n1}, { n2})) >= n2
+        have n3 N_pos = finite_set_max(union({n1}, { n2}))
         n3 >= n1
         n3 >= n2
         abs(fn(k N_pos) R {partial_sum(a, k)}(n3) - L) <= eta
@@ -2093,8 +2070,6 @@ diverges.
 
 sketch:
     have fn harmonic_terms(k N_pos) R = 1 / k
-    forall k N_pos:
-        harmonic_terms(k) = 1 / k
     have alternating_harmonic_terms seq(R) = alternating_series_terms(harmonic_terms)
 
     claim:
@@ -2107,102 +2082,93 @@ sketch:
         (-1)^k * (1 / k) = (-1)^k / k
         alternating_harmonic_terms(k) = (-1)^k / k
 
-    claim:
-        ? $is_nonnegative_sequence(harmonic_terms)
-        forall n N_pos:
-            harmonic_terms(n) = 1 / n
-            1 / n > 0
-            1 / n >= 0
-            harmonic_terms(n) >= 0
+    forall n N_pos:
+        harmonic_terms(n) = 1 / n
+        1 / n > 0
+        1 / n >= 0
+        harmonic_terms(n) >= 0
+    by def $is_nonnegative_sequence(harmonic_terms)
+
+    forall n N_pos:
+        harmonic_terms(n + 1) = 1 / (n + 1)
+        harmonic_terms(n) = 1 / n
+        n + 1 $in N_pos
+        n * (n + 1) > 0
+        1 / (n + 1) = n / (n * (n + 1))
+        1 / n = (n + 1) / (n * (n + 1))
+        n <= n + 1
+        n / (n * (n + 1)) <= (n + 1) / (n * (n + 1))
+        1 / (n + 1) <= 1 / n
+        harmonic_terms(n + 1) <= harmonic_terms(n)
+    by def $is_decreasing_sequence(harmonic_terms)
 
     claim:
-        ? $is_decreasing_sequence(harmonic_terms)
-        forall n N_pos:
-            harmonic_terms(n + 1) = 1 / (n + 1)
-            harmonic_terms(n) = 1 / n
-            n + 1 $in N_pos
-            n * (n + 1) > 0
-            1 / (n + 1) = n / (n * (n + 1))
-            1 / n = (n + 1) / (n * (n + 1))
-            n <= n + 1
-            n / (n * (n + 1)) <= (n + 1) / (n * (n + 1))
-            1 / (n + 1) <= 1 / n
-            harmonic_terms(n + 1) <= harmonic_terms(n)
-        $is_decreasing_sequence(harmonic_terms)
+        ? forall epsilon R_pos:
+            exist n0 N_pos st {$is_tail_close_to(harmonic_terms, 0, epsilon, n0)}
+        by thm chap5::archimedean_property(epsilon)
+        exist n_bound N_pos st {1 / n_bound < epsilon}
+        obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
+        witness exist n1 N_pos st {$is_tail_close_to(harmonic_terms, 0, epsilon, n1)} from n0:
+            forall n N_pos:
+                n >= n0
+                =>:
+                    harmonic_terms(n) = 1 / n
+                    n0 <= n
+                    n0 * n > 0
+                    1 / n = n0 / (n0 * n)
+                    n0 / (n0 * n) <= n / (n0 * n)
+                    n / (n0 * n) = 1 / n0
+                    1 / n <= 1 / n0
+                    1 / n <= 1 / n0 < epsilon
+                    1 / n < epsilon
+                    1 / n > 0
+                    1 / n - 0 = 1 / n
+                    1 / n - 0 >= 0
+                    abs(1 / n - 0) = 1 / n - 0
+                    abs(1 / n - 0) = 1 / n
+                    abs(harmonic_terms(n) - 0) = abs(1 / n - 0)
+                    abs(harmonic_terms(n) - 0) < epsilon
+                    abs(harmonic_terms(n) - 0) <= epsilon
+            $is_tail_close_to(harmonic_terms, 0, epsilon, n0)
+    by def $has_limit(harmonic_terms, 0)
 
-    claim:
-        ? $has_limit(harmonic_terms, 0)
-        claim:
-            ? forall epsilon R_pos:
-                exist n0 N_pos st {$is_tail_close_to(harmonic_terms, 0, epsilon, n0)}
-            by thm chap5::archimedean_property(epsilon)
-            exist n_bound N_pos st {1 / n_bound < epsilon}
-            obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
-            witness exist n1 N_pos st {$is_tail_close_to(harmonic_terms, 0, epsilon, n1)} from n0:
-                forall n N_pos:
-                    n >= n0
-                    =>:
-                        harmonic_terms(n) = 1 / n
-                        n0 <= n
-                        n0 * n > 0
-                        1 / n = n0 / (n0 * n)
-                        n0 / (n0 * n) <= n / (n0 * n)
-                        n / (n0 * n) = 1 / n0
-                        1 / n <= 1 / n0
-                        1 / n <= 1 / n0 < epsilon
-                        1 / n < epsilon
-                        1 / n > 0
-                        1 / n - 0 = 1 / n
-                        1 / n - 0 >= 0
-                        abs(1 / n - 0) = 1 / n - 0
-                        abs(1 / n - 0) = 1 / n
-                        abs(harmonic_terms(n) - 0) = abs(1 / n - 0)
-                        abs(harmonic_terms(n) - 0) < epsilon
-                        abs(harmonic_terms(n) - 0) <= epsilon
-                $is_tail_close_to(harmonic_terms, 0, epsilon, n0)
-        $has_limit(harmonic_terms, 0)
-
-    claim:
-        ? $is_convergent_series(alternating_harmonic_terms)
-        by thm alternating_series_test(harmonic_terms)
-        $is_convergent_series(alternating_series_terms(harmonic_terms))
-        $is_convergent_series(alternating_harmonic_terms)
+    by thm alternating_series_test(harmonic_terms)
+    $is_convergent_series(alternating_series_terms(harmonic_terms))
+    $is_convergent_series(alternating_harmonic_terms)
 
     claim:
         ? not $is_convergent_series(harmonic_terms)
         trust not $is_convergent_series(harmonic_terms)
 
+    $is_convergent_series(alternating_harmonic_terms)
     claim:
-        ? $is_only_conditionally_convergent_series(alternating_harmonic_terms)
-        $is_convergent_series(alternating_harmonic_terms)
-        claim:
+        ? not $is_convergent_series(fn(j N_pos) R {abs(alternating_harmonic_terms(j))})
+        by contra:
             ? not $is_convergent_series(fn(j N_pos) R {abs(alternating_harmonic_terms(j))})
-            by contra:
-                ? not $is_convergent_series(fn(j N_pos) R {abs(alternating_harmonic_terms(j))})
-                $is_convergent_series(fn(j N_pos) R {abs(alternating_harmonic_terms(j))})
-                claim:
-                    ? forall n N_pos:
-                        abs(alternating_harmonic_terms(n)) = harmonic_terms(n)
-                    alternating_harmonic_terms(n) = alternating_series_terms(harmonic_terms)(n)
-                    abs(alternating_harmonic_terms(n)) = abs(alternating_series_terms(harmonic_terms)(n))
-                    by thm alternating_terms_abs_value(harmonic_terms, n)
-                    abs(alternating_series_terms(harmonic_terms)(n)) = abs(harmonic_terms(n))
-                    harmonic_terms(n) = 1 / n
-                    1 / n > 0
-                    abs(harmonic_terms(n)) = harmonic_terms(n)
+            $is_convergent_series(fn(j N_pos) R {abs(alternating_harmonic_terms(j))})
+            claim:
+                ? forall n N_pos:
                     abs(alternating_harmonic_terms(n)) = harmonic_terms(n)
-                by thm series_convergence_extensional(fn(j N_pos) R {abs(alternating_harmonic_terms(j))}, harmonic_terms)
-                $is_convergent_series(harmonic_terms)
-                impossible not $is_convergent_series(harmonic_terms)
-        claim:
+                alternating_harmonic_terms(n) = alternating_series_terms(harmonic_terms)(n)
+                abs(alternating_harmonic_terms(n)) = abs(alternating_series_terms(harmonic_terms)(n))
+                by thm alternating_terms_abs_value(harmonic_terms, n)
+                abs(alternating_series_terms(harmonic_terms)(n)) = abs(harmonic_terms(n))
+                harmonic_terms(n) = 1 / n
+                1 / n > 0
+                abs(harmonic_terms(n)) = harmonic_terms(n)
+                abs(alternating_harmonic_terms(n)) = harmonic_terms(n)
+            by thm series_convergence_extensional(fn(j N_pos) R {abs(alternating_harmonic_terms(j))}, harmonic_terms)
+            $is_convergent_series(harmonic_terms)
+            impossible not $is_convergent_series(harmonic_terms)
+    claim:
+        ? not $is_absolutely_convergent_series(alternating_harmonic_terms)
+        by contra:
             ? not $is_absolutely_convergent_series(alternating_harmonic_terms)
-            by contra:
-                ? not $is_absolutely_convergent_series(alternating_harmonic_terms)
-                $is_absolutely_convergent_series(alternating_harmonic_terms)
-                $is_convergent_series(fn(j N_pos) R {abs(alternating_harmonic_terms(j))})
-                impossible not $is_convergent_series(fn(j N_pos) R {abs(alternating_harmonic_terms(j))})
-        not $is_absolutely_convergent_series(alternating_harmonic_terms)
-        $is_only_conditionally_convergent_series(alternating_harmonic_terms)
+            $is_absolutely_convergent_series(alternating_harmonic_terms)
+            $is_convergent_series(fn(j N_pos) R {abs(alternating_harmonic_terms(j))})
+            impossible not $is_convergent_series(fn(j N_pos) R {abs(alternating_harmonic_terms(j))})
+    not $is_absolutely_convergent_series(alternating_harmonic_terms)
+    by def $is_only_conditionally_convergent_series(alternating_harmonic_terms)
 
 """
 Proposition 7.2.14 (Series laws). Convergent series are closed under addition,
@@ -2271,16 +2237,16 @@ thm series_laws_add:
         epsilon / 2 $in R_pos
         obtain n1 from exist n1 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(a, k)}, x, epsilon / 2, n1)}
         obtain n2 from exist n2 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(b, k)}, y, epsilon / 2, n2)}
-        max(n1, n2) $in N_pos
-        max(n1, n2) >= n1
-        max(n1, n2) >= n2
-        witness exist N1 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y, epsilon, N1)} from max(n1, n2):
+        finite_set_max(union({n1}, { n2})) $in N_pos
+        finite_set_max(union({n1}, { n2})) >= n1
+        finite_set_max(union({n1}, { n2})) >= n2
+        witness exist N1 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y, epsilon, N1)} from finite_set_max(union({n1}, { n2})):
             forall n N_pos:
-                n >= max(n1, n2)
+                n >= finite_set_max(union({n1}, { n2}))
                 =>:
-                    n1 <= max(n1, n2) <= n
+                    n1 <= finite_set_max(union({n1}, { n2})) <= n
                     n >= n1
-                    n2 <= max(n1, n2) <= n
+                    n2 <= finite_set_max(union({n1}, { n2})) <= n
                     n >= n2
                     abs(fn(k N_pos) R {partial_sum(a, k)}(n) - x) <= epsilon / 2
                     fn(k N_pos) R {partial_sum(a, k)}(n) = partial_sum(a, n)
@@ -2302,7 +2268,7 @@ thm series_laws_add:
                     epsilon / 2 + epsilon / 2 = epsilon
                     abs(partial_sum(a, n) - x) + abs(partial_sum(b, n) - y) <= epsilon
                     abs(fn(k N_pos) R {partial_sum(series_add(a, b), k)}(n) - (x + y)) <= epsilon
-            $is_tail_close_to(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y, epsilon, max(n1, n2))
+            $is_tail_close_to(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y, epsilon, finite_set_max(union({n1}, { n2})))
     $has_limit(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y)
     $has_series_sum(series_add(a, b), x + y)
 
@@ -2488,11 +2454,9 @@ thm series_laws_tail_sum_reverse_one_bound_direct:
     n - 1 >= 1
     n - 1 $in N_pos
     have m N_pos = n - 1
-    m = n - 1
     n - 1 >= n0
     m >= n0
     by thm series_laws_tail_sum_reverse_one_bound(a, T, epsilon, n0, m, n)
-    abs(fn(k N_pos) R {partial_sum(a, k)}(n) - (partial_sum(a, 1) + T)) <= epsilon
 
 thm series_laws_tail_sum_reverse_one:
     ? forall a seq(R), T R:
@@ -2622,7 +2586,7 @@ thm nonnegative_series_convergent_has_bounded_partial_sums:
     $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
     1 $in R_pos
     obtain n0 from exist n0 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(a, k)}, L, 1, n0)}
-    have M R = max(partial_sum(a, n0), L + 1)
+    have M R = finite_set_max(union({partial_sum(a, n0)}, { L + 1}))
     claim:
         ? forall k N_pos:
             partial_sum(a, k) <= M
@@ -2632,9 +2596,9 @@ thm nonnegative_series_convergent_has_bounded_partial_sums:
             case k <= n0:
                 by thm nonnegative_partial_sum_le_of_le(a, k, n0)
                 partial_sum(a, k) <= partial_sum(a, n0)
-                partial_sum(a, n0) <= max(partial_sum(a, n0), L + 1)
-                max(partial_sum(a, n0), L + 1) = M
-                partial_sum(a, k) <= partial_sum(a, n0) <= max(partial_sum(a, n0), L + 1) = M
+                partial_sum(a, n0) <= finite_set_max(union({partial_sum(a, n0)}, { L + 1}))
+                finite_set_max(union({partial_sum(a, n0)}, { L + 1})) = M
+                partial_sum(a, k) <= partial_sum(a, n0) <= finite_set_max(union({partial_sum(a, n0)}, { L + 1})) = M
                 partial_sum(a, k) <= M
             case k > n0:
                 k >= n0
@@ -2649,9 +2613,9 @@ thm nonnegative_series_convergent_has_bounded_partial_sums:
                 1 + L = L + 1
                 (partial_sum(a, k) - L) + L <= L + 1
                 partial_sum(a, k) <= L + 1
-                L + 1 <= max(partial_sum(a, n0), L + 1)
-                max(partial_sum(a, n0), L + 1) = M
-                partial_sum(a, k) <= L + 1 <= max(partial_sum(a, n0), L + 1) = M
+                L + 1 <= finite_set_max(union({partial_sum(a, n0)}, { L + 1}))
+                finite_set_max(union({partial_sum(a, n0)}, { L + 1})) = M
+                partial_sum(a, k) <= L + 1 <= finite_set_max(union({partial_sum(a, n0)}, { L + 1})) = M
                 partial_sum(a, k) <= M
     witness exist B R st {$is_partial_sum_bound(a, B)} from M:
         forall k N_pos:
@@ -2670,46 +2634,24 @@ thm nonnegative_series_bounded_partial_sums_converge:
     claim:
         ? forall k N_pos:
             partial_sums(k) <= partial_sums(k + 1)
-        partial_sums(k) = partial_sum(a, k)
-        partial_sums(k + 1) = partial_sum(a, k + 1)
-        k <= k + 1
         by thm nonnegative_partial_sum_le_of_le(a, k, k + 1)
-        partial_sum(a, k) <= partial_sum(a, k + 1)
-        partial_sums(k) <= partial_sums(k + 1)
-    claim:
-        ? $chap6::is_increasing_sequence(partial_sums)
-        $chap6::is_increasing_sequence(partial_sums)
-    claim:
-        ? $chap6::is_bounded_above_sequence(partial_sums)
-        witness exist B R st {$chap6::is_sequence_upper_bound(partial_sums, B)} from M:
-            forall k N_pos:
-                partial_sums(k) = partial_sum(a, k)
-                partial_sum(a, k) <= M
-                partial_sums(k) <= M
-            $chap6::is_sequence_upper_bound(partial_sums, M)
+    by def $chap6::is_increasing_sequence(partial_sums)
+    witness exist B R st {$chap6::is_sequence_upper_bound(partial_sums, B)} from M
     by thm chap6::bounded_increasing_sequence_converges(partial_sums)
-    $chap6::is_convergent_sequence(partial_sums)
     by thm chap6::convergent_sequence_has_limit(partial_sums)
-    exist L R st {$chap6::has_limit(partial_sums, L)}
     obtain L from exist L R st {$chap6::has_limit(partial_sums, L)}
     claim:
-        ? $has_limit(partial_sums, L)
-        claim:
-            ? forall epsilon R_pos:
-                exist n0 N_pos st {$is_tail_close_to(partial_sums, L, epsilon, n0)}
-            by thm chap6::has_limit_gives_eventual_closeness(partial_sums, L, epsilon)
-            obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(partial_sums, L, epsilon, n0)}
-            witness exist n1 N_pos st {$is_tail_close_to(partial_sums, L, epsilon, n1)} from n0:
-                forall n N_pos:
-                    n >= n0
-                    =>:
-                        abs(partial_sums(n) - L) < epsilon
-                        abs(partial_sums(n) - L) <= epsilon
-                $is_tail_close_to(partial_sums, L, epsilon, n0)
-        $has_limit(partial_sums, L)
-    partial_sums = fn(k N_pos) R {partial_sum(a, k)}
-    witness exist S R st {$has_series_sum(a, S)} from L:
-        $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
+        ? forall epsilon R_pos:
+            exist n0 N_pos st {$is_tail_close_to(partial_sums, L, epsilon, n0)}
+        by thm chap6::has_limit_gives_eventual_closeness(partial_sums, L, epsilon)
+        obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(partial_sums, L, epsilon, n0)}
+        witness exist n1 N_pos st {$is_tail_close_to(partial_sums, L, epsilon, n1)} from n0:
+            forall n N_pos:
+                n >= n0
+                =>:
+                    abs(partial_sums(n) - L) <= epsilon
+    by def $has_limit(partial_sums, L)
+    witness exist S R st {$has_series_sum(a, S)} from L
 
 """
 Corollary 7.3.2 (Comparison test). If |a_n| is bounded by a convergent
@@ -2726,41 +2668,31 @@ thm comparison_test_for_series:
             abs(a(n)) <= b(n)
         =>:
             $is_absolutely_convergent_series(a)
-    claim:
-        ? $is_nonnegative_sequence(b)
-        forall n N_pos:
-            abs(a(n)) <= b(n)
-            abs(a(n)) >= 0
-            b(n) >= abs(a(n)) >= 0
-            b(n) >= 0
-        $is_nonnegative_sequence(b)
+    forall n N_pos:
+        abs(a(n)) <= b(n)
+        abs(a(n)) >= 0
+        b(n) >= abs(a(n)) >= 0
+        b(n) >= 0
+    by def $is_nonnegative_sequence(b)
     by thm nonnegative_series_convergent_has_bounded_partial_sums(b)
-    $has_bounded_partial_sums(b)
     obtain M from exist M R st {$is_partial_sum_bound(b, M)}
-    claim:
-        ? $has_bounded_partial_sums(fn(j N_pos) R {abs(a(j))})
-        witness exist M0 R st {$is_partial_sum_bound(fn(j N_pos) R {abs(a(j))}, M0)} from M:
-            forall k N_pos:
-                partial_sum(fn(j N_pos) R {abs(a(j))}, k) = sum(1, k, fn(i N_pos) R {abs(a(i))})
-                partial_sum(b, k) = sum(1, k, fn(i N_pos) R {b(i)})
-                sum(1, k, fn(i N_pos) R {abs(a(i))}) <= sum(1, k, fn(i N_pos) R {b(i)})
-                partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= sum(1, k, fn(i N_pos) R {b(i)})
-                partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= partial_sum(b, k)
-                partial_sum(b, k) <= M
-                partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= partial_sum(b, k) <= M
-                partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= M
-            $is_partial_sum_bound(fn(j N_pos) R {abs(a(j))}, M)
-        $has_bounded_partial_sums(fn(j N_pos) R {abs(a(j))})
-    claim:
-        ? $is_nonnegative_sequence(fn(j N_pos) R {abs(a(j))})
-        forall n N_pos:
-            fn(j N_pos) R {abs(a(j))}(n) = abs(a(n))
-            abs(a(n)) >= 0
-            fn(j N_pos) R {abs(a(j))}(n) >= 0
-        $is_nonnegative_sequence(fn(j N_pos) R {abs(a(j))})
+    witness exist M0 R st {$is_partial_sum_bound(fn(j N_pos) R {abs(a(j))}, M0)} from M:
+        forall k N_pos:
+            partial_sum(fn(j N_pos) R {abs(a(j))}, k) = sum(1, k, fn(i N_pos) R {abs(a(i))})
+            partial_sum(b, k) = sum(1, k, fn(i N_pos) R {b(i)})
+            sum(1, k, fn(i N_pos) R {abs(a(i))}) <= sum(1, k, fn(i N_pos) R {b(i)})
+            partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= sum(1, k, fn(i N_pos) R {b(i)})
+            partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= partial_sum(b, k)
+            partial_sum(b, k) <= M
+            partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= partial_sum(b, k) <= M
+            partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= M
+    by def $has_bounded_partial_sums(fn(j N_pos) R {abs(a(j))})
+    forall n N_pos:
+        fn(j N_pos) R {abs(a(j))}(n) = abs(a(n))
+        abs(a(n)) >= 0
+        fn(j N_pos) R {abs(a(j))}(n) >= 0
+    by def $is_nonnegative_sequence(fn(j N_pos) R {abs(a(j))})
     by thm nonnegative_series_bounded_partial_sums_converge(fn(j N_pos) R {abs(a(j))})
-    $is_convergent_series(fn(j N_pos) R {abs(a(j))})
-    $is_absolutely_convergent_series(a)
 
 # A finite initial block does not affect absolute convergence.  This is the
 # reverse finite-prefix direction of Proposition 7.2.14, whose proof is left to
@@ -2774,7 +2706,6 @@ thm absolute_shift_abs_terms_match:
     fn(j N_pos) R {abs(series_shift(a, k)(j))}(n) = abs(a(n + k))
     series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) = fn(i N_pos) R {abs(a(i))}(n + k)
     fn(i N_pos) R {abs(a(i))}(n + k) = abs(a(n + k))
-    fn(j N_pos) R {abs(series_shift(a, k)(j))}(n) = series_shift(fn(i N_pos) R {abs(a(i))}, k)(n)
 
 thm absolute_sequence_nonnegative:
     ? forall a seq(R):
@@ -2783,7 +2714,6 @@ thm absolute_sequence_nonnegative:
         fn(i N_pos) R {abs(a(i))}(n) = abs(a(n))
         abs(a(n)) >= 0
         fn(i N_pos) R {abs(a(i))}(n) >= 0
-    $is_nonnegative_sequence(fn(i N_pos) R {abs(a(i))})
 
 thm real_add_abs_nonnegative:
     ? forall M R:
@@ -2864,37 +2794,22 @@ thm absolute_series_laws_tail_convergence_reverse:
         ? forall n N_pos:
             abs(series_shift(a, k)(n)) = series_shift(fn(i N_pos) R {abs(a(i))}, k)(n)
         by thm absolute_shift_abs_terms_match(a, k, n)
-        abs(series_shift(a, k)(n)) = series_shift(fn(i N_pos) R {abs(a(i))}, k)(n)
     by thm series_convergence_extensional(fn(j N_pos) R {abs(series_shift(a, k)(j))}, series_shift(fn(i N_pos) R {abs(a(i))}, k))
-    $is_convergent_series(series_shift(fn(i N_pos) R {abs(a(i))}, k))
-    claim:
-        ? $is_nonnegative_sequence(series_shift(fn(i N_pos) R {abs(a(i))}, k))
-        claim:
-            ? forall n N_pos:
-                series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) >= 0
-            series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) = fn(i N_pos) R {abs(a(i))}(n + k)
-            fn(i N_pos) R {abs(a(i))}(n + k) = abs(a(n + k))
-            abs(a(n + k)) >= 0
-            series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) >= 0
-        $is_nonnegative_sequence(series_shift(fn(i N_pos) R {abs(a(i))}, k))
-    by thm nonnegative_series_convergent_has_bounded_partial_sums(series_shift(fn(i N_pos) R {abs(a(i))}, k))
-    $has_bounded_partial_sums(series_shift(fn(i N_pos) R {abs(a(i))}, k))
-    obtain M from exist M R st {$is_partial_sum_bound(series_shift(fn(i N_pos) R {abs(a(i))}, k), M)}
-    by thm shifted_abs_partial_sum_bound_extends_to_original(a, k, M)
-    $is_partial_sum_bound(fn(i N_pos) R {abs(a(i))}, partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M + abs(M))
-    witness exist B R st {$is_partial_sum_bound(fn(i N_pos) R {abs(a(i))}, B)} from partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M + abs(M):
-        $is_partial_sum_bound(fn(i N_pos) R {abs(a(i))}, partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M + abs(M))
-    $has_bounded_partial_sums(fn(i N_pos) R {abs(a(i))})
-    by thm absolute_sequence_nonnegative(a)
-    $is_nonnegative_sequence(fn(i N_pos) R {abs(a(i))})
-    by thm nonnegative_series_bounded_partial_sums_converge(fn(i N_pos) R {abs(a(i))})
-    $is_convergent_series(fn(i N_pos) R {abs(a(i))})
     claim:
         ? forall n N_pos:
-            abs(a(n)) = abs(a(n))
+            series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) >= 0
+        series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) = fn(i N_pos) R {abs(a(i))}(n + k)
+        fn(i N_pos) R {abs(a(i))}(n + k) = abs(a(n + k))
+        abs(a(n + k)) >= 0
+        series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) >= 0
+    by def $is_nonnegative_sequence(series_shift(fn(i N_pos) R {abs(a(i))}, k))
+    by thm nonnegative_series_convergent_has_bounded_partial_sums(series_shift(fn(i N_pos) R {abs(a(i))}, k))
+    obtain M from exist M R st {$is_partial_sum_bound(series_shift(fn(i N_pos) R {abs(a(i))}, k), M)}
+    by thm shifted_abs_partial_sum_bound_extends_to_original(a, k, M)
+    witness exist B R st {$is_partial_sum_bound(fn(i N_pos) R {abs(a(i))}, B)} from partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M + abs(M)
+    by thm absolute_sequence_nonnegative(a)
+    by thm nonnegative_series_bounded_partial_sums_converge(fn(i N_pos) R {abs(a(i))})
     by thm series_convergence_extensional(fn(i N_pos) R {abs(a(i))}, fn(j N_pos) R {abs(a(j))})
-    $is_convergent_series(fn(j N_pos) R {abs(a(j))})
-    $is_absolutely_convergent_series(a)
 
 prop is_eventually_abs_bounded_by(a, b seq(R), n0 N_pos):
     forall n N_pos:
@@ -2910,11 +2825,9 @@ thm eventual_comparison_test_for_series:
             $is_absolutely_convergent_series(a)
     have h N = n0 - 1
     by thm series_laws_tail_convergence(b, h)
-    $is_convergent_series(series_shift(b, h))
     claim:
         ? forall n N_pos:
             abs(series_shift(a, h)(n)) <= series_shift(b, h)(n)
-        h = n0 - 1
         n >= 1
         n - 1 >= 0
         n + h = n + (n0 - 1)
@@ -2927,9 +2840,7 @@ thm eventual_comparison_test_for_series:
         abs(series_shift(a, h)(n)) = abs(a(n + h))
         abs(series_shift(a, h)(n)) <= series_shift(b, h)(n)
     by thm comparison_test_for_series(series_shift(a, h), series_shift(b, h))
-    $is_absolutely_convergent_series(series_shift(a, h))
     by thm absolute_series_laws_tail_convergence_reverse(a, h)
-    $is_absolutely_convergent_series(a)
 
 """
 Lemma 7.3.3 (Geometric series). The geometric series diverges when |x| >= 1 and
@@ -3377,9 +3288,7 @@ thm cauchy_condensation_partial_sum_bounds:
             partial_sum(a, 2^K - 1) <= partial_sum(condensed_terms(a), K)
             partial_sum(condensed_terms(a), K) <= 2 * partial_sum(a, 2^K)
     by thm cauchy_condensation_partial_sum_lower_bound(a, K)
-    partial_sum(a, 2^K - 1) <= partial_sum(condensed_terms(a), K)
     by thm cauchy_condensation_partial_sum_upper_strong(a, K)
-    partial_sum(condensed_terms(a), K) <= 2 * partial_sum(a, 2^(K - 1))
     K >= 1
     K - 1 $in N
     2^(K - 1) $in N_pos
@@ -3394,11 +3303,9 @@ thm cauchy_condensation_partial_sum_bounds:
     2^K >= 2^(K - 1)
     2^(K - 1) <= 2^K
     by thm nonnegative_partial_sums_monotone(a, 2^(K - 1), 2^K)
-    partial_sum(a, 2^(K - 1)) <= partial_sum(a, 2^K)
     2 >= 0
     2 * partial_sum(a, 2^(K - 1)) <= 2 * partial_sum(a, 2^K)
     partial_sum(condensed_terms(a), K) <= 2 * partial_sum(a, 2^(K - 1)) <= 2 * partial_sum(a, 2^K)
-    partial_sum(condensed_terms(a), K) <= 2 * partial_sum(a, 2^K)
 
 thm cauchy_condensation_test_forward:
     ? forall a seq(R):
@@ -3408,31 +3315,21 @@ thm cauchy_condensation_test_forward:
         =>:
             $is_convergent_series(condensed_terms(a))
     by thm nonnegative_series_convergent_has_bounded_partial_sums(a)
-    $has_bounded_partial_sums(a)
     obtain M from exist M R st {$is_partial_sum_bound(a, M)}
     have B R = 2 * M
     claim:
         ? forall K N_pos:
             partial_sum(condensed_terms(a), K) <= B
         by thm cauchy_condensation_partial_sum_bounds(a, K)
-        partial_sum(condensed_terms(a), K) <= 2 * partial_sum(a, 2^K)
         2^K $in N_pos
         partial_sum(a, 2^K) <= M
         2 >= 0
         2 * partial_sum(a, 2^K) <= 2 * M
         partial_sum(condensed_terms(a), K) <= 2 * partial_sum(a, 2^K) <= 2 * M
-        partial_sum(condensed_terms(a), K) <= 2 * M
         2 * M = B
-        partial_sum(condensed_terms(a), K) <= B
-    witness exist C R st {$is_partial_sum_bound(condensed_terms(a), C)} from B:
-        forall K N_pos:
-            partial_sum(condensed_terms(a), K) <= B
-        $is_partial_sum_bound(condensed_terms(a), B)
-    $has_bounded_partial_sums(condensed_terms(a))
+    witness exist C R st {$is_partial_sum_bound(condensed_terms(a), C)} from B
     by thm condensed_terms_nonnegative(a)
-    $is_nonnegative_sequence(condensed_terms(a))
     by thm nonnegative_series_bounded_partial_sums_converge(condensed_terms(a))
-    $is_convergent_series(condensed_terms(a))
 
 thm cauchy_condensation_test_reverse:
     ? forall a seq(R):
@@ -3442,9 +3339,7 @@ thm cauchy_condensation_test_reverse:
         =>:
             $is_convergent_series(a)
     by thm condensed_terms_nonnegative(a)
-    $is_nonnegative_sequence(condensed_terms(a))
     by thm nonnegative_series_convergent_has_bounded_partial_sums(condensed_terms(a))
-    $has_bounded_partial_sums(condensed_terms(a))
     obtain M from exist M R st {$is_partial_sum_bound(condensed_terms(a), M)}
     claim:
         ? forall k N_pos:
@@ -3453,19 +3348,11 @@ thm cauchy_condensation_test_reverse:
         obtain K from exist K N_pos st {k <= 2^K - 1}
         2^K - 1 $in N
         by thm nonnegative_partial_sums_monotone(a, k, 2^K - 1)
-        partial_sum(a, k) <= partial_sum(a, 2^K - 1)
         by thm cauchy_condensation_partial_sum_bounds(a, K)
-        partial_sum(a, 2^K - 1) <= partial_sum(condensed_terms(a), K)
         partial_sum(condensed_terms(a), K) <= M
         partial_sum(a, k) <= partial_sum(a, 2^K - 1) <= partial_sum(condensed_terms(a), K) <= M
-        partial_sum(a, k) <= M
-    witness exist B R st {$is_partial_sum_bound(a, B)} from M:
-        forall k N_pos:
-            partial_sum(a, k) <= M
-        $is_partial_sum_bound(a, M)
-    $has_bounded_partial_sums(a)
+    witness exist B R st {$is_partial_sum_bound(a, B)} from M
     by thm nonnegative_series_bounded_partial_sums_converge(a)
-    $is_convergent_series(a)
 
 """
 Corollary 7.3.7. The p-series sum 1/n^q converges exactly when q > 1.
@@ -3539,7 +3426,7 @@ prop has_bounded_prefix_preimage(phi fn(i N_pos) N_pos, n N_pos, M N_pos):
 # Proof-package helper: the running maximum bounds the image of a finite prefix.
 have fn prefix_image_bound(phi fn(i N_pos) N_pos, n N_pos) N_pos by induc n from 1:
     case n = 1: phi(1)
-    case n > 1: max(prefix_image_bound(phi, n - 1), phi(n))
+    case n > 1: finite_set_max(union({prefix_image_bound(phi, n - 1)}, { phi(n)}))
 
 prop prefix_image_bound_bounds_up_to(phi fn(i N_pos) N_pos, n N_pos):
     forall j N_pos:
@@ -3565,14 +3452,14 @@ thm prefix_image_bound_bounds:
             $prefix_image_bound_bounds_up_to(phi, 1)
         ? induc:
             n + 1 > 1
-            prefix_image_bound(phi, n + 1) = max(prefix_image_bound(phi, n + 1 - 1), phi(n + 1))
+            prefix_image_bound(phi, n + 1) = finite_set_max(union({prefix_image_bound(phi, n + 1 - 1)}, { phi(n + 1)}))
             n + 1 - 1 = n
             prefix_image_bound(phi, n + 1 - 1) = prefix_image_bound(phi, n)
-            prefix_image_bound(phi, n + 1 - 1) <= max(prefix_image_bound(phi, n + 1 - 1), phi(n + 1))
-            prefix_image_bound(phi, n) = prefix_image_bound(phi, n + 1 - 1) <= max(prefix_image_bound(phi, n + 1 - 1), phi(n + 1)) = prefix_image_bound(phi, n + 1)
+            prefix_image_bound(phi, n + 1 - 1) <= finite_set_max(union({prefix_image_bound(phi, n + 1 - 1)}, { phi(n + 1)}))
+            prefix_image_bound(phi, n) = prefix_image_bound(phi, n + 1 - 1) <= finite_set_max(union({prefix_image_bound(phi, n + 1 - 1)}, { phi(n + 1)})) = prefix_image_bound(phi, n + 1)
             prefix_image_bound(phi, n) <= prefix_image_bound(phi, n + 1)
-            phi(n + 1) <= max(prefix_image_bound(phi, n + 1 - 1), phi(n + 1))
-            phi(n + 1) <= max(prefix_image_bound(phi, n + 1 - 1), phi(n + 1)) = prefix_image_bound(phi, n + 1)
+            phi(n + 1) <= finite_set_max(union({prefix_image_bound(phi, n + 1 - 1)}, { phi(n + 1)}))
+            phi(n + 1) <= finite_set_max(union({prefix_image_bound(phi, n + 1 - 1)}, { phi(n + 1)})) = prefix_image_bound(phi, n + 1)
             phi(n + 1) <= prefix_image_bound(phi, n + 1)
             claim:
                 ? forall j N_pos:
@@ -3610,14 +3497,13 @@ thm permutation_prefix_image_has_bound:
     have M N_pos = prefix_image_bound(phi, n)
     by thm prefix_image_bound_bounds(phi, n)
     $prefix_image_bound_bounds_up_to(phi, n)
-    claim:
-        ? $has_bounded_prefix_image(phi, n, M)
-        forall j N_pos:
-            j <= n
-            =>:
-                phi(j) <= prefix_image_bound(phi, n)
-                prefix_image_bound(phi, n) = M
-                phi(j) <= M
+    forall j N_pos:
+        j <= n
+        =>:
+            phi(j) <= prefix_image_bound(phi, n)
+            prefix_image_bound(phi, n) = M
+            phi(j) <= M
+    by def $has_bounded_prefix_image(phi, n, M)
     witness exist M0 N_pos st {$has_bounded_prefix_image(phi, n, M0)} from M:
         $has_bounded_prefix_image(phi, n, M)
 
@@ -3760,10 +3646,6 @@ thm square_reciprocal_terms_formula:
     square_reciprocal_terms(k) = p_series_terms(2)(k)
     p_series_terms(2)(k) = 1 / k^2
 
-have fn adjacent_pair_swap(i N_pos) N_pos by cases:
-    case i % 2 = 1: i + 1
-    case i % 2 = 0 and i > 1: i - 1
-
 thm positive_even_gt_one:
     ? forall i N_pos:
         i % 2 = 0
@@ -3778,6 +3660,10 @@ thm positive_even_gt_one:
         i % 2 = 1 % 2
         i % 2 = 1
         impossible i % 2 = 0
+
+have fn adjacent_pair_swap(i N_pos) N_pos by cases:
+    case i % 2 = 1: i + 1
+    case i % 2 = 0: i - 1
 
 thm adjacent_pair_swap_odd:
     ? forall i N_pos:
@@ -3901,11 +3787,9 @@ thm adjacent_pair_swap_has_unique_preimages:
                     by thm adjacent_pair_swap_is_injective(x1, x2)
                     x1 = x2
 
-claim:
-    ? $is_permutation_of_positive_integers(adjacent_pair_swap)
-    forall y N_pos:
-        exist! x N_pos st {adjacent_pair_swap(x) = y}
-    $is_permutation_of_positive_integers(adjacent_pair_swap)
+forall y N_pos:
+    exist! x N_pos st {adjacent_pair_swap(x) = y}
+by def $is_permutation_of_positive_integers(adjacent_pair_swap)
 
 thm square_reciprocal_terms_nonnegative_terms:
     ? forall n N_pos:
@@ -3916,19 +3800,15 @@ thm square_reciprocal_terms_nonnegative_terms:
     1 / n^2 > 0
     square_reciprocal_terms(n) >= 0
 
-claim:
-    ? $is_nonnegative_sequence(square_reciprocal_terms)
-    forall n N_pos:
-        square_reciprocal_terms(n) >= 0
-    $is_nonnegative_sequence(square_reciprocal_terms)
+forall n N_pos:
+    square_reciprocal_terms(n) >= 0
+by def $is_nonnegative_sequence(square_reciprocal_terms)
 
-claim:
-    ? $is_convergent_series(square_reciprocal_terms)
-    2 $in R_pos
-    2 > 1
-    by thm p_series_converges_when_exponent_gt_one(2)
-    $is_convergent_series(p_series_terms(2))
-    $is_convergent_series(square_reciprocal_terms)
+2 $in R_pos
+2 > 1
+by thm p_series_converges_when_exponent_gt_one(2)
+$is_convergent_series(p_series_terms(2))
+$is_convergent_series(square_reciprocal_terms)
 
 thm square_reciprocal_pair_swap_preserves_sum:
     ? forall L R:
@@ -3940,16 +3820,14 @@ thm square_reciprocal_pair_swap_preserves_sum:
     by thm nonnegative_rearrangement(square_reciprocal_terms, adjacent_pair_swap, L)
     $has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), L)
 
-claim:
-    ? $is_convergent_series(rearranged_series(square_reciprocal_terms, adjacent_pair_swap))
-    $is_convergent_series(square_reciprocal_terms)
-    exist L R st {$has_series_sum(square_reciprocal_terms, L)}
-    obtain L from exist L R st {$has_series_sum(square_reciprocal_terms, L)}
-    by thm square_reciprocal_pair_swap_preserves_sum(L)
+$is_convergent_series(square_reciprocal_terms)
+exist L R st {$has_series_sum(square_reciprocal_terms, L)}
+obtain L from exist L R st {$has_series_sum(square_reciprocal_terms, L)}
+by thm square_reciprocal_pair_swap_preserves_sum(L)
+$has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), L)
+witness exist M R st {$has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), M)} from L:
     $has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), L)
-    witness exist M R st {$has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), M)} from L:
-        $has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), L)
-    $is_convergent_series(rearranged_series(square_reciprocal_terms, adjacent_pair_swap))
+by def $is_convergent_series(rearranged_series(square_reciprocal_terms, adjacent_pair_swap))
 
 """
 Proposition 7.4.3 (Rearrangement of series). An absolutely convergent series
@@ -3981,12 +3859,11 @@ thm rearranged_series_absolutely_convergent:
             $is_absolutely_convergent_series(rearranged_series(a, phi))
     $is_convergent_series(fn(j N_pos) R {abs(a(j))})
     obtain A from exist A R st {$has_series_sum(fn(j N_pos) R {abs(a(j))}, A)}
-    claim:
-        ? $is_nonnegative_sequence(fn(j N_pos) R {abs(a(j))})
-        forall n N_pos:
-            fn(j N_pos) R {abs(a(j))}(n) = abs(a(n))
-            abs(a(n)) >= 0
-            fn(j N_pos) R {abs(a(j))}(n) >= 0
+    forall n N_pos:
+        fn(j N_pos) R {abs(a(j))}(n) = abs(a(n))
+        abs(a(n)) >= 0
+        fn(j N_pos) R {abs(a(j))}(n) >= 0
+    by def $is_nonnegative_sequence(fn(j N_pos) R {abs(a(j))})
     by thm nonnegative_rearrangement(fn(j N_pos) R {abs(a(j))}, phi, A)
     $has_series_sum(rearranged_series(fn(j N_pos) R {abs(a(j))}, phi), A)
     claim:
@@ -4223,28 +4100,17 @@ thm absolute_rearrangement:
             $has_series_sum(rearranged_series(a, phi), L)
             $is_absolutely_convergent_series(rearranged_series(a, phi))
     by thm rearranged_series_absolutely_convergent(a, phi)
-    $is_absolutely_convergent_series(rearranged_series(a, phi))
     by thm positive_part_convergent_from_absolute(a)
-    $is_convergent_series(positive_part_series(a))
     obtain P from exist P R st {$has_series_sum(positive_part_series(a), P)}
     by thm negative_part_convergent_from_absolute(a)
-    $is_convergent_series(negative_part_series(a))
     obtain Qsum from exist Qsum R st {$has_series_sum(negative_part_series(a), Qsum)}
     by thm positive_negative_parts_reconstruct_series_sum(a, P, Qsum)
-    $has_series_sum(a, P - Qsum)
     by thm series_sum_unique(a, L, P - Qsum)
-    L = P - Qsum
     by thm positive_part_series_nonnegative(a)
-    $is_nonnegative_sequence(positive_part_series(a))
     by thm nonnegative_rearrangement(positive_part_series(a), phi, P)
-    $has_series_sum(rearranged_series(positive_part_series(a), phi), P)
     by thm negative_part_series_nonnegative(a)
-    $is_nonnegative_sequence(negative_part_series(a))
     by thm nonnegative_rearrangement(negative_part_series(a), phi, Qsum)
-    $has_series_sum(rearranged_series(negative_part_series(a), phi), Qsum)
     by thm rearranged_positive_negative_parts_reconstruct_series_sum(a, phi, P, Qsum)
-    $has_series_sum(rearranged_series(a, phi), P - Qsum)
-    $has_series_sum(rearranged_series(a, phi), L)
 
 """
 Example 7.4.4. A conditionally convergent series can change value under
@@ -4965,85 +4831,38 @@ have positive_natural_sequence seq(R) = fn(j N_pos) R {j}
 
 claim:
     ? forall n N_pos:
-        positive_natural_sequence(n) = n
-
-claim:
-    ? $is_positive_sequence(positive_natural_sequence)
-    claim:
-        ? forall n N_pos:
-            positive_natural_sequence(n) > 0
-        positive_natural_sequence(n) = n
-        n > 0
         positive_natural_sequence(n) > 0
-    $is_positive_sequence(positive_natural_sequence)
+    n > 0
+by def $is_positive_sequence(positive_natural_sequence)
 
 claim:
-    ? $has_limit(ratio_terms(positive_natural_sequence), 1)
-    $is_positive_sequence(positive_natural_sequence)
-    claim:
-        ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n0)}
-        by thm chap5::archimedean_property(epsilon)
-        exist n_bound N_pos st {1 / n_bound < epsilon}
-        obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
-        witness exist n1 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n1)} from n0:
-            claim:
-                ? forall n N_pos:
-                    n >= n0
-                    =>:
-                        abs(ratio_terms(positive_natural_sequence)(n) - 1) <= epsilon
-                positive_natural_sequence(n) > 0
-                by thm ratio_terms_eval(positive_natural_sequence, n)
-                ratio_terms(positive_natural_sequence)(n) = positive_natural_sequence(n + 1) / positive_natural_sequence(n)
-                n + 1 $in N_pos
-                have k N_pos = n + 1
-                positive_natural_sequence(k) = k
-                positive_natural_sequence(n + 1) = positive_natural_sequence(k)
-                positive_natural_sequence(n + 1) = k
-                k = n + 1
-                positive_natural_sequence(n) = n
-                ratio_terms(positive_natural_sequence)(n) = (n + 1) / n
-                (n + 1) / n - 1 = 1 / n
-                n0 <= n
-                n0 * n > 0
-                1 / n = n0 / (n0 * n)
-                n0 / (n0 * n) <= n / (n0 * n)
-                n / (n0 * n) = 1 / n0
-                1 / n <= 1 / n0
-                1 / n <= 1 / n0 < epsilon
-                1 / n < epsilon
-                1 / n > 0
-                abs((n + 1) / n - 1) = abs(1 / n)
-                abs(1 / n) = 1 / n
-                abs(ratio_terms(positive_natural_sequence)(n) - 1) = abs((n + 1) / n - 1)
-                abs(ratio_terms(positive_natural_sequence)(n) - 1) < epsilon
-                abs(ratio_terms(positive_natural_sequence)(n) - 1) <= epsilon
-            $is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n0)
-    $has_limit(ratio_terms(positive_natural_sequence), 1)
+    ? forall epsilon R_pos:
+        exist n0 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n0)}
+    by thm chap5::archimedean_property(epsilon)
+    exist n_bound N_pos st {1 / n_bound < epsilon}
+    obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
+    witness exist n1 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n1)} from n0:
+        claim:
+            ? forall n N_pos:
+                n >= n0
+                =>:
+                    abs(ratio_terms(positive_natural_sequence)(n) - 1) <= epsilon
+            positive_natural_sequence(n) > 0
+            by thm ratio_terms_eval(positive_natural_sequence, n)
+            ratio_terms(positive_natural_sequence)(n) = (n + 1) / n
+            (n + 1) / n - 1 = 1 / n
+            n0 <= n
+            1 / n <= 1 / n0 < epsilon
+            1 / n > 0
+            abs(ratio_terms(positive_natural_sequence)(n) - 1) = 1 / n
+            abs(ratio_terms(positive_natural_sequence)(n) - 1) <= epsilon
+        $is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n0)
+by def $has_limit(ratio_terms(positive_natural_sequence), 1)
 
-claim:
-    ? $pointwise_equal_sequences(root_test_terms(positive_natural_sequence), fn(j N_pos) R {j^(1 / j)})
-    claim:
-        ? forall n N_pos:
-            root_test_terms(positive_natural_sequence)(n) = fn(j N_pos) R {j^(1 / j)}(n)
-        root_test_terms(positive_natural_sequence)(n) = abs(positive_natural_sequence(n))^(1 / n)
-        positive_natural_sequence(n) = n
-        abs(positive_natural_sequence(n)) = abs(n)
-        abs(n) = n
-        root_test_terms(positive_natural_sequence)(n) = n^(1 / n)
-        fn(j N_pos) R {j^(1 / j)}(n) = n^(1 / n)
-        root_test_terms(positive_natural_sequence)(n) = fn(j N_pos) R {j^(1 / j)}(n)
-    $pointwise_equal_sequences(root_test_terms(positive_natural_sequence), fn(j N_pos) R {j^(1 / j)})
+by def $pointwise_equal_sequences(root_test_terms(positive_natural_sequence), fn(j N_pos) R {j^(1 / j)})
 
-claim:
-    ? $has_limit(fn(j N_pos) R {j^(1 / j)}, 1)
-    $is_positive_sequence(positive_natural_sequence)
-    $has_limit(ratio_terms(positive_natural_sequence), 1)
-    by thm positive_sequence_ratio_limit_one_gives_root_limit_one(positive_natural_sequence)
-    $has_limit(root_test_terms(positive_natural_sequence), 1)
-    $pointwise_equal_sequences(root_test_terms(positive_natural_sequence), fn(j N_pos) R {j^(1 / j)})
-    by thm has_limit_extensional(root_test_terms(positive_natural_sequence), fn(j N_pos) R {j^(1 / j)}, 1)
-    $has_limit(fn(j N_pos) R {j^(1 / j)}, 1)
+by thm positive_sequence_ratio_limit_one_gives_root_limit_one(positive_natural_sequence)
+by thm has_limit_extensional(root_test_terms(positive_natural_sequence), fn(j N_pos) R {j^(1 / j)}, 1)
 
 """
 Remark 7.5.5. The integral test is another important convergence test, but it

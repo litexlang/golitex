@@ -761,8 +761,6 @@ impl Runtime {
             Obj::Abs(ref a) => self.match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
             Obj::Sqrt(ref a) => self.match_arg_when_left_is_sqrt(a.arg.as_ref(), given_arg),
             Obj::Log(ref a) => self.match_arg_when_left_is_log(&a.base, &a.arg, given_arg),
-            Obj::Max(ref a) => self.match_arg_when_left_is_max(&a.left, &a.right, given_arg),
-            Obj::Min(ref a) => self.match_arg_when_left_is_min(&a.left, &a.right, given_arg),
             Obj::Union(ref a) => self.match_arg_when_left_is_union(&a.left, &a.right, given_arg),
             Obj::Intersect(ref a) => {
                 self.match_arg_when_left_is_intersect(&a.left, &a.right, given_arg)
@@ -803,6 +801,12 @@ impl Runtime {
             }
             Obj::FiniteSetSize(ref left) => {
                 self.match_arg_when_left_is_finite_set_size(left.set.as_ref(), given_arg)
+            }
+            Obj::FiniteSetMax(ref left) => {
+                self.match_arg_when_left_is_finite_set_max(left.set.as_ref(), given_arg)
+            }
+            Obj::FiniteSetMin(ref left) => {
+                self.match_arg_when_left_is_finite_set_min(left.set.as_ref(), given_arg)
             }
             Obj::FnRange(ref left) => {
                 self.match_arg_when_left_is_fn_range(left.function.as_ref(), given_arg)
@@ -1362,34 +1366,6 @@ impl Runtime {
         match given_arg {
             Obj::Log(ref g) => {
                 self.match_arg_binary_then_merge(left_base, left_arg, &g.base, &g.arg)
-            }
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_max(
-        &mut self,
-        left_left: &Obj,
-        left_right: &Obj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::Max(ref g) => {
-                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
-            }
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_min(
-        &mut self,
-        left_left: &Obj,
-        left_right: &Obj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::Min(ref g) => {
-                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),
         }
@@ -2134,20 +2110,18 @@ impl Runtime {
                 given.arg.as_ref(),
                 anonymous_fn_body,
             ),
-            (Obj::Max(left), Obj::Max(given)) => self.match_binary_in_anonymous_fn_body(
-                left.left.as_ref(),
-                left.right.as_ref(),
-                given.left.as_ref(),
-                given.right.as_ref(),
-                anonymous_fn_body,
-            ),
-            (Obj::Min(left), Obj::Min(given)) => self.match_binary_in_anonymous_fn_body(
-                left.left.as_ref(),
-                left.right.as_ref(),
-                given.left.as_ref(),
-                given.right.as_ref(),
-                anonymous_fn_body,
-            ),
+            (Obj::FiniteSetMax(left), Obj::FiniteSetMax(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.set.as_ref(),
+                    given.set.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::FiniteSetMin(left), Obj::FiniteSetMin(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.set.as_ref(),
+                    given.set.as_ref(),
+                    anonymous_fn_body,
+                ),
             (Obj::Tuple(left), Obj::Tuple(given)) => self.match_boxed_args_in_anonymous_fn_body(
                 &left.args,
                 &given.args,
@@ -2555,6 +2529,36 @@ impl Runtime {
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::FiniteSetSize(ref given) => self
+                .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    left_set,
+                    given.set.as_ref(),
+                ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_finite_set_max(
+        &mut self,
+        left_set: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::FiniteSetMax(given) => self
+                .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    left_set,
+                    given.set.as_ref(),
+                ),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_finite_set_min(
+        &mut self,
+        left_set: &Obj,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::FiniteSetMin(given) => self
                 .match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left_set,
                     given.set.as_ref(),

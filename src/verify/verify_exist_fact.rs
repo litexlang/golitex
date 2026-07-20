@@ -350,6 +350,32 @@ fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(
     Some((left.clone(), right.clone(), strict))
 }
 
+fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
+    if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
+        return None;
+    }
+
+    let params = exist_fact
+        .params_def_with_type()
+        .collect_param_names_with_types();
+    let [(witness_name, ParamType::Obj(witness_set))] = params.as_slice() else {
+        return None;
+    };
+
+    let ExistBodyFact::AtomicFact(AtomicFact::InFact(membership)) = &exist_fact.facts()[0] else {
+        return None;
+    };
+    let witness_is_member = matches!(
+        &membership.element,
+        Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name
+    );
+    if !witness_is_member || membership.set.to_string() != witness_set.to_string() {
+        return None;
+    }
+
+    Some(witness_set.clone())
+}
+
 impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
@@ -392,6 +418,25 @@ impl Runtime {
                         exist_fact.clone().into(),
                         "exist: real-line comparison witness".to_string(),
                         steps,
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        // A nonempty set has a member. This proves only the existential fact,
+        // without selecting a global choice object. Example:
+        // `$is_nonempty_set(A)` => `exist x A st {x $in A}`.
+        if let Some(set) = nonempty_set_exist_fact_set(exist_fact) {
+            let nonempty: AtomicFact = IsNonemptySetFact::new(set, exist_fact.line_file()).into();
+            let nonempty_result =
+                self.verify_non_equational_known_then_builtin_rules_only(&nonempty, verify_state)?;
+            if nonempty_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        exist_fact.clone().into(),
+                        "exist: member of a nonempty set".to_string(),
+                        vec![nonempty_result],
                     )
                     .into(),
                 );

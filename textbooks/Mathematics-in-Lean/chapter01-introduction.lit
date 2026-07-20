@@ -1,0 +1,40 @@
+# Chapter 1 — Introduction
+
+# 1.2 Overview
+
+# Definition (source label: f). The source's first callable object adds three
+# to a natural number. The descriptive public name keeps the source behavior
+# visible at call sites.
+have fn add_three(x N) N = x + 3
+
+# A concrete call checks the defining equation.
+add_three(2) = 5
+
+# Result (source label: easy). Concrete arithmetic is checked directly.
+2 + 2 = 4
+
+# Fact (source label: FermatLastTheorem) and result (source label: hard).
+# Nonzero natural x, y, z cannot solve the equation at an exponent greater
+# than two. The source admits this fact with sorry, so the exact universal fact
+# is the smallest visible trust boundary; it is not wrapped in a nullary prop.
+trust
+    forall x, y, z, n N:
+        n > 2
+        x * y * z != 0
+        =>:
+            x^n + y^n != z^n
+
+# Definition (source label: Even). An even natural has an explicit half.
+prop even(n N):
+    exist k N st {n = 2 * k}
+
+# The source gives five Lean proof styles for this one mathematical result.
+# They collapse to the witness proof below: if n = 2k, then mn = 2(mk).
+thm even_mul:
+    ? forall m, n N:
+        $even(n)
+        =>:
+            $even(m * n)
+    obtain k from exist k N st {n = 2 * k}
+    witness exist l N st {m * n = 2 * l} from m * k:
+        m * n = m * (2 * k) = 2 * (m * k)

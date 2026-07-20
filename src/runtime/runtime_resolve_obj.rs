@@ -127,16 +127,6 @@ impl Runtime {
                 let result: Obj = Abs::new(resolved_arg).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
-            Obj::Max(m) => {
-                let result: Obj =
-                    Max::new(self.resolve_obj(&m.left), self.resolve_obj(&m.right)).into();
-                self.resolve_obj_try_fold_arithmetic(result)
-            }
-            Obj::Min(m) => {
-                let result: Obj =
-                    Min::new(self.resolve_obj(&m.left), self.resolve_obj(&m.right)).into();
-                self.resolve_obj_try_fold_arithmetic(result)
-            }
             Obj::Log(l) => {
                 let result: Obj =
                     Log::new(self.resolve_obj(&l.base), self.resolve_obj(&l.arg)).into();
@@ -370,6 +360,14 @@ impl Runtime {
                 }
                 _ => obj.clone(),
             },
+            Obj::FiniteSetMax(extremum) => {
+                let result: Obj = FiniteSetMax::new(self.resolve_obj(&extremum.set)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
+            Obj::FiniteSetMin(extremum) => {
+                let result: Obj = FiniteSetMin::new(self.resolve_obj(&extremum.set)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
             Obj::FnRange(fn_range) => FnRange::new(self.resolve_obj(&fn_range.function)).into(),
             Obj::Replacement(replacement) => Replacement::new(
                 replacement.prop_name.clone(),

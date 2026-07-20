@@ -37,7 +37,7 @@ impl Runtime {
             | AtomicFact::GreaterFact(_)
             | AtomicFact::LessEqualFact(_)
             | AtomicFact::GreaterEqualFact(_) => {
-                self.verify_order_atomic_fact_numeric_builtin_only(atomic_fact)
+                self.verify_order_atomic_fact_numeric_builtin_only(atomic_fact, verify_state)
             }
             AtomicFact::IsSetFact(is_set_fact) => Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -55,6 +55,11 @@ impl Runtime {
             AtomicFact::IsFiniteSetFact(is_finite_set_fact) => {
                 self._verify_is_finite_set_fact_with_builtin_rules(is_finite_set_fact, verify_state)
             }
+            AtomicFact::NotIsFiniteSetFact(not_is_finite_set_fact) => self
+                ._verify_not_is_finite_set_fact_with_builtin_rules(
+                    not_is_finite_set_fact,
+                    verify_state,
+                ),
             AtomicFact::IsCartFact(is_cart_fact) => {
                 self._verify_is_cart_fact_with_builtin_rules(is_cart_fact, verify_state)
             }
@@ -115,7 +120,7 @@ impl Runtime {
             | AtomicFact::GreaterFact(_)
             | AtomicFact::LessEqualFact(_)
             | AtomicFact::GreaterEqualFact(_) => {
-                self.verify_order_atomic_fact_numeric_builtin_only(atomic_fact)
+                self.verify_order_atomic_fact_numeric_builtin_only(atomic_fact, verify_state)
             }
             AtomicFact::IsSetFact(is_set_fact) => Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -133,6 +138,11 @@ impl Runtime {
             AtomicFact::IsFiniteSetFact(is_finite_set_fact) => {
                 self._verify_is_finite_set_fact_with_builtin_rules(is_finite_set_fact, verify_state)
             }
+            AtomicFact::NotIsFiniteSetFact(not_is_finite_set_fact) => self
+                ._verify_not_is_finite_set_fact_with_builtin_rules(
+                    not_is_finite_set_fact,
+                    verify_state,
+                ),
             AtomicFact::IsCartFact(is_cart_fact) => {
                 self._verify_is_cart_fact_with_builtin_rules(is_cart_fact, verify_state)
             }

@@ -103,6 +103,7 @@ impl fmt::Display for ByStmt {
             ByStmt::ByZornLemmaStmt(x) => write!(f, "{}", x),
             ByStmt::ByAxiomOfChoiceStmt(x) => write!(f, "{}", x),
             ByStmt::ByRegularityAxiomStmt(x) => write!(f, "{}", x),
+            ByStmt::ByDefStmt(x) => write!(f, "{}", x),
             ByStmt::ByThmStmt(x) => write!(f, "{}", x),
         }
     }

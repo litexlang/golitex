@@ -29,6 +29,13 @@ forall A, B set:
     set_minus(A, B) $subset A
     set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
 
+# Removing a finite set from an infinite set leaves an infinite set.
+
+forall X set, s finite_set:
+    not $is_finite_set(X)
+    =>:
+        not $is_finite_set(set_minus(X, s))
+
 # Finite deletion cardinality is a builtin equality rule.
 
 forall A, B finite_set:

@@ -1,0 +1,120 @@
+# Linear Algebra Done Right, fourth edition, Section 2B: Bases.
+
+# Definition 2.26. A basis is exactly a finite vector list that is linearly
+# independent and spans the equipped vector space.
+prop is_basis(s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, n N, vectors &section01a::FiniteList<v, n>):
+    $section02a::is_linearly_independent(s, scalars, v, space, n, vectors)
+    $section02a::spans(s, scalars, v, space, n, vectors)
+
+# Example 2.27. The source checks standard and nonstandard bases of coordinate
+# spaces and the monomial basis of bounded-degree polynomials. Each positive
+# case supplies both clauses of is_basis; each negative case identifies which
+# clause fails. The concrete calculations remain source sketches here.
+
+# Result 2.28. A list is a basis iff every vector has a unique coefficient
+# list in its linear-combination representation. The source proves existence
+# from spanning and uniqueness from independence, then reverses both steps.
+prop has_unique_coordinates(s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, n N, vectors &section01a::FiniteList<v, n>):
+    forall value v:
+        exist! coefficients &section01a::FiniteList<s, n> st {value = \section02a::linear_combination_value<s, scalars, v, space, n>(coefficients, vectors)}
+
+prop basis_iff_unique_coordinates_statement(s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, n N, vectors &section01a::FiniteList<v, n>):
+    forall:
+        =>:
+            $is_basis(s, scalars, v, space, n, vectors)
+        <=>:
+            $has_unique_coordinates(s, scalars, v, space, n, vectors)
+
+# The forward direction subtracts two coordinate lists pointwise and applies
+# independence. The reverse direction compares any zero representation with
+# the zero coefficient list and recovers spanning from coordinate existence.
+axiom basis_iff_unique_coordinates:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, n N, vectors &section01a::FiniteList<v, n>:
+        $basis_iff_unique_coordinates_statement(s, scalars, v, space, n, vectors)
+
+# Candidate audit: both directions still enter a verifier inference loop in a
+# self-leak-free 60-second probe, so 2.28 remains explicit proof debt.
+
+# The reduction and extension theorems need the ordered notion of sublist.
+# selected_indices is strictly increasing, so entries are retained in source
+# order rather than merely chosen as an unordered subset.
+prop is_sublist_index_selection(v nonempty_set, long_length, short_length N, long_list &section01a::FiniteList<v, long_length>, short_list &section01a::FiniteList<v, short_length>, selected_indices &section01a::FiniteList<N_pos, short_length>):
+    forall i N_pos:
+        i <= short_length
+        =>:
+            &section01a::FiniteList<N_pos, short_length>{selected_indices}.entries(i) <= long_length
+            &section01a::FiniteList<v, short_length>{short_list}.entries(i) = &section01a::FiniteList<v, long_length>{long_list}.entries(&section01a::FiniteList<N_pos, short_length>{selected_indices}.entries(i))
+    forall i, j N_pos:
+        i < j
+        j <= short_length
+        =>:
+            &section01a::FiniteList<N_pos, short_length>{selected_indices}.entries(i) < &section01a::FiniteList<N_pos, short_length>{selected_indices}.entries(j)
+
+prop is_order_preserving_sublist(v nonempty_set, long_length, short_length N, long_list &section01a::FiniteList<v, long_length>, short_list &section01a::FiniteList<v, short_length>):
+    short_length <= long_length
+    exist selected_indices &section01a::FiniteList<N_pos, short_length> st {$is_sublist_index_selection(v, long_length, short_length, long_list, short_list, selected_indices)}
+
+# An order-preserving sublist with the same finite length keeps every index.
+# The proof first bounds the selected index at position i below and above by i,
+# then applies Chapter 1 finite-list extensionality.
+axiom equal_length_order_preserving_sublist_equal:
+    ? forall v nonempty_set, n N, long_list, short_list &section01a::FiniteList<v, n>:
+        $is_order_preserving_sublist(v, n, n, long_list, short_list)
+        =>:
+            long_list = short_list
+
+# Candidate audit: bounded induction does not retain the index-domain premise
+# needed to type entries(i), so this remains an explicit verifier proof blocker.
+
+# Unnumbered example before Result 2.30. The spanning list
+# (1,2),(3,6),(4,7),(5,9) reduces in source order to (1,2),(4,7) after the
+# second and fourth entries are recognized as redundant.
+
+# Result 2.30. Every spanning list has an order-preserving sublist that is a
+# basis. The source repeatedly invokes Result 2.19 while scanning the list.
+# Proof debt: the finite deletion recursion and preservation invariant remain.
+axiom spanning_list_reduces_to_basis:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, n N, vectors &section01a::FiniteList<v, n>:
+        $section02a::spans(s, scalars, v, space, n, vectors)
+        =>:
+            exist m N, basis_vectors &section01a::FiniteList<v, m> st {$is_order_preserving_sublist(v, n, m, vectors, basis_vectors), $is_basis(s, scalars, v, space, m, basis_vectors)}
+
+# Result 2.31. Every finite-dimensional vector space has a basis. This is the
+# direct source corollary obtained by reducing a spanning witness via 2.30.
+# Litex proof: unpack the spanning witness in Definition 2.9 and apply the
+# already stated reduction theorem 2.30 to that concrete ordered list.
+axiom finite_dimensional_has_basis:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>:
+        $section02a::is_finite_dimensional(s, scalars, v, space)
+        =>:
+            exist n N, basis_vectors &section01a::FiniteList<v, n> st {$is_basis(s, scalars, v, space, n, basis_vectors)}
+
+# Candidate audit: the direct existential corollary still times out without
+# project preloading, so it remains tied transparently to the 2.30 boundary.
+
+# Result 2.32. Every independent list in a finite-dimensional vector space is
+# an order-preserving sublist of some basis. The source appends a spanning list
+# and reduces it without deleting an entry from the independent prefix.
+# Proof debt: concatenation and prefix-preserving reduction are not checked.
+axiom independent_list_extends_to_basis:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, n N, vectors &section01a::FiniteList<v, n>:
+        $section02a::is_finite_dimensional(s, scalars, v, space)
+        $section02a::is_linearly_independent(s, scalars, v, space, n, vectors)
+        =>:
+            exist m N, basis_vectors &section01a::FiniteList<v, m> st {$is_order_preserving_sublist(v, m, n, basis_vectors, vectors), $is_basis(s, scalars, v, space, m, basis_vectors)}
+
+# Unnumbered example after Result 2.32. The independent pair (2,3,4),(9,6,8)
+# extends to the displayed basis after adjoining (0,1,0).
+
+# Result 2.33. Every subspace U of finite-dimensional V has some complementary
+# subspace W such that the binary sum equals V and the decomposition is unique.
+# The witness is intentionally existential; the source does not define a
+# canonical complement function.
+# Proof debt: construct a basis of U, extend it, and prove that the span of the
+# added vectors has zero intersection with U.
+axiom finite_dimensional_subspace_has_complement:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, U power_set(v):
+        $section02a::is_finite_dimensional(s, scalars, v, space)
+        $section01c::is_subspace(s, scalars, v, space, U)
+        =>:
+            exist W power_set(v) st {$section01c::is_subspace(s, scalars, v, space, W), \section01c::subspace_sum_pair<s, scalars, v, space>(U, W) = v, $section01c::is_direct_sum_pair(s, scalars, v, space, U, W)}

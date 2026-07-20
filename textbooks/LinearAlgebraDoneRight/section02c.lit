@@ -1,0 +1,139 @@
+# Linear Algebra Done Right, fourth edition, Section 2C: Dimension.
+
+# A candidate basis length is a natural number n for which the equipped
+# vector space has a basis represented by &section01a::FiniteList<v,n>.
+# Its uniqueness is the next source result; Definition 2.35 then selects it.
+prop has_basis_length(s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, n N):
+    exist basis_vectors &section01a::FiniteList<v, n> st {$section02b::is_basis(s, scalars, v, space, n, basis_vectors)}
+
+# Result 2.34. Any two bases of a finite-dimensional vector space have the
+# same length. The source applies Result 2.22 in both directions.
+# Candidate proof route: unpack both basis witnesses and apply Result 2.22 in
+# both directions. The body is not retained without a bounded self-leak-free
+# candidate pass.
+axiom basis_length_unique:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, length1, length2 N:
+        $has_basis_length(s, scalars, v, space, length1)
+        $has_basis_length(s, scalars, v, space, length2)
+        =>:
+            length1 = length2
+
+prop admits_basis_length(s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>):
+    exist n N st {$has_basis_length(s, scalars, v, space, n)}
+
+# Result 2.31 supplies a basis witness and hence a candidate basis length. The
+# bridge remains explicit, but its former body was not retained without a
+# bounded self-leak-free candidate pass.
+axiom finite_dimensional_admits_basis_length:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>:
+        $section02a::is_finite_dimensional(s, scalars, v, space)
+        =>:
+            $admits_basis_length(s, scalars, v, space)
+
+# Definition 2.35. dimension is a template-selected natural-number object.
+# The template header supplies existence, and Result 2.34 makes every selected
+# basis length equal; callers use exactly \dimension<s,scalars,v,space>.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>: $admits_basis_length(s, scalars, v, space)>:
+    have dimension N:
+        $has_basis_length(s, scalars, v, space, dimension)
+
+# Example 2.36. The standard coordinate and monomial lists give
+# dim F^n=n and dim P_m(F)=m+1. The two displayed coordinate subspaces of F^3
+# each have the explicit two-vector basis recorded by the source.
+
+# Result 2.37. A subspace of a finite-dimensional vector space has dimension
+# at most the ambient dimension. A basis of U is independent in V, while a
+# basis of V spans V, so Result 2.22 supplies the inequality.
+# The unverified candidate chooses bases of U and V and transports the U-basis
+# to the ambient carrier before applying Result 2.22.
+axiom subspace_dimension_le_ambient_dimension:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, U power_set(v):
+        $section02a::is_finite_dimensional(s, scalars, v, space)
+        $section01c::is_subspace(s, scalars, v, space, U)
+        =>:
+            \dimension<s, scalars, U, \section01c::subspace_vector_space<s, scalars, v, space, U>> <= \dimension<s, scalars, v, space>
+
+# Field-dependence remark. Dimension belongs to an equipped scalar/vector-space
+# pair: R^2 has real dimension two, whereas C has complex dimension one even
+# though their underlying additive sets can be identified.
+
+# Result 2.38. An independent list of length dimension is already a basis.
+# The source extends it by Result 2.32, then Result 2.34 prevents any addition.
+# The candidate route uses equal-length sublist extensionality, but its body is
+# not retained without a bounded self-leak-free candidate pass.
+axiom independent_list_of_dimension_length_is_basis:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, n N, vectors &section01a::FiniteList<v, n>:
+        $section02a::is_finite_dimensional(s, scalars, v, space)
+        $section02a::is_linearly_independent(s, scalars, v, space, n, vectors)
+        n = \dimension<s, scalars, v, space>
+        =>:
+            $section02b::is_basis(s, scalars, v, space, n, vectors)
+
+# Result 2.39. A subspace with the same dimension as the ambient finite-
+# dimensional space equals the whole carrier. The source promotes a basis of U
+# to a basis of V by Result 2.38 and then uses its spanning property.
+# The candidate transports the selected U-basis through the inherited
+# subspace structure, but that body lacks a bounded self-leak-free pass.
+axiom full_dimension_subspace_equals_ambient:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, U power_set(v):
+        $section02a::is_finite_dimensional(s, scalars, v, space)
+        $section01c::is_subspace(s, scalars, v, space, U)
+        \dimension<s, scalars, U, \section01c::subspace_vector_space<s, scalars, v, space, U>> = \dimension<s, scalars, v, space>
+        =>:
+            U = v
+
+# Example 2.40. The list (5,7),(4,3) is independent over R or C and has length
+# two, so Result 2.38 proves it is a basis of F^2 without a spanning calculation.
+
+# Example 2.41. For U={p in P_3(R):p'(5)=0}, the source proves independence of
+# 1,(x-5)^2,(x-5)^3 by leading coefficients, bounds dim U between three and
+# four, rules out four because x is not in U, and applies Result 2.38.
+
+# Result 2.42. A spanning list of length dimension is already a basis. The
+# source reduces it via Result 2.30, then Result 2.34 prevents any deletion.
+# The candidate route identifies an equal-length ordered sublist, but its body
+# is not retained without a bounded self-leak-free candidate pass.
+axiom spanning_list_of_dimension_length_is_basis:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, n N, vectors &section01a::FiniteList<v, n>:
+        $section02a::is_finite_dimensional(s, scalars, v, space)
+        $section02a::spans(s, scalars, v, space, n, vectors)
+        n = \dimension<s, scalars, v, space>
+        =>:
+            $section02b::is_basis(s, scalars, v, space, n, vectors)
+
+# Binary infrastructure used by Result 2.43. The direct closure candidates did
+# not receive a bounded self-leak-free pass and remain explicit debt.
+axiom subspace_intersection_is_subspace:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, U, W power_set(v):
+        $section01c::is_subspace(s, scalars, v, space, U)
+        $section01c::is_subspace(s, scalars, v, space, W)
+        =>:
+            $section01c::is_subspace(s, scalars, v, space, intersect(U, W))
+
+# For the binary sum, the intended proof uses 0+0, regrouping, and scalar
+# distributivity; its unchecked candidate body is not retained.
+axiom subspace_sum_pair_is_subspace:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, U, W power_set(v):
+        $section01c::is_subspace(s, scalars, v, space, U)
+        $section01c::is_subspace(s, scalars, v, space, W)
+        =>:
+            $section01c::is_subspace(s, scalars, v, space, \section01c::subspace_sum_pair<s, scalars, v, space>(U, W))
+
+# Result 2.43. The dimension of a two-subspace sum satisfies inclusion-
+# exclusion. The source extends a basis of the intersection separately inside
+# U and W, concatenates the two complements once, and proves that list is a
+# basis of the sum.
+# Proof debt: basis concatenation and the natural-subtraction rearrangement are
+# not yet formalized. The displayed equations inside that proof are not
+# independent source results.
+axiom dimension_of_subspace_sum:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, v nonempty_set, space &section01b::VectorSpace<s, scalars, v>, U, W power_set(v):
+        $section02a::is_finite_dimensional(s, scalars, v, space)
+        $section01c::is_subspace(s, scalars, v, space, U)
+        $section01c::is_subspace(s, scalars, v, space, W)
+        =>:
+            \dimension<s, scalars, \section01c::subspace_sum_pair<s, scalars, v, space>(U, W), \section01c::subspace_vector_space<s, scalars, v, space, \section01c::subspace_sum_pair<s, scalars, v, space>(U, W)>> = \dimension<s, scalars, U, \section01c::subspace_vector_space<s, scalars, v, space, U>> + \dimension<s, scalars, W, \section01c::subspace_vector_space<s, scalars, v, space, W>> - \dimension<s, scalars, intersect(U, W), \section01c::subspace_vector_space<s, scalars, v, space, intersect(U, W)>>
+
+# Closing analogy. Finite-set cardinality corresponds to dimension, union to
+# subspace sum, and disjoint union to direct sum. The general finite-family
+# direct-sum dimension equivalence is intentionally deferred to Result 3.94.

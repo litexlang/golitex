@@ -14,11 +14,26 @@ pub const MUL: &str = "*";
 pub const DIV: &str = "/";
 pub const MOD: &str = "%";
 pub const POW: &str = "^";
-pub const MATRIX_ADD: &str = "++";
-pub const MATRIX_SUB: &str = "--";
-pub const MATRIX_MUL: &str = "**";
-pub const MATRIX_SCALAR_MUL: &str = "*.";
-pub const MATRIX_POW: &str = "^^";
+/// Matrix addition. Example: `A '+ B`.
+pub const MATRIX_ADD: &str = "'+";
+/// Matrix subtraction. Example: `A '- B`.
+pub const MATRIX_SUB: &str = "'-";
+/// Matrix multiplication. Example: `A '* B`.
+pub const MATRIX_MUL: &str = "'*";
+/// Scalar multiplication of a matrix. Example: `c *' A`.
+pub const MATRIX_SCALAR_MUL: &str = "*'";
+/// Matrix power. Example: `A '^ n`.
+pub const MATRIX_POW: &str = "'^";
+/// Removed matrix addition spelling; retained only to give a migration error.
+pub const LEGACY_MATRIX_ADD: &str = "++";
+/// Removed matrix subtraction spelling; retained only to give a migration error.
+pub const LEGACY_MATRIX_SUB: &str = "--";
+/// Removed matrix multiplication spelling; retained only to give a migration error.
+pub const LEGACY_MATRIX_MUL: &str = "**";
+/// Removed scalar-matrix multiplication spelling; retained only to give a migration error.
+pub const LEGACY_MATRIX_SCALAR_MUL: &str = "*.";
+/// Removed matrix power spelling; retained only to give a migration error.
+pub const LEGACY_MATRIX_POW: &str = "^^";
 pub const LEFT_BRACE: &str = "(";
 pub const RIGHT_BRACE: &str = ")";
 pub const COMMA: &str = ",";
@@ -62,6 +77,8 @@ pub const CART_DIM: &str = "cart_dim";
 pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
 pub const FINITE_SET_SIZE: &str = "finite_set_size";
+pub const FINITE_SET_MAX: &str = "finite_set_max";
+pub const FINITE_SET_MIN: &str = "finite_set_min";
 pub const FN_RANGE: &str = "fn_range";
 pub const REPLACEMENT: &str = "replacement";
 pub const FINITE_SEQ: &str = "finite_seq";
@@ -106,6 +123,8 @@ pub const STOP: &str = "stop";
 pub const USE: &str = "use";
 
 pub const BY: &str = "by";
+/// Contextual keyword used only after `by`; intentionally not globally reserved.
+pub const DEF: &str = "def";
 pub const CASES: &str = "cases";
 pub const CONTRA: &str = "contra";
 pub const ENUMERATE: &str = "enumerate";
@@ -145,8 +164,6 @@ pub const ABS: &str = "abs";
 pub const INTEGER_QUOTIENT: &str = "integer_quotient";
 pub const SQRT: &str = "sqrt";
 pub const LOG: &str = "log";
-pub const MAX: &str = "max";
-pub const MIN: &str = "min";
 pub const Q_POS: &str = "Q_pos";
 pub const R_POS: &str = "R_pos";
 pub const Q_NEG: &str = "Q_neg";
@@ -191,6 +208,11 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         MATRIX_SCALAR_MUL,
         MATRIX_ADD,
         MATRIX_SUB,
+        LEGACY_MATRIX_POW,
+        LEGACY_MATRIX_MUL,
+        LEGACY_MATRIX_SCALAR_MUL,
+        LEGACY_MATRIX_ADD,
+        LEGACY_MATRIX_SUB,
         DOT_DOT_DOT,
         LEFT_BRACE,
         RIGHT_BRACE,
@@ -237,6 +259,8 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE_DIM,
         PROJ,
         FINITE_SET_SIZE,
+        FINITE_SET_MAX,
+        FINITE_SET_MIN,
         FN_RANGE,
         REPLACEMENT,
         SUM,
@@ -304,8 +328,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         INTEGER_QUOTIENT,
         SQRT,
         LOG,
-        MAX,
-        MIN,
         Q_POS,
         R_POS,
         Q_NEG,
@@ -409,6 +431,8 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == Z
         || atom_name == R
         || atom_name == FINITE_SET_SIZE
+        || atom_name == FINITE_SET_MAX
+        || atom_name == FINITE_SET_MIN
 }
 
 #[cfg(test)]
@@ -419,5 +443,10 @@ mod tests {
     fn output_labels_are_not_source_keywords() {
         assert!(!is_keyword(SUCCESS_COLON));
         assert!(!is_keyword(UNKNOWN_COLON));
+    }
+
+    #[test]
+    fn by_def_uses_a_contextual_keyword() {
+        assert!(!is_keyword(DEF));
     }
 }

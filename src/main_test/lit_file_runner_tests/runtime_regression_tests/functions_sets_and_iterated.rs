@@ -154,6 +154,124 @@ claim:
 }
 
 #[test]
+fn casewise_function_definition_requires_a_total_disjoint_partition() {
+    run_with_large_stack(
+        "casewise_function_definition_requires_a_total_disjoint_partition",
+        || {
+            let invalid_cases = [
+                (
+                    "casewise_function_missing_coverage",
+                    r#"
+have fn f(x R) R by cases:
+    case x >= 0: 1
+"#,
+                    "have fn by cases: cases do not cover the declared domain",
+                ),
+                (
+                    "casewise_function_empty_case_list",
+                    r#"
+have fn f(x R) R by cases:
+"#,
+                    "block header missing body",
+                ),
+                (
+                    "casewise_function_overlapping_cases_with_same_value",
+                    r#"
+have fn f(x R) R by cases:
+    case x >= 0: 1
+    case x <= 0: 1
+"#,
+                    "have fn by cases: cases overlap or cannot be proved mutually exclusive",
+                ),
+                (
+                    "casewise_function_overlapping_cases_with_conflicting_values",
+                    r#"
+have fn f(x R) R by cases:
+    case x >= 0: 1
+    case x <= 0: 2
+"#,
+                    "have fn by cases: cases overlap or cannot be proved mutually exclusive",
+                ),
+            ];
+
+            for (label, source_code, expected_error) in invalid_cases {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(label);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                assert!(
+                    !run_succeeded,
+                    "{} should reject an invalid case partition:\n{}",
+                    label, run_output
+                );
+                assert!(
+                    run_output.contains(expected_error),
+                    "{} should report the partition failure:\n{}",
+                    label,
+                    run_output
+                );
+
+                let recovery_source = r#"
+have fn f(x R) R by cases:
+    case x >= 0: 1
+    case x < 0: 2
+
+f(0) = 1
+"#;
+                let (stmt_results, runtime_error) = run_source_code(recovery_source, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                assert!(
+                    run_succeeded,
+                    "{} should not bind the rejected function name:\n{}",
+                    label, run_output
+                );
+            }
+
+            let domain_relative_source = r#"
+have fn only_nonnegative(x R: x >= 0) R by cases:
+    case x >= 0: x
+
+only_nonnegative(0) = 0
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope("casewise_function_domain_coverage");
+            let (stmt_results, runtime_error) =
+                run_source_code(domain_relative_source, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "cases only need to cover the declared function domain:\n{}",
+                run_output
+            );
+
+            let negated_membership_source = r#"
+have fn rational_indicator(x R) R by cases:
+    case x $in Q: 1
+    case not x $in Q: 0
+
+rational_indicator(0) = 1
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "casewise_function_negated_membership_condition",
+            );
+            let (stmt_results, runtime_error) =
+                run_source_code(negated_membership_source, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "casewise functions should accept a leading negated atomic condition:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn anonymous_fn_equality_transports_across_propositionally_equal_param_sets() {
     run_with_large_stack(
         "anonymous_fn_equality_transports_across_propositionally_equal_param_sets_large_stack",

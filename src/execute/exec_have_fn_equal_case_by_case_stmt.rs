@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 use super::exec_have_fn_equal_shared::{
-    build_declared_function_obj_with_param_names, forall_param_defs_dom_and_map_from_have_fn_clause,
+    build_declared_function_obj_with_param_names, case_conditions_are_disjoint,
+    forall_param_defs_dom_and_map_from_have_fn_clause,
 };
 
 impl Runtime {
@@ -182,6 +183,16 @@ impl Runtime {
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
     ) -> Result<Vec<StmtResult>, RuntimeError> {
         let mut inside_results = Vec::new();
+        let partition_result = self.run_in_local_env(|rt| {
+            rt.have_fn_equal_case_by_case_stmt_define_params_and_domain(
+                have_fn_equal_case_by_case_stmt,
+            )?;
+            rt.have_fn_equal_case_by_case_stmt_verify_case_partition(
+                have_fn_equal_case_by_case_stmt,
+            )
+        })?;
+        inside_results.push(partition_result);
+
         for case_index in 0..have_fn_equal_case_by_case_stmt.cases.len() {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
             let equal_to = &have_fn_equal_case_by_case_stmt.equal_tos[case_index];
@@ -236,6 +247,82 @@ impl Runtime {
         .into())
     }
 
+    /// A casewise function is total and unambiguous: its cases cover the domain and are pairwise
+    /// disjoint. Example: `case x = 0` and `case x != 0` cover every input without overlap.
+    fn have_fn_equal_case_by_case_stmt_verify_case_partition(
+        &mut self,
+        stmt: &HaveFnEqualCaseByCaseStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        if stmt.cases.is_empty() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                "have fn by cases: case list must not be empty".to_string(),
+                None,
+                vec![],
+            ));
+        }
+
+        let coverage: Fact = OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
+        let coverage_result = self
+            .verify_fact_return_err_if_not_true(&coverage, &VerifyState::new(0, false))
+            .map_err(|e| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "have fn by cases: cases do not cover the declared domain".to_string(),
+                    Some(e),
+                    vec![],
+                )
+            })?;
+
+        self.have_fn_equal_case_by_case_stmt_verify_cases_mutually_exclusive(stmt)?;
+        Ok(coverage_result)
+    }
+
+    fn have_fn_equal_case_by_case_stmt_verify_cases_mutually_exclusive(
+        &mut self,
+        stmt: &HaveFnEqualCaseByCaseStmt,
+    ) -> Result<(), RuntimeError> {
+        for i in 0..stmt.cases.len() {
+            for j in (i + 1)..stmt.cases.len() {
+                if !case_conditions_are_disjoint(self, &stmt.cases[i], &stmt.cases[j])? {
+                    return Err(short_exec_error(
+                        stmt.clone().into(),
+                        format!(
+                            "have fn by cases: cases overlap or cannot be proved mutually exclusive: `{}` and `{}`",
+                            stmt.cases[i], stmt.cases[j]
+                        ),
+                        None,
+                        vec![],
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn have_fn_equal_case_by_case_stmt_define_params_and_domain(
+        &mut self,
+        stmt: &HaveFnEqualCaseByCaseStmt,
+    ) -> Result<(), RuntimeError> {
+        for param_def_with_set in stmt.fn_set_clause.params_def_with_set.iter() {
+            self.define_params_with_set(param_def_with_set)
+                .map_err(|define_params_error| {
+                    short_exec_error(stmt.clone().into(), "", Some(define_params_error), vec![])
+                })?;
+        }
+
+        for dom_fact in stmt.fn_set_clause.dom_facts.iter() {
+            self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                dom_fact.clone(),
+            )
+            .map_err(|store_fact_error| {
+                short_exec_error(stmt.clone().into(), "", Some(store_fact_error), vec![])
+            })?;
+        }
+
+        Ok(())
+    }
+
     fn have_fn_equal_case_by_case_stmt_verify_well_defined_body(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
@@ -245,40 +332,9 @@ impl Runtime {
         let verify_state = VerifyState::new(0, false);
         let case_fact_as_fact: Fact = case_fact.clone().into();
 
-        for param_def_with_set in have_fn_equal_case_by_case_stmt
-            .fn_set_clause
-            .params_def_with_set
-            .iter()
-        {
-            self.define_params_with_set(param_def_with_set)
-                .map_err(|define_params_error| {
-                    short_exec_error(
-                        have_fn_equal_case_by_case_stmt.clone().into(),
-                        "",
-                        Some(define_params_error),
-                        vec![],
-                    )
-                })?;
-        }
-
-        for dom_fact in have_fn_equal_case_by_case_stmt
-            .fn_set_clause
-            .dom_facts
-            .iter()
-        {
-            let _ = self
-                .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                    dom_fact.clone(),
-                )
-                .map_err(|store_fact_error| {
-                    short_exec_error(
-                        have_fn_equal_case_by_case_stmt.clone().into(),
-                        "",
-                        Some(store_fact_error),
-                        vec![],
-                    )
-                })?;
-        }
+        self.have_fn_equal_case_by_case_stmt_define_params_and_domain(
+            have_fn_equal_case_by_case_stmt,
+        )?;
 
         let _ = self
             .verify_well_defined_and_store_and_infer_with_default_verify_state(case_fact_as_fact)

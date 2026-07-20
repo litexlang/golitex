@@ -28,6 +28,8 @@ impl Runtime {
                 | Obj::Mul(_)
                 | Obj::Div(_)
                 | Obj::Pow(_)
+                | Obj::FiniteSetMax(_)
+                | Obj::FiniteSetMin(_)
                 | Obj::Sum(_)
                 | Obj::Product(_)
                 | Obj::MatrixListObj(_)
@@ -194,32 +196,22 @@ impl Runtime {
                 )?;
                 Ok(Log::new(b, x).into())
             }
-            Obj::Max(m) => {
-                let l = self.eval_reduce_nested_sum_product_in_obj(
-                    (*m.left).clone(),
+            Obj::FiniteSetMax(extremum) => Ok(FiniteSetMax::new(
+                self.eval_reduce_nested_sum_product_in_obj(
+                    (*extremum.set).clone(),
                     eval_stmt,
                     active_fn_calls,
-                )?;
-                let r = self.eval_reduce_nested_sum_product_in_obj(
-                    (*m.right).clone(),
+                )?,
+            )
+            .into()),
+            Obj::FiniteSetMin(extremum) => Ok(FiniteSetMin::new(
+                self.eval_reduce_nested_sum_product_in_obj(
+                    (*extremum.set).clone(),
                     eval_stmt,
                     active_fn_calls,
-                )?;
-                Ok(Max::new(l, r).into())
-            }
-            Obj::Min(m) => {
-                let l = self.eval_reduce_nested_sum_product_in_obj(
-                    (*m.left).clone(),
-                    eval_stmt,
-                    active_fn_calls,
-                )?;
-                let r = self.eval_reduce_nested_sum_product_in_obj(
-                    (*m.right).clone(),
-                    eval_stmt,
-                    active_fn_calls,
-                )?;
-                Ok(Min::new(l, r).into())
-            }
+                )?,
+            )
+            .into()),
             other => Ok(other),
         }
     }
@@ -396,7 +388,7 @@ impl Runtime {
         if left.rows.len() != right.rows.len() {
             return Err(short_exec_error(
                 eval_stmt.clone().into(),
-                "eval: matrix ++ row count mismatch".to_string(),
+                format!("eval: matrix {} row count mismatch", MATRIX_ADD),
                 None,
                 vec![],
             ));
@@ -406,7 +398,7 @@ impl Runtime {
             if lr.len() != rr.len() {
                 return Err(short_exec_error(
                     eval_stmt.clone().into(),
-                    "eval: matrix ++ column count mismatch".to_string(),
+                    format!("eval: matrix {} column count mismatch", MATRIX_ADD),
                     None,
                     vec![],
                 ));
@@ -417,7 +409,7 @@ impl Runtime {
                 let Some(n) = Self::evaluate_numeric_obj_for_eval(&sum_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
-                        "eval: matrix ++ needs numeric cells".to_string(),
+                        format!("eval: matrix {} needs numeric cells", MATRIX_ADD),
                         None,
                         vec![],
                     ));
@@ -438,7 +430,7 @@ impl Runtime {
         if left.rows.len() != right.rows.len() {
             return Err(short_exec_error(
                 eval_stmt.clone().into(),
-                "eval: matrix -- row count mismatch".to_string(),
+                format!("eval: matrix {} row count mismatch", MATRIX_SUB),
                 None,
                 vec![],
             ));
@@ -448,7 +440,7 @@ impl Runtime {
             if lr.len() != rr.len() {
                 return Err(short_exec_error(
                     eval_stmt.clone().into(),
-                    "eval: matrix -- column count mismatch".to_string(),
+                    format!("eval: matrix {} column count mismatch", MATRIX_SUB),
                     None,
                     vec![],
                 ));
@@ -459,7 +451,7 @@ impl Runtime {
                 let Some(n) = Self::evaluate_numeric_obj_for_eval(&diff_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
-                        "eval: matrix -- needs numeric cells".to_string(),
+                        format!("eval: matrix {} needs numeric cells", MATRIX_SUB),
                         None,
                         vec![],
                     ));
@@ -484,7 +476,7 @@ impl Runtime {
         if c1 != r2 {
             return Err(short_exec_error(
                 eval_stmt.clone().into(),
-                "eval: matrix ** inner dimension mismatch".to_string(),
+                format!("eval: matrix {} inner dimension mismatch", MATRIX_MUL),
                 None,
                 vec![],
             ));
@@ -500,7 +492,7 @@ impl Runtime {
                     let Some(p) = Self::evaluate_numeric_obj_for_eval(&prod_obj) else {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
-                            "eval: matrix ** cell multiply failed".to_string(),
+                            format!("eval: matrix {} cell multiply failed", MATRIX_MUL),
                             None,
                             vec![],
                         ));
@@ -509,7 +501,7 @@ impl Runtime {
                     let Some(s) = Self::evaluate_numeric_obj_for_eval(&sum_obj) else {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
-                            "eval: matrix ** accumulation failed".to_string(),
+                            format!("eval: matrix {} accumulation failed", MATRIX_MUL),
                             None,
                             vec![],
                         ));
@@ -537,7 +529,10 @@ impl Runtime {
                 let Some(n) = Self::evaluate_numeric_obj_for_eval(&prod_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
-                        "eval: *. needs scalar and numeric matrix cells".to_string(),
+                        format!(
+                            "eval: {} needs scalar and numeric matrix cells",
+                            MATRIX_SCALAR_MUL
+                        ),
                         None,
                         vec![],
                     ));
@@ -558,7 +553,7 @@ impl Runtime {
         if exponent == 0 {
             return Err(short_exec_error(
                 eval_stmt.clone().into(),
-                "eval: matrix ^^ exponent must be at least 1".to_string(),
+                format!("eval: matrix {} exponent must be at least 1", MATRIX_POW),
                 None,
                 vec![],
             ));
@@ -652,7 +647,10 @@ impl Runtime {
                 let Some(exp_i) = Self::integer_value_for_eval_obj(&exp_obj) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
-                        "eval: matrix ^^ exponent must evaluate to an integer".to_string(),
+                        format!(
+                            "eval: matrix {} exponent must evaluate to an integer",
+                            MATRIX_POW
+                        ),
                         None,
                         vec![],
                     ));
@@ -660,7 +658,10 @@ impl Runtime {
                 let exp_u = usize::try_from(exp_i).map_err(|_| {
                     short_exec_error(
                         eval_stmt.clone().into(),
-                        "eval: matrix ^^ exponent must be a non-negative integer".to_string(),
+                        format!(
+                            "eval: matrix {} exponent must be a non-negative integer",
+                            MATRIX_POW
+                        ),
                         None,
                         vec![],
                     )
@@ -799,6 +800,62 @@ impl Runtime {
                         }
                     }
                 }
+                Obj::FiniteSetMax(extremum) => {
+                    let reduced: Obj =
+                        FiniteSetMax::new(self.eval_reduce_nested_sum_product_in_obj(
+                            (*extremum.set).clone(),
+                            eval_stmt,
+                            active_fn_calls,
+                        )?)
+                        .into();
+                    let resolved = self.resolve_obj(&reduced);
+                    if matches!(resolved, Obj::Number(_)) {
+                        return self.finish_numeric_accumulator_with_pending_rights(
+                            resolved,
+                            &mut pending,
+                            eval_stmt,
+                            active_fn_calls,
+                        );
+                    }
+                    if pending.is_empty() {
+                        return Ok(resolved);
+                    }
+                    return Err(short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: non-numeric finite_set_max with pending binary operation"
+                            .to_string(),
+                        None,
+                        vec![],
+                    ));
+                }
+                Obj::FiniteSetMin(extremum) => {
+                    let reduced: Obj =
+                        FiniteSetMin::new(self.eval_reduce_nested_sum_product_in_obj(
+                            (*extremum.set).clone(),
+                            eval_stmt,
+                            active_fn_calls,
+                        )?)
+                        .into();
+                    let resolved = self.resolve_obj(&reduced);
+                    if matches!(resolved, Obj::Number(_)) {
+                        return self.finish_numeric_accumulator_with_pending_rights(
+                            resolved,
+                            &mut pending,
+                            eval_stmt,
+                            active_fn_calls,
+                        );
+                    }
+                    if pending.is_empty() {
+                        return Ok(resolved);
+                    }
+                    return Err(short_exec_error(
+                        eval_stmt.clone().into(),
+                        "eval: non-numeric finite_set_min with pending binary operation"
+                            .to_string(),
+                        None,
+                        vec![],
+                    ));
+                }
                 Obj::Sum(sum) => {
                     if !pending.is_empty() {
                         return Err(short_exec_error(
@@ -864,7 +921,7 @@ impl Runtime {
                     if !pending.is_empty() {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
-                            "eval: matrix ++ with pending binary operation".to_string(),
+                            format!("eval: matrix {} with pending binary operation", MATRIX_ADD),
                             None,
                             vec![],
                         ));
@@ -880,7 +937,7 @@ impl Runtime {
                     if !pending.is_empty() {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
-                            "eval: matrix -- with pending binary operation".to_string(),
+                            format!("eval: matrix {} with pending binary operation", MATRIX_SUB),
                             None,
                             vec![],
                         ));
@@ -896,7 +953,7 @@ impl Runtime {
                     if !pending.is_empty() {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
-                            "eval: matrix ** with pending binary operation".to_string(),
+                            format!("eval: matrix {} with pending binary operation", MATRIX_MUL),
                             None,
                             vec![],
                         ));
@@ -912,7 +969,7 @@ impl Runtime {
                     if !pending.is_empty() {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
-                            "eval: *. with pending binary operation".to_string(),
+                            format!("eval: {} with pending binary operation", MATRIX_SCALAR_MUL),
                             None,
                             vec![],
                         ));
@@ -928,7 +985,7 @@ impl Runtime {
                     if !pending.is_empty() {
                         return Err(short_exec_error(
                             eval_stmt.clone().into(),
-                            "eval: matrix ^^ with pending binary operation".to_string(),
+                            format!("eval: matrix {} with pending binary operation", MATRIX_POW),
                             None,
                             vec![],
                         ));
@@ -1330,22 +1387,31 @@ impl Runtime {
                 );
             }
             if verify_result.is_unknown() {
-                let reversed_case_condition = instantiated_case_condition.make_reversed();
-                let verify_reversed_result = self
-                    .verify_atomic_fact(&reversed_case_condition, &VerifyState::new(0, false))
+                let negated_case_condition = instantiated_case_condition
+                    .logical_negation()
+                    .map_err(|negation_error| {
+                        short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: case condition cannot be logically negated".to_string(),
+                            Some(negation_error),
+                            vec![],
+                        )
+                    })?;
+                let verify_negated_result = self
+                    .verify_atomic_fact(&negated_case_condition, &VerifyState::new(0, false))
                     .map_err(|verify_error| {
                         short_exec_error(
                             eval_stmt.clone().into(),
-                            "eval: failed to verify reversed case condition".to_string(),
+                            "eval: failed to verify negated case condition".to_string(),
                             Some(verify_error),
                             vec![],
                         )
                     })?;
-                if verify_reversed_result.is_unknown() {
+                if verify_negated_result.is_unknown() {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
                         format!(
-                            "eval: case `{}` is unknown and its reverse is also unknown",
+                            "eval: case `{}` is unknown and its negation is also unknown",
                             instantiated_case_condition
                         ),
                         None,
@@ -1385,8 +1451,14 @@ impl Runtime {
             if !Self::object_supported_by_eval_stmt(&executable_obj) {
                 return Err(short_exec_error(
                     stmt.clone().into(),
-                    "eval: need a function call, numeric expression (+ - * / ^), sum/product over a unary anonymous body, or matrix ++ -- ** *. ^^ / matrix literal"
-                        .to_string(),
+                    format!(
+                        "eval: need a function call, numeric expression (+ - * / ^), sum/product over a unary anonymous body, or matrix operators {} {} {} {} {} / matrix literal",
+                        MATRIX_ADD,
+                        MATRIX_SUB,
+                        MATRIX_MUL,
+                        MATRIX_SCALAR_MUL,
+                        MATRIX_POW
+                    ),
                     None,
                     vec![],
                 ));

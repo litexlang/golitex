@@ -18,6 +18,7 @@ pub enum ByStmtResult {
     ByZornLemmaStmt(NonFactualStmtSuccess),
     ByAxiomOfChoiceStmt(NonFactualStmtSuccess),
     ByRegularityAxiomStmt(NonFactualStmtSuccess),
+    ByDefStmt(NonFactualStmtSuccess),
     ByThmStmt(NonFactualStmtSuccess),
 }
 
@@ -54,6 +55,7 @@ impl ByStmtResult {
             Stmt::By(ByStmt::ByRegularityAxiomStmt(_)) => {
                 ByStmtResult::ByRegularityAxiomStmt(success)
             }
+            Stmt::By(ByStmt::ByDefStmt(_)) => ByStmtResult::ByDefStmt(success),
             Stmt::By(ByStmt::ByThmStmt(_)) => ByStmtResult::ByThmStmt(success),
             _ => panic!("expected by stmt result"),
         }
@@ -77,6 +79,7 @@ impl ByStmtResult {
             | ByStmtResult::ByZornLemmaStmt(success)
             | ByStmtResult::ByAxiomOfChoiceStmt(success)
             | ByStmtResult::ByRegularityAxiomStmt(success)
+            | ByStmtResult::ByDefStmt(success)
             | ByStmtResult::ByThmStmt(success) => success,
         }
     }
@@ -99,6 +102,7 @@ impl ByStmtResult {
             | ByStmtResult::ByZornLemmaStmt(success)
             | ByStmtResult::ByAxiomOfChoiceStmt(success)
             | ByStmtResult::ByRegularityAxiomStmt(success)
+            | ByStmtResult::ByDefStmt(success)
             | ByStmtResult::ByThmStmt(success) => success,
         }
     }
@@ -121,6 +125,7 @@ impl ByStmtResult {
             | ByStmtResult::ByZornLemmaStmt(success)
             | ByStmtResult::ByAxiomOfChoiceStmt(success)
             | ByStmtResult::ByRegularityAxiomStmt(success)
+            | ByStmtResult::ByDefStmt(success)
             | ByStmtResult::ByThmStmt(success) => success,
         }
     }

@@ -97,8 +97,19 @@ fn add_normal_verification_fields(output: &mut Vec<(String, JsonValue)>, value: 
             "parameters" | "assumptions" | "conclusions" => {
                 push_normal_field(output, key, normal_output_value(value));
             }
-            "type" | "rule" | "cite_source" | "cited_statement" | "prove_goal" | "theorems"
-            | "parameter_sets" | "verify_what" => {
+            "type"
+            | "rule"
+            | "cite_source"
+            | "cited_statement"
+            | "prove_goal"
+            | "theorems"
+            | "parameter_sets"
+            | "verify_what"
+            | "prop"
+            | "arguments"
+            | "parameter_type_check"
+            | "definition_clause_checks"
+            | "stored_fact" => {
                 why_verified.push((key, normal_output_value(value)));
             }
             _ => {}

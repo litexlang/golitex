@@ -294,6 +294,12 @@ impl From<ByThmStmt> for Stmt {
     }
 }
 
+impl From<ByDefStmt> for Stmt {
+    fn from(v: ByDefStmt) -> Self {
+        ByStmt::ByDefStmt(v).into()
+    }
+}
+
 impl From<DefThmStmt> for Stmt {
     fn from(v: DefThmStmt) -> Self {
         Stmt::DefThmStmt(v)

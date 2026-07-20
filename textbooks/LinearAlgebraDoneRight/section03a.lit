@@ -1,0 +1,102 @@
+# Linear Algebra Done Right, fourth edition — Section 3A.
+# Vector Space of Linear Maps.
+
+# Definition 3.1. A linear map preserves vector addition and scalar
+# multiplication. The domain and codomain operations remain explicit callable
+# data in this interface.
+prop is_linear_map(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T fn(v V) W):
+    forall u, v V:
+        T(&section01b::VectorSpace<s, scalars, V>{Vspace}.add(u, v)) = &section01b::VectorSpace<s, scalars, W>{Wspace}.add(T(u), T(v))
+    forall a s, v V:
+        T(&section01b::VectorSpace<s, scalars, V>{Vspace}.smul(a, v)) = &section01b::VectorSpace<s, scalars, W>{Wspace}.smul(a, T(v))
+
+# Notation 3.2. L(V,W) is the set of all linear maps V -> W; L(V) is the
+# special case W=V. Because the result carrier varies with V and W, Litex uses
+# a template rather than pretending this family is one ordinary function.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    have linear_map_space power_set(fn(v V) W) = {T fn(v V) W: $is_linear_map(s, scalars, V, W, Vspace, Wspace, T)}
+
+# Example 3.3. The source exhibits the zero map, identity map, differentiation,
+# integration, multiplication by x^2, coordinate maps, and composition as
+# concrete linear maps. The two basic reusable maps are exposed below.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>>:
+    trust have identity_linear_map \linear_map_space<s, scalars, V, V, Vspace, Vspace>:
+        forall v V:
+            identity_linear_map(v) = v
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    trust have zero_linear_map \linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        forall v V:
+            zero_linear_map(v) = &section01b::VectorSpace<s, scalars, W>{Wspace}.zero
+
+# Result 3.4. A map is uniquely determined by arbitrary prescribed values on a
+# basis. Axler constructs it from the unique coordinate representation.
+# Trust boundary: the recursive finite linear-combination construction from
+# Chapter 2 has not yet been connected to a selected coordinate function.
+prop has_prescribed_basis_values(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n N, basis &section01a::FiniteList<V, n>, values &section01a::FiniteList<W, n>, T \linear_map_space<s, scalars, V, W, Vspace, Wspace>):
+    forall k N_pos:
+        k <= n
+        =>:
+            T(&section01a::FiniteList<V, n>{basis}.entries(k)) = &section01a::FiniteList<W, n>{values}.entries(k)
+
+axiom linear_map_lemma:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n N, basis &section01a::FiniteList<V, n>, values &section01a::FiniteList<W, n>:
+        $section02b::is_basis(s, scalars, V, Vspace, n, basis)
+        =>:
+            exist! T \linear_map_space<s, scalars, V, W, Vspace, Wspace> st {$has_prescribed_basis_values(s, scalars, V, W, Vspace, Wspace, n, basis, values, T)}
+
+# Definition 3.5. Addition and scalar multiplication on L(V,W) are pointwise.
+# The functions are callable and their codomain is the linear-map carrier.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    trust have linear_map_add fn(S, T \linear_map_space<s, scalars, V, W, Vspace, Wspace>) \linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        forall v V:
+            linear_map_add(S, T)(v) = &section01b::VectorSpace<s, scalars, W>{Wspace}.add(S(v), T(v))
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    trust have linear_map_smul fn(a s, T \linear_map_space<s, scalars, V, W, Vspace, Wspace>) \linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        forall v V:
+            linear_map_smul(a, T)(v) = &section01b::VectorSpace<s, scalars, W>{Wspace}.smul(a, T(v))
+
+# Result 3.6. With the pointwise operations, L(V,W) is a vector space.
+# Trust boundary: this records the routine closure and law proof that Axler
+# leaves to the reader.
+axiom linear_map_space_is_vector_space:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>:
+        (\zero_linear_map<s, scalars, V, W, Vspace, Wspace>, \linear_map_add<s, scalars, V, W, Vspace, Wspace>, \linear_map_smul<s, scalars, V, W, Vspace, Wspace>) $in &section01b::VectorSpace<s, scalars, \linear_map_space<s, scalars, V, W, Vspace, Wspace>>
+
+# Canonical selected structure used by later dimension statements. This does
+# not add a new mathematical result; it packages the operations of 3.5 and the
+# vector-space fact of 3.6 as callable data.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    trust have linear_map_vector_space &section01b::VectorSpace<s, scalars, \linear_map_space<s, scalars, V, W, Vspace, Wspace>>:
+        linear_map_vector_space = (\zero_linear_map<s, scalars, V, W, Vspace, Wspace>, \linear_map_add<s, scalars, V, W, Vspace, Wspace>, \linear_map_smul<s, scalars, V, W, Vspace, Wspace>)
+
+# Definition 3.7. The product ST of compatible linear maps is ordinary
+# composition, with T applied first and S second.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, U, V, W nonempty_set, Uspace &section01b::VectorSpace<s, scalars, U>, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    trust have linear_map_compose fn(S \linear_map_space<s, scalars, V, W, Vspace, Wspace>, T \linear_map_space<s, scalars, U, V, Uspace, Vspace>) \linear_map_space<s, scalars, U, W, Uspace, Wspace>:
+        forall u U:
+            linear_map_compose(S, T)(u) = S(T(u))
+
+# Result 3.8. Composition is associative, has identity maps, and distributes
+# over pointwise addition. The equations are kept as one source-facing package.
+axiom algebraic_properties_of_linear_map_products:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, U, V, W, X nonempty_set, Uspace &section01b::VectorSpace<s, scalars, U>, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, Xspace &section01b::VectorSpace<s, scalars, X>, A \linear_map_space<s, scalars, W, X, Wspace, Xspace>, B, B2 \linear_map_space<s, scalars, V, W, Vspace, Wspace>, C, D \linear_map_space<s, scalars, U, V, Uspace, Vspace>:
+        \linear_map_compose<s, scalars, U, W, X, Uspace, Wspace, Xspace>(A, \linear_map_compose<s, scalars, U, V, W, Uspace, Vspace, Wspace>(B, C)) = \linear_map_compose<s, scalars, U, V, X, Uspace, Vspace, Xspace>(\linear_map_compose<s, scalars, V, W, X, Vspace, Wspace, Xspace>(A, B), C)
+        \linear_map_compose<s, scalars, U, U, V, Uspace, Uspace, Vspace>(C, \identity_linear_map<s, scalars, U, Uspace>) = C
+        \linear_map_compose<s, scalars, U, V, V, Uspace, Vspace, Vspace>(\identity_linear_map<s, scalars, V, Vspace>, C) = C
+        \linear_map_compose<s, scalars, U, V, W, Uspace, Vspace, Wspace>(\linear_map_add<s, scalars, V, W, Vspace, Wspace>(B, B2), C) = \linear_map_add<s, scalars, U, W, Uspace, Wspace>(\linear_map_compose<s, scalars, U, V, W, Uspace, Vspace, Wspace>(B, C), \linear_map_compose<s, scalars, U, V, W, Uspace, Vspace, Wspace>(B2, C))
+        \linear_map_compose<s, scalars, U, V, W, Uspace, Vspace, Wspace>(B, \linear_map_add<s, scalars, U, V, Uspace, Vspace>(C, D)) = \linear_map_add<s, scalars, U, W, Uspace, Wspace>(\linear_map_compose<s, scalars, U, V, W, Uspace, Vspace, Wspace>(B, C), \linear_map_compose<s, scalars, U, V, W, Uspace, Vspace, Wspace>(B, D))
+
+# Example 3.9. Differentiation and multiplication by x^2 do not commute;
+# composition of linear maps is generally noncommutative.
+
+# Result 3.10. Every linear map sends the additive identity of its domain to
+# the additive identity of its codomain.
+thm linear_maps_take_zero_to_zero:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T \linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        T(&section01b::VectorSpace<s, scalars, V>{Vspace}.zero) = &section01b::VectorSpace<s, scalars, W>{Wspace}.zero
+    &section01b::VectorSpace<s, scalars, V>{Vspace}.smul(&section01a::ScalarSystem<s>{scalars}.zero, &section01b::VectorSpace<s, scalars, V>{Vspace}.zero) = &section01b::VectorSpace<s, scalars, V>{Vspace}.zero
+    &section01b::VectorSpace<s, scalars, W>{Wspace}.smul(&section01a::ScalarSystem<s>{scalars}.zero, T(&section01b::VectorSpace<s, scalars, V>{Vspace}.zero)) = &section01b::VectorSpace<s, scalars, W>{Wspace}.zero
+    T(&section01b::VectorSpace<s, scalars, V>{Vspace}.smul(&section01a::ScalarSystem<s>{scalars}.zero, &section01b::VectorSpace<s, scalars, V>{Vspace}.zero)) = &section01b::VectorSpace<s, scalars, W>{Wspace}.smul(&section01a::ScalarSystem<s>{scalars}.zero, T(&section01b::VectorSpace<s, scalars, V>{Vspace}.zero))
+    T(&section01b::VectorSpace<s, scalars, V>{Vspace}.zero) = &section01b::VectorSpace<s, scalars, W>{Wspace}.zero

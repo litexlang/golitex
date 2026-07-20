@@ -32,7 +32,8 @@ impl Runtime {
     fn verify_order_subgoal(&mut self, fact: AtomicFact) -> Result<StmtResult, RuntimeError> {
         let mut result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fact)?;
         if !result.is_true() {
-            result = self.verify_order_atomic_fact_numeric_builtin_only(&fact)?;
+            result = self
+                .verify_order_atomic_fact_numeric_builtin_only(&fact, &VerifyState::new(0, true))?;
         }
         Ok(result)
     }

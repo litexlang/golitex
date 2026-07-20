@@ -1,0 +1,239 @@
+# Linear Algebra Done Right, fourth edition — Section 3D.
+# Invertibility and Isomorphisms.
+
+# Definition 3.59. S is an inverse of T when both composites are the relevant
+# identity map; T is invertible when such an S exists.
+prop is_inverse_linear_map(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T fn(v V) W, S fn(w W) V):
+    $section03a::is_linear_map(s, scalars, V, W, Vspace, Wspace, T)
+    $section03a::is_linear_map(s, scalars, W, V, Wspace, Vspace, S)
+    \section03a::linear_map_compose<s, scalars, V, W, V, Vspace, Wspace, Vspace>(S, T) = \section03a::identity_linear_map<s, scalars, V, Vspace>
+    \section03a::linear_map_compose<s, scalars, W, V, W, Wspace, Vspace, Wspace>(T, S) = \section03a::identity_linear_map<s, scalars, W, Wspace>
+
+prop is_invertible_linear_map(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T fn(v V) W):
+    $section03a::is_linear_map(s, scalars, V, W, Vspace, Wspace, T)
+    exist S fn(w W) V st {$is_inverse_linear_map(s, scalars, V, W, Vspace, Wspace, T, S)}
+
+# Result 3.60. An invertible linear map has only one inverse.
+axiom inverse_linear_map_is_unique:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T fn(v V) W, S1, S2 fn(w W) V:
+        $is_inverse_linear_map(s, scalars, V, W, Vspace, Wspace, T, S1)
+        $is_inverse_linear_map(s, scalars, V, W, Vspace, Wspace, T, S2)
+        =>:
+            S1 = S2
+
+# Notation 3.61. inverse_linear_map(T) is Axler's T^-1. The function domain
+# records the invertibility precondition instead of making inverse total.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    trust have inverse_linear_map fn(T fn(v V) W: $is_invertible_linear_map(s, scalars, V, W, Vspace, Wspace, T)) fn(w W) V:
+        $is_inverse_linear_map(s, scalars, V, W, Vspace, Wspace, T, inverse_linear_map(T))
+
+# Example 3.62 is retained as prose in the source: a quarter-turn/stretch map
+# on R^3 has the evident clockwise-turn/quarter-stretch inverse.
+
+# Result 3.63. Invertibility is equivalent to injectivity plus surjectivity.
+prop invertible_iff_injective_and_surjective_statement(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>):
+    forall:
+        =>:
+            $is_invertible_linear_map(s, scalars, V, W, Vspace, Wspace, T)
+        <=>:
+            $section03b::is_injective(V, W, T)
+            $section03b::is_surjective(V, W, T)
+
+axiom invertible_iff_injective_and_surjective:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        $invertible_iff_injective_and_surjective_statement(s, scalars, V, W, Vspace, Wspace, T)
+
+# Example 3.64 records the infinite-dimensional warning: injective or
+# surjective alone need not imply invertible.
+
+# Result 3.65. In equal finite dimension, injectivity, surjectivity, and
+# invertibility are equivalent.
+prop invertible_iff_injective_statement(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>):
+    forall:
+        =>:
+            $is_invertible_linear_map(s, scalars, V, W, Vspace, Wspace, T)
+        <=>:
+            $section03b::is_injective(V, W, T)
+
+prop injective_iff_surjective_statement(V, W set, T fn(v V) W):
+    forall:
+        =>:
+            $section03b::is_injective(V, W, T)
+        <=>:
+            $section03b::is_surjective(V, W, T)
+
+axiom injective_iff_surjective_in_equal_finite_dimension:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        $section02a::is_finite_dimensional(s, scalars, V, Vspace)
+        $section02a::is_finite_dimensional(s, scalars, W, Wspace)
+        \section02c::dimension<s, scalars, V, Vspace> = \section02c::dimension<s, scalars, W, Wspace>
+        =>:
+            $invertible_iff_injective_statement(s, scalars, V, W, Vspace, Wspace, T)
+            $injective_iff_surjective_statement(V, W, T)
+
+# Example 3.67 is comment-only: the finite-dimensional restriction P_m(R)
+# makes the displayed differential operator surjective.
+
+# Result 3.68. For maps between finite-dimensional spaces of equal dimension,
+# one inverse identity implies the other.
+prop one_sided_inverse_iff_other_side_statement(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, S \section03a::linear_map_space<s, scalars, W, V, Wspace, Vspace>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>):
+    forall:
+        =>:
+            \section03a::linear_map_compose<s, scalars, V, W, V, Vspace, Wspace, Vspace>(S, T) = \section03a::identity_linear_map<s, scalars, V, Vspace>
+        <=>:
+            \section03a::linear_map_compose<s, scalars, W, V, W, Wspace, Vspace, Wspace>(T, S) = \section03a::identity_linear_map<s, scalars, W, Wspace>
+
+axiom one_sided_inverse_iff_other_side:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, S \section03a::linear_map_space<s, scalars, W, V, Wspace, Vspace>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        $section02a::is_finite_dimensional(s, scalars, V, Vspace)
+        $section02a::is_finite_dimensional(s, scalars, W, Wspace)
+        \section02c::dimension<s, scalars, V, Vspace> = \section02c::dimension<s, scalars, W, Wspace>
+        =>:
+            $one_sided_inverse_iff_other_side_statement(s, scalars, V, W, Vspace, Wspace, S, T)
+
+# Definition 3.69. An isomorphism is an invertible linear map; two spaces are
+# isomorphic when an isomorphism exists between them.
+prop is_isomorphism(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T fn(v V) W):
+    $is_invertible_linear_map(s, scalars, V, W, Vspace, Wspace, T)
+
+prop are_isomorphic(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>):
+    exist T fn(v V) W st {$is_isomorphism(s, scalars, V, W, Vspace, Wspace, T)}
+
+# Result 3.70. Finite-dimensional spaces over the same scalar field are
+# isomorphic exactly when their dimensions agree.
+prop isomorphic_iff_equal_dimension_statement(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>):
+    forall:
+        =>:
+            $are_isomorphic(s, scalars, V, W, Vspace, Wspace)
+        <=>:
+            \section02c::dimension<s, scalars, V, Vspace> = \section02c::dimension<s, scalars, W, Wspace>
+
+axiom dimension_characterizes_isomorphism:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>:
+        $section02a::is_finite_dimensional(s, scalars, V, Vspace)
+        $section02a::is_finite_dimensional(s, scalars, W, Wspace)
+        =>:
+            $isomorphic_iff_equal_dimension_statement(s, scalars, V, W, Vspace, Wspace)
+
+# Result 3.71. Once bases are fixed, the matrix-formation map is an
+# isomorphism from L(V,W) onto the m-by-n matrix carrier.
+axiom linear_maps_and_matrices_are_isomorphic:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n, m N_pos, v &section01a::FiniteList<V, n>, w &section01a::FiniteList<W, m>:
+        $section02b::is_basis(s, scalars, V, Vspace, n, v)
+        $section02b::is_basis(s, scalars, W, Wspace, m, w)
+        =>:
+            $section03b::is_injective(\section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>, matrix(s, m, n), fn(T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>) matrix(s, m, n) {\section03c::matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, T)})
+            $section03b::is_surjective(\section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>, matrix(s, m, n), fn(T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>) matrix(s, m, n) {\section03c::matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, T)})
+
+# Result 3.72. dim L(V,W) = (dim V)(dim W).
+axiom dimension_of_linear_map_space:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>:
+        $section02a::is_finite_dimensional(s, scalars, V, Vspace)
+        $section02a::is_finite_dimensional(s, scalars, W, Wspace)
+        =>:
+            \section02c::dimension<s, scalars, \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>, \section03a::linear_map_vector_space<s, scalars, V, W, Vspace, Wspace>> = \section02c::dimension<s, scalars, V, Vspace> * \section02c::dimension<s, scalars, W, Wspace>
+
+# Definition 3.73. The matrix of a vector is its coordinate column with
+# respect to the displayed basis.
+prop is_matrix_of_vector(s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, n N_pos, basis &section01a::FiniteList<V, n>, v V, A matrix(s, n, 1)):
+    $section02b::is_basis(s, scalars, V, Vspace, n, basis)
+    v = \section02a::linear_combination_value<s, scalars, V, Vspace, n>(\section03c::matrix_column_coefficients<s, n, 1>(A, 1), basis)
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, n N_pos>:
+    trust have matrix_of_vector fn(basis &section01a::FiniteList<V, n>, v V) matrix(s, n, 1):
+        $is_matrix_of_vector(s, scalars, V, Vspace, n, basis, v, matrix_of_vector(basis, v))
+
+# Example 3.74 is comment-only: coordinate columns for a polynomial and for a
+# vector in F^n illustrate the definition.
+
+# Result 3.75. The kth column of M(T) is M(T(v_k)).
+axiom matrix_column_of_linear_map:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n, m N_pos, v &section01a::FiniteList<V, n>, w &section01a::FiniteList<W, m>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>, k N_pos:
+        $section02b::is_basis(s, scalars, V, Vspace, n, v)
+        $section02b::is_basis(s, scalars, W, Wspace, m, w)
+        k <= n
+        =>:
+            \section03c::matrix_column<s, m, n>(\section03c::matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, T), k) = fn(j N_pos: j <= m) s {\section03d::matrix_of_vector<s, scalars, W, Wspace, m>(w, T(&section01a::FiniteList<V, n>{v}.entries(k)))(j, 1)}
+
+# Result 3.76. Coordinate columns turn a linear map into matrix multiplication.
+axiom linear_maps_act_like_matrix_multiplication:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n, m N_pos, vbasis &section01a::FiniteList<V, n>, wbasis &section01a::FiniteList<W, m>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>, v V:
+        $section02b::is_basis(s, scalars, V, Vspace, n, vbasis)
+        $section02b::is_basis(s, scalars, W, Wspace, m, wbasis)
+        =>:
+            \section03d::matrix_of_vector<s, scalars, W, Wspace, m>(wbasis, T(v)) = \section03c::matrix_mul<s, scalars, m, n, 1>(\section03c::matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(vbasis, wbasis, T), \section03d::matrix_of_vector<s, scalars, V, Vspace, n>(vbasis, v))
+
+# Result 3.78. The dimension of range T equals the column rank of M(T).
+axiom dimension_of_range_equals_column_rank:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n, m N_pos, vbasis &section01a::FiniteList<V, n>, wbasis &section01a::FiniteList<W, m>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        $section02b::is_basis(s, scalars, V, Vspace, n, vbasis)
+        $section02b::is_basis(s, scalars, W, Wspace, m, wbasis)
+        =>:
+            \section02c::dimension<s, scalars, \section03b::range_of<V, W>(T), \section01c::subspace_vector_space<s, scalars, W, Wspace, \section03b::range_of<V, W>(T)>> = \section03c::column_rank<s, scalars, m, n>(\section03c::matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(vbasis, wbasis, T))
+
+# Definition 3.79. I_n has scalar one on the diagonal and zero elsewhere.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, n N_pos>:
+    trust have identity_matrix matrix(s, n, n):
+        forall j, k N_pos:
+            j <= n
+            k <= n
+            j = k
+            =>:
+                identity_matrix(j, k) = &section01a::ScalarSystem<s>{scalars}.one
+        forall j, k N_pos:
+            j <= n
+            k <= n
+            j != k
+            =>:
+                identity_matrix(j, k) = &section01a::ScalarSystem<s>{scalars}.zero
+
+# Definition 3.80. B is an inverse of square A when AB=BA=I; invertibility is
+# existence, and inverse_matrix selects the unique B.
+prop is_inverse_matrix(s nonempty_set, scalars &section01a::ScalarSystem<s>, n N_pos, A, B matrix(s, n, n)):
+    \section03c::matrix_mul<s, scalars, n, n, n>(A, B) = \identity_matrix<s, scalars, n>
+    \section03c::matrix_mul<s, scalars, n, n, n>(B, A) = \identity_matrix<s, scalars, n>
+
+prop is_invertible_matrix(s nonempty_set, scalars &section01a::ScalarSystem<s>, n N_pos, A matrix(s, n, n)):
+    exist B matrix(s, n, n) st {$is_inverse_matrix(s, scalars, n, A, B)}
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, n N_pos>:
+    trust have inverse_matrix fn(A matrix(s, n, n): $is_invertible_matrix(s, scalars, n, A)) matrix(s, n, n):
+        $is_inverse_matrix(s, scalars, n, A, inverse_matrix(A))
+
+# Result 3.81. The explicit-basis matrix of ST is the corresponding product.
+axiom matrix_of_product_with_explicit_bases:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, U, V, W nonempty_set, Uspace &section01b::VectorSpace<s, scalars, U>, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, m, n, p N_pos, u &section01a::FiniteList<U, m>, v &section01a::FiniteList<V, n>, w &section01a::FiniteList<W, p>, T \section03a::linear_map_space<s, scalars, U, V, Uspace, Vspace>, S \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        $section02b::is_basis(s, scalars, U, Uspace, m, u)
+        $section02b::is_basis(s, scalars, V, Vspace, n, v)
+        $section02b::is_basis(s, scalars, W, Wspace, p, w)
+        =>:
+            \section03c::matrix_of_linear_map<s, scalars, U, W, Uspace, Wspace, m, p>(u, w, \section03a::linear_map_compose<s, scalars, U, V, W, Uspace, Vspace, Wspace>(S, T)) = \section03c::matrix_mul<s, scalars, p, n, m>(\section03c::matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, p>(v, w, S), \section03c::matrix_of_linear_map<s, scalars, U, V, Uspace, Vspace, m, n>(u, v, T))
+
+# Result 3.82. The two change-of-coordinate matrices for opposite basis orders
+# are mutual inverses.
+axiom identity_map_between_two_bases:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, n N_pos, u, v &section01a::FiniteList<V, n>:
+        $section02b::is_basis(s, scalars, V, Vspace, n, u)
+        $section02b::is_basis(s, scalars, V, Vspace, n, v)
+        =>:
+            $is_inverse_matrix(s, scalars, n, \section03c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(u, v, \section03a::identity_linear_map<s, scalars, V, Vspace>), \section03c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(v, u, \section03a::identity_linear_map<s, scalars, V, Vspace>))
+
+# Example 3.83 is comment-only: the source computes the two coordinate-change
+# matrices for bases ((4,2),(5,3)) and the standard basis of R^2.
+
+# Result 3.84. If C changes u-coordinates to v-coordinates, then
+# M(T,u)=C^-1 M(T,v) C.
+axiom change_of_basis_formula:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, n N_pos, u, v &section01a::FiniteList<V, n>, T \section03a::linear_map_space<s, scalars, V, V, Vspace, Vspace>:
+        $section02b::is_basis(s, scalars, V, Vspace, n, u)
+        $section02b::is_basis(s, scalars, V, Vspace, n, v)
+        =>:
+            \section03c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(u, u, T) = \section03c::matrix_mul<s, scalars, n, n, n>(\inverse_matrix<s, scalars, n>(\section03c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(u, v, \section03a::identity_linear_map<s, scalars, V, Vspace>)), \section03c::matrix_mul<s, scalars, n, n, n>(\section03c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(v, v, T), \section03c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(u, v, \section03a::identity_linear_map<s, scalars, V, Vspace>)))
+
+# Result 3.86. With one basis fixed, the matrix of T^-1 is M(T)^-1.
+axiom matrix_of_inverse_equals_inverse_of_matrix:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, n N_pos, basis &section01a::FiniteList<V, n>, T \section03a::linear_map_space<s, scalars, V, V, Vspace, Vspace>:
+        $section02b::is_basis(s, scalars, V, Vspace, n, basis)
+        $is_invertible_linear_map(s, scalars, V, V, Vspace, Vspace, T)
+        =>:
+            \section03c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(basis, basis, \inverse_linear_map<s, scalars, V, V, Vspace, Vspace>(T)) = \inverse_matrix<s, scalars, n>(\section03c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(basis, basis, T))

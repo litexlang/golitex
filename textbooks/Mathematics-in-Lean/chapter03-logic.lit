@@ -1,0 +1,668 @@
+# Chapter 3 — Logic
+
+# This chapter keeps the mathematical content of the source while collapsing
+# repeated Lean elaboration and tactic variants into one Litex proof route.
+
+# 3.1 Implication and the Universal Quantifier
+
+# Source: my_lemma through my_lemma4. If x and y are both smaller than a
+# positive epsilon in absolute value, and epsilon is at most one, then their
+# product is still smaller than epsilon. The proof multiplies the two bounds
+# and uses epsilon^2 <= epsilon.
+thm small_product_below_epsilon:
+    ? forall x, y R, epsilon R_pos:
+        epsilon <= 1
+        abs(x) < epsilon
+        abs(y) < epsilon
+        =>:
+            abs(x * y) < epsilon
+    abs(x * y) = abs(x) * abs(y)
+    0 <= abs(y)
+    abs(x) <= epsilon
+    abs(x) * abs(y) <= epsilon * abs(y)
+    epsilon * abs(y) < epsilon * epsilon
+    epsilon * epsilon <= 1 * epsilon = epsilon
+    abs(x * y) = abs(x) * abs(y) <= epsilon * abs(y) < epsilon * epsilon <= 1 * epsilon = epsilon
+
+# Source definition FnUb. A real number a is an upper bound for f when every
+# value of f is at most a.
+prop is_upper_bound_of_fn(f fn(x R) R, a R):
+    forall x R:
+        f(x) <= a
+
+# Source definition FnLb. A lower bound is below every value of the function.
+prop is_lower_bound_of_fn(f fn(x R) R, a R):
+    forall x R:
+        a <= f(x)
+
+# Source result fnUb_add. Pointwise addition adds upper bounds.
+thm upper_bound_of_fn_add:
+    ? forall f, g fn(x R) R, a, b R:
+        $is_upper_bound_of_fn(f, a)
+        $is_upper_bound_of_fn(g, b)
+        =>:
+            $is_upper_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
+    forall x R:
+        f(x) <= a
+        g(x) <= b
+        =>:
+            f(x) + g(x) <= a + b
+
+# The dual source example shows that pointwise addition also adds lower bounds.
+thm lower_bound_of_fn_add:
+    ? forall f, g fn(x R) R, a, b R:
+        $is_lower_bound_of_fn(f, a)
+        $is_lower_bound_of_fn(g, b)
+        =>:
+            $is_lower_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
+    forall x R:
+        a <= f(x)
+        b <= g(x)
+        =>:
+            a + b <= f(x) + g(x)
+
+# The source also records the useful nonnegative-product instance.
+thm nonnegative_fn_product:
+    ? forall f, g fn(x R) R:
+        $is_lower_bound_of_fn(f, 0)
+        $is_lower_bound_of_fn(g, 0)
+        =>:
+            $is_lower_bound_of_fn(fn(x R) R {f(x) * g(x)}, 0)
+    forall x R:
+        0 <= f(x)
+        0 <= g(x)
+        =>:
+            0 <= f(x) * g(x)
+
+# Generic source orders are represented extensionally as sets of ordered
+# pairs. This keeps the carrier explicit while making the relation callable in
+# facts through membership.
+prop order_holds(A set, le_rel power_set(cart(A, A)), x, y A):
+    (x, y) $in le_rel
+
+# A preorder relation is reflexive and transitive on its carrier.
+prop is_preorder_relation(A set, le_rel power_set(cart(A, A))):
+    forall x A:
+        $order_holds(A, le_rel, x, x)
+    forall x, y, z A:
+        $order_holds(A, le_rel, x, y)
+        $order_holds(A, le_rel, y, z)
+        =>:
+            $order_holds(A, le_rel, x, z)
+
+# A partial order adds antisymmetry to the preorder laws.
+prop is_partial_order_relation(A set, le_rel power_set(cart(A, A))):
+    $is_preorder_relation(A, le_rel)
+    forall x, y A:
+        $order_holds(A, le_rel, x, y)
+        $order_holds(A, le_rel, y, x)
+        =>:
+            x = y
+
+# The source ConvergesTo' domain is linearly ordered, so its relation also has
+# total comparability rather than only the preorder laws.
+prop is_linear_order_relation(A set, le_rel power_set(cart(A, A))):
+    $is_partial_order_relation(A, le_rel)
+    forall x, y A:
+        $order_holds(A, le_rel, x, y) or $order_holds(A, le_rel, y, x)
+
+# The generic source theorem fnUb_add uses an additive commutative monoid with
+# IsOrderedCancelAddMonoid. Besides monotonicity in both inputs, the latter
+# reflects the order after cancelling an equal left or right addend.
+prop is_add_comm_monoid(A set, add fn(x, y A) A, zero A):
+    forall x, y, z A:
+        add(add(x, y), z) = add(x, add(y, z))
+    forall x A:
+        add(zero, x) = x
+        add(x, zero) = x
+    forall x, y A:
+        add(x, y) = add(y, x)
+
+prop is_ordered_cancel_add_monoid_relation(A set, le_rel power_set(cart(A, A)), add fn(x, y A) A):
+    $is_partial_order_relation(A, le_rel)
+    forall x1, x2, y1, y2 A:
+        $order_holds(A, le_rel, x1, x2)
+        $order_holds(A, le_rel, y1, y2)
+        =>:
+            $order_holds(A, le_rel, add(x1, y1), add(x2, y2))
+    forall a, b, c A:
+        $order_holds(A, le_rel, add(a, b), add(a, c))
+        =>:
+            $order_holds(A, le_rel, b, c)
+    forall a, b, c A:
+        $order_holds(A, le_rel, add(b, a), add(c, a))
+        =>:
+            $order_holds(A, le_rel, b, c)
+
+# Source definition FnUb'. Its arbitrary domain and partially ordered codomain
+# remain carrier-first and relation-explicit.
+prop is_upper_bound_of_fn_by_relation(D, A set, le_rel power_set(cart(A, A)), f fn(x D) A, a A):
+    $is_partial_order_relation(A, le_rel)
+    forall x D:
+        $order_holds(A, le_rel, f(x), a)
+
+# Source theorem fnUb_add. The pointwise relation follows directly from the two
+# input bounds and compatibility of addition with the explicit order.
+thm upper_bound_of_fn_add_by_relation:
+    ? forall D, A set, le_rel power_set(cart(A, A)), add fn(x, y A) A, zero A, f, g fn(x D) A, a, b A:
+        $is_add_comm_monoid(A, add, zero)
+        $is_ordered_cancel_add_monoid_relation(A, le_rel, add)
+        $is_upper_bound_of_fn_by_relation(D, A, le_rel, f, a)
+        $is_upper_bound_of_fn_by_relation(D, A, le_rel, g, b)
+        =>:
+            $is_upper_bound_of_fn_by_relation(D, A, le_rel, fn(x D) A {add(f(x), g(x))}, add(a, b))
+    forall x D:
+        $order_holds(A, le_rel, f(x), a)
+        $order_holds(A, le_rel, g(x), b)
+        =>:
+            $order_holds(A, le_rel, add(f(x), g(x)), add(a, b))
+
+# Source definitions FnEven and FnOdd describe symmetry under x |-> -x.
+prop is_even_fn(f fn(x R) R):
+    forall x R:
+        f(x) = f(-x)
+
+prop is_odd_fn(f fn(x R) R):
+    forall x R:
+        f(x) = -f(-x)
+
+# The sum of two even functions is even.
+thm even_fn_add:
+    ? forall f, g fn(x R) R:
+        $is_even_fn(f)
+        $is_even_fn(g)
+        =>:
+            $is_even_fn(fn(x R) R {f(x) + g(x)})
+    forall x R:
+        f(x) = f(-x)
+        g(x) = g(-x)
+        f(x) + g(x) = f(-x) + g(-x)
+
+# The product of two odd functions is even.
+thm odd_fn_mul_odd_fn:
+    ? forall f, g fn(x R) R:
+        $is_odd_fn(f)
+        $is_odd_fn(g)
+        =>:
+            $is_even_fn(fn(x R) R {f(x) * g(x)})
+    forall x R:
+        f(x) = -f(-x)
+        g(x) = -g(-x)
+        f(x) * g(x) = (-f(-x)) * (-g(-x)) = f(-x) * g(-x)
+        fn(z R) R {f(z) * g(z)}(x) = f(x) * g(x) = f(-x) * g(-x) = fn(z R) R {f(z) * g(z)}(-x)
+
+# The product of an even and an odd function is odd.
+thm even_fn_mul_odd_fn:
+    ? forall f, g fn(x R) R:
+        $is_even_fn(f)
+        $is_odd_fn(g)
+        =>:
+            $is_odd_fn(fn(x R) R {f(x) * g(x)})
+    forall x R:
+        f(x) = f(-x)
+        g(x) = -g(-x)
+        f(x) * g(x) = f(-x) * (-g(-x)) = -(f(-x) * g(-x))
+        fn(z R) R {f(z) * g(z)}(x) = f(x) * g(x) = -(f(-x) * g(-x)) = -(fn(z R) R {f(z) * g(z)}(-x))
+
+# Composing an even function with an odd one gives an even function.
+thm even_fn_comp_odd_fn:
+    ? forall f, g fn(x R) R:
+        $is_even_fn(f)
+        $is_odd_fn(g)
+        =>:
+            $is_even_fn(fn(x R) R {f(g(x))})
+    forall x R:
+        f(g(x)) = f(-g(x))
+        g(x) = -g(-x)
+        f(g(x)) = f(-g(x)) = f(g(-x))
+        fn(z R) R {f(g(z))}(x) = f(g(x)) = f(g(-x)) = fn(z R) R {f(g(z))}(-x)
+
+# Source theorems Subset.refl and Subset.trans. Litex has subset as a builtin,
+# so both statements follow directly from membership propagation.
+thm subset_refl:
+    ? forall S set:
+        S $subset S
+    S $subset S
+
+thm subset_trans:
+    ? forall R0, S, T set:
+        R0 $subset S
+        S $subset T
+        =>:
+            R0 $subset T
+    R0 $subset T
+
+# Source definition SetUb. The source carrier is an arbitrary partial order, so
+# both the carrier and its order relation remain explicit here.
+prop is_upper_bound_of_set(A set, le_rel power_set(cart(A, A)), S power_set(A), a A):
+    $is_partial_order_relation(A, le_rel)
+    forall x S:
+        $order_holds(A, le_rel, x, a)
+
+thm upper_bound_of_set_mono:
+    ? forall A set, le_rel power_set(cart(A, A)), S power_set(A), a, b A:
+        $is_upper_bound_of_set(A, le_rel, S, a)
+        $order_holds(A, le_rel, a, b)
+        =>:
+            $is_upper_bound_of_set(A, le_rel, S, b)
+    forall x S:
+        $order_holds(A, le_rel, x, a)
+        $order_holds(A, le_rel, a, b)
+        =>:
+            $order_holds(A, le_rel, x, b)
+
+# 3.2 The Existential Quantifier
+
+# Source definitions FnHasUb and FnHasLb hide the particular bound while
+# retaining the upper- or lower-bound property.
+prop has_upper_bound(f fn(x R) R):
+    exist a R st {$is_upper_bound_of_fn(f, a)}
+
+prop has_lower_bound(f fn(x R) R):
+    exist a R st {$is_lower_bound_of_fn(f, a)}
+
+# The repeated source proof variants for bounded sums collapse to one witness
+# construction: unpack both bounds and choose their sum.
+thm has_upper_bound_add:
+    ? forall f, g fn(x R) R:
+        $has_upper_bound(f)
+        $has_upper_bound(g)
+        =>:
+            $has_upper_bound(fn(x R) R {f(x) + g(x)})
+    obtain a from exist a R st {$is_upper_bound_of_fn(f, a)}
+    obtain b from exist b R st {$is_upper_bound_of_fn(g, b)}
+    by thm upper_bound_of_fn_add(f, g, a, b)
+    witness exist c R st {$is_upper_bound_of_fn(fn(x R) R {f(x) + g(x)}, c)} from a + b
+
+thm has_lower_bound_add:
+    ? forall f, g fn(x R) R:
+        $has_lower_bound(f)
+        $has_lower_bound(g)
+        =>:
+            $has_lower_bound(fn(x R) R {f(x) + g(x)})
+    obtain a from exist a R st {$is_lower_bound_of_fn(f, a)}
+    obtain b from exist b R st {$is_lower_bound_of_fn(g, b)}
+    by thm lower_bound_of_fn_add(f, g, a, b)
+    witness exist c R st {$is_lower_bound_of_fn(fn(x R) R {f(x) + g(x)}, c)} from a + b
+
+# Source definition SumOfSquares. The carrier and its operations are explicit,
+# so the definition remains generic instead of silently specializing to R.
+prop is_sum_of_two_squares(A set, add fn(x, y A) A, mul fn(x, y A) A, z A):
+    exist a, b A st {z = add(mul(a, a), mul(b, b))}
+
+# Source result sumOfSquares_mul (including its duplicate proof variant).
+# The witnesses are the real and imaginary parts of a product. The one trusted
+# equality is the generic commutative-ring normalization for opaque operations;
+# the existential construction itself remains explicit.
+thm sum_of_two_squares_mul:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, z, w A:
+        $chap2::is_ring(A, add, zero, neg, mul, one)
+        forall x, y A:
+            mul(x, y) = mul(y, x)
+        $is_sum_of_two_squares(A, add, mul, z)
+        $is_sum_of_two_squares(A, add, mul, w)
+        =>:
+            $is_sum_of_two_squares(A, add, mul, mul(z, w))
+    obtain a, b from exist a, b A st {z = add(mul(a, a), mul(b, b))}
+    obtain c, d from exist c, d A st {w = add(mul(c, c), mul(d, d))}
+    have p A = add(mul(a, c), neg(mul(b, d)))
+    have q A = add(mul(a, d), mul(b, c))
+    # Trust reason: the source closes this exact identity by commutative-ring
+    # normalization; Litex cannot yet normalize arbitrary opaque operations.
+    trust mul(z, w) = add(mul(p, p), mul(q, q))
+    witness exist u, v A st {mul(z, w) = add(mul(u, u), mul(v, v))} from p, q
+
+# 3.4 Conjunction and Iff
+
+# Source definition Monotone, made explicit for real functions.
+prop is_monotone_fn(f fn(x R) R):
+    forall x, y R:
+        x <= y
+        =>:
+            f(x) <= f(y)
+
+# Source theorem not_monotone_iff, represented by its two fact directions
+# because Litex theorem goals are implication-shaped rather than top-level iff.
+thm not_monotone_iff_forward:
+    ? forall f fn(x R) R:
+        not $is_monotone_fn(f)
+        =>:
+            exist x, y R st {x <= y, f(x) > f(y)}
+    claim:
+        ? forall:
+            not $is_monotone_fn(f)
+            =>:
+                exist x, y R st {x <= y, f(x) > f(y)}
+        # The source uses push_neg. Litex performs the same classical argument
+        # explicitly: if no counterexample exists, every ordered pair is
+        # monotone, contradicting the premise.
+        prop _is_monotonicity_counterexample(x, y R):
+            x <= y
+            f(x) > f(y)
+        claim:
+            ? exist x, y R st {$_is_monotonicity_counterexample(x, y)}
+            by contra:
+                ? exist x, y R st {$_is_monotonicity_counterexample(x, y)}
+                claim:
+                    ? forall x, y R:
+                        x <= y
+                        =>:
+                            f(x) <= f(y)
+                    by contra:
+                        ? f(x) <= f(y)
+                        f(x) > f(y)
+                        $_is_monotonicity_counterexample(x, y)
+                        impossible $_is_monotonicity_counterexample(x, y)
+                $is_monotone_fn(f)
+                impossible not $is_monotone_fn(f)
+        obtain x, y from exist x, y R st {$_is_monotonicity_counterexample(x, y)}
+        witness exist u, v R st {u <= v, f(u) > f(v)} from x, y:
+            x <= y
+            f(x) > f(y)
+    claim:
+        ? forall:
+            exist x, y R st {x <= y, f(x) > f(y)}
+            =>:
+                not $is_monotone_fn(f)
+        obtain x, y from exist x, y R st {x <= y, f(x) > f(y)}
+        by contra:
+            ? not $is_monotone_fn(f)
+            $is_monotone_fn(f)
+            f(x) <= f(y)
+            impossible f(x) > f(y)
+    exist x, y R st {x <= y, f(x) > f(y)}
+
+thm not_monotone_iff_reverse:
+    ? forall f fn(x R) R:
+        exist x, y R st {x <= y, f(x) > f(y)}
+        =>:
+            not $is_monotone_fn(f)
+    obtain x, y from exist x, y R st {x <= y, f(x) > f(y)}
+    by contra:
+        ? not $is_monotone_fn(f)
+        $is_monotone_fn(f)
+        f(x) <= f(y)
+        impossible f(x) > f(y)
+
+# 3.5 Disjunction
+
+# Source namespace MyAbs. These five named results expose the standard absolute
+# value inequalities and their two useful logical normal forms.
+thm le_abs_self:
+    ? forall x R:
+        x <= abs(x)
+    x <= abs(x)
+
+thm neg_le_abs_self:
+    ? forall x R:
+        -x <= abs(x)
+    -x <= abs(x)
+
+thm abs_add_le:
+    ? forall x, y R:
+        abs(x + y) <= abs(x) + abs(y)
+    abs(x + y) <= abs(x) + abs(y)
+
+# Source theorem lt_abs, expressed by two direction facts.
+thm lt_abs_forward:
+    ? forall x, y R:
+        x < abs(y)
+        =>:
+            x < y or x < -y
+    claim:
+        ? forall:
+            x < abs(y)
+            =>:
+                x < y or x < -y
+        by cases:
+            ? x < y or x < -y
+            case y >= 0:
+                abs(y) = y
+                x < y
+                x < y or x < -y
+            case y < 0:
+                abs(y) = -y
+                x < -y
+                x < y or x < -y
+    claim:
+        ? forall:
+            x < y or x < -y
+            =>:
+                x < abs(y)
+        by cases:
+            ? x < abs(y)
+            case x < y:
+                by thm le_abs_self(y)
+                x < y <= abs(y)
+            case x < -y:
+                by thm neg_le_abs_self(y)
+                x < -y <= abs(y)
+    x < y or x < -y
+
+thm lt_abs_reverse:
+    ? forall x, y R:
+        x < y or x < -y
+        =>:
+            x < abs(y)
+    by cases:
+        ? x < abs(y)
+        case x < y:
+            by thm le_abs_self(y)
+            x < y <= abs(y)
+        case x < -y:
+            by thm neg_le_abs_self(y)
+            x < -y <= abs(y)
+
+# Source theorem abs_lt, expressed by two direction facts.
+thm abs_lt_forward:
+    ? forall x, y R:
+        abs(x) < y
+        =>:
+            -y < x and x < y
+    claim:
+        ? forall:
+            abs(x) < y
+            =>:
+                -y < x and x < y
+        x <= abs(x) < y
+        -x <= abs(x) < y
+        -y < x
+        -y < x and x < y
+    claim:
+        ? forall:
+            -y < x and x < y
+            =>:
+                abs(x) < y
+        -y < x
+        x < y
+        by cases:
+            ? abs(x) < y
+            case x >= 0:
+                abs(x) = x < y
+            case x < 0:
+                abs(x) = -x < y
+    -y < x and x < y
+
+thm abs_lt_reverse:
+    ? forall x, y R:
+        -y < x and x < y
+        =>:
+            abs(x) < y
+    -y < x
+    x < y
+    by cases:
+        ? abs(x) < y
+        case x >= 0:
+            abs(x) = x < y
+        case x < 0:
+            abs(x) = -x < y
+
+# 3.6 Sequences and Convergence
+
+# Private parser-facing helper. The tail beginning at N0 remains within
+# epsilon of a. This is not a second public convergence interface.
+prop _is_eventually_close(s fn(n N) R, a R, epsilon R_pos, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            abs(s(n) - a) < epsilon
+
+# Source definition ConvergesTo. The sequence domain is N, including index 0.
+prop converges_to(s fn(n N) R, a R):
+    forall epsilon R_pos:
+        exist N0 N st {$_is_eventually_close(s, a, epsilon, N0)}
+
+# Source theorem convergesTo_const. Choose N0 = 0; every later term differs
+# from the constant limit by zero.
+thm converges_to_const:
+    ? forall a R:
+        $converges_to(fn(n N) R {a}, a)
+    claim:
+        ? forall epsilon R_pos:
+            exist N0 N st {$_is_eventually_close(fn(n N) R {a}, a, epsilon, N0)}
+        witness exist N0 N st {$_is_eventually_close(fn(n N) R {a}, a, epsilon, N0)} from 0:
+            forall n N:
+                n >= 0
+                =>:
+                    abs(fn(k N) R {a}(n) - a) = abs(a - a) = 0 < epsilon
+    $converges_to(fn(n N) R {a}, a)
+
+# Source theorem convergesTo_add. Use epsilon/2 for each input sequence and the
+# maximum of the two tail indices, then apply the triangle inequality.
+thm converges_to_add:
+    ? forall s, t fn(n N) R, a, b R:
+        $converges_to(s, a)
+        $converges_to(t, b)
+        =>:
+            $converges_to(fn(n N) R {s(n) + t(n)}, a + b)
+    claim:
+        ? forall epsilon R_pos:
+            exist N0 N st {$_is_eventually_close(fn(n N) R {s(n) + t(n)}, a + b, epsilon, N0)}
+        epsilon / 2 $in R_pos
+        obtain Ns from exist N0 N st {$_is_eventually_close(s, a, epsilon / 2, N0)}
+        obtain Nt from exist N0 N st {$_is_eventually_close(t, b, epsilon / 2, N0)}
+        finite_set_max(union({Ns}, {Nt})) >= Ns
+        finite_set_max(union({Ns}, {Nt})) >= Nt
+        witness exist N0 N st {$_is_eventually_close(fn(n N) R {s(n) + t(n)}, a + b, epsilon, N0)} from finite_set_max(union({Ns}, {Nt})):
+            forall n N:
+                n >= finite_set_max(union({Ns}, {Nt}))
+                =>:
+                    n >= finite_set_max(union({Ns}, {Nt})) >= Ns
+                    n >= finite_set_max(union({Ns}, {Nt})) >= Nt
+                    abs(s(n) - a) < epsilon / 2
+                    abs(t(n) - b) < epsilon / 2
+                    abs((s(n) + t(n)) - (a + b)) = abs((s(n) - a) + (t(n) - b))
+                    abs((s(n) - a) + (t(n) - b)) <= abs(s(n) - a) + abs(t(n) - b) < epsilon / 2 + epsilon / 2 = epsilon
+    $converges_to(fn(n N) R {s(n) + t(n)}, a + b)
+
+# Source theorem convergesTo_mul_const. The always-positive scale |c| + 1
+# avoids a separate zero case while still providing a sufficiently small tail.
+thm converges_to_mul_const:
+    ? forall s fn(n N) R, a, c R:
+        $converges_to(s, a)
+        =>:
+            $converges_to(fn(n N) R {c * s(n)}, c * a)
+    claim:
+        ? forall epsilon R_pos:
+            exist N0 N st {$_is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        abs(c) >= 0
+        abs(c) + 1 > 0
+        epsilon / (abs(c) + 1) $in R_pos
+        obtain N0 from exist K N st {$_is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        witness exist K N st {$_is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            forall n N:
+                n >= N0
+                =>:
+                    abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                    abs(c) <= abs(c) + 1
+                    abs(s(n) - a) >= 0
+                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+    $converges_to(fn(n N) R {c * s(n)}, c * a)
+
+# Source theorem exists_abs_le_of_convergesTo. Convergence at epsilon = 1 gives
+# a tail bounded by |a| + 1 via the triangle inequality.
+thm exists_abs_bound_of_converges_to:
+    ? forall s fn(n N) R, a R:
+        $converges_to(s, a)
+        =>:
+            exist N0 N, B R_pos st {$_is_eventually_close(s, 0, B, N0)}
+    obtain N0 from exist K N st {$_is_eventually_close(s, a, 1, K)}
+    abs(a) + 1 $in R_pos
+    witness exist K N, B R_pos st {$_is_eventually_close(s, 0, B, K)} from N0, abs(a) + 1:
+        forall n N:
+            n >= N0
+            =>:
+                abs(s(n) - a) < 1
+                abs(s(n)) = abs((s(n) - a) + a) <= abs(s(n) - a) + abs(a) < 1 + abs(a) = abs(a) + 1
+                abs(s(n) - 0) = abs(s(n)) < abs(a) + 1
+
+# Source theorems aux and convergesTo_mul. The auxiliary product-with-zero
+# result is kept local because only multiplication consumes it.
+thm converges_to_mul:
+    ? forall s, t fn(n N) R, a, b R:
+        $converges_to(s, a)
+        $converges_to(t, b)
+        =>:
+            $converges_to(fn(n N) R {s(n) * t(n)}, a * b)
+
+    claim:
+        ? $converges_to(fn(n N) R {t(n) - b}, 0)
+        by thm converges_to_const(-b)
+        by thm converges_to_add(t, fn(n N) R {-b}, b, -b)
+        fn(n N) R {t(n) + (-b)} = fn(n N) R {t(n) - b}
+        b + (-b) = 0
+
+    claim:
+        ? forall u, v fn(n N) R, L R:
+            $converges_to(u, L)
+            $converges_to(v, 0)
+            =>:
+                $converges_to(fn(n N) R {u(n) * v(n)}, 0)
+        by thm exists_abs_bound_of_converges_to(u, L)
+        obtain Nu, B from exist N0 N, B R_pos st {$_is_eventually_close(u, 0, B, N0)}
+        claim:
+            ? forall epsilon R_pos:
+                exist N0 N st {$_is_eventually_close(fn(n N) R {u(n) * v(n)}, 0, epsilon, N0)}
+            epsilon / B $in R_pos
+            obtain Nv from exist N0 N st {$_is_eventually_close(v, 0, epsilon / B, N0)}
+            finite_set_max(union({Nu}, {Nv})) >= Nu
+            finite_set_max(union({Nu}, {Nv})) >= Nv
+            witness exist N0 N st {$_is_eventually_close(fn(n N) R {u(n) * v(n)}, 0, epsilon, N0)} from finite_set_max(union({Nu}, {Nv})):
+                forall n N:
+                    n >= finite_set_max(union({Nu}, {Nv}))
+                    =>:
+                        n >= finite_set_max(union({Nu}, {Nv})) >= Nu
+                        n >= finite_set_max(union({Nu}, {Nv})) >= Nv
+                        abs(u(n) - 0) < B
+                        abs(u(n)) = abs(u(n) - 0) < B
+                        abs(v(n) - 0) < epsilon / B
+                        abs(v(n)) = abs(v(n) - 0) < epsilon / B
+                        abs(u(n)) <= B
+                        abs(v(n)) >= 0
+                        abs(u(n) * v(n) - 0) = abs(u(n) * v(n)) = abs(u(n)) * abs(v(n))
+                        abs(u(n)) * abs(v(n)) <= B * abs(v(n)) < B * (epsilon / B) = epsilon
+                        abs(fn(k N) R {u(k) * v(k)}(n) - 0) < epsilon
+        $converges_to(fn(n N) R {u(n) * v(n)}, 0)
+
+    $converges_to(fn(n N) R {s(n) * (t(n) - b)}, 0)
+    by thm converges_to_mul_const(s, a, b)
+    by thm converges_to_add(fn(n N) R {s(n) * (t(n) - b)}, fn(n N) R {b * s(n)}, 0, b * a)
+    fn(n N) R {s(n) * (t(n) - b) + b * s(n)} = fn(n N) R {s(n) * t(n)}
+    0 + b * a = a * b
+    $converges_to(fn(n N) R {s(n) * t(n)}, a * b)
+
+# Source definition ConvergesTo'. The index carrier is arbitrary, while its
+# LinearOrder instance is represented by an explicit linear-order relation.
+# The tail condition reads i0 <= i as membership of (i0,i) in that relation.
+prop _is_eventually_close_by_relation(I set, le_rel power_set(cart(I, I)), s fn(i I) R, a R, epsilon R_pos, i0 I):
+    forall i I:
+        $order_holds(I, le_rel, i0, i)
+        =>:
+            abs(s(i) - a) < epsilon
+
+prop converges_to_by_relation(I set, le_rel power_set(cart(I, I)), s fn(i I) R, a R):
+    $is_linear_order_relation(I, le_rel)
+    forall epsilon R_pos:
+        exist i0 I st {$_is_eventually_close_by_relation(I, le_rel, s, a, epsilon, i0)}

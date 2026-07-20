@@ -1323,7 +1323,7 @@ impl MatrixAdd {
         format!(
             r"{} \mathbin{{\mathrm{{{}}}}} {}",
             self.left.to_latex_string(),
-            latex_escape_underscore(MATRIX_ADD),
+            latex_texttt_escape(MATRIX_ADD),
             self.right.to_latex_string()
         )
     }
@@ -1353,7 +1353,7 @@ impl MatrixMul {
         format!(
             r"{} \mathbin{{\mathrm{{{}}}}} {}",
             self.left.to_latex_string(),
-            latex_escape_underscore(MATRIX_MUL),
+            latex_texttt_escape(MATRIX_MUL),
             self.right.to_latex_string()
         )
     }
@@ -1364,7 +1364,7 @@ impl MatrixPow {
         format!(
             r"{} \mathbin{{\mathrm{{{}}}}} {}",
             self.base.to_latex_string(),
-            latex_escape_underscore(MATRIX_POW),
+            latex_texttt_escape(MATRIX_POW),
             self.exponent.to_latex_string()
         )
     }
@@ -1375,7 +1375,7 @@ impl MatrixScalarMul {
         format!(
             r"{} \mathbin{{\mathrm{{{}}}}} {}",
             self.scalar.to_latex_string(),
-            latex_escape_underscore(MATRIX_SCALAR_MUL),
+            latex_texttt_escape(MATRIX_SCALAR_MUL),
             self.matrix.to_latex_string()
         )
     }
@@ -1398,29 +1398,21 @@ impl MatrixSub {
         format!(
             r"{} \mathbin{{\mathrm{{{}}}}} {}",
             self.left.to_latex_string(),
-            latex_escape_underscore(MATRIX_SUB),
+            latex_texttt_escape(MATRIX_SUB),
             self.right.to_latex_string()
         )
     }
 }
 
-impl Max {
+impl FiniteSetMax {
     pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\max \left( {}, {} \right)",
-            self.left.to_latex_string(),
-            self.right.to_latex_string()
-        )
+        format!(r"\max \left( {} \right)", self.set.to_latex_string())
     }
 }
 
-impl Min {
+impl FiniteSetMin {
     pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\min \left( {}, {} \right)",
-            self.left.to_latex_string(),
-            self.right.to_latex_string()
-        )
+        format!(r"\min \left( {} \right)", self.set.to_latex_string())
     }
 }
 
@@ -2009,8 +2001,6 @@ impl Obj {
             Obj::Abs(x) => x.to_latex_string(),
             Obj::Sqrt(x) => x.to_latex_string(),
             Obj::Log(x) => x.to_latex_string(),
-            Obj::Max(x) => x.to_latex_string(),
-            Obj::Min(x) => x.to_latex_string(),
             Obj::Union(x) => x.to_latex_string(),
             Obj::Intersect(x) => x.to_latex_string(),
             Obj::SetMinus(x) => x.to_latex_string(),
@@ -2029,6 +2019,8 @@ impl Obj {
             Obj::TupleDim(x) => x.to_latex_string(),
             Obj::Tuple(x) => x.to_latex_string(),
             Obj::FiniteSetSize(x) => x.to_latex_string(),
+            Obj::FiniteSetMax(x) => x.to_latex_string(),
+            Obj::FiniteSetMin(x) => x.to_latex_string(),
             Obj::FnRange(x) => x.to_latex_string(),
             Obj::Replacement(x) => x.to_latex_string(),
             Obj::Sum(x) => x.to_latex_string(),
@@ -2147,6 +2139,7 @@ impl Stmt {
             Stmt::By(ByStmt::ByZornLemmaStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByAxiomOfChoiceStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByRegularityAxiomStmt(x)) => x.to_latex_string(),
+            Stmt::By(ByStmt::ByDefStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::By(ByStmt::ByThmStmt(x)) => latex_texttt_escape(&x.to_string()),
         }
     }

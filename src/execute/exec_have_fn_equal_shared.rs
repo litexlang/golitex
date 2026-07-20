@@ -266,6 +266,48 @@ fn append_fn_set_param_groups_as_forall_param_type_groups(
     Ok(())
 }
 
+pub(crate) fn case_conditions_are_disjoint(
+    runtime: &mut Runtime,
+    left: &AndChainAtomicFact,
+    right: &AndChainAtomicFact,
+) -> Result<bool, RuntimeError> {
+    if case_condition_implies_not_other(runtime, left, right)? {
+        return Ok(true);
+    }
+    case_condition_implies_not_other(runtime, right, left)
+}
+
+fn case_condition_implies_not_other(
+    runtime: &mut Runtime,
+    assumed: &AndChainAtomicFact,
+    other: &AndChainAtomicFact,
+) -> Result<bool, RuntimeError> {
+    runtime.run_in_local_env(|rt| {
+        rt.verify_well_defined_and_store_and_infer_with_default_verify_state(Fact::from(
+            assumed.clone(),
+        ))?;
+
+        for atom in flatten_and_chain_to_atomic_facts(other) {
+            let Ok(negated) = atom.logical_negation() else {
+                continue;
+            };
+            let result = rt.verify_atomic_fact(&negated, &VerifyState::new(0, false))?;
+            if result.is_true() {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    })
+}
+
+fn flatten_and_chain_to_atomic_facts(fact: &AndChainAtomicFact) -> Vec<AtomicFact> {
+    match fact {
+        AndChainAtomicFact::AtomicFact(atomic_fact) => vec![atomic_fact.clone()],
+        AndChainAtomicFact::AndFact(and_fact) => and_fact.facts.clone(),
+        AndChainAtomicFact::ChainFact(chain_fact) => chain_fact.facts().unwrap(),
+    }
+}
+
 impl Runtime {
     // Parser and executor must use the same object form for declarations in a
     // named module. Example: `have fn f ...` in `m` stores facts about `m::f`.

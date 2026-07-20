@@ -1406,8 +1406,24 @@ impl AtomicFact {
 }
 
 impl AtomicFact {
-    pub fn make_reversed(&self) -> AtomicFact {
-        match self {
+    /// Return the logical negation of an atomic fact.
+    ///
+    /// Function equality has no negated atomic form in Litex. Swapping its two
+    /// sides is symmetry, not negation, so callers must handle that case.
+    pub fn logical_negation(&self) -> Result<AtomicFact, RuntimeError> {
+        if matches!(
+            self,
+            AtomicFact::FnEqualInFact(_) | AtomicFact::FnEqualFact(_)
+        ) {
+            return Err(RuntimeError::from(NewFactRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!("logical negation is not supported for `{}`", self),
+                    self.line_file(),
+                ),
+            )));
+        }
+
+        Ok(match self {
             AtomicFact::NormalAtomicFact(a) => AtomicFact::NotNormalAtomicFact(
                 NotNormalAtomicFact::new(a.predicate.clone(), a.body.clone(), a.line_file.clone()),
             ),
@@ -1492,17 +1508,10 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(a) => {
                 SupersetFact::new(a.left.clone(), a.right.clone(), a.line_file.clone()).into()
             }
-            AtomicFact::FnEqualInFact(a) => FnEqualInFact::new(
-                a.right.clone(),
-                a.left.clone(),
-                a.set.clone(),
-                a.line_file.clone(),
-            )
-            .into(),
-            AtomicFact::FnEqualFact(a) => {
-                FnEqualFact::new(a.right.clone(), a.left.clone(), a.line_file.clone()).into()
+            AtomicFact::FnEqualInFact(_) | AtomicFact::FnEqualFact(_) => {
+                unreachable!("function equality is handled before logical negation")
             }
-        }
+        })
     }
 }
 

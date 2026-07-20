@@ -137,7 +137,7 @@ impl Runtime {
                 infer_result.new_infer_result_inside(non_factual_success.infers.clone());
             } else if result.factual_success().is_some() {
                 // Do not merge then-fact verification `infers` into `infer_result` (e.g. instantiated
-                // `min(a,b) <= a` from a known forall). Each then proof is attached as Steps under
+                // `finite_set_min(S) <= a` from a known forall). Each then proof is attached as Steps under
                 // `verified_by` for JSON/CLI.
             } else {
                 unreachable!("stmt unknown is handled above before this match")

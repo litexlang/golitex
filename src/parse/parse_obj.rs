@@ -63,6 +63,18 @@ impl Runtime {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
+        let operator = tb.current()?;
+        if let Some(replacement) = legacy_matrix_operator_replacement(operator) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "matrix operator `{}` has been replaced by `{}`",
+                        operator, replacement
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
         if tb.current_token_is_equal_to(POW) {
             tb.skip()?;
             let right = self.parse_obj_hierarchy3(tb)?; // Right associative: the right side may contain another `^`.
@@ -589,66 +601,6 @@ impl Runtime {
             })?;
             return Ok(IntegerQuotient::new(dividend, divisor).into());
         }
-        if tok == MAX {
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 2 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "max expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "max expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "max expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return Ok(Max::new(left, right).into());
-        }
-        if tok == MIN {
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 2 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "min expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "min expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "min expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return Ok(Min::new(left, right).into());
-        }
         if tok == LOG {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -1150,6 +1102,38 @@ impl Runtime {
                 ))
             })?;
             return Ok(FiniteSetSize::new(value).into());
+        }
+        if tok == FINITE_SET_MAX || tok == FINITE_SET_MIN {
+            let is_max = tok == FINITE_SET_MAX;
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 1 {
+                let name = if is_max {
+                    FINITE_SET_MAX
+                } else {
+                    FINITE_SET_MIN
+                };
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("{name} expects 1 argument"),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let set = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "finite-set extrema expects 1 argument".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return if is_max {
+                Ok(FiniteSetMax::new(set).into())
+            } else {
+                Ok(FiniteSetMin::new(set).into())
+            };
         }
         if tok == FN_RANGE {
             tb.skip()?;
@@ -2024,6 +2008,22 @@ fn standard_set_from_bare_identifier_name(name: &str) -> Option<Obj> {
     }
 }
 
+fn legacy_matrix_operator_replacement(operator: &str) -> Option<&'static str> {
+    if operator == LEGACY_MATRIX_ADD {
+        Some(MATRIX_ADD)
+    } else if operator == LEGACY_MATRIX_SUB {
+        Some(MATRIX_SUB)
+    } else if operator == LEGACY_MATRIX_MUL {
+        Some(MATRIX_MUL)
+    } else if operator == LEGACY_MATRIX_SCALAR_MUL {
+        Some(MATRIX_SCALAR_MUL)
+    } else if operator == LEGACY_MATRIX_POW {
+        Some(MATRIX_POW)
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod module_qualification_parse_tests {
     use crate::parse::Tokenizer;
@@ -2270,6 +2270,12 @@ mod module_qualification_parse_tests {
         };
         assert_with_mod(&thm_stmt.name, "Nat", "T");
 
+        let def_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by def $P(a)");
+        let Stmt::By(ByStmt::ByDefStmt(def_stmt)) = def_stmt else {
+            panic!("expected by def stmt");
+        };
+        assert_with_mod(&def_stmt.fact.predicate, "Nat", "P");
+
         let strategy_stmt = parse_one_stmt_line_with_runtime(&mut rt, "use strategy S");
         let Stmt::Command(CommandStmt::UseStrategyStmt(strategy_stmt)) = strategy_stmt else {
             panic!("expected use strategy stmt");
@@ -2305,6 +2311,12 @@ mod module_qualification_parse_tests {
             panic!("expected by thm stmt");
         };
         assert_with_mod(&thm_stmt.name, "Other", "T");
+
+        let def_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by def $Other::P(a)");
+        let Stmt::By(ByStmt::ByDefStmt(def_stmt)) = def_stmt else {
+            panic!("expected by def stmt");
+        };
+        assert_with_mod(&def_stmt.fact.predicate, "Other", "P");
 
         let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\Other::Template<2>");
         let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
@@ -2428,5 +2440,68 @@ mod module_qualification_parse_tests {
             panic!("expected struct object");
         };
         assert_without_mod(&struct_obj.name, "Struct");
+    }
+}
+
+#[cfg(test)]
+mod matrix_operator_parse_tests {
+    use crate::parse::Tokenizer;
+    use crate::prelude::*;
+    use std::rc::Rc;
+
+    fn parse_obj_line(source: &str) -> Result<Obj, RuntimeError> {
+        let mut tokenizer = Tokenizer::new();
+        let mut blocks = tokenizer.parse_blocks(source, Rc::from("test.lit"))?;
+        assert_eq!(blocks.len(), 1, "{source:?}");
+        Runtime::new().parse_obj(&mut blocks[0])
+    }
+
+    #[test]
+    fn apostrophe_matrix_operators_keep_existing_ast_variants() {
+        let cases = [
+            ("A '+ B", ObjKind::MatrixAdd),
+            ("A '- B", ObjKind::MatrixSub),
+            ("A '* B", ObjKind::MatrixMul),
+            ("3 *' A", ObjKind::MatrixScalarMul),
+            ("A '^ 2", ObjKind::MatrixPow),
+        ];
+
+        for (source, expected_kind) in cases {
+            let obj = parse_obj_line(source).expect("matrix operator should parse");
+            assert_eq!(obj.kind(), expected_kind, "{source}");
+            assert_eq!(obj.to_string(), source, "{source}");
+        }
+
+        let interval = parse_obj_line("'(0, 1)").expect("interval literal should still parse");
+        assert_eq!(interval.kind(), ObjKind::IntervalObj);
+        assert_eq!(interval.to_string(), "'(0, 1)");
+    }
+
+    #[test]
+    fn legacy_matrix_operators_report_their_replacements() {
+        let cases = [
+            ("A ++ B", "++", "'+"),
+            ("A -- B", "--", "'-"),
+            ("A ** B", "**", "'*"),
+            ("3 *. A", "*.", "*'"),
+            ("A ^^ 2", "^^", "'^"),
+        ];
+
+        for (source, legacy, replacement) in cases {
+            let error = match parse_obj_line(source) {
+                Ok(obj) => panic!("legacy operator should be rejected, parsed {obj}"),
+                Err(error) => error,
+            };
+            let RuntimeError::ParseError(error) = error else {
+                panic!("expected parse error for {source}");
+            };
+            assert_eq!(
+                error.msg,
+                format!(
+                    "matrix operator `{}` has been replaced by `{}`",
+                    legacy, replacement
+                )
+            );
+        }
     }
 }

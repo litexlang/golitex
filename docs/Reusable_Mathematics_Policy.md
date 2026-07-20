@@ -5,7 +5,6 @@ construction. Bundled standard modules such as `basics` load only when a
 top-level `litex.config` lists them under `[import std]`. Other non-kernel
 background mathematics belongs in a project or source-local cite dependency,
 whose names remain explicitly qualified. The old experimental collection under
-`scripts/legacy_std/` remains an archive and is not an import search path.
 
 ## Where a fact belongs
 

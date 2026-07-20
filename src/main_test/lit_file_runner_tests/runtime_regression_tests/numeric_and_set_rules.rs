@@ -1,6 +1,67 @@
 use super::*;
 
 #[test]
+fn infinite_set_minus_rule_keeps_a_finite_deletion_infinite() {
+    let source_code = r#"
+forall X set, s finite_set:
+    not $is_finite_set(X)
+    =>:
+        not $is_finite_set(set_minus(X, s))
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "infinite_set_minus_rule_keeps_a_finite_deletion_infinite",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "finite deletion from an infinite set should stay infinite:\n{run_output}"
+    );
+    assert!(
+        run_output
+            .contains("set minus is infinite when left side is infinite and right side is finite"),
+        "the result should expose the finite-deletion rule:\n{run_output}"
+    );
+}
+
+#[test]
+fn infinite_set_minus_rule_requires_both_finiteness_premises() {
+    for (name, source_code) in [
+        (
+            "missing_left_infinite_premise",
+            r#"
+forall X set, s finite_set:
+    not $is_finite_set(set_minus(X, s))
+"#,
+        ),
+        (
+            "missing_right_finite_premise",
+            r#"
+forall X, s set:
+    not $is_finite_set(X)
+    =>:
+        not $is_finite_set(set_minus(X, s))
+"#,
+        ),
+    ] {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(name);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "{name} must not prove the infinite set-minus conclusion:\n{run_output}"
+        );
+    }
+}
+
+#[test]
 fn dense_real_intervals_have_rational_and_real_witnesses_as_builtin_rules() {
     run_with_large_stack(
         "dense_real_intervals_have_rational_and_real_witnesses_as_builtin_rules",
@@ -109,22 +170,22 @@ forall a, b, c Z:
         a <= c
 
 forall a, b R:
-    a <= max(a, b)
-    b <= max(a, b)
-    min(a, b) <= a
-    min(a, b) <= b
+    a <= finite_set_max(union({a}, {b}))
+    b <= finite_set_max(union({a}, {b}))
+    finite_set_min(union({a}, {b})) <= a
+    finite_set_min(union({a}, {b})) <= b
 
 forall a, b, c R:
     a <= c
     b <= c
     =>:
-        max(a, b) <= c
+        finite_set_max(union({a}, {b})) <= c
 
 forall a, b, c R:
     c <= a
     c <= b
     =>:
-        c <= min(a, b)
+        c <= finite_set_min(union({a}, {b}))
 
 forall a, b Z:
     a < b
@@ -157,10 +218,10 @@ forall x, n Z:
             );
             for rule in [
                 "order: transitivity through a shared ordered numeric middle term",
-                "max: each operand is below the binary maximum",
-                "min: the binary minimum is below each operand",
-                "max: least upper bound of two real operands",
-                "min: greatest lower bound of two real operands",
+                "finite_set_max: every member is at most the maximum",
+                "finite_set_min: the minimum is at most every member",
+                "finite_set_max: least upper bound of a concrete finite-set expression",
+                "finite_set_min: greatest lower bound of a concrete finite-set expression",
                 "integer successor: a < b gives a + 1 <= b",
                 "integer predecessor: a < b gives a <= b - 1",
                 "or: integer discrete split x <= n or x >= n + 1",
@@ -2127,44 +2188,63 @@ forall A, B set:
 }
 
 #[test]
-fn finite_set_extrema_are_public_source_level_interfaces() {
+fn finite_set_extrema_are_builtin_interfaces() {
     let source_code = r#"
-import std basics
+finite_set_max({1, 2}) = 2
+finite_set_max({1, 2, 3, 4}) = 4
+finite_set_min({4, -1, 2}) = -1
 
 thm finite_set_extrema_have_defining_properties:
-    ? forall S power_set(N), x S:
+    ? forall S power_set(R), x S:
         $is_finite_set(S)
         $is_nonempty_set(S)
         =>:
-            basics::finite_set_max(S) $in S
-            x <= basics::finite_set_max(S)
-            basics::finite_set_min(S) $in S
-            basics::finite_set_min(S) <= x
-    by thm basics::finite_set_max_in_set(S)
-    by thm basics::finite_set_member_le_max(S, x)
-    by thm basics::finite_set_min_in_set(S)
-    by thm basics::finite_set_min_le_member(S, x)
+            finite_set_max(S) $in S
+            x <= finite_set_max(S)
+            finite_set_min(S) $in S
+            finite_set_min(S) <= x
 "#;
     let mut runtime = Runtime::new();
     runtime.isolated = true;
-    runtime.new_file_path_new_env_new_name_scope("finite_set_extrema_public_interfaces");
+    runtime.new_file_path_new_env_new_name_scope("finite_set_extrema_builtin_interfaces");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "finite-set extrema should be available through public basics theorems:\n{run_output}"
+        "finite-set extrema should be direct builtin interfaces:\n{run_output}"
     );
-    for theorem_name in [
-        "basics::finite_set_max_in_set",
-        "basics::finite_set_member_le_max",
-        "basics::finite_set_min_in_set",
-        "basics::finite_set_min_le_member",
+    for rule_name in [
+        "finite_set_max: the maximum belongs to its set",
+        "finite_set_max: every member is at most the maximum",
+        "finite_set_min: the minimum belongs to its set",
+        "finite_set_min: the minimum is at most every member",
     ] {
         assert!(
-            run_output.contains(theorem_name),
-            "missing public finite-set extrema theorem `{theorem_name}`:\n{run_output}"
+            run_output.contains(rule_name),
+            "missing finite-set extrema builtin provenance `{rule_name}`:\n{run_output}"
         );
     }
+}
+
+#[test]
+fn legacy_binary_max_and_min_are_not_builtins() {
+    let source_code = r#"
+max(1, 2) = 2
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("legacy_binary_max_and_min_are_not_builtins");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "the removed binary max builtin must not verify:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("function `max` not defined"),
+        "the failure should identify max as an ordinary undefined function:\n{run_output}"
+    );
 }

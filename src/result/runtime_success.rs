@@ -51,6 +51,7 @@ pub enum ByVerificationResult {
     AxiomOfChoice(ByChoiceVerificationResult),
     ZornLemma(ByChoiceVerificationResult),
     RegularityAxiom(ByChoiceVerificationResult),
+    Definition(ByDefinitionVerificationResult),
     Theorem(ByTheoremVerificationResult),
 }
 
@@ -161,6 +162,14 @@ pub struct ByTheoremVerificationResult {
     pub arguments: Vec<String>,
     pub domain_facts: Vec<String>,
     pub stored_then_facts: Vec<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ByDefinitionVerificationResult {
+    pub prop: String,
+    pub arguments: Vec<String>,
+    pub definition_clauses: Vec<String>,
+    pub stored_fact: String,
 }
 
 #[derive(Clone, Debug)]
@@ -921,6 +930,22 @@ impl ByTheoremVerificationResult {
     }
 }
 
+impl ByDefinitionVerificationResult {
+    pub fn new(
+        prop: String,
+        arguments: Vec<String>,
+        definition_clauses: Vec<String>,
+        stored_fact: String,
+    ) -> Self {
+        ByDefinitionVerificationResult {
+            prop,
+            arguments,
+            definition_clauses,
+            stored_fact,
+        }
+    }
+}
+
 impl From<ByCasesVerificationResult> for ByVerificationResult {
     fn from(v: ByCasesVerificationResult) -> Self {
         ByVerificationResult::Cases(v)
@@ -972,6 +997,12 @@ impl From<ByPropRegistrationVerificationResult> for ByVerificationResult {
 impl From<ByTheoremVerificationResult> for ByVerificationResult {
     fn from(v: ByTheoremVerificationResult) -> Self {
         ByVerificationResult::Theorem(v)
+    }
+}
+
+impl From<ByDefinitionVerificationResult> for ByVerificationResult {
+    fn from(v: ByDefinitionVerificationResult) -> Self {
+        ByVerificationResult::Definition(v)
     }
 }
 
@@ -1038,6 +1069,7 @@ impl fmt::Debug for ByVerificationResult {
             ByVerificationResult::RegularityAxiom(v) => {
                 f.debug_tuple("RegularityAxiom").field(v).finish()
             }
+            ByVerificationResult::Definition(v) => f.debug_tuple("Definition").field(v).finish(),
             ByVerificationResult::Theorem(v) => f.debug_tuple("Theorem").field(v).finish(),
         }
     }

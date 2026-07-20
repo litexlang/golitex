@@ -23,10 +23,10 @@ pub use free_param_obj::{
 };
 pub use obj::{
     fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, ClosedRange, Cup, Div, FiniteSeqListObj,
-    FiniteSeqSet, FiniteSetSize, FnObj, FnRange, GeneralCart, InstantiatedTemplateObj,
-    IntegerQuotient, Intersect, IntervalObj, IntervalObjStruct, ListSet, Log, MatrixAdd,
-    MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul,
-    Number, Obj, ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind,
+    FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnObj, FnRange, GeneralCart,
+    InstantiatedTemplateObj, IntegerQuotient, Intersect, IntervalObj, IntervalObjStruct, ListSet,
+    Log, MatrixAdd, MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub,
+    Mod, Mul, Number, Obj, ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind,
     OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, Pow, PowerSet, Product,
     ProductOfFiniteSet, Proj, Range, Replacement, SeqSet, SetBuilder, SetDiff, SetMinus, Sqrt,
     StructObj, Sub, Sum, SumOfFiniteSet, Tuple, TupleDim, Union,

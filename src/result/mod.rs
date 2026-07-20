@@ -35,15 +35,15 @@ pub use proof_trust::{ProofTrustDependency, ProofTrustSummary};
 pub use runtime_result::StmtResult;
 pub use runtime_success::{
     ByAssignmentVerificationResult, ByCasesVerificationResult, ByChoiceVerificationResult,
-    ByContraVerificationResult, ByEnumerateFiniteSetVerificationResult,
-    ByEnumerateRangeVerificationResult, ByExtensionVerificationResult, ByForVerificationResult,
-    ByInducVerificationResult, ByPropRegistrationVerificationResult, ByTheoremVerificationResult,
-    ByVerificationResult, ClaimFactVerificationResult, ClaimForallVerificationResult,
-    ClaimVerificationResult, FactualStmtSuccess, ForallProofResult, ForallProvedFactResult,
-    KnownForallInstantiationItem, KnownForallInstantiationResult, KnownForallRequirementResult,
-    NonFactualStmtSuccess, ObjectIntroductionItem, TheoremVerificationResult,
-    VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum,
-    VerifiedBysResult,
+    ByContraVerificationResult, ByDefinitionVerificationResult,
+    ByEnumerateFiniteSetVerificationResult, ByEnumerateRangeVerificationResult,
+    ByExtensionVerificationResult, ByForVerificationResult, ByInducVerificationResult,
+    ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ByVerificationResult,
+    ClaimFactVerificationResult, ClaimForallVerificationResult, ClaimVerificationResult,
+    FactualStmtSuccess, ForallProofResult, ForallProvedFactResult, KnownForallInstantiationItem,
+    KnownForallInstantiationResult, KnownForallRequirementResult, NonFactualStmtSuccess,
+    ObjectIntroductionItem, TheoremVerificationResult, VerifiedByBuiltinRuleResult,
+    VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum, VerifiedBysResult,
 };
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;

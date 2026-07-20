@@ -747,8 +747,6 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         }
         Obj::Pow(x) => collect_module_names_from_two(&x.base, &x.exponent, module_names),
         Obj::Log(x) => collect_module_names_from_two(&x.base, &x.arg, module_names),
-        Obj::Max(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
-        Obj::Min(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Union(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Intersect(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::SetMinus(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
@@ -795,6 +793,8 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Cap(x) => collect_module_names_from_obj(&x.left, module_names),
         Obj::PowerSet(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FiniteSetSize(x) => collect_module_names_from_obj(&x.set, module_names),
+        Obj::FiniteSetMax(x) => collect_module_names_from_obj(&x.set, module_names),
+        Obj::FiniteSetMin(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FnRange(x) => collect_module_names_from_obj(&x.function, module_names),
         Obj::Replacement(x) => {
             collect_module_name_from_atomic_name(&x.prop_name, module_names);

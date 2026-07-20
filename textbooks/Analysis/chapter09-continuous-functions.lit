@@ -455,26 +455,26 @@ thm closure_union_subset_forward:
                         obtain epsilon_x from exist epsilon_x R_pos st {not $is_epsilon_adherent_to_set(X, z, epsilon_x)}
                         by thm non_closure_gives_failed_radius(Y, z)
                         obtain epsilon_y from exist epsilon_y R_pos st {not $is_epsilon_adherent_to_set(Y, z, epsilon_y)}
-                        min(epsilon_x, epsilon_y) $in R_pos
+                        finite_set_min(union({epsilon_x}, { epsilon_y})) $in R_pos
                         $is_adherent_point(union(X, Y), z)
-                        $is_epsilon_adherent_to_set(union(X, Y), z, min(epsilon_x, epsilon_y))
-                        obtain w from exist w R st {w $in union(X, Y), abs(z - w) <= min(epsilon_x, epsilon_y)}
-                        min(epsilon_x, epsilon_y) <= epsilon_x
-                        min(epsilon_x, epsilon_y) <= epsilon_y
+                        $is_epsilon_adherent_to_set(union(X, Y), z, finite_set_min(union({epsilon_x}, { epsilon_y})))
+                        obtain w from exist w R st {w $in union(X, Y), abs(z - w) <= finite_set_min(union({epsilon_x}, { epsilon_y}))}
+                        finite_set_min(union({epsilon_x}, { epsilon_y})) <= epsilon_x
+                        finite_set_min(union({epsilon_x}, { epsilon_y})) <= epsilon_y
                         w $in X or w $in Y
                         by cases:
                             ? z $in union(closure_of_real_set(X), closure_of_real_set(Y))
                             case w $in X:
                                 witness exist u R st {u $in X, abs(z - u) <= epsilon_x} from w:
                                     w $in X
-                                    abs(z - w) <= min(epsilon_x, epsilon_y) <= epsilon_x
+                                    abs(z - w) <= finite_set_min(union({epsilon_x}, { epsilon_y})) <= epsilon_x
                                     abs(z - w) <= epsilon_x
                                 $is_epsilon_adherent_to_set(X, z, epsilon_x)
                                 impossible not $is_epsilon_adherent_to_set(X, z, epsilon_x)
                             case w $in Y:
                                 witness exist u R st {u $in Y, abs(z - u) <= epsilon_y} from w:
                                     w $in Y
-                                    abs(z - w) <= min(epsilon_x, epsilon_y) <= epsilon_y
+                                    abs(z - w) <= finite_set_min(union({epsilon_x}, { epsilon_y})) <= epsilon_y
                                     abs(z - w) <= epsilon_y
                                 $is_epsilon_adherent_to_set(Y, z, epsilon_y)
                                 impossible not $is_epsilon_adherent_to_set(Y, z, epsilon_y)
@@ -2991,8 +2991,8 @@ forall X set, f, g fn(x X) R, c R, x X:
     fn(y X) R {f(y) - g(y)}(x) = f(x) - g(x)
     fn(y X) R {f(y) * g(y)}(x) = f(x) * g(x)
     fn(y X) R {c * f(y)}(x) = c * f(x)
-    fn(y X) R {max(f(y), g(y))}(x) = max(f(x), g(x))
-    fn(y X) R {min(f(y), g(y))}(x) = min(f(x), g(x))
+    fn(y X) R {finite_set_max(union({f(y)}, { g(y)}))}(x) = finite_set_max(union({f(x)}, { g(x)}))
+    fn(y X) R {finite_set_min(union({f(y)}, { g(y)}))}(x) = finite_set_min(union({f(x)}, { g(x)}))
 
 forall X power_set(R), f, g fn(x X) R, x X:
     g(x) != 0
@@ -3553,22 +3553,22 @@ thm function_limit_unique:
         $is_locally_epsilon_close_to(E, f, x0, L2, abs(L1 - L2) / 3)
         obtain delta1 from exist delta1 R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L1, abs(L1 - L2) / 3, delta1)}
         obtain delta2 from exist delta2 R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L2, abs(L1 - L2) / 3, delta2)}
-        min(delta1, delta2) $in R_pos
-        min(delta1, delta2) / 2 $in R_pos
-        $is_epsilon_adherent_to_set(E, x0, min(delta1, delta2) / 2)
-        obtain y from exist y R st {y $in E, abs(x0 - y) <= min(delta1, delta2) / 2}
+        finite_set_min(union({delta1}, { delta2})) $in R_pos
+        finite_set_min(union({delta1}, { delta2})) / 2 $in R_pos
+        $is_epsilon_adherent_to_set(E, x0, finite_set_min(union({delta1}, { delta2})) / 2)
+        obtain y from exist y R st {y $in E, abs(x0 - y) <= finite_set_min(union({delta1}, { delta2})) / 2}
         y $in E
-        abs(x0 - y) <= min(delta1, delta2) / 2
+        abs(x0 - y) <= finite_set_min(union({delta1}, { delta2})) / 2
         abs(y - x0) = abs(x0 - y)
-        abs(y - x0) <= min(delta1, delta2) / 2
-        min(delta1, delta2) / 2 < min(delta1, delta2)
-        abs(y - x0) <= min(delta1, delta2) / 2 < min(delta1, delta2)
-        abs(y - x0) < min(delta1, delta2)
-        min(delta1, delta2) <= delta1
-        min(delta1, delta2) <= delta2
-        abs(y - x0) < min(delta1, delta2) <= delta1
+        abs(y - x0) <= finite_set_min(union({delta1}, { delta2})) / 2
+        finite_set_min(union({delta1}, { delta2})) / 2 < finite_set_min(union({delta1}, { delta2}))
+        abs(y - x0) <= finite_set_min(union({delta1}, { delta2})) / 2 < finite_set_min(union({delta1}, { delta2}))
+        abs(y - x0) < finite_set_min(union({delta1}, { delta2}))
+        finite_set_min(union({delta1}, { delta2})) <= delta1
+        finite_set_min(union({delta1}, { delta2})) <= delta2
+        abs(y - x0) < finite_set_min(union({delta1}, { delta2})) <= delta1
         abs(y - x0) < delta1
-        abs(y - x0) < min(delta1, delta2) <= delta2
+        abs(y - x0) < finite_set_min(union({delta1}, { delta2})) <= delta2
         abs(y - x0) < delta2
         abs(f(y) - L1) <= abs(L1 - L2) / 3
         abs(f(y) - L2) <= abs(L1 - L2) / 3
@@ -3624,18 +3624,18 @@ thm function_limit_add:
         $is_locally_epsilon_close_to(E, g, x0, M, epsilon / 2)
         obtain delta_f from exist delta_f R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon / 2, delta_f)}
         obtain delta_g from exist delta_g R_pos st {$is_delta_neighborhood_close_to(E, g, x0, M, epsilon / 2, delta_g)}
-        min(delta_f, delta_g) $in R_pos
-        min(delta_f, delta_g) <= delta_f
-        min(delta_f, delta_g) <= delta_g
-        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, fn(x E) R {f(x) + g(x)}, x0, L + M, epsilon, delta)} from min(delta_f, delta_g):
+        finite_set_min(union({delta_f}, { delta_g})) $in R_pos
+        finite_set_min(union({delta_f}, { delta_g})) <= delta_f
+        finite_set_min(union({delta_f}, { delta_g})) <= delta_g
+        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, fn(x E) R {f(x) + g(x)}, x0, L + M, epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
             claim:
                 ? forall y E:
-                    abs(y - x0) < min(delta_f, delta_g)
+                    abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
                     =>:
                         abs(fn(x E) R {f(x) + g(x)}(y) - (L + M)) <= epsilon
-                abs(y - x0) < min(delta_f, delta_g) <= delta_f
+                abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_f
                 abs(y - x0) < delta_f
-                abs(y - x0) < min(delta_f, delta_g) <= delta_g
+                abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_g
                 abs(y - x0) < delta_g
                 abs(f(y) - L) <= epsilon / 2
                 abs(g(y) - M) <= epsilon / 2
@@ -3670,18 +3670,18 @@ thm function_limit_sub:
         $is_locally_epsilon_close_to(E, g, x0, M, epsilon / 2)
         obtain delta_f from exist delta_f R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon / 2, delta_f)}
         obtain delta_g from exist delta_g R_pos st {$is_delta_neighborhood_close_to(E, g, x0, M, epsilon / 2, delta_g)}
-        min(delta_f, delta_g) $in R_pos
-        min(delta_f, delta_g) <= delta_f
-        min(delta_f, delta_g) <= delta_g
-        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, fn(x E) R {f(x) - g(x)}, x0, L - M, epsilon, delta)} from min(delta_f, delta_g):
+        finite_set_min(union({delta_f}, { delta_g})) $in R_pos
+        finite_set_min(union({delta_f}, { delta_g})) <= delta_f
+        finite_set_min(union({delta_f}, { delta_g})) <= delta_g
+        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, fn(x E) R {f(x) - g(x)}, x0, L - M, epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
             claim:
                 ? forall y E:
-                    abs(y - x0) < min(delta_f, delta_g)
+                    abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
                     =>:
                         abs(fn(x E) R {f(x) - g(x)}(y) - (L - M)) <= epsilon
-                abs(y - x0) < min(delta_f, delta_g) <= delta_f
+                abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_f
                 abs(y - x0) < delta_f
-                abs(y - x0) < min(delta_f, delta_g) <= delta_g
+                abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_g
                 abs(y - x0) < delta_g
                 abs(f(y) - L) <= epsilon / 2
                 abs(g(y) - M) <= epsilon / 2
@@ -3725,25 +3725,25 @@ thm function_limit_product:
         obtain delta_bound from exist delta_bound R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, 1, delta_bound)}
         obtain delta_f from exist delta_f R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon / (abs(L) + 1 + abs(M) + 1), delta_f)}
         obtain delta_g from exist delta_g R_pos st {$is_delta_neighborhood_close_to(E, g, x0, M, epsilon / (abs(L) + 1 + abs(M) + 1), delta_g)}
-        min(delta_bound, delta_f) $in R_pos
-        min(min(delta_bound, delta_f), delta_g) $in R_pos
-        min(delta_bound, delta_f) <= delta_bound
-        min(delta_bound, delta_f) <= delta_f
-        min(min(delta_bound, delta_f), delta_g) <= min(delta_bound, delta_f)
-        min(min(delta_bound, delta_f), delta_g) <= delta_g
-        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, fn(x E) R {f(x) * g(x)}, x0, L * M, epsilon, delta)} from min(min(delta_bound, delta_f), delta_g):
+        finite_set_min(union({delta_bound}, { delta_f})) $in R_pos
+        finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})) $in R_pos
+        finite_set_min(union({delta_bound}, { delta_f})) <= delta_bound
+        finite_set_min(union({delta_bound}, { delta_f})) <= delta_f
+        finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})) <= finite_set_min(union({delta_bound}, { delta_f}))
+        finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})) <= delta_g
+        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, fn(x E) R {f(x) * g(x)}, x0, L * M, epsilon, delta)} from finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})):
             claim:
                 ? forall y E:
-                    abs(y - x0) < min(min(delta_bound, delta_f), delta_g)
+                    abs(y - x0) < finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g}))
                     =>:
                         abs(fn(x E) R {f(x) * g(x)}(y) - L * M) <= epsilon
-                abs(y - x0) < min(min(delta_bound, delta_f), delta_g) <= min(delta_bound, delta_f)
-                abs(y - x0) < min(delta_bound, delta_f)
-                abs(y - x0) < min(delta_bound, delta_f) <= delta_bound
+                abs(y - x0) < finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})) <= finite_set_min(union({delta_bound}, { delta_f}))
+                abs(y - x0) < finite_set_min(union({delta_bound}, { delta_f}))
+                abs(y - x0) < finite_set_min(union({delta_bound}, { delta_f})) <= delta_bound
                 abs(y - x0) < delta_bound
-                abs(y - x0) < min(delta_bound, delta_f) <= delta_f
+                abs(y - x0) < finite_set_min(union({delta_bound}, { delta_f})) <= delta_f
                 abs(y - x0) < delta_f
-                abs(y - x0) < min(min(delta_bound, delta_f), delta_g) <= delta_g
+                abs(y - x0) < finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})) <= delta_g
                 abs(y - x0) < delta_g
                 abs(f(y) - L) <= 1
                 abs(f(y) - L) <= epsilon / (abs(L) + 1 + abs(M) + 1)
@@ -3801,7 +3801,7 @@ thm max_lipschitz:
         abs(a - A) <= epsilon
         abs(b - B) <= epsilon
         =>:
-            abs(max(a, b) - max(A, B)) <= epsilon
+            abs(finite_set_max(union({a}, { b})) - finite_set_max(union({A}, { B}))) <= epsilon
     a - A <= abs(a - A)
     a - A <= abs(a - A) <= epsilon
     a - A <= epsilon
@@ -3816,18 +3816,18 @@ thm max_lipschitz:
     (b - B) + B = b
     epsilon + B = B + epsilon
     b <= B + epsilon
-    A <= max(A, B)
-    B <= max(A, B)
-    A + epsilon <= max(A, B) + epsilon
-    B + epsilon <= max(A, B) + epsilon
-    a <= A + epsilon <= max(A, B) + epsilon
-    a <= max(A, B) + epsilon
-    b <= B + epsilon <= max(A, B) + epsilon
-    b <= max(A, B) + epsilon
-    max(a, b) <= max(A, B) + epsilon
-    max(a, b) - max(A, B) <= (max(A, B) + epsilon) - max(A, B)
-    (max(A, B) + epsilon) - max(A, B) = epsilon
-    max(a, b) - max(A, B) <= epsilon
+    A <= finite_set_max(union({A}, { B}))
+    B <= finite_set_max(union({A}, { B}))
+    A + epsilon <= finite_set_max(union({A}, { B})) + epsilon
+    B + epsilon <= finite_set_max(union({A}, { B})) + epsilon
+    a <= A + epsilon <= finite_set_max(union({A}, { B})) + epsilon
+    a <= finite_set_max(union({A}, { B})) + epsilon
+    b <= B + epsilon <= finite_set_max(union({A}, { B})) + epsilon
+    b <= finite_set_max(union({A}, { B})) + epsilon
+    finite_set_max(union({a}, { b})) <= finite_set_max(union({A}, { B})) + epsilon
+    finite_set_max(union({a}, { b})) - finite_set_max(union({A}, { B})) <= (finite_set_max(union({A}, { B})) + epsilon) - finite_set_max(union({A}, { B}))
+    (finite_set_max(union({A}, { B})) + epsilon) - finite_set_max(union({A}, { B})) = epsilon
+    finite_set_max(union({a}, { b})) - finite_set_max(union({A}, { B})) <= epsilon
     A - a <= abs(A - a)
     abs(A - a) = abs(a - A)
     A - a <= abs(a - A)
@@ -3846,150 +3846,150 @@ thm max_lipschitz:
     (B - b) + b = B
     epsilon + b = b + epsilon
     B <= b + epsilon
-    a <= max(a, b)
-    b <= max(a, b)
-    a + epsilon <= max(a, b) + epsilon
-    b + epsilon <= max(a, b) + epsilon
-    A <= a + epsilon <= max(a, b) + epsilon
-    A <= max(a, b) + epsilon
-    B <= b + epsilon <= max(a, b) + epsilon
-    B <= max(a, b) + epsilon
-    max(A, B) <= max(a, b) + epsilon
-    max(A, B) - max(a, b) <= (max(a, b) + epsilon) - max(a, b)
-    (max(a, b) + epsilon) - max(a, b) = epsilon
-    max(A, B) - max(a, b) <= epsilon
-    -(max(a, b) - max(A, B)) = max(A, B) - max(a, b)
-    -(max(a, b) - max(A, B)) <= epsilon
-    abs(max(a, b) - max(A, B)) <= epsilon
+    a <= finite_set_max(union({a}, { b}))
+    b <= finite_set_max(union({a}, { b}))
+    a + epsilon <= finite_set_max(union({a}, { b})) + epsilon
+    b + epsilon <= finite_set_max(union({a}, { b})) + epsilon
+    A <= a + epsilon <= finite_set_max(union({a}, { b})) + epsilon
+    A <= finite_set_max(union({a}, { b})) + epsilon
+    B <= b + epsilon <= finite_set_max(union({a}, { b})) + epsilon
+    B <= finite_set_max(union({a}, { b})) + epsilon
+    finite_set_max(union({A}, { B})) <= finite_set_max(union({a}, { b})) + epsilon
+    finite_set_max(union({A}, { B})) - finite_set_max(union({a}, { b})) <= (finite_set_max(union({a}, { b})) + epsilon) - finite_set_max(union({a}, { b}))
+    (finite_set_max(union({a}, { b})) + epsilon) - finite_set_max(union({a}, { b})) = epsilon
+    finite_set_max(union({A}, { B})) - finite_set_max(union({a}, { b})) <= epsilon
+    -(finite_set_max(union({a}, { b})) - finite_set_max(union({A}, { B}))) = finite_set_max(union({A}, { B})) - finite_set_max(union({a}, { b}))
+    -(finite_set_max(union({a}, { b})) - finite_set_max(union({A}, { B}))) <= epsilon
+    abs(finite_set_max(union({a}, { b})) - finite_set_max(union({A}, { B}))) <= epsilon
 
 thm min_neg_max:
     ? forall u, v R:
-        min(u, v) = -max(-u, -v)
+        finite_set_min(union({u}, { v})) = -finite_set_max(union({-u}, { -v}))
     u <= v or u > v
     by cases:
-        ? min(u, v) = -max(-u, -v)
+        ? finite_set_min(union({u}, { v})) = -finite_set_max(union({-u}, { -v}))
         case u <= v:
-            min(u, v) <= u
-            u <= min(u, v)
-            min(u, v) = u
+            finite_set_min(union({u}, { v})) <= u
+            u <= finite_set_min(union({u}, { v}))
+            finite_set_min(union({u}, { v})) = u
             -v <= -u
-            max(-u, -v) <= -u
-            -u <= max(-u, -v)
-            max(-u, -v) = -u
-            -max(-u, -v) = -(-u)
+            finite_set_max(union({-u}, { -v})) <= -u
+            -u <= finite_set_max(union({-u}, { -v}))
+            finite_set_max(union({-u}, { -v})) = -u
+            -finite_set_max(union({-u}, { -v})) = -(-u)
             -(-u) = u
-            min(u, v) = -max(-u, -v)
+            finite_set_min(union({u}, { v})) = -finite_set_max(union({-u}, { -v}))
         case u > v:
             v <= u
-            min(u, v) <= v
-            v <= min(u, v)
-            min(u, v) = v
+            finite_set_min(union({u}, { v})) <= v
+            v <= finite_set_min(union({u}, { v}))
+            finite_set_min(union({u}, { v})) = v
             -u <= -v
-            max(-u, -v) <= -v
-            -v <= max(-u, -v)
-            max(-u, -v) = -v
-            -max(-u, -v) = -(-v)
+            finite_set_max(union({-u}, { -v})) <= -v
+            -v <= finite_set_max(union({-u}, { -v}))
+            finite_set_max(union({-u}, { -v})) = -v
+            -finite_set_max(union({-u}, { -v})) = -(-v)
             -(-v) = v
-            min(u, v) = -max(-u, -v)
-    min(u, v) = -max(-u, -v)
+            finite_set_min(union({u}, { v})) = -finite_set_max(union({-u}, { -v}))
+    finite_set_min(union({u}, { v})) = -finite_set_max(union({-u}, { -v}))
 
 thm min_lipschitz:
     ? forall a, b, A, B R, epsilon R_pos:
         abs(a - A) <= epsilon
         abs(b - B) <= epsilon
         =>:
-            abs(min(a, b) - min(A, B)) <= epsilon
+            abs(finite_set_min(union({a}, { b})) - finite_set_min(union({A}, { B}))) <= epsilon
     abs((-a) - (-A)) = abs(a - A)
     abs((-a) - (-A)) <= epsilon
     abs((-b) - (-B)) = abs(b - B)
     abs((-b) - (-B)) <= epsilon
     by thm max_lipschitz(-a, -b, -A, -B, epsilon)
-    abs(max(-a, -b) - max(-A, -B)) <= epsilon
+    abs(finite_set_max(union({-a}, { -b})) - finite_set_max(union({-A}, { -B}))) <= epsilon
     by thm min_neg_max(a, b)
     by thm min_neg_max(A, B)
-    min(a, b) = -max(-a, -b)
-    min(A, B) = -max(-A, -B)
-    min(a, b) - min(A, B) = (-max(-a, -b)) - (-max(-A, -B))
-    (-max(-a, -b)) - (-max(-A, -B)) = -(max(-a, -b) - max(-A, -B))
-    abs(min(a, b) - min(A, B)) = abs(-(max(-a, -b) - max(-A, -B)))
-    abs(-(max(-a, -b) - max(-A, -B))) = abs(max(-a, -b) - max(-A, -B))
-    abs(min(a, b) - min(A, B)) <= epsilon
+    finite_set_min(union({a}, { b})) = -finite_set_max(union({-a}, { -b}))
+    finite_set_min(union({A}, { B})) = -finite_set_max(union({-A}, { -B}))
+    finite_set_min(union({a}, { b})) - finite_set_min(union({A}, { B})) = (-finite_set_max(union({-a}, { -b}))) - (-finite_set_max(union({-A}, { -B})))
+    (-finite_set_max(union({-a}, { -b}))) - (-finite_set_max(union({-A}, { -B}))) = -(finite_set_max(union({-a}, { -b})) - finite_set_max(union({-A}, { -B})))
+    abs(finite_set_min(union({a}, { b})) - finite_set_min(union({A}, { B}))) = abs(-(finite_set_max(union({-a}, { -b})) - finite_set_max(union({-A}, { -B}))))
+    abs(-(finite_set_max(union({-a}, { -b})) - finite_set_max(union({-A}, { -B})))) = abs(finite_set_max(union({-a}, { -b})) - finite_set_max(union({-A}, { -B})))
+    abs(finite_set_min(union({a}, { b})) - finite_set_min(union({A}, { B}))) <= epsilon
 
 thm function_limit_max:
     ? forall E power_set(R), f, g fn(x E) R, x0, L, M R:
         $has_function_limit(E, f, x0, L)
         $has_function_limit(E, g, x0, M)
         =>:
-            $has_function_limit(E, fn(x E) R {max(f(x), g(x))}, x0, max(L, M))
+            $has_function_limit(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})))
     $is_adherent_point(E, x0)
     claim:
         ? forall epsilon R_pos:
-            $is_locally_epsilon_close_to(E, fn(x E) R {max(f(x), g(x))}, x0, max(L, M), epsilon)
+            $is_locally_epsilon_close_to(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})), epsilon)
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
         $is_locally_epsilon_close_to(E, g, x0, M, epsilon)
         obtain delta_f from exist delta_f R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta_f)}
         obtain delta_g from exist delta_g R_pos st {$is_delta_neighborhood_close_to(E, g, x0, M, epsilon, delta_g)}
-        min(delta_f, delta_g) $in R_pos
-        min(delta_f, delta_g) <= delta_f
-        min(delta_f, delta_g) <= delta_g
-        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, fn(x E) R {max(f(x), g(x))}, x0, max(L, M), epsilon, delta)} from min(delta_f, delta_g):
+        finite_set_min(union({delta_f}, { delta_g})) $in R_pos
+        finite_set_min(union({delta_f}, { delta_g})) <= delta_f
+        finite_set_min(union({delta_f}, { delta_g})) <= delta_g
+        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})), epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
             claim:
                 ? forall y E:
-                    abs(y - x0) < min(delta_f, delta_g)
+                    abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
                     =>:
-                        abs(fn(x E) R {max(f(x), g(x))}(y) - max(L, M)) <= epsilon
-                abs(y - x0) < min(delta_f, delta_g) <= delta_f
+                        abs(fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}(y) - finite_set_max(union({L}, { M}))) <= epsilon
+                abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_f
                 abs(y - x0) < delta_f
-                abs(y - x0) < min(delta_f, delta_g) <= delta_g
+                abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_g
                 abs(y - x0) < delta_g
                 abs(f(y) - L) <= epsilon
                 abs(g(y) - M) <= epsilon
                 by thm max_lipschitz(f(y), g(y), L, M, epsilon)
-                abs(max(f(y), g(y)) - max(L, M)) <= epsilon
-                fn(x E) R {max(f(x), g(x))}(y) = max(f(y), g(y))
-                abs(fn(x E) R {max(f(x), g(x))}(y) - max(L, M)) = abs(max(f(y), g(y)) - max(L, M))
-                abs(fn(x E) R {max(f(x), g(x))}(y) - max(L, M)) <= epsilon
-            $is_delta_neighborhood_close_to(E, fn(x E) R {max(f(x), g(x))}, x0, max(L, M), epsilon, delta)
-        $is_locally_epsilon_close_to(E, fn(x E) R {max(f(x), g(x))}, x0, max(L, M), epsilon)
-    $has_function_limit(E, fn(x E) R {max(f(x), g(x))}, x0, max(L, M))
+                abs(finite_set_max(union({f(y)}, { g(y)})) - finite_set_max(union({L}, { M}))) <= epsilon
+                fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}(y) = finite_set_max(union({f(y)}, { g(y)}))
+                abs(fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}(y) - finite_set_max(union({L}, { M}))) = abs(finite_set_max(union({f(y)}, { g(y)})) - finite_set_max(union({L}, { M})))
+                abs(fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}(y) - finite_set_max(union({L}, { M}))) <= epsilon
+            $is_delta_neighborhood_close_to(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})), epsilon, delta)
+        $is_locally_epsilon_close_to(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})), epsilon)
+    $has_function_limit(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})))
 
 thm function_limit_min:
     ? forall E power_set(R), f, g fn(x E) R, x0, L, M R:
         $has_function_limit(E, f, x0, L)
         $has_function_limit(E, g, x0, M)
         =>:
-            $has_function_limit(E, fn(x E) R {min(f(x), g(x))}, x0, min(L, M))
+            $has_function_limit(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})))
     $is_adherent_point(E, x0)
     claim:
         ? forall epsilon R_pos:
-            $is_locally_epsilon_close_to(E, fn(x E) R {min(f(x), g(x))}, x0, min(L, M), epsilon)
+            $is_locally_epsilon_close_to(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})), epsilon)
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
         $is_locally_epsilon_close_to(E, g, x0, M, epsilon)
         obtain delta_f from exist delta_f R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta_f)}
         obtain delta_g from exist delta_g R_pos st {$is_delta_neighborhood_close_to(E, g, x0, M, epsilon, delta_g)}
-        min(delta_f, delta_g) $in R_pos
-        min(delta_f, delta_g) <= delta_f
-        min(delta_f, delta_g) <= delta_g
-        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, fn(x E) R {min(f(x), g(x))}, x0, min(L, M), epsilon, delta)} from min(delta_f, delta_g):
+        finite_set_min(union({delta_f}, { delta_g})) $in R_pos
+        finite_set_min(union({delta_f}, { delta_g})) <= delta_f
+        finite_set_min(union({delta_f}, { delta_g})) <= delta_g
+        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})), epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
             claim:
                 ? forall y E:
-                    abs(y - x0) < min(delta_f, delta_g)
+                    abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
                     =>:
-                        abs(fn(x E) R {min(f(x), g(x))}(y) - min(L, M)) <= epsilon
-                abs(y - x0) < min(delta_f, delta_g) <= delta_f
+                        abs(fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}(y) - finite_set_min(union({L}, { M}))) <= epsilon
+                abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_f
                 abs(y - x0) < delta_f
-                abs(y - x0) < min(delta_f, delta_g) <= delta_g
+                abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_g
                 abs(y - x0) < delta_g
                 abs(f(y) - L) <= epsilon
                 abs(g(y) - M) <= epsilon
                 by thm min_lipschitz(f(y), g(y), L, M, epsilon)
-                abs(min(f(y), g(y)) - min(L, M)) <= epsilon
-                fn(x E) R {min(f(x), g(x))}(y) = min(f(y), g(y))
-                abs(fn(x E) R {min(f(x), g(x))}(y) - min(L, M)) = abs(min(f(y), g(y)) - min(L, M))
-                abs(fn(x E) R {min(f(x), g(x))}(y) - min(L, M)) <= epsilon
-            $is_delta_neighborhood_close_to(E, fn(x E) R {min(f(x), g(x))}, x0, min(L, M), epsilon, delta)
-        $is_locally_epsilon_close_to(E, fn(x E) R {min(f(x), g(x))}, x0, min(L, M), epsilon)
-    $has_function_limit(E, fn(x E) R {min(f(x), g(x))}, x0, min(L, M))
+                abs(finite_set_min(union({f(y)}, { g(y)})) - finite_set_min(union({L}, { M}))) <= epsilon
+                fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}(y) = finite_set_min(union({f(y)}, { g(y)}))
+                abs(fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}(y) - finite_set_min(union({L}, { M}))) = abs(finite_set_min(union({f(y)}, { g(y)})) - finite_set_min(union({L}, { M})))
+                abs(fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}(y) - finite_set_min(union({L}, { M}))) <= epsilon
+            $is_delta_neighborhood_close_to(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})), epsilon, delta)
+        $is_locally_epsilon_close_to(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})), epsilon)
+    $has_function_limit(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})))
 
 thm near_nonzero_abs_lower:
     ? forall z, y R:
@@ -4066,25 +4066,25 @@ thm nonzero_limit_restricted_domain_adherent:
         abs(M) / 2 $in R_pos
         $is_locally_epsilon_close_to(E, g, x0, M, abs(M) / 2)
         obtain delta_nonzero from exist delta_nonzero R_pos st {$is_delta_neighborhood_close_to(E, g, x0, M, abs(M) / 2, delta_nonzero)}
-        min(epsilon, delta_nonzero) $in R_pos
-        min(epsilon, delta_nonzero) / 2 $in R_pos
-        min(epsilon, delta_nonzero) <= epsilon
-        min(epsilon, delta_nonzero) <= delta_nonzero
+        finite_set_min(union({epsilon}, { delta_nonzero})) $in R_pos
+        finite_set_min(union({epsilon}, { delta_nonzero})) / 2 $in R_pos
+        finite_set_min(union({epsilon}, { delta_nonzero})) <= epsilon
+        finite_set_min(union({epsilon}, { delta_nonzero})) <= delta_nonzero
         1 / 2 < 1
-        (1 / 2) * min(epsilon, delta_nonzero) < 1 * min(epsilon, delta_nonzero)
-        (1 / 2) * min(epsilon, delta_nonzero) = min(epsilon, delta_nonzero) / 2
-        1 * min(epsilon, delta_nonzero) = min(epsilon, delta_nonzero)
-        min(epsilon, delta_nonzero) / 2 < min(epsilon, delta_nonzero)
-        min(epsilon, delta_nonzero) / 2 <= min(epsilon, delta_nonzero)
-        $is_epsilon_adherent_to_set(E, x0, min(epsilon, delta_nonzero) / 2)
-        obtain y from exist y R st {y $in E, abs(x0 - y) <= min(epsilon, delta_nonzero) / 2}
-        abs(x0 - y) <= min(epsilon, delta_nonzero) / 2 <= min(epsilon, delta_nonzero)
-        abs(x0 - y) <= min(epsilon, delta_nonzero)
-        abs(x0 - y) <= min(epsilon, delta_nonzero) <= epsilon
+        (1 / 2) * finite_set_min(union({epsilon}, { delta_nonzero})) < 1 * finite_set_min(union({epsilon}, { delta_nonzero}))
+        (1 / 2) * finite_set_min(union({epsilon}, { delta_nonzero})) = finite_set_min(union({epsilon}, { delta_nonzero})) / 2
+        1 * finite_set_min(union({epsilon}, { delta_nonzero})) = finite_set_min(union({epsilon}, { delta_nonzero}))
+        finite_set_min(union({epsilon}, { delta_nonzero})) / 2 < finite_set_min(union({epsilon}, { delta_nonzero}))
+        finite_set_min(union({epsilon}, { delta_nonzero})) / 2 <= finite_set_min(union({epsilon}, { delta_nonzero}))
+        $is_epsilon_adherent_to_set(E, x0, finite_set_min(union({epsilon}, { delta_nonzero})) / 2)
+        obtain y from exist y R st {y $in E, abs(x0 - y) <= finite_set_min(union({epsilon}, { delta_nonzero})) / 2}
+        abs(x0 - y) <= finite_set_min(union({epsilon}, { delta_nonzero})) / 2 <= finite_set_min(union({epsilon}, { delta_nonzero}))
+        abs(x0 - y) <= finite_set_min(union({epsilon}, { delta_nonzero}))
+        abs(x0 - y) <= finite_set_min(union({epsilon}, { delta_nonzero})) <= epsilon
         abs(x0 - y) <= epsilon
-        abs(x0 - y) <= min(epsilon, delta_nonzero) / 2 < min(epsilon, delta_nonzero)
-        abs(x0 - y) < min(epsilon, delta_nonzero)
-        abs(x0 - y) < min(epsilon, delta_nonzero) <= delta_nonzero
+        abs(x0 - y) <= finite_set_min(union({epsilon}, { delta_nonzero})) / 2 < finite_set_min(union({epsilon}, { delta_nonzero}))
+        abs(x0 - y) < finite_set_min(union({epsilon}, { delta_nonzero}))
+        abs(x0 - y) < finite_set_min(union({epsilon}, { delta_nonzero})) <= delta_nonzero
         abs(x0 - y) < delta_nonzero
         abs(y - x0) = abs(x0 - y)
         abs(y - x0) < delta_nonzero
@@ -4219,20 +4219,20 @@ thm function_limit_reciprocal:
         $is_locally_epsilon_close_to(E, g, x0, M, (abs(M) / 2)^2 * epsilon)
         obtain delta_lower from exist delta_lower R_pos st {$is_delta_neighborhood_close_to(E, g, x0, M, abs(M) / 2, delta_lower)}
         obtain delta_close from exist delta_close R_pos st {$is_delta_neighborhood_close_to(E, g, x0, M, (abs(M) / 2)^2 * epsilon, delta_close)}
-        min(delta_lower, delta_close) $in R_pos
-        min(delta_lower, delta_close) <= delta_lower
-        min(delta_lower, delta_close) <= delta_close
-        witness exist delta R_pos st {$is_delta_neighborhood_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, 1 / M, epsilon, delta)} from min(delta_lower, delta_close):
+        finite_set_min(union({delta_lower}, { delta_close})) $in R_pos
+        finite_set_min(union({delta_lower}, { delta_close})) <= delta_lower
+        finite_set_min(union({delta_lower}, { delta_close})) <= delta_close
+        witness exist delta R_pos st {$is_delta_neighborhood_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, 1 / M, epsilon, delta)} from finite_set_min(union({delta_lower}, { delta_close})):
             claim:
                 ? forall y {x E: g(x) != 0}:
-                    abs(y - x0) < min(delta_lower, delta_close)
+                    abs(y - x0) < finite_set_min(union({delta_lower}, { delta_close}))
                     =>:
                         abs(fn(x {x E: g(x) != 0}) R {1 / g(x)}(y) - 1 / M) <= epsilon
                 y $in E
                 g(y) != 0
-                abs(y - x0) < min(delta_lower, delta_close) <= delta_lower
+                abs(y - x0) < finite_set_min(union({delta_lower}, { delta_close})) <= delta_lower
                 abs(y - x0) < delta_lower
-                abs(y - x0) < min(delta_lower, delta_close) <= delta_close
+                abs(y - x0) < finite_set_min(union({delta_lower}, { delta_close})) <= delta_close
                 abs(y - x0) < delta_close
                 abs(g(y) - M) <= abs(M) / 2
                 by thm near_nonzero_abs_lower(g(y), M)
@@ -4430,30 +4430,30 @@ thm function_limit_max_value:
         $has_function_limit_at(E, f, x0)
         $has_function_limit_at(E, g, x0)
         =>:
-            $has_function_limit_at(E, fn(x E) R {max(f(x), g(x))}, x0)
-            function_limit(E, fn(x E) R {max(f(x), g(x))}, x0) = max(function_limit(E, f, x0), function_limit(E, g, x0))
+            $has_function_limit_at(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0)
+            function_limit(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0) = finite_set_max(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)}))
     $has_function_limit(E, f, x0, function_limit(E, f, x0))
     $has_function_limit(E, g, x0, function_limit(E, g, x0))
     by thm function_limit_max(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
-    $has_function_limit(E, fn(x E) R {max(f(x), g(x))}, x0, max(function_limit(E, f, x0), function_limit(E, g, x0)))
-    by thm has_function_limit_to_function_limit_value(E, fn(x E) R {max(f(x), g(x))}, x0, max(function_limit(E, f, x0), function_limit(E, g, x0)))
-    $has_function_limit_at(E, fn(x E) R {max(f(x), g(x))}, x0)
-    function_limit(E, fn(x E) R {max(f(x), g(x))}, x0) = max(function_limit(E, f, x0), function_limit(E, g, x0))
+    $has_function_limit(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)})))
+    by thm has_function_limit_to_function_limit_value(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)})))
+    $has_function_limit_at(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0)
+    function_limit(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0) = finite_set_max(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)}))
 
 thm function_limit_min_value:
     ? forall E power_set(R), f, g fn(x E) R, x0 R:
         $has_function_limit_at(E, f, x0)
         $has_function_limit_at(E, g, x0)
         =>:
-            $has_function_limit_at(E, fn(x E) R {min(f(x), g(x))}, x0)
-            function_limit(E, fn(x E) R {min(f(x), g(x))}, x0) = min(function_limit(E, f, x0), function_limit(E, g, x0))
+            $has_function_limit_at(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0)
+            function_limit(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0) = finite_set_min(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)}))
     $has_function_limit(E, f, x0, function_limit(E, f, x0))
     $has_function_limit(E, g, x0, function_limit(E, g, x0))
     by thm function_limit_min(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
-    $has_function_limit(E, fn(x E) R {min(f(x), g(x))}, x0, min(function_limit(E, f, x0), function_limit(E, g, x0)))
-    by thm has_function_limit_to_function_limit_value(E, fn(x E) R {min(f(x), g(x))}, x0, min(function_limit(E, f, x0), function_limit(E, g, x0)))
-    $has_function_limit_at(E, fn(x E) R {min(f(x), g(x))}, x0)
-    function_limit(E, fn(x E) R {min(f(x), g(x))}, x0) = min(function_limit(E, f, x0), function_limit(E, g, x0))
+    $has_function_limit(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)})))
+    by thm has_function_limit_to_function_limit_value(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)})))
+    $has_function_limit_at(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0)
+    function_limit(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0) = finite_set_min(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)}))
 
 thm function_limit_quotient_value:
     ? forall E power_set(R), f, g fn(x E) R, x0 R:
@@ -4479,7 +4479,7 @@ nonzero in the quotient case.
 
 # In ordinary notation these are the rules
 # `chap6::lim(f +/- g)=chap6::lim f +/- chap6::lim g`, `chap6::lim(fg)=chap6::lim f chap6::lim g`,
-# `chap6::lim max(f,g)=max(chap6::lim f, chap6::lim g)`, `chap6::lim min(f,g)=min(chap6::lim f, chap6::lim g)`, and
+# `chap6::lim finite_set_max(union({f}, {g}))=finite_set_max(union({chap6::lim f}, { chap6::lim g}))`, `chap6::lim finite_set_min(union({f}, {g}))=finite_set_min(union({chap6::lim f}, { chap6::lim g}))`, and
 # `chap6::lim(f/g)=chap6::lim f / chap6::lim g` when the quotient expression is defined and the
 # denominator limit is nonzero.  The next examples show how the same laws give
 # the basic polynomial limits after the constant and identity limits.
@@ -4814,14 +4814,14 @@ thm function_limit_on_local_part:
         claim:
             ? forall epsilon R_pos:
                 $is_epsilon_adherent_to_set(local_part(E, x0, delta), x0, epsilon)
-            min(epsilon, delta / 2) $in R_pos
-            min(epsilon, delta / 2) <= epsilon
-            min(epsilon, delta / 2) <= delta / 2
-            $is_epsilon_adherent_to_set(E, x0, min(epsilon, delta / 2))
-            obtain y from exist y R st {y $in E, abs(x0 - y) <= min(epsilon, delta / 2)}
-            abs(x0 - y) <= min(epsilon, delta / 2) <= epsilon
+            finite_set_min(union({epsilon}, { delta / 2})) $in R_pos
+            finite_set_min(union({epsilon}, { delta / 2})) <= epsilon
+            finite_set_min(union({epsilon}, { delta / 2})) <= delta / 2
+            $is_epsilon_adherent_to_set(E, x0, finite_set_min(union({epsilon}, { delta / 2})))
+            obtain y from exist y R st {y $in E, abs(x0 - y) <= finite_set_min(union({epsilon}, { delta / 2}))}
+            abs(x0 - y) <= finite_set_min(union({epsilon}, { delta / 2})) <= epsilon
             abs(x0 - y) <= epsilon
-            abs(x0 - y) <= min(epsilon, delta / 2) <= delta / 2
+            abs(x0 - y) <= finite_set_min(union({epsilon}, { delta / 2})) <= delta / 2
             abs(x0 - y) <= delta / 2
             delta / 2 < delta
             abs(x0 - y) <= delta / 2 < delta
@@ -4894,18 +4894,18 @@ thm local_part_function_limit_extends:
             $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
         $is_locally_epsilon_close_to(local_part(E, x0, delta), fn(x local_part(E, x0, delta)) R {f(x)}, x0, L, epsilon)
         obtain eta from exist eta R_pos st {$is_delta_neighborhood_close_to(local_part(E, x0, delta), fn(x local_part(E, x0, delta)) R {f(x)}, x0, L, epsilon, eta)}
-        min(eta, delta / 2) $in R_pos
-        min(eta, delta / 2) <= eta
-        min(eta, delta / 2) <= delta / 2
-        witness exist eta0 R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, eta0)} from min(eta, delta / 2):
+        finite_set_min(union({eta}, { delta / 2})) $in R_pos
+        finite_set_min(union({eta}, { delta / 2})) <= eta
+        finite_set_min(union({eta}, { delta / 2})) <= delta / 2
+        witness exist eta0 R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, eta0)} from finite_set_min(union({eta}, { delta / 2})):
             claim:
                 ? forall y E:
-                    abs(y - x0) < min(eta, delta / 2)
+                    abs(y - x0) < finite_set_min(union({eta}, { delta / 2}))
                     =>:
                         abs(f(y) - L) <= epsilon
-                abs(y - x0) < min(eta, delta / 2) <= eta
+                abs(y - x0) < finite_set_min(union({eta}, { delta / 2})) <= eta
                 abs(y - x0) < eta
-                abs(y - x0) < min(eta, delta / 2) <= delta / 2
+                abs(y - x0) < finite_set_min(union({eta}, { delta / 2})) <= delta / 2
                 abs(y - x0) < delta / 2
                 delta / 2 < delta
                 abs(y - x0) < delta / 2 < delta
@@ -5098,7 +5098,7 @@ irrational sequences approaching zero force it to be `0`.
 # zero.
 have fn rational_indicator_for_limit_example(x R) R by cases:
     case x $in Q: 1
-    case x $in set_minus(R, Q): 0
+    case not x $in Q: 0
 
 thm rational_indicator_restricted_limits_at_zero:
     ? forall :
@@ -5891,7 +5891,7 @@ thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact:
 Proposition 9.4.9 (Arithmetic preserves continuity). Let `X` be a subset of
 `R`, let `f : X -> R` and `g : X -> R`, and let `x0` be an element of `X`.
 If `f` and `g` are both continuous at `x0`, then `f + g`, `f - g`,
-`max(f,g)`, `min(f,g)`, and `fg` are also continuous at `x0`. If `g` is
+`finite_set_max(union({f}, {g}))`, `finite_set_min(union({f}, {g}))`, and `fg` are also continuous at `x0`. If `g` is
 non-zero on `X`, then `f/g` is also continuous at `x0`.
 """
 
@@ -5903,8 +5903,8 @@ thm continuity_at_closed_under_arithmetic:
             $is_continuous_at(X, fn(x X) R {f(x) + g(x)}, x0)
             $is_continuous_at(X, fn(x X) R {f(x) - g(x)}, x0)
             $is_continuous_at(X, fn(x X) R {f(x) * g(x)}, x0)
-            $is_continuous_at(X, fn(x X) R {max(f(x), g(x))}, x0)
-            $is_continuous_at(X, fn(x X) R {min(f(x), g(x))}, x0)
+            $is_continuous_at(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0)
+            $is_continuous_at(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0)
     claim:
         ? $is_continuous_at(X, fn(x X) R {f(x) + g(x)}, x0)
         $has_function_limit(X, f, x0, f(x0))
@@ -5933,23 +5933,23 @@ thm continuity_at_closed_under_arithmetic:
         $has_function_limit(X, fn(x X) R {f(x) * g(x)}, x0, fn(x X) R {f(x) * g(x)}(x0))
         $is_continuous_at(X, fn(x X) R {f(x) * g(x)}, x0)
     claim:
-        ? $is_continuous_at(X, fn(x X) R {max(f(x), g(x))}, x0)
+        ? $is_continuous_at(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0)
         $has_function_limit(X, f, x0, f(x0))
         $has_function_limit(X, g, x0, g(x0))
         by thm function_limit_max(X, f, g, x0, f(x0), g(x0))
-        $has_function_limit(X, fn(x X) R {max(f(x), g(x))}, x0, max(f(x0), g(x0)))
-        fn(x X) R {max(f(x), g(x))}(x0) = max(f(x0), g(x0))
-        $has_function_limit(X, fn(x X) R {max(f(x), g(x))}, x0, fn(x X) R {max(f(x), g(x))}(x0))
-        $is_continuous_at(X, fn(x X) R {max(f(x), g(x))}, x0)
+        $has_function_limit(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({f(x0)}, { g(x0)})))
+        fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0) = finite_set_max(union({f(x0)}, { g(x0)}))
+        $has_function_limit(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0))
+        $is_continuous_at(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0)
     claim:
-        ? $is_continuous_at(X, fn(x X) R {min(f(x), g(x))}, x0)
+        ? $is_continuous_at(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0)
         $has_function_limit(X, f, x0, f(x0))
         $has_function_limit(X, g, x0, g(x0))
         by thm function_limit_min(X, f, g, x0, f(x0), g(x0))
-        $has_function_limit(X, fn(x X) R {min(f(x), g(x))}, x0, min(f(x0), g(x0)))
-        fn(x X) R {min(f(x), g(x))}(x0) = min(f(x0), g(x0))
-        $has_function_limit(X, fn(x X) R {min(f(x), g(x))}, x0, fn(x X) R {min(f(x), g(x))}(x0))
-        $is_continuous_at(X, fn(x X) R {min(f(x), g(x))}, x0)
+        $has_function_limit(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({f(x0)}, { g(x0)})))
+        fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0) = finite_set_min(union({f(x0)}, { g(x0)}))
+        $has_function_limit(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0))
+        $is_continuous_at(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0)
 
 thm continuity_at_quotient_on_nonzero_domain:
     ? forall X power_set(R), f, g fn(x X) R, x0 {x X: g(x) != 0}:
@@ -5977,10 +5977,10 @@ thm continuous_max_of_continuous:
         $is_continuous_on(X, f)
         $is_continuous_on(X, g)
         =>:
-            $is_continuous_on(X, fn(x X) R {max(f(x), g(x))})
+            $is_continuous_on(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))})
     claim:
         ? forall x0 X:
-            $is_continuous_at(X, fn(x X) R {max(f(x), g(x))}, x0)
+            $is_continuous_at(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0)
         by thm interval_member_is_adherent(X, x0)
         $is_continuous_at(X, f, x0)
         $is_continuous_at(X, g, x0)
@@ -5988,48 +5988,48 @@ thm continuous_max_of_continuous:
         $has_function_limit(X, g, x0, g(x0))
         claim:
             ? forall epsilon R_pos:
-                $is_locally_epsilon_close_to(X, fn(x X) R {max(f(x), g(x))}, x0, fn(x X) R {max(f(x), g(x))}(x0), epsilon)
+                $is_locally_epsilon_close_to(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0), epsilon)
             $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
             $is_locally_epsilon_close_to(X, g, x0, g(x0), epsilon)
             obtain delta_f from exist delta_f R_pos st {$is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, delta_f)}
             obtain delta_g from exist delta_g R_pos st {$is_delta_neighborhood_close_to(X, g, x0, g(x0), epsilon, delta_g)}
-            min(delta_f, delta_g) $in R_pos
-            min(delta_f, delta_g) <= delta_f
-            min(delta_f, delta_g) <= delta_g
-            witness exist delta R_pos st {$is_delta_neighborhood_close_to(X, fn(x X) R {max(f(x), g(x))}, x0, fn(x X) R {max(f(x), g(x))}(x0), epsilon, delta)} from min(delta_f, delta_g):
+            finite_set_min(union({delta_f}, { delta_g})) $in R_pos
+            finite_set_min(union({delta_f}, { delta_g})) <= delta_f
+            finite_set_min(union({delta_f}, { delta_g})) <= delta_g
+            witness exist delta R_pos st {$is_delta_neighborhood_close_to(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0), epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
                 claim:
                     ? forall y X:
-                        abs(y - x0) < min(delta_f, delta_g)
+                        abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
                         =>:
-                            abs(fn(x X) R {max(f(x), g(x))}(y) - fn(x X) R {max(f(x), g(x))}(x0)) <= epsilon
-                    abs(y - x0) < min(delta_f, delta_g) <= delta_f
+                            abs(fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(y) - fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0)) <= epsilon
+                    abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_f
                     abs(y - x0) < delta_f
-                    abs(y - x0) < min(delta_f, delta_g) <= delta_g
+                    abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_g
                     abs(y - x0) < delta_g
                     abs(f(y) - f(x0)) <= epsilon
                     abs(g(y) - g(x0)) <= epsilon
                     by thm max_lipschitz(f(y), g(y), f(x0), g(x0), epsilon)
-                    abs(max(f(y), g(y)) - max(f(x0), g(x0))) <= epsilon
-                    fn(x X) R {max(f(x), g(x))}(y) = max(f(y), g(y))
-                    fn(x X) R {max(f(x), g(x))}(x0) = max(f(x0), g(x0))
-                    fn(x X) R {max(f(x), g(x))}(y) - fn(x X) R {max(f(x), g(x))}(x0) = max(f(y), g(y)) - max(f(x0), g(x0))
-                    abs(fn(x X) R {max(f(x), g(x))}(y) - fn(x X) R {max(f(x), g(x))}(x0)) = abs(max(f(y), g(y)) - max(f(x0), g(x0)))
-                    abs(fn(x X) R {max(f(x), g(x))}(y) - fn(x X) R {max(f(x), g(x))}(x0)) <= epsilon
-                $is_delta_neighborhood_close_to(X, fn(x X) R {max(f(x), g(x))}, x0, fn(x X) R {max(f(x), g(x))}(x0), epsilon, delta)
-            $is_locally_epsilon_close_to(X, fn(x X) R {max(f(x), g(x))}, x0, fn(x X) R {max(f(x), g(x))}(x0), epsilon)
-        $has_function_limit(X, fn(x X) R {max(f(x), g(x))}, x0, fn(x X) R {max(f(x), g(x))}(x0))
-        $is_continuous_at(X, fn(x X) R {max(f(x), g(x))}, x0)
-    $is_continuous_on(X, fn(x X) R {max(f(x), g(x))})
+                    abs(finite_set_max(union({f(y)}, { g(y)})) - finite_set_max(union({f(x0)}, { g(x0)}))) <= epsilon
+                    fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(y) = finite_set_max(union({f(y)}, { g(y)}))
+                    fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0) = finite_set_max(union({f(x0)}, { g(x0)}))
+                    fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(y) - fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0) = finite_set_max(union({f(y)}, { g(y)})) - finite_set_max(union({f(x0)}, { g(x0)}))
+                    abs(fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(y) - fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0)) = abs(finite_set_max(union({f(y)}, { g(y)})) - finite_set_max(union({f(x0)}, { g(x0)})))
+                    abs(fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(y) - fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0)) <= epsilon
+                $is_delta_neighborhood_close_to(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0), epsilon, delta)
+            $is_locally_epsilon_close_to(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0), epsilon)
+        $has_function_limit(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0))
+        $is_continuous_at(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0)
+    $is_continuous_on(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))})
 
 thm continuous_min_of_continuous:
     ? forall X power_set(R), f, g fn(x X) R:
         $is_continuous_on(X, f)
         $is_continuous_on(X, g)
         =>:
-            $is_continuous_on(X, fn(x X) R {min(f(x), g(x))})
+            $is_continuous_on(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))})
     claim:
         ? forall x0 X:
-            $is_continuous_at(X, fn(x X) R {min(f(x), g(x))}, x0)
+            $is_continuous_at(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0)
         by thm interval_member_is_adherent(X, x0)
         $is_continuous_at(X, f, x0)
         $is_continuous_at(X, g, x0)
@@ -6037,38 +6037,38 @@ thm continuous_min_of_continuous:
         $has_function_limit(X, g, x0, g(x0))
         claim:
             ? forall epsilon R_pos:
-                $is_locally_epsilon_close_to(X, fn(x X) R {min(f(x), g(x))}, x0, fn(x X) R {min(f(x), g(x))}(x0), epsilon)
+                $is_locally_epsilon_close_to(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0), epsilon)
             $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
             $is_locally_epsilon_close_to(X, g, x0, g(x0), epsilon)
             obtain delta_f from exist delta_f R_pos st {$is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, delta_f)}
             obtain delta_g from exist delta_g R_pos st {$is_delta_neighborhood_close_to(X, g, x0, g(x0), epsilon, delta_g)}
-            min(delta_f, delta_g) $in R_pos
-            min(delta_f, delta_g) <= delta_f
-            min(delta_f, delta_g) <= delta_g
-            witness exist delta R_pos st {$is_delta_neighborhood_close_to(X, fn(x X) R {min(f(x), g(x))}, x0, fn(x X) R {min(f(x), g(x))}(x0), epsilon, delta)} from min(delta_f, delta_g):
+            finite_set_min(union({delta_f}, { delta_g})) $in R_pos
+            finite_set_min(union({delta_f}, { delta_g})) <= delta_f
+            finite_set_min(union({delta_f}, { delta_g})) <= delta_g
+            witness exist delta R_pos st {$is_delta_neighborhood_close_to(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0), epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
                 claim:
                     ? forall y X:
-                        abs(y - x0) < min(delta_f, delta_g)
+                        abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
                         =>:
-                            abs(fn(x X) R {min(f(x), g(x))}(y) - fn(x X) R {min(f(x), g(x))}(x0)) <= epsilon
-                    abs(y - x0) < min(delta_f, delta_g) <= delta_f
+                            abs(fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(y) - fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0)) <= epsilon
+                    abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_f
                     abs(y - x0) < delta_f
-                    abs(y - x0) < min(delta_f, delta_g) <= delta_g
+                    abs(y - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_g
                     abs(y - x0) < delta_g
                     abs(f(y) - f(x0)) <= epsilon
                     abs(g(y) - g(x0)) <= epsilon
                     by thm min_lipschitz(f(y), g(y), f(x0), g(x0), epsilon)
-                    abs(min(f(y), g(y)) - min(f(x0), g(x0))) <= epsilon
-                    fn(x X) R {min(f(x), g(x))}(y) = min(f(y), g(y))
-                    fn(x X) R {min(f(x), g(x))}(x0) = min(f(x0), g(x0))
-                    fn(x X) R {min(f(x), g(x))}(y) - fn(x X) R {min(f(x), g(x))}(x0) = min(f(y), g(y)) - min(f(x0), g(x0))
-                    abs(fn(x X) R {min(f(x), g(x))}(y) - fn(x X) R {min(f(x), g(x))}(x0)) = abs(min(f(y), g(y)) - min(f(x0), g(x0)))
-                    abs(fn(x X) R {min(f(x), g(x))}(y) - fn(x X) R {min(f(x), g(x))}(x0)) <= epsilon
-                $is_delta_neighborhood_close_to(X, fn(x X) R {min(f(x), g(x))}, x0, fn(x X) R {min(f(x), g(x))}(x0), epsilon, delta)
-            $is_locally_epsilon_close_to(X, fn(x X) R {min(f(x), g(x))}, x0, fn(x X) R {min(f(x), g(x))}(x0), epsilon)
-        $has_function_limit(X, fn(x X) R {min(f(x), g(x))}, x0, fn(x X) R {min(f(x), g(x))}(x0))
-        $is_continuous_at(X, fn(x X) R {min(f(x), g(x))}, x0)
-    $is_continuous_on(X, fn(x X) R {min(f(x), g(x))})
+                    abs(finite_set_min(union({f(y)}, { g(y)})) - finite_set_min(union({f(x0)}, { g(x0)}))) <= epsilon
+                    fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(y) = finite_set_min(union({f(y)}, { g(y)}))
+                    fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0) = finite_set_min(union({f(x0)}, { g(x0)}))
+                    fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(y) - fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0) = finite_set_min(union({f(y)}, { g(y)})) - finite_set_min(union({f(x0)}, { g(x0)}))
+                    abs(fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(y) - fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0)) = abs(finite_set_min(union({f(y)}, { g(y)})) - finite_set_min(union({f(x0)}, { g(x0)})))
+                    abs(fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(y) - fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0)) <= epsilon
+                $is_delta_neighborhood_close_to(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0), epsilon, delta)
+            $is_locally_epsilon_close_to(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0), epsilon)
+        $has_function_limit(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0))
+        $is_continuous_at(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0)
+    $is_continuous_on(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))})
 
 thm continuity_closed_under_arithmetic:
     ? forall X power_set(R), f, g fn(x X) R:
@@ -6078,8 +6078,8 @@ thm continuity_closed_under_arithmetic:
             $is_continuous_on(X, fn(x X) R {f(x) + g(x)})
             $is_continuous_on(X, fn(x X) R {f(x) - g(x)})
             $is_continuous_on(X, fn(x X) R {f(x) * g(x)})
-            $is_continuous_on(X, fn(x X) R {max(f(x), g(x))})
-            $is_continuous_on(X, fn(x X) R {min(f(x), g(x))})
+            $is_continuous_on(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))})
+            $is_continuous_on(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))})
     claim:
         ? $is_continuous_on(X, fn(x X) R {f(x) + g(x)})
         claim:
@@ -6126,9 +6126,9 @@ thm continuity_closed_under_arithmetic:
             $is_continuous_at(X, fn(x X) R {f(x) - g(x)}, x0)
         $is_continuous_on(X, fn(x X) R {f(x) - g(x)})
     by thm continuous_max_of_continuous(X, f, g)
-    $is_continuous_on(X, fn(x X) R {max(f(x), g(x))})
+    $is_continuous_on(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))})
     by thm continuous_min_of_continuous(X, f, g)
-    $is_continuous_on(X, fn(x X) R {min(f(x), g(x))})
+    $is_continuous_on(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))})
 
 """
 Proposition 9.4.10 (Exponentiation is continuous, I). For a fixed positive
@@ -6172,12 +6172,12 @@ thm positive_domain_power_function_continuous:
 
 """
 Proposition 9.4.12 (Absolute value is continuous). The function `x |-> abs(x)`
-is continuous on the real line; Tao derives this from `abs(x)=max(x,-x)`.
+is continuous on the real line; Tao derives this from `abs(x)=finite_set_max(union({x}, {-x}))`.
 """
 
 # These three propositions give standard continuous functions.  The proof uses
 # Chapter 6 exponentiation estimates for the first two and arithmetic
-# continuity plus `abs(x)=max(x,-x)` for the absolute-value case.
+# continuity plus `abs(x)=finite_set_max(union({x}, {-x}))` for the absolute-value case.
 
 have fn abs_fn(u R) R = abs(u)
 
@@ -6700,20 +6700,20 @@ thm continuity_from_one_sided_limits:
             $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
         obtain delta_left from exist delta_left R_pos st {$is_left_delta_close_to(E, f, x0, L, epsilon, delta_left)}
         obtain delta_right from exist delta_right R_pos st {$is_right_delta_close_to(E, f, x0, L, epsilon, delta_right)}
-        min(delta_left, delta_right) $in R_pos
-        min(delta_left, delta_right) <= delta_left
-        min(delta_left, delta_right) <= delta_right
-        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta)} from min(delta_left, delta_right):
+        finite_set_min(union({delta_left}, { delta_right})) $in R_pos
+        finite_set_min(union({delta_left}, { delta_right})) <= delta_left
+        finite_set_min(union({delta_left}, { delta_right})) <= delta_right
+        witness exist delta R_pos st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta)} from finite_set_min(union({delta_left}, { delta_right})):
             claim:
                 ? forall x E:
-                    abs(x - x0) < min(delta_left, delta_right)
+                    abs(x - x0) < finite_set_min(union({delta_left}, { delta_right}))
                     =>:
                         abs(f(x) - L) <= epsilon
                 x < x0 or x >= x0
                 by cases:
                     ? abs(f(x) - L) <= epsilon
                     case x < x0:
-                        abs(x - x0) < min(delta_left, delta_right) <= delta_left
+                        abs(x - x0) < finite_set_min(union({delta_left}, { delta_right})) <= delta_left
                         abs(x - x0) < delta_left
                         abs(f(x) - L) <= epsilon
                     case x >= x0:
@@ -6728,7 +6728,7 @@ thm continuity_from_one_sided_limits:
                                 abs(0) = 0
                                 0 <= epsilon
                             case x > x0:
-                                abs(x - x0) < min(delta_left, delta_right) <= delta_right
+                                abs(x - x0) < finite_set_min(union({delta_left}, { delta_right})) <= delta_right
                                 abs(x - x0) < delta_right
                                 abs(f(x) - L) <= epsilon
             $is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta)
@@ -7488,33 +7488,33 @@ thm ivt_left_set_lub_value_at_least:
         obtain delta from exist delta R_pos st {$is_delta_neighborhood_close_to('[a, b], f, c0, f(c0), (y - f(c0)) / 2, delta)}
         have gap R_pos = b - c
         gap = b - c
-        min(delta, gap) $in R_pos
-        min(delta, gap) / 2 $in R_pos
-        min(delta, gap) <= gap
-        min(delta, gap) / 2 < min(delta, gap)
-        min(delta, gap) / 2 <= min(delta, gap)
-        min(delta, gap) / 2 <= gap
-        min(delta, gap) / 2 <= b - c
+        finite_set_min(union({delta}, { gap})) $in R_pos
+        finite_set_min(union({delta}, { gap})) / 2 $in R_pos
+        finite_set_min(union({delta}, { gap})) <= gap
+        finite_set_min(union({delta}, { gap})) / 2 < finite_set_min(union({delta}, { gap}))
+        finite_set_min(union({delta}, { gap})) / 2 <= finite_set_min(union({delta}, { gap}))
+        finite_set_min(union({delta}, { gap})) / 2 <= gap
+        finite_set_min(union({delta}, { gap})) / 2 <= b - c
         a <= c
-        a <= c + min(delta, gap) / 2
-        c + min(delta, gap) / 2 <= c + (b - c)
+        a <= c + finite_set_min(union({delta}, { gap})) / 2
+        c + finite_set_min(union({delta}, { gap})) / 2 <= c + (b - c)
         c + (b - c) = b
-        c + min(delta, gap) / 2 <= b
-        c + min(delta, gap) / 2 $in '[a, b]
-        have x '[a, b] = c + min(delta, gap) / 2
-        x = c + min(delta, gap) / 2
-        min(delta, gap) / 2 > 0
-        x - c = min(delta, gap) / 2
+        c + finite_set_min(union({delta}, { gap})) / 2 <= b
+        c + finite_set_min(union({delta}, { gap})) / 2 $in '[a, b]
+        have x '[a, b] = c + finite_set_min(union({delta}, { gap})) / 2
+        x = c + finite_set_min(union({delta}, { gap})) / 2
+        finite_set_min(union({delta}, { gap})) / 2 > 0
+        x - c = finite_set_min(union({delta}, { gap})) / 2
         x - c > 0
         x > c
-        min(delta, gap) <= delta
-        min(delta, gap) / 2 < min(delta, gap)
-        min(delta, gap) / 2 <= min(delta, gap)
-        min(delta, gap) / 2 <= min(delta, gap) <= delta
-        min(delta, gap) / 2 < min(delta, gap) <= delta
-        min(delta, gap) / 2 < delta
-        min(delta, gap) / 2 <= delta
-        x - c0 = min(delta, gap) / 2
+        finite_set_min(union({delta}, { gap})) <= delta
+        finite_set_min(union({delta}, { gap})) / 2 < finite_set_min(union({delta}, { gap}))
+        finite_set_min(union({delta}, { gap})) / 2 <= finite_set_min(union({delta}, { gap}))
+        finite_set_min(union({delta}, { gap})) / 2 <= finite_set_min(union({delta}, { gap})) <= delta
+        finite_set_min(union({delta}, { gap})) / 2 < finite_set_min(union({delta}, { gap})) <= delta
+        finite_set_min(union({delta}, { gap})) / 2 < delta
+        finite_set_min(union({delta}, { gap})) / 2 <= delta
+        x - c0 = finite_set_min(union({delta}, { gap})) / 2
         x - c0 >= 0
         abs(x - c0) = x - c0
         abs(x - c0) <= delta
@@ -8086,14 +8086,14 @@ thm equivalent_sequences_share_limit:
         obtain n_a from exist n_a N_pos st {$chap6::is_tail_close_to(a, L, epsilon / 2, n_a)}
         $are_eventually_epsilon_close_sequences(a, b, epsilon / 2)
         obtain n_ab from exist n_ab N_pos st {$are_epsilon_close_after_index(a, b, epsilon / 2, n_ab)}
-        witness exist n0 N_pos st {$chap6::is_tail_close_to(b, L, epsilon, n0)} from max(n_a, n_ab):
+        witness exist n0 N_pos st {$chap6::is_tail_close_to(b, L, epsilon, n0)} from finite_set_max(union({n_a}, { n_ab})):
             claim:
                 ? forall n N_pos:
-                    n >= max(n_a, n_ab)
+                    n >= finite_set_max(union({n_a}, { n_ab}))
                     =>:
                         abs(b(n) - L) < epsilon
-                n >= max(n_a, n_ab) >= n_a
-                n >= max(n_a, n_ab) >= n_ab
+                n >= finite_set_max(union({n_a}, { n_ab})) >= n_a
+                n >= finite_set_max(union({n_a}, { n_ab})) >= n_ab
                 abs(a(n) - L) < epsilon / 2
                 abs(a(n) - b(n)) < epsilon / 2
                 abs(b(n) - a(n)) = abs(a(n) - b(n))
@@ -8151,14 +8151,14 @@ thm sequences_with_common_limit_are_equivalent:
         obtain n_a from exist n_a N_pos st {$chap6::is_tail_close_to(a, L, epsilon / 2, n_a)}
         $chap6::has_eventual_closeness_to(b, L, epsilon / 2)
         obtain n_b from exist n_b N_pos st {$chap6::is_tail_close_to(b, L, epsilon / 2, n_b)}
-        witness exist n0 N_pos st {$are_epsilon_close_after_index(a, b, epsilon, n0)} from max(n_a, n_b):
+        witness exist n0 N_pos st {$are_epsilon_close_after_index(a, b, epsilon, n0)} from finite_set_max(union({n_a}, { n_b})):
             claim:
                 ? forall n N_pos:
-                    n >= max(n_a, n_b)
+                    n >= finite_set_max(union({n_a}, { n_b}))
                     =>:
                         abs(a(n) - b(n)) < epsilon
-                n >= max(n_a, n_b) >= n_a
-                n >= max(n_a, n_b) >= n_b
+                n >= finite_set_max(union({n_a}, { n_b})) >= n_a
+                n >= finite_set_max(union({n_a}, { n_b})) >= n_b
                 abs(a(n) - L) < epsilon / 2
                 abs(b(n) - L) < epsilon / 2
                 a(n) - b(n) = (a(n) - L) + (L - b(n))

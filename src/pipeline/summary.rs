@@ -357,6 +357,7 @@ impl RunSummary {
             ByVerificationResult::AxiomOfChoice(_) => self.bump_by_method("axiom of choice"),
             ByVerificationResult::ZornLemma(_) => self.bump_by_method("zorn lemma"),
             ByVerificationResult::RegularityAxiom(_) => self.bump_by_method("regularity axiom"),
+            ByVerificationResult::Definition(_) => self.bump_by_method("def"),
             ByVerificationResult::Theorem(result) => {
                 self.bump_by_method("theorem");
                 bump_count(&mut self.by_theorem_counts, result.theorem.as_str());

@@ -82,12 +82,13 @@ Record broad proof debt in nearby comments or todo files; only introduce a
 named prop when it is a real source definition or a reusable local interface
 that later checked statements actually depend on.
 
-Use source-local cite packages for lengthy supporting facts. This is the
-preferred workflow for textbook and dataset formalization when the main
-mathematical line is clear but a surrounding fact has a long, routine, or
-library-shaped proof. Keep the main chapter or problem file focused on the
-source-facing definitions, theorem statements, core proof route, and checked
-derivations. Put the surrounding fact into an adjacent module such as
+Use source-local cite packages for substantial unresolved supporting facts.
+This is the preferred workflow for textbook and dataset formalization when the
+main mathematical line is clear but a surrounding fact remains genuinely
+unproved after a direct attempt and has a substantial or library-shaped proof.
+Keep the main chapter or problem file focused on the source-facing definitions,
+theorem statements, core proof route, and checked derivations. Put the
+surrounding fact into an adjacent module such as
 `chap7_cite/main.lit`, `<source>_cite/main.lit`, or a local `cite/main.lit`.
 The main file should import this module with `import "../chap7_cite"` or the
 analogous relative module import. For repository projects, declare the cite
@@ -95,6 +96,18 @@ package with `export mod` and import its root name. Represent source-order file
 reuse by placing the source earlier in the ordered `[export]` table and citing
 its canonical name in the dependent source; Litex has no statement for loading
 an arbitrary `.lit` path.
+
+Before adding or calling a cite theorem, test the intended fact directly in the
+real caller context without a wrapper theorem or `trust`. If builtin or infer
+rules verify it, use the fact directly and do not create a `thm` merely so later
+code can cite it. Never put a trusted duplicate of a builtin-supported fact in
+cite. This includes elementary set algebra such as commutativity of `intersect`
+or `union`, arithmetic normalization, comparisons, and automatic type or
+membership consequences. Repetition alone does not make such a fact
+cite-worthy. If the source itself names the result, keep the source-facing
+theorem in source order and let its body verify directly. If a simple expected
+fact fails, classify the missing builtin, infer, standard-library, or kernel
+support instead of hiding the gap as citation debt.
 
 Cite packages are explicit proof-debt interfaces, not completed standard
 library modules. Facts in a cite package should be named `thm` or `claim`
@@ -128,14 +141,65 @@ completed item.
 
 Treat `textbooks/<Book>/` as the final-product surface. For Analysis I,
 `textbooks/Analysis/` contains the final chapter `.lit` files and
-`litex.config`; do not create Markdown todos, audits, experience notes,
-generated Markdown, verifier captures, or other working artifacts there.
+`litex.config`, together with the module-owned `README.md` and
+`math_collections.md`. These two sidecar documents are explicit exceptions:
+do not export, import, or render them as textbook chapters, and do not pass
+them to the Litex kernel. Do not create other Markdown todos, audits,
+experience notes, generated Markdown, verifier captures, or working artifacts
+there.
 
 Put all Analysis I working artifacts under `scripts/Analysis/`. Chapter
 tracking belongs in `scripts/Analysis/todo/`, and generated or temporary
 artifacts belong in an appropriate subfolder of `scripts/Analysis/` (or
 `/private/tmp` when they are disposable). Move a file into
-`textbooks/Analysis/` only when it is a final textbook artifact.
+`textbooks/Analysis/` only when it is a final textbook artifact or one of the
+two module-owned sidecar documents above.
+
+## Litex Module Documentation
+
+For every new top-level Litex module or project, maintain exactly one
+`README.md` and one `math_collections.md`. When an existing module gains or
+changes a core mathematical interface, add or refresh this pair as part of the
+same work. Do not backfill untouched modules merely to satisfy this convention.
+
+Here “module” means the top-level maintained package or project, even when it
+contains many `.lit` files, exports, or submodules. Do not create another pair
+for every chapter or submodule.
+
+- Put the pair in the root of a reusable directory module such as
+  `std/basics/`.
+- For a textbook or translation project, put the pair directly in
+  `textbooks/<Book>/` beside `litex.config`. Do not put the module-owned pair
+  in the paired `scripts/<Book>/` workspace.
+- Write both files in English.
+
+The textbook pair is repository documentation, not chapter content. Do not
+list it in `[export]`, import it from Litex, add it to a rendered chapter
+manifest, or otherwise send it through the Litex kernel or textbook renderer.
+Keep todos, audits, verifier captures, and other working Markdown in
+`scripts/<Book>/`.
+
+`README.md` describes the current implemented module. Keep it factual: purpose,
+import or run entrypoint, namespace, actual public objects/functions/templates,
+predicates and main theorems, visible checked/trusted/axiom boundaries, and a
+small real use example. Do not put unimplemented wish-list interfaces there.
+
+`math_collections.md` is the mathematical design manual. Record only the
+important concepts and intermediate nodes that shape later work. For each one,
+explain its mathematical meaning, why it matters, the ideal Litex form and a
+short representative signature, the nearest rejected form, dependencies,
+downstream uses, and which proof/existence/uniqueness/well-definedness holes may
+remain. It is a narrative guide, not a machine-readable schema or exhaustive
+theorem inventory.
+
+Before generating substantial module code, read both files and compare the
+candidate declarations with `math_collections.md`. If they differ, decide
+whether the code misunderstood the intended mathematics or the design note is
+now wrong. Fix the code in the first case; update `math_collections.md` first
+and then migrate the code in the second. Do not preserve incompatible shapes
+through a wrapper, alias, `abstract_prop`, or `trust`. After the implementation
+and representative use probes verify, update `README.md` to reflect the actual
+public interface.
 
 ## Dataset And Textbook Problem-Solving Loop
 
@@ -196,10 +260,12 @@ For each item, proceed in this order:
    and keep the textbook proof idea in a local `prove` block, proof sketch, or
    nearby todo until it is checkable.
 
-4. If a supporting fact is lengthy, routine, or only needed as a background
-   citation for the current source item, put it in a source-local cite package
-   and import that package from the main file. This keeps the main file
-   readable while preserving a named theorem interface and explicit proof debt.
+4. If a supporting fact remains genuinely unproved after a direct real-context
+   attempt, has a substantial or library-shaped proof, and is needed to keep
+   the current source item moving, put it in a source-local cite package and
+   import that package from the main file. This keeps the main file readable
+   while preserving a named theorem interface and explicit proof debt. Do not
+   put builtin-supported or other elementary automatic facts in cite.
 
 5. If the proof cannot be completed immediately, write the best partial Litex
    proof first. It is acceptable to use `trust` temporarily, but only for the

@@ -1,6 +1,8 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
+use super::exec_have_fn_equal_shared::case_conditions_are_disjoint;
+
 impl Runtime {
     pub fn exec_have_fn_by_induc(
         &mut self,
@@ -50,7 +52,7 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<(), RuntimeError> {
         self.define_have_fn_by_induc_current_params_and_domain(stmt)?;
-        self.verify_have_fn_by_induc_measure_lower_bound(stmt)?;
+        self.verify_have_fn_by_induc_integer_measure_and_lower_bound(stmt)?;
         self.register_have_fn_by_induc_recursive_fn(stmt)?;
         self.verify_have_fn_by_induc_case_list(stmt, &stmt.cases)
     }
@@ -101,7 +103,7 @@ impl Runtime {
         Ok(())
     }
 
-    fn verify_have_fn_by_induc_measure_lower_bound(
+    fn verify_have_fn_by_induc_integer_measure_and_lower_bound(
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<(), RuntimeError> {
@@ -112,6 +114,38 @@ impl Runtime {
             &VerifyState::new(0, false),
         )
         .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+
+        for (label, obj) in [
+            ("measure", &stmt.measure),
+            ("lower bound", &stmt.lower_bound),
+        ] {
+            let integer_fact: AtomicFact =
+                InFact::new(obj.clone(), StandardSet::Z.into(), stmt.line_file.clone()).into();
+            let result = self
+                .verify_atomic_fact(&integer_fact, &VerifyState::new(0, false))
+                .map_err(|e| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        format!(
+                            "have fn by induc: failed to verify that the {} is integer-valued",
+                            label
+                        ),
+                        Some(e),
+                        vec![],
+                    )
+                })?;
+            if result.is_unknown() {
+                return Err(short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "have fn by induc: the {} must be provably integer-valued; failed to prove `{}`",
+                        label, integer_fact
+                    ),
+                    None,
+                    vec![],
+                ));
+            }
+        }
 
         let lower_fact: AtomicFact = GreaterEqualFact::new(
             stmt.measure.clone(),
@@ -320,9 +354,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         for i in 0..cases.len() {
             for j in (i + 1)..cases.len() {
-                if !self
-                    .have_fn_by_induc_cases_are_disjoint(&cases[i].case_fact, &cases[j].case_fact)?
-                {
+                if !case_conditions_are_disjoint(self, &cases[i].case_fact, &cases[j].case_fact)? {
                     return Err(short_exec_error(
                         stmt.clone().into(),
                         format!(
@@ -338,50 +370,10 @@ impl Runtime {
         Ok(())
     }
 
-    fn have_fn_by_induc_cases_are_disjoint(
-        &mut self,
-        left: &AndChainAtomicFact,
-        right: &AndChainAtomicFact,
-    ) -> Result<bool, RuntimeError> {
-        if self.have_fn_by_induc_case_implies_not_other(left, right)? {
-            return Ok(true);
-        }
-        self.have_fn_by_induc_case_implies_not_other(right, left)
-    }
-
-    fn have_fn_by_induc_case_implies_not_other(
-        &mut self,
-        assumed: &AndChainAtomicFact,
-        other: &AndChainAtomicFact,
-    ) -> Result<bool, RuntimeError> {
-        self.run_in_local_env(|rt| {
-            rt.verify_well_defined_and_store_and_infer_with_default_verify_state(Fact::from(
-                assumed.clone(),
-            ))?;
-
-            for atom in flatten_have_fn_by_induc_and_chain_to_atomic_facts(other) {
-                let reversed = atom.make_reversed();
-                let result = rt.verify_atomic_fact(&reversed, &VerifyState::new(0, false))?;
-                if result.is_true() {
-                    return Ok(true);
-                }
-            }
-            Ok(false)
-        })
-    }
-
     pub fn exec_have_fn_by_induc_stmt(
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_have_fn_by_induc(stmt)
-    }
-}
-
-fn flatten_have_fn_by_induc_and_chain_to_atomic_facts(c: &AndChainAtomicFact) -> Vec<AtomicFact> {
-    match c {
-        AndChainAtomicFact::AtomicFact(a) => vec![a.clone()],
-        AndChainAtomicFact::AndFact(af) => af.facts.clone(),
-        AndChainAtomicFact::ChainFact(cf) => cf.facts().unwrap(),
     }
 }

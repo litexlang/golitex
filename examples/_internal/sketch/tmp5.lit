@@ -1,5 +1,5 @@
 # Nonempty finite sets have an index function.
-# Induction on finite_set_size(s): base |s| = 1, then extend after removing min(s).
+# Induction on finite_set_size(s): base |s| = 1, then extend after removing a least element.
 
 prop injective_fn(S, T set, f fn(x S) T):
     forall x1, x2 S:
@@ -119,7 +119,7 @@ thm index_function_step:
     set_minus(s, {a}) $subset s
     have fn idx(i N_pos: i <= finite_set_size(s)) s by cases:
         case i <= n: prev(i)
-        case i = n + 1: a
+        case i > n: a
     idx(1) = prev(1)
     prev(1) $in set_minus(s, {a})
     prev(1) $in s

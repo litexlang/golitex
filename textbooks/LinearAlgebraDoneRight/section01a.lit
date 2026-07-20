@@ -1,0 +1,291 @@
+# Linear Algebra Done Right, fourth edition, Section 1A: R^n and C^n.
+
+# Definition 1.1. A complex number is an ordered pair of real numbers.
+# The fields re and im expose the two coordinates, while complex_add and
+# complex_mul implement the source's coordinate formulas as callable maps.
+struct Complex:
+    re R
+    im R
+
+have complex_zero &Complex = (0, 0)
+have complex_one &Complex = (1, 0)
+have fn complex_add(a, b &Complex) &Complex = (&Complex{a}.re + &Complex{b}.re, &Complex{a}.im + &Complex{b}.im)
+have fn complex_mul(a, b &Complex) &Complex = (&Complex{a}.re * &Complex{b}.re - &Complex{a}.im * &Complex{b}.im, &Complex{a}.re * &Complex{b}.im + &Complex{a}.im * &Complex{b}.re)
+
+# Example 1.2. Expanding the coordinate formula gives
+# (2 + 3i)(4 + 5i) = -7 + 22i.
+sketch:
+    2 * 4 - 3 * 5 = -7
+    2 * 5 + 3 * 4 = 22
+
+# Result 1.3. Complex arithmetic obeys commutativity, associativity,
+# identities, unique additive and nonzero multiplicative inverses, and
+# distributivity. ScalarSystem packages this same reusable operation surface;
+# its operation fields remain callable in every later chapter.
+struct ScalarSystem<s nonempty_set>:
+    zero s
+    one s
+    add fn(x, y s) s
+    neg fn(x s) s
+    mul fn(x, y s) s
+    inv fn(x s) s
+    <=>:
+        zero != one
+        forall x, y, z s:
+            add(add(x, y), z) = add(x, add(y, z))
+            add(x, y) = add(y, x)
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+            mul(x, y) = mul(y, x)
+            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+        forall x s:
+            add(zero, x) = x
+            add(x, neg(x)) = zero
+            mul(one, x) = x
+        forall x s:
+            x != zero
+            =>:
+                mul(x, inv(x)) = one
+
+prop is_scalar_system(s nonempty_set, zero, one s, add fn(x, y s) s, neg fn(x s) s, mul fn(x, y s) s, inv fn(x s) s):
+    (zero, one, add, neg, mul, inv) $in &ScalarSystem<s>
+
+# Verifier projection bridge. These are exactly the fields in ScalarSystem's
+# `<=>` clause; the current kernel type-checks the record but does not expose
+# those dependent field laws from a symbolic `scalars &ScalarSystem<s>`
+# parameter during ordinary proof search.
+axiom scalar_system_projection_laws:
+    ? forall s nonempty_set, scalars &ScalarSystem<s>, x, y, z s:
+        &ScalarSystem<s>{scalars}.zero != &ScalarSystem<s>{scalars}.one
+        &ScalarSystem<s>{scalars}.add(&ScalarSystem<s>{scalars}.add(x, y), z) = &ScalarSystem<s>{scalars}.add(x, &ScalarSystem<s>{scalars}.add(y, z))
+        &ScalarSystem<s>{scalars}.add(x, y) = &ScalarSystem<s>{scalars}.add(y, x)
+        &ScalarSystem<s>{scalars}.mul(&ScalarSystem<s>{scalars}.mul(x, y), z) = &ScalarSystem<s>{scalars}.mul(x, &ScalarSystem<s>{scalars}.mul(y, z))
+        &ScalarSystem<s>{scalars}.mul(x, y) = &ScalarSystem<s>{scalars}.mul(y, x)
+        &ScalarSystem<s>{scalars}.mul(x, &ScalarSystem<s>{scalars}.add(y, z)) = &ScalarSystem<s>{scalars}.add(&ScalarSystem<s>{scalars}.mul(x, y), &ScalarSystem<s>{scalars}.mul(x, z))
+        &ScalarSystem<s>{scalars}.add(&ScalarSystem<s>{scalars}.zero, x) = x
+        &ScalarSystem<s>{scalars}.add(x, &ScalarSystem<s>{scalars}.neg(x)) = &ScalarSystem<s>{scalars}.zero
+        &ScalarSystem<s>{scalars}.mul(&ScalarSystem<s>{scalars}.one, x) = x
+
+axiom scalar_system_inverse_projection_law:
+    ? forall s nonempty_set, scalars &ScalarSystem<s>, w s:
+        w != &ScalarSystem<s>{scalars}.zero
+        =>:
+            &ScalarSystem<s>{scalars}.mul(w, &ScalarSystem<s>{scalars}.inv(w)) = &ScalarSystem<s>{scalars}.one
+
+# Remaining proof boundary: strict verification does not yet normalize the
+# repeated Complex projections through nested operation calls.
+axiom complex_arithmetic_laws:
+    ? forall x, y, z &Complex:
+        complex_zero != complex_one
+        complex_add(complex_add(x, y), z) = complex_add(x, complex_add(y, z))
+        complex_add(x, y) = complex_add(y, x)
+        complex_mul(complex_mul(x, y), z) = complex_mul(x, complex_mul(y, z))
+        complex_mul(x, y) = complex_mul(y, x)
+        complex_mul(x, complex_add(y, z)) = complex_add(complex_mul(x, y), complex_mul(x, z))
+        complex_add(complex_zero, x) = x
+        complex_mul(complex_one, x) = x
+        exist! w &Complex st {complex_add(x, w) = complex_zero}
+
+axiom complex_nonzero_inverse_exists_unique:
+    ? forall x &Complex:
+        x != complex_zero
+        =>:
+            exist! y &Complex st {complex_mul(x, y) = complex_one}
+
+# Example 1.4. The source verifies multiplication commutativity by comparing
+# the real and imaginary coordinates of alpha beta and beta alpha.
+sketch:
+    forall alpha, beta &Complex:
+        complex_mul(alpha, beta) = complex_mul(beta, alpha)
+
+# Definition 1.5. Negation and subtraction are coordinatewise. The inverse of
+# a nonzero complex number divides its conjugate by a^2+b^2, and division is
+# multiplication by that inverse. complex_inv is total only so it can be a
+# ScalarSystem field; its law is required solely away from complex_zero.
+have fn complex_neg(z &Complex) &Complex = (-&Complex{z}.re, -&Complex{z}.im)
+have fn complex_sub(z, w &Complex) &Complex = complex_add(z, complex_neg(w))
+have fn complex_norm_sq(z &Complex) R = &Complex{z}.re^2 + &Complex{z}.im^2
+
+# A sum of two real squares vanishes only when both coordinates vanish; the
+# current strict verifier still needs a reusable Complex-extensionality bridge.
+axiom nonzero_complex_has_nonzero_norm_sq:
+    ? forall z &Complex:
+        z != complex_zero
+        =>:
+            complex_norm_sq(z) != 0
+
+have fn complex_inv(z &Complex) &Complex by cases:
+    case z = complex_zero: complex_zero
+    case z != complex_zero: (&Complex{z}.re / complex_norm_sq(z), -&Complex{z}.im / complex_norm_sq(z))
+
+have fn complex_div(z &Complex, w &Complex: w != complex_zero) &Complex = complex_mul(z, complex_inv(w))
+
+# Notation 1.6. The book writes F for either R or C and calls its elements
+# scalars. Litex makes that standing choice explicit as
+# `s nonempty_set, scalars &ScalarSystem<s>`; these are the two source cases.
+have fn real_inv(x R) R by cases:
+    case x = 0: 0
+    case x != 0: 1 / x
+
+# Remaining selected-structure boundaries. The tuples are explicit, but the
+# current verifier still needs their full structure-membership proofs.
+trust have real_scalars &ScalarSystem<R>:
+    real_scalars = (0, 1, fn(x, y R) R {x + y}, fn(x R) R {-x}, fn(x, y R) R {x * y}, real_inv)
+
+trust have complex_scalars &ScalarSystem<&Complex>:
+    complex_scalars = (complex_zero, complex_one, complex_add, complex_neg, complex_mul, complex_inv)
+
+# Example 1.7. R^2 and R^3 are ordered real coordinate lists. finite_seq is
+# the native homogeneous positive-length list carrier used below.
+sketch:
+    have real_pair finite_seq(R, 2) = [1, 2]
+    have real_triple finite_seq(R, 3) = [1, 2, 3]
+    real_pair(2) = 2
+    real_triple(3) = 3
+
+# Definition 1.8. A finite list has a length and an ordered coordinate map.
+# The family FiniteList<s,n> also admits n=0, unlike native finite_seq, whose
+# length parameter is N_pos. For n>0 the coordinate development below uses
+# finite_seq because it already provides application and list literals.
+struct FiniteList<s set, n N>:
+    length N
+    entries fn(i N_pos: i <= n) s
+    <=>:
+        length = n
+
+# Trust reason: Litex can type the empty-domain function space at n=0, but its
+# current finite_seq/list-literal constructor requires a positive length and
+# does not construct the unique empty coordinate map.
+template<s set>:
+    trust have empty_list &FiniteList<s, 0>
+
+# Equality of these dependent list records is extensional in the coordinate
+# function. Equality implies entrywise equality is checked below; the converse
+# remains the explicit finite-list extensionality axiom.
+prop have_same_finite_list_entries(s set, n N, x, y &FiniteList<s, n>):
+    forall i N_pos:
+        i <= n
+        =>:
+            &FiniteList<s, n>{x}.entries(i) = &FiniteList<s, n>{y}.entries(i)
+
+thm finite_list_equal_implies_same_entries:
+    ? forall s set, n N, x, y &FiniteList<s, n>:
+        x = y
+        =>:
+            $have_same_finite_list_entries(s, n, x, y)
+    claim:
+        ? forall i N_pos:
+            i <= n
+            =>:
+                &FiniteList<s, n>{x}.entries(i) = &FiniteList<s, n>{y}.entries(i)
+        x = y
+        x[2] = y[2]
+        &FiniteList<s, n>{x}.entries = x[2]
+        &FiniteList<s, n>{y}.entries = y[2]
+        &FiniteList<s, n>{x}.entries = &FiniteList<s, n>{y}.entries
+    $have_same_finite_list_entries(s, n, x, y)
+
+axiom finite_list_extensionality:
+    ? forall s set, n N, x, y &FiniteList<s, n>:
+        $have_same_finite_list_entries(s, n, x, y)
+        =>:
+            x = y
+
+# Example 1.9. Order and repetition are observable in lists through coordinate
+# application, whereas finite-set literals are extensional.
+sketch:
+    have list_35 finite_seq(N, 2) = [3, 5]
+    have list_53 finite_seq(N, 2) = [5, 3]
+    list_35(1) = 3
+    list_53(1) = 5
+
+# Notation 1.10. The chapter's fixed length is always represented by a
+# parameter `n N_pos`; the following templates keep that hypothesis visible.
+
+# Definition 1.11. F^n is the carrier finite_seq(s,n), and coordinate(x,k)
+# is the kth entry. This is a declaration family and an applicable map, not a
+# predicate describing a proposed coordinate list.
+template<s nonempty_set, n N_pos>:
+    have coordinate_carrier set = finite_seq(s, n)
+
+template<s nonempty_set, n N_pos>:
+    have fn coordinate(x finite_seq(s, n), k N_pos: k <= n) s = x(k)
+
+# Example 1.12. C^4 consists of lists of four Complex records.
+sketch:
+    have complex_four finite_seq(&Complex, 4) = [(1, 0), (0, 1), (2, 3), (4, 5)]
+    \coordinate<&Complex, 4>(complex_four, 3) $in &Complex
+    complex_four(3) = (2, 3)
+
+# Definition 1.13. Addition in F^n is the callable map obtained by adding
+# corresponding coordinates with the selected ScalarSystem operation.
+template<s nonempty_set, scalars &ScalarSystem<s>, n N_pos>:
+    have fn coordinate_add(x, y finite_seq(s, n)) finite_seq(s, n) = fn(i N_pos: i <= n) s {&ScalarSystem<s>{scalars}.add(x(i), y(i))}
+
+# Definitional projection bridge for template-instantiated function values.
+axiom coordinate_add_entry:
+    ? forall s nonempty_set, scalars &ScalarSystem<s>, n N_pos, x, y, result finite_seq(s, n), i N_pos:
+        result = \coordinate_add<s, scalars, n>(x, y)
+        i <= n
+        =>:
+            result(i) = &ScalarSystem<s>{scalars}.add(x(i), y(i))
+
+# Result 1.14. Coordinate addition is commutative because scalar addition is
+# commutative at every coordinate.
+# The pointwise scalar equalities are available from ScalarSystem; Litex's
+# function extensionality closes the finite-sequence equality.
+thm coordinate_add_commutative:
+    ? forall s nonempty_set, scalars &ScalarSystem<s>, n N_pos, x, y finite_seq(s, n):
+        \coordinate_add<s, scalars, n>(x, y) = \coordinate_add<s, scalars, n>(y, x)
+    claim:
+        ? forall i N_pos:
+            i <= n
+            =>:
+                &ScalarSystem<s>{scalars}.add(x(i), y(i)) = &ScalarSystem<s>{scalars}.add(y(i), x(i))
+        by thm scalar_system_projection_laws(s, scalars, x(i), y(i), x(i))
+        &ScalarSystem<s>{scalars}.add(x(i), y(i)) = &ScalarSystem<s>{scalars}.add(y(i), x(i))
+    have left finite_seq(s, n) = \coordinate_add<s, scalars, n>(x, y)
+    have right finite_seq(s, n) = \coordinate_add<s, scalars, n>(y, x)
+    claim:
+        ? forall i N_pos:
+            i <= n
+            =>:
+                left(i) = right(i)
+        by thm coordinate_add_entry(s, scalars, n, x, y, left, i)
+        by thm coordinate_add_entry(s, scalars, n, y, x, right, i)
+        left(i) = &ScalarSystem<s>{scalars}.add(x(i), y(i))
+        &ScalarSystem<s>{scalars}.add(x(i), y(i)) = &ScalarSystem<s>{scalars}.add(y(i), x(i))
+        &ScalarSystem<s>{scalars}.add(y(i), x(i)) = right(i)
+    $fn_eq(left, right)
+    left = right
+    \coordinate_add<s, scalars, n>(x, y) = \coordinate_add<s, scalars, n>(y, x)
+
+# Notation 1.15. The zero vector is the constant coordinate list whose value
+# is the scalar zero selected by the ScalarSystem instance.
+template<s nonempty_set, scalars &ScalarSystem<s>, n N_pos>:
+    have coordinate_zero finite_seq(s, n) = fn(i N_pos: i <= n) s {&ScalarSystem<s>{scalars}.zero}
+
+# Example 1.16. In x+0=x the second argument below is visibly a vector-valued
+# zero, not the scalar zero field of ScalarSystem. The full identity law is
+# packaged by coordinate_space after VectorSpace is introduced in Section 1B.
+sketch:
+    have x2 finite_seq(R, 2) = [2, 3]
+    \coordinate_add<R, real_scalars, 2>(x2, \coordinate_zero<R, real_scalars, 2>) $in finite_seq(R, 2)
+
+# Definition 1.17. Vector negation is the callable coordinatewise application
+# of the scalar negation field.
+template<s nonempty_set, scalars &ScalarSystem<s>, n N_pos>:
+    have fn coordinate_neg(x finite_seq(s, n)) finite_seq(s, n) = fn(i N_pos: i <= n) s {&ScalarSystem<s>{scalars}.neg(x(i))}
+
+# Definition 1.18. Scalar multiplication is the callable map that multiplies
+# each coordinate by the selected scalar.
+template<s nonempty_set, scalars &ScalarSystem<s>, n N_pos>:
+    have fn coordinate_smul(a s, x finite_seq(s, n)) finite_seq(s, n) = fn(i N_pos: i <= n) s {&ScalarSystem<s>{scalars}.mul(a, x(i))}
+
+# Remark on geometry and algebra. Arrows in R^2 motivate intuition, but the
+# formal carrier remains finite_seq(R,n); points and vectors are two readings
+# of the same elements, and higher-dimensional work is algebraic.
+
+# Remark on fields. The axioms packaged by ScalarSystem describe a field-like
+# operation interface. This book specializes the formal development to the
+# explicit real_scalars and complex_scalars instances even though other fields
+# also satisfy analogous laws.

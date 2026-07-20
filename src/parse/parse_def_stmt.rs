@@ -1013,7 +1013,7 @@ impl Runtime {
                 ParamObjType::FnSet,
                 fn_param_names,
                 case_lf,
-                |this| this.parse_and_chain_atomic_fact(block),
+                |this| this.parse_and_chain_atomic_fact_allow_leading_not(block),
             )?);
             block.skip_token(COLON)?;
             let rhs_lf = block.line_file.clone();

@@ -165,8 +165,8 @@ impl Runtime {
         if shape_left != shape_right {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix ++: shape {:?} and {:?} do not match",
-                    shape_left, shape_right
+                    "matrix {}: shape {:?} and {:?} do not match",
+                    MATRIX_ADD, shape_left, shape_right
                 )),
             )));
         }
@@ -185,8 +185,8 @@ impl Runtime {
         if shape_left != shape_right {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix --: shape {:?} and {:?} do not match",
-                    shape_left, shape_right
+                    "matrix {}: shape {:?} and {:?} do not match",
+                    MATRIX_SUB, shape_left, shape_right
                 )),
             )));
         }
@@ -205,8 +205,8 @@ impl Runtime {
         if shape_left.1 != shape_right.0 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix **: left columns {} != right rows {}",
-                    shape_left.1, shape_right.0
+                    "matrix {}: left columns {} != right rows {}",
+                    MATRIX_MUL, shape_left.1, shape_right.0
                 )),
             )));
         }
@@ -235,8 +235,8 @@ impl Runtime {
         if shape_base.0 != shape_base.1 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix ^^: base must be square, got {}x{}",
-                    shape_base.0, shape_base.1
+                    "matrix {}: base must be square, got {}x{}",
+                    MATRIX_POW, shape_base.0, shape_base.1
                 )),
             )));
         }
@@ -250,8 +250,8 @@ impl Runtime {
         if ok.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix ^^: exponent {} is not verified in N_pos",
-                    m.exponent
+                    "matrix {}: exponent {} is not verified in N_pos",
+                    MATRIX_POW, m.exponent
                 )),
             )));
         }
@@ -276,8 +276,8 @@ impl Runtime {
                 if sl.1 != sr.0 {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(format!(
-                            "matrix **: left columns {} != right rows {}",
-                            sl.1, sr.0
+                            "matrix {}: left columns {} != right rows {}",
+                            MATRIX_MUL, sl.1, sr.0
                         )),
                     )));
                 }
@@ -289,8 +289,8 @@ impl Runtime {
                 if s.0 != s.1 {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(format!(
-                            "matrix ^^: base must be square, got {}x{}",
-                            s.0, s.1
+                            "matrix {}: base must be square, got {}x{}",
+                            MATRIX_POW, s.0, s.1
                         )),
                     )));
                 }

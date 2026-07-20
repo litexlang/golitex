@@ -200,7 +200,7 @@ ordinary program function can be viewed as case analysis plus recursive state
 transitions. Conditionals are case splits; loops are recursive updates over an
 explicit state; dynamic-programming recurrences are recursive equations with a
 chosen evaluation strategy. Litex supports checked case definitions,
-decreasing recursive definitions, and executable `algo` bodies, so in principle
+bounded integer-measured recursive definitions, and executable `algo` bodies, so in principle
 the algorithms used in scientific computation can be expressed in Litex once
 their data and state are made explicit.
 

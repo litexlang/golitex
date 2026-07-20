@@ -34,14 +34,17 @@ impl Runtime {
         let (exec_proof_inside_results, last_error) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
 
-            let reverse_to_prove_fact = reverse_fact_for_by_contra(&to_prove_fact)?;
+            let negated_to_prove_fact = logical_negation_for_by_contra(&to_prove_fact)?;
             rt.verify_well_defined_and_store_and_infer_with_default_verify_state(
-                reverse_to_prove_fact,
+                negated_to_prove_fact,
             )
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt.clone().into(),
-                    format!("by contra: failed to store reverse of `{}`", to_prove_fact),
+                    format!(
+                        "by contra: failed to store logical negation of `{}`",
+                        to_prove_fact
+                    ),
                     Some(store_fact_error),
                     vec![],
                 )
@@ -74,11 +77,10 @@ impl Runtime {
                 ));
             }
 
-            let verify_reversed_impossible_fact_result = rt.verify_atomic_fact(
-                &stmt.impossible_fact.make_reversed(),
-                &VerifyState::new(0, false),
-            )?;
-            if verify_reversed_impossible_fact_result.is_unknown() {
+            let negated_impossible_fact = stmt.impossible_fact.logical_negation()?;
+            let verify_negated_impossible_fact_result =
+                rt.verify_atomic_fact(&negated_impossible_fact, &VerifyState::new(0, false))?;
+            if verify_negated_impossible_fact_result.is_unknown() {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     impossible_proof_error_message(&stmt.impossible_fact, None),
@@ -87,7 +89,7 @@ impl Runtime {
                 ));
             }
             inside_results.push(verify_impossible_fact_result);
-            inside_results.push(verify_reversed_impossible_fact_result);
+            inside_results.push(verify_negated_impossible_fact_result);
 
             Ok((inside_results, last_error))
         })?;
@@ -101,10 +103,10 @@ impl Runtime {
             ));
         }
 
-        let reverse_assumption = reverse_fact_for_by_contra(&stmt.to_prove)?;
+        let negated_assumption = logical_negation_for_by_contra(&stmt.to_prove)?;
         let by_verification = ByContraVerificationResult::new(
             stmt.to_prove.clone(),
-            reverse_assumption,
+            negated_assumption,
             stmt.proof.len(),
             stmt.impossible_fact.clone(),
         )
@@ -154,9 +156,9 @@ impl Runtime {
     }
 }
 
-fn reverse_fact_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
+fn logical_negation_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
     match fact {
-        Fact::AtomicFact(atomic_fact) => Ok(atomic_fact.make_reversed().into()),
+        Fact::AtomicFact(atomic_fact) => Ok(atomic_fact.logical_negation()?.into()),
         Fact::ForallFact(forall_fact) => Ok(NotForallFact::new(forall_fact.clone()).into()),
         Fact::NotForall(not_forall) => Ok(not_forall.forall_fact.clone().into()),
         Fact::ExistFact(exist_fact) => match exist_fact {
@@ -165,7 +167,7 @@ fn reverse_fact_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
             ExistFactEnum::ExistUniqueFact(_) => Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
-                        "by contra: cannot build reverse assumption for `{}` yet",
+                        "by contra: cannot build logical negation for `{}` yet",
                         fact
                     ),
                     fact.line_file(),
@@ -176,7 +178,7 @@ fn reverse_fact_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
             Err(RuntimeError::ExecStmtError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
-                        "by contra: cannot build reverse assumption for `{}` yet",
+                        "by contra: cannot build logical negation for `{}` yet",
                         fact
                     ),
                     fact.line_file(),

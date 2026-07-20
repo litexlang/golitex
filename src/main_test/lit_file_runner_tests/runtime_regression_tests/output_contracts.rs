@@ -1,6 +1,39 @@
 use super::*;
 
 #[test]
+fn by_def_output_and_summary_report_definition_checks() {
+    let source_code = r#"
+prop unit(x R):
+    x = 1
+1 = 1
+by def $unit(1)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("by_def_output_contract");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    let summary_output = crate::pipeline::display_run_summary_json_with_runtime(
+        &runtime,
+        &stmt_results,
+        &runtime_error,
+    );
+
+    assert!(
+        run_succeeded,
+        "by def output fixture failed:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("\"type\": \"proof by definition\""));
+    assert!(run_output.contains("\"type\": \"by definition proof\""));
+    assert!(run_output.contains("\"prop\": \"unit\""));
+    assert!(run_output.contains("\"definition_clause_checks\": ["));
+    assert!(run_output.contains("\"stored_fact\": \"$unit(1)\""));
+    assert!(summary_output.contains("\"by def\": 1"));
+}
+
+#[test]
 fn hidden_file_path_output_omits_source_fields() {
     // Use a verification failure so the public error contract includes its line.
     // An undeclared identifier fails earlier during well-definedness and does not
@@ -70,6 +103,60 @@ eval a
             run_output
         );
     });
+}
+
+#[test]
+fn matrix_operator_eval_output_uses_apostrophe_syntax() {
+    run_with_large_stack("matrix_operator_eval_output_uses_apostrophe_syntax", || {
+        let source_code = r#"
+eval [[1, 0], [0, 1]] '+ [[1, 0], [0, 1]]
+eval [[2, 0], [0, 2]] '- [[1, 0], [0, 1]]
+eval [[1, 2], [0, 1]] '* [[1, 0], [1, 1]]
+eval 3 *' [[1, 2], [4, 5]]
+eval [[2, 0], [0, 2]] '^ 2
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("matrix_operator_eval_output");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "matrix operator eval fixture failed:\n{}",
+            run_output
+        );
+        for fact in [
+            "[[1, 0], [0, 1]] '+ [[1, 0], [0, 1]] = [[2, 0], [0, 2]]",
+            "[[2, 0], [0, 2]] '- [[1, 0], [0, 1]] = [[1, 0], [0, 1]]",
+            "[[1, 2], [0, 1]] '* [[1, 0], [1, 1]] = [[3, 2], [1, 1]]",
+            "3 *' [[1, 2], [4, 5]] = [[3, 6], [12, 15]]",
+            "[[2, 0], [0, 2]] '^ 2 = [[4, 0], [0, 4]]",
+        ] {
+            assert!(
+                run_output.contains(fact),
+                "matrix eval output should include `{}`:\n{}",
+                fact,
+                run_output
+            );
+        }
+    });
+}
+
+#[test]
+fn matrix_operator_latex_escapes_the_apostrophe_power_token() {
+    let output = to_latex_from_source(
+        "eval [[2, 0], [0, 2]] '^ 2",
+        "matrix_operator_latex_escapes_the_apostrophe_power_token",
+    )
+    .expect("matrix power should convert to LaTeX");
+
+    assert!(
+        output.contains(r"\textasciicircum{}"),
+        "matrix power token must escape its caret in LaTeX:\n{}",
+        output
+    );
 }
 
 #[test]
