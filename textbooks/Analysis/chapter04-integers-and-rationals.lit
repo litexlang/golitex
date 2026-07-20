@@ -215,10 +215,7 @@ claim:
         a < b
         =>:
             exist x N st {b = a + x}
-    b - a $in N
-    b = a + (b - a)
-    witness exist x N st {b = a + x} from b - a:
-        b = a + (b - a)
+    witness exist x N st {b = a + x} from b - a
 
 # The non-strict order version allows the same witness `x=b-a`, now possibly
 # zero.
@@ -228,10 +225,7 @@ claim:
         a <= b
         =>:
             exist x N st {b = a + x}
-    b - a $in N
-    b = a + (b - a)
-    witness exist x N st {b = a + x} from b - a:
-        b = a + (b - a)
+    witness exist x N st {b = a + x} from b - a
 
 """
 Lemma 4.1.11. Integer order is compatible with addition, positive
@@ -515,9 +509,7 @@ claim:
         q < 0
         =>:
             exist y Q st {y > 0, q = -y}
-    witness exist y Q st {y > 0, q = -y} from -q:
-        -q > 0
-        q = -(-q)
+    witness exist y Q st {y > 0, q = -y} from -q
 
 # Conversely, the additive inverse of a positive rational is negative.
 
@@ -798,8 +790,6 @@ forall x, y Q:
 # `dist_Q(x,y)=abs(x-y)`.
 
 forall x, y Q:
-    dist_Q(x, y) = abs(x - y)
-    abs(x - y) >= 0
     dist_Q(x, y) >= 0
 
 # Proposition 4.3.3(e), one zero-distance direction: equal points have
@@ -808,8 +798,7 @@ forall x, y Q:
 forall x, y Q:
     x = y
     =>:
-        x - y = 0
-        dist_Q(x, y) = abs(x - y) = abs(0) = 0
+        dist_Q(x, y) = 0
 
 # Proposition 4.3.3(e), the other zero-distance direction: distance zero
 # forces the difference to be zero, hence the two rationals are equal.
@@ -817,54 +806,18 @@ forall x, y Q:
 forall x, y Q:
     dist_Q(x, y) = 0
     =>:
-        dist_Q(x, y) = abs(x - y)
-        abs(x - y) = 0
-        x - y = 0
         x = y
 
-# Proposition 4.3.3(f): symmetry of distance.  The long chain shows both
-# `abs(x-y) <= abs(y-x)` and the reverse inequality, then folds back to `dist_Q`.
+# Proposition 4.3.3(f): symmetry follows from
+# `abs(x-y)=abs(-(y-x))=abs(y-x)`.
 
 forall x, y Q:
-    dist_Q(x, y) = abs(x - y)
-    dist_Q(y, x) = abs(y - x)
-    -(y - x) <= abs(y - x)
-    x - y = -(y - x)
-    x - y <= abs(y - x)
-    y - x <= abs(y - x)
-    -(x - y) = y - x
-    -(x - y) <= abs(y - x)
-    abs(x - y) <= abs(y - x)
-    -(x - y) <= abs(x - y)
-    y - x = -(x - y)
-    y - x <= abs(x - y)
-    x - y <= abs(x - y)
-    -(y - x) = x - y
-    -(y - x) <= abs(x - y)
-    abs(y - x) <= abs(x - y)
-    abs(x - y) = abs(y - x)
     dist_Q(x, y) = dist_Q(y, x)
 
-# Proposition 4.3.3(g): triangle inequality for distance.  The proof first
-# bounds `x-z` and `-(x-z)` by `abs(x-y)+abs(y-z)`, then folds through `dist_Q`.
+# Proposition 4.3.3(g): the triangle inequality follows from
+# `x-z=(x-y)+(y-z)` and the triangle inequality for absolute value.
 
 forall x, y, z Q:
-    x - y <= abs(x - y)
-    y - z <= abs(y - z)
-    (x - y) + (y - z) <= abs(x - y) + abs(y - z)
-    x - z = (x - y) + (y - z)
-    x - z <= abs(x - y) + abs(y - z)
-    -(x - y) <= abs(x - y)
-    -(y - z) <= abs(y - z)
-    -(x - y) + -(y - z) <= abs(x - y) + abs(y - z)
-    -(x - z) = -(x - y) + -(y - z)
-    -(x - z) <= abs(x - y) + abs(y - z)
-    abs(x - z) <= abs(x - y) + abs(y - z)
-    dist_Q(x, y) = abs(x - y)
-    dist_Q(y, z) = abs(y - z)
-    abs(x - y) + abs(y - z) = dist_Q(x, y) + dist_Q(y, z)
-    abs(x - z) <= dist_Q(x, y) + dist_Q(y, z)
-    dist_Q(x, z) = abs(x - z)
     dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z)
 
 """
@@ -900,8 +853,6 @@ sketch:
     $is_close_in_Q(0.1, 0.99, 1.01)
     0.02 > 0.01
     forall epsilon Q_pos:
-        dist_Q(2, 2) = abs(2 - 2) = abs(0) = 0
-        0 <= epsilon
         $is_close_in_Q(epsilon, 2, 2)
 
 """
@@ -914,9 +865,6 @@ corresponding error estimates.
 # Proposition 4.3.7(a), reflexive direction: every rational is epsilon-close to itself.
 
 forall epsilon Q_pos, x Q:
-    x - x = 0
-    dist_Q(x, x) = abs(x - x) = abs(0) = 0
-    0 <= epsilon
     $is_close_in_Q(epsilon, x, x)
 
 # Relaxing the tolerance preserves closeness: a bound by `epsilon` is also a
@@ -926,8 +874,6 @@ forall epsilon, epsilon_prime Q_pos, x, y Q:
     $is_close_in_Q(epsilon, x, y)
     epsilon_prime > epsilon
     =>:
-        dist_Q(x, y) <= epsilon < epsilon_prime
-        dist_Q(x, y) <= epsilon_prime
         $is_close_in_Q(epsilon_prime, x, y)
 
 # Proposition 4.3.7(a), converse direction: if two rationals are epsilon-close
@@ -942,18 +888,9 @@ claim:
             x = y
     by contra:
         ? x = y
-        x != y
-        x - y != 0
-        abs(x - y) > 0
         abs(x - y) / 2 $in Q_pos
         $is_close_in_Q(abs(x - y) / 2, x, y)
-        dist_Q(x, y) = abs(x - y)
-        dist_Q(x, y) <= abs(x - y) / 2
-        abs(x - y) <= abs(x - y) / 2
-        abs(x - y) / 2 < abs(x - y)
-        abs(x - y) <= abs(x - y) / 2 < abs(x - y)
         abs(x - y) < abs(x - y)
-        abs(x - y) != abs(x - y)
         impossible abs(x - y) = abs(x - y)
 
 # Proposition 4.3.7(b): epsilon-closeness is symmetric because distance is symmetric.
@@ -961,9 +898,6 @@ claim:
 forall epsilon Q_pos, x, y Q:
     $is_close_in_Q(epsilon, x, y)
     =>:
-        dist_Q(x, y) <= epsilon
-        dist_Q(y, x) = dist_Q(x, y)
-        dist_Q(y, x) <= epsilon
         $is_close_in_Q(epsilon, y, x)
 
 # Proposition 4.3.7(c): closeness composes, with errors adding.
@@ -972,64 +906,16 @@ forall epsilon, delta Q_pos, x, y, z Q:
     $is_close_in_Q(epsilon, x, y)
     $is_close_in_Q(delta, y, z)
     =>:
-        dist_Q(x, y) <= epsilon
-        dist_Q(y, z) <= delta
-        dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z)
-        dist_Q(x, y) + dist_Q(y, z) <= epsilon + delta
-        dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z) <= epsilon + delta
-        dist_Q(x, z) <= epsilon + delta
         $is_close_in_Q(epsilon + delta, x, z)
 
-# Proposition 4.3.7(d): addition and subtraction preserve closeness, again
-# with errors adding.  The proof unfolds both distances into absolute values.
+# Proposition 4.3.7(d): addition and subtraction preserve closeness, with the
+# two errors adding.
 
 forall epsilon, delta Q_pos, x, y, z, w Q:
     $is_close_in_Q(epsilon, x, y)
     $is_close_in_Q(delta, z, w)
     =>:
-        dist_Q(x, y) <= epsilon
-        dist_Q(z, w) <= delta
-        (x + z) - (y + w) = (x - y) + (z - w)
-        x - y <= abs(x - y)
-        z - w <= abs(z - w)
-        (x - y) + (z - w) <= abs(x - y) + abs(z - w)
-        (x + z) - (y + w) <= abs(x - y) + abs(z - w)
-        -(x - y) <= abs(x - y)
-        -(z - w) <= abs(z - w)
-        -(x - y) + -(z - w) <= abs(x - y) + abs(z - w)
-        -((x + z) - (y + w)) = -(x - y) + -(z - w)
-        -((x + z) - (y + w)) = -(x - y) + -(z - w) <= abs(x - y) + abs(z - w)
-        -((x + z) - (y + w)) <= abs(x - y) + abs(z - w)
-        abs((x + z) - (y + w)) <= abs(x - y) + abs(z - w)
-        dist_Q(x + z, y + w) = abs((x + z) - (y + w))
-        dist_Q(x, y) = abs(x - y)
-        dist_Q(z, w) = abs(z - w)
-        abs(x - y) + abs(z - w) = dist_Q(x, y) + dist_Q(z, w)
-        dist_Q(x + z, y + w) = abs((x + z) - (y + w)) <= abs(x - y) + abs(z - w) = dist_Q(x, y) + dist_Q(z, w)
-        dist_Q(x + z, y + w) <= dist_Q(x, y) + dist_Q(z, w)
-        dist_Q(x, y) + dist_Q(z, w) <= epsilon + delta
-        dist_Q(x + z, y + w) <= dist_Q(x, y) + dist_Q(z, w) <= epsilon + delta
-        dist_Q(x + z, y + w) <= epsilon + delta
         $is_close_in_Q(epsilon + delta, x + z, y + w)
-        (x - z) - (y - w) = (x - y) + (w - z)
-        w - z <= abs(w - z)
-        (x - y) + (w - z) <= abs(x - y) + abs(w - z)
-        (x - z) - (y - w) = (x - y) + (w - z) <= abs(x - y) + abs(w - z)
-        (x - z) - (y - w) <= abs(x - y) + abs(w - z)
-        -(w - z) <= abs(w - z)
-        -(x - y) + -(w - z) <= abs(x - y) + abs(w - z)
-        -((x - z) - (y - w)) = -(x - y) + -(w - z)
-        -((x - z) - (y - w)) = -(x - y) + -(w - z) <= abs(x - y) + abs(w - z)
-        -((x - z) - (y - w)) <= abs(x - y) + abs(w - z)
-        abs((x - z) - (y - w)) <= abs(x - y) + abs(w - z)
-        dist_Q(w, z) = abs(w - z)
-        dist_Q(w, z) = dist_Q(z, w)
-        abs(x - y) + abs(w - z) = dist_Q(x, y) + dist_Q(z, w)
-        dist_Q(x - z, y - w) = abs((x - z) - (y - w))
-        dist_Q(x - z, y - w) = abs((x - z) - (y - w)) <= abs(x - y) + abs(w - z) = dist_Q(x, y) + dist_Q(z, w)
-        dist_Q(x - z, y - w) <= dist_Q(x, y) + dist_Q(z, w)
-        dist_Q(x - z, y - w) <= dist_Q(x, y) + dist_Q(z, w) <= epsilon + delta
-        dist_Q(x - z, y - w) <= epsilon + delta
         $is_close_in_Q(epsilon + delta, x - z, y - w)
 
 # Proposition 4.3.7(f): if two endpoints are epsilon-close to `x`, then every
@@ -1041,30 +927,6 @@ forall epsilon Q_pos, x, y, z, w Q:
     y <= w
     w <= z
     =>:
-        dist_Q(y, x) <= epsilon
-        dist_Q(z, x) <= epsilon
-        dist_Q(y, x) = abs(y - x)
-        dist_Q(z, x) = abs(z - x)
-        w - x <= z - x
-        z - x <= abs(z - x)
-        w - x <= z - x <= abs(z - x)
-        w - x <= abs(z - x)
-        abs(z - x) <= epsilon
-        w - x <= abs(z - x) <= epsilon
-        w - x <= epsilon
-        x - w <= x - y
-        x - y = -(y - x)
-        -(y - x) <= abs(y - x)
-        x - w <= x - y = -(y - x) <= abs(y - x)
-        x - w <= abs(y - x)
-        abs(y - x) <= epsilon
-        x - w <= abs(y - x) <= epsilon
-        x - w <= epsilon
-        -(w - x) = x - w
-        -(w - x) <= epsilon
-        abs(w - x) <= epsilon
-        dist_Q(w, x) = abs(w - x)
-        dist_Q(w, x) <= epsilon
         $is_close_in_Q(epsilon, w, x)
 
 forall epsilon Q_pos, x, y, z, w Q:
@@ -1073,30 +935,6 @@ forall epsilon Q_pos, x, y, z, w Q:
     z <= w
     w <= y
     =>:
-        dist_Q(y, x) <= epsilon
-        dist_Q(z, x) <= epsilon
-        dist_Q(y, x) = abs(y - x)
-        dist_Q(z, x) = abs(z - x)
-        w - x <= y - x
-        y - x <= abs(y - x)
-        w - x <= y - x <= abs(y - x)
-        w - x <= abs(y - x)
-        abs(y - x) <= epsilon
-        w - x <= abs(y - x) <= epsilon
-        w - x <= epsilon
-        x - w <= x - z
-        x - z = -(z - x)
-        -(z - x) <= abs(z - x)
-        x - w <= x - z = -(z - x) <= abs(z - x)
-        x - w <= abs(z - x)
-        abs(z - x) <= epsilon
-        x - w <= abs(z - x) <= epsilon
-        x - w <= epsilon
-        -(w - x) = x - w
-        -(w - x) <= epsilon
-        abs(w - x) <= epsilon
-        dist_Q(w, x) = abs(w - x)
-        dist_Q(w, x) <= epsilon
         $is_close_in_Q(epsilon, w, x)
 
 # Multiplication by a fixed rational scales the error by `abs(z)`: rewrite
@@ -1106,28 +944,6 @@ forall epsilon Q_pos, x, y, z Q:
     $is_close_in_Q(epsilon, x, y)
     z != 0
     =>:
-        dist_Q(x, y) <= epsilon
-        (x * z) - (y * z) = (x - y) * z
-        abs((x - y) * z) = abs(x - y) * abs(z)
-        (x - y) * z <= abs((x - y) * z)
-        (x - y) * z <= abs(x - y) * abs(z)
-        (x * z) - (y * z) <= abs(x - y) * abs(z)
-        -((x - y) * z) <= abs((x - y) * z)
-        -((x - y) * z) <= abs(x - y) * abs(z)
-        -((x * z) - (y * z)) = -((x - y) * z)
-        -((x * z) - (y * z)) <= abs(x - y) * abs(z)
-        abs((x * z) - (y * z)) <= abs(x - y) * abs(z)
-        dist_Q(x * z, y * z) = abs((x * z) - (y * z))
-        dist_Q(x, y) = abs(x - y)
-        abs(x - y) * abs(z) = dist_Q(x, y) * abs(z)
-        dist_Q(x * z, y * z) = abs((x * z) - (y * z)) <= abs(x - y) * abs(z) = dist_Q(x, y) * abs(z)
-        dist_Q(x * z, y * z) <= dist_Q(x, y) * abs(z)
-        abs(z) >= 0
-        dist_Q(x, y) * abs(z) <= epsilon * abs(z)
-        dist_Q(x * z, y * z) <= dist_Q(x, y) * abs(z) <= epsilon * abs(z)
-        dist_Q(x * z, y * z) <= epsilon * abs(z)
-        abs(z) > 0
-        epsilon * abs(z) $in Q_pos
         $is_close_in_Q(epsilon * abs(z), x * z, y * z)
 
 # For two moving products, the useful estimate rewrites
@@ -1137,58 +953,6 @@ forall epsilon, delta Q_pos, x, y, z, w Q:
     $is_close_in_Q(epsilon, x, y)
     $is_close_in_Q(delta, z, w)
     =>:
-        dist_Q(x, y) <= epsilon
-        dist_Q(z, w) <= delta
-        dist_Q(x, y) = abs(x - y)
-        dist_Q(z, w) = abs(z - w)
-        abs(x - y) <= epsilon
-        abs(z - w) <= delta
-        abs(z) >= 0
-        abs(x) >= 0
-        abs((x - y) * z) = abs(x - y) * abs(z)
-        abs(x - y) * abs(z) <= epsilon * abs(z)
-        (x - y) * z <= abs((x - y) * z)
-        (x - y) * z <= abs((x - y) * z) = abs(x - y) * abs(z) <= epsilon * abs(z)
-        (x - y) * z <= epsilon * abs(z)
-        -((x - y) * z) <= abs((x - y) * z)
-        -((x - y) * z) <= abs((x - y) * z) = abs(x - y) * abs(z) <= epsilon * abs(z)
-        -((x - y) * z) <= epsilon * abs(z)
-        abs(x * (z - w)) = abs(x) * abs(z - w)
-        abs(x) * abs(z - w) = abs(z - w) * abs(x)
-        abs(z - w) * abs(x) <= delta * abs(x)
-        abs(x * (z - w)) <= delta * abs(x)
-        x * (z - w) <= abs(x * (z - w))
-        x * (z - w) <= abs(x * (z - w)) <= delta * abs(x)
-        x * (z - w) <= delta * abs(x)
-        -(x * (z - w)) <= abs(x * (z - w))
-        -(x * (z - w)) <= abs(x * (z - w)) <= delta * abs(x)
-        -(x * (z - w)) <= delta * abs(x)
-        abs((x - y) * (z - w)) = abs(x - y) * abs(z - w)
-        abs(x - y) * abs(z - w) <= epsilon * abs(z - w)
-        epsilon * abs(z - w) <= epsilon * delta
-        abs(x - y) * abs(z - w) <= epsilon * abs(z - w) <= epsilon * delta
-        abs(x - y) * abs(z - w) <= epsilon * delta
-        (x - y) * (z - w) <= abs((x - y) * (z - w))
-        (x - y) * (z - w) <= abs((x - y) * (z - w)) = abs(x - y) * abs(z - w) <= epsilon * delta
-        (x - y) * (z - w) <= epsilon * delta
-        -((x - y) * (z - w)) <= abs((x - y) * (z - w))
-        -((x - y) * (z - w)) <= abs((x - y) * (z - w)) = abs(x - y) * abs(z - w) <= epsilon * delta
-        -((x - y) * (z - w)) <= epsilon * delta
-        (x - y) * z + x * (z - w) <= epsilon * abs(z) + delta * abs(x)
-        ((x - y) * z + x * (z - w)) - (x - y) * (z - w) = (x - y) * z + x * (z - w) + -((x - y) * (z - w))
-        (x - y) * z + x * (z - w) + -((x - y) * (z - w)) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
-        (x - y) * z + x * (z - w) - (x - y) * (z - w) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
-        x * z - y * w = (x - y) * z + x * (z - w) - (x - y) * (z - w)
-        x * z - y * w <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
-        -((x - y) * z) + -(x * (z - w)) <= epsilon * abs(z) + delta * abs(x)
-        -((x - y) * z) + -(x * (z - w)) + (x - y) * (z - w) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
-        -(x * z - y * w) = -((x - y) * z) + -(x * (z - w)) + (x - y) * (z - w)
-        -(x * z - y * w) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
-        abs(x * z - y * w) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
-        dist_Q(x * z, y * w) = abs(x * z - y * w)
-        dist_Q(x * z, y * w) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
-        epsilon * delta $in Q_pos
-        epsilon * abs(z) + delta * abs(x) + epsilon * delta $in Q_pos
         $is_close_in_Q(epsilon * abs(z) + delta * abs(x) + epsilon * delta, x * z, y * w)
 
 """
@@ -1367,30 +1131,8 @@ lies in a unique interval [n, n+1), and some natural number is bigger than x.
 claim:
     ? forall a Z, b N_pos:
         exist m Z st {m <= a / b, a / b < m + 1}
-    0 <= a % b
-    a % b < b
-    (a - a % b) % b = 0
     have n Z = integer_quotient(a, b)
-    a = b * integer_quotient(a, b) + a % b = b * n + a % b
-    a - a % b = b * n = n * b
-    a = (a - a % b) + a % b
-    (a - a % b) + a % b = n * b + a % b
-    n * b <= n * b + a % b
-    n * b + a % b = a
-    n * b <= a
-    n * b + a % b < n * b + b
-    n * b + b = (n + 1) * b
-    a < (n + 1) * b
-    b > 0
-    n = (n * b) / b
-    (n * b) / b <= a / b
-    n <= a / b
-    a / b < ((n + 1) * b) / b
-    ((n + 1) * b) / b = n + 1
-    a / b < n + 1
-    witness exist m Z st {m <= a / b, a / b < m + 1} from n:
-        n <= a / b
-        a / b < n + 1
+    witness exist m Z st {m <= a / b, a / b < m + 1} from n
 
 # Then use the built-in meaning of rational number: every rational can be
 # represented as an integer divided by a positive natural number.
@@ -1398,16 +1140,9 @@ claim:
 claim:
     ? forall x Q:
         exist n Z st {n <= x, x < n + 1}
-    exist a Z, b N_pos st {x = a / b}
     obtain a, b from exist a Z, b N_pos st {x = a / b}
-    exist m Z st {m <= a / b, a / b < m + 1}
     obtain m from exist m Z st {m <= a / b, a / b < m + 1}
-    x = a / b
-    m <= x
-    x < m + 1
-    witness exist n Z st {n <= x, x < n + 1} from m:
-        m <= x
-        x < m + 1
+    witness exist n Z st {n <= x, x < n + 1} from m
 
 # The integer endpoint is unique: two intervals `[n,n+1)` and `[m,m+1)`
 # containing the same rational must have `n=m`.
@@ -1420,12 +1155,6 @@ claim:
         x < m + 1
         =>:
             n = m
-    n <= x < m + 1
-    n < m + 1
-    m <= x < n + 1
-    m < n + 1
-    n <= (m + 1) - 1 = m
-    m <= (n + 1) - 1 = n
     n = m
 
 claim:
@@ -1435,49 +1164,10 @@ claim:
     by cases:
         ? exist n N st {n > x}
         case x <= 0:
-            1 $in N
-            1 > x
-            witness exist n N st {n > x} from 1:
-                1 > x
+            witness exist n N st {n > x} from 1
         case x > 0:
-            exist a Z, b N_pos st {x = a / b}
             obtain a, b from exist a Z, b N_pos st {x = a / b}
-            x = a / b
-            a / b > 0
-            b > 0
-            (a / b) * b > 0 * b
-            (a / b) * b = a
-            0 * b = 0
-            a > 0
-            a $in N_pos
-            a $in N
-            b >= 1
-            a >= 0
-            b - 1 >= 0
-            a * (b - 1) >= 0
-            a * b = a * (b - 1) + a
-            a * (b - 1) + a >= a
-            a * b >= a
-            b != 0
-            a / b <= (a * b) / b
-            (a * b) / b = a
-            a / b <= a
-            x <= a
-            a < a + 1
-            x <= a < a + 1
-            x < a + 1
-            a + 1 $in N
-            witness exist n N st {n > x} from a + 1:
-                a + 1 > x
-
-# The upper-bound half says that rationals are not larger than every natural
-# number.  The easy nonpositive case is shown below.
-
-sketch:
-    forall x Q:
-        x <= 0
-        =>:
-            1 > x
+            witness exist n N st {n > x} from a + 1
 
 """
 Remark 4.4.2. The integer n with n <= x < n + 1 is the integer part of x,
@@ -1496,19 +1186,7 @@ claim:
         x < y
         =>:
             exist z Q st {x < z < y}
-    (x + y) / 2 $in Q
-    x + x < x + y
-    2 * x = x + x
-    2 * x < x + y
-    x = (2 * x) / 2 < (x + y) / 2
-    x < (x + y) / 2
-    x + y < y + y
-    y + y = 2 * y
-    x + y < 2 * y
-    (x + y) / 2 < (2 * y) / 2 = y
-    (x + y) / 2 < y
-    witness exist z Q st {x < z < y} from (x + y) / 2:
-        x < (x + y) / 2 < y
+    witness exist z Q st {x < z < y} from (x + y) / 2
 
 
 """
@@ -1522,20 +1200,13 @@ Proposition 4.4.4. There is no rational x such that x^2 = 2.
 # residue cases modulo two show that they cannot both be even, since otherwise
 # two would be a common positive divisor of a reduced fraction.
 
-prop is_reduced_fraction(a Z, b N_pos):
-    forall k N_pos:
-        a % k = 0
-        b % k = 0
-        =>:
-            k = 1
-
-# The reduced-fraction existence interface is cited from `chap4citation`.
-# Its finite-divisor construction is explicit proof debt there; the source
-# definition remains here because the following parity proof uses it directly.
+# The source's reduced-fraction predicate is the shared
+# `basics::is_reduced_fraction` interface.  The construction is explicit
+# trusted background in `std/basics`, rather than Chapter 4-local citation debt.
 thm rational_has_reduced_fraction:
     ? forall x Q:
-        exist p Z, q N_pos st {x = p / q, $is_reduced_fraction(p, q)}
-    by thm chap4citation::rational_has_reduced_fraction(x)
+        exist p Z, q N_pos st {x = p / q, $basics::is_reduced_fraction(p, q)}
+    by thm basics::rational_has_unique_reduced_fraction(x)
 
 # A square divisible by two has even base.  This is the source's residue
 # argument, expressed through the Euclidean quotient/remainder primitives.
@@ -1544,30 +1215,24 @@ thm integer_square_multiple_of_two_has_even_base:
         p^2 = 2 * r
         =>:
             p % 2 = 0
-    p^2 = 2 * r + 0
     p^2 % 2 = 0
-    claim:
+    p % 2 = 0 or p % 2 = 1
+    by cases:
         ? p % 2 = 0
-        p % 2 = 0 or p % 2 = 1
-        by cases:
-            ? p % 2 = 0
-            case p % 2 = 0:
-                p % 2 = 0
-            case p % 2 = 1:
-                have s Z = integer_quotient(p, 2)
-                p = 2 * integer_quotient(p, 2) + p % 2 = 2 * s + 1
-                p^2 = (2 * s + 1)^2
-                p^2 = 2 * (2 * s^2 + 2 * s) + 1
-                p^2 % 2 = 1
-                impossible p^2 % 2 = 0
-        p % 2 = 0
-    p % 2 = 0
+        case p % 2 = 0:
+            p % 2 = 0
+        case p % 2 = 1:
+            have s Z = integer_quotient(p, 2)
+            p = 2 * integer_quotient(p, 2) + p % 2 = 2 * s + 1
+            p^2 = (2 * s + 1)^2 = 2 * (2 * s^2 + 2 * s) + 1
+            p^2 % 2 = 1
+            impossible p^2 % 2 = 0
 
 thm rational_reduced_fraction_parity_witness:
     ? forall x Q:
         exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
     by thm rational_has_reduced_fraction(x)
-    obtain p, q from exist p Z, q N_pos st {x = p / q, $is_reduced_fraction(p, q)}
+    obtain p, q from exist p Z, q N_pos st {x = p / q, $basics::is_reduced_fraction(p, q)}
     claim:
         ? p % 2 != 0 or q % 2 != 0
         p % 2 = 0 or p % 2 = 1
@@ -1578,57 +1243,26 @@ thm rational_reduced_fraction_parity_witness:
                 by cases:
                     ? p % 2 != 0 or q % 2 != 0
                     case q % 2 = 0:
-                        forall k N_pos:
-                            p % k = 0
-                            q % k = 0
-                            =>:
-                                k = 1
-                        2 $in N_pos
                         2 = 1
                         impossible 2 = 1
                     case q % 2 = 1:
                         q % 2 != 0
             case p % 2 = 1:
                 p % 2 != 0
-    witness exist p0 Z, q0 N_pos st {x = p0 / q0, p0 % 2 != 0 or q0 % 2 != 0} from p, q:
-        x = p / q
-        p % 2 != 0 or q % 2 != 0
+    witness exist p0 Z, q0 N_pos st {x = p0 / q0, p0 % 2 != 0 or q0 % 2 != 0} from p, q
 
 thm rational_square_not_two:
     ? forall x Q:
         x^2 != 2
     by contra x^2 != 2:
-        x^2 = 2
         by thm rational_reduced_fraction_parity_witness(x)
         obtain p, q from exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
-        x = p / q
-        p % 2 != 0 or q % 2 != 0
-        q != 0
-        (p / q)^2 = 2
-        (p / q)^2 * q^2 = 2 * q^2
-        (p / q)^2 * q^2 = p^2
         p^2 = 2 * q^2
-        q^2 $in Z
-        witness exist r Z st {p^2 = 2 * r} from q^2:
-            p^2 = 2 * q^2
-        obtain r from exist r Z st {p^2 = 2 * r}
-        by thm integer_square_multiple_of_two_has_even_base(p, r)
-        p % 2 = 0
+        by thm integer_square_multiple_of_two_has_even_base(p, q^2)
         have s Z = integer_quotient(p, 2)
         p = 2 * integer_quotient(p, 2) + p % 2 = 2 * s + p % 2 = 2 * s
-        p^2 = (2 * s)^2 = 4 * s^2
-        4 * s^2 = 2 * q^2
-        2 * s^2 = 4 * s^2 / 2
-        4 * s^2 / 2 = 2 * q^2 / 2
-        2 * q^2 / 2 = q^2
-        2 * s^2 = q^2
         q^2 = 2 * s^2
-        s^2 $in Z
-        witness exist t Z st {q^2 = 2 * t} from s^2:
-            q^2 = 2 * s^2
-        obtain t from exist t Z st {q^2 = 2 * t}
-        by thm integer_square_multiple_of_two_has_even_base(q, t)
-        p % 2 != 0 or q % 2 != 0
+        by thm integer_square_multiple_of_two_has_even_base(q, s^2)
         by cases:
             ? q % 2 != 0
             case p % 2 != 0:

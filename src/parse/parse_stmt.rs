@@ -164,6 +164,34 @@ mod parse_stmt_diagnostic_tests {
     }
 
     #[test]
+    fn by_def_rejects_body_trailing_tokens_and_non_normal_props() {
+        let message = parse_one_stmt_error_message("by def $P(1):\n    1 = 1");
+        assert!(message.contains("single-line"), "{}", message);
+
+        let mut tokenizer = Tokenizer::new();
+        let error = tokenizer
+            .parse_blocks(
+                "by def $P(1)\n    1 = 1",
+                Rc::from("parse_stmt_diagnostic_test.lit"),
+            )
+            .expect_err("an indented body without `:` should fail tokenization");
+        let RuntimeError::ParseError(error) = error else {
+            panic!("expected parse error");
+        };
+        assert!(error.msg.contains("unexpected indent"), "{}", error.msg);
+
+        for source_code in ["by def not $P(1)", "by def $in(1, R)", "by def 1 = 1"] {
+            let message = parse_one_stmt_error_message(source_code);
+            assert!(
+                message.contains("expects one positive concrete prop fact"),
+                "{}: {}",
+                source_code,
+                message
+            );
+        }
+    }
+
+    #[test]
     fn function_implementation_syntax_has_targeted_migrations() {
         assert_eq!(
             parse_one_stmt_error_message("algo f(x):\n    x"),

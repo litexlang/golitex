@@ -803,4 +803,180 @@ impl Runtime {
         }
         Ok((StmtUnknown::new()).into())
     }
+
+    // A finite-set extremum is an element of its source set.  If that set is
+    // known to lie in a standard numeric set, the extremum inherits the type.
+    // Examples: `finite_set_max(S) $in S` and `S $subset N` => `finite_set_max(S) $in N`.
+    pub(super) fn maybe_verify_in_fact_finite_set_extremum(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let source_set = match &in_fact.element {
+            Obj::FiniteSetMax(extremum) => extremum.set.as_ref(),
+            Obj::FiniteSetMin(extremum) => extremum.set.as_ref(),
+            _ => return Ok(None),
+        };
+
+        if source_set.to_string() == in_fact.set.to_string() {
+            let rule_name = match &in_fact.element {
+                Obj::FiniteSetMax(_) => "finite_set_max: the maximum belongs to its set",
+                Obj::FiniteSetMin(_) => "finite_set_min: the minimum belongs to its set",
+                _ => unreachable!(),
+            };
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    rule_name.to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ));
+        }
+
+        if !matches!(in_fact.set, Obj::StandardSet(_)) {
+            return Ok(Some((StmtUnknown::new()).into()));
+        }
+
+        let source_member: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            source_set.clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let source_member_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&source_member, verify_state)?;
+        if !source_member_result.is_true() {
+            return Ok(Some((StmtUnknown::new()).into()));
+        }
+
+        let Some(mut type_results) = self.verify_finite_set_extremum_source_in_standard_set(
+            source_set,
+            &in_fact.set,
+            &in_fact.line_file,
+            verify_state,
+        )?
+        else {
+            return Ok(Some((StmtUnknown::new()).into()));
+        };
+
+        let mut dependencies = vec![source_member_result];
+        dependencies.append(&mut type_results);
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "finite-set extremum: member of a standard numeric superset".to_string(),
+                dependencies,
+            )
+            .into(),
+        ))
+    }
+
+    fn verify_finite_set_extremum_source_in_standard_set(
+        &mut self,
+        source_set: &Obj,
+        standard_set: &Obj,
+        line_file: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        match source_set {
+            Obj::ListSet(list_set) => {
+                let mut results = Vec::new();
+                for element in &list_set.list {
+                    let element_in_standard_set: AtomicFact = InFact::new(
+                        element.as_ref().clone(),
+                        standard_set.clone(),
+                        line_file.clone(),
+                    )
+                    .into();
+                    let result = self.verify_non_equational_known_then_builtin_rules_only(
+                        &element_in_standard_set,
+                        verify_state,
+                    )?;
+                    if !result.is_true() {
+                        return Ok(None);
+                    }
+                    results.push(result);
+                }
+                Ok(Some(results))
+            }
+            Obj::Union(union) => self.verify_two_finite_set_parts_in_standard_set(
+                &union.left,
+                &union.right,
+                standard_set,
+                line_file,
+                verify_state,
+            ),
+            Obj::Intersect(intersect) => self.verify_finite_set_extremum_source_in_standard_set(
+                &intersect.left,
+                standard_set,
+                line_file,
+                verify_state,
+            ),
+            Obj::SetMinus(set_minus) => self.verify_finite_set_extremum_source_in_standard_set(
+                &set_minus.left,
+                standard_set,
+                line_file,
+                verify_state,
+            ),
+            Obj::SetDiff(set_diff) => self.verify_two_finite_set_parts_in_standard_set(
+                &set_diff.left,
+                &set_diff.right,
+                standard_set,
+                line_file,
+                verify_state,
+            ),
+            Obj::SetBuilder(set_builder) => self.verify_finite_set_extremum_source_in_standard_set(
+                &set_builder.param_set,
+                standard_set,
+                line_file,
+                verify_state,
+            ),
+            _ => {
+                let subset_fact: AtomicFact =
+                    SubsetFact::new(source_set.clone(), standard_set.clone(), line_file.clone())
+                        .into();
+                let result = self.verify_non_equational_known_then_builtin_rules_only(
+                    &subset_fact,
+                    verify_state,
+                )?;
+                if result.is_true() {
+                    Ok(Some(vec![result]))
+                } else {
+                    Ok(None)
+                }
+            }
+        }
+    }
+
+    fn verify_two_finite_set_parts_in_standard_set(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        standard_set: &Obj,
+        line_file: &LineFile,
+        verify_state: &VerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let Some(mut left_results) = self.verify_finite_set_extremum_source_in_standard_set(
+            left,
+            standard_set,
+            line_file,
+            verify_state,
+        )?
+        else {
+            return Ok(None);
+        };
+        let Some(mut right_results) = self.verify_finite_set_extremum_source_in_standard_set(
+            right,
+            standard_set,
+            line_file,
+            verify_state,
+        )?
+        else {
+            return Ok(None);
+        };
+        left_results.append(&mut right_results);
+        Ok(Some(left_results))
+    }
 }

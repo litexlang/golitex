@@ -1,0 +1,476 @@
+# Chapter 13 — Integration and Measure Theory
+
+# This chapter keeps the source order: elementary interval integration,
+# measurable spaces and measures, and then Bochner integration.  Integrals,
+# measures, convolution, and derivative selections are mathematical objects.
+# Their principal laws are closed facts and therefore appear as theorems.
+
+# ---------------------------------------------------------------------------
+# Section 13.1 — Elementary Integration
+# ---------------------------------------------------------------------------
+
+# The unoriented segment between a and b.  The product criterion is symmetric
+# in the endpoints and avoids introducing separate min and max operations.
+have fn real_closed_segment(a, b R) power_set(R) = {x R: (x - a) * (x - b) <= 0}
+
+# Mathlib's interval integral is a total callable object, including the
+# orientation convention when b < a.
+trust have interval_integral fn(f fn(x R) R, a, b R) R
+trust have real_log fn(x R) R
+
+# A uniform right-endpoint Riemann sum is retained as an object.  It lets the
+# integrability relation below have mathematical content instead of becoming
+# an opaque proposition placeholder.
+trust have uniform_riemann_sum fn(f fn(x R) R, a, b R, n N_pos) R
+
+prop riemann_sum_close_after(f fn(x R) R, a, b R, epsilon R_pos, N0 N):
+    forall n N_pos:
+        n >= N0
+        =>:
+            abs(uniform_riemann_sum(f, a, b, n) - interval_integral(f, a, b)) < epsilon
+
+prop is_interval_integrable(f fn(x R) R, a, b R):
+    forall epsilon R_pos:
+        exist N0 N st {$riemann_sum_close_after(f, a, b, epsilon, N0)}
+
+prop real_continuity_control(f fn(x R) R, x R, epsilon, delta R_pos):
+    forall y R:
+        abs(y - x) < delta
+        =>:
+            abs(f(y) - f(x)) < epsilon
+
+prop is_continuous_real_function(f fn(x R) R):
+    forall x R, epsilon R_pos:
+        exist delta R_pos st {$real_continuity_control(f, x, epsilon, delta)}
+
+prop real_derivative_control(f fn(x R) R, x, L R, epsilon, delta R_pos):
+    forall y R:
+        y != x
+        abs(y - x) < delta
+        =>:
+            abs((f(y) - f(x)) / (y - x) - L) < epsilon
+
+prop has_real_derivative_at(f fn(x R) R, x, L R):
+    forall epsilon R_pos:
+        exist delta R_pos st {$real_derivative_control(f, x, L, epsilon, delta)}
+
+# Like Lean's `deriv`, this is a total selected derivative value.
+trust have real_derivative fn(f fn(t R) R, x R) R
+
+have fn real_identity(x R) R = x
+trust have real_reciprocal fn(x R) R:
+    forall x R:
+        x != 0
+        =>:
+            real_reciprocal(x) = 1 / x
+
+template<f fn(t R) R, a R>:
+    have fn accumulated_interval_integral(u R) R = interval_integral(f, a, u)
+
+prop has_derivative_on_segment(f, fprime fn(x R) R, a, b R):
+    forall x R:
+        x $in real_closed_segment(a, b)
+        =>:
+            $has_real_derivative_at(f, x, fprime(x))
+
+# Source example `integral_id`.
+thm interval_integral_identity:
+    ? forall a, b R:
+        interval_integral(real_identity, a, b) = (b^2 - a^2) / 2
+    trust interval_integral(real_identity, a, b) = (b^2 - a^2) / 2
+
+# The segment misses zero exactly under the source hypothesis.  The product
+# condition is a compact equivalent formulation for real endpoints.
+thm interval_integral_one_div:
+    ? forall a, b R:
+        a != 0
+        a * b > 0
+        =>:
+            interval_integral(real_reciprocal, a, b) = real_log(b / a)
+    trust interval_integral(real_reciprocal, a, b) = real_log(b / a)
+
+# First fundamental theorem of calculus.  This is a fact, not a nullary prop.
+thm fundamental_theorem_of_calculus_first:
+    ? forall f fn(x R) R, a, b R:
+        $is_continuous_real_function(f)
+        =>:
+            real_derivative(fn(u R) R {interval_integral(f, a, u)}, b) = f(b)
+    trust real_derivative(fn(u R) R {interval_integral(f, a, u)}, b) = f(b)
+
+# Second fundamental theorem of calculus.
+thm fundamental_theorem_of_calculus_second:
+    ? forall f, fprime fn(x R) R, a, b R:
+        $has_derivative_on_segment(f, fprime, a, b)
+        $is_interval_integrable(fprime, a, b)
+        =>:
+            interval_integral(fprime, a, b) = f(b) - f(a)
+    trust interval_integral(fprime, a, b) = f(b) - f(a)
+
+# Whole-line integration and convolution stay callable objects.  The source
+# convolution identity then verifies by unfolding the construction.
+trust have real_volume_integral fn(f fn(x R) R) R
+
+template<f, g fn(t R) R, x R>:
+    have fn real_convolution_integrand(t R) R = f(t) * g(x - t)
+
+have fn real_convolution(f, g fn(t R) R, x R) R = real_volume_integral(fn(t R) R {f(t) * g(x - t)})
+
+thm real_convolution_formula:
+    ? forall f, g fn(t R) R, x R:
+        real_convolution(f, g, x) = real_volume_integral(fn(t R) R {f(t) * g(x - t)})
+    real_convolution(f, g, x) = real_volume_integral(fn(t R) R {f(t) * g(x - t)})
+
+# ---------------------------------------------------------------------------
+# Section 13.2 — Measure Theory
+# ---------------------------------------------------------------------------
+
+# Countable unions and intersections are actual set-valued constructions.
+prop _member_of_countable_union(X set, A fn(n N) power_set(X), x X):
+    exist n N st {x $in A(n)}
+
+prop _member_of_countable_intersection(X set, A fn(n N) power_set(X), x X):
+    forall n N:
+        x $in A(n)
+
+template<X set>:
+    have fn countable_union(A fn(n N) power_set(X)) power_set(X) = {x X: $_member_of_countable_union(X, A, x)}
+
+template<X set>:
+    have fn countable_intersection(A fn(n N) power_set(X)) power_set(X) = {x X: $_member_of_countable_intersection(X, A, x)}
+
+# A measurable space is a sigma-algebra on the carrier.  The countable-union
+# axiom uses a separate relation so each quantified clause stays explicit.
+prop is_measurable_sequence(X set, M power_set(power_set(X)), A fn(n N) power_set(X)):
+    forall n N:
+        A(n) $in M
+
+prop is_measurable_space_on(X set, M power_set(power_set(X))):
+    {} $in M
+    forall S M:
+        set_minus(X, S) $in M
+    forall A fn(n N) power_set(X):
+        $is_measurable_sequence(X, M, A)
+        =>:
+            \countable_union<X>(A) $in M
+
+prop is_measurable_set(X set, M power_set(power_set(X)), S power_set(X)):
+    S $in M
+
+thm measurable_empty:
+    ? forall X set, M power_set(power_set(X)):
+        $is_measurable_space_on(X, M)
+        =>:
+            $is_measurable_set(X, M, {})
+    $is_measurable_set(X, M, {})
+
+thm measurable_universe:
+    ? forall X set, M power_set(power_set(X)):
+        $is_measurable_space_on(X, M)
+        =>:
+            $is_measurable_set(X, M, X)
+    trust $is_measurable_set(X, M, X)
+
+thm measurable_complement:
+    ? forall X set, M power_set(power_set(X)), S power_set(X):
+        $is_measurable_space_on(X, M)
+        $is_measurable_set(X, M, S)
+        =>:
+            $is_measurable_set(X, M, set_minus(X, S))
+    $is_measurable_set(X, M, set_minus(X, S))
+
+thm measurable_countable_union:
+    ? forall X set, M power_set(power_set(X)), A fn(n N) power_set(X):
+        $is_measurable_space_on(X, M)
+        $is_measurable_sequence(X, M, A)
+        =>:
+            $is_measurable_set(X, M, \countable_union<X>(A))
+    $is_measurable_set(X, M, \countable_union<X>(A))
+
+thm measurable_countable_intersection:
+    ? forall X set, M power_set(power_set(X)), A fn(n N) power_set(X):
+        $is_measurable_space_on(X, M)
+        $is_measurable_sequence(X, M, A)
+        =>:
+            $is_measurable_set(X, M, \countable_intersection<X>(A))
+    trust $is_measurable_set(X, M, \countable_intersection<X>(A))
+
+# The two Encodable examples in the source are Lean typeclass plumbing rather
+# than mathematical definitions or results, so they are intentionally omitted.
+
+# Extended nonnegative reals and their infinite sums/infima are mathematical
+# objects required by the measure interface.
+trust have ENNReal nonempty_set
+trust have ennreal_zero ENNReal
+trust have ennreal_infinity ENNReal
+trust have ennreal_order power_set(cart(ENNReal, ENNReal))
+trust have ennreal_sum fn(a fn(n N) ENNReal) ENNReal
+trust have ennreal_infimum fn(S power_set(ENNReal)) ENNReal
+trust have ennreal_to_real fn(x ENNReal) R
+
+template<X set, mu fn(Tset power_set(X)) ENNReal, A fn(n N) power_set(X)>:
+    have fn measured_sequence(n N) ENNReal = mu(A(n))
+
+prop ennreal_le(x, y ENNReal):
+    (x, y) $in ennreal_order
+
+prop pairwise_disjoint_sequence(X set, A fn(n N) power_set(X)):
+    forall i, j N:
+        i != j
+        =>:
+            intersect(A(i), A(j)) = {}
+
+# A measure candidate is countably additive on measurable disjoint sequences.
+# Its values on arbitrary sets are total, matching Mathlib's public interface.
+prop is_measure_on(X set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal):
+    mu({}) = ennreal_zero
+    forall A fn(n N) power_set(X):
+        $is_measurable_sequence(X, M, A)
+        $pairwise_disjoint_sequence(X, A)
+        =>:
+            mu(\countable_union<X>(A)) = ennreal_sum(\measured_sequence<X, mu, A>)
+
+prop _is_measurable_superset_value(X set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal, S power_set(X), y ENNReal):
+    exist T M st {T $in power_set(X), S $subset T, y = mu(T)}
+
+template<X set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal>:
+    have fn measurable_superset_values(S power_set(X)) power_set(ENNReal) = {y ENNReal: $_is_measurable_superset_value(X, M, mu, S, y)}
+
+thm measure_eq_infimum_of_measurable_supersets:
+    ? forall X set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal, S power_set(X):
+        $is_measurable_space_on(X, M)
+        $is_measure_on(X, M, mu)
+        =>:
+            mu(S) = ennreal_infimum(\measurable_superset_values<X, M, mu>(S))
+    trust mu(S) = ennreal_infimum(\measurable_superset_values<X, M, mu>(S))
+
+thm measure_countable_union_le_sum:
+    ? forall X set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal, A fn(n N) power_set(X):
+        $is_measure_on(X, M, mu)
+        =>:
+            $ennreal_le(mu(\countable_union<X>(A)), ennreal_sum(\measured_sequence<X, mu, A>))
+    trust $ennreal_le(mu(\countable_union<X>(A)), ennreal_sum(\measured_sequence<X, mu, A>))
+
+thm measure_disjoint_countable_union:
+    ? forall X set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal, A fn(n N) power_set(X):
+        $is_measure_on(X, M, mu)
+        $is_measurable_sequence(X, M, A)
+        $pairwise_disjoint_sequence(X, A)
+        =>:
+            mu(\countable_union<X>(A)) = ennreal_sum(\measured_sequence<X, mu, A>)
+    mu(\countable_union<X>(A)) = ennreal_sum(\measured_sequence<X, mu, A>)
+
+# Almost-everywhere truth is modeled by a measurable null exceptional set.
+prop holds_almost_everywhere(X set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal, P power_set(X)):
+    exist Nset M st {Nset $in power_set(X), mu(Nset) = ennreal_zero, set_minus(X, Nset) $subset P}
+
+template<X set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal>:
+    have ae_filter power_set(power_set(X)) = {P power_set(X): $holds_almost_everywhere(X, M, mu, P)}
+
+prop eventually_in_filter(X set, F power_set(power_set(X)), P power_set(X)):
+    P $in F
+
+# The source's `(forall almost everywhere) <=> (eventually in ae mu)` example
+# is definitional notation.  Here `holds_almost_everywhere` is the mathematical
+# relation and `ae_filter` is the filter object; no separate closed theorem is
+# manufactured from that notation-only identity.
+
+# ---------------------------------------------------------------------------
+# Section 13.3 — Integration
+# ---------------------------------------------------------------------------
+
+# Bochner integration is total in Mathlib: nonintegrable functions receive the
+# zero value.  The whole-space and set integrals therefore remain selected
+# objects for every typed function.
+template<X, E set, mu fn(Tset power_set(X)) ENNReal, f fn(x X) E>:
+    trust have bochner_integral E
+
+template<X, E set, mu fn(Tset power_set(X)) ENNReal, S power_set(X), f fn(x X) E>:
+    trust have bochner_set_integral E
+
+# These trusted carriers stand for Mathlib's strongly measurable and
+# integrable function classes.  Membership is used directly below, avoiding
+# proposition placeholders for what are genuinely collections of functions.
+template<X, E set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal>:
+    trust have ae_strongly_measurable_functions power_set(fn(x X) E)
+
+template<X, E set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal>:
+    trust have bochner_integrable_functions power_set(fn(x X) E)
+
+template<X, E set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal>:
+    trust have ae_strongly_measurable_sequences power_set(fn(n N, x X) E)
+
+# Pointwise addition is an actual callable construction.  The corresponding
+# integral value remains a selected object because the current verifier cannot
+# pass this template-specialized function as a first-class template argument.
+template<X, E set, add_E fn(x, y E) E, f, g fn(x X) E>:
+    have fn pointwise_add(x X) E = add_E(f(x), g(x))
+
+# Source theorem `integral_add`.
+thm bochner_integral_add:
+    ? forall X, E set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal, add_E fn(x, y E) E, f, g fn(x X) E:
+        f $in \bochner_integrable_functions<X, E, M, mu>
+        g $in \bochner_integrable_functions<X, E, M, mu>
+        =>:
+            \bochner_integral<X, E, mu, fn(x X) E {add_E(f(x), g(x))}> = add_E(\bochner_integral<X, E, mu, f>, \bochner_integral<X, E, mu, g>)
+    trust \bochner_integral<X, E, mu, fn(x X) E {add_E(f(x), g(x))}> = add_E(\bochner_integral<X, E, mu, f>, \bochner_integral<X, E, mu, g>)
+
+# Source theorem `setIntegral_const`.
+thm bochner_set_integral_constant:
+    ? forall X, E set, mu fn(Tset power_set(X)) ENNReal, S power_set(X), smul fn(a R, x E) E, c E:
+        \bochner_set_integral<X, E, mu, S, fn(x X) E {c}> = smul(ennreal_to_real(mu(S)), c)
+    trust \bochner_set_integral<X, E, mu, S, fn(x X) E {c}> = smul(ennreal_to_real(mu(S)), c)
+
+# Almost-everywhere domination by a scalar bound, stated through a measurable
+# null exceptional set rather than an opaque property.
+prop norm_bound_outside_null_set(X, E set, mu fn(Tset power_set(X)) ENNReal, norm_E fn(y E) R, Fseq fn(n N, x X) E, bound fn(x X) R, n N, Nset power_set(X)):
+    mu(Nset) = ennreal_zero
+    forall x X:
+        x $in set_minus(X, Nset)
+        =>:
+            norm_E(Fseq(n, x)) <= bound(x)
+
+prop ae_norm_bounded_by(X, E set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal, norm_E fn(y E) R, Fseq fn(n N, x X) E, bound fn(x X) R):
+    forall n N:
+        exist Nset M st {$norm_bound_outside_null_set(X, E, mu, norm_E, Fseq, bound, n, Nset)}
+
+prop norm_pointwise_convergence_after(X, E set, sub_E fn(x, y E) E, norm_E fn(y E) R, Fseq fn(n N, x X) E, f fn(x X) E, x X, epsilon R_pos, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            norm_E(sub_E(Fseq(n, x), f(x))) < epsilon
+
+prop pointwise_norm_converges_at(X, E set, sub_E fn(x, y E) E, norm_E fn(y E) R, Fseq fn(n N, x X) E, f fn(x X) E, x X):
+    forall epsilon R_pos:
+        exist N0 N st {$norm_pointwise_convergence_after(X, E, sub_E, norm_E, Fseq, f, x, epsilon, N0)}
+
+prop pointwise_convergence_outside_null_set(X, E set, mu fn(Tset power_set(X)) ENNReal, sub_E fn(x, y E) E, norm_E fn(y E) R, Fseq fn(n N, x X) E, f fn(x X) E, Nset power_set(X)):
+    mu(Nset) = ennreal_zero
+    forall x X:
+        x $in set_minus(X, Nset)
+        =>:
+            $pointwise_norm_converges_at(X, E, sub_E, norm_E, Fseq, f, x)
+
+prop ae_pointwise_norm_converges(X, E set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal, sub_E fn(x, y E) E, norm_E fn(y E) R, Fseq fn(n N, x X) E, f fn(x X) E):
+    exist Nset M st {$pointwise_convergence_outside_null_set(X, E, mu, sub_E, norm_E, Fseq, f, Nset)}
+
+template<X, E set, mu fn(Tset power_set(X)) ENNReal, Fseq fn(n N, x X) E>:
+    have fn bochner_integral_sequence(n N) E = \bochner_integral<X, E, mu, fn(x X) E {Fseq(n, x)}>
+
+prop bochner_integral_sequence_close_after(X, E set, mu fn(Tset power_set(X)) ENNReal, sub_E fn(x, y E) E, norm_E fn(y E) R, Fseq fn(n N, x X) E, f fn(x X) E, epsilon R_pos, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            norm_E(sub_E(\bochner_integral_sequence<X, E, mu, Fseq>(n), \bochner_integral<X, E, mu, f>)) < epsilon
+
+prop bochner_integral_sequence_converges(X, E set, mu fn(Tset power_set(X)) ENNReal, sub_E fn(x, y E) E, norm_E fn(y E) R, Fseq fn(n N, x X) E, f fn(x X) E):
+    forall epsilon R_pos:
+        exist N0 N st {$bochner_integral_sequence_close_after(X, E, mu, sub_E, norm_E, Fseq, f, epsilon, N0)}
+
+# Source dominated convergence theorem.  This is a closed theorem, with all
+# hypotheses visible, rather than a nullary predicate.
+thm dominated_convergence_theorem:
+    ? forall X, E set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal, sub_E fn(x, y E) E, norm_E fn(y E) R, Fseq fn(n N, x X) E, f fn(x X) E, bound fn(x X) R:
+        Fseq $in \ae_strongly_measurable_sequences<X, E, M, mu>
+        bound $in \bochner_integrable_functions<X, R, M, mu>
+        $ae_norm_bounded_by(X, E, M, mu, norm_E, Fseq, bound)
+        $ae_pointwise_norm_converges(X, E, M, mu, sub_E, norm_E, Fseq, f)
+        =>:
+            $bochner_integral_sequence_converges(X, E, mu, sub_E, norm_E, Fseq, f)
+    trust $bochner_integral_sequence_converges(X, E, mu, sub_E, norm_E, Fseq, f)
+
+prop sigma_finite_cover(X set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal, A fn(n N) power_set(X)):
+    \countable_union<X>(A) = X
+    forall n N:
+        A(n) $in M
+        mu(A(n)) != ennreal_infinity
+
+prop is_sigma_finite_measure(X set, M power_set(power_set(X)), mu fn(Tset power_set(X)) ENNReal):
+    exist A fn(n N) power_set(X) st {$sigma_finite_cover(X, M, mu, A)}
+
+# Product measure, product integral, and iterated integral are actual selected
+# objects.  Their equality is the Fubini theorem below.
+template<X, Y set, Mx power_set(power_set(X)), My power_set(power_set(Y)), mu fn(S power_set(X)) ENNReal, nu fn(Tset power_set(Y)) ENNReal>:
+    trust have product_measure fn(U power_set(cart(X, Y))) ENNReal
+
+template<X, Y, E set, Mx power_set(power_set(X)), My power_set(power_set(Y)), mu fn(S power_set(X)) ENNReal, nu fn(Tset power_set(Y)) ENNReal, f fn(p cart(X, Y)) E>:
+    trust have product_bochner_integral E
+
+template<X, Y, E set, mu fn(S power_set(X)) ENNReal, nu fn(Tset power_set(Y)) ENNReal, f fn(p cart(X, Y)) E>:
+    have iterated_bochner_integral E = \bochner_integral<X, E, mu, fn(x X) E {\bochner_integral<Y, E, nu, fn(y Y) E {f((x, y))}>}>
+
+template<X, Y, E set, Mx power_set(power_set(X)), My power_set(power_set(Y)), mu fn(S power_set(X)) ENNReal, nu fn(Tset power_set(Y)) ENNReal>:
+    trust have product_integrable_functions power_set(fn(p cart(X, Y)) E)
+
+# Source Fubini theorem `integral_prod`.
+thm fubini_product_integral:
+    ? forall X, Y, E set, Mx power_set(power_set(X)), My power_set(power_set(Y)), mu fn(S power_set(X)) ENNReal, nu fn(Tset power_set(Y)) ENNReal, f fn(p cart(X, Y)) E:
+        $is_sigma_finite_measure(X, Mx, mu)
+        $is_sigma_finite_measure(Y, My, nu)
+        f $in \product_integrable_functions<X, Y, E, Mx, My, mu, nu>
+        =>:
+            \product_bochner_integral<X, Y, E, Mx, My, mu, nu, f> = \iterated_bochner_integral<X, Y, E, mu, nu, f>
+    trust \product_bochner_integral<X, Y, E, Mx, My, mu, nu, f> = \iterated_bochner_integral<X, Y, E, mu, nu, f>
+
+# General convolution with a bilinear pairing.  Both sides are callable
+# functions of x; the theorem states their pointwise equality.
+template<G, E, E2, F set, mu fn(S power_set(G)) ENNReal, sub_G fn(x, t G) G, L fn(u E, v E2) F, f fn(t G) E, g fn(t G) E2>:
+    have fn bochner_convolution(x G) F = \bochner_integral<G, F, mu, fn(t G) F {L(f(t), g(sub_G(x, t)))}>
+
+template<G, E, E2, F set, mu fn(S power_set(G)) ENNReal, sub_G fn(x, t G) G, L fn(u E, v E2) F, f fn(t G) E, g fn(t G) E2>:
+    have fn bilinear_convolution_integral(x G) F = \bochner_integral<G, F, mu, fn(t G) F {L(f(t), g(sub_G(x, t)))}>
+
+thm bochner_convolution_formula:
+    ? forall G, E, E2, F set, mu fn(S power_set(G)) ENNReal, sub_G fn(x, t G) G, L fn(u E, v E2) F, f fn(t G) E, g fn(t G) E2, x G:
+        \bochner_convolution<G, E, E2, F, mu, sub_G, L, f, g>(x) = \bilinear_convolution_integral<G, E, E2, F, mu, sub_G, L, f, g>(x)
+    \bochner_convolution<G, E, E2, F, mu, sub_G, L, f, g>(x) = \bilinear_convolution_integral<G, E, E2, F, mu, sub_G, L, f, g>(x)
+
+# Image and injectivity are direct set/function notions needed by the final
+# change-of-variables statement.
+prop _in_function_image(A, B set, f fn(x A) B, S power_set(A), y B):
+    exist x S st {x $in A, y = f(x)}
+
+template<A, B set, f fn(x A) B, S power_set(A)>:
+    have function_image power_set(B) = {y B: $_in_function_image(A, B, f, S, y)}
+
+prop is_injective_on(A, B set, f fn(x A) B, S power_set(A)):
+    forall x, y S:
+        f(x) = f(y)
+        =>:
+            x = y
+
+prop frechet_within_remainder_control(E set, S power_set(E), add_E fn(x, y E) E, sub_E fn(x, y E) E, norm_E fn(x E) R, f fn(x E) E, fprime fn(x, h E) E, x E, epsilon, delta R_pos):
+    forall y E:
+        y $in S
+        y != x
+        norm_E(sub_E(y, x)) < delta
+        =>:
+            norm_E(sub_E(f(y), add_E(f(x), fprime(x, sub_E(y, x))))) < epsilon * norm_E(sub_E(y, x))
+
+prop has_frechet_derivative_within_at(E set, S power_set(E), add_E fn(x, y E) E, sub_E fn(x, y E) E, norm_E fn(x E) R, f fn(x E) E, fprime fn(x, h E) E, x E):
+    forall epsilon R_pos:
+        exist delta R_pos st {$frechet_within_remainder_control(E, S, add_E, sub_E, norm_E, f, fprime, x, epsilon, delta)}
+
+prop has_frechet_derivative_within_on(E set, S power_set(E), add_E fn(x, y E) E, sub_E fn(x, y E) E, norm_E fn(x E) R, f fn(x E) E, fprime fn(x, h E) E):
+    forall x E:
+        x $in S
+        =>:
+            $has_frechet_derivative_within_at(E, S, add_E, sub_E, norm_E, f, fprime, x)
+
+template<E set, fprime fn(x, h E) E>:
+    trust have jacobian_absolute_determinant fn(x E) R
+
+template<E, F set, mu fn(S power_set(E)) ENNReal, source power_set(E), smul_F fn(a R, y F) F, f fn(x E) E, fprime fn(x, h E) E, g fn(x E) F>:
+    have change_of_variables_source_integral F = \bochner_set_integral<E, F, mu, source, fn(x E) F {smul_F(\jacobian_absolute_determinant<E, fprime>(x), g(f(x)))}>
+
+template<E, F set, mu fn(S power_set(E)) ENNReal, source power_set(E), f fn(x E) E, g fn(x E) F>:
+    have change_of_variables_image_integral F = \bochner_set_integral<E, F, mu, \function_image<E, E, f, source>, g>
+
+# Source theorem `integral_image_eq_integral_abs_det_fderiv_smul`.
+thm change_of_variables_formula:
+    ? forall E, F set, M power_set(power_set(E)), mu fn(Tset power_set(E)) ENNReal, source power_set(E), add_E fn(x, y E) E, sub_E fn(x, y E) E, norm_E fn(x E) R, smul_F fn(a R, y F) F, f fn(x E) E, fprime fn(x, h E) E, g fn(x E) F:
+        $is_measurable_set(E, M, source)
+        $has_frechet_derivative_within_on(E, source, add_E, sub_E, norm_E, f, fprime)
+        $is_injective_on(E, E, f, source)
+        =>:
+            \change_of_variables_image_integral<E, F, mu, source, f, g> = \change_of_variables_source_integral<E, F, mu, source, smul_F, f, fprime, g>
+    trust \change_of_variables_image_integral<E, F, mu, source, f, g> = \change_of_variables_source_integral<E, F, mu, source, smul_F, f, fprime, g>

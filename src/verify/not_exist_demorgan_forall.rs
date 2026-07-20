@@ -147,18 +147,16 @@ impl Runtime {
     }
 
     fn demorgan_negate_atomic_or_err(a: &AtomicFact) -> Result<AtomicFact, RuntimeError> {
-        match a {
-            AtomicFact::FnEqualFact(_) | AtomicFact::FnEqualInFact(_) => Err(
-                RuntimeError::from(NewFactRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "not exist: automatic forall derivation does not support negating $fn_eq / $fn_eq_in here"
-                            .to_string(),
-                        a.line_file(),
-                    ),
-                )),
-            ),
-            _ => Ok(a.make_reversed()),
-        }
+        a.logical_negation().map_err(|negation_error| {
+            RuntimeError::from(NewFactRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "not exist: automatic forall derivation does not support this logical negation"
+                    .to_string(),
+                a.line_file(),
+                Some(negation_error),
+                vec![],
+            )))
+        })
     }
 }
 

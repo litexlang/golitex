@@ -1,0 +1,17 @@
+# A nonempty set can be used as an existential source without choosing a
+# globally named member.
+
+forall A set:
+    $is_nonempty_set(A)
+    =>:
+        exist x A st {x $in A}
+
+# The existential fact is usable immediately by `obtain` in an ordinary proof.
+
+thm nonempty_set_has_member_and_can_be_used:
+    ? forall A set:
+        $is_nonempty_set(A)
+        =>:
+            exist x A st {x $in A}
+    obtain x from exist x A st {x $in A}
+    x $in A

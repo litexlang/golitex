@@ -47,8 +47,6 @@ impl Runtime {
             Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map, param_obj_type),
             Obj::Sqrt(inner) => self.inst_sqrt(inner, param_to_arg_map, param_obj_type),
             Obj::Log(inner) => self.inst_log(inner, param_to_arg_map, param_obj_type),
-            Obj::Max(inner) => self.inst_max(inner, param_to_arg_map, param_obj_type),
-            Obj::Min(inner) => self.inst_min(inner, param_to_arg_map, param_obj_type),
             Obj::Union(inner) => self.inst_union(inner, param_to_arg_map, param_obj_type),
             Obj::Intersect(inner) => self.inst_intersect(inner, param_to_arg_map, param_obj_type),
             Obj::SetMinus(inner) => self.inst_set_minus(inner, param_to_arg_map, param_obj_type),
@@ -73,6 +71,12 @@ impl Runtime {
             Obj::Tuple(inner) => self.inst_tuple(inner, param_to_arg_map, param_obj_type),
             Obj::FiniteSetSize(inner) => {
                 self.inst_finite_set_size(inner, param_to_arg_map, param_obj_type)
+            }
+            Obj::FiniteSetMax(inner) => {
+                self.inst_finite_set_max(inner, param_to_arg_map, param_obj_type)
+            }
+            Obj::FiniteSetMin(inner) => {
+                self.inst_finite_set_min(inner, param_to_arg_map, param_obj_type)
             }
             Obj::FnRange(inner) => self.inst_fn_range(inner, param_to_arg_map, param_obj_type),
             Obj::Replacement(inner) => {
@@ -531,32 +535,6 @@ impl Runtime {
         .into())
     }
 
-    pub fn inst_max(
-        &self,
-        max: &Max,
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        Ok(Max::new(
-            self.inst_obj(&max.left, param_to_arg_map, param_obj_type)?,
-            self.inst_obj(&max.right, param_to_arg_map, param_obj_type)?,
-        )
-        .into())
-    }
-
-    pub fn inst_min(
-        &self,
-        min: &Min,
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        Ok(Min::new(
-            self.inst_obj(&min.left, param_to_arg_map, param_obj_type)?,
-            self.inst_obj(&min.right, param_to_arg_map, param_obj_type)?,
-        )
-        .into())
-    }
-
     pub fn inst_union(
         &self,
         union: &Union,
@@ -847,6 +825,34 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         Ok(FiniteSetSize::new(self.inst_obj(
             &finite_set_size.set,
+            param_to_arg_map,
+            param_obj_type,
+        )?)
+        .into())
+    }
+
+    pub fn inst_finite_set_max(
+        &self,
+        finite_set_max: &FiniteSetMax,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(FiniteSetMax::new(self.inst_obj(
+            &finite_set_max.set,
+            param_to_arg_map,
+            param_obj_type,
+        )?)
+        .into())
+    }
+
+    pub fn inst_finite_set_min(
+        &self,
+        finite_set_min: &FiniteSetMin,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(FiniteSetMin::new(self.inst_obj(
+            &finite_set_min.set,
             param_to_arg_map,
             param_obj_type,
         )?)

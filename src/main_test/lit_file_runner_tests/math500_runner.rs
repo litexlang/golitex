@@ -5,7 +5,7 @@ use std::time::Instant;
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
-use super::helper::{print_slowest_run_labels, run_with_large_stack};
+use super::helper::{print_slowest_run_labels, run_with_large_stack, source_has_isolated_import};
 
 // Local workflow helper: run math500 temporary snippets without touching golitex/examples.
 //
@@ -110,6 +110,7 @@ fn run_math500_tmp() {
         }
 
         let normalized_source = remove_windows_carriage_return(snippet.source.as_str());
+        runtime.isolated = source_has_isolated_import(normalized_source.as_str());
         let start_time = Instant::now();
         let (stmt_results, runtime_error) =
             run_source_code(normalized_source.as_str(), &mut runtime);
@@ -153,18 +154,18 @@ fn run_math500_litex_all() {
 
 fn run_math500_litex_simple_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let completed_dir = manifest_dir.join("MATH-500-litex").join("litex_file");
+    let completed_dir = manifest_dir.join("MATH-500-litex").join("finished");
     let completed_dir = if completed_dir.is_dir() {
         completed_dir
     } else {
         manifest_dir
             .join("scripts")
             .join("MATH-500-litex")
-            .join("litex_file")
+            .join("finished")
     };
     assert!(
         completed_dir.is_dir(),
-        "MATH-500-litex/litex_file must exist at {:?}",
+        "MATH-500-litex/finished must exist at {:?}",
         completed_dir
     );
     run_math500_litex_lit_dir(&completed_dir);
@@ -172,20 +173,15 @@ fn run_math500_litex_simple_impl() {
 
 fn run_math500_litex_all_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let lit_dir = manifest_dir
-        .join("MATH-500-litex")
-        .join("unfinished_litex_file");
+    let lit_dir = manifest_dir.join("MATH-500-litex");
     let lit_dir = if lit_dir.is_dir() {
         lit_dir
     } else {
-        manifest_dir
-            .join("scripts")
-            .join("MATH-500-litex")
-            .join("unfinished_litex_file")
+        manifest_dir.join("scripts").join("MATH-500-litex")
     };
     assert!(
         lit_dir.is_dir(),
-        "MATH-500-litex/unfinished_litex_file must exist at {:?}",
+        "MATH-500-litex must exist at {:?}",
         lit_dir
     );
     run_math500_litex_lit_dir(&lit_dir);
@@ -262,6 +258,16 @@ fn run_math500_litex_lit_dir(base_dir: &Path) {
         }
 
         let normalized_source = remove_windows_carriage_return(litex_code);
+        runtime.isolated = source_has_isolated_import(normalized_source.as_str());
+
+        if total_count % 25 == 0 || total_count + 1 == lit_paths.len() {
+            println!(
+                "--- [RUN {}/{}] math500-litex {} ---",
+                total_count + 1,
+                lit_paths.len(),
+                relative_label
+            );
+        }
 
         let start_time_for_one_solution = Instant::now();
         let (stmt_results, runtime_error) =

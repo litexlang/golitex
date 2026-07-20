@@ -117,8 +117,7 @@ claim:
     ? forall A nonempty_set:
         exist x A st {x $in A}
     have x A
-    witness exist x A st {x $in A} from x:
-        x $in A
+    witness exist x A st {x $in A} from x
 
 """
 Remark 3.1.7. Single choice lets us choose one element from one non-empty set;
@@ -1015,7 +1014,7 @@ sketch:
     prop P_example(x X_example, y Y_example):
         y = x
 
-    claim:
+    have fn f_from_relation by exist!:
         ? forall x X_example:
             exist! y Y_example st {$P_example(x, y)}
         witness exist! y Y_example st {$P_example(x, y)} from x:
@@ -1028,11 +1027,6 @@ sketch:
                 y1 = x
                 x = y2
                 y1 = y2
-
-    have fn f_from_relation by exist!:
-        ? forall x X_example:
-            exist! y Y_example st {$P_example(x, y)}
-        exist! y Y_example st {$P_example(x, y)}
 
     forall x X_example:
         $P_example(x, f_from_relation(x))
@@ -1061,22 +1055,15 @@ valid predecessor function h:N\{0}->N.
 """
 
 sketch:
-    claim:
+    have fn increment_from_relation by exist!:
         ? forall x N:
             exist! y N st {y = x + 1}
-        witness exist y N st {y = x + 1} from x + 1:
-            x + 1 $in N
+        witness exist y N st {y = x + 1} from x + 1
         forall y1, y2 N:
             y1 = x + 1
             y2 = x + 1
             =>:
                 y1 = y2
-        exist! y N st {y = x + 1}
-
-    have fn increment_from_relation by exist!:
-        ? forall x N:
-            exist! y N st {y = x + 1}
-        exist! y N st {y = x + 1}
 
     forall x N:
         increment_from_relation(x) = x + 1
@@ -1093,7 +1080,7 @@ sketch:
     increment_N(2 * 3 + 3) = 10
     succ(0) = 1
 
-    claim:
+    have fn pred_pos_from_relation by exist!:
         ? forall a N_pos:
             exist! b N st {b + 1 = a}
         witness exist b N st {b + 1 = a} from a - 1:
@@ -1104,12 +1091,6 @@ sketch:
             =>:
                 b1 + 1 = b2 + 1
                 b1 = (b1 + 1) - 1 = (b2 + 1) - 1 = b2
-        exist! b N st {b + 1 = a}
-
-    have fn pred_pos_from_relation by exist!:
-        ? forall a N_pos:
-            exist! b N st {b + 1 = a}
-        exist! b N st {b + 1 = a}
 
     have fn pred_pos(n N_pos) N = n - 1
 
@@ -1210,29 +1191,15 @@ test and gives the constant function N->N with value 7.
 # can have the same output.
 
 sketch:
-    claim:
-        ? forall x N:
-            exist! y N st {y = 7}
-        witness exist y N st {y = 7} from 7:
-            7 $in N
-        forall y1, y2 N:
-            y1 = 7
-            y2 = 7
-            =>:
-                y1 = y2
-        exist! y N st {y = 7}
-
     have fn constant7_from_relation by exist!:
         ? forall x N:
             exist! y N st {y = 7}
-        witness exist y N st {y = 7} from 7:
-            7 $in N
+        witness exist y N st {y = 7} from 7
         forall y1, y2 N:
             y1 = 7
             y2 = 7
             =>:
                 y1 = y2
-        exist! y N st {y = 7}
 
     forall x N:
         constant7_from_relation(x) = 7
@@ -1461,14 +1428,12 @@ sketch:
 
     have fn square_N(n N) Z = n^2
 
-    claim:
-        ? $is_injective_fn(N, Z, square_N)
-        forall x1, x2 N:
-            square_N(x1) = square_N(x2)
-            =>:
-                x1^2 = square_N(x1) = square_N(x2) = x2^2
-                x1 = sqrt(x1^2) = sqrt(x2^2) = x2
-        $is_injective_fn(N, Z, square_N)
+    forall x1, x2 N:
+        square_N(x1) = square_N(x2)
+        =>:
+            x1^2 = square_N(x1) = square_N(x2) = x2^2
+            x1 = sqrt(x1^2) = sqrt(x2^2) = x2
+    by def $is_injective_fn(N, Z, square_N)
 
 """
 Remark 3.3.16. A non-injective function is two-to-one in the sense that two
@@ -1586,40 +1551,23 @@ sketch:
         case x = 1: 4
         case x = 2: 5
 
-    finite_bijection(0) = 3
-    finite_bijection(1) = 4
-    finite_bijection(2) = 5
+    by enumerate finite_set:
+        ? forall x1, x2 {0, 1, 2}:
+            finite_bijection(x1) = finite_bijection(x2)
+            =>:
+                x1 = x2
+    by def $is_injective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
 
-    claim:
-        ? $is_injective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
-        by enumerate finite_set:
-            ? forall x1, x2 {0, 1, 2}:
-                finite_bijection(x1) = finite_bijection(x2)
-                =>:
-                    x1 = x2
-        $is_injective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
-
-    claim:
-        ? $is_surjective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
-        by cases:
-            ? forall y {3, 4, 5}:
-                exist x {0, 1, 2} st {y = finite_bijection(x)}
-            case y = 3:
-                witness exist x {0, 1, 2} st {y = finite_bijection(x)} from 0:
-                    finite_bijection(0) = 3
-                    y = 3
-                    y = finite_bijection(0)
-            case y = 4:
-                witness exist x {0, 1, 2} st {y = finite_bijection(x)} from 1:
-                    finite_bijection(1) = 4
-                    y = 4
-                    y = finite_bijection(1)
-            case y = 5:
-                witness exist x {0, 1, 2} st {y = finite_bijection(x)} from 2:
-                    finite_bijection(2) = 5
-                    y = 5
-                    y = finite_bijection(2)
-        $is_surjective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
+    by cases:
+        ? forall y {3, 4, 5}:
+            exist x {0, 1, 2} st {y = finite_bijection(x)}
+        case y = 3:
+            witness exist x {0, 1, 2} st {y = finite_bijection(x)} from 0
+        case y = 4:
+            witness exist x {0, 1, 2} st {y = finite_bijection(x)} from 1
+        case y = 5:
+            witness exist x {0, 1, 2} st {y = finite_bijection(x)} from 2
+    by def $is_surjective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
 
     $is_bijective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
 
@@ -1634,26 +1582,18 @@ formula is not a bijection N->N because 0 is not hit.
 
 sketch:
     have fn succ(n N) N_pos = n + 1
-    forall n N:
-        succ(n) = n + 1
+
+    forall x1, x2 N:
+        succ(x1) = succ(x2)
+        =>:
+            x1 = (x1 + 1) - 1 = succ(x1) - 1 = succ(x2) - 1 = (x2 + 1) - 1 = x2
+    by def $is_injective_fn(N, N_pos, succ)
 
     claim:
-        ? $is_injective_fn(N, N_pos, succ)
-        forall x1, x2 N:
-            succ(x1) = succ(x2)
-            =>:
-                x1 = (x1 + 1) - 1 = succ(x1) - 1 = succ(x2) - 1 = (x2 + 1) - 1 = x2
-
-    claim:
-        ? $is_surjective_fn(N, N_pos, succ)
-        claim:
-            ? forall y N_pos:
-                exist x N st {y = succ(x)}
-            witness exist x N st {y = succ(x)} from y - 1:
-                succ(y - 1) = (y - 1) + 1
-                (y - 1) + 1 = y
-                y = succ(y - 1)
-        $is_surjective_fn(N, N_pos, succ)
+        ? forall y N_pos:
+            exist x N st {y = succ(x)}
+        witness exist x N st {y = succ(x)} from y - 1
+    by def $is_surjective_fn(N, N_pos, succ)
 
     $is_bijective_fn(N, N_pos, succ)
 
@@ -1791,74 +1731,28 @@ sketch:
 
     {2, 4, 6} $subset N
 
-    claim:
-        ? $is_forward_image_of({1, 2, 3}, {2, 4, 6}, double_on_three, {1, 2, 3}, {2, 4, 6})
-        {1, 2, 3} $subset {1, 2, 3}
-        {2, 4, 6} $subset {2, 4, 6}
-        by enumerate finite_set:
-            ? forall x {1, 2, 3}:
-                double_on_three(x) $in {2, 4, 6}
-        by enumerate finite_set:
-            ? forall y {2, 4, 6}:
-                exist x {1, 2, 3} st {y = double_on_three(x)}
-            by cases:
-                ? exist x {1, 2, 3} st {y = double_on_three(x)}
-                case y = 2:
-                    witness exist x {1, 2, 3} st {y = double_on_three(x)} from 1:
-                        y = 2
-                        double_on_three(1) = 2
-                case y = 4:
-                    witness exist x {1, 2, 3} st {y = double_on_three(x)} from 2:
-                        y = 4
-                        double_on_three(2) = 4
-                case y = 6:
-                    witness exist x {1, 2, 3} st {y = double_on_three(x)} from 3:
-                        y = 6
-                        double_on_three(3) = 6
-        $is_forward_image_of({1, 2, 3}, {2, 4, 6}, double_on_three, {1, 2, 3}, {2, 4, 6})
+    {1, 2, 3} $subset {1, 2, 3}
+    {2, 4, 6} $subset {2, 4, 6}
+    by enumerate finite_set:
+        ? forall x {1, 2, 3}:
+            double_on_three(x) $in {2, 4, 6}
+    by enumerate finite_set:
+        ? forall y {2, 4, 6}:
+            exist x {1, 2, 3} st {y = double_on_three(x)}
+        by cases:
+            ? exist x {1, 2, 3} st {y = double_on_three(x)}
+            case y = 2:
+                witness exist x {1, 2, 3} st {y = double_on_three(x)} from 1
+            case y = 4:
+                witness exist x {1, 2, 3} st {y = double_on_three(x)} from 2
+            case y = 6:
+                witness exist x {1, 2, 3} st {y = double_on_three(x)} from 3
+    by def $is_forward_image_of({1, 2, 3}, {2, 4, 6}, double_on_three, {1, 2, 3}, {2, 4, 6})
 
-    witness exist x {1, 2, 3} st {x $in N, double_nat(1) = double_nat(x)} from 1:
-        1 $in N
-        double_nat(1) = double_nat(1)
+    witness exist x {1, 2, 3} st {x $in N, double_nat(1) = double_nat(x)} from 1
     $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, double_nat(1))
     double_nat(1) $in {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
     double_nat(1) $in \restricted_image<N, N, double_nat, {1, 2, 3}>
-
-    double_on_three(1) $in fn_range(double_on_three)
-    double_on_three(2) $in fn_range(double_on_three)
-    double_on_three(3) $in fn_range(double_on_three)
-
-    claim:
-        ? forall y fn_range(double_on_three):
-            y $in {2, 4, 6}
-        y $in fn_range(double_on_three)
-        have by preimage k from y $in fn_range(double_on_three)
-        k $in {1, 2, 3}
-        double_on_three(k) $in {2, 4, 6}
-        y = double_on_three(k)
-        y $in {2, 4, 6}
-
-    fn_range(double_on_three) $subset {2, 4, 6}
-
-    claim:
-        ? forall y {2, 4, 6}:
-            y $in fn_range(double_on_three)
-        by cases:
-            ? y $in fn_range(double_on_three)
-            case y = 2:
-                double_on_three(1) = 2
-                y = double_on_three(1)
-                y $in fn_range(double_on_three)
-            case y = 4:
-                double_on_three(2) = 4
-                y = double_on_three(2)
-                y $in fn_range(double_on_three)
-            case y = 6:
-                double_on_three(3) = 6
-                y = double_on_three(3)
-                y $in fn_range(double_on_three)
-
-    {2, 4, 6} $subset fn_range(double_on_three)
 
     by extension:
         ? fn_range(double_on_three) = {2, 4, 6}
@@ -1897,68 +1791,23 @@ sketch:
 
     {0, 1, 4} $subset Z
 
-    claim:
-        ? $is_forward_image_of({-1, 0, 1, 2}, {0, 1, 4}, square_on_example, {-1, 0, 1, 2}, {0, 1, 4})
-        {-1, 0, 1, 2} $subset {-1, 0, 1, 2}
-        {0, 1, 4} $subset {0, 1, 4}
-        by enumerate finite_set:
-            ? forall z {-1, 0, 1, 2}:
-                square_on_example(z) $in {0, 1, 4}
-        by enumerate finite_set:
-            ? forall y {0, 1, 4}:
-                exist z {-1, 0, 1, 2} st {y = square_on_example(z)}
-            by cases:
-                ? exist z {-1, 0, 1, 2} st {y = square_on_example(z)}
-                case y = 0:
-                    witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from 0:
-                        y = 0
-                        square_on_example(0) = 0
-                case y = 1:
-                    witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from -1:
-                        y = 1
-                        square_on_example(-1) = 1
-                case y = 4:
-                    witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from 2:
-                        y = 4
-                        square_on_example(2) = 4
-        $is_forward_image_of({-1, 0, 1, 2}, {0, 1, 4}, square_on_example, {-1, 0, 1, 2}, {0, 1, 4})
-
-    square_on_example(-1) $in fn_range(square_on_example)
-    square_on_example(0) $in fn_range(square_on_example)
-    square_on_example(1) $in fn_range(square_on_example)
-    square_on_example(2) $in fn_range(square_on_example)
-
-    claim:
-        ? forall y fn_range(square_on_example):
-            y $in {0, 1, 4}
-        y $in fn_range(square_on_example)
-        have by preimage z from y $in fn_range(square_on_example)
-        z $in {-1, 0, 1, 2}
-        square_on_example(z) $in {0, 1, 4}
-        y = square_on_example(z)
-        y $in {0, 1, 4}
-
-    fn_range(square_on_example) $subset {0, 1, 4}
-
-    claim:
+    {-1, 0, 1, 2} $subset {-1, 0, 1, 2}
+    {0, 1, 4} $subset {0, 1, 4}
+    by enumerate finite_set:
+        ? forall z {-1, 0, 1, 2}:
+            square_on_example(z) $in {0, 1, 4}
+    by enumerate finite_set:
         ? forall y {0, 1, 4}:
-            y $in fn_range(square_on_example)
+            exist z {-1, 0, 1, 2} st {y = square_on_example(z)}
         by cases:
-            ? y $in fn_range(square_on_example)
+            ? exist z {-1, 0, 1, 2} st {y = square_on_example(z)}
             case y = 0:
-                square_on_example(0) = 0
-                y = square_on_example(0)
-                y $in fn_range(square_on_example)
+                witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from 0
             case y = 1:
-                square_on_example(-1) = 1
-                y = square_on_example(-1)
-                y $in fn_range(square_on_example)
+                witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from -1
             case y = 4:
-                square_on_example(2) = 4
-                y = square_on_example(2)
-                y $in fn_range(square_on_example)
-
-    {0, 1, 4} $subset fn_range(square_on_example)
+                witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from 2
+    by def $is_forward_image_of({-1, 0, 1, 2}, {0, 1, 4}, square_on_example, {-1, 0, 1, 2}, {0, 1, 4})
 
     by extension:
         ? fn_range(square_on_example) = {0, 1, 4}
@@ -1969,10 +1818,6 @@ sketch:
     square_Z(1) = 1
     -1 != 1
     square_Z(-2) = 4
-    square_on_example(2) = 4
-    square_on_example(2) $in fn_range(square_on_example)
-    4 = square_on_example(2)
-    4 $in fn_range(square_on_example)
     not -2 $in {-1, 0, 1, 2}
 
 """
@@ -2012,47 +1857,43 @@ sketch:
     double_nat(2) = 4
     not 4 $in {1, 2, 3}
 
+    by enumerate finite_set:
+        ? forall u {1, 2, 3}:
+            u $in N
+    by enumerate finite_set:
+        ? forall a {1}:
+            a $in N
+    by enumerate finite_set:
+        ? forall x {1}:
+            double_nat(x) $in {1, 2, 3}
     claim:
-        ? $is_inverse_image_of(N, N, double_nat, {1, 2, 3}, {1})
-        by enumerate finite_set:
-            ? forall u {1, 2, 3}:
-                u $in N
-        {1, 2, 3} $subset N
-        by enumerate finite_set:
-            ? forall a {1}:
-                a $in N
-        {1} $subset N
-        by enumerate finite_set:
-            ? forall x {1}:
-                double_nat(x) $in {1, 2, 3}
-        claim:
-            ? forall x N:
-                double_nat(x) $in {1, 2, 3}
-                =>:
-                    x $in {1}
-            double_nat(x) = 1 or double_nat(x) = 2 or double_nat(x) = 3
-            by cases:
-                ? x $in {1}
-                case double_nat(x) = 1:
-                    double_nat(x) = 2 * x
-                    2 * x = 1
-                    x = 1 / 2
-                    x $in N
-                    not 1 / 2 $in N
-                    impossible not 1 / 2 $in N
-                case double_nat(x) = 2:
-                    double_nat(x) = 2 * x
-                    2 * x = 2
-                    x = 1
-                    x $in {1}
-                case double_nat(x) = 3:
-                    double_nat(x) = 2 * x
-                    2 * x = 3
-                    x = 3 / 2
-                    x $in N
-                    not 3 / 2 $in N
-                    impossible not 3 / 2 $in N
-        $is_inverse_image_of(N, N, double_nat, {1, 2, 3}, {1})
+        ? forall x N:
+            double_nat(x) $in {1, 2, 3}
+            =>:
+                x $in {1}
+        double_nat(x) = 1 or double_nat(x) = 2 or double_nat(x) = 3
+        by cases:
+            ? x $in {1}
+            case double_nat(x) = 1:
+                double_nat(x) = 2 * x
+                2 * x = 1
+                x = 1 / 2
+                x $in N
+                not 1 / 2 $in N
+                impossible not 1 / 2 $in N
+            case double_nat(x) = 2:
+                double_nat(x) = 2 * x
+                2 * x = 2
+                x = 1
+                x $in {1}
+            case double_nat(x) = 3:
+                double_nat(x) = 2 * x
+                2 * x = 3
+                x = 3 / 2
+                x $in N
+                not 3 / 2 $in N
+                impossible not 3 / 2 $in N
+    by def $is_inverse_image_of(N, N, double_nat, {1, 2, 3}, {1})
 
     double_on_one(1) = 2
     claim:
@@ -2082,12 +1923,10 @@ sketch:
     by enumerate finite_set:
         ? forall u {0, 1, 4}:
             u $in Z
-    {0, 1, 4} $subset Z
 
     by enumerate finite_set:
         ? forall z {-2, -1, 0, 1, 2}:
             z $in Z
-    {-2, -1, 0, 1, 2} $subset Z
 
     claim:
         ? forall z Z:
@@ -2127,18 +1966,10 @@ sketch:
                         z = -2
                         z $in {-2, -1, 0, 1, 2}
 
-    claim:
-        ? $is_inverse_image_of(Z, Z, square_Z, {0, 1, 4}, {-2, -1, 0, 1, 2})
-        {0, 1, 4} $subset Z
-        {-2, -1, 0, 1, 2} $subset Z
-        by enumerate finite_set:
-            ? forall z {-2, -1, 0, 1, 2}:
-                square_Z(z) $in {0, 1, 4}
-        forall z Z:
+    by enumerate finite_set:
+        ? forall z {-2, -1, 0, 1, 2}:
             square_Z(z) $in {0, 1, 4}
-            =>:
-                z $in {-2, -1, 0, 1, 2}
-        $is_inverse_image_of(Z, Z, square_Z, {0, 1, 4}, {-2, -1, 0, 1, 2})
+    by def $is_inverse_image_of(Z, Z, square_Z, {0, 1, 4}, {-2, -1, 0, 1, 2})
 
     -2 $in {-2, -1, 0, 1, 2}
     not -2 $in {-1, 0, 1, 2}
@@ -2160,31 +1991,14 @@ sketch:
             $is_forward_image_of(S, T, f, A, B)
             =>:
                 $is_inverse_image_of(S, T, f, B, A)
-        A $subset S
-        B $subset T
-        claim:
-            ? forall x A:
-                f(x) $in B
         claim:
             ? forall x S:
                 f(x) $in B
                 =>:
                     x $in A
-            A $subset S
-            claim:
-                ? forall a A:
-                    a $in S
-            claim:
-                ? forall a A:
-                    f(a) $in T
-                a $in S
-                f(a) $in T
             obtain a from exist a A st {f(x) = f(a)}
-            a $in S
-            f(a) = f(x)
             x = a
-            x $in A
-        $is_inverse_image_of(S, T, f, B, A)
+        by def $is_inverse_image_of(S, T, f, B, A)
 
 
 
@@ -2799,44 +2613,26 @@ sketch:
         case n = 1: 4
         case n = 2: 5
 
-    shift_0_to_3(0) = 3
-    shift_0_to_3(1) = 4
-    shift_0_to_3(2) = 5
+    by enumerate finite_set:
+        ? forall x1, x2 {0, 1, 2}:
+            shift_0_to_3(x1) = shift_0_to_3(x2)
+            =>:
+                x1 = x2
+    by def $is_injective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
 
-    claim:
-        ? $is_injective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
-        by enumerate finite_set:
-            ? forall x1, x2 {0, 1, 2}:
-                shift_0_to_3(x1) = shift_0_to_3(x2)
-                =>:
-                    x1 = x2
-        $is_injective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
-
-    claim:
-        ? $is_surjective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
-        by cases:
-            ? forall y {3, 4, 5}:
-                exist x {0, 1, 2} st {y = shift_0_to_3(x)}
-            case y = 3:
-                witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 0:
-                    shift_0_to_3(0) = 3
-                    y = 3
-                    y = shift_0_to_3(0)
-            case y = 4:
-                witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 1:
-                    shift_0_to_3(1) = 4
-                    y = 4
-                    y = shift_0_to_3(1)
-            case y = 5:
-                witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 2:
-                    shift_0_to_3(2) = 5
-                    y = 5
-                    y = shift_0_to_3(2)
-        $is_surjective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
+    by cases:
+        ? forall y {3, 4, 5}:
+            exist x {0, 1, 2} st {y = shift_0_to_3(x)}
+        case y = 3:
+            witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 0
+        case y = 4:
+            witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 1
+        case y = 5:
+            witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 2
+    by def $is_surjective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
 
     $is_bijective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
-    witness exist f fn(x {0, 1, 2}) {3, 4, 5} st {$is_bijective_fn({0, 1, 2}, {3, 4, 5}, f)} from shift_0_to_3:
-        $is_bijective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
+    witness exist f fn(x {0, 1, 2}) {3, 4, 5} st {$is_bijective_fn({0, 1, 2}, {3, 4, 5}, f)} from shift_0_to_3
     $has_equal_cardinality({0, 1, 2}, {3, 4, 5})
 
     have fn collapse_to_two(n {0, 1, 2}) {3, 4} by cases:
@@ -2879,47 +2675,26 @@ sketch:
     claim:
         ? forall n N:
             2 * n $in even_N
-        witness exist k N st {2 * n = 2 * k} from n:
-            2 * n = 2 * n
-        $is_even_nat(2 * n)
-        2 * n $in {m N: $is_even_nat(m)}
-        2 * n $in even_N
+        witness exist k N st {2 * n = 2 * k} from n
 
     have fn double_to_even(n N) even_N = 2 * n
 
-    forall t N:
-        double_to_even(t) = 2 * t
+    forall x1, x2 N:
+        double_to_even(x1) = double_to_even(x2)
+        =>:
+            2 * x1 = 2 * x2
+            x1 = (2 * x1) / 2 = (2 * x2) / 2 = x2
+    by def $is_injective_fn(N, even_N, double_to_even)
 
     claim:
-        ? $is_injective_fn(N, even_N, double_to_even)
-        forall x1, x2 N:
-            double_to_even(x1) = double_to_even(x2)
-            =>:
-                double_to_even(x1) = 2 * x1
-                double_to_even(x2) = 2 * x2
-                2 * x1 = 2 * x2
-                x1 = (2 * x1) / 2 = (2 * x2) / 2 = x2
-        $is_injective_fn(N, even_N, double_to_even)
-
-    claim:
-        ? $is_surjective_fn(N, even_N, double_to_even)
-        claim:
-            ? forall y even_N:
-                exist x N st {y = double_to_even(x)}
-            y $in even_N
-            $is_even_nat(y)
-            exist k N st {y = 2 * k}
-            obtain k from exist k N st {y = 2 * k}
-            k $in N
-            2 * k $in even_N
-            witness exist x N st {y = double_to_even(x)} from k:
-                y = 2 * k
-                2 * k = double_to_even(k)
-        $is_surjective_fn(N, even_N, double_to_even)
+        ? forall y even_N:
+            exist x N st {y = double_to_even(x)}
+        obtain k from exist k N st {y = 2 * k}
+        witness exist x N st {y = double_to_even(x)} from k
+    by def $is_surjective_fn(N, even_N, double_to_even)
 
     $is_bijective_fn(N, even_N, double_to_even)
-    witness exist f fn(x N) even_N st {$is_bijective_fn(N, even_N, f)} from double_to_even:
-        $is_bijective_fn(N, even_N, double_to_even)
+    witness exist f fn(x N) even_N st {$is_bijective_fn(N, even_N, f)} from double_to_even
     $has_equal_cardinality(N, even_N)
 
     by contra:
@@ -2945,28 +2720,18 @@ sketch:
         ? forall X set:
             $has_equal_cardinality(X, X)
         have fn id_X(x X) X = x
-        forall x X:
-            id_X(x) = x
+        forall x1, x2 X:
+            id_X(x1) = id_X(x2)
+            =>:
+                x1 = x2
+        by def $is_injective_fn(X, X, id_X)
         claim:
-            ? $is_injective_fn(X, X, id_X)
-            forall x1, x2 X:
-                id_X(x1) = id_X(x2)
-                =>:
-                    id_X(x1) = x1
-                    id_X(x2) = x2
-                    x1 = x2
-        claim:
-            ? $is_surjective_fn(X, X, id_X)
-            claim:
-                ? forall y X:
-                    exist x X st {y = id_X(x)}
-                witness exist x X st {y = id_X(x)} from y:
-                    id_X(y) = y
-                    y = id_X(y)
-            $is_surjective_fn(X, X, id_X)
+            ? forall y X:
+                exist x X st {y = id_X(x)}
+            witness exist x X st {y = id_X(x)} from y
+        by def $is_surjective_fn(X, X, id_X)
         $is_bijective_fn(X, X, id_X)
-        witness exist f fn(x X) X st {$is_bijective_fn(X, X, f)} from id_X:
-            $is_bijective_fn(X, X, id_X)
+        witness exist f fn(x X) X st {$is_bijective_fn(X, X, f)} from id_X
 
 """
 Definition 3.6.5. A set has cardinality n when it has equal cardinality with a
@@ -2995,50 +2760,28 @@ sketch:
         case i = 2: 3
         case i = 3: 4
 
-    shift_zero_to_one(0) = 1
-    shift_zero_to_one(1) = 2
-    shift_zero_to_one(2) = 3
-    shift_zero_to_one(3) = 4
+    by enumerate finite_set:
+        ? forall x1, x2 {0, 1, 2, 3}:
+            shift_zero_to_one(x1) = shift_zero_to_one(x2)
+            =>:
+                x1 = x2
+    by def $is_injective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
 
-    claim:
-        ? $is_injective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
-        by enumerate finite_set:
-            ? forall x1, x2 {0, 1, 2, 3}:
-                shift_zero_to_one(x1) = shift_zero_to_one(x2)
-                =>:
-                    x1 = x2
-        $is_injective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
-
-    claim:
-        ? $is_surjective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
-        by cases:
-            ? forall y {1, 2, 3, 4}:
-                exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)}
-            case y = 1:
-                witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 0:
-                    shift_zero_to_one(0) = 1
-                    y = 1
-                    y = shift_zero_to_one(0)
-            case y = 2:
-                witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 1:
-                    shift_zero_to_one(1) = 2
-                    y = 2
-                    y = shift_zero_to_one(1)
-            case y = 3:
-                witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 2:
-                    shift_zero_to_one(2) = 3
-                    y = 3
-                    y = shift_zero_to_one(2)
-            case y = 4:
-                witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 3:
-                    shift_zero_to_one(3) = 4
-                    y = 4
-                    y = shift_zero_to_one(3)
-        $is_surjective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
+    by cases:
+        ? forall y {1, 2, 3, 4}:
+            exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)}
+        case y = 1:
+            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 0
+        case y = 2:
+            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 1
+        case y = 3:
+            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 2
+        case y = 4:
+            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 3
+    by def $is_surjective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
 
     $is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
-    witness exist f fn(x {0, 1, 2, 3}) {1, 2, 3, 4} st {$is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, f)} from shift_zero_to_one:
-        $is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
+    witness exist f fn(x {0, 1, 2, 3}) {1, 2, 3, 4} st {$is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, f)} from shift_zero_to_one
     $has_equal_cardinality({0, 1, 2, 3}, {1, 2, 3, 4})
 
 """
@@ -3127,12 +2870,8 @@ sketch:
     finite_set_size(closed_range(1, 4)) = 4
     finite_set_size(range(0, 4)) = finite_set_size(closed_range(1, 4))
 
-    claim:
-        ? forall X finite_set:
-            exist n N st {finite_set_size(X) = n}
-        finite_set_size(X) $in N
-        witness exist n N st {finite_set_size(X) = n} from finite_set_size(X):
-            finite_set_size(X) = finite_set_size(X)
+    forall X finite_set:
+        exist n N st {finite_set_size(X) = n}
 
 """
 Theorem 3.6.12. The natural numbers are infinite.  Tao's proof shows that a finite list of all
@@ -3147,20 +2886,8 @@ sketch:
     by contra:
         ? not $is_finite_set(N)
         $is_finite_set(N)
-
-        forall x 0...finite_set_size(N):
-            x $in N
-
-        0...finite_set_size(N) $subset N
-
-        $is_finite_set(0...finite_set_size(N))
-        finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
-        finite_set_size(0...finite_set_size(N)) = finite_set_size(N) - 0 + 1
-        finite_set_size(N) + 1 = finite_set_size(N) - 0 + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
-
+        finite_set_size(N) + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
         impossible finite_set_size(N) + 1 <= finite_set_size(N)
-
-    not $is_finite_set(N)
 
 """
 Remark 3.6.13. The sets Q and R are also infinite by unboundedness, and
@@ -3188,20 +2915,15 @@ are finite with the expected cardinality bounds or formulas.
 # Subset finiteness is cited explicitly from `basics` below.
 
 sketch:
-    claim:
-        ? forall X, Y finite_set:
-            $is_finite_set(union(X, Y))
-            finite_set_size(union(X, Y)) <= finite_set_size(X) + finite_set_size(Y)
+    forall X, Y finite_set:
         $is_finite_set(union(X, Y))
         finite_set_size(union(X, Y)) <= finite_set_size(X) + finite_set_size(Y)
 
-    claim:
-        ? forall X, Y finite_set:
-            intersect(X, Y) = {}
-            =>:
-                finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y)
-        finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size(intersect(X, Y))
-        finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size(intersect(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size({}) = finite_set_size(X) + finite_set_size(Y)
+    forall X, Y finite_set:
+        intersect(X, Y) = {}
+        =>:
+            finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size(intersect(X, Y))
+            finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size(intersect(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size({}) = finite_set_size(X) + finite_set_size(Y)
 
     intersect({1, 2}, {3}) = {}
     finite_set_size(union({1, 2}, {3})) = finite_set_size({1, 2}) + finite_set_size({3}) = finite_set_size({1, 2}) + 1 = 3
@@ -3213,7 +2935,6 @@ sketch:
                 $is_finite_set(Y)
                 finite_set_size(Y) <= finite_set_size(X)
         by thm basics::subset_of_finite_set_is_finite(Y, X)
-        $is_finite_set(Y)
         finite_set_size(Y) <= finite_set_size(X)
 
     have fn double_on_three(n {1, 2, 3}) {2, 4, 6} by cases:

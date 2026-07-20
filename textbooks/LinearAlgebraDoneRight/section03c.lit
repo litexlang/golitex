@@ -1,0 +1,164 @@
+# Linear Algebra Done Right, fourth edition — Section 3C.
+# Matrices.
+
+# Definition 3.29. An m-by-n matrix over F is a rectangular array of scalars;
+# Litex uses its builtin matrix(S,m,n) carrier and callable entry A(j,k).
+prop is_matrix_over(s set, m, n N_pos, A matrix(s, m, n)):
+    A $in matrix(s, m, n)
+
+# A matrix column is converted to Chapter 2's zero-length-capable FiniteList
+# record before it is used as a coefficient list.
+template<s set, m, n N_pos>:
+    have fn matrix_column_coefficients(A matrix(s, m, n), k N_pos: k <= n) &section01a::FiniteList<s, m> = (m, fn(j N_pos: j <= m) s {A(j, k)})
+
+# Definition 3.31. The matrix of a linear map is basis-dependent. Its kth
+# column contains the coefficients of T(v_k) in the chosen codomain basis.
+prop is_matrix_of_linear_map(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n, m N_pos, domain_basis &section01a::FiniteList<V, n>, codomain_basis &section01a::FiniteList<W, m>, T fn(v V) W, A matrix(s, m, n)):
+    $section02b::is_basis(s, scalars, V, Vspace, n, domain_basis)
+    $section02b::is_basis(s, scalars, W, Wspace, m, codomain_basis)
+    forall k N_pos:
+        k <= n
+        =>:
+            T(&section01a::FiniteList<V, n>{domain_basis}.entries(k)) = \section02a::linear_combination_value<s, scalars, W, Wspace, m>(\matrix_column_coefficients<s, m, n>(A, k), codomain_basis)
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n, m N_pos>:
+    trust have matrix_of_linear_map fn(domain_basis &section01a::FiniteList<V, n>, codomain_basis &section01a::FiniteList<W, m>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>) matrix(s, m, n)
+
+axiom matrix_of_linear_map_spec:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n, m N_pos, domain_basis &section01a::FiniteList<V, n>, codomain_basis &section01a::FiniteList<W, m>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        $section02b::is_basis(s, scalars, V, Vspace, n, domain_basis)
+        $section02b::is_basis(s, scalars, W, Wspace, m, codomain_basis)
+        =>:
+            $is_matrix_of_linear_map(s, scalars, V, W, Vspace, Wspace, n, m, domain_basis, codomain_basis, T, \matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(domain_basis, codomain_basis, T))
+
+# Definition 3.34. Matrix addition is entrywise. The builtin matrix carrier is
+# reused; the scalar operation comes from the explicit scalar structure.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n N_pos>:
+    have fn matrix_add(A, B matrix(s, m, n)) matrix(s, m, n) = fn(j N_pos, k N_pos: j <= m, k <= n) s {&section01a::ScalarSystem<s>{scalars}.add(A(j, k), B(j, k))}
+
+# Result 3.35. Taking matrices commutes with addition of linear maps.
+axiom matrix_of_sum:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n, m N_pos, v &section01a::FiniteList<V, n>, w &section01a::FiniteList<W, m>, S, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        $section02b::is_basis(s, scalars, V, Vspace, n, v)
+        $section02b::is_basis(s, scalars, W, Wspace, m, w)
+        =>:
+            \matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, \section03a::linear_map_add<s, scalars, V, W, Vspace, Wspace>(S, T)) = \matrix_add<s, scalars, m, n>(\matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, S), \matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, T))
+
+# Definition 3.36. Scalar multiplication of matrices is entrywise.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n N_pos>:
+    have fn matrix_smul(a s, A matrix(s, m, n)) matrix(s, m, n) = fn(j N_pos, k N_pos: j <= m, k <= n) s {&section01a::ScalarSystem<s>{scalars}.mul(a, A(j, k))}
+
+# Result 3.38. The matrix of a scalar multiple is the corresponding scalar
+# multiple of the matrix.
+axiom matrix_of_scalar_multiple:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, n, m N_pos, v &section01a::FiniteList<V, n>, w &section01a::FiniteList<W, m>, a s, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        $section02b::is_basis(s, scalars, V, Vspace, n, v)
+        $section02b::is_basis(s, scalars, W, Wspace, m, w)
+        =>:
+            \matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, \section03a::linear_map_smul<s, scalars, V, W, Vspace, Wspace>(a, T)) = \matrix_smul<s, scalars, m, n>(a, \matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, T))
+
+# Notation 3.39. F^(m,n) is precisely matrix(F,m,n) in the builtin surface.
+
+# Result 3.40. The matrix space has dimension mn.
+axiom dimension_of_matrix_space:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n N_pos, matrix_space &section01b::VectorSpace<s, scalars, matrix(s, m, n)>:
+        \section02c::dimension<s, scalars, matrix(s, m, n), matrix_space> = m * n
+
+# Definition 3.41. Matrix multiplication contracts the shared index. The
+# scalar finite sum is the explicit generic-field analogue of the builtin
+# numeric matrix product.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n, p N_pos>:
+    trust have matrix_mul fn(A matrix(s, m, n), B matrix(s, n, p)) matrix(s, m, p):
+        forall j, k N_pos:
+            j <= m
+            k <= p
+            =>:
+                matrix_mul(A, B)(j, k) = \section03b::scalar_finite_sum<s, scalars, n>(fn(r N_pos: r <= n) s {&section01a::ScalarSystem<s>{scalars}.mul(A(j, r), B(r, k))})
+
+# Result 3.43. Matrix formation converts composition of linear maps into matrix
+# multiplication, with all three bases shown explicitly.
+axiom matrix_of_product:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, U, V, W nonempty_set, Uspace &section01b::VectorSpace<s, scalars, U>, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, p, n, m N_pos, u &section01a::FiniteList<U, p>, v &section01a::FiniteList<V, n>, w &section01a::FiniteList<W, m>, T \section03a::linear_map_space<s, scalars, U, V, Uspace, Vspace>, S \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        $section02b::is_basis(s, scalars, U, Uspace, p, u)
+        $section02b::is_basis(s, scalars, V, Vspace, n, v)
+        $section02b::is_basis(s, scalars, W, Wspace, m, w)
+        =>:
+            \matrix_of_linear_map<s, scalars, U, W, Uspace, Wspace, p, m>(u, w, \section03a::linear_map_compose<s, scalars, U, V, W, Uspace, Vspace, Wspace>(S, T)) = \matrix_mul<s, scalars, m, n, p>(\matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, S), \matrix_of_linear_map<s, scalars, U, V, Uspace, Vspace, p, n>(u, v, T))
+
+# Notation 3.44. A(j,·) and A(·,k) are the jth row and kth column.
+template<s set, m, n N_pos>:
+    have fn matrix_row(A matrix(s, m, n), j N_pos: j <= m) finite_seq(s, n) = fn(k N_pos: k <= n) s {A(j, k)}
+
+template<s set, m, n N_pos>:
+    have fn matrix_column(A matrix(s, m, n), k N_pos: k <= n) finite_seq(s, m) = fn(j N_pos: j <= m) s {A(j, k)}
+
+# Result 3.46. Each entry of AB is the row-column scalar product.
+axiom entry_of_matrix_product:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n, p N_pos, A matrix(s, m, n), B matrix(s, n, p), j, k N_pos:
+        j <= m
+        k <= p
+        =>:
+            \matrix_mul<s, scalars, m, n, p>(A, B)(j, k) = \section03b::scalar_finite_sum<s, scalars, n>(fn(r N_pos: r <= n) s {&section01a::ScalarSystem<s>{scalars}.mul(\matrix_row<s, m, n>(A, j)(r), \matrix_column<s, n, p>(B, k)(r))})
+
+# Result 3.48. The kth column of AB equals A applied to the kth column of B.
+axiom column_of_matrix_product:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n, p N_pos, A matrix(s, m, n), B matrix(s, n, p), k N_pos:
+        k <= p
+        =>:
+            \matrix_column<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), k) $in finite_seq(s, m)
+
+# Result 3.50. Multiplying A by a coordinate vector forms the matching linear
+# combination of the columns of A.
+axiom matrix_times_vector_is_column_combination:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n), c finite_seq(s, n):
+        \matrix_column<s, m, 1>(\matrix_mul<s, scalars, m, n, 1>(A, fn(j N_pos, k N_pos: j <= n, k <= 1) s {c(j)}), 1) $in finite_seq(s, m)
+
+# Result 3.51. Matrix multiplication can be read as linear combinations of the
+# left matrix's columns or of the right matrix's rows.
+prop has_matrix_product_column_and_row_descriptions(s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n, p N_pos, A matrix(s, m, n), B matrix(s, n, p)):
+    forall k N_pos:
+        k <= p
+        =>:
+            \matrix_column<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), k) $in finite_seq(s, m)
+    forall j N_pos:
+        j <= m
+        =>:
+            \matrix_row<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), j) $in finite_seq(s, p)
+
+axiom matrix_product_column_and_row_descriptions:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n, p N_pos, A matrix(s, m, n), B matrix(s, n, p):
+        $has_matrix_product_column_and_row_descriptions(s, scalars, m, n, p, A, B)
+
+# Definition 3.52. Column rank and row rank are the dimensions of the spans of
+# the matrix's columns and rows. They remain callable canonical values.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n N_pos>:
+    trust have column_rank fn(A matrix(s, m, n)) N:
+        column_rank(A) <= n
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n N_pos>:
+    trust have row_rank fn(A matrix(s, m, n)) N:
+        row_rank(A) <= m
+
+# Definition 3.54. The transpose swaps row and column indices.
+template<s set, m, n N_pos>:
+    have fn transpose(A matrix(s, m, n)) matrix(s, n, m) = fn(j N_pos, k N_pos: j <= n, k <= m) s {A(k, j)}
+
+# Result 3.56. A positive-rank matrix factors as a column matrix times a row
+# matrix, with the inner size equal to its column rank. The source also permits
+# rank zero; builtin matrix dimensions are N_pos, so the zero-width case is
+# recorded separately as A=0 instead of inventing a fake 0-column matrix.
+prop has_positive_column_row_factorization(s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n)):
+    exist r N_pos, C matrix(s, m, r), Rm matrix(s, r, n) st {r = \column_rank<s, scalars, m, n>(A), A = \matrix_mul<s, scalars, m, r, n>(C, Rm)}
+
+axiom column_row_factorization:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n):
+        \column_rank<s, scalars, m, n>(A) = 0 or $has_positive_column_row_factorization(s, scalars, m, n, A)
+
+# Result 3.57. Column rank equals row rank.
+axiom column_rank_equals_row_rank:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n):
+        \column_rank<s, scalars, m, n>(A) = \row_rank<s, scalars, m, n>(A)
+
+# Definition 3.58. The rank of a matrix is this common column/row rank.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, m, n N_pos>:
+    have fn matrix_rank(A matrix(s, m, n)) N = \column_rank<s, scalars, m, n>(A)

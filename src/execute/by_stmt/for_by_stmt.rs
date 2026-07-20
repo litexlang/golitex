@@ -318,19 +318,19 @@ impl Runtime {
 }
 
 impl Runtime {
-    // Negated domain: one atomic uses `make_reversed`; conjunction uses De Morgan (or of negated atomics).
+    // Negated domain: one atomic uses logical negation; conjunction uses De Morgan.
     pub(crate) fn negated_domain_fact_for_by_for_skip(dom: &Fact) -> Option<Fact> {
         match dom {
-            Fact::AtomicFact(a) => Some(Fact::AtomicFact(a.make_reversed())),
+            Fact::AtomicFact(a) => a.logical_negation().ok().map(Fact::AtomicFact),
             Fact::AndFact(and_fact) => {
                 if and_fact.facts.is_empty() {
                     return None;
                 }
-                let branches: Vec<AndChainAtomicFact> = and_fact
-                    .facts
-                    .iter()
-                    .map(|f| AndChainAtomicFact::AtomicFact(f.make_reversed()))
-                    .collect();
+                let mut branches = Vec::with_capacity(and_fact.facts.len());
+                for fact in and_fact.facts.iter() {
+                    let negated = fact.logical_negation().ok()?;
+                    branches.push(AndChainAtomicFact::AtomicFact(negated));
+                }
                 Some(OrFact::new(branches, and_fact.line_file()).into())
             }
             Fact::ChainFact(_)

@@ -79,14 +79,6 @@ impl Runtime {
                 Obj::Log(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Max(a) => match right {
-                Obj::Max(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Min(a) => match right {
-                Obj::Min(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
             Obj::Union(a) => match right {
                 Obj::Union(b) => a.to_string() == b.to_string(),
                 _ => false,
@@ -169,6 +161,14 @@ impl Runtime {
             },
             Obj::FiniteSetSize(a) => match right {
                 Obj::FiniteSetSize(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::FiniteSetMax(a) => match right {
+                Obj::FiniteSetMax(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::FiniteSetMin(a) => match right {
+                Obj::FiniteSetMin(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::FnRange(a) => match right {

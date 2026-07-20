@@ -1,46 +1,6 @@
 use super::*;
 
 impl Runtime {
-    pub(super) fn maybe_verify_in_fact_max_min_pair_closed_standard_set(
-        &mut self,
-        in_fact: &InFact,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let (left, right, set) = match (&in_fact.element, &in_fact.set) {
-            (Obj::Max(m), Obj::StandardSet(s)) => (m.left.as_ref(), m.right.as_ref(), s.clone()),
-            (Obj::Min(m), Obj::StandardSet(s)) => (m.left.as_ref(), m.right.as_ref(), s.clone()),
-            _ => return Ok(None),
-        };
-        if !matches!(
-            set,
-            StandardSet::RPos
-                | StandardSet::QPos
-                | StandardSet::RNeg
-                | StandardSet::QNeg
-                | StandardSet::ZNeg
-                | StandardSet::N
-                | StandardSet::NPos
-        ) {
-            return Ok(None);
-        }
-        let reason = format!("max/min: both operands in {}", set);
-        let set_obj: Obj = set.into();
-        let lf = in_fact.line_file.clone();
-        for operand in [left, right] {
-            let f: AtomicFact = InFact::new(operand.clone(), set_obj.clone(), lf.clone()).into();
-            if !self.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
-                &f,
-                verify_state,
-            )? {
-                return Ok(Some((StmtUnknown::new()).into()));
-            }
-        }
-        Ok(Some(number_in_set_verified_by_builtin_rules_result(
-            in_fact,
-            reason.as_str(),
-        )))
-    }
-
     // Finite `sum` / `product` over a closed integer range: if the object is well-defined, its value
     // is a real (used e.g. for `+` on real-valued operands).
     pub(super) fn verify_in_fact_sum_or_product_in_r(
@@ -1192,8 +1152,6 @@ impl Runtime {
                     )?
                 }
             }
-            Obj::Max(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
-            Obj::Min(m) => require_in_z(&m.left)? && require_in_z(&m.right)?,
             Obj::Abs(a) => require_in_z(a.arg.as_ref())?,
             _ => false,
         };
@@ -1279,8 +1237,6 @@ impl Runtime {
             Obj::Mul(m) => in_q(self, &m.left)? && in_q(self, &m.right)?,
             Obj::Div(d) => in_q(self, &d.left)? && in_q(self, &d.right)?,
             Obj::Pow(p) => in_q(self, &p.base)? && in_z(self, &p.exponent)?,
-            Obj::Max(m) => in_q(self, &m.left)? && in_q(self, &m.right)?,
-            Obj::Min(m) => in_q(self, &m.left)? && in_q(self, &m.right)?,
             Obj::Abs(a) => in_q(self, a.arg.as_ref())?,
             _ => false,
         };

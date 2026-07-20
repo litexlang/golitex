@@ -14,6 +14,7 @@ pub enum HaveFnByInducCaseBody {
     NestedCases(Vec<HaveFnByInducCase>),
 }
 
+// The induction measure and lower bound must both be provably integer-valued.
 // have fn f(a Z, b Z: a >= 0, b >= 0) R
 //     by induc abs(a) + abs(b) from 0:
 //         case b = 0: 0

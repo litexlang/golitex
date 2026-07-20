@@ -388,6 +388,7 @@ impl FactGraphBuilder {
             | Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_)) => {
                 self.add_trust_nodes(&success.infers)
             }
+            Stmt::By(ByStmt::ByDefStmt(_)) => self.add_infer_nodes(&success.infers),
             _ => {}
         }
         if let Some(verification) = success.theorem_verification.as_ref() {
@@ -578,6 +579,19 @@ impl FactGraphBuilder {
         for inside in &success.inside_results {
             self.collect_result_edges(inside);
         }
+        if let Stmt::By(ByStmt::ByDefStmt(stmt)) = &success.stmt {
+            self.add_infer_edges(&success.infers);
+            let target_fact: Fact = stmt.fact.clone().into();
+            let target_id = self.add_fact_node(&target_fact, "fact", None);
+            for clause_result in success.inside_results.iter().skip(1) {
+                for source_id in self.dependency_source_ids_from_result(clause_result) {
+                    for source_id in self.main_chain_source_ids(&source_id) {
+                        self.add_edge(&source_id, &target_id, "unfolds");
+                    }
+                }
+            }
+            return;
+        }
         let Some(last_fact_id) = self.last_factual_result_node_id(&success.inside_results) else {
             return;
         };
@@ -719,6 +733,10 @@ impl FactGraphBuilder {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
                 vec![claim_id(&stmt.line_file)]
             }
+            Stmt::By(ByStmt::ByDefStmt(stmt)) => {
+                let fact: Fact = stmt.fact.clone().into();
+                vec![fact_node_id(&fact)]
+            }
             _ => vec![],
         }
     }
@@ -820,6 +838,10 @@ impl FactGraphBuilder {
         match &success.stmt {
             Stmt::DefThmStmt(stmt) => stmt.names.first().map(|name| theorem_id(name)),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => Some(claim_id(&stmt.line_file)),
+            Stmt::By(ByStmt::ByDefStmt(stmt)) => {
+                let fact: Fact = stmt.fact.clone().into();
+                Some(self.add_fact_node(&fact, "fact", None))
+            }
             _ => None,
         }
     }
@@ -830,6 +852,10 @@ impl FactGraphBuilder {
                 return Some(self.add_fact_node(&success.stmt, "fact", None));
             }
             if let Some(success) = result.non_factual_success() {
+                if let Stmt::By(ByStmt::ByDefStmt(stmt)) = &success.stmt {
+                    let fact: Fact = stmt.fact.clone().into();
+                    return Some(self.add_fact_node(&fact, "fact", None));
+                }
                 if let Some(node_id) = self.last_factual_result_node_id(&success.inside_results) {
                     return Some(node_id);
                 }
@@ -1285,5 +1311,15 @@ mod tests {
         assert!(output.contains(r#""kind": "unfolds""#));
         assert!(output.contains(r#""selection": "facts, claims, and theorems; inferred facts are compressed into edges""#));
         assert!(!output.contains(r#""kind": "prop""#));
+    }
+
+    #[test]
+    fn fact_graph_records_by_def_target_and_unfolding_edges() {
+        let output =
+            fact_graph_output("prop unit(x R):\n    x = 1\n1 = 1\nby def $unit(1)\n$unit(1)\n");
+
+        assert!(output.contains("$unit(1)"));
+        assert!(output.contains(r#""store_reason": "proof by definition""#));
+        assert!(output.contains(r#""kind": "unfolds""#));
     }
 }

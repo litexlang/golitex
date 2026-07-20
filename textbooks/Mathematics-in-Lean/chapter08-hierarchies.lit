@@ -1,0 +1,340 @@
+# Chapter 8 — Hierarchies
+
+# This chapter translates mathematical interfaces, not Lean's elaborator
+# mechanics. Repeated class-extension, coercion, outParam, and to_additive
+# presentations are collapsed when they expose the same data and laws. Actual
+# structures remain records or sets of callable maps; only properties of
+# explicit candidates are props. The source's order hierarchy and
+# order-preserving-hom presentation variants are outside this core slice.
+
+# 8.1 Basics
+
+# One1/One2 and Dia1 are one-field carrier-dependent interfaces. Their data are
+# preserved below as the `one` and `mul` fields of actual Monoid/Group records;
+# no one-field object is misrepresented as a proposition.
+prop is_semigroup(s nonempty_set, mul fn(x, y s) s):
+    forall x, y, z s:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+
+struct Monoid<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    <=>:
+        $is_semigroup(s, mul)
+        forall x s:
+            mul(one, x) = x
+            mul(x, one) = x
+
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        $is_semigroup(s, mul)
+        forall x s:
+            mul(one, x) = x
+            mul(x, one) = x
+            mul(inv(x), x) = one
+
+# Source lemma left_inv_eq_right_inv1.
+thm monoid_left_inverse_unique:
+    ? forall s nonempty_set, monoid &Monoid<s>, a, b, c s:
+        &Monoid<s>{monoid}.mul(b, a) = &Monoid<s>{monoid}.one
+        &Monoid<s>{monoid}.mul(a, c) = &Monoid<s>{monoid}.one
+        =>:
+            b = c
+    b = &Monoid<s>{monoid}.mul(b, &Monoid<s>{monoid}.one) = &Monoid<s>{monoid}.mul(b, &Monoid<s>{monoid}.mul(a, c)) = &Monoid<s>{monoid}.mul(&Monoid<s>{monoid}.mul(b, a), c) = &Monoid<s>{monoid}.mul(&Monoid<s>{monoid}.one, c) = c
+
+# Source lemma inv_eq_of_dia.
+thm group_inverse_eq_of_right_inverse:
+    ? forall s nonempty_set, group &Group<s>, a, b s:
+        &Group<s>{group}.mul(a, b) = &Group<s>{group}.one
+        =>:
+            &Group<s>{group}.inv(a) = b
+    &Group<s>{group}.mul(&Group<s>{group}.inv(a), a) = &Group<s>{group}.one
+    &Group<s>{group}.inv(a) = &Group<s>{group}.mul(&Group<s>{group}.inv(a), &Group<s>{group}.one) = &Group<s>{group}.mul(&Group<s>{group}.inv(a), &Group<s>{group}.mul(a, b)) = &Group<s>{group}.mul(&Group<s>{group}.mul(&Group<s>{group}.inv(a), a), b) = &Group<s>{group}.mul(&Group<s>{group}.one, b) = b
+
+# Source lemma dia_inv. It is a fact about every Group object, not a new prop.
+thm group_right_inverse:
+    ? forall s nonempty_set, group &Group<s>, a s:
+        &Group<s>{group}.mul(a, &Group<s>{group}.inv(a)) = &Group<s>{group}.one
+    trust &Group<s>{group}.mul(a, &Group<s>{group}.inv(a)) = &Group<s>{group}.one
+
+# AddSemigroup3 through AddCommGroup3 are the additive branch of the hierarchy.
+struct AdditiveMonoid<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    <=>:
+        forall x, y, z s:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x s:
+            add(zero, x) = x
+            add(x, zero) = x
+
+struct AdditiveGroup<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+    <=>:
+        forall x, y, z s:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x s:
+            add(zero, x) = x
+            add(x, zero) = x
+            add(neg(x), x) = zero
+
+struct AdditiveCommutativeGroup<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+    <=>:
+        forall x, y, z s:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x, y s:
+            add(x, y) = add(y, x)
+        forall x s:
+            add(zero, x) = x
+            add(x, zero) = x
+            add(neg(x), x) = zero
+
+# Ring3 deliberately assumes only an additive group, not additive
+# commutativity. The latter is derived below, matching the source hierarchy.
+struct Ring<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+    mul fn(x, y s) s
+    one s
+    <=>:
+        forall x, y, z s:
+            add(add(x, y), z) = add(x, add(y, z))
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+            mul(add(x, y), z) = add(mul(x, z), mul(y, z))
+        forall x s:
+            add(zero, x) = x
+            add(x, zero) = x
+            add(neg(x), x) = zero
+            mul(one, x) = x
+            mul(x, one) = x
+            mul(zero, x) = zero
+            mul(x, zero) = zero
+
+# Source instance Ring3 -> AddCommGroup3.
+thm ring_add_commutative:
+    ? forall s nonempty_set, ring &Ring<s>, x, y s:
+        &Ring<s>{ring}.add(x, y) = &Ring<s>{ring}.add(y, x)
+    trust &Ring<s>{ring}.add(x, y) = &Ring<s>{ring}.add(y, x)
+
+# Source instance Ring3 Z. Its selected record is bound to the ordinary integer
+# operations; only verification of the Ring laws is trusted.
+trust have integer_ring &Ring<Z>:
+    integer_ring = (fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
+
+# The source's LE1/Preorder1/PartialOrder1/OrderedCommMonoid1 block is an
+# alternate hierarchy presentation and is outside this core slice.
+
+struct Module<Scalar, M nonempty_set>:
+    ring &Ring<Scalar>
+    additive_group &AdditiveCommutativeGroup<M>
+    smul fn(r Scalar, m M) M
+    <=>:
+        forall m M:
+            smul(&Ring<Scalar>{ring}.zero, m) = &AdditiveCommutativeGroup<M>{additive_group}.zero
+            smul(&Ring<Scalar>{ring}.one, m) = m
+        forall a, b Scalar, m M:
+            smul(&Ring<Scalar>{ring}.mul(a, b), m) = smul(a, smul(b, m))
+            smul(&Ring<Scalar>{ring}.add(a, b), m) = &AdditiveCommutativeGroup<M>{additive_group}.add(smul(a, m), smul(b, m))
+        forall a Scalar, m, n M:
+            smul(a, &AdditiveCommutativeGroup<M>{additive_group}.add(m, n)) = &AdditiveCommutativeGroup<M>{additive_group}.add(smul(a, m), smul(a, n))
+
+# Source selfModule: multiplication gives every ring a module over itself.
+template<Scalar nonempty_set, ring &Ring<Scalar>>:
+    trust have self_module &Module<Scalar, Scalar>:
+        self_module = (ring, (&Ring<Scalar>{ring}.add, &Ring<Scalar>{ring}.zero, &Ring<Scalar>{ring}.neg), fn(r, m Scalar) Scalar {&Ring<Scalar>{ring}.mul(r, m)})
+
+# Source recursive nsmul1 and zsmul1. The selected functions are actual
+# callables; generic recursion over an opaque carrier is the trust boundary.
+template<M nonempty_set, group &AdditiveCommutativeGroup<M>>:
+    trust have natural_smul fn(n N, x M) M:
+        forall x M:
+            natural_smul(0, x) = &AdditiveCommutativeGroup<M>{group}.zero
+        forall n N, x M:
+            natural_smul(n + 1, x) = &AdditiveCommutativeGroup<M>{group}.add(x, natural_smul(n, x))
+
+template<M nonempty_set, group &AdditiveCommutativeGroup<M>>:
+    trust have integer_smul fn(n Z, x M) M:
+        forall n N, x M:
+            integer_smul(n, x) = \natural_smul<M, group>(n, x)
+            integer_smul(-n - 1, x) = &AdditiveCommutativeGroup<M>{group}.neg(\natural_smul<M, group>(n + 1, x))
+
+# Source abGrpModule: every additive commutative group is a Z-module.
+template<M nonempty_set, group &AdditiveCommutativeGroup<M>>:
+    trust have integer_module &Module<Z, M>:
+        integer_module = (integer_ring, group, \integer_smul<M, group>)
+
+# AddMonoid4 makes the natural scalar function a customizable data field.
+struct AdditiveMonoidWithNSmul<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    nsmul fn(n N, x s) s
+    <=>:
+        forall x, y, z s:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x s:
+            add(zero, x) = x
+            add(x, zero) = x
+            nsmul(0, x) = zero
+        forall n N, x s:
+            nsmul(n + 1, x) = add(x, nsmul(n, x))
+
+template<M, N nonempty_set, left &AdditiveMonoidWithNSmul<M>, right &AdditiveMonoidWithNSmul<N>>:
+    trust have product_additive_monoid_with_nsmul &AdditiveMonoidWithNSmul<cart(M, N)>
+
+trust have integer_additive_monoid_with_nsmul &AdditiveMonoidWithNSmul<Z>
+
+# 8.2 Morphisms
+
+# isMonoidHom1/isMonoidHom2 collapse to one relation on an explicit candidate
+# function. MonoidHom1 itself is the actual set of maps satisfying it.
+prop is_monoid_hom(G, H nonempty_set, source &Monoid<G>, target &Monoid<H>, f fn(x G) H):
+    f(&Monoid<G>{source}.one) = &Monoid<H>{target}.one
+    forall x, y G:
+        f(&Monoid<G>{source}.mul(x, y)) = &Monoid<H>{target}.mul(f(x), f(y))
+
+template<G, H nonempty_set, source &Monoid<G>, target &Monoid<H>>:
+    have MonoidHom set = {f fn(x G) H: $is_monoid_hom(G, H, source, target, f)}
+
+prop is_additive_monoid_hom(G, H nonempty_set, source &AdditiveMonoid<G>, target &AdditiveMonoid<H>, f fn(x G) H):
+    f(&AdditiveMonoid<G>{source}.zero) = &AdditiveMonoid<H>{target}.zero
+    forall x, y G:
+        f(&AdditiveMonoid<G>{source}.add(x, y)) = &AdditiveMonoid<H>{target}.add(f(x), f(y))
+
+template<G, H nonempty_set, source &AdditiveMonoid<G>, target &AdditiveMonoid<H>>:
+    have AdditiveMonoidHom set = {f fn(x G) H: $is_additive_monoid_hom(G, H, source, target, f)}
+
+prop is_ring_hom(A, B nonempty_set, source &Ring<A>, target &Ring<B>, f fn(x A) B):
+    f(&Ring<A>{source}.zero) = &Ring<B>{target}.zero
+    f(&Ring<A>{source}.one) = &Ring<B>{target}.one
+    forall x, y A:
+        f(&Ring<A>{source}.add(x, y)) = &Ring<B>{target}.add(f(x), f(y))
+        f(&Ring<A>{source}.mul(x, y)) = &Ring<B>{target}.mul(f(x), f(y))
+
+template<A, B nonempty_set, source &Ring<A>, target &Ring<B>>:
+    have RingHom set = {f fn(x A) B: $is_ring_hom(A, B, source, target, f)}
+
+# Source lemma map_inv_of_inv. It is direct once the hom laws are explicit.
+thm monoid_hom_maps_inverse_pair:
+    ? forall SourceCarrier, TargetCarrier nonempty_set, source &Monoid<SourceCarrier>, target &Monoid<TargetCarrier>, f fn(x SourceCarrier) TargetCarrier, m, m_inverse SourceCarrier:
+        $is_monoid_hom(SourceCarrier, TargetCarrier, source, target, f)
+        &Monoid<SourceCarrier>{source}.mul(m, m_inverse) = &Monoid<SourceCarrier>{source}.one
+        =>:
+            &Monoid<TargetCarrier>{target}.mul(f(m), f(m_inverse)) = &Monoid<TargetCarrier>{target}.one
+    f(&Monoid<SourceCarrier>{source}.mul(m, m_inverse)) = &Monoid<TargetCarrier>{target}.mul(f(m), f(m_inverse))
+    f(&Monoid<SourceCarrier>{source}.one) = &Monoid<TargetCarrier>{target}.one
+    f(&Monoid<SourceCarrier>{source}.mul(m, m_inverse)) = f(&Monoid<SourceCarrier>{source}.one) = &Monoid<TargetCarrier>{target}.one
+    &Monoid<TargetCarrier>{target}.mul(f(m), f(m_inverse)) = f(&Monoid<SourceCarrier>{source}.mul(m, m_inverse)) = &Monoid<TargetCarrier>{target}.one
+
+# MonoidHomClass1--3 and their coercion instances are alternate API wrappers
+# around the three function spaces above and introduce no new mathematics.
+# OrderPresHom and OrderPresMonoidHom are alternate hierarchy APIs outside this
+# core slice.
+
+# 8.3 Subobjects
+
+prop is_submonoid(M nonempty_set, monoid &Monoid<M>, carrier power_set(M)):
+    &Monoid<M>{monoid}.one $in carrier
+    forall x, y carrier:
+        &Monoid<M>{monoid}.mul(x, y) $in carrier
+
+template<M nonempty_set, monoid &Monoid<M>>:
+    have Submonoid set = {carrier power_set(M): $is_submonoid(M, monoid, carrier)}
+
+thm submonoid_carrier_nonempty:
+    ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M):
+        $is_submonoid(M, monoid, carrier)
+        =>:
+            $is_nonempty_set(carrier)
+    witness $is_nonempty_set(carrier) from &Monoid<M>{monoid}.one:
+        &Monoid<M>{monoid}.one $in carrier
+
+# Source SubMonoid1Monoid: the subtype inherits an actual monoid record.
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $is_nonempty_set(carrier)>:
+    trust have inherited_submonoid &Monoid<carrier>:
+        inherited_submonoid = (fn(x, y carrier) carrier {&Monoid<M>{monoid}.mul(x, y)}, &Monoid<M>{monoid}.one)
+
+template<M nonempty_set>:
+    have fn submonoid_intersection(left, right power_set(M)) power_set(M) = {x M: x $in left and x $in right}
+
+thm submonoid_intersection_closed:
+    ? forall M nonempty_set, monoid &Monoid<M>, left, right power_set(M):
+        $is_submonoid(M, monoid, left)
+        $is_submonoid(M, monoid, right)
+        =>:
+            $is_submonoid(M, monoid, \submonoid_intersection<M>(left, right))
+    trust $is_submonoid(M, monoid, \submonoid_intersection<M>(left, right))
+
+# Source Submonoid.Setoid. The relation is correctly a prop because its
+# candidate elements x and y are explicit parameters.
+prop submonoid_fraction_equiv(M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x, y M):
+    exist w, z M st {w $in carrier, z $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(y, z)}
+
+prop monoid_is_commutative(M nonempty_set, monoid &Monoid<M>):
+    forall x, y M:
+        &Monoid<M>{monoid}.mul(x, y) = &Monoid<M>{monoid}.mul(y, x)
+
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M)>:
+    have fn fraction_class(x M) power_set(M) = {y M: $submonoid_fraction_equiv(M, monoid, carrier, x, y)}
+
+prop is_fraction_class(M nonempty_set, monoid &Monoid<M>, carrier power_set(M), C power_set(M)):
+    exist x M st {C = \fraction_class<M, monoid, carrier>(x)}
+
+thm fraction_relation_reflexive:
+    ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x M:
+        $is_submonoid(M, monoid, carrier)
+        =>:
+            $submonoid_fraction_equiv(M, monoid, carrier, x, x)
+    witness exist w, z M st {w $in carrier, z $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(x, z)} from &Monoid<M>{monoid}.one, &Monoid<M>{monoid}.one
+
+thm fraction_relation_symmetric:
+    ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x, y M:
+        $submonoid_fraction_equiv(M, monoid, carrier, x, y)
+        =>:
+            $submonoid_fraction_equiv(M, monoid, carrier, y, x)
+    obtain w, z from exist w, z M st {w $in carrier, z $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(y, z)}
+    witness exist w2, z2 M st {w2 $in carrier, z2 $in carrier, &Monoid<M>{monoid}.mul(y, w2) = &Monoid<M>{monoid}.mul(x, z2)} from z, w
+
+thm fraction_relation_transitive:
+    ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x, y, z M:
+        $is_submonoid(M, monoid, carrier)
+        $monoid_is_commutative(M, monoid)
+        $submonoid_fraction_equiv(M, monoid, carrier, x, y)
+        $submonoid_fraction_equiv(M, monoid, carrier, y, z)
+        =>:
+            $submonoid_fraction_equiv(M, monoid, carrier, x, z)
+    trust $submonoid_fraction_equiv(M, monoid, carrier, x, z)
+
+# Source quotient constructor. The represented-class carrier becomes a genuine
+# quotient only for a commutative monoid and a submonoid carrier.
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid)>:
+    have fraction_quotient power_set(power_set(M)) = {C power_set(M): $is_fraction_class(M, monoid, carrier, C)}
+
+# Source quotient projection and induced multiplication. Their domains retain
+# the same commutative-monoid and submonoid guards; well-definedness is the
+# only trust boundary.
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid)>:
+    trust have fraction_projection fn(x M) \fraction_quotient<M, monoid, carrier>:
+        forall x M:
+            fraction_projection(x) = \fraction_class<M, monoid, carrier>(x)
+
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid)>:
+    trust have fraction_quotient_mul fn(A, B \fraction_quotient<M, monoid, carrier>) \fraction_quotient<M, monoid, carrier>:
+        forall A, B \fraction_quotient<M, monoid, carrier>, x, y M:
+            A = \fraction_class<M, monoid, carrier>(x)
+            B = \fraction_class<M, monoid, carrier>(y)
+            =>:
+                fraction_quotient_mul(A, B) = \fraction_class<M, monoid, carrier>(&Monoid<M>{monoid}.mul(x, y))
+
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid), $is_nonempty_set(\fraction_quotient<M, monoid, carrier>)>:
+    trust have quotient_monoid &Monoid<\fraction_quotient<M, monoid, carrier>>:
+        quotient_monoid = (\fraction_quotient_mul<M, monoid, carrier>, \fraction_projection<M, monoid, carrier>(&Monoid<M>{monoid}.one))

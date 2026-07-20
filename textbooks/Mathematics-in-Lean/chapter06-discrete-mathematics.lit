@@ -1,0 +1,292 @@
+# Chapter 6 — Discrete Mathematics
+
+# Only source definitions, principal mathematical results, and the constructors
+# needed to use them are retained. Repeated tactic presentations are collapsed.
+
+# 6.1 Finsets and Fintypes
+
+# Source definition: example1. A finite set is unordered and has no duplicate
+# elements; later source spelling variants are presentation examples only.
+have finite_set_example finite_set = {0, 1, 2}
+
+# Source definition: f. The source function is integer-valued and remains
+# callable instead of being replaced by a predicate about squares.
+have fn square_int(n N) Z = n^2
+
+# The substantive finite-product example in this section. Litex has the finite
+# product object and insertion equations; the generic structural induction is
+# left as the smallest theorem-local proof boundary here.
+thm finite_product_ne_zero:
+    ? forall A finite_set, f fn(x A) N:
+        forall x A:
+            f(x) != 0
+        =>:
+            finite_set_product(A, f) != 0
+    trust:
+        finite_set_product(A, f) != 0
+
+# The source identifies cardinality with a sum of ones. This is checked by the
+# finite constant-sum rule.
+thm finite_set_card_as_sum_ones:
+    ? forall A finite_set:
+        finite_set_size(A) = finite_set_sum(A, fn(x A) N {1})
+    finite_set_sum(A, fn(x A) N {1}) = finite_set_size(A) * 1 = finite_set_size(A)
+
+# 6.2 Counting Arguments
+
+# The first counting formulas are direct finite-set cardinality laws.
+thm card_cartesian_product:
+    ? forall A, B finite_set:
+        finite_set_size(cart(A, B)) = finite_set_size(A) * finite_set_size(B)
+    finite_set_size(cart(A, B)) = finite_set_size(A) * finite_set_size(B)
+
+thm card_union_inclusion_exclusion:
+    ? forall A, B finite_set:
+        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+
+# Disjointness is a relation between two candidate sets, so this is correctly a
+# prop. The following named result is a fact, not another proposition wrapper.
+prop disjoint_sets(A, B set):
+    intersect(A, B) = {}
+
+thm card_union_of_disjoint:
+    ? forall A, B finite_set:
+        $disjoint_sets(A, B)
+        =>:
+            finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B)
+    intersect(A, B) = {}
+    finite_set_size(intersect(A, B)) = finite_set_size({}) = 0
+    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B)) = finite_set_size(A) + finite_set_size(B)
+
+# Source definition: triangle. The object is a callable finite-set-valued
+# function. Finiteness of a filtered Cartesian product is recorded with the
+# object rather than changing triangle into a prop.
+trust have triangle fn(n N) power_set(cart(N, N)):
+    forall n N:
+        triangle(n) = {p cart(range(0, n + 1), range(0, n + 1)): p[1] < p[2]}
+    forall n N:
+        $is_finite_set(triangle(n))
+
+# The three Lean proofs of this formula collapse to one mathematical result.
+thm triangle_card:
+    ? forall n N:
+        finite_set_size(triangle(n)) = (n + 1) * n / 2
+    trust:
+        finite_set_size(triangle(n)) = (n + 1) * n / 2
+
+# Source theorem: doubleCounting. A binary relation is represented by its edge
+# set E inside S x T. The two explicit finiteness clauses are verifier-facing
+# consequences of being subsets of finite sets; they do not alter the counting
+# hypotheses. The missing work is the finite indicator-sum argument.
+thm double_counting:
+    ? forall S, T finite_set, E power_set(cart(S, T)):
+        forall a S:
+            $is_finite_set({b T: (a, b) $in E})
+            finite_set_size({b T: (a, b) $in E}) >= 3
+        forall b T:
+            $is_finite_set({a S: (a, b) $in E})
+            finite_set_size({a S: (a, b) $in E}) <= 1
+        =>:
+            3 * finite_set_size(S) <= finite_set_size(T)
+    trust:
+        3 * finite_set_size(S) <= finite_set_size(T)
+
+# 6.3 Inductive Structures
+
+# Litex does not yet declare user-defined inductive carrier families. The
+# reusable interface therefore keeps the element carrier A and the list carrier
+# L explicit. ListCore packages the callable constructors and their structural
+# induction principle; no nullary prop is used as a fake list object.
+struct ListCore<A set, L nonempty_set>:
+    nil L
+    cons fn(a A, xs L) L
+    <=>:
+        forall P power_set(L):
+            nil $in P
+            forall a A, xs L:
+                xs $in P
+                =>:
+                    cons(a, xs) $in P
+            =>:
+                P = L
+
+# Source definition: append. is_list_append is a property of a candidate
+# callable function; list_append is the corresponding selected function.
+prop is_list_append(A set, L nonempty_set, core &ListCore<A, L>, append fn(xs, ys L) L):
+    forall ys L:
+        append(&ListCore<A, L>{core}.nil, ys) = ys
+    forall a A, xs, ys L:
+        append(&ListCore<A, L>{core}.cons(a, xs), ys) = &ListCore<A, L>{core}.cons(a, append(xs, ys))
+
+template<A set, L nonempty_set, core &ListCore<A, L>>:
+    trust have list_append fn(xs, ys L) L:
+        $is_list_append(A, L, core, list_append)
+
+# Source definition: map. Its domain and codomain list carriers remain
+# independent, exactly as in List.map.
+prop is_list_map(A, B set, L_A, L_B nonempty_set, core_A &ListCore<A, L_A>, core_B &ListCore<B, L_B>, f fn(x A) B, map_fn fn(xs L_A) L_B):
+    map_fn(&ListCore<A, L_A>{core_A}.nil) = &ListCore<B, L_B>{core_B}.nil
+    forall a A, xs L_A:
+        map_fn(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<B, L_B>{core_B}.cons(f(a), map_fn(xs))
+
+template<A, B set, L_A, L_B nonempty_set, core_A &ListCore<A, L_A>, core_B &ListCore<B, L_B>, f fn(x A) B>:
+    trust have list_map fn(xs L_A) L_B:
+        $is_list_map(A, B, L_A, L_B, core_A, core_B, f, list_map)
+
+# Source theorem: append_nil. Its proof is structural induction on L; the
+# source carrier is absent from the kernel, so only that induction step is
+# trusted, while the exact callable interface remains visible.
+thm list_append_nil:
+    ? forall A set, L nonempty_set, core &ListCore<A, L>, append fn(xs, ys L) L, xs L:
+        $is_list_append(A, L, core, append)
+        =>:
+            append(xs, &ListCore<A, L>{core}.nil) = xs
+    trust:
+        append(xs, &ListCore<A, L>{core}.nil) = xs
+
+# Source theorem: map_map. The three candidate map functions make every
+# composition callable and keep the theorem independent of hidden coercions.
+thm list_map_map:
+    ? forall A, B, C set, L_A, L_B, L_C nonempty_set, core_A &ListCore<A, L_A>, core_B &ListCore<B, L_B>, core_C &ListCore<C, L_C>, f fn(x A) B, g fn(y B) C, map_f fn(xs L_A) L_B, map_g fn(xs L_B) L_C, map_gf fn(xs L_A) L_C, xs L_A:
+        $is_list_map(A, B, L_A, L_B, core_A, core_B, f, map_f)
+        $is_list_map(B, C, L_B, L_C, core_B, core_C, g, map_g)
+        $is_list_map(A, C, L_A, L_C, core_A, core_C, fn(x A) C {g(f(x))}, map_gf)
+        =>:
+            map_g(map_f(xs)) = map_gf(xs)
+    trust:
+        map_g(map_f(xs)) = map_gf(xs)
+
+# Source inductive carrier: BinTree, with its two callable constructors.
+trust have BinaryTree nonempty_set
+trust have binary_tree_empty BinaryTree
+trust have binary_tree_node fn(left, right BinaryTree) BinaryTree
+
+# Source definitions: size and depth. Their defining equations are retained as
+# facts attached to the callable functions.
+trust have binary_tree_size fn(tree BinaryTree) N:
+    binary_tree_size(binary_tree_empty) = 0
+    forall left, right BinaryTree:
+        binary_tree_size(binary_tree_node(left, right)) = binary_tree_size(left) + binary_tree_size(right) + 1
+
+# The source uses Nat.max in the depth recursion.
+have fn nat_max(left, right N) N by cases:
+    case left >= right: left
+    case left < right: right
+
+trust have binary_tree_depth fn(tree BinaryTree) N:
+    binary_tree_depth(binary_tree_empty) = 0
+    forall left, right BinaryTree:
+        binary_tree_depth(binary_tree_node(left, right)) = nat_max(binary_tree_depth(left), binary_tree_depth(right)) + 1
+
+# Source theorem: BinTree.size_le.
+thm binary_tree_size_le_power_depth:
+    ? forall tree BinaryTree:
+        binary_tree_size(tree) <= 2^binary_tree_depth(tree) - 1
+    trust:
+        binary_tree_size(tree) <= 2^binary_tree_depth(tree) - 1
+
+# Source inductive carrier: PropForm. Boolean values are represented by the
+# actual two-element carrier {0,1}; eval remains a callable function.
+have Boolean finite_set = {0, 1}
+
+trust have boolean_not fn(value {0, 1}) {0, 1}:
+    boolean_not(0) = 1
+    boolean_not(1) = 0
+
+trust have boolean_and fn(left, right {0, 1}) {0, 1}:
+    boolean_and(0, 0) = 0
+    boolean_and(0, 1) = 0
+    boolean_and(1, 0) = 0
+    boolean_and(1, 1) = 1
+
+trust have boolean_or fn(left, right {0, 1}) {0, 1}:
+    boolean_or(0, 0) = 0
+    boolean_or(0, 1) = 1
+    boolean_or(1, 0) = 1
+    boolean_or(1, 1) = 1
+
+trust have PropForm nonempty_set
+trust have prop_var fn(index N) PropForm
+trust have prop_false PropForm
+trust have prop_conj fn(left, right PropForm) PropForm
+trust have prop_disj fn(left, right PropForm) PropForm
+trust have prop_impl fn(left, right PropForm) PropForm
+
+# Source definition: PropForm.eval.
+trust have prop_eval fn(form PropForm, valuation fn(index N) {0, 1}) {0, 1}:
+    forall n N, valuation fn(index N) {0, 1}:
+        prop_eval(prop_var(n), valuation) = valuation(n)
+    forall valuation fn(index N) {0, 1}:
+        prop_eval(prop_false, valuation) = 0
+    forall left, right PropForm, valuation fn(index N) {0, 1}:
+        prop_eval(prop_conj(left, right), valuation) = boolean_and(prop_eval(left, valuation), prop_eval(right, valuation))
+        prop_eval(prop_disj(left, right), valuation) = boolean_or(prop_eval(left, valuation), prop_eval(right, valuation))
+        prop_eval(prop_impl(left, right), valuation) = boolean_or(boolean_not(prop_eval(left, valuation)), prop_eval(right, valuation))
+
+# Source definition: PropForm.vars. The result is a callable finite-set-valued
+# function, with finiteness retained explicitly.
+trust have prop_vars fn(form PropForm) power_set(N):
+    forall form PropForm:
+        $is_finite_set(prop_vars(form))
+    forall n N:
+        prop_vars(prop_var(n)) = {n}
+    prop_vars(prop_false) = {}
+    forall left, right PropForm:
+        prop_vars(prop_conj(left, right)) = union(prop_vars(left), prop_vars(right))
+        prop_vars(prop_disj(left, right)) = union(prop_vars(left), prop_vars(right))
+        prop_vars(prop_impl(left, right)) = union(prop_vars(left), prop_vars(right))
+
+# Source theorem: eval_eq_eval. The two proof-script variants collapse here.
+thm prop_eval_eq_of_agree_on_vars:
+    ? forall form PropForm, valuation1, valuation2 fn(index N) {0, 1}:
+        forall n N:
+            n $in prop_vars(form)
+            =>:
+                valuation1(n) = valuation2(n)
+        =>:
+            prop_eval(form, valuation1) = prop_eval(form, valuation2)
+    trust:
+        prop_eval(form, valuation1) = prop_eval(form, valuation2)
+
+# Source definition: subst.
+trust have prop_subst fn(form PropForm, index N, replacement_form PropForm) PropForm:
+    forall n, m N, replacement_form PropForm:
+        n = m
+        =>:
+            prop_subst(prop_var(n), m, replacement_form) = replacement_form
+    forall n, m N, replacement_form PropForm:
+        n != m
+        =>:
+            prop_subst(prop_var(n), m, replacement_form) = prop_var(n)
+    forall m N, replacement_form PropForm:
+        prop_subst(prop_false, m, replacement_form) = prop_false
+    forall left, right PropForm, m N, replacement_form PropForm:
+        prop_subst(prop_conj(left, right), m, replacement_form) = prop_conj(prop_subst(left, m, replacement_form), prop_subst(right, m, replacement_form))
+        prop_subst(prop_disj(left, right), m, replacement_form) = prop_disj(prop_subst(left, m, replacement_form), prop_subst(right, m, replacement_form))
+        prop_subst(prop_impl(left, right), m, replacement_form) = prop_impl(prop_subst(left, m, replacement_form), prop_subst(right, m, replacement_form))
+
+# Callable valuation update used by the substitution-evaluation theorem.
+trust have update_valuation fn(index N, replacement_form PropForm, valuation fn(n N) {0, 1}) fn(n N) {0, 1}:
+    forall index, n N, replacement_form PropForm, valuation fn(k N) {0, 1}:
+        n = index
+        =>:
+            update_valuation(index, replacement_form, valuation)(n) = prop_eval(replacement_form, valuation)
+    forall index, n N, replacement_form PropForm, valuation fn(k N) {0, 1}:
+        n != index
+        =>:
+            update_valuation(index, replacement_form, valuation)(n) = valuation(n)
+
+thm subst_eq_of_not_mem_vars:
+    ? forall form, replacement_form PropForm, n N:
+        not n $in prop_vars(form)
+        =>:
+            prop_subst(form, n, replacement_form) = form
+    trust:
+        prop_subst(form, n, replacement_form) = form
+
+thm subst_eval_eq:
+    ? forall form, replacement_form PropForm, n N, valuation fn(k N) {0, 1}:
+        prop_eval(prop_subst(form, n, replacement_form), valuation) = prop_eval(form, update_valuation(n, replacement_form, valuation))
+    trust:
+        prop_eval(prop_subst(form, n, replacement_form), valuation) = prop_eval(form, update_valuation(n, replacement_form, valuation))

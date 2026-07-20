@@ -320,21 +320,21 @@ engineering mathematics. Matrices are ordinary objects with indexed entries and
 evaluable operations.
 
 ```litex
-eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]]
+eval [[1, 0], [0, 1]] '+ [[1, 0], [0, 1]]
 
 have m matrix(R, 2, 2) = [[1, 0], [0, 1]]
 
 m $in fn (x1 N_pos, x2 N_pos: x1 <= 2, x2 <= 2) R
 
-eval m ++ m
-eval [[2, 0], [0, 2]] -- [[1, 0], [0, 1]]
-eval [[1, 2], [0, 1]] ** [[1, 0], [1, 1]]
-eval 3 *. [[1, 2], [4, 5]]
-eval [[2, 0], [0, 2]] ^^ 2
-eval m ** m
-eval 2 *. m
-eval [[1 / 2, 1 / 3], [0, 1]] ** [[1, 0], [1 / 6, 1 / 2]]
-eval (1 / 3) *. [[3, 6], [9, 12]]
+eval m '+ m
+eval [[2, 0], [0, 2]] '- [[1, 0], [0, 1]]
+eval [[1, 2], [0, 1]] '* [[1, 0], [1, 1]]
+eval 3 *' [[1, 2], [4, 5]]
+eval [[2, 0], [0, 2]] '^ 2
+eval m '* m
+eval 2 *' m
+eval [[1 / 2, 1 / 3], [0, 1]] '* [[1, 0], [1 / 6, 1 / 2]]
+eval (1 / 3) *' [[3, 6], [9, 12]]
 ```
 
 This surface is intentionally close to ordinary classroom and engineering

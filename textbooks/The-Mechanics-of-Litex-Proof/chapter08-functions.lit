@@ -89,7 +89,8 @@ eval sum(1, 2, fn(x Z) Z {sum(2, 3, fn(y Z) Z {x + y})})
 #     case condition_2: value_2
 # ```
 
-# The cases should cover the part of the domain where the function will be used.
+# The cases must cover the entire declared domain and must not overlap. Their order
+# does not introduce priority.
 # This is the natural Litex form for functions such as absolute value, maximum, or
 # finite lookup tables.
 
@@ -148,9 +149,11 @@ sketch:
 #     case x >= 1: expression_using_earlier_values
 # ```
 
-# This form is useful for sequences and functions defined by recurrence. It says
-# that values are built in order from the starting point, so the recursive branch
-# may use earlier values such as `h(x - 1)`.
+# This form is useful for sequences and functions defined by recurrence. The
+# measure and starting lower bound must both be provably in Z. Other parameters
+# may carry state from arbitrary sets, but a dense real-valued measure is not an
+# induction measure. Recursive branches may use values with a strictly smaller
+# integer measure, such as `h(x - 1)`.
 
 # For example, Fibonacci sequence can be defined by:
 

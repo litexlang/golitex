@@ -37,10 +37,10 @@ thm derivative_value_unique:
         abs(L1 - L2) / 3 $in R_pos
         obtain delta1 from exist delta1 R_pos st {$is_difference_quotient_close_to(X, f, x0, L1, abs(L1 - L2) / 3, delta1)}
         obtain delta2 from exist delta2 R_pos st {$is_difference_quotient_close_to(X, f, x0, L2, abs(L1 - L2) / 3, delta2)}
-        min(delta1, delta2) $in R_pos
-        min(delta1, delta2) / 2 $in R_pos
-        $chap9::is_epsilon_adherent_to_set(set_minus(X, {x0}), x0, min(delta1, delta2) / 2)
-        obtain y from exist y R st {y $in set_minus(X, {x0}), abs(x0 - y) <= min(delta1, delta2) / 2}
+        finite_set_min(union({delta1}, { delta2})) $in R_pos
+        finite_set_min(union({delta1}, { delta2})) / 2 $in R_pos
+        $chap9::is_epsilon_adherent_to_set(set_minus(X, {x0}), x0, finite_set_min(union({delta1}, { delta2})) / 2)
+        obtain y from exist y R st {y $in set_minus(X, {x0}), abs(x0 - y) <= finite_set_min(union({delta1}, { delta2})) / 2}
         y $in X
         not y $in {x0}
         claim:
@@ -52,17 +52,17 @@ thm derivative_value_unique:
                 y $in {x0}
                 impossible not y $in {x0}
         y - x0 != 0
-        abs(x0 - y) <= min(delta1, delta2) / 2
+        abs(x0 - y) <= finite_set_min(union({delta1}, { delta2})) / 2
         abs(y - x0) = abs(x0 - y)
-        abs(y - x0) <= min(delta1, delta2) / 2
-        min(delta1, delta2) / 2 < min(delta1, delta2)
-        abs(y - x0) <= min(delta1, delta2) / 2 < min(delta1, delta2)
-        abs(y - x0) < min(delta1, delta2)
-        min(delta1, delta2) <= delta1
-        min(delta1, delta2) <= delta2
-        abs(y - x0) < min(delta1, delta2) <= delta1
+        abs(y - x0) <= finite_set_min(union({delta1}, { delta2})) / 2
+        finite_set_min(union({delta1}, { delta2})) / 2 < finite_set_min(union({delta1}, { delta2}))
+        abs(y - x0) <= finite_set_min(union({delta1}, { delta2})) / 2 < finite_set_min(union({delta1}, { delta2}))
+        abs(y - x0) < finite_set_min(union({delta1}, { delta2}))
+        finite_set_min(union({delta1}, { delta2})) <= delta1
+        finite_set_min(union({delta1}, { delta2})) <= delta2
+        abs(y - x0) < finite_set_min(union({delta1}, { delta2})) <= delta1
         abs(y - x0) < delta1
-        abs(y - x0) < min(delta1, delta2) <= delta2
+        abs(y - x0) < finite_set_min(union({delta1}, { delta2})) <= delta2
         abs(y - x0) < delta2
         abs(((f(y) - f(x0)) / (y - x0)) - L1) <= abs(L1 - L2) / 3
         abs(((f(y) - f(x0)) / (y - x0)) - L2) <= abs(L1 - L2) / 3
@@ -715,13 +715,13 @@ thm differentiability_implies_continuity_at:
         abs(L) + 1 $in R_pos
         epsilon / (abs(L) + 1) $in R_pos
         obtain delta0 from exist delta0 R_pos st {$is_difference_quotient_close_to(X, f, x0, L, 1, delta0)}
-        min(delta0, epsilon / (abs(L) + 1)) $in R_pos
-        min(delta0, epsilon / (abs(L) + 1)) <= delta0
-        min(delta0, epsilon / (abs(L) + 1)) <= epsilon / (abs(L) + 1)
-        witness exist delta R_pos st {$chap9::is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, delta)} from min(delta0, epsilon / (abs(L) + 1)):
+        finite_set_min(union({delta0}, { epsilon / (abs(L) + 1)})) $in R_pos
+        finite_set_min(union({delta0}, { epsilon / (abs(L) + 1)})) <= delta0
+        finite_set_min(union({delta0}, { epsilon / (abs(L) + 1)})) <= epsilon / (abs(L) + 1)
+        witness exist delta R_pos st {$chap9::is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, delta)} from finite_set_min(union({delta0}, { epsilon / (abs(L) + 1)})):
             claim:
                 ? forall x X:
-                    abs(x - x0) < min(delta0, epsilon / (abs(L) + 1))
+                    abs(x - x0) < finite_set_min(union({delta0}, { epsilon / (abs(L) + 1)}))
                     =>:
                         abs(f(x) - f(x0)) <= epsilon
                 x - x0 = 0 or x - x0 != 0
@@ -735,9 +735,9 @@ thm differentiability_implies_continuity_at:
                         0 <= epsilon
                         abs(f(x) - f(x0)) <= epsilon
                     case x - x0 != 0:
-                        abs(x - x0) < min(delta0, epsilon / (abs(L) + 1)) <= delta0
+                        abs(x - x0) < finite_set_min(union({delta0}, { epsilon / (abs(L) + 1)})) <= delta0
                         abs(x - x0) < delta0
-                        abs(x - x0) < min(delta0, epsilon / (abs(L) + 1)) <= epsilon / (abs(L) + 1)
+                        abs(x - x0) < finite_set_min(union({delta0}, { epsilon / (abs(L) + 1)})) <= epsilon / (abs(L) + 1)
                         abs(x - x0) < epsilon / (abs(L) + 1)
                         abs(((f(x) - f(x0)) / (x - x0)) - L) <= 1
                         abs(((f(x) - f(x0)) / (x - x0)) - L) + abs(L) <= 1 + abs(L)
@@ -1119,19 +1119,19 @@ thm derivative_sum_rule:
         epsilon / 2 $in R_pos
         obtain delta_f from exist delta_f R_pos st {$is_difference_quotient_close_to(X, f, x0, Lf, epsilon / 2, delta_f)}
         obtain delta_g from exist delta_g R_pos st {$is_difference_quotient_close_to(X, g, x0, Lg, epsilon / 2, delta_g)}
-        min(delta_f, delta_g) $in R_pos
-        min(delta_f, delta_g) <= delta_f
-        min(delta_f, delta_g) <= delta_g
-        witness exist delta R_pos st {$is_difference_quotient_close_to(X, fn(x X) R {f(x) + g(x)}, x0, Lf + Lg, epsilon, delta)} from min(delta_f, delta_g):
+        finite_set_min(union({delta_f}, { delta_g})) $in R_pos
+        finite_set_min(union({delta_f}, { delta_g})) <= delta_f
+        finite_set_min(union({delta_f}, { delta_g})) <= delta_g
+        witness exist delta R_pos st {$is_difference_quotient_close_to(X, fn(x X) R {f(x) + g(x)}, x0, Lf + Lg, epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
             claim:
                 ? forall z X:
                     z - x0 != 0
-                    abs(z - x0) < min(delta_f, delta_g)
+                    abs(z - x0) < finite_set_min(union({delta_f}, { delta_g}))
                     =>:
                         abs(((fn(x X) R {f(x) + g(x)}(z) - fn(x X) R {f(x) + g(x)}(x0)) / (z - x0)) - (Lf + Lg)) <= epsilon
-                abs(z - x0) < min(delta_f, delta_g) <= delta_f
+                abs(z - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_f
                 abs(z - x0) < delta_f
-                abs(z - x0) < min(delta_f, delta_g) <= delta_g
+                abs(z - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_g
                 abs(z - x0) < delta_g
                 abs(((f(z) - f(x0)) / (z - x0)) - Lf) <= epsilon / 2
                 abs(((g(z) - g(x0)) / (z - x0)) - Lg) <= epsilon / 2
@@ -1195,36 +1195,36 @@ thm derivative_product_rule_estimate:
     obtain delta_cont from exist delta_cont R_pos st {$chap9::is_delta_neighborhood_close_to(X, g, x0, g(x0), epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1), delta_cont)}
     obtain delta_f from exist delta_f R_pos st {$is_difference_quotient_close_to(X, f, x0, Lf, epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1), delta_f)}
     obtain delta_g from exist delta_g R_pos st {$is_difference_quotient_close_to(X, g, x0, Lg, epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1), delta_g)}
-    min(delta_bound, delta_cont) $in R_pos
-    min(delta_f, delta_g) $in R_pos
-    min(min(delta_bound, delta_cont), min(delta_f, delta_g)) $in R_pos
-    min(delta_bound, delta_cont) <= delta_bound
-    min(delta_bound, delta_cont) <= delta_cont
-    min(delta_f, delta_g) <= delta_f
-    min(delta_f, delta_g) <= delta_g
-    min(min(delta_bound, delta_cont), min(delta_f, delta_g)) <= min(delta_bound, delta_cont)
-    min(min(delta_bound, delta_cont), min(delta_f, delta_g)) <= min(delta_f, delta_g)
-    witness exist delta R_pos st {$is_difference_quotient_close_to(X, fn(x X) R {f(x) * g(x)}, x0, Lf * g(x0) + f(x0) * Lg, epsilon, delta)} from min(min(delta_bound, delta_cont), min(delta_f, delta_g)):
+    finite_set_min(union({delta_bound}, { delta_cont})) $in R_pos
+    finite_set_min(union({delta_f}, { delta_g})) $in R_pos
+    finite_set_min(union({finite_set_min(union({delta_bound}, { delta_cont}))}, { finite_set_min(union({delta_f}, { delta_g}))})) $in R_pos
+    finite_set_min(union({delta_bound}, { delta_cont})) <= delta_bound
+    finite_set_min(union({delta_bound}, { delta_cont})) <= delta_cont
+    finite_set_min(union({delta_f}, { delta_g})) <= delta_f
+    finite_set_min(union({delta_f}, { delta_g})) <= delta_g
+    finite_set_min(union({finite_set_min(union({delta_bound}, { delta_cont}))}, { finite_set_min(union({delta_f}, { delta_g}))})) <= finite_set_min(union({delta_bound}, { delta_cont}))
+    finite_set_min(union({finite_set_min(union({delta_bound}, { delta_cont}))}, { finite_set_min(union({delta_f}, { delta_g}))})) <= finite_set_min(union({delta_f}, { delta_g}))
+    witness exist delta R_pos st {$is_difference_quotient_close_to(X, fn(x X) R {f(x) * g(x)}, x0, Lf * g(x0) + f(x0) * Lg, epsilon, delta)} from finite_set_min(union({finite_set_min(union({delta_bound}, { delta_cont}))}, { finite_set_min(union({delta_f}, { delta_g}))})):
         claim:
             ? forall z X:
                 z - x0 != 0
                 abs(z - x0) < delta
                 =>:
                     abs(((fn(x X) R {f(x) * g(x)}(z) - fn(x X) R {f(x) * g(x)}(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg)) <= epsilon
-            delta = min(min(delta_bound, delta_cont), min(delta_f, delta_g))
-            abs(z - x0) < delta = min(min(delta_bound, delta_cont), min(delta_f, delta_g))
-            abs(z - x0) < min(min(delta_bound, delta_cont), min(delta_f, delta_g))
-            abs(z - x0) < min(min(delta_bound, delta_cont), min(delta_f, delta_g)) <= min(delta_bound, delta_cont)
-            abs(z - x0) < min(delta_bound, delta_cont)
-            abs(z - x0) < min(delta_bound, delta_cont) <= delta_bound
+            delta = finite_set_min(union({finite_set_min(union({delta_bound}, { delta_cont}))}, { finite_set_min(union({delta_f}, { delta_g}))}))
+            abs(z - x0) < delta = finite_set_min(union({finite_set_min(union({delta_bound}, { delta_cont}))}, { finite_set_min(union({delta_f}, { delta_g}))}))
+            abs(z - x0) < finite_set_min(union({finite_set_min(union({delta_bound}, { delta_cont}))}, { finite_set_min(union({delta_f}, { delta_g}))}))
+            abs(z - x0) < finite_set_min(union({finite_set_min(union({delta_bound}, { delta_cont}))}, { finite_set_min(union({delta_f}, { delta_g}))})) <= finite_set_min(union({delta_bound}, { delta_cont}))
+            abs(z - x0) < finite_set_min(union({delta_bound}, { delta_cont}))
+            abs(z - x0) < finite_set_min(union({delta_bound}, { delta_cont})) <= delta_bound
             abs(z - x0) < delta_bound
-            abs(z - x0) < min(delta_bound, delta_cont) <= delta_cont
+            abs(z - x0) < finite_set_min(union({delta_bound}, { delta_cont})) <= delta_cont
             abs(z - x0) < delta_cont
-            abs(z - x0) < min(min(delta_bound, delta_cont), min(delta_f, delta_g)) <= min(delta_f, delta_g)
-            abs(z - x0) < min(delta_f, delta_g)
-            abs(z - x0) < min(delta_f, delta_g) <= delta_f
+            abs(z - x0) < finite_set_min(union({finite_set_min(union({delta_bound}, { delta_cont}))}, { finite_set_min(union({delta_f}, { delta_g}))})) <= finite_set_min(union({delta_f}, { delta_g}))
+            abs(z - x0) < finite_set_min(union({delta_f}, { delta_g}))
+            abs(z - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_f
             abs(z - x0) < delta_f
-            abs(z - x0) < min(delta_f, delta_g) <= delta_g
+            abs(z - x0) < finite_set_min(union({delta_f}, { delta_g})) <= delta_g
             abs(z - x0) < delta_g
             abs(g(z) - g(x0)) <= 1
             abs(g(z) - g(x0)) <= epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1)
@@ -1656,16 +1656,16 @@ thm newton_approximation_chain_rule:
         obtain delta_linear from exist delta_linear R_pos st {$is_newton_approximation_witness(X, f, x0, Lf, 1, delta_linear)}
         obtain delta_error from exist delta_error R_pos st {$is_newton_approximation_witness(X, f, x0, Lf, epsilon / (2 * (abs(Lg) + 1)), delta_error)}
         eta_g / (abs(Lf) + 1) $in R_pos
-        min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1)) $in R_pos
-        witness exist delta R_pos st {$is_newton_approximation_witness(X, h, x0, Lg * Lf, epsilon, delta)} from min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1)):
+        finite_set_min(union({finite_set_min(union({delta_linear}, { delta_error}))}, { eta_g / (abs(Lf) + 1)})) $in R_pos
+        witness exist delta R_pos st {$is_newton_approximation_witness(X, h, x0, Lg * Lf, epsilon, delta)} from finite_set_min(union({finite_set_min(union({delta_linear}, { delta_error}))}, { eta_g / (abs(Lf) + 1)})):
             claim:
                 ? forall x X:
-                    abs(x - x0) <= min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1))
+                    abs(x - x0) <= finite_set_min(union({finite_set_min(union({delta_linear}, { delta_error}))}, { eta_g / (abs(Lf) + 1)}))
                     =>:
                         abs(g(f(x)) - (g(f(x0)) + (Lg * Lf) * (x - x0))) <= epsilon * abs(x - x0)
-                abs(x - x0) <= min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1)) <= min(delta_linear, delta_error) <= delta_linear
-                abs(x - x0) <= min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1)) <= min(delta_linear, delta_error) <= delta_error
-                abs(x - x0) <= min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1)) <= eta_g / (abs(Lf) + 1)
+                abs(x - x0) <= finite_set_min(union({finite_set_min(union({delta_linear}, { delta_error}))}, { eta_g / (abs(Lf) + 1)})) <= finite_set_min(union({delta_linear}, { delta_error})) <= delta_linear
+                abs(x - x0) <= finite_set_min(union({finite_set_min(union({delta_linear}, { delta_error}))}, { eta_g / (abs(Lf) + 1)})) <= finite_set_min(union({delta_linear}, { delta_error})) <= delta_error
+                abs(x - x0) <= finite_set_min(union({finite_set_min(union({delta_linear}, { delta_error}))}, { eta_g / (abs(Lf) + 1)})) <= eta_g / (abs(Lf) + 1)
                 f(x0) = y0
                 by thm newton_approximation_local_linear_bound(X, f, x0, y0, Lf, delta_linear, x)
                 abs(f(x) - y0) <= (abs(Lf) + 1) * abs(x - x0)
@@ -1700,7 +1700,7 @@ thm newton_approximation_chain_rule:
                 abs(g(f(x)) - (g(f(x0)) + (Lg * Lf) * (x - x0))) = abs((g(f(x)) - (g(y0) + Lg * (f(x) - y0))) + Lg * (f(x) - (y0 + Lf * (x - x0)))) <= abs(g(f(x)) - (g(y0) + Lg * (f(x) - y0))) + abs(Lg * (f(x) - (y0 + Lf * (x - x0)))) <= (epsilon / 2) * abs(x - x0) + (epsilon / 2) * abs(x - x0) = epsilon * abs(x - x0)
             claim:
                 ? forall x X:
-                    abs(x - x0) <= min(min(delta_linear, delta_error), eta_g / (abs(Lf) + 1))
+                    abs(x - x0) <= finite_set_min(union({finite_set_min(union({delta_linear}, { delta_error}))}, { eta_g / (abs(Lf) + 1)}))
                     =>:
                         abs(h(x) - (h(x0) + (Lg * Lf) * (x - x0))) <= epsilon * abs(x - x0)
                 h(x) = g(f(x))
@@ -2301,11 +2301,11 @@ thm open_interval_has_nearby_right_point:
     x0 < b
     b - x0 > 0
     b - x0 $in R_pos
-    min(epsilon, b - x0) $in R_pos
-    min(epsilon, b - x0) <= epsilon
-    min(epsilon, b - x0) <= b - x0
-    have t R_pos = min(epsilon, b - x0)
-    t = min(epsilon, b - x0)
+    finite_set_min(union({epsilon}, { b - x0})) $in R_pos
+    finite_set_min(union({epsilon}, { b - x0})) <= epsilon
+    finite_set_min(union({epsilon}, { b - x0})) <= b - x0
+    have t R_pos = finite_set_min(union({epsilon}, { b - x0}))
+    t = finite_set_min(union({epsilon}, { b - x0}))
     t <= epsilon
     t <= b - x0
     t / 2 > 0
@@ -2345,11 +2345,11 @@ thm open_interval_has_nearby_left_point:
     a < x0
     x0 - a > 0
     x0 - a $in R_pos
-    min(epsilon, x0 - a) $in R_pos
-    min(epsilon, x0 - a) <= epsilon
-    min(epsilon, x0 - a) <= x0 - a
-    have t R_pos = min(epsilon, x0 - a)
-    t = min(epsilon, x0 - a)
+    finite_set_min(union({epsilon}, { x0 - a})) $in R_pos
+    finite_set_min(union({epsilon}, { x0 - a})) <= epsilon
+    finite_set_min(union({epsilon}, { x0 - a})) <= x0 - a
+    have t R_pos = finite_set_min(union({epsilon}, { x0 - a}))
+    t = finite_set_min(union({epsilon}, { x0 - a}))
     t <= epsilon
     t <= x0 - a
     t / 2 > 0
@@ -2467,18 +2467,18 @@ thm local_maximum_derivative_nonpositive_has_derivative_at:
         L / 2 $in R_pos
         obtain delta_d from exist delta_d R_pos st {$is_difference_quotient_close_to('(a, b), f, x0, L, L / 2, delta_d)}
         obtain delta_m from exist delta_m R_pos st {$is_local_maximum_witness('(a, b), f, x0, delta_m)}
-        min(delta_d, delta_m) $in R_pos
-        min(delta_d, delta_m) / 2 $in R_pos
-        by thm open_interval_has_nearby_right_point(a, b, x0, min(delta_d, delta_m) / 2)
-        obtain y from exist y '(a, b) st {x0 < y, y != x0, abs(y - x0) <= min(delta_d, delta_m) / 2}
-        min(delta_d, delta_m) / 2 < min(delta_d, delta_m)
-        abs(y - x0) <= min(delta_d, delta_m) / 2 < min(delta_d, delta_m)
-        abs(y - x0) < min(delta_d, delta_m)
-        min(delta_d, delta_m) <= delta_d
-        min(delta_d, delta_m) <= delta_m
-        abs(y - x0) < min(delta_d, delta_m) <= delta_d
+        finite_set_min(union({delta_d}, { delta_m})) $in R_pos
+        finite_set_min(union({delta_d}, { delta_m})) / 2 $in R_pos
+        by thm open_interval_has_nearby_right_point(a, b, x0, finite_set_min(union({delta_d}, { delta_m})) / 2)
+        obtain y from exist y '(a, b) st {x0 < y, y != x0, abs(y - x0) <= finite_set_min(union({delta_d}, { delta_m})) / 2}
+        finite_set_min(union({delta_d}, { delta_m})) / 2 < finite_set_min(union({delta_d}, { delta_m}))
+        abs(y - x0) <= finite_set_min(union({delta_d}, { delta_m})) / 2 < finite_set_min(union({delta_d}, { delta_m}))
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m}))
+        finite_set_min(union({delta_d}, { delta_m})) <= delta_d
+        finite_set_min(union({delta_d}, { delta_m})) <= delta_m
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m})) <= delta_d
         abs(y - x0) < delta_d
-        abs(y - x0) < min(delta_d, delta_m) <= delta_m
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m})) <= delta_m
         abs(y - x0) < delta_m
         y - x0 != 0
         by thm local_maximum_right_difference_quotient_nonpositive(a, b, f, x0, y, delta_m)
@@ -2516,18 +2516,18 @@ thm local_minimum_derivative_nonpositive_has_derivative_at:
         L / 2 $in R_pos
         obtain delta_d from exist delta_d R_pos st {$is_difference_quotient_close_to('(a, b), f, x0, L, L / 2, delta_d)}
         obtain delta_m from exist delta_m R_pos st {$is_local_minimum_witness('(a, b), f, x0, delta_m)}
-        min(delta_d, delta_m) $in R_pos
-        min(delta_d, delta_m) / 2 $in R_pos
-        by thm open_interval_has_nearby_left_point(a, b, x0, min(delta_d, delta_m) / 2)
-        obtain y from exist y '(a, b) st {y < x0, y != x0, abs(y - x0) <= min(delta_d, delta_m) / 2}
-        min(delta_d, delta_m) / 2 < min(delta_d, delta_m)
-        abs(y - x0) <= min(delta_d, delta_m) / 2 < min(delta_d, delta_m)
-        abs(y - x0) < min(delta_d, delta_m)
-        min(delta_d, delta_m) <= delta_d
-        min(delta_d, delta_m) <= delta_m
-        abs(y - x0) < min(delta_d, delta_m) <= delta_d
+        finite_set_min(union({delta_d}, { delta_m})) $in R_pos
+        finite_set_min(union({delta_d}, { delta_m})) / 2 $in R_pos
+        by thm open_interval_has_nearby_left_point(a, b, x0, finite_set_min(union({delta_d}, { delta_m})) / 2)
+        obtain y from exist y '(a, b) st {y < x0, y != x0, abs(y - x0) <= finite_set_min(union({delta_d}, { delta_m})) / 2}
+        finite_set_min(union({delta_d}, { delta_m})) / 2 < finite_set_min(union({delta_d}, { delta_m}))
+        abs(y - x0) <= finite_set_min(union({delta_d}, { delta_m})) / 2 < finite_set_min(union({delta_d}, { delta_m}))
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m}))
+        finite_set_min(union({delta_d}, { delta_m})) <= delta_d
+        finite_set_min(union({delta_d}, { delta_m})) <= delta_m
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m})) <= delta_d
         abs(y - x0) < delta_d
-        abs(y - x0) < min(delta_d, delta_m) <= delta_m
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m})) <= delta_m
         abs(y - x0) < delta_m
         y - x0 != 0
         by thm local_minimum_left_difference_quotient_nonpositive(a, b, f, x0, y, delta_m)
@@ -2566,18 +2566,18 @@ thm local_maximum_derivative_nonnegative_has_derivative_at:
         (0 - L) / 2 $in R_pos
         obtain delta_d from exist delta_d R_pos st {$is_difference_quotient_close_to('(a, b), f, x0, L, (0 - L) / 2, delta_d)}
         obtain delta_m from exist delta_m R_pos st {$is_local_maximum_witness('(a, b), f, x0, delta_m)}
-        min(delta_d, delta_m) $in R_pos
-        min(delta_d, delta_m) / 2 $in R_pos
-        by thm open_interval_has_nearby_left_point(a, b, x0, min(delta_d, delta_m) / 2)
-        obtain y from exist y '(a, b) st {y < x0, y != x0, abs(y - x0) <= min(delta_d, delta_m) / 2}
-        min(delta_d, delta_m) / 2 < min(delta_d, delta_m)
-        abs(y - x0) <= min(delta_d, delta_m) / 2 < min(delta_d, delta_m)
-        abs(y - x0) < min(delta_d, delta_m)
-        min(delta_d, delta_m) <= delta_d
-        min(delta_d, delta_m) <= delta_m
-        abs(y - x0) < min(delta_d, delta_m) <= delta_d
+        finite_set_min(union({delta_d}, { delta_m})) $in R_pos
+        finite_set_min(union({delta_d}, { delta_m})) / 2 $in R_pos
+        by thm open_interval_has_nearby_left_point(a, b, x0, finite_set_min(union({delta_d}, { delta_m})) / 2)
+        obtain y from exist y '(a, b) st {y < x0, y != x0, abs(y - x0) <= finite_set_min(union({delta_d}, { delta_m})) / 2}
+        finite_set_min(union({delta_d}, { delta_m})) / 2 < finite_set_min(union({delta_d}, { delta_m}))
+        abs(y - x0) <= finite_set_min(union({delta_d}, { delta_m})) / 2 < finite_set_min(union({delta_d}, { delta_m}))
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m}))
+        finite_set_min(union({delta_d}, { delta_m})) <= delta_d
+        finite_set_min(union({delta_d}, { delta_m})) <= delta_m
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m})) <= delta_d
         abs(y - x0) < delta_d
-        abs(y - x0) < min(delta_d, delta_m) <= delta_m
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m})) <= delta_m
         abs(y - x0) < delta_m
         y - x0 != 0
         by thm local_maximum_left_difference_quotient_nonnegative(a, b, f, x0, y, delta_m)
@@ -2612,18 +2612,18 @@ thm local_minimum_derivative_nonnegative_has_derivative_at:
         (0 - L) / 2 $in R_pos
         obtain delta_d from exist delta_d R_pos st {$is_difference_quotient_close_to('(a, b), f, x0, L, (0 - L) / 2, delta_d)}
         obtain delta_m from exist delta_m R_pos st {$is_local_minimum_witness('(a, b), f, x0, delta_m)}
-        min(delta_d, delta_m) $in R_pos
-        min(delta_d, delta_m) / 2 $in R_pos
-        by thm open_interval_has_nearby_right_point(a, b, x0, min(delta_d, delta_m) / 2)
-        obtain y from exist y '(a, b) st {x0 < y, y != x0, abs(y - x0) <= min(delta_d, delta_m) / 2}
-        min(delta_d, delta_m) / 2 < min(delta_d, delta_m)
-        abs(y - x0) <= min(delta_d, delta_m) / 2 < min(delta_d, delta_m)
-        abs(y - x0) < min(delta_d, delta_m)
-        min(delta_d, delta_m) <= delta_d
-        min(delta_d, delta_m) <= delta_m
-        abs(y - x0) < min(delta_d, delta_m) <= delta_d
+        finite_set_min(union({delta_d}, { delta_m})) $in R_pos
+        finite_set_min(union({delta_d}, { delta_m})) / 2 $in R_pos
+        by thm open_interval_has_nearby_right_point(a, b, x0, finite_set_min(union({delta_d}, { delta_m})) / 2)
+        obtain y from exist y '(a, b) st {x0 < y, y != x0, abs(y - x0) <= finite_set_min(union({delta_d}, { delta_m})) / 2}
+        finite_set_min(union({delta_d}, { delta_m})) / 2 < finite_set_min(union({delta_d}, { delta_m}))
+        abs(y - x0) <= finite_set_min(union({delta_d}, { delta_m})) / 2 < finite_set_min(union({delta_d}, { delta_m}))
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m}))
+        finite_set_min(union({delta_d}, { delta_m})) <= delta_d
+        finite_set_min(union({delta_d}, { delta_m})) <= delta_m
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m})) <= delta_d
         abs(y - x0) < delta_d
-        abs(y - x0) < min(delta_d, delta_m) <= delta_m
+        abs(y - x0) < finite_set_min(union({delta_d}, { delta_m})) <= delta_m
         abs(y - x0) < delta_m
         y - x0 != 0
         by thm local_minimum_right_difference_quotient_nonnegative(a, b, f, x0, y, delta_m)

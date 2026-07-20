@@ -95,7 +95,7 @@ impl Runtime {
             }
         }
         if let Some(result) =
-            self.maybe_verify_in_fact_max_min_pair_closed_standard_set(in_fact, verify_state)?
+            self.maybe_verify_in_fact_finite_set_extremum(in_fact, verify_state)?
         {
             return Ok(result);
         }
@@ -295,31 +295,15 @@ impl Runtime {
                 | Obj::Mod(_)
                 | Obj::IntegerQuotient(_)
                 | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_)
                 | Obj::Abs(_),
                 Obj::StandardSet(StandardSet::Z),
             ) => self.verify_in_fact_arithmetic_expression_in_z(in_fact, verify_state),
             (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Div(_)
-                | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_)
-                | Obj::Abs(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Pow(_) | Obj::Abs(_),
                 Obj::StandardSet(StandardSet::Q),
             ) => self.verify_in_fact_arithmetic_expression_in_q(in_fact, verify_state),
             (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Div(_)
-                | Obj::Mod(_)
-                | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::StandardSet(StandardSet::RNeg),
             ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
                 in_fact,
@@ -327,14 +311,7 @@ impl Runtime {
                 StandardSet::RNeg,
             ),
             (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Div(_)
-                | Obj::Mod(_)
-                | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::StandardSet(StandardSet::QNeg),
             ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
                 in_fact,
@@ -342,14 +319,7 @@ impl Runtime {
                 StandardSet::QNeg,
             ),
             (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Div(_)
-                | Obj::Mod(_)
-                | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::StandardSet(StandardSet::ZNeg),
             ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
                 in_fact,
@@ -364,8 +334,6 @@ impl Runtime {
                 | Obj::Mod(_)
                 | Obj::IntegerQuotient(_)
                 | Obj::Pow(_)
-                | Obj::Max(_)
-                | Obj::Min(_)
                 | Obj::Abs(_)
                 | Obj::Sqrt(_)
                 | Obj::Log(_),

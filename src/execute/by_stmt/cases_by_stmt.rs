@@ -368,8 +368,22 @@ impl Runtime {
                 ));
             }
 
-            let verify_reversed_impossible_fact_result = self
-                .verify_atomic_fact(&impossible_fact.make_reversed(), &verify_state)
+            let negated_impossible_fact =
+                impossible_fact
+                    .logical_negation()
+                    .map_err(|negation_error| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            impossible_proof_error_message(
+                                impossible_fact,
+                                Some(case_fact.to_string()),
+                            ),
+                            Some(negation_error),
+                            vec![],
+                        )
+                    })?;
+            let verify_negated_impossible_fact_result = self
+                .verify_atomic_fact(&negated_impossible_fact, &verify_state)
                 .map_err(|verify_error| {
                     short_exec_error(
                         stmt.clone().into(),
@@ -382,7 +396,7 @@ impl Runtime {
                     )
                 })?;
 
-            if verify_reversed_impossible_fact_result.is_unknown() {
+            if verify_negated_impossible_fact_result.is_unknown() {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     impossible_proof_error_message(impossible_fact, Some(case_fact.to_string())),
@@ -397,7 +411,7 @@ impl Runtime {
                     InferResult::new(),
                     vec![
                         verify_impossible_fact_result,
-                        verify_reversed_impossible_fact_result,
+                        verify_negated_impossible_fact_result,
                     ],
                 ))
                 .into(),

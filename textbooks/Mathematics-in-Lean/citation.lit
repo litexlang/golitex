@@ -1,0 +1,5 @@
+# Mathematics in Lean — shared cited material
+
+# This first five-chapter slice currently needs no extra shared mathematical
+# assumptions beyond std/basics. Source-local proof debt remains beside the
+# theorem or construction that owns it.

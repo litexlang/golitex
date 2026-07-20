@@ -18,8 +18,6 @@ pub enum Obj {
     Abs(Abs),
     Sqrt(Sqrt),
     Log(Log),
-    Max(Max),
-    Min(Min),
     Union(Union),
     Intersect(Intersect),
     SetMinus(SetMinus),
@@ -38,6 +36,8 @@ pub enum Obj {
     TupleDim(TupleDim),
     Tuple(Tuple),
     FiniteSetSize(FiniteSetSize),
+    FiniteSetMax(FiniteSetMax),
+    FiniteSetMin(FiniteSetMin),
     FnRange(FnRange),
     Replacement(Replacement),
     Sum(Sum),
@@ -80,8 +80,8 @@ pub enum ObjKind {
     Abs = 9,
     Sqrt = 10,
     Log = 11,
-    Max = 12,
-    Min = 13,
+    FiniteSetMax = 12,
+    FiniteSetMin = 13,
     Union = 14,
     Intersect = 15,
     SetMinus = 16,
@@ -469,6 +469,16 @@ pub struct FiniteSetSize {
 }
 
 #[derive(Clone)]
+pub struct FiniteSetMax {
+    pub set: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct FiniteSetMin {
+    pub set: Box<Obj>,
+}
+
+#[derive(Clone)]
 pub struct FnRange {
     pub function: Box<Obj>,
 }
@@ -564,18 +574,6 @@ pub struct Abs {
 pub struct Log {
     pub base: Box<Obj>,
     pub arg: Box<Obj>,
-}
-
-#[derive(Clone)]
-pub struct Max {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-#[derive(Clone)]
-pub struct Min {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -746,24 +744,6 @@ impl Log {
     }
 }
 
-impl Max {
-    pub fn new(left: Obj, right: Obj) -> Self {
-        Max {
-            left: Box::new(left),
-            right: Box::new(right),
-        }
-    }
-}
-
-impl Min {
-    pub fn new(left: Obj, right: Obj) -> Self {
-        Min {
-            left: Box::new(left),
-            right: Box::new(right),
-        }
-    }
-}
-
 impl Union {
     pub fn new(left: Obj, right: Obj) -> Self {
         Union {
@@ -904,6 +884,18 @@ impl Tuple {
 impl FiniteSetSize {
     pub fn new(set: Obj) -> Self {
         FiniteSetSize { set: Box::new(set) }
+    }
+}
+
+impl FiniteSetMax {
+    pub fn new(set: Obj) -> Self {
+        FiniteSetMax { set: Box::new(set) }
+    }
+}
+
+impl FiniteSetMin {
+    pub fn new(set: Obj) -> Self {
+        FiniteSetMin { set: Box::new(set) }
     }
 }
 
@@ -1077,8 +1069,6 @@ fn precedence(o: &Obj) -> u8 {
         | Obj::Div(_)
         | Obj::Mod(_)
         | Obj::IntegerQuotient(_)
-        | Obj::Max(_)
-        | Obj::Min(_)
         | Obj::MatrixScalarMul(_) => 2,
         Obj::Pow(_)
         | Obj::Abs(_)
@@ -1127,8 +1117,6 @@ impl Obj {
             Obj::Abs(_) => ObjKind::Abs,
             Obj::Sqrt(_) => ObjKind::Sqrt,
             Obj::Log(_) => ObjKind::Log,
-            Obj::Max(_) => ObjKind::Max,
-            Obj::Min(_) => ObjKind::Min,
             Obj::Union(_) => ObjKind::Union,
             Obj::Intersect(_) => ObjKind::Intersect,
             Obj::SetMinus(_) => ObjKind::SetMinus,
@@ -1147,6 +1135,8 @@ impl Obj {
             Obj::TupleDim(_) => ObjKind::TupleDim,
             Obj::Tuple(_) => ObjKind::Tuple,
             Obj::FiniteSetSize(_) => ObjKind::FiniteSetSize,
+            Obj::FiniteSetMax(_) => ObjKind::FiniteSetMax,
+            Obj::FiniteSetMin(_) => ObjKind::FiniteSetMin,
             Obj::FnRange(_) => ObjKind::FnRange,
             Obj::Replacement(_) => ObjKind::Replacement,
             Obj::Sum(_) => ObjKind::Sum,
@@ -1198,8 +1188,6 @@ impl Obj {
             Obj::Abs(_) => ABS.to_string(),
             Obj::Sqrt(_) => SQRT.to_string(),
             Obj::Log(_) => LOG.to_string(),
-            Obj::Max(_) => MAX.to_string(),
-            Obj::Min(_) => MIN.to_string(),
             Obj::Union(_) => UNION.to_string(),
             Obj::Intersect(_) => INTERSECT.to_string(),
             Obj::SetMinus(_) => SET_MINUS.to_string(),
@@ -1213,6 +1201,8 @@ impl Obj {
             Obj::Proj(_) => PROJ.to_string(),
             Obj::TupleDim(_) => TUPLE_DIM.to_string(),
             Obj::FiniteSetSize(_) => FINITE_SET_SIZE.to_string(),
+            Obj::FiniteSetMax(_) => FINITE_SET_MAX.to_string(),
+            Obj::FiniteSetMin(_) => FINITE_SET_MIN.to_string(),
             Obj::FnRange(_) => FN_RANGE.to_string(),
             Obj::Replacement(_) => REPLACEMENT.to_string(),
             Obj::Sum(_) => SUM.to_string(),
@@ -1328,20 +1318,6 @@ impl Obj {
                 l.arg.fmt_with_precedence(f, 0)?;
                 write!(f, "{}", RIGHT_BRACE)?;
             }
-            Obj::Max(m) => {
-                write!(f, "{} {}", MAX, LEFT_BRACE)?;
-                m.left.fmt_with_precedence(f, 0)?;
-                write!(f, "{} ", COMMA)?;
-                m.right.fmt_with_precedence(f, 0)?;
-                write!(f, "{}", RIGHT_BRACE)?;
-            }
-            Obj::Min(m) => {
-                write!(f, "{} {}", MIN, LEFT_BRACE)?;
-                m.left.fmt_with_precedence(f, 0)?;
-                write!(f, "{} ", COMMA)?;
-                m.right.fmt_with_precedence(f, 0)?;
-                write!(f, "{}", RIGHT_BRACE)?;
-            }
             Obj::Union(x) => write!(f, "{}", x)?,
             Obj::Intersect(x) => write!(f, "{}", x)?,
             Obj::SetMinus(x) => write!(f, "{}", x)?,
@@ -1362,6 +1338,8 @@ impl Obj {
             Obj::TupleDim(x) => write!(f, "{}", x)?,
             Obj::Tuple(x) => write!(f, "{}", x)?,
             Obj::FiniteSetSize(x) => write!(f, "{}", x)?,
+            Obj::FiniteSetMax(x) => write!(f, "{}", x)?,
+            Obj::FiniteSetMin(x) => write!(f, "{}", x)?,
             Obj::FnRange(x) => write!(f, "{}", x)?,
             Obj::Replacement(x) => write!(f, "{}", x)?,
             Obj::Sum(x) => write!(f, "{}", x)?,
@@ -1451,16 +1429,6 @@ impl Obj {
             Obj::Log(x) => Log::new(
                 Obj::replace_bound_identifier(*x.base, from, to),
                 Obj::replace_bound_identifier(*x.arg, from, to),
-            )
-            .into(),
-            Obj::Max(x) => Max::new(
-                Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to),
-            )
-            .into(),
-            Obj::Min(x) => Min::new(
-                Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to),
             )
             .into(),
             Obj::Union(x) => Union::new(
@@ -1604,6 +1572,12 @@ impl Obj {
             .into(),
             Obj::FiniteSetSize(x) => {
                 FiniteSetSize::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
+            }
+            Obj::FiniteSetMax(x) => {
+                FiniteSetMax::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
+            }
+            Obj::FiniteSetMin(x) => {
+                FiniteSetMin::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
             }
             Obj::FnRange(x) => {
                 FnRange::new(Obj::replace_bound_identifier(*x.function, from, to)).into()
@@ -2157,6 +2131,28 @@ impl fmt::Display for FiniteSetSize {
     }
 }
 
+impl fmt::Display for FiniteSetMax {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            FINITE_SET_MAX,
+            braced_vec_to_string(&vec![self.set.as_ref()])
+        )
+    }
+}
+
+impl fmt::Display for FiniteSetMin {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            FINITE_SET_MIN,
+            braced_vec_to_string(&vec![self.set.as_ref()])
+        )
+    }
+}
+
 impl fmt::Display for FnRange {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -2389,26 +2385,6 @@ impl fmt::Display for Log {
             f,
             "{} {}{}{}{}{}",
             LOG, LEFT_BRACE, self.base, COMMA, self.arg, RIGHT_BRACE
-        )
-    }
-}
-
-impl fmt::Display for Max {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}{}{}{}{}",
-            MAX, LEFT_BRACE, self.left, COMMA, self.right, RIGHT_BRACE
-        )
-    }
-}
-
-impl fmt::Display for Min {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {}{}{}{}{}",
-            MIN, LEFT_BRACE, self.left, COMMA, self.right, RIGHT_BRACE
         )
     }
 }
@@ -2647,18 +2623,6 @@ impl From<Log> for Obj {
     }
 }
 
-impl From<Max> for Obj {
-    fn from(m: Max) -> Self {
-        Obj::Max(m)
-    }
-}
-
-impl From<Min> for Obj {
-    fn from(m: Min) -> Self {
-        Obj::Min(m)
-    }
-}
-
 impl From<Union> for Obj {
     fn from(u: Union) -> Self {
         Obj::Union(u)
@@ -2752,6 +2716,18 @@ impl From<Tuple> for Obj {
 impl From<FiniteSetSize> for Obj {
     fn from(c: FiniteSetSize) -> Self {
         Obj::FiniteSetSize(c)
+    }
+}
+
+impl From<FiniteSetMax> for Obj {
+    fn from(x: FiniteSetMax) -> Self {
+        Obj::FiniteSetMax(x)
+    }
+}
+
+impl From<FiniteSetMin> for Obj {
+    fn from(x: FiniteSetMin) -> Self {
+        Obj::FiniteSetMin(x)
     }
 }
 

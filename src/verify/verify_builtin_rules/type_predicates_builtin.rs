@@ -784,6 +784,51 @@ impl Runtime {
         }
     }
 
+    pub fn _verify_not_is_finite_set_fact_with_builtin_rules(
+        &mut self,
+        not_is_finite_set_fact: &NotIsFiniteSetFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        // Removing a finite set from an infinite set leaves an infinite set.
+        // Example: from `not $is_finite_set(X)` and `$is_finite_set(s)`, prove
+        // `not $is_finite_set(set_minus(X, s))`.
+        let Obj::SetMinus(set_minus) = &not_is_finite_set_fact.set else {
+            return Ok((StmtUnknown::new()).into());
+        };
+
+        let left_infinite: AtomicFact = NotIsFiniteSetFact::new(
+            set_minus.left.as_ref().clone(),
+            not_is_finite_set_fact.line_file.clone(),
+        )
+        .into();
+        let left_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&left_infinite, verify_state)?;
+        if !left_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let right_finite: AtomicFact = IsFiniteSetFact::new(
+            set_minus.right.as_ref().clone(),
+            not_is_finite_set_fact.line_file.clone(),
+        )
+        .into();
+        let right_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&right_finite, verify_state)?;
+        if !right_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                not_is_finite_set_fact.clone().into(),
+                "set_minus_is_infinite_when_left_side_is_infinite_and_right_side_is_finite"
+                    .to_string(),
+                vec![left_result, right_result],
+            )
+            .into(),
+        )
+    }
+
     pub fn _verify_is_cart_fact_with_builtin_rules(
         &mut self,
         is_cart_fact: &IsCartFact,

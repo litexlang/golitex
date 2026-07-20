@@ -46,13 +46,6 @@ Representative slices.
   piecewise-constant integrals, upper/lower Riemann integrals, integrability
   criteria, and examples.
 
-Representative runs.
-
-Run a file with `target/debug/litex -f <file>`.  Useful first checks are:
-
-- `textbooks/Analysis/chapter07-series.lit`
-- `textbooks/Analysis/chapter11-riemann-integral.lit`
-
 What "checked" means.
 
 A successful run means Litex verified the checkable statements in the file,

@@ -12,14 +12,6 @@ impl Runtime {
         if let Obj::Sqrt(s) = obj {
             return self.verify_sqrt_well_defined(s, verify_state);
         }
-        if let Obj::Max(m) = obj {
-            self.require_obj_in_r(&m.left, verify_state)?;
-            return self.require_obj_in_r(&m.right, verify_state);
-        }
-        if let Obj::Min(m) = obj {
-            self.require_obj_in_r(&m.left, verify_state)?;
-            return self.require_obj_in_r(&m.right, verify_state);
-        }
         if let Obj::Log(l) = obj {
             self.require_obj_in_r(&l.base, verify_state)?;
             return self.require_obj_in_r(&l.arg, verify_state);
@@ -259,30 +251,6 @@ impl Runtime {
                 )));
             }
         }
-        Ok(())
-    }
-
-    pub(in crate::verify) fn verify_max_well_defined(
-        &mut self,
-        max: &Max,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&max.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&max.right, verify_state)?;
-        self.require_obj_in_r(&max.left, verify_state)?;
-        self.require_obj_in_r(&max.right, verify_state)?;
-        Ok(())
-    }
-
-    pub(in crate::verify) fn verify_min_well_defined(
-        &mut self,
-        min: &Min,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&min.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&min.right, verify_state)?;
-        self.require_obj_in_r(&min.left, verify_state)?;
-        self.require_obj_in_r(&min.right, verify_state)?;
         Ok(())
     }
 

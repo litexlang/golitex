@@ -1,5 +1,0 @@
-import Trig
-
-(2*pi/3 - pi/2) / pi = 1/6
-
-Trig::cos(2*pi/3) != 0

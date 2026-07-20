@@ -90,7 +90,7 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
     $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
 
 # The ordinary gcd is defined only for a nonzero integer pair.
-have fn gcd(a, b Z: a != 0 or b != 0) N = basics::finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+have fn gcd(a, b Z: a != 0 or b != 0) N = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
 
 thm gcd_positive:
     ? forall a, b Z:
@@ -98,8 +98,8 @@ thm gcd_positive:
         =>:
             gcd(a, b) $in N_pos
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    by thm basics::finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) = basics::finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
     gcd(a, b) $in N_pos
 
@@ -109,8 +109,8 @@ thm gcd_divides_left:
         =>:
             $divides(gcd(a, b), a)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    by thm basics::finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) = basics::finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
     $divides(gcd(a, b), a)
 
@@ -120,8 +120,8 @@ thm gcd_divides_right:
         =>:
             $divides(gcd(a, b), b)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    by thm basics::finite_set_max_in_set({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) = basics::finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
     $divides(gcd(a, b), b)
 
@@ -134,8 +134,8 @@ thm common_divisor_le_gcd:
             d <= gcd(a, b)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
     d $in {c N_pos: $divides(c, a), $divides(c, b)}
-    by thm basics::finite_set_member_le_max({c N_pos: $divides(c, a), $divides(c, b)}, d)
-    gcd(a, b) = basics::finite_set_max({c N_pos: $divides(c, a), $divides(c, b)})
+    d <= finite_set_max({c N_pos: $divides(c, a), $divides(c, b)})
+    gcd(a, b) = finite_set_max({c N_pos: $divides(c, a), $divides(c, b)})
     d <= gcd(a, b)
 
 thm gcd_euclidean_base:

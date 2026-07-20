@@ -292,16 +292,6 @@ impl Runtime {
                 x.exponent.as_ref(),
                 names,
             ),
-            Obj::Max(x) => Self::obj_pair_depends_on_given_exist_param(
-                x.left.as_ref(),
-                x.right.as_ref(),
-                names,
-            ),
-            Obj::Min(x) => Self::obj_pair_depends_on_given_exist_param(
-                x.left.as_ref(),
-                x.right.as_ref(),
-                names,
-            ),
             Obj::Union(x) => Self::obj_pair_depends_on_given_exist_param(
                 x.left.as_ref(),
                 x.right.as_ref(),
@@ -384,6 +374,8 @@ impl Runtime {
             Obj::CartDim(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::TupleDim(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::FiniteSetSize(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
+            Obj::FiniteSetMax(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
+            Obj::FiniteSetMin(x) => Self::obj_depends_on_given_exist_param(x.set.as_ref(), names),
             Obj::FnRange(x) => Self::obj_depends_on_given_exist_param(x.function.as_ref(), names),
             Obj::Replacement(x) => {
                 Self::obj_depends_on_given_exist_param(x.source_set.as_ref(), names)

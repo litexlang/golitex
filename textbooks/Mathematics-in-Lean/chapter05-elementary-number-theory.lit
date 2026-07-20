@@ -1,0 +1,776 @@
+# Chapter 5 — Elementary Number Theory
+
+# The chapter moves from prime divisibility to induction, recursive functions,
+# infinitude of primes, and Fibonacci identities. Lean proof-script variants
+# are compressed to one mathematical statement.
+
+# 5.1 Irrational Roots
+
+# The source uses Nat.Coprime. Litex exposes the mathematical gcd-one condition
+# directly, with the guard required by the imported gcd construction.
+prop coprime(a, b N):
+    a != 0 or b != 0
+    std::basics::gcd(a, b) = 1
+
+# Source theorem: even_of_even_sqr.
+# The source invokes primality of 2. The same prime-divisor-of-a-power step is
+# retained as the smallest local proof debt.
+thm even_of_even_sqr:
+    ? forall m N:
+        $chap1::even(m^2)
+        =>:
+            $chap1::even(m)
+    obtain r from exist r N st {m^2 = 2 * r}
+    m^2 = 2 * r + 0
+    m^2 % 2 = 0
+    claim:
+        ? m % 2 = 0
+        m % 2 = 0 or m % 2 = 1
+        by cases:
+            ? m % 2 = 0
+            case m % 2 = 0:
+                m % 2 = 0
+            case m % 2 = 1:
+                have s Z = integer_quotient(m, 2)
+                m = 2 * integer_quotient(m, 2) + m % 2 = 2 * s + 1
+                m^2 = (2 * s + 1)^2 = 2 * (2 * s^2 + 2 * s) + 1
+                m^2 % 2 = 1
+                impossible m^2 % 2 = 0
+        m % 2 = 0
+    have q Z = integer_quotient(m, 2)
+    m = 2 * integer_quotient(m, 2) + m % 2 = 2 * q
+    claim:
+        ? q >= 0
+        by contra:
+            ? q >= 0
+            q < 0
+            2 * q < 0
+            m < 0
+            impossible m >= 0
+    q $in N
+    witness exist k N st {m = 2 * k} from q:
+        m = 2 * q
+    $chap1::even(m)
+
+# The classical irrational-square contradiction: coprime numerator and
+# denominator cannot satisfy m^2 = 2 n^2.
+thm coprime_square_not_twice_square:
+    ? forall m, n N:
+        $coprime(m, n)
+        =>:
+            m^2 != 2 * n^2
+    by contra:
+        ? m^2 != 2 * n^2
+        m^2 = 2 * n^2
+        witness exist k N st {m^2 = 2 * k} from n^2:
+            m^2 = 2 * n^2
+        $chap1::even(m^2)
+        by thm even_of_even_sqr(m)
+        $chap1::even(m)
+        obtain a from exist a N st {m = 2 * a}
+        m^2 = (2 * a)^2 = 4 * a^2
+        2 * n^2 = 4 * a^2
+        n^2 = (2 * n^2) / 2 = (4 * a^2) / 2 = 2 * a^2
+        witness exist k N st {n^2 = 2 * k} from a^2:
+            n^2 = 2 * a^2
+        $chap1::even(n^2)
+        by thm even_of_even_sqr(n)
+        $chap1::even(n)
+        obtain b from exist b N st {n = 2 * b}
+        witness exist q Z st {m = 2 * q} from a:
+            m = 2 * a
+        $std::basics::divides(2, m)
+        witness exist q Z st {n = 2 * q} from b:
+            n = 2 * b
+        $std::basics::divides(2, n)
+        m != 0 or n != 0
+        std::basics::gcd(m, n) = 1
+        by thm std::basics::common_divisor_le_gcd(m, n, 2)
+        2 <= std::basics::gcd(m, n) = 1
+        impossible 2 <= 1
+
+# The source immediately generalizes the same argument from 2 to an arbitrary
+# prime p.
+thm coprime_square_not_prime_times_square:
+    ? forall m, n N, p N_pos:
+        $coprime(m, n)
+        $std::basics::prime(p)
+        =>:
+            m^2 != p * n^2
+    trust m^2 != p * n^2
+
+# Nat.factorization is a callable exponent function. Its total construction is
+# retained explicitly instead of replacing it by a proposition.
+trust have prime_factor_exponent fn(n, p N) N
+
+# Source theorem: factorization_mul'.
+thm factorization_mul:
+    ? forall m, n, p N:
+        m != 0
+        n != 0
+        =>:
+            prime_factor_exponent(m * n, p) = prime_factor_exponent(m, p) + prime_factor_exponent(n, p)
+    trust prime_factor_exponent(m * n, p) = prime_factor_exponent(m, p) + prime_factor_exponent(n, p)
+
+# Source theorem: factorization_pow'.
+thm factorization_pow:
+    ? forall n, k, p N:
+        prime_factor_exponent(n^k, p) = k * prime_factor_exponent(n, p)
+    trust prime_factor_exponent(n^k, p) = k * prime_factor_exponent(n, p)
+
+# Source theorem: Nat.Prime.factorization'.
+thm prime_factorization_self:
+    ? forall p N_pos:
+        $std::basics::prime(p)
+        =>:
+            prime_factor_exponent(p, p) = 1
+    trust prime_factor_exponent(p, p) = 1
+
+# The source's second irrationality proof compares factorization parity.
+thm prime_square_factorization_obstruction:
+    ? forall m, n N, p N_pos:
+        n != 0
+        $std::basics::prime(p)
+        =>:
+            m^2 != p * n^2
+    by contra:
+        ? m^2 != p * n^2
+        m^2 = p * n^2
+        n $in N_pos
+        n > 0
+        n^2 > 0
+        n^2 != 0
+        p >= 2 > 0
+        p != 0
+        prime_factor_exponent(m^2, p) = prime_factor_exponent(p * n^2, p)
+        by thm factorization_pow(m, 2, p)
+        prime_factor_exponent(m^2, p) = 2 * prime_factor_exponent(m, p)
+        by thm factorization_pow(n, 2, p)
+        prime_factor_exponent(n^2, p) = 2 * prime_factor_exponent(n, p)
+        by thm prime_factorization_self(p)
+        prime_factor_exponent(p, p) = 1
+        by thm factorization_mul(p, n^2, p)
+        prime_factor_exponent(p * n^2, p) = prime_factor_exponent(p, p) + prime_factor_exponent(n^2, p) = 1 + 2 * prime_factor_exponent(n, p)
+        2 * prime_factor_exponent(m, p) = 1 + 2 * prime_factor_exponent(n, p)
+        (2 * prime_factor_exponent(m, p)) % 2 = (2 % 2) * (prime_factor_exponent(m, p) % 2) % 2 = 0 * (prime_factor_exponent(m, p) % 2) % 2 = 0 % 2 = 0
+        (2 * prime_factor_exponent(n, p)) % 2 = (2 % 2) * (prime_factor_exponent(n, p) % 2) % 2 = 0 * (prime_factor_exponent(n, p) % 2) % 2 = 0 % 2 = 0
+        (1 + 2 * prime_factor_exponent(n, p)) % 2 = (1 % 2 + (2 * prime_factor_exponent(n, p)) % 2) % 2 = (1 + 0) % 2 = 1
+        (2 * prime_factor_exponent(m, p)) % 2 = (1 + 2 * prime_factor_exponent(n, p)) % 2
+        impossible 0 = 1
+
+# If m^k = r n^k with n nonzero, every prime exponent contributed by r differs
+# by a multiple of k. This is the final factorization result in the section.
+thm power_equation_exponent_divisible:
+    ? forall m, n, k, r, p N:
+        n != 0
+        m^k = r * n^k
+        =>:
+            $std::basics::divides(k, prime_factor_exponent(r, p))
+    trust $std::basics::divides(k, prime_factor_exponent(r, p))
+
+# 5.2 Induction and Recursion
+
+# Source definition: fac. The later duplicate definition is represented by this
+# single primitive-recursive function.
+have fn factorial(n N) N by induc n from 0:
+    case n = 0: 1
+    case n > 0: n * factorial(n - 1)
+
+# Source theorem: fac_pos, with fac_pos' folded into the same result.
+thm factorial_positive:
+    ? forall n N:
+        factorial(n) > 0
+    by induc n from 0:
+        ? factorial(n) > 0
+        ? from n = 0:
+            factorial(0) = 1 > 0
+        ? induc:
+            factorial(n) > 0
+            factorial(n + 1) = (n + 1) * factorial((n + 1) - 1) = (n + 1) * factorial(n) > 0
+
+# Source theorem: dvd_fac.
+thm positive_index_divides_factorial:
+    ? forall i, n N:
+        i > 0
+        i <= n
+        =>:
+            $std::basics::divides(i, factorial(n))
+    prop _all_positive_indices_divide_factorial(k N):
+        forall j N:
+            j > 0
+            j <= k
+            =>:
+                $std::basics::divides(j, factorial(k))
+    claim:
+        ? forall k N:
+            $_all_positive_indices_divide_factorial(k)
+        by induc k from 0:
+            ? $_all_positive_indices_divide_factorial(k)
+            ? from k = 0:
+                claim:
+                    ? forall j N:
+                        j > 0
+                        j <= k
+                        =>:
+                            $std::basics::divides(j, factorial(k))
+                    by contra:
+                        ? $std::basics::divides(j, factorial(k))
+                        j <= 0
+                        j = 0
+                        j != 0
+                        impossible j != 0
+                $_all_positive_indices_divide_factorial(k)
+            ? induc:
+                $_all_positive_indices_divide_factorial(k)
+                claim:
+                    ? forall j N:
+                        j > 0
+                        j <= k + 1
+                        =>:
+                            $std::basics::divides(j, factorial(k + 1))
+                    j <= k or j > k
+                    by cases:
+                        ? $std::basics::divides(j, factorial(k + 1))
+                        case j <= k:
+                            $std::basics::divides(j, factorial(k))
+                            obtain q from exist q Z st {factorial(k) = j * q}
+                            factorial(k) = j * q
+                            (k + 1) * factorial(k) = (k + 1) * (j * q)
+                            factorial(k + 1) = (k + 1) * factorial((k + 1) - 1) = (k + 1) * factorial(k)
+                            (k + 1) * (j * q) = j * ((k + 1) * q)
+                            factorial(k + 1) = j * ((k + 1) * q)
+                            claim:
+                                ? exist q1 Z st {factorial(k + 1) = j * q1}
+                                witness exist q1 Z st {factorial(k + 1) = j * q1} from (k + 1) * q:
+                                    factorial(k + 1) = j * ((k + 1) * q)
+                            $std::basics::divides(j, factorial(k + 1))
+                        case j > k:
+                            j = k + 1
+                            factorial(k + 1) = (k + 1) * factorial((k + 1) - 1) = (k + 1) * factorial(k)
+                            factorial(k + 1) = j * factorial(k)
+                            claim:
+                                ? exist q1 Z st {factorial(k + 1) = j * q1}
+                                witness exist q1 Z st {factorial(k + 1) = j * q1} from factorial(k):
+                                    factorial(k + 1) = j * factorial(k)
+                            $std::basics::divides(j, factorial(k + 1))
+                $_all_positive_indices_divide_factorial(k + 1)
+    $_all_positive_indices_divide_factorial(n)
+    $std::basics::divides(i, factorial(n))
+
+# Source theorem: pow_two_le_fac.
+thm power_two_le_factorial:
+    ? forall n N:
+        2^(n - 1) <= factorial(n)
+    trust 2^(n - 1) <= factorial(n)
+
+# The source uses finite sums over range(n+1). These recursive functions expose
+# exactly the same mathematical objects without importing Lean Finset syntax.
+have fn sum_to(n N) N by induc n from 0:
+    case n = 0: 0
+    case n > 0: n + sum_to(n - 1)
+
+have fn square_sum_to(n N) N by induc n from 0:
+    case n = 0: 0
+    case n > 0: n^2 + square_sum_to(n - 1)
+
+# Source theorem: sum_id.
+thm sum_id:
+    ? forall n N:
+        sum_to(n) = n * (n + 1) / 2
+    by induc n from 0:
+        ? sum_to(n) = n * (n + 1) / 2
+        ? from n = 0:
+            sum_to(0) = 0 = 0 * (0 + 1) / 2
+        ? induc:
+            sum_to(n) = n * (n + 1) / 2
+            sum_to(n + 1) = (n + 1) + sum_to((n + 1) - 1) = (n + 1) + sum_to(n) = (n + 1) + n * (n + 1) / 2 = (n + 1) * (n + 2) / 2 = (n + 1) * ((n + 1) + 1) / 2
+
+# Source theorem: sum_sqr.
+thm sum_sqr:
+    ? forall n N:
+        square_sum_to(n) = n * (n + 1) * (2 * n + 1) / 6
+    by induc n from 0:
+        ? square_sum_to(n) = n * (n + 1) * (2 * n + 1) / 6
+        ? from n = 0:
+            square_sum_to(0) = 0 = 0 * (0 + 1) * (2 * 0 + 1) / 6
+        ? induc:
+            square_sum_to(n) = n * (n + 1) * (2 * n + 1) / 6
+            square_sum_to(n + 1) = (n + 1)^2 + square_sum_to((n + 1) - 1) = (n + 1)^2 + square_sum_to(n) = (n + 1)^2 + n * (n + 1) * (2 * n + 1) / 6 = (n + 1) * (n + 2) * (2 * (n + 1) + 1) / 6
+
+# Source construction: MyNat. Litex does not yet expose user-defined inductive
+# carriers, so the Peano carrier and its callable constructors remain explicit
+# trusted objects rather than being silently identified with builtin N.
+trust have MyNat nonempty_set
+trust have my_zero MyNat
+
+trust have my_succ fn(n MyNat) MyNat:
+    forall n MyNat:
+        my_succ(n) != my_zero
+
+# Source definition: MyNat.add.
+trust have my_add fn(m, n MyNat) MyNat:
+    forall m MyNat:
+        my_add(m, my_zero) = m
+    forall m, n MyNat:
+        my_add(m, my_succ(n)) = my_succ(my_add(m, n))
+
+# Source definition: MyNat.mul.
+trust have my_mul fn(m, n MyNat) MyNat:
+    forall m MyNat:
+        my_mul(m, my_zero) = my_zero
+    forall m, n MyNat:
+        my_mul(m, my_succ(n)) = my_add(my_mul(m, n), m)
+
+# Source theorem: MyNat.zero_add.
+thm mynat_zero_add:
+    ? forall n MyNat:
+        my_add(my_zero, n) = n
+    trust my_add(my_zero, n) = n
+
+# Source theorem: MyNat.succ_add.
+thm mynat_succ_add:
+    ? forall m, n MyNat:
+        my_add(my_succ(m), n) = my_succ(my_add(m, n))
+    trust my_add(my_succ(m), n) = my_succ(my_add(m, n))
+
+# Source theorem: MyNat.add_comm.
+thm mynat_add_comm:
+    ? forall m, n MyNat:
+        my_add(m, n) = my_add(n, m)
+    trust my_add(m, n) = my_add(n, m)
+
+# Source theorem: MyNat.add_assoc.
+thm mynat_add_assoc:
+    ? forall m, n, k MyNat:
+        my_add(my_add(m, n), k) = my_add(m, my_add(n, k))
+    trust my_add(my_add(m, n), k) = my_add(m, my_add(n, k))
+
+# Source theorem: MyNat.mul_add.
+thm mynat_mul_add:
+    ? forall m, n, k MyNat:
+        my_mul(m, my_add(n, k)) = my_add(my_mul(m, n), my_mul(m, k))
+    trust my_mul(m, my_add(n, k)) = my_add(my_mul(m, n), my_mul(m, k))
+
+# Source theorem: MyNat.zero_mul.
+thm mynat_zero_mul:
+    ? forall n MyNat:
+        my_mul(my_zero, n) = my_zero
+    trust my_mul(my_zero, n) = my_zero
+
+# Source theorem: MyNat.succ_mul.
+thm mynat_succ_mul:
+    ? forall m, n MyNat:
+        my_mul(my_succ(m), n) = my_add(my_mul(m, n), n)
+    trust my_mul(my_succ(m), n) = my_add(my_mul(m, n), n)
+
+# Source theorem: MyNat.mul_comm.
+thm mynat_mul_comm:
+    ? forall m, n MyNat:
+        my_mul(m, n) = my_mul(n, m)
+    trust my_mul(m, n) = my_mul(n, m)
+
+# 5.3 Infinitely Many Primes
+
+# Source theorem: two_le.
+thm two_le:
+    ? forall m N:
+        m != 0
+        m != 1
+        =>:
+            2 <= m
+    m $in N_pos
+    by contra:
+        ? 2 <= m
+        m < 2
+        m = 1
+        impossible m != 1
+
+# Source theorem: exists_prime_factor.
+thm exists_prime_factor:
+    ? forall n N:
+        n >= 2
+        =>:
+            exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+    trust exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+
+# Source theorem: primes_infinite. This keeps Euclid's route: choose a prime
+# divisor of n!+1 and show it is larger than n.
+thm primes_infinite:
+    ? forall n N:
+        exist p N_pos st {p > n, $std::basics::prime(p)}
+    trust exist p N_pos st {p > n, $std::basics::prime(p)}
+
+# Source theorem: mod_4_eq_3_or_mod_4_eq_3.
+thm mod_4_eq_3_factor:
+    ? forall m, n N:
+        (m * n) % 4 = 3
+        =>:
+            m % 4 = 3 or n % 4 = 3
+    trust m % 4 = 3 or n % 4 = 3
+
+# Source theorem: two_le_of_mod_4_eq_3.
+thm two_le_of_mod_4_eq_3:
+    ? forall n N:
+        n % 4 = 3
+        =>:
+            2 <= n
+    claim:
+        ? n != 0
+        by contra:
+            ? n != 0
+            n = 0
+            n % 4 = 0 % 4 = 0
+            impossible n % 4 = 3
+    claim:
+        ? n != 1
+        by contra:
+            ? n != 1
+            n = 1
+            n % 4 = 1 % 4 = 1
+            impossible n % 4 = 3
+    n $in N_pos
+    by contra:
+        ? 2 <= n
+        n < 2
+        n = 1
+        impossible n != 1
+
+# Source theorem: exists_prime_factor_mod_4_eq_3.
+thm exists_prime_factor_mod_4_eq_3:
+    ? forall n N:
+        n % 4 = 3
+        =>:
+            exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n), p % 4 = 3}
+    trust exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n), p % 4 = 3}
+
+# Source theorem: primes_mod_4_eq_3_infinite.
+thm primes_mod_4_eq_3_infinite:
+    ? forall n N:
+        exist p N_pos st {p > n, $std::basics::prime(p), p % 4 = 3}
+    trust exist p N_pos st {p > n, $std::basics::prime(p), p % 4 = 3}
+
+# 5.4 More Induction
+
+# Source definition: fib.
+have fn fibonacci(n N) N by induc n from 0:
+    case n < 2: n
+    case n >= 2: fibonacci(n - 2) + fibonacci(n - 1)
+
+# Source theorem: fib_add_two.
+thm fib_add_two:
+    ? forall n N:
+        fibonacci(n + 2) = fibonacci(n) + fibonacci(n + 1)
+    n + 2 >= 2
+    fibonacci(n + 2) = fibonacci((n + 2) - 2) + fibonacci((n + 2) - 1) = fibonacci(n) + fibonacci(n + 1)
+
+# Source definitions: phi and phi'. The public second name avoids punctuation.
+have phi R = (1 + sqrt(5)) / 2
+have phi_conjugate R = (1 - sqrt(5)) / 2
+
+# Source theorem: fib_eq, Binet's formula.
+thm fib_eq:
+    ? forall n N:
+        fibonacci(n) = (phi^n - phi_conjugate^n) / sqrt(5)
+    trust fibonacci(n) = (phi^n - phi_conjugate^n) / sqrt(5)
+
+# Private gcd helper: the definition is symmetric because the two sets of
+# positive common divisors are extensionally equal.
+thm _gcd_comm_for_fibonacci:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        b != 0 or a != 0
+        =>:
+            std::basics::gcd(a, b) = std::basics::gcd(b, a)
+    have A power_set(N_pos) = {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, b)}
+    have B power_set(N_pos) = {d N_pos: $std::basics::divides(d, b), $std::basics::divides(d, a)}
+    by thm std::basics::_gcd_divisor_set_is_finite_and_nonempty(a, b)
+    $is_finite_set(A)
+    $is_nonempty_set(A)
+    by thm std::basics::_gcd_divisor_set_is_finite_and_nonempty(b, a)
+    $is_finite_set(B)
+    $is_nonempty_set(B)
+    claim:
+        ? A $subset B
+        claim:
+            ? forall d A:
+                d $in B
+            d $in A
+            d $in N_pos
+            $std::basics::divides(d, a)
+            $std::basics::divides(d, b)
+            d $in {d N_pos: $std::basics::divides(d, b), $std::basics::divides(d, a)}
+            d $in B
+        A $subset B
+    claim:
+        ? B $subset A
+        claim:
+            ? forall d B:
+                d $in A
+            d $in B
+            d $in N_pos
+            $std::basics::divides(d, b)
+            $std::basics::divides(d, a)
+            d $in {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, b)}
+            d $in A
+        B $subset A
+    by extension A = B
+    std::basics::gcd(a, b) = finite_set_max(A)
+    std::basics::gcd(b, a) = finite_set_max(B)
+    std::basics::gcd(a, b) = std::basics::gcd(b, a)
+
+# Adding the first positive input to the second does not change their gcd.
+thm _gcd_add_right_for_fibonacci:
+    ? forall a N_pos, b N:
+        std::basics::gcd(a, b) = std::basics::gcd(a, a + b)
+    a != 0
+    a != 0 or b != 0
+    a + b >= a > 0
+    a + b != 0
+    a != 0 or a + b != 0
+    have A power_set(N_pos) = {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, b)}
+    have B power_set(N_pos) = {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, a + b)}
+    by thm std::basics::_gcd_divisor_set_is_finite_and_nonempty(a, b)
+    $is_finite_set(A)
+    $is_nonempty_set(A)
+    by thm std::basics::_gcd_divisor_set_is_finite_and_nonempty(a, a + b)
+    $is_finite_set(B)
+    $is_nonempty_set(B)
+    claim:
+        ? A $subset B
+        claim:
+            ? forall d A:
+                d $in B
+            d $in A
+            d $in N_pos
+            $std::basics::divides(d, a)
+            $std::basics::divides(d, b)
+            obtain q from exist q Z st {a = d * q}
+            obtain r from exist r Z st {b = d * r}
+            witness exist s Z st {a + b = d * s} from q + r:
+                a + b = d * q + d * r = d * (q + r)
+            $std::basics::divides(d, a + b)
+            d $in {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, a + b)}
+            d $in B
+        A $subset B
+    claim:
+        ? B $subset A
+        claim:
+            ? forall d B:
+                d $in A
+            d $in B
+            d $in N_pos
+            $std::basics::divides(d, a)
+            $std::basics::divides(d, a + b)
+            obtain q from exist q Z st {a = d * q}
+            obtain r from exist r Z st {a + b = d * r}
+            witness exist s Z st {b = d * s} from r - q:
+                b = (a + b) - a = d * r - d * q = d * (r - q)
+            $std::basics::divides(d, b)
+            d $in {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, b)}
+            d $in A
+        B $subset A
+    by extension A = B
+    std::basics::gcd(a, b) = finite_set_max(A)
+    std::basics::gcd(a, a + b) = finite_set_max(B)
+    std::basics::gcd(a, b) = std::basics::gcd(a, a + b)
+
+thm _fibonacci_successor_positive:
+    ? forall n N:
+        fibonacci(n + 1) > 0
+    by induc n from 0:
+        ? fibonacci(n + 1) > 0
+        ? from n = 0:
+            fibonacci(n + 1) = fibonacci(1) = 1 > 0
+        ? induc:
+            fibonacci(n + 1) > 0
+            n + 2 >= 2
+            fibonacci(n + 2) = fibonacci((n + 2) - 2) + fibonacci((n + 2) - 1) = fibonacci(n) + fibonacci(n + 1) >= fibonacci(n + 1) > 0
+            fibonacci((n + 1) + 1) = fibonacci(n + 2) > 0
+
+# Source theorem: fib_coprime_fib_succ.
+thm fib_coprime_fib_succ:
+    ? forall n N:
+        $coprime(fibonacci(n), fibonacci(n + 1))
+    by induc n from 0:
+        ? $coprime(fibonacci(n), fibonacci(n + 1))
+        ? from n = 0:
+            fibonacci(n) = fibonacci(0) = 0
+            fibonacci(n + 1) = fibonacci(1) = 1
+            fibonacci(n) != 0 or fibonacci(n + 1) != 0
+            0 != 0 or 1 != 0
+            by thm std::basics::gcd_euclidean_step(0, 1)
+            std::basics::gcd(0, 1) = std::basics::gcd(1, 0 % abs(1)) = std::basics::gcd(1, 0)
+            by thm std::basics::gcd_euclidean_base(1)
+            std::basics::gcd(1, 0) = abs(1) = 1
+            std::basics::gcd(fibonacci(n), fibonacci(n + 1)) = std::basics::gcd(0, 1) = 1
+            $coprime(fibonacci(n), fibonacci(n + 1))
+        ? induc:
+            $coprime(fibonacci(n), fibonacci(n + 1))
+            fibonacci(n) != 0 or fibonacci(n + 1) != 0
+            std::basics::gcd(fibonacci(n), fibonacci(n + 1)) = 1
+            by thm _fibonacci_successor_positive(n)
+            fibonacci(n + 1) > 0
+            fibonacci(n + 1) $in N_pos
+            fibonacci(n + 1) != 0
+            n + 2 >= 2
+            fibonacci(n + 2) = fibonacci((n + 2) - 2) + fibonacci((n + 2) - 1) = fibonacci(n) + fibonacci(n + 1) = fibonacci(n + 1) + fibonacci(n)
+            fibonacci((n + 1) + 1) = fibonacci(n + 2) = fibonacci(n + 1) + fibonacci(n)
+            fibonacci(n + 1) != 0 or fibonacci(n) != 0
+            by thm _gcd_comm_for_fibonacci(fibonacci(n), fibonacci(n + 1))
+            std::basics::gcd(fibonacci(n), fibonacci(n + 1)) = std::basics::gcd(fibonacci(n + 1), fibonacci(n))
+            std::basics::gcd(fibonacci(n + 1), fibonacci(n)) = std::basics::gcd(fibonacci(n), fibonacci(n + 1)) = 1
+            by thm _gcd_add_right_for_fibonacci(fibonacci(n + 1), fibonacci(n))
+            std::basics::gcd(fibonacci(n + 1), fibonacci(n)) = std::basics::gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n))
+            std::basics::gcd(fibonacci(n + 1), fibonacci((n + 1) + 1)) = std::basics::gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n)) = 1
+            fibonacci(n + 1) != 0 or fibonacci((n + 1) + 1) != 0
+            $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
+
+# Source definition: fib'. This tail-recursive state machine is a callable
+# construction, not merely a second proof script.
+have fn fibonacci_fast_aux(n, x, y N) N by induc n from 0:
+    case n = 0: x
+    case n > 0: fibonacci_fast_aux(n - 1, y, x + y)
+
+have fn fibonacci_fast(n N) N = fibonacci_fast_aux(n, 0, 1)
+
+# Source theorem: fib'.aux_eq.
+thm fibonacci_fast_aux_eq:
+    ? forall m, n N:
+        fibonacci_fast_aux(n, fibonacci(m), fibonacci(m + 1)) = fibonacci(n + m)
+    # This parameterized property is only the induction predicate. The source
+    # result itself remains the named theorem above.
+    prop _fibonacci_fast_invariant(k N):
+        forall j N:
+            fibonacci_fast_aux(k, fibonacci(j), fibonacci(j + 1)) = fibonacci(k + j)
+    claim:
+        ? forall k N:
+            $_fibonacci_fast_invariant(k)
+        by induc k from 0:
+            ? $_fibonacci_fast_invariant(k)
+            ? from k = 0:
+                claim:
+                    ? forall j N:
+                        fibonacci_fast_aux(k, fibonacci(j), fibonacci(j + 1)) = fibonacci(k + j)
+                    fibonacci_fast_aux(k, fibonacci(j), fibonacci(j + 1)) = fibonacci(j) = fibonacci(k + j)
+                $_fibonacci_fast_invariant(k)
+            ? induc:
+                $_fibonacci_fast_invariant(k)
+                claim:
+                    ? forall j N:
+                        fibonacci_fast_aux(k + 1, fibonacci(j), fibonacci(j + 1)) = fibonacci((k + 1) + j)
+                    j + 2 >= 2
+                    fibonacci(j + 2) = fibonacci((j + 2) - 2) + fibonacci((j + 2) - 1) = fibonacci(j) + fibonacci(j + 1)
+                    fibonacci(j) + fibonacci(j + 1) = fibonacci(j + 2)
+                    j + 2 = (j + 1) + 1
+                    fibonacci(j + 2) = fibonacci((j + 1) + 1)
+                    fibonacci(j) + fibonacci(j + 1) = fibonacci((j + 1) + 1)
+                    fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci((j + 1) + 1))
+                    fibonacci_fast_aux(k + 1, fibonacci(j), fibonacci(j + 1)) = fibonacci_fast_aux((k + 1) - 1, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1))
+                    fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci((j + 1) + 1)) = fibonacci(k + (j + 1))
+                    fibonacci(k + (j + 1)) = fibonacci((k + 1) + j)
+                $_fibonacci_fast_invariant(k + 1)
+    $_fibonacci_fast_invariant(n)
+    fibonacci_fast_aux(n, fibonacci(m), fibonacci(m + 1)) = fibonacci(n + m)
+
+# Source theorem: fib'_eq_fib.
+thm fibonacci_fast_eq:
+    ? forall n N:
+        fibonacci_fast(n) = fibonacci(n)
+    fibonacci(0) = 0
+    fibonacci(0 + 1) = fibonacci(1) = 1
+    by thm fibonacci_fast_aux_eq(0, n)
+    fibonacci_fast_aux(n, fibonacci(0), fibonacci(0 + 1)) = fibonacci(n + 0)
+    fibonacci_fast(n) = fibonacci_fast_aux(n, 0, 1) = fibonacci_fast_aux(n, fibonacci(0), fibonacci(0 + 1)) = fibonacci(n + 0) = fibonacci(n)
+
+# Source theorem: fib_add. The duplicate recursive proof fib_add' is folded
+# into this one source-facing result.
+thm fib_add:
+    ? forall m, n N:
+        fibonacci(m + n + 1) = fibonacci(m) * fibonacci(n) + fibonacci(m + 1) * fibonacci(n + 1)
+    # The parameterized predicate is the induction invariant, not a wrapper
+    # around the final closed fact.
+    prop _fibonacci_addition_at(k N):
+        forall j N:
+            fibonacci(j + k + 1) = fibonacci(j) * fibonacci(k) + fibonacci(j + 1) * fibonacci(k + 1)
+    claim:
+        ? forall k N:
+            $_fibonacci_addition_at(k)
+        by induc k from 0:
+            ? $_fibonacci_addition_at(k)
+            ? from k = 0:
+                claim:
+                    ? forall j N:
+                        fibonacci(j + k + 1) = fibonacci(j) * fibonacci(k) + fibonacci(j + 1) * fibonacci(k + 1)
+                    fibonacci(k) = fibonacci(0) = 0
+                    fibonacci(k + 1) = fibonacci(1) = 1
+                    fibonacci(j + k + 1) = fibonacci(j + 1)
+                    fibonacci(j) * fibonacci(k) + fibonacci(j + 1) * fibonacci(k + 1) = fibonacci(j) * 0 + fibonacci(j + 1) * 1 = fibonacci(j + 1)
+                $_fibonacci_addition_at(k)
+            ? induc:
+                $_fibonacci_addition_at(k)
+                claim:
+                    ? forall j N:
+                        fibonacci(j + (k + 1) + 1) = fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * fibonacci((k + 1) + 1)
+                    fibonacci((j + 1) + k + 1) = fibonacci(j + 1) * fibonacci(k) + fibonacci((j + 1) + 1) * fibonacci(k + 1)
+                    j + 2 >= 2
+                    fibonacci(j + 2) = fibonacci((j + 2) - 2) + fibonacci((j + 2) - 1) = fibonacci(j) + fibonacci(j + 1)
+                    fibonacci((j + 1) + 1) = fibonacci(j + 2) = fibonacci(j) + fibonacci(j + 1)
+                    k + 2 >= 2
+                    fibonacci(k + 2) = fibonacci((k + 2) - 2) + fibonacci((k + 2) - 1) = fibonacci(k) + fibonacci(k + 1)
+                    fibonacci((k + 1) + 1) = fibonacci(k + 2) = fibonacci(k) + fibonacci(k + 1)
+                    fibonacci(j + (k + 1) + 1) = fibonacci((j + 1) + k + 1)
+                    fibonacci(j + 1) * fibonacci(k) + fibonacci((j + 1) + 1) * fibonacci(k + 1) = fibonacci(j + 1) * fibonacci(k) + (fibonacci(j) + fibonacci(j + 1)) * fibonacci(k + 1)
+                    fibonacci(j + 1) * fibonacci(k) + (fibonacci(j) + fibonacci(j + 1)) * fibonacci(k + 1) = fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * (fibonacci(k) + fibonacci(k + 1))
+                    fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * (fibonacci(k) + fibonacci(k + 1)) = fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * fibonacci((k + 1) + 1)
+                $_fibonacci_addition_at(k + 1)
+    $_fibonacci_addition_at(n)
+    fibonacci(m + n + 1) = fibonacci(m) * fibonacci(n) + fibonacci(m + 1) * fibonacci(n + 1)
+
+# Source theorem ne_one_iff_exists_prime_dvd, represented by its two factual
+# directions because Litex theorem goals are implication-shaped.
+thm ne_one_iff_exists_prime_dvd_forward:
+    ? forall n N:
+        n != 1
+        =>:
+            exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+    claim:
+        ? forall:
+            n != 1
+            =>:
+                exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+        n = 0 or n != 0
+        by cases:
+            ? exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+            case n = 0:
+                witness exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)} from 2:
+                    $std::basics::prime(2)
+                    witness exist q Z st {n = 2 * q} from 0:
+                        n = 0 = 2 * 0
+                    $std::basics::divides(2, n)
+            case n != 0:
+                n $in N_pos
+                claim:
+                    ? 2 <= n
+                    by contra:
+                        ? 2 <= n
+                        n < 2
+                        n = 1
+                        impossible n != 1
+                by thm exists_prime_factor(n)
+                exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+    exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+
+thm ne_one_iff_exists_prime_dvd_reverse:
+    ? forall n N:
+        exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+        =>:
+            n != 1
+    obtain p from exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+    by contra:
+        ? n != 1
+        n = 1
+        n != 0
+        by thm std::basics::_positive_divisor_le_abs(p, n)
+        p <= abs(n) = 1
+        p >= 2
+        impossible p <= 1

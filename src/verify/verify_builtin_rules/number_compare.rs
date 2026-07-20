@@ -3,6 +3,9 @@ use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
 
 impl Runtime {
+    // Keep the caller's recursive verification state. In particular, finite-set
+    // cardinality order rules can ask the non-equational dispatcher to verify
+    // set facts again; resetting to round 0 here would erase that boundary.
     // The nonnegative / positive cone under field operations is checked here on normalized
     // `0 <=` / `0 <` goals (possibly after `normalize_positive_order_atomic_fact`):
     // - Chained `+`: `0 <= a + b + …` from `0 <=` on each peeled summand; `0 < a + b + …` from
@@ -19,9 +22,11 @@ impl Runtime {
     pub fn verify_order_atomic_fact_numeric_builtin_only(
         &mut self,
         atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let vs = VerifyState::new(0, true);
-        if let Some(result) = self.try_verify_order_semantics_builtin_rule(atomic_fact, &vs)? {
+        if let Some(result) =
+            self.try_verify_order_semantics_builtin_rule(atomic_fact, verify_state)?
+        {
             return Ok(result);
         }
         // Most rules in this dispatcher are facts about the real-number order.
@@ -46,58 +51,62 @@ impl Runtime {
             _ => return Ok(StmtUnknown::new().into()),
         };
         if self
-            .verify_objects_are_known_reals(&[&left, &right], &line_file, &vs)?
+            .verify_objects_are_known_reals(&[&left, &right], &line_file, verify_state)?
             .is_none()
         {
             return Ok(StmtUnknown::new().into());
         }
         if let Some(result) =
-            self.try_verify_finite_nonempty_set_size_at_least_one(atomic_fact, &vs)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) = self.try_verify_finite_set_size_subset_le(atomic_fact, &vs)? {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.try_verify_finite_set_size_union_or_set_diff_le_sum(atomic_fact, &vs)?
+            self.try_verify_finite_nonempty_set_size_at_least_one(atomic_fact, verify_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, &vs)?
+            self.try_verify_finite_set_size_subset_le(atomic_fact, verify_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_order_one_le_from_membership_in_n_pos(atomic_fact, &vs)?
+            self.try_verify_finite_set_size_union_or_set_diff_le_sum(atomic_fact, verify_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_order_one_le_from_membership_in_n_and_nonzero(atomic_fact, &vs)?
+            self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, verify_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_order_one_le_from_membership_in_z_and_positive(atomic_fact, &vs)?
+            self.try_verify_order_one_le_from_membership_in_n_pos(atomic_fact, verify_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self
+            .try_verify_order_one_le_from_membership_in_n_and_nonzero(atomic_fact, verify_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self
+            .try_verify_order_one_le_from_membership_in_z_and_positive(atomic_fact, verify_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_numeric_lower_bound_from_known_lower_bound(atomic_fact, &vs)?
+            self.try_verify_numeric_lower_bound_from_known_lower_bound(atomic_fact, verify_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_numeric_upper_bound_from_known_upper_bound(atomic_fact, &vs)?
+            self.try_verify_numeric_upper_bound_from_known_upper_bound(atomic_fact, verify_state)?
         {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_mod_remainder_bounds(atomic_fact, &vs)? {
+        if let Some(result) = self.try_verify_mod_remainder_bounds(atomic_fact, verify_state)? {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, &vs)? {
+        if let Some(result) =
+            self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, verify_state)?
+        {
             return Ok(result);
         }
         if let Some(result) = self.verify_order_from_known_negated_complement(atomic_fact)? {
@@ -567,7 +576,8 @@ impl Runtime {
         };
         let mut result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fact)?;
         if !result.is_true() {
-            result = self.verify_order_atomic_fact_numeric_builtin_only(&fact)?;
+            result = self
+                .verify_order_atomic_fact_numeric_builtin_only(&fact, &VerifyState::new(0, true))?;
         }
         Ok(result)
     }
@@ -2096,7 +2106,10 @@ impl Runtime {
                 let mut result =
                     self.verify_non_equational_atomic_fact_with_known_atomic_facts(&derived)?;
                 if !result.is_true() {
-                    result = self.verify_order_atomic_fact_numeric_builtin_only(&derived)?;
+                    result = self.verify_order_atomic_fact_numeric_builtin_only(
+                        &derived,
+                        &VerifyState::new(0, true),
+                    )?;
                 }
                 if result.is_true() {
                     Ok(Some(StmtResult::from(
@@ -2123,7 +2136,10 @@ impl Runtime {
                 let mut result =
                     self.verify_non_equational_atomic_fact_with_known_atomic_facts(&derived)?;
                 if !result.is_true() {
-                    result = self.verify_order_atomic_fact_numeric_builtin_only(&derived)?;
+                    result = self.verify_order_atomic_fact_numeric_builtin_only(
+                        &derived,
+                        &VerifyState::new(0, true),
+                    )?;
                 }
                 if result.is_true() {
                     Ok(Some(StmtResult::from(

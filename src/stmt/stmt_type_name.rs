@@ -184,6 +184,12 @@ impl ByThmStmt {
     }
 }
 
+impl ByDefStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ByDefStmt".to_string()
+    }
+}
+
 impl DefThmStmt {
     pub fn stmt_type_name(&self) -> String {
         "DefThmStmt".to_string()
@@ -481,6 +487,12 @@ impl ByRegularityAxiomStmt {
 impl ByThmStmt {
     pub fn output_type_string() -> String {
         "proof by theorem".to_string()
+    }
+}
+
+impl ByDefStmt {
+    pub fn output_type_string() -> String {
+        "proof by definition".to_string()
     }
 }
 

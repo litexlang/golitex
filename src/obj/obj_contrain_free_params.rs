@@ -31,8 +31,6 @@ impl Obj {
             Obj::Abs(x) => x.arg.contains_forall_free_param_obj(),
             Obj::Sqrt(x) => x.arg.contains_forall_free_param_obj(),
             Obj::Log(x) => contains_forall_free_param_obj_in_pair(&x.base, &x.arg),
-            Obj::Max(x) => contains_forall_free_param_obj_in_pair(&x.left, &x.right),
-            Obj::Min(x) => contains_forall_free_param_obj_in_pair(&x.left, &x.right),
             Obj::Union(x) => contains_forall_free_param_obj_in_pair(&x.left, &x.right),
             Obj::Intersect(x) => contains_forall_free_param_obj_in_pair(&x.left, &x.right),
             Obj::SetMinus(x) => contains_forall_free_param_obj_in_pair(&x.left, &x.right),
@@ -40,6 +38,8 @@ impl Obj {
             Obj::Cup(x) => x.left.contains_forall_free_param_obj(),
             Obj::Cap(x) => x.left.contains_forall_free_param_obj(),
             Obj::PowerSet(x) => x.set.contains_forall_free_param_obj(),
+            Obj::FiniteSetMax(x) => x.set.contains_forall_free_param_obj(),
+            Obj::FiniteSetMin(x) => x.set.contains_forall_free_param_obj(),
             Obj::GeneralCart(x) => {
                 x.index_set.contains_forall_free_param_obj()
                     || x.family_set.contains_forall_free_param_obj()

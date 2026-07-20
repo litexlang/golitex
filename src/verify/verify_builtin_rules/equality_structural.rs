@@ -429,30 +429,6 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
-            (Obj::Max(l), Obj::Max(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Min(l), Obj::Min(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
             (Obj::Union(l), Obj::Union(r)) => {
                 if self.arg_pairs_share_known_equality_class(&[
                     (&l.left, &r.left),
@@ -547,6 +523,24 @@ impl Runtime {
                 }
             }
             (Obj::FiniteSetSize(l), Obj::FiniteSetSize(r)) => {
+                if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::FiniteSetMax(l), Obj::FiniteSetMax(r)) => {
+                if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::FiniteSetMin(l), Obj::FiniteSetMin(r)) => {
                 if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
                     Some(factual_equal_success_by_builtin_reason(
                         left, right, line_file, reason,

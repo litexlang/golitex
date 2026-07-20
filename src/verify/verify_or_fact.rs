@@ -469,16 +469,17 @@ impl Runtime {
                 AndChainAtomicFact::AtomicFact(second_atomic),
             ) = (&or_fact.facts[0], &or_fact.facts[1])
             {
-                if first_atomic.make_reversed().to_string() == second_atomic.to_string() {
-                    return Ok(
-                        (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            or_fact.clone().into(),
-                            "or: complementary atomic facts (make_reversed first equals second)"
-                                .to_string(),
-                            Vec::new(),
-                        ))
-                        .into(),
-                    );
+                if let Ok(negated_first) = first_atomic.logical_negation() {
+                    if negated_first.to_string() == second_atomic.to_string() {
+                        return Ok(
+                            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                or_fact.clone().into(),
+                                "or: complementary atomic facts".to_string(),
+                                Vec::new(),
+                            ))
+                            .into(),
+                        );
+                    }
                 }
                 if let Some((left, right)) =
                     order_split_or_real_line_operands(first_atomic, second_atomic)

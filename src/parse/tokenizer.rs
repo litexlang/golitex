@@ -544,6 +544,33 @@ mod tests {
     }
 
     #[test]
+    fn matrix_operator_tokens_preserve_apostrophe_and_interval_prefix() {
+        let tokenizer = Tokenizer::new();
+        assert_eq!(
+            tokenizer
+                .tokenize_line("A '+ B '- C '* D '^ 2", test_line_file())
+                .unwrap(),
+            vec!["A", "'+", "B", "'-", "C", "'*", "D", "'^", "2"]
+        );
+        assert_eq!(
+            tokenizer.tokenize_line("3 *' A", test_line_file()).unwrap(),
+            vec!["3", "*'", "A"]
+        );
+        assert_eq!(
+            tokenizer
+                .tokenize_line("'(0, 1)", test_line_file())
+                .unwrap(),
+            vec!["'", "(", "0", ",", "1", ")"]
+        );
+        assert_eq!(
+            tokenizer
+                .tokenize_line("A ++ B -- C ** D *. E ^^ 2", test_line_file())
+                .unwrap(),
+            vec!["A", "++", "B", "--", "C", "**", "D", "*.", "E", "^^", "2"]
+        );
+    }
+
+    #[test]
     fn macro_definition_expands_later_line_in_same_block() {
         let mut tokenizer = Tokenizer::new();
         let blocks = tokenizer

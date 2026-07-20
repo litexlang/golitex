@@ -25,8 +25,6 @@ Names beginning with `_` are implementation details, not client API.
 | --- | --- | --- |
 | `pi` | a positive real constant | Trusted |
 | `euler_e` | a positive real constant | Trusted |
-| `finite_set_max(S)` | maximum of a finite, nonempty subset `S` of `N` | Checked |
-| `finite_set_min(S)` | minimum of a finite, nonempty subset `S` of `N` | Checked |
 | `gcd(a, b)` | positive greatest common divisor of a nonzero integer pair | Checked |
 
 `gcd(a, b)` requires the side condition `a != 0 or b != 0`.
@@ -51,20 +49,16 @@ Names beginning with `_` are implementation details, not client API.
 The second theorem is the checked reduced-fraction existence theorem. The first
 is a separate, currently trusted unique-normal-form interface.
 
-### Finite sets of natural numbers
+### Finite sets
 
 | Theorem | Conclusion |
 | --- | --- |
-| `finite_set_max_in_set(S)` | `finite_set_max(S) $in S` |
-| `finite_set_member_le_max(S, x)` | every `x $in S` is at most `finite_set_max(S)` |
-| `finite_set_max_singleton(x)` | `finite_set_max({x}) = x` |
-| `finite_set_min_in_set(S)` | `finite_set_min(S) $in S` |
-| `finite_set_min_le_member(S, x)` | `finite_set_min(S) <= x` for every `x $in S` |
-| `finite_set_min_singleton(x)` | `finite_set_min({x}) = x` |
 | `finite_set_has_bijective_index(s)` | a finite set has a zero-based bijective index over `range(0, finite_set_size(s))` |
 
-All of these require the displayed finite/nonempty or membership hypotheses
-from their theorem statements.
+`finite_set_max(S)` and `finite_set_min(S)` are kernel builtins, not names
+exported by `std/basics`. They require a finite, nonempty set of real numbers;
+they belong to the set and bound every member. Literal calls such as
+`finite_set_max({1, 2, 3, 4})` compute directly.
 
 ### Divisibility and gcd
 

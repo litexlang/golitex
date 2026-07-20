@@ -385,18 +385,18 @@ thm strict_between_intersections_of_interval_endpoint_forms_is_member:
     ? forall I, J power_set(R), a, b, c, d, z R:
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        max(a, c) < z
-        z < min(b, d)
+        finite_set_max(union({a}, { c})) < z
+        z < finite_set_min(union({b}, { d}))
         =>:
             z $in intersect(I, J)
-    a <= max(a, c)
-    c <= max(a, c)
+    a <= finite_set_max(union({a}, { c}))
+    c <= finite_set_max(union({a}, { c}))
     a < z
     c < z
-    min(b, d) <= b
-    min(b, d) <= d
+    finite_set_min(union({b}, { d})) <= b
+    finite_set_min(union({b}, { d})) <= d
     z < b
-    z < min(b, d) <= d
+    z < finite_set_min(union({b}, { d})) <= d
     z < d
     by thm strict_between_interval_endpoints_is_member(I, a, b, z)
     by thm strict_between_interval_endpoints_is_member(J, c, d, z)
@@ -407,206 +407,206 @@ thm intersection_of_interval_endpoint_forms_member_bounds:
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
         =>:
-            max(a, c) <= z
-            z <= min(b, d)
+            finite_set_max(union({a}, { c})) <= z
+            z <= finite_set_min(union({b}, { d}))
     have z0 R = z
     z0 = z
     z0 $in I
     z0 $in J
     by thm interval_endpoint_member_is_between(I, a, b, z0)
     by thm interval_endpoint_member_is_between(J, c, d, z0)
-    max(a, c) <= z0
-    z0 <= min(b, d)
-    max(a, c) <= z
-    z <= min(b, d)
+    finite_set_max(union({a}, { c})) <= z0
+    z0 <= finite_set_min(union({b}, { d}))
+    finite_set_max(union({a}, { c})) <= z
+    z <= finite_set_min(union({b}, { d}))
 
 thm intersection_of_interval_endpoint_forms_member_is_in_closed_hull:
     ? forall I, J power_set(R), a, b, c, d R, z intersect(I, J):
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
         =>:
-            z $in '[max(a, c), min(b, d)]
+            z $in '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
     have z0 R = z
     z0 = z
     by thm intersection_of_interval_endpoint_forms_member_bounds(I, J, a, b, c, d, z)
-    max(a, c) <= z0
-    z0 <= min(b, d)
-    z0 $in '[max(a, c), min(b, d)]
-    z $in '[max(a, c), min(b, d)]
+    finite_set_max(union({a}, { c})) <= z0
+    z0 <= finite_set_min(union({b}, { d}))
+    z0 $in '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
+    z $in '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
 
 thm intersection_of_interval_endpoint_forms_member_is_in_closed_open_hull:
     ? forall I, J power_set(R), a, b, c, d R, z intersect(I, J):
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        max(a, c) $in intersect(I, J)
-        not min(b, d) $in intersect(I, J)
+        finite_set_max(union({a}, { c})) $in intersect(I, J)
+        not finite_set_min(union({b}, { d})) $in intersect(I, J)
         =>:
-            z $in '[max(a, c), min(b, d))
+            z $in '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d})))
     have z0 R = z
     z0 = z
     z0 $in intersect(I, J)
     by thm intersection_of_interval_endpoint_forms_member_bounds(I, J, a, b, c, d, z)
     claim:
-        ? z0 < min(b, d)
+        ? z0 < finite_set_min(union({b}, { d}))
         by contra:
-            ? z0 < min(b, d)
-            z0 >= min(b, d)
-            z0 = min(b, d)
+            ? z0 < finite_set_min(union({b}, { d}))
+            z0 >= finite_set_min(union({b}, { d}))
+            z0 = finite_set_min(union({b}, { d}))
             z0 $in intersect(I, J)
-            impossible not min(b, d) $in intersect(I, J)
-    max(a, c) <= z0
-    z0 $in '[max(a, c), min(b, d))
-    z $in '[max(a, c), min(b, d))
+            impossible not finite_set_min(union({b}, { d})) $in intersect(I, J)
+    finite_set_max(union({a}, { c})) <= z0
+    z0 $in '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d})))
+    z $in '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d})))
 
 thm intersection_of_interval_endpoint_forms_member_is_in_open_closed_hull:
     ? forall I, J power_set(R), a, b, c, d R, z intersect(I, J):
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        not max(a, c) $in intersect(I, J)
-        min(b, d) $in intersect(I, J)
+        not finite_set_max(union({a}, { c})) $in intersect(I, J)
+        finite_set_min(union({b}, { d})) $in intersect(I, J)
         =>:
-            z $in '(max(a, c), min(b, d)]
+            z $in '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
     have z0 R = z
     z0 = z
     z0 $in intersect(I, J)
     by thm intersection_of_interval_endpoint_forms_member_bounds(I, J, a, b, c, d, z)
     claim:
-        ? max(a, c) < z0
+        ? finite_set_max(union({a}, { c})) < z0
         by contra:
-            ? max(a, c) < z0
-            max(a, c) >= z0
-            max(a, c) = z0
+            ? finite_set_max(union({a}, { c})) < z0
+            finite_set_max(union({a}, { c})) >= z0
+            finite_set_max(union({a}, { c})) = z0
             z0 $in intersect(I, J)
-            impossible not max(a, c) $in intersect(I, J)
-    z0 <= min(b, d)
-    z0 $in '(max(a, c), min(b, d)]
-    z $in '(max(a, c), min(b, d)]
+            impossible not finite_set_max(union({a}, { c})) $in intersect(I, J)
+    z0 <= finite_set_min(union({b}, { d}))
+    z0 $in '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
+    z $in '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
 
 thm intersection_of_interval_endpoint_forms_member_is_in_open_hull:
     ? forall I, J power_set(R), a, b, c, d R, z intersect(I, J):
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        not max(a, c) $in intersect(I, J)
-        not min(b, d) $in intersect(I, J)
+        not finite_set_max(union({a}, { c})) $in intersect(I, J)
+        not finite_set_min(union({b}, { d})) $in intersect(I, J)
         =>:
-            z $in '(max(a, c), min(b, d))
+            z $in '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d})))
     have z0 R = z
     z0 = z
     z0 $in intersect(I, J)
     by thm intersection_of_interval_endpoint_forms_member_bounds(I, J, a, b, c, d, z)
     claim:
-        ? max(a, c) < z0
+        ? finite_set_max(union({a}, { c})) < z0
         by contra:
-            ? max(a, c) < z0
-            max(a, c) >= z0
-            max(a, c) = z0
+            ? finite_set_max(union({a}, { c})) < z0
+            finite_set_max(union({a}, { c})) >= z0
+            finite_set_max(union({a}, { c})) = z0
             z0 $in intersect(I, J)
-            impossible not max(a, c) $in intersect(I, J)
+            impossible not finite_set_max(union({a}, { c})) $in intersect(I, J)
     claim:
-        ? z0 < min(b, d)
+        ? z0 < finite_set_min(union({b}, { d}))
         by contra:
-            ? z0 < min(b, d)
-            z0 >= min(b, d)
-            z0 = min(b, d)
+            ? z0 < finite_set_min(union({b}, { d}))
+            z0 >= finite_set_min(union({b}, { d}))
+            z0 = finite_set_min(union({b}, { d}))
             z0 $in intersect(I, J)
-            impossible not min(b, d) $in intersect(I, J)
-    z0 $in '(max(a, c), min(b, d))
-    z $in '(max(a, c), min(b, d))
+            impossible not finite_set_min(union({b}, { d})) $in intersect(I, J)
+    z0 $in '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d})))
+    z $in '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d})))
 
 thm closed_between_intersection_of_interval_endpoint_forms_is_member:
     ? forall I, J power_set(R), a, b, c, d, z R:
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        max(a, c) $in intersect(I, J)
-        min(b, d) $in intersect(I, J)
-        z $in '[max(a, c), min(b, d)]
+        finite_set_max(union({a}, { c})) $in intersect(I, J)
+        finite_set_min(union({b}, { d})) $in intersect(I, J)
+        z $in '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
         =>:
             z $in intersect(I, J)
-    max(a, c) < z or max(a, c) >= z
+    finite_set_max(union({a}, { c})) < z or finite_set_max(union({a}, { c})) >= z
     by cases:
         ? z $in intersect(I, J)
-        case max(a, c) < z:
-            z < min(b, d) or z >= min(b, d)
+        case finite_set_max(union({a}, { c})) < z:
+            z < finite_set_min(union({b}, { d})) or z >= finite_set_min(union({b}, { d}))
             by cases:
                 ? z $in intersect(I, J)
-                case z < min(b, d):
+                case z < finite_set_min(union({b}, { d})):
                     by thm strict_between_intersections_of_interval_endpoint_forms_is_member(I, J, a, b, c, d, z)
                     z $in intersect(I, J)
-                case z >= min(b, d):
-                    z = min(b, d)
+                case z >= finite_set_min(union({b}, { d})):
+                    z = finite_set_min(union({b}, { d}))
                     z $in intersect(I, J)
-        case max(a, c) >= z:
-            z = max(a, c)
+        case finite_set_max(union({a}, { c})) >= z:
+            z = finite_set_max(union({a}, { c}))
             z $in intersect(I, J)
 
 thm closed_between_intersection_of_interval_endpoint_forms_is_member_subtype:
-    ? forall I, J power_set(R), a, b, c, d R, z '[max(a, c), min(b, d)]:
+    ? forall I, J power_set(R), a, b, c, d R, z '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]:
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        max(a, c) $in intersect(I, J)
-        min(b, d) $in intersect(I, J)
+        finite_set_max(union({a}, { c})) $in intersect(I, J)
+        finite_set_min(union({b}, { d})) $in intersect(I, J)
         =>:
             z $in intersect(I, J)
     have z0 R = z
     z0 = z
-    max(a, c) <= z0
-    z0 <= min(b, d)
+    finite_set_max(union({a}, { c})) <= z0
+    z0 <= finite_set_min(union({b}, { d}))
     by thm closed_between_intersection_of_interval_endpoint_forms_is_member(I, J, a, b, c, d, z0)
     z0 $in intersect(I, J)
     z $in intersect(I, J)
 
 thm closed_open_between_intersection_of_interval_endpoint_forms_is_member:
-    ? forall I, J power_set(R), a, b, c, d R, z '[max(a, c), min(b, d)):
+    ? forall I, J power_set(R), a, b, c, d R, z '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))):
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        max(a, c) $in intersect(I, J)
+        finite_set_max(union({a}, { c})) $in intersect(I, J)
         =>:
             z $in intersect(I, J)
     have z0 R = z
     z0 = z
-    max(a, c) < z0 or max(a, c) >= z0
+    finite_set_max(union({a}, { c})) < z0 or finite_set_max(union({a}, { c})) >= z0
     by cases:
         ? z0 $in intersect(I, J)
-        case max(a, c) < z0:
-            z0 < min(b, d)
+        case finite_set_max(union({a}, { c})) < z0:
+            z0 < finite_set_min(union({b}, { d}))
             by thm strict_between_intersections_of_interval_endpoint_forms_is_member(I, J, a, b, c, d, z0)
             z0 $in intersect(I, J)
-        case max(a, c) >= z0:
-            z0 = max(a, c)
+        case finite_set_max(union({a}, { c})) >= z0:
+            z0 = finite_set_max(union({a}, { c}))
             z0 $in intersect(I, J)
     z $in intersect(I, J)
 
 thm open_closed_between_intersection_of_interval_endpoint_forms_is_member:
-    ? forall I, J power_set(R), a, b, c, d R, z '(max(a, c), min(b, d)]:
+    ? forall I, J power_set(R), a, b, c, d R, z '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]:
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        min(b, d) $in intersect(I, J)
+        finite_set_min(union({b}, { d})) $in intersect(I, J)
         =>:
             z $in intersect(I, J)
     have z0 R = z
     z0 = z
-    z0 < min(b, d) or z0 >= min(b, d)
+    z0 < finite_set_min(union({b}, { d})) or z0 >= finite_set_min(union({b}, { d}))
     by cases:
         ? z0 $in intersect(I, J)
-        case z0 < min(b, d):
-            max(a, c) < z0
+        case z0 < finite_set_min(union({b}, { d})):
+            finite_set_max(union({a}, { c})) < z0
             by thm strict_between_intersections_of_interval_endpoint_forms_is_member(I, J, a, b, c, d, z0)
             z0 $in intersect(I, J)
-        case z0 >= min(b, d):
-            z0 = min(b, d)
+        case z0 >= finite_set_min(union({b}, { d})):
+            z0 = finite_set_min(union({b}, { d}))
             z0 $in intersect(I, J)
     z $in intersect(I, J)
 
 thm open_between_intersection_of_interval_endpoint_forms_is_member:
-    ? forall I, J power_set(R), a, b, c, d R, z '(max(a, c), min(b, d)):
+    ? forall I, J power_set(R), a, b, c, d R, z '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))):
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
         =>:
             z $in intersect(I, J)
     have z0 R = z
     z0 = z
-    max(a, c) < z0
-    z0 < min(b, d)
+    finite_set_max(union({a}, { c})) < z0
+    z0 < finite_set_min(union({b}, { d}))
     by thm strict_between_intersections_of_interval_endpoint_forms_is_member(I, J, a, b, c, d, z0)
     z0 $in intersect(I, J)
     z $in intersect(I, J)
@@ -615,56 +615,56 @@ thm intersection_of_interval_endpoint_forms_with_both_endpoints_is_closed:
     ? forall I, J power_set(R), a, b, c, d R:
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        max(a, c) $in intersect(I, J)
-        min(b, d) $in intersect(I, J)
+        finite_set_max(union({a}, { c})) $in intersect(I, J)
+        finite_set_min(union({b}, { d})) $in intersect(I, J)
         =>:
-            intersect(I, J) = '[max(a, c), min(b, d)]
-    by extension intersect(I, J) = '[max(a, c), min(b, d)]:
+            intersect(I, J) = '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
+    by extension intersect(I, J) = '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]:
         forall z intersect(I, J):
-            z $in '[max(a, c), min(b, d)]
-        forall z '[max(a, c), min(b, d)]:
+            z $in '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
+        forall z '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]:
             z $in intersect(I, J)
 
 thm intersection_of_interval_endpoint_forms_with_left_endpoint_is_closed_open:
     ? forall I, J power_set(R), a, b, c, d R:
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        max(a, c) $in intersect(I, J)
-        not min(b, d) $in intersect(I, J)
+        finite_set_max(union({a}, { c})) $in intersect(I, J)
+        not finite_set_min(union({b}, { d})) $in intersect(I, J)
         =>:
-            intersect(I, J) = '[max(a, c), min(b, d))
-    by extension intersect(I, J) = '[max(a, c), min(b, d)):
+            intersect(I, J) = '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d})))
+    by extension intersect(I, J) = '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))):
         forall z intersect(I, J):
-            z $in '[max(a, c), min(b, d))
-        forall z '[max(a, c), min(b, d)):
+            z $in '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d})))
+        forall z '[finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))):
             z $in intersect(I, J)
 
 thm intersection_of_interval_endpoint_forms_with_right_endpoint_is_open_closed:
     ? forall I, J power_set(R), a, b, c, d R:
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        not max(a, c) $in intersect(I, J)
-        min(b, d) $in intersect(I, J)
+        not finite_set_max(union({a}, { c})) $in intersect(I, J)
+        finite_set_min(union({b}, { d})) $in intersect(I, J)
         =>:
-            intersect(I, J) = '(max(a, c), min(b, d)]
-    by extension intersect(I, J) = '(max(a, c), min(b, d)]:
+            intersect(I, J) = '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
+    by extension intersect(I, J) = '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]:
         forall z intersect(I, J):
-            z $in '(max(a, c), min(b, d)]
-        forall z '(max(a, c), min(b, d)]:
+            z $in '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]
+        forall z '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))]:
             z $in intersect(I, J)
 
 thm intersection_of_interval_endpoint_forms_without_endpoints_is_open:
     ? forall I, J power_set(R), a, b, c, d R:
         $has_interval_endpoints(I, a, b)
         $has_interval_endpoints(J, c, d)
-        not max(a, c) $in intersect(I, J)
-        not min(b, d) $in intersect(I, J)
+        not finite_set_max(union({a}, { c})) $in intersect(I, J)
+        not finite_set_min(union({b}, { d})) $in intersect(I, J)
         =>:
-            intersect(I, J) = '(max(a, c), min(b, d))
-    by extension intersect(I, J) = '(max(a, c), min(b, d)):
+            intersect(I, J) = '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d})))
+    by extension intersect(I, J) = '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))):
         forall z intersect(I, J):
-            z $in '(max(a, c), min(b, d))
-        forall z '(max(a, c), min(b, d)):
+            z $in '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d})))
+        forall z '(finite_set_max(union({a}, { c})), finite_set_min(union({b}, { d}))):
             z $in intersect(I, J)
 
 thm closed_interval_is_bounded_without_endpoint_order:
@@ -927,7 +927,7 @@ singleton or the empty set.
 
 prop has_interval_length_with_endpoints(I power_set(R), l, a, b R):
     $has_interval_endpoints(I, a, b)
-    l = max(b - a, 0)
+    l = finite_set_max(union({b - a}, { 0}))
 
 prop has_interval_length(I power_set(R), l R):
     exist a0, b0 R st {$has_interval_length_with_endpoints(I, l, a0, b0)}
@@ -944,12 +944,12 @@ thm interval_endpoint_case_has_total_length:
     ? forall I power_set(R), a, b R:
         $has_interval_endpoints(I, a, b)
         =>:
-            $has_interval_length(I, max(b - a, 0))
+            $has_interval_length(I, finite_set_max(union({b - a}, { 0})))
     claim:
-        ? $has_interval_length_with_endpoints(I, max(b - a, 0), a, b)
+        ? $has_interval_length_with_endpoints(I, finite_set_max(union({b - a}, { 0})), a, b)
         $has_interval_endpoints(I, a, b)
-        max(b - a, 0) = max(b - a, 0)
-    by thm interval_length_endpoint_case(I, max(b - a, 0), a, b)
+        finite_set_max(union({b - a}, { 0})) = finite_set_max(union({b - a}, { 0}))
+    by thm interval_length_endpoint_case(I, finite_set_max(union({b - a}, { 0})), a, b)
 
 thm interval_length_value_unique:
     ? forall I power_set(R), l1, l2 R:
@@ -958,7 +958,7 @@ thm interval_length_value_unique:
         =>:
             l1 = l2
     # Source handling: the endpoint-only definition assigns the same
-    # `max(b-a,0)` value to every endpoint representation of the same
+    # `finite_set_max(union({b-a}, {0}))` value to every endpoint representation of the same
     # bounded interval.
     # proof_debt: split the two endpoint representations and compare their
     # positive-part lengths by interval extensionality.
@@ -976,8 +976,8 @@ have fn interval_length by exist!:
     by thm interval_endpoint_case_has_total_length(I, a, b)
     claim:
         ? exist l R st {$has_interval_length(I, l)}
-        witness exist l R st {$has_interval_length(I, l)} from max(b - a, 0):
-            $has_interval_length(I, max(b - a, 0))
+        witness exist l R st {$has_interval_length(I, l)} from finite_set_max(union({b - a}, { 0})):
+            $has_interval_length(I, finite_set_max(union({b - a}, { 0})))
     claim:
         ? forall l1, l2 R:
             $has_interval_length(I, l1)
@@ -996,11 +996,11 @@ thm interval_length_nonnegative:
     # difference, so it is non-negative in every endpoint convention.
     obtain a, b from exist a, b R st {$has_interval_endpoints(I, a, b)}
     by thm interval_endpoint_case_has_total_length(I, a, b)
-    $has_interval_length(I, max(b - a, 0))
+    $has_interval_length(I, finite_set_max(union({b - a}, { 0})))
     $has_interval_length(I, interval_length(I))
-    by thm interval_length_value_unique(I, interval_length(I), max(b - a, 0))
-    interval_length(I) = max(b - a, 0)
-    max(b - a, 0) >= 0
+    by thm interval_length_value_unique(I, interval_length(I), finite_set_max(union({b - a}, { 0})))
+    interval_length(I) = finite_set_max(union({b - a}, { 0}))
+    finite_set_max(union({b - a}, { 0})) >= 0
     interval_length(I) >= 0
 
 thm interval_endpoint_forms_are_bounded_intervals:
@@ -1161,32 +1161,32 @@ thm max_positive_part_identity_when_positive:
     ? forall a, b R:
         a < b
         =>:
-            max(b - a, 0) = b - a
+            finite_set_max(union({b - a}, { 0})) = b - a
     b - a > 0
     b - a >= 0
     b - a <= b - a
     0 <= b - a
-    max(b - a, 0) <= b - a
-    b - a <= max(b - a, 0)
-    max(b - a, 0) = b - a
+    finite_set_max(union({b - a}, { 0})) <= b - a
+    b - a <= finite_set_max(union({b - a}, { 0}))
+    finite_set_max(union({b - a}, { 0})) = b - a
 
 thm max_positive_part_zero_when_nonpositive:
     ? forall a, b R:
         b <= a
         =>:
-            max(b - a, 0) = 0
+            finite_set_max(union({b - a}, { 0})) = 0
     b - a <= 0
     0 <= 0
-    max(b - a, 0) <= 0
-    0 <= max(b - a, 0)
-    max(b - a, 0) = 0
+    finite_set_max(union({b - a}, { 0})) <= 0
+    0 <= finite_set_max(union({b - a}, { 0}))
+    finite_set_max(union({b - a}, { 0})) = 0
 
 thm interval_endpoint_forms_have_total_length:
     ? forall a, b R:
-        $has_interval_length('[a, b], max(b - a, 0))
-        $has_interval_length('[a, b), max(b - a, 0))
-        $has_interval_length('(a, b], max(b - a, 0))
-        $has_interval_length('(a, b), max(b - a, 0))
+        $has_interval_length('[a, b], finite_set_max(union({b - a}, { 0})))
+        $has_interval_length('[a, b), finite_set_max(union({b - a}, { 0})))
+        $has_interval_length('(a, b], finite_set_max(union({b - a}, { 0})))
+        $has_interval_length('(a, b), finite_set_max(union({b - a}, { 0})))
     by thm interval_endpoint_forms_are_bounded_intervals(a, b)
     claim:
         ? $has_interval_endpoints('[a, b], a, b)
@@ -1219,13 +1219,13 @@ thm interval_endpoint_forms_have_zero_length_when_nonpositive:
             $has_interval_length('(a, b), 0)
     by thm interval_endpoint_forms_have_total_length(a, b)
     by thm max_positive_part_zero_when_nonpositive(a, b)
-    $has_interval_length('[a, b], max(b - a, 0))
+    $has_interval_length('[a, b], finite_set_max(union({b - a}, { 0})))
     $has_interval_length('[a, b], 0)
-    $has_interval_length('[a, b), max(b - a, 0))
+    $has_interval_length('[a, b), finite_set_max(union({b - a}, { 0})))
     $has_interval_length('[a, b), 0)
-    $has_interval_length('(a, b], max(b - a, 0))
+    $has_interval_length('(a, b], finite_set_max(union({b - a}, { 0})))
     $has_interval_length('(a, b], 0)
-    $has_interval_length('(a, b), max(b - a, 0))
+    $has_interval_length('(a, b), finite_set_max(union({b - a}, { 0})))
     $has_interval_length('(a, b), 0)
 
 thm non_degenerate_interval_forms_have_length:
@@ -1240,13 +1240,13 @@ thm non_degenerate_interval_forms_have_length:
     # 11.1.8, obtained by simplifying the total endpoint formula.
     by thm interval_endpoint_forms_have_total_length(a, b)
     by thm max_positive_part_identity_when_positive(a, b)
-    $has_interval_length('[a, b], max(b - a, 0))
+    $has_interval_length('[a, b], finite_set_max(union({b - a}, { 0})))
     $has_interval_length('[a, b], b - a)
-    $has_interval_length('[a, b), max(b - a, 0))
+    $has_interval_length('[a, b), finite_set_max(union({b - a}, { 0})))
     $has_interval_length('[a, b), b - a)
-    $has_interval_length('(a, b], max(b - a, 0))
+    $has_interval_length('(a, b], finite_set_max(union({b - a}, { 0})))
     $has_interval_length('(a, b], b - a)
-    $has_interval_length('(a, b), max(b - a, 0))
+    $has_interval_length('(a, b), finite_set_max(union({b - a}, { 0})))
     $has_interval_length('(a, b), b - a)
 
 thm singleton_interval_has_length_zero:
@@ -1261,7 +1261,7 @@ thm singleton_interval_has_length_zero:
     by thm interval_endpoint_case_has_total_length({a}, a, a)
     a <= a
     by thm max_positive_part_zero_when_nonpositive(a, a)
-    $has_interval_length({a}, max(a - a, 0))
+    $has_interval_length({a}, finite_set_max(union({a - a}, { 0})))
     $has_interval_length({a}, 0)
 
 thm empty_interval_has_length_zero:
@@ -1276,7 +1276,7 @@ thm empty_interval_has_length_zero:
     by thm interval_endpoint_case_has_total_length({}, 0, 0)
     0 <= 0
     by thm max_positive_part_zero_when_nonpositive(0, 0)
-    $has_interval_length({}, max(0 - 0, 0))
+    $has_interval_length({}, finite_set_max(union({0 - 0}, { 0})))
     $has_interval_length({}, 0)
 
 """
@@ -1314,6 +1314,20 @@ prop is_partition_of_bounded_interval(I power_set(R), P finite_set):
         J $subset I
     forall x I:
         exist! J P st {J $in power_set(R), x $in J}
+
+thm partition_is_set_of_real_subsets:
+    ? forall I power_set(R), P finite_set:
+        $is_partition_of_bounded_interval(I, P)
+        =>:
+            P $in power_set(power_set(R))
+    # Every partition piece is a real subset.  This is the carrier bridge for
+    # construction-valued APIs whose arguments are finite families of pieces.
+    claim:
+        ? P $subset power_set(R)
+        forall J P:
+            J $in power_set(R)
+        P $subset power_set(R)
+    P $in power_set(power_set(R))
 
 thm one_piece_partition_of_bounded_interval:
     ? forall I power_set(R):
@@ -1506,24 +1520,24 @@ thm singleton_interval_length_value:
 
 thm interval_endpoint_forms_length_value:
     ? forall a, b R:
-        interval_length('[a, b]) = max(b - a, 0)
-        interval_length('[a, b)) = max(b - a, 0)
-        interval_length('(a, b]) = max(b - a, 0)
-        interval_length('(a, b)) = max(b - a, 0)
+        interval_length('[a, b]) = finite_set_max(union({b - a}, { 0}))
+        interval_length('[a, b)) = finite_set_max(union({b - a}, { 0}))
+        interval_length('(a, b]) = finite_set_max(union({b - a}, { 0}))
+        interval_length('(a, b)) = finite_set_max(union({b - a}, { 0}))
     by thm interval_endpoint_forms_are_bounded_intervals(a, b)
     by thm interval_endpoint_forms_have_total_length(a, b)
     $has_interval_length('[a, b], interval_length('[a, b]))
-    $has_interval_length('[a, b], max(b - a, 0))
-    by thm interval_length_value_unique('[a, b], interval_length('[a, b]), max(b - a, 0))
+    $has_interval_length('[a, b], finite_set_max(union({b - a}, { 0})))
+    by thm interval_length_value_unique('[a, b], interval_length('[a, b]), finite_set_max(union({b - a}, { 0})))
     $has_interval_length('[a, b), interval_length('[a, b)))
-    $has_interval_length('[a, b), max(b - a, 0))
-    by thm interval_length_value_unique('[a, b), interval_length('[a, b)), max(b - a, 0))
+    $has_interval_length('[a, b), finite_set_max(union({b - a}, { 0})))
+    by thm interval_length_value_unique('[a, b), interval_length('[a, b)), finite_set_max(union({b - a}, { 0})))
     $has_interval_length('(a, b], interval_length('(a, b]))
-    $has_interval_length('(a, b], max(b - a, 0))
-    by thm interval_length_value_unique('(a, b], interval_length('(a, b]), max(b - a, 0))
+    $has_interval_length('(a, b], finite_set_max(union({b - a}, { 0})))
+    by thm interval_length_value_unique('(a, b], interval_length('(a, b]), finite_set_max(union({b - a}, { 0})))
     $has_interval_length('(a, b), interval_length('(a, b)))
-    $has_interval_length('(a, b), max(b - a, 0))
-    by thm interval_length_value_unique('(a, b), interval_length('(a, b)), max(b - a, 0))
+    $has_interval_length('(a, b), finite_set_max(union({b - a}, { 0})))
+    by thm interval_length_value_unique('(a, b), interval_length('(a, b)), finite_set_max(union({b - a}, { 0})))
 
 thm interval_endpoint_forms_zero_length_value_when_nonpositive:
     ? forall a, b R:
@@ -2069,6 +2083,777 @@ thm common_refinement_exists_for_partitions:
             witness exist H fn_range(fn(p cart(P, Qpart)) power_set(R) {intersect(p[1], p[2])}) st {H = intersect(J, K)} from intersect(J, K):
                 intersect(J, K) = intersect(J, K)
 
+thm common_refinement_unique:
+    ? forall I power_set(R), P, Qpart, Rf1, Rf2 finite_set:
+        $is_common_refinement_of_partitions(I, P, Qpart, Rf1)
+        $is_common_refinement_of_partitions(I, P, Qpart, Rf2)
+        =>:
+            Rf1 = Rf2
+    # Source handling: Definition 11.1.16 describes the common refinement by
+    # exactly its intersection pieces, so two such families have the same
+    # members.
+    by extension Rf1 = Rf2:
+        claim:
+            ? forall H Rf1:
+                H $in Rf2
+            obtain J, K from exist J P, K Qpart st {J $in power_set(R), K $in power_set(R), H = intersect(J, K)}
+            obtain H0 from exist H0 Rf2 st {H0 = intersect(J, K)}
+            H = intersect(J, K)
+            H0 = intersect(J, K)
+            H = H0
+            H $in Rf2
+        claim:
+            ? forall H Rf2:
+                H $in Rf1
+            obtain J, K from exist J P, K Qpart st {J $in power_set(R), K $in power_set(R), H = intersect(J, K)}
+            obtain H0 from exist H0 Rf1 st {H0 = intersect(J, K)}
+            H = intersect(J, K)
+            H0 = intersect(J, K)
+            H = H0
+            H $in Rf1
+
+have fn common_refinement by exist!:
+    ? forall I power_set(R), P, Qpart power_set(power_set(R)):
+        $is_finite_set(P)
+        $is_finite_set(Qpart)
+        $is_partition_of_bounded_interval(I, P)
+        $is_partition_of_bounded_interval(I, Qpart)
+        =>:
+            exist! Rf power_set(power_set(R)) st {$is_finite_set(Rf), $is_common_refinement_of_partitions(I, P, Qpart, Rf)}
+    # Source handling: this is the canonical `P#Q` from Definition 11.1.16.
+    # Its selector shape lets later constructions use the refinement itself,
+    # instead of reopening an existential witness at every use site.
+    by thm common_refinement_exists_for_partitions(I, P, Qpart)
+    obtain Rf from exist Rf finite_set st {$is_common_refinement_of_partitions(I, P, Qpart, Rf)}
+    by thm partition_is_set_of_real_subsets(I, Rf)
+    claim:
+        ? exist Rf0 power_set(power_set(R)) st {$is_finite_set(Rf0), $is_common_refinement_of_partitions(I, P, Qpart, Rf0)}
+        witness exist Rf0 power_set(power_set(R)) st {$is_finite_set(Rf0), $is_common_refinement_of_partitions(I, P, Qpart, Rf0)} from Rf:
+            $is_finite_set(Rf)
+            $is_common_refinement_of_partitions(I, P, Qpart, Rf)
+    claim:
+        ? forall Rf1, Rf2 power_set(power_set(R)):
+            $is_finite_set(Rf1)
+            $is_finite_set(Rf2)
+            $is_common_refinement_of_partitions(I, P, Qpart, Rf1)
+            $is_common_refinement_of_partitions(I, P, Qpart, Rf2)
+            =>:
+                Rf1 = Rf2
+        by thm common_refinement_unique(I, P, Qpart, Rf1, Rf2)
+    exist! Rf0 power_set(power_set(R)) st {$is_finite_set(Rf0), $is_common_refinement_of_partitions(I, P, Qpart, Rf0)}
+
+# A refinement fiber is the finite family of nonempty fine pieces lying inside
+# one prospective coarse piece.  Empty pieces have zero length and zero
+# rectangle contribution, but cannot be assigned to a unique coarse piece.
+# Excluding them here makes the later finite regrouping disjoint.
+
+prop is_refinement_fiber(Pfine power_set(power_set(R)), K power_set(R), F power_set(power_set(R))):
+    $is_finite_set(Pfine)
+    $is_finite_set(F)
+    F $subset Pfine
+    forall J F:
+        $is_nonempty_set(J)
+        J $subset K
+    forall J Pfine:
+        $is_nonempty_set(J)
+        J $subset K
+        =>:
+            J $in F
+
+thm refinement_fiber_exists:
+    ? forall Pfine power_set(power_set(R)), K power_set(R):
+        $is_finite_set(Pfine)
+        =>:
+            exist F power_set(power_set(R)) st {$is_refinement_fiber(Pfine, K, F)}
+    claim:
+        ? {J Pfine: $is_nonempty_set(J), J $subset K} $subset Pfine
+        forall J {J Pfine: $is_nonempty_set(J), J $subset K}:
+            J $in Pfine
+    by thm basics::subset_of_finite_set_is_finite({J Pfine: $is_nonempty_set(J), J $subset K}, Pfine)
+    claim:
+        ? $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
+        $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
+    witness exist F power_set(power_set(R)) st {$is_refinement_fiber(Pfine, K, F)} from {J Pfine: $is_nonempty_set(J), J $subset K}:
+        $is_finite_set(Pfine)
+        $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
+        {J Pfine: $is_nonempty_set(J), J $subset K} $subset Pfine
+        forall J {J Pfine: $is_nonempty_set(J), J $subset K}:
+            $is_nonempty_set(J)
+            J $subset K
+        forall J Pfine:
+            $is_nonempty_set(J)
+            J $subset K
+            =>:
+                J $in {X Pfine: $is_nonempty_set(X), X $subset K}
+        $is_refinement_fiber(Pfine, K, {J Pfine: $is_nonempty_set(J), J $subset K})
+
+thm refinement_fiber_unique:
+    ? forall Pfine, F1, F2 power_set(power_set(R)), K power_set(R):
+        $is_refinement_fiber(Pfine, K, F1)
+        $is_refinement_fiber(Pfine, K, F2)
+        =>:
+            F1 = F2
+    by extension F1 = F2:
+        claim:
+            ? forall J F1:
+                J $in F2
+            J $in Pfine
+            $is_nonempty_set(J)
+            J $subset K
+            J $in F2
+        claim:
+            ? forall J F2:
+                J $in F1
+            J $in Pfine
+            $is_nonempty_set(J)
+            J $subset K
+            J $in F1
+
+have fn refinement_fiber by exist!:
+    ? forall Pfine power_set(power_set(R)), K power_set(R):
+        $is_finite_set(Pfine)
+        =>:
+            exist! F power_set(power_set(R)) st {$is_refinement_fiber(Pfine, K, F)}
+    by thm refinement_fiber_exists(Pfine, K)
+    obtain F from exist F power_set(power_set(R)) st {$is_refinement_fiber(Pfine, K, F)}
+    claim:
+        ? exist F0 power_set(power_set(R)) st {$is_refinement_fiber(Pfine, K, F0)}
+        witness exist F0 power_set(power_set(R)) st {$is_refinement_fiber(Pfine, K, F0)} from F:
+            $is_refinement_fiber(Pfine, K, F)
+    claim:
+        ? forall F1, F2 power_set(power_set(R)):
+            $is_refinement_fiber(Pfine, K, F1)
+            $is_refinement_fiber(Pfine, K, F2)
+            =>:
+                F1 = F2
+        by thm refinement_fiber_unique(Pfine, K, F1, F2)
+    exist! F0 power_set(power_set(R)) st {$is_refinement_fiber(Pfine, K, F0)}
+
+thm refinement_fiber_has_value:
+    ? forall Pfine power_set(power_set(R)), K power_set(R):
+        $is_finite_set(Pfine)
+        =>:
+            $is_refinement_fiber(Pfine, K, refinement_fiber(Pfine, K))
+    have F power_set(power_set(R)) = refinement_fiber(Pfine, K)
+    $is_refinement_fiber(Pfine, K, F)
+    F = refinement_fiber(Pfine, K)
+    $is_refinement_fiber(Pfine, K, refinement_fiber(Pfine, K))
+
+thm refinement_fiber_has_finite_representative:
+    ? forall Pfine power_set(power_set(R)), K power_set(R):
+        $is_finite_set(Pfine)
+        =>:
+            exist F finite_set st {F = refinement_fiber(Pfine, K), $is_refinement_fiber(Pfine, K, F)}
+    # The selector's public carrier is a set of real subsets.  This bridge
+    # packages its finite value for finite_set_sum and other finite APIs.
+    claim:
+        ? {J Pfine: $is_nonempty_set(J), J $subset K} $subset Pfine
+        forall J {J Pfine: $is_nonempty_set(J), J $subset K}:
+            J $in Pfine
+    by thm basics::subset_of_finite_set_is_finite({J Pfine: $is_nonempty_set(J), J $subset K}, Pfine)
+    claim:
+        ? $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
+        $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
+    claim:
+        ? $is_refinement_fiber(Pfine, K, {J Pfine: $is_nonempty_set(J), J $subset K})
+        $is_finite_set(Pfine)
+        $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
+        {J Pfine: $is_nonempty_set(J), J $subset K} $subset Pfine
+        forall J {J Pfine: $is_nonempty_set(J), J $subset K}:
+            $is_nonempty_set(J)
+            J $subset K
+        forall J Pfine:
+            $is_nonempty_set(J)
+            J $subset K
+            =>:
+                J $in {X Pfine: $is_nonempty_set(X), X $subset K}
+    by thm refinement_fiber_has_value(Pfine, K)
+    by thm refinement_fiber_unique(Pfine, {J Pfine: $is_nonempty_set(J), J $subset K}, refinement_fiber(Pfine, K), K)
+    {J Pfine: $is_nonempty_set(J), J $subset K} = refinement_fiber(Pfine, K)
+    witness exist F finite_set st {F = refinement_fiber(Pfine, K), $is_refinement_fiber(Pfine, K, F)} from {J Pfine: $is_nonempty_set(J), J $subset K}:
+        $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
+        {J Pfine: $is_nonempty_set(J), J $subset K} = refinement_fiber(Pfine, K)
+        $is_refinement_fiber(Pfine, K, {J Pfine: $is_nonempty_set(J), J $subset K})
+
+thm refinement_fiber_partitions_coarse_piece:
+    ? forall I power_set(R), Pfine, Pcoarse, F finite_set, K power_set(R):
+        $is_finer_partition_than(I, Pfine, Pcoarse)
+        K $in Pcoarse
+        $is_refinement_fiber(Pfine, K, F)
+        =>:
+            $is_partition_of_bounded_interval(K, F)
+    # A fine piece through x lies in some coarse piece.  Since both that
+    # coarse piece and K contain x, unique coverage by Pcoarse identifies
+    # them.  Thus the fiber covers K exactly once.
+    $is_partition_of_bounded_interval(I, Pfine)
+    $is_partition_of_bounded_interval(I, Pcoarse)
+    $is_bounded_interval(K)
+    claim:
+        ? K $subset I
+        K $in Pcoarse
+        K $subset I
+    claim:
+        ? forall J F:
+            J $in power_set(R)
+            $is_bounded_interval(J)
+            J $subset K
+        J $in Pfine
+        J $in power_set(R)
+        $is_bounded_interval(J)
+        J $subset I
+        J $subset K
+    claim:
+        ? forall x K:
+            exist J F st {J $in power_set(R), x $in J}
+        x $in I
+        obtain J from exist J Pfine st {J $in power_set(R), x $in J}
+        obtain K0 from exist K0 Pcoarse st {J $in power_set(R), K0 $in power_set(R), J $subset K0}
+        x $in J
+        witness $is_nonempty_set(J) from x
+        x $in K0
+        J $subset K0
+        K $in power_set(R)
+        exist! K1 Pcoarse st {K1 $in power_set(R), x $in K1}
+        K0 = K
+        J $subset K
+        J $in F
+        witness exist J0 F st {J0 $in power_set(R), x $in J0} from J:
+            J $in power_set(R)
+            x $in J
+    claim:
+        ? forall x K, J1, J2 F:
+            J1 $in power_set(R)
+            J2 $in power_set(R)
+            x $in J1
+            x $in J2
+            =>:
+                J1 = J2
+        J1 $in Pfine
+        J2 $in Pfine
+        exist! J Pfine st {J $in power_set(R), x $in J}
+        J1 = J2
+    $is_partition_of_bounded_interval(K, F)
+
+thm nonempty_fine_piece_has_unique_coarse_piece:
+    ? forall I power_set(R), Pfine, Pcoarse finite_set, J power_set(R):
+        $is_finer_partition_than(I, Pfine, Pcoarse)
+        J $in Pfine
+        $is_nonempty_set(J)
+        =>:
+            exist! K Pcoarse st {K $in power_set(R), J $subset K}
+    # A nonempty fine piece has a point.  The unique-cover clause of the
+    # coarse partition then makes its containing coarse piece unique.
+    $is_partition_of_bounded_interval(I, Pfine)
+    $is_partition_of_bounded_interval(I, Pcoarse)
+    J $in power_set(R)
+    J $subset I
+    obtain K0 from exist K Pcoarse st {J $in power_set(R), K $in power_set(R), J $subset K}
+    witness exist! K Pcoarse st {K $in power_set(R), J $subset K} from K0:
+        K0 $in power_set(R)
+        J $subset K0
+        claim:
+            ? forall K1, K2 Pcoarse:
+                K1 $in power_set(R)
+                K2 $in power_set(R)
+                J $subset K1
+                J $subset K2
+                =>:
+                    K1 = K2
+            obtain x from exist x J st {x $in J}
+            x $in K1
+            x $in K2
+            exist! Kcover Pcoarse st {Kcover $in power_set(R), x $in Kcover}
+            K1 = K2
+
+have fn refinement_owner by exist!:
+    ? forall I power_set(R), Pfine, Pcoarse power_set(power_set(R)), J power_set(R):
+        $is_finite_set(Pfine)
+        $is_finite_set(Pcoarse)
+        $is_finer_partition_than(I, Pfine, Pcoarse)
+        J $in Pfine
+        $is_nonempty_set(J)
+        =>:
+            exist! K power_set(R) st {K $in Pcoarse, J $subset K}
+    by thm nonempty_fine_piece_has_unique_coarse_piece(I, Pfine, Pcoarse, J)
+
+thm refinement_owner_has_value:
+    ? forall I power_set(R), Pfine, Pcoarse power_set(power_set(R)), J power_set(R):
+        $is_finite_set(Pfine)
+        $is_finite_set(Pcoarse)
+        $is_finer_partition_than(I, Pfine, Pcoarse)
+        J $in Pfine
+        $is_nonempty_set(J)
+        =>:
+            refinement_owner(I, Pfine, Pcoarse, J) $in Pcoarse
+            J $subset refinement_owner(I, Pfine, Pcoarse, J)
+    have K power_set(R) = refinement_owner(I, Pfine, Pcoarse, J)
+    K $in Pcoarse
+    J $subset K
+    K = refinement_owner(I, Pfine, Pcoarse, J)
+    refinement_owner(I, Pfine, Pcoarse, J) $in Pcoarse
+    J $subset refinement_owner(I, Pfine, Pcoarse, J)
+
+thm refinement_owner_is_in_refinement_fiber:
+    ? forall I power_set(R), Pfine, Pcoarse power_set(power_set(R)), J power_set(R):
+        $is_finite_set(Pfine)
+        $is_finite_set(Pcoarse)
+        $is_finer_partition_than(I, Pfine, Pcoarse)
+        J $in Pfine
+        $is_nonempty_set(J)
+        =>:
+            J $in refinement_fiber(Pfine, refinement_owner(I, Pfine, Pcoarse, J))
+    have K power_set(R) = refinement_owner(I, Pfine, Pcoarse, J)
+    by thm refinement_owner_has_value(I, Pfine, Pcoarse, J)
+    J $subset K
+    by thm refinement_fiber_has_value(Pfine, K)
+    $is_refinement_fiber(Pfine, K, refinement_fiber(Pfine, K))
+    J $in refinement_fiber(Pfine, K)
+    K = refinement_owner(I, Pfine, Pcoarse, J)
+    J $in refinement_fiber(Pfine, refinement_owner(I, Pfine, Pcoarse, J))
+
+thm refinement_fiber_member_has_owner:
+    ? forall I power_set(R), Pfine, Pcoarse power_set(power_set(R)), J, K power_set(R):
+        $is_finite_set(Pfine)
+        $is_finite_set(Pcoarse)
+        $is_finer_partition_than(I, Pfine, Pcoarse)
+        K $in Pcoarse
+        J $in refinement_fiber(Pfine, K)
+        =>:
+            refinement_owner(I, Pfine, Pcoarse, J) = K
+    # The fiber condition recovers a nonempty fine piece contained in K.
+    # Uniqueness of the coarse cover then identifies K with its owner.
+    by thm refinement_fiber_has_value(Pfine, K)
+    $is_refinement_fiber(Pfine, K, refinement_fiber(Pfine, K))
+    J $in Pfine
+    $is_nonempty_set(J)
+    J $subset K
+    by thm refinement_owner_has_value(I, Pfine, Pcoarse, J)
+    refinement_owner(I, Pfine, Pcoarse, J) $in Pcoarse
+    J $subset refinement_owner(I, Pfine, Pcoarse, J)
+    by thm nonempty_fine_piece_has_unique_coarse_piece(I, Pfine, Pcoarse, J)
+    K = refinement_owner(I, Pfine, Pcoarse, J)
+    refinement_owner(I, Pfine, Pcoarse, J) = K
+
+prop has_refinement_fiber_sum(Pfine power_set(power_set(R)), K power_set(R), h fn(J Pfine) R, s R):
+    $is_finite_set(Pfine)
+    exist F finite_set st {$is_refinement_fiber(Pfine, K, F), s = finite_set_sum(F, fn(J F) R {h(J)})}
+
+thm refinement_fiber_sum_exists:
+    ? forall Pfine power_set(power_set(R)), K power_set(R), h fn(J Pfine) R:
+        $is_finite_set(Pfine)
+        =>:
+            exist s R st {$has_refinement_fiber_sum(Pfine, K, h, s)}
+    by thm refinement_fiber_has_finite_representative(Pfine, K)
+    obtain F from exist F finite_set st {F = refinement_fiber(Pfine, K), $is_refinement_fiber(Pfine, K, F)}
+    $is_finite_set(Pfine)
+    witness exist F0 finite_set st {$is_refinement_fiber(Pfine, K, F0), finite_set_sum(F, fn(J F) R {h(J)}) = finite_set_sum(F0, fn(J F0) R {h(J)})} from F:
+        $is_refinement_fiber(Pfine, K, F)
+        finite_set_sum(F, fn(J F) R {h(J)}) = finite_set_sum(F, fn(J F) R {h(J)})
+    $has_refinement_fiber_sum(Pfine, K, h, finite_set_sum(F, fn(J F) R {h(J)}))
+    witness exist s R st {$has_refinement_fiber_sum(Pfine, K, h, s)} from finite_set_sum(F, fn(J F) R {h(J)}):
+        $has_refinement_fiber_sum(Pfine, K, h, finite_set_sum(F, fn(J F) R {h(J)}))
+
+thm refinement_fiber_sum_unique:
+    ? forall Pfine power_set(power_set(R)), K power_set(R), h fn(J Pfine) R, s1, s2 R:
+        $has_refinement_fiber_sum(Pfine, K, h, s1)
+        $has_refinement_fiber_sum(Pfine, K, h, s2)
+        =>:
+            s1 = s2
+    obtain F1 from exist F1 finite_set st {$is_refinement_fiber(Pfine, K, F1), s1 = finite_set_sum(F1, fn(J F1) R {h(J)})}
+    obtain F2 from exist F2 finite_set st {$is_refinement_fiber(Pfine, K, F2), s2 = finite_set_sum(F2, fn(J F2) R {h(J)})}
+    by thm refinement_fiber_unique(Pfine, F1, F2, K)
+    F1 = F2
+    finite_set_sum(F1, fn(J F1) R {h(J)}) = finite_set_sum(F2, fn(J F2) R {h(J)})
+    s1 = finite_set_sum(F1, fn(J F1) R {h(J)}) = finite_set_sum(F2, fn(J F2) R {h(J)}) = s2
+
+have fn refinement_fiber_sum by exist!:
+    ? forall Pfine power_set(power_set(R)), K power_set(R), h fn(J Pfine) R:
+        $is_finite_set(Pfine)
+        =>:
+            exist! s R st {$has_refinement_fiber_sum(Pfine, K, h, s)}
+    by thm refinement_fiber_sum_exists(Pfine, K, h)
+    obtain s from exist s R st {$has_refinement_fiber_sum(Pfine, K, h, s)}
+    claim:
+        ? exist s0 R st {$has_refinement_fiber_sum(Pfine, K, h, s0)}
+        witness exist s0 R st {$has_refinement_fiber_sum(Pfine, K, h, s0)} from s:
+            $has_refinement_fiber_sum(Pfine, K, h, s)
+    claim:
+        ? forall s1, s2 R:
+            $has_refinement_fiber_sum(Pfine, K, h, s1)
+            $has_refinement_fiber_sum(Pfine, K, h, s2)
+            =>:
+                s1 = s2
+        by thm refinement_fiber_sum_unique(Pfine, K, h, s1, s2)
+    exist! s0 R st {$has_refinement_fiber_sum(Pfine, K, h, s0)}
+
+thm refinement_fiber_sum_has_value:
+    ? forall Pfine power_set(power_set(R)), K power_set(R), h fn(J Pfine) R:
+        $is_finite_set(Pfine)
+        =>:
+            $has_refinement_fiber_sum(Pfine, K, h, refinement_fiber_sum(Pfine, K, h))
+    have s R = refinement_fiber_sum(Pfine, K, h)
+    $has_refinement_fiber_sum(Pfine, K, h, s)
+    s = refinement_fiber_sum(Pfine, K, h)
+    $has_refinement_fiber_sum(Pfine, K, h, refinement_fiber_sum(Pfine, K, h))
+
+have fn nonempty_refinement_support(Pfine power_set(power_set(R))) power_set(power_set(R)) = {J Pfine: $is_nonempty_set(J)}
+
+thm nonempty_refinement_support_is_finite:
+    ? forall Pfine power_set(power_set(R)):
+        $is_finite_set(Pfine)
+        =>:
+            $is_finite_set(nonempty_refinement_support(Pfine))
+    claim:
+        ? nonempty_refinement_support(Pfine) $subset Pfine
+        forall J nonempty_refinement_support(Pfine):
+            J $in Pfine
+    by thm basics::subset_of_finite_set_is_finite(nonempty_refinement_support(Pfine), Pfine)
+    $is_finite_set(nonempty_refinement_support(Pfine))
+
+# Generic finite-family vocabulary for the later regrouping theorem.  The
+# carrier is deliberately the Chapter 11 family of real subsets; its fully
+# carrier-polymorphic counterpart needs first-class dependent function output
+# types before it can leave this chapter.
+prop is_finite_indexed_subfamily(S, T power_set(power_set(R)), F fn(L T) power_set(power_set(R))):
+    $is_finite_set(S)
+    $is_finite_set(T)
+    forall K T:
+        $is_finite_set(F(K))
+        F(K) $subset S
+
+prop has_indexed_fiber_sum(S, T power_set(power_set(R)), F fn(L T) power_set(power_set(R)), h fn(x power_set(R)) R, K T, s R):
+    $is_finite_indexed_subfamily(S, T, F)
+    exist A finite_set st {A = F(K), A $subset S, A $subset power_set(R), s = finite_set_sum(A, fn(x A) R {h(x)})}
+
+prop is_finite_unique_cover_of(S, T power_set(power_set(R)), F fn(L T) power_set(power_set(R))):
+    $is_finite_indexed_subfamily(S, T, F)
+    forall J S:
+        exist! K T st {J $in F(K)}
+
+# A unique cover makes distinct fibers disjoint. This is the structural
+# premise required before a finite-set sum can split into fiber sums.
+thm finite_unique_cover_distinct_fibers_are_disjoint:
+    ? forall S, T power_set(power_set(R)), F fn(L T) power_set(power_set(R)), K1, K2 T:
+        $is_finite_unique_cover_of(S, T, F)
+        K1 != K2
+        =>:
+            intersect(F(K1), F(K2)) = {}
+    forall J S:
+        exist! K0 T st {J $in F(K0)}
+    claim:
+        ? forall J intersect(F(K1), F(K2)):
+            J $in {}
+        by contra:
+            ? J $in {}
+            not J $in {}
+            J $in F(K1)
+            J $in F(K2)
+            F(K1) $subset S
+            J $in S
+            exist! K0 T st {J $in F(K0)}
+            obtain K0 from exist! K0 T st {J $in F(K0)}
+            K0 = K1
+            K0 = K2
+            K1 = K2
+            impossible K1 != K2
+    by extension intersect(F(K1), F(K2)) = {}:
+        claim:
+            ? forall J intersect(F(K1), F(K2)):
+                J $in {}
+            J $in {}
+        claim:
+            ? forall J {}:
+                J $in intersect(F(K1), F(K2))
+            by contra:
+                ? J $in intersect(F(K1), F(K2))
+                J $in {}
+                not J $in {}
+                impossible not J $in {}
+
+# After removing one index, the remaining fibers still cover precisely the
+# complement of that fiber. This is the structural induction step for finite
+# regrouping.
+thm finite_unique_cover_residual_after_removing_index:
+    ? forall S, T power_set(power_set(R)), F fn(L T) power_set(power_set(R)), K T:
+        $is_finite_unique_cover_of(S, T, F)
+        =>:
+            $is_finite_unique_cover_of(set_minus(S, F(K)), set_minus(T, {K}), fn(L set_minus(T, {K})) power_set(power_set(R)) {F(L)})
+    set_minus(S, F(K)) $subset power_set(R)
+    set_minus(S, F(K)) $in power_set(power_set(R))
+    set_minus(T, {K}) $subset power_set(R)
+    set_minus(T, {K}) $in power_set(power_set(R))
+    have S0 power_set(power_set(R)) = set_minus(S, F(K))
+    have T0 power_set(power_set(R)) = set_minus(T, {K})
+    have fn F0(L T0) power_set(power_set(R)) = F(L)
+    claim:
+        ? $is_finite_indexed_subfamily(S0, T0, F0)
+        S0 $subset S
+        by thm basics::subset_of_finite_set_is_finite(S0, S)
+        T0 $subset T
+        by thm basics::subset_of_finite_set_is_finite(T0, T)
+        claim:
+            ? forall L T0:
+                $is_finite_set(F0(L))
+                F0(L) $subset S0
+            F0(L) = F(L)
+            $is_finite_set(F(L))
+            F(L) $subset S
+            L != K
+            by thm finite_unique_cover_distinct_fibers_are_disjoint(S, T, F, L, K)
+            intersect(F(L), F(K)) = {}
+            claim:
+                ? forall J F(L):
+                    J $in S0
+                J $in S
+                by contra:
+                    ? J $in S0
+                    not J $in S0
+                    J $in F(K)
+                    J $in intersect(F(L), F(K))
+                    J $in {}
+                    not J $in {}
+                    impossible not J $in {}
+                J $in set_minus(S, F(K))
+                J $in S0
+            F(L) $subset S0
+            F0(L) $subset S0
+        $is_finite_indexed_subfamily(S0, T0, F0)
+
+# An ambient weight remains the same function after a fiber and its index are
+# removed. Only the finite family being summed changes.
+thm indexed_fiber_sum_persists_after_removing_index:
+    ? forall S, T power_set(power_set(R)), F fn(L T) power_set(power_set(R)), h fn(x power_set(R)) R, K T, L set_minus(T, {K}), s R:
+        $is_finite_unique_cover_of(S, T, F)
+        $has_indexed_fiber_sum(S, T, F, h, L, s)
+        =>:
+            $has_indexed_fiber_sum(set_minus(S, F(K)), set_minus(T, {K}), fn(L0 set_minus(T, {K})) power_set(power_set(R)) {F(L0)}, h, L, s)
+    set_minus(S, F(K)) $subset power_set(R)
+    set_minus(S, F(K)) $in power_set(power_set(R))
+    set_minus(T, {K}) $subset power_set(R)
+    set_minus(T, {K}) $in power_set(power_set(R))
+    have S0 power_set(power_set(R)) = set_minus(S, F(K))
+    have T0 power_set(power_set(R)) = set_minus(T, {K})
+    have fn F0(L0 T0) power_set(power_set(R)) = F(L0)
+    by thm finite_unique_cover_residual_after_removing_index(S, T, F, K)
+    $is_finite_indexed_subfamily(S0, T0, F0)
+    obtain A from exist A finite_set st {A = F(L), A $subset S, A $subset power_set(R), s = finite_set_sum(A, fn(x A) R {h(x)})}
+    s = finite_set_sum(A, fn(x A) R {h(x)})
+    A = F(L)
+    F0(L) = F(L)
+    F0(L) = A
+    F0(L) $subset S0
+    A $subset S0
+    by thm finite_unique_cover_residual_after_removing_index(S, T, F, K)
+    $is_finite_indexed_subfamily(set_minus(S, F(K)), set_minus(T, {K}), fn(L0 set_minus(T, {K})) power_set(power_set(R)) {F(L0)})
+    witness exist B finite_set st {B = fn(L0 set_minus(T, {K})) power_set(power_set(R)) {F(L0)}(L), B $subset set_minus(S, F(K)), B $subset power_set(R), s = finite_set_sum(B, fn(x B) R {h(x)})} from A:
+        B = A
+        A = F(L)
+        fn(L0 set_minus(T, {K})) power_set(power_set(R)) {F(L0)}(L) = F(L)
+        B = F(L) = fn(L0 set_minus(T, {K})) power_set(power_set(R)) {F(L0)}(L)
+        B $subset S0
+        B $subset set_minus(S, F(K))
+        B $subset power_set(R)
+        s = finite_set_sum(A, fn(x A) R {h(x)})
+        finite_set_sum(B, fn(x B) R {h(x)}) = finite_set_sum(A, fn(x A) R {h(x)})
+        s = finite_set_sum(B, fn(x B) R {h(x)})
+    $has_indexed_fiber_sum(set_minus(S, F(K)), set_minus(T, {K}), fn(L0 set_minus(T, {K})) power_set(power_set(R)) {F(L0)}, h, L, s)
+
+# A finite-set induction presents its recursive index set as a named set T,
+# whereas residual-cover elimination produces the literal set_minus(U, {K}).
+# This bridge changes only that index carrier; no mathematical fiber changes.
+thm finite_unique_cover_retype_residual_index:
+    ? forall S, T, U power_set(power_set(R)), K U, F fn(L U) power_set(power_set(R)):
+        T = set_minus(U, {K})
+        T $subset U
+        $is_finite_unique_cover_of(S, U, F)
+        =>:
+            $is_finite_unique_cover_of(set_minus(S, F(K)), T, fn(L T) power_set(power_set(R)) {F(L)})
+    set_minus(S, F(K)) $subset power_set(R)
+    set_minus(S, F(K)) $in power_set(power_set(R))
+    by thm finite_unique_cover_residual_after_removing_index(S, U, F, K)
+    $is_finite_unique_cover_of(set_minus(S, F(K)), set_minus(U, {K}), fn(L set_minus(U, {K})) power_set(power_set(R)) {F(L)})
+    $is_finite_unique_cover_of(set_minus(S, F(K)), T, fn(L T) power_set(power_set(R)) {F(L)})
+
+thm indexed_fiber_sum_retype_residual_index:
+    ? forall S, T, U power_set(power_set(R)), K U, F fn(L U) power_set(power_set(R)), h fn(x power_set(R)) R, L T, s R:
+        T = set_minus(U, {K})
+        T $subset U
+        $is_finite_unique_cover_of(S, U, F)
+        $has_indexed_fiber_sum(S, U, F, h, L, s)
+        =>:
+            $has_indexed_fiber_sum(set_minus(S, F(K)), T, fn(L0 T) power_set(power_set(R)) {F(L0)}, h, L, s)
+    set_minus(S, F(K)) $subset power_set(R)
+    set_minus(S, F(K)) $in power_set(power_set(R))
+    by thm indexed_fiber_sum_persists_after_removing_index(S, U, F, h, K, L, s)
+    $has_indexed_fiber_sum(set_minus(S, F(K)), set_minus(U, {K}), fn(L0 set_minus(U, {K})) power_set(power_set(R)) {F(L0)}, h, L, s)
+    $has_indexed_fiber_sum(set_minus(S, F(K)), T, fn(L0 T) power_set(power_set(R)) {F(L0)}, h, L, s)
+
+# The empty index family can cover only the empty source family. This is the
+# actual base case of finite-index induction (the singleton theorem below is
+# the first nonempty case).
+thm finite_set_sum_over_empty_unique_cover:
+    ? forall S, T power_set(power_set(R)), F fn(L T) power_set(power_set(R)), h fn(x power_set(R)) R, g fn(K T) R:
+        $is_finite_unique_cover_of(S, T, F)
+        T = {}
+        =>:
+            finite_set_sum(S, fn(x S) R {h(x)}) = finite_set_sum(T, g)
+    claim:
+        ? S = {}
+        by extension S = {}:
+            claim:
+                ? forall J S:
+                    J $in {}
+                exist! k T st {J $in F(k)}
+                obtain k from exist! k T st {J $in F(k)}
+                k $in T
+                T = {}
+                k $in {}
+                impossible k $in {}
+            claim:
+                ? forall J {}:
+                    J $in S
+                by contra:
+                    ? J $in S
+                    J $in {}
+                    impossible J $in {}
+    S = {}
+    by thm chap7::finite_set_sum_empty(fn(x {}) R {h(x)})
+    finite_set_sum({}, fn(x {}) R {h(x)}) = 0
+    T = {}
+    by thm chap7::finite_set_sum_empty(g)
+    finite_set_sum(T, g) = 0
+    finite_set_sum(S, fn(x S) R {h(x)}) = 0 = finite_set_sum(T, g)
+
+# The one-index case is the base interface for finite regrouping: a unique
+# cover indexed by a singleton has no reindexing ambiguity at all.
+thm finite_set_sum_over_singleton_unique_cover:
+    ? forall S, T power_set(power_set(R)), F fn(L T) power_set(power_set(R)), h fn(x power_set(R)) R, K T, s R:
+        $is_finite_unique_cover_of(S, T, F)
+        $has_indexed_fiber_sum(S, T, F, h, K, s)
+        T = {K}
+        =>:
+            finite_set_sum(S, fn(x S) R {h(x)}) = s
+    $is_finite_indexed_subfamily(S, T, F)
+    forall J S:
+        exist! K0 T st {J $in F(K0)}
+    claim:
+        ? S = F(K)
+        by extension S = F(K):
+            claim:
+                ? forall J S:
+                    J $in F(K)
+                exist! K0 T st {J $in F(K0)}
+                obtain K0 from exist! K0 T st {J $in F(K0)}
+                K0 $in T
+                T = {K}
+                K0 = K
+                J $in F(K0)
+                F(K0) = F(K)
+                J $in F(K)
+            F(K) $subset S
+    obtain A from exist A finite_set st {A = F(K), A $subset S, A $subset power_set(R), s = finite_set_sum(A, fn(x A) R {h(x)})}
+    A = F(K) = S
+    s = finite_set_sum(A, fn(x A) R {h(x)}) = finite_set_sum(S, fn(x S) R {h(x)})
+    finite_set_sum(S, fn(x S) R {h(x)}) = s
+
+thm indexed_fiber_sum_exists:
+    ? forall S, T power_set(power_set(R)), F fn(L T) power_set(power_set(R)), h fn(x power_set(R)) R, K T:
+        $is_finite_indexed_subfamily(S, T, F)
+        =>:
+            exist s R st {$has_indexed_fiber_sum(S, T, F, h, K, s)}
+    $is_finite_set(F(K))
+    F(K) $subset S
+    F(K) $subset power_set(R)
+    witness exist A finite_set st {A = F(K), A $subset S, A $subset power_set(R), finite_set_sum(F(K), fn(x F(K)) R {h(x)}) = finite_set_sum(A, fn(x A) R {h(x)})} from F(K):
+        $is_finite_set(F(K))
+        F(K) = F(K)
+        F(K) $subset S
+        F(K) $subset power_set(R)
+        finite_set_sum(F(K), fn(x F(K)) R {h(x)}) = finite_set_sum(F(K), fn(x F(K)) R {h(x)})
+    $has_indexed_fiber_sum(S, T, F, h, K, finite_set_sum(F(K), fn(x F(K)) R {h(x)}))
+    witness exist s R st {$has_indexed_fiber_sum(S, T, F, h, K, s)} from finite_set_sum(F(K), fn(x F(K)) R {h(x)}):
+        $has_indexed_fiber_sum(S, T, F, h, K, finite_set_sum(F(K), fn(x F(K)) R {h(x)}))
+
+thm indexed_fiber_sum_unique:
+    ? forall S, T power_set(power_set(R)), F fn(L T) power_set(power_set(R)), h fn(x power_set(R)) R, K T, s1, s2 R:
+        $has_indexed_fiber_sum(S, T, F, h, K, s1)
+        $has_indexed_fiber_sum(S, T, F, h, K, s2)
+        =>:
+            s1 = s2
+    obtain A1 from exist A1 finite_set st {A1 = F(K), A1 $subset S, A1 $subset power_set(R), s1 = finite_set_sum(A1, fn(x A1) R {h(x)})}
+    obtain A2 from exist A2 finite_set st {A2 = F(K), A2 $subset S, A2 $subset power_set(R), s2 = finite_set_sum(A2, fn(x A2) R {h(x)})}
+    A1 = F(K) = A2
+    A1 = A2
+    finite_set_sum(A1, fn(x A1) R {h(x)}) = finite_set_sum(A2, fn(x A2) R {h(x)})
+    s1 = finite_set_sum(A1, fn(x A1) R {h(x)}) = finite_set_sum(A2, fn(x A2) R {h(x)}) = s2
+
+thm refinement_fiber_family_is_finite_unique_cover:
+    ? forall I, Pfine, Pcoarse power_set(power_set(R)), F fn(L Pcoarse) power_set(power_set(R)):
+        $is_finite_set(Pfine)
+        $is_finite_set(Pcoarse)
+        $is_finer_partition_than(I, Pfine, Pcoarse)
+        forall K Pcoarse:
+            F(K) = refinement_fiber(Pfine, K)
+        =>:
+            $is_finite_unique_cover_of(nonempty_refinement_support(Pfine), Pcoarse, F)
+    claim:
+        ? $is_finite_indexed_subfamily(nonempty_refinement_support(Pfine), Pcoarse, F)
+        $is_finite_set(nonempty_refinement_support(Pfine))
+        $is_finite_set(Pcoarse)
+        claim:
+            ? forall K Pcoarse:
+                $is_finite_set(F(K))
+                F(K) $subset nonempty_refinement_support(Pfine)
+            F(K) = refinement_fiber(Pfine, K)
+            by thm refinement_fiber_has_finite_representative(Pfine, K)
+            obtain A from exist A finite_set st {A = refinement_fiber(Pfine, K), $is_refinement_fiber(Pfine, K, A)}
+            F(K) = A
+            $is_finite_set(F(K))
+            claim:
+                ? forall J F(K):
+                    J $in nonempty_refinement_support(Pfine)
+                F(K) = refinement_fiber(Pfine, K)
+                J $in refinement_fiber(Pfine, K)
+                by thm refinement_fiber_has_value(Pfine, K)
+                $is_refinement_fiber(Pfine, K, refinement_fiber(Pfine, K))
+                J $in Pfine
+                $is_nonempty_set(J)
+                J $in {X Pfine: $is_nonempty_set(X)}
+                J $in nonempty_refinement_support(Pfine)
+            F(K) $subset nonempty_refinement_support(Pfine)
+        $is_finite_indexed_subfamily(nonempty_refinement_support(Pfine), Pcoarse, F)
+    claim:
+        ? forall J nonempty_refinement_support(Pfine):
+            exist! K Pcoarse st {J $in F(K)}
+        J $in {X Pfine: $is_nonempty_set(X)}
+        J $in Pfine
+        $is_nonempty_set(J)
+        by thm refinement_owner_has_value(I, Pfine, Pcoarse, J)
+        refinement_owner(I, Pfine, Pcoarse, J) $in Pcoarse
+        by thm refinement_owner_is_in_refinement_fiber(I, Pfine, Pcoarse, J)
+        J $in refinement_fiber(Pfine, refinement_owner(I, Pfine, Pcoarse, J))
+        refinement_owner(I, Pfine, Pcoarse, J) $in Pcoarse
+        F(refinement_owner(I, Pfine, Pcoarse, J)) = refinement_fiber(Pfine, refinement_owner(I, Pfine, Pcoarse, J))
+        J $in F(refinement_owner(I, Pfine, Pcoarse, J))
+        witness exist! K Pcoarse st {J $in F(K)} from refinement_owner(I, Pfine, Pcoarse, J):
+            J $in F(refinement_owner(I, Pfine, Pcoarse, J))
+            claim:
+                ? forall K1, K2 Pcoarse:
+                    J $in F(K1)
+                    J $in F(K2)
+                    =>:
+                        K1 = K2
+                F(K1) = refinement_fiber(Pfine, K1)
+                F(K2) = refinement_fiber(Pfine, K2)
+                J $in refinement_fiber(Pfine, K1)
+                J $in refinement_fiber(Pfine, K2)
+                by thm refinement_fiber_member_has_owner(I, Pfine, Pcoarse, J, K1)
+                refinement_owner(I, Pfine, Pcoarse, J) = K1
+                by thm refinement_fiber_member_has_owner(I, Pfine, Pcoarse, J, K2)
+                refinement_owner(I, Pfine, Pcoarse, J) = K2
+                K1 = refinement_owner(I, Pfine, Pcoarse, J) = K2
+    $is_finite_unique_cover_of(nonempty_refinement_support(Pfine), Pcoarse, F)
+
 
 # 11.2 Piecewise constant functions
 
@@ -2179,21 +2964,21 @@ thm constant_on_subset_max:
         $is_constant_on_subset(I, E, f)
         $is_constant_on_subset(I, E, g)
         =>:
-            $is_constant_on_subset(I, E, fn(x I) R {max(f(x), g(x))})
+            $is_constant_on_subset(I, E, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
     # Source handling: this is the same-piece maximum step used in Exercise
     # 11.2.2.
     obtain cf from exist c R st {$has_constant_value_on_subset(I, E, f, c)}
     obtain cg from exist c R st {$has_constant_value_on_subset(I, E, g, c)}
-    witness exist c R st {$has_constant_value_on_subset(I, E, fn(x I) R {max(f(x), g(x))}, c)} from max(cf, cg):
+    witness exist c R st {$has_constant_value_on_subset(I, E, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}, c)} from finite_set_max(union({cf}, { cg})):
         E $subset I
         forall x E:
             x $in I
             f(x) = cf
             g(x) = cg
-            fn(x I) R {max(f(x), g(x))}(x) = max(f(x), g(x))
-            fn(x I) R {max(f(x), g(x))}(x) = max(cf, cg)
-        $has_constant_value_on_subset(I, E, fn(x I) R {max(f(x), g(x))}, max(cf, cg))
-    $is_constant_on_subset(I, E, fn(x I) R {max(f(x), g(x))})
+            fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}(x) = finite_set_max(union({f(x)}, { g(x)}))
+            fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}(x) = finite_set_max(union({cf}, { cg}))
+        $has_constant_value_on_subset(I, E, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}, finite_set_max(union({cf}, { cg})))
+    $is_constant_on_subset(I, E, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
 
 thm constant_on_subset_min:
     ? forall I power_set(R), E power_set(R), f, g fn(x I) R:
@@ -2201,21 +2986,21 @@ thm constant_on_subset_min:
         $is_constant_on_subset(I, E, f)
         $is_constant_on_subset(I, E, g)
         =>:
-            $is_constant_on_subset(I, E, fn(x I) R {min(f(x), g(x))})
+            $is_constant_on_subset(I, E, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
     # Source handling: this is the same-piece minimum step used in Theorem
     # 11.4.3.
     obtain cf from exist c R st {$has_constant_value_on_subset(I, E, f, c)}
     obtain cg from exist c R st {$has_constant_value_on_subset(I, E, g, c)}
-    witness exist c R st {$has_constant_value_on_subset(I, E, fn(x I) R {min(f(x), g(x))}, c)} from min(cf, cg):
+    witness exist c R st {$has_constant_value_on_subset(I, E, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))}, c)} from finite_set_min(union({cf}, { cg})):
         E $subset I
         forall x E:
             x $in I
             f(x) = cf
             g(x) = cg
-            fn(x I) R {min(f(x), g(x))}(x) = min(f(x), g(x))
-            fn(x I) R {min(f(x), g(x))}(x) = min(cf, cg)
-        $has_constant_value_on_subset(I, E, fn(x I) R {min(f(x), g(x))}, min(cf, cg))
-    $is_constant_on_subset(I, E, fn(x I) R {min(f(x), g(x))})
+            fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))}(x) = finite_set_min(union({f(x)}, { g(x)}))
+            fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))}(x) = finite_set_min(union({cf}, { cg}))
+        $has_constant_value_on_subset(I, E, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))}, finite_set_min(union({cf}, { cg})))
+    $is_constant_on_subset(I, E, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
 
 thm constant_on_subset_scalar_mul:
     ? forall I power_set(R), E power_set(R), f fn(x I) R, c R:
@@ -2361,42 +3146,42 @@ thm piecewise_constant_same_partition_max:
         $is_piecewise_constant_with_partition(I, P, f)
         $is_piecewise_constant_with_partition(I, P, g)
         =>:
-            $is_piecewise_constant_with_partition(I, P, fn(x I) R {max(f(x), g(x))})
+            $is_piecewise_constant_with_partition(I, P, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
     # Source handling: this proves the easy same-partition part of the maximum
     # law.
     $is_partition_of_bounded_interval(I, P)
     claim:
         ? forall J P:
             J $in power_set(R)
-            $is_constant_on_subset(I, J, fn(x I) R {max(f(x), g(x))})
+            $is_constant_on_subset(I, J, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
         J $in power_set(R)
         J $subset I
         $is_constant_on_subset(I, J, f)
         $is_constant_on_subset(I, J, g)
         by thm constant_on_subset_max(I, J, f, g)
-        $is_constant_on_subset(I, J, fn(x I) R {max(f(x), g(x))})
-    $is_piecewise_constant_with_partition(I, P, fn(x I) R {max(f(x), g(x))})
+        $is_constant_on_subset(I, J, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
+    $is_piecewise_constant_with_partition(I, P, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
 
 thm piecewise_constant_same_partition_min:
     ? forall I power_set(R), P finite_set, f, g fn(x I) R:
         $is_piecewise_constant_with_partition(I, P, f)
         $is_piecewise_constant_with_partition(I, P, g)
         =>:
-            $is_piecewise_constant_with_partition(I, P, fn(x I) R {min(f(x), g(x))})
+            $is_piecewise_constant_with_partition(I, P, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
     # Source handling: this proves the easy same-partition part of the
     # minimum law.
     $is_partition_of_bounded_interval(I, P)
     claim:
         ? forall J P:
             J $in power_set(R)
-            $is_constant_on_subset(I, J, fn(x I) R {min(f(x), g(x))})
+            $is_constant_on_subset(I, J, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
         J $in power_set(R)
         J $subset I
         $is_constant_on_subset(I, J, f)
         $is_constant_on_subset(I, J, g)
         by thm constant_on_subset_min(I, J, f, g)
-        $is_constant_on_subset(I, J, fn(x I) R {min(f(x), g(x))})
-    $is_piecewise_constant_with_partition(I, P, fn(x I) R {min(f(x), g(x))})
+        $is_constant_on_subset(I, J, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
+    $is_piecewise_constant_with_partition(I, P, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
 
 thm piecewise_constant_same_partition_scalar_mul:
     ? forall I power_set(R), P finite_set, f fn(x I) R, c R:
@@ -2655,8 +3440,8 @@ thm piecewise_constant_algebra:
         =>:
             $is_piecewise_constant_on(I, fn(x I) R {f(x) + g(x)})
             $is_piecewise_constant_on(I, fn(x I) R {f(x) - g(x)})
-            $is_piecewise_constant_on(I, fn(x I) R {max(f(x), g(x))})
-            $is_piecewise_constant_on(I, fn(x I) R {min(f(x), g(x))})
+            $is_piecewise_constant_on(I, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
+            $is_piecewise_constant_on(I, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
             $is_piecewise_constant_on(I, fn(x I) R {f(x) * g(x)})
     # Source handling: Tao proves this in Exercise 11.2.2 by passing to a
     # common refinement.
@@ -2664,8 +3449,10 @@ thm piecewise_constant_algebra:
     obtain Pg from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, g)}
     $is_partition_of_bounded_interval(I, Pf)
     $is_partition_of_bounded_interval(I, Pg)
-    by thm common_refinement_exists_for_partitions(I, Pf, Pg)
-    obtain Rf from exist Rf finite_set st {$is_common_refinement_of_partitions(I, Pf, Pg, Rf)}
+    by thm partition_is_set_of_real_subsets(I, Pf)
+    by thm partition_is_set_of_real_subsets(I, Pg)
+    have Rf finite_set = common_refinement(I, Pf, Pg)
+    $is_common_refinement_of_partitions(I, Pf, Pg, Rf)
     by thm common_refinement_is_partition_and_finer(I, Pf, Pg, Rf)
     by thm piecewise_constant_refines(I, Pf, Rf, f)
     by thm piecewise_constant_refines(I, Pg, Rf, g)
@@ -2678,16 +3465,16 @@ thm piecewise_constant_algebra:
         $is_piecewise_constant_with_partition(I, Rf, fn(x I) R {f(x) + g(x)})
     witness exist P finite_set st {$is_piecewise_constant_with_partition(I, P, fn(x I) R {f(x) - g(x)})} from Rf:
         $is_piecewise_constant_with_partition(I, Rf, fn(x I) R {f(x) - g(x)})
-    witness exist P finite_set st {$is_piecewise_constant_with_partition(I, P, fn(x I) R {max(f(x), g(x))})} from Rf:
-        $is_piecewise_constant_with_partition(I, Rf, fn(x I) R {max(f(x), g(x))})
-    witness exist P finite_set st {$is_piecewise_constant_with_partition(I, P, fn(x I) R {min(f(x), g(x))})} from Rf:
-        $is_piecewise_constant_with_partition(I, Rf, fn(x I) R {min(f(x), g(x))})
+    witness exist P finite_set st {$is_piecewise_constant_with_partition(I, P, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})} from Rf:
+        $is_piecewise_constant_with_partition(I, Rf, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
+    witness exist P finite_set st {$is_piecewise_constant_with_partition(I, P, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})} from Rf:
+        $is_piecewise_constant_with_partition(I, Rf, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
     witness exist P finite_set st {$is_piecewise_constant_with_partition(I, P, fn(x I) R {f(x) * g(x)})} from Rf:
         $is_piecewise_constant_with_partition(I, Rf, fn(x I) R {f(x) * g(x)})
     $is_piecewise_constant_on(I, fn(x I) R {f(x) + g(x)})
     $is_piecewise_constant_on(I, fn(x I) R {f(x) - g(x)})
-    $is_piecewise_constant_on(I, fn(x I) R {max(f(x), g(x))})
-    $is_piecewise_constant_on(I, fn(x I) R {min(f(x), g(x))})
+    $is_piecewise_constant_on(I, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
+    $is_piecewise_constant_on(I, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
     $is_piecewise_constant_on(I, fn(x I) R {f(x) * g(x)})
 
 thm piecewise_constant_quotient:
@@ -2702,8 +3489,10 @@ thm piecewise_constant_quotient:
     obtain Pg from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, g)}
     $is_partition_of_bounded_interval(I, Pf)
     $is_partition_of_bounded_interval(I, Pg)
-    by thm common_refinement_exists_for_partitions(I, Pf, Pg)
-    obtain Rf from exist Rf finite_set st {$is_common_refinement_of_partitions(I, Pf, Pg, Rf)}
+    by thm partition_is_set_of_real_subsets(I, Pf)
+    by thm partition_is_set_of_real_subsets(I, Pg)
+    have Rf finite_set = common_refinement(I, Pf, Pg)
+    $is_common_refinement_of_partitions(I, Pf, Pg, Rf)
     by thm common_refinement_is_partition_and_finer(I, Pf, Pg, Rf)
     by thm piecewise_constant_refines(I, Pf, Rf, f)
     by thm piecewise_constant_refines(I, Pg, Rf, g)
@@ -4087,6 +4876,33 @@ thm piecewise_constant_integral_value_unique:
     by thm piecewise_constant_integral_independent_of_partition(I, f, P, P2, s1, s2)
     s1 = s2
 
+have fn piecewise_constant_integral by exist!:
+    ? forall I power_set(R), f fn(x I) R:
+        $is_piecewise_constant_on(I, f)
+        =>:
+            exist! s R st {$has_piecewise_constant_integral(I, f, s)}
+    # Source handling: Definition 11.2.14 selects the common finite-rectangle
+    # value after Proposition 11.2.13 has established partition independence.
+    obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f)}
+    by thm piecewise_constant_partition_is_set_of_real_subsets(I, P, f)
+    by thm piecewise_constant_integral_with_partition_has_value(I, P, f)
+    have s R = piecewise_constant_integral_with_partition(I, P, f)
+    claim:
+        ? exist s0 R st {$has_piecewise_constant_integral(I, f, s0)}
+        witness exist s0 R st {$has_piecewise_constant_integral(I, f, s0)} from s:
+            witness exist P0 finite_set st {$is_piecewise_constant_with_partition(I, P0, f), $has_piecewise_constant_integral_with_partition(I, P0, f, s)} from P:
+                $is_piecewise_constant_with_partition(I, P, f)
+                $has_piecewise_constant_integral_with_partition(I, P, f, s)
+            $has_piecewise_constant_integral(I, f, s)
+    claim:
+        ? forall s1, s2 R:
+            $has_piecewise_constant_integral(I, f, s1)
+            $has_piecewise_constant_integral(I, f, s2)
+            =>:
+                s1 = s2
+        by thm piecewise_constant_integral_value_unique(I, f, s1, s2)
+    exist! s0 R st {$has_piecewise_constant_integral(I, f, s0)}
+
 """
 Example 11.2.15.  The function from Example 11.2.12 has partition-free
 piecewise constant integral `10` on `[1,4]`.
@@ -4348,8 +5164,10 @@ thm piecewise_constant_integral_laws:
     obtain Pg from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, g), $has_piecewise_constant_integral_with_partition(I, P, g, sg)}
     $is_partition_of_bounded_interval(I, Pf)
     $is_partition_of_bounded_interval(I, Pg)
-    by thm common_refinement_exists_for_partitions(I, Pf, Pg)
-    obtain Rf from exist Rf finite_set st {$is_common_refinement_of_partitions(I, Pf, Pg, Rf)}
+    by thm partition_is_set_of_real_subsets(I, Pf)
+    by thm partition_is_set_of_real_subsets(I, Pg)
+    have Rf finite_set = common_refinement(I, Pf, Pg)
+    $is_common_refinement_of_partitions(I, Pf, Pg, Rf)
     by thm common_refinement_is_partition_and_finer(I, Pf, Pg, Rf)
     $is_finer_partition_than(I, Rf, Pf)
     $is_finer_partition_than(I, Rf, Pg)
@@ -4447,8 +5265,10 @@ thm piecewise_constant_integral_order_laws:
     obtain Pg from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, g), $has_piecewise_constant_integral_with_partition(I, P, g, sg)}
     $is_partition_of_bounded_interval(I, Pf)
     $is_partition_of_bounded_interval(I, Pg)
-    by thm common_refinement_exists_for_partitions(I, Pf, Pg)
-    obtain Rf from exist Rf finite_set st {$is_common_refinement_of_partitions(I, Pf, Pg, Rf)}
+    by thm partition_is_set_of_real_subsets(I, Pf)
+    by thm partition_is_set_of_real_subsets(I, Pg)
+    have Rf finite_set = common_refinement(I, Pf, Pg)
+    $is_common_refinement_of_partitions(I, Pf, Pg, Rf)
     by thm common_refinement_is_partition_and_finer(I, Pf, Pg, Rf)
     $is_finer_partition_than(I, Rf, Pf)
     $is_finer_partition_than(I, Rf, Pg)
@@ -5789,6 +6609,206 @@ thm lower_riemann_sum_piece_contribution_exists:
                 $has_empty_riemann_sum_piece_contribution(J, 0)
                 $has_lower_riemann_sum_piece_contribution(I, J, f, 0)
 
+# The two relations above are specifications, while each piece contribution is
+# a mathematical value.  The uniqueness facts expose that distinction before
+# the canonical value APIs below select those values.
+
+thm upper_riemann_sum_piece_contribution_unique:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R, t1, t2 R:
+        $has_upper_riemann_sum_piece_contribution(I, J, f, t1)
+        $has_upper_riemann_sum_piece_contribution(I, J, f, t2)
+        =>:
+            t1 = t2
+    $has_empty_riemann_sum_piece_contribution(J, t1) or $has_nonempty_upper_riemann_sum_piece_contribution(I, J, f, t1)
+    $has_empty_riemann_sum_piece_contribution(J, t2) or $has_nonempty_upper_riemann_sum_piece_contribution(I, J, f, t2)
+    by cases:
+        ? t1 = t2
+        case $has_empty_riemann_sum_piece_contribution(J, t1):
+            t1 = 0
+            by cases:
+                ? t1 = t2
+                case $has_empty_riemann_sum_piece_contribution(J, t2):
+                    t2 = 0
+                    t1 = t2
+                case $has_nonempty_upper_riemann_sum_piece_contribution(I, J, f, t2):
+                    not $is_nonempty_set(J)
+                    $is_nonempty_set(J)
+                    impossible $is_nonempty_set(J)
+        case $has_nonempty_upper_riemann_sum_piece_contribution(I, J, f, t1):
+            $is_nonempty_set(J)
+            by cases:
+                ? t1 = t2
+                case $has_empty_riemann_sum_piece_contribution(J, t2):
+                    not $is_nonempty_set(J)
+                    impossible $is_nonempty_set(J)
+                case $has_nonempty_upper_riemann_sum_piece_contribution(I, J, f, t2):
+                    obtain s1 from exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s), t1 = s * interval_length(J)}
+                    obtain s2 from exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s), t2 = s * interval_length(J)}
+                    by thm chap5::least_upper_bound_unique(function_values_on_subset(I, J, f), s1, s2)
+                    s1 = s2
+                    t1 = s1 * interval_length(J)
+                    t2 = s2 * interval_length(J)
+                    t1 = t2
+
+thm lower_riemann_sum_piece_contribution_unique:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R, t1, t2 R:
+        $has_lower_riemann_sum_piece_contribution(I, J, f, t1)
+        $has_lower_riemann_sum_piece_contribution(I, J, f, t2)
+        =>:
+            t1 = t2
+    $has_empty_riemann_sum_piece_contribution(J, t1) or $has_nonempty_lower_riemann_sum_piece_contribution(I, J, f, t1)
+    $has_empty_riemann_sum_piece_contribution(J, t2) or $has_nonempty_lower_riemann_sum_piece_contribution(I, J, f, t2)
+    by cases:
+        ? t1 = t2
+        case $has_empty_riemann_sum_piece_contribution(J, t1):
+            t1 = 0
+            by cases:
+                ? t1 = t2
+                case $has_empty_riemann_sum_piece_contribution(J, t2):
+                    t2 = 0
+                    t1 = t2
+                case $has_nonempty_lower_riemann_sum_piece_contribution(I, J, f, t2):
+                    not $is_nonempty_set(J)
+                    $is_nonempty_set(J)
+                    impossible $is_nonempty_set(J)
+        case $has_nonempty_lower_riemann_sum_piece_contribution(I, J, f, t1):
+            $is_nonempty_set(J)
+            by cases:
+                ? t1 = t2
+                case $has_empty_riemann_sum_piece_contribution(J, t2):
+                    not $is_nonempty_set(J)
+                    impossible $is_nonempty_set(J)
+                case $has_nonempty_lower_riemann_sum_piece_contribution(I, J, f, t2):
+                    obtain s1 from exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s), t1 = s * interval_length(J)}
+                    obtain s2 from exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s), t2 = s * interval_length(J)}
+                    by thm infimum_of_real_set_value_unique(function_values_on_subset(I, J, f), s1, s2)
+                    s1 = s2
+                    t1 = s1 * interval_length(J)
+                    t2 = s2 * interval_length(J)
+                    t1 = t2
+
+have fn upper_riemann_sum_piece by exist!:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R:
+        $is_bounded_interval(J)
+        J $subset I
+        $chap9::is_bounded_function_on(I, f)
+        =>:
+            exist! t R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t)}
+    by cases:
+        ? exist t R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t)}
+        case $is_nonempty_set(J):
+            by thm nonempty_piece_function_values_has_least_upper_bound(I, J, f)
+            obtain upper from exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s)}
+            claim:
+                ? exist t R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t)}
+                witness exist t0 R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t0)} from upper * interval_length(J):
+                    $is_bounded_interval(J)
+                    J $subset I
+                    $is_nonempty_set(J)
+                    witness exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s), upper * interval_length(J) = s * interval_length(J)} from upper:
+                        $chap5::is_least_upper_bound(function_values_on_subset(I, J, f), upper)
+                        upper * interval_length(J) = upper * interval_length(J)
+                    exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s), upper * interval_length(J) = s * interval_length(J)}
+                    $has_nonempty_upper_riemann_sum_piece_contribution(I, J, f, upper * interval_length(J))
+                    $has_upper_riemann_sum_piece_contribution(I, J, f, upper * interval_length(J))
+            claim:
+                ? forall t1, t2 R:
+                    $has_upper_riemann_sum_piece_contribution(I, J, f, t1)
+                    $has_upper_riemann_sum_piece_contribution(I, J, f, t2)
+                    =>:
+                        t1 = t2
+                by thm upper_riemann_sum_piece_contribution_unique(I, J, f, t1, t2)
+            exist! t0 R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t0)}
+        case not $is_nonempty_set(J):
+            claim:
+                ? exist t R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t)}
+                witness exist t0 R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t0)} from 0:
+                    not $is_nonempty_set(J)
+                    0 = 0
+                    $has_empty_riemann_sum_piece_contribution(J, 0)
+                    $has_upper_riemann_sum_piece_contribution(I, J, f, 0)
+            claim:
+                ? forall t1, t2 R:
+                    $has_upper_riemann_sum_piece_contribution(I, J, f, t1)
+                    $has_upper_riemann_sum_piece_contribution(I, J, f, t2)
+                    =>:
+                        t1 = t2
+                by thm upper_riemann_sum_piece_contribution_unique(I, J, f, t1, t2)
+            exist! t0 R st {$has_upper_riemann_sum_piece_contribution(I, J, f, t0)}
+
+have fn lower_riemann_sum_piece by exist!:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R:
+        $is_bounded_interval(J)
+        J $subset I
+        $chap9::is_bounded_function_on(I, f)
+        =>:
+            exist! t R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t)}
+    by cases:
+        ? exist t R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t)}
+        case $is_nonempty_set(J):
+            by thm nonempty_piece_function_values_has_infimum(I, J, f)
+            obtain lower from exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s)}
+            claim:
+                ? exist t R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t)}
+                witness exist t0 R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t0)} from lower * interval_length(J):
+                    $is_bounded_interval(J)
+                    J $subset I
+                    $is_nonempty_set(J)
+                    witness exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s), lower * interval_length(J) = s * interval_length(J)} from lower:
+                        $is_infimum_of_real_set(function_values_on_subset(I, J, f), lower)
+                        lower * interval_length(J) = lower * interval_length(J)
+                    exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s), lower * interval_length(J) = s * interval_length(J)}
+                    $has_nonempty_lower_riemann_sum_piece_contribution(I, J, f, lower * interval_length(J))
+                    $has_lower_riemann_sum_piece_contribution(I, J, f, lower * interval_length(J))
+            claim:
+                ? forall t1, t2 R:
+                    $has_lower_riemann_sum_piece_contribution(I, J, f, t1)
+                    $has_lower_riemann_sum_piece_contribution(I, J, f, t2)
+                    =>:
+                        t1 = t2
+                by thm lower_riemann_sum_piece_contribution_unique(I, J, f, t1, t2)
+            exist! t0 R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t0)}
+        case not $is_nonempty_set(J):
+            claim:
+                ? exist t R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t)}
+                witness exist t0 R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t0)} from 0:
+                    not $is_nonempty_set(J)
+                    0 = 0
+                    $has_empty_riemann_sum_piece_contribution(J, 0)
+                    $has_lower_riemann_sum_piece_contribution(I, J, f, 0)
+            claim:
+                ? forall t1, t2 R:
+                    $has_lower_riemann_sum_piece_contribution(I, J, f, t1)
+                    $has_lower_riemann_sum_piece_contribution(I, J, f, t2)
+                    =>:
+                        t1 = t2
+                by thm lower_riemann_sum_piece_contribution_unique(I, J, f, t1, t2)
+            exist! t0 R st {$has_lower_riemann_sum_piece_contribution(I, J, f, t0)}
+
+thm upper_riemann_sum_piece_has_value:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R:
+        $is_bounded_interval(J)
+        J $subset I
+        $chap9::is_bounded_function_on(I, f)
+        =>:
+            $has_upper_riemann_sum_piece_contribution(I, J, f, upper_riemann_sum_piece(I, J, f))
+    have t R = upper_riemann_sum_piece(I, J, f)
+    $has_upper_riemann_sum_piece_contribution(I, J, f, t)
+    t = upper_riemann_sum_piece(I, J, f)
+    $has_upper_riemann_sum_piece_contribution(I, J, f, upper_riemann_sum_piece(I, J, f))
+
+thm lower_riemann_sum_piece_has_value:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R:
+        $is_bounded_interval(J)
+        J $subset I
+        $chap9::is_bounded_function_on(I, f)
+        =>:
+            $has_lower_riemann_sum_piece_contribution(I, J, f, lower_riemann_sum_piece(I, J, f))
+    have t R = lower_riemann_sum_piece(I, J, f)
+    $has_lower_riemann_sum_piece_contribution(I, J, f, t)
+    t = lower_riemann_sum_piece(I, J, f)
+    $has_lower_riemann_sum_piece_contribution(I, J, f, lower_riemann_sum_piece(I, J, f))
+
 prop is_upper_riemann_sum_contribution_family(I power_set(R), P finite_set, f fn(x I) R, c fn(J P) R):
     forall J P:
         $has_upper_riemann_sum_piece_contribution(I, J, f, c(J))
@@ -5900,6 +6920,144 @@ thm lower_riemann_sum_exists:
             finite_set_sum(P, c) = finite_set_sum(P, c)
         exist c0 fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c0), finite_set_sum(P, c) = finite_set_sum(P, c0)}
         $has_lower_riemann_sum(I, P, f, finite_set_sum(P, c))
+
+thm upper_riemann_sum_contribution_family_unique:
+    ? forall I power_set(R), P finite_set, f fn(x I) R, c1, c2 fn(J P) R:
+        $is_upper_riemann_sum_contribution_family(I, P, f, c1)
+        $is_upper_riemann_sum_contribution_family(I, P, f, c2)
+        =>:
+            c1 = c2
+    claim:
+        ? forall J P:
+            c1(J) = c2(J)
+        $has_upper_riemann_sum_piece_contribution(I, J, f, c1(J))
+        $has_upper_riemann_sum_piece_contribution(I, J, f, c2(J))
+        by thm upper_riemann_sum_piece_contribution_unique(I, J, f, c1(J), c2(J))
+        c1(J) = c2(J)
+    claim:
+        ? $fn_eq(c1, c2)
+        forall J P:
+            c1(J) = c2(J)
+        $fn_eq(c1, c2)
+    c1 = c2
+
+thm lower_riemann_sum_contribution_family_unique:
+    ? forall I power_set(R), P finite_set, f fn(x I) R, c1, c2 fn(J P) R:
+        $is_lower_riemann_sum_contribution_family(I, P, f, c1)
+        $is_lower_riemann_sum_contribution_family(I, P, f, c2)
+        =>:
+            c1 = c2
+    claim:
+        ? forall J P:
+            c1(J) = c2(J)
+        $has_lower_riemann_sum_piece_contribution(I, J, f, c1(J))
+        $has_lower_riemann_sum_piece_contribution(I, J, f, c2(J))
+        by thm lower_riemann_sum_piece_contribution_unique(I, J, f, c1(J), c2(J))
+        c1(J) = c2(J)
+    claim:
+        ? $fn_eq(c1, c2)
+        forall J P:
+            c1(J) = c2(J)
+        $fn_eq(c1, c2)
+    c1 = c2
+
+thm upper_riemann_sum_value_unique:
+    ? forall I power_set(R), P finite_set, f fn(x I) R, U1, U2 R:
+        $has_upper_riemann_sum(I, P, f, U1)
+        $has_upper_riemann_sum(I, P, f, U2)
+        =>:
+            U1 = U2
+    obtain c1 from exist c fn(J P) R st {$is_upper_riemann_sum_contribution_family(I, P, f, c), U1 = finite_set_sum(P, c)}
+    obtain c2 from exist c fn(J P) R st {$is_upper_riemann_sum_contribution_family(I, P, f, c), U2 = finite_set_sum(P, c)}
+    by thm upper_riemann_sum_contribution_family_unique(I, P, f, c1, c2)
+    c1 = c2
+    finite_set_sum(P, c1) = finite_set_sum(P, c2)
+    U1 = finite_set_sum(P, c1)
+    U2 = finite_set_sum(P, c2)
+    U1 = U2
+
+thm lower_riemann_sum_value_unique:
+    ? forall I power_set(R), P finite_set, f fn(x I) R, L1, L2 R:
+        $has_lower_riemann_sum(I, P, f, L1)
+        $has_lower_riemann_sum(I, P, f, L2)
+        =>:
+            L1 = L2
+    obtain c1 from exist c fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c), L1 = finite_set_sum(P, c)}
+    obtain c2 from exist c fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c), L2 = finite_set_sum(P, c)}
+    by thm lower_riemann_sum_contribution_family_unique(I, P, f, c1, c2)
+    c1 = c2
+    finite_set_sum(P, c1) = finite_set_sum(P, c2)
+    L1 = finite_set_sum(P, c1)
+    L2 = finite_set_sum(P, c2)
+    L1 = L2
+
+have fn upper_riemann_sum by exist!:
+    ? forall I power_set(R), P power_set(power_set(R)), f fn(x I) R:
+        $is_finite_set(P)
+        $is_partition_of_bounded_interval(I, P)
+        $chap9::is_bounded_function_on(I, f)
+        =>:
+            exist! U R st {$has_upper_riemann_sum(I, P, f, U)}
+    by thm upper_riemann_sum_exists(I, P, f)
+    obtain U from exist U R st {$has_upper_riemann_sum(I, P, f, U)}
+    claim:
+        ? exist U0 R st {$has_upper_riemann_sum(I, P, f, U0)}
+        witness exist U0 R st {$has_upper_riemann_sum(I, P, f, U0)} from U:
+            $has_upper_riemann_sum(I, P, f, U)
+    claim:
+        ? forall U1, U2 R:
+            $has_upper_riemann_sum(I, P, f, U1)
+            $has_upper_riemann_sum(I, P, f, U2)
+            =>:
+                U1 = U2
+        by thm upper_riemann_sum_value_unique(I, P, f, U1, U2)
+    exist! U0 R st {$has_upper_riemann_sum(I, P, f, U0)}
+
+have fn lower_riemann_sum by exist!:
+    ? forall I power_set(R), P power_set(power_set(R)), f fn(x I) R:
+        $is_finite_set(P)
+        $is_partition_of_bounded_interval(I, P)
+        $chap9::is_bounded_function_on(I, f)
+        =>:
+            exist! L R st {$has_lower_riemann_sum(I, P, f, L)}
+    by thm lower_riemann_sum_exists(I, P, f)
+    obtain L from exist L R st {$has_lower_riemann_sum(I, P, f, L)}
+    claim:
+        ? exist L0 R st {$has_lower_riemann_sum(I, P, f, L0)}
+        witness exist L0 R st {$has_lower_riemann_sum(I, P, f, L0)} from L:
+            $has_lower_riemann_sum(I, P, f, L)
+    claim:
+        ? forall L1, L2 R:
+            $has_lower_riemann_sum(I, P, f, L1)
+            $has_lower_riemann_sum(I, P, f, L2)
+            =>:
+                L1 = L2
+        by thm lower_riemann_sum_value_unique(I, P, f, L1, L2)
+    exist! L0 R st {$has_lower_riemann_sum(I, P, f, L0)}
+
+thm upper_riemann_sum_has_value:
+    ? forall I power_set(R), P power_set(power_set(R)), f fn(x I) R:
+        $is_finite_set(P)
+        $is_partition_of_bounded_interval(I, P)
+        $chap9::is_bounded_function_on(I, f)
+        =>:
+            $has_upper_riemann_sum(I, P, f, upper_riemann_sum(I, P, f))
+    have U R = upper_riemann_sum(I, P, f)
+    $has_upper_riemann_sum(I, P, f, U)
+    U = upper_riemann_sum(I, P, f)
+    $has_upper_riemann_sum(I, P, f, upper_riemann_sum(I, P, f))
+
+thm lower_riemann_sum_has_value:
+    ? forall I power_set(R), P power_set(power_set(R)), f fn(x I) R:
+        $is_finite_set(P)
+        $is_partition_of_bounded_interval(I, P)
+        $chap9::is_bounded_function_on(I, f)
+        =>:
+            $has_lower_riemann_sum(I, P, f, lower_riemann_sum(I, P, f))
+    have L R = lower_riemann_sum(I, P, f)
+    $has_lower_riemann_sum(I, P, f, L)
+    L = lower_riemann_sum(I, P, f)
+    $has_lower_riemann_sum(I, P, f, lower_riemann_sum(I, P, f))
 
 # These value-set interfaces are proof packages for Proposition 11.3.12, not
 # additional source definitions.
@@ -6223,116 +7381,116 @@ thm max_of_ge:
     ? forall a, b R:
         a >= b
         =>:
-            max(a, b) = a
-    a <= max(a, b)
+            finite_set_max(union({a}, { b})) = a
+    a <= finite_set_max(union({a}, { b}))
     b <= a
-    max(a, b) <= a
-    max(a, b) = a
+    finite_set_max(union({a}, { b})) <= a
+    finite_set_max(union({a}, { b})) = a
 
 thm max_of_le:
     ? forall a, b R:
         a <= b
         =>:
-            max(a, b) = b
+            finite_set_max(union({a}, { b})) = b
     a <= b
-    b <= max(a, b)
-    max(a, b) <= b
-    max(a, b) = b
+    b <= finite_set_max(union({a}, { b}))
+    finite_set_max(union({a}, { b})) <= b
+    finite_set_max(union({a}, { b})) = b
 
 thm min_of_le:
     ? forall a, b R:
         a <= b
         =>:
-            min(a, b) = a
-    min(a, b) <= a
+            finite_set_min(union({a}, { b})) = a
+    finite_set_min(union({a}, { b})) <= a
     a <= b
-    a <= min(a, b)
-    min(a, b) = a
+    a <= finite_set_min(union({a}, { b}))
+    finite_set_min(union({a}, { b})) = a
 
 thm min_of_ge:
     ? forall a, b R:
         a >= b
         =>:
-            min(a, b) = b
-    min(a, b) <= b
+            finite_set_min(union({a}, { b})) = b
+    finite_set_min(union({a}, { b})) <= b
     b <= a
-    b <= min(a, b)
-    min(a, b) = b
+    b <= finite_set_min(union({a}, { b}))
+    finite_set_min(union({a}, { b})) = b
 
 thm min_eq_neg_max_neg:
     ? forall a, b R:
-        min(a, b) = -1 * max(-1 * a, -1 * b)
+        finite_set_min(union({a}, { b})) = -1 * finite_set_max(union({-1 * a}, { -1 * b}))
     by cases:
-        ? min(a, b) = -1 * max(-1 * a, -1 * b)
+        ? finite_set_min(union({a}, { b})) = -1 * finite_set_max(union({-1 * a}, { -1 * b}))
         case a <= b:
             by thm min_of_le(a, b)
             -1 * a >= -1 * b
             by thm max_of_ge(-1 * a, -1 * b)
-            max(-1 * a, -1 * b) = -1 * a
-            -1 * max(-1 * a, -1 * b) = -1 * (-1 * a)
+            finite_set_max(union({-1 * a}, { -1 * b})) = -1 * a
+            -1 * finite_set_max(union({-1 * a}, { -1 * b})) = -1 * (-1 * a)
             -1 * (-1 * a) = a
-            min(a, b) = a
-            min(a, b) = -1 * max(-1 * a, -1 * b)
+            finite_set_min(union({a}, { b})) = a
+            finite_set_min(union({a}, { b})) = -1 * finite_set_max(union({-1 * a}, { -1 * b}))
         case a > b:
             b <= a
             by thm min_of_ge(a, b)
-            min(a, b) = b
+            finite_set_min(union({a}, { b})) = b
             -1 * a <= -1 * b
             by thm max_of_le(-1 * a, -1 * b)
-            max(-1 * a, -1 * b) = -1 * b
-            -1 * max(-1 * a, -1 * b) = -1 * (-1 * b)
+            finite_set_max(union({-1 * a}, { -1 * b})) = -1 * b
+            -1 * finite_set_max(union({-1 * a}, { -1 * b})) = -1 * (-1 * b)
             -1 * (-1 * b) = b
-            min(a, b) = -1 * max(-1 * a, -1 * b)
+            finite_set_min(union({a}, { b})) = -1 * finite_set_max(union({-1 * a}, { -1 * b}))
 
 thm riemann_integrable_max_by_darboux_squeeze:
     ? forall I power_set(R), f, g fn(x I) R:
         $is_riemann_integrable_on(I, f)
         $is_riemann_integrable_on(I, g)
         =>:
-            $is_riemann_integrable_on(I, fn(x I) R {max(f(x), g(x))})
+            $is_riemann_integrable_on(I, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
     # Source handling: this is Tao's proof of the maximum case in Theorem
     # 11.4.3.  Choose common piecewise-constant minorants and majorants for
     # `f` and `g`, use the piecewise-constant max closure on a common
     # refinement, and bound the resulting upper-lower gap by the sum of the
     # two original gaps.
     # proof_debt: formalize the common-refinement Darboux squeeze estimate.
-    trust $is_riemann_integrable_on(I, fn(x I) R {max(f(x), g(x))})
+    trust $is_riemann_integrable_on(I, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
 
 thm riemann_integrable_min_by_darboux_squeeze:
     ? forall I power_set(R), f, g fn(x I) R:
         $is_riemann_integrable_on(I, f)
         $is_riemann_integrable_on(I, g)
         =>:
-            $is_riemann_integrable_on(I, fn(x I) R {min(f(x), g(x))})
+            $is_riemann_integrable_on(I, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
     # Source handling: this is the analogous minimum case in Theorem 11.4.3.
     # It can be proved by the same Darboux squeeze, or by applying the maximum
-    # case to `-f` and `-g` and using `min(a,b) = -max(-a,-b)`.
+    # case to `-f` and `-g` and using `finite_set_min(union({a}, {b})) = -finite_set_max(union({-a}, {-b}))`.
     by thm riemann_integral_scalar_multiplication_law(I, f, -1)
     $is_riemann_integrable_on(I, fn(x I) R {-1 * f(x)})
     by thm riemann_integral_scalar_multiplication_law(I, g, -1)
     $is_riemann_integrable_on(I, fn(x I) R {-1 * g(x)})
     by thm riemann_integrable_max_by_darboux_squeeze(I, fn(x I) R {-1 * f(x)}, fn(x I) R {-1 * g(x)})
-    $is_riemann_integrable_on(I, fn(x I) R {max(-1 * f(x), -1 * g(x))})
-    by thm riemann_integral_scalar_multiplication_law(I, fn(x I) R {max(-1 * f(x), -1 * g(x))}, -1)
-    $is_riemann_integrable_on(I, fn(x I) R {-1 * max(-1 * f(x), -1 * g(x))})
+    $is_riemann_integrable_on(I, fn(x I) R {finite_set_max(union({-1 * f(x)}, { -1 * g(x)}))})
+    by thm riemann_integral_scalar_multiplication_law(I, fn(x I) R {finite_set_max(union({-1 * f(x)}, { -1 * g(x)}))}, -1)
+    $is_riemann_integrable_on(I, fn(x I) R {-1 * finite_set_max(union({-1 * f(x)}, { -1 * g(x)}))})
     claim:
         ? forall x I:
-            fn(x I) R {min(f(x), g(x))}(x) = fn(x I) R {-1 * max(-1 * f(x), -1 * g(x))}(x)
+            fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))}(x) = fn(x I) R {-1 * finite_set_max(union({-1 * f(x)}, { -1 * g(x)}))}(x)
         by thm min_eq_neg_max_neg(f(x), g(x))
-        fn(x I) R {min(f(x), g(x))}(x) = min(f(x), g(x))
-        fn(x I) R {-1 * max(-1 * f(x), -1 * g(x))}(x) = -1 * max(-1 * f(x), -1 * g(x))
-        min(f(x), g(x)) = -1 * max(-1 * f(x), -1 * g(x))
-        fn(x I) R {min(f(x), g(x))}(x) = fn(x I) R {-1 * max(-1 * f(x), -1 * g(x))}(x)
-    by thm riemann_integral_respects_pointwise_equality(I, fn(x I) R {-1 * max(-1 * f(x), -1 * g(x))}, fn(x I) R {min(f(x), g(x))})
-    $is_riemann_integrable_on(I, fn(x I) R {min(f(x), g(x))})
+        fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))}(x) = finite_set_min(union({f(x)}, { g(x)}))
+        fn(x I) R {-1 * finite_set_max(union({-1 * f(x)}, { -1 * g(x)}))}(x) = -1 * finite_set_max(union({-1 * f(x)}, { -1 * g(x)}))
+        finite_set_min(union({f(x)}, { g(x)})) = -1 * finite_set_max(union({-1 * f(x)}, { -1 * g(x)}))
+        fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))}(x) = fn(x I) R {-1 * finite_set_max(union({-1 * f(x)}, { -1 * g(x)}))}(x)
+    by thm riemann_integral_respects_pointwise_equality(I, fn(x I) R {-1 * finite_set_max(union({-1 * f(x)}, { -1 * g(x)}))}, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
+    $is_riemann_integrable_on(I, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
 
 thm max_min_preserve_riemann_integrability:
     ? forall I power_set(R), f, g fn(x I) R:
         $is_riemann_integrable_on(I, f)
         $is_riemann_integrable_on(I, g)
         =>:
-            $is_riemann_integrable_on(I, fn(x I) R {max(f(x), g(x))})
-            $is_riemann_integrable_on(I, fn(x I) R {min(f(x), g(x))})
+            $is_riemann_integrable_on(I, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
+            $is_riemann_integrable_on(I, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
     # Source handling: Tao proves `max` by squeezing between piecewise
     # constant majorants and minorants, and says the `min` case is similar.
     by thm riemann_integrable_max_by_darboux_squeeze(I, f, g)
@@ -6347,93 +7505,93 @@ thm max_with_zero_of_nonnegative:
     ? forall t R:
         t >= 0
         =>:
-            max(t, 0) = t
-    t <= max(t, 0)
+            finite_set_max(union({t}, { 0})) = t
+    t <= finite_set_max(union({t}, { 0}))
     0 <= t
-    max(t, 0) <= t
-    max(t, 0) = t
+    finite_set_max(union({t}, { 0})) <= t
+    finite_set_max(union({t}, { 0})) = t
 
 thm min_with_zero_of_nonnegative:
     ? forall t R:
         t >= 0
         =>:
-            min(t, 0) = 0
-    min(t, 0) <= 0
+            finite_set_min(union({t}, { 0})) = 0
+    finite_set_min(union({t}, { 0})) <= 0
     0 <= t
-    0 <= min(t, 0)
-    min(t, 0) = 0
+    0 <= finite_set_min(union({t}, { 0}))
+    finite_set_min(union({t}, { 0})) = 0
 
 thm max_with_zero_of_negative:
     ? forall t R:
         t < 0
         =>:
-            max(t, 0) = 0
-    0 <= max(t, 0)
+            finite_set_max(union({t}, { 0})) = 0
+    0 <= finite_set_max(union({t}, { 0}))
     t <= 0
-    max(t, 0) <= 0
-    max(t, 0) = 0
+    finite_set_max(union({t}, { 0})) <= 0
+    finite_set_max(union({t}, { 0})) = 0
 
 thm min_with_zero_of_negative:
     ? forall t R:
         t < 0
         =>:
-            min(t, 0) = t
-    min(t, 0) <= t
+            finite_set_min(union({t}, { 0})) = t
+    finite_set_min(union({t}, { 0})) <= t
     t <= 0
-    t <= min(t, 0)
-    min(t, 0) = t
+    t <= finite_set_min(union({t}, { 0}))
+    finite_set_min(union({t}, { 0})) = t
 
 thm absolute_value_as_positive_minus_negative_part:
     ? forall t R:
-        abs(t) = max(t, 0) - min(t, 0)
+        abs(t) = finite_set_max(union({t}, { 0})) - finite_set_min(union({t}, { 0}))
     # Source handling: this is the pointwise identity behind Tao's notation
     # `|f| = f_+ - f_-`.
     by cases:
-        ? abs(t) = max(t, 0) - min(t, 0)
+        ? abs(t) = finite_set_max(union({t}, { 0})) - finite_set_min(union({t}, { 0}))
         case t >= 0:
             by thm max_with_zero_of_nonnegative(t)
             by thm min_with_zero_of_nonnegative(t)
             abs(t) = t
-            max(t, 0) = t
-            min(t, 0) = 0
-            max(t, 0) - min(t, 0) = t - 0
+            finite_set_max(union({t}, { 0})) = t
+            finite_set_min(union({t}, { 0})) = 0
+            finite_set_max(union({t}, { 0})) - finite_set_min(union({t}, { 0})) = t - 0
             t - 0 = t
-            abs(t) = max(t, 0) - min(t, 0)
+            abs(t) = finite_set_max(union({t}, { 0})) - finite_set_min(union({t}, { 0}))
         case t < 0:
             by thm max_with_zero_of_negative(t)
             by thm min_with_zero_of_negative(t)
             abs(t) = -1 * t
-            max(t, 0) = 0
-            min(t, 0) = t
-            max(t, 0) - min(t, 0) = 0 - t
+            finite_set_max(union({t}, { 0})) = 0
+            finite_set_min(union({t}, { 0})) = t
+            finite_set_max(union({t}, { 0})) - finite_set_min(union({t}, { 0})) = 0 - t
             0 - t = -1 * t
-            abs(t) = max(t, 0) - min(t, 0)
+            abs(t) = finite_set_max(union({t}, { 0})) - finite_set_min(union({t}, { 0}))
 
 thm absolute_value_preserves_riemann_integrability:
     ? forall I power_set(R), f fn(x I) R:
         $is_riemann_integrable_on(I, f)
         =>:
-            $is_riemann_integrable_on(I, fn(x I) R {max(f(x), 0)})
-            $is_riemann_integrable_on(I, fn(x I) R {min(f(x), 0)})
+            $is_riemann_integrable_on(I, fn(x I) R {finite_set_max(union({f(x)}, { 0}))})
+            $is_riemann_integrable_on(I, fn(x I) R {finite_set_min(union({f(x)}, { 0}))})
             $is_riemann_integrable_on(I, fn(x I) R {abs(f(x))})
     # Source handling: Tao applies Theorem 11.4.3 with the zero function and
     # then writes `|f| = f_+ - f_-`.
     by thm riemann_integrable_on_bounded_interval(I, f)
     by thm riemann_integral_of_zero_function(I)
     by thm max_min_preserve_riemann_integrability(I, f, fn(x I) R {0})
-    $is_riemann_integrable_on(I, fn(x I) R {max(f(x), 0)})
-    $is_riemann_integrable_on(I, fn(x I) R {min(f(x), 0)})
-    by thm riemann_integral_subtraction_law(I, fn(x I) R {max(f(x), 0)}, fn(x I) R {min(f(x), 0)})
-    $is_riemann_integrable_on(I, fn(x I) R {max(f(x), 0) - min(f(x), 0)})
+    $is_riemann_integrable_on(I, fn(x I) R {finite_set_max(union({f(x)}, { 0}))})
+    $is_riemann_integrable_on(I, fn(x I) R {finite_set_min(union({f(x)}, { 0}))})
+    by thm riemann_integral_subtraction_law(I, fn(x I) R {finite_set_max(union({f(x)}, { 0}))}, fn(x I) R {finite_set_min(union({f(x)}, { 0}))})
+    $is_riemann_integrable_on(I, fn(x I) R {finite_set_max(union({f(x)}, { 0})) - finite_set_min(union({f(x)}, { 0}))})
     claim:
         ? forall x I:
-            fn(x I) R {abs(f(x))}(x) = fn(x I) R {max(f(x), 0) - min(f(x), 0)}(x)
+            fn(x I) R {abs(f(x))}(x) = fn(x I) R {finite_set_max(union({f(x)}, { 0})) - finite_set_min(union({f(x)}, { 0}))}(x)
         by thm absolute_value_as_positive_minus_negative_part(f(x))
         fn(x I) R {abs(f(x))}(x) = abs(f(x))
-        fn(x I) R {max(f(x), 0) - min(f(x), 0)}(x) = max(f(x), 0) - min(f(x), 0)
-        abs(f(x)) = max(f(x), 0) - min(f(x), 0)
-        fn(x I) R {abs(f(x))}(x) = fn(x I) R {max(f(x), 0) - min(f(x), 0)}(x)
-    by thm riemann_integral_respects_pointwise_equality(I, fn(x I) R {max(f(x), 0) - min(f(x), 0)}, fn(x I) R {abs(f(x))})
+        fn(x I) R {finite_set_max(union({f(x)}, { 0})) - finite_set_min(union({f(x)}, { 0}))}(x) = finite_set_max(union({f(x)}, { 0})) - finite_set_min(union({f(x)}, { 0}))
+        abs(f(x)) = finite_set_max(union({f(x)}, { 0})) - finite_set_min(union({f(x)}, { 0}))
+        fn(x I) R {abs(f(x))}(x) = fn(x I) R {finite_set_max(union({f(x)}, { 0})) - finite_set_min(union({f(x)}, { 0}))}(x)
+    by thm riemann_integral_respects_pointwise_equality(I, fn(x I) R {finite_set_max(union({f(x)}, { 0})) - finite_set_min(union({f(x)}, { 0}))}, fn(x I) R {abs(f(x))})
     $is_riemann_integrable_on(I, fn(x I) R {abs(f(x))})
 
 """
@@ -6808,7 +7966,7 @@ thm example_11_5_5_not_continuous_on_closed_interval:
         not $chap9::is_continuous_on('[1, 3], example_11_5_5_function)
     # Source handling: the left-hand values approach `4` at `2`, while the
     # function value is `7`.  Given the continuity radius `delta`, take a
-    # point `2 - min(delta / 2, 1 / 2)` in the left-hand piece.  Its value
+    # point `2 - finite_set_min(union({delta / 2}, { 1 / 2}))` in the left-hand piece.  Its value
     # stays at least `3` away from `7`, contradicting epsilon `1`.
     by contra:
         ? not $chap9::is_continuous_on('[1, 3], example_11_5_5_function)
@@ -6820,9 +7978,9 @@ thm example_11_5_5_not_continuous_on_closed_interval:
         1 $in R_pos
         $chap9::is_locally_epsilon_close_to('[1, 3], example_11_5_5_function, 2, 7, 1)
         obtain delta from exist delta R_pos st {$chap9::is_delta_neighborhood_close_to('[1, 3], example_11_5_5_function, 2, 7, 1, delta)}
-        have h R_pos = min(delta / 2, 1 / 2)
-        min(delta / 2, 1 / 2) <= 1 / 2
-        h = min(delta / 2, 1 / 2)
+        have h R_pos = finite_set_min(union({delta / 2}, { 1 / 2}))
+        finite_set_min(union({delta / 2}, { 1 / 2})) <= 1 / 2
+        h = finite_set_min(union({delta / 2}, { 1 / 2}))
         h <= 1 / 2
         -1 * h >= -1 * (1 / 2)
         2 + (-1 * h) >= 2 + (-1 * (1 / 2))
@@ -6835,7 +7993,7 @@ thm example_11_5_5_not_continuous_on_closed_interval:
         2 - h <= 2
         2 - h <= 3
         2 - h $in '[1, 3]
-        min(delta / 2, 1 / 2) <= delta / 2
+        finite_set_min(union({delta / 2}, { 1 / 2})) <= delta / 2
         h <= delta / 2
         delta / 2 < delta
         h <= delta / 2 < delta
@@ -7520,7 +8678,7 @@ irrationals, so all upper sums are `1` and all lower sums are `0`.
 
 have fn dirichlet_rational_indicator_on_unit(x '[0, 1]) R by cases:
     case x $in Q: 1
-    case x $in set_minus(R, Q): 0
+    case not x $in Q: 0
 
 thm real_point_is_rational_or_irrational:
     ? forall x R:
@@ -7643,6 +8801,19 @@ alpha-length zero.
 # `alpha : R -> R` as a domain bridge; the source's more general ambient
 # domain is tracked in the alignment audit.
 
+prop has_alpha_interval_length(alpha fn(x R) R, I power_set(R), l R):
+    $is_bounded_interval(I)
+    forall a, b R:
+        $has_interval_endpoints(I, a, b)
+        a < b
+        =>:
+            l = alpha(b) - alpha(a)
+    forall a, b R:
+        $has_interval_endpoints(I, a, b)
+        b <= a
+        =>:
+            l = 0
+
 # Source handling: Definition 11.8.1 selects Tao's alpha-length `alpha[I]`.
 # proof_debt: the selector remains specialized to `alpha : R -> R` while the
 # source permits a larger ambient domain.
@@ -7665,6 +8836,63 @@ trust have alpha_interval_length fn(alpha fn(x R) R, I power_set(R)) R:
             alpha_interval_length(alpha, '[a, b)) = 0
             alpha_interval_length(alpha, '(a, b]) = 0
             alpha_interval_length(alpha, '(a, b)) = 0
+
+thm alpha_interval_length_has_value:
+    ? forall alpha fn(x R) R, I power_set(R):
+        $is_bounded_interval(I)
+        =>:
+            $has_alpha_interval_length(alpha, I, alpha_interval_length(alpha, I))
+    claim:
+        ? forall a, b R:
+            $has_interval_endpoints(I, a, b)
+            a < b
+            =>:
+                alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
+        I = '[a, b] or I = '[a, b) or I = '(a, b] or I = '(a, b)
+        by cases:
+            ? alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
+            case I = '[a, b]:
+                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '[a, b])
+                alpha_interval_length(alpha, '[a, b]) = alpha(b) - alpha(a)
+                alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
+            case I = '[a, b):
+                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '[a, b))
+                alpha_interval_length(alpha, '[a, b)) = alpha(b) - alpha(a)
+                alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
+            case I = '(a, b]:
+                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '(a, b])
+                alpha_interval_length(alpha, '(a, b]) = alpha(b) - alpha(a)
+                alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
+            case I = '(a, b):
+                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '(a, b))
+                alpha_interval_length(alpha, '(a, b)) = alpha(b) - alpha(a)
+                alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
+    claim:
+        ? forall a, b R:
+            $has_interval_endpoints(I, a, b)
+            b <= a
+            =>:
+                alpha_interval_length(alpha, I) = 0
+        I = '[a, b] or I = '[a, b) or I = '(a, b] or I = '(a, b)
+        by cases:
+            ? alpha_interval_length(alpha, I) = 0
+            case I = '[a, b]:
+                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '[a, b])
+                alpha_interval_length(alpha, '[a, b]) = 0
+                alpha_interval_length(alpha, I) = 0
+            case I = '[a, b):
+                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '[a, b))
+                alpha_interval_length(alpha, '[a, b)) = 0
+                alpha_interval_length(alpha, I) = 0
+            case I = '(a, b]:
+                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '(a, b])
+                alpha_interval_length(alpha, '(a, b]) = 0
+                alpha_interval_length(alpha, I) = 0
+            case I = '(a, b):
+                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '(a, b))
+                alpha_interval_length(alpha, '(a, b)) = 0
+                alpha_interval_length(alpha, I) = 0
+    $has_alpha_interval_length(alpha, I, alpha_interval_length(alpha, I))
 
 """
 Example 11.8.2.  For `alpha(x)=x^2`, the alpha-length of `[2,3]` is `5`,
@@ -9130,15 +10358,41 @@ thm closed_initial_subinterval_subset_parent:
 # proof_debt: the restriction witness is a Litex domain bridge for applying
 # `integral_on` to the smaller interval.
 
+prop has_integral_from_left_endpoint(a, b R, f fn(t '[a, b]) R, x '[a, b], s R):
+    a < b
+    exist g fn(u '[a, x]) R st {$is_restriction_to_subset('[a, b], '[a, x], f, g), $has_riemann_integral('[a, x], g, s)}
+
 trust have integral_from_left_endpoint fn(a, b R, f fn(t '[a, b]) R, x '[a, b]) R:
     forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
         a < b
         =>:
             exist g fn(u '[a, x]) R st {$is_restriction_to_subset('[a, b], '[a, x], f, g), $has_riemann_integral('[a, x], g, integral_from_left_endpoint(a, b, f, x))}
 
+thm integral_from_left_endpoint_has_value:
+    ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
+        a < b
+        =>:
+            $has_integral_from_left_endpoint(a, b, f, x, integral_from_left_endpoint(a, b, f, x))
+    exist g fn(u '[a, x]) R st {$is_restriction_to_subset('[a, b], '[a, x], f, g), $has_riemann_integral('[a, x], g, integral_from_left_endpoint(a, b, f, x))}
+    $has_integral_from_left_endpoint(a, b, f, x, integral_from_left_endpoint(a, b, f, x))
+
 prop is_integral_function_from_left_endpoint(a, b R, f fn(t '[a, b]) R, F fn(x '[a, b]) R):
     forall x '[a, b]:
-        F(x) = integral_from_left_endpoint(a, b, f, x)
+        $has_integral_from_left_endpoint(a, b, f, x, F(x))
+
+thm selected_left_endpoint_integral_is_integral_function:
+    ? forall a, b R, f fn(t '[a, b]) R:
+        a < b
+        =>:
+            $is_integral_function_from_left_endpoint(a, b, f, fn(x '[a, b]) R {integral_from_left_endpoint(a, b, f, x)})
+    claim:
+        ? forall x '[a, b]:
+            $has_integral_from_left_endpoint(a, b, f, x, fn(y '[a, b]) R {integral_from_left_endpoint(a, b, f, y)}(x))
+        fn(y '[a, b]) R {integral_from_left_endpoint(a, b, f, y)}(x) = integral_from_left_endpoint(a, b, f, x)
+        by thm integral_from_left_endpoint_has_value(a, b, f, x)
+        $has_integral_from_left_endpoint(a, b, f, x, integral_from_left_endpoint(a, b, f, x))
+        $has_integral_from_left_endpoint(a, b, f, x, fn(y '[a, b]) R {integral_from_left_endpoint(a, b, f, y)}(x))
+    $is_integral_function_from_left_endpoint(a, b, f, fn(x '[a, b]) R {integral_from_left_endpoint(a, b, f, x)})
 
 thm first_fundamental_theorem_integral_function_continuous:
     ? forall a, b R, f fn(x '[a, b]) R, F fn(x '[a, b]) R:

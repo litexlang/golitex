@@ -1121,8 +1121,6 @@ impl DepCollector {
             Obj::IntegerQuotient(x) => self.collect_two_objs(&x.dividend, &x.divisor),
             Obj::Pow(x) => self.collect_two_objs(&x.base, &x.exponent),
             Obj::Log(x) => self.collect_two_objs(&x.base, &x.arg),
-            Obj::Max(x) => self.collect_two_objs(&x.left, &x.right),
-            Obj::Min(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Union(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Intersect(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::SetMinus(x) => self.collect_two_objs(&x.left, &x.right),
@@ -1167,6 +1165,8 @@ impl DepCollector {
             Obj::Cap(x) => self.collect_obj(&x.left),
             Obj::PowerSet(x) => self.collect_obj(&x.set),
             Obj::FiniteSetSize(x) => self.collect_obj(&x.set),
+            Obj::FiniteSetMax(x) => self.collect_obj(&x.set),
+            Obj::FiniteSetMin(x) => self.collect_obj(&x.set),
             Obj::FnRange(x) => self.collect_obj(&x.function),
             Obj::Replacement(x) => {
                 self.deps.push_prop(x.prop_name.to_string());

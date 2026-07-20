@@ -1,6 +1,169 @@
 use super::*;
 
 #[test]
+fn by_def_strictly_checks_and_stores_a_concrete_prop() {
+    run_with_large_stack("by_def_strict_success", || {
+        let source_code = r#"
+prop is_unit_pair(x R, y R):
+    x = 1
+    y = 1
+alias prop unit_pair <=> is_unit_pair
+
+1 = 1
+by def $unit_pair(1, 1)
+$unit_pair(1, 1)
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("by_def_strict_success");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(run_succeeded, "by def should succeed:\n{}", run_output);
+        assert!(run_output.contains("\"type\": \"proof by definition\""));
+        assert!(run_output.contains("\"type\": \"by definition proof\""));
+        assert!(run_output.contains("\"definition_clause_checks\":"));
+        assert!(runtime.cache_known_facts_contains("$unit_pair(1, 1)").0);
+    });
+}
+
+#[test]
+fn by_def_resolves_an_explicit_current_module_prop() {
+    run_with_large_stack("by_def_module_qualified", || {
+        let source_code = r#"
+prop unit(x R):
+    x = 1
+1 = 1
+by def $Current::unit(1)
+$Current::unit(1)
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("by_def_module_qualified");
+        runtime.current_module_mut().module_name = "Current".to_string();
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "module-qualified by def should succeed:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("by def $Current::unit(1)"));
+    });
+}
+
+#[test]
+fn by_def_does_not_short_circuit_on_an_already_known_target() {
+    run_with_large_stack("by_def_known_target_strictness", || {
+        let source_code = r#"
+prop is_zero(x R):
+    x = 0
+trust $is_zero(1)
+by def $is_zero(1)
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("by_def_known_target_strictness");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "by def should recheck the definition:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("\"definition_clause_checks\": ["));
+        assert!(run_output.contains("\"statement\": \"1 = 0\""));
+    });
+}
+
+#[test]
+fn failed_by_def_does_not_store_its_target() {
+    run_with_large_stack("by_def_failure_is_atomic", || {
+        let source_code = r#"
+prop is_zero(x R):
+    x = 0
+by def $is_zero(1)
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("by_def_failure_is_atomic");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded, "fixture should fail:\n{}", run_output);
+        assert!(run_output.contains("definition clause 1 is not verified: `1 = 0`"));
+        assert!(!runtime.cache_known_facts_contains("$is_zero(1)").0);
+    });
+}
+
+#[test]
+fn by_def_rejects_non_concrete_or_empty_definitions() {
+    run_with_large_stack("by_def_rejects_invalid_definitions", || {
+        let cases = [
+            (
+                "abstract",
+                "abstract_prop P(x)\nby def $P(1)",
+                "is an abstract_prop and has no concrete definition body",
+            ),
+            (
+                "empty",
+                "prop P(x R)\nby def $P(1)",
+                "has no definition clauses",
+            ),
+            (
+                "missing",
+                "by def $P(1)",
+                "concrete prop definition `P` was not found",
+            ),
+        ];
+
+        for (label, source_code, expected) in cases {
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(format!("by_def_{}", label).as_str());
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(!run_succeeded, "{} should fail:\n{}", label, run_output);
+            assert!(run_output.contains(expected), "{}:\n{}", label, run_output);
+        }
+    });
+}
+
+#[test]
+fn by_def_reports_argument_count_and_type_failures() {
+    run_with_large_stack("by_def_argument_failures", || {
+        let cases = [
+            (
+                "arity",
+                "prop P(x R, y R):\n    x = y\nby def $P(1)",
+                "expected 2 argument(s), got 1",
+            ),
+            (
+                "type",
+                "prop P(x N):\n    x = x\nby def $P(-1)",
+                "could not verify argument parameter types",
+            ),
+        ];
+
+        for (label, source_code, expected) in cases {
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(format!("by_def_{}", label).as_str());
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(!run_succeeded, "{} should fail:\n{}", label, run_output);
+            assert!(run_output.contains(expected), "{}:\n{}", label, run_output);
+        }
+    });
+}
+
+#[test]
 fn positive_real_power_closure_enables_log_inverse() {
     let source_code = r#"
 forall a R_pos, x R:

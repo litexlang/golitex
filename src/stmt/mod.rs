@@ -22,6 +22,7 @@ mod thm_stmt;
 pub use alias_stmt::AliasPropStmt;
 pub use alias_stmt::AliasThmStmt;
 pub use by_stmt::ByClosedRangeAsCasesStmt;
+pub use by_stmt::ByDefStmt;
 pub use by_stmt::ByEnumerateRangeStmt;
 pub use by_stmt::ByThmStmt;
 pub use stmt::ByStmt;

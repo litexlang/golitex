@@ -1,7 +1,7 @@
 use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::prelude::*;
 
-/// Integer `closed_range(a, b)` has `max(0, b - a + 1)` points; non-integer endpoints yield `None`.
+/// Integer `closed_range(a, b)` has the larger of `0` and `b - a + 1` points; non-integer endpoints yield `None`.
 pub fn count_closed_range_integer_endpoints(a: &Number, b: &Number) -> Option<Number> {
     let as_ = a.normalized_value.trim();
     let bs = b.normalized_value.trim();
@@ -19,7 +19,7 @@ pub fn count_closed_range_integer_endpoints(a: &Number, b: &Number) -> Option<Nu
     Some(Number::new(cnt.to_string()))
 }
 
-/// Integer `range(a, b)` is half-open `[a, b)`; size `max(0, b - a)` when `b > a`.
+/// Integer `range(a, b)` is half-open `[a, b)`; its size is the larger of `0` and `b - a`.
 pub fn count_half_open_range_integer_endpoints(a: &Number, b: &Number) -> Option<Number> {
     let as_ = a.normalized_value.trim();
     let bs = b.normalized_value.trim();

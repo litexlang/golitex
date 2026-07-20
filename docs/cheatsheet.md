@@ -65,8 +65,8 @@ object-introduction family of `have` statements listed below.
 | `obtain ... from exist` | Existential shape and parameter count must match the named witnesses. | Verifies the existential fact. | Stores witness names, witness type facts, instantiated body facts, and inference results. |
 | `have ... by preimage` | Preimage count and function/range shape must match. | Verifies the source range membership. | Stores preimage names, source-domain facts, domain facts, and value equality facts. |
 | `have fn = anonymous_fn` | Function body, function set, return set, and function name are checked. | Verifies the function value belongs to the return set. | Stores the function name, `f $in fn_set`, known function-body data, `f = anonymous_fn`, and inferred facts. |
-| `have fn case_by_case` | Function set, cases, equal-to expressions, and function name are checked. | Verifies case return values and related case obligations. | Stores the function name, function type, and generated case `forall` facts. |
-| `have fn by induc` | Function and induction shapes are checked. | Verifies base and step obligations. | Stores the function definition facts. |
+| `have fn case_by_case` | Function set, cases, equal-to expressions, and function name are checked. | Verifies coverage of the declared domain, pairwise mutual exclusivity, and every return value's membership in the return set. | Stores the function name, function type, and generated case `forall` facts. |
+| `have fn by induc` | Function and induction shapes are checked. | Proves the measure and lower bound are integer-valued, then verifies the lower bound, case partition, return values, and strict decrease of recursive calls. | Stores the function definition facts. |
 | `have algo for f(...)` | `f` must already be a function; parameters and case shape are checked against it. | Verifies every executable return and case against the function facts. | Stores the checked implementation so later `eval f(...)` can use it. |
 | `have fn ... by exist!` | The source `forall` must have the expected existence-uniqueness shape. | Verifies the source `forall` or the provided proof block. | Stores the function name, function type, property `forall`, and uniqueness fact. |
 | `have tuple` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N_pos` and `2 <= dimension`. | Stores tuple marker, dimension equality, and coordinate `forall` fact. |
@@ -102,6 +102,7 @@ object-introduction family of `have` statements listed below.
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
+| `by def $P(args...)` | `P` must be a concrete prop with a nonempty definition; arguments must match its parameters. The statement is single-line and has no body. | Substitutes the arguments and verifies every definition clause, even if the target is already known. | Stores `$P(args...)` and runs inference only after every clause succeeds. |
 | `by thm` | The theorem must exist; arguments must satisfy theorem parameter types. | Verifies instantiated theorem domain facts. | Stores instantiated then-facts and runs inference. |
 | `by cases` | Then-facts must be well-defined; case/prove shape restrictions must hold. | Verifies cases cover all situations; each case proof must prove the then-facts. | Stores the then-facts. |
 | `by contra` | Target fact must be well-defined. | Assumes the negated target, runs the proof, and verifies both contradiction sides. | Stores the original target fact. |

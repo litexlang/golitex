@@ -498,6 +498,101 @@ impl Runtime {
         Ok(())
     }
 
+    pub(in crate::verify) fn verify_finite_set_max_well_defined(
+        &mut self,
+        x: &FiniteSetMax,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_finite_set_extremum_well_defined(&x.set, FINITE_SET_MAX, verify_state)
+    }
+
+    pub(in crate::verify) fn verify_finite_set_min_well_defined(
+        &mut self,
+        x: &FiniteSetMin,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_finite_set_extremum_well_defined(&x.set, FINITE_SET_MIN, verify_state)
+    }
+
+    fn verify_finite_set_extremum_well_defined(
+        &mut self,
+        set: &Obj,
+        operator_name: &str,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(set, verify_state)?;
+        let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), default_line_file()).into();
+        let nonempty: AtomicFact = IsNonemptySetFact::new(set.clone(), default_line_file()).into();
+        for fact in [finite, nonempty] {
+            if self.verify_atomic_fact(&fact, verify_state)?.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "{operator_name} requires a finite, nonempty subset of R"
+                    )),
+                )));
+            }
+        }
+
+        self.verify_set_elements_are_known_reals(set, operator_name, verify_state)
+    }
+
+    fn verify_set_elements_are_known_reals(
+        &mut self,
+        set: &Obj,
+        operator_name: &str,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        match set {
+            Obj::ListSet(list_set) => {
+                for element in &list_set.list {
+                    self.require_obj_in_r(element, verify_state)?;
+                }
+                Ok(())
+            }
+            Obj::Union(union) => {
+                self.verify_set_elements_are_known_reals(&union.left, operator_name, verify_state)?;
+                self.verify_set_elements_are_known_reals(&union.right, operator_name, verify_state)
+            }
+            Obj::Intersect(intersect) => self.verify_set_elements_are_known_reals(
+                &intersect.left,
+                operator_name,
+                verify_state,
+            ),
+            Obj::SetMinus(set_minus) => self.verify_set_elements_are_known_reals(
+                &set_minus.left,
+                operator_name,
+                verify_state,
+            ),
+            Obj::SetDiff(set_diff) => {
+                self.verify_set_elements_are_known_reals(
+                    &set_diff.left,
+                    operator_name,
+                    verify_state,
+                )?;
+                self.verify_set_elements_are_known_reals(
+                    &set_diff.right,
+                    operator_name,
+                    verify_state,
+                )
+            }
+            _ => {
+                let real_subset: AtomicFact =
+                    SubsetFact::new(set.clone(), StandardSet::R.into(), default_line_file()).into();
+                if self
+                    .verify_atomic_fact(&real_subset, verify_state)?
+                    .is_unknown()
+                {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "{operator_name} requires a finite, nonempty subset of R"
+                        )),
+                    )));
+                }
+                Ok(())
+            }
+        }
+    }
+
     pub(in crate::verify) fn verify_fn_range_well_defined(
         &mut self,
         x: &FnRange,

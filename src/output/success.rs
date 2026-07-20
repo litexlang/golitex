@@ -1,13 +1,14 @@
 use crate::common::json_value::{line_file_line_json_value, render_json_value, JsonValue};
 use crate::prelude::{
     ByAssignmentVerificationResult, ByCasesVerificationResult, ByChoiceVerificationResult,
-    ByContraVerificationResult, ByEnumerateFiniteSetVerificationResult,
-    ByEnumerateRangeVerificationResult, ByExtensionVerificationResult, ByForVerificationResult,
-    ByInducVerificationResult, ByPropRegistrationVerificationResult, ByTheoremVerificationResult,
-    ByVerificationResult, ClaimFactVerificationResult, ClaimForallVerificationResult,
-    ClaimVerificationResult, CommandStmt, DefObjStmt, Fact, FactualStmtSuccess, InferResult,
-    NonFactualStmtSuccess, ParamDefWithType, Runtime, StatementExecutionTrace,
-    StatementPhaseStatus, Stmt, StmtResult, TheoremVerificationResult, VerifiedByResult,
+    ByContraVerificationResult, ByDefinitionVerificationResult,
+    ByEnumerateFiniteSetVerificationResult, ByEnumerateRangeVerificationResult,
+    ByExtensionVerificationResult, ByForVerificationResult, ByInducVerificationResult,
+    ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ByVerificationResult,
+    ClaimFactVerificationResult, ClaimForallVerificationResult, ClaimVerificationResult,
+    CommandStmt, DefObjStmt, Fact, FactualStmtSuccess, InferResult, NonFactualStmtSuccess,
+    ParamDefWithType, Runtime, StatementExecutionTrace, StatementPhaseStatus, Stmt, StmtResult,
+    TheoremVerificationResult, VerifiedByResult,
 };
 
 use super::evidence::{
@@ -259,6 +260,11 @@ fn non_factual_verification_value(
             verification,
             &x.inside_results,
             "trusted_conclusion",
+        )),
+        ByVerificationResult::Definition(verification) => Some(by_definition_verification_value(
+            runtime,
+            verification,
+            &x.inside_results,
         )),
         ByVerificationResult::Theorem(verification) => Some(by_theorem_verification_value(
             runtime,
@@ -1072,6 +1078,55 @@ fn by_theorem_verification_value(
     ])
 }
 
+fn by_definition_verification_value(
+    runtime: &Runtime,
+    verification: &ByDefinitionVerificationResult,
+    inside_results: &[StmtResult],
+) -> JsonValue {
+    let parameter_type_check = inside_results
+        .first()
+        .map(|result| stmt_exec_result_json_value(runtime, result))
+        .unwrap_or_else(|| JsonValue::Object(vec![]));
+    let definition_clause_checks = verification
+        .definition_clauses
+        .iter()
+        .zip(inside_results.iter().skip(1))
+        .enumerate()
+        .map(|(index, (statement, result))| {
+            statement_check_value(
+                runtime,
+                format!("definition clause {}", index + 1).as_str(),
+                statement,
+                result,
+            )
+        })
+        .collect::<Vec<_>>();
+
+    JsonValue::Object(vec![
+        (
+            "type".to_string(),
+            JsonValue::JsonString("by definition proof".to_string()),
+        ),
+        (
+            "prop".to_string(),
+            JsonValue::JsonString(verification.prop.clone()),
+        ),
+        (
+            "arguments".to_string(),
+            JsonValue::Array(string_items(&verification.arguments)),
+        ),
+        ("parameter_type_check".to_string(), parameter_type_check),
+        (
+            "definition_clause_checks".to_string(),
+            JsonValue::Array(definition_clause_checks),
+        ),
+        (
+            "stored_fact".to_string(),
+            JsonValue::JsonString(verification.stored_fact.clone()),
+        ),
+    ])
+}
+
 fn impossible_verification_value(
     runtime: &Runtime,
     impossible_fact: &crate::prelude::AtomicFact,
@@ -1103,14 +1158,12 @@ fn impossible_check_values(
     impossible_fact: &crate::prelude::AtomicFact,
     results: &[&StmtResult],
 ) -> Vec<JsonValue> {
-    let facts = vec![
-        impossible_fact.clone().into(),
-        impossible_fact.make_reversed().into(),
-    ];
-    let roles = ["impossible fact", "reversed impossible fact"];
-    facts
+    let mut facts_and_roles = vec![(impossible_fact.clone().into(), "impossible fact")];
+    if let Ok(negated) = impossible_fact.logical_negation() {
+        facts_and_roles.push((negated.into(), "negated impossible fact"));
+    }
+    facts_and_roles
         .into_iter()
-        .zip(roles)
         .zip(results.iter())
         .map(|((fact, role), result)| fact_check_value(runtime, role, &fact, result))
         .collect::<Vec<_>>()

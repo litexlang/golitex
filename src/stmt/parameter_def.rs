@@ -638,20 +638,6 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
-        Obj::Max(x) => collect_cited_param_indices_from_two_objs(
-            &x.left,
-            &x.right,
-            previous_param_indices,
-            shadowed_names,
-            out,
-        ),
-        Obj::Min(x) => collect_cited_param_indices_from_two_objs(
-            &x.left,
-            &x.right,
-            previous_param_indices,
-            shadowed_names,
-            out,
-        ),
         Obj::Union(x) => collect_cited_param_indices_from_two_objs(
             &x.left,
             &x.right,
@@ -808,6 +794,18 @@ fn collect_cited_param_indices_from_obj(
             }
         }
         Obj::FiniteSetSize(x) => collect_cited_param_indices_from_obj(
+            &x.set,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::FiniteSetMax(x) => collect_cited_param_indices_from_obj(
+            &x.set,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::FiniteSetMin(x) => collect_cited_param_indices_from_obj(
             &x.set,
             previous_param_indices,
             shadowed_names,

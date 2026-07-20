@@ -1,0 +1,803 @@
+# Chapter 11 — Topology
+
+# This chapter follows the source order: filters, metric spaces, and then
+# topological spaces. Lean implementation demonstrations are compressed to
+# their mathematical interfaces.
+
+# ---------------------------------------------------------------------------
+# Section 11.1 — Filters
+# ---------------------------------------------------------------------------
+
+# A filter on X is represented by its collection of large subsets.  This is a
+# property of a candidate collection, not the filter object itself.
+prop is_filter_on(X set, F power_set(power_set(X))):
+    X $in F
+    forall U, V F:
+        intersect(U, V) $in F
+    forall U F, V power_set(X):
+        U $subset V
+        =>:
+            V $in F
+
+# Source definition `principal`.  The result is a callable filter construction.
+template<X set>:
+    have fn principal_filter(s power_set(X)) power_set(power_set(X)) = {U power_set(X): s $subset U}
+
+# The source's concrete atTop filter on the naturals consists of sets which
+# contain a tail.  Both helpers are direct, fixed-carrier definitions.
+prop contains_natural_tail_from(a N, S power_set(N)):
+    forall b N:
+        b >= a
+        =>:
+            b $in S
+
+prop contains_natural_tail(S power_set(N)):
+    exist a N st {$contains_natural_tail_from(a, S)}
+
+have at_top_N power_set(power_set(N)) = {S power_set(N): $contains_natural_tail(S)}
+
+# Source construction `Filter.map`.
+template<X, Y set>:
+    have fn map_filter(f fn(x X) Y, F power_set(power_set(X))) power_set(power_set(Y)) = {V power_set(Y): {x X: f(x) $in V} $in F}
+
+# `comap` contains every set which contains the preimage of a large target set.
+prop _contains_filter_preimage(X, Y set, f fn(x X) Y, G power_set(power_set(Y)), U power_set(X)):
+    exist V G st {{x X: f(x) $in V} $subset U}
+
+template<X, Y set>:
+    have fn comap_filter(f fn(x X) Y, G power_set(power_set(Y))) power_set(power_set(X)) = {U power_set(X): $_contains_filter_preimage(X, Y, f, G, U)}
+
+# Lean's filter order is reverse inclusion of the collections of large sets.
+prop filter_le(X set, F, G power_set(power_set(X))):
+    G $subset F
+
+# Source definitions `Tendsto₁` and `Tendsto₂`.
+prop tends_to_by_preimage(X, Y set, f fn(x X) Y, F power_set(power_set(X)), G power_set(power_set(Y))):
+    forall V G:
+        {x X: f(x) $in V} $in F
+
+prop tends_to_by_map(X, Y set, f fn(x X) Y, F power_set(power_set(X)), G power_set(power_set(Y))):
+    $filter_le(Y, \map_filter<X, Y>(f, F), G)
+
+# The source iff is represented by its two factual directions: Litex theorem
+# goals are implication-shaped rather than proposition-valued iff wrappers.
+thm tends_to_map_iff_preimage_forward:
+    ? forall X, Y set, f fn(x X) Y, F power_set(power_set(X)), G power_set(power_set(Y)):
+        $tends_to_by_map(X, Y, f, F, G)
+        =>:
+            $tends_to_by_preimage(X, Y, f, F, G)
+    trust $tends_to_by_preimage(X, Y, f, F, G)
+
+thm tends_to_map_iff_preimage_reverse:
+    ? forall X, Y set, f fn(x X) Y, F power_set(power_set(X)), G power_set(power_set(Y)):
+        $tends_to_by_preimage(X, Y, f, F, G)
+        =>:
+            $tends_to_by_map(X, Y, f, F, G)
+    trust $tends_to_by_map(X, Y, f, F, G)
+
+# Source result: limits compose.
+thm filter_limits_compose:
+    ? forall X, Y, W set, f fn(x X) Y, g fn(y Y) W, F power_set(power_set(X)), G power_set(power_set(Y)), H power_set(power_set(W)):
+        $tends_to_by_preimage(X, Y, f, F, G)
+        $tends_to_by_preimage(Y, W, g, G, H)
+        =>:
+            $tends_to_by_preimage(X, W, fn(x X) W {g(f(x))}, F, H)
+    trust $tends_to_by_preimage(X, W, fn(x X) W {g(f(x))}, F, H)
+
+# The source next records the functorial map/comap composition laws.
+thm map_filter_compose:
+    ? forall X, Y, W set, f fn(x X) Y, g fn(y Y) W, F power_set(power_set(X)):
+        \map_filter<Y, W>(g, \map_filter<X, Y>(f, F)) = \map_filter<X, W>(fn(x X) W {g(f(x))}, F)
+    trust \map_filter<Y, W>(g, \map_filter<X, Y>(f, F)) = \map_filter<X, W>(fn(x X) W {g(f(x))}, F)
+
+thm comap_filter_compose:
+    ? forall X, Y, W set, f fn(x X) Y, g fn(y Y) W, H power_set(power_set(W)):
+        \comap_filter<X, Y>(f, \comap_filter<Y, W>(g, H)) = \comap_filter<X, W>(fn(x X) W {g(f(x))}, H)
+    trust \comap_filter<X, Y>(f, \comap_filter<Y, W>(g, H)) = \comap_filter<X, W>(fn(x X) W {g(f(x))}, H)
+
+# The epsilon-N formulation of real sequence convergence is used throughout
+# the later metric development.
+prop real_sequence_is_epsilon_close_from(u fn(n N) R, x0 R, epsilon R_pos, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            abs(u(n) - x0) < epsilon
+
+prop real_sequence_converges(u fn(n N) R, x0 R):
+    forall epsilon R_pos:
+        exist N0 N st {$real_sequence_is_epsilon_close_from(u, x0, epsilon, N0)}
+
+# A product sequence converges when both coordinate sequences converge.  The
+# relation exposes the mathematical content without importing a product-filter
+# implementation.
+prop product_real_sequence_converges(u fn(n N) cart(R, R), x0, y0 R):
+    $real_sequence_converges(fn(n N) R {u(n)[1]}, x0)
+    $real_sequence_converges(fn(n N) R {u(n)[2]}, y0)
+
+# Neighborhoods of a real point are the sets containing some positive open
+# interval around that point.
+prop real_open_interval_is_subset(x0 R, epsilon R_pos, U power_set(R)):
+    forall y R:
+        x0 - epsilon < y
+        y < x0 + epsilon
+        =>:
+            y $in U
+
+prop contains_real_neighborhood_interval(x0 R, U power_set(R)):
+    exist epsilon R_pos st {$real_open_interval_is_subset(x0, epsilon, U)}
+
+have fn real_neighborhood_filter(x0 R) power_set(power_set(R)) = {U power_set(R): $contains_real_neighborhood_interval(x0, U)}
+
+thm real_filter_limit_iff_epsilon_N_forward:
+    ? forall u fn(n N) R, x0 R:
+        $tends_to_by_preimage(N, R, u, at_top_N, real_neighborhood_filter(x0))
+        =>:
+            $real_sequence_converges(u, x0)
+    trust $real_sequence_converges(u, x0)
+
+thm real_filter_limit_iff_epsilon_N_reverse:
+    ? forall u fn(n N) R, x0 R:
+        $real_sequence_converges(u, x0)
+        =>:
+            $tends_to_by_preimage(N, R, u, at_top_N, real_neighborhood_filter(x0))
+    trust $tends_to_by_preimage(N, R, u, at_top_N, real_neighborhood_filter(x0))
+
+# Eventually means membership in the chosen filter.  For atTop on N this is
+# exactly eventual truth after a natural threshold.
+prop eventually(X set, F power_set(power_set(X)), P power_set(X)):
+    P $in F
+
+prop eventually_on_N(P power_set(N)):
+    $contains_natural_tail(P)
+
+prop eventually_equal_real_sequences(u, v fn(n N) R):
+    $eventually_on_N({n N: u(n) = v(n)})
+
+thm eventually_conjunction_on_N:
+    ? forall P, Qset power_set(N):
+        $eventually_on_N(P)
+        $eventually_on_N(Qset)
+        =>:
+            $eventually_on_N(intersect(P, Qset))
+    trust $eventually_on_N(intersect(P, Qset))
+
+thm eventually_equal_preserves_real_limit_forward:
+    ? forall u, v fn(n N) R, x0 R:
+        $eventually_equal_real_sequences(u, v)
+        $real_sequence_converges(u, x0)
+        =>:
+            $real_sequence_converges(v, x0)
+    trust $real_sequence_converges(v, x0)
+
+thm eventually_equal_preserves_real_limit_reverse:
+    ? forall u, v fn(n N) R, x0 R:
+        $eventually_equal_real_sequences(u, v)
+        $real_sequence_converges(v, x0)
+        =>:
+            $real_sequence_converges(u, x0)
+    trust $real_sequence_converges(u, x0)
+
+prop intersection_membership_implies(P, Qset, R0 power_set(N), n N):
+    not n $in intersect(P, Qset) or n $in R0
+
+thm eventually_implication_on_N:
+    ? forall P, Qset, R0 power_set(N):
+        $eventually_on_N(P)
+        $eventually_on_N(Qset)
+        $eventually_on_N({n N: $intersection_membership_implies(P, Qset, R0, n)})
+        =>:
+            $eventually_on_N(R0)
+    trust $eventually_on_N(R0)
+
+# ---------------------------------------------------------------------------
+# Section 11.2 — Metric Spaces
+# ---------------------------------------------------------------------------
+
+# A metric-space declaration is a property of a candidate distance function.
+prop metric_separates_points(X set, dist fn(x, y X) R):
+    forall x, y X:
+        dist(x, y) = 0
+        =>:
+            x = y
+    forall x, y X:
+        x = y
+        =>:
+            dist(x, y) = 0
+
+prop is_metric_space(X set, dist fn(x, y X) R):
+    forall x, y X:
+        dist(x, y) >= 0
+    $metric_separates_points(X, dist)
+    forall x, y X:
+        dist(x, y) = dist(y, x)
+    forall x, y, z X:
+        dist(x, z) <= dist(x, y) + dist(y, z)
+
+# The real metric is directly callable.
+have fn real_distance(x, y R) R = abs(x - y)
+
+thm real_distance_nonnegative:
+    ? forall x, y R:
+        real_distance(x, y) >= 0
+    real_distance(x, y) = abs(x - y) >= 0
+
+thm real_distance_separates_points_forward:
+    ? forall x, y R:
+        real_distance(x, y) = 0
+        =>:
+            x = y
+    trust x = y
+
+thm real_distance_separates_points_reverse:
+    ? forall x, y R:
+        x = y
+        =>:
+            real_distance(x, y) = 0
+    trust real_distance(x, y) = 0
+
+thm real_distance_symmetric:
+    ? forall x, y R:
+        real_distance(x, y) = real_distance(y, x)
+    trust real_distance(x, y) = real_distance(y, x)
+
+thm real_distance_triangle:
+    ? forall x, y, z R:
+        real_distance(x, z) <= real_distance(x, y) + real_distance(y, z)
+    trust real_distance(x, z) <= real_distance(x, y) + real_distance(y, z)
+
+prop metric_sequence_is_epsilon_close_from(X set, dist fn(x, y X) R, u fn(n N) X, a X, epsilon R_pos, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            dist(u(n), a) < epsilon
+
+prop metric_sequence_converges(X set, dist fn(x, y X) R, u fn(n N) X, a X):
+    forall epsilon R_pos:
+        exist N0 N st {$metric_sequence_is_epsilon_close_from(X, dist, u, a, epsilon, N0)}
+
+prop is_metric_delta_controlled_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X, epsilon R_pos, delta R_pos):
+    forall x X:
+        dist_X(x, a) < delta
+        =>:
+            dist_Y(f(x), f(a)) < epsilon
+
+prop is_metric_continuous_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X):
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
+
+prop is_metric_continuous(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
+    forall a X:
+        $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+
+# Five Lean proof variants of this source fact collapse to one theorem.
+thm distance_of_continuous_images_is_continuous:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
+        $is_metric_space(X, dist_X)
+        $is_metric_space(Y, dist_Y)
+        $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+        =>:
+            $is_metric_continuous(cart(X, X), R, fn(p, q cart(X, X)) R {dist_X(p[1], q[1]) + dist_X(p[2], q[2])}, real_distance, fn(p cart(X, X)) R {dist_Y(f(p[1]), f(p[2]))})
+    trust $is_metric_continuous(cart(X, X), R, fn(p, q cart(X, X)) R {dist_X(p[1], q[1]) + dist_X(p[2], q[2])}, real_distance, fn(p cart(X, X)) R {dist_Y(f(p[1]), f(p[2]))})
+
+thm continuous_after_quadratic_precomposition:
+    ? forall X set, dist_X fn(x, y X) R, f fn(x R) X:
+        $is_metric_continuous(R, X, real_distance, dist_X, f)
+        =>:
+            $is_metric_continuous(R, X, real_distance, dist_X, fn(x R) X {f(x^2 + x)})
+    trust $is_metric_continuous(R, X, real_distance, dist_X, fn(x R) X {f(x^2 + x)})
+
+# Source definitions `Metric.ball` and `Metric.closedBall` remain set-valued
+# functions.  A failed construction must never turn either object into a prop.
+template<X set, dist fn(x, y X) R>:
+    have fn metric_ball(a X, r R) power_set(X) = {x X: dist(x, a) < r}
+
+template<X set, dist fn(x, y X) R>:
+    have fn metric_closed_ball(a X, r R) power_set(X) = {x X: dist(x, a) <= r}
+
+thm metric_ball_contains_center:
+    ? forall X set, dist fn(x, y X) R, a X, r R:
+        $is_metric_space(X, dist)
+        r > 0
+        =>:
+            a $in \metric_ball<X, dist>(a, r)
+    trust a $in \metric_ball<X, dist>(a, r)
+
+thm metric_closed_ball_contains_center:
+    ? forall X set, dist fn(x, y X) R, a X, r R:
+        $is_metric_space(X, dist)
+        r >= 0
+        =>:
+            a $in \metric_closed_ball<X, dist>(a, r)
+    trust a $in \metric_closed_ball<X, dist>(a, r)
+
+prop is_metric_open(X set, dist fn(x, y X) R, S power_set(X)):
+    forall x S:
+        exist epsilon R_pos st {\metric_ball<X, dist>(x, epsilon) $subset S}
+
+prop is_metric_closed(X set, dist fn(x, y X) R, S power_set(X)):
+    $is_metric_open(X, dist, set_minus(X, S))
+
+# The closure object is the set of all points approached arbitrarily closely
+# by S.  It remains a selected set-valued construction.
+prop is_metric_adherent_point(X set, dist fn(x, y X) R, S power_set(X), x X):
+    forall epsilon R_pos:
+        exist y S st {dist(x, y) < epsilon}
+
+template<X set, dist fn(x, y X) R>:
+    have fn metric_closure(S power_set(X)) power_set(X) = {x X: $is_metric_adherent_point(X, dist, S, x)}
+
+prop is_sequence_in_set(X set, S power_set(X), u fn(n N) X):
+    forall n N:
+        u(n) $in S
+
+thm closed_set_contains_sequence_limits:
+    ? forall X set, dist fn(x, y X) R, S power_set(X), u fn(n N) X, a X:
+        $is_metric_space(X, dist)
+        $is_metric_closed(X, dist, S)
+        $metric_sequence_converges(X, dist, u, a)
+        $is_sequence_in_set(X, S, u)
+        =>:
+            a $in S
+    trust a $in S
+
+thm metric_closure_epsilon_characterization_forward:
+    ? forall X set, dist fn(x, y X) R, S power_set(X), a X:
+        a $in \metric_closure<X, dist>(S)
+        =>:
+            $is_metric_adherent_point(X, dist, S, a)
+    trust $is_metric_adherent_point(X, dist, S, a)
+
+thm metric_closure_epsilon_characterization_reverse:
+    ? forall X set, dist fn(x, y X) R, S power_set(X), a X:
+        $is_metric_adherent_point(X, dist, S, a)
+        =>:
+            a $in \metric_closure<X, dist>(S)
+    trust a $in \metric_closure<X, dist>(S)
+
+prop is_metric_neighborhood(X set, dist fn(x, y X) R, x X, S power_set(X)):
+    exist epsilon R_pos st {\metric_ball<X, dist>(x, epsilon) $subset S}
+
+prop contains_metric_closed_ball(X set, dist fn(x, y X) R, x X, S power_set(X)):
+    exist epsilon R_pos st {\metric_closed_ball<X, dist>(x, epsilon) $subset S}
+
+thm closed_balls_form_metric_neighborhood_basis_forward:
+    ? forall X set, dist fn(x, y X) R, x X, S power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_neighborhood(X, dist, x, S)
+        =>:
+            $contains_metric_closed_ball(X, dist, x, S)
+    trust $contains_metric_closed_ball(X, dist, x, S)
+
+thm closed_balls_form_metric_neighborhood_basis_reverse:
+    ? forall X set, dist fn(x, y X) R, x X, S power_set(X):
+        $is_metric_space(X, dist)
+        $contains_metric_closed_ball(X, dist, x, S)
+        =>:
+            $is_metric_neighborhood(X, dist, x, S)
+    trust $is_metric_neighborhood(X, dist, x, S)
+
+# Sequential compactness is equivalent to compactness for metric spaces and is
+# the source-facing formulation needed by the subsequence examples.
+prop strictly_increasing_natural_map(phi fn(n N) N):
+    forall m, n N:
+        m < n
+        =>:
+            phi(m) < phi(n)
+
+prop is_metric_compact(X set, dist fn(x, y X) R, S power_set(X)):
+    forall u fn(n N) X:
+        $is_sequence_in_set(X, S, u)
+        =>:
+            exist a S, phi fn(n N) N st {$strictly_increasing_natural_map(phi), $metric_sequence_converges(X, dist, fn(n N) X {u(phi(n))}, a)}
+
+have fn closed_real_interval(a, b R) power_set(R) = {x R: a <= x <= b}
+
+have closed_unit_interval power_set(R) = closed_real_interval(0, 1)
+
+thm closed_unit_interval_is_compact:
+    ? forall a, b R:
+        a = 0
+        b = 1
+        =>:
+            $is_metric_compact(R, real_distance, closed_real_interval(a, b))
+    trust $is_metric_compact(R, real_distance, closed_real_interval(a, b))
+
+prop is_minimizer_on(X set, S power_set(X), f fn(x X) R, x S):
+    forall y S:
+        f(x) <= f(y)
+
+prop is_maximizer_on(X set, S power_set(X), f fn(x X) R, x S):
+    forall y S:
+        f(y) <= f(x)
+
+thm continuous_function_on_compact_set_has_minimum:
+    ? forall X set, dist fn(x, y X) R, S power_set(X), f fn(x X) R:
+        $is_metric_compact(X, dist, S)
+        S != {}
+        $is_metric_continuous(X, R, dist, real_distance, f)
+        =>:
+            exist x S st {$is_minimizer_on(X, S, f, x)}
+    trust exist x S st {$is_minimizer_on(X, S, f, x)}
+
+thm continuous_function_on_compact_set_has_maximum:
+    ? forall X set, dist fn(x, y X) R, S power_set(X), f fn(x X) R:
+        $is_metric_compact(X, dist, S)
+        S != {}
+        $is_metric_continuous(X, R, dist, real_distance, f)
+        =>:
+            exist x S st {$is_maximizer_on(X, S, f, x)}
+    trust exist x S st {$is_maximizer_on(X, S, f, x)}
+
+thm compact_metric_set_is_closed:
+    ? forall X set, dist fn(x, y X) R, S power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_compact(X, dist, S)
+        =>:
+            $is_metric_closed(X, dist, S)
+    trust $is_metric_closed(X, dist, S)
+
+prop is_compact_metric_space(X set, dist fn(x, y X) R):
+    $is_metric_compact(X, dist, X)
+
+prop is_uniform_delta_control(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, epsilon R_pos, delta R_pos):
+    forall a, b X:
+        dist_X(a, b) < delta
+        =>:
+            dist_Y(f(a), f(b)) < epsilon
+
+prop is_uniformly_metric_continuous(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_uniform_delta_control(X, Y, dist_X, dist_Y, f, epsilon, delta)}
+
+thm heine_cantor:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
+        $is_metric_space(X, dist_X)
+        $is_metric_space(Y, dist_Y)
+        $is_compact_metric_space(X, dist_X)
+        $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+        =>:
+            $is_uniformly_metric_continuous(X, Y, dist_X, dist_Y, f)
+    trust $is_uniformly_metric_continuous(X, Y, dist_X, dist_Y, f)
+
+prop is_cauchy_after(X set, dist fn(x, y X) R, u fn(n N) X, epsilon R_pos, N0 N):
+    forall m, n N:
+        m >= N0
+        n >= N0
+        =>:
+            dist(u(m), u(n)) < epsilon
+
+prop is_cauchy_sequence(X set, dist fn(x, y X) R, u fn(n N) X):
+    forall epsilon R_pos:
+        exist N0 N st {$is_cauchy_after(X, dist, u, epsilon, N0)}
+
+prop is_cauchy_anchored_after(X set, dist fn(x, y X) R, u fn(n N) X, epsilon R_pos, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            dist(u(n), u(N0)) < epsilon
+
+prop is_cauchy_sequence_anchored(X set, dist fn(x, y X) R, u fn(n N) X):
+    forall epsilon R_pos:
+        exist N0 N st {$is_cauchy_anchored_after(X, dist, u, epsilon, N0)}
+
+thm cauchy_characterizations_equivalent_forward:
+    ? forall X set, dist fn(x, y X) R, u fn(n N) X:
+        $is_metric_space(X, dist)
+        $is_cauchy_sequence(X, dist, u)
+        =>:
+            $is_cauchy_sequence_anchored(X, dist, u)
+    trust $is_cauchy_sequence_anchored(X, dist, u)
+
+thm cauchy_characterizations_equivalent_reverse:
+    ? forall X set, dist fn(x, y X) R, u fn(n N) X:
+        $is_metric_space(X, dist)
+        $is_cauchy_sequence_anchored(X, dist, u)
+        =>:
+            $is_cauchy_sequence(X, dist, u)
+    trust $is_cauchy_sequence(X, dist, u)
+
+prop is_complete_metric_space(X set, dist fn(x, y X) R):
+    forall u fn(n N) X:
+        $is_cauchy_sequence(X, dist, u)
+        =>:
+            exist x X st {$metric_sequence_converges(X, dist, u, x)}
+
+thm cauchy_sequence_converges_in_complete_space:
+    ? forall X set, dist fn(x, y X) R, u fn(n N) X:
+        $is_complete_metric_space(X, dist)
+        $is_cauchy_sequence(X, dist, u)
+        =>:
+            exist x X st {$metric_sequence_converges(X, dist, u, x)}
+    trust exist x X st {$metric_sequence_converges(X, dist, u, x)}
+
+prop has_geometric_step_bound(X set, dist fn(x, y X) R, u fn(n N) X):
+    forall n N:
+        dist(u(n), u(n + 1)) <= (1 / 2)^n
+
+thm cauchy_of_geometric_step_bound:
+    ? forall X set, dist fn(x, y X) R, u fn(n N) X:
+        $is_metric_space(X, dist)
+        $has_geometric_step_bound(X, dist, u)
+        =>:
+            $is_cauchy_sequence(X, dist, u)
+    trust $is_cauchy_sequence(X, dist, u)
+
+prop is_metric_dense(X set, dist fn(x, y X) R, S power_set(X)):
+    forall x X, epsilon R:
+        epsilon > 0
+        =>:
+            exist y S st {dist(x, y) < epsilon}
+
+prop _belongs_every_countable_set(X set, A fn(n N) power_set(X), x X):
+    forall n N:
+        x $in A(n)
+
+template<X set>:
+    have fn countable_intersection(A fn(n N) power_set(X)) power_set(X) = {x X: $_belongs_every_countable_set(X, A, x)}
+
+# Source headline result: the Baire category theorem.  The local center/radius
+# choice functions from the Lean proof remain proof-local and are not exported.
+prop is_countable_family_metric_open(X set, dist fn(x, y X) R, A fn(n N) power_set(X)):
+    forall n N:
+        $is_metric_open(X, dist, A(n))
+
+prop is_countable_family_metric_dense(X set, dist fn(x, y X) R, A fn(n N) power_set(X)):
+    forall n N:
+        $is_metric_dense(X, dist, A(n))
+
+thm baire_category_theorem:
+    ? forall X set, dist fn(x, y X) R, A fn(n N) power_set(X):
+        $is_metric_space(X, dist)
+        $is_complete_metric_space(X, dist)
+        $is_countable_family_metric_open(X, dist, A)
+        $is_countable_family_metric_dense(X, dist, A)
+        =>:
+            $is_metric_dense(X, dist, \countable_intersection<X>(A))
+    trust $is_metric_dense(X, dist, \countable_intersection<X>(A))
+
+# ---------------------------------------------------------------------------
+# Section 11.3 — Topological Spaces
+# ---------------------------------------------------------------------------
+
+prop _belongs_family_union(X set, family power_set(power_set(X)), x X):
+    exist U family st {x $in U}
+
+template<X set>:
+    have fn family_union(family power_set(power_set(X))) power_set(X) = {x X: $_belongs_family_union(X, family, x)}
+
+# A topology is a candidate collection of open sets satisfying the usual
+# axioms.  It is not itself collapsed into a proposition.
+prop is_topology_on(X set, T power_set(power_set(X))):
+    {} $in T
+    X $in T
+    forall U, V T:
+        intersect(U, V) $in T
+    forall family power_set(power_set(X)):
+        family $subset T
+        =>:
+            \family_union<X>(family) $in T
+
+prop is_topologically_open(X set, T power_set(power_set(X)), U power_set(X)):
+    U $in T
+
+prop is_topologically_closed(X set, T power_set(power_set(X)), S power_set(X)):
+    set_minus(X, S) $in T
+
+thm topology_contains_empty_and_univ:
+    ? forall X set, T power_set(power_set(X)):
+        $is_topology_on(X, T)
+        =>:
+            {} $in T
+            X $in T
+    trust {} $in T
+    trust X $in T
+
+thm topology_closed_under_arbitrary_unions:
+    ? forall X set, T power_set(power_set(X)), family power_set(power_set(X)):
+        $is_topology_on(X, T)
+        family $subset T
+        =>:
+            \family_union<X>(family) $in T
+    trust \family_union<X>(family) $in T
+
+prop is_topologically_continuous(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y):
+    forall V T_Y:
+        {x X: f(x) $in V} $in T_X
+
+prop has_open_preimages(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y):
+    forall V T_Y:
+        {x X: f(x) $in V} $in T_X
+
+prop _is_topological_neighborhood(X set, T power_set(power_set(X)), x X, S power_set(X)):
+    exist U T st {x $in U, U $subset S}
+
+template<X set>:
+    have fn topological_neighborhood_filter(T power_set(power_set(X)), x X) power_set(power_set(X)) = {S power_set(X): $_is_topological_neighborhood(X, T, x, S)}
+
+prop is_topologically_continuous_at(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y, x X):
+    $tends_to_by_preimage(X, Y, f, \topological_neighborhood_filter<X>(T_X, x), \topological_neighborhood_filter<Y>(T_Y, f(x)))
+
+thm continuous_iff_open_preimages_forward:
+    ? forall X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y:
+        $is_topologically_continuous(X, Y, T_X, T_Y, f)
+        =>:
+            $has_open_preimages(X, Y, T_X, T_Y, f)
+    trust $has_open_preimages(X, Y, T_X, T_Y, f)
+
+thm continuous_iff_open_preimages_reverse:
+    ? forall X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y:
+        $has_open_preimages(X, Y, T_X, T_Y, f)
+        =>:
+            $is_topologically_continuous(X, Y, T_X, T_Y, f)
+    trust $is_topologically_continuous(X, Y, T_X, T_Y, f)
+
+# Source constructions `coinduced` and `induced` are topology-valued functions.
+template<X, Y set>:
+    have fn coinduced_topology(f fn(x X) Y, T_X power_set(power_set(X))) power_set(power_set(Y)) = {V power_set(Y): {x X: f(x) $in V} $in T_X}
+
+prop _is_induced_open(X, Y set, f fn(x X) Y, T_Y power_set(power_set(Y)), U power_set(X)):
+    exist V T_Y st {{x X: f(x) $in V} = U}
+
+template<X, Y set>:
+    have fn induced_topology(f fn(x X) Y, T_Y power_set(power_set(Y))) power_set(power_set(X)) = {U power_set(X): $_is_induced_open(X, Y, f, T_Y, U)}
+
+thm coinduced_induced_galois_connection_forward:
+    ? forall X, Y set, f fn(x X) Y, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)):
+        $filter_le(Y, \coinduced_topology<X, Y>(f, T_X), T_Y)
+        =>:
+            $filter_le(X, T_X, \induced_topology<X, Y>(f, T_Y))
+    trust $filter_le(X, T_X, \induced_topology<X, Y>(f, T_Y))
+
+thm coinduced_induced_galois_connection_reverse:
+    ? forall X, Y set, f fn(x X) Y, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)):
+        $filter_le(X, T_X, \induced_topology<X, Y>(f, T_Y))
+        =>:
+            $filter_le(Y, \coinduced_topology<X, Y>(f, T_X), T_Y)
+    trust $filter_le(Y, \coinduced_topology<X, Y>(f, T_X), T_Y)
+
+thm continuous_maps_compose:
+    ? forall X, Y, W set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), T_W power_set(power_set(W)), f fn(x X) Y, g fn(y Y) W:
+        $is_topologically_continuous(X, Y, T_X, T_Y, f)
+        $is_topologically_continuous(Y, W, T_Y, T_W, g)
+        =>:
+            $is_topologically_continuous(X, W, T_X, T_W, fn(x X) W {g(f(x))})
+    trust $is_topologically_continuous(X, W, T_X, T_W, fn(x X) W {g(f(x))})
+
+prop is_hausdorff_topology(X set, T power_set(power_set(X))):
+    forall x, y X:
+        x != y
+        =>:
+            exist U, V T st {x $in U, y $in V, intersect(U, V) = {}}
+
+thm hausdorff_limits_are_unique:
+    ? forall X set, T power_set(power_set(X)), u fn(n N) X, a, b X:
+        $is_hausdorff_topology(X, T)
+        $tends_to_by_preimage(N, X, u, at_top_N, \topological_neighborhood_filter<X>(T, a))
+        $tends_to_by_preimage(N, X, u, at_top_N, \topological_neighborhood_filter<X>(T, b))
+        =>:
+            a = b
+    trust a = b
+
+prop is_regular_topology(X set, T power_set(power_set(X))):
+    forall x X, U T:
+        x $in U
+        =>:
+            exist V T st {x $in V, V $subset U}
+
+# Source theorem `aux`, stated as the open-neighborhood refinement it supplies.
+thm topology_extension_aux:
+    ? forall X, Y, A set, T_X power_set(power_set(X)), c fn(a A) X, f fn(a A) Y, x X, F power_set(power_set(Y)), V0 F:
+        $tends_to_by_preimage(A, Y, f, \comap_filter<A, X>(c, \topological_neighborhood_filter<X>(T_X, x)), F)
+        =>:
+            exist V T_X st {x $in V, {a A: c(a) $in V} $subset {a A: f(a) $in V0}}
+    trust exist V T_X st {x $in V, {a A: c(a) $in V} $subset {a A: f(a) $in V0}}
+
+prop is_topologically_dense(X set, T power_set(power_set(X)), A power_set(X)):
+    forall U T:
+        U != {}
+        =>:
+            intersect(A, U) != {}
+
+# Closure remains a selected set-valued object.  A point belongs when every
+# neighborhood meets the original set.
+prop is_topological_adherent_point(X set, T power_set(power_set(X)), A power_set(X), x X):
+    forall U \topological_neighborhood_filter<X>(T, x):
+        intersect(U, A) != {}
+
+template<X set>:
+    have fn topological_closure(T power_set(power_set(X)), A power_set(X)) power_set(X) = {x X: $is_topological_adherent_point(X, T, A, x)}
+
+prop is_countable_neighborhood_basis(X set, T power_set(power_set(X)), x X, basis fn(n N) power_set(X)):
+    forall n N:
+        basis(n) $in \topological_neighborhood_filter<X>(T, x)
+    forall U \topological_neighborhood_filter<X>(T, x):
+        exist n N st {basis(n) $subset U}
+
+prop is_first_countable_topology(X set, T power_set(power_set(X))):
+    forall x X:
+        exist basis fn(n N) power_set(X) st {$is_countable_neighborhood_basis(X, T, x, basis)}
+
+prop has_dense_subset_limit_at_every_point(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), A power_set(X), f fn(a A) Y):
+    forall x X:
+        exist c Y st {$tends_to_by_preimage(A, Y, f, \comap_filter<A, X>(fn(a A) X {a}, \topological_neighborhood_filter<X>(T_X, x)), \topological_neighborhood_filter<Y>(T_Y, c))}
+
+prop is_continuous_extension(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), A power_set(X), f fn(a A) Y, phi fn(x X) Y):
+    $is_topologically_continuous(X, Y, T_X, T_Y, phi)
+    forall a A:
+        phi(a) = f(a)
+
+thm continuous_extension_from_dense_subset:
+    ? forall X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), A power_set(X), f fn(a A) Y:
+        $is_topologically_dense(X, T_X, A)
+        $is_hausdorff_topology(Y, T_Y)
+        $is_regular_topology(Y, T_Y)
+        $is_topologically_continuous(A, Y, \induced_topology<A, X>(fn(a A) X {a}, T_X), T_Y, f)
+        $has_dense_subset_limit_at_every_point(X, Y, T_X, T_Y, A, f)
+        =>:
+            exist phi fn(x X) Y st {$is_continuous_extension(X, Y, T_X, T_Y, A, f, phi)}
+    trust exist phi fn(x X) Y st {$is_continuous_extension(X, Y, T_X, T_Y, A, f, phi)}
+
+prop is_sequence_from_set_converging_to(X set, T power_set(power_set(X)), S power_set(X), a X, u fn(n N) X):
+    $is_sequence_in_set(X, S, u)
+    $tends_to_by_preimage(N, X, u, at_top_N, \topological_neighborhood_filter<X>(T, a))
+
+prop is_sequential_closure_point(X set, T power_set(power_set(X)), S power_set(X), a X):
+    exist u fn(n N) X st {$is_sequence_from_set_converging_to(X, T, S, a, u)}
+
+thm closure_point_iff_sequence_limit_first_countable_forward:
+    ? forall X set, T power_set(power_set(X)), S power_set(X), a X:
+        $is_first_countable_topology(X, T)
+        a $in \topological_closure<X>(T, S)
+        =>:
+            $is_sequential_closure_point(X, T, S, a)
+    trust $is_sequential_closure_point(X, T, S, a)
+
+thm closure_point_iff_sequence_limit_first_countable_reverse:
+    ? forall X set, T power_set(power_set(X)), S power_set(X), a X:
+        $is_first_countable_topology(X, T)
+        $is_sequential_closure_point(X, T, S, a)
+        =>:
+            a $in \topological_closure<X>(T, S)
+    trust a $in \topological_closure<X>(T, S)
+
+prop is_proper_filter_on(X set, F power_set(power_set(X))):
+    $is_filter_on(X, F)
+    not {} $in F
+
+prop is_cluster_point(X set, T power_set(power_set(X)), F power_set(power_set(X)), x X):
+    forall U \topological_neighborhood_filter<X>(T, x), V F:
+        intersect(U, V) != {}
+
+prop is_topologically_compact(X set, T power_set(power_set(X)), S power_set(X)):
+    forall F power_set(power_set(X)):
+        $is_proper_filter_on(X, F)
+        $filter_le(X, F, \principal_filter<X>(S))
+        =>:
+            exist a S st {$is_cluster_point(X, T, F, a)}
+
+thm compact_first_countable_space_has_convergent_subsequences:
+    ? forall X set, T power_set(power_set(X)), S power_set(X), u fn(n N) X:
+        $is_first_countable_topology(X, T)
+        $is_topologically_compact(X, T, S)
+        $is_sequence_in_set(X, S, u)
+        =>:
+            exist a S, phi fn(n N) N st {$strictly_increasing_natural_map(phi), $tends_to_by_preimage(N, X, fn(n N) X {u(phi(n))}, at_top_N, \topological_neighborhood_filter<X>(T, a))}
+    trust exist a S, phi fn(n N) N st {$strictly_increasing_natural_map(phi), $tends_to_by_preimage(N, X, fn(n N) X {u(phi(n))}, at_top_N, \topological_neighborhood_filter<X>(T, a))}
+
+# Finite families are represented by a finite enumeration.  The empty-family
+# branch keeps the definition valid for every carrier.
+prop has_finite_family_enumeration(X set, S power_set(power_set(X)), n N, enum fn(k N) power_set(X)):
+    forall U S:
+        exist k N st {k < n, enum(k) = U}
+
+prop is_finite_family(X set, S power_set(power_set(X))):
+    exist n N, enum fn(k N) power_set(X) st {$has_finite_family_enumeration(X, S, n, enum)}
+
+thm compact_set_has_finite_open_subcover:
+    ? forall X set, T power_set(power_set(X)), S power_set(X), cover power_set(power_set(X)):
+        $is_topologically_compact(X, T, S)
+        cover $subset T
+        S $subset \family_union<X>(cover)
+        =>:
+            exist finite_cover power_set(power_set(X)) st {finite_cover $subset cover, $is_finite_family(X, finite_cover), S $subset \family_union<X>(finite_cover)}
+    trust exist finite_cover power_set(power_set(X)) st {finite_cover $subset cover, $is_finite_family(X, finite_cover), S $subset \family_union<X>(finite_cover)}

@@ -120,28 +120,11 @@ impl Runtime {
             }
         };
 
-        let verify_state_for_definition_clauses = verify_state;
-
-        let args_param_types = match self.verify_args_satisfy_param_def_flat_types(
-            &definition.params_def_with_type,
-            &normal_atomic_fact.body,
-            verify_state_for_definition_clauses,
-            ParamObjType::DefHeader,
-        ) {
-            Ok(x) => x,
-            Err(_) => {
-                return Err({
-                    VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
-                        format!("failed to verify parameter types for {}", predicate_name),
-                        normal_atomic_fact.line_file.clone(),
-                        None,
-                        vec![],
-                    ))
-                    .into()
-                })
-            }
-        };
+        let (args_param_types, clause_checks) = self.verify_normal_atomic_fact_definition_clauses(
+            normal_atomic_fact,
+            &definition,
+            verify_state,
+        )?;
         if args_param_types.is_unknown() {
             return Ok(None);
         }
@@ -150,32 +133,12 @@ impl Runtime {
             return Ok(None);
         }
 
-        let param_to_arg_map = definition
-            .params_def_with_type
-            .param_defs_and_args_to_param_to_arg_map(normal_atomic_fact.body.as_slice());
-
         let mut infer_result = InferResult::new();
-
-        for iff_fact in definition.iff_facts.iter() {
-            let instantiated_iff_fact = self
-                .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader, None)
-                .map_err(|e| {
-                    {
-                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                            Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
-                            String::new(),
-                            normal_atomic_fact.line_file.clone(),
-                            Some(e),
-                            vec![],
-                        )))
-                    }
-                })?;
-            let iff_clause_verify_result = self
-                .verify_fact_full(&instantiated_iff_fact, &verify_state_for_definition_clauses)?;
-            if iff_clause_verify_result.is_unknown() {
+        for (_, clause_result) in clause_checks {
+            if clause_result.is_unknown() {
                 return Ok(None);
             }
-            infer_result.new_infer_result_inside(iff_clause_verify_result.infer_result());
+            infer_result.new_infer_result_inside(clause_result.infer_result());
         }
 
         let verified_by_text = format!(
@@ -201,6 +164,59 @@ impl Runtime {
             ))
             .into(),
         ))
+    }
+
+    pub(crate) fn verify_normal_atomic_fact_definition_clauses(
+        &mut self,
+        normal_atomic_fact: &NormalAtomicFact,
+        definition: &DefPropStmt,
+        verify_state: &VerifyState,
+    ) -> Result<(StmtResult, Vec<(Fact, StmtResult)>), RuntimeError> {
+        let predicate_name = normal_atomic_fact.predicate.to_string();
+        let args_param_types = self
+            .verify_args_satisfy_param_def_flat_types(
+                &definition.params_def_with_type,
+                &normal_atomic_fact.body,
+                verify_state,
+                ParamObjType::DefHeader,
+            )
+            .map_err(|_| {
+                RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                    Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                    format!("failed to verify parameter types for {}", predicate_name),
+                    normal_atomic_fact.line_file.clone(),
+                    None,
+                    vec![],
+                )))
+            })?;
+        if args_param_types.is_unknown() {
+            return Ok((args_param_types, vec![]));
+        }
+
+        let param_to_arg_map = definition
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(normal_atomic_fact.body.as_slice());
+        let mut clause_checks = Vec::with_capacity(definition.iff_facts.len());
+        for iff_fact in definition.iff_facts.iter() {
+            let instantiated_iff_fact = self
+                .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader, None)
+                .map_err(|e| {
+                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                        Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                        String::new(),
+                        normal_atomic_fact.line_file.clone(),
+                        Some(e),
+                        vec![],
+                    )))
+                })?;
+            let clause_result = self.verify_fact_full(&instantiated_iff_fact, verify_state)?;
+            let clause_is_unknown = clause_result.is_unknown();
+            clause_checks.push((instantiated_iff_fact, clause_result));
+            if clause_is_unknown {
+                break;
+            }
+        }
+        Ok((args_param_types, clause_checks))
     }
 
     fn verify_builtin_fact_with_their_definition(

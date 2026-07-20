@@ -647,9 +647,7 @@ fn builtin_rule_output_text(rule: &str) -> BuiltinRuleOutputText {
         "known-only equality: resolved objects match" => {
             BuiltinRuleOutputText::SameValueAfterResolvingKnownValues
         }
-        "or: complementary atomic facts (make_reversed first equals second)" => {
-            BuiltinRuleOutputText::ComplementaryFactsCoverAllCases
-        }
+        "or: complementary atomic facts" => BuiltinRuleOutputText::ComplementaryFactsCoverAllCases,
         "calculation and rational expression simplification" => {
             BuiltinRuleOutputText::ExactCalculationAndRationalExpressionSimplification
         }

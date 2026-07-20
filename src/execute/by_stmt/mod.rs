@@ -4,6 +4,7 @@ mod axiom_of_choice_by_stmt;
 mod cases_by_stmt;
 mod closed_range_by_stmt;
 mod contra_by_stmt;
+mod definition_by_stmt;
 mod enumerate_by_stmt;
 mod enumerate_range_by_stmt;
 mod extension_by_stmt;

@@ -169,14 +169,6 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(binary.base.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.arg.as_ref(), coverage_by_forall_param);
         }
-        Obj::Max(binary) => {
-            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
-            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
-        }
-        Obj::Min(binary) => {
-            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
-            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
-        }
         Obj::Union(binary) => {
             mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
@@ -287,6 +279,18 @@ fn mark_forall_param_coverage_in_obj(
         Obj::FiniteSetSize(finite_set_size) => {
             mark_forall_param_coverage_in_obj(
                 finite_set_size.set.as_ref(),
+                coverage_by_forall_param,
+            );
+        }
+        Obj::FiniteSetMax(finite_set_max) => {
+            mark_forall_param_coverage_in_obj(
+                finite_set_max.set.as_ref(),
+                coverage_by_forall_param,
+            );
+        }
+        Obj::FiniteSetMin(finite_set_min) => {
+            mark_forall_param_coverage_in_obj(
+                finite_set_min.set.as_ref(),
                 coverage_by_forall_param,
             );
         }

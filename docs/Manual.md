@@ -276,7 +276,7 @@ forall a, b, c R:
     a <= c
     b <= c
     =>:
-        max(a, b) <= c
+        finite_set_max(union({a}, {b})) <= c
 ```
 
 Treat kernel rules as part of Litex's trusted mathematical background. When a
@@ -656,29 +656,24 @@ forall a, b N:
 
 #### Finite-set extrema
 
-The `std/basics` functions `finite_set_max` and `finite_set_min` select the
-maximum and minimum of a finite nonempty subset of `N`. Their primary public
-interfaces state that the selected value belongs to the set and bounds every
-member. These are source-level theorems, not builtin verifier rules. The
-singleton equations are secondary computation rules.
+`finite_set_max(S)` and `finite_set_min(S)` are builtin operators for a
+finite, nonempty set `S` of real numbers. Each result belongs to `S`; every
+member is at most the maximum and at least the minimum. Literal calls compute
+directly. They do not require `std/basics`.
 
-<!-- litex:skip-test -->
 ```litex
-import std basics
+finite_set_max({1, 2, 3, 4}) = 4
+finite_set_min({4, -1, 2}) = -1
 
 thm finite_set_extrema_interfaces:
-    ? forall S power_set(N), x S:
+    ? forall S power_set(R), x S:
         $is_finite_set(S)
         $is_nonempty_set(S)
         =>:
-            basics::finite_set_max(S) $in S
-            x <= basics::finite_set_max(S)
-            basics::finite_set_min(S) $in S
-            basics::finite_set_min(S) <= x
-    by thm basics::finite_set_max_in_set(S)
-    by thm basics::finite_set_member_le_max(S, x)
-    by thm basics::finite_set_min_in_set(S)
-    by thm basics::finite_set_min_le_member(S, x)
+            finite_set_max(S) $in S
+            x <= finite_set_max(S)
+            finite_set_min(S) $in S
+            finite_set_min(S) <= x
 ```
 
 #### Finite `sum` and `product`
@@ -838,30 +833,30 @@ sketch:
     a(2, 2) = 4
 ```
 
-**Matrix algebra (surface operators).** These are **not** the scalar operators `+`, `-`, `*`, `^`. For two matrices of matching shape, `++` is cell-wise sum and `--` cell-wise difference. For compatible sizes, `**` is matrix product (columns of the left match rows of the right). For scalar `c` and matrix `A`, `c *. A` is scalar multiplication. For a square matrix and exponent `n` in `N_pos`, `A ^^ n` is matrix power.
+**Matrix algebra (surface operators).** These are **not** the scalar operators `+`, `-`, `*`, `^`. The apostrophe marks the matrix-level operation: for two matrices of matching shape, `'+` is cell-wise sum and `'-` cell-wise difference. For compatible sizes, `'*` is matrix product (columns of the left match rows of the right). For scalar `c` and matrix `A`, `c *' A` is scalar multiplication. For a square matrix and exponent `n` in `N_pos`, `A '^ n` is matrix power.
 
 ```litex
-eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]]
+eval [[1, 0], [0, 1]] '+ [[1, 0], [0, 1]]
 ```
 
 ```litex
-eval [[2, 0], [0, 2]] -- [[1, 0], [0, 1]]
+eval [[2, 0], [0, 2]] '- [[1, 0], [0, 1]]
 ```
 
 ```litex
-eval [[1, 2], [0, 1]] ** [[1, 0], [1, 1]]
+eval [[1, 2], [0, 1]] '* [[1, 0], [1, 1]]
 ```
 
 ```litex
-eval [[1 / 2, 1 / 3], [0, 1]] ** [[1, 0], [1 / 6, 1 / 2]]
+eval [[1 / 2, 1 / 3], [0, 1]] '* [[1, 0], [1 / 6, 1 / 2]]
 ```
 
 ```litex
-eval 3 *. [[1, 2], [4, 5]]
+eval 3 *' [[1, 2], [4, 5]]
 ```
 
 ```litex
-eval [[2, 0], [0, 2]] ^^ 2
+eval [[2, 0], [0, 2]] '^ 2
 ```
 
 **Named matrices.** The same operators work on matrix objects (e.g. after `have m matrix(R, 2, 2) = …`).
@@ -869,11 +864,11 @@ eval [[2, 0], [0, 2]] ^^ 2
 ```litex
 have m matrix(R, 2, 2) = [[1, 0], [0, 1]]
 
-eval m ++ m
+eval m '+ m
 
-eval m ** m
+eval m '* m
 
-eval 2 *. m
+eval 2 *' m
 ```
 
 ---
@@ -932,7 +927,8 @@ The table below lists the main builtin object well-definedness criteria. Every r
 |-------------|-----------------------------|
 | Name such as `x` or `Nat::zero` | The name must already be introduced in the current environment or imported module. Struct names count as defined names for struct objects. |
 | Numeric literal, standard number set | Numerals and standard sets such as `R`, `Q`, `Z`, `N`, `N_pos`, `R_pos`, `R_nz`, and related signed variants are builtin well-defined objects. |
-| `a + b`, `a - b`, `a * b`, `abs(a)`, `max(a, b)`, `min(a, b)` | The arguments must be real-number objects; for binary operators both sides must be in `R`. |
+| `a + b`, `a - b`, `a * b`, `abs(a)` | The arguments must be real-number objects; for binary operators both sides must be in `R`. |
+| `finite_set_max(S)`, `finite_set_min(S)` | `S` must be finite, nonempty, and have real-number elements. |
 | `a / b` | Both arguments must be in `R`, and Litex must prove `b != 0`. |
 | `a % b` | Both arguments must be in `Z`, and Litex must prove `b != 0`. |
 | `a^b` | Litex accepts the standard real/integer power domains: nonnegative real base with positive real exponent; positive real base with real exponent; zero base with positive real exponent; nonzero base with integer exponent; or real base with natural exponent. The last case includes the current natural-exponent convention `0^0 = 1`. |
@@ -959,7 +955,7 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | Real intervals `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]`, `'(,a)`, `'(,a]`, `'(a,)`, `'[a,)` | Endpoints must be real-number objects. |
 | `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
 | `matrix(S, rows, cols)` and matrix literal `[[...], ...]` | For matrix types, `S` must be a set and both dimensions must be in `N_pos`. Matrix literals must be rectangular and all entries must be well-defined. |
-| Matrix operators `A ++ B`, `A -- B`, `A ** B`, `c *. A`, `A ^^ n` | The scalar in `c *. A` must be well-defined. Matrix operands must have known literal shapes. Addition and subtraction require equal shapes; multiplication requires left columns equal right rows; powers require a square base and exponent in `N_pos`. |
+| Matrix operators `A '+ B`, `A '- B`, `A '* B`, `c *' A`, `A '^ n` | The scalar in `c *' A` must be well-defined. Matrix operands must have known literal shapes. Addition and subtraction require equal shapes; multiplication requires left columns equal right rows; powers require a square base and exponent in `N_pos`. |
 | Struct object `&Name<args>` | The struct must be defined. Its arguments must satisfy the struct parameter types and domain facts. Instantiated field types and struct filter facts must be well-defined. |
 | Field access `&Name<args>{p}.field` | The struct object must be well-defined, the field must exist, `p` must be well-defined, and Litex must prove `p $in &Name<args>`. |
 | Template instance such as `\T<R>` | The template instance must materialize from a defined template, and the template arguments must satisfy the template's parameter obligations. |
@@ -1858,7 +1854,14 @@ forall z R:
         g(z) = 4
 ```
 
-> Hint: the cases should cover the domain you intend to use.
+> Litex verifies this partition before storing the definition: the cases must cover the entire
+> declared domain and must be pairwise mutually exclusive. Branch order does not introduce
+> priority.
+
+A case may start with a negated atomic condition, for example `case not x $in Q: 0`.
+Function equality is not such a partition condition yet: `$fn_eq(f, g)` and
+`$fn_eq(g, f)` are the same condition by symmetry, and Litex has no negated
+function-equality fact.
 
 ---
 
@@ -1919,7 +1922,15 @@ check the well-definedness lemmas around it.
 
 ### Recursive function by induction measure (`have fn ... by induc ... from ...`)
 
-Use **`have fn ... by induc ... from ...`** to define a recursive function whose calls are justified by a decreasing measure. The function signature gives the parameters, domain facts, and return set; the `by induc` clause gives a measure and a lower bound.
+Use **`have fn ... by induc ... from ...`** to define a recursive function whose calls are justified by a decreasing integer-valued measure. The function signature gives the parameters, domain facts, and return set; the `by induc` clause gives the integer-valued measure and its integer lower bound.
+
+Under the function's declared parameter types and domain facts, Litex must prove
+both `measure $in Z` and `lower_bound $in Z`. Auxiliary parameters may belong to
+other sets; only the induction measure is restricted. Thus a function may carry
+real-valued state while recursing on a separate `n N`, and expressions such as
+`abs(a) + abs(b)` are accepted when their integer-valuedness is provable. A
+real-valued rank such as `x R_pos` is rejected even when every recursive call
+makes it smaller and keeps it above zero.
 
 When defining `h(args)`, a recursive call `h(args')` is allowed only if Litex can verify that `args'` satisfies the function domain, that the measure at `args'` is strictly smaller than the current measure, and that the measure remains above the lower bound.
 
@@ -2077,6 +2088,28 @@ thm self_eq_named_auto:
 # This can use automatic matching from the proved theorem.
 2 = 2
 ```
+
+### Explicit definition unfolding (preview)
+
+`by def $P(args...)` explicitly checks a concrete `prop` by its recorded
+definition. Litex checks the argument types, substitutes the arguments into
+every definition clause, verifies every instantiated clause, and only then
+stores `$P(args...)`.
+
+```litex
+prop is_unit_pair(x R, y R):
+    x = 1
+    y = 1
+
+1 = 1
+by def $is_unit_pair(1, 1)
+$is_unit_pair(1, 1)
+```
+
+This preview form is deliberately single-line. It does not accept `:` or an
+indented body, does not apply to `abstract_prop` or builtin predicates, and
+does not add proof search beyond verifying the instantiated definition
+clauses. An already-known target does not bypass those checks.
 
 ---
 
@@ -2388,7 +2421,7 @@ Besides algorithms, **`eval expr`** can reduce closed expressions according to e
 ```litex
 eval 1 + 1 / 3 # exact rational arithmetic
 
-eval [[1, 0], [0, 1]] ++ [[1, 0], [0, 1]] # matrix addition
+eval [[1, 0], [0, 1]] '+ [[1, 0], [0, 1]] # matrix addition
 
 eval sum(1, 2, fn(x Z) Z {sum(2, 3, fn(y Z) Z {x + y})}) # sum of a sum
 ```
@@ -2913,6 +2946,7 @@ The sections above explain the common use cases. This table is a quick map of th
 | `witness $is_nonempty_set` | Prove a set is nonempty by giving an element |
 | `by cases` | Prove a goal by splitting into cases |
 | `by contra` | Prove by contradiction |
+| `by def` | Preview: instantiate and verify every clause of a concrete `prop` definition |
 | `by enumerate finite_set` | Check a finite list of cases |
 | `by closed_range as cases` | Expand closed integer interval membership into finite equality cases |
 | `by induc` / `by strong_induc` | Prove a statement by ordinary or strong induction |
@@ -2994,8 +3028,8 @@ bound variable in a set builder.
 | absolute value | `abs(x)` |
 | square root | `sqrt(x)` |
 | logarithm with explicit base | `log(2, x)` |
-| binary maximum | `max(x, y)` |
-| binary minimum | `min(x, y)` |
+| finite-set maximum | `finite_set_max(S)` |
+| finite-set minimum | `finite_set_min(S)` |
 
 #### Set, function, and tuple objects
 
@@ -3040,11 +3074,11 @@ bound variable in a set builder.
 | index access | `a[1]` |
 | matrix type | `matrix(R, 2, 2)` |
 | displayed matrix value | `[[1, 0], [0, 1]]` |
-| matrix addition | `A ++ B` |
-| matrix subtraction | `A -- B` |
-| matrix multiplication | `A ** B` |
-| scalar-matrix multiplication | `2 *. A` |
-| matrix power | `A ^^ 2` |
+| matrix addition | `A '+ B` |
+| matrix subtraction | `A '- B` |
+| matrix multiplication | `A '* B` |
+| scalar-matrix multiplication | `2 *' A` |
+| matrix power | `A '^ 2` |
 | open real interval | `'(0, 1)` |
 | left-open, right-closed real interval | `'(0, 1]` |
 | left-closed, right-open real interval | `'[0, 1)` |
@@ -3175,6 +3209,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 | define a named theorem that also becomes a known `forall` fact | `lemma self_eq_auto:`<br>`? forall x R:`<br>`x = x` |
 | copy a theorem under a new name | `alias thm eq_refl <=> self_eq` |
 | call a named theorem with arguments | `by thm self_eq(1)` |
+| explicitly verify a concrete prop by its definition | `by def $is_unit_pair(1, 1)` |
 | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`? forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |
 | enable a strategy | `use strategy positive_nonzero` |
 | disable a strategy | `stop strategy positive_nonzero` |
@@ -3199,6 +3234,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 |---------|---------|
 | prove a goal by exhaustive case split | `by cases x = 0 or x != 0:`<br>`case x = 0:`<br>`do_nothing`<br>`case x != 0:`<br>`do_nothing` |
 | prove a goal by contradiction | `by contra not $p(1):`<br>`$p(1)`<br>`impossible $q(1)` |
+| verify a concrete prop by its definition | `by def $P(a, b)` |
 | prove a `forall` over displayed finite sets by enumeration | `by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}:` |
 | expand membership in `range` or `closed_range` | `by enumerate range: i $in range(0, 3)` |
 | expose closed-range membership as equality cases | `by closed_range as cases: i $in closed_range(0, 3)` |
@@ -3259,7 +3295,7 @@ moves:
 | builtin reasoning | a direct fact such as `2 + 3 = 5` | arithmetic, equality, order, membership, set, function, and other builtin patterns |
 | known fact matching | a fact already present in the context | whether the same fact, possibly up to known equalities, is already known |
 | known `forall` matching | a desired conclusion of a universal fact | whether parameters and premises can be matched from the current context |
-| definition unfolding | a `prop` or definition-shaped fact | whether the target follows from the recorded meaning of the definition |
+| definition unfolding | a `prop` fact, optionally explicit as `by def $P(args...)` | whether the instantiated clauses of the concrete definition all hold |
 | theorem call | `by thm name(args...)` | whether the named theorem applies to the arguments and stores its conclusions |
 | local claim | `claim:` | whether a local proof block establishes a reusable intermediate fact |
 | standard proof form | `by contra`, `by cases`, or `by induc` | whether contradiction, case split, or induction subproofs close the goal |
@@ -4740,13 +4776,14 @@ sketch:
     not (-1) $in N
 ```
 
-#### Numeric Cones And `max` / `min`
+#### Numeric Cones And Finite-Set Extrema
 
-If `max(a,b)` or `min(a,b)` is asserted inside a standard one-sided number cone, Litex may close the goal when both operands are already known to lie in that same cone.
+The maximum or minimum inherits a standard numeric set when every element of
+its source finite set lies in that set.
 
 ```litex
 sketch:
-    max(2, 3) $in R_pos
+    finite_set_max({2, 3}) $in R_pos
 ```
 
 #### Finite Sums And Products

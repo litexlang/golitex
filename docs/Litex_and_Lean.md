@@ -191,7 +191,11 @@ example : h 2 = 3 := by
   simp [h]
 ```
 
-**What differs.** Litex's `case` form reads like a piecewise definition. Lean uses `if` and unfolds it with simplification.
+**What differs.** Litex's `case` form reads like a piecewise definition. Before storing the
+definition, Litex verifies that the cases cover the declared domain and are pairwise mutually
+exclusive, so source order is not priority. Lean can faithfully lower that partition to `if` and
+unfold it with simplification. Function equality has no negated atomic form: `$fn_eq(f, g)` and
+`$fn_eq(g, f)` are symmetric statements, not complementary branches.
 
 ```litex
 have fn h(x R) R by cases:

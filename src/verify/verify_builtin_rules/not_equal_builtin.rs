@@ -972,8 +972,12 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let operand_not_equal_zero_fact =
             NotEqualFact::new(operand.clone(), zero_obj, line_file).into();
-        let verify_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+        // A factor may be a computable nonzero scalar such as `7 / 5`, not
+        // only a previously stored nonzero fact. Example: from `b != 0`,
+        // prove `b * (7 / 5) != 0`.
+        let verify_result = self.verify_non_equational_known_then_builtin_rules_only(
             &operand_not_equal_zero_fact,
+            &VerifyState::new(0, true),
         )?;
         Ok(verify_result.is_true())
     }

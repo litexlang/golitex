@@ -1,0 +1,179 @@
+# Linear Algebra Done Right, fourth edition — Section 3E.
+# Products and Quotients of Vector Spaces.
+
+# Definition 3.87. A finite product is represented by iterating this binary
+# cartesian product. Litex's cart(V,W) keeps the two carrier types distinct.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    have product_zero cart(V, W) = (&section01b::VectorSpace<s, scalars, V>{Vspace}.zero, &section01b::VectorSpace<s, scalars, W>{Wspace}.zero)
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    have fn product_add(x, y cart(V, W)) cart(V, W) = (&section01b::VectorSpace<s, scalars, V>{Vspace}.add(x[1], y[1]), &section01b::VectorSpace<s, scalars, W>{Wspace}.add(x[2], y[2]))
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    have fn product_smul(a s, x cart(V, W)) cart(V, W) = (&section01b::VectorSpace<s, scalars, V>{Vspace}.smul(a, x[1]), &section01b::VectorSpace<s, scalars, W>{Wspace}.smul(a, x[2]))
+
+# Example 3.88 is comment-only: P_5(R) x R^3 illustrates componentwise
+# addition and scalar multiplication.
+
+# Result 3.89. The componentwise operations make the product a vector space.
+axiom product_is_vector_space:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>:
+        (\product_zero<s, scalars, V, W, Vspace, Wspace>, \product_add<s, scalars, V, W, Vspace, Wspace>, \product_smul<s, scalars, V, W, Vspace, Wspace>) $in &section01b::VectorSpace<s, scalars, cart(V, W)>
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    trust have product_vector_space &section01b::VectorSpace<s, scalars, cart(V, W)>:
+        product_vector_space = (\product_zero<s, scalars, V, W, Vspace, Wspace>, \product_add<s, scalars, V, W, Vspace, Wspace>, \product_smul<s, scalars, V, W, Vspace, Wspace>)
+
+# Examples 3.90 and 3.91 are comment-only: R^2 x R^3 is naturally isomorphic
+# (but not literally equal) to R^5, and the source displays a product basis.
+
+# Result 3.92. Binary dimensions add; the printed m-fold statement follows by
+# iterating the binary product representation.
+axiom dimension_of_product_is_sum:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>:
+        $section02a::is_finite_dimensional(s, scalars, V, Vspace)
+        $section02a::is_finite_dimensional(s, scalars, W, Wspace)
+        =>:
+            \section02c::dimension<s, scalars, cart(V, W), \product_vector_space<s, scalars, V, W, Vspace, Wspace>> = \section02c::dimension<s, scalars, V, Vspace> + \section02c::dimension<s, scalars, W, Wspace>
+
+# Result 3.93. The addition map Gamma: U x W -> U+W is injective exactly when
+# the sum is direct (the finite-family statement is obtained by iteration).
+prop direct_sum_iff_addition_injective_statement(s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U, W power_set(V)):
+    forall:
+        =>:
+            $section01c::is_direct_sum_pair(s, scalars, V, Vspace, U, W)
+        <=>:
+            $section03b::is_injective(cart(U, W), \section01c::subspace_sum_pair<s, scalars, V, Vspace>(U, W), fn(p cart(U, W)) \section01c::subspace_sum_pair<s, scalars, V, Vspace>(U, W) {&section01b::VectorSpace<s, scalars, V>{Vspace}.add(p[1], p[2])})
+
+axiom products_and_direct_sums:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U, W power_set(V):
+        $section01c::is_subspace(s, scalars, V, Vspace, U)
+        $section01c::is_subspace(s, scalars, V, Vspace, W)
+        =>:
+            $direct_sum_iff_addition_injective_statement(s, scalars, V, Vspace, U, W)
+
+# Result 3.94. In finite dimension, a pair sum is direct exactly when the
+# dimension of the sum is the sum of the dimensions.
+prop direct_sum_iff_dimension_adds_statement(s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U, W power_set(V)):
+    forall:
+        =>:
+            $section01c::is_direct_sum_pair(s, scalars, V, Vspace, U, W)
+        <=>:
+            \section02c::dimension<s, scalars, \section01c::subspace_sum_pair<s, scalars, V, Vspace>(U, W), \section01c::subspace_vector_space<s, scalars, V, Vspace, \section01c::subspace_sum_pair<s, scalars, V, Vspace>(U, W)>> = \section02c::dimension<s, scalars, U, \section01c::subspace_vector_space<s, scalars, V, Vspace, U>> + \section02c::dimension<s, scalars, W, \section01c::subspace_vector_space<s, scalars, V, Vspace, W>>
+
+axiom dimension_criterion_for_direct_sum:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U, W power_set(V):
+        $section02a::is_finite_dimensional(s, scalars, V, Vspace)
+        $section01c::is_subspace(s, scalars, V, Vspace, U)
+        $section01c::is_subspace(s, scalars, V, Vspace, W)
+        =>:
+            $direct_sum_iff_dimension_adds_statement(s, scalars, V, Vspace, U, W)
+
+# Notation 3.95. v+U is the subset obtained by adding v to every element of U.
+# Definition 3.97. A set of the form v+U is called a translate of U.
+prop belongs_to_translate(s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U power_set(V), v, x V):
+    exist u U st {x = &section01b::VectorSpace<s, scalars, V>{Vspace}.add(v, u)}
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>>:
+    have fn translate(U power_set(V), v V) power_set(V) = {x V: $belongs_to_translate(s, scalars, V, Vspace, U, v, x)}
+
+# Examples 3.96 and 3.98 are comment-only: affine lines and planes are
+# translates of the corresponding origin-containing subspaces.
+
+# Definition 3.99. V/U is the set of all translates v+U.
+prop is_translate_of(s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U power_set(V), A power_set(V)):
+    exist v V st {A = \translate<s, scalars, V, Vspace>(U, v)}
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>>:
+    have fn quotient_space(U power_set(V)) power_set(power_set(V)) = {A power_set(V): $is_translate_of(s, scalars, V, Vspace, U, A)}
+
+# Litex requires a nonempty carrier to instantiate VectorSpace. The equality
+# below is the local quotient-carrier promotion boundary; 0+U supplies the
+# mathematical witness.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U power_set(V)>:
+    trust have quotient_carrier set:
+        quotient_carrier = \quotient_space<s, scalars, V, Vspace>(U)
+        $is_nonempty_set(quotient_carrier)
+
+# Example 3.100 is comment-only: quotients of R^2 and R^3 by lines or planes
+# are the corresponding families of parallel affine subspaces.
+
+# Result 3.101. Two translates of a subspace are equal or disjoint; the source
+# gives the equivalent difference-membership criterion as well.
+prop translate_difference_criterion_statement(s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U power_set(V), v, w V):
+    forall:
+        =>:
+            &section01b::VectorSpace<s, scalars, V>{Vspace}.add(v, \section01b::vector_neg<s, scalars, V, Vspace>(w)) $in U
+        <=>:
+            \translate<s, scalars, V, Vspace>(U, v) = \translate<s, scalars, V, Vspace>(U, w)
+
+prop translates_equal_iff_intersect_statement(s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U power_set(V), v, w V):
+    forall:
+        =>:
+            \translate<s, scalars, V, Vspace>(U, v) = \translate<s, scalars, V, Vspace>(U, w)
+        <=>:
+            intersect(\translate<s, scalars, V, Vspace>(U, v), \translate<s, scalars, V, Vspace>(U, w)) != {}
+
+axiom translates_equal_iff_difference_in_subspace:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U power_set(V), v, w V:
+        $section01c::is_subspace(s, scalars, V, Vspace, U)
+        =>:
+            $translate_difference_criterion_statement(s, scalars, V, Vspace, U, v, w)
+            $translates_equal_iff_intersect_statement(s, scalars, V, Vspace, U, v, w)
+
+# Definition 3.102. Quotient addition and scalar multiplication are induced
+# from representatives. These selected functions carry their representative
+# equations explicitly.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>>:
+    trust have quotient_add fn(U power_set(V), A, B \quotient_carrier<s, scalars, V, Vspace, U>) \quotient_carrier<s, scalars, V, Vspace, U>:
+        forall v, w V:
+            A = \translate<s, scalars, V, Vspace>(U, v)
+            B = \translate<s, scalars, V, Vspace>(U, w)
+            =>:
+                quotient_add(U, A, B) = \translate<s, scalars, V, Vspace>(U, &section01b::VectorSpace<s, scalars, V>{Vspace}.add(v, w))
+
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>>:
+    trust have quotient_smul fn(U power_set(V), a s, A \quotient_carrier<s, scalars, V, Vspace, U>) \quotient_carrier<s, scalars, V, Vspace, U>:
+        forall v V:
+            A = \translate<s, scalars, V, Vspace>(U, v)
+            =>:
+                quotient_smul(U, a, A) = \translate<s, scalars, V, Vspace>(U, &section01b::VectorSpace<s, scalars, V>{Vspace}.smul(a, v))
+
+# Result 3.103. These operations make V/U a vector space.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>>:
+    trust have quotient_vector_space fn(U power_set(V): $section01c::is_subspace(s, scalars, V, Vspace, U)) &section01b::VectorSpace<s, scalars, \quotient_carrier<s, scalars, V, Vspace, U>>:
+        quotient_vector_space(U) = (\translate<s, scalars, V, Vspace>(U, &section01b::VectorSpace<s, scalars, V>{Vspace}.zero), fn(A, B \quotient_carrier<s, scalars, V, Vspace, U>) \quotient_carrier<s, scalars, V, Vspace, U> {\quotient_add<s, scalars, V, Vspace>(U, A, B)}, fn(a s, A \quotient_carrier<s, scalars, V, Vspace, U>) \quotient_carrier<s, scalars, V, Vspace, U> {\quotient_smul<s, scalars, V, Vspace>(U, a, A)})
+
+# Definition 3.104. The quotient map sends v to v+U.
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>>:
+    trust have quotient_map fn(U power_set(V), v V) \quotient_carrier<s, scalars, V, Vspace, U>:
+        quotient_map(U, v) = \translate<s, scalars, V, Vspace>(U, v)
+
+# Result 3.105. In finite dimension, dim(V/U)=dim(V)-dim(U).
+axiom dimension_of_quotient_space:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, U power_set(V):
+        $section02a::is_finite_dimensional(s, scalars, V, Vspace)
+        $section01c::is_subspace(s, scalars, V, Vspace, U)
+        =>:
+            \section02c::dimension<s, scalars, \quotient_carrier<s, scalars, V, Vspace, U>, \quotient_vector_space<s, scalars, V, Vspace>(U)> = \section02c::dimension<s, scalars, V, Vspace> - \section02c::dimension<s, scalars, U, \section01c::subspace_vector_space<s, scalars, V, Vspace, U>>
+
+# Notation 3.106. T-tilde maps the coset v+null(T) to T(v).
+template<s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>>:
+    trust have induced_map fn(T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>, A \quotient_carrier<s, scalars, V, Vspace, \section03b::null_space<s, scalars, V, W, Vspace, Wspace>(T)>) W:
+        forall v V:
+            A = \translate<s, scalars, V, Vspace>(\section03b::null_space<s, scalars, V, W, Vspace, Wspace>(T), v)
+            =>:
+                induced_map(T, A) = T(v)
+
+# Result 3.107. T-tilde composed with pi is T; it is injective, has the same
+# range as T, and gives an isomorphism onto range(T).
+prop induced_map_first_isomorphism_statement(s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>):
+    forall v V:
+        \induced_map<s, scalars, V, W, Vspace, Wspace>(T, \quotient_map<s, scalars, V, Vspace>(\section03b::null_space<s, scalars, V, W, Vspace, Wspace>(T), v)) = T(v)
+    $section03b::is_injective(\quotient_carrier<s, scalars, V, Vspace, \section03b::null_space<s, scalars, V, W, Vspace, Wspace>(T)>, W, fn(A \quotient_carrier<s, scalars, V, Vspace, \section03b::null_space<s, scalars, V, W, Vspace, Wspace>(T)>) W {\induced_map<s, scalars, V, W, Vspace, Wspace>(T, A)})
+    \section03b::range_of<\quotient_carrier<s, scalars, V, Vspace, \section03b::null_space<s, scalars, V, W, Vspace, Wspace>(T)>, W>(fn(A \quotient_carrier<s, scalars, V, Vspace, \section03b::null_space<s, scalars, V, W, Vspace, Wspace>(T)>) W {\induced_map<s, scalars, V, W, Vspace, Wspace>(T, A)}) = \section03b::range_of<V, W>(T)
+    $section03d::are_isomorphic(s, scalars, \quotient_carrier<s, scalars, V, Vspace, \section03b::null_space<s, scalars, V, W, Vspace, Wspace>(T)>, \section03b::range_of<V, W>(T), \quotient_vector_space<s, scalars, V, Vspace>(\section03b::null_space<s, scalars, V, W, Vspace, Wspace>(T)), \section01c::subspace_vector_space<s, scalars, W, Wspace, \section03b::range_of<V, W>(T)>)
+
+axiom null_space_and_range_of_induced_map:
+    ? forall s nonempty_set, scalars &section01a::ScalarSystem<s>, V, W nonempty_set, Vspace &section01b::VectorSpace<s, scalars, V>, Wspace &section01b::VectorSpace<s, scalars, W>, T \section03a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
+        $induced_map_first_isomorphism_statement(s, scalars, V, W, Vspace, Wspace, T)

@@ -127,40 +127,6 @@ impl Obj {
                 }
                 None => None,
             },
-            Obj::Max(m) => {
-                let left_number = m.left.evaluate_to_normalized_decimal_number();
-                let right_number = m.right.evaluate_to_normalized_decimal_number();
-                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
-                    let a = left_number.normalized_value.trim();
-                    let b = right_number.normalized_value.trim();
-                    let diff = sub_signed_decimal_str(a, b);
-                    let d = diff.trim();
-                    if d.starts_with('-') {
-                        Some(right_number)
-                    } else {
-                        Some(left_number)
-                    }
-                } else {
-                    None
-                }
-            }
-            Obj::Min(m) => {
-                let left_number = m.left.evaluate_to_normalized_decimal_number();
-                let right_number = m.right.evaluate_to_normalized_decimal_number();
-                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
-                    let a = left_number.normalized_value.trim();
-                    let b = right_number.normalized_value.trim();
-                    let diff = sub_signed_decimal_str(a, b);
-                    let d = diff.trim();
-                    if d.starts_with('-') || d == "0" {
-                        Some(left_number)
-                    } else {
-                        Some(right_number)
-                    }
-                } else {
-                    None
-                }
-            }
             Obj::CartDim(cart_dim) => match &*cart_dim.set {
                 Obj::Cart(cart) => Some(Number::new(cart.args.len().to_string())),
                 _ => None,
@@ -197,6 +163,12 @@ impl Obj {
                 }
                 _ => None,
             },
+            Obj::FiniteSetMax(extremum) => {
+                evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), true)
+            }
+            Obj::FiniteSetMin(extremum) => {
+                evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), false)
+            }
             _ => None,
         };
 
@@ -217,6 +189,26 @@ impl Obj {
             _ => return false,
         }
     }
+}
+
+fn evaluate_nonempty_numeric_list_set(set: &Obj, take_maximum: bool) -> Option<Number> {
+    let Obj::ListSet(list_set) = set else {
+        return None;
+    };
+    let mut elements = list_set.list.iter();
+    let mut result = elements.next()?.evaluate_to_normalized_decimal_number()?;
+    for element in elements {
+        let candidate = element.evaluate_to_normalized_decimal_number()?;
+        let difference = sub_signed_decimal_str(
+            candidate.normalized_value.trim(),
+            result.normalized_value.trim(),
+        );
+        let candidate_is_larger = !difference.trim().starts_with('-') && difference.trim() != "0";
+        if candidate_is_larger == take_maximum {
+            result = candidate;
+        }
+    }
+    Some(result)
 }
 
 /// Returns whether a normalized decimal string is non-negative.

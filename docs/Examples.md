@@ -897,25 +897,25 @@ forall:
         $q(1, {x R: $q(1 + 2, x)})
 ```
 
-### 23. Max And Min Bounds
+### 23. Finite-Set Extrema Bounds
 
 - Category: `builtin rule`
-- Purpose: Shows builtin max/min order consequences.
+- Purpose: Shows finite-set maximum/minimum order consequences.
 
 ```litex
-## Max/min order bounds used by sequence-limit estimates.
+## Finite-set extrema bounds used by sequence-limit estimates.
 
 forall a, b, c R:
     a <= c
     b <= c
     =>:
-        max(a, b) <= c
+        finite_set_max(union({a}, {b})) <= c
 
 forall a, b, c R:
     c <= a
     c <= b
     =>:
-        c <= min(a, b)
+        c <= finite_set_min(union({a}, {b}))
 ```
 
 ### 24. Membership In A Set-Valued Function
@@ -3246,9 +3246,13 @@ Purpose: define a function by cases on its input domain.
 - Well-definedness / structural checks: checks the function set, cases,
   returned expressions, and function name.
 - Truth verification: verifies each case returns a value in the return set and
-  that the cases cover the domain.
+  that the cases cover the declared domain and are pairwise mutually exclusive.
 - Environment effects: stores the function name, function type, and generated
   case facts.
+
+Function equality currently has no negated atomic form. In particular,
+`$fn_eq(f, g)` and `$fn_eq(g, f)` are symmetric statements, not complementary
+case conditions.
 
 ```litex
 have fn is_zero_indicator(x R) R by cases:
@@ -3265,7 +3269,9 @@ measure.
 
 - Well-definedness / structural checks: checks the function signature,
   induction measure, base and step cases, and recursive calls.
-- Truth verification: verifies base and step obligations.
+- Truth verification: proves the measure and lower bound belong to `Z`, then
+  verifies the lower bound, case partition, return values, and every recursive
+  call's strict decrease.
 - Environment effects: stores the recursive function definition facts.
 
 ```litex
@@ -3456,6 +3462,30 @@ thm add_zero_right:
 by thm add_zero_right(2)
 2 + 0 = 2
 ```
+
+#### 17a. Explicit Definition Checks With `by def` (Preview)
+
+Purpose: instantiate a concrete prop definition and verify all of its clauses.
+
+- Well-definedness / structural checks: the prop must have a nonempty concrete
+  definition, and arguments must match its parameters.
+- Truth verification: substitutes the arguments and verifies every definition
+  clause; an already-known target does not bypass these checks.
+- Environment effects: stores the target prop fact only after every check
+  succeeds.
+
+```litex
+prop is_unit_pair(x R, y R):
+    x = 1
+    y = 1
+
+1 = 1
+by def $is_unit_pair(1, 1)
+$is_unit_pair(1, 1)
+```
+
+`by def` is single-line in this preview: it accepts neither `:` nor an
+indented proof body.
 
 #### 18. Local Proof Blocks With `claim`
 

@@ -5,7 +5,9 @@ use std::time::Instant;
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
-use super::helper::{print_slowest_run_labels, run_with_large_stack};
+use super::helper::{
+    print_slowest_run_labels, run_with_large_stack, source_has_isolated_import,
+};
 
 #[test]
 fn run_gsm8k_solutions() {
@@ -244,14 +246,14 @@ fn run_math23k_solutions() {
 
 fn run_math23k_solutions_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let jsonl_path = manifest_dir
+    let litex_file_dir = manifest_dir
         .join("scripts")
-        .join("math23k-litex")
-        .join("math23k.jsonl");
+        .join("litex-math23k")
+        .join("litex_file");
     assert!(
-        jsonl_path.is_file(),
-        "math23k-litex jsonl file must exist at {:?}",
-        jsonl_path
+        litex_file_dir.is_dir(),
+        "litex-math23k litex_file directory must exist at {:?}",
+        litex_file_dir
     );
 
     let runtime_setup_start = Instant::now();
@@ -263,9 +265,9 @@ fn run_math23k_solutions_impl() {
     let mut failed_labels: Vec<String> = Vec::new();
     let mut total_solution_duration_ms: f64 = 0.0;
 
-    run_labeled_jsonl_solution_file(
-        "math23k-litex",
-        &jsonl_path,
+    run_litex_file_directory(
+        "litex-math23k",
+        &litex_file_dir,
         &mut runtime,
         &mut total_count,
         &mut failed_labels,
@@ -273,7 +275,7 @@ fn run_math23k_solutions_impl() {
     );
 
     let run_wall_ms = run_wall_start.elapsed().as_secs_f64() * 1000.0;
-    println!("--- math23k-litex timing (summary) ---");
+    println!("--- litex-math23k timing (summary) ---");
     println!(
         "  runtime setup (once): {:.2} ms",
         runtime_setup_duration_ms
@@ -284,45 +286,18 @@ fn run_math23k_solutions_impl() {
     );
 
     if failed_labels.is_empty() {
-        println!("--- math23k-litex: all solutions OK ---");
+        println!("--- litex-math23k: all solutions OK ---");
         return;
     }
 
-    println!("--- math23k-litex failed titles ---");
+    println!("--- litex-math23k failed titles ---");
     for label in failed_labels.iter() {
         println!("{}", label);
     }
     panic!(
-        "math23k-litex solution run failed for {} of {} item(s)",
+        "litex-math23k solution run failed for {} of {} item(s)",
         failed_labels.len(),
         total_count
-    );
-}
-
-// cargo test run_math23k_debug_items -- --ignored --nocapture
-// LITEX_MATH23K_TITLE=Math23k_15120 cargo test run_math23k_debug_items -- --ignored --nocapture
-// LITEX_MATH23K_FILTER=camera LITEX_MATH23K_LIMIT=5 cargo test run_math23k_debug_items -- --ignored --nocapture
-#[test]
-#[ignore = "local debug helper; filters Math23K items with env vars"]
-fn run_math23k_debug_items() {
-    run_with_large_stack(
-        "run_math23k_debug_items_large_stack",
-        run_math23k_debug_items_impl,
-    );
-}
-
-fn run_math23k_debug_items_impl() {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let jsonl_paths = vec![manifest_dir
-        .join("scripts")
-        .join("math23k-litex")
-        .join("math23k.jsonl")];
-    run_jsonl_debug_items(
-        "math23k",
-        jsonl_paths.as_slice(),
-        "LITEX_MATH23K",
-        false,
-        None,
     );
 }
 
@@ -426,6 +401,7 @@ fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, labe
         });
 
         let normalized_source = remove_windows_carriage_return(litex_code.as_str());
+        runtime.isolated = source_has_isolated_import(normalized_source.as_str());
         let start_time_for_one_solution = Instant::now();
         let (stmt_results, runtime_error) =
             run_source_code(normalized_source.as_str(), &mut runtime);
@@ -907,54 +883,37 @@ fn select_jsonl_paths_for_debug(
     selected_paths
 }
 
-fn run_labeled_jsonl_solution_file(
+fn run_litex_file_directory(
     dataset_label: &str,
-    jsonl_path: &Path,
+    litex_file_dir: &Path,
     runtime: &mut Runtime,
     total_count: &mut usize,
     failed_labels: &mut Vec<String>,
     total_solution_duration_ms: &mut f64,
 ) {
-    let jsonl_path_str = match jsonl_path.to_str() {
-        Some(path_string) => path_string.to_string(),
-        None => panic!("{:?} must be valid UTF-8", jsonl_path),
-    };
+    let mut litex_files: Vec<PathBuf> = fs::read_dir(litex_file_dir)
+        .unwrap_or_else(|error_message| panic!("failed to read {:?}: {}", litex_file_dir, error_message))
+        .map(|entry| entry.map(|item| item.path()))
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap_or_else(|error_message| panic!("failed to enumerate {:?}: {}", litex_file_dir, error_message));
+    litex_files.retain(|path| path.extension().is_some_and(|extension| extension == "lit"));
+    litex_files.sort();
 
-    let jsonl_content = match fs::read_to_string(jsonl_path) {
-        Ok(content) => content,
-        Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
-    };
-
-    runtime.new_file_path_new_env_new_name_scope(jsonl_path_str.as_str());
-
-    for (line_index, line) in jsonl_content.lines().enumerate() {
-        if line.trim().is_empty() {
-            continue;
-        }
-
-        if line_index > 0 {
-            runtime.reset_for_isolated_runner_item();
-            runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
-        }
-
-        let title = jsonl_string_field(line, "title").unwrap_or_else(|error_message| {
-            panic!(
-                "failed to parse title in {:?} line {}: {}",
-                jsonl_path,
-                line_index + 1,
-                error_message
-            )
-        });
-        let solution = jsonl_string_field(line, "solution").unwrap_or_else(|error_message| {
-            panic!(
-                "failed to parse solution in {:?} line {} ({}): {}",
-                jsonl_path,
-                line_index + 1,
-                title,
-                error_message
-            )
-        });
-        let normalized_source = remove_windows_carriage_return(solution.as_str());
+    for (file_index, litex_file_path) in litex_files.iter().enumerate() {
+        let title = litex_file_path
+            .file_stem()
+            .and_then(|name| name.to_str())
+            .unwrap_or_else(|| panic!("invalid Math23K file name {:?}", litex_file_path));
+        let source = fs::read_to_string(litex_file_path)
+            .unwrap_or_else(|error_message| panic!("failed to read {:?}: {}", litex_file_path, error_message));
+        let source_path_str = litex_file_path
+            .to_str()
+            .unwrap_or_else(|| panic!("invalid UTF-8 source path {:?}", litex_file_path));
+        runtime.reset_for_isolated_runner_item();
+        runtime.set_current_user_lit_file_path(source_path_str);
+        let normalized_source = remove_windows_carriage_return(source.as_str());
+        runtime.isolated = true;
+        runtime.strict_mode = true;
 
         let start_time_for_one_solution = Instant::now();
         let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), runtime);
@@ -966,11 +925,11 @@ fn run_labeled_jsonl_solution_file(
 
         *total_count += 1;
         if !run_succeeded {
-            let label = format!("{}:{}", line_index + 1, title);
+            let label = format!("{}:{}", file_index + 1, title);
             println!(
-                "=== [FAILED] {} at jsonl line {} ({:.2} ms): {} ===\n{}\n",
+                "=== [FAILED] {} at file {} ({:.2} ms): {} ===\n{}\n",
                 dataset_label,
-                line_index + 1,
+                file_index + 1,
                 duration_ms,
                 title,
                 run_output

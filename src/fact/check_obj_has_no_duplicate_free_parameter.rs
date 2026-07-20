@@ -90,12 +90,16 @@ fn check_obj_has_no_duplicate_free_parameter(
             params_already_used,
         ),
         Obj::Log(obj) => check_two_objs(&obj.base, &obj.arg, free_param_type, params_already_used),
-        Obj::Max(obj) => {
-            check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
-        }
-        Obj::Min(obj) => {
-            check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
-        }
+        Obj::FiniteSetMax(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.set,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::FiniteSetMin(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.set,
+            free_param_type,
+            params_already_used,
+        ),
         Obj::Union(obj) => {
             check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
         }

@@ -672,24 +672,6 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
-            (Obj::Max(left_max), Obj::Max(right_max)) => self
-                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
-                    &left_max.left,
-                    &left_max.right,
-                    &right_max.left,
-                    &right_max.right,
-                    verify_state,
-                    equality_line_file,
-                ),
-            (Obj::Min(left_min), Obj::Min(right_min)) => self
-                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
-                    &left_min.left,
-                    &left_min.right,
-                    &right_min.left,
-                    &right_min.right,
-                    verify_state,
-                    equality_line_file,
-                ),
             (Obj::Union(left_union), Obj::Union(right_union)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_union.left,
@@ -770,6 +752,22 @@ impl Runtime {
                 verify_state,
                 equality_line_file,
             ),
+            (Obj::FiniteSetMax(left_finite_set_max), Obj::FiniteSetMax(right_finite_set_max)) => {
+                self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left_finite_set_max.set,
+                    &right_finite_set_max.set,
+                    verify_state,
+                    equality_line_file,
+                )
+            }
+            (Obj::FiniteSetMin(left_finite_set_min), Obj::FiniteSetMin(right_finite_set_min)) => {
+                self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left_finite_set_min.set,
+                    &right_finite_set_min.set,
+                    verify_state,
+                    equality_line_file,
+                )
+            }
             (Obj::FnRange(left_range), Obj::FnRange(right_range)) => self
                 .verify_unary_objs_are_equal_when_their_only_args_are_equal(
                     &left_range.function,
