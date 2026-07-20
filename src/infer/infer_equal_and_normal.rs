@@ -484,6 +484,30 @@ impl Runtime {
         normal_atomic_fact: &NormalAtomicFact,
     ) -> Result<InferResult, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
+        if let Some(definition_facts) =
+            self.builtin_function_property_definition_facts(normal_atomic_fact)?
+        {
+            let mut infer_result = InferResult::new();
+            let source_fact: Fact = normal_atomic_fact.clone().into();
+            let reason = InferReason::ByDefinition(ByDefinitionReason::new(
+                Some(source_fact.clone()),
+                Some(predicate_name.clone()),
+            ));
+            for fact in definition_facts {
+                infer_result.add_fact_by_definition(
+                    Some(source_fact.clone()),
+                    Some(predicate_name.clone()),
+                    &fact,
+                );
+                infer_result.new_infer_result_inside(
+                    self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                        fact,
+                        reason.clone(),
+                    )?,
+                );
+            }
+            return Ok(infer_result);
+        }
         let predicate_definition = match self.get_prop_definition_by_name(&predicate_name) {
             Some(predicate_definition) => predicate_definition,
             None => return Ok(InferResult::new()),

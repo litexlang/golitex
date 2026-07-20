@@ -1468,7 +1468,7 @@ thm adherent_integer_point_is_integer:
     by axiom_of_choice: set fn_range(integer_near_witness_set):
         forall A fn_range(integer_near_witness_set):
             $is_nonempty_set(A)
-    obtain choose_integer from exist f fn(A fn_range(integer_near_witness_set)) cup(fn_range(integer_near_witness_set)) st {forall! A fn_range(integer_near_witness_set) => {f(A) $in A}}
+    obtain choose_integer from exist f fn(A fn_range(integer_near_witness_set)) big_union(fn_range(integer_near_witness_set)) st {forall! A fn_range(integer_near_witness_set) => {f(A) $in A}}
     claim:
         ? forall A fn_range(integer_near_witness_set):
             choose_integer(A) $in Z
@@ -1668,7 +1668,7 @@ thm adherent_point_sequence_characterization_forward:
     by axiom_of_choice: set fn_range(near_witness_set):
         forall A fn_range(near_witness_set):
             $is_nonempty_set(A)
-    obtain choose_point from exist f fn(A fn_range(near_witness_set)) cup(fn_range(near_witness_set)) st {forall! A fn_range(near_witness_set) => {f(A) $in A}}
+    obtain choose_point from exist f fn(A fn_range(near_witness_set)) big_union(fn_range(near_witness_set)) st {forall! A fn_range(near_witness_set) => {f(A) $in A}}
     claim:
         ? forall A fn_range(near_witness_set):
             choose_point(A) $in R
@@ -2676,7 +2676,7 @@ thm unbounded_real_set_has_escaping_sequence:
     by axiom_of_choice: set fn_range(escaping_witness_set):
         forall A fn_range(escaping_witness_set):
             $is_nonempty_set(A)
-    obtain choose_point from exist f fn(A fn_range(escaping_witness_set)) cup(fn_range(escaping_witness_set)) st {forall! A fn_range(escaping_witness_set) => {f(A) $in A}}
+    obtain choose_point from exist f fn(A fn_range(escaping_witness_set)) big_union(fn_range(escaping_witness_set)) st {forall! A fn_range(escaping_witness_set) => {f(A) $in A}}
     claim:
         ? forall A fn_range(escaping_witness_set):
             choose_point(A) $in R
@@ -3431,7 +3431,7 @@ thm sequence_limit_preservation_implies_function_limit:
             by axiom_of_choice: set fn_range(bad_witness_set):
                 forall A fn_range(bad_witness_set):
                     $is_nonempty_set(A)
-            obtain choose_point from exist f fn(A fn_range(bad_witness_set)) cup(fn_range(bad_witness_set)) st {forall! A fn_range(bad_witness_set) => {f(A) $in A}}
+            obtain choose_point from exist f fn(A fn_range(bad_witness_set)) big_union(fn_range(bad_witness_set)) st {forall! A fn_range(bad_witness_set) => {f(A) $in A}}
             claim:
                 ? forall A fn_range(bad_witness_set):
                     choose_point(A) $in R
@@ -5825,7 +5825,7 @@ thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact:
         by axiom_of_choice: set fn_range(preimage_fiber):
             forall A fn_range(preimage_fiber):
                 $is_nonempty_set(A)
-        obtain choose_preimage from exist f fn(A fn_range(preimage_fiber)) cup(fn_range(preimage_fiber)) st {forall! A fn_range(preimage_fiber) => {f(A) $in A}}
+        obtain choose_preimage from exist f fn(A fn_range(preimage_fiber)) big_union(fn_range(preimage_fiber)) st {forall! A fn_range(preimage_fiber) => {f(A) $in A}}
         claim:
             ? forall A fn_range(preimage_fiber):
                 choose_preimage(A) $in X
@@ -8390,7 +8390,7 @@ thm not_uniformly_continuous_has_bad_uniform_sequence_pair:
     by axiom_of_choice: set fn_range(F):
         forall A fn_range(F):
             $is_nonempty_set(A)
-    obtain choose_pair from exist f fn(A fn_range(F)) cup(fn_range(F)) st {forall! A fn_range(F) => {f(A) $in A}}
+    obtain choose_pair from exist f fn(A fn_range(F)) big_union(fn_range(F)) st {forall! A fn_range(F) => {f(A) $in A}}
     claim:
         ? forall A fn_range(F):
             choose_pair(A) $in cart(R, R)
@@ -8518,7 +8518,7 @@ thm equivalent_sequence_preservation_implies_uniform_continuity:
         by axiom_of_choice: set fn_range(F):
             forall A fn_range(F):
                 $is_nonempty_set(A)
-        obtain choose_pair from exist f fn(A fn_range(F)) cup(fn_range(F)) st {forall! A fn_range(F) => {f(A) $in A}}
+        obtain choose_pair from exist f fn(A fn_range(F)) big_union(fn_range(F)) st {forall! A fn_range(F) => {f(A) $in A}}
         claim:
             ? forall A fn_range(F):
                 choose_pair(A) $in cart(R, R)

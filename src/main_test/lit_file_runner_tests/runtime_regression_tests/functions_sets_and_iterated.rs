@@ -793,6 +793,252 @@ eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
 }
 
 #[test]
+fn builtin_function_properties_verify_and_unfold() {
+    run_with_large_stack("builtin_function_properties_verify_and_unfold", || {
+        let source_code = r#"
+have fn identity_on_three(x {1, 2, 3}) {1, 2, 3} = x
+
+forall x1, x2 {1, 2, 3}:
+    identity_on_three(x1) = identity_on_three(x2)
+    =>:
+        x1 = identity_on_three(x1) = identity_on_three(x2) = x2
+$injective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+
+claim:
+    ? forall y {1, 2, 3}:
+        exist x {1, 2, 3} st {y = identity_on_three(x)}
+    y = identity_on_three(y)
+    witness exist x {1, 2, 3} st {y = identity_on_three(x)} from y
+$surjective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+$bijective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+
+thm builtin_injective_unfolds:
+    ? forall A, B set, f fn(x A) B, x1, x2 A:
+        $injective(A, B, f)
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
+    x1 = x2
+
+thm builtin_surjective_unfolds:
+    ? forall A, B set, f fn(x A) B, y B:
+        $surjective(A, B, f)
+        =>:
+            exist x A st {y = f(x)}
+    exist x A st {y = f(x)}
+
+thm builtin_bijective_unfolds:
+    ? forall A, B set, f fn(x A) B:
+        $bijective(A, B, f)
+        =>:
+            $injective(A, B, f)
+            $surjective(A, B, f)
+    $injective(A, B, f)
+    $surjective(A, B, f)
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime
+            .new_file_path_new_env_new_name_scope("builtin_function_properties_verify_and_unfold");
+        runtime.detail_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "builtin function properties should verify and expose their definitions:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("builtin function-property definition"),
+            "function-property verification should expose builtin provenance:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn builtin_function_property_negation_uses_by_contra() {
+    run_with_large_stack("builtin_function_property_negation_uses_by_contra", || {
+        let source_code = r#"
+have fn constant(x {1, 2}) {0} = 0
+
+by contra not $injective({1, 2}, {0}, constant):
+    constant(1) = constant(2)
+    1 = 2
+    impossible 1 = 2
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            "builtin_function_property_negation_uses_by_contra",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "a constant map on a two-element source should be proved non-injective by contra:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn finite_source_function_property_rules() {
+    run_with_large_stack("finite_source_function_property_rules", || {
+        let source_code = r#"
+thm finite_injection_preserves_size_onto_range:
+    ? forall A finite_set, B set, f fn(x A) B:
+        $injective(A, B, f)
+        =>:
+            finite_set_size(fn_range(f)) = finite_set_size(A)
+    finite_set_size(fn_range(f)) = finite_set_size(A)
+
+thm finite_surjection_has_finite_bounded_codomain:
+    ? forall A finite_set, B set, f fn(x A) B:
+        $surjective(A, B, f)
+        =>:
+            $is_finite_set(B)
+            finite_set_size(B) <= finite_set_size(A)
+    $is_finite_set(B)
+    finite_set_size(B) <= finite_set_size(A)
+
+thm finite_bijection_preserves_size:
+    ? forall A finite_set, B set, f fn(x A) B:
+        $bijective(A, B, f)
+        =>:
+            $is_finite_set(B)
+            finite_set_size(A) = finite_set_size(B)
+    $is_finite_set(B)
+    finite_set_size(A) = finite_set_size(B)
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("finite_source_function_property_rules");
+        runtime.detail_output = true;
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "finite-source function-property rules should verify:\n{}",
+            run_output
+        );
+        for expected_rule in [
+            "finite injection has range cardinality equal to its source",
+            "finite codomain of a surjection from a finite set",
+            "finite surjection bounds codomain cardinality by source cardinality",
+            "finite bijection preserves cardinality",
+        ] {
+            assert!(
+                run_output.contains(expected_rule),
+                "finite-source verification should expose rule `{}`:\n{}",
+                expected_rule,
+                run_output
+            );
+        }
+    });
+}
+
+#[test]
+fn builtin_function_properties_reject_malformed_arguments() {
+    let source_code = r#"
+$injective({1}, {1}, 1)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "builtin_function_properties_require_matching_function_signature",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "injective should reject a non-function third argument:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("requires sets A and B and a function with type fn(x A) B"),
+        "wrong function-property signature should report the required function type:\n{}",
+        run_output
+    );
+
+    let mismatch_source_code = r#"
+have fn mismatched_codomain(x {1}) {2} = 2
+$injective({1}, {1}, mismatched_codomain)
+"#;
+    let mut mismatch_runtime = Runtime::new();
+    mismatch_runtime.new_file_path_new_env_new_name_scope(
+        "builtin_function_properties_reject_mismatched_codomain",
+    );
+    let (stmt_results, runtime_error) =
+        run_source_code(mismatch_source_code, &mut mismatch_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&mismatch_runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "injective should reject a function with the wrong codomain:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("requires sets A and B and a function with type fn(x A) B"),
+        "mismatched codomain should report the required function type:\n{}",
+        run_output
+    );
+
+    let mut arity_runtime = Runtime::new();
+    arity_runtime
+        .new_file_path_new_env_new_name_scope("builtin_function_properties_reject_wrong_arity");
+    let (stmt_results, runtime_error) = run_source_code("$injective({1}, {1})", &mut arity_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&arity_runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "injective should reject two arguments:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("fact `injective` expects 3 argument(s), but got 2"),
+        "wrong function-property arity should report the expected argument count:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn finite_surjection_rules_do_not_bootstrap_finiteness_cycle() {
+    let source_code = r#"
+have A, B set
+have f fn(x A) B
+have g fn(y B) A
+trust $surjective(A, B, f)
+trust $surjective(B, A, g)
+$is_finite_set(A)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "finite_surjection_rules_do_not_bootstrap_finiteness_cycle",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "cyclic surjections without a finite source must not infer finiteness:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn finite_set_sum_core_rules() {
     run_with_large_stack("finite_set_sum_core_rules", || {
         let source_code = r#"
@@ -830,8 +1076,7 @@ sketch:
 
 thm finite_set_sum_substitution_tmp:
     ? forall X, Y finite_set, f fn(x X) R, g fn(y Y) X:
-        forall x X:
-            exist! y Y st {g(y) = x}
+        $bijective(Y, X, g)
         =>:
             finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
     finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
@@ -967,18 +1212,14 @@ fn finite_set_sum_bijective_enumerations_are_well_defined() {
         "finite_set_sum_bijective_enumerations_are_well_defined",
         || {
             let source_code = r#"
-prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, finite_set_size(X))) X):
-    forall x X:
-        exist! i closed_range(1, finite_set_size(X)) st {g(i) = x}
-
-template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $bijective(closed_range(1, finite_set_size(X)), X, g)>:
     have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
 
 thm finite_set_sum_raw_enumeration_well_defined:
     ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
         finite_set_size(X) >= 1
-        $is_bijection_from_index_range_to_finite_set(X, g)
-        $is_bijection_from_index_range_to_finite_set(X, h)
+        $bijective(closed_range(1, finite_set_size(X)), X, g)
+        $bijective(closed_range(1, finite_set_size(X)), X, h)
         =>:
             sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(h(i))})
     sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(h(i))})
@@ -986,8 +1227,8 @@ thm finite_set_sum_raw_enumeration_well_defined:
 thm finite_set_sum_template_enumeration_well_defined:
     ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
         finite_set_size(X) >= 1
-        $is_bijection_from_index_range_to_finite_set(X, g)
-        $is_bijection_from_index_range_to_finite_set(X, h)
+        $bijective(closed_range(1, finite_set_size(X)), X, g)
+        $bijective(closed_range(1, finite_set_size(X)), X, h)
         =>:
             \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>

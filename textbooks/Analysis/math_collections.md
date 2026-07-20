@@ -256,6 +256,92 @@ Both are props: mathematics checks whether a displayed finite family has the
 property. They depend on interval geometry and feed finite additivity,
 piecewise-constant functions, Riemann sums, and all later gluing arguments.
 
+### Removing a partition piece
+
+The endpoint step has three separate theorem roles. First, a nonempty
+partition has some removable endpoint piece:
+
+~~~litex
+thm partition_has_removable_piece:
+    ? forall I power_set(R), P finite_set:
+        $is_partition_of_bounded_interval(I, P)
+        $is_nonempty_set(P)
+        =>:
+            exist J P st {$is_bounded_interval(set_minus(I, J))}
+~~~
+
+This is an existential `thm`, not a canonical `have fn`: later proofs need any
+endpoint piece, and no mathematical choice is distinguished. It is also not a
+new `is_removable_piece` prop; that wrapper would only rename the displayed
+bounded-complement condition. The interface is implemented with visible
+`trust`; its finite-endpoint selection proof remains open.
+
+Second, deleting a supplied removable piece transfers the partition
+structure to the remainder:
+
+~~~litex
+thm partition_removal_partitions_bounded_remainder:
+    ? forall I power_set(R), P finite_set, J P:
+        $is_partition_of_bounded_interval(I, P)
+        $is_bounded_interval(set_minus(I, J))
+        =>:
+            $is_partition_of_bounded_interval(
+                set_minus(I, J), set_minus(P, {J})
+            )
+~~~
+
+It is a `thm` because callers use its conclusion to replace a finite family by
+the residual family; a `prop is_removable_piece` would hide the actual
+partition transfer and incorrectly include the desired conclusion in an
+admissibility condition. The theorem is checked. Its proof uses only unique
+coverage: a remaining piece cannot meet `J`, and the unique old owner of a
+point outside `J` cannot be `J`.
+
+Third, the cardinality induction is independent of the particular interval
+weight:
+
+~~~litex
+thm interval_weight_is_finitely_additive_over_partition:
+    ? forall w fn(J power_set(R): $is_bounded_interval(J)) R,
+             I power_set(R), P finite_set:
+        w({}) = 0
+        forall I0, J0 power_set(R):
+            $is_bounded_interval(I0)
+            $is_bounded_interval(J0)
+            J0 $subset I0
+            $is_bounded_interval(set_minus(I0, J0))
+            =>:
+                w(I0) = w(J0) + w(set_minus(I0, J0))
+        $is_partition_of_bounded_interval(I, P)
+        =>:
+            w(I) = finite_set_sum(P, fn(J P) R {w(J)})
+~~~
+
+This is a checked `thm`, not a prop or selected object. Its proof contains the
+empty-family case, strong induction on `finite_set_size(P)`, the checked
+partition removal, cardinality decrease, and disjoint-union sum regrouping.
+Ordinary length and alpha-length are its two current consumers.
+
+The remaining numerical input for ordinary length is the theorem-level law
+
+~~~litex
+thm interval_length_adds_across_bounded_difference:
+    ? forall I, J power_set(R):
+        $is_bounded_interval(I)
+        $is_bounded_interval(J)
+        J $subset I
+        $is_bounded_interval(set_minus(I, J))
+        =>:
+            interval_length(I) =
+                interval_length(J) + interval_length(set_minus(I, J))
+~~~
+
+Its interface is implemented with visible `trust`; the four endpoint-form
+classification remains open. Consequently Theorem 11.1.13 itself now has a
+checked proof from two explicit geometric theorem interfaces—endpoint-piece
+existence and length splitting—instead of one theorem-wide trust. Section
+11.8 reuses the same selection, removal, and generic induction core.
+
 ### Common refinement
 
 The common refinement P#Q is an actual finite set, not merely an existential
@@ -414,38 +500,63 @@ refinement_fiber_family(Pfine, Pcoarse)
   -> is_finite_unique_cover_of(nonempty_refinement_support(Pfine), Pcoarse, ...)
 ~~~
 
-The next theorem is a theorem, not a selected numerical object.  For a weight
-`h` on the fine pieces whose empty-piece value is zero, its ideal conclusion is
-the finite reindexing identity
-
-~~~text
-sum_{J in Pfine} h(J)
-  = sum_{K in Pcoarse} sum_{J in refinement_fiber(Pfine, K)} h(J).
-~~~
-
-Its intended Litex statement is the following; it is deliberately recorded as
-the next theorem, not as an implemented claim yet.
+The checked Chapter 11 theorem is a theorem, not a selected numerical object.
+It states the reindexing identity over the uniquely owned nonempty support,
+with an ambient weight so that every fiber restriction is total.
 
 ~~~litex
-thm finite_set_sum_regroups_over_refinement:
-    ? forall I power_set(R), Pfine, Pcoarse finite_set, h fn(J Pfine) R:
-        Pfine $in power_set(power_set(R))
-        Pcoarse $in power_set(power_set(R))
+thm refinement_fiber_cover_reindexes_ambient_sum:
+    ? forall I, Pfine, Pcoarse power_set(power_set(R)),
+        F fn(K Pcoarse) power_set(power_set(R)), h fn(J Pfine) R:
+        $is_finite_set(Pfine)
+        $is_finite_set(Pcoarse)
         $is_finer_partition_than(I, Pfine, Pcoarse)
-        forall J Pfine:
-            not $is_nonempty_set(J)
-            =>:
-                h(J) = 0
+        forall K Pcoarse:
+            F(K) = refinement_fiber(Pfine, K)
         =>:
-            finite_set_sum(Pfine, h)
-            = finite_set_sum(Pcoarse, fn(K Pcoarse) R {refinement_fiber_sum(Pfine, K, h)})
+            finite_set_sum(nonempty_refinement_support(Pfine),
+                fn(J nonempty_refinement_support(Pfine)) R {h(J)})
+            = finite_set_sum(Pcoarse,
+                fn(K Pcoarse) R {finite_set_sum(F(K), fn(J F(K)) R {h(J)})})
 ~~~
 
-It depends on the fiber-partition theorem and finite-sum reindexing.  It will
-then be instantiated with interval lengths and rectangle contributions, both
-of which vanish on empty pieces.  Do not add a trusted `regrouped_sum`
+It depends on the fiber-cover theorem and the checked generic finite-sum
+reindexing theorem. A later source-facing variant can add the hypothesis that
+`h` vanishes on empty fine pieces, identify the support sum with the sum over
+all of `Pfine`, and then expose the familiar formula
+`sum_J h(J) = sum_K sum_{J in fiber(K)} h(J)`. Interval lengths and rectangle
+contributions are intended instances. Do not add a trusted `regrouped_sum`
 function: regrouping asserts an equality for a class of weights, so its correct
 semantic role is `thm`.
+
+The next composition has two deliberately separate theorem nodes:
+
+~~~text
+is_partition_of_bounded_interval(K, F)
+  -> interval_length(K) = sum(J in F) interval_length(J)
+     [interval_length_reindexes_over_refinement_fiber for a refinement fiber]
+
+constant value c of f on K + preceding length equality
+  -> contribution(I, K, f) = sum(J in F) contribution(I, J, f)
+     [constant_rectangle_reindexes_over_partition]
+
+whole fine partition sum
+  -> sum over nonempty_refinement_support(Pfine)
+     [piecewise_constant_partition_sum_ignores_empty_pieces]
+  -> sum(K in Pcoarse) sum(J in fiber(K)) contribution(I, J, f)
+     [refinement_fiber_cover_reindexes_ambient_sum]
+~~~
+
+The first equality is still sourced from Tao's finite length-additivity theorem;
+the second is only distributivity of a fixed height through that equality. They
+must remain `thm`s rather than a new `rectangle_sum` object: both are
+propositions that a caller uses to replace one finite expression with another.
+The source composes these bridges in
+`piecewise_constant_integral_with_partition_reindexes_over_refinement`, and
+the full Analysis project runner verifies that composition. Proposition
+11.2.13 uses it twice through the selected common refinement and no longer
+contains its own direct `trust`; the visible upstream debt remains Theorem
+11.1.13 finite additivity of interval length.
 
 ### Generic finite indexed families
 
@@ -502,38 +613,42 @@ theorem restricts it only where it is summed; deleting an index never asks the
 caller to invent a new function. The finite-sum reindexing conclusion is a
 thm, not an object or template.
 
-Chapter 11 now implements this relation-first core on its actual carrier of
+Chapter 11 implements this relation-first core on its actual carrier of
 families of real subsets: `$is_finite_indexed_subfamily`,
-`$has_indexed_fiber_sum`, and `$is_finite_unique_cover_of`, together with the
-checked existence and uniqueness theorems for an individual indexed fiber
-sum. Its checked base theorem
-`finite_set_sum_over_singleton_unique_cover` proves the one-index case: a
-unique cover of `S` indexed by `{K}` has `S = F(K)`, so its total sum is the
-verified fiber sum at `K`. This is the base case of the intended finite-index
-induction, not a special Riemann fact. The checked structural theorem
+`$has_indexed_fiber_sum`, and `$is_finite_unique_cover_of`, together with
+checked existence and uniqueness theorems for an individual indexed fiber sum.
+Their first argument is the shared ambient family `U`; the source family `S`
+is required to be a finite subfamily of `U`, and the weight has type `U -> R`.
+Its checked zero case `finite_set_sum_over_empty_unique_cover` shows that an
+empty index family uniquely covers only the empty source family. The checked
+singleton theorem `finite_set_sum_over_singleton_unique_cover` is the first
+nonempty case: a unique cover of `S` indexed by `{K}` has `S = F(K)`, so its
+total sum is the verified fiber sum at `K`. The checked structural theorem
 `finite_unique_cover_distinct_fibers_are_disjoint` derives pairwise fiber
 disjointness from the same cover condition, which is exactly the premise of
 finite-set disjoint-union addition. The checked
 `finite_unique_cover_residual_after_removing_index` and
 `indexed_fiber_sum_persists_after_removing_index` show that deleting one index
 leaves a unique cover of the complementary family and preserves every
-remaining displayed inner sum. The carrier-polymorphic version displayed above
-remains ideal design:
-`have fn ... by exist!` currently only accepts object parameters, so it cannot
-provide one uniform selected sum for arbitrary `finite_set` carriers and a
-higher-order family parameter while retaining an importable value theorem.
+remaining displayed inner sum. `finite_set_insert_residual_index` changes the
+literal residual index set back into the induction variable. The verified
+`finite_set_sum_over_unique_cover` then inducts over the finite index family,
+uses these residual interfaces, and applies `chap7::finite_set_sum_disjoint_union`
+to the source and index sides. Its checked Chapter 11 consumer
+`refinement_fiber_cover_reindexes_ambient_sum` applies the theorem to the
+nonempty fine pieces grouped by their unique coarse owner. The
+carrier-polymorphic version displayed above remains ideal design: the current
+implementation accepts arbitrary *families* `U,S,T` of real subsets, but not an
+arbitrary element carrier. `have fn ... by exist!` still only accepts object
+parameters, so it cannot provide one uniform selected sum for arbitrary
+`finite_set` carriers and a higher-order family parameter while retaining an
+importable value theorem.
 
-The remaining general `finite_set_sum_over_unique_cover` induction step is a
-generic finite-combinatorics theorem. Existing Fubini handles only uniform
-Cartesian products; it does not prove this disjoint indexed-cover law. Its
-checked structural preparation now removes one index, restricts the remaining
-family to the complement of that fiber, and preserves every remaining inner
-sum under the same ambient weight. What remains is to state the finite-set
-induction over index families and join its hypothesis to the two disjoint-union
-sum identities. It belongs in a reusable finite-sum interface, not in a
-Chapter-11-specific matcher. A template remains a rejected escape hatch: it
+This establishes the generic finite-combinatorics theorem rather than a
+Chapter-11 matcher. Existing Fubini still handles a different, uniform
+Cartesian-product situation. A template remains a rejected form here: it
 would hide the relationship between a fiber value and the original summand
-instead of giving the theorem the explicit `g` relation.
+instead of exposing the explicit `g` relation required by the theorem.
 
 ## Step functions
 
@@ -600,6 +715,15 @@ dependencies are interval length, partitions, common refinement, and finite
 regrouping. It is the concrete base for Darboux values and the identity-alpha
 Stieltjes bridge.
 
+The intended proof order is therefore not “choose an integral value first”. It
+is: choose a partition-local contribution value; prove it respects splitting
+of one constant rectangle; reindex the nonempty fine pieces through a common
+refinement; then conclude that two partition sums agree. Only after that
+theorem is `piecewise_constant_integral` a legitimate `have fn ... by exist!`
+selection. The nearest rejected form is a `prop` called `is_the_integral`: it
+would hide the canonical value and make every downstream substitution carry an
+existential witness.
+
 ## Darboux, Riemann sums, and the Riemann integral
 
 ### Order envelopes
@@ -637,6 +761,101 @@ second public definition of integration.
 An upper or lower Riemann sum is a number attached to one function and one
 partition. It must be callable, not only asserted to exist.
 
+The layer immediately below these sums is the image of a function on one
+partition piece. That image is an object; its connection to a displayed point
+of the piece is a theorem. This keeps the least-upper-bound and infimum
+definitions mathematical, while giving every later comparison a stable
+elimination rule instead of asking an imported definition to unfold.
+
+~~~litex
+have fn function_values_on_subset(
+    I power_set(R), J power_set(R), f fn(x I) R: J $subset I
+) power_set(R) = fn_range(fn(x J) R {f(x)})
+
+thm function_value_on_subset_member:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R, x J:
+        J $subset I
+        =>:
+            f(x) $in function_values_on_subset(I, J, f)
+
+thm function_values_on_subset_member_has_preimage:
+    ? forall I power_set(R), J power_set(R), f fn(x I) R, y R:
+        J $subset I
+        y $in function_values_on_subset(I, J, f)
+        =>:
+            exist x J st {y = f(x)}
+~~~
+
+`function_values_on_subset` is a `have fn`, because the set itself is passed
+to least-upper-bound and infimum interfaces. The two membership facts are
+`thm`s, not a new `prop`: they state reusable consequences of that object.
+`majorizes_on` and `minorizes_on` remain props. Chapter 11 now checks the
+following two constant-rectangle inequalities from a constant value `c` of a
+majorant (respectively minorant) on J:
+`upper_riemann_sum_piece(I,J,f) <= c * interval_length(J)` and
+`c * interval_length(J) <= lower_riemann_sum_piece(I,J,f)`. Their proof
+dependencies are exactly the member/preimage bridge, the least-upper-bound or
+infimum defining prop, constancy on J, and non-negativity of interval length.
+The checked fixed-partition theorems
+`piecewise_constant_majorant_with_partition_bounds_upper_riemann_sum` and
+`piecewise_constant_minorant_with_partition_bounds_lower_riemann_sum` then
+apply finite-sum monotonicity. Finally,
+`piecewise_constant_majorant_minorant_compare_riemann_sums` transports those
+partition values to the partition-free step integral by its uniqueness. This
+is Lemma 11.3.11. The finite summation step stays a theorem, never a
+Darboux-specific selected object.
+
+### Piece heights and partition step functions
+
+The supremum and infimum themselves are values, not merely hidden witnesses
+inside their products with a length. Chapter 11 now exposes them with the
+zero-on-empty convention, together with the canonical partition piece at a
+point.
+
+~~~litex
+have fn partition_piece_containing by exist!:
+    ? forall I power_set(R), P power_set(power_set(R)), x I:
+        $is_finite_set(P)
+        $is_partition_of_bounded_interval(I, P)
+        =>:
+            exist! J power_set(R) st {J $in P, x $in J}
+
+have fn upper_riemann_piece_height by exist!:
+    ? forall I, J power_set(R), f fn(x I) R:
+        $is_bounded_interval(J)
+        J $subset I
+        $chap9::is_bounded_function_on(I, f)
+        =>:
+            exist! s R st {$has_upper_riemann_piece_height(I, J, f, s)}
+
+have fn lower_riemann_piece_height by exist!:
+    ? forall I, J power_set(R), f fn(x I) R:
+        $is_bounded_interval(J)
+        J $subset I
+        $chap9::is_bounded_function_on(I, f)
+        =>:
+            exist! s R st {$has_lower_riemann_piece_height(I, J, f, s)}
+~~~
+
+Each `has_*_riemann_piece_height` relation is the specification: on a nonempty
+piece it is the least upper bound or infimum of `function_values_on_subset`; on
+an empty piece it is zero. The height selectors are objects because a step
+function uses their values pointwise. The verified bridge theorems
+`upper_riemann_sum_piece_is_height_times_length` and its lower counterpart
+show that existing sum-contribution APIs are derived values, not competing
+definitions.
+
+The direct partition step functions are now implemented objects:
+`upper_riemann_partition_step_function(I,P,f)` and its lower counterpart.
+They apply the height selector to `partition_piece_containing(I,P,x)`. Their
+dependencies are precisely the three selectors above. The checked theorems
+say that each is piecewise constant on P, is respectively a majorant or
+minorant of f, and has fixed-partition integral equal to the corresponding
+Riemann sum. These are `thm`s because they are facts about already-selected
+objects. In particular, `upper_riemann_sum_is_upper_riemann_integral_candidate`
+and its lower counterpart are derived transports, not trusted replacement
+definitions: the canonical step function remains the actual witness.
+
 The checked Chapter 11 API first selects each empty/nonempty piece value, then
 uses `$fn_eq` to turn pointwise contribution uniqueness into equality of
 contribution families before applying `finite_set_sum`. This explicit middle
@@ -672,9 +891,12 @@ thm upper_riemann_sum_has_value:
 Lower sums mirror these declarations, including
 `lower_riemann_sum_piece_has_value` and `lower_riemann_sum_has_value`. The
 existing contribution-family props remain verifier bridges; they should not be
-the first names a mathematical caller has to manipulate. The Darboux/Riemann
-comparison is a thm linking these selected sums to the upper/lower envelope
-values.
+the first names a mathematical caller has to manipulate. Lemma 11.3.11 and
+Proposition 11.3.12 are checked. The latter uses two explicit order transports:
+every selected sum is the integral of its canonical step candidate, and every
+Darboux candidate has a witnessing partition whose selected sum is no worse.
+These transports make the infimum/supremum proof a direct greatest-lower-bound
+or least-upper-bound argument, without a second completion construction.
 
 ### Integrability and the selected integral
 
@@ -698,6 +920,72 @@ have fn integral_on by exist!:
 Use integral_on(I,f) in algebraic laws and source statements. Keep
 has_riemann_integral for theorems that supply a value. Reject a value relation
 as the sole API because it obscures canonical substitution.
+
+### Darboux approximation witnesses
+
+The passage from equality of the selected upper and lower integrals to the
+upper/lower step functions used in ordinary epsilon proofs is a relation, not
+a construction: there is no canonical best pair of approximants, and later
+proofs must quantify over a fresh pair for each epsilon.
+
+~~~litex
+prop has_darboux_approximation(
+    I power_set(R), f, h, g fn(x I) R, sh, sg R, epsilon R_pos
+):
+    $is_piecewise_constant_on(I, h)
+    $is_piecewise_constant_on(I, g)
+    $minorizes_on(I, h, f)
+    $majorizes_on(I, g, f)
+    $has_piecewise_constant_integral(I, h, sh)
+    $has_piecewise_constant_integral(I, g, sg)
+    sg - sh < epsilon
+
+thm riemann_integrable_has_darboux_approximation:
+    ? forall I power_set(R), f fn(x I) R, epsilon R_pos:
+        $is_riemann_integrable_on(I, f)
+        =>:
+            exist h, g fn(x I) R, sh, sg R st {
+                $has_darboux_approximation(I, f, h, g, sh, sg, epsilon)
+            }
+~~~
+
+This is a Litex-local proof interface, not a new Tao source definition. It is
+a `prop` because callers assert it about supplied step functions and values;
+`have fn darbouxs_approximation` would be wrong because neither the functions
+nor the witnesses are unique. Its proof depends on the candidate envelopes and
+their infimum/supremum order laws. Both directions are checked:
+`riemann_integrable_has_darboux_approximation` extracts witnesses from
+integrability, while `arbitrary_darboux_approximations_imply_riemann_integrable`
+turns arbitrarily small witness gaps back into equality of the envelopes.
+
+`darboux_approximations_add` is a theorem, not another definition: it adds a
+pair of lower step functions and a pair of upper step functions, and adds their
+two displayed integrals and error bounds. The nearby candidate-level theorems
+`upper_riemann_integral_candidates_add` and
+`lower_riemann_integral_candidates_add` retain the directional information
+needed by order arguments. They yield the two one-sided envelope inequalities
+and, after integrability identifies upper and lower values, the checked
+addition law for `integral_on`. Scalar, lattice, and product laws should reuse
+this witness/candidate pattern; they must not introduce a separate opaque
+closure predicate. The source now checks scalar multiplication by four
+candidate transports: nonnegative scalars preserve upper/lower roles, while
+negative scalars exchange them. The maximum transport takes the maximum of
+both lower witnesses as well as the maximum of both upper witnesses; its gap
+is bounded by the sum of the original gaps through the piecewise-constant
+integral order law. Minimum closure reuses negation and this checked maximum
+result. The product estimate remains a separate analytic step, not an excuse
+to weaken the Darboux interface. It is now checked through two ordinary
+theorems, rather than a new closure prop. First,
+`riemann_integrable_nonnegative_bounded_has_clamped_darboux_approximation`
+turns a supplied bound `abs(f(x)) <= M` and nonnegativity into fresh witnesses
+`0 <= h <= f <= g <= M`. Second,
+`riemann_integrable_nonnegative_product_has_darboux_approximation` multiplies
+the lower and upper steps. Its error function is controlled pointwise by
+`M_g * (f_+ - f_-) + M_f * (g_+ - g_-)`; the existing piecewise-constant order
+law transports that control to the displayed integrals. The nearest rejected
+form is a `product_integrable` prop: the useful reusable fact is the explicit
+epsilon witness construction, and the final closure theorem is simply its
+boundedness plus envelope consequence.
 
 Small oscillation, closed trims, piecewise continuity, and piecewise
 monotonicity are props. Their criteria are thms concluding
@@ -771,18 +1059,50 @@ mathematical specification without treating the trusted declaration itself as
 the only interface.
 
 `has_piecewise_constant_stieltjes_integral` and its selected value are the
-Stieltjes analogues of the ordinary step-integral relation and value.  The
+Stieltjes analogues of the ordinary step-integral relation and value. The
 value is not a second name for `stieltjes_integral_on`: it is the finite,
-piecewise-constant base case used to define the candidate envelopes.  Its
-partition-independence theorem depends on exactly the generic finite-family
-reindexing bridge above, with `alpha_interval_length` in place of ordinary
-length.  In the current Chapter 11 implementation this base remains an
-explicit relation named
-`has_piecewise_constant_riemann_stieltjes_integral`; do not add the selector
-until its uniqueness is supplied by that real partition-independence theorem.
-The final envelope selectors `upper_riemann_stieltjes_integral`,
+piecewise-constant base case used to define the candidate envelopes. Chapter
+11 now implements the three corresponding values:
+
+~~~litex
+have fn piecewise_constant_riemann_stieltjes_integral_piece_contribution by exist!:
+    ? forall I, J power_set(R), alpha fn(x R) R, f fn(x I) R:
+        $is_bounded_interval(J)
+        $is_constant_on_subset(I, J, f)
+        =>:
+            exist! t R st {$has_piecewise_constant_riemann_stieltjes_integral_piece_contribution(I, J, alpha, f, t)}
+
+have fn piecewise_constant_riemann_stieltjes_integral by exist!:
+    ? forall I power_set(R), alpha fn(x R) R, f fn(x I) R:
+        $is_piecewise_constant_on(I, f)
+        =>:
+            exist! s R st {$has_piecewise_constant_riemann_stieltjes_integral(I, alpha, f, s)}
+~~~
+
+The proof route is exactly the checked ordinary skeleton with
+`alpha_interval_length` substituted for `interval_length`: the checked
+`interval_weight_is_finitely_additive_over_partition` supplies the finite
+induction, then the existing refinement route removes empty pieces, reindexes
+nonempty fibers, and splits constant weighted rectangles. Lemma 11.8.4 now has
+a checked proof from `partition_has_removable_piece` and the narrow trusted
+`alpha_interval_length_adds_across_bounded_difference`; its theorem body is no
+longer a finite-additivity trust. The full Analysis runner verifies the
+resulting global composition. The final envelope selectors `upper_riemann_stieltjes_integral`,
 `lower_riemann_stieltjes_integral`, and `stieltjes_integral_on` are already
 implemented.
+
+The order layer uses the same shapes as the ordinary Darboux layer, with one
+extra hypothesis rather than a second architecture. The theorem
+`piecewise_constant_riemann_stieltjes_integral_piece_contribution_monotone`
+compares two constant heights after applying
+`monotone_alpha_interval_length_nonnegative`; its empty branch uses zero
+alpha-length. The same-partition theorem then applies finite-sum monotonicity,
+and `piecewise_constant_stieltjes_minorant_integral_le_majorant_integral`
+sends the two witnessing partitions to their common refinement before calling
+it. These are `thm`s: they state order facts about already-selected values,
+not new Stieltjes objects. The upstream debt in this chain is now the shared
+endpoint-piece selector plus the alpha-length bounded-difference law, not a
+second copy of finite-family induction.
 
 The identity-integrator theorem is a thm equating `stieltjes_integral_on` with
 `integral_on`. This layer depends on partitions, finite regrouping, step
@@ -881,29 +1201,34 @@ for the relational predicate.
 ## Dependency order
 
 ~~~text
-endpoint forms and membership
-  -> bounded intervals and connectedness
-  -> interval_length
-  -> partitions -> refinement -> common_refinement
-  -> finite partition additivity and regrouping
-
-constant-on-piece -> piecewise-constant-with-partition
-  -> selected piece contribution
-  -> step integral with a partition
+interval endpoints and membership
+  -> bounded intervals -> interval_length
+  -> partitions -> endpoint-piece removal
+  -> generic interval-weight finite additivity
+  -> common refinement
+  -> finite reorganization (support removal, fibers, regrouping)
+  -> piecewise-constant integral with a partition
   -> partition independence -> piecewise_constant_integral
 
-piecewise constant + majorizes/minorizes
-  -> upper/lower candidate-value sets
-  -> upper/lower Riemann integrals
-  -> Riemann integrability -> integral_on
-
 partition + function-value extrema
+  -> partition_piece_containing + upper/lower piece heights
+  -> canonical upper/lower partition step functions
   -> upper/lower Riemann sums
-  -> Darboux/Riemann comparison
-  -> continuity and monotonicity criteria
-  -> is_riemann_integrable_on
 
-alpha_interval_length + the same partition/step machinery
+piecewise constant + majorizes/minorizes
+  -> upper/lower Darboux candidate-value sets
+  -> upper/lower Riemann integrals
+
+canonical steps and candidate witness partitions
+  -> Darboux/Riemann sum transports
+  -> Proposition 11.3.12 extrema equivalence
+  -> Riemann integrability -> integral_on
+  -> has_darboux_approximation (for every epsilon)
+  -> step/candidate algebra -> integral laws
+
+alpha_interval_length + alpha bounded-difference splitting
+  -> generic interval-weight finite additivity
+  -> the same partition/step machinery
   -> piecewise-constant Stieltjes integral
   -> upper/lower Stieltjes values
   -> Stieltjes integrability -> stieltjes_integral_on

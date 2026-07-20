@@ -3,6 +3,17 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_by_def_stmt(&mut self, stmt: &ByDefStmt) -> Result<StmtResult, RuntimeError> {
         let predicate_name = stmt.fact.predicate.to_string();
+        if matches!(predicate_name.as_str(), INJECTIVE | SURJECTIVE | BIJECTIVE) {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "by def: `{}` is a builtin predicate; write the fact directly to verify its builtin definition",
+                    predicate_name
+                ),
+                None,
+                vec![],
+            ));
+        }
         if self
             .get_abstract_prop_definition_by_name(&predicate_name)
             .is_some()

@@ -1,0 +1,27 @@
+# Builtin function properties use an explicit domain, codomain, and function.
+
+have fn mapping_identity(x {1, 2, 3}) {1, 2, 3} = x
+
+forall x1, x2 {1, 2, 3}:
+    mapping_identity(x1) = mapping_identity(x2)
+    =>:
+        x1 = mapping_identity(x1) = mapping_identity(x2) = x2
+$injective({1, 2, 3}, {1, 2, 3}, mapping_identity)
+
+claim:
+    ? forall y {1, 2, 3}:
+        exist x {1, 2, 3} st {y = mapping_identity(x)}
+    y = mapping_identity(y)
+    witness exist x {1, 2, 3} st {y = mapping_identity(x)} from y
+$surjective({1, 2, 3}, {1, 2, 3}, mapping_identity)
+$bijective({1, 2, 3}, {1, 2, 3}, mapping_identity)
+
+# A finite injection has the same cardinality as its range.
+finite_set_size(fn_range(mapping_identity)) = finite_set_size({1, 2, 3})
+
+# A finite-source bijection makes its codomain finite and preserves cardinality.
+forall A finite_set, B set, f fn(x A) B:
+    $bijective(A, B, f)
+    =>:
+        $is_finite_set(B)
+        finite_set_size(A) = finite_set_size(B)

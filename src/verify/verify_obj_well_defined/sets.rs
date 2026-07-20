@@ -43,7 +43,7 @@ impl Runtime {
 
     pub(in crate::verify) fn verify_cup_well_defined(
         &mut self,
-        x: &Cup,
+        x: &BigUnion,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
@@ -52,7 +52,7 @@ impl Runtime {
 
     pub(in crate::verify) fn verify_cap_well_defined(
         &mut self,
-        x: &Cap,
+        x: &BigIntersect,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;

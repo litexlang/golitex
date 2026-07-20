@@ -185,10 +185,10 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
         }
-        Obj::Cup(unary) => {
+        Obj::BigUnion(unary) => {
             mark_forall_param_coverage_in_obj(unary.left.as_ref(), coverage_by_forall_param);
         }
-        Obj::Cap(unary) => {
+        Obj::BigIntersect(unary) => {
             mark_forall_param_coverage_in_obj(unary.left.as_ref(), coverage_by_forall_param);
         }
         Obj::PowerSet(unary) => {

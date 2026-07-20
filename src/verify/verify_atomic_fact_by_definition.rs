@@ -93,6 +93,12 @@ impl Runtime {
         normal_atomic_fact: &NormalAtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) =
+            self.verify_builtin_function_property_by_definition(normal_atomic_fact, verify_state)?
+        {
+            return Ok(Some(result));
+        }
+
         if let Some(_) =
             self.get_abstract_prop_definition_by_name(&normal_atomic_fact.predicate.to_string())
         {

@@ -53,21 +53,14 @@ thm rational_has_unique_reduced_fraction:
 # enumeration they need without depending on this proof's induction machinery.
 thm finite_set_has_bijective_index:
     ? forall s finite_set:
-        exist idx fn(i range(0, finite_set_size(s))) s st {forall! x s => {exist! i range(0, finite_set_size(s)) st {idx(i) = x}}}
+        exist idx fn(i range(0, finite_set_size(s))) s st {$bijective(range(0, finite_set_size(s)), s, idx)}
 
-    prop zero_index(U finite_set, f fn(i range(0, finite_set_size(U))) U):
-        forall x U:
-            exist! i range(0, finite_set_size(U)) st {f(i) = x}
-
-    prop zero_index_set(U finite_set):
-        exist f fn(i range(0, finite_set_size(U))) U st {$zero_index(U, f)}
-
-    thm extend_zero_index:
+    thm extend_bijective_index:
         ? forall a set, T finite_set, prev fn(i range(0, finite_set_size(T))) T:
             not a $in T
-            $zero_index(T, prev)
+            $bijective(range(0, finite_set_size(T)), T, prev)
             =>:
-                exist idx fn(i range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$zero_index(union({a}, T), idx)}
+                exist idx fn(i range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$bijective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx)}
         by extension intersect({a}, T) = {}:
             forall z intersect({a}, T):
                 z $in {a}
@@ -130,78 +123,71 @@ thm finite_set_has_bijective_index:
                     idx(i) = a
                     y = idx(i) = a
                     impossible y != a
-        witness exist idx0 fn(i range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$zero_index(union({a}, T), idx0)} from idx:
+        witness exist idx0 fn(i range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$bijective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx0)} from idx:
             claim:
                 ? forall y union({a}, T):
-                    exist! i range(0, finite_set_size(union({a}, T))) st {idx0(i) = y}
+                    exist i range(0, finite_set_size(union({a}, T))) st {y = idx0(i)}
                 y = a or y != a
                 by cases:
-                    ? exist! i range(0, finite_set_size(union({a}, T))) st {idx0(i) = y}
+                    ? exist i range(0, finite_set_size(union({a}, T))) st {y = idx0(i)}
                     case y = a:
                         finite_set_size(T) >= 0
                         finite_set_size(T) < finite_set_size(T) + 1
                         finite_set_size(T) < finite_set_size(union({a}, T))
                         idx0(finite_set_size(T)) = idx(finite_set_size(T)) = a = y
-                        witness exist! i range(0, finite_set_size(union({a}, T))) st {idx0(i) = y} from finite_set_size(T):
-                            idx0(finite_set_size(T)) = y
-                            forall i1, i2 range(0, finite_set_size(union({a}, T))):
-                                idx0(i1) = y
-                                idx0(i2) = y
-                                =>:
-                                    idx(i1) = idx0(i1) = y = a
-                                    idx(i2) = idx0(i2) = y = a
-                                    i1 = finite_set_size(T)
-                                    i2 = finite_set_size(T)
-                                    i1 = i2
+                        witness exist i range(0, finite_set_size(union({a}, T))) st {y = idx0(i)} from finite_set_size(T):
+                            y = idx0(finite_set_size(T))
                     case y != a:
                         y $in T
-                        exist! j range(0, finite_set_size(T)) st {prev(j) = y}
-                        obtain j from exist! j range(0, finite_set_size(T)) st {prev(j) = y}
+                        obtain j from exist j range(0, finite_set_size(T)) st {y = prev(j)}
                         j >= 0
                         j < finite_set_size(T)
                         finite_set_size(T) < finite_set_size(T) + 1
                         finite_set_size(T) < finite_set_size(union({a}, T))
                         j < finite_set_size(union({a}, T))
-                        idx0(j) = idx(j) = prev(j) = y
-                        witness exist! i range(0, finite_set_size(union({a}, T))) st {idx0(i) = y} from j:
-                            idx0(j) = y
-                            forall i1, i2 range(0, finite_set_size(union({a}, T))):
-                                idx0(i1) = y
-                                idx0(i2) = y
-                                =>:
-                                    idx(i1) = idx0(i1) = y
-                                    idx(i2) = idx0(i2) = y
-                                    i1 < finite_set_size(T)
-                                    i2 < finite_set_size(T)
-                                    i1 $in range(0, finite_set_size(T))
-                                    i2 $in range(0, finite_set_size(T))
-                                    prev(i1) = idx(i1) = y = idx(i2) = prev(i2)
-                                    i1 = i2
-            $zero_index(union({a}, T), idx0)
+                        y = prev(j) = idx(j) = idx0(j)
+                        witness exist i range(0, finite_set_size(union({a}, T))) st {y = idx0(i)} from j
+            $surjective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx0)
+            claim:
+                ? forall i1, i2 range(0, finite_set_size(union({a}, T))):
+                    idx0(i1) = idx0(i2)
+                    =>:
+                        i1 = i2
+                idx0(i1) = a or idx0(i1) != a
+                by cases:
+                    ? i1 = i2
+                    case idx0(i1) = a:
+                        idx(i1) = idx0(i1) = a
+                        idx(i2) = idx0(i2) = idx0(i1) = a
+                        i1 = finite_set_size(T)
+                        i2 = finite_set_size(T)
+                        i1 = i2
+                    case idx0(i1) != a:
+                        idx0(i1) $in union({a}, T)
+                        idx0(i2) = idx0(i1)
+                        idx0(i2) != a
+                        idx(i1) = idx0(i1)
+                        idx(i2) = idx0(i2)
+                        i1 < finite_set_size(T)
+                        i2 < finite_set_size(T)
+                        i1 $in range(0, finite_set_size(T))
+                        i2 $in range(0, finite_set_size(T))
+                        prev(i1) = idx(i1) = idx0(i1) = idx0(i2) = idx(i2) = prev(i2)
+                        i1 = i2
+            $injective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx0)
+            $bijective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx0)
 
     by induc P:
-        ? $zero_index_set(P)
+        ? exist idx fn(i range(0, finite_set_size(P))) P st {$bijective(range(0, finite_set_size(P)), P, idx)}
         ? from P = {}:
             finite_set_size({}) = 0
             range(0, finite_set_size({})) = {}
             have fn empty_index(i range(0, finite_set_size({}))) {} = i
-            witness exist idx fn(i range(0, finite_set_size({}))) {} st {$zero_index({}, idx)} from empty_index:
-                forall x {}:
-                    exist! i range(0, finite_set_size({})) st {idx(i) = x}
-                $zero_index({}, idx)
-            $zero_index_set({})
+            $bijective(range(0, finite_set_size({})), {}, empty_index)
+            witness exist idx fn(i range(0, finite_set_size({}))) {} st {$bijective(range(0, finite_set_size({})), {}, idx)} from empty_index
         ? induc a, T:
-            $zero_index_set(T)
-            exist prev fn(i range(0, finite_set_size(T))) T st {$zero_index(T, prev)}
-            obtain prev from exist prev fn(i range(0, finite_set_size(T))) T st {$zero_index(T, prev)}
-            by thm extend_zero_index(a, T, prev)
-            $zero_index_set(union({a}, T))
-    $zero_index_set(s)
-    exist w fn(i range(0, finite_set_size(s))) s st {$zero_index(s, w)}
-    obtain w from exist w fn(i range(0, finite_set_size(s))) s st {$zero_index(s, w)}
-    $zero_index(s, w)
-    witness exist idx fn(i range(0, finite_set_size(s))) s st {forall! x s => {exist! i range(0, finite_set_size(s)) st {idx(i) = x}}} from w
-    exist idx fn(i range(0, finite_set_size(s))) s st {forall! x s => {exist! i range(0, finite_set_size(s)) st {idx(i) = x}}}
+            obtain prev from exist prev fn(i range(0, finite_set_size(T))) T st {$bijective(range(0, finite_set_size(T)), T, prev)}
+            by thm extend_bijective_index(a, T, prev)
 
 # ---------------------------------------------------------------------------
 # gcd related

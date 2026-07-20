@@ -478,7 +478,6 @@ thm finite_set_sum_satisfies_self_definition:
             =>:
                 sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = finite_set_sum(X, f)
         by thm finite_set_sum_matches_bijective_enumeration(X, f, g)
-    $is_finite_set_sum(X, f, finite_set_sum(X, f))
 
 prop has_finite_set_sum(X finite_set, f fn(x X) R):
     exist l R st {$is_finite_set_sum(X, f, l)}
@@ -506,8 +505,6 @@ thm self_finite_set_sum_satisfies_definition:
         =>:
             $is_finite_set_sum(X, f, \self_finite_set_sum<X, f>)
     by thm finite_set_sum_exists(X, f)
-    $has_finite_set_sum(X, f)
-    $is_finite_set_sum(X, f, \self_finite_set_sum<X, f>)
 
 thm finite_set_sum_value_unique:
     ? forall X finite_set, f fn(x X) R, l1, l2 R:
@@ -668,11 +665,7 @@ have fn partial_sum(a seq(R), k N) R by induc k from 0:
     case k = 0: 0
     case k > 0: partial_sum(a, k - 1) + a(k)
 
-thm partial_sum_zero:
-    ? forall a seq(R):
-        partial_sum(a, 0) = 0
-    partial_sum(a, 0) = 0
-
+# A positive-index partial sum is its predecessor plus the new term.
 thm partial_sum_successor:
     ? forall a seq(R), k N_pos:
         partial_sum(a, k) = partial_sum(a, k - 1) + a(k)
@@ -686,31 +679,14 @@ thm partial_sum_matches_finite_sum:
         ? partial_sum(a, k) = sum(1, k, fn(i N_pos) R {a(i)})
 
         ? from k = 1:
-            by thm partial_sum_successor(a, 1)
-            partial_sum(a, 1) = partial_sum(a, 1 - 1) + a(1)
-            1 - 1 = 0
-            partial_sum(a, 1 - 1) = partial_sum(a, 0)
             partial_sum(a, 0) = 0
-            partial_sum(a, 1 - 1) + a(1) = partial_sum(a, 0) + a(1)
-            partial_sum(a, 0) + a(1) = 0 + a(1)
-            partial_sum(a, 1) = 0 + a(1)
-            0 + a(1) = a(1)
-            sum(1, 1, fn(i N_pos) R {a(i)}) = a(1)
-            partial_sum(a, 1) = sum(1, 1, fn(i N_pos) R {a(i)})
+            partial_sum(a, 1) = partial_sum(a, 0) + a(1) = 0 + a(1) = a(1) = sum(1, 1, fn(i N_pos) R {a(i)})
 
         ? induc:
-            partial_sum(a, k) = sum(1, k, fn(i N_pos) R {a(i)})
-            k + 1 $in N_pos
-            by thm partial_sum_successor(a, k + 1)
-            partial_sum(a, k + 1) = partial_sum(a, (k + 1) - 1) + a(k + 1)
             (k + 1) - 1 = k
+            partial_sum(a, k + 1) = partial_sum(a, (k + 1) - 1) + a(k + 1)
             partial_sum(a, (k + 1) - 1) = partial_sum(a, k)
-            partial_sum(a, (k + 1) - 1) + a(k + 1) = partial_sum(a, k) + a(k + 1)
-            partial_sum(a, k + 1) = partial_sum(a, k) + a(k + 1)
-            sum(1, k + 1, fn(i N_pos) R {a(i)}) = sum(1, k, fn(i N_pos) R {a(i)}) + fn(i N_pos) R {a(i)}(k + 1)
-            fn(i N_pos) R {a(i)}(k + 1) = a(k + 1)
-            sum(1, k + 1, fn(i N_pos) R {a(i)}) = sum(1, k, fn(i N_pos) R {a(i)}) + a(k + 1)
-            partial_sum(a, k + 1) = sum(1, k + 1, fn(i N_pos) R {a(i)})
+            partial_sum(a, k + 1) = partial_sum(a, k) + a(k + 1) = sum(1, k, fn(i N_pos) R {a(i)}) + a(k + 1) = sum(1, k + 1, fn(i N_pos) R {a(i)})
 
 thm partial_sum_split_after:
     ? forall a seq(R), m, n N_pos:
@@ -719,8 +695,6 @@ thm partial_sum_split_after:
             partial_sum(a, n) = partial_sum(a, m) + sum(m + 1, n, fn(i N_pos) R {a(i)})
     by thm partial_sum_matches_finite_sum(a, n)
     by thm partial_sum_matches_finite_sum(a, m)
-    partial_sum(a, n) = sum(1, n, fn(i N_pos) R {a(i)})
-    partial_sum(a, m) = sum(1, m, fn(i N_pos) R {a(i)})
     sum(1, n, fn(i N_pos) R {a(i)}) = sum(1, m, fn(i N_pos) R {a(i)}) + sum(m + 1, n, fn(i N_pos) R {a(i)})
     sum(1, m, fn(i N_pos) R {a(i)}) + sum(m + 1, n, fn(i N_pos) R {a(i)}) = partial_sum(a, m) + sum(m + 1, n, fn(i N_pos) R {a(i)})
     partial_sum(a, n) = sum(1, m, fn(i N_pos) R {a(i)}) + sum(m + 1, n, fn(i N_pos) R {a(i)})
@@ -750,7 +724,6 @@ thm strict_eventual_closeness_implies_closed_tail:
             =>:
                 abs(a(n) - L) < epsilon
                 abs(a(n) - L) <= epsilon
-        $is_tail_close_to(a, L, epsilon, n0)
 
 thm strict_limit_implies_closed_limit:
     ? forall a seq(R), L R:
@@ -761,10 +734,25 @@ thm strict_limit_implies_closed_limit:
         ? forall epsilon R_pos:
             exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)}
         by thm chap6::has_limit_gives_eventual_closeness(a, L, epsilon)
-        $chap6::has_eventual_closeness_to(a, L, epsilon)
         by thm strict_eventual_closeness_implies_closed_tail(a, L, epsilon)
-        exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)}
-    $has_limit(a, L)
+
+# A closed epsilon/2 tail is a strict epsilon tail, so the two limit interfaces agree.
+thm closed_limit_implies_strict_limit:
+    ? forall a seq(R), L R:
+        $has_limit(a, L)
+        =>:
+            $chap6::has_limit(a, L)
+    claim:
+        ? forall epsilon R_pos:
+            $chap6::has_eventual_closeness_to(a, L, epsilon)
+        epsilon / 2 $in R_pos
+        epsilon / 2 < epsilon
+        obtain n0 from exist n0 N_pos st {$is_tail_close_to(a, L, epsilon / 2, n0)}
+        witness exist n1 N_pos st {$chap6::is_tail_close_to(a, L, epsilon, n1)} from n0:
+            forall n N_pos:
+                n >= n0
+                =>:
+                    abs(a(n) - L) <= epsilon / 2 < epsilon
 
 # Pointwise equal sequences have the same strict limit because each epsilon
 # tail transfers unchanged.
@@ -791,9 +779,6 @@ thm strict_limit_extensional:
                 b(n) - L = a(n) - L
                 abs(b(n) - L) = abs(a(n) - L)
                 abs(b(n) - L) < epsilon
-            $chap6::is_tail_close_to(b, L, epsilon, n0)
-        $chap6::has_eventual_closeness_to(b, L, epsilon)
-    $chap6::has_limit(b, L)
 
 have fn constant_sequence(c R) fn(k N_pos) R = fn(i N_pos) R {c}
 
@@ -831,22 +816,18 @@ thm partial_sum_extensional:
         ? partial_sum(a, k) = partial_sum(b, k)
 
         ? from k = 0:
-            by thm partial_sum_zero(a)
             partial_sum(a, 0) = 0
-            by thm partial_sum_zero(b)
             partial_sum(b, 0) = 0
             partial_sum(a, 0) = partial_sum(b, 0)
 
         ? induc:
             partial_sum(a, k) = partial_sum(b, k)
             k + 1 $in N_pos
-            by thm partial_sum_successor(a, k + 1)
             partial_sum(a, k + 1) = partial_sum(a, (k + 1) - 1) + a(k + 1)
             (k + 1) - 1 = k
             partial_sum(a, (k + 1) - 1) = partial_sum(a, k)
             partial_sum(a, (k + 1) - 1) + a(k + 1) = partial_sum(a, k) + a(k + 1)
             partial_sum(a, k + 1) = partial_sum(a, k) + a(k + 1)
-            by thm partial_sum_successor(b, k + 1)
             partial_sum(b, k + 1) = partial_sum(b, (k + 1) - 1) + b(k + 1)
             partial_sum(b, (k + 1) - 1) = partial_sum(b, k)
             partial_sum(b, (k + 1) - 1) + b(k + 1) = partial_sum(b, k) + b(k + 1)
@@ -891,7 +872,6 @@ thm series_convergence_extensional:
             $is_convergent_series(b)
     obtain L from exist L R st {$has_series_sum(a, L)}
     by thm series_sum_extensional(a, b, L)
-    $has_series_sum(b, L)
     witness exist M R st {$has_series_sum(b, M)} from L:
         $has_series_sum(b, L)
     $is_convergent_series(b)
@@ -907,12 +887,12 @@ thm geometric_series_from_one_partial_sum:
         ? partial_sum(geometric_series_terms_from_one(x), k) = (x - x^(k + 1)) / (1 - x)
 
         ? from k = 1:
-            by thm partial_sum_successor(geometric_series_terms_from_one(x), 1)
-            partial_sum(geometric_series_terms_from_one(x), 1) = partial_sum(geometric_series_terms_from_one(x), 0) + geometric_series_terms_from_one(x)(1)
-            by thm partial_sum_zero(geometric_series_terms_from_one(x))
             partial_sum(geometric_series_terms_from_one(x), 0) = 0
+            by thm partial_sum_successor(geometric_series_terms_from_one(x), 1)
+            1 - 1 = 0
             geometric_series_terms_from_one(x)(1) = x^1
             x^1 = x
+            partial_sum(geometric_series_terms_from_one(x), 1 - 1) + geometric_series_terms_from_one(x)(1) = 0 + x = x
             partial_sum(geometric_series_terms_from_one(x), 1) = x
             x = (x - x^(1 + 1)) / (1 - x)
 
@@ -920,7 +900,6 @@ thm geometric_series_from_one_partial_sum:
             partial_sum(geometric_series_terms_from_one(x), k) = (x - x^(k + 1)) / (1 - x)
             k + 1 $in N_pos
             by thm partial_sum_successor(geometric_series_terms_from_one(x), k + 1)
-            partial_sum(geometric_series_terms_from_one(x), k + 1) = partial_sum(geometric_series_terms_from_one(x), (k + 1) - 1) + geometric_series_terms_from_one(x)(k + 1)
             (k + 1) - 1 = k
             partial_sum(geometric_series_terms_from_one(x), (k + 1) - 1) = partial_sum(geometric_series_terms_from_one(x), k)
             partial_sum(geometric_series_terms_from_one(x), k + 1) = partial_sum(geometric_series_terms_from_one(x), k) + geometric_series_terms_from_one(x)(k + 1)
@@ -942,28 +921,12 @@ thm geometric_series_from_one_tail_has_strict_limit_zero:
         =>:
             $chap6::has_limit(geometric_series_from_one_tail(x), 0)
     by thm chap6::geometric_abs_lt_one_converges_to_zero(x)
-    $chap6::has_limit(chap6::geom_seq(x), 0)
     by thm chap6::seq_shift_has_limit(chap6::geom_seq(x), 0)
-    $chap6::has_limit(chap6::seq_shift(chap6::geom_seq(x)), 0)
     claim:
-        ? forall epsilon R_pos:
-            $chap6::has_eventual_closeness_to(geometric_series_from_one_tail(x), 0, epsilon)
-        by thm chap6::has_limit_gives_eventual_closeness(chap6::seq_shift(chap6::geom_seq(x)), 0, epsilon)
-        obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(chap6::seq_shift(chap6::geom_seq(x)), 0, epsilon, n0)}
-        witness exist n1 N_pos st {$chap6::is_tail_close_to(geometric_series_from_one_tail(x), 0, epsilon, n1)} from n0:
-            forall n N_pos:
-                n >= n0
-                =>:
-                    abs(chap6::seq_shift(chap6::geom_seq(x))(n) - 0) < epsilon
-                    chap6::seq_shift(chap6::geom_seq(x))(n) = chap6::geom_seq(x)(n + 1)
-                    chap6::geom_seq(x)(n + 1) = x^(n + 1)
-                    geometric_series_from_one_tail(x)(n) = x^(n + 1)
-                    geometric_series_from_one_tail(x)(n) = chap6::seq_shift(chap6::geom_seq(x))(n)
-                    abs(geometric_series_from_one_tail(x)(n) - 0) = abs(chap6::seq_shift(chap6::geom_seq(x))(n) - 0)
-                    abs(geometric_series_from_one_tail(x)(n) - 0) < epsilon
-            $chap6::is_tail_close_to(geometric_series_from_one_tail(x), 0, epsilon, n0)
-        $chap6::has_eventual_closeness_to(geometric_series_from_one_tail(x), 0, epsilon)
-    $chap6::has_limit(geometric_series_from_one_tail(x), 0)
+        ? forall n N_pos:
+            chap6::seq_shift(chap6::geom_seq(x))(n) = geometric_series_from_one_tail(x)(n)
+        chap6::seq_shift(chap6::geom_seq(x))(n) = chap6::geom_seq(x)(n + 1) = x^(n + 1) = geometric_series_from_one_tail(x)(n)
+    by thm strict_limit_extensional(chap6::seq_shift(chap6::geom_seq(x)), geometric_series_from_one_tail(x), 0)
 
 thm geometric_series_from_one_tail_has_limit_zero:
     ? forall x R:
@@ -971,9 +934,7 @@ thm geometric_series_from_one_tail_has_limit_zero:
         =>:
             $has_limit(geometric_series_from_one_tail(x), 0)
     by thm geometric_series_from_one_tail_has_strict_limit_zero(x)
-    $chap6::has_limit(geometric_series_from_one_tail(x), 0)
     by thm strict_limit_implies_closed_limit(geometric_series_from_one_tail(x), 0)
-    $has_limit(geometric_series_from_one_tail(x), 0)
 
 thm geometric_series_from_one_formula:
     ? forall x R:
@@ -982,11 +943,8 @@ thm geometric_series_from_one_formula:
         =>:
             $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
     by thm constant_sequence_has_strict_limit(x)
-    $chap6::has_limit(constant_sequence(x), x)
     by thm geometric_series_from_one_tail_has_strict_limit_zero(x)
-    $chap6::has_limit(geometric_series_from_one_tail(x), 0)
     by thm chap6::seq_sub_converges_to(constant_sequence(x), geometric_series_from_one_tail(x), x, 0)
-    $chap6::has_limit(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, x - 0)
     x - 0 = x
     $chap6::has_limit(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, x)
     forall k N_pos:
@@ -995,7 +953,6 @@ thm geometric_series_from_one_formula:
         constant_sequence(1 - x)(k) != 0
     by def $chap6::is_nonzero_sequence(constant_sequence(1 - x))
     by thm constant_sequence_has_strict_limit(1 - x)
-    $chap6::has_limit(constant_sequence(1 - x), 1 - x)
     have fn geometric_series_from_one_remainder(n N_pos) R = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
     claim:
         ? forall n N_pos:
@@ -1005,7 +962,6 @@ thm geometric_series_from_one_formula:
         fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = geometric_series_from_one_remainder(n)
     by thm strict_limit_extensional(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, geometric_series_from_one_remainder, x)
     by thm chap6::seq_div_converges_to(geometric_series_from_one_remainder, constant_sequence(1 - x), x, 1 - x)
-    $chap6::has_limit(fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}, x / (1 - x))
     claim:
         ? forall n N_pos:
             fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}(n) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n)
@@ -1018,14 +974,11 @@ thm geometric_series_from_one_formula:
         geometric_series_from_one_remainder(n) / constant_sequence(1 - x)(n) = (x - geometric_series_from_one_tail(x)(n)) / (1 - x)
         fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}(n) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n)
     by thm strict_limit_extensional(fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}, fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
-    $chap6::has_limit(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
     by thm strict_limit_implies_closed_limit(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
-    $has_limit(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
     claim:
         ? forall k N_pos:
             partial_sum(geometric_series_terms_from_one(x), k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
         by thm geometric_series_from_one_partial_sum(x, k)
-        partial_sum(geometric_series_terms_from_one(x), k) = (x - x^(k + 1)) / (1 - x)
         geometric_series_from_one_tail(x)(k) = x^(k + 1)
         (x - geometric_series_from_one_tail(x)(k)) / (1 - x) = (x - x^(k + 1)) / (1 - x)
         partial_sum(geometric_series_terms_from_one(x), k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
@@ -1093,10 +1046,9 @@ thm geometric_series_from_one_diverges_when_abs_ge_one:
         abs(partial_sum(geometric_series_terms_from_one(x), n0 + 1) - L) = abs(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}(n0 + 1) - L)
         abs(partial_sum(geometric_series_terms_from_one(x), n0) - L) <= 1 / 3
         abs(partial_sum(geometric_series_terms_from_one(x), n0 + 1) - L) <= 1 / 3
-        by thm partial_sum_successor(geometric_series_terms_from_one(x), n0 + 1)
-        partial_sum(geometric_series_terms_from_one(x), n0 + 1) = partial_sum(geometric_series_terms_from_one(x), (n0 + 1) - 1) + geometric_series_terms_from_one(x)(n0 + 1)
         (n0 + 1) - 1 = n0
         partial_sum(geometric_series_terms_from_one(x), (n0 + 1) - 1) = partial_sum(geometric_series_terms_from_one(x), n0)
+        by thm partial_sum_successor(geometric_series_terms_from_one(x), n0 + 1)
         partial_sum(geometric_series_terms_from_one(x), n0 + 1) = partial_sum(geometric_series_terms_from_one(x), n0) + geometric_series_terms_from_one(x)(n0 + 1)
         geometric_series_terms_from_one(x)(n0 + 1) = x^(n0 + 1)
         partial_sum(geometric_series_terms_from_one(x), n0 + 1) = partial_sum(geometric_series_terms_from_one(x), n0) + x^(n0 + 1)
@@ -1105,7 +1057,6 @@ thm geometric_series_from_one_diverges_when_abs_ge_one:
         partial_sum(geometric_series_terms_from_one(x), n0 + 1) - partial_sum(geometric_series_terms_from_one(x), n0) = x^(n0 + 1)
         abs(x^(n0 + 1)) = abs(x)^(n0 + 1)
         by thm real_power_at_least_one(abs(x), n0 + 1)
-        abs(x)^(n0 + 1) >= 1
         abs(x^(n0 + 1)) >= 1
         partial_sum(geometric_series_terms_from_one(x), n0 + 1) - partial_sum(geometric_series_terms_from_one(x), n0) = (partial_sum(geometric_series_terms_from_one(x), n0 + 1) - L) - (partial_sum(geometric_series_terms_from_one(x), n0) - L)
         abs(partial_sum(geometric_series_terms_from_one(x), n0 + 1) - partial_sum(geometric_series_terms_from_one(x), n0)) = abs((partial_sum(geometric_series_terms_from_one(x), n0 + 1) - L) - (partial_sum(geometric_series_terms_from_one(x), n0) - L))
@@ -1141,39 +1092,9 @@ thm sequence_limit_unique_cite_from_chap6:
         $has_limit(b, M2)
         =>:
             M1 = M2
-    by contra:
-        ? M1 = M2
-        M1 != M2
-        M1 - M2 != 0
-        abs(M1 - M2) > 0
-        abs(M1 - M2) / 3 $in R_pos
-        obtain n1 from exist n1 N_pos st {$is_tail_close_to(b, M1, abs(M1 - M2) / 3, n1)}
-        obtain n2 from exist n2 N_pos st {$is_tail_close_to(b, M2, abs(M1 - M2) / 3, n2)}
-        finite_set_max(union({n1}, { n2})) $in N_pos
-        finite_set_max(union({n1}, { n2})) >= n1
-        finite_set_max(union({n1}, { n2})) >= n2
-        abs(b(finite_set_max(union({n1}, { n2}))) - M1) <= abs(M1 - M2) / 3
-        abs(b(finite_set_max(union({n1}, { n2}))) - M2) <= abs(M1 - M2) / 3
-        abs(M1 - b(finite_set_max(union({n1}, { n2})))) = abs(b(finite_set_max(union({n1}, { n2}))) - M1)
-        abs(M1 - b(finite_set_max(union({n1}, { n2})))) <= abs(M1 - M2) / 3
-        M1 - M2 = (M1 - b(finite_set_max(union({n1}, { n2})))) + (b(finite_set_max(union({n1}, { n2}))) - M2)
-        abs(M1 - M2) = abs((M1 - b(finite_set_max(union({n1}, { n2})))) + (b(finite_set_max(union({n1}, { n2}))) - M2))
-        abs((M1 - b(finite_set_max(union({n1}, { n2})))) + (b(finite_set_max(union({n1}, { n2}))) - M2)) <= abs(M1 - b(finite_set_max(union({n1}, { n2})))) + abs(b(finite_set_max(union({n1}, { n2}))) - M2)
-        abs(M1 - M2) <= abs(M1 - b(finite_set_max(union({n1}, { n2})))) + abs(b(finite_set_max(union({n1}, { n2}))) - M2)
-        abs(M1 - b(finite_set_max(union({n1}, { n2})))) + abs(b(finite_set_max(union({n1}, { n2}))) - M2) <= abs(M1 - M2) / 3 + abs(M1 - M2) / 3
-        abs(M1 - M2) <= abs(M1 - b(finite_set_max(union({n1}, { n2})))) + abs(b(finite_set_max(union({n1}, { n2}))) - M2) <= abs(M1 - M2) / 3 + abs(M1 - M2) / 3
-        abs(M1 - M2) <= abs(M1 - M2) / 3 + abs(M1 - M2) / 3
-        abs(M1 - M2) / 3 + abs(M1 - M2) / 3 = 2 * abs(M1 - M2) / 3
-        2 / 3 < 1
-        (2 / 3) * abs(M1 - M2) < 1 * abs(M1 - M2)
-        (2 / 3) * abs(M1 - M2) = 2 * abs(M1 - M2) / 3
-        1 * abs(M1 - M2) = abs(M1 - M2)
-        2 * abs(M1 - M2) / 3 < abs(M1 - M2)
-        abs(M1 - M2) <= 2 * abs(M1 - M2) / 3
-        abs(M1 - M2) <= 2 * abs(M1 - M2) / 3 < abs(M1 - M2)
-        abs(M1 - M2) < abs(M1 - M2)
-        abs(M1 - M2) != abs(M1 - M2)
-        impossible abs(M1 - M2) = abs(M1 - M2)
+    by thm closed_limit_implies_strict_limit(b, M1)
+    by thm closed_limit_implies_strict_limit(b, M2)
+    by thm chap6::sequence_limit_unique(b, M1, M2)
 
 thm series_sum_unique:
     ? forall a seq(R), L1, L2 R:
@@ -1181,10 +1102,7 @@ thm series_sum_unique:
         $has_series_sum(a, L2)
         =>:
             L1 = L2
-    $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L1)
-    $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L2)
     by thm sequence_limit_unique_cite_from_chap6(fn(k N_pos) R {partial_sum(a, k)}, L1, L2)
-    L1 = L2
 
 """
 Examples 7.2.4. The geometric series with terms 2^{-n} converges to 1, while
@@ -1218,7 +1136,6 @@ sketch:
     abs(1 / 2) < 1
     1 - 1 / 2 != 0
     by thm geometric_series_from_one_formula(1 / 2)
-    $has_series_sum(geometric_series_terms_from_one(1 / 2), (1 / 2) / (1 - 1 / 2))
     (1 / 2) / (1 - 1 / 2) = 1
     $has_series_sum(geometric_series_terms_from_one(1 / 2), 1)
     $has_series_sum(half_power_terms, 1)
@@ -1227,7 +1144,6 @@ sketch:
         ? not $is_convergent_series(two_power_terms)
         abs(2) >= 1
         by thm geometric_series_from_one_diverges_when_abs_ge_one(2)
-        not $is_convergent_series(geometric_series_terms_from_one(2))
         not $is_convergent_series(two_power_terms)
 
 """
@@ -1259,14 +1175,10 @@ thm series_cauchy_criterion_forward:
         =>:
             $has_cauchy_series_tails(a)
     obtain L from exist L R st {$has_series_sum(a, L)}
-    $has_series_sum(a, L)
-    $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
     claim:
         ? forall epsilon R_pos:
             exist n0 N_pos st {$has_small_tail_sums_after(a, epsilon, n0)}
-        epsilon / 2 $in R_pos
         obtain N0 from exist N0 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(a, k)}, L, epsilon / 2, N0)}
-        N0 + 1 $in N_pos
         witness exist n1 N_pos st {$has_small_tail_sums_after(a, epsilon, n1)} from N0 + 1:
             claim:
                 ? forall p, q N_pos:
@@ -1278,43 +1190,28 @@ thm series_cauchy_criterion_forward:
                     ? abs(finite_tail_sum(a, p, q)) <= epsilon
                     case q < p:
                         finite_tail_sum(a, p, q) = 0
-                        abs(finite_tail_sum(a, p, q)) = 0
-                        0 <= epsilon
-                        abs(finite_tail_sum(a, p, q)) <= epsilon
                     case q >= p:
-                        N0 + 1 >= N0
-                        q >= N0 + 1 >= N0
-                        q >= N0
-                        p - 1 >= N0
-                        N0 >= 1
-                        p - 1 >= N0 >= 1
-                        p - 1 >= 1
+                        q >= N0 + 1 > N0
+                        p - 1 >= (N0 + 1) - 1 = N0 > 0
                         p - 1 $in N_pos
                         abs(fn(k N_pos) R {partial_sum(a, k)}(q) - L) <= epsilon / 2
-                        fn(k N_pos) R {partial_sum(a, k)}(q) = partial_sum(a, q)
-                        abs(partial_sum(a, q) - L) = abs(fn(k N_pos) R {partial_sum(a, k)}(q) - L)
-                        abs(partial_sum(a, q) - L) <= epsilon / 2
                         abs(fn(k N_pos) R {partial_sum(a, k)}(p - 1) - L) <= epsilon / 2
+                        fn(k N_pos) R {partial_sum(a, k)}(q) = partial_sum(a, q)
                         fn(k N_pos) R {partial_sum(a, k)}(p - 1) = partial_sum(a, p - 1)
+                        abs(partial_sum(a, q) - L) = abs(fn(k N_pos) R {partial_sum(a, k)}(q) - L)
                         abs(partial_sum(a, p - 1) - L) = abs(fn(k N_pos) R {partial_sum(a, k)}(p - 1) - L)
+                        abs(partial_sum(a, q) - L) <= epsilon / 2
                         abs(partial_sum(a, p - 1) - L) <= epsilon / 2
                         finite_tail_sum(a, p, q) = partial_sum(a, q) - partial_sum(a, p - 1)
                         partial_sum(a, q) - partial_sum(a, p - 1) = (partial_sum(a, q) - L) + (L - partial_sum(a, p - 1))
                         abs(finite_tail_sum(a, p, q)) = abs((partial_sum(a, q) - L) + (L - partial_sum(a, p - 1)))
                         abs((partial_sum(a, q) - L) + (L - partial_sum(a, p - 1))) <= abs(partial_sum(a, q) - L) + abs(L - partial_sum(a, p - 1))
-                        abs(finite_tail_sum(a, p, q)) <= abs(partial_sum(a, q) - L) + abs(L - partial_sum(a, p - 1))
                         abs(L - partial_sum(a, p - 1)) = abs(partial_sum(a, p - 1) - L)
+                        abs(finite_tail_sum(a, p, q)) <= abs(partial_sum(a, q) - L) + abs(L - partial_sum(a, p - 1))
                         abs(L - partial_sum(a, p - 1)) <= epsilon / 2
                         abs(partial_sum(a, q) - L) + abs(L - partial_sum(a, p - 1)) <= epsilon / 2 + epsilon / 2
-                        epsilon / 2 + epsilon / 2 = epsilon
-                        abs(partial_sum(a, q) - L) + abs(L - partial_sum(a, p - 1)) <= epsilon
-                        abs(finite_tail_sum(a, p, q)) <= abs(partial_sum(a, q) - L) + abs(L - partial_sum(a, p - 1)) <= epsilon
-                        abs(finite_tail_sum(a, p, q)) <= epsilon
-            $has_small_tail_sums_after(a, epsilon, N0 + 1)
-    $has_cauchy_series_tails(a)
-
-# The tail criterion makes the partial sums Cauchy; completeness then supplies
-# their limit.
+                        abs(finite_tail_sum(a, p, q)) <= epsilon / 2 + epsilon / 2 = epsilon
+            by def $has_small_tail_sums_after(a, epsilon, N0 + 1)
 
 thm real_closeness_is_symmetric:
     ? forall epsilon R_pos, x, y R:
@@ -1374,16 +1271,13 @@ thm cauchy_series_tails_make_partial_sums_cauchy_in_R:
                     ? $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
                     case j < k:
                         by thm partial_sums_close_when_first_index_before_second(a, epsilon, n0, j, k)
-                        $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
                     case j >= k:
                         k < j or k >= j
                         by cases:
                             ? $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
                             case k < j:
                                 by thm partial_sums_close_when_first_index_before_second(a, epsilon, n0, k, j)
-                                $chap5::is_close_in_R(epsilon, partial_sum(a, k), partial_sum(a, j))
                                 by thm real_closeness_is_symmetric(epsilon, partial_sum(a, k), partial_sum(a, j))
-                                $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
                             case k >= j:
                                 j = k
                                 partial_sum(a, j) = partial_sum(a, k)
@@ -1401,8 +1295,6 @@ thm cauchy_series_tails_make_partial_sums_cauchy_in_R:
                 $chap5::is_close_in_R(epsilon, partial_sum(a, j), partial_sum(a, k))
                 $chap5::is_close_in_R(epsilon, fn(k N_pos) R {partial_sum(a, k)}(j), fn(k N_pos) R {partial_sum(a, k)}(k))
             $chap5::is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)
-            $chap5::is_cauchy_tail_in_R(fn(k N_pos) R {partial_sum(a, k)}, epsilon, n0)
-    $chap5::is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
 
 thm nonstrict_real_limit_gives_series_limit:
     ? forall a seq(R), L R:
@@ -1431,15 +1323,12 @@ thm series_cauchy_criterion_reverse:
         =>:
             $is_convergent_series(a)
     by thm cauchy_series_tails_make_partial_sums_cauchy_in_R(a)
-    $chap5::is_cauchy_sequence_in_R(fn(k N_pos) R {partial_sum(a, k)})
     by thm chap5::real_cauchy_sequence_has_limit_in_R(fn(k N_pos) R {partial_sum(a, k)})
     obtain L from exist L R st {$chap5::has_limit_in_R(fn(k N_pos) R {partial_sum(a, k)}, L)}
     by thm nonstrict_real_limit_gives_series_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
-    $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
     witness exist M R st {$has_series_sum(a, M)} from L:
         $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
         $has_series_sum(a, L)
-    $is_convergent_series(a)
 
 """
 Corollary 7.2.6 (Zero test). Every convergent series has terms tending to 0.
@@ -1456,7 +1345,6 @@ thm series_zero_test:
         =>:
             $has_limit(a, 0)
     by thm series_cauchy_criterion_forward(a)
-    $has_cauchy_series_tails(a)
     claim:
         ? forall epsilon R_pos:
             exist n0 N_pos st {$is_tail_close_to(a, 0, epsilon, n0)}
@@ -1476,7 +1364,6 @@ thm series_zero_test:
                     abs(a(n) - 0) = abs(finite_tail_sum(a, n, n))
                     abs(a(n) - 0) <= epsilon
             $is_tail_close_to(a, 0, epsilon, n0)
-    $has_limit(a, 0)
 
 """
 Example 7.2.7. The series with constant term 1 diverges, and the alternating
@@ -1512,7 +1399,6 @@ sketch:
             ? not $is_convergent_series(ones_series_terms)
             $is_convergent_series(ones_series_terms)
             by thm series_zero_test(ones_series_terms)
-            $has_limit(ones_series_terms, 0)
             impossible not $has_limit(ones_series_terms, 0)
 
     claim:
@@ -1545,7 +1431,6 @@ sketch:
             ? not $is_convergent_series(alternating_ones_terms)
             $is_convergent_series(alternating_ones_terms)
             by thm series_zero_test(alternating_ones_terms)
-            $has_limit(alternating_ones_terms, 0)
             impossible not $has_limit(alternating_ones_terms, 0)
 
 """
@@ -1570,7 +1455,6 @@ thm partial_sum_abs_matches_finite_sum:
     ? forall a seq(R), k N_pos:
         partial_sum(fn(j N_pos) R {abs(a(j))}, k) = sum(1, k, fn(i N_pos) R {abs(a(i))})
     by thm partial_sum_matches_finite_sum(fn(j N_pos) R {abs(a(j))}, k)
-    partial_sum(fn(j N_pos) R {abs(a(j))}, k) = sum(1, k, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)})
     sum(1, k, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)}) = sum(1, k, fn(i N_pos) R {abs(a(i))})
 
 thm finite_sum_abs_nonnegative:
@@ -1594,41 +1478,15 @@ thm finite_tail_abs_nonnegative:
         ? finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) >= 0
         case q < p:
             finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = 0
-            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) >= 0
         case q >= p:
             by cases:
                 ? finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) >= 0
                 case p = 1:
-                    finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = partial_sum(fn(j N_pos) R {abs(a(j))}, q) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1)
-                    p - 1 = 0
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) = partial_sum(fn(j N_pos) R {abs(a(j))}, 0)
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, 0) = 0
-                    finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = partial_sum(fn(j N_pos) R {abs(a(j))}, q) - 0
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) - 0 = partial_sum(fn(j N_pos) R {abs(a(j))}, q)
                     by thm partial_sum_abs_matches_finite_sum(a, q)
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) = sum(1, q, fn(i N_pos) R {abs(a(i))})
                     by thm finite_sum_abs_nonnegative(a, 1, q)
-                    sum(1, q, fn(i N_pos) R {abs(a(i))}) >= 0
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) >= 0
-                    finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) >= 0
                 case p > 1:
-                    p - 1 $in N_pos
-                    p - 1 < p
-                    p - 1 < p <= q
-                    p - 1 < q
                     by thm partial_sum_split_after(fn(j N_pos) R {abs(a(j))}, p - 1, q)
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) = partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum((p - 1) + 1, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)})
-                    (p - 1) + 1 = p
-                    sum((p - 1) + 1, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)}) = sum(p, q, fn(i N_pos) R {abs(a(i))})
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum((p - 1) + 1, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)}) = partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum(p, q, fn(i N_pos) R {abs(a(i))})
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) = partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum(p, q, fn(i N_pos) R {abs(a(i))})
-                    finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = partial_sum(fn(j N_pos) R {abs(a(j))}, q) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1)
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) = (partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum(p, q, fn(i N_pos) R {abs(a(i))})) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1)
-                    (partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum(p, q, fn(i N_pos) R {abs(a(i))})) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) = sum(p, q, fn(i N_pos) R {abs(a(i))})
-                    finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i N_pos) R {abs(a(i))})
                     by thm finite_sum_abs_nonnegative(a, p, q)
-                    sum(p, q, fn(i N_pos) R {abs(a(i))}) >= 0
-                    finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) >= 0
 
 thm finite_tail_abs_bound:
     ? forall a seq(R), p, q N_pos:
@@ -1638,65 +1496,17 @@ thm finite_tail_abs_bound:
         case q < p:
             finite_tail_sum(a, p, q) = 0
             finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = 0
-            abs(finite_tail_sum(a, p, q)) = abs(0)
-            abs(0) = 0
-            abs(finite_tail_sum(a, p, q)) <= finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q)
         case q >= p:
             by cases:
                 ? abs(finite_tail_sum(a, p, q)) <= finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q)
                 case p = 1:
-                    finite_tail_sum(a, p, q) = partial_sum(a, q) - partial_sum(a, p - 1)
-                    p - 1 = 0
-                    partial_sum(a, p - 1) = partial_sum(a, 0)
-                    partial_sum(a, 0) = 0
-                    partial_sum(a, q) - partial_sum(a, p - 1) = partial_sum(a, q) - 0
-                    finite_tail_sum(a, p, q) = partial_sum(a, q) - 0
-                    partial_sum(a, q) - 0 = partial_sum(a, q)
-                    finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = partial_sum(fn(j N_pos) R {abs(a(j))}, q) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1)
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) = partial_sum(fn(j N_pos) R {abs(a(j))}, 0)
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, 0) = 0
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) = partial_sum(fn(j N_pos) R {abs(a(j))}, q) - 0
-                    finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = partial_sum(fn(j N_pos) R {abs(a(j))}, q) - 0
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) - 0 = partial_sum(fn(j N_pos) R {abs(a(j))}, q)
                     by thm partial_sum_matches_finite_sum(a, q)
-                    partial_sum(a, q) = sum(1, q, fn(i N_pos) R {a(i)})
                     by thm partial_sum_abs_matches_finite_sum(a, q)
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) = sum(1, q, fn(i N_pos) R {abs(a(i))})
-                    abs(partial_sum(a, q)) = abs(sum(1, q, fn(i N_pos) R {a(i)}))
-                    sum(1, q, fn(i N_pos) R {abs(a(i))}) = partial_sum(fn(j N_pos) R {abs(a(j))}, q)
                     abs(sum(1, q, fn(i N_pos) R {a(i)})) <= sum(1, q, fn(i N_pos) R {abs(a(i))})
-                    abs(partial_sum(a, q)) <= sum(1, q, fn(i N_pos) R {abs(a(i))})
-                    abs(partial_sum(a, q)) <= partial_sum(fn(j N_pos) R {abs(a(j))}, q)
-                    abs(finite_tail_sum(a, p, q)) = abs(partial_sum(a, q))
-                    abs(finite_tail_sum(a, p, q)) <= partial_sum(fn(j N_pos) R {abs(a(j))}, q)
-                    abs(finite_tail_sum(a, p, q)) <= finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q)
                 case p > 1:
-                    p - 1 $in N_pos
-                    p - 1 < p
-                    p - 1 < p <= q
-                    p - 1 < q
                     by thm partial_sum_split_after(a, p - 1, q)
-                    partial_sum(a, q) = partial_sum(a, p - 1) + sum((p - 1) + 1, q, fn(i N_pos) R {a(i)})
-                    (p - 1) + 1 = p
-                    sum((p - 1) + 1, q, fn(i N_pos) R {a(i)}) = sum(p, q, fn(i N_pos) R {a(i)})
-                    partial_sum(a, q) = partial_sum(a, p - 1) + sum(p, q, fn(i N_pos) R {a(i)})
-                    finite_tail_sum(a, p, q) = partial_sum(a, q) - partial_sum(a, p - 1)
-                    partial_sum(a, q) - partial_sum(a, p - 1) = (partial_sum(a, p - 1) + sum(p, q, fn(i N_pos) R {a(i)})) - partial_sum(a, p - 1)
-                    (partial_sum(a, p - 1) + sum(p, q, fn(i N_pos) R {a(i)})) - partial_sum(a, p - 1) = sum(p, q, fn(i N_pos) R {a(i)})
-                    finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
                     by thm partial_sum_split_after(fn(j N_pos) R {abs(a(j))}, p - 1, q)
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) = partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum((p - 1) + 1, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)})
-                    sum((p - 1) + 1, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)}) = sum(p, q, fn(i N_pos) R {abs(a(i))})
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum((p - 1) + 1, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)}) = partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum(p, q, fn(i N_pos) R {abs(a(i))})
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) = partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum(p, q, fn(i N_pos) R {abs(a(i))})
-                    finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = partial_sum(fn(j N_pos) R {abs(a(j))}, q) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1)
-                    partial_sum(fn(j N_pos) R {abs(a(j))}, q) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) = (partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum(p, q, fn(i N_pos) R {abs(a(i))})) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1)
-                    (partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) + sum(p, q, fn(i N_pos) R {abs(a(i))})) - partial_sum(fn(j N_pos) R {abs(a(j))}, p - 1) = sum(p, q, fn(i N_pos) R {abs(a(i))})
-                    finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i N_pos) R {abs(a(i))})
                     abs(sum(p, q, fn(i N_pos) R {a(i)})) <= sum(p, q, fn(i N_pos) R {abs(a(i))})
-                    abs(finite_tail_sum(a, p, q)) = abs(sum(p, q, fn(i N_pos) R {a(i)}))
-                    abs(finite_tail_sum(a, p, q)) <= sum(p, q, fn(i N_pos) R {abs(a(i))})
-                    abs(finite_tail_sum(a, p, q)) <= finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q)
 
 thm absolute_tail_control:
     ? forall a seq(R), epsilon R_pos, n0 N_pos:
@@ -1723,26 +1533,21 @@ thm absolute_convergence_test:
             $is_convergent_series(a)
     $is_convergent_series(fn(j N_pos) R {abs(a(j))})
     by thm series_cauchy_criterion_forward(fn(j N_pos) R {abs(a(j))})
-    $has_cauchy_series_tails(fn(j N_pos) R {abs(a(j))})
     claim:
         ? forall epsilon R_pos:
             exist n0 N_pos st {$has_small_tail_sums_after(a, epsilon, n0)}
         obtain n0 from exist n0 N_pos st {$has_small_tail_sums_after(fn(j N_pos) R {abs(a(j))}, epsilon, n0)}
         by thm absolute_tail_control(a, epsilon, n0)
-        $has_small_tail_sums_after(a, epsilon, n0)
         witness exist n1 N_pos st {$has_small_tail_sums_after(a, epsilon, n1)} from n0:
             $has_small_tail_sums_after(a, epsilon, n0)
     $has_cauchy_series_tails(a)
     by thm series_cauchy_criterion_reverse(a)
-    $is_convergent_series(a)
 
 thm partial_sum_triangle_bound:
     ? forall a seq(R), n N_pos:
         abs(partial_sum(a, n)) <= partial_sum(fn(j N_pos) R {abs(a(j))}, n)
     by thm partial_sum_matches_finite_sum(a, n)
-    partial_sum(a, n) = sum(1, n, fn(i N_pos) R {a(i)})
     by thm partial_sum_abs_matches_finite_sum(a, n)
-    partial_sum(fn(j N_pos) R {abs(a(j))}, n) = sum(1, n, fn(i N_pos) R {abs(a(i))})
     1 <= n
     abs(sum(1, n, fn(i N_pos) R {a(i)})) <= sum(1, n, fn(i N_pos) R {abs(a(i))})
     abs(partial_sum(a, n)) = abs(sum(1, n, fn(i N_pos) R {a(i)}))
@@ -1783,7 +1588,6 @@ thm absolute_convergence_triangle_bound:
         abs(partial_sum(fn(j N_pos) R {abs(a(j))}, n3) - A) = abs(fn(k N_pos) R {partial_sum(fn(j N_pos) R {abs(a(j))}, k)}(n3) - A)
         abs(partial_sum(fn(j N_pos) R {abs(a(j))}, n3) - A) <= eta
         by thm partial_sum_triangle_bound(a, n3)
-        abs(partial_sum(a, n3)) <= partial_sum(fn(j N_pos) R {abs(a(j))}, n3)
         L = partial_sum(a, n3) + (L - partial_sum(a, n3))
         abs(L) = abs(partial_sum(a, n3) + (L - partial_sum(a, n3)))
         abs(partial_sum(a, n3) + (L - partial_sum(a, n3))) <= abs(partial_sum(a, n3)) + abs(L - partial_sum(a, n3))
@@ -1878,7 +1682,6 @@ thm decreasing_seq_le_of_le:
     n - m $in N
     m + (n - m) = n
     by thm decreasing_seq_le_add(a, n - m, m)
-    a(m + (n - m)) <= a(m)
     a(n) = a(m + (n - m))
     a(n) <= a(m)
 
@@ -1922,8 +1725,6 @@ thm nonnegative_partial_sum_le_add:
         ? induc:
             partial_sum(a, n) <= partial_sum(a, n + h)
             n + h $in N_pos
-            by thm partial_sum_successor(a, n + h + 1)
-            partial_sum(a, n + h + 1) = partial_sum(a, (n + h + 1) - 1) + a(n + h + 1)
             (n + h + 1) - 1 = n + h
             partial_sum(a, (n + h + 1) - 1) = partial_sum(a, n + h)
             partial_sum(a, (n + h + 1) - 1) + a(n + h + 1) = partial_sum(a, n + h) + a(n + h + 1)
@@ -1944,7 +1745,6 @@ thm nonnegative_partial_sum_le_of_le:
     n - m $in N
     m + (n - m) = n
     by thm nonnegative_partial_sum_le_add(a, n - m, m)
-    partial_sum(a, m) <= partial_sum(a, m + (n - m))
     partial_sum(a, m + (n - m)) = partial_sum(a, n)
     partial_sum(a, m) <= partial_sum(a, n)
 
@@ -1979,7 +1779,6 @@ thm alternating_terms_distance_from_zero:
     abs(alternating_series_terms(a)(n) - 0) = abs((-1)^n * a(n))
     abs((-1)^n * a(n)) = abs((-1)^n) * abs(a(n))
     by thm alternating_sign_abs_one(n)
-    abs((-1)^n) = 1
     abs((-1)^n) * abs(a(n)) = 1 * abs(a(n))
     1 * abs(a(n)) = abs(a(n))
     abs(alternating_series_terms(a)(n) - 0) = abs(a(n))
@@ -1995,7 +1794,6 @@ thm alternating_terms_abs_value:
     abs(alternating_series_terms(a)(n)) = abs((-1)^n * a(n))
     abs((-1)^n * a(n)) = abs((-1)^n) * abs(a(n))
     by thm alternating_sign_abs_one(n)
-    abs((-1)^n) = 1
     abs((-1)^n) * abs(a(n)) = 1 * abs(a(n))
     1 * abs(a(n)) = abs(a(n))
     abs(alternating_series_terms(a)(n)) = abs(a(n))
@@ -2039,7 +1837,6 @@ thm alternating_series_test:
             $has_small_tail_sums_after(alternating_series_terms(a), epsilon, n0)
     $has_cauchy_series_tails(alternating_series_terms(a))
     by thm series_cauchy_criterion_reverse(alternating_series_terms(a))
-    $is_convergent_series(alternating_series_terms(a))
 
 thm alternating_series_test_reverse:
     ? forall a seq(R):
@@ -2047,7 +1844,6 @@ thm alternating_series_test_reverse:
         =>:
             $has_limit(a, 0)
     by thm series_zero_test(alternating_series_terms(a))
-    $has_limit(alternating_series_terms(a), 0)
     claim:
         ? forall epsilon R_pos:
             exist n0 N_pos st {$is_tail_close_to(a, 0, epsilon, n0)}
@@ -2106,7 +1902,6 @@ sketch:
         ? forall epsilon R_pos:
             exist n0 N_pos st {$is_tail_close_to(harmonic_terms, 0, epsilon, n0)}
         by thm chap5::archimedean_property(epsilon)
-        exist n_bound N_pos st {1 / n_bound < epsilon}
         obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
         witness exist n1 N_pos st {$is_tail_close_to(harmonic_terms, 0, epsilon, n1)} from n0:
             forall n N_pos:
@@ -2133,7 +1928,6 @@ sketch:
     by def $has_limit(harmonic_terms, 0)
 
     by thm alternating_series_test(harmonic_terms)
-    $is_convergent_series(alternating_series_terms(harmonic_terms))
     $is_convergent_series(alternating_harmonic_terms)
 
     claim:
@@ -2152,13 +1946,11 @@ sketch:
                 alternating_harmonic_terms(n) = alternating_series_terms(harmonic_terms)(n)
                 abs(alternating_harmonic_terms(n)) = abs(alternating_series_terms(harmonic_terms)(n))
                 by thm alternating_terms_abs_value(harmonic_terms, n)
-                abs(alternating_series_terms(harmonic_terms)(n)) = abs(harmonic_terms(n))
                 harmonic_terms(n) = 1 / n
                 1 / n > 0
                 abs(harmonic_terms(n)) = harmonic_terms(n)
                 abs(alternating_harmonic_terms(n)) = harmonic_terms(n)
             by thm series_convergence_extensional(fn(j N_pos) R {abs(alternating_harmonic_terms(j))}, harmonic_terms)
-            $is_convergent_series(harmonic_terms)
             impossible not $is_convergent_series(harmonic_terms)
     claim:
         ? not $is_absolutely_convergent_series(alternating_harmonic_terms)
@@ -2224,99 +2016,29 @@ thm series_laws_add:
         $has_series_sum(b, y)
         =>:
             $has_series_sum(series_add(a, b), x + y)
-    $has_limit(fn(k N_pos) R {partial_sum(a, k)}, x)
-    $has_limit(fn(k N_pos) R {partial_sum(b, k)}, y)
+    by thm closed_limit_implies_strict_limit(fn(k N_pos) R {partial_sum(a, k)}, x)
+    by thm closed_limit_implies_strict_limit(fn(k N_pos) R {partial_sum(b, k)}, y)
+    by thm chap6::seq_add_converges_to(fn(k N_pos) R {partial_sum(a, k)}, fn(k N_pos) R {partial_sum(b, k)}, x, y)
     claim:
         ? forall n N_pos:
-            partial_sum(series_add(a, b), n) = partial_sum(a, n) + partial_sum(b, n)
+            fn(k N_pos) R {partial_sum(a, k) + partial_sum(b, k)}(n) = fn(k N_pos) R {partial_sum(series_add(a, b), k)}(n)
         by thm partial_sum_series_add(a, b, n)
-        partial_sum(series_add(a, b), n) = partial_sum(a, n) + partial_sum(b, n)
-    claim:
-        ? forall epsilon R_pos:
-            exist N0 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y, epsilon, N0)}
-        epsilon / 2 $in R_pos
-        obtain n1 from exist n1 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(a, k)}, x, epsilon / 2, n1)}
-        obtain n2 from exist n2 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(b, k)}, y, epsilon / 2, n2)}
-        finite_set_max(union({n1}, { n2})) $in N_pos
-        finite_set_max(union({n1}, { n2})) >= n1
-        finite_set_max(union({n1}, { n2})) >= n2
-        witness exist N1 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y, epsilon, N1)} from finite_set_max(union({n1}, { n2})):
-            forall n N_pos:
-                n >= finite_set_max(union({n1}, { n2}))
-                =>:
-                    n1 <= finite_set_max(union({n1}, { n2})) <= n
-                    n >= n1
-                    n2 <= finite_set_max(union({n1}, { n2})) <= n
-                    n >= n2
-                    abs(fn(k N_pos) R {partial_sum(a, k)}(n) - x) <= epsilon / 2
-                    fn(k N_pos) R {partial_sum(a, k)}(n) = partial_sum(a, n)
-                    abs(partial_sum(a, n) - x) = abs(fn(k N_pos) R {partial_sum(a, k)}(n) - x)
-                    abs(partial_sum(a, n) - x) <= epsilon / 2
-                    abs(fn(k N_pos) R {partial_sum(b, k)}(n) - y) <= epsilon / 2
-                    fn(k N_pos) R {partial_sum(b, k)}(n) = partial_sum(b, n)
-                    abs(partial_sum(b, n) - y) = abs(fn(k N_pos) R {partial_sum(b, k)}(n) - y)
-                    abs(partial_sum(b, n) - y) <= epsilon / 2
-                    partial_sum(series_add(a, b), n) = partial_sum(a, n) + partial_sum(b, n)
-                    fn(k N_pos) R {partial_sum(series_add(a, b), k)}(n) = partial_sum(series_add(a, b), n)
-                    abs(fn(k N_pos) R {partial_sum(series_add(a, b), k)}(n) - (x + y)) = abs(partial_sum(series_add(a, b), n) - (x + y))
-                    partial_sum(series_add(a, b), n) - (x + y) = (partial_sum(a, n) + partial_sum(b, n)) - (x + y)
-                    (partial_sum(a, n) + partial_sum(b, n)) - (x + y) = (partial_sum(a, n) - x) + (partial_sum(b, n) - y)
-                    abs(partial_sum(series_add(a, b), n) - (x + y)) = abs((partial_sum(a, n) - x) + (partial_sum(b, n) - y))
-                    abs((partial_sum(a, n) - x) + (partial_sum(b, n) - y)) <= abs(partial_sum(a, n) - x) + abs(partial_sum(b, n) - y)
-                    abs(partial_sum(series_add(a, b), n) - (x + y)) <= abs(partial_sum(a, n) - x) + abs(partial_sum(b, n) - y)
-                    abs(partial_sum(a, n) - x) + abs(partial_sum(b, n) - y) <= epsilon / 2 + epsilon / 2
-                    epsilon / 2 + epsilon / 2 = epsilon
-                    abs(partial_sum(a, n) - x) + abs(partial_sum(b, n) - y) <= epsilon
-                    abs(fn(k N_pos) R {partial_sum(series_add(a, b), k)}(n) - (x + y)) <= epsilon
-            $is_tail_close_to(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y, epsilon, finite_set_max(union({n1}, { n2})))
-    $has_limit(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y)
-    $has_series_sum(series_add(a, b), x + y)
+    by thm strict_limit_extensional(fn(k N_pos) R {partial_sum(a, k) + partial_sum(b, k)}, fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y)
+    by thm strict_limit_implies_closed_limit(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y)
 
 thm series_laws_scalar_mul:
     ? forall a seq(R), c, x R:
         $has_series_sum(a, x)
         =>:
             $has_series_sum(series_scalar_mul(c, a), c * x)
-    $has_limit(fn(k N_pos) R {partial_sum(a, k)}, x)
+    by thm closed_limit_implies_strict_limit(fn(k N_pos) R {partial_sum(a, k)}, x)
+    by thm chap6::seq_const_mul_converges_to(c, fn(k N_pos) R {partial_sum(a, k)}, x)
     claim:
         ? forall n N_pos:
-            partial_sum(series_scalar_mul(c, a), n) = c * partial_sum(a, n)
+            fn(k N_pos) R {c * partial_sum(a, k)}(n) = fn(k N_pos) R {partial_sum(series_scalar_mul(c, a), k)}(n)
         by thm partial_sum_series_scalar_mul(a, c, n)
-        partial_sum(series_scalar_mul(c, a), n) = c * partial_sum(a, n)
-    claim:
-        ? forall epsilon R_pos:
-            exist N0 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(series_scalar_mul(c, a), k)}, c * x, epsilon, N0)}
-        abs(c) >= 0
-        abs(c) + 1 > 0
-        abs(c) + 1 != 0
-        epsilon / (abs(c) + 1) $in R_pos
-        obtain n0 from exist n0 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(a, k)}, x, epsilon / (abs(c) + 1), n0)}
-        witness exist N1 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(series_scalar_mul(c, a), k)}, c * x, epsilon, N1)} from n0:
-            forall n N_pos:
-                n >= n0
-                =>:
-                    abs(fn(k N_pos) R {partial_sum(a, k)}(n) - x) <= epsilon / (abs(c) + 1)
-                    fn(k N_pos) R {partial_sum(a, k)}(n) = partial_sum(a, n)
-                    abs(partial_sum(a, n) - x) = abs(fn(k N_pos) R {partial_sum(a, k)}(n) - x)
-                    abs(partial_sum(a, n) - x) <= epsilon / (abs(c) + 1)
-                    partial_sum(series_scalar_mul(c, a), n) = c * partial_sum(a, n)
-                    fn(k N_pos) R {partial_sum(series_scalar_mul(c, a), k)}(n) = partial_sum(series_scalar_mul(c, a), n)
-                    abs(fn(k N_pos) R {partial_sum(series_scalar_mul(c, a), k)}(n) - c * x) = abs(partial_sum(series_scalar_mul(c, a), n) - c * x)
-                    partial_sum(series_scalar_mul(c, a), n) - c * x = c * partial_sum(a, n) - c * x
-                    c * partial_sum(a, n) - c * x = c * (partial_sum(a, n) - x)
-                    abs(partial_sum(series_scalar_mul(c, a), n) - c * x) = abs(c * (partial_sum(a, n) - x))
-                    abs(c * (partial_sum(a, n) - x)) = abs(c) * abs(partial_sum(a, n) - x)
-                    abs(c) <= abs(c) + 1
-                    abs(partial_sum(a, n) - x) >= 0
-                    abs(c) * abs(partial_sum(a, n) - x) <= (abs(c) + 1) * abs(partial_sum(a, n) - x)
-                    (abs(c) + 1) * abs(partial_sum(a, n) - x) <= (abs(c) + 1) * (epsilon / (abs(c) + 1))
-                    (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
-                    abs(c) * abs(partial_sum(a, n) - x) <= (abs(c) + 1) * abs(partial_sum(a, n) - x) <= (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
-                    abs(c) * abs(partial_sum(a, n) - x) <= epsilon
-                    abs(fn(k N_pos) R {partial_sum(series_scalar_mul(c, a), k)}(n) - c * x) <= epsilon
-            $is_tail_close_to(fn(k N_pos) R {partial_sum(series_scalar_mul(c, a), k)}, c * x, epsilon, n0)
-    $has_limit(fn(k N_pos) R {partial_sum(series_scalar_mul(c, a), k)}, c * x)
-    $has_series_sum(series_scalar_mul(c, a), c * x)
+    by thm strict_limit_extensional(fn(k N_pos) R {c * partial_sum(a, k)}, fn(k N_pos) R {partial_sum(series_scalar_mul(c, a), k)}, c * x)
+    by thm strict_limit_implies_closed_limit(fn(k N_pos) R {partial_sum(series_scalar_mul(c, a), k)}, c * x)
 
 thm partial_sum_series_shift_plus_prefix:
     ? forall a seq(R), h N, k N_pos:
@@ -2325,8 +2047,6 @@ thm partial_sum_series_shift_plus_prefix:
         ? partial_sum(series_shift(a, h), k) + partial_sum(a, h) = partial_sum(a, k + h)
 
         ? from k = 1:
-            by thm partial_sum_successor(series_shift(a, h), 1)
-            partial_sum(series_shift(a, h), 1) = partial_sum(series_shift(a, h), 1 - 1) + series_shift(a, h)(1)
             1 - 1 = 0
             partial_sum(series_shift(a, h), 1 - 1) = partial_sum(series_shift(a, h), 0)
             partial_sum(series_shift(a, h), 0) = 0
@@ -2334,8 +2054,6 @@ thm partial_sum_series_shift_plus_prefix:
             partial_sum(series_shift(a, h), 1) = 0 + a(1 + h)
             0 + a(1 + h) = a(1 + h)
             1 + h $in N_pos
-            by thm partial_sum_successor(a, 1 + h)
-            partial_sum(a, 1 + h) = partial_sum(a, (1 + h) - 1) + a(1 + h)
             (1 + h) - 1 = h
             partial_sum(a, (1 + h) - 1) = partial_sum(a, h)
             partial_sum(a, 1 + h) = partial_sum(a, h) + a(1 + h)
@@ -2347,8 +2065,6 @@ thm partial_sum_series_shift_plus_prefix:
         ? induc:
             partial_sum(series_shift(a, h), k) + partial_sum(a, h) = partial_sum(a, k + h)
             k + 1 $in N_pos
-            by thm partial_sum_successor(series_shift(a, h), k + 1)
-            partial_sum(series_shift(a, h), k + 1) = partial_sum(series_shift(a, h), (k + 1) - 1) + series_shift(a, h)(k + 1)
             (k + 1) - 1 = k
             partial_sum(series_shift(a, h), (k + 1) - 1) = partial_sum(series_shift(a, h), k)
             series_shift(a, h)(k + 1) = a(k + 1 + h)
@@ -2357,8 +2073,6 @@ thm partial_sum_series_shift_plus_prefix:
             (partial_sum(series_shift(a, h), k) + a(k + 1 + h)) + partial_sum(a, h) = (partial_sum(series_shift(a, h), k) + partial_sum(a, h)) + a(k + 1 + h)
             partial_sum(series_shift(a, h), k + 1) + partial_sum(a, h) = partial_sum(a, k + h) + a(k + 1 + h)
             k + 1 + h $in N_pos
-            by thm partial_sum_successor(a, k + 1 + h)
-            partial_sum(a, k + 1 + h) = partial_sum(a, (k + 1 + h) - 1) + a(k + 1 + h)
             (k + 1 + h) - 1 = k + h
             partial_sum(a, (k + 1 + h) - 1) = partial_sum(a, k + h)
             partial_sum(a, k + 1 + h) = partial_sum(a, k + h) + a(k + 1 + h)
@@ -2370,39 +2084,32 @@ thm series_laws_tail_convergence:
         =>:
             $is_convergent_series(series_shift(a, h))
     obtain L from exist L R st {$has_series_sum(a, L)}
-    $has_series_sum(a, L)
-    $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
+    by thm closed_limit_implies_strict_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
     claim:
-        ? forall epsilon R_pos:
-            exist N0 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h), epsilon, N0)}
-        obtain n0 from exist n0 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(a, k)}, L, epsilon, n0)}
-        witness exist N1 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h), epsilon, N1)} from n0:
-            claim:
-                ? forall n N_pos:
+        ? $chap6::has_limit(fn(n N_pos) R {partial_sum(a, n + h)}, L)
+        claim:
+            ? forall epsilon R_pos:
+                $chap6::has_eventual_closeness_to(fn(n N_pos) R {partial_sum(a, n + h)}, L, epsilon)
+            by thm chap6::has_limit_gives_eventual_closeness(fn(k N_pos) R {partial_sum(a, k)}, L, epsilon)
+            obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(fn(k N_pos) R {partial_sum(a, k)}, L, epsilon, n0)}
+            witness exist n1 N_pos st {$chap6::is_tail_close_to(fn(n N_pos) R {partial_sum(a, n + h)}, L, epsilon, n1)} from n0:
+                forall n N_pos:
                     n >= n0
                     =>:
-                        abs(fn(k N_pos) R {partial_sum(series_shift(a, h), k)}(n) - (L - partial_sum(a, h))) <= epsilon
-                n + h $in N_pos
-                n + h >= n
-                n + h >= n0
-                abs(fn(k N_pos) R {partial_sum(a, k)}(n + h) - L) <= epsilon
-                fn(k N_pos) R {partial_sum(a, k)}(n + h) = partial_sum(a, n + h)
-                abs(partial_sum(a, n + h) - L) = abs(fn(k N_pos) R {partial_sum(a, k)}(n + h) - L)
-                abs(partial_sum(a, n + h) - L) <= epsilon
-                fn(k N_pos) R {partial_sum(series_shift(a, h), k)}(n) = partial_sum(series_shift(a, h), n)
-                by thm partial_sum_series_shift_plus_prefix(a, h, n)
-                partial_sum(series_shift(a, h), n) + partial_sum(a, h) = partial_sum(a, n + h)
-                partial_sum(series_shift(a, h), n) - (L - partial_sum(a, h)) = partial_sum(series_shift(a, h), n) + partial_sum(a, h) - L
-                partial_sum(series_shift(a, h), n) + partial_sum(a, h) - L = partial_sum(a, n + h) - L
-                abs(partial_sum(series_shift(a, h), n) - (L - partial_sum(a, h))) = abs(partial_sum(a, n + h) - L)
-                abs(fn(k N_pos) R {partial_sum(series_shift(a, h), k)}(n) - (L - partial_sum(a, h))) = abs(partial_sum(series_shift(a, h), n) - (L - partial_sum(a, h)))
-                abs(fn(k N_pos) R {partial_sum(series_shift(a, h), k)}(n) - (L - partial_sum(a, h))) <= epsilon
-            $is_tail_close_to(fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h), epsilon, n0)
-    $has_limit(fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h))
-    $has_series_sum(series_shift(a, h), L - partial_sum(a, h))
-    witness exist T R st {$has_series_sum(series_shift(a, h), T)} from L - partial_sum(a, h):
-        $has_series_sum(series_shift(a, h), L - partial_sum(a, h))
-    $is_convergent_series(series_shift(a, h))
+                        n + h >= n >= n0
+                        abs(fn(k N_pos) R {partial_sum(a, k)}(n + h) - L) < epsilon
+                        fn(n N_pos) R {partial_sum(a, n + h)}(n) = fn(k N_pos) R {partial_sum(a, k)}(n + h)
+                        abs(fn(n N_pos) R {partial_sum(a, n + h)}(n) - L) < epsilon
+        $chap6::has_limit(fn(n N_pos) R {partial_sum(a, n + h)}, L)
+    by thm constant_sequence_has_strict_limit(partial_sum(a, h))
+    by thm chap6::seq_sub_converges_to(fn(n N_pos) R {partial_sum(a, n + h)}, constant_sequence(partial_sum(a, h)), L, partial_sum(a, h))
+    claim:
+        ? forall n N_pos:
+            fn(i N_pos) R {partial_sum(a, i + h) - constant_sequence(partial_sum(a, h))(i)}(n) = fn(k N_pos) R {partial_sum(series_shift(a, h), k)}(n)
+        by thm partial_sum_series_shift_plus_prefix(a, h, n)
+    by thm strict_limit_extensional(fn(i N_pos) R {partial_sum(a, i + h) - constant_sequence(partial_sum(a, h))(i)}, fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h))
+    by thm strict_limit_implies_closed_limit(fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h))
+    witness exist T R st {$has_series_sum(series_shift(a, h), T)} from L - partial_sum(a, h)
 
 thm series_laws_index_shift:
     ? forall a seq(R), k N, x R:
@@ -2413,7 +2120,6 @@ thm series_laws_index_shift:
         $has_series_sum(a, x)
     $is_convergent_series(a)
     by thm series_laws_tail_convergence(a, k)
-    $is_convergent_series(series_shift(a, k))
 
 thm series_laws_tail_sum_reverse_one_bound:
     ? forall a seq(R), T R, epsilon R_pos, n0, m, n N_pos:
@@ -2425,7 +2131,6 @@ thm series_laws_tail_sum_reverse_one_bound:
     abs(fn(k N_pos) R {partial_sum(series_shift(a, 1), k)}(m) - T) <= epsilon
     fn(k N_pos) R {partial_sum(series_shift(a, 1), k)}(m) = partial_sum(series_shift(a, 1), m)
     by thm partial_sum_series_shift_plus_prefix(a, 1, m)
-    partial_sum(series_shift(a, 1), m) + partial_sum(a, 1) = partial_sum(a, m + 1)
     m + 1 = (n - 1) + 1
     (n - 1) + 1 = n
     partial_sum(a, m + 1) = partial_sum(a, n)
@@ -2476,7 +2181,6 @@ thm series_laws_tail_sum_reverse_one:
                     =>:
                         abs(fn(k N_pos) R {partial_sum(a, k)}(n) - (partial_sum(a, 1) + T)) <= epsilon
                 by thm series_laws_tail_sum_reverse_one_bound_direct(a, T, epsilon, n0, n)
-                abs(fn(k N_pos) R {partial_sum(a, k)}(n) - (partial_sum(a, 1) + T)) <= epsilon
             $is_tail_close_to(fn(k N_pos) R {partial_sum(a, k)}, partial_sum(a, 1) + T, epsilon, n0 + 1)
     $has_limit(fn(k N_pos) R {partial_sum(a, k)}, partial_sum(a, 1) + T)
     $has_series_sum(a, partial_sum(a, 1) + T)
@@ -2595,7 +2299,6 @@ thm nonnegative_series_convergent_has_bounded_partial_sums:
             ? partial_sum(a, k) <= M
             case k <= n0:
                 by thm nonnegative_partial_sum_le_of_le(a, k, n0)
-                partial_sum(a, k) <= partial_sum(a, n0)
                 partial_sum(a, n0) <= finite_set_max(union({partial_sum(a, n0)}, { L + 1}))
                 finite_set_max(union({partial_sum(a, n0)}, { L + 1})) = M
                 partial_sum(a, k) <= partial_sum(a, n0) <= finite_set_max(union({partial_sum(a, n0)}, { L + 1})) = M
@@ -2746,9 +2449,7 @@ thm shifted_abs_partial_sum_bound_extends_to_original:
         =>:
             $is_partial_sum_bound(fn(i N_pos) R {abs(a(i))}, partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M + abs(M))
     by thm absolute_sequence_nonnegative(a)
-    $is_nonnegative_sequence(fn(i N_pos) R {abs(a(i))})
     by thm real_add_abs_nonnegative(M)
-    M + abs(M) >= 0
     claim:
         ? forall m N_pos:
             partial_sum(fn(i N_pos) R {abs(a(i))}, m) <= partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M + abs(M)
@@ -2761,7 +2462,6 @@ thm shifted_abs_partial_sum_bound_extends_to_original:
                 k >= 1
                 k $in N_pos
                 by thm nonnegative_partial_sum_le_of_le(fn(i N_pos) R {abs(a(i))}, m, k)
-                partial_sum(fn(i N_pos) R {abs(a(i))}, m) <= partial_sum(fn(i N_pos) R {abs(a(i))}, k)
                 partial_sum(fn(i N_pos) R {abs(a(i))}, k) <= partial_sum(fn(i N_pos) R {abs(a(i))}, k) + (M + abs(M))
                 partial_sum(fn(i N_pos) R {abs(a(i))}, m) <= partial_sum(fn(i N_pos) R {abs(a(i))}, k) <= partial_sum(fn(i N_pos) R {abs(a(i))}, k) + (M + abs(M))
                 partial_sum(fn(i N_pos) R {abs(a(i))}, m) <= partial_sum(fn(i N_pos) R {abs(a(i))}, k) + (M + abs(M))
@@ -2770,13 +2470,11 @@ thm shifted_abs_partial_sum_bound_extends_to_original:
             case m > k:
                 m - k $in N_pos
                 by thm partial_sum_series_shift_plus_prefix(fn(i N_pos) R {abs(a(i))}, k, m - k)
-                partial_sum(series_shift(fn(i N_pos) R {abs(a(i))}, k), m - k) + partial_sum(fn(i N_pos) R {abs(a(i))}, k) = partial_sum(fn(i N_pos) R {abs(a(i))}, (m - k) + k)
                 (m - k) + k = m
                 partial_sum(fn(i N_pos) R {abs(a(i))}, (m - k) + k) = partial_sum(fn(i N_pos) R {abs(a(i))}, m)
                 partial_sum(series_shift(fn(i N_pos) R {abs(a(i))}, k), m - k) + partial_sum(fn(i N_pos) R {abs(a(i))}, k) = partial_sum(fn(i N_pos) R {abs(a(i))}, m)
                 partial_sum(fn(i N_pos) R {abs(a(i))}, m) = partial_sum(series_shift(fn(i N_pos) R {abs(a(i))}, k), m - k) + partial_sum(fn(i N_pos) R {abs(a(i))}, k)
                 by thm partial_sum_bound_at(series_shift(fn(i N_pos) R {abs(a(i))}, k), M, m - k)
-                partial_sum(series_shift(fn(i N_pos) R {abs(a(i))}, k), m - k) <= M
                 partial_sum(series_shift(fn(i N_pos) R {abs(a(i))}, k), m - k) + partial_sum(fn(i N_pos) R {abs(a(i))}, k) <= M + partial_sum(fn(i N_pos) R {abs(a(i))}, k)
                 M + partial_sum(fn(i N_pos) R {abs(a(i))}, k) = partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M
                 partial_sum(fn(i N_pos) R {abs(a(i))}, m) <= partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M
@@ -2860,7 +2558,6 @@ thm geometric_series_formula:
         =>:
             $has_series_sum(geometric_series_terms(x), 1 / (1 - x))
     by thm geometric_series_from_one_formula(x)
-    $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
     claim:
         ? forall n N_pos:
             geometric_series_terms_from_one(x)(n) = series_shift(geometric_series_terms(x), 1)(n)
@@ -2872,11 +2569,7 @@ thm geometric_series_formula:
         series_shift(geometric_series_terms(x), 1)(n) = x^n
         geometric_series_terms_from_one(x)(n) = series_shift(geometric_series_terms(x), 1)(n)
     by thm series_sum_extensional(geometric_series_terms_from_one(x), series_shift(geometric_series_terms(x), 1), x / (1 - x))
-    $has_series_sum(series_shift(geometric_series_terms(x), 1), x / (1 - x))
     by thm series_laws_tail_sum_reverse_one(geometric_series_terms(x), x / (1 - x))
-    $has_series_sum(geometric_series_terms(x), partial_sum(geometric_series_terms(x), 1) + x / (1 - x))
-    by thm partial_sum_successor(geometric_series_terms(x), 1)
-    partial_sum(geometric_series_terms(x), 1) = partial_sum(geometric_series_terms(x), 1 - 1) + geometric_series_terms(x)(1)
     1 - 1 = 0
     partial_sum(geometric_series_terms(x), 1 - 1) = partial_sum(geometric_series_terms(x), 0)
     partial_sum(geometric_series_terms(x), 0) = 0
@@ -2899,7 +2592,6 @@ thm geometric_series_diverges_when_abs_ge_one:
         ? not $is_convergent_series(geometric_series_terms(x))
         $is_convergent_series(geometric_series_terms(x))
         by thm series_laws_tail_convergence(geometric_series_terms(x), 1)
-        $is_convergent_series(series_shift(geometric_series_terms(x), 1))
         claim:
             ? forall n N_pos:
                 series_shift(geometric_series_terms(x), 1)(n) = geometric_series_terms_from_one(x)(n)
@@ -2911,9 +2603,7 @@ thm geometric_series_diverges_when_abs_ge_one:
             series_shift(geometric_series_terms(x), 1)(n) = x^n
             series_shift(geometric_series_terms(x), 1)(n) = geometric_series_terms_from_one(x)(n)
         by thm series_convergence_extensional(series_shift(geometric_series_terms(x), 1), geometric_series_terms_from_one(x))
-        $is_convergent_series(geometric_series_terms_from_one(x))
         by thm geometric_series_from_one_diverges_when_abs_ge_one(x)
-        not $is_convergent_series(geometric_series_terms_from_one(x))
         impossible not $is_convergent_series(geometric_series_terms_from_one(x))
 
 """
@@ -2930,8 +2620,6 @@ have fn condensed_terms(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {2^(j - 1) * a(2
 thm condensed_partial_sum_successor:
     ? forall a seq(R), K N_pos:
         partial_sum(condensed_terms(a), K + 1) = partial_sum(condensed_terms(a), K) + 2^K * a(2^K)
-    by thm partial_sum_successor(condensed_terms(a), K + 1)
-    partial_sum(condensed_terms(a), K + 1) = partial_sum(condensed_terms(a), (K + 1) - 1) + condensed_terms(a)(K + 1)
     (K + 1) - 1 = K
     partial_sum(condensed_terms(a), (K + 1) - 1) = partial_sum(condensed_terms(a), K)
     condensed_terms(a)(K + 1) = 2^((K + 1) - 1) * a(2^((K + 1) - 1))
@@ -2994,8 +2682,6 @@ thm nonnegative_partial_sums_monotone:
                             partial_sum(a, p0) <= partial_sum(a, r)
                             r + 1 $in N_pos
                             a(r + 1) >= 0
-                            by thm partial_sum_successor(a, r + 1)
-                            partial_sum(a, r + 1) = partial_sum(a, (r + 1) - 1) + a(r + 1)
                             (r + 1) - 1 = r
                             partial_sum(a, (r + 1) - 1) = partial_sum(a, r)
                             partial_sum(a, (r + 1) - 1) + a(r + 1) = partial_sum(a, r) + a(r + 1)
@@ -3030,7 +2716,6 @@ thm dyadic_endpoint_covers_index:
     ? forall n N_pos:
         exist K N_pos st {n <= 2^K - 1}
     by thm two_power_ge_successor(n)
-    2^n >= n + 1
     2^n - 1 >= n
     n <= 2^n - 1
     witness exist K N_pos st {n <= 2^K - 1} from n:
@@ -3046,7 +2731,6 @@ thm dyadic_block_upper_by_left_endpoint:
     2^K $in N_pos
     2^(K + 1) - 1 $in N_pos
     by thm decreasing_finite_block_upper_by_left_endpoint(a, 2^K, 2^(K + 1) - 1)
-    sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(i)}) <= sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(2^K)})
     have c R = a(2^K)
     sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {c}) = ((2^(K + 1) - 1 - 2^K) + 1) * c
     sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(2^K)}) = sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {c})
@@ -3071,7 +2755,6 @@ thm dyadic_block_lower_by_right_endpoint:
     2^(K - 1) + 1 $in N_pos
     2^K $in N_pos
     by thm decreasing_finite_block_lower_by_right_endpoint(a, 2^(K - 1) + 1, 2^K)
-    sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(2^K)}) <= sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})
     have c R = a(2^K)
     sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {c}) = ((2^K - (2^(K - 1) + 1)) + 1) * c
     sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(2^K)}) = sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {c})
@@ -3100,8 +2783,6 @@ thm cauchy_condensation_partial_sum_lower_bound:
             2^1 = 2
             2^1 - 1 = 1
             partial_sum(a, 2^1 - 1) = partial_sum(a, 1)
-            by thm partial_sum_successor(a, 1)
-            partial_sum(a, 1) = partial_sum(a, 1 - 1) + a(1)
             1 - 1 = 0
             partial_sum(a, 1 - 1) = partial_sum(a, 0)
             partial_sum(a, 0) = 0
@@ -3115,8 +2796,6 @@ thm cauchy_condensation_partial_sum_lower_bound:
             a(2^(1 - 1)) = a(1)
             condensed_terms(a)(1) = 1 * a(1)
             1 * a(1) = a(1)
-            by thm partial_sum_successor(condensed_terms(a), 1)
-            partial_sum(condensed_terms(a), 1) = partial_sum(condensed_terms(a), 1 - 1) + condensed_terms(a)(1)
             partial_sum(condensed_terms(a), 1 - 1) = partial_sum(condensed_terms(a), 0)
             partial_sum(condensed_terms(a), 0) = 0
             partial_sum(condensed_terms(a), 1 - 1) + condensed_terms(a)(1) = partial_sum(condensed_terms(a), 0) + condensed_terms(a)(1)
@@ -3130,7 +2809,6 @@ thm cauchy_condensation_partial_sum_lower_bound:
             partial_sum(a, 2^K - 1) <= partial_sum(condensed_terms(a), K)
             2^K $in N_pos
             by thm two_power_ge_successor(K)
-            2^K >= K + 1
             K >= 1
             K + 1 >= 1 + 1
             1 + 1 = 2
@@ -3140,7 +2818,6 @@ thm cauchy_condensation_partial_sum_lower_bound:
             2^K - 1 >= 1
             2^K - 1 $in N_pos
             by thm two_power_ge_successor(K + 1)
-            2^(K + 1) >= (K + 1) + 1
             K >= 1
             K + 1 >= 2
             (K + 1) + 1 >= K + 1
@@ -3164,16 +2841,13 @@ thm cauchy_condensation_partial_sum_lower_bound:
             2^K <= 2^(K + 1) - 1
             2^K - 1 < 2^(K + 1) - 1
             by thm partial_sum_split_after(a, 2^K - 1, 2^(K + 1) - 1)
-            partial_sum(a, 2^(K + 1) - 1) = partial_sum(a, 2^K - 1) + sum((2^K - 1) + 1, 2^(K + 1) - 1, fn(i N_pos) R {a(i)})
             (2^K - 1) + 1 = 2^K
             sum((2^K - 1) + 1, 2^(K + 1) - 1, fn(i N_pos) R {a(i)}) = sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(i)})
             partial_sum(a, 2^(K + 1) - 1) = partial_sum(a, 2^K - 1) + sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(i)})
             by thm dyadic_block_upper_by_left_endpoint(a, K)
-            sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(i)}) <= 2^K * a(2^K)
             partial_sum(a, 2^K - 1) + sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(i)}) <= partial_sum(condensed_terms(a), K) + 2^K * a(2^K)
             partial_sum(a, 2^(K + 1) - 1) <= partial_sum(condensed_terms(a), K) + 2^K * a(2^K)
             by thm condensed_partial_sum_successor(a, K)
-            partial_sum(condensed_terms(a), K + 1) = partial_sum(condensed_terms(a), K) + 2^K * a(2^K)
             partial_sum(a, 2^(K + 1) - 1) <= partial_sum(condensed_terms(a), K + 1)
 
 thm cauchy_condensation_partial_sum_upper_strong:
@@ -3192,8 +2866,6 @@ thm cauchy_condensation_partial_sum_upper_strong:
             a(2^(1 - 1)) = a(1)
             condensed_terms(a)(1) = 1 * a(1)
             1 * a(1) = a(1)
-            by thm partial_sum_successor(condensed_terms(a), 1)
-            partial_sum(condensed_terms(a), 1) = partial_sum(condensed_terms(a), 1 - 1) + condensed_terms(a)(1)
             partial_sum(condensed_terms(a), 1 - 1) = partial_sum(condensed_terms(a), 0)
             partial_sum(condensed_terms(a), 0) = 0
             partial_sum(condensed_terms(a), 1 - 1) + condensed_terms(a)(1) = partial_sum(condensed_terms(a), 0) + condensed_terms(a)(1)
@@ -3201,8 +2873,6 @@ thm cauchy_condensation_partial_sum_upper_strong:
             partial_sum(condensed_terms(a), 1) = 0 + condensed_terms(a)(1)
             0 + condensed_terms(a)(1) = condensed_terms(a)(1)
             partial_sum(condensed_terms(a), 1) = a(1)
-            by thm partial_sum_successor(a, 1)
-            partial_sum(a, 1) = partial_sum(a, 1 - 1) + a(1)
             partial_sum(a, 1 - 1) = partial_sum(a, 0)
             partial_sum(a, 0) = 0
             partial_sum(a, 1 - 1) + a(1) = partial_sum(a, 0) + a(1)
@@ -3235,7 +2905,6 @@ thm cauchy_condensation_partial_sum_upper_strong:
             2^K >= 2^(K - 1) + 1
             2^(K - 1) + 1 <= 2^K
             by thm dyadic_block_lower_by_right_endpoint(a, K)
-            2^(K - 1) * a(2^K) <= sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})
             2 >= 0
             2 * (2^(K - 1) * a(2^K)) <= 2 * sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})
             2^K = 2^(K - 1) * 2
@@ -3245,7 +2914,6 @@ thm cauchy_condensation_partial_sum_upper_strong:
             (2 * 2^(K - 1)) * a(2^K) = 2^K * a(2^K)
             2^K * a(2^K) <= 2 * sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})
             by thm condensed_partial_sum_successor(a, K)
-            partial_sum(condensed_terms(a), K + 1) = partial_sum(condensed_terms(a), K) + 2^K * a(2^K)
             partial_sum(condensed_terms(a), K) + 2^K * a(2^K) <= 2 * partial_sum(a, 2^(K - 1)) + 2 * sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})
             partial_sum(condensed_terms(a), K + 1) <= 2 * partial_sum(a, 2^(K - 1)) + 2 * sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})
             2^K = 2^(K - 1) + 2^(K - 1)
@@ -3254,7 +2922,6 @@ thm cauchy_condensation_partial_sum_upper_strong:
             2^K > 2^(K - 1)
             2^(K - 1) < 2^K
             by thm partial_sum_split_after(a, 2^(K - 1), 2^K)
-            partial_sum(a, 2^K) = partial_sum(a, 2^(K - 1)) + sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})
             2 * partial_sum(a, 2^K) = 2 * (partial_sum(a, 2^(K - 1)) + sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)}))
             2 * (partial_sum(a, 2^(K - 1)) + sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})) = 2 * partial_sum(a, 2^(K - 1)) + 2 * sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})
             partial_sum(condensed_terms(a), K + 1) <= 2 * partial_sum(a, 2^K)
@@ -3496,7 +3163,6 @@ thm permutation_prefix_image_has_bound:
             exist M N_pos st {$has_bounded_prefix_image(phi, n, M)}
     have M N_pos = prefix_image_bound(phi, n)
     by thm prefix_image_bound_bounds(phi, n)
-    $prefix_image_bound_bounds_up_to(phi, n)
     forall j N_pos:
         j <= n
         =>:
@@ -3535,7 +3201,6 @@ thm prefix_preimage_bound_from_right_inverse:
         h(j) <= M
         phi(h(j)) = j
         by thm bounded_preimage_witness_from_function(phi, h, j, M)
-        exist t N_pos st {t <= M, phi(t) = j}
     $has_bounded_prefix_preimage(phi, n, M)
 
 thm permutation_prefix_preimage_has_bound:
@@ -3549,14 +3214,12 @@ thm permutation_prefix_preimage_has_bound:
         exist! x N_pos st {phi(x) = y}
     have M N_pos = prefix_image_bound(preimage_func, n)
     by thm prefix_image_bound_bounds(preimage_func, n)
-    $prefix_image_bound_bounds_up_to(preimage_func, n)
     claim:
         ? forall j N_pos:
             phi(preimage_func(j)) = j
         j = phi(preimage_func(j))
         phi(preimage_func(j)) = j
     by thm prefix_preimage_bound_from_right_inverse(phi, preimage_func, n, M)
-    $has_bounded_prefix_preimage(phi, n, M)
     witness exist M0 N_pos st {$has_bounded_prefix_preimage(phi, n, M0)} from M:
         $has_bounded_prefix_preimage(phi, n, M)
 
@@ -3598,10 +3261,8 @@ thm rearranged_series_partial_sums_cofinal:
         ? forall n N_pos:
             exist m N_pos st {partial_sum(rearranged_series(a, phi), n) <= partial_sum(a, m)}
         by thm permutation_prefix_image_has_bound(phi, n)
-        exist M N_pos st {$has_bounded_prefix_image(phi, n, M)}
         obtain M from exist M N_pos st {$has_bounded_prefix_image(phi, n, M)}
         by thm rearranged_partial_sum_le_original_at_bounded_prefix(a, phi, n, M)
-        partial_sum(rearranged_series(a, phi), n) <= partial_sum(a, M)
         witness exist m N_pos st {partial_sum(rearranged_series(a, phi), n) <= partial_sum(a, m)} from M:
             partial_sum(rearranged_series(a, phi), n) <= partial_sum(a, M)
     $has_mutually_cofinal_partial_sums(a, rearranged_series(a, phi))
@@ -3624,11 +3285,8 @@ thm nonnegative_rearrangement:
         =>:
             $has_series_sum(rearranged_series(a, phi), L)
     by thm rearranged_series_nonnegative(a, phi)
-    $is_nonnegative_sequence(rearranged_series(a, phi))
     by thm rearranged_series_partial_sums_cofinal(a, phi)
-    $has_mutually_cofinal_partial_sums(a, rearranged_series(a, phi))
     by thm nonnegative_series_same_sum_from_cofinal_partial_sums(a, rearranged_series(a, phi), L)
-    $has_series_sum(rearranged_series(a, phi), L)
 
 """
 Example 7.4.2. Since the p-series with q=2 converges, swapping adjacent pairs
@@ -3677,7 +3335,6 @@ thm adjacent_pair_swap_even:
         =>:
             adjacent_pair_swap(i) = i - 1
     by thm positive_even_gt_one(i)
-    i > 1
     adjacent_pair_swap(i) = i - 1
 
 thm odd_successor_even:
@@ -3710,23 +3367,16 @@ thm adjacent_pair_swap_is_involution:
         case x % 2 = 1:
             x + 1 $in N_pos
             by thm odd_successor_even(x)
-            (x + 1) % 2 = 0
             by thm adjacent_pair_swap_odd(x)
-            adjacent_pair_swap(x) = x + 1
             by thm adjacent_pair_swap_even(x + 1)
-            adjacent_pair_swap(x + 1) = (x + 1) - 1
             (x + 1) - 1 = x
             adjacent_pair_swap(adjacent_pair_swap(x)) = adjacent_pair_swap(x + 1) = (x + 1) - 1 = x
         case x % 2 = 0:
             by thm positive_even_gt_one(x)
-            x > 1
             x - 1 $in N_pos
             by thm even_predecessor_odd(x)
-            (x - 1) % 2 = 1
             by thm adjacent_pair_swap_even(x)
-            adjacent_pair_swap(x) = x - 1
             by thm adjacent_pair_swap_odd(x - 1)
-            adjacent_pair_swap(x - 1) = (x - 1) + 1
             (x - 1) + 1 = x
             adjacent_pair_swap(adjacent_pair_swap(x)) = adjacent_pair_swap(x - 1) = (x - 1) + 1 = x
 
@@ -3737,9 +3387,7 @@ thm adjacent_pair_swap_is_injective:
             x1 = x2
     adjacent_pair_swap(adjacent_pair_swap(x1)) = adjacent_pair_swap(adjacent_pair_swap(x2))
     by thm adjacent_pair_swap_is_involution(x1)
-    adjacent_pair_swap(adjacent_pair_swap(x1)) = x1
     by thm adjacent_pair_swap_is_involution(x2)
-    adjacent_pair_swap(adjacent_pair_swap(x2)) = x2
     x1 = x2
 
 thm adjacent_pair_swap_has_unique_preimages:
@@ -3751,9 +3399,7 @@ thm adjacent_pair_swap_has_unique_preimages:
         case y % 2 = 1:
             y + 1 $in N_pos
             by thm odd_successor_even(y)
-            (y + 1) % 2 = 0
             by thm adjacent_pair_swap_even(y + 1)
-            adjacent_pair_swap(y + 1) = (y + 1) - 1
             (y + 1) - 1 = y
             witness exist! x N_pos st {adjacent_pair_swap(x) = y} from y + 1:
                 adjacent_pair_swap(y + 1) = y
@@ -3765,15 +3411,11 @@ thm adjacent_pair_swap_has_unique_preimages:
                             x1 = x2
                     adjacent_pair_swap(x1) = adjacent_pair_swap(x2)
                     by thm adjacent_pair_swap_is_injective(x1, x2)
-                    x1 = x2
         case y % 2 = 0:
             by thm positive_even_gt_one(y)
-            y > 1
             y - 1 $in N_pos
             by thm even_predecessor_odd(y)
-            (y - 1) % 2 = 1
             by thm adjacent_pair_swap_odd(y - 1)
-            adjacent_pair_swap(y - 1) = (y - 1) + 1
             (y - 1) + 1 = y
             witness exist! x N_pos st {adjacent_pair_swap(x) = y} from y - 1:
                 adjacent_pair_swap(y - 1) = y
@@ -3785,7 +3427,6 @@ thm adjacent_pair_swap_has_unique_preimages:
                             x1 = x2
                     adjacent_pair_swap(x1) = adjacent_pair_swap(x2)
                     by thm adjacent_pair_swap_is_injective(x1, x2)
-                    x1 = x2
 
 forall y N_pos:
     exist! x N_pos st {adjacent_pair_swap(x) = y}
@@ -3795,7 +3436,6 @@ thm square_reciprocal_terms_nonnegative_terms:
     ? forall n N_pos:
         square_reciprocal_terms(n) >= 0
     by thm square_reciprocal_terms_formula(n)
-    square_reciprocal_terms(n) = 1 / n^2
     n^2 > 0
     1 / n^2 > 0
     square_reciprocal_terms(n) >= 0
@@ -3807,8 +3447,6 @@ by def $is_nonnegative_sequence(square_reciprocal_terms)
 2 $in R_pos
 2 > 1
 by thm p_series_converges_when_exponent_gt_one(2)
-$is_convergent_series(p_series_terms(2))
-$is_convergent_series(square_reciprocal_terms)
 
 thm square_reciprocal_pair_swap_preserves_sum:
     ? forall L R:
@@ -3818,15 +3456,10 @@ thm square_reciprocal_pair_swap_preserves_sum:
     $is_nonnegative_sequence(square_reciprocal_terms)
     $is_permutation_of_positive_integers(adjacent_pair_swap)
     by thm nonnegative_rearrangement(square_reciprocal_terms, adjacent_pair_swap, L)
-    $has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), L)
 
-$is_convergent_series(square_reciprocal_terms)
-exist L R st {$has_series_sum(square_reciprocal_terms, L)}
 obtain L from exist L R st {$has_series_sum(square_reciprocal_terms, L)}
 by thm square_reciprocal_pair_swap_preserves_sum(L)
-$has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), L)
-witness exist M R st {$has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), M)} from L:
-    $has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), L)
+witness exist M R st {$has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), M)} from L
 by def $is_convergent_series(rearranged_series(square_reciprocal_terms, adjacent_pair_swap))
 
 """
@@ -3865,13 +3498,11 @@ thm rearranged_series_absolutely_convergent:
         fn(j N_pos) R {abs(a(j))}(n) >= 0
     by def $is_nonnegative_sequence(fn(j N_pos) R {abs(a(j))})
     by thm nonnegative_rearrangement(fn(j N_pos) R {abs(a(j))}, phi, A)
-    $has_series_sum(rearranged_series(fn(j N_pos) R {abs(a(j))}, phi), A)
     claim:
         ? forall n N_pos:
             rearranged_series(fn(j N_pos) R {abs(a(j))}, phi)(n) = fn(j N_pos) R {abs(rearranged_series(a, phi)(j))}(n)
         by thm rearranged_absolute_value_terms_pointwise(a, phi, n)
     by thm series_sum_extensional(rearranged_series(fn(j N_pos) R {abs(a(j))}, phi), fn(j N_pos) R {abs(rearranged_series(a, phi)(j))}, A)
-    $has_series_sum(fn(j N_pos) R {abs(rearranged_series(a, phi)(j))}, A)
     witness exist B R st {$has_series_sum(fn(j N_pos) R {abs(rearranged_series(a, phi)(j))}, B)} from A:
         $has_series_sum(fn(j N_pos) R {abs(rearranged_series(a, phi)(j))}, A)
     $is_convergent_series(fn(j N_pos) R {abs(rearranged_series(a, phi)(j))})
@@ -3974,7 +3605,6 @@ thm positive_part_series_nonnegative:
             positive_part_series(a)(n) >= 0
         positive_part_series(a)(n) = (abs(a(n)) + a(n)) / 2
         by thm positive_part_value_nonnegative(a(n))
-        (abs(a(n)) + a(n)) / 2 >= 0
         positive_part_series(a)(n) >= 0
     $is_nonnegative_sequence(positive_part_series(a))
 
@@ -3986,7 +3616,6 @@ thm negative_part_series_nonnegative:
             negative_part_series(a)(n) >= 0
         negative_part_series(a)(n) = (abs(a(n)) - a(n)) / 2
         by thm negative_part_value_nonnegative(a(n))
-        (abs(a(n)) - a(n)) / 2 >= 0
         negative_part_series(a)(n) >= 0
     $is_nonnegative_sequence(negative_part_series(a))
 
@@ -4001,17 +3630,13 @@ thm positive_part_convergent_from_absolute:
             abs(positive_part_series(a)(n)) <= abs(a(n))
         positive_part_series(a)(n) = (abs(a(n)) + a(n)) / 2
         by thm positive_part_value_nonnegative(a(n))
-        (abs(a(n)) + a(n)) / 2 >= 0
         positive_part_series(a)(n) >= 0
         abs(positive_part_series(a)(n)) = positive_part_series(a)(n)
         by thm positive_part_value_le_abs(a(n))
-        (abs(a(n)) + a(n)) / 2 <= abs(a(n))
         positive_part_series(a)(n) <= abs(a(n))
         abs(positive_part_series(a)(n)) <= abs(a(n))
     by thm comparison_test_for_series(positive_part_series(a), fn(j N_pos) R {abs(a(j))})
-    $is_absolutely_convergent_series(positive_part_series(a))
     by thm absolute_convergence_test(positive_part_series(a))
-    $is_convergent_series(positive_part_series(a))
 
 thm negative_part_convergent_from_absolute:
     ? forall a seq(R):
@@ -4024,17 +3649,13 @@ thm negative_part_convergent_from_absolute:
             abs(negative_part_series(a)(n)) <= abs(a(n))
         negative_part_series(a)(n) = (abs(a(n)) - a(n)) / 2
         by thm negative_part_value_nonnegative(a(n))
-        (abs(a(n)) - a(n)) / 2 >= 0
         negative_part_series(a)(n) >= 0
         abs(negative_part_series(a)(n)) = negative_part_series(a)(n)
         by thm negative_part_value_le_abs(a(n))
-        (abs(a(n)) - a(n)) / 2 <= abs(a(n))
         negative_part_series(a)(n) <= abs(a(n))
         abs(negative_part_series(a)(n)) <= abs(a(n))
     by thm comparison_test_for_series(negative_part_series(a), fn(j N_pos) R {abs(a(j))})
-    $is_absolutely_convergent_series(negative_part_series(a))
     by thm absolute_convergence_test(negative_part_series(a))
-    $is_convergent_series(negative_part_series(a))
 
 thm positive_negative_parts_reconstruct_series_sum:
     ? forall a seq(R), P, Qsum R:
@@ -4043,9 +3664,7 @@ thm positive_negative_parts_reconstruct_series_sum:
         =>:
             $has_series_sum(a, P - Qsum)
     by thm series_laws_scalar_mul(negative_part_series(a), -1, Qsum)
-    $has_series_sum(series_scalar_mul(-1, negative_part_series(a)), -1 * Qsum)
     by thm series_laws_add(positive_part_series(a), series_scalar_mul(-1, negative_part_series(a)), P, -1 * Qsum)
-    $has_series_sum(series_add(positive_part_series(a), series_scalar_mul(-1, negative_part_series(a))), P + (-1 * Qsum))
     P + (-1 * Qsum) = P - Qsum
     $has_series_sum(series_add(positive_part_series(a), series_scalar_mul(-1, negative_part_series(a))), P - Qsum)
     claim:
@@ -4060,7 +3679,6 @@ thm positive_negative_parts_reconstruct_series_sum:
         (abs(a(n)) + a(n)) / 2 + (-1 * ((abs(a(n)) - a(n)) / 2)) = a(n)
         series_add(positive_part_series(a), series_scalar_mul(-1, negative_part_series(a)))(n) = a(n)
     by thm series_sum_extensional(series_add(positive_part_series(a), series_scalar_mul(-1, negative_part_series(a))), a, P - Qsum)
-    $has_series_sum(a, P - Qsum)
 
 thm rearranged_positive_negative_parts_reconstruct_series_sum:
     ? forall a seq(R), phi fn(i N_pos) N_pos, P, Qsum R:
@@ -4069,9 +3687,7 @@ thm rearranged_positive_negative_parts_reconstruct_series_sum:
         =>:
             $has_series_sum(rearranged_series(a, phi), P - Qsum)
     by thm series_laws_scalar_mul(rearranged_series(negative_part_series(a), phi), -1, Qsum)
-    $has_series_sum(series_scalar_mul(-1, rearranged_series(negative_part_series(a), phi)), -1 * Qsum)
     by thm series_laws_add(rearranged_series(positive_part_series(a), phi), series_scalar_mul(-1, rearranged_series(negative_part_series(a), phi)), P, -1 * Qsum)
-    $has_series_sum(series_add(rearranged_series(positive_part_series(a), phi), series_scalar_mul(-1, rearranged_series(negative_part_series(a), phi))), P + (-1 * Qsum))
     P + (-1 * Qsum) = P - Qsum
     $has_series_sum(series_add(rearranged_series(positive_part_series(a), phi), series_scalar_mul(-1, rearranged_series(negative_part_series(a), phi))), P - Qsum)
     claim:
@@ -4089,7 +3705,6 @@ thm rearranged_positive_negative_parts_reconstruct_series_sum:
         rearranged_series(a, phi)(n) = a(phi(n))
         series_add(rearranged_series(positive_part_series(a), phi), series_scalar_mul(-1, rearranged_series(negative_part_series(a), phi)))(n) = rearranged_series(a, phi)(n)
     by thm series_sum_extensional(series_add(rearranged_series(positive_part_series(a), phi), series_scalar_mul(-1, rearranged_series(negative_part_series(a), phi))), rearranged_series(a, phi), P - Qsum)
-    $has_series_sum(rearranged_series(a, phi), P - Qsum)
 
 thm absolute_rearrangement:
     ? forall a seq(R), phi fn(i N_pos) N_pos, L R:
@@ -4146,8 +3761,6 @@ thm example_7_4_4_original_grouped_partial_sums_positive:
         ? partial_sum(example_7_4_4_original_pair_terms, k) > 0
 
         ? from k = 1:
-            by thm partial_sum_successor(example_7_4_4_original_pair_terms, 1)
-            partial_sum(example_7_4_4_original_pair_terms, 1) = partial_sum(example_7_4_4_original_pair_terms, 1 - 1) + example_7_4_4_original_pair_terms(1)
             partial_sum(example_7_4_4_original_pair_terms, 1 - 1) = partial_sum(example_7_4_4_original_pair_terms, 0)
             partial_sum(example_7_4_4_original_pair_terms, 0) = 0
             partial_sum(example_7_4_4_original_pair_terms, 1 - 1) + example_7_4_4_original_pair_terms(1) = partial_sum(example_7_4_4_original_pair_terms, 0) + example_7_4_4_original_pair_terms(1)
@@ -4155,20 +3768,16 @@ thm example_7_4_4_original_grouped_partial_sums_positive:
             partial_sum(example_7_4_4_original_pair_terms, 1) = 0 + example_7_4_4_original_pair_terms(1)
             0 + example_7_4_4_original_pair_terms(1) = example_7_4_4_original_pair_terms(1)
             by thm example_7_4_4_original_pair_positive(1)
-            example_7_4_4_original_pair_terms(1) > 0
             partial_sum(example_7_4_4_original_pair_terms, 1) > 0
 
         ? induc:
             partial_sum(example_7_4_4_original_pair_terms, k) > 0
             k + 1 $in N_pos
-            by thm partial_sum_successor(example_7_4_4_original_pair_terms, k + 1)
-            partial_sum(example_7_4_4_original_pair_terms, k + 1) = partial_sum(example_7_4_4_original_pair_terms, (k + 1) - 1) + example_7_4_4_original_pair_terms(k + 1)
             (k + 1) - 1 = k
             partial_sum(example_7_4_4_original_pair_terms, (k + 1) - 1) = partial_sum(example_7_4_4_original_pair_terms, k)
             partial_sum(example_7_4_4_original_pair_terms, (k + 1) - 1) + example_7_4_4_original_pair_terms(k + 1) = partial_sum(example_7_4_4_original_pair_terms, k) + example_7_4_4_original_pair_terms(k + 1)
             partial_sum(example_7_4_4_original_pair_terms, k + 1) = partial_sum(example_7_4_4_original_pair_terms, k) + example_7_4_4_original_pair_terms(k + 1)
             by thm example_7_4_4_original_pair_positive(k + 1)
-            example_7_4_4_original_pair_terms(k + 1) > 0
             partial_sum(example_7_4_4_original_pair_terms, k) + example_7_4_4_original_pair_terms(k + 1) > 0
             partial_sum(example_7_4_4_original_pair_terms, k + 1) > 0
 
@@ -4197,8 +3806,6 @@ thm example_7_4_4_rearranged_grouped_partial_sums_negative:
         ? partial_sum(example_7_4_4_rearranged_block_terms, k) < 0
 
         ? from k = 1:
-            by thm partial_sum_successor(example_7_4_4_rearranged_block_terms, 1)
-            partial_sum(example_7_4_4_rearranged_block_terms, 1) = partial_sum(example_7_4_4_rearranged_block_terms, 1 - 1) + example_7_4_4_rearranged_block_terms(1)
             partial_sum(example_7_4_4_rearranged_block_terms, 1 - 1) = partial_sum(example_7_4_4_rearranged_block_terms, 0)
             partial_sum(example_7_4_4_rearranged_block_terms, 0) = 0
             partial_sum(example_7_4_4_rearranged_block_terms, 1 - 1) + example_7_4_4_rearranged_block_terms(1) = partial_sum(example_7_4_4_rearranged_block_terms, 0) + example_7_4_4_rearranged_block_terms(1)
@@ -4206,20 +3813,16 @@ thm example_7_4_4_rearranged_grouped_partial_sums_negative:
             partial_sum(example_7_4_4_rearranged_block_terms, 1) = 0 + example_7_4_4_rearranged_block_terms(1)
             0 + example_7_4_4_rearranged_block_terms(1) = example_7_4_4_rearranged_block_terms(1)
             by thm example_7_4_4_rearranged_block_negative(1)
-            example_7_4_4_rearranged_block_terms(1) < 0
             partial_sum(example_7_4_4_rearranged_block_terms, 1) < 0
 
         ? induc:
             partial_sum(example_7_4_4_rearranged_block_terms, k) < 0
             k + 1 $in N_pos
-            by thm partial_sum_successor(example_7_4_4_rearranged_block_terms, k + 1)
-            partial_sum(example_7_4_4_rearranged_block_terms, k + 1) = partial_sum(example_7_4_4_rearranged_block_terms, (k + 1) - 1) + example_7_4_4_rearranged_block_terms(k + 1)
             (k + 1) - 1 = k
             partial_sum(example_7_4_4_rearranged_block_terms, (k + 1) - 1) = partial_sum(example_7_4_4_rearranged_block_terms, k)
             partial_sum(example_7_4_4_rearranged_block_terms, (k + 1) - 1) + example_7_4_4_rearranged_block_terms(k + 1) = partial_sum(example_7_4_4_rearranged_block_terms, k) + example_7_4_4_rearranged_block_terms(k + 1)
             partial_sum(example_7_4_4_rearranged_block_terms, k + 1) = partial_sum(example_7_4_4_rearranged_block_terms, k) + example_7_4_4_rearranged_block_terms(k + 1)
             by thm example_7_4_4_rearranged_block_negative(k + 1)
-            example_7_4_4_rearranged_block_terms(k + 1) < 0
             partial_sum(example_7_4_4_rearranged_block_terms, k) + example_7_4_4_rearranged_block_terms(k + 1) < 0
             partial_sum(example_7_4_4_rearranged_block_terms, k + 1) < 0
 
@@ -4292,11 +3895,9 @@ thm chapter7_nth_root_le_one:
         ? x^(1 / n) <= 1
         x^(1 / n) > 1
         by thm chapter7_nth_root_nonnegative(x, n)
-        x^(1 / n) >= 0
         0 <= x^(1 / n)
         (x^(1 / n))^n > 1^n
         by thm chapter7_nth_root_power_identity_nonnegative(x, n)
-        (x^(1 / n))^n = x
         1^n = 1
         x > 1
         impossible x <= 1
@@ -4339,11 +3940,9 @@ thm root_test_tail_bound_by_geometric:
         abs(a(n))^(1 / n) < r
         abs(a(n)) >= 0
         by thm chapter7_nth_root_nonnegative(abs(a(n)), n)
-        abs(a(n))^(1 / n) >= 0
         0 <= abs(a(n))^(1 / n)
         (abs(a(n))^(1 / n))^n < r^n
         by thm chapter7_nth_root_power_identity_nonnegative(abs(a(n)), n)
-        (abs(a(n))^(1 / n))^n = abs(a(n))
         abs(a(n)) <= r^n
         geometric_series_terms_from_one(r)(n) = r^n
         abs(a(n)) <= geometric_series_terms_from_one(r)(n)
@@ -4357,24 +3956,17 @@ thm root_test_absolute_convergence:
             $is_absolutely_convergent_series(a)
     by thm positive_number_between_below_one(alpha)
     obtain r from exist r R_pos st {alpha < r and r < 1}
-    alpha < r and r < 1
-    alpha < r
-    r < 1
-    r > alpha
     obtain n0 from exist n0 N_pos st {$is_eventually_below(root_test_terms(a), r, n0)}
     by thm root_test_tail_bound_by_geometric(a, r, n0)
-    $is_eventually_abs_bounded_by(a, geometric_series_terms_from_one(r), n0)
     abs(r) = r
     abs(r) < 1
     1 - r > 0
     1 - r != 0
     by thm geometric_series_from_one_formula(r)
-    $has_series_sum(geometric_series_terms_from_one(r), r / (1 - r))
     witness exist M R st {$has_series_sum(geometric_series_terms_from_one(r), M)} from r / (1 - r):
         $has_series_sum(geometric_series_terms_from_one(r), r / (1 - r))
     $is_convergent_series(geometric_series_terms_from_one(r))
     by thm eventual_comparison_test_for_series(a, geometric_series_terms_from_one(r), n0)
-    $is_absolutely_convergent_series(a)
 
 thm root_test_divergence:
     ? forall a seq(R), alpha R:
@@ -4386,22 +3978,17 @@ thm root_test_divergence:
         ? not $is_convergent_series(a)
         $is_convergent_series(a)
         by thm series_zero_test(a)
-        $has_limit(a, 0)
         1 < alpha
         $exceeds_infinitely_often(root_test_terms(a), 1)
         obtain n0 from exist n0 N_pos st {$is_tail_close_to(a, 0, 1, n0)}
         $has_late_term_above(root_test_terms(a), 1, n0)
         obtain n from exist n N_pos st {n >= n0 and root_test_terms(a)(n) > 1}
-        n >= n0 and root_test_terms(a)(n) > 1
-        n >= n0
-        root_test_terms(a)(n) > 1
         abs(a(n) - 0) <= 1
         root_test_terms(a)(n) = abs(a(n))^(1 / n)
         abs(a(n) - 0) = abs(a(n))
         abs(a(n)) <= 1
         abs(a(n)) >= 0
         by thm chapter7_nth_root_le_one(abs(a(n)), n)
-        abs(a(n))^(1 / n) <= 1
         root_test_terms(a)(n) <= 1
         impossible root_test_terms(a)(n) > 1
 
@@ -4532,12 +4119,10 @@ thm pointwise_equal_sequences_symmetric:
         $pointwise_equal_sequences(a, b)
         =>:
             $pointwise_equal_sequences(b, a)
-    claim:
-        ? forall n N_pos:
-            b(n) = a(n)
+    forall n N_pos:
         a(n) = b(n)
         b(n) = a(n)
-    $pointwise_equal_sequences(b, a)
+    by def $pointwise_equal_sequences(b, a)
 
 thm has_limit_extensional:
     ? forall a, b seq(R), L R:
@@ -4545,45 +4130,16 @@ thm has_limit_extensional:
         $has_limit(a, L)
         =>:
             $has_limit(b, L)
-    claim:
-        ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_tail_close_to(b, L, epsilon, n0)}
-        obtain n0 from exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)}
-        witness exist n1 N_pos st {$is_tail_close_to(b, L, epsilon, n1)} from n0:
-            claim:
-                ? forall n N_pos:
-                    n >= n0
-                    =>:
-                        abs(b(n) - L) <= epsilon
-                abs(a(n) - L) <= epsilon
-                a(n) = b(n)
-                b(n) - L = a(n) - L
-                abs(b(n) - L) = abs(a(n) - L)
-                abs(b(n) - L) <= epsilon
-            $is_tail_close_to(b, L, epsilon, n0)
-    $has_limit(b, L)
+    by thm closed_limit_implies_strict_limit(a, L)
+    by thm strict_limit_extensional(a, b, L)
+    by thm strict_limit_implies_closed_limit(b, L)
 
 prop is_positive_sequence(c seq(R)):
     forall n N_pos:
         c(n) > 0
 
-thm positive_sequence_term_positive:
-    ? forall c seq(R), n N_pos:
-        $is_positive_sequence(c)
-        =>:
-            c(n) > 0
-    c(n) > 0
-
-# This is the sequence with kth term `c(k+1)/c(k)`.  The evaluation rule below
-# records the ratio notation explicitly.
+# This is the sequence with kth term `c(k+1)/c(k)`.
 have fn ratio_terms(c seq(R): $is_positive_sequence(c)) fn(i N_pos) R = fn(k N_pos: c(k) > 0) R {c(k + 1) / c(k)}
-
-thm ratio_terms_eval:
-    ? forall c seq(R), n N_pos:
-        $is_positive_sequence(c)
-        c(n) > 0
-        =>:
-            ratio_terms(c)(n) = c(n + 1) / c(n)
 
 thm eventual_ratio_upper_bound_gives_root_limsup_bound:
     ? forall c seq(R), r, A R, n0 N_pos:
@@ -4625,7 +4181,6 @@ thm ratio_limsup_bounds_root_limsup:
         mid > L
         obtain n0 from exist n0 N_pos st {$is_eventually_below(ratio_terms(c), mid, n0)}
         by thm eventual_ratio_upper_bound_gives_root_limsup_bound(c, mid, A, n0)
-        A <= mid
         impossible mid < A
 
 thm ratio_liminf_bounds_root_liminf:
@@ -4649,7 +4204,6 @@ thm ratio_liminf_bounds_root_liminf:
         mid < L
         obtain n0 from exist n0 N_pos st {$is_eventually_above(ratio_terms(c), mid, n0)}
         by thm eventual_ratio_lower_bound_gives_root_liminf_bound(c, mid, A, n0)
-        mid <= A
         impossible A < mid
 
 thm ratio_limsup_less_than_one_gives_root_limsup_below_one:
@@ -4691,24 +4245,8 @@ prop has_no_zero_terms(a seq(R)):
     forall n N_pos:
         a(n) != 0
 
-thm no_zero_terms_abs_positive:
-    ? forall a seq(R), n N_pos:
-        $has_no_zero_terms(a)
-        =>:
-            abs(a(n)) > 0
-    a(n) != 0
-    abs(a(n)) > 0
-
-# This is the sequence with kth term `abs(a(k+1))/abs(a(k))`; the nonzero-term
-# predicate supplies the denominator condition.
+# This is the sequence with kth term `abs(a(k+1))/abs(a(k))`.
 have fn absolute_ratio_terms(a seq(R): $has_no_zero_terms(a)) fn(i N_pos) R = fn(k N_pos: abs(a(k)) > 0) R {abs(a(k + 1)) / abs(a(k))}
-
-thm absolute_ratio_terms_eval:
-    ? forall a seq(R), n N_pos:
-        $has_no_zero_terms(a)
-        abs(a(n)) > 0
-        =>:
-            absolute_ratio_terms(a)(n) = abs(a(n + 1)) / abs(a(n))
 
 have fn absolute_value_sequence(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {abs(a(j))}
 
@@ -4717,14 +4255,12 @@ thm abs_sequence_positive_from_no_zero_terms:
         $has_no_zero_terms(a)
         =>:
             $is_positive_sequence(absolute_value_sequence(a))
-    claim:
-        ? forall n N_pos:
-            absolute_value_sequence(a)(n) > 0
+    forall n N_pos:
         a(n) != 0
         abs(a(n)) > 0
         absolute_value_sequence(a)(n) = abs(a(n))
         absolute_value_sequence(a)(n) > 0
-    $is_positive_sequence(absolute_value_sequence(a))
+    by def $is_positive_sequence(absolute_value_sequence(a))
 
 thm absolute_ratio_terms_match_positive_ratio_terms:
     ? forall a seq(R):
@@ -4732,22 +4268,18 @@ thm absolute_ratio_terms_match_positive_ratio_terms:
         =>:
             $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
     by thm abs_sequence_positive_from_no_zero_terms(a)
-    $is_positive_sequence(absolute_value_sequence(a))
     claim:
         ? forall n N_pos:
             absolute_ratio_terms(a)(n) = ratio_terms(absolute_value_sequence(a))(n)
         a(n) != 0
         abs(a(n)) > 0
-        by thm absolute_ratio_terms_eval(a, n)
-        absolute_ratio_terms(a)(n) = abs(a(n + 1)) / abs(a(n))
         absolute_value_sequence(a)(n) > 0
-        by thm ratio_terms_eval(absolute_value_sequence(a), n)
-        ratio_terms(absolute_value_sequence(a))(n) = absolute_value_sequence(a)(n + 1) / absolute_value_sequence(a)(n)
         absolute_value_sequence(a)(n + 1) = abs(a(n + 1))
         absolute_value_sequence(a)(n) = abs(a(n))
+        absolute_ratio_terms(a)(n) = abs(a(n + 1)) / abs(a(n))
         ratio_terms(absolute_value_sequence(a))(n) = abs(a(n + 1)) / abs(a(n))
         absolute_ratio_terms(a)(n) = ratio_terms(absolute_value_sequence(a))(n)
-    $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
+    by def $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
 
 thm root_test_terms_match_absolute_value_sequence:
     ? forall a seq(R):
@@ -4762,63 +4294,41 @@ thm root_test_terms_match_absolute_value_sequence:
         abs(abs(a(n))) = abs(a(n))
         root_test_terms(absolute_value_sequence(a))(n) = abs(a(n))^(1 / n)
         root_test_terms(a)(n) = root_test_terms(absolute_value_sequence(a))(n)
-    $pointwise_equal_sequences(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
+    by def $pointwise_equal_sequences(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
 
 thm ratio_test_absolute_convergence:
-    ? forall a seq(R), alpha, beta R:
+    ? forall a seq(R), alpha R:
         $has_no_zero_terms(a)
         $has_finite_limit_superior(absolute_ratio_terms(a), alpha)
-        $has_finite_limit_inferior(absolute_ratio_terms(a), beta)
         alpha < 1
         =>:
             $is_absolutely_convergent_series(a)
     by thm abs_sequence_positive_from_no_zero_terms(a)
-    $is_positive_sequence(absolute_value_sequence(a))
     by thm absolute_ratio_terms_match_positive_ratio_terms(a)
-    $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
     by thm finite_limsup_extensional(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)), alpha)
-    $has_finite_limit_superior(ratio_terms(absolute_value_sequence(a)), alpha)
     by thm ratio_limsup_less_than_one_gives_root_limsup_below_one(absolute_value_sequence(a), alpha)
     obtain gamma from exist gamma R st {$has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma) and gamma < 1}
-    $has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma) and gamma < 1
-    $has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma)
-    gamma < 1
     by thm root_test_terms_match_absolute_value_sequence(a)
-    $pointwise_equal_sequences(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
     by thm pointwise_equal_sequences_symmetric(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
-    $pointwise_equal_sequences(root_test_terms(absolute_value_sequence(a)), root_test_terms(a))
     by thm finite_limsup_extensional(root_test_terms(absolute_value_sequence(a)), root_test_terms(a), gamma)
-    $has_finite_limit_superior(root_test_terms(a), gamma)
     by thm root_test_absolute_convergence(a, gamma)
-    $is_absolutely_convergent_series(a)
 
 thm ratio_test_divergence:
-    ? forall a seq(R), alpha, beta R:
+    ? forall a seq(R), beta R:
         $has_no_zero_terms(a)
-        $has_finite_limit_superior(absolute_ratio_terms(a), alpha)
         $has_finite_limit_inferior(absolute_ratio_terms(a), beta)
         beta > 1
         =>:
             not $is_convergent_series(a)
     by thm abs_sequence_positive_from_no_zero_terms(a)
-    $is_positive_sequence(absolute_value_sequence(a))
     by thm absolute_ratio_terms_match_positive_ratio_terms(a)
-    $pointwise_equal_sequences(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)))
     by thm finite_liminf_extensional(absolute_ratio_terms(a), ratio_terms(absolute_value_sequence(a)), beta)
-    $has_finite_limit_inferior(ratio_terms(absolute_value_sequence(a)), beta)
     by thm ratio_liminf_greater_than_one_gives_root_limsup_above_one(absolute_value_sequence(a), beta)
     obtain gamma from exist gamma R st {$has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma) and gamma > 1}
-    $has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma) and gamma > 1
-    $has_finite_limit_superior(root_test_terms(absolute_value_sequence(a)), gamma)
-    gamma > 1
     by thm root_test_terms_match_absolute_value_sequence(a)
-    $pointwise_equal_sequences(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
     by thm pointwise_equal_sequences_symmetric(root_test_terms(a), root_test_terms(absolute_value_sequence(a)))
-    $pointwise_equal_sequences(root_test_terms(absolute_value_sequence(a)), root_test_terms(a))
     by thm finite_limsup_extensional(root_test_terms(absolute_value_sequence(a)), root_test_terms(a), gamma)
-    $has_finite_limit_superior(root_test_terms(a), gamma)
     by thm root_test_divergence(a, gamma)
-    not $is_convergent_series(a)
 
 """
 Proposition 7.5.4. The sequence n^(1/n) converges to 1.
@@ -4829,17 +4339,12 @@ Proposition 7.5.4. The sequence n^(1/n) converges to 1.
 
 have positive_natural_sequence seq(R) = fn(j N_pos) R {j}
 
-claim:
-    ? forall n N_pos:
-        positive_natural_sequence(n) > 0
-    n > 0
 by def $is_positive_sequence(positive_natural_sequence)
 
 claim:
     ? forall epsilon R_pos:
         exist n0 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n0)}
     by thm chap5::archimedean_property(epsilon)
-    exist n_bound N_pos st {1 / n_bound < epsilon}
     obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
     witness exist n1 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n1)} from n0:
         claim:
@@ -4848,7 +4353,6 @@ claim:
                 =>:
                     abs(ratio_terms(positive_natural_sequence)(n) - 1) <= epsilon
             positive_natural_sequence(n) > 0
-            by thm ratio_terms_eval(positive_natural_sequence, n)
             ratio_terms(positive_natural_sequence)(n) = (n + 1) / n
             (n + 1) / n - 1 = 1 / n
             n0 <= n

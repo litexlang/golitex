@@ -6,6 +6,7 @@ mod equality_function;
 mod equality_numeric;
 mod equality_structural;
 mod in_fact_builtin;
+mod mapping_properties_builtin;
 mod non_equational_dispatch;
 mod not_equal_builtin;
 mod number_compare;

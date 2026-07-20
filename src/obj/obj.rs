@@ -22,8 +22,8 @@ pub enum Obj {
     Intersect(Intersect),
     SetMinus(SetMinus),
     SetDiff(SetDiff),
-    Cup(Cup),
-    Cap(Cap),
+    BigUnion(BigUnion),
+    BigIntersect(BigIntersect),
     PowerSet(PowerSet),
     GeneralCart(GeneralCart),
     ListSet(ListSet),
@@ -86,8 +86,8 @@ pub enum ObjKind {
     Intersect = 15,
     SetMinus = 16,
     SetDiff = 17,
-    Cup = 18,
-    Cap = 19,
+    BigUnion = 18,
+    BigIntersect = 19,
     PowerSet = 20,
     ListSet = 21,
     SetBuilder = 22,
@@ -601,12 +601,12 @@ pub struct SetDiff {
 }
 
 #[derive(Clone)]
-pub struct Cup {
+pub struct BigUnion {
     pub left: Box<Obj>,
 }
 
 #[derive(Clone)]
-pub struct Cap {
+pub struct BigIntersect {
     pub left: Box<Obj>,
 }
 
@@ -780,17 +780,17 @@ impl SetDiff {
     }
 }
 
-impl Cup {
+impl BigUnion {
     pub fn new(left: Obj) -> Self {
-        Cup {
+        BigUnion {
             left: Box::new(left),
         }
     }
 }
 
-impl Cap {
+impl BigIntersect {
     pub fn new(left: Obj) -> Self {
-        Cap {
+        BigIntersect {
             left: Box::new(left),
         }
     }
@@ -1121,8 +1121,8 @@ impl Obj {
             Obj::Intersect(_) => ObjKind::Intersect,
             Obj::SetMinus(_) => ObjKind::SetMinus,
             Obj::SetDiff(_) => ObjKind::SetDiff,
-            Obj::Cup(_) => ObjKind::Cup,
-            Obj::Cap(_) => ObjKind::Cap,
+            Obj::BigUnion(_) => ObjKind::BigUnion,
+            Obj::BigIntersect(_) => ObjKind::BigIntersect,
             Obj::PowerSet(_) => ObjKind::PowerSet,
             Obj::GeneralCart(_) => ObjKind::GeneralCart,
             Obj::ListSet(_) => ObjKind::ListSet,
@@ -1192,8 +1192,8 @@ impl Obj {
             Obj::Intersect(_) => INTERSECT.to_string(),
             Obj::SetMinus(_) => SET_MINUS.to_string(),
             Obj::SetDiff(_) => SET_DIFF.to_string(),
-            Obj::Cup(_) => CUP.to_string(),
-            Obj::Cap(_) => CAP.to_string(),
+            Obj::BigUnion(_) => BIG_UNION.to_string(),
+            Obj::BigIntersect(_) => BIG_INTERSECT.to_string(),
             Obj::PowerSet(_) => POWER_SET.to_string(),
             Obj::GeneralCart(_) => GENERAL_CART.to_string(),
             Obj::Cart(_) => CART.to_string(),
@@ -1322,8 +1322,8 @@ impl Obj {
             Obj::Intersect(x) => write!(f, "{}", x)?,
             Obj::SetMinus(x) => write!(f, "{}", x)?,
             Obj::SetDiff(x) => write!(f, "{}", x)?,
-            Obj::Cup(x) => write!(f, "{}", x)?,
-            Obj::Cap(x) => write!(f, "{}", x)?,
+            Obj::BigUnion(x) => write!(f, "{}", x)?,
+            Obj::BigIntersect(x) => write!(f, "{}", x)?,
             Obj::Atom(x) => write!(f, "{}", x)?,
             Obj::FnObj(x) => write!(f, "{}", x)?,
             Obj::Number(x) => write!(f, "{}", x)?,
@@ -1451,8 +1451,12 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.right, from, to),
             )
             .into(),
-            Obj::Cup(x) => Cup::new(Obj::replace_bound_identifier(*x.left, from, to)).into(),
-            Obj::Cap(x) => Cap::new(Obj::replace_bound_identifier(*x.left, from, to)).into(),
+            Obj::BigUnion(x) => {
+                BigUnion::new(Obj::replace_bound_identifier(*x.left, from, to)).into()
+            }
+            Obj::BigIntersect(x) => {
+                BigIntersect::new(Obj::replace_bound_identifier(*x.left, from, to)).into()
+            }
             Obj::PowerSet(x) => {
                 PowerSet::new(Obj::replace_bound_identifier(*x.set, from, to)).into()
             }
@@ -2433,23 +2437,23 @@ impl fmt::Display for SetDiff {
     }
 }
 
-impl fmt::Display for Cup {
+impl fmt::Display for BigUnion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{}",
-            CUP,
+            BIG_UNION,
             braced_vec_to_string(&vec![self.left.as_ref()])
         )
     }
 }
 
-impl fmt::Display for Cap {
+impl fmt::Display for BigIntersect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{}",
-            CAP,
+            BIG_INTERSECT,
             braced_vec_to_string(&vec![self.left.as_ref()])
         )
     }
@@ -2647,15 +2651,15 @@ impl From<SetDiff> for Obj {
     }
 }
 
-impl From<Cup> for Obj {
-    fn from(c: Cup) -> Self {
-        Obj::Cup(c)
+impl From<BigUnion> for Obj {
+    fn from(c: BigUnion) -> Self {
+        Obj::BigUnion(c)
     }
 }
 
-impl From<Cap> for Obj {
-    fn from(c: Cap) -> Self {
-        Obj::Cap(c)
+impl From<BigIntersect> for Obj {
+    fn from(c: BigIntersect) -> Self {
+        Obj::BigIntersect(c)
     }
 }
 

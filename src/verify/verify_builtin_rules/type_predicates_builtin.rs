@@ -528,6 +528,14 @@ impl Runtime {
         is_finite_set_fact: &IsFiniteSetFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if _verify_state.is_round_0() {
+            if let Some(result) = self.try_verify_finite_codomain_from_known_surjection(
+                is_finite_set_fact,
+                _verify_state,
+            )? {
+                return Ok(result);
+            }
+        }
         match &is_finite_set_fact.set {
             Obj::ListSet(_) => Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

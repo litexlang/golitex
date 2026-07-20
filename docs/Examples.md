@@ -163,7 +163,7 @@ claim:
         forall A S:
             $is_nonempty_set(A)
         =>:
-            exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
+            exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}
 
     by axiom_of_choice: set S
 ```
@@ -182,10 +182,10 @@ trust forall X s:
     $is_nonempty_set(X)
 
 $is_nonempty_set(general_cart(I, s, g))
-general_cart(I, s, g) = {f fn(t I)cup(s): forall! alpha I => {f(alpha) $in g(alpha)}}
+general_cart(I, s, g) = {f fn(t I)big_union(s): forall! alpha I => {f(alpha) $in g(alpha)}}
 
 have c general_cart(I, s, g)
-c $in fn(t I)cup(s)
+c $in fn(t I)big_union(s)
 
 forall alpha I:
     c(alpha) $in g(alpha)
@@ -1659,12 +1659,12 @@ thm cup_intro_from_member:
         A $in F
         x $in A
         =>:
-            x $in cup(F)
-    x $in cup(F)
+            x $in big_union(F)
+    x $in big_union(F)
 
 thm cup_elim_to_exist:
     ? forall x set, F set:
-        x $in cup(F)
+        x $in big_union(F)
         =>:
             exist A F st {x $in A}
     exist A F st {x $in A}
@@ -2786,8 +2786,7 @@ forall X power_set(Z):
 ```litex
 thm finite_set_sum_substitution_example:
     ? forall X, Y finite_set, f fn(x X) R, g fn(y Y) X:
-        forall x X:
-            exist! y Y st {g(y) = x}
+        $bijective(Y, X, g)
         =>:
             finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
     finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
@@ -2840,18 +2839,14 @@ thm finite_fubini_example:
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 
 ## A finite-set sum defined by a bijective enumeration is independent of the enumeration.
-prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, finite_set_size(X))) X):
-    forall x X:
-        exist! i closed_range(1, finite_set_size(X)) st {g(i) = x}
-
-template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $bijective(closed_range(1, finite_set_size(X)), X, g)>:
     have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
 
 thm finite_set_sum_enumeration_well_defined:
     ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
         finite_set_size(X) >= 1
-        $is_bijection_from_index_range_to_finite_set(X, g)
-        $is_bijection_from_index_range_to_finite_set(X, h)
+        $bijective(closed_range(1, finite_set_size(X)), X, g)
+        $bijective(closed_range(1, finite_set_size(X)), X, h)
         =>:
             \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>

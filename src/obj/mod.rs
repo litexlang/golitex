@@ -22,7 +22,7 @@ pub use free_param_obj::{
     ParamObjType, SetBuilderFreeParamObj, TupleIndexFreeParamObj,
 };
 pub use obj::{
-    fn_obj_to_string, Abs, Add, Cap, Cart, CartDim, ClosedRange, Cup, Div, FiniteSeqListObj,
+    fn_obj_to_string, Abs, Add, BigIntersect, Cart, CartDim, ClosedRange, BigUnion, Div, FiniteSeqListObj,
     FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnObj, FnRange, GeneralCart,
     InstantiatedTemplateObj, IntegerQuotient, Intersect, IntervalObj, IntervalObjStruct, ListSet,
     Log, MatrixAdd, MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub,

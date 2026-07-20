@@ -1083,13 +1083,19 @@ impl DepCollector {
     pub(crate) fn collect_atomic_fact(&mut self, fact: &AtomicFact) {
         match fact {
             AtomicFact::NormalAtomicFact(f) => {
-                self.deps.push_prop(f.predicate.to_string());
+                let name = f.predicate.to_string();
+                if !is_builtin_predicate(&name) {
+                    self.deps.push_prop(name);
+                }
                 for obj in f.body.iter() {
                     self.collect_obj(obj);
                 }
             }
             AtomicFact::NotNormalAtomicFact(f) => {
-                self.deps.push_prop(f.predicate.to_string());
+                let name = f.predicate.to_string();
+                if !is_builtin_predicate(&name) {
+                    self.deps.push_prop(name);
+                }
                 for obj in f.body.iter() {
                     self.collect_obj(obj);
                 }
@@ -1161,8 +1167,8 @@ impl DepCollector {
             }
             Obj::Abs(x) => self.collect_obj(&x.arg),
             Obj::Sqrt(x) => self.collect_obj(&x.arg),
-            Obj::Cup(x) => self.collect_obj(&x.left),
-            Obj::Cap(x) => self.collect_obj(&x.left),
+            Obj::BigUnion(x) => self.collect_obj(&x.left),
+            Obj::BigIntersect(x) => self.collect_obj(&x.left),
             Obj::PowerSet(x) => self.collect_obj(&x.set),
             Obj::FiniteSetSize(x) => self.collect_obj(&x.set),
             Obj::FiniteSetMax(x) => self.collect_obj(&x.set),
@@ -1436,6 +1442,16 @@ mod tests {
         assert!(output.contains(r#""kind": "uses_prop""#));
         assert!(output.contains(r#""from": "fn:d""#));
         assert!(output.contains(r#""kind": "uses_fn""#));
+    }
+
+    #[test]
+    fn builtin_function_properties_are_not_reported_as_user_props() {
+        let output = graph_output(
+            "have fn graph_identity(x {1}) {1} = x\nforall x1, x2 {1}:\n    graph_identity(x1) = graph_identity(x2)\n    =>:\n        x1 = graph_identity(x1) = graph_identity(x2) = x2\n$injective({1}, {1}, graph_identity)\n",
+        );
+
+        assert!(!output.contains(r#""id": "prop:injective""#));
+        assert!(output.contains(r#""id": "fn:graph_identity""#));
     }
 
     #[test]

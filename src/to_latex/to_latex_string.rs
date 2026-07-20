@@ -436,13 +436,9 @@ impl ByInducStmt {
     }
 }
 
-impl Cap {
+impl BigIntersect {
     pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\left( {}\right)",
-            CAP,
-            self.left.to_latex_string()
-        )
+        format!(r"\bigcap\left( {}\right)", self.left.to_latex_string())
     }
 }
 
@@ -615,13 +611,9 @@ impl Product {
     }
 }
 
-impl Cup {
+impl BigUnion {
     pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\left( {}\right)",
-            CUP,
-            self.left.to_latex_string()
-        )
+        format!(r"\bigcup\left( {}\right)", self.left.to_latex_string())
     }
 }
 
@@ -2005,8 +1997,8 @@ impl Obj {
             Obj::Intersect(x) => x.to_latex_string(),
             Obj::SetMinus(x) => x.to_latex_string(),
             Obj::SetDiff(x) => x.to_latex_string(),
-            Obj::Cup(x) => x.to_latex_string(),
-            Obj::Cap(x) => x.to_latex_string(),
+            Obj::BigUnion(x) => x.to_latex_string(),
+            Obj::BigIntersect(x) => x.to_latex_string(),
             Obj::PowerSet(x) => x.to_latex_string(),
             Obj::GeneralCart(x) => x.to_latex_string(),
             Obj::ListSet(x) => x.to_latex_string(),

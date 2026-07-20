@@ -477,7 +477,7 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
-            (Obj::Cup(l), Obj::Cup(r)) => {
+            (Obj::BigUnion(l), Obj::BigUnion(r)) => {
                 if self.objs_have_same_known_equality_rc_in_some_env(&l.left, &r.left) {
                     Some(factual_equal_success_by_builtin_reason(
                         left, right, line_file, reason,
@@ -486,7 +486,7 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
-            (Obj::Cap(l), Obj::Cap(r)) => {
+            (Obj::BigIntersect(l), Obj::BigIntersect(r)) => {
                 if self.objs_have_same_known_equality_rc_in_some_env(&l.left, &r.left) {
                     Some(factual_equal_success_by_builtin_reason(
                         left, right, line_file, reason,

@@ -410,9 +410,9 @@ forall A, B set, x union(A, B):
     x $in A or x $in B
 ```
 
-#### Big union and big intersection (`cup`, `cap`)
+#### Big union and big intersection (`big_union`, `big_intersect`)
 
-Union and intersection over an indexed collection of sets; in Litex this is `cup(...)` and `cap(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets; see the object examples in `docs/Examples.md#objects-and-statements`.
+Union and intersection over an indexed collection of sets; in Litex this is `big_union(...)` and `big_intersect(...)` on a suitable “set of sets.” Short illustrative proofs often need extra side conditions on the inner sets; see the object examples in `docs/Examples.md#objects-and-statements`.
 
 #### Power set
 
@@ -723,21 +723,20 @@ thm finite_fubini_example:
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 ```
 
-For a nonempty finite set, an enumeration by a bijection from `1...finite_set_size(X)` gives the same sum for any bijective ordering.
+For a nonempty finite set, an enumeration by a bijection from
+`1...finite_set_size(X)` gives the same sum for any bijective ordering. The
+bijection is expressed by the builtin predicate `$bijective` rather than by a
+source-level wrapper.
 
 ```litex
-prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, finite_set_size(X))) X):
-    forall x X:
-        exist! i closed_range(1, finite_set_size(X)) st {g(i) = x}
-
-template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $is_bijection_from_index_range_to_finite_set(X, g)>:
+template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $bijective(closed_range(1, finite_set_size(X)), X, g)>:
     have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
 
 thm finite_set_sum_enumeration_well_defined:
     ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
         finite_set_size(X) >= 1
-        $is_bijection_from_index_range_to_finite_set(X, g)
-        $is_bijection_from_index_range_to_finite_set(X, h)
+        $bijective(closed_range(1, finite_set_size(X)), X, g)
+        $bijective(closed_range(1, finite_set_size(X)), X, h)
         =>:
             \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
@@ -800,7 +799,7 @@ claim:
         forall A S:
             $is_nonempty_set(A)
         =>:
-            exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
+            exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}
 
     by axiom_of_choice: set S
 ```
@@ -934,7 +933,7 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | `a^b` | Litex accepts the standard real/integer power domains: nonnegative real base with positive real exponent; positive real base with real exponent; zero base with positive real exponent; nonzero base with integer exponent; or real base with natural exponent. The last case includes the current natural-exponent convention `0^0 = 1`. |
 | `sqrt(a)` | `a $in R` and `0 <= a`. |
 | `log(base, a)` | `base $in R`, `a $in R`, `base > 0`, `a > 0`, and `base != 1`. |
-| `union(A, B)`, `intersect(A, B)`, `set_minus(A, B)`, `set_diff(A, B)`, `cup(F)`, `cap(F)`, `power_set(A)` | The arguments must be well-defined. Set-ness and membership facts may still be separate proof obligations in the facts that use these objects. |
+| `union(A, B)`, `intersect(A, B)`, `set_minus(A, B)`, `set_diff(A, B)`, `big_union(F)`, `big_intersect(F)`, `power_set(A)` | The arguments must be well-defined. Set-ness and membership facts may still be separate proof obligations in the facts that use these objects. |
 | Displayed set `{a, b, ...}` | Each element must be well-defined, and Litex must be able to prove the displayed elements are pairwise distinct. |
 | Set builder `{x S: ...}` | The parameter set `S` must be well-defined. The body facts are checked for well-definedness in a local context where `x $in S` is available. |
 | `replacement(P, A)` | `P` must name a binary `prop` or `abstract_prop`, `A` must be well-defined, and Litex must verify uniqueness: `forall x A, y, y2 set: $P(x, y), $P(x, y2) => y = y2`. |
@@ -1409,6 +1408,53 @@ These predicates express equality of functions.
 |-----------|---------|
 | `$fn_eq_in(f, g, S)` | `f` and `g` agree at every argument in `S`. |
 | `$fn_eq(f, g)` | `f` and `g` are globally equal as function values. |
+
+### Function Mapping Properties (Preview)
+
+Litex has builtin predicates for the standard mapping properties of a function
+`f : A -> B`:
+
+| Predicate | Meaning |
+|-----------|---------|
+| `$injective(A, B, f)` | if `f(x1) = f(x2)` for `x1, x2` in `A`, then `x1 = x2` |
+| `$surjective(A, B, f)` | every `y` in `B` equals `f(x)` for some `x` in `A` |
+| `$bijective(A, B, f)` | `f` is both injective and surjective |
+
+The first two arguments must be sets, and the third must have the exact type
+`fn(x A) B`. A known positive builtin fact exposes its defining `forall` and
+`exist` facts to ordinary inference, so the predicates can be proved from those
+facts and used by later proofs without defining a custom `prop` wrapper.
+
+```litex
+have fn identity_on_three(x {1, 2, 3}) {1, 2, 3} = x
+
+forall x1, x2 {1, 2, 3}:
+    identity_on_three(x1) = identity_on_three(x2)
+    =>:
+        x1 = identity_on_three(x1) = identity_on_three(x2) = x2
+$injective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+
+claim:
+    ? forall y {1, 2, 3}:
+        exist x {1, 2, 3} st {y = identity_on_three(x)}
+    y = identity_on_three(y)
+    witness exist x {1, 2, 3} st {y = identity_on_three(x)} from y
+$surjective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+$bijective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+```
+
+For a finite source `A`, the verifier also knows these cardinality
+consequences:
+
+- an injection has `finite_set_size(fn_range(f)) = finite_set_size(A)`;
+- a surjection makes `B` finite and gives
+  `finite_set_size(B) <= finite_set_size(A)`;
+- a bijection makes `B` finite and gives
+  `finite_set_size(A) = finite_set_size(B)`.
+
+These rules run in the stated finite-source direction. They do not infer a
+bijection merely from equal cardinalities, and negated mapping-property facts
+do not trigger an automatic counterexample search.
 
 ---
 
@@ -2225,6 +2271,12 @@ try:
 x = 1
 ```
 
+In a persistent `-session`, a directly submitted top-level `try:` that fails
+does not stop the session: its child environment has already been discarded,
+so another candidate can be submitted immediately. A failure in any other
+top-level statement still stops later session blocks. Nesting `try:` inside a
+different top-level statement does not make the outer statement recoverable.
+
 ---
 
 ### Modules and manifests (preview)
@@ -2821,7 +2873,7 @@ claim:
         forall A S:
             $is_nonempty_set(A)
         =>:
-            exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
+            exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}
 
     by axiom_of_choice: set S
 ```
@@ -3040,8 +3092,8 @@ bound variable in a set builder.
 | binary intersection | `intersect(A, B)` |
 | set subtraction | `set_minus(A, B)` |
 | symmetric difference | `set_diff(A, B)` |
-| union over a family | `cup(F)` |
-| intersection over a family | `cap(F)` |
+| union over a family | `big_union(F)` |
+| intersection over a family | `big_intersect(F)` |
 | power set | `power_set(A)` |
 | finite displayed set | `{1, 2, 3}` |
 | set comprehension | `{x R: x >= 0}` |

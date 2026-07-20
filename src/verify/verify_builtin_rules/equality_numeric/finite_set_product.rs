@@ -798,6 +798,16 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
+        let enumerator: Obj = shape.enumerator_head.clone().into();
+        if self.has_known_builtin_bijection(
+            &shape.index_set,
+            &shape.target_set,
+            &enumerator,
+            line_file.clone(),
+        ) {
+            return Ok(true);
+        }
+
         let x_name = self.generate_random_unused_name();
         let i_name = format!("{}_idx", x_name);
         let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);

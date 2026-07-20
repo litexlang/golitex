@@ -142,12 +142,18 @@ fn run_session_loop_with_readers(
                     continue;
                 }
 
-                let (mut results, runtime_error) =
-                    run_source_code(source.replace('\r', "").as_str(), &mut runtime);
+                let (mut results, runtime_error, failure_kind) =
+                    crate::pipeline::pipeline::run_source_code_with_failure_kind(
+                        source.replace('\r', "").as_str(),
+                        &mut runtime,
+                    );
                 let (ok, trace) =
                     render_run_source_code_output(&runtime, &results, &runtime_error, true);
                 all_results.append(&mut results);
-                if !ok {
+                if !ok
+                    && failure_kind
+                        != Some(crate::pipeline::pipeline::RunSourceFailureKind::TryStmt)
+                {
                     has_failed = true;
                 }
                 write_session_event(
@@ -314,6 +320,29 @@ mod tests {
         format!("run {} {}\n{}", id, source.as_bytes().len(), source)
     }
 
+    fn run_isolated_session(name: &str, input: String) -> String {
+        let root = session_test_dir(name);
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).expect("create isolated fixture");
+
+        let mut stdin_reader = Cursor::new(input.into_bytes());
+        let mut stdout_writer = Vec::new();
+        run_session_loop_with_readers(
+            &mut stdin_reader,
+            &mut stdout_writer,
+            &root,
+            OutputStyle::Normal,
+            false,
+            OutputLanguage::English,
+            false,
+        )
+        .expect("session must run");
+
+        let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
+        let _ = fs::remove_dir_all(&root);
+        output
+    }
+
     #[test]
     fn project_session_keeps_previous_blocks() {
         let root = session_test_dir("project");
@@ -383,5 +412,72 @@ mod tests {
         assert!(!output.contains("block header missing body"));
 
         let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn session_continues_after_failed_try_parse() {
+        let input = format!(
+            "{}{}artifacts final\nclose\n",
+            run_frame(
+                "failed_try",
+                "try:\n    have candidate R\n    have candidate R\n",
+            ),
+            run_frame("next", "have candidate R\ncandidate = candidate\n"),
+        );
+        let output = run_isolated_session("failed-try-parse", input);
+
+        assert!(output.contains("\"id\":\"failed_try\",\"ok\":false"));
+        assert!(output.contains("\"id\":\"next\",\"ok\":true"));
+        assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
+        assert!(!output.contains("\"event\":\"skipped\""));
+    }
+
+    #[test]
+    fn session_continues_after_failed_try_execution() {
+        let input = format!(
+            "{}{}artifacts final\nclose\n",
+            run_frame("failed_try", "try:\n    clear\n"),
+            run_frame("next", "have after_try R = 2\nafter_try = 2\n"),
+        );
+        let output = run_isolated_session("failed-try-execution", input);
+
+        assert!(output.contains("\"id\":\"failed_try\",\"ok\":false"));
+        assert!(output.contains("\"id\":\"next\",\"ok\":true"));
+        assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
+        assert!(!output.contains("\"event\":\"skipped\""));
+    }
+
+    #[test]
+    fn session_stops_after_failed_non_try_statement() {
+        let input = format!(
+            "{}{}artifacts final\nclose\n",
+            run_frame("failed", "have ordinary R\nhave ordinary R\n"),
+            run_frame("next", "1 = 1\n"),
+        );
+        let output = run_isolated_session("failed-non-try", input);
+
+        assert!(output.contains("\"id\":\"failed\",\"ok\":false"));
+        assert!(output.contains(
+            "\"event\":\"skipped\",\"id\":\"next\",\"error\":\"an earlier block failed\""
+        ));
+        assert!(output.contains("\"event\":\"artifacts_unavailable\",\"id\":\"final\""));
+    }
+
+    #[test]
+    fn nested_try_does_not_make_outer_statement_recoverable() {
+        let input = format!(
+            "{}{}close\n",
+            run_frame(
+                "failed_claim",
+                "claim:\n    ? 1 = 1\n    try:\n        have nested R\n        have nested R\n",
+            ),
+            run_frame("next", "1 = 1\n"),
+        );
+        let output = run_isolated_session("nested-failed-try", input);
+
+        assert!(output.contains("\"id\":\"failed_claim\",\"ok\":false"));
+        assert!(output.contains(
+            "\"event\":\"skipped\",\"id\":\"next\",\"error\":\"an earlier block failed\""
+        ));
     }
 }

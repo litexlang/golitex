@@ -666,13 +666,13 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
-        Obj::Cup(x) => collect_cited_param_indices_from_obj(
+        Obj::BigUnion(x) => collect_cited_param_indices_from_obj(
             &x.left,
             previous_param_indices,
             shadowed_names,
             out,
         ),
-        Obj::Cap(x) => collect_cited_param_indices_from_obj(
+        Obj::BigIntersect(x) => collect_cited_param_indices_from_obj(
             &x.left,
             previous_param_indices,
             shadowed_names,

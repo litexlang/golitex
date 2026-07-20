@@ -95,12 +95,12 @@ impl Runtime {
                 Obj::SetDiff(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Cup(a) => match right {
-                Obj::Cup(b) => a.to_string() == b.to_string(),
+            Obj::BigUnion(a) => match right {
+                Obj::BigUnion(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Cap(a) => match right {
-                Obj::Cap(b) => a.to_string() == b.to_string(),
+            Obj::BigIntersect(a) => match right {
+                Obj::BigIntersect(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::ListSet(a) => match right {

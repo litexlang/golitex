@@ -18,6 +18,7 @@ mod verify_fn_equal_in_builtin;
 mod verify_fn_set_equality_builtin_rule;
 mod verify_forall_fact;
 mod verify_forall_fact_with_iff;
+mod verify_function_properties_builtin;
 mod verify_helper;
 mod verify_known_atomic_facts;
 mod verify_non_equational_atomic_fact;

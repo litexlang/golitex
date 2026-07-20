@@ -66,7 +66,7 @@ impl Runtime {
         // Trusted axiom of choice step: once S is a set whose members are
         // nonempty, infer the existence of a function choosing one element
         // from each member. Example: by axiom_of_choice: set S: stores
-        // exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}.
+        // exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}.
         let choice_fact = axiom_of_choice_exist_fact(stmt.family.clone(), stmt.line_file.clone())?;
         let choice_fact_string = choice_fact.to_string();
         let infer_result = self
@@ -149,7 +149,7 @@ fn axiom_of_choice_exist_fact(family: Obj, line_file: LineFile) -> Result<Fact, 
     let choice_fn_set = FnSet::new(
         vec![ParamGroupWithSet::new(vec![a_name.clone()], family.clone())],
         vec![],
-        Cup::new(family.clone()).into(),
+        BigUnion::new(family.clone()).into(),
     )?;
     let body = ExistFactBody::new(
         ParamDefWithType::new(vec![ParamGroupWithParamType::new(
