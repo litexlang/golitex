@@ -122,6 +122,23 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
+        if let Some(type_result) =
+            self.verify_builtin_function_property_arg_types(atomic_fact, verify_state)?
+        {
+            if type_result.is_unknown() {
+                return Err(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "{} requires sets A and B and a function with type fn(x A) B",
+                            atomic_fact
+                        ),
+                        atomic_fact.line_file(),
+                    ),
+                )
+                .into());
+            }
+        }
+
         Ok(())
     }
 

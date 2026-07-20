@@ -180,7 +180,6 @@ Remark 2.1.13. (Informal) One interesting feature about the natural numbers is t
 
 by contra:
     ? not $is_finite_set(N)
-    $is_finite_set(N)
     finite_set_size(N) + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
     impossible finite_set_size(N) + 1 <= finite_set_size(N)
 
@@ -314,14 +313,12 @@ Lemma 2.2.10. Let a be a positive number. Then there exists exactly one natural 
 claim:
     ? forall a N_pos:
         exist! b N st {b + 1 = a}
-    witness exist b N st {b + 1 = a} from a - 1:
-        (a - 1) + 1 = a
+    witness exist b N st {b + 1 = a} from a - 1
     forall b1, b2 N:
         b1 + 1 = a
         b2 + 1 = a
         =>:
-            b1 + 1 = b2 + 1
-            b1 = (b1 + 1) - 1 = (b2 + 1) - 1 = b2
+            b1 = b2
 
 """
 Definition 2.2.11 (Ordering of the natural numbers). Let n and m be natural numbers. We say that n is greater than or equal to m, and write n >= m or m <= n, iff n=m+a for some natural number a. We say that n is strictly greater than m, and write n>m or m<n, iff n=m+a for some positive natural number a.
@@ -337,28 +334,24 @@ sketch:
             n >= m
             =>:
                 exist a N st {n = m + a}
-        witness exist a N st {n = m + a} from n - m:
-            n = m + (n - m)
+        witness exist a N st {n = m + a} from n - m
 
     claim:
         ? forall n, m N:
             n > m
             =>:
                 exist a N_pos st {n = m + a}
-        witness exist a N_pos st {n = m + a} from n - m:
-            n = m + (n - m)
+        witness exist a N_pos st {n = m + a} from n - m
 
     forall n, m, a N:
         n = m + a
         =>:
-            m + a >= m
-            n >= m
+            n = m + a >= m
 
     forall n, m N, a N_pos:
         n = m + a
         =>:
-            m + a > m
-            n > m
+            n = m + a > m
 
 """
 Proposition 2.2.12 (Basic properties of order for natural numbers). Let a,b,c be natural numbers. Then order is reflexive, transitive, antisymmetric, and compatible with addition.
@@ -607,24 +600,19 @@ claim:
         ? exist m, r N st {$is_euclidean_division(n, q, m, r)}
 
         ? from n = 0:
-            witness exist m, r N st {$is_euclidean_division(0, q, m, r)} from 0, 0:
-                0 = 0 * q + 0
+            witness exist m, r N st {$is_euclidean_division(0, q, m, r)} from 0, 0
 
         ? induc:
             obtain m, r from exist m, r N st {$is_euclidean_division(n, q, m, r)}
-            r < q
-            n = m * q + r
             by cases:
                 ? exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)}
                 case r + 1 < q:
                     witness exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)} from m, r + 1:
-                        n + 1 = (m * q + r) + 1 = m * q + (r + 1)
+                        n + 1 = m * q + (r + 1)
                 case r + 1 >= q:
-                    r + 1 <= q
-                    q <= r + 1
                     r + 1 = q
                     witness exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)} from m + 1, 0:
-                        n + 1 = (m * q + r) + 1 = m * q + (r + 1) = m * q + q = (m + 1) * q + 0
+                        n + 1 = (m + 1) * q + 0
 
 """
 Remark 2.3.10. Dividing a natural number by a positive natural number produces

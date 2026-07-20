@@ -31,6 +31,38 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(_) => 2,
             AtomicFact::FnEqualInFact(_) => 3,
             AtomicFact::FnEqualFact(_) => 2,
+            AtomicFact::NormalAtomicFact(a)
+                if matches!(
+                    a.predicate.to_string().as_str(),
+                    INJECTIVE | SURJECTIVE | BIJECTIVE
+                ) =>
+            {
+                3
+            }
+            AtomicFact::NotNormalAtomicFact(a)
+                if matches!(
+                    a.predicate.to_string().as_str(),
+                    INJECTIVE | SURJECTIVE | BIJECTIVE
+                ) =>
+            {
+                3
+            }
+            AtomicFact::NormalAtomicFact(a)
+                if matches!(
+                    a.predicate.to_string().as_str(),
+                    PROPER_SUBSET | PROPER_SUPERSET
+                ) =>
+            {
+                2
+            }
+            AtomicFact::NotNormalAtomicFact(a)
+                if matches!(
+                    a.predicate.to_string().as_str(),
+                    PROPER_SUBSET | PROPER_SUPERSET
+                ) =>
+            {
+                2
+            }
             _ => unreachable!("other cases are not builtin predicates"),
         }
     }

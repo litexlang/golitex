@@ -94,6 +94,24 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_finite_set_size_fn_range_from_known_injection(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_size_from_known_bijection(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) =
             self.try_verify_abs_equalities(left, right, line_file.clone(), verify_state)?
         {
@@ -2686,7 +2704,7 @@ impl Runtime {
     }
 
     // General Cartesian product definition as a canonical set-builder.
-    // Example: `general_cart(I, s, g) = {f fn(t I)cup(s): forall! a I => {f(a) $in g(a)}}`.
+    // Example: `general_cart(I, s, g) = {f fn(t I)big_union(s): forall! a I => {f(a) $in g(a)}}`.
     fn try_verify_general_cart_set_builder_equality(
         &mut self,
         left: &Obj,
@@ -2749,7 +2767,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        let expected_ret_set: Obj = Cup::new(general_cart.family_set.as_ref().clone()).into();
+        let expected_ret_set: Obj = BigUnion::new(general_cart.family_set.as_ref().clone()).into();
         let ret_result = self.verify_objs_are_equal_in_equality_builtin(
             fn_set.body.ret_set.as_ref(),
             &expected_ret_set,

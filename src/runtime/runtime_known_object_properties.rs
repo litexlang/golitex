@@ -789,8 +789,8 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         }
         Obj::Abs(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::Sqrt(x) => collect_module_names_from_obj(&x.arg, module_names),
-        Obj::Cup(x) => collect_module_names_from_obj(&x.left, module_names),
-        Obj::Cap(x) => collect_module_names_from_obj(&x.left, module_names),
+        Obj::BigUnion(x) => collect_module_names_from_obj(&x.left, module_names),
+        Obj::BigIntersect(x) => collect_module_names_from_obj(&x.left, module_names),
         Obj::PowerSet(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FiniteSetSize(x) => collect_module_names_from_obj(&x.set, module_names),
         Obj::FiniteSetMax(x) => collect_module_names_from_obj(&x.set, module_names),

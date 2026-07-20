@@ -66,6 +66,14 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) = self
+            .try_verify_finite_set_size_codomain_le_domain_from_known_surjection(
+                atomic_fact,
+                verify_state,
+            )?
+        {
+            return Ok(result);
+        }
         if let Some(result) =
             self.try_verify_finite_set_size_union_or_set_diff_le_sum(atomic_fact, verify_state)?
         {

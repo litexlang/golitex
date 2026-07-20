@@ -112,12 +112,12 @@ fn check_obj_has_no_duplicate_free_parameter(
         Obj::SetDiff(obj) => {
             check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
         }
-        Obj::Cup(obj) => check_obj_has_no_duplicate_free_parameter(
+        Obj::BigUnion(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.left,
             free_param_type,
             params_already_used,
         ),
-        Obj::Cap(obj) => check_obj_has_no_duplicate_free_parameter(
+        Obj::BigIntersect(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.left,
             free_param_type,
             params_already_used,

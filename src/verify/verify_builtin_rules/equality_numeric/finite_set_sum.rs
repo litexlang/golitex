@@ -392,6 +392,18 @@ impl Runtime {
             ) else {
                 continue;
             };
+            let known_bijection = match &map_exist_y {
+                Obj::FnObj(map_call) => {
+                    let map: Obj = map_call.head.as_ref().clone().into();
+                    self.has_known_builtin_bijection(
+                        pullback_sum.set.as_ref(),
+                        source_sum.set.as_ref(),
+                        &map,
+                        line_file.clone(),
+                    )
+                }
+                _ => false,
+            };
             let preimage_eq: AtomicFact =
                 EqualFact::new(map_exist_y, x_obj, line_file.clone()).into();
             let exist_body = ExistFactBody::new(
@@ -403,16 +415,18 @@ impl Runtime {
                 line_file.clone(),
             )?;
             let unique_preimage_fact: Fact = ExistFactEnum::ExistUniqueFact(exist_body).into();
-            let unique_preimage_result = self.run_in_local_env(|rt| {
-                let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                    vec![x_name],
-                    ParamType::Obj(source_sum.set.as_ref().clone()),
-                )]);
-                rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
-                rt.verify_fact_full(&unique_preimage_fact, verify_state)
-            })?;
-            if !unique_preimage_result.is_true() {
-                continue;
+            if !known_bijection {
+                let unique_preimage_result = self.run_in_local_env(|rt| {
+                    let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                        vec![x_name],
+                        ParamType::Obj(source_sum.set.as_ref().clone()),
+                    )]);
+                    rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+                    rt.verify_fact_full(&unique_preimage_fact, verify_state)
+                })?;
+                if !unique_preimage_result.is_true() {
+                    continue;
+                }
             }
 
             return Ok(Some(factual_equal_success_by_builtin_reason(

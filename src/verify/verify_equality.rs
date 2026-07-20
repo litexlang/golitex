@@ -708,17 +708,17 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
-            (Obj::Cup(left_cup), Obj::Cup(right_cup)) => self
+            (Obj::BigUnion(left_big_union), Obj::BigUnion(right_big_union)) => self
                 .verify_unary_objs_are_equal_when_their_only_args_are_equal(
-                    &left_cup.left,
-                    &right_cup.left,
+                    &left_big_union.left,
+                    &right_big_union.left,
                     verify_state,
                     equality_line_file,
                 ),
-            (Obj::Cap(left_cap), Obj::Cap(right_cap)) => self
+            (Obj::BigIntersect(left_big_intersect), Obj::BigIntersect(right_big_intersect)) => self
                 .verify_unary_objs_are_equal_when_their_only_args_are_equal(
-                    &left_cap.left,
-                    &right_cap.left,
+                    &left_big_intersect.left,
+                    &right_big_intersect.left,
                     verify_state,
                     equality_line_file,
                 ),

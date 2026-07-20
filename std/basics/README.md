@@ -51,9 +51,15 @@ is a separate, currently trusted unique-normal-form interface.
 
 ### Finite sets
 
-| Theorem | Conclusion |
-| --- | --- |
-| `finite_set_has_bijective_index(s)` | a finite set has a zero-based bijective index over `range(0, finite_set_size(s))` |
+| Theorem | Conclusion | Status |
+| --- | --- | --- |
+| `finite_set_has_bijective_index(s)` | there is `idx : range(0, finite_set_size(s)) -> s` satisfying the kernel predicate `$bijective(range(0, finite_set_size(s)), s, idx)` | Checked |
+
+The module does not define `zero_index`, `zero_index_set`, or a local
+bijection predicate. Function properties are kernel vocabulary:
+`$injective(A, B, f)`, `$surjective(A, B, f)`, and `$bijective(A, B, f)`, with
+`f : fn(x A) B`. This keeps the theorem's public result usable without a
+`std/basics`-specific wrapper.
 
 `finite_set_max(S)` and `finite_set_min(S)` are kernel builtins, not names
 exported by `std/basics`. They require a finite, nonempty set of real numbers;

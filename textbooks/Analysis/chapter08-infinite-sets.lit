@@ -1707,8 +1707,8 @@ thm countable_union_of_at_most_countable_sets:
         forall i I:
             $is_at_most_countable(A(i))
         =>:
-            $is_at_most_countable(cup(fn_range(A)))
-    trust $is_at_most_countable(cup(fn_range(A)))
+            $is_at_most_countable(big_union(fn_range(A)))
+    trust $is_at_most_countable(big_union(fn_range(A)))
 
 
 # 8.2 Summation on infinite sets
@@ -2169,11 +2169,11 @@ template<I set, S nonempty_set, X fn(alpha I) S>:
 
 thm builtin_general_cart_unfolds_to_choice_function_set:
     ? forall I set, S nonempty_set, X fn(alpha I) S:
-        general_cart(I, S, X) = {f fn(t I)cup(S): forall! alpha I => {f(alpha) $in X(alpha)}}
+        general_cart(I, S, X) = {f fn(t I)big_union(S): forall! alpha I => {f(alpha) $in X(alpha)}}
 
 thm builtin_general_cart_member_has_function_type:
     ? forall I set, S nonempty_set, X fn(alpha I) S, c general_cart(I, S, X):
-        c $in fn(t I)cup(S)
+        c $in fn(t I)big_union(S)
 
 thm builtin_general_cart_member_has_factor_values:
     ? forall I set, S nonempty_set, X fn(alpha I) S, c general_cart(I, S, X), alpha I:
@@ -2208,16 +2208,16 @@ index set it agrees with the finite Cartesian product from Chapter 3.
 
 thm union_of_singleton_family:
     ? forall X set:
-        cup({X}) = X
-    by extension cup({X}) = X:
+        big_union({X}) = X
+    by extension big_union({X}) = X:
         claim:
-            ? forall x cup({X}):
+            ? forall x big_union({X}):
                 x $in X
             obtain A from exist A {X} st {x $in A}
             A = X
         claim:
             ? forall x X:
-                x $in cup({X})
+                x $in big_union({X})
             X $in {X}
 
 thm constant_general_cart_product_members_are_in_function_space:
@@ -2263,14 +2263,14 @@ thm constant_general_cart_product_is_function_space:
             $is_constant_general_cart_product_candidate(I, X, F, f)
             forall alpha I:
                 f(alpha) $in F(alpha)
-            cup({X}) = X
+            big_union({X}) = X
             claim:
                 ? forall alpha I:
-                    f(alpha) $in cup({X})
+                    f(alpha) $in big_union({X})
                 f(alpha) $in X
                 X $in {X}
-                f(alpha) $in cup({X})
-            f $in fn(alpha I) cup({X})
+                f(alpha) $in big_union({X})
+            f $in fn(alpha I) big_union({X})
             f $in general_cart(I, {X}, F)
 
 # For a finite index set `closed_range(1,n)`, Definition 3.5.7 represents the
@@ -3957,7 +3957,7 @@ template<X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X
     have good_chain_family set = {Y power_set(X): $is_good_well_ordered_chain(X, le, x0, C, Y)}
 
 template<X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X))>:
-    have good_chain_union set = cup(\good_chain_family<X, le, x0, C>)
+    have good_chain_union set = big_union(\good_chain_family<X, le, x0, C>)
 
 prop second_good_chain_difference_strictly_bounds_first(X set, le power_set(cart(X, X)), Y, W power_set(X)):
     forall z set_minus(W, Y):

@@ -162,33 +162,33 @@ impl Runtime {
         )
     }
 
-    // Family-union introduction: `x $in cup(F)` follows from a member set
+    // Family-union introduction: `x $in big_union(F)` follows from a member set
     // containing `x`, either as a known existential or as concrete facts.
-    // Example: `A $in F` and `x $in A` prove `x $in cup(F)`.
+    // Example: `A $in F` and `x $in A` prove `x $in big_union(F)`.
     pub(super) fn verify_in_fact_in_cup_by_member_witness(
         &mut self,
         in_fact: &InFact,
-        cup: &Cup,
+        big_union: &BigUnion,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let exist_fact = self.cup_membership_exist_fact(in_fact, cup)?;
+        let exist_fact = self.big_union_membership_exist_fact(in_fact, big_union)?;
         let exist_result =
             self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
         if exist_result.is_true() {
             return Ok(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
-                    "cup membership: an element of a member set is in the family union".to_string(),
+                    "big_union membership: an element of a member set is in the family union".to_string(),
                     vec![exist_result],
                 )
                 .into(),
             );
         }
 
-        for member_set in self.known_member_sets_for_cup_family(in_fact, cup.left.as_ref()) {
+        for member_set in self.known_member_sets_for_cup_family(in_fact, big_union.left.as_ref()) {
             let member_set_in_family: AtomicFact = InFact::new(
                 member_set.clone(),
-                cup.left.as_ref().clone(),
+                big_union.left.as_ref().clone(),
                 in_fact.line_file.clone(),
             )
             .into();
@@ -214,7 +214,7 @@ impl Runtime {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
-                        "cup membership: an element of a member set is in the family union"
+                        "big_union membership: an element of a member set is in the family union"
                             .to_string(),
                         vec![member_set_result, element_result],
                     )
@@ -226,10 +226,10 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
-    pub(super) fn cup_membership_exist_fact(
+    pub(super) fn big_union_membership_exist_fact(
         &self,
         in_fact: &InFact,
-        cup: &Cup,
+        big_union: &BigUnion,
     ) -> Result<ExistFactEnum, RuntimeError> {
         let member_name = "item".to_string();
         let member_obj = obj_for_bound_param_in_scope(member_name.clone(), ParamObjType::Exist);
@@ -242,7 +242,7 @@ impl Runtime {
         let exist_body = ExistFactBody::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![member_name],
-                ParamType::Obj(cup.left.as_ref().clone()),
+                ParamType::Obj(big_union.left.as_ref().clone()),
             )]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
@@ -568,10 +568,10 @@ impl Runtime {
         )
     }
 
-    // General Cartesian product membership: a member is a function on `I` into `cup(s)`
+    // General Cartesian product membership: a member is a function on `I` into `big_union(s)`
     // whose value at every index lies in the indexed factor.
     // Example: `f $in general_cart(I, s, g)` follows from
-    // `f $in fn(t I)cup(s)` and `forall! t I => {f(t) $in g(t)}`.
+    // `f $in fn(t I)big_union(s)` and `forall! t I => {f(t) $in g(t)}`.
     pub(super) fn verify_in_fact_in_general_cart_by_defining_facts(
         &mut self,
         in_fact: &InFact,
@@ -602,7 +602,7 @@ impl Runtime {
 
         Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             in_fact.clone().into(),
-            "general_cart membership: function into cup(family) with pointwise factor membership"
+            "general_cart membership: function into big_union(family) with pointwise factor membership"
                 .to_string(),
             vec![fn_set_result, pointwise_result],
         )

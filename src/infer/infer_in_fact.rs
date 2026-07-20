@@ -396,7 +396,7 @@ impl Runtime {
             // General Cartesian product: membership gives the choice function type and the
             // pointwise factor-membership forall.
             // Example: `c $in general_cart(I, s, g)` infers
-            // `c $in fn(t I)cup(s)` and `forall t I: c(t) $in g(t)`.
+            // `c $in fn(t I)big_union(s)` and `forall t I: c(t) $in g(t)`.
             Obj::GeneralCart(general_cart) => {
                 self.infer_membership_in_general_cart_from_in_fact(in_fact, general_cart)
             }
@@ -829,9 +829,9 @@ impl Runtime {
                 }
                 Ok(infer_result)
             }
-            // Family union elimination: `x $in cup(F)` means `x` lies in some member set of `F`.
-            // Example: from `x $in cup(F)`, infer `exist item F st {x $in item}`.
-            Obj::Cup(cup) => self.infer_membership_in_cup(in_fact, cup),
+            // Family union elimination: `x $in big_union(F)` means `x` lies in some member set of `F`.
+            // Example: from `x $in big_union(F)`, infer `exist item F st {x $in item}`.
+            Obj::BigUnion(big_union) => self.infer_membership_in_big_union(in_fact, big_union),
             set_obj => {
                 let symbolic_cart_infer =
                     self.infer_membership_in_symbolic_cart_from_in_fact(in_fact)?;
@@ -963,10 +963,10 @@ impl Runtime {
         Ok(Some(ExistFactEnum::ExistFact(exist_body).into()))
     }
 
-    fn infer_membership_in_cup(
+    fn infer_membership_in_big_union(
         &mut self,
         in_fact: &InFact,
-        cup: &Cup,
+        big_union: &BigUnion,
     ) -> Result<InferResult, RuntimeError> {
         let member_name = "item".to_string();
         let member_obj = obj_for_bound_param_in_scope(member_name.clone(), ParamObjType::Exist);
@@ -979,7 +979,7 @@ impl Runtime {
         let exist_body = ExistFactBody::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![member_name],
-                ParamType::Obj(cup.left.as_ref().clone()),
+                ParamType::Obj(big_union.left.as_ref().clone()),
             )]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),

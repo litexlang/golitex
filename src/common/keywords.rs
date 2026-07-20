@@ -57,8 +57,12 @@ pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
 pub const SET_MINUS: &str = "set_minus";
 pub const SET_DIFF: &str = "set_diff";
-pub const CUP: &str = "cup";
-pub const CAP: &str = "cap";
+pub const BIG_UNION: &str = "big_union";
+pub const BIG_INTERSECT: &str = "big_intersect";
+/// Removed family-union spelling; retained only to give a migration error.
+pub const LEGACY_CUP: &str = "cup";
+/// Removed family-intersection spelling; retained only to give a migration error.
+pub const LEGACY_CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const GENERAL_CART: &str = "general_cart";
 pub const FN_LOWER_CASE: &str = "fn";
@@ -108,6 +112,8 @@ pub const OR: &str = "or";
 pub const AND: &str = "and";
 pub const SUBSET: &str = "subset";
 pub const SUPERSET: &str = "superset";
+pub const PROPER_SUBSET: &str = "proper_subset";
+pub const PROPER_SUPERSET: &str = "proper_superset";
 pub const SUCCESS_COLON: &str = "Success:";
 pub const UNKNOWN_COLON: &str = "Unknown:";
 pub const ALIAS: &str = "alias";
@@ -241,8 +247,10 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         INTERSECT,
         SET_MINUS,
         SET_DIFF,
-        CUP,
-        CAP,
+        BIG_UNION,
+        BIG_INTERSECT,
+        LEGACY_CUP,
+        LEGACY_CAP,
         POWER_SET,
         GENERAL_CART,
         FN_LOWER_CASE,
@@ -341,6 +349,11 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         STRATEGY,
         FN_EQ_IN,
         FN_EQ,
+        INJECTIVE,
+        SURJECTIVE,
+        BIJECTIVE,
+        PROPER_SUBSET,
+        PROPER_SUPERSET,
     ];
     for &s in &words {
         m.insert(s, s);
@@ -400,9 +413,14 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == IS_TUPLE
         || atom_name == SUBSET
         || atom_name == SUPERSET
+        || atom_name == PROPER_SUBSET
+        || atom_name == PROPER_SUPERSET
         || atom_name == IN
         || atom_name == FN_EQ_IN
         || atom_name == FN_EQ
+        || atom_name == INJECTIVE
+        || atom_name == SURJECTIVE
+        || atom_name == BIJECTIVE
 }
 
 pub fn is_builtin_identifier_name(atom_name: &str) -> bool {

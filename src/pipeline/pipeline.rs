@@ -297,10 +297,28 @@ fn file_target_error(entry_file_path: &str, message: &str) -> RuntimeError {
     .into()
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum RunSourceFailureKind {
+    TryStmt,
+    Other,
+}
+
 pub fn run_source_code(
     source_code: &str,
     runtime: &mut Runtime,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let (stmt_results, runtime_error, _) = run_source_code_with_failure_kind(source_code, runtime);
+    (stmt_results, runtime_error)
+}
+
+pub(crate) fn run_source_code_with_failure_kind(
+    source_code: &str,
+    runtime: &mut Runtime,
+) -> (
+    Vec<StmtResult>,
+    Option<RuntimeError>,
+    Option<RunSourceFailureKind>,
+) {
     if !runtime.has_active_execution_frame() {
         return (
             vec![],
@@ -311,6 +329,7 @@ pub fn run_source_code(
                 ))
                 .into(),
             ),
+            Some(RunSourceFailureKind::Other),
         );
     }
 
@@ -319,30 +338,42 @@ pub fn run_source_code(
     let blocks = match tokenizer.parse_blocks(source_code, current_file_path) {
         Ok(b) => b,
         Err(e) => {
-            return (vec![], Some(e));
+            return (vec![], Some(e), Some(RunSourceFailureKind::Other));
         }
     };
 
     let mut stmt_results: Vec<StmtResult> = Vec::new();
     for mut block in blocks {
+        let parsing_try_stmt = block.current_token_is_equal_to(TRY);
         let stmt: Stmt = {
             match runtime.parse_stmt(&mut block) {
                 Ok(s) => s,
                 Err(e) => {
-                    return (stmt_results, Some(e));
+                    let failure_kind = if parsing_try_stmt {
+                        RunSourceFailureKind::TryStmt
+                    } else {
+                        RunSourceFailureKind::Other
+                    };
+                    return (stmt_results, Some(e), Some(failure_kind));
                 }
             }
         };
+        let executing_try_stmt = matches!(&stmt, Stmt::ProofBlock(ProofBlockStmt::TryStmt(_)));
         let result = match run_stmt_at_global_env(&stmt, runtime) {
             Ok(r) => r,
             Err(e) => {
-                return (stmt_results, Some(e));
+                let failure_kind = if executing_try_stmt {
+                    RunSourceFailureKind::TryStmt
+                } else {
+                    RunSourceFailureKind::Other
+                };
+                return (stmt_results, Some(e), Some(failure_kind));
             }
         };
         stmt_results.push(result);
     }
 
-    (stmt_results, None)
+    (stmt_results, None, None)
 }
 
 /// When `strip_free_param_tags` is true, run [`strip_free_param_numeric_tags_in_display`] on the full

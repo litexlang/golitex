@@ -64,8 +64,8 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 || obj_expr_mentions_bare_id(g.family_set.as_ref(), id)
                 || obj_expr_mentions_bare_id(g.family_fn.as_ref(), id)
         }
-        Obj::Cup(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
-        Obj::Cap(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
+        Obj::BigUnion(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
+        Obj::BigIntersect(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
         Obj::Log(l) => {
             obj_expr_mentions_bare_id(l.base.as_ref(), id)
                 || obj_expr_mentions_bare_id(l.arg.as_ref(), id)

@@ -16,12 +16,12 @@ natural numbers. Two expressions a-b and c-d are equal iff a+d = c+b.
 forall a, b, c, d N:
     a - b = c - d
     =>:
-        a + d = (a - b + b) + d = (c - d + b) + d = c + b
+        a + d = c + b
 
 forall a, b, c, d N:
     a + d = c + b
     =>:
-        a - b = (a + d - d) - b = (c + b - d) - b = c - d
+        a - b = c - d
 
 forall a, b, c, d N:
     =>:
@@ -53,7 +53,7 @@ Lemma 4.1.3. Addition and multiplication are well-defined.
 forall a, b, a1, b1, c, d N:
     a + b1 = a1 + b
     =>:
-        (a + c) + (b1 + d) = (a + b1) + c + d = (a1 + b) + c + d = (a1 + c) + (b + d)
+        (a + c) + (b1 + d) = (a1 + c) + (b + d)
 
 # The multiplication case is the corresponding representative-replacement
 # statement for the product formula.
@@ -61,7 +61,6 @@ forall a, b, a1, b1, c, d N:
 forall a, b, a1, b1, c, d N:
     a + b1 = a1 + b
     =>:
-        a - b = ((a + b1) - b1) - b = ((a1 + b) - b1) - b = a1 - b1
         (a - b) * (c - d) = (a1 - b1) * (c - d)
 
 # Lemma 4.1.3 also includes replacing the left input when it appears second;
@@ -70,18 +69,11 @@ forall a, b, a1, b1, c, d N:
 forall a, b, a1, b1, c, d N:
     a + b1 = a1 + b
     =>:
-        a - b = ((a + b1) - b1) - b = ((a1 + b) - b1) - b = a1 - b1
         (a - b) + (c - d) = (a1 - b1) + (c - d)
         (c - d) + (a - b) = (c - d) + (a1 - b1)
         (c - d) * (a - b) = (c - d) * (a1 - b1)
 
-# Natural numbers sit inside the integers, and their integer arithmetic agrees
-# with natural-number addition and multiplication.
-
-forall n, m N:
-    n $in Z
-    n + m $in Z
-    n * m $in Z
+# Natural-number arithmetic agrees with its integer embedding.
 
 forall n, m N:
     (n + 0) + (m + 0) = (n + m) + 0
@@ -191,7 +183,7 @@ forall a, b, c Z:
     a * c = b * c
     c != 0
     =>:
-        a = (a * c) / c = (b * c) / c = b
+        a = b
 
 """
 Definition 4.1.10. Ordering of integers.
@@ -257,9 +249,6 @@ forall a, b Z:
 forall a, b, c Z:
     a > b
     =>:
-        a - b > 0
-        (a + c) - (b + c) = a - b
-        (a + c) - (b + c) > 0
         a + c > b + c
 
 # Lemma 4.1.11(c): multiplying by a positive integer preserves strict order.
@@ -283,16 +272,12 @@ forall a, b, c Z:
     a > b
     b > c
     =>:
-        a > b > c
         a > c
 
 # Lemma 4.1.11(f): integer order has trichotomy.
 
 forall a, b Z:
     a > b or a = b or a < b
-
-forall x, y R:
-    x = y or x < y or x > y
 
 forall a, b Z:
     a > b
@@ -305,18 +290,11 @@ forall a, b Z:
         a >= b
         not a < b
 
-claim:
-    ? forall a, b Z:
-        a = b
-        =>:
-            not a > b
-            not a < b
-    by contra not a > b:
-        a > b
-        impossible a = b
-    by contra not a < b:
-        a < b
-        impossible a = b
+forall a, b Z:
+    a = b
+    =>:
+        not a > b
+        not a < b
 
 forall a, b Z:
     a < b
@@ -341,12 +319,12 @@ Two quotients a//b and c//d are equal iff ad = cb.
 forall a Z, b Z_nz, c Z, d Z_nz:
     a / b = c / d
     =>:
-        a * d = (a / b * b) * d = (c / d * b) * d = c * b
+        a * d = c * b
 
 forall a Z, b Z_nz, c Z, d Z_nz:
     a * d = c * b
     =>:
-        a / b = (a * d) / (b * d) = (c * b) / (b * d) = c / d
+        a / b = c / d
 
 forall a Z, b Z_nz, c Z, d Z_nz:
     =>:
@@ -387,7 +365,6 @@ Lemma 4.2.3. These operations are well-defined.
 forall a Z, b Z_nz, a1 Z, b1 Z_nz, c Z, d Z_nz:
     a * b1 = a1 * b
     =>:
-        a / b = (a * b1) / (b * b1) = (a1 * b) / (b * b1) = a1 / b1
         (a / b) + (c / d) = (a1 / b1) + (c / d)
         (a / b) * (c / d) = (a1 / b1) * (c / d)
         -(a / b) = -(a1 / b1)
@@ -395,7 +372,6 @@ forall a Z, b Z_nz, a1 Z, b1 Z_nz, c Z, d Z_nz:
 forall a Z, b Z_nz, c Z, d Z_nz, c1 Z, d1 Z_nz:
     c * d1 = c1 * d
     =>:
-        c / d = (c * d1) / (d * d1) = (c1 * d) / (d * d1) = c1 / d1
         (a / b) + (c / d) = (a / b) + (c1 / d1)
         (a / b) * (c / d) = (a / b) * (c1 / d1)
 
@@ -409,7 +385,7 @@ forall a, b Z:
 forall a, b Z:
     a / 1 = b / 1
     =>:
-        a = (a / 1) * 1 = (b / 1) * 1 = b
+        a = b
 
 forall a, b Z:
     a = b
@@ -428,15 +404,7 @@ forall a, b Z:
 forall a Z, b Z_nz:
     a / b = 0
     =>:
-        a = (a / b) * b = 0 * b = 0
         a = 0
-
-claim:
-    ? forall a Z, b Z_nz:
-        a / b = 0
-        =>:
-            a = 0
-    a = (a / b) * b = 0 * b = 0
 
 forall a Z, b Z_nz:
     a = 0
@@ -541,7 +509,6 @@ forall x Q:
     x > 0
     =>:
         x != 0
-        not x = 0
         not x < 0
 
 forall x Q:
@@ -554,7 +521,6 @@ forall x Q:
     x < 0
     =>:
         x != 0
-        not x = 0
         not x > 0
 
 """
@@ -589,14 +555,11 @@ forall x, y Q:
     x < y
     =>:
         x != y
-        x <= y
         not x > y
 
 forall x, y Q:
     x = y
     =>:
-        x <= y
-        x >= y
         not x < y
         not x > y
 
@@ -604,7 +567,6 @@ forall x, y Q:
     x > y
     =>:
         x != y
-        x >= y
         not x < y
 
 # Proposition 4.2.9(b): reversing the arguments reverses the inequality symbol.
@@ -620,7 +582,6 @@ forall x, y, z Q:
     x < y
     y < z
     =>:
-        x < y < z
         x < z
 
 # Proposition 4.2.9(d): adding the same rational preserves strict order.
@@ -698,65 +659,24 @@ forall x Q:
 # absolute value.  The proof splits the sign of `abs(x)` and rules out zero
 # and negative cases.
 
-claim:
-    ? forall x Q:
-        x != 0
-        =>:
-            abs(x) > 0
-    abs(x) >= 0
-    abs(x) > 0 or abs(x) = 0 or abs(x) < 0
-    by cases:
-        ? abs(x) > 0
-        case abs(x) > 0:
-            abs(x) > 0
-        case abs(x) = 0:
-            x = 0
-            impossible x != 0
-        case abs(x) < 0:
-            impossible abs(x) >= 0
+forall x Q:
+    x != 0
+    =>:
+        abs(x) > 0
 
 # Proposition 4.3.3(c): `-y <= x <= y` is equivalent to `y >= abs(x)`.
 
-claim:
-    ? forall x, y Q:
+forall x, y Q:
+    -y <= x
+    x <= y
+    =>:
+        y >= abs(x)
+
+forall x, y Q:
+    y >= abs(x)
+    =>:
         -y <= x
         x <= y
-        =>:
-            y >= abs(x)
-    x > 0 or x = 0 or x < 0
-    by cases:
-        ? y >= abs(x)
-        case x > 0:
-            abs(x) = x
-            y >= x
-            y >= abs(x)
-        case x = 0:
-            abs(x) = 0
-            y >= 0
-            y >= abs(x)
-        case x < 0:
-            abs(x) = -x
-            -(-y) >= -x
-            -(-y) = y
-            y >= -x
-            y >= abs(x)
-
-claim:
-    ? forall x, y Q:
-        y >= abs(x)
-        =>:
-            -y <= x
-            x <= y
-    x <= abs(x)
-    x <= abs(x) <= y
-    x <= y
-    -x <= abs(x)
-    -x <= abs(x) <= y
-    -x <= y
-    -(-x) >= -y
-    -(-x) = x
-    x >= -y
-    -y <= x
 
 forall x, y Q:
     =>:
@@ -779,7 +699,7 @@ forall x, y Q:
 # Taking `y=-1` in multiplicativity gives `abs(-x)=abs(x)`.
 
 forall x Q:
-    abs(-x) = abs((-1) * x) = abs(-1) * abs(x) = 1 * abs(x) = abs(x)
+    abs(-x) = abs(x)
 
 # Proposition 4.3.3(b): the absolute-value triangle inequality.
 
@@ -1005,7 +925,7 @@ forall x Q, n N_pos:
 forall x Q, n N_pos:
     x = 0
     =>:
-        x^n = 0^n = 0
+        x^n = 0
 
 forall x Q, n N_pos:
     =>:
@@ -1029,11 +949,6 @@ forall x, y Q, n N_pos:
     y >= 0
     =>:
         x^n > y^n
-
-forall x, y Q, n N_pos:
-    x > y
-    y >= 0
-    =>:
         y^n >= 0
 
 # Proposition 4.3.10(d): absolute value commutes with natural powers.
@@ -1052,9 +967,7 @@ forall x Q_nz, n N_pos:
     x^n != 0
 
 forall x Q_nz, n N_pos:
-    x^n != 0
-    =>:
-        x^(-n) = 1 / x^n
+    x^(-n) = 1 / x^n
 
 """
 Proposition 4.3.12. Properties of exponentiation, II.
@@ -1094,11 +1007,6 @@ forall x, y Q_pos, n Z:
     n < 0
     =>:
         x^n > 0
-
-forall x, y Q_pos, n Z:
-    x >= y
-    n < 0
-    =>:
         x^n <= y^n
 
 # Proposition 4.3.12(c): a nonzero integer power is injective on positive
@@ -1147,15 +1055,13 @@ claim:
 # The integer endpoint is unique: two intervals `[n,n+1)` and `[m,m+1)`
 # containing the same rational must have `n=m`.
 
-claim:
-    ? forall x Q, n, m Z:
-        n <= x
-        x < n + 1
-        m <= x
-        x < m + 1
-        =>:
-            n = m
-    n = m
+forall x Q, n, m Z:
+    n <= x
+    x < n + 1
+    m <= x
+    x < m + 1
+    =>:
+        n = m
 
 claim:
     ? forall x Q:
@@ -1284,69 +1190,21 @@ claim:
         exist x Q st {x >= 0, x^2 < 2, 2 < (x + epsilon)^2}
     by contra:
         ? exist x Q st {x >= 0, x^2 < 2, 2 < (x + epsilon)^2}
-        not exist x Q st {x >= 0, x^2 < 2, 2 < (x + epsilon)^2}
-        claim:
-            ? forall y Q:
-                y >= 0
-                y^2 < 2
-                =>:
-                    (y + epsilon)^2 < 2
-            not y >= 0 or not y^2 < 2 or not 2 < (y + epsilon)^2
-            by cases:
-                ? not 2 < (y + epsilon)^2
-                case not y >= 0:
-                    impossible y >= 0
-                case not y^2 < 2:
-                    impossible y^2 < 2
-                case not 2 < (y + epsilon)^2:
-                    not 2 < (y + epsilon)^2
-            (y + epsilon)^2 <= 2
-            (y + epsilon)^2 != 2
-            by contra (y + epsilon)^2 < 2:
-                (y + epsilon)^2 >= 2
-                (y + epsilon)^2 = 2
-                impossible (y + epsilon)^2 != 2
-        0 $in Q
-        0 >= 0
-        0^2 < 2
-        (0 + epsilon)^2 < 2
-        epsilon^2 = (0 + epsilon)^2
-        epsilon^2 < 2
-        epsilon >= 0
-        epsilon $in Q
-        (epsilon + epsilon)^2 < 2
-        2 * epsilon = epsilon + epsilon
-        (2 * epsilon)^2 = (epsilon + epsilon)^2
-        (2 * epsilon)^2 < 2
+        forall y Q:
+            y >= 0
+            y^2 < 2
+            =>:
+                (y + epsilon)^2 < 2
         by induc n from 0:
             ? (n * epsilon)^2 < 2
 
             ? from n = 0:
-                (0 * epsilon)^2 = 0
-                0 < 2
                 (0 * epsilon)^2 < 2
 
             ? induc:
-                n * epsilon >= 0
-                n * epsilon $in Q
-                (n * epsilon)^2 < 2
-                (n * epsilon + epsilon)^2 < 2
-                (n + 1) * epsilon = n * epsilon + epsilon
-                ((n + 1) * epsilon)^2 = (n * epsilon + epsilon)^2
                 ((n + 1) * epsilon)^2 < 2
-        exist n N st {n > 2 / epsilon}
         obtain n from exist n N st {n > 2 / epsilon}
-        n > 2 / epsilon
-        (n * epsilon)^2 < 2
-        epsilon > 0
-        epsilon != 0
-        n * epsilon > (2 / epsilon) * epsilon
-        (2 / epsilon) * epsilon = 2
         n * epsilon > 2
-        (n * epsilon)^2 > 2^2
-        2^2 = 4
-        (n * epsilon)^2 > 4
-        4 > 2
         (n * epsilon)^2 > 2
         impossible (n * epsilon)^2 < 2
 

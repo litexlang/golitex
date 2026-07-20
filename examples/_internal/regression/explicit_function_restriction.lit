@@ -8,7 +8,7 @@ have fn g(x R) Z = 0
 $is_integer_endomorphism(fn(x Z) Z {g(x)})
 
 thm function_space_membership_from_pointwise_values:
-    ? forall I set, X set, f fn(alpha I) cup({X}):
+    ? forall I set, X set, f fn(alpha I) big_union({X}):
         forall alpha I:
             f(alpha) $in X
         =>:

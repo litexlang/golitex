@@ -753,35 +753,26 @@ impl Runtime {
             })?;
             return Ok(SetDiff::new(left, right).into());
         }
-        if tok == CAP {
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 1 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "cap expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let value = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "cap expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return Ok(Cap::new(value).into());
+        if tok == LEGACY_CAP || tok == LEGACY_CUP {
+            let replacement = if tok == LEGACY_CAP {
+                BIG_INTERSECT
+            } else {
+                BIG_UNION
+            };
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!("`{}` has been replaced by `{}`", tok, replacement),
+                    tb.line_file.clone(),
+                ),
+            )));
         }
-        if tok == CUP {
+        if tok == BIG_INTERSECT {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "cup expects 1 argument".to_string(),
+                        "big_intersect expects 1 argument".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -790,12 +781,34 @@ impl Runtime {
             let value = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "cup expects 1 argument".to_string(),
+                        "big_intersect expects 1 argument".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
             })?;
-            return Ok(Cup::new(value).into());
+            return Ok(BigIntersect::new(value).into());
+        }
+        if tok == BIG_UNION {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 1 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "big_union expects 1 argument".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut it = args.into_iter();
+            let value = it.next().ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "big_union expects 1 argument".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(BigUnion::new(value).into());
         }
         if tok == PROJ {
             tb.skip()?;
@@ -977,28 +990,6 @@ impl Runtime {
             return Ok(MatrixSet::new(set, row_len, col_len).into());
         }
 
-        if tok == CUP {
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 1 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "cup expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let value = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "cup expects 1 argument".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return Ok(Cup::new(value).into());
-        }
         if tok == POWER_SET {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -2502,6 +2493,42 @@ mod matrix_operator_parse_tests {
                     legacy, replacement
                 )
             );
+        }
+    }
+
+    #[test]
+    fn big_set_family_operators_parse_and_print_canonically() {
+        let cases = [
+            ("big_union(F)", ObjKind::BigUnion),
+            ("big_intersect(F)", ObjKind::BigIntersect),
+        ];
+
+        for (source, expected_kind) in cases {
+            let obj = parse_obj_line(source).expect("set-family operator should parse");
+            assert_eq!(obj.kind(), expected_kind, "{source}");
+            assert_eq!(obj.to_string(), source, "{source}");
+        }
+    }
+
+    #[test]
+    fn legacy_set_family_operators_report_their_replacements() {
+        let cases = [
+            ("cup(F)", "`cup` has been replaced by `big_union`"),
+            (
+                "cap(F)",
+                "`cap` has been replaced by `big_intersect`",
+            ),
+        ];
+
+        for (source, expected_message) in cases {
+            let error = match parse_obj_line(source) {
+                Ok(obj) => panic!("legacy set-family operator should be rejected, parsed {obj}"),
+                Err(error) => error,
+            };
+            let RuntimeError::ParseError(error) = error else {
+                panic!("expected parse error for {source}");
+            };
+            assert_eq!(error.msg, expected_message);
         }
     }
 }

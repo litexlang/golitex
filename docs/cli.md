@@ -193,6 +193,14 @@ graph, and fact graph after successful blocks. The event values are `ready`,
 `skipped`, and `protocol_error`; textual verifier output is returned in the
 JSON-string `trace` field so a client never has to parse terminal prompts.
 
+A failed top-level `try:` block returns a `block` event with `ok: false`, but
+does not stop the session because `try:` has already discarded its temporary
+environment. The client may submit another `run` frame, and `artifacts` remains
+available. Any other failed Litex statement stops execution of later frames:
+subsequent `run` requests return `skipped`, and `artifacts` returns
+`artifacts_unavailable`. A `try:` nested inside another top-level statement does
+not make that outer statement recoverable.
+
 ## Graph Commands
 
 | Command | Behavior |

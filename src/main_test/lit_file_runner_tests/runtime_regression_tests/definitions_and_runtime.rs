@@ -121,6 +121,11 @@ fn by_def_rejects_non_concrete_or_empty_definitions() {
                 "by def $P(1)",
                 "concrete prop definition `P` was not found",
             ),
+            (
+                "builtin",
+                "have fn builtin_identity(x {1}) {1} = x\nby def $injective({1}, {1}, builtin_identity)",
+                "is a builtin predicate; write the fact directly to verify its builtin definition",
+            ),
         ];
 
         for (label, source_code, expected) in cases {

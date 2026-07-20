@@ -771,8 +771,8 @@ impl Runtime {
             Obj::SetDiff(ref a) => {
                 self.match_arg_when_left_is_set_diff(&a.left, &a.right, given_arg)
             }
-            Obj::Cup(ref a) => self.match_arg_when_left_is_cup(&a.left, given_arg),
-            Obj::Cap(ref a) => self.match_arg_when_left_is_cap(&a.left, given_arg),
+            Obj::BigUnion(ref a) => self.match_arg_when_left_is_big_union(&a.left, given_arg),
+            Obj::BigIntersect(ref a) => self.match_arg_when_left_is_big_intersect(&a.left, given_arg),
             Obj::GeneralCart(ref left) => self.match_arg_when_left_is_general_cart(left, given_arg),
             Obj::ListSet(ref left) => self.match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(ref left) => self.match_arg_when_left_is_set_builder(left, given_arg),
@@ -1427,26 +1427,26 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_cup(
+    fn match_arg_when_left_is_big_union(
         &mut self,
         left_left: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Cup(ref g) => {
+            Obj::BigUnion(ref g) => {
                 self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_left, &g.left)
             }
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_cap(
+    fn match_arg_when_left_is_big_intersect(
         &mut self,
         left_left: &Obj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::Cap(ref g) => {
+            Obj::BigIntersect(ref g) => {
                 self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_left, &g.left)
             }
             _ => Ok(None),

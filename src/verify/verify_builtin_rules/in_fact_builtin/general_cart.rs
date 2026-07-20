@@ -7,7 +7,7 @@ pub(crate) fn general_cart_member_fn_set(general_cart: &GeneralCart) -> Result<O
             general_cart.index_set.as_ref().clone(),
         )],
         vec![],
-        Cup::new(general_cart.family_set.as_ref().clone()).into(),
+        BigUnion::new(general_cart.family_set.as_ref().clone()).into(),
     )?
     .into())
 }

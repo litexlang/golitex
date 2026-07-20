@@ -23,7 +23,8 @@ sketch:
 Axiom 3.1 (Sets are objects). If A is a set, then A is also an object.
 """
 
-# In set theory, every object is a set. Since litex is based on set theory, every object is a set. So there is no difference between an object and a set here. prop `is_set` is used to prove something is a set. Since any object is a set, the prop `is_set` is always true.
+# Litex's set-theoretic universe treats every object as a set, so `is_set` is
+# universal.
 
 forall A set:
     $is_set(A)
@@ -53,36 +54,15 @@ element of A is an element of B and vice versa.
 
 # Set equality is extensional: both directions of membership imply equality.
 # Litex's `by extension` form proves the same principle for arbitrary sets.
-# The commutative property of equality, the transitive property of equality, and the reflexive property of equality are all builtin in Litex.
-
-claim:
-    ? forall A, B set:
-        forall x A:
-            x $in B
-        forall y B:
-            y $in A
-        =>:
-            A = B
-    by extension:
-        ? A = B
-        forall x A:
-            x $in B
-        forall y B:
-            y $in A
-
-forall A set:
-    A = A
+# Equality reflexivity, symmetry, and transitivity are builtin in Litex.
 
 forall A, B set:
-    A = B
+    forall x A:
+        x $in B
+    forall y B:
+        y $in A
     =>:
-        B = A
-
-forall A, B, C set:
-    A = B
-    B = C
-    =>:
-        A = C
+        A = B
 
 """
 Example 3.1.5. Sets with the same members are equal even if the display order
@@ -169,64 +149,22 @@ Examples 3.1.10. From the empty set one can build {}, {{}}, {{{}}}, and
 {{}, {{}}}; these are distinct set-shaped objects.
 """
 
-# This example continues Example 3.1.2: one set can be an element of another
-# set.  This sample chapter does not rebuild pure set coding; it keeps only the
-# nested-set intuition.  When cardinality is needed later, it uses `finite_set`
-# and `finite_set_size`.
+# Nested finite sets are distinguished by their membership structure.
 
 sketch:
     finite_set_size({}) = 0
 
-    claim:
-        ? {} != {{}}
-        by contra:
-            ? {} != {{}}
-            {} = {{}}
-            0 = finite_set_size({}) = finite_set_size({{}}) = 1
-            impossible 0 = 1
+    {} != {{}}
 
-    claim:
-        ? {} != {{{}}}
-        by contra:
-            ? {} != {{{}}}
-            {} = {{{}}}
-            0 = finite_set_size({}) = finite_set_size({{{}}}) = 1
-            impossible 0 = 1
+    {} != {{{}}}
 
-    claim:
-        ? {} != {{}, {{}}}
-        by contra:
-            ? {} != {{}, {{}}}
-            {} = {{}, {{}}}
-            0 = finite_set_size({}) = finite_set_size({{}, {{}}}) = 2
-            impossible 0 = 2
+    {} != {{}, {{}}}
 
-    claim:
-        ? {{}} != {{{}}}
-        by contra:
-            ? {{}} != {{{}}}
-            {{}} = {{{}}}
-            {} $in {{}}
-            {} $in {{{}}}
-            {} = {{}}
-            0 = finite_set_size({}) = finite_set_size({{}}) = 1
-            impossible 0 = 1
+    {{}} != {{{}}}
 
-    claim:
-        ? {{}} != {{}, {{}}}
-        by contra:
-            ? {{}} != {{}, {{}}}
-            {{}} = {{}, {{}}}
-            1 = finite_set_size({{}}) = finite_set_size({{}, {{}}}) = 2
-            impossible 1 = 2
+    {{}} != {{}, {{}}}
 
-    claim:
-        ? {{{}}} != {{}, {{}}}
-        by contra:
-            ? {{{}}} != {{}, {{}}}
-            {{{}}} = {{}, {{}}}
-            1 = finite_set_size({{{}}}) = finite_set_size({{}, {{}}}) = 2
-            impossible 1 = 2
+    {{{}}} != {{}, {{}}}
 
 """
 Axiom 3.4 (Pairwise union). x in A union B iff x in A or x in B.
@@ -237,12 +175,10 @@ Axiom 3.4 (Pairwise union). x in A union B iff x in A or x in B.
 # right set.  The later `{1, 2} union {2, 3}` calculation is a concrete example
 # of this rule.
 
-claim:
-    ? forall A, B set, x set:
-        x $in union(A, B)
-        =>:
-            x $in A or x $in B
-    x $in A or x $in B
+forall A, B set, x set:
+    x $in union(A, B)
+    =>:
+        x $in A or x $in B
 
 forall A, B set, x set:
     x $in A
@@ -253,16 +189,6 @@ forall A, B set, x set:
     x $in B
     =>:
         x $in union(A, B)
-
-# The finite-union upper bound is a kernel builtin rule; its finite-induction
-# proof is background to this first set-theory example.
-
-sketch:
-    1 $in union({1, 2}, {2, 3})
-    2 $in union({1, 2}, {2, 3})
-    3 $in union({1, 2}, {2, 3})
-    $is_finite_set(union({1, 2}, {2, 3}))
-    finite_set_size(union({1, 2}, {2, 3})) <= finite_set_size({1, 2}) + finite_set_size({2, 3})
 
 """
 Example 3.1.11. {1, 2} union {2, 3} is {1, 2, 3}.
@@ -289,29 +215,9 @@ operation, not numerical addition.
 sketch:
     by extension:
         ? union({1, 2}, {2, 3}) = {1, 2, 3}
-        claim:
+        by enumerate finite_set:
             ? forall x union({1, 2}, {2, 3}):
                 x $in {1, 2, 3}
-            x $in union({1, 2}, {2, 3})
-            x $in {1, 2} or x $in {2, 3}
-            by cases:
-                ? x $in {1, 2, 3}
-                case x $in {1, 2}:
-                    x = 1 or x = 2
-                    by cases:
-                        ? x $in {1, 2, 3}
-                        case x = 1:
-                            x $in {1, 2, 3}
-                        case x = 2:
-                            x $in {1, 2, 3}
-                case x $in {2, 3}:
-                    x = 2 or x = 3
-                    by cases:
-                        ? x $in {1, 2, 3}
-                        case x = 2:
-                            x $in {1, 2, 3}
-                        case x = 3:
-                            x $in {1, 2, 3}
         by enumerate finite_set:
             ? forall y {1, 2, 3}:
                 y $in union({1, 2}, {2, 3})
@@ -323,19 +229,9 @@ sketch:
             union(A, B) = union(A1, B1)
     by extension:
         ? union({2}, {3}) = {2, 3}
-        claim:
+        by enumerate finite_set:
             ? forall x union({2}, {3}):
                 x $in {2, 3}
-            x $in union({2}, {3})
-            x $in {2} or x $in {3}
-            by cases:
-                ? x $in {2, 3}
-                case x $in {2}:
-                    x = 2
-                    x $in {2, 3}
-                case x $in {3}:
-                    x = 3
-                    x $in {2, 3}
         by enumerate finite_set:
             ? forall y {2, 3}:
                 y $in union({2}, {3})
@@ -343,38 +239,10 @@ sketch:
     finite_set_size(union({2}, {3})) = finite_set_size({2, 3}) = 2
     2 + 3 = 5
 
-    claim:
-        ? forall a, b set:
-            a != b
-            =>:
-                {a, b} = union({a}, {b})
-        by extension:
-            ? {a, b} = union({a}, {b})
-            claim:
-                ? forall x {a, b}:
-                    x $in union({a}, {b})
-                x = a or x = b
-                by cases:
-                    ? x $in union({a}, {b})
-                    case x = a:
-                        x $in {a}
-                        x $in union({a}, {b})
-                    case x = b:
-                        x $in {b}
-                        x $in union({a}, {b})
-            claim:
-                ? forall y union({a}, {b}):
-                    y $in {a, b}
-                y $in union({a}, {b})
-                y $in {a} or y $in {b}
-                by cases:
-                    ? y $in {a, b}
-                    case y $in {a}:
-                        y = a
-                        y $in {a, b}
-                    case y $in {b}:
-                        y = b
-                        y $in {a, b}
+    forall a, b set:
+        a != b
+        =>:
+            {a, b} = union({a}, {b})
 
     forall A, B set:
         union(A, B) = union(B, A)
@@ -416,33 +284,11 @@ forall A, B, C set:
     =>:
         A $subset C
 
-sketch:
-    prop same_set_for_transitive_prop_example(x, y set):
-        x = y
-
-    by transitive_prop:
-        ? forall x, y, z set:
-            $same_set_for_transitive_prop_example(x, y)
-            $same_set_for_transitive_prop_example(y, z)
-            =>:
-                $same_set_for_transitive_prop_example(x, z)
-        x = y
-        y = z
-
-    forall a, b, c set:
-        $same_set_for_transitive_prop_example(a, b)
-        $same_set_for_transitive_prop_example(b, c)
-        =>:
-            $same_set_for_transitive_prop_example(a, c)
-
-    claim:
-        ? forall A, B set:
-            A $subset B
-            B $subset A
-            =>:
-                A = B
-        by extension:
-            ? A = B
+forall A, B set:
+    A $subset B
+    B $subset A
+    =>:
+        A = B
 
 """
 Remark 3.1.16. Subset is also well-defined under equality of sets.
@@ -467,17 +313,7 @@ sketch:
     {1, 2, 4} $subset {1, 2, 3, 4, 5}
     {1, 2, 4} != {1, 2, 3, 4, 5}
 
-    claim:
-        ? forall A set:
-            {} $subset A
-        claim:
-            ? forall x {}:
-                x $in A
-            by contra:
-                ? x $in A
-                not $is_nonempty_set({})
-                witness $is_nonempty_set({}) from x
-                impossible $is_nonempty_set({})
+    forall A set:
         {} $subset A
 
     claim:
@@ -521,47 +357,11 @@ sketch:
     {1} $subset union({1}, {2, 3})
     {2, 3} $subset union({1}, {2, 3})
 
-    claim:
-        ? union({1}, {2, 3}) $subset {1, 2, 3}
-        claim:
-            ? forall x union({1}, {2, 3}):
-                x $in {1, 2, 3}
-            x $in union({1}, {2, 3})
-            x $in {1} or x $in {2, 3}
-            by cases:
-                ? x $in {1, 2, 3}
-                case x $in {1}:
-                    x = 1
-                    x $in {1, 2, 3}
-                case x $in {2, 3}:
-                    x = 2 or x = 3
-                    by cases:
-                        ? x $in {1, 2, 3}
-                        case x = 2:
-                            x $in {1, 2, 3}
-                        case x = 3:
-                            x $in {1, 2, 3}
-        union({1}, {2, 3}) $subset {1, 2, 3}
+    union({1}, {2, 3}) $subset {1, 2, 3}
 
-    claim:
-        ? not {1} $subset {2}
-        by contra:
-            ? not {1} $subset {2}
-            {1} $subset {2}
-            1 $in {1}
-            1 $in {2}
-            not 1 $in {2}
-            impossible not 1 $in {2}
+    not {1} $subset {2}
 
-    claim:
-        ? not {2} $subset {1}
-        by contra:
-            ? not {2} $subset {1}
-            {2} $subset {1}
-            2 $in {2}
-            2 $in {1}
-            not 2 $in {1}
-            impossible not 2 $in {1}
+    not {2} $subset {1}
 
     1 <= 2
 
@@ -579,20 +379,10 @@ subset {x in A : P(x)}.
 # here, `n $in N` and `n < 4`.
 
 sketch:
-    have small_initial_segment set = {n N: n < 4}
-
     forall n N:
         n $in {k N: k < 4}
         =>:
             n < 4
-    forall x set:
-        x $in {k N: k < 4}
-        =>:
-            x $in N
-    forall x set:
-        x $in {k N: k < 4}
-        =>:
-            x < 4
     forall n N:
         n < 4
         =>:
@@ -610,25 +400,13 @@ sketch:
     2 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
     3 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
 
-    claim:
-        ? not 4 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
-        by contra:
-            ? not 4 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
-            impossible 4 < 4
+    not 4 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
 
-    claim:
-        ? not 5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
-        by contra:
-            ? not 5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
-            impossible 5 < 4
+    not 5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
 
     5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 7}
 
-    claim:
-        ? not 1 $in {n N: n $in {1, 2, 3, 4, 5} and n < 1}
-        by contra:
-            ? not 1 $in {n N: n $in {1, 2, 3, 4, 5} and n < 1}
-            impossible 1 < 1
+    not 1 $in {n N: n $in {1, 2, 3, 4, 5} and n < 1}
 
 """
 Definition 3.1.23 (Intersections). An element is in A intersect B iff it is in
@@ -792,40 +570,20 @@ sketch:
     prop plus_one_relation(x R, y R):
         y = x + 1
 
-    claim:
-        ? forall x {3, 5, 9}, y, y2 set:
-            $plus_one_relation(x, y)
-            $plus_one_relation(x, y2)
-            =>:
-                y = y2
-        y = x + 1
-        y2 = x + 1
-        y = y2
+    forall x {3, 5, 9}, y, y2 set:
+        $plus_one_relation(x, y)
+        $plus_one_relation(x, y2)
+        =>:
+            y = y2
 
     have replacement_plus_one_image set = replacement(plus_one_relation, {3, 5, 9})
 
-# A closer example to the later Cartesian-product language is this: take
-# `A = closed_range(1, n)` and let `c` be an n-dimensional cartesian product.
-# If we want `{y: exist x A st {y $in proj(c, x)}}`, directly taking `P(x,y)` to
-# mean `y $in proj(c,x)` usually does not satisfy Replacement's uniqueness
-# condition: after fixing a coordinate `x`, the x-th factor usually contains
-# many possible `y`.
-# The correct set-theoretic construction has two steps: first use Replacement to
-# collect each projection factor set, then take `cup` of that set of factor
-# sets.  In other words, Replacement applies to the functional relation
-# `Q(x, S)`, meaning `S = proj(c, x)`; then
-# `y $in cup(replacement(Q, A))` means that for some `x in A`, `y` belongs to the
-# x-th factor.
-# projection factor。
-# The fully variable-index version needs a little more tuple notation than this
-# section has introduced.  The 3-dimensional example below shows the same idea
-# with concrete projections: collect the three factor sets, then take their
-# union.
+# For a Cartesian product, Replacement collects the factor sets through the
+# functional relation `S = proj(c,x)`; `big_union` then unions those factors.  The
+# three-dimensional example below exhibits this construction concretely.
 
 sketch:
     have C set = cart({1, 2}, {3, 4}, {5, 6})
-    $is_cart(C)
-    cart_dim(C) = 3
     proj(C, 1) = {1, 2}
     proj(C, 2) = {3, 4}
     proj(C, 3) = {5, 6}
@@ -835,12 +593,9 @@ sketch:
         case k = 2: proj(C, 2)
         case k = 3: proj(C, 3)
 
-    projection_factor_on_three(1) = proj(C, 1) = {1, 2}
-    projection_factor_on_three(2) = proj(C, 2) = {3, 4}
-    projection_factor_on_three(3) = proj(C, 3) = {5, 6}
-    projection_factor_on_three(1) $in fn_range(projection_factor_on_three)
-    projection_factor_on_three(2) $in fn_range(projection_factor_on_three)
-    projection_factor_on_three(3) $in fn_range(projection_factor_on_three)
+    projection_factor_on_three(1) = {1, 2}
+    projection_factor_on_three(2) = {3, 4}
+    projection_factor_on_three(3) = {5, 6}
     {1, 2} $in fn_range(projection_factor_on_three)
     {3, 4} $in fn_range(projection_factor_on_three)
     {5, 6} $in fn_range(projection_factor_on_three)
@@ -848,18 +603,9 @@ sketch:
     1 $in {1, 2}
     3 $in {3, 4}
     5 $in {5, 6}
-    1 $in projection_factor_on_three(1)
-    3 $in projection_factor_on_three(2)
-    5 $in projection_factor_on_three(3)
-    witness exist k {1, 2, 3} st {1 $in projection_factor_on_three(k)} from 1:
-        1 $in projection_factor_on_three(1)
-    witness exist k {1, 2, 3} st {3 $in projection_factor_on_three(k)} from 2:
-        3 $in projection_factor_on_three(2)
-    1 $in cup(fn_range(projection_factor_on_three))
-    3 $in cup(fn_range(projection_factor_on_three))
-    5 $in cup(fn_range(projection_factor_on_three))
-    fn_range(projection_factor_on_three) $subset {{1, 2}, {3, 4}, {5, 6}}
-    $is_finite_set(fn_range(projection_factor_on_three))
+    1 $in big_union(fn_range(projection_factor_on_three))
+    3 $in big_union(fn_range(projection_factor_on_three))
+    5 $in big_union(fn_range(projection_factor_on_three))
 
 # When the relation is already presented as a function, its image over a set is
 # simply `fn_range(f)`: the set of all values `f(x)` in its declared domain.
@@ -869,54 +615,20 @@ sketch:
         case n = 5: 6
         case n = 9: 10
 
-    plus_one_on_three(3) = 4
-    plus_one_on_three(5) = 6
-    plus_one_on_three(9) = 10
-
-    plus_one_on_three(3) $in fn_range(plus_one_on_three)
-    plus_one_on_three(5) $in fn_range(plus_one_on_three)
-    plus_one_on_three(9) $in fn_range(plus_one_on_three)
-    fn_range(plus_one_on_three) $subset {4, 6, 10}
-    $is_finite_set(fn_range(plus_one_on_three))
-
     have fn constant1_on_three(n {3, 5, 9}) {1} by cases:
         case n = 3: 1
         case n = 5: 1
         case n = 9: 1
 
-    constant1_on_three(3) = 1
-    constant1_on_three(5) = 1
-    constant1_on_three(9) = 1
-    constant1_on_three(3) $in fn_range(constant1_on_three)
     1 $in fn_range(constant1_on_three)
 
-    claim:
-        ? forall y fn_range(constant1_on_three):
+    by extension fn_range(constant1_on_three) = {1}:
+        forall y fn_range(constant1_on_three):
             y $in {1}
-        y $in fn_range(constant1_on_three)
-        have by preimage k from y $in fn_range(constant1_on_three)
-        k $in {3, 5, 9}
-        y = constant1_on_three(k)
-        constant1_on_three(k) $in {1}
-        constant1_on_three(k) = 1
-        y = 1
-        y $in {1}
-
-    fn_range(constant1_on_three) $subset {1}
-
-    claim:
-        ? forall y {1}:
+        forall y {1}:
             y $in fn_range(constant1_on_three)
-        y = 1
-        1 $in fn_range(constant1_on_three)
-        y $in fn_range(constant1_on_three)
 
-    {1} $subset fn_range(constant1_on_three)
-
-    by extension:
-        ? fn_range(constant1_on_three) = {1}
-
-    finite_set_size(fn_range(constant1_on_three)) = finite_set_size({1}) = 1
+    finite_set_size(fn_range(constant1_on_three)) = 1
 
 """
 Axiom 3.7 (Infinity). There is a set N of natural numbers containing 0 and
@@ -961,40 +673,27 @@ claim:
         not $is_universal_set(U)
     by contra:
         ? not $is_universal_set(U)
-        $is_universal_set(U)
         U $in U
         U $in {U}
         by regularity_axiom({U})
         obtain x from exist x {U} st {intersect(x, {U}) = {}}
-        x = U
-        intersect(U, {U}) = intersect(x, {U}) = {}
+        intersect(U, {U}) = {}
         U $in intersect(U, {U})
         U $in {}
-        not U $in {}
         impossible not U $in {}
 
 sketch:
     by contra:
         ? not $is_universal_set({1, 2})
-        $is_universal_set({1, 2})
         3 $in {1, 2}
-        not 3 $in {1, 2}
         impossible not 3 $in {1, 2}
 
     2 $in {n N: n < 4}
     2 $in {n N: n + 1 < 5}
 
-    claim:
-        ? not 5 $in {n N: n < 4}
-        by contra:
-            ? not 5 $in {n N: n < 4}
-            impossible 5 < 4
+    not 5 $in {n N: n < 4}
 
-    claim:
-        ? not 5 $in {n N: n + 1 < 5}
-        by contra:
-            ? not 5 $in {n N: n + 1 < 5}
-            impossible 5 + 1 < 5
+    not 5 $in {n N: n + 1 < 5}
 
 
 # Chapter 3, Section 3.3: Functions.
@@ -1018,34 +717,11 @@ sketch:
         ? forall x X_example:
             exist! y Y_example st {$P_example(x, y)}
         witness exist! y Y_example st {$P_example(x, y)} from x:
-            claim:
-                ? forall y1, y2 Y_example:
-                    $P_example(x, y1)
-                    $P_example(x, y2)
-                    =>:
-                        y1 = y2
-                y1 = x
-                x = y2
-                y1 = y2
-
-    forall x X_example:
-        $P_example(x, f_from_relation(x))
-
-    forall x X_example, y Y_example:
-        $P_example(x, y)
-        =>:
-            y = f_from_relation(x)
-    claim:
-        ? forall x X_example, y Y_example:
-            y = f_from_relation(x)
-            =>:
-                $P_example(x, y)
-        $P_example(x, f_from_relation(x))
-        $P_example(x, y)
-
-    # The concrete `f_from_relation` construction above is the executable
-    # vertical-line-test example.  It already exhibits the unique output and
-    # the two directions between `P(x,y)` and `y=f(x)`.
+            forall y1, y2 Y_example:
+                $P_example(x, y1)
+                $P_example(x, y2)
+                =>:
+                    y1 = y2
 
 """
 Example 3.3.2. With X=N, Y=N, and P(x,y) the relation y=x++, the vertical
@@ -1065,9 +741,6 @@ sketch:
             =>:
                 y1 = y2
 
-    forall x N:
-        increment_from_relation(x) = x + 1
-
     increment_from_relation(4) = 5
 
     forall n N:
@@ -1083,78 +756,18 @@ sketch:
     have fn pred_pos_from_relation by exist!:
         ? forall a N_pos:
             exist! b N st {b + 1 = a}
-        witness exist b N st {b + 1 = a} from a - 1:
-            (a - 1) + 1 = a
+        witness exist b N st {b + 1 = a} from a - 1
         forall b1, b2 N:
             b1 + 1 = a
             b2 + 1 = a
             =>:
-                b1 + 1 = b2 + 1
-                b1 = (b1 + 1) - 1 = (b2 + 1) - 1 = b2
+                b1 = b2
 
     have fn pred_pos(n N_pos) N = n - 1
 
     pred_pos(1) = 0
     pred_pos(4) = 3
     succ(pred_pos(4)) = 4
-
-"""
-Litex sidebar: several ways to define functions.
-"""
-
-sketch:
-    have fn direct_succ(n N) N = n + 1
-    direct_succ(4) = 5
-
-    have fn add_two_inputs(x N, y N) N = x + y
-    add_two_inputs(2, 3) = 5
-
-    have fn restricted_pred(n N_pos) N = n - 1
-    restricted_pred(4) = 3
-
-    have fn max_by_cases(x, y R) R by cases:
-        case x > y: x
-        case x <= y: y
-
-    max_by_cases(5, 3) = 5
-    max_by_cases(2, 7) = 7
-
-    have fn rec_add_one(n N) R by induc n from 0:
-        case n = 0: 1
-        case n != 0: rec_add_one(n - 1) + 1
-
-    rec_add_one(0) = 1
-    rec_add_one(1) = rec_add_one(0) + 1 = 2
-
-    have fn algo_square(x R) R = x^2
-
-    algo_square(3) = 9
-
-    have A set = R
-    have B set = R
-
-    have fn identity_from_unique_existence by exist!:
-        ? forall x A:
-            exist! y B st {y = x}
-        witness exist! y B st {y = x} from x:
-            claim:
-                ? forall y1, y2 B:
-                    y1 = x
-                    y2 = x
-                    =>:
-                        y1 = y2
-                y1 = x
-                x = y2
-                y1 = y2
-
-    forall x A:
-        identity_from_unique_existence(x) = x
-
-    fn(x N) N {x + 1}(4) = 5
-
-    claim:
-        ? forall S, T set, f fn(x S) T, x S:
-            f(x) $in T
 
 """
 Example 3.3.3. The relation y^2=x does not define a square-root function
@@ -1174,7 +787,6 @@ sketch:
         ? not exist y R st {y^2 = -1}
         obtain a from exist y R st {y^2 = -1}
         a^2 >= 0
-        a^2 = -1
         impossible -1 >= 0
 
     2^2 = 4
@@ -1201,9 +813,6 @@ sketch:
             =>:
                 y1 = y2
 
-    forall x N:
-        constant7_from_relation(x) = 7
-
     have fn constant7_N(n N) N = 7
 
     constant7_N(0) = 7
@@ -1221,30 +830,6 @@ definitions, and the danger of suppressing domain and codomain.
 # often writes functions by formulas, cases, recursion, algorithms, or anonymous
 # expressions.  These are convenient notations for the same mathematical object,
 # not a different definition.
-
-sketch:
-    abs(2) = 2
-    abs(-2) = 2
-    -2 != 2
-
-    have fn self_max(x, y R) R by cases:
-        case x > y: x
-        case x <= y: y
-
-    self_max(5, 3) = 5
-    self_max(2, 7) = 7
-
-    have fn rec_add_one(n N) R by induc n from 0:
-        case n = 0: 1
-        case n != 0: rec_add_one(n - 1) + 1
-
-    rec_add_one(0) = 1
-
-    have fn algo_identity(x R) R = x
-
-    algo_identity(3) = 3
-
-    fn(x N) N {x + 1}(4) = 5
 
 """
 Remark 3.3.5. Parentheses are overloaded: they can group operations, hold a
@@ -1319,14 +904,8 @@ sketch:
     have fn empty_to_N(x {}) N = 0
     have fn empty_to_N_alt(x {}) N = 1
 
-    claim:
-        ? forall x {}:
-            empty_to_N(x) = empty_to_N_alt(x)
-        by contra:
-            ? empty_to_N(x) = empty_to_N_alt(x)
-            not $is_nonempty_set({})
-            witness $is_nonempty_set({}) from x
-            impossible $is_nonempty_set({})
+    forall x {}:
+        empty_to_N(x) = empty_to_N_alt(x)
 
     $fn_eq(empty_to_N, empty_to_N_alt)
 
@@ -1366,18 +945,10 @@ Lemma 3.3.12. Composition is associative: f o (g o h) = (f o g) o h.
 # parenthesizations, both sides are `f(g(h(x)))` for every `x`.
 
 sketch:
-    claim:
-        ? forall X0, Y0, Z0, W0 set, f fn(z Z0) W0, g fn(y Y0) Z0, h fn(x X0) Y0:
-            $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {fn(u Y0) W0 {f(g(u))}(h(t))})
-        forall x X0:
-            fn(t X0) W0 {f(g(h(t)))}(x) = f(g(h(x))) = fn(u Y0) W0 {f(g(u))}(h(x)) = fn(t X0) W0 {fn(u Y0) W0 {f(g(u))}(h(t))}(x)
+    forall X0, Y0, Z0, W0 set, f fn(z Z0) W0, g fn(y Y0) Z0, h fn(x X0) Y0:
         $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {fn(u Y0) W0 {f(g(u))}(h(t))})
 
-    claim:
-        ? forall X0, Y0, Z0, W0 set, f fn(z Z0) W0, g fn(y Y0) Z0, h fn(x X0) Y0:
-            $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {f(fn(u X0) Z0 {g(h(u))}(t))})
-        forall x X0:
-            fn(t X0) W0 {f(g(h(t)))}(x) = f(g(h(x))) = f(fn(u X0) Z0 {g(h(u))}(x)) = fn(t X0) W0 {f(fn(u X0) Z0 {g(h(u))}(t))}(x)
+    forall X0, Y0, Z0, W0 set, f fn(z Z0) W0, g fn(y Y0) Z0, h fn(x X0) Y0:
         $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {f(fn(u X0) Z0 {g(h(u))}(t))})
 
 """
@@ -1394,9 +965,7 @@ Definition 3.3.14. A function is one-to-one, or injective, when equal outputs
 force equal inputs.
 """
 
-# Tao first says "different inputs give different outputs".  Litex more often
-# uses the equivalent, contrapositive-friendly form `f(x1)=f(x2) => x1=x2`.
-# This is the substance of the definition.
+# Injectivity is written in the equivalent form `f(x1)=f(x2) => x1=x2`.
 prop is_injective_fn(S, T set, f fn(x S) T):
     forall x1, x2 S:
         f(x1) = f(x2)
@@ -1421,9 +990,6 @@ sketch:
 
     by contra:
         ? not $is_injective_fn(Z, Z, square_Z)
-        $is_injective_fn(Z, Z, square_Z)
-        square_Z(1) = square_Z(-1)
-        1 = -1
         impossible 1 = -1
 
     have fn square_N(n N) Z = n^2
@@ -1431,7 +997,6 @@ sketch:
     forall x1, x2 N:
         square_N(x1) = square_N(x2)
         =>:
-            x1^2 = square_N(x1) = square_N(x2) = x2^2
             x1 = sqrt(x1^2) = sqrt(x2^2) = x2
     by def $is_injective_fn(N, Z, square_N)
 
@@ -1467,18 +1032,12 @@ sketch:
     by contra:
         ? not exist n Z st {square_Z(n) = -1}
         obtain k from exist n Z st {square_Z(n) = -1}
-        square_Z(k) = k^2
-        k^2 = square_Z(k) = -1
         k^2 >= 0
         impossible -1 >= 0
 
     by contra:
         ? not $is_surjective_fn(Z, Z, square_Z)
-        $is_surjective_fn(Z, Z, square_Z)
-        exist n Z st {-1 = square_Z(n)}
         obtain k2 from exist n Z st {-1 = square_Z(n)}
-        square_Z(k2) = -1
-        square_Z(k2) != -1
         impossible square_Z(k2) = -1
 
 """
@@ -1517,9 +1076,6 @@ sketch:
     0 != 1
     by contra:
         ? not $is_injective_fn({0, 1, 2}, {3, 4}, finite_not_injective)
-        $is_injective_fn({0, 1, 2}, {3, 4}, finite_not_injective)
-        finite_not_injective(0) = finite_not_injective(1)
-        0 = 1
         impossible 0 = 1
 
     have fn finite_not_surjective(x {0, 1}) {2, 3, 4} by cases:
@@ -1531,8 +1087,6 @@ sketch:
     not 4 $in {2, 3}
     by contra:
         ? not $is_surjective_fn({0, 1}, {2, 3, 4}, finite_not_surjective)
-        $is_surjective_fn({0, 1}, {2, 3, 4}, finite_not_surjective)
-        exist x {0, 1} st {4 = finite_not_surjective(x)}
         obtain a from exist x {0, 1} st {4 = finite_not_surjective(x)}
         a = 0 or a = 1
         by cases:
@@ -1543,7 +1097,6 @@ sketch:
             case a = 1:
                 finite_not_surjective(a) = finite_not_surjective(1) = 3
                 finite_not_surjective(a) $in {2, 3}
-        4 $in {2, 3}
         impossible 4 $in {2, 3}
 
     have fn finite_bijection(x {0, 1, 2}) {3, 4, 5} by cases:
@@ -1578,7 +1131,7 @@ formula is not a bijection N->N because 0 is not hit.
 
 # Successor as `N -> N_pos` is a bijection; the same formula `n+1`, viewed as
 # `N -> N`, is not onto because `0` has no preimage.  This is exactly the
-# domain/range dependence that Tao emphasizes repeatedly.
+# domain/range dependence emphasized by the example.
 
 sketch:
     have fn succ(n N) N_pos = n + 1
@@ -1586,7 +1139,7 @@ sketch:
     forall x1, x2 N:
         succ(x1) = succ(x2)
         =>:
-            x1 = (x1 + 1) - 1 = succ(x1) - 1 = succ(x2) - 1 = (x2 + 1) - 1 = x2
+            x1 = x2
     by def $is_injective_fn(N, N_pos, succ)
 
     claim:
@@ -1605,16 +1158,12 @@ sketch:
     by contra:
         ? not exist x N st {succ_to_N(x) = 0}
         obtain k from exist x N st {succ_to_N(x) = 0}
-        0 = succ_to_N(k) = k + 1
         k + 1 $in N_pos
         impossible 0 $in N_pos
 
     by contra:
         ? not $is_surjective_fn(N, N, succ_to_N)
-        $is_surjective_fn(N, N, succ_to_N)
-        exist x N st {0 = succ_to_N(x)}
         obtain k2 from exist x N st {0 = succ_to_N(x)}
-        succ_to_N(k2) = 0
         impossible succ_to_N(k2) = 0
 
 """
@@ -1672,17 +1221,13 @@ thm injective_fn_has_unique_preimage_in_range:
         $is_injective_fn(X, Y, f)
         =>:
             exist! x X st {y = f(x)}
-    y $in fn_range(f)
-    exist x X st {y = f(x)}
-    forall x1, x2 X:
-        y = f(x1)
-        y = f(x2)
-        =>:
-            f(x1) = y
-            f(x2) = y
-            f(x1) = f(x2)
-            x1 = x2
-    exist! x X st {y = f(x)}
+    have by preimage x from y $in fn_range(f)
+    witness exist! x X st {y = f(x)} from x:
+        forall x1, x2 X:
+            y = f(x1)
+            y = f(x2)
+            =>:
+                x1 = x2
 
 """
 Definition 3.4.1. The forward image f(A) consists exactly of values f(x) with
@@ -1720,23 +1265,6 @@ sketch:
         case n = 3: 6
 
     by enumerate finite_set:
-        ? forall x {1, 2, 3}:
-            x $in N
-
-    {1, 2, 3} $subset N
-
-    by enumerate finite_set:
-        ? forall y {2, 4, 6}:
-            y $in N
-
-    {2, 4, 6} $subset N
-
-    {1, 2, 3} $subset {1, 2, 3}
-    {2, 4, 6} $subset {2, 4, 6}
-    by enumerate finite_set:
-        ? forall x {1, 2, 3}:
-            double_on_three(x) $in {2, 4, 6}
-    by enumerate finite_set:
         ? forall y {2, 4, 6}:
             exist x {1, 2, 3} st {y = double_on_three(x)}
         by cases:
@@ -1749,9 +1277,6 @@ sketch:
                 witness exist x {1, 2, 3} st {y = double_on_three(x)} from 3
     by def $is_forward_image_of({1, 2, 3}, {2, 4, 6}, double_on_three, {1, 2, 3}, {2, 4, 6})
 
-    witness exist x {1, 2, 3} st {x $in N, double_nat(1) = double_nat(x)} from 1
-    $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, double_nat(1))
-    double_nat(1) $in {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
     double_nat(1) $in \restricted_image<N, N, double_nat, {1, 2, 3}>
 
     by extension:
@@ -1759,16 +1284,11 @@ sketch:
 
     finite_set_size(fn_range(double_on_three)) = finite_set_size({2, 4, 6}) = 3
 
-    have by preimage builtin_k from double_on_three(1) $in fn_range(double_on_three)
-    builtin_k $in {1, 2, 3}
-
 """
 Example 3.4.3. If f:Z->Z is f(x)=x^2, then the forward image of
 {-1,0,1,2} is {0,1,4}.
 """
 
-# Tao marks this example informal because Z is introduced in the next section.
-# The same finite image can be written directly with integer-valued functions.
 # The image is smaller because -1 and 1 have the same square.
 
 sketch:
@@ -1779,23 +1299,6 @@ sketch:
         case z = 1: 1
         case z = 2: 4
 
-    by enumerate finite_set:
-        ? forall z {-1, 0, 1, 2}:
-            z $in Z
-
-    {-1, 0, 1, 2} $subset Z
-
-    by enumerate finite_set:
-        ? forall y {0, 1, 4}:
-            y $in Z
-
-    {0, 1, 4} $subset Z
-
-    {-1, 0, 1, 2} $subset {-1, 0, 1, 2}
-    {0, 1, 4} $subset {0, 1, 4}
-    by enumerate finite_set:
-        ? forall z {-1, 0, 1, 2}:
-            square_on_example(z) $in {0, 1, 4}
     by enumerate finite_set:
         ? forall y {0, 1, 4}:
             exist z {-1, 0, 1, 2} st {y = square_on_example(z)}
@@ -1875,34 +1378,18 @@ sketch:
         by cases:
             ? x $in {1}
             case double_nat(x) = 1:
-                double_nat(x) = 2 * x
-                2 * x = 1
                 x = 1 / 2
-                x $in N
-                not 1 / 2 $in N
                 impossible not 1 / 2 $in N
             case double_nat(x) = 2:
-                double_nat(x) = 2 * x
-                2 * x = 2
                 x = 1
                 x $in {1}
             case double_nat(x) = 3:
-                double_nat(x) = 2 * x
-                2 * x = 3
                 x = 3 / 2
-                x $in N
-                not 3 / 2 $in N
                 impossible not 3 / 2 $in N
     by def $is_inverse_image_of(N, N, double_nat, {1, 2, 3}, {1})
 
     double_on_one(1) = 2
-    claim:
-        ? {2} != {1, 2, 3}
-        by contra:
-            ? {2} != {1, 2, 3}
-            {2} = {1, 2, 3}
-            1 = finite_set_size({2}) = finite_set_size({1, 2, 3}) = 3
-            impossible 1 = 3
+    {2} != {1, 2, 3}
 
 """
 Example 3.4.6. For f:Z->Z, f(x)=x^2, the inverse image of {0,1,4}
@@ -1934,15 +1421,12 @@ sketch:
             =>:
                 z $in {-2, -1, 0, 1, 2}
         square_Z(z) = 0 or square_Z(z) = 1 or square_Z(z) = 4
-        square_Z(z) = z^2
         by cases:
             ? z $in {-2, -1, 0, 1, 2}
             case square_Z(z) = 0:
-                z^2 = square_Z(z) = 0
                 z = 0
                 z $in {-2, -1, 0, 1, 2}
             case square_Z(z) = 1:
-                z^2 = square_Z(z) = 1
                 (z - 1) * (z + 1) = z^2 - 1 = 0
                 z - 1 = 0 or z + 1 = 0
                 by cases:
@@ -1954,7 +1438,6 @@ sketch:
                         z = -1
                         z $in {-2, -1, 0, 1, 2}
             case square_Z(z) = 4:
-                z^2 = square_Z(z) = 4
                 (z - 2) * (z + 2) = z^2 - 4 = 0
                 z - 2 = 0 or z + 2 = 0
                 by cases:
@@ -2006,7 +1489,7 @@ sketch:
 Axiom 3.10. Y^X is the set of all functions from X to Y.
 """
 
-# In Litex, Tao's function-space notation `Y^X` is written as `fn(x X) Y`:
+# The function-space notation `Y^X` is written as `fn(x X) Y`:
 # an object of this type takes an input `x` in `X` and returns a value in `Y`.
 
 sketch:
@@ -2039,20 +1522,6 @@ sketch:
     have fn bit_11(x {4, 7}) {0, 1} by cases:
         case x = 4: 1
         case x = 7: 1
-
-    bit_00 $in fn(x {4, 7}) {0, 1}
-    bit_01 $in fn(x {4, 7}) {0, 1}
-    bit_10 $in fn(x {4, 7}) {0, 1}
-    bit_11 $in fn(x {4, 7}) {0, 1}
-
-    bit_00(4) = 0
-    bit_00(7) = 0
-    bit_01(4) = 0
-    bit_01(7) = 1
-    bit_10(4) = 1
-    bit_10(7) = 0
-    bit_11(4) = 1
-    bit_11(7) = 1
 
 """
 Lemma 3.4.9. The collection of all subsets of X is the power set 2^X.
@@ -2100,15 +1569,15 @@ Axiom 3.11. The union of a set of sets contains exactly the elements of the
 member sets.
 """
 
-# The family union is written `cup(F)`, where the elements of `F` are themselves
-# sets.  To prove `x $in cup(F)`, it is enough to find one member set `A` of
-# the family with `x $in A`.  Conversely, a point of `cup(F)` comes with such a
+# The family union is written `big_union(F)`, where the elements of `F` are themselves
+# sets.  To prove `x $in big_union(F)`, it is enough to find one member set `A` of
+# the family with `x $in A`.  Conversely, a point of `big_union(F)` comes with such a
 # witness set.
 
 forall F set, A F, x A:
-    x $in cup(F)
+    x $in big_union(F)
 
-forall F set, x cup(F):
+forall F set, x big_union(F):
     exist A F st {x $in A}
 
 """
@@ -2117,8 +1586,7 @@ inside a common universe Y, then the union over i in I contains exactly the
 objects that lie in at least one A_i.
 """
 
-# This is Tao's unnumbered bridge from replacement plus union to indexed
-# notation.  The family is a function `A fn(i I) power_set(Y)`, and the indexed
+# The family is a function `A fn(i I) power_set(Y)`, and the indexed
 # union is the subset of Y whose members have some index witness.
 prop is_in_indexed_union(I set, Y set, A fn(i I) power_set(Y), z Y):
     exist i I st {z $in A(i)}
@@ -2126,10 +1594,10 @@ prop is_in_indexed_union(I set, Y set, A fn(i I) power_set(Y), z Y):
 template<I set, Y set, A fn(i I) power_set(Y)>:
     have indexed_union set = {z Y: $is_in_indexed_union(I, Y, A, z)}
 
-# Tao obtains indexed unions by first forming the family `{A_i : i in I}` and
-# then taking its union.  The definition above states the same membership
+# Indexed unions first form the family `{A_i : i in I}` and then take its union.
+# The definition above states the same membership
 # condition directly: a point lies in the indexed union when it lies in some
-# indexed set.  The replacement-plus-`cup` equality is a routine set-theory
+# indexed set.  The replacement-plus-`big_union` equality is a routine set-theory
 # fact left for later reuse.
 sketch:
     have fn A(i {1, 2, 3}) power_set(N) by cases:
@@ -2137,16 +1605,6 @@ sketch:
         case i = 2: {3, 4}
         case i = 3: {4, 5}
 
-    A(1) = {2, 3}
-    A(2) = {3, 4}
-    A(3) = {4, 5}
-    {2, 3} $subset A(1)
-    2 $in {2, 3}
-    2 $in A(1)
-    witness exist i {1, 2, 3} st {2 $in A(i)} from 1:
-        2 $in A(1)
-    $is_in_indexed_union({1, 2, 3}, N, A, 2)
-    2 $in {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)}
     2 $in \indexed_union<{1, 2, 3}, N, A>
 
 """
@@ -2155,9 +1613,7 @@ A_i inside a common universe Y, then the intersection over i in I contains
 exactly the objects that lie in every A_i.
 """
 
-# Tao chooses a base index beta to get an ambient set for specification.  Here
-# the ambient universe `Y` is passed explicitly, and the index set is still
-# required to be nonempty.
+# The ambient universe `Y` is explicit, while the index set remains nonempty.
 prop is_in_indexed_intersection(I nonempty_set, Y set, A fn(i I) power_set(Y), z Y):
     forall i I:
         z $in A(i)
@@ -2165,129 +1621,45 @@ prop is_in_indexed_intersection(I nonempty_set, Y set, A fn(i I) power_set(Y), z
 template<I nonempty_set, Y set, A fn(i I) power_set(Y)>:
     have indexed_intersection set = {z Y: $is_in_indexed_intersection(I, Y, A, z)}
 
-# Tao's construction should not depend on which base index beta is chosen.  The
-# definition above uses the common ambient set `Y`, so the set being intersected
-# is explicit; proving beta-independence for Tao's original presentation is a
-# separate set-theory lemma.
+# Using the common ambient set `Y` makes the intersection independent of a
+# chosen base index.
 sketch:
     have fn A(i {1, 2, 3}) power_set(N) by cases:
         case i = 1: {2, 3}
         case i = 2: {3, 4}
         case i = 3: {3, 5}
 
-    A(1) = {2, 3}
-    A(2) = {3, 4}
-    A(3) = {3, 5}
-    {2, 3} $subset A(1)
-    {3, 4} $subset A(2)
-    {3, 5} $subset A(3)
-    3 $in A(1)
-    3 $in A(2)
-    3 $in A(3)
-    claim:
+    by enumerate finite_set:
         ? forall i {1, 2, 3}:
             3 $in A(i)
-        by enumerate finite_set:
-            ? forall j {1, 2, 3}:
-                3 $in A(j)
-    $is_in_indexed_intersection({1, 2, 3}, N, A, 3)
-    3 $in {z N: $is_in_indexed_intersection({1, 2, 3}, N, A, z)}
     3 $in \indexed_intersection<{1, 2, 3}, N, A>
 
 """
 Example 3.4.11. The union of {{2,3},{3,4},{4,5}} is {2,3,4,5}.
 """
 
-# The membership rule is: if `A $in F` and `x $in A`, then `x $in cup(F)`.
+# The membership rule is: if `A $in F` and `x $in A`, then `x $in big_union(F)`.
 
 sketch:
-    claim:
-        ? {2, 3} != {3, 4}
-        by contra:
-            ? {2, 3} != {3, 4}
-            {2, 3} = {3, 4}
-            2 $in {2, 3}
-            2 $in {3, 4}
-            not 2 $in {3, 4}
-            impossible not 2 $in {3, 4}
-    claim:
-        ? {2, 3} != {4, 5}
-        by contra:
-            ? {2, 3} != {4, 5}
-            {2, 3} = {4, 5}
-            2 $in {2, 3}
-            2 $in {4, 5}
-            not 2 $in {4, 5}
-            impossible not 2 $in {4, 5}
-    claim:
-        ? {3, 4} != {4, 5}
-        by contra:
-            ? {3, 4} != {4, 5}
-            {3, 4} = {4, 5}
-            3 $in {3, 4}
-            3 $in {4, 5}
-            not 3 $in {4, 5}
-            impossible not 3 $in {4, 5}
+    2 $in big_union({{2, 3}, {3, 4}, {4, 5}})
 
-    2 $in {2, 3}
-    {2, 3} $in {{2, 3}, {3, 4}, {4, 5}}
-    2 $in cup({{2, 3}, {3, 4}, {4, 5}})
+    3 $in big_union({{2, 3}, {3, 4}, {4, 5}})
 
-    3 $in {2, 3}
-    {2, 3} $in {{2, 3}, {3, 4}, {4, 5}}
-    3 $in cup({{2, 3}, {3, 4}, {4, 5}})
+    4 $in big_union({{2, 3}, {3, 4}, {4, 5}})
 
-    4 $in {3, 4}
-    {3, 4} $in {{2, 3}, {3, 4}, {4, 5}}
-    4 $in cup({{2, 3}, {3, 4}, {4, 5}})
+    5 $in big_union({{2, 3}, {3, 4}, {4, 5}})
 
-    5 $in {4, 5}
-    {4, 5} $in {{2, 3}, {3, 4}, {4, 5}}
-    5 $in cup({{2, 3}, {3, 4}, {4, 5}})
-
-    by enumerate finite_set:
-        ? forall t {2, 3}:
-            t $in {2, 3, 4, 5}
     {2, 3} $subset {2, 3, 4, 5}
-    by enumerate finite_set:
-        ? forall t {3, 4}:
-            t $in {2, 3, 4, 5}
     {3, 4} $subset {2, 3, 4, 5}
-    by enumerate finite_set:
-        ? forall t {4, 5}:
-            t $in {2, 3, 4, 5}
     {4, 5} $subset {2, 3, 4, 5}
 
-    by extension cup({{2, 3}, {3, 4}, {4, 5}}) = {2, 3, 4, 5}:
-        claim:
-            ? forall x cup({{2, 3}, {3, 4}, {4, 5}}):
+    by extension big_union({{2, 3}, {3, 4}, {4, 5}}) = {2, 3, 4, 5}:
+        by enumerate finite_set:
+            ? forall x big_union({{2, 3}, {3, 4}, {4, 5}}):
                 x $in {2, 3, 4, 5}
-            x $in cup({{2, 3}, {3, 4}, {4, 5}})
-            exist A {{2, 3}, {3, 4}, {4, 5}} st {x $in A}
-            obtain A from exist A {{2, 3}, {3, 4}, {4, 5}} st {x $in A}
-            A = {2, 3} or A = {3, 4} or A = {4, 5}
-            by cases:
-                ? x $in {2, 3, 4, 5}
-                case A = {2, 3}:
-                    A $subset {2, 3}
-                    x $in {2, 3}
-                    {2, 3} $subset {2, 3, 4, 5}
-                    x $in {2, 3, 4, 5}
-                case A = {3, 4}:
-                    A $subset {3, 4}
-                    x $in {3, 4}
-                    {3, 4} $subset {2, 3, 4, 5}
-                    x $in {2, 3, 4, 5}
-                case A = {4, 5}:
-                    A $subset {4, 5}
-                    x $in {4, 5}
-                    {4, 5} $subset {2, 3, 4, 5}
-                    x $in {2, 3, 4, 5}
         by enumerate finite_set:
             ? forall y {2, 3, 4, 5}:
-                y $in cup({{2, 3}, {3, 4}, {4, 5}})
-
-    cup({{2, 3}, {3, 4}, {4, 5}}) = {2, 3, 4, 5}
+                y $in big_union({{2, 3}, {3, 4}, {4, 5}})
 
 """
 Remark 3.4.12. The axioms in this section, except unrestricted comprehension,
@@ -2303,9 +1675,8 @@ components agree. This differs from unordered pair sets.
 """
 
 # Ordered pairs are written directly as tuple literals `(x,y)` in Litex;
-# projections use `[1]` and `[2]`.  We do not recode ordered pairs as sets here,
-# because Tao himself leaves the set-theoretic construction to an exercise.  The
-# main line needs coordinate notation more.
+# projections use `[1]` and `[2]`; the set-theoretic coding is left to the
+# source exercise.
 
 sketch:
     forall x1, x2 set, y1, y2 set:
@@ -2325,29 +1696,11 @@ sketch:
     (3, 5)[2] = 5
     tuple_dim((3, 5)) = 2
 
-    claim:
-        ? (3, 5) != (5, 3)
-        by contra:
-            ? (3, 5) != (5, 3)
-            (3, 5) = (5, 3)
-            3 = (3, 5)[1] = (5, 3)[1] = 5
-            impossible 3 = 5
+    (3, 5) != (5, 3)
 
-    claim:
-        ? (3, 5) != (3, 3)
-        by contra:
-            ? (3, 5) != (3, 3)
-            (3, 5) = (3, 3)
-            5 = (3, 5)[2] = (3, 3)[2] = 3
-            impossible 5 = 3
+    (3, 5) != (3, 3)
 
-    claim:
-        ? (3, 5) != (2, 5)
-        by contra:
-            ? (3, 5) != (2, 5)
-            (3, 5) = (2, 5)
-            3 = (3, 5)[1] = (2, 5)[1] = 2
-            impossible 3 = 2
+    (3, 5) != (2, 5)
 
 """
 Remark 3.5.2 says ordered pairs can be constructed from set axioms.
@@ -2369,19 +1722,17 @@ to an exercise.
 
 # The binary Cartesian product is written `cart(X,Y)`.  Its points are ordered
 # pairs `(x,y)` with `x` in `X` and `y` in `Y`, and a point of `cart(X,Y)`
-# exposes its two coordinates.  Empty factors behave as Tao expects for binary
+# exposes its two coordinates.  Empty factors have the expected behavior for binary
 # products.  One-fold and zero-fold product conventions are discussed later as
 # finite-product notation, not as binary `cart`.
 
 sketch:
-    claim:
-        ? forall X, Y nonempty_set, x X, y Y:
-            (x, y) $in cart(X, Y)
+    forall X, Y nonempty_set, x X, y Y:
+        (x, y) $in cart(X, Y)
 
-    claim:
-        ? forall X, Y nonempty_set, p cart(X, Y):
-            p[1] $in X
-            p[2] $in Y
+    forall X, Y nonempty_set, p cart(X, Y):
+        p[1] $in X
+        p[2] $in Y
 
     cart_dim(cart({}, {1})) = 2
     finite_set_size(cart({}, {1})) = 0
@@ -2406,18 +1757,7 @@ sketch:
     finite_set_size(cart({1, 2}, {3, 4, 5})) = finite_set_size({1, 2}) * finite_set_size({3, 4, 5}) = 6
     finite_set_size(cart({3, 4, 5}, {1, 2})) = finite_set_size({3, 4, 5}) * finite_set_size({1, 2}) = 6
 
-    claim:
-        ? cart({1, 2}, {3, 4, 5}) != cart({3, 4, 5}, {1, 2})
-        by contra:
-            ? cart({1, 2}, {3, 4, 5}) != cart({3, 4, 5}, {1, 2})
-            cart({1, 2}, {3, 4, 5}) = cart({3, 4, 5}, {1, 2})
-            (1, 3) $in cart({1, 2}, {3, 4, 5})
-            (1, 3) $in cart({3, 4, 5}, {1, 2})
-            (1, 3)[2] $in {1, 2}
-            (1, 3)[2] = 3
-            3 $in {1, 2}
-            not 3 $in {1, 2}
-            impossible not 3 $in {1, 2}
+    cart({1, 2}, {3, 4, 5}) != cart({3, 4, 5}, {1, 2})
 
 """
 After Example 3.5.6, a function on X x Y can be viewed either as a function
@@ -2437,13 +1777,8 @@ sketch:
     cart_add_on_pair((2, 3)) = 5
     cart_add_two_inputs(2, 3) = 5
 
-    claim:
-        ? forall x, y N:
-            cart_add_on_pair((x, y)) = cart_add_two_inputs(x, y)
-        cart_add_on_pair((x, y)) = (x, y)[1] + (x, y)[2] = x + y = cart_add_two_inputs(x, y)
-
-    cart_add_on_pair $in fn(p cart(N, N)) N
-    cart_add_two_inputs $in fn(x N, y N) N
+    forall x, y N:
+        cart_add_on_pair((x, y)) = cart_add_two_inputs(x, y)
 
 
 """
@@ -2482,9 +1817,8 @@ product X1 x X2 x X3 contains triples, while the iterated binary products
 
 # These three product shapes are intentionally different: flat triples,
 # left-nested pairs, and right-nested pairs have different projections even
-# though each has eight elements.  Tao writes out all eight elements in each
-# case; below we record the eight membership facts, the common finite-set size, and the
-# different arities/projections.  The single displayed eight-element set
+# though each has eight elements.  The sketch records the eight membership
+# facts, common finite-set size, and different arities/projections.  The full
 # equality is left for a later finite-list-set lemma.
 
 sketch:
@@ -2568,7 +1902,7 @@ then append it.
 """
 
 # For any written binary or ternary product, nonempty factors give a nonempty
-# product by choosing one coordinate from each factor.  Tao's full theorem over
+# product by choosing one coordinate from each factor.  The full theorem over
 # a variable finite family would prove this by induction on the number of
 # factors; the fixed-arity cases below show the same idea in the forms needed
 # here.
@@ -2645,10 +1979,6 @@ sketch:
     0 != 1
     by contra:
         ? not $is_bijective_fn({0, 1, 2}, {3, 4}, collapse_to_two)
-        $is_bijective_fn({0, 1, 2}, {3, 4}, collapse_to_two)
-        $is_injective_fn({0, 1, 2}, {3, 4}, collapse_to_two)
-        collapse_to_two(0) = collapse_to_two(1)
-        0 = 1
         impossible 0 = 1
 
     finite_set_size({0, 1, 2}) = finite_set_size({3, 4, 5}) = 3
@@ -2670,7 +2000,6 @@ prop is_even_nat(m N):
 
 sketch:
     have even_N set = {m N: $is_even_nat(m)}
-    even_N $subset N
 
     claim:
         ? forall n N:
@@ -2682,8 +2011,7 @@ sketch:
     forall x1, x2 N:
         double_to_even(x1) = double_to_even(x2)
         =>:
-            2 * x1 = 2 * x2
-            x1 = (2 * x1) / 2 = (2 * x2) / 2 = x2
+            x1 = x2
     by def $is_injective_fn(N, even_N, double_to_even)
 
     claim:
@@ -2699,13 +2027,8 @@ sketch:
 
     by contra:
         ? not 1 $in even_N
-        1 $in even_N
-        $is_even_nat(1)
-        exist k N st {1 = 2 * k}
         obtain k from exist k N st {1 = 2 * k}
         k = 1 / 2
-        k $in N
-        not 1 / 2 $in N
         impossible not 1 / 2 $in N
 
 """
@@ -2738,7 +2061,7 @@ Definition 3.6.5. A set has cardinality n when it has equal cardinality with a
 standard n-element set.
 """
 
-# Tao uses the standard set `{i in N : 1 <= i <= n}`.  This file uses
+# Tao uses `{i in N : 1 <= i <= n}`.  This file uses
 # `range(0, n)` as an equivalent n-element model, while concrete examples still
 # compute size with `finite_set_size(X)`.
 
@@ -2885,7 +2208,6 @@ natural numbers would have a maximum M, so M+1 would be missing.
 sketch:
     by contra:
         ? not $is_finite_set(N)
-        $is_finite_set(N)
         finite_set_size(N) + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
         impossible finite_set_size(N) + 1 <= finite_set_size(N)
 
@@ -2922,8 +2244,7 @@ sketch:
     forall X, Y finite_set:
         intersect(X, Y) = {}
         =>:
-            finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size(intersect(X, Y))
-            finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size(intersect(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size({}) = finite_set_size(X) + finite_set_size(Y)
+            finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y)
 
     intersect({1, 2}, {3}) = {}
     finite_set_size(union({1, 2}, {3})) = finite_set_size({1, 2}) + finite_set_size({3}) = finite_set_size({1, 2}) + 1 = 3
@@ -2935,7 +2256,6 @@ sketch:
                 $is_finite_set(Y)
                 finite_set_size(Y) <= finite_set_size(X)
         by thm basics::subset_of_finite_set_is_finite(Y, X)
-        finite_set_size(Y) <= finite_set_size(X)
 
     have fn double_on_three(n {1, 2, 3}) {2, 4, 6} by cases:
         case n = 1: 2

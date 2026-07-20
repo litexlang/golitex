@@ -36,6 +36,16 @@ where Chapter 6 uses a strict sequence-tail convention (`< epsilon`), and
 Chapter 11's monotonicity predicates are non-strict whereas Chapter 9's are
 strict.  These are not duplicate interfaces to erase.
 
+## Chapter 3 cardinality surface
+
+Chapter 3 defines equal cardinality through a bijection and proves the
+Cantor-Schroeder-Bernstein theorem as `cantor_schroeder_bernstein`: injections
+in both directions produce a bijection.  The proof iterates `g(f(x))` from the
+part of the first set outside `g`'s range, uses `f` on the resulting reachable
+region, and uses the unique inverse of `g` on its complement.  Later chapters
+can call it as `chap3::cantor_schroeder_bernstein` without importing a separate
+cardinality module or assuming any form of choice.
+
 ## Chapter 6 concept-first surface
 
 Chapter 6 separates the candidate-limit relation `$has_limit(a,L)` from the
@@ -83,9 +93,37 @@ are `interval_length`, `common_refinement`,
 `piecewise_constant_integral_with_partition`,
 `piecewise_constant_integral`, `upper_riemann_sum`, `lower_riemann_sum`,
 `upper_riemann_integral`, `lower_riemann_integral`, and `integral_on`. The
+Riemann-sum layer also exposes the set-valued object
+`function_values_on_subset`, selected `upper_riemann_sum_piece` and
+`lower_riemann_sum_piece` values, and theorem interfaces from a constant
+majorant/minorant to each piece and then to a fixed partition sum. Its
+lower-level objects `partition_piece_containing`,
+`upper_riemann_piece_height`, and `lower_riemann_piece_height` expose the
+unique piece at a point and its sup/inf height; the sum-piece values are
+verified height-times-length consequences. The canonical objects
+`upper_riemann_partition_step_function` and
+`lower_riemann_partition_step_function` turn those heights into actual
+piecewise-constant majorant/minorant witnesses. Their fixed-partition
+integrals are the selected upper/lower sums, so Proposition 11.3.12 is checked:
+the Darboux extrema equal the corresponding extrema over all selected Riemann
+sums. The noncanonical epsilon interface `$has_darboux_approximation` supplies
+fresh lower and upper step witnesses for each requested precision. Its checked
+addition transport, together with candidate-level upper/lower sum transports,
+proves Theorem 11.4.1(a): integrable functions are closed under addition and
+`integral_on` is additive. Sign-sensitive candidate transports prove the
+scalar multiplication law, including its integral equality. The same witness
+interface proves maximum closure; minimum closure follows by negation.
+For nonnegative products, `riemann_integrable_nonnegative_bounded_has_clamped_darboux_approximation`
+supplies brackets `0 <= h <= f <= g <= M`; their product gap is bounded by the
+two input gaps weighted by `M_f` and `M_g`. This checks the nonnegative case of
+Theorem 11.4.5, from which squares and arbitrary products follow.
 Stieltjes layer mirrors the last three with `upper_riemann_stieltjes_integral`,
 `lower_riemann_stieltjes_integral`, and `stieltjes_integral_on`; its interval
-weight is `alpha_interval_length`. The relational specification
+weight is `alpha_interval_length`. Its finite base now also has
+`piecewise_constant_riemann_stieltjes_integral_piece_contribution`,
+`piecewise_constant_riemann_stieltjes_integral_with_partition`, and
+`piecewise_constant_riemann_stieltjes_integral`; the relational specifications
+remain the bridge back to displayed witnesses. The relational specification
 `$has_alpha_interval_length` and its theorem
 `alpha_interval_length_has_value` are the stable bridge from that value to its
 endpoint cases.
@@ -118,23 +156,43 @@ usable: membership in a fiber and ownership by its coarse piece agree.
 finite unique-cover instance for generic regrouping.
 The checked
 `refinement_fiber_has_finite_representative` bridge supplies the finite carrier
-needed by the selected inner value `refinement_fiber_sum`. The
-remaining outer/inner finite-sum reindexing equality is explicit proof debt;
-it is not represented by a trusted numerical API. Its intended reusable shape
-is `$is_finite_indexed_subfamily`, `$has_indexed_fiber_sum`, and
-`$is_finite_unique_cover_of`, followed by a finite-sum reindexing theorem.
-The first three form a checked relation-first core: a caller supplies an outer
-summand and proves each of its values is the sum on the displayed fiber. The
-weight is defined on the common carrier of real subsets, so deleting one index
-changes the summation family but not the weight itself. The checked theorems
-`finite_set_sum_over_singleton_unique_cover`,
-`finite_unique_cover_distinct_fibers_are_disjoint`,
-`finite_unique_cover_residual_after_removing_index`, and
-`indexed_fiber_sum_persists_after_removing_index` supply respectively the
-singleton base, disjointness, residual-cover, and residual-summand steps for
-the finite induction. The remaining generic unique-cover equality is still
-proof debt; it must be a reusable finite-combinatorics theorem, not a trusted
-Chapter-11 numerical API.
+needed by the selected inner value `refinement_fiber_sum`. The reusable
+relation-first shape is `$is_finite_indexed_subfamily`,
+`$has_indexed_fiber_sum`, and `$is_finite_unique_cover_of`, followed by the
+checked finite-sum theorem `finite_set_sum_over_unique_cover`. A caller supplies
+a shared ambient family `U`, an outer summand on `U`, and a proof for each
+displayed fiber value. The source family is a subfamily of `U`, so deleting one
+index changes the summation family but not the weight itself. Its proof has checked empty and
+singleton cases, disjointness, residual-cover and residual-summand transport,
+then an induction step using the Chapter 7 finite disjoint-union sum law. It is
+a reusable finite-combinatorics theorem, not a trusted Chapter-11 numerical
+API. `refinement_fiber_cover_reindexes_ambient_sum` is its checked Chapter 11
+consumer: it regroups a sum over nonempty fine pieces into a sum of the
+corresponding coarse-piece fibers. Later rectangle and Darboux constructions
+can use `U=Pfine` and the same ambient-weight interface.
+
+`interval_length_reindexes_over_refinement_fiber` is the next geometric
+specialization: each fiber partitions its coarse piece, so its lengths sum to
+the coarse length. `constant_rectangle_reindexes_over_partition` then keeps a
+fixed height and distributes the corresponding rectangle over any partition
+with that length equality. These declarations are the intended bridge from
+finite regrouping to Proposition 11.2.13.
+`partition_removal_partitions_bounded_remainder` is also checked: after a
+piece is selected whose complement is a bounded interval, it transfers finite
+coverage and uniqueness to the remaining pieces.
+`interval_weight_is_finitely_additive_over_partition` now checks the shared
+empty case, cardinality induction, residual-family step, and finite-sum
+regrouping for any bounded-interval weight with an additive endpoint split.
+Theorem 11.1.13 is its ordinary-length consumer and no longer contains a
+theorem-wide trust. Its two explicit upstream trust interfaces are
+`partition_has_removable_piece` and
+`interval_length_adds_across_bounded_difference`.
+`piecewise_constant_integral_with_partition_reindexes_over_refinement`
+composes them with empty-piece removal and unique-cover regrouping, and
+Proposition 11.2.13 then sends two partitions to their selected common
+refinement. This route is checked by the full Analysis project runner. The
+remaining trust on this route is therefore geometric, not a duplicate trust in
+finite induction or step-integral independence.
 
 For example, once `P` and `Q` have been shown to partition `I`, derive their
 carrier facts and use the selected refinement directly:
@@ -158,11 +216,19 @@ $has_upper_riemann_sum(I, P, f, U)
 ```
 
 The selected step-integral and ordinary/Stieltjes integral values are
-verified interfaces. Their remaining `trust` is limited to the source-facing
-finite-regrouping and approximation theorems recorded in
+verified interfaces. Their remaining `trust` is limited to endpoint geometry,
+approximation, and later gluing theorems recorded in
 `scripts/Analysis/todo/03_integration_and_language_blockers.md`.
 
-The Stieltjes piecewise-constant base currently remains the explicit relation
-`$has_piecewise_constant_riemann_stieltjes_integral`. Its future selected value
-depends on the same generic finite regrouping theorem, so the chapter does not
-add a redundant trusted selector merely to make the API look symmetric.
+The Stieltjes piecewise-constant base now mirrors the ordinary one: canonical
+piece and fixed-partition selectors are linked to the existing relation, and
+the global selector is justified by alpha-length refinement transport through
+a common refinement. Lemma 11.8.4 now reuses the checked generic
+interval-weight induction; its remaining upstream debt is the shared
+endpoint-piece selector and
+`alpha_interval_length_adds_across_bounded_difference`, not a second trusted
+finite-additivity proof. The full Analysis runner verifies this composition.
+The corresponding checked order
+layer compares weighted rectangles on one piece, sums them on one partition,
+and sends the two witness partitions to a common refinement; it is exposed by
+`piecewise_constant_stieltjes_minorant_integral_le_majorant_integral`.
