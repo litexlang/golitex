@@ -1,5 +1,22 @@
 # The apostrophe marks a matrix-level operation.
 
+forall m, n N_pos, A, B matrix(R, m, n), c R, i, j N_pos:
+    i <= m
+    j <= n
+    =>:
+        A '+ B $in matrix(R, m, n)
+        A '- B $in matrix(R, m, n)
+        c *' A $in matrix(R, m, n)
+        (A '+ B)(i, j) = A(i, j) + B(i, j)
+
+forall m, n, p N_pos, A matrix(R, m, n), B matrix(R, n, p):
+    A '* B $in matrix(R, m, p)
+
+forall n, k N_pos, A matrix(R, n, n):
+    A '^ k $in matrix(R, n, n)
+    A '^ 1 = A
+    A '^ (k + 1) = (A '^ k) '* A
+
 eval [[1, 0], [0, 1]] '+ [[1, 0], [0, 1]]
 eval [[2, 0], [0, 2]] '- [[1, 0], [0, 1]]
 eval [[1, 2], [0, 1]] '* [[1, 0], [1, 1]]

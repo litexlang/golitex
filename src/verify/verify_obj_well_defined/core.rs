@@ -118,6 +118,13 @@ impl Runtime {
                 }
                 return Ok(());
             }
+            FnObjHead::MatrixOperator(matrix) => {
+                self.verify_obj_well_defined_and_store_cache(matrix, verify_state)?;
+                let matrix_set = self.real_matrix_type(matrix, verify_state, "entry access")?;
+                vec![FnSetSpace::Set(
+                    self.matrix_set_to_fn_set(&matrix_set, default_line_file()),
+                )]
+            }
             FnObjHead::InstantiatedTemplateObj(template_obj) => {
                 let function_name_obj: Obj = template_obj.clone().into();
                 self.verify_obj_well_defined_and_store_cache(&function_name_obj, verify_state)?;

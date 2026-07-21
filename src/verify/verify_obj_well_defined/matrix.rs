@@ -131,6 +131,13 @@ impl Runtime {
         x: &MatrixListObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
+        if x.rows.is_empty() || x.rows[0].is_empty() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(
+                    "matrix literal must have at least one row and one column".to_string(),
+                ),
+            )));
+        }
         if !x.rows.is_empty() {
             let col_len = x.rows[0].len();
             for row in x.rows.iter() {
@@ -160,16 +167,10 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&ma.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&ma.right, verify_state)?;
-        let shape_left = Self::matrix_value_shape(self, &ma.left)?;
-        let shape_right = Self::matrix_value_shape(self, &ma.right)?;
-        if shape_left != shape_right {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix {}: shape {:?} and {:?} do not match",
-                    MATRIX_ADD, shape_left, shape_right
-                )),
-            )));
-        }
+        let left = self.real_matrix_type(&ma.left, verify_state, MATRIX_ADD)?;
+        let right = self.real_matrix_type(&ma.right, verify_state, MATRIX_ADD)?;
+        self.require_same_matrix_dimension(&left.row_len, &right.row_len, "row", MATRIX_ADD)?;
+        self.require_same_matrix_dimension(&left.col_len, &right.col_len, "column", MATRIX_ADD)?;
         Ok(())
     }
 
@@ -180,16 +181,10 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&ms.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&ms.right, verify_state)?;
-        let shape_left = Self::matrix_value_shape(self, &ms.left)?;
-        let shape_right = Self::matrix_value_shape(self, &ms.right)?;
-        if shape_left != shape_right {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix {}: shape {:?} and {:?} do not match",
-                    MATRIX_SUB, shape_left, shape_right
-                )),
-            )));
-        }
+        let left = self.real_matrix_type(&ms.left, verify_state, MATRIX_SUB)?;
+        let right = self.real_matrix_type(&ms.right, verify_state, MATRIX_SUB)?;
+        self.require_same_matrix_dimension(&left.row_len, &right.row_len, "row", MATRIX_SUB)?;
+        self.require_same_matrix_dimension(&left.col_len, &right.col_len, "column", MATRIX_SUB)?;
         Ok(())
     }
 
@@ -200,16 +195,9 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&mm.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&mm.right, verify_state)?;
-        let shape_left = Self::matrix_value_shape(self, &mm.left)?;
-        let shape_right = Self::matrix_value_shape(self, &mm.right)?;
-        if shape_left.1 != shape_right.0 {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix {}: left columns {} != right rows {}",
-                    MATRIX_MUL, shape_left.1, shape_right.0
-                )),
-            )));
-        }
+        let left = self.real_matrix_type(&mm.left, verify_state, MATRIX_MUL)?;
+        let right = self.real_matrix_type(&mm.right, verify_state, MATRIX_MUL)?;
+        self.require_same_matrix_dimension(&left.col_len, &right.row_len, "inner", MATRIX_MUL)?;
         Ok(())
     }
 
@@ -220,7 +208,16 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&m.scalar, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&m.matrix, verify_state)?;
-        let _ = Self::matrix_value_shape(self, &m.matrix)?;
+        self.require_obj_in_r(&m.scalar, verify_state)
+            .map_err(|_| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "matrix {} requires scalar {} in R",
+                        MATRIX_SCALAR_MUL, m.scalar
+                    )),
+                ))
+            })?;
+        let _ = self.real_matrix_type(&m.matrix, verify_state, MATRIX_SCALAR_MUL)?;
         Ok(())
     }
 
@@ -231,15 +228,8 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&m.base, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&m.exponent, verify_state)?;
-        let shape_base = Self::matrix_value_shape(self, &m.base)?;
-        if shape_base.0 != shape_base.1 {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix {}: base must be square, got {}x{}",
-                    MATRIX_POW, shape_base.0, shape_base.1
-                )),
-            )));
-        }
+        let base = self.real_matrix_type(&m.base, verify_state, MATRIX_POW)?;
+        self.require_same_matrix_dimension(&base.row_len, &base.col_len, "square", MATRIX_POW)?;
         let exp_in_n_pos = InFact::new(
             (*m.exponent).clone(),
             StandardSet::NPos.into(),
@@ -258,122 +248,160 @@ impl Runtime {
         Ok(())
     }
 
-    /// Dimensions of a matrix-valued expression (literal, known name, or matrix operators).
-    pub(in crate::verify) fn matrix_value_shape(
-        rt: &Runtime,
+    /// Return the formal `matrix(R, m, n)` type of a matrix expression.
+    ///
+    /// This is the well-definedness boundary for real matrix algebra. For example,
+    /// `A '+ B` is accepted only when both operands have real entries and equal dimensions.
+    pub(in crate::verify) fn real_matrix_type(
+        &mut self,
         obj: &Obj,
-    ) -> Result<(usize, usize), RuntimeError> {
-        match obj {
-            Obj::MatrixListObj(m) => Self::rectangular_shape_of_matrix_list_obj(m),
-            Obj::Atom(AtomObj::Identifier(id)) => {
-                Self::matrix_list_shape_for_name_known_as_matrix_list(rt, &id.name)
-            }
-            Obj::MatrixAdd(inner) => Self::matrix_value_shape(rt, &inner.left),
-            Obj::MatrixSub(inner) => Self::matrix_value_shape(rt, &inner.left),
-            Obj::MatrixMul(inner) => {
-                let sl = Self::matrix_value_shape(rt, &inner.left)?;
-                let sr = Self::matrix_value_shape(rt, &inner.right)?;
-                if sl.1 != sr.0 {
+        verify_state: &VerifyState,
+        operator: &str,
+    ) -> Result<MatrixSet, RuntimeError> {
+        let result = match obj {
+            Obj::MatrixListObj(matrix) => {
+                let (rows, cols) = Self::rectangular_shape_of_matrix_list_obj(matrix)?;
+                if rows == 0 || cols == 0 {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "matrix {}: left columns {} != right rows {}",
-                            MATRIX_MUL, sl.1, sr.0
-                        )),
+                        RuntimeErrorStruct::new_with_just_msg(
+                            "matrix literal must have at least one row and one column".to_string(),
+                        ),
                     )));
                 }
-                Ok((sl.0, sr.1))
-            }
-            Obj::MatrixScalarMul(inner) => Self::matrix_value_shape(rt, &inner.matrix),
-            Obj::MatrixPow(inner) => {
-                let s = Self::matrix_value_shape(rt, &inner.base)?;
-                if s.0 != s.1 {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "matrix {}: base must be square, got {}x{}",
-                            MATRIX_POW, s.0, s.1
-                        )),
-                    )));
+                for row in matrix.rows.iter() {
+                    for cell in row.iter() {
+                        self.require_obj_in_r(cell, verify_state).map_err(|_| {
+                            RuntimeError::from(WellDefinedRuntimeError(
+                                RuntimeErrorStruct::new_with_just_msg(format!(
+                                    "matrix {} requires entries in R; {} is not verified in R",
+                                    operator, cell
+                                )),
+                            ))
+                        })?;
+                    }
                 }
-                Ok(s)
+                MatrixSet::new(
+                    StandardSet::R.into(),
+                    Number::new(rows.to_string()).into(),
+                    Number::new(cols.to_string()).into(),
+                )
             }
-            _ => Self::matrix_list_shape_for_name_known_as_matrix_list(rt, &obj.to_string()),
-        }
-    }
+            Obj::MatrixAdd(value) => {
+                let left = self.real_matrix_type(&value.left, verify_state, MATRIX_ADD)?;
+                let right = self.real_matrix_type(&value.right, verify_state, MATRIX_ADD)?;
+                self.require_same_matrix_dimension(
+                    &left.row_len,
+                    &right.row_len,
+                    "row",
+                    MATRIX_ADD,
+                )?;
+                self.require_same_matrix_dimension(
+                    &left.col_len,
+                    &right.col_len,
+                    "column",
+                    MATRIX_ADD,
+                )?;
+                left
+            }
+            Obj::MatrixSub(value) => {
+                let left = self.real_matrix_type(&value.left, verify_state, MATRIX_SUB)?;
+                let right = self.real_matrix_type(&value.right, verify_state, MATRIX_SUB)?;
+                self.require_same_matrix_dimension(
+                    &left.row_len,
+                    &right.row_len,
+                    "row",
+                    MATRIX_SUB,
+                )?;
+                self.require_same_matrix_dimension(
+                    &left.col_len,
+                    &right.col_len,
+                    "column",
+                    MATRIX_SUB,
+                )?;
+                left
+            }
+            Obj::MatrixMul(value) => {
+                let left = self.real_matrix_type(&value.left, verify_state, MATRIX_MUL)?;
+                let right = self.real_matrix_type(&value.right, verify_state, MATRIX_MUL)?;
+                self.require_same_matrix_dimension(
+                    &left.col_len,
+                    &right.row_len,
+                    "inner",
+                    MATRIX_MUL,
+                )?;
+                MatrixSet::new(
+                    StandardSet::R.into(),
+                    (*left.row_len).clone(),
+                    (*right.col_len).clone(),
+                )
+            }
+            Obj::MatrixScalarMul(value) => {
+                self.require_obj_in_r(&value.scalar, verify_state)
+                    .map_err(|_| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_just_msg(format!(
+                                "matrix {} requires scalar {} in R",
+                                MATRIX_SCALAR_MUL, value.scalar
+                            )),
+                        ))
+                    })?;
+                self.real_matrix_type(&value.matrix, verify_state, MATRIX_SCALAR_MUL)?
+            }
+            Obj::MatrixPow(value) => {
+                let base = self.real_matrix_type(&value.base, verify_state, MATRIX_POW)?;
+                self.require_same_matrix_dimension(
+                    &base.row_len,
+                    &base.col_len,
+                    "square",
+                    MATRIX_POW,
+                )?;
+                base
+            }
+            _ => self.get_matrix_set_for_obj(obj).ok_or_else(|| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "matrix {} requires a matrix(R, m, n) operand; {} has no known matrix type",
+                        operator, obj
+                    )),
+                ))
+            })?,
+        };
 
-    /// Shape of a matrix list stored under `key` in `known_objs_equal_to_matrix_list`.
-    /// When the entry carries a `MatrixSet`, resolved `row_len` / `col_len` must match the list shape.
-    pub(in crate::verify) fn matrix_list_shape_for_name_known_as_matrix_list(
-        rt: &Runtime,
-        key: &str,
-    ) -> Result<(usize, usize), RuntimeError> {
-        let Some(known) = rt.get_obj_equal_to_matrix_list(key) else {
+        let real: Obj = StandardSet::R.into();
+        if self
+            .verify_objs_are_equal_known_only(&result.set, &real, default_line_file())
+            .is_unknown()
+        {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "`{}` is not known as a matrix list value",
-                    key
+                    "matrix {} requires entries in R; operand {} has entries in {}",
+                    operator, obj, result.set
                 )),
             )));
-        };
-        let shape = Self::rectangular_shape_of_matrix_list_obj(&known)?;
-        if let Some(ms) = rt.get_matrix_set_for_obj_equal_to_matrix_list(key) {
-            Self::ensure_matrix_list_matches_matrix_set(rt, &known, &ms)?;
         }
-        Ok(shape)
+        Ok(result)
     }
 
-    pub(in crate::verify) fn ensure_matrix_list_matches_matrix_set(
-        rt: &Runtime,
-        m: &MatrixListObj,
-        ms: &MatrixSet,
+    fn require_same_matrix_dimension(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        dimension: &str,
+        operator: &str,
     ) -> Result<(), RuntimeError> {
-        let (rows, cols) = Self::rectangular_shape_of_matrix_list_obj(m)?;
-        let row_expect = rt
-            .resolve_obj_to_number(ms.row_len.as_ref())
-            .ok_or_else(|| {
-                RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "matrix: cannot resolve row_len {} of matrix type for list shape check",
-                        ms.row_len
-                    )),
-                ))
-            })?;
-        let col_expect = rt
-            .resolve_obj_to_number(ms.col_len.as_ref())
-            .ok_or_else(|| {
-                RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "matrix: cannot resolve col_len {} of matrix type for list shape check",
-                        ms.col_len
-                    )),
-                ))
-            })?;
-        let r = row_expect.normalized_value.parse::<usize>().map_err(|_| {
-            RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix: row_len `{}` is not a valid size",
-                    row_expect.normalized_value
-                )),
-            ))
-        })?;
-        let c = col_expect.normalized_value.parse::<usize>().map_err(|_| {
-            RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix: col_len `{}` is not a valid size",
-                    col_expect.normalized_value
-                )),
-            ))
-        })?;
-        if r != rows || c != cols {
+        if self
+            .verify_objs_are_equal_known_only(left, right, default_line_file())
+            .is_unknown()
+        {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix list has shape {}x{} but matrix type expects {}x{}",
-                    rows, cols, r, c
+                    "matrix {} shapes do not match: {} dimensions are {} and {}",
+                    operator, dimension, left, right
                 )),
             )));
         }
         Ok(())
     }
-
     pub(in crate::verify) fn rectangular_shape_of_matrix_list_obj(
         m: &MatrixListObj,
     ) -> Result<(usize, usize), RuntimeError> {

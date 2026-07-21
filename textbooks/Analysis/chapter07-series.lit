@@ -4104,6 +4104,8 @@ thm eventual_ratio_lower_bound_gives_root_liminf_bound:
         $has_finite_limit_inferior(root_test_terms(c), A)
         =>:
             r <= A
+    # The original textbook leaves the first inequality in Lemma 7.5.2 to
+    # Exercise 7.5.1.
     trust r <= A
 
 thm ratio_limsup_bounds_root_limsup:
@@ -4169,6 +4171,8 @@ thm ratio_liminf_greater_than_one_gives_root_limsup_above_one:
         beta > 1
         =>:
             exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma > 1}
+    # This is the ratio-test consequence of the exercise-deferred first
+    # inequality in Lemma 7.5.2.
     trust exist gamma R st {$has_finite_limit_superior(root_test_terms(c), gamma) and gamma > 1}
 
 thm positive_sequence_ratio_limit_one_gives_root_limit_one:

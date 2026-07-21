@@ -22,6 +22,17 @@ impl Runtime {
             .into());
         }
 
+        if let Some(done) =
+            self.try_verify_matrix_power_definition(left, right, left, right, line_file.clone())
+        {
+            return Ok(done);
+        }
+        if let Some(done) =
+            self.try_verify_matrix_power_definition(left, right, right, left, line_file.clone())
+        {
+            return Ok(done);
+        }
+
         if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = left {
             let projected = self.struct_field_access_projection(field_access)?;
             let projected_result = self.verify_equality_by_builtin_rules(
@@ -846,6 +857,27 @@ impl Runtime {
             return Ok(done);
         }
         if let Some(done) = self.try_verify_anonymous_fn_application_equals_other_side(
+            left,
+            right,
+            right,
+            left,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_matrix_product_entry_equals_sum(
+            left,
+            right,
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(done);
+        }
+        if let Some(done) = self.try_verify_matrix_product_entry_equals_sum(
             left,
             right,
             right,

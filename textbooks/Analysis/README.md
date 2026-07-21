@@ -130,9 +130,9 @@ checked: every direct `trust` says whether the source leaves the proof to an
 exercise or gives a proof route with a specific step left implicit, followed
 by the exact unexpanded Litex obligation. The left-endpoint integral uses the
 explicit restriction `fn(y '[a,x]) R {f(y)}`. Its subinterval integrability is
-checked from the already visible two-piece additivity interface. The remaining
-selector trust is only a Litex declaration boundary: its parameter types
-depend on the earlier endpoints `a,b`.
+checked from the already visible two-piece additivity interface. The selected
+left-endpoint integral is then constructed by checked unique existence; it has
+no direct trust boundary.
 
 Its lower-level objects `partition_piece_containing`,
 `upper_riemann_piece_height`, and `lower_riemann_piece_height` expose the
@@ -199,9 +199,8 @@ The left-endpoint selector is available only when the integrand is Riemann
 integrable on the parent interval. The changing-domain restriction is written
 directly as `fn(y '[a,x]) R {f(y)}`; the chapter checks that this restriction
 is Riemann integrable. `integral_from_left_endpoint_has_value` is its stable
-specification theorem. The selector itself remains narrowly trusted because
-Litex currently rejects a global function declaration whose later parameter
-types `f : '[a,b] -> R` and `x : '[a,b]` depend on the earlier parameters
+specification theorem. The selector is checked by unique existence even though
+the types `f : '[a,b] -> R` and `x : '[a,b]` depend on the earlier parameters
 `a,b`. The canonical function satisfies the pointwise global predicate by
 `selected_left_endpoint_integral_is_integral_function`.
 

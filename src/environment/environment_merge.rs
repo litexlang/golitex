@@ -203,6 +203,7 @@ impl Environment {
             known_objs_equal_to_cart,
             known_objs_equal_to_finite_seq_list,
             known_objs_equal_to_matrix_list,
+            known_objs_in_matrix_sets,
             known_obj_values,
             known_objs_equal_to_set_builder,
             known_objs_in_fn_sets,
@@ -300,6 +301,10 @@ impl Environment {
             };
             self.known_objs_equal_to_matrix_list
                 .insert(name, (matrix, merged_member, line_file));
+        }
+
+        for (name, matrix_set) in known_objs_in_matrix_sets {
+            self.known_objs_in_matrix_sets.insert(name, matrix_set);
         }
 
         for (name, value) in known_obj_values {

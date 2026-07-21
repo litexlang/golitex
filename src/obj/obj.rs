@@ -1931,6 +1931,10 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             };
             FnObjHead::InstantiatedTemplateObj(new_t)
         }
+        FnObjHead::MatrixOperator(matrix) => {
+            let replaced = Obj::replace_bound_identifier((*matrix).clone(), from, to);
+            FnObjHead::MatrixOperator(Box::new(replaced))
+        }
     }
 }
 

@@ -15603,20 +15603,26 @@ thm closed_initial_restriction_is_riemann_integrable:
         by def $is_partition_of_bounded_interval('[a, b], union({'[a, x]}, {'(x, b]}))
     by thm riemann_integral_additive_over_two_piece_partition('[a, b], union({'[a, x]}, {'(x, b]}), '[a, x], '(x, b], f)
 
-# Source handling: Theorem 11.9.1 defines the left-endpoint integral directly;
-# the restriction and its subinterval integrability are checked above rather
-# than admitted as an extra source proof step.
-# kernel_problem: a non-trusted global declaration with parameters
-# `f : '[a,b] -> R` and `x : '[a,b]` is rejected because those parameter types
-# depend on the earlier endpoints `a,b`.  The trust only preserves the named
-# source-facing selector; its mathematical value is fixed by `integral_on`.
-trust have integral_from_left_endpoint fn(a, b R, f fn(t '[a, b]) R, x '[a, b]) R:
-    forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
+# Source handling: Theorem 11.9.1 defines the left-endpoint integral directly.
+# The restriction, its subinterval integrability, and the selected integral
+# value are all checked here.
+have fn integral_from_left_endpoint by exist!:
+    ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
         a < b
         $is_riemann_integrable_on('[a, b], f)
-        $is_riemann_integrable_on('[a, x], fn(y '[a, x]) R {f(y)})
         =>:
-            integral_from_left_endpoint(a, b, f, x) = integral_on('[a, x], fn(y '[a, x]) R {f(y)})
+            exist! s R st {$has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, s)}
+    by thm closed_initial_restriction_is_riemann_integrable(a, b, f, x)
+    witness exist s R st {$has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, s)} from integral_on('[a, x], fn(y '[a, x]) R {f(y)}):
+        by thm integral_on_has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)})
+    claim:
+        ? forall s1, s2 R:
+            $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, s1)
+            $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, s2)
+            =>:
+                s1 = s2
+        by thm riemann_integral_value_unique('[a, x], fn(y '[a, x]) R {f(y)}, s1, s2)
+    exist! s R st {$has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, s)}
 
 thm integral_from_left_endpoint_has_value:
     ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
@@ -15624,10 +15630,6 @@ thm integral_from_left_endpoint_has_value:
         $is_riemann_integrable_on('[a, b], f)
         =>:
             $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, integral_from_left_endpoint(a, b, f, x))
-    by thm closed_initial_restriction_is_riemann_integrable(a, b, f, x)
-    by thm integral_on_has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)})
-    integral_from_left_endpoint(a, b, f, x) = integral_on('[a, x], fn(y '[a, x]) R {f(y)})
-    $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, integral_from_left_endpoint(a, b, f, x))
 
 prop is_integral_function_from_left_endpoint(a, b R, f fn(t '[a, b]) R, F fn(x '[a, b]) R):
     forall x '[a, b]:

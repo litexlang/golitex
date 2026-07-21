@@ -318,6 +318,11 @@ impl Runtime {
             Obj::ObjAsStructInstanceWithFieldAccess(x) => {
                 FnObjHead::ObjAsStructInstanceWithFieldAccess(x)
             }
+            Obj::MatrixAdd(_)
+            | Obj::MatrixSub(_)
+            | Obj::MatrixMul(_)
+            | Obj::MatrixScalarMul(_)
+            | Obj::MatrixPow(_) => FnObjHead::MatrixOperator(Box::new(inst_head)),
             _ => {
                 return Err(InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(
                     format!(

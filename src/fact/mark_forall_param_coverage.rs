@@ -87,6 +87,9 @@ fn mark_forall_param_coverage_in_fn_obj_head(
                 coverage_by_forall_param,
             );
         }
+        FnObjHead::MatrixOperator(matrix) => {
+            mark_forall_param_coverage_in_obj(matrix, coverage_by_forall_param);
+        }
     }
 }
 

@@ -112,29 +112,19 @@ thm additive_identity_unique:
 
 # Result 1.27. Every vector has a unique additive inverse for the fixed
 # VectorSpace addition and zero.
-# Existence is a VectorSpace field.  The source uniqueness calculation is
-# replayed below using associativity, commutativity, and the selected zero.
+# Existence is a VectorSpace field.  Uniqueness first commutes the second
+# inverse equation, then uses the source's equality chain through y2+(x+y1).
 thm additive_inverse_exists_unique:
     ? forall s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &VectorSpace<s, scalars, v>, x v:
         exist! y v st {@Space.add(x, y) = @Space.zero}
     obtain y from exist y v st {@Space.add(x, y) = @Space.zero}
-    claim:
-        ? forall y1, y2 v:
-            @Space.add(x, y1) = @Space.zero
-            @Space.add(x, y2) = @Space.zero
-            =>:
-                y1 = y2
-        @Space.add(y1, x) = @Space.add(x, y1)
-        @Space.add(y1, x) = @Space.zero
-        @Space.add(y2, @Space.zero) = @Space.add(@Space.zero, y2) = y2
-        @Space.add(y2, @Space.add(x, y1)) = @Space.add(y2, @Space.zero) = y2
-        @Space.add(y2, @Space.add(x, y1)) = @Space.add(@Space.add(y2, x), y1)
-        @Space.add(y2, x) = @Space.add(x, y2)
-        @Space.add(y2, x) = @Space.zero
-        @Space.add(@Space.add(y2, x), y1) = @Space.add(@Space.zero, y1) = y1
-        y1 = y2
-    witness exist! y2 v st {@Space.add(x, y2) = @Space.zero} from y:
-        @Space.add(x, y) = @Space.zero
+    forall y1, y2 v:
+        @Space.add(x, y1) = @Space.zero
+        @Space.add(x, y2) = @Space.zero
+        =>:
+            @Space.add(y2, x) = @Space.add(x, y2) = @Space.zero
+            y1 = @Space.add(@Space.zero, y1) = @Space.add(@Space.add(y2, x), y1) = @Space.add(y2, @Space.add(x, y1)) = @Space.add(y2, @Space.zero) = @Space.add(@Space.zero, y2) = y2
+    witness exist! y2 v st {@Space.add(x, y2) = @Space.zero} from y
 
 # Notation 1.28. vector_neg selects the unique inverse from Result 1.27, and
 # vector_sub is the derived callable subtraction map w-v = w+(-v).

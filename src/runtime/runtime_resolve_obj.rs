@@ -190,6 +190,20 @@ impl Runtime {
                 }
             }
             Obj::FnObj(fn_obj) => {
+                if let FnObjHead::MatrixOperator(matrix) = fn_obj.head.as_ref() {
+                    let args: Vec<Obj> = fn_obj
+                        .body
+                        .iter()
+                        .flat_map(|group| group.iter().map(|arg| (**arg).clone()))
+                        .collect();
+                    if args.len() == 2 {
+                        if let Some(entry) =
+                            self.matrix_operator_entry(matrix, args[0].clone(), args[1].clone())
+                        {
+                            return self.resolve_obj(&entry);
+                        }
+                    }
+                }
                 if let FnObjHead::AnonymousFnLiteral(anonymous_fn) = fn_obj.head.as_ref() {
                     if !fn_obj.body.is_empty() {
                         let mut args: Vec<Obj> = Vec::new();
@@ -646,6 +660,112 @@ impl Runtime {
         let resolved = self.resolve_obj(obj);
         rational_pair_from_obj(&resolved)
     }
+
+    fn matrix_operator_entry(&self, matrix: &Obj, row: Obj, col: Obj) -> Option<Obj> {
+        match matrix {
+            Obj::MatrixAdd(value) => Some(
+                Add::new(
+                    matrix_entry_application((*value.left).clone(), row.clone(), col.clone())?,
+                    matrix_entry_application((*value.right).clone(), row, col)?,
+                )
+                .into(),
+            ),
+            Obj::MatrixSub(value) => Some(
+                Sub::new(
+                    matrix_entry_application((*value.left).clone(), row.clone(), col.clone())?,
+                    matrix_entry_application((*value.right).clone(), row, col)?,
+                )
+                .into(),
+            ),
+            Obj::MatrixScalarMul(value) => Some(
+                Mul::new(
+                    (*value.scalar).clone(),
+                    matrix_entry_application((*value.matrix).clone(), row, col)?,
+                )
+                .into(),
+            ),
+            Obj::MatrixMul(value) => {
+                let end = self.matrix_column_dimension(&value.left)?;
+                let index_name = self.generate_random_unused_name();
+                let index = obj_for_bound_param_in_scope(index_name.clone(), ParamObjType::FnSet);
+                let term: Obj = Mul::new(
+                    matrix_entry_application((*value.left).clone(), row, index.clone())?,
+                    matrix_entry_application((*value.right).clone(), index.clone(), col)?,
+                )
+                .into();
+                let function = AnonymousFn::new(
+                    vec![ParamGroupWithSet::new(
+                        vec![index_name],
+                        StandardSet::NPos.into(),
+                    )],
+                    vec![AtomicFact::from(LessEqualFact::new(
+                        index,
+                        end.clone(),
+                        default_line_file(),
+                    ))
+                    .into()],
+                    StandardSet::R.into(),
+                    term,
+                )
+                .ok()?;
+                Some(Sum::new(Number::new("1".to_string()).into(), end, function.into()).into())
+            }
+            Obj::MatrixPow(value) => {
+                let exponent = self.resolve_obj(&value.exponent);
+                let one: Obj = Number::new("1".to_string()).into();
+                if exponent.to_string() == one.to_string() {
+                    return matrix_entry_application((*value.base).clone(), row, col);
+                }
+                let predecessor = match &exponent {
+                    Obj::Number(number) => {
+                        let value = number.normalized_value.parse::<usize>().ok()?;
+                        if value <= 1 {
+                            return None;
+                        }
+                        Number::new((value - 1).to_string()).into()
+                    }
+                    Obj::Add(add)
+                        if self.resolve_obj(&add.right).to_string() == one.to_string() =>
+                    {
+                        (*add.left).clone()
+                    }
+                    Obj::Add(add) if self.resolve_obj(&add.left).to_string() == one.to_string() => {
+                        (*add.right).clone()
+                    }
+                    _ => return None,
+                };
+                let product: Obj = MatrixMul::new(
+                    MatrixPow::new((*value.base).clone(), predecessor).into(),
+                    (*value.base).clone(),
+                )
+                .into();
+                self.matrix_operator_entry(&product, row, col)
+            }
+            _ => None,
+        }
+    }
+
+    fn matrix_column_dimension(&self, matrix: &Obj) -> Option<Obj> {
+        if let Some(matrix_set) = self.get_matrix_set_for_obj(matrix) {
+            return Some((*matrix_set.col_len).clone());
+        }
+        match matrix {
+            Obj::MatrixListObj(value) if !value.rows.is_empty() && !value.rows[0].is_empty() => {
+                Some(Number::new(value.rows[0].len().to_string()).into())
+            }
+            Obj::MatrixAdd(value) => self.matrix_column_dimension(&value.left),
+            Obj::MatrixSub(value) => self.matrix_column_dimension(&value.left),
+            Obj::MatrixMul(value) => self.matrix_column_dimension(&value.right),
+            Obj::MatrixScalarMul(value) => self.matrix_column_dimension(&value.matrix),
+            Obj::MatrixPow(value) => self.matrix_column_dimension(&value.base),
+            _ => None,
+        }
+    }
+}
+
+fn matrix_entry_application(matrix: Obj, row: Obj, col: Obj) -> Option<Obj> {
+    let head = FnObjHead::from_callable_obj(matrix)?;
+    Some(FnObj::new(head, vec![vec![Box::new(row), Box::new(col)]]).into())
 }
 
 fn normalize_rational_pair(numerator: i128, denominator: i128) -> Option<(i128, i128)> {
