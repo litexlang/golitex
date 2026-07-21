@@ -56,6 +56,29 @@ impl Runtime {
         {
             return Ok(StmtUnknown::new().into());
         }
+        // Real-order reflexivity and strict irreflexivity.
+        // Example: `a R` proves `a <= a` and `not a < a`.
+        if verify_equality_by_they_are_the_same(&left, &right) {
+            let reason = match atomic_fact {
+                AtomicFact::LessEqualFact(_) | AtomicFact::GreaterEqualFact(_) => {
+                    "order: weak real order is reflexive"
+                }
+                AtomicFact::NotLessFact(_) | AtomicFact::NotGreaterFact(_) => {
+                    "order: strict real order is irreflexive"
+                }
+                _ => "",
+            };
+            if !reason.is_empty() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        reason.to_string(),
+                        Vec::new(),
+                    )
+                    .into(),
+                );
+            }
+        }
         if let Some(result) =
             self.try_verify_finite_nonempty_set_size_at_least_one(atomic_fact, verify_state)?
         {

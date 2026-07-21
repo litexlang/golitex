@@ -9,7 +9,7 @@ pub struct ByAntisymmetricPropStmt {
 }
 
 impl fmt::Display for ByAntisymmetricPropStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}:\n{}",

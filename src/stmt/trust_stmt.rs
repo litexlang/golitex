@@ -22,7 +22,7 @@ impl TrustStmt {
 }
 
 impl fmt::Display for TrustStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         if self.facts.len() == 1 {
             write!(f, "{} {}", TRUST, self.facts[0])
         } else {

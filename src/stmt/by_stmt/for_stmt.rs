@@ -31,7 +31,7 @@ pub struct ByForStmt {
 }
 
 impl fmt::Display for ByForStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}:\n{}",
@@ -131,7 +131,7 @@ impl ByForStmt {
 }
 
 impl fmt::Display for ClosedRangeOrRange {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             ClosedRangeOrRange::ClosedRange(closed_range) => write!(f, "{}", closed_range),
             ClosedRangeOrRange::Range(range) => write!(f, "{}", range),

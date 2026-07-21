@@ -2,13 +2,13 @@ use crate::prelude::*;
 use std::fmt;
 
 impl fmt::Debug for Stmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", self)
     }
 }
 
 impl fmt::Display for Stmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             Stmt::Fact(x) => write!(f, "{}", x),
             Stmt::UnsafeStmt(x) => write!(f, "{}", x),
@@ -28,7 +28,7 @@ impl fmt::Display for Stmt {
 }
 
 impl fmt::Display for UnsafeStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             UnsafeStmt::TrustStmt(x) => write!(f, "{}", x),
             UnsafeStmt::TrustHaveStmt(x) => write!(f, "{}", x),
@@ -37,7 +37,7 @@ impl fmt::Display for UnsafeStmt {
 }
 
 impl fmt::Display for DefObjStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             DefObjStmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
@@ -58,7 +58,7 @@ impl fmt::Display for DefObjStmt {
 }
 
 impl fmt::Display for DefPredicateStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             DefPredicateStmt::DefPropStmt(x) => write!(f, "{}", x),
             DefPredicateStmt::DefAbstractPropStmt(x) => write!(f, "{}", x),
@@ -67,7 +67,7 @@ impl fmt::Display for DefPredicateStmt {
 }
 
 impl fmt::Display for DefAliasStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             DefAliasStmt::AliasPropStmt(x) => write!(f, "{}", x),
             DefAliasStmt::AliasThmStmt(x) => write!(f, "{}", x),
@@ -76,7 +76,7 @@ impl fmt::Display for DefAliasStmt {
 }
 
 impl fmt::Display for DefInterfaceStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             DefInterfaceStmt::DefTemplateStmt(x) => write!(f, "{}", x),
             DefInterfaceStmt::DefStructStmt(x) => write!(f, "{}", x),
@@ -85,7 +85,7 @@ impl fmt::Display for DefInterfaceStmt {
 }
 
 impl fmt::Display for ByStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             ByStmt::ByCasesStmt(x) => write!(f, "{}", x),
             ByStmt::ByContraStmt(x) => write!(f, "{}", x),
@@ -110,7 +110,7 @@ impl fmt::Display for ByStmt {
 }
 
 impl fmt::Display for WitnessStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             WitnessStmt::WitnessExistFact(x) => write!(f, "{}", x),
             WitnessStmt::WitnessNonemptySet(x) => write!(f, "{}", x),
@@ -119,7 +119,7 @@ impl fmt::Display for WitnessStmt {
 }
 
 impl fmt::Display for ProofBlockStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             ProofBlockStmt::ClaimStmt(x) => write!(f, "{}", x),
             ProofBlockStmt::SketchStmt(x) => write!(f, "{}", x),
@@ -129,7 +129,7 @@ impl fmt::Display for ProofBlockStmt {
 }
 
 impl fmt::Display for CommandStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             CommandStmt::ImportStmt(x) => write!(f, "{}", x),
             CommandStmt::DoNothingStmt(x) => write!(f, "{}", x),

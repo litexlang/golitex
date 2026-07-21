@@ -1,42 +1,41 @@
-have fn identity_on_three(x {1, 2, 3}) {1, 2, 3} = x
+# A field is a structure on a nonempty carrier F.  Matrices use the carrier
+# as their entry set and receive the selected field structure when operations
+# need addition, multiplication, or inverses.
+struct Field:
+    F nonempty_set
+    zero F
+    one F
+    add fn(x, y F) F
+    neg fn(x F) F
+    mul fn(x, y F) F
+    inv fn(x F) F
+    <=>:
+        zero != one
+        forall x, y, z F:
+            add(add(x, y), z) = add(x, add(y, z))
+            add(x, y) = add(y, x)
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+            mul(x, y) = mul(y, x)
+            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+        forall x F:
+            add(zero, x) = x
+            add(x, neg(x)) = zero
+            mul(one, x) = x
+        forall x F:
+            x != zero
+            =>:
+                mul(x, inv(x)) = one
 
-forall x1, x2 {1, 2, 3}:
-    identity_on_three(x1) = identity_on_three(x2)
-    =>:
-        x1 = identity_on_three(x1) = identity_on_three(x2) = x2
-$injective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+# A Matrix value is a row-column function. The template is only the reusable
+# carrier constructor; it does not use Litex's builtin matrix.
+template<F nonempty_set, field &Field<F>, m, n N_pos>:
+    have Matrix set = fn(i N_pos, j N_pos: i <= m, j <= n) F
 
-claim:
-    ? forall y {1, 2, 3}:
-        exist x {1, 2, 3} st {y = identity_on_three(x)}
-    y = identity_on_three(y)
-    witness exist x {1, 2, 3} st {y = identity_on_three(x)} from y
-$surjective({1, 2, 3}, {1, 2, 3}, identity_on_three)
-$bijective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+# Same Matrix parameters make the inputs and result use one carrier and shape.
+template<F nonempty_set, field &Field<F>, m, n N_pos>:
+    have fn matrix_add(A, B \Matrix<F, field, m, n>) \Matrix<F, field, m, n> = fn(i N_pos, j N_pos: i <= m, j <= n) F {&Field<F>{field}.add(A(i, j), B(i, j))}
 
-finite_set_size(fn_range(identity_on_three)) = finite_set_size({1, 2, 3})
-
-thm finite_injection_preserves_size_onto_range:
-    ? forall A finite_set, B set, f fn(x A) B:
-        $injective(A, B, f)
-        =>:
-            finite_set_size(fn_range(f)) = finite_set_size(A)
-    finite_set_size(fn_range(f)) = finite_set_size(A)
-
-thm finite_surjection_bounds_target:
-    ? forall A finite_set, B set, f fn(x A) B:
-        $surjective(A, B, f)
-        =>:
-            $is_finite_set(B)
-            finite_set_size(B) <= finite_set_size(A)
-    $is_finite_set(B)
-    finite_set_size(B) <= finite_set_size(A)
-
-thm finite_bijection_preserves_size:
-    ? forall A finite_set, B set, f fn(x A) B:
-        $bijective(A, B, f)
-        =>:
-            $is_finite_set(B)
-            finite_set_size(A) = finite_set_size(B)
-    $is_finite_set(B)
-    finite_set_size(A) = finite_set_size(B)
+# Use probes: matrix entries and matrix addition are ordinary function calls.
+forall F nonempty_set, field &Field<F>, m, n N_pos, A, B \Matrix<F, field, m, n>:
+    A(1, 1) $in F
+    \matrix_add<F, field, m, n>(A, B) $in \Matrix<F, field, m, n>

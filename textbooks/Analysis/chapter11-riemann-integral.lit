@@ -711,14 +711,16 @@ thm bounded_connected_subsets_are_bounded_intervals:
         $is_connected_subset_of_R(X)
         =>:
             $is_bounded_interval(X)
-    # Source handling: Tao proves this in Exercise 11.1.1 by taking the lower
-    # and upper endpoints of a non-empty bounded connected set.
+    # Source handling: Lemma 11.1.4 leaves the endpoint construction to
+    # Exercise 11.1.1.  The trust below records exactly that source-deferred
+    # step rather than presenting the lemma as checked.
     # proof_debt: the endpoint existence and open/closed case analysis remain
     # to be formalized.
     by cases:
         ? $is_bounded_interval(X)
         case $is_nonempty_set(X):
-            # Source handling: this is the non-empty branch of Lemma 11.1.4.
+            # Source handling: this is the non-empty endpoint-classification
+            # step deferred by Exercise 11.1.1.
             # proof_debt: endpoint openness and closedness still need the
             # local order-case proof.
             trust $is_bounded_interval(X)
@@ -2179,6 +2181,9 @@ thm interval_length_adds_across_bounded_difference:
         $is_bounded_interval(set_minus(I, J))
         =>:
             interval_length(I) = interval_length(J) + interval_length(set_minus(I, J))
+    # Source handling: the proof of Theorem 11.1.13 uses this length split but
+    # leaves the compatible open/closed endpoint cases implicit.  The trust
+    # keeps that compressed source step visible.
     # proof_debt: classify the endpoint forms of I and J and reduce each
     # possible bounded-remainder case to subtraction of their endpoints.
     trust interval_length(I) = interval_length(J) + interval_length(set_minus(I, J))
@@ -11015,7 +11020,8 @@ thm riemann_integral_extension_by_zero:
         =>:
             $is_riemann_integrable_on(J, F)
             integral_on(J, F) = integral_on(I, f)
-    # Source handling: this is Theorem 11.4.1(g).
+    # Source handling: the source states Theorem 11.4.1(g) and leaves its proof
+    # to Exercise 11.4.1.  The trust records only that source-deferred part.
     # proof_debt: compare upper and lower approximations after extending
     # outside `I` by zero.
     trust:
@@ -11037,10 +11043,9 @@ thm riemann_integral_additive_over_two_piece_partition:
             $is_riemann_integrable_on(J, fn(x J) R {f(x)})
             $is_riemann_integrable_on(K, fn(x K) R {f(x)})
             integral_on(I, f) = integral_on(J, fn(x J) R {f(x)}) + integral_on(K, fn(x K) R {f(x)})
-    # Source handling: this is Theorem 11.4.1(h).  The finite set `P` is the
-    # source partition into exactly the two pieces `J` and `K`; Tao writes the
-    # same `f` on the subintervals, so the Litex statement uses explicit
-    # restriction lambdas.
+    # Source handling: the source states Theorem 11.4.1(h) and leaves its proof
+    # to Exercise 11.4.1.  The finite set `P` is the source partition into
+    # exactly `J` and `K`; the trust records only the deferred gluing proof.
     # proof_debt: compare upper/lower sums over the two subinterval pieces.
     trust:
         $is_riemann_integrable_on(J, fn(x J) R {f(x)})
@@ -11833,10 +11838,9 @@ thm uniformly_continuous_on_bounded_interval_has_small_oscillation_partitions:
         $chap9::is_uniformly_continuous_on(I, f)
         =>:
             $has_small_oscillation_partition(I, f, epsilon)
-    # Source handling: choose `delta` from uniform continuity, then partition
-    # the bounded interval into finitely many pieces of length below `delta`;
-    # any two points in the same piece are `delta`-close, so their function
-    # values differ by at most `epsilon`.
+    # Source handling: the proof of Theorem 11.5.1 chooses `delta`, asks for a
+    # sufficiently fine finite partition, and leaves the endpoint-form
+    # construction as a "How?" step.  The trust keeps that source gap visible.
     # proof_debt: construct the equal-length finite partition and prove the
     # piecewise diameter estimate in all endpoint conventions.
     trust $has_small_oscillation_partition(I, f, epsilon)
@@ -11987,9 +11991,9 @@ thm continuous_bounded_interval_has_integrable_closed_trims:
         $chap9::is_continuous_on(I, f)
         =>:
             $has_integrable_closed_interval_trim(I, f, eta)
-    # Source handling: choose a closed subinterval inside `I` whose omitted
-    # endpoint tails have total length at most `eta`; continuity restricts to
-    # that closed interval, so Corollary 11.5.2 makes the core integrable.
+    # Source handling: Proposition 11.5.3 gives the closed-trim argument but
+    # compresses the endpoint choices and their restriction properties.  The
+    # trust keeps precisely that unexpanded source step visible.
     # proof_debt: construct the endpoint trim for all four endpoint
     # conventions and prove the restricted function is continuous.
     trust $has_integrable_closed_interval_trim(I, f, eta)
@@ -12002,9 +12006,9 @@ thm darbouxs_criterion_from_integrable_closed_trims_and_bounded_tails:
             $has_integrable_closed_interval_trim(I, f, eta)
         =>:
             $is_riemann_integrable_on(I, f)
-    # Source handling: this packages Tao's endpoint-tail estimate.  The closed
-    # trimmed core has matching upper and lower integrals, while boundedness of
-    # `f` makes the contribution from the omitted tails arbitrarily small.
+    # Source handling: Proposition 11.5.3 gives the endpoint-tail estimate but
+    # does not expand the Darboux gluing calculation for all interval forms.
+    # The trust keeps precisely that compressed source step visible.
     # proof_debt: compare the upper/lower Darboux sums after adjoining the
     # finitely many tail pieces and bound their contribution by `M * eta`.
     trust $is_riemann_integrable_on(I, f)
@@ -12500,12 +12504,9 @@ thm riemann_integrable_from_partition_piece_integrability:
             $is_riemann_integrable_on(J, fn(x J) R {f(x)})
         =>:
             $is_riemann_integrable_on(I, f)
-    # Source handling: this is the finite additivity step behind Exercises
-    # 11.5.1 and 11.6.2.  Once each partition piece is integrable, iterating
-    # Theorem 11.4.1(h) over the finite partition gives integrability on the
-    # whole bounded interval.
-    # Source handling: this is the finite-additivity route in Proposition
-    # 11.5.6.
+    # Source handling: Proposition 11.5.6 leaves this finite-gluing proof to
+    # Exercise 11.5.1.  The trust records exactly that source-deferred
+    # induction rather than presenting the proposition as checked.
     # proof_debt: formalize induction over finite interval partitions and
     # compare the restricted piece integrals with the whole-domain Darboux
     # upper and lower sums.
@@ -12564,9 +12565,9 @@ thm monotone_closed_interval_riemann_integrable:
         $chap9::is_monotone_on('[a, b], f)
         =>:
             $is_riemann_integrable_on('[a, b], f)
-    # Source handling: Tao handles the increasing case, partitions `[a,b]`
-    # into equal pieces, telescopes the upper-lower sum difference, and says the
-    # decreasing case follows similarly.
+    # Source handling: Proposition 11.6.1 gives the equal-partition and
+    # telescoping route, but compresses the partition construction, extrema
+    # evaluation, and limiting step.  The trust keeps those source gaps visible.
     # proof_debt: prove boundedness of monotone functions on closed intervals,
     # construct equal partitions, and formalize the telescoping estimate.
     trust $is_riemann_integrable_on('[a, b], f)
@@ -12588,8 +12589,8 @@ thm bounded_monotone_bounded_interval_riemann_integrable:
         $chap9::is_bounded_function_on(I, f)
         =>:
             $is_riemann_integrable_on(I, f)
-    # Source handling: Tao proves this in Exercise 11.6.1 by adapting the
-    # trimming argument from Proposition 11.5.3.
+    # Source handling: Corollary 11.6.3 leaves this trimming argument to
+    # Exercise 11.6.1.  The trust records exactly that source-deferred proof.
     # proof_debt: trim to closed subintervals and control endpoint tails using
     # boundedness.
     trust $is_riemann_integrable_on(I, f)
@@ -12673,11 +12674,6 @@ thm bounded_piecewise_monotone_riemann_integrable:
     by thm bounded_piecewise_monotone_with_partition_riemann_integrable(I, P, f)
     $is_riemann_integrable_on(I, f)
 
-prop is_restriction_to_subset(X power_set(R), E power_set(R), f fn(x X) R, g fn(x E) R):
-    E $subset X
-    forall x E:
-        g(x) = f(x)
-
 prop is_tail_close_to_value(a fn(k N_pos) R, L R, epsilon R_pos, N0 N_pos):
     forall k N_pos:
         k >= N0
@@ -12696,14 +12692,108 @@ have fn one_indexed_partial_sum(a fn(n N_pos) R, k N) R by induc k from 0:
     case k = 0: 0
     case k > 0: one_indexed_partial_sum(a, k - 1) + a(k)
 
+thm one_indexed_partial_sum_successor:
+    ? forall a fn(n N_pos) R, k N_pos:
+        one_indexed_partial_sum(a, k) = one_indexed_partial_sum(a, k - 1) + a(k)
+
+thm one_indexed_partial_sum_matches_chapter7:
+    ? forall a fn(n N_pos) R, k N:
+        one_indexed_partial_sum(a, k) = chap7::partial_sum(a, k)
+    by induc k from 0:
+        ? one_indexed_partial_sum(a, k) = chap7::partial_sum(a, k)
+        ? from k = 0:
+            one_indexed_partial_sum(a, 0) = 0 = chap7::partial_sum(a, 0)
+        ? induc:
+            by thm one_indexed_partial_sum_successor(a, k + 1)
+            by thm chap7::partial_sum_successor(a, k + 1)
+            one_indexed_partial_sum(a, k + 1) = one_indexed_partial_sum(a, k) + a(k + 1) = chap7::partial_sum(a, k) + a(k + 1) = chap7::partial_sum(a, k + 1)
+
 prop has_series_sum_from_zero(a fn(n N) R, S R):
     $has_sequence_limit_value(fn(k N_pos) R {zero_indexed_partial_sum(a, k)}, S)
 
 prop has_series_sum_from_one(a fn(n N_pos) R, S R):
     $has_sequence_limit_value(fn(k N_pos) R {one_indexed_partial_sum(a, k)}, S)
 
+thm chapter7_series_sum_implies_chapter11_series_sum_from_one:
+    ? forall a fn(n N_pos) R, S R:
+        $chap7::has_series_sum(a, S)
+        =>:
+            $has_series_sum_from_one(a, S)
+    claim:
+        ? $has_sequence_limit_value(fn(k N_pos) R {one_indexed_partial_sum(a, k)}, S)
+        claim:
+            ? forall epsilon R_pos:
+                exist N0 N_pos st {$is_tail_close_to_value(fn(k N_pos) R {one_indexed_partial_sum(a, k)}, S, epsilon, N0)}
+            obtain N0 from exist N0 N_pos st {$chap7::is_tail_close_to(fn(k N_pos) R {chap7::partial_sum(a, k)}, S, epsilon, N0)}
+            witness exist N1 N_pos st {$is_tail_close_to_value(fn(k N_pos) R {one_indexed_partial_sum(a, k)}, S, epsilon, N1)} from N0:
+                claim:
+                    ? forall k N_pos:
+                        k >= N0
+                        =>:
+                            abs(fn(j N_pos) R {one_indexed_partial_sum(a, j)}(k) - S) <= epsilon
+                    fn(j N_pos) R {one_indexed_partial_sum(a, j)}(k) = one_indexed_partial_sum(a, k)
+                    by thm one_indexed_partial_sum_matches_chapter7(a, k)
+                    fn(j N_pos) R {chap7::partial_sum(a, j)}(k) = chap7::partial_sum(a, k)
+                    abs(fn(j N_pos) R {chap7::partial_sum(a, j)}(k) - S) <= epsilon
+                    abs(fn(j N_pos) R {one_indexed_partial_sum(a, j)}(k) - S) <= epsilon
+    by def $has_series_sum_from_one(a, S)
+
+thm chapter11_series_sum_from_one_implies_chapter7_series_sum:
+    ? forall a fn(n N_pos) R, S R:
+        $has_series_sum_from_one(a, S)
+        =>:
+            $chap7::has_series_sum(a, S)
+    claim:
+        ? $chap7::has_limit(fn(k N_pos) R {chap7::partial_sum(a, k)}, S)
+        claim:
+            ? forall epsilon R_pos:
+                exist N0 N_pos st {$chap7::is_tail_close_to(fn(k N_pos) R {chap7::partial_sum(a, k)}, S, epsilon, N0)}
+            obtain N0 from exist N0 N_pos st {$is_tail_close_to_value(fn(k N_pos) R {one_indexed_partial_sum(a, k)}, S, epsilon, N0)}
+            witness exist N1 N_pos st {$chap7::is_tail_close_to(fn(k N_pos) R {chap7::partial_sum(a, k)}, S, epsilon, N1)} from N0:
+                claim:
+                    ? forall k N_pos:
+                        k >= N0
+                        =>:
+                            abs(fn(j N_pos) R {chap7::partial_sum(a, j)}(k) - S) <= epsilon
+                    fn(j N_pos) R {chap7::partial_sum(a, j)}(k) = chap7::partial_sum(a, k)
+                    by thm one_indexed_partial_sum_matches_chapter7(a, k)
+                    fn(j N_pos) R {one_indexed_partial_sum(a, j)}(k) = one_indexed_partial_sum(a, k)
+                    abs(fn(j N_pos) R {one_indexed_partial_sum(a, j)}(k) - S) <= epsilon
+                    abs(fn(j N_pos) R {chap7::partial_sum(a, j)}(k) - S) = abs(chap7::partial_sum(a, k) - S) = abs(one_indexed_partial_sum(a, k) - S) = abs(fn(j N_pos) R {one_indexed_partial_sum(a, j)}(k) - S) <= epsilon
+    by def $chap7::has_series_sum(a, S)
+
+thm nonpositive_p_series_terms_at_least_one:
+    ? forall p R, n N_pos:
+        p <= 0
+        =>:
+            1 / n^p >= 1
+    p = 0 or p < 0
+    by cases:
+        ? 1 / n^p >= 1
+        case p = 0:
+            n^p = n^0 = 1
+            1 / n^p = 1 / 1 = 1
+        case p < 0:
+            n = 1 or n > 1
+            by cases:
+                ? 1 / n^p >= 1
+                case n = 1:
+                    n^p = 1^p = 1
+                    1 / n^p = 1 / 1 = 1
+                case n > 1:
+                    n $in R_pos
+                    by thm chap6::real_power_exponent_strict_mono_above_one(n, 0, p)
+                    n^0 > n^p
+                    n^0 = 1
+                    n^p < 1
+                    by thm chap6::real_power_positive(n, p)
+                    n^p > 0
+                    n^p / n^p < 1 / n^p
+                    n^p / n^p = 1
+                    1 < 1 / n^p
+
 prop is_closed_interval_integral_value_on_nonnegative_ray_endpoint(f fn(x '[0,)) R, T '[0,), s R):
-    exist g fn(x '[0, T]) R st {$is_restriction_to_subset('[0,), '[0, T], f, g), $is_riemann_integrable_on('[0, T], g), s = integral_on('[0, T], g)}
+    $has_riemann_integral('[0, T], fn(x '[0, T]) R {f(x)}, s)
 
 prop is_closed_interval_integral_value_on_nonnegative_ray(f fn(x '[0,)) R, s R):
     exist T '[0,) st {$is_closed_interval_integral_value_on_nonnegative_ray_endpoint(f, T, s)}
@@ -12726,8 +12816,9 @@ thm integral_test_series_implies_finite_integral_supremum:
         $has_series_sum_from_zero(fn(n N) R {f(n)}, S)
         =>:
             $has_finite_integral_supremum_on_nonnegative_ray(f)
-    # Source handling: Tao proves this in Exercise 11.6.3 by comparing
-    # rectangle sums with finite integrals on `[0,N]`.
+    # Source handling: Proposition 11.6.4 leaves both directions of the
+    # integral test to Exercise 11.6.3.  This trust records the source-deferred
+    # series-to-integral direction.
     # proof_debt: formalize the finite sum/integral comparison and the
     # monotone convergence criterion for partial sums.
     trust $has_finite_integral_supremum_on_nonnegative_ray(f)
@@ -12739,7 +12830,9 @@ thm integral_test_finite_integral_supremum_implies_series:
         $has_finite_integral_supremum_on_nonnegative_ray(f)
         =>:
             exist S R st {$has_series_sum_from_zero(fn(n N) R {f(n)}, S)}
-    # Source handling: this is the reverse implication of Proposition 11.6.4.
+    # Source handling: Proposition 11.6.4 leaves both directions of the
+    # integral test to Exercise 11.6.3.  This trust records the source-deferred
+    # integral-to-series direction.
     # proof_debt: use the same rectangle comparison to bound partial sums.
     trust exist S R st {$has_series_sum_from_zero(fn(n N) R {f(n)}, S)}
 
@@ -12754,21 +12847,65 @@ thm p_series_test_by_integral_test:
         =>:
             exist S R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)}
     # Source handling: Tao proves this in Exercise 11.6.5 using the integral
-    # test.
-    # proof_debt: evaluate the power-function integral comparison and handle
-    # the endpoint `p=1` divergence separately.
-    trust exist S R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)}
+    # test.  Chapter 7 already exposes the same p-series convergence theorem;
+    # this chapter checks only the bridge to its local partial-sum notation.
+    p > 0
+    p $in R_pos
+    by thm chap7::p_series_converges_when_exponent_gt_one(p)
+    claim:
+        ? forall n N_pos:
+            chap7::p_series_terms(p)(n) = fn(j N_pos) R {1 / j^p}(n)
+        chap7::p_series_terms(p)(n) = 1 / n^p
+        fn(j N_pos) R {1 / j^p}(n) = 1 / n^p
+    by thm chap7::series_convergence_extensional(chap7::p_series_terms(p), fn(n N_pos) R {1 / n^p})
+    $chap7::is_convergent_series(fn(n N_pos) R {1 / n^p})
+    obtain S from exist S R st {$chap7::has_series_sum(fn(n N_pos) R {1 / n^p}, S)}
+    by thm chapter7_series_sum_implies_chapter11_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)
+    witness exist S0 R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S0)} from S
 
 thm p_series_diverges_when_p_le_one:
     ? forall p R:
         p <= 1
         =>:
             not exist S R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)}
-    # Source handling: Tao proves this in Exercise 11.6.5 using the integral
-    # test.
-    # proof_debt: show the corresponding improper-integral supremum is
-    # infinite, or compare with the harmonic series.
-    trust not exist S R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)}
+    # Source handling: for positive exponents, reuse Chapter 7's p-series
+    # divergence interface.  For non-positive exponents, the terms stay at
+    # least one, so Chapter 7's checked zero test rules out convergence.
+    by contra:
+        ? not exist S R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)}
+        obtain S from exist S R st {$has_series_sum_from_one(fn(n N_pos) R {1 / n^p}, S)}
+        by thm chapter11_series_sum_from_one_implies_chapter7_series_sum(fn(n N_pos) R {1 / n^p}, S)
+        $chap7::is_convergent_series(fn(n N_pos) R {1 / n^p})
+        claim:
+            ? not $chap7::is_convergent_series(fn(n N_pos) R {1 / n^p})
+            p > 0 or p <= 0
+            by cases:
+                ? not $chap7::is_convergent_series(fn(n N_pos) R {1 / n^p})
+                case p > 0:
+                    p $in R_pos
+                    by thm chap7::p_series_diverges_when_exponent_le_one(p)
+                    by contra:
+                        ? not $chap7::is_convergent_series(fn(n N_pos) R {1 / n^p})
+                        claim:
+                            ? forall n N_pos:
+                                fn(j N_pos) R {1 / j^p}(n) = chap7::p_series_terms(p)(n)
+                            fn(j N_pos) R {1 / j^p}(n) = 1 / n^p
+                            chap7::p_series_terms(p)(n) = 1 / n^p
+                        by thm chap7::series_convergence_extensional(fn(n N_pos) R {1 / n^p}, chap7::p_series_terms(p))
+                        impossible not $chap7::is_convergent_series(chap7::p_series_terms(p))
+                case p <= 0:
+                    by contra:
+                        ? not $chap7::is_convergent_series(fn(n N_pos) R {1 / n^p})
+                        by thm chap7::series_zero_test(fn(n N_pos) R {1 / n^p})
+                        obtain n0 from exist n0 N_pos st {$chap7::is_tail_close_to(fn(n N_pos) R {1 / n^p}, 0, 1 / 2, n0)}
+                        fn(n N_pos) R {1 / n^p}(n0) = 1 / n0^p
+                        abs(fn(n N_pos) R {1 / n^p}(n0) - 0) <= 1 / 2
+                        by thm nonpositive_p_series_terms_at_least_one(p, n0)
+                        1 / n0^p >= 1
+                        1 / n0^p > 0
+                        abs(fn(n N_pos) R {1 / n^p}(n0) - 0) = abs(1 / n0^p) = 1 / n0^p >= 1 > 1 / 2
+                        impossible abs(fn(n N_pos) R {1 / n^p}(n0) - 0) <= 1 / 2
+        impossible not $chap7::is_convergent_series(fn(n N_pos) R {1 / n^p})
 
 
 # 11.7 A non-Riemann integrable function
@@ -12950,18 +13087,158 @@ thm dirichlet_lower_piece_height_on_positive_length:
     lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) <= 0
     lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) = 0
 
+thm dirichlet_upper_riemann_sum_piece_equals_length:
+    ? forall J power_set(R):
+        $is_bounded_interval(J)
+        J $subset '[0, 1]
+        =>:
+            upper_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = interval_length(J)
+    by thm dirichlet_rational_indicator_bounded()
+    by thm upper_riemann_sum_piece_is_height_times_length('[0, 1], J, dirichlet_rational_indicator_on_unit)
+    upper_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) * interval_length(J)
+    by thm interval_length_nonnegative(J)
+    by cases:
+        ? upper_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = interval_length(J)
+        case interval_length(J) > 0:
+            by thm dirichlet_upper_piece_height_on_positive_length(J)
+            upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) = 1
+            upper_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = 1 * interval_length(J) = interval_length(J)
+        case interval_length(J) = 0:
+            upper_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) * 0 = 0 = interval_length(J)
+
+thm dirichlet_lower_riemann_sum_piece_equals_zero:
+    ? forall J power_set(R):
+        $is_bounded_interval(J)
+        J $subset '[0, 1]
+        =>:
+            lower_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = 0
+    by thm dirichlet_rational_indicator_bounded()
+    by thm lower_riemann_sum_piece_is_height_times_length('[0, 1], J, dirichlet_rational_indicator_on_unit)
+    lower_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) * interval_length(J)
+    by thm interval_length_nonnegative(J)
+    by cases:
+        ? lower_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = 0
+        case interval_length(J) > 0:
+            by thm dirichlet_lower_piece_height_on_positive_length(J)
+            lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) = 0
+            lower_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = 0 * interval_length(J) = 0
+        case interval_length(J) = 0:
+            lower_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) * 0 = 0
+
+thm dirichlet_upper_riemann_sum_on_partition_equals_one:
+    ? forall P power_set(power_set(R)):
+        $is_finite_set(P)
+        $is_partition_of_bounded_interval('[0, 1], P)
+        =>:
+            upper_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit) = 1
+    by thm dirichlet_rational_indicator_bounded()
+    by thm upper_riemann_sum_has_value('[0, 1], P, dirichlet_rational_indicator_on_unit)
+    obtain c from exist c fn(J P) R st {$is_upper_riemann_sum_contribution_family('[0, 1], P, dirichlet_rational_indicator_on_unit, c), upper_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit) = finite_set_sum(P, c)}
+    claim:
+        ? $fn_eq(c, fn(J P) R {interval_length(J)})
+        claim:
+            ? forall J P:
+                c(J) = fn(K P) R {interval_length(K)}(J)
+            J $in power_set(R)
+            $is_bounded_interval(J)
+            J $subset '[0, 1]
+            $has_upper_riemann_sum_piece_contribution('[0, 1], J, dirichlet_rational_indicator_on_unit, c(J))
+            by thm upper_riemann_sum_piece_has_value('[0, 1], J, dirichlet_rational_indicator_on_unit)
+            $has_upper_riemann_sum_piece_contribution('[0, 1], J, dirichlet_rational_indicator_on_unit, upper_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit))
+            by thm upper_riemann_sum_piece_contribution_unique('[0, 1], J, dirichlet_rational_indicator_on_unit, c(J), upper_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit))
+            c(J) = upper_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit)
+            by thm dirichlet_upper_riemann_sum_piece_equals_length(J)
+            upper_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = interval_length(J)
+            fn(K P) R {interval_length(K)}(J) = interval_length(J)
+            c(J) = fn(K P) R {interval_length(K)}(J)
+        $fn_eq(c, fn(J P) R {interval_length(J)})
+    c = fn(J P) R {interval_length(J)}
+    upper_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit) = finite_set_sum(P, c) = finite_set_sum(P, fn(J P) R {interval_length(J)})
+    by thm interval_length_is_finitely_additive_over_partition('[0, 1], P)
+    interval_length('[0, 1]) = finite_set_sum(P, fn(J P) R {interval_length(J)})
+    by thm non_degenerate_interval_forms_length_value(0, 1)
+    interval_length('[0, 1]) = 1 - 0 = 1
+    upper_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit) = 1
+
+thm dirichlet_lower_riemann_sum_on_partition_equals_zero:
+    ? forall P power_set(power_set(R)):
+        $is_finite_set(P)
+        $is_partition_of_bounded_interval('[0, 1], P)
+        =>:
+            lower_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit) = 0
+    by thm dirichlet_rational_indicator_bounded()
+    by thm lower_riemann_sum_has_value('[0, 1], P, dirichlet_rational_indicator_on_unit)
+    obtain c from exist c fn(J P) R st {$is_lower_riemann_sum_contribution_family('[0, 1], P, dirichlet_rational_indicator_on_unit, c), lower_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit) = finite_set_sum(P, c)}
+    claim:
+        ? $fn_eq(c, fn(J P) R {0})
+        claim:
+            ? forall J P:
+                c(J) = fn(K P) R {0}(J)
+            J $in power_set(R)
+            $is_bounded_interval(J)
+            J $subset '[0, 1]
+            $has_lower_riemann_sum_piece_contribution('[0, 1], J, dirichlet_rational_indicator_on_unit, c(J))
+            by thm lower_riemann_sum_piece_has_value('[0, 1], J, dirichlet_rational_indicator_on_unit)
+            $has_lower_riemann_sum_piece_contribution('[0, 1], J, dirichlet_rational_indicator_on_unit, lower_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit))
+            by thm lower_riemann_sum_piece_contribution_unique('[0, 1], J, dirichlet_rational_indicator_on_unit, c(J), lower_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit))
+            c(J) = lower_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit)
+            by thm dirichlet_lower_riemann_sum_piece_equals_zero(J)
+            lower_riemann_sum_piece('[0, 1], J, dirichlet_rational_indicator_on_unit) = 0
+            fn(K P) R {0}(J) = 0
+            c(J) = fn(K P) R {0}(J)
+        $fn_eq(c, fn(J P) R {0})
+    c = fn(J P) R {0}
+    lower_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit) = finite_set_sum(P, c) = finite_set_sum(P, fn(J P) R {0})
+    finite_set_sum(P, fn(J P) R {0}) = 0
+    lower_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit) = 0
+
 thm dirichlet_rational_indicator_upper_integral_value:
     ? forall:
         $is_bounded_interval('[0, 1])
         $chap9::is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
         =>:
             upper_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 1
-    # Source handling: every non-degenerate partition piece contains a rational
-    # point, so every upper Darboux sum for this function is the total length
-    # of `[0,1]`.
-    # proof_debt: formalize the rational-density witness on each partition
-    # piece and the finite additivity of the displayed partition lengths.
-    trust upper_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 1
+    # Every positive-length partition piece contains a rational point, hence
+    # has upper height one. Zero-length pieces contribute zero. Therefore every
+    # upper sum is one, and its infimum is one.
+    by thm upper_integral_equals_infimum_of_riemann_sums('[0, 1], dirichlet_rational_indicator_on_unit)
+    $is_infimum_of_real_set(upper_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit), upper_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit))
+    claim:
+        ? forall U upper_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit):
+            U = 1
+        by thm upper_riemann_sum_value_from_member('[0, 1], dirichlet_rational_indicator_on_unit, U)
+        obtain P from exist P finite_set st {$has_upper_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit, U)}
+        P $in power_set(power_set(R))
+        by thm upper_riemann_sum_has_value('[0, 1], P, dirichlet_rational_indicator_on_unit)
+        by thm upper_riemann_sum_value_unique('[0, 1], P, dirichlet_rational_indicator_on_unit, U, upper_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit))
+        U = upper_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit)
+        by thm dirichlet_upper_riemann_sum_on_partition_equals_one(P)
+        upper_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit) = 1
+        U = 1
+    claim:
+        ? $is_lower_bound_of_real_set(upper_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit), 1)
+        claim:
+            ? forall U upper_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit):
+                1 <= U
+            U = 1
+            1 <= U
+        $is_lower_bound_of_real_set(upper_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit), 1)
+    1 <= upper_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit)
+    by thm one_piece_partition_of_bounded_interval('[0, 1])
+    $is_partition_of_bounded_interval('[0, 1], {'[0, 1]})
+    by thm upper_riemann_sum_has_value('[0, 1], {'[0, 1]}, dirichlet_rational_indicator_on_unit)
+    by thm dirichlet_upper_riemann_sum_on_partition_equals_one({'[0, 1]})
+    upper_riemann_sum('[0, 1], {'[0, 1]}, dirichlet_rational_indicator_on_unit) = 1
+    $has_upper_riemann_sum('[0, 1], {'[0, 1]}, dirichlet_rational_indicator_on_unit, 1)
+    claim:
+        ? $is_upper_riemann_sum_value('[0, 1], dirichlet_rational_indicator_on_unit, 1)
+        witness exist P finite_set st {$has_upper_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit, 1)} from {'[0, 1]}:
+            $has_upper_riemann_sum('[0, 1], {'[0, 1]}, dirichlet_rational_indicator_on_unit, 1)
+    by thm upper_riemann_sum_value_member('[0, 1], dirichlet_rational_indicator_on_unit, 1)
+    1 $in upper_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit)
+    $is_lower_bound_of_real_set(upper_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit), upper_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit))
+    upper_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) <= 1
+    upper_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 1
 
 thm dirichlet_rational_indicator_lower_integral_value:
     ? forall:
@@ -12969,11 +13246,47 @@ thm dirichlet_rational_indicator_lower_integral_value:
         $chap9::is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
         =>:
             lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 0
-    # Source handling: every non-degenerate partition piece contains an
-    # irrational point, so every lower Darboux sum for this function is zero.
-    # proof_debt: formalize irrational density in each partition piece and the
-    # lower-sum comparison.
-    trust lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 0
+    # Every positive-length partition piece contains an irrational point,
+    # hence has lower height zero. Zero-length pieces also contribute zero, so
+    # every lower sum and therefore its supremum is zero.
+    by thm lower_integral_equals_supremum_of_riemann_sums('[0, 1], dirichlet_rational_indicator_on_unit)
+    $is_least_upper_bound(lower_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit), lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit))
+    claim:
+        ? forall L lower_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit):
+            L = 0
+        by thm lower_riemann_sum_value_from_member('[0, 1], dirichlet_rational_indicator_on_unit, L)
+        obtain P from exist P finite_set st {$has_lower_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit, L)}
+        P $in power_set(power_set(R))
+        by thm lower_riemann_sum_has_value('[0, 1], P, dirichlet_rational_indicator_on_unit)
+        by thm lower_riemann_sum_value_unique('[0, 1], P, dirichlet_rational_indicator_on_unit, L, lower_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit))
+        L = lower_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit)
+        by thm dirichlet_lower_riemann_sum_on_partition_equals_zero(P)
+        lower_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit) = 0
+        L = 0
+    claim:
+        ? $is_upper_bound_of_real_set(lower_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit), 0)
+        claim:
+            ? forall L lower_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit):
+                L <= 0
+            L = 0
+            L <= 0
+        $is_upper_bound_of_real_set(lower_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit), 0)
+    lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) <= 0
+    by thm one_piece_partition_of_bounded_interval('[0, 1])
+    $is_partition_of_bounded_interval('[0, 1], {'[0, 1]})
+    by thm lower_riemann_sum_has_value('[0, 1], {'[0, 1]}, dirichlet_rational_indicator_on_unit)
+    by thm dirichlet_lower_riemann_sum_on_partition_equals_zero({'[0, 1]})
+    lower_riemann_sum('[0, 1], {'[0, 1]}, dirichlet_rational_indicator_on_unit) = 0
+    $has_lower_riemann_sum('[0, 1], {'[0, 1]}, dirichlet_rational_indicator_on_unit, 0)
+    claim:
+        ? $is_lower_riemann_sum_value('[0, 1], dirichlet_rational_indicator_on_unit, 0)
+        witness exist P finite_set st {$has_lower_riemann_sum('[0, 1], P, dirichlet_rational_indicator_on_unit, 0)} from {'[0, 1]}:
+            $has_lower_riemann_sum('[0, 1], {'[0, 1]}, dirichlet_rational_indicator_on_unit, 0)
+    by thm lower_riemann_sum_value_member('[0, 1], dirichlet_rational_indicator_on_unit, 0)
+    0 $in lower_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit)
+    $is_upper_bound_of_real_set(lower_riemann_sum_values('[0, 1], dirichlet_rational_indicator_on_unit), lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit))
+    0 <= lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit)
+    lower_riemann_integral('[0, 1], dirichlet_rational_indicator_on_unit) = 0
 
 thm dirichlet_rational_indicator_upper_lower_integrals_separated:
     ? forall:
@@ -13386,6 +13699,9 @@ thm alpha_interval_length_adds_across_bounded_difference:
         $is_bounded_interval(set_minus(I, J))
         =>:
             alpha_interval_length(alpha, I) = alpha_interval_length(alpha, J) + alpha_interval_length(alpha, set_minus(I, J))
+    # Source handling: Lemma 11.8.4 leaves its finite-additivity proof to
+    # Exercise 11.8.1.  The trust records the source-deferred alpha-length
+    # splitting step used by the otherwise checked partition induction.
     # proof_debt: classify the compatible endpoint forms of the removed piece
     # and the bounded remainder, then telescope their alpha-endpoint values.
     trust alpha_interval_length(alpha, I) = alpha_interval_length(alpha, J) + alpha_interval_length(alpha, set_minus(I, J))
@@ -15138,34 +15454,184 @@ thm closed_initial_subinterval_subset_parent:
         t $in '[a, b]
     '[a, x] $subset '[a, b]
 
-# Source handling: Theorem 11.9.1 defines the function
-# `x |-> integral_[a,x] f`.
-# proof_debt: the restriction witness is a Litex domain bridge for applying
-# `integral_on` to the smaller interval.
+thm closed_initial_restriction_is_riemann_integrable:
+    ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
+        a < b
+        $is_riemann_integrable_on('[a, b], f)
+        =>:
+            $is_riemann_integrable_on('[a, x], fn(y '[a, x]) R {f(y)})
+    by thm interval_endpoint_forms_are_bounded_intervals(a, b)
+    by thm interval_endpoint_forms_are_bounded_intervals(a, x)
+    by thm interval_endpoint_forms_are_bounded_intervals(x, b)
+    by thm closed_initial_subinterval_subset_parent(a, b, x)
+    claim:
+        ? forall t '(x, b]:
+            t $in '[a, b]
+        x < t <= b
+        a <= x < t
+        a <= t <= b
+        t $in '[a, b]
+    '(x, b] $subset '[a, b]
+    claim:
+        ? '[a, x] != '(x, b]
+        by contra:
+            ? '[a, x] != '(x, b]
+            '[a, x] = '(x, b]
+            a $in '[a, x]
+            a $in '(x, b]
+            x < a <= x
+            impossible x < x
+    '[a, x] $in union({'[a, x]}, {'(x, b]})
+    '(x, b] $in union({'[a, x]}, {'(x, b]})
+    claim:
+        ? forall H union({'[a, x]}, {'(x, b]}):
+            H = '[a, x] or H = '(x, b]
+        H $in {'[a, x]} or H $in {'(x, b]}
+        by cases:
+            ? H = '[a, x] or H = '(x, b]
+            case H $in {'[a, x]}:
+                H = '[a, x]
+            case H $in {'(x, b]}:
+                H = '(x, b]
+    claim:
+        ? forall t '[a, b], H union({'[a, x]}, {'(x, b]}):
+            t $in H
+            t <= x
+            =>:
+                H = '[a, x]
+        H = '[a, x] or H = '(x, b]
+        by cases:
+            ? H = '[a, x]
+            case H = '[a, x]:
+                H = '[a, x]
+            case H = '(x, b]:
+                t $in '(x, b]
+                x < t <= x
+                impossible x < x
+    claim:
+        ? forall t '[a, b], H union({'[a, x]}, {'(x, b]}):
+            t $in H
+            t > x
+            =>:
+                H = '(x, b]
+        H = '[a, x] or H = '(x, b]
+        by cases:
+            ? H = '(x, b]
+            case H = '[a, x]:
+                t $in '[a, x]
+                x < t <= x
+                impossible x < x
+            case H = '(x, b]:
+                H = '(x, b]
+    claim:
+        ? $is_partition_of_bounded_interval('[a, b], union({'[a, x]}, {'(x, b]}))
+        claim:
+            ? forall H union({'[a, x]}, {'(x, b]}):
+                H $in power_set(R)
+            H = '[a, x] or H = '(x, b]
+            by cases:
+                ? H $in power_set(R)
+                case H = '[a, x]:
+                    H = '[a, x]
+                    H $in power_set(R)
+                case H = '(x, b]:
+                    H = '(x, b]
+                    H $in power_set(R)
+        claim:
+            ? forall H union({'[a, x]}, {'(x, b]}):
+                $is_bounded_interval(H)
+            H = '[a, x] or H = '(x, b]
+            by cases:
+                ? $is_bounded_interval(H)
+                case H = '[a, x]:
+                    H = '[a, x]
+                    $is_bounded_interval(H)
+                case H = '(x, b]:
+                    H = '(x, b]
+                    $is_bounded_interval(H)
+        claim:
+            ? forall H union({'[a, x]}, {'(x, b]}):
+                H $subset '[a, b]
+            H = '[a, x] or H = '(x, b]
+            by cases:
+                ? H $subset '[a, b]
+                case H = '[a, x]:
+                    H = '[a, x]
+                    H $subset '[a, b]
+                case H = '(x, b]:
+                    H = '(x, b]
+                    H $subset '[a, b]
+        claim:
+            ? forall t '[a, b]:
+                exist H union({'[a, x]}, {'(x, b]}) st {H $in power_set(R), t $in H}
+            t <= x or t > x
+            by cases:
+                ? exist H union({'[a, x]}, {'(x, b]}) st {H $in power_set(R), t $in H}
+                case t <= x:
+                    witness exist H union({'[a, x]}, {'(x, b]}) st {H $in power_set(R), t $in H} from '[a, x]:
+                        '[a, x] $in union({'[a, x]}, {'(x, b]})
+                        '[a, x] $in power_set(R)
+                        a <= t <= x
+                        t $in '[a, x]
+                case t > x:
+                    witness exist H union({'[a, x]}, {'(x, b]}) st {H $in power_set(R), t $in H} from '(x, b]:
+                        '(x, b] $in union({'[a, x]}, {'(x, b]})
+                        '(x, b] $in power_set(R)
+                        x < t <= b
+                        t $in '(x, b]
+        claim:
+            ? forall t '[a, b], H1, H2 union({'[a, x]}, {'(x, b]}):
+                H1 $in power_set(R)
+                H2 $in power_set(R)
+                t $in H1
+                t $in H2
+                =>:
+                    H1 = H2
+            t <= x or t > x
+            by cases:
+                ? H1 = H2
+                case t <= x:
+                    H1 = '[a, x]
+                    H2 = '[a, x]
+                    H1 = H2
+                case t > x:
+                    H1 = '(x, b]
+                    H2 = '(x, b]
+                    H1 = H2
+        forall t '[a, b]:
+            exist! H union({'[a, x]}, {'(x, b]}) st {H $in power_set(R), t $in H}
+        by def $is_partition_of_bounded_interval('[a, b], union({'[a, x]}, {'(x, b]}))
+    by thm riemann_integral_additive_over_two_piece_partition('[a, b], union({'[a, x]}, {'(x, b]}), '[a, x], '(x, b], f)
 
-prop has_integral_from_left_endpoint(a, b R, f fn(t '[a, b]) R, x '[a, b], s R):
-    a < b
-    exist g fn(u '[a, x]) R st {$is_restriction_to_subset('[a, b], '[a, x], f, g), $has_riemann_integral('[a, x], g, s)}
-
+# Source handling: Theorem 11.9.1 defines the left-endpoint integral directly;
+# the restriction and its subinterval integrability are checked above rather
+# than admitted as an extra source proof step.
+# kernel_problem: a non-trusted global declaration with parameters
+# `f : '[a,b] -> R` and `x : '[a,b]` is rejected because those parameter types
+# depend on the earlier endpoints `a,b`.  The trust only preserves the named
+# source-facing selector; its mathematical value is fixed by `integral_on`.
 trust have integral_from_left_endpoint fn(a, b R, f fn(t '[a, b]) R, x '[a, b]) R:
     forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
         a < b
         $is_riemann_integrable_on('[a, b], f)
+        $is_riemann_integrable_on('[a, x], fn(y '[a, x]) R {f(y)})
         =>:
-            exist g fn(u '[a, x]) R st {$is_restriction_to_subset('[a, b], '[a, x], f, g), $has_riemann_integral('[a, x], g, integral_from_left_endpoint(a, b, f, x))}
+            integral_from_left_endpoint(a, b, f, x) = integral_on('[a, x], fn(y '[a, x]) R {f(y)})
 
 thm integral_from_left_endpoint_has_value:
     ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
         a < b
         $is_riemann_integrable_on('[a, b], f)
         =>:
-            $has_integral_from_left_endpoint(a, b, f, x, integral_from_left_endpoint(a, b, f, x))
-    exist g fn(u '[a, x]) R st {$is_restriction_to_subset('[a, b], '[a, x], f, g), $has_riemann_integral('[a, x], g, integral_from_left_endpoint(a, b, f, x))}
-    $has_integral_from_left_endpoint(a, b, f, x, integral_from_left_endpoint(a, b, f, x))
+            $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, integral_from_left_endpoint(a, b, f, x))
+    by thm closed_initial_restriction_is_riemann_integrable(a, b, f, x)
+    by thm integral_on_has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)})
+    integral_from_left_endpoint(a, b, f, x) = integral_on('[a, x], fn(y '[a, x]) R {f(y)})
+    $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, integral_from_left_endpoint(a, b, f, x))
 
 prop is_integral_function_from_left_endpoint(a, b R, f fn(t '[a, b]) R, F fn(x '[a, b]) R):
     forall x '[a, b]:
-        $has_integral_from_left_endpoint(a, b, f, x, F(x))
+        $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, F(x))
 
 thm selected_left_endpoint_integral_is_integral_function:
     ? forall a, b R, f fn(t '[a, b]) R:
@@ -15175,12 +15641,10 @@ thm selected_left_endpoint_integral_is_integral_function:
             $is_integral_function_from_left_endpoint(a, b, f, fn(x '[a, b]) R {integral_from_left_endpoint(a, b, f, x)})
     claim:
         ? forall x '[a, b]:
-            $has_integral_from_left_endpoint(a, b, f, x, fn(y '[a, b]) R {integral_from_left_endpoint(a, b, f, y)}(x))
-        fn(y '[a, b]) R {integral_from_left_endpoint(a, b, f, y)}(x) = integral_from_left_endpoint(a, b, f, x)
+            $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, fn(z '[a, b]) R {integral_from_left_endpoint(a, b, f, z)}(x))
+        fn(z '[a, b]) R {integral_from_left_endpoint(a, b, f, z)}(x) = integral_from_left_endpoint(a, b, f, x)
         by thm integral_from_left_endpoint_has_value(a, b, f, x)
-        $has_integral_from_left_endpoint(a, b, f, x, integral_from_left_endpoint(a, b, f, x))
-        $has_integral_from_left_endpoint(a, b, f, x, fn(y '[a, b]) R {integral_from_left_endpoint(a, b, f, y)}(x))
-    $is_integral_function_from_left_endpoint(a, b, f, fn(x '[a, b]) R {integral_from_left_endpoint(a, b, f, x)})
+    by def $is_integral_function_from_left_endpoint(a, b, f, fn(x '[a, b]) R {integral_from_left_endpoint(a, b, f, x)})
 
 thm first_fundamental_theorem_integral_function_continuous:
     ? forall a, b R, f fn(x '[a, b]) R, F fn(x '[a, b]) R:
@@ -15189,8 +15653,9 @@ thm first_fundamental_theorem_integral_function_continuous:
         $is_integral_function_from_left_endpoint(a, b, f, F)
         =>:
             $chap9::is_continuous_on('[a, b], F)
-    # Source handling: Tao proves continuity by bounding
-    # `F(y)-F(x)` by `M|y-x|`.
+    # Source handling: the proof of Theorem 11.9.1 bounds `F(y)-F(x)` by
+    # `M|y-x|`, but leaves the changing-interval additivity and restriction
+    # transports implicit.  The trust keeps those source gaps visible.
     # proof_debt: formalize interval additivity and boundedness of integrable
     # functions.
     trust $chap9::is_continuous_on('[a, b], F)
@@ -15203,8 +15668,9 @@ thm first_fundamental_theorem_integral_function_derivative_at_continuity_point:
         $chap9::is_continuous_at('[a, b], f, x0)
         =>:
             $chap10::has_derivative_at('[a, b], F, x0, f(x0))
-    # Source handling: Tao compares the average integral over `[x0,y]` with
-    # the continuous value `f(x0)`.
+    # Source handling: the proof of Theorem 11.9.1 compares the average
+    # integral over `[x0,y]` with `f(x0)`, while compressing the
+    # changing-interval quotient squeeze.  The trust keeps that gap visible.
     # proof_debt: formalize the squeeze estimate for the difference quotient.
     trust $chap10::has_derivative_at('[a, b], F, x0, f(x0))
 
@@ -15261,8 +15727,9 @@ thm antiderivative_boundary_difference_between_riemann_integral_bounds:
         =>:
             lower_riemann_integral('[a, b], f) <= F(b) - F(a)
             F(b) - F(a) <= upper_riemann_integral('[a, b], f)
-    # Source handling: Tao bounds `F(b)-F(a)` between every lower and upper
-    # Riemann sum using the mean-value theorem on each partition interval.
+    # Source handling: Theorem 11.9.4 gives the Riemann-sum and mean-value
+    # route, but leaves one inequality analogous and compresses the per-piece
+    # endpoint bookkeeping.  The trust keeps those source gaps visible.
     # proof_debt: formalize the Riemann-sum comparison, alpha-length notation
     # for `F[J]`, and the mean-value theorem application on each piece.
     trust:
@@ -15304,9 +15771,104 @@ thm antiderivatives_differ_by_constant:
             exist C R st {$differs_by_constant_on(I, F, G, C)}
     # Source handling: Tao proves this in Exercise 11.9.2 using the mean-value
     # theorem applied to `F-G`.
-    # proof_debt: show `F-G` has zero chap10::derivative and use the Chapter 10
-    # constant-chap10::derivative theorem on bounded intervals.
-    trust exist C R st {$differs_by_constant_on(I, F, G, C)}
+    # The closed subinterval between any two points of I lies in I.  On it,
+    # F-G has derivative zero, so the checked Chapter 10 zero-derivative
+    # theorem gives equal endpoint values.
+    by thm bounded_intervals_are_bounded_connected(I)
+    $is_connected_subset_of_R(I)
+    have fn difference_function(x I) R = F(x) - G(x)
+    claim:
+        ? forall x I:
+            $chap10::has_derivative_at(I, difference_function, x, 0)
+        $chap10::has_derivative_at(I, F, x, f(x))
+        $chap10::has_derivative_at(I, G, x, f(x))
+        by thm chap10::derivative_difference_rule(I, F, G, x, f(x), f(x))
+        $chap10::has_derivative_at(I, fn(y I) R {F(y) - G(y)}, x, f(x) - f(x))
+        f(x) - f(x) = 0
+        difference_function = fn(y I) R {F(y) - G(y)}
+        $chap10::has_derivative_at(I, difference_function, x, 0)
+    by cases:
+        ? exist C R st {$differs_by_constant_on(I, F, G, C)}
+        case $is_nonempty_set(I):
+            have x0 I
+            have C R = F(x0) - G(x0)
+            witness exist C0 R st {$differs_by_constant_on(I, F, G, C0)} from C:
+                claim:
+                    ? forall x I:
+                        F(x) = G(x) + C
+                    x < x0 or x = x0 or x > x0
+                    by cases:
+                        ? F(x) = G(x) + C
+                        case x < x0:
+                            '[x, x0] $subset I
+                            have fn restricted_difference(y '[x, x0]) R = difference_function(y)
+                            claim:
+                                ? $chap10::has_derivative_function_on('[x, x0], restricted_difference, fn(y '[x, x0]) R {0})
+                                claim:
+                                    ? forall y '[x, x0]:
+                                        $chap9::is_limit_point_of_set('[x, x0], y)
+                                        =>:
+                                            $chap10::has_derivative_at('[x, x0], restricted_difference, y, 0)
+                                    y $in I
+                                    by thm chap10::derivative_restrict_domain(I, '[x, x0], difference_function, y, 0)
+                                    $chap10::has_derivative_at('[x, x0], fn(z '[x, x0]) R {difference_function(z)}, y, 0)
+                                    restricted_difference = fn(z '[x, x0]) R {difference_function(z)}
+                                    $chap10::has_derivative_at('[x, x0], restricted_difference, y, 0)
+                                $chap10::has_derivative_function_on('[x, x0], restricted_difference, fn(y '[x, x0]) R {0})
+                            by thm chap10::zero_derivative_constant(x, x0, restricted_difference, fn(y '[x, x0]) R {0})
+                            $chap10::is_constant_on('[x, x0], restricted_difference)
+                            restricted_difference(x) = restricted_difference(x0)
+                            restricted_difference(x) = difference_function(x)
+                            restricted_difference(x0) = difference_function(x0)
+                            difference_function(x) = difference_function(x0)
+                            difference_function(x) = F(x) - G(x)
+                            difference_function(x0) = F(x0) - G(x0)
+                            F(x) - G(x) = F(x0) - G(x0)
+                            C = F(x0) - G(x0)
+                            F(x) = G(x) + C
+                        case x = x0:
+                            C = F(x0) - G(x0)
+                            F(x) = F(x0)
+                            G(x) = G(x0)
+                            F(x) = G(x) + C
+                        case x > x0:
+                            '[x0, x] $subset I
+                            have fn restricted_difference(y '[x0, x]) R = difference_function(y)
+                            claim:
+                                ? $chap10::has_derivative_function_on('[x0, x], restricted_difference, fn(y '[x0, x]) R {0})
+                                claim:
+                                    ? forall y '[x0, x]:
+                                        $chap9::is_limit_point_of_set('[x0, x], y)
+                                        =>:
+                                            $chap10::has_derivative_at('[x0, x], restricted_difference, y, 0)
+                                    y $in I
+                                    by thm chap10::derivative_restrict_domain(I, '[x0, x], difference_function, y, 0)
+                                    $chap10::has_derivative_at('[x0, x], fn(z '[x0, x]) R {difference_function(z)}, y, 0)
+                                    restricted_difference = fn(z '[x0, x]) R {difference_function(z)}
+                                    $chap10::has_derivative_at('[x0, x], restricted_difference, y, 0)
+                                $chap10::has_derivative_function_on('[x0, x], restricted_difference, fn(y '[x0, x]) R {0})
+                            by thm chap10::zero_derivative_constant(x0, x, restricted_difference, fn(y '[x0, x]) R {0})
+                            $chap10::is_constant_on('[x0, x], restricted_difference)
+                            restricted_difference(x0) = restricted_difference(x)
+                            restricted_difference(x0) = difference_function(x0)
+                            restricted_difference(x) = difference_function(x)
+                            difference_function(x) = difference_function(x0)
+                            difference_function(x) = F(x) - G(x)
+                            difference_function(x0) = F(x0) - G(x0)
+                            F(x) - G(x) = F(x0) - G(x0)
+                            C = F(x0) - G(x0)
+                            F(x) = G(x) + C
+                $differs_by_constant_on(I, F, G, C)
+        case not $is_nonempty_set(I):
+            witness exist C R st {$differs_by_constant_on(I, F, G, C)} from 0:
+                claim:
+                    ? forall x I:
+                        F(x) = G(x) + 0
+                    by contra:
+                        ? F(x) = G(x) + 0
+                        witness $is_nonempty_set(I) from x
+                        impossible not $is_nonempty_set(I)
+                $differs_by_constant_on(I, F, G, 0)
 
 
 # 11.10 Consequences of the fundamental theorems
@@ -15451,20 +16013,68 @@ thm stieltjes_piecewise_constant_as_riemann_integral:
             $is_riemann_stieltjes_integrable_on('[a, b], alpha, f)
             $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
             stieltjes_integral_on('[a, b], alpha, f) = integral_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
-    # Source handling: expand the finite Stieltjes sum over the constant pieces
-    # and use Theorem 11.9.4 on each piece to rewrite `alpha[J]` as the integral
-    # of `alpha'`.
-    # proof_debt: connect the piecewise-constant Stieltjes sum construction to
-    # the Darboux Riemann-Stieltjes integrability definition.
-    trust $is_riemann_stieltjes_integrable_on('[a, b], alpha, f)
     by thm non_degenerate_interval_forms_are_bounded_intervals(a, b)
     $is_bounded_interval('[a, b])
+    by thm piecewise_constant_on_bounded_interval_is_bounded('[a, b], f)
+    $chap9::is_bounded_function_on('[a, b], f)
+    have s R = piecewise_constant_riemann_stieltjes_integral('[a, b], alpha, f)
+    by thm piecewise_constant_riemann_stieltjes_integral_has_value('[a, b], alpha, f)
+    $has_piecewise_constant_riemann_stieltjes_integral('[a, b], alpha, f, s)
+    $has_upper_riemann_stieltjes_integral('[a, b], alpha, f, upper_riemann_stieltjes_integral('[a, b], alpha, f))
+    $has_lower_riemann_stieltjes_integral('[a, b], alpha, f, lower_riemann_stieltjes_integral('[a, b], alpha, f))
+    claim:
+        ? $is_upper_riemann_stieltjes_integral_candidate_value('[a, b], alpha, f, s)
+        witness exist g fn(x '[a, b]) R st {$is_piecewise_constant_on('[a, b], g), $majorizes_on('[a, b], g, f), $has_piecewise_constant_riemann_stieltjes_integral('[a, b], alpha, g, s)} from f:
+            $is_piecewise_constant_on('[a, b], f)
+            claim:
+                ? $majorizes_on('[a, b], f, f)
+                forall x '[a, b]:
+                    f(x) >= f(x)
+            $has_piecewise_constant_riemann_stieltjes_integral('[a, b], alpha, f, s)
+    by thm upper_riemann_stieltjes_integral_candidate_value_member('[a, b], alpha, f, s)
+    s $in upper_riemann_stieltjes_integral_candidate_values('[a, b], alpha, f)
+    upper_riemann_stieltjes_integral('[a, b], alpha, f) <= s
+    claim:
+        ? $is_lower_riemann_stieltjes_integral_candidate_value('[a, b], alpha, f, s)
+        witness exist h fn(x '[a, b]) R st {$is_piecewise_constant_on('[a, b], h), $minorizes_on('[a, b], h, f), $has_piecewise_constant_riemann_stieltjes_integral('[a, b], alpha, h, s)} from f:
+            $is_piecewise_constant_on('[a, b], f)
+            claim:
+                ? $minorizes_on('[a, b], f, f)
+                forall x '[a, b]:
+                    f(x) <= f(x)
+            $has_piecewise_constant_riemann_stieltjes_integral('[a, b], alpha, f, s)
+    by thm lower_riemann_stieltjes_integral_candidate_value_member('[a, b], alpha, f, s)
+    s $in lower_riemann_stieltjes_integral_candidate_values('[a, b], alpha, f)
+    s <= lower_riemann_stieltjes_integral('[a, b], alpha, f)
+    claim:
+        ? $is_upper_bound_of_real_set(lower_riemann_stieltjes_integral_candidate_values('[a, b], alpha, f), upper_riemann_stieltjes_integral('[a, b], alpha, f))
+        claim:
+            ? forall sh lower_riemann_stieltjes_integral_candidate_values('[a, b], alpha, f):
+                sh <= upper_riemann_stieltjes_integral('[a, b], alpha, f)
+            by thm lower_riemann_stieltjes_integral_candidate_value_from_member('[a, b], alpha, f, sh)
+            obtain h from exist h fn(x '[a, b]) R st {$is_piecewise_constant_on('[a, b], h), $minorizes_on('[a, b], h, f), $has_piecewise_constant_riemann_stieltjes_integral('[a, b], alpha, h, sh)}
+            claim:
+                ? $is_lower_bound_of_real_set(upper_riemann_stieltjes_integral_candidate_values('[a, b], alpha, f), sh)
+                claim:
+                    ? forall sg upper_riemann_stieltjes_integral_candidate_values('[a, b], alpha, f):
+                        sh <= sg
+                    by thm upper_riemann_stieltjes_integral_candidate_value_from_member('[a, b], alpha, f, sg)
+                    obtain g from exist g fn(x '[a, b]) R st {$is_piecewise_constant_on('[a, b], g), $majorizes_on('[a, b], g, f), $has_piecewise_constant_riemann_stieltjes_integral('[a, b], alpha, g, sg)}
+                    by thm piecewise_constant_stieltjes_minorant_integral_le_majorant_integral('[a, b], alpha, f, g, h, sg, sh)
+            sh <= upper_riemann_stieltjes_integral('[a, b], alpha, f)
+    lower_riemann_stieltjes_integral('[a, b], alpha, f) <= upper_riemann_stieltjes_integral('[a, b], alpha, f)
+    upper_riemann_stieltjes_integral('[a, b], alpha, f) <= s <= lower_riemann_stieltjes_integral('[a, b], alpha, f)
+    upper_riemann_stieltjes_integral('[a, b], alpha, f) <= lower_riemann_stieltjes_integral('[a, b], alpha, f)
+    upper_riemann_stieltjes_integral('[a, b], alpha, f) = lower_riemann_stieltjes_integral('[a, b], alpha, f)
+    by def $is_riemann_stieltjes_integrable_on('[a, b], alpha, f)
+    $is_riemann_stieltjes_integrable_on('[a, b], alpha, f)
     by thm piecewise_constant_on_bounded_interval_is_riemann_integrable('[a, b], f)
     $is_riemann_integrable_on('[a, b], f)
     by thm products_preserve_riemann_integrability('[a, b], f, dalpha)
     $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
-    # Source handling: this is the second part of Theorem 11.10.2 after the
-    # checked product-integrability substep.
+    # Source handling: Theorem 11.10.2 gives the finite piecewise calculation
+    # and invokes the second FTC on every piece, but suppresses the formal
+    # regrouping and endpoint transports.  The trust keeps that gap visible.
     # proof_debt: formalize finite additivity over arbitrary piecewise-constant
     # partitions and the per-piece second-FTC rewrite.
     trust stieltjes_integral_on('[a, b], alpha, f) = integral_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
@@ -15484,8 +16094,10 @@ thm stieltjes_to_riemann_integrability_by_piecewise_approximation:
         $is_riemann_stieltjes_integrable_on('[a, b], alpha, f)
         =>:
             $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
-    # Source handling: approximate `f` by piecewise constant upper and lower
-    # functions and use Theorem 11.10.2 on those approximants.
+    # Source handling: Corollary 11.10.3 gives the piecewise upper/lower
+    # approximation route, but compresses the transfer from the displayed
+    # inequalities to ordinary Riemann integrability.  The trust keeps that
+    # source gap visible.
     # proof_debt: carry the Darboux squeeze through the product with
     # non-negative `alpha'`.
     trust $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
@@ -15501,8 +16113,9 @@ thm stieltjes_to_riemann_identity_by_piecewise_approximation:
         $is_riemann_integrable_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
         =>:
             stieltjes_integral_on('[a, b], alpha, f) = integral_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
-    # Source handling: squeeze both sides between the identities for the
-    # piecewise-constant upper and lower approximants.
+    # Source handling: Corollary 11.10.3 gives the final epsilon squeeze, but
+    # compresses the two envelope transports needed to compare the selected
+    # integrals.  The trust keeps that source gap visible.
     # proof_debt: formalize the upper/lower Riemann-Stieltjes squeeze and use
     # non-negativity of `alpha'`.
     trust stieltjes_integral_on('[a, b], alpha, f) = integral_on('[a, b], fn(x '[a, b]) R {f(x) * dalpha(x)})
@@ -15577,17 +16190,18 @@ thm change_of_variables_piecewise_constant:
             $is_riemann_integrable_on('[u, v], f)
             $is_riemann_stieltjes_integrable_on('[a, b], phi, h)
             stieltjes_integral_on('[a, b], phi, h) = integral_on('[u, v], f)
-    # Source handling: preimages of the partition pieces for `f` under a
-    # continuous monotone map are again interval pieces; on each such preimage,
-    # `h=f o phi` is constant; the Stieltjes sum over preimage pieces equals
-    # the ordinary Riemann sum over the image pieces.
+    # Source handling: Lemma 11.10.5 gives only a proof sketch and leaves its
+    # marked "why?" gaps to Exercise 11.10.2.  This trust records the
+    # source-deferred preimage-partition step.
     # proof_debt: build the preimage partition and prove its interval pieces.
     trust $is_piecewise_constant_on('[a, b], h)
     by thm interval_endpoint_forms_are_bounded_intervals(u, v)
     $is_bounded_interval('[u, v])
     by thm piecewise_constant_on_bounded_interval_is_riemann_integrable('[u, v], f)
     $is_riemann_integrable_on('[u, v], f)
-    # Source handling: this is the finite-sum equality in Lemma 11.10.5.
+    # Source handling: Lemma 11.10.5 leaves the marked finite-sum and
+    # image-length gaps to Exercise 11.10.2.  This trust records exactly those
+    # source-deferred conclusions.
     # proof_debt: prove `phi[phi^{-1}(J)]` has the same length as `J` and sum
     # over the preimage partition.
     trust:
@@ -15610,8 +16224,9 @@ thm change_of_variables_stieltjes_integrability_by_piecewise_approximation:
         $is_composition_on_closed_interval(a, b, u, v, phi, f, h)
         =>:
             $is_riemann_stieltjes_integrable_on('[a, b], phi, h)
-    # Source handling: transfer piecewise-constant majorants and minorants of
-    # `f` along `phi` and apply Lemma 11.10.5.
+    # Source handling: Proposition 11.10.6 gives the transferred
+    # majorant/minorant squeeze, but compresses the pullback and envelope
+    # transports.  The trust keeps that source gap visible.
     # proof_debt: formalize the transferred Darboux squeeze.
     trust $is_riemann_stieltjes_integrable_on('[a, b], phi, h)
 
@@ -15628,8 +16243,9 @@ thm change_of_variables_stieltjes_identity_by_piecewise_approximation:
         $is_riemann_stieltjes_integrable_on('[a, b], phi, h)
         =>:
             stieltjes_integral_on('[a, b], phi, h) = integral_on('[u, v], f)
-    # Source handling: squeeze the Stieltjes integral of `h` between the
-    # transferred piecewise-constant upper and lower integrals.
+    # Source handling: Proposition 11.10.6 gives the final epsilon squeeze,
+    # but compresses the comparison between the selected Stieltjes value and
+    # the transferred piecewise integrals.  The trust keeps that gap visible.
     # proof_debt: carry the equality from Lemma 11.10.5 through the
     # upper/lower approximation limit.
     trust stieltjes_integral_on('[a, b], phi, h) = integral_on('[u, v], f)

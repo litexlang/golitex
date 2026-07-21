@@ -20,7 +20,7 @@ pub enum AtomObj {
 }
 
 impl fmt::Display for AtomObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             AtomObj::Identifier(x) => write!(f, "{}", x),
             AtomObj::IdentifierWithMod(x) => write!(f, "{}", x),

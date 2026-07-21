@@ -8,7 +8,7 @@ pub struct EvalStmt {
 }
 
 impl fmt::Display for EvalStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {}", EVAL, self.obj_to_eval)
     }
 }

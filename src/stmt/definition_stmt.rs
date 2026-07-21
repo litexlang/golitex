@@ -236,7 +236,7 @@ pub struct DefPropStmt {
 }
 
 impl fmt::Display for DefAbstractPropStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}{}{}",
@@ -266,7 +266,7 @@ impl DefPropStmt {
 }
 
 impl fmt::Display for DefPropStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self.iff_facts.len() {
             0 => write!(
                 f,
@@ -307,7 +307,7 @@ impl TrustHaveStmt {
 }
 
 impl fmt::Display for TrustHaveStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let param_str = self.param_def.to_string();
         match self.facts.len() {
             0 => write!(f, "{} {} {}", TRUST, HAVE, param_str),
@@ -337,7 +337,7 @@ impl HaveObjInNonemptySetOrParamTypeStmt {
 }
 
 impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {}", HAVE, self.param_def.to_string())
     }
 }
@@ -361,7 +361,7 @@ impl HaveObjByExistFactsStmt {
 }
 
 impl fmt::Display for HaveObjByExistFactsStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}\n{}",
@@ -388,7 +388,7 @@ impl HaveObjEqualStmt {
 }
 
 impl fmt::Display for HaveObjEqualStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {} {}",
@@ -423,7 +423,7 @@ impl HaveTupleStmt {
 }
 
 impl fmt::Display for HaveTupleStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {} {} {} {} {}, {}[{}] {} {}",
@@ -465,7 +465,7 @@ impl HaveCartStmt {
 }
 
 impl fmt::Display for HaveCartStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {} {} {} {} {}, {}({}, {}) {} {}",
@@ -508,7 +508,7 @@ impl HaveSeqStmt {
 }
 
 impl fmt::Display for HaveSeqStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {} {} {} {}, {}({}) {} {}",
@@ -551,7 +551,7 @@ impl HaveFiniteSeqStmt {
 }
 
 impl fmt::Display for HaveFiniteSeqStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {} {} {} {} {} {}, {}({}) {} {}",
@@ -600,7 +600,7 @@ impl HaveMatrixStmt {
 }
 
 impl fmt::Display for HaveMatrixStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {} {} {} {} {} {}, {} {} {}, {}({}, {}) {} {}",
@@ -687,7 +687,7 @@ impl HaveByExistStmt {
 }
 
 impl fmt::Display for HaveByExistStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {} {}",
@@ -710,7 +710,7 @@ impl HaveByPreimageStmt {
 }
 
 impl fmt::Display for HaveByPreimageStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {} {} {} {}",
@@ -739,7 +739,7 @@ impl HaveFnEqualStmt {
 }
 
 impl fmt::Display for HaveFnEqualStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let fn_set_clause = FnSetClause::new(
             self.equal_to_anonymous_fn.body.params_def_with_set.clone(),
             self.equal_to_anonymous_fn.body.dom_facts.clone(),
@@ -779,7 +779,7 @@ impl HaveFnByForallExistUniqueStmt {
 }
 
 impl fmt::Display for HaveFnByForallExistUniqueStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {} {} {}{}\n{}",
@@ -870,7 +870,7 @@ impl TemplateDefEnum {
 }
 
 impl fmt::Display for TemplateDefEnum {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveObjEqualStmt(stmt) => write!(f, "{}", stmt),
@@ -891,7 +891,7 @@ impl fmt::Display for TemplateDefEnum {
 }
 
 impl fmt::Display for DefTemplateStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}{}{}{}{}\n{}",
@@ -915,7 +915,7 @@ impl fmt::Display for DefTemplateStmt {
 }
 
 impl fmt::Display for HaveFnEqualCaseByCaseStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let cases_and_proofs = self
             .cases
             .iter()
@@ -1068,7 +1068,7 @@ impl HaveFnByInducStmt {
 
 impl fmt::Display for HaveFnByInducStmt {
     /// Display uses the same parameter names as in source.
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {}{} {} {} {} {} {} {}",
@@ -1096,7 +1096,7 @@ impl HaveFnByInducStmt {
         f: &mut fmt::Formatter<'_>,
         cases: &[HaveFnByInducCase],
         indent: usize,
-    ) -> fmt::Result {
+    ) -> Result<(), fmt::Error> {
         let pad = "    ".repeat(indent);
         for c in cases {
             writeln!(f)?;

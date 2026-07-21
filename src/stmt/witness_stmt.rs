@@ -34,7 +34,7 @@ impl WitnessExistFact {
 }
 
 impl fmt::Display for WitnessExistFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self.proof.len() {
             0 => write!(
                 f,
@@ -67,7 +67,7 @@ impl fmt::Display for WitnessExistFact {
 }
 
 impl fmt::Display for WitnessNonemptySet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self.proof.len() {
             0 => write!(f, "{} {} {}", WITNESS, self.obj, self.set),
             _ => write!(

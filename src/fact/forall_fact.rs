@@ -50,7 +50,7 @@ impl ForallFact {
 }
 
 impl fmt::Display for ForallFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self.dom_facts.len() {
             0 => write!(
                 f,

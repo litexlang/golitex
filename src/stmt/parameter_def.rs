@@ -149,7 +149,7 @@ impl ParamDefWithType {
 }
 
 impl fmt::Display for ParamDefWithType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", vec_to_string_join_by_comma(&self.groups))
     }
 }
@@ -328,7 +328,7 @@ impl FiniteSet {
 }
 
 impl fmt::Display for ParamType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             ParamType::Set(set) => write!(f, "{}", set.to_string()),
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
@@ -339,25 +339,25 @@ impl fmt::Display for ParamType {
 }
 
 impl fmt::Display for Set {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", SET)
     }
 }
 
 impl fmt::Display for NonemptySet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", NONEMPTY_SET)
     }
 }
 
 impl fmt::Display for FiniteSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", FINITE_SET)
     }
 }
 
 impl fmt::Display for ParamGroupWithSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}",
@@ -368,7 +368,7 @@ impl fmt::Display for ParamGroupWithSet {
 }
 
 impl fmt::Display for ParamGroupWithParamType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}",

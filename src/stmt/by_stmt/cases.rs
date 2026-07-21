@@ -30,7 +30,7 @@ impl ByCasesStmt {
 }
 
 impl fmt::Display for ByCasesStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let question_goals = self
             .then_facts
             .iter()

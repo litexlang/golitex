@@ -1,6 +1,45 @@
 use super::*;
 
 #[test]
+fn real_order_reflexivity_and_strict_irreflexivity_are_builtin_rules() {
+    run_with_large_stack(
+        "real_order_reflexivity_and_strict_irreflexivity_are_builtin_rules",
+        || {
+            let source_code = r#"
+claim:
+    ? forall a R:
+        not a < a
+    by contra:
+        ? not a < a
+        a < a
+        impossible a < a
+
+forall a R:
+    a <= a
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "real_order_reflexivity_and_strict_irreflexivity_are_builtin_rules",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "real-order reflexivity and strict irreflexivity should verify:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("order: strict real order is irreflexive")
+                    && run_output.contains("order: weak real order is reflexive"),
+                "the result should expose both real-order rules:\n{run_output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn infinite_set_minus_rule_keeps_a_finite_deletion_infinite() {
     let source_code = r#"
 forall X set, s finite_set:

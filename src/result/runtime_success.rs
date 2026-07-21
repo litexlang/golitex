@@ -561,7 +561,7 @@ impl ForallProvedFactResult {
 }
 
 impl fmt::Debug for ForallProofResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("ForallProofResult")
             .field("forall_fact", &self.forall_fact.to_string())
             .field("assumption_infers", &self.assumption_infers)
@@ -571,7 +571,7 @@ impl fmt::Debug for ForallProofResult {
 }
 
 impl fmt::Debug for ForallProvedFactResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("ForallProvedFactResult")
             .field("stmt", &self.stmt.to_string())
             .field("result", &self.result)
@@ -1007,7 +1007,7 @@ impl From<ByDefinitionVerificationResult> for ByVerificationResult {
 }
 
 impl fmt::Debug for ClaimVerificationResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             ClaimVerificationResult::Forall(v) => f.debug_tuple("Forall").field(v).finish(),
             ClaimVerificationResult::Fact(v) => f.debug_tuple("Fact").field(v).finish(),
@@ -1016,7 +1016,7 @@ impl fmt::Debug for ClaimVerificationResult {
 }
 
 impl fmt::Debug for TheoremVerificationResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("TheoremVerificationResult")
             .field("names", &self.names)
             .field("forall_fact", &self.forall_fact.to_string())
@@ -1027,7 +1027,7 @@ impl fmt::Debug for TheoremVerificationResult {
 }
 
 impl fmt::Debug for ClaimForallVerificationResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("ClaimForallVerificationResult")
             .field("forall_fact", &self.forall_fact.to_string())
             .field("assumption_infers", &self.assumption_infers)
@@ -1037,7 +1037,7 @@ impl fmt::Debug for ClaimForallVerificationResult {
 }
 
 impl fmt::Debug for ClaimFactVerificationResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("ClaimFactVerificationResult")
             .field("fact", &self.fact.to_string())
             .field("proof_step_count", &self.proof_step_count)
@@ -1046,7 +1046,7 @@ impl fmt::Debug for ClaimFactVerificationResult {
 }
 
 impl fmt::Debug for ByVerificationResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             ByVerificationResult::Cases(v) => f.debug_tuple("Cases").field(v).finish(),
             ByVerificationResult::Contra(v) => f.debug_tuple("Contra").field(v).finish(),
@@ -1076,7 +1076,7 @@ impl fmt::Debug for ByVerificationResult {
 }
 
 impl fmt::Debug for ByCasesVerificationResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let cases = self
             .cases
             .iter()
@@ -1103,7 +1103,7 @@ impl fmt::Debug for ByCasesVerificationResult {
 }
 
 impl fmt::Debug for ByContraVerificationResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("ByContraVerificationResult")
             .field("to_prove", &self.to_prove.to_string())
             .field("reverse_assumption", &self.reverse_assumption.to_string())
@@ -1114,7 +1114,7 @@ impl fmt::Debug for ByContraVerificationResult {
 }
 
 impl fmt::Debug for ByPropRegistrationVerificationResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("ByPropRegistrationVerificationResult")
             .field("registration_type", &self.registration_type)
             .field("prop_name", &self.prop_name)

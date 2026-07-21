@@ -19,7 +19,7 @@ pub enum StandardSet {
 }
 
 impl fmt::Display for StandardSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             StandardSet::NPos => write!(f, "{}", N_POS),
             StandardSet::N => write!(f, "{}", N),

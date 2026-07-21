@@ -1,0 +1,115 @@
+# Linear Algebra Done Right, fourth edition — Section 3B.
+# Null Spaces and Ranges.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro LinearMaps "\chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>"
+
+# Definition 3.11. The null space of T is the set of domain vectors sent to
+# the zero vector of the codomain.
+template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+    have fn null_space(T fn(v V) W) power_set(V) = {v V: T(v) = &chap1b::VectorSpace<s, scalars, W>{Wspace}.zero}
+
+# Result 3.13. The null space of a linear map is a subspace of its domain.
+axiom null_space_is_subspace:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps:
+        $chap1c::is_subspace(s, scalars, V, Vspace, \null_space<s, scalars, V, W, Vspace, Wspace>(T))
+
+# Definition 3.14. A map is injective when equal outputs force equal inputs.
+prop is_injective(V, W set, T fn(v V) W):
+    forall u, v V:
+        T(u) = T(v)
+        =>:
+            u = v
+
+# Result 3.15. A linear map is injective exactly when its null space consists
+# only of the zero vector.
+prop injective_iff_null_space_is_zero_statement(s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps):
+    forall:
+        =>:
+            $is_injective(V, W, T)
+        <=>:
+            \null_space<s, scalars, V, W, Vspace, Wspace>(T) = {&chap1b::VectorSpace<s, scalars, V>{Vspace}.zero}
+
+axiom injective_iff_null_space_is_zero:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps:
+        $injective_iff_null_space_is_zero_statement(s, scalars, V, W, Vspace, Wspace, T)
+
+# Definition 3.16. The range of T is the set of all values T(v). The helper
+# relation keeps the existential out of the set-builder parser while the
+# source-facing range remains a callable set-valued construction.
+prop has_preimage(V, W set, T fn(v V) W, w W):
+    exist v V st {w = T(v)}
+
+template<V, W set>:
+    have fn range_of(T fn(v V) W) power_set(W) = {w W: $has_preimage(V, W, T, w)}
+
+# Result 3.18. The range of a linear map is a subspace of its codomain.
+axiom range_is_subspace:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps:
+        $chap1c::is_subspace(s, scalars, W, Wspace, \range_of<V, W>(T))
+
+# Definition 3.19. A map is surjective when every codomain vector is attained.
+prop is_surjective(V, W set, T fn(v V) W):
+    forall w W:
+        exist v V st {T(v) = w}
+
+# Result 3.21. For finite-dimensional V, its dimension is the sum of the
+# dimensions of null T and range T. Axler proves this by extending a basis of
+# the null space to a basis of V.
+axiom fundamental_theorem_of_linear_maps:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            \chap2c::dimension<s, scalars, V, Vspace> = \chap2c::dimension<s, scalars, \null_space<s, scalars, V, W, Vspace, Wspace>(T), \chap1c::subspace_vector_space<s, scalars, V, Vspace, \null_space<s, scalars, V, W, Vspace, Wspace>(T)>> + \chap2c::dimension<s, scalars, \range_of<V, W>(T), \chap1c::subspace_vector_space<s, scalars, W, Wspace, \range_of<V, W>(T)>>
+
+# Result 3.22. A linear map into a lower-dimensional space cannot be injective.
+axiom lower_dimensional_codomain_prevents_injectivity:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap2a::is_finite_dimensional(s, scalars, W, Wspace)
+        \chap2c::dimension<s, scalars, W, Wspace> < \chap2c::dimension<s, scalars, V, Vspace>
+        =>:
+            not $is_injective(V, W, T)
+
+# Result 3.24. A linear map into a higher-dimensional space cannot be
+# surjective.
+axiom higher_dimensional_codomain_prevents_surjectivity:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap2a::is_finite_dimensional(s, scalars, W, Wspace)
+        \chap2c::dimension<s, scalars, V, Vspace> < \chap2c::dimension<s, scalars, W, Wspace>
+        =>:
+            not $is_surjective(V, W, T)
+
+# A finite scalar sum is the book-local bridge used to state linear systems.
+# Its recursive implementation is deferred because the operation comes from a
+# parameterized scalar structure rather than a builtin numeric carrier.
+template<s nonempty_set, scalars @ScalarSystem, n N_pos>:
+    trust have scalar_finite_sum fn(a finite_seq(s, n)) s:
+        scalar_finite_sum(a) $in s
+
+prop solves_linear_system(s nonempty_set, scalars @ScalarSystem, m, n N_pos, A matrix(s, m, n), b finite_seq(s, m), x finite_seq(s, n)):
+    forall j N_pos:
+        j <= m
+        =>:
+            \scalar_finite_sum<s, scalars, n>(fn(k N_pos: k <= n) s {&chap1a::ScalarSystem<s>{scalars}.mul(A(j, k), x(k))}) = b(j)
+
+# Result 3.26. A homogeneous system with more variables than equations has a
+# nonzero solution.
+axiom homogeneous_system_with_more_variables_has_nonzero_solution:
+    ? forall s nonempty_set, scalars @ScalarSystem, m, n N_pos, A matrix(s, m, n):
+        m < n
+        =>:
+            exist x finite_seq(s, n) st {$solves_linear_system(s, scalars, m, n, A, fn(j N_pos: j <= m) s {&chap1a::ScalarSystem<s>{scalars}.zero}, x), x != fn(k N_pos: k <= n) s {&chap1a::ScalarSystem<s>{scalars}.zero}}
+
+# Result 3.28. If a system has more equations than variables, some choice of
+# right-hand side makes the system unsolvable.
+prop is_inconsistent_right_hand_side(s nonempty_set, scalars @ScalarSystem, m, n N_pos, A matrix(s, m, n), b finite_seq(s, m)):
+    forall x finite_seq(s, n):
+        not $solves_linear_system(s, scalars, m, n, A, b, x)
+
+axiom more_equations_than_variables_can_be_inconsistent:
+    ? forall s nonempty_set, scalars @ScalarSystem, m, n N_pos, A matrix(s, m, n):
+        n < m
+        =>:
+            exist b finite_seq(s, m) st {$is_inconsistent_right_hand_side(s, scalars, m, n, A, b)}

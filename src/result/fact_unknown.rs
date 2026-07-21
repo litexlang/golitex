@@ -88,7 +88,7 @@ pub enum FactUnknown {
 }
 
 impl fmt::Display for FactUnknown {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", UNKNOWN_COLON)?;
         let goal = self.goal().to_string();
         if !goal.is_empty() {

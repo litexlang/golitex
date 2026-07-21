@@ -1083,7 +1083,7 @@ fn precedence(o: &Obj) -> u8 {
 }
 
 impl fmt::Display for Obj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         self.fmt_with_precedence(f, 0)
     }
 }
@@ -1232,7 +1232,7 @@ impl Obj {
         &self,
         f: &mut fmt::Formatter<'_>,
         parent_precedent: u8,
-    ) -> fmt::Result {
+    ) -> Result<(), fmt::Error> {
         let precedent = precedence(self);
         let need_parens = parent_precedent != 0 && precedent != 0 && precedent > parent_precedent;
         if need_parens {
@@ -1935,7 +1935,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
 }
 
 impl fmt::Display for ObjAtIndex {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}{}{}",
@@ -1945,7 +1945,7 @@ impl fmt::Display for ObjAtIndex {
 }
 
 impl fmt::Display for StructObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}{}", STRUCT_VIEW_PREFIX, self.name)?;
         if !self.params.is_empty() {
             write!(
@@ -1961,7 +1961,7 @@ impl fmt::Display for StructObj {
 }
 
 impl fmt::Display for InstantiatedTemplateObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}{}{}{}",
@@ -1975,7 +1975,7 @@ impl fmt::Display for InstantiatedTemplateObj {
 }
 
 impl fmt::Display for ObjAsStructInstanceWithFieldAccess {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}{}", STRUCT_VIEW_PREFIX, self.struct_obj.name)?;
         if !self.struct_obj.params.is_empty() {
             write!(
@@ -1999,7 +1999,7 @@ impl fmt::Display for ObjAsStructInstanceWithFieldAccess {
 }
 
 impl fmt::Display for Range {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2010,7 +2010,7 @@ impl fmt::Display for Range {
 }
 
 impl fmt::Display for ClosedRange {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2021,7 +2021,7 @@ impl fmt::Display for ClosedRange {
 }
 
 impl fmt::Display for IntervalObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let (left_delimiter, right_delimiter) = match self {
             IntervalObj::LeftOpenRightOpen(_) => (LEFT_BRACE, RIGHT_BRACE),
             IntervalObj::LeftOpenRightClosed(_) => (LEFT_BRACE, RIGHT_BRACKET),
@@ -2042,7 +2042,7 @@ impl fmt::Display for IntervalObj {
 }
 
 impl fmt::Display for OneSideInfinityIntervalObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             OneSideInfinityIntervalObj::LeftOpen(interval) => write!(f, "'({},)", interval.start),
             OneSideInfinityIntervalObj::LeftClosed(interval) => write!(f, "'[{},)", interval.start),
@@ -2055,7 +2055,7 @@ impl fmt::Display for OneSideInfinityIntervalObj {
 }
 
 impl fmt::Display for FiniteSeqSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2066,7 +2066,7 @@ impl fmt::Display for FiniteSeqSet {
 }
 
 impl fmt::Display for SeqSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2077,7 +2077,7 @@ impl fmt::Display for SeqSet {
 }
 
 impl fmt::Display for FiniteSeqListObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", LEFT_BRACKET)?;
         for (i, o) in self.objs.iter().enumerate() {
             if i > 0 {
@@ -2090,7 +2090,7 @@ impl fmt::Display for FiniteSeqListObj {
 }
 
 impl fmt::Display for MatrixSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2105,7 +2105,7 @@ impl fmt::Display for MatrixSet {
 }
 
 impl fmt::Display for MatrixListObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", LEFT_BRACKET)?;
         for (ri, row) in self.rows.iter().enumerate() {
             if ri > 0 {
@@ -2125,7 +2125,7 @@ impl fmt::Display for MatrixListObj {
 }
 
 impl fmt::Display for FiniteSetSize {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2136,7 +2136,7 @@ impl fmt::Display for FiniteSetSize {
 }
 
 impl fmt::Display for FiniteSetMax {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2147,7 +2147,7 @@ impl fmt::Display for FiniteSetMax {
 }
 
 impl fmt::Display for FiniteSetMin {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2158,7 +2158,7 @@ impl fmt::Display for FiniteSetMin {
 }
 
 impl fmt::Display for FnRange {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2169,7 +2169,7 @@ impl fmt::Display for FnRange {
 }
 
 impl fmt::Display for Replacement {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}{}, {}{}",
@@ -2179,7 +2179,7 @@ impl fmt::Display for Replacement {
 }
 
 impl fmt::Display for Sum {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2194,7 +2194,7 @@ impl fmt::Display for Sum {
 }
 
 impl fmt::Display for SumOfFiniteSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2205,7 +2205,7 @@ impl fmt::Display for SumOfFiniteSet {
 }
 
 impl fmt::Display for Product {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2220,7 +2220,7 @@ impl fmt::Display for Product {
 }
 
 impl fmt::Display for ProductOfFiniteSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2231,13 +2231,13 @@ impl fmt::Display for ProductOfFiniteSet {
 }
 
 impl fmt::Display for Tuple {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", braced_vec_to_string(&self.args))
     }
 }
 
 impl fmt::Display for CartDim {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2248,7 +2248,7 @@ impl fmt::Display for CartDim {
 }
 
 impl fmt::Display for Proj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2259,7 +2259,7 @@ impl fmt::Display for Proj {
 }
 
 impl fmt::Display for TupleDim {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2270,13 +2270,13 @@ impl fmt::Display for TupleDim {
 }
 
 impl fmt::Display for Identifier {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", self.name)
     }
 }
 
 impl fmt::Display for FnObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", fn_obj_to_string(self.head.as_ref(), &self.body))
     }
 }
@@ -2290,43 +2290,43 @@ pub fn fn_obj_to_string(head: &FnObjHead, body: &Vec<Vec<Box<Obj>>>) -> String {
 }
 
 impl fmt::Display for Number {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", self.normalized_value)
     }
 }
 
 impl fmt::Display for Add {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, ADD, self.right)
     }
 }
 
 impl fmt::Display for Sub {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, SUB, self.right)
     }
 }
 
 impl fmt::Display for Mul {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, MUL, self.right)
     }
 }
 
 impl fmt::Display for Div {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, DIV, self.right)
     }
 }
 
 impl fmt::Display for Mod {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, MOD, self.right)
     }
 }
 
 impl fmt::Display for IntegerQuotient {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}{}{}{}",
@@ -2336,55 +2336,55 @@ impl fmt::Display for IntegerQuotient {
 }
 
 impl fmt::Display for Pow {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.base, POW, self.exponent)
     }
 }
 
 impl fmt::Display for MatrixAdd {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, MATRIX_ADD, self.right)
     }
 }
 
 impl fmt::Display for MatrixSub {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, MATRIX_SUB, self.right)
     }
 }
 
 impl fmt::Display for MatrixMul {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, MATRIX_MUL, self.right)
     }
 }
 
 impl fmt::Display for MatrixScalarMul {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.scalar, MATRIX_SCALAR_MUL, self.matrix)
     }
 }
 
 impl fmt::Display for MatrixPow {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.base, MATRIX_POW, self.exponent)
     }
 }
 
 impl fmt::Display for Abs {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {}{}{}", ABS, LEFT_BRACE, self.arg, RIGHT_BRACE)
     }
 }
 
 impl fmt::Display for Sqrt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {}{}{}", SQRT, LEFT_BRACE, self.arg, RIGHT_BRACE)
     }
 }
 
 impl fmt::Display for Log {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}{}{}{}",
@@ -2394,7 +2394,7 @@ impl fmt::Display for Log {
 }
 
 impl fmt::Display for Union {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2405,7 +2405,7 @@ impl fmt::Display for Union {
 }
 
 impl fmt::Display for Intersect {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2416,7 +2416,7 @@ impl fmt::Display for Intersect {
 }
 
 impl fmt::Display for SetMinus {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2427,7 +2427,7 @@ impl fmt::Display for SetMinus {
 }
 
 impl fmt::Display for SetDiff {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2438,7 +2438,7 @@ impl fmt::Display for SetDiff {
 }
 
 impl fmt::Display for BigUnion {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2449,7 +2449,7 @@ impl fmt::Display for BigUnion {
 }
 
 impl fmt::Display for BigIntersect {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
@@ -2460,19 +2460,19 @@ impl fmt::Display for BigIntersect {
 }
 
 impl fmt::Display for IdentifierWithMod {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}{}{}", self.mod_name, MOD_SIGN, self.name)
     }
 }
 
 impl fmt::Display for ListSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", curly_braced_vec_to_string(&self.list))
     }
 }
 
 impl fmt::Display for SetBuilder {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{} {}{} {}{}",
@@ -2487,7 +2487,7 @@ impl fmt::Display for SetBuilder {
 }
 
 impl fmt::Display for GeneralCart {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}({}, {}, {})",
@@ -2497,13 +2497,13 @@ impl fmt::Display for GeneralCart {
 }
 
 impl fmt::Display for Cart {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}{}", CART, braced_vec_to_string(&self.args))
     }
 }
 
 impl fmt::Display for PowerSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",

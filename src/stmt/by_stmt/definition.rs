@@ -18,7 +18,7 @@ impl ByDefStmt {
 }
 
 impl fmt::Display for ByDefStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", BY, DEF, self.fact)
     }
 }

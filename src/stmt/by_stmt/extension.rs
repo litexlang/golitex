@@ -11,7 +11,7 @@ pub struct ByExtensionStmt {
 }
 
 impl fmt::Display for ByExtensionStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self.proof.len() {
             0 => write!(
                 f,

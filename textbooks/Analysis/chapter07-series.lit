@@ -226,30 +226,19 @@ thm index_function_step:
         $finite_set_size_has_index(n)
         =>:
             exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
-    n >= 1
-    n + 1 >= 1
     finite_set_size(s) = n + 1 >= 1
     $is_nonempty_set(s)
     have a s
-    a $in s
     by thm intersect_with_singleton(s, a)
-    intersect(s, {a}) = {a}
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
     finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = (n + 1) - 1 = n
     $finite_set_size_has_index(n)
-    $is_finite_set(set_minus(s, {a}))
-    finite_set_size(set_minus(s, {a})) = n
-    exist prev fn(i closed_range(1, finite_set_size(set_minus(s, {a})))) set_minus(s, {a}) st {$is_bijection_from_index_range_to_finite_set(set_minus(s, {a}), prev)}
     obtain prev from exist prev fn(i closed_range(1, finite_set_size(set_minus(s, {a})))) set_minus(s, {a}) st {$is_bijection_from_index_range_to_finite_set(set_minus(s, {a}), prev)}
     set_minus(s, {a}) $subset s
     have fn idx(i closed_range(1, finite_set_size(s))) s by cases:
         case i <= n: prev(i)
         case i > n: a
-    idx(1) = prev(1)
-    prev(1) $in set_minus(s, {a})
-    prev(1) $in s
-    idx(1) $in s
     claim:
         ? forall i closed_range(1, finite_set_size(s)):
             idx(i) = a
@@ -316,7 +305,6 @@ thm index_function_step:
                 idx(i2) = idx(i1) = a
                 i2 = n + 1
                 i1 = i2
-    by def $chap3::is_injective_fn(closed_range(1, finite_set_size(s)), s, idx)
     claim:
         ? forall y s:
             exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
@@ -331,7 +319,6 @@ thm index_function_step:
                     y = idx(n + 1)
             case y != a:
                 y $in set_minus(s, {a})
-                exist i closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(i) = y}
                 obtain j from exist i closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(i) = y}
                 j <= finite_set_size(set_minus(s, {a}))
                 j <= n
@@ -341,14 +328,11 @@ thm index_function_step:
                 witness exist i closed_range(1, finite_set_size(s)) st {y = idx(i)} from j:
                     j <= finite_set_size(s)
                     y = idx(j)
-    by def $chap3::is_surjective_fn(closed_range(1, finite_set_size(s)), s, idx)
     witness exist idx0 fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
         claim:
             ? forall y s:
                 exist! i closed_range(1, finite_set_size(s)) st {idx0(i) = y}
-            exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
             obtain i from exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
-            idx(i) = y
             witness exist! i0 closed_range(1, finite_set_size(s)) st {idx0(i0) = y} from i:
                 idx0(i) = idx(i) = y
                 forall i1, i2 closed_range(1, finite_set_size(s)):
@@ -392,11 +376,7 @@ thm finite_set_has_bijective_index:
         finite_set_size(s) >= 1
         =>:
             exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
-    finite_set_size(s) >= 1
-    finite_set_size(s) $in N_pos
-    have n N_pos = finite_set_size(s)
-    finite_set_size(s) = n
-    by thm finite_set_size_has_index_for_all(n)
+    by thm finite_set_size_has_index_for_all(finite_set_size(s))
 
 # `finite_set_sum(X, f)` denotes the enumeration-independent value of summing
 # `f` over the finite set `X`.
@@ -471,7 +451,6 @@ thm finite_set_sum_satisfies_self_definition:
         finite_set_size(X) >= 1
         =>:
             $is_finite_set_sum(X, f, finite_set_sum(X, f))
-    finite_set_size(X) >= 1
     claim:
         ? forall g fn(i closed_range(1, finite_set_size(X))) X:
             $is_bijection_from_index_range_to_finite_set(X, g)
@@ -669,8 +648,6 @@ have fn partial_sum(a seq(R), k N) R by induc k from 0:
 thm partial_sum_successor:
     ? forall a seq(R), k N_pos:
         partial_sum(a, k) = partial_sum(a, k - 1) + a(k)
-    k > 0
-    partial_sum(a, k) = partial_sum(a, k - 1) + a(k)
 
 thm partial_sum_matches_finite_sum:
     ? forall a seq(R), k N_pos:
@@ -695,10 +672,7 @@ thm partial_sum_split_after:
             partial_sum(a, n) = partial_sum(a, m) + sum(m + 1, n, fn(i N_pos) R {a(i)})
     by thm partial_sum_matches_finite_sum(a, n)
     by thm partial_sum_matches_finite_sum(a, m)
-    sum(1, n, fn(i N_pos) R {a(i)}) = sum(1, m, fn(i N_pos) R {a(i)}) + sum(m + 1, n, fn(i N_pos) R {a(i)})
-    sum(1, m, fn(i N_pos) R {a(i)}) + sum(m + 1, n, fn(i N_pos) R {a(i)}) = partial_sum(a, m) + sum(m + 1, n, fn(i N_pos) R {a(i)})
-    partial_sum(a, n) = sum(1, m, fn(i N_pos) R {a(i)}) + sum(m + 1, n, fn(i N_pos) R {a(i)})
-    partial_sum(a, n) = partial_sum(a, m) + sum(m + 1, n, fn(i N_pos) R {a(i)})
+    partial_sum(a, n) = sum(1, n, fn(i N_pos) R {a(i)}) = sum(1, m, fn(i N_pos) R {a(i)}) + sum(m + 1, n, fn(i N_pos) R {a(i)}) = partial_sum(a, m) + sum(m + 1, n, fn(i N_pos) R {a(i)})
 
 prop is_tail_close_to(a seq(R), L R, epsilon R_pos, N0 N_pos):
     forall n N_pos:
@@ -723,7 +697,6 @@ thm strict_eventual_closeness_implies_closed_tail:
             n >= n0
             =>:
                 abs(a(n) - L) < epsilon
-                abs(a(n) - L) <= epsilon
 
 thm strict_limit_implies_closed_limit:
     ? forall a seq(R), L R:
@@ -769,16 +742,10 @@ thm strict_limit_extensional:
         by thm chap6::has_limit_gives_eventual_closeness(a, L, epsilon)
         obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(a, L, epsilon, n0)}
         witness exist n1 N_pos st {$chap6::is_tail_close_to(b, L, epsilon, n1)} from n0:
-            claim:
-                ? forall n N_pos:
-                    n >= n0
-                    =>:
-                        abs(b(n) - L) < epsilon
-                abs(a(n) - L) < epsilon
-                a(n) = b(n)
-                b(n) - L = a(n) - L
-                abs(b(n) - L) = abs(a(n) - L)
-                abs(b(n) - L) < epsilon
+            forall n N_pos:
+                n >= n0
+                =>:
+                    abs(b(n) - L) = abs(a(n) - L) < epsilon
 
 have fn constant_sequence(c R) fn(k N_pos) R = fn(i N_pos) R {c}
 
@@ -792,13 +759,7 @@ thm constant_sequence_has_strict_limit:
             forall k N_pos:
                 k >= 1
                 =>:
-                    constant_sequence(c)(k) = c
-                    abs(constant_sequence(c)(k) - c) = 0
-                    0 < epsilon
                     abs(constant_sequence(c)(k) - c) = 0 < epsilon
-            $chap6::is_tail_close_to(constant_sequence(c), c, epsilon, 1)
-        $chap6::has_eventual_closeness_to(constant_sequence(c), c, epsilon)
-    $chap6::has_limit(constant_sequence(c), c)
 
 prop has_series_sum(a seq(R), L R):
     $has_limit(fn(k N_pos) R {partial_sum(a, k)}, L)
@@ -816,25 +777,12 @@ thm partial_sum_extensional:
         ? partial_sum(a, k) = partial_sum(b, k)
 
         ? from k = 0:
-            partial_sum(a, 0) = 0
-            partial_sum(b, 0) = 0
-            partial_sum(a, 0) = partial_sum(b, 0)
+            partial_sum(a, 0) = 0 = partial_sum(b, 0)
 
         ? induc:
-            partial_sum(a, k) = partial_sum(b, k)
-            k + 1 $in N_pos
-            partial_sum(a, k + 1) = partial_sum(a, (k + 1) - 1) + a(k + 1)
-            (k + 1) - 1 = k
-            partial_sum(a, (k + 1) - 1) = partial_sum(a, k)
-            partial_sum(a, (k + 1) - 1) + a(k + 1) = partial_sum(a, k) + a(k + 1)
-            partial_sum(a, k + 1) = partial_sum(a, k) + a(k + 1)
-            partial_sum(b, k + 1) = partial_sum(b, (k + 1) - 1) + b(k + 1)
-            partial_sum(b, (k + 1) - 1) = partial_sum(b, k)
-            partial_sum(b, (k + 1) - 1) + b(k + 1) = partial_sum(b, k) + b(k + 1)
-            partial_sum(b, k + 1) = partial_sum(b, k) + b(k + 1)
-            a(k + 1) = b(k + 1)
-            partial_sum(a, k) + a(k + 1) = partial_sum(b, k) + b(k + 1)
-            partial_sum(a, k + 1) = partial_sum(b, k + 1)
+            by thm partial_sum_successor(a, k + 1)
+            by thm partial_sum_successor(b, k + 1)
+            partial_sum(a, k + 1) = partial_sum(a, k) + a(k + 1) = partial_sum(b, k) + b(k + 1) = partial_sum(b, k + 1)
 
 thm series_sum_extensional:
     ? forall a, b seq(R), L R:
@@ -851,17 +799,7 @@ thm series_sum_extensional:
             forall k N_pos:
                 k >= N0
                 =>:
-                    abs(fn(k N_pos) R {partial_sum(a, k)}(k) - L) <= epsilon
-                    fn(k N_pos) R {partial_sum(a, k)}(k) = partial_sum(a, k)
-                    partial_sum(a, k) = partial_sum(b, k)
-                    fn(k N_pos) R {partial_sum(b, k)}(k) = partial_sum(b, k)
-                    abs(fn(k N_pos) R {partial_sum(b, k)}(k) - L) = abs(partial_sum(b, k) - L)
-                    abs(partial_sum(b, k) - L) = abs(partial_sum(a, k) - L)
-                    abs(partial_sum(a, k) - L) = abs(fn(k N_pos) R {partial_sum(a, k)}(k) - L)
-                    abs(fn(k N_pos) R {partial_sum(b, k)}(k) - L) <= epsilon
-            $is_tail_close_to(fn(k N_pos) R {partial_sum(b, k)}, L, epsilon, N0)
-    $has_limit(fn(k N_pos) R {partial_sum(b, k)}, L)
-    $has_series_sum(b, L)
+                    abs(partial_sum(b, k) - L) = abs(partial_sum(a, k) - L) <= epsilon
 
 thm series_convergence_extensional:
     ? forall a, b seq(R):
@@ -872,9 +810,7 @@ thm series_convergence_extensional:
             $is_convergent_series(b)
     obtain L from exist L R st {$has_series_sum(a, L)}
     by thm series_sum_extensional(a, b, L)
-    witness exist M R st {$has_series_sum(b, M)} from L:
-        $has_series_sum(b, L)
-    $is_convergent_series(b)
+    witness exist M R st {$has_series_sum(b, M)} from L
 
 have fn geometric_series_terms_from_one(x R) fn(i N_pos) R = fn(j N_pos) R {x^j}
 
@@ -945,64 +881,19 @@ thm geometric_series_from_one_formula:
     by thm constant_sequence_has_strict_limit(x)
     by thm geometric_series_from_one_tail_has_strict_limit_zero(x)
     by thm chap6::seq_sub_converges_to(constant_sequence(x), geometric_series_from_one_tail(x), x, 0)
-    x - 0 = x
-    $chap6::has_limit(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, x)
+    have fn geometric_series_remainder(n N_pos) R = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
     forall k N_pos:
-        constant_sequence(1 - x)(k) = 1 - x
-        1 - x != 0
-        constant_sequence(1 - x)(k) != 0
+        constant_sequence(1 - x)(k) = 1 - x != 0
     by def $chap6::is_nonzero_sequence(constant_sequence(1 - x))
     by thm constant_sequence_has_strict_limit(1 - x)
-    have fn geometric_series_from_one_remainder(n N_pos) R = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
-    claim:
-        ? forall n N_pos:
-            fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = geometric_series_from_one_remainder(n)
-        fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
-        geometric_series_from_one_remainder(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
-        fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}(n) = geometric_series_from_one_remainder(n)
-    by thm strict_limit_extensional(fn(i N_pos) R {constant_sequence(x)(i) - geometric_series_from_one_tail(x)(i)}, geometric_series_from_one_remainder, x)
-    by thm chap6::seq_div_converges_to(geometric_series_from_one_remainder, constant_sequence(1 - x), x, 1 - x)
-    claim:
-        ? forall n N_pos:
-            fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}(n) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n)
-        geometric_series_from_one_remainder(n) = constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n)
-        constant_sequence(x)(n) = x
-        constant_sequence(1 - x)(n) = 1 - x
-        constant_sequence(x)(n) - geometric_series_from_one_tail(x)(n) = x - geometric_series_from_one_tail(x)(n)
-        fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}(n) = geometric_series_from_one_remainder(n) / constant_sequence(1 - x)(n)
-        fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n) = (x - geometric_series_from_one_tail(x)(n)) / (1 - x)
-        geometric_series_from_one_remainder(n) / constant_sequence(1 - x)(n) = (x - geometric_series_from_one_tail(x)(n)) / (1 - x)
-        fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}(n) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(n)
-    by thm strict_limit_extensional(fn(i N_pos) R {geometric_series_from_one_remainder(i) / constant_sequence(1 - x)(i)}, fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
-    by thm strict_limit_implies_closed_limit(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x))
+    by thm chap6::seq_div_converges_to(geometric_series_remainder, constant_sequence(1 - x), x, 1 - x)
     claim:
         ? forall k N_pos:
-            partial_sum(geometric_series_terms_from_one(x), k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
+            fn(i N_pos) R {geometric_series_remainder(i) / constant_sequence(1 - x)(i)}(k) = partial_sum(geometric_series_terms_from_one(x), k)
         by thm geometric_series_from_one_partial_sum(x, k)
-        geometric_series_from_one_tail(x)(k) = x^(k + 1)
-        (x - geometric_series_from_one_tail(x)(k)) / (1 - x) = (x - x^(k + 1)) / (1 - x)
-        partial_sum(geometric_series_terms_from_one(x), k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
-    claim:
-        ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x), epsilon, n0)}
-        obtain n0 from exist n0 N_pos st {$is_tail_close_to(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}, x / (1 - x), epsilon, n0)}
-        witness exist n1 N_pos st {$is_tail_close_to(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x), epsilon, n1)} from n0:
-            forall k N_pos:
-                k >= n0
-                =>:
-                    abs(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(k) - x / (1 - x)) <= epsilon
-                    partial_sum(geometric_series_terms_from_one(x), k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
-                    geometric_series_from_one_tail(x)(k) = x^(k + 1)
-                    (x - geometric_series_from_one_tail(x)(k)) / (1 - x) = (x - x^(k + 1)) / (1 - x)
-                    partial_sum(geometric_series_terms_from_one(x), k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
-                    fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}(k) = partial_sum(geometric_series_terms_from_one(x), k)
-                    fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(k) = (x - geometric_series_from_one_tail(x)(k)) / (1 - x)
-                    fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}(k) = fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(k)
-                    abs(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}(k) - x / (1 - x)) = abs(fn(k N_pos) R {(x - geometric_series_from_one_tail(x)(k)) / (1 - x)}(k) - x / (1 - x))
-                    abs(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}(k) - x / (1 - x)) <= epsilon
-            $is_tail_close_to(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x), epsilon, n0)
-    $has_limit(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x))
-    $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
+        fn(i N_pos) R {geometric_series_remainder(i) / constant_sequence(1 - x)(i)}(k) = (x - x^(k + 1)) / (1 - x) = partial_sum(geometric_series_terms_from_one(x), k)
+    by thm strict_limit_extensional(fn(i N_pos) R {geometric_series_remainder(i) / constant_sequence(1 - x)(i)}, fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x))
+    by thm strict_limit_implies_closed_limit(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x))
 
 thm real_power_at_least_one:
     ? forall y R, n N_pos:
@@ -2729,11 +2620,11 @@ thm nonnegative_partial_sums_monotone:
                             partial_sum(a, p0) <= partial_sum(a, r)
                             r + 1 $in N_pos
                             a(r + 1) >= 0
-                    (r + 1) - 1 = r
-                    partial_sum(a, (r + 1) - 1) = partial_sum(a, r)
-                    partial_sum(a, (r + 1) - 1) + a(r + 1) = partial_sum(a, r) + a(r + 1)
-                    by thm partial_sum_successor(a, r + 1)
-                    partial_sum(a, r + 1) = partial_sum(a, r) + a(r + 1)
+                            (r + 1) - 1 = r
+                            partial_sum(a, (r + 1) - 1) = partial_sum(a, r)
+                            partial_sum(a, (r + 1) - 1) + a(r + 1) = partial_sum(a, r) + a(r + 1)
+                            by thm partial_sum_successor(a, r + 1)
+                            partial_sum(a, r + 1) = partial_sum(a, r) + a(r + 1)
                             partial_sum(a, r) <= partial_sum(a, r) + a(r + 1)
                             partial_sum(a, p0) <= partial_sum(a, r) <= partial_sum(a, r + 1)
                             partial_sum(a, p0) <= partial_sum(a, r + 1)

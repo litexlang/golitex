@@ -14,7 +14,7 @@ impl OrFact {
 }
 
 impl fmt::Display for OrFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let fact_strings = self
             .facts
             .iter()

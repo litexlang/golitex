@@ -24,7 +24,7 @@ impl ByEnumerateFiniteSetStmt {
 }
 
 impl fmt::Display for ByEnumerateFiniteSetStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {}:\n{}",

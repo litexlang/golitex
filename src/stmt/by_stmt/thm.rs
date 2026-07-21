@@ -23,7 +23,7 @@ impl ByThmStmt {
 }
 
 impl fmt::Display for ByThmStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {}{}",

@@ -7,7 +7,7 @@ pub struct StmtUnknown {
 }
 
 impl fmt::Display for StmtUnknown {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", UNKNOWN_COLON)?;
         if let Some(detail_lines) = &self.detail {
             if !detail_lines.is_empty() {

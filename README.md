@@ -251,4 +251,4 @@ so that failures can guide the next audit or implementation step.
 
 Litex is built by Jiachen Shen and the Litex team, with support and advice from
 many friends and collaborators. Thanks especially to Wei Lin, Siqi Sun, Peng
-Sun, Chenxuan Huang, Yan Lu, Sheng Xu, and Zhaoxuan Hong.
+Sun, Yi Wang, Chenxuan Huang, Yan Lu, Sheng Xu, and Zhaoxuan Hong.

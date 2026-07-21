@@ -1,0 +1,215 @@
+# Linear Algebra Done Right, fourth edition — Section 3F.
+# Duality.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro LinearMaps "\chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>"
+macro DualV "\dual_space<s, scalars, V, Vspace>"
+macro DualW "\dual_space<s, scalars, W, Wspace>"
+macro DualVSpace "\dual_vector_space<s, scalars, V, Vspace>"
+macro DualWSpace "\dual_vector_space<s, scalars, W, Wspace>"
+macro DualMap "\dual_map<s, scalars, V, W, Vspace, Wspace>"
+macro DualBasis "\dual_basis<s, scalars, V, Vspace, n>"
+macro Annihilator "\annihilator<s, scalars, V, Vspace>"
+
+# The scalar field is itself a one-dimensional vector space over itself. This
+# selected structure lets the general L(V,W) interface specialize to W=F.
+template<s nonempty_set, scalars @ScalarSystem>:
+    trust have scalar_vector_space &chap1b::VectorSpace<s, scalars, s>:
+        scalar_vector_space = (@Scalars.zero, @Scalars.add, @Scalars.mul)
+
+# Definition 3.108. A linear functional is a linear map V -> F.
+prop is_linear_functional(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, phi fn(v V) s):
+    $chap3a::is_linear_map(s, scalars, V, s, Vspace, \scalar_vector_space<s, scalars>, phi)
+
+# Example 3.109 is comment-only: coordinate combinations, derivative
+# evaluation, and integration give the source's four linear functionals.
+
+# Definition 3.110. V' is L(V,F), with its pointwise vector-space structure.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have dual_space set = \chap3a::linear_map_space<s, scalars, V, s, Vspace, \scalar_vector_space<s, scalars>>
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    trust have dual_vector_space &chap1b::VectorSpace<s, scalars, @DualV>:
+        dual_vector_space = \chap3a::linear_map_vector_space<s, scalars, V, s, Vspace, \scalar_vector_space<s, scalars>>
+
+# Result 3.111. A finite-dimensional space and its dual have equal dimension.
+axiom dimension_of_dual_space:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            \chap2c::dimension<s, scalars, @DualV, @DualVSpace> = \chap2c::dimension<s, scalars, V, Vspace>
+
+# Definition 3.112. The dual basis consists of coordinate functionals.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N>:
+    trust have dual_basis fn(basis &chap1a::FiniteList<V, n>) &chap1a::FiniteList<@DualV, n>
+
+prop dual_basis_spec_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N, basis &chap1a::FiniteList<V, n>):
+    forall j, k N_pos:
+        j <= n
+        k <= n
+        j = k
+        =>:
+            &chap1a::FiniteList<@DualV, n>{@DualBasis(basis)}.entries(j)(&chap1a::FiniteList<V, n>{basis}.entries(k)) = @Scalars.one
+    forall j, k N_pos:
+        j <= n
+        k <= n
+        j != k
+        =>:
+            &chap1a::FiniteList<@DualV, n>{@DualBasis(basis)}.entries(j)(&chap1a::FiniteList<V, n>{basis}.entries(k)) = @Scalars.zero
+
+axiom dual_basis_spec:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N, basis &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        =>:
+            $dual_basis_spec_statement(s, scalars, V, Vspace, n, basis)
+
+# Example 3.113 is comment-only: the dual of the standard coordinate basis
+# consists of the coordinate projections.
+
+prop are_dual_basis_coefficients(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N, basis &chap1a::FiniteList<V, n>, v V, coefficients &chap1a::FiniteList<s, n>):
+    forall k N_pos:
+        k <= n
+        =>:
+            &chap1a::FiniteList<s, n>{coefficients}.entries(k) = &chap1a::FiniteList<@DualV, n>{@DualBasis(basis)}.entries(k)(v)
+
+# Result 3.114. Applying the dual basis recovers all coefficients of v.
+axiom dual_basis_gives_coefficients:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N, basis &chap1a::FiniteList<V, n>, v V:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        =>:
+            exist coefficients &chap1a::FiniteList<s, n> st {$are_dual_basis_coefficients(s, scalars, V, Vspace, n, basis, v, coefficients), v = \chap2a::linear_combination_value<s, scalars, V, Vspace, n>(coefficients, basis)}
+
+# Result 3.116. The dual basis is a basis of V'.
+axiom dual_basis_is_basis_of_dual_space:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N, basis &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        =>:
+            $chap2b::is_basis(s, scalars, @DualV, @DualVSpace, n, @DualBasis(basis))
+
+# Definition 3.118. T'(phi)=phi composed with T. The return type records that
+# dual_map(T) is itself a linear map W' -> V'.
+template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+    trust have dual_map fn(T @LinearMaps) \chap3a::linear_map_space<s, scalars, @DualW, @DualV, @DualWSpace, @DualVSpace>:
+        forall phi @DualW, v V:
+            dual_map(T)(phi)(v) = phi(T(v))
+
+# Example 3.119 is comment-only: dualizing differentiation turns evaluation
+# into derivative evaluation, and turns integration into endpoint difference.
+
+# Result 3.120. Dualization is additive, homogeneous, and reverses products.
+axiom algebraic_properties_of_dual_maps:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, Uspace &chap1b::VectorSpace<s, scalars, U>, S, T @LinearMaps, Rmap \chap3a::linear_map_space<s, scalars, W, U, Wspace, Uspace>, a s:
+        @DualMap(\chap3a::linear_map_add<s, scalars, V, W, Vspace, Wspace>(S, T)) = \chap3a::linear_map_add<s, scalars, @DualW, @DualV, @DualWSpace, @DualVSpace>(@DualMap(S), @DualMap(T))
+        @DualMap(\chap3a::linear_map_smul<s, scalars, V, W, Vspace, Wspace>(a, T)) = \chap3a::linear_map_smul<s, scalars, @DualW, @DualV, @DualWSpace, @DualVSpace>(a, @DualMap(T))
+        \dual_map<s, scalars, V, U, Vspace, Uspace>(\chap3a::linear_map_compose<s, scalars, V, W, U, Vspace, Wspace, Uspace>(Rmap, T)) = \chap3a::linear_map_compose<s, scalars, \dual_space<s, scalars, U, Uspace>, @DualW, @DualV, \dual_vector_space<s, scalars, U, Uspace>, @DualWSpace, @DualVSpace>(@DualMap(T), \dual_map<s, scalars, W, U, Wspace, Uspace>(Rmap))
+
+# Definition 3.121. U^0 is the set of functionals that vanish on U.
+prop annihilates(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, U power_set(V), phi @DualV):
+    forall u U:
+        phi(u) = @Scalars.zero
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn annihilator(U power_set(V)) power_set(@DualV) = {phi @DualV: $annihilates(s, scalars, V, Vspace, U, phi)}
+
+# Examples 3.122 and 3.123 are comment-only: derivative-at-zero annihilates
+# multiples of x^2, and span(e1,e2)^0=span(phi3,phi4,phi5) in (R^5)'.
+
+# Result 3.124. Every annihilator is a subspace of the dual.
+axiom annihilator_is_subspace:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, U power_set(V):
+        $chap1c::is_subspace(s, scalars, @DualV, @DualVSpace, @Annihilator(U))
+
+# Result 3.125. dim U^0 = dim V - dim U.
+axiom dimension_of_annihilator:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, U power_set(V):
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap1c::is_subspace(s, scalars, V, Vspace, U)
+        =>:
+            \chap2c::dimension<s, scalars, @Annihilator(U), \chap1c::subspace_vector_space<s, scalars, @DualV, @DualVSpace, @Annihilator(U)>> = \chap2c::dimension<s, scalars, V, Vspace> - \chap2c::dimension<s, scalars, U, \chap1c::subspace_vector_space<s, scalars, V, Vspace, U>>
+
+# Result 3.127. The two extreme annihilators characterize U=V and U={0}.
+prop zero_annihilator_iff_whole_space_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, U power_set(V)):
+    forall:
+        =>:
+            @Annihilator(U) = {\chap3a::zero_linear_map<s, scalars, V, s, Vspace, \scalar_vector_space<s, scalars>>}
+        <=>:
+            U = V
+
+prop full_annihilator_iff_zero_subspace_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, U power_set(V)):
+    forall:
+        =>:
+            @Annihilator(U) = @DualV
+        <=>:
+            U = {&chap1b::VectorSpace<s, scalars, V>{Vspace}.zero}
+
+axiom extreme_annihilators:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, U power_set(V):
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap1c::is_subspace(s, scalars, V, Vspace, U)
+        =>:
+            $zero_annihilator_iff_whole_space_statement(s, scalars, V, Vspace, U)
+            $full_annihilator_iff_zero_subspace_statement(s, scalars, V, Vspace, U)
+
+# Result 3.128. null(T') is the annihilator of range(T), with the displayed
+# finite-dimensional nullity formula.
+axiom null_space_of_dual_map:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap2a::is_finite_dimensional(s, scalars, W, Wspace)
+        =>:
+            \chap3b::null_space<s, scalars, @DualW, @DualV, @DualWSpace, @DualVSpace>(@DualMap(T)) = \annihilator<s, scalars, W, Wspace>(\chap3b::range_of<V, W>(T))
+            \chap2c::dimension<s, scalars, \chap3b::null_space<s, scalars, @DualW, @DualV, @DualWSpace, @DualVSpace>(@DualMap(T)), \chap1c::subspace_vector_space<s, scalars, @DualW, @DualWSpace, \chap3b::null_space<s, scalars, @DualW, @DualV, @DualWSpace, @DualVSpace>(@DualMap(T))>> = \chap2c::dimension<s, scalars, \chap3b::null_space<s, scalars, V, W, Vspace, Wspace>(T), \chap1c::subspace_vector_space<s, scalars, V, Vspace, \chap3b::null_space<s, scalars, V, W, Vspace, Wspace>(T)>> + \chap2c::dimension<s, scalars, W, Wspace> - \chap2c::dimension<s, scalars, V, Vspace>
+
+# Result 3.129. T is surjective exactly when T' is injective.
+prop surjective_iff_dual_injective_statement(s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps):
+    forall:
+        =>:
+            $chap3b::is_surjective(V, W, T)
+        <=>:
+            $chap3b::is_injective(@DualW, @DualV, @DualMap(T))
+
+axiom surjective_iff_dual_injective:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap2a::is_finite_dimensional(s, scalars, W, Wspace)
+        =>:
+            $surjective_iff_dual_injective_statement(s, scalars, V, W, Vspace, Wspace, T)
+
+# Result 3.130. range(T') has the same dimension as range(T), and it is the
+# annihilator of null(T).
+axiom range_of_dual_map:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap2a::is_finite_dimensional(s, scalars, W, Wspace)
+        =>:
+            \chap2c::dimension<s, scalars, \chap3b::range_of<@DualW, @DualV>(@DualMap(T)), \chap1c::subspace_vector_space<s, scalars, @DualV, @DualVSpace, \chap3b::range_of<@DualW, @DualV>(@DualMap(T))>> = \chap2c::dimension<s, scalars, \chap3b::range_of<V, W>(T), \chap1c::subspace_vector_space<s, scalars, W, Wspace, \chap3b::range_of<V, W>(T)>>
+            \chap3b::range_of<@DualW, @DualV>(@DualMap(T)) = @Annihilator(\chap3b::null_space<s, scalars, V, W, Vspace, Wspace>(T))
+
+# Result 3.131. T is injective exactly when T' is surjective.
+prop injective_iff_dual_surjective_statement(s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps):
+    forall:
+        =>:
+            $chap3b::is_injective(V, W, T)
+        <=>:
+            $chap3b::is_surjective(@DualW, @DualV, @DualMap(T))
+
+axiom injective_iff_dual_surjective:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap2a::is_finite_dimensional(s, scalars, W, Wspace)
+        =>:
+            $injective_iff_dual_surjective_statement(s, scalars, V, W, Vspace, Wspace, T)
+
+# Result 3.132. Relative to a basis and its dual basis, M(T')=M(T)^t.
+axiom matrix_of_dual_is_transpose:
+    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, n, m N_pos, v &chap1a::FiniteList<V, n>, w &chap1a::FiniteList<W, m>, T @LinearMaps:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, v)
+        $chap2b::is_basis(s, scalars, W, Wspace, m, w)
+        =>:
+            \chap3c::matrix_of_linear_map<s, scalars, @DualW, @DualV, @DualWSpace, @DualVSpace, m, n>(\dual_basis<s, scalars, W, Wspace, m>(w), @DualBasis(v), @DualMap(T)) = \chap3c::transpose<s, m, n>(\chap3c::matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, T))
+
+# Result 3.133. Duality gives another proof that column rank equals row rank.
+axiom column_rank_equals_row_rank_by_duality:
+    ? forall s nonempty_set, scalars @ScalarSystem, m, n N_pos, A matrix(s, m, n):
+        \chap3c::column_rank<s, scalars, m, n>(A) = \chap3c::row_rank<s, scalars, m, n>(A)

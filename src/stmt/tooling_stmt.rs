@@ -46,7 +46,7 @@ impl ImportStmt {
 }
 
 impl fmt::Display for ImportStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             Self::Module(stmt) => write!(f, "{} \"{}\" {} {}", IMPORT, stmt.path, AS, stmt.alias),
             Self::Std(stmt) => write!(f, "{} {} {}", IMPORT, STD, stmt.name),
@@ -66,7 +66,7 @@ impl DoNothingStmt {
 }
 
 impl fmt::Display for DoNothingStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", DO_NOTHING)
     }
 }
@@ -83,7 +83,7 @@ impl ClearStmt {
 }
 
 impl fmt::Display for ClearStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", CLEAR)
     }
 }

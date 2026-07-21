@@ -14,7 +14,7 @@ impl ByRegularityAxiomStmt {
 }
 
 impl fmt::Display for ByRegularityAxiomStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {}({})", BY, REGULARITY_AXIOM, self.set)
     }
 }

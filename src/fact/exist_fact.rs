@@ -171,7 +171,7 @@ impl ExistBodyFact {
 }
 
 impl fmt::Display for ExistBodyFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             ExistBodyFact::AtomicFact(a) => write!(f, "{}", a),
             ExistBodyFact::AndFact(a) => write!(f, "{}", a),
@@ -548,7 +548,7 @@ fn exist_fact_string_without_exist_as_prefix(
 }
 
 impl fmt::Display for ExistFactEnum {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let head = self.keyword_prefix();
         write!(
             f,
