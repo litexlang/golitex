@@ -723,6 +723,7 @@ thm recursive_min_enumeration_is_bijective:
                     n2 - n1 >= 1
                     n2 - n1 - 1 $in N
                     by thm recursive_min_enumeration_strictly_increases_after_steps(X, f, n1, n2 - n1 - 1)
+                    f(n1) < f(n1 + (n2 - n1 - 1) + 1)
                     n1 + (n2 - n1 - 1) + 1 = n2
                     f(n1 + (n2 - n1 - 1) + 1) = f(n2)
                     f(n1) < f(n2)
@@ -736,6 +737,7 @@ thm recursive_min_enumeration_is_bijective:
                             n1 - n2 >= 1
                             n1 - n2 - 1 $in N
                             by thm recursive_min_enumeration_strictly_increases_after_steps(X, f, n2, n1 - n2 - 1)
+                            f(n2) < f(n2 + (n1 - n2 - 1) + 1)
                             n2 + (n1 - n2 - 1) + 1 = n1
                             f(n2 + (n1 - n2 - 1) + 1) = f(n1)
                             f(n2) < f(n1)
@@ -744,6 +746,7 @@ thm recursive_min_enumeration_is_bijective:
                             n1 = n2
         $chap3::is_injective_fn(N, X, f)
     by thm recursive_min_enumeration_is_surjective(X, f)
+    $chap3::is_surjective_fn(N, X, f)
     $chap3::is_bijective_fn(N, X, f)
 
 thm increasing_bijection_zero_is_minimum:
@@ -770,6 +773,7 @@ thm increasing_bijection_zero_is_minimum:
             case m > 0:
                 m - 1 $in N
                 by thm successor_strict_increase_has_strict_growth(X, f, 0, m - 1)
+                f(0) < f(0 + (m - 1) + 1)
                 0 + (m - 1) + 1 = m
                 f(0 + (m - 1) + 1) = f(m) = z
                 f(0) < z
@@ -805,6 +809,7 @@ thm increasing_bijection_successor_is_least_above:
                         n - m >= 1
                         n - m - 1 $in N
                         by thm successor_strict_increase_has_strict_growth(X, f, m, n - m - 1)
+                        f(m) < f(m + (n - m - 1) + 1)
                         m + (n - m - 1) + 1 = n
                         f(m + (n - m - 1) + 1) = f(n)
                         f(m) < f(n)
@@ -834,6 +839,7 @@ thm increasing_bijection_successor_is_least_above:
                         m - (n + 1) >= 1
                         m - (n + 1) - 1 $in N
                         by thm successor_strict_increase_has_strict_growth(X, f, n + 1, m - (n + 1) - 1)
+                        f(n + 1) < f(n + 1 + (m - (n + 1) - 1) + 1)
                         n + 1 + (m - (n + 1) - 1) + 1 = m
                         f(n + 1 + (m - (n + 1) - 1) + 1) = f(m) = z
                         f(n + 1) < z
@@ -853,6 +859,7 @@ thm increasing_bijection_from_N_to_subset_is_recursive_min_enumeration:
             ? f(n) = increasing_N_subset_enum_value(X, n)
             ? from n = 0:
                 by thm increasing_bijection_zero_is_minimum(X, f)
+                $is_minimum_of_natural_subset(X, f(0))
                 $is_minimum_of_natural_subset(X, first_in_infinite_N_subset_value(X))
                 exist! y N st {$is_minimum_of_natural_subset(X, y)}
                 f(0) = first_in_infinite_N_subset_value(X)
@@ -861,6 +868,7 @@ thm increasing_bijection_from_N_to_subset_is_recursive_min_enumeration:
             ? induc:
                 f(n) = increasing_N_subset_enum_value(X, n)
                 by thm increasing_bijection_successor_is_least_above(X, f, n)
+                $is_least_natural_element_above_in_subset(X, f(n), f(n + 1))
                 $is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, n), f(n + 1))
                 $is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, n), next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, n)))
                 exist! y N st {$is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, n), y)}
@@ -1089,6 +1097,7 @@ thm union_of_two_countable_sets_is_countable:
         $is_countably_infinite(Y)
         =>:
             $is_countably_infinite(union(X, Y))
+    # The original textbook leaves Proposition 8.1.10 to Exercise 8.1.7.
     trust $is_countably_infinite(union(X, Y))
 
 """
@@ -1690,6 +1699,8 @@ thm countable_union_of_at_most_countable_sets:
             $is_at_most_countable(A(i))
         =>:
             $is_at_most_countable(big_union(fn_range(A)))
+    # The original textbook leaves this countable-union extension to
+    # Exercise 8.1.9.
     trust $is_at_most_countable(big_union(fn_range(A)))
 
 
@@ -1772,6 +1783,8 @@ prop has_double_sum_finite_support_capture(f fn(p cart(N_pos, N_pos)) R, L R):
     forall epsilon R_pos:
         exist A finite_set st {A $subset cart(N_pos, N_pos), finite_set_sum(A, fn(p A) R {f(p)}) >= L - epsilon}
 
+# The original textbook presents the Fubini proof as an optional sketch and
+# leaves its indicated gap steps to Exercise 8.2.5.
 thm nonnegative_double_sum_bounds_finite_subsums:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R:
         $has_double_sum(f, L)
@@ -1872,6 +1885,8 @@ prop is_finite_subsum_abs_bound(X set, f fn(x X) R, M R):
 prop has_bounded_finite_absolute_subsums(X set, f fn(x X) R):
     exist M R st {$is_finite_subsum_abs_bound(X, f, M)}
 
+# The original textbook leaves both directions of Lemma 8.2.3 to Exercise
+# 8.2.1.
 thm countable_absolute_convergence_implies_bounded_finite_subsums:
     ? forall X set, f fn(x X) R:
         $is_at_most_countable(X)
@@ -1907,6 +1922,7 @@ support `{x in X : f(x) != 0}` is at most countable.
 template<X set, f fn(t X) R>:
     have nonzero_support set = {u X: f(u) != 0}
 
+# The original textbook leaves Lemma 8.2.5 to Exercise 8.2.2.
 thm absolutely_summable_support_is_at_most_countable:
     ? forall X set, f fn(x X) R:
         $is_absolutely_summable_on_set(X, f)
@@ -1931,6 +1947,7 @@ bijection change of variables; the sums obey the expected identities.
 
 # The laws reduce arbitrary-set sums to their countable nonzero supports, then
 # apply the Chapter 7 absolute-convergence and finite-sum laws.
+# The original textbook leaves Proposition 8.2.6 to Exercise 8.2.3.
 
 thm arbitrary_set_series_add:
     ? forall X set, f, g fn(x X) R, Lf, Lg R:
@@ -1985,6 +2002,7 @@ template<a seq(R)>:
 template<a seq(R)>:
     have negative_index_set set = {n N_pos: a(n) < 0}
 
+# The original textbook leaves Lemma 8.2.7 to Exercise 8.2.4.
 thm positive_and_negative_parts_of_conditional_series_diverge:
     ? forall a seq(R):
         $is_only_conditionally_convergent_series(a)
@@ -2014,6 +2032,8 @@ thm riemann_rearrangement_theorem:
         $is_only_conditionally_convergent_series(a)
         =>:
             exist phi fn(i N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $chap7::has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
+    # The original textbook gives only an optional sketch here and leaves the
+    # details to Exercise 8.2.5.
     trust exist phi fn(i N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $chap7::has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
 
 
@@ -2242,6 +2262,7 @@ thm constant_general_cart_product_is_function_space:
             ? forall f fn(alpha I) X:
                 f $in general_cart(I, {X}, F)
             by thm function_space_members_satisfy_constant_product_conditions(I, X, F, f)
+            $is_constant_general_cart_product_candidate(I, X, F, f)
             forall alpha I:
                 f(alpha) $in F(alpha)
             big_union({X}) = X
@@ -2380,6 +2401,7 @@ thm finite_index_product_agrees_with_chapter3_cartesian_product:
             f $in {f fn(i closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)}
             f $in P
     by thm finite_cartesian_product_choice_function_representation(n, U, X, C, coordinate_product)
+    $chap3::has_equal_cardinality(C, coordinate_product)
     coordinate_product = P
     $chap3::has_equal_cardinality(C, P)
 
@@ -3617,6 +3639,7 @@ claim:
         $is_total_order_on_subset(X, le, X)
         =>:
             $is_well_ordered_subset(X, le, X)
+    # The original textbook leaves this finite-order fact to Exercise 8.5.8.
     trust $is_well_ordered_subset(X, le, X)
 
 claim:
@@ -3927,6 +3950,8 @@ thm good_chain_comparison_forward_from_exercise_8_5_13:
         $is_good_well_ordered_chain(X, le, x0, C, W)
         =>:
             $second_good_chain_difference_strictly_bounds_first(X, le, Y, W)
+    # The original textbook leaves these two good-chain comparisons to
+    # Exercise 8.5.13.
     trust $second_good_chain_difference_strictly_bounds_first(X, le, Y, W)
 
 thm good_chain_comparison_reverse_from_exercise_8_5_13:
@@ -3945,6 +3970,8 @@ thm good_chain_union_is_chain_with_minimum:
         $is_strict_upper_bound_choice_relation(X, le, x0, C)
         =>:
             $is_well_ordered_chain_with_minimum(X, le, x0, \good_chain_union<X, le, x0, C>)
+    # The original proof sketch leaves the union-order verification as a
+    # "why?" step and invokes Exercise 8.5.11 for the extension argument.
     trust $is_well_ordered_chain_with_minimum(X, le, x0, \good_chain_union<X, le, x0, C>)
 
 thm good_chain_union_has_no_strict_upper_bound:
@@ -3953,6 +3980,8 @@ thm good_chain_union_has_no_strict_upper_bound:
         $is_strict_upper_bound_choice_relation(X, le, x0, C)
         =>:
             not $has_strict_upper_bound(X, le, \good_chain_union<X, le, x0, C>)
+    # The original proof sketch leaves this final union argument as a "why?"
+    # step after choosing the strict upper bound.
     trust not $has_strict_upper_bound(X, le, \good_chain_union<X, le, x0, C>)
 
 thm good_chain_union_construction:
@@ -4052,6 +4081,7 @@ thm zorn_maximal_element_principle:
                             (y, z) $in le
                         (y, u) $in le
                         by thm partial_order_transitive_step(X, le, y, u, z)
+                        (y, z) $in le
                     $is_upper_bound(X, le, Y, z)
                 claim:
                     ? not z $in Y
@@ -4059,6 +4089,7 @@ thm zorn_maximal_element_principle:
                         ? not z $in Y
                         (z, u) $in le
                         by thm partial_order_antisymmetric_step(X, le, z, u)
+                        z = u
                         impossible u != z
                 $is_strict_upper_bound(X, le, Y, z)
                 witness exist s X st {$is_strict_upper_bound(X, le, Y, s)} from z:

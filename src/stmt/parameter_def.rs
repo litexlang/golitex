@@ -1206,6 +1206,14 @@ fn collect_cited_param_indices_from_fn_head(
                 );
             }
         }
+        FnObjHead::MatrixOperator(matrix) => {
+            collect_cited_param_indices_from_obj(
+                matrix,
+                previous_param_indices,
+                shadowed_names,
+                out,
+            );
+        }
     }
 }
 

@@ -37,10 +37,9 @@ impl Runtime {
                     )
                 }
                 Obj::MatrixSet(ms) => {
-                    let fn_set = self.matrix_set_to_fn_set(ms, default_line_file());
                     let type_fact = InFact::new(
                         param_binding_element_obj_for_store(name.to_string(), binding_kind),
-                        fn_set.into(),
+                        ms.clone().into(),
                         default_line_file(),
                     )
                     .into();

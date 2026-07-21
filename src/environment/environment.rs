@@ -66,6 +66,7 @@ pub struct Environment {
         HashMap<ObjString, (FiniteSeqListObj, Option<FiniteSeqSet>, LineFile)>,
     pub known_objs_equal_to_matrix_list:
         HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
+    pub known_objs_in_matrix_sets: HashMap<ObjString, (MatrixSet, LineFile)>,
     pub known_obj_values: HashMap<ObjString, KnownObjValue>,
     pub known_objs_equal_to_set_builder: HashMap<ObjString, (SetBuilder, LineFile)>,
 
@@ -171,6 +172,7 @@ impl Environment {
             known_objs_equal_to_cart: known_cart_objs,
             known_objs_equal_to_finite_seq_list: known_finite_seq_list_objs,
             known_objs_equal_to_matrix_list: known_matrix_list_objs,
+            known_objs_in_matrix_sets: HashMap::new(),
             known_obj_values,
             known_objs_equal_to_set_builder: known_set_builder_objs,
             known_transitive_props: HashMap::new(),

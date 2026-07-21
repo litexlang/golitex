@@ -23,6 +23,8 @@ pub enum FnObjHead {
     TupleIndex(TupleIndexFreeParamObj),
     CartIndex(CartIndexFreeParamObj),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
+    /// A matrix operator expression used as a two-argument function, e.g. `(A '+ B)(i, j)`.
+    MatrixOperator(Box<Obj>),
 }
 
 impl fmt::Display for FnObjHead {
@@ -45,6 +47,7 @@ impl fmt::Display for FnObjHead {
             FnObjHead::TupleIndex(p) => write!(f, "{}", p),
             FnObjHead::CartIndex(p) => write!(f, "{}", p),
             FnObjHead::InstantiatedTemplateObj(t) => write!(f, "{}", t),
+            FnObjHead::MatrixOperator(matrix) => write!(f, "({})", matrix),
         }
     }
 }
@@ -82,6 +85,11 @@ impl FnObjHead {
                 Some(FnObjHead::ObjAsStructInstanceWithFieldAccess(v))
             }
             Obj::InstantiatedTemplateObj(t) => Some(FnObjHead::InstantiatedTemplateObj(t)),
+            Obj::MatrixAdd(_)
+            | Obj::MatrixSub(_)
+            | Obj::MatrixMul(_)
+            | Obj::MatrixScalarMul(_)
+            | Obj::MatrixPow(_) => Some(FnObjHead::MatrixOperator(Box::new(obj))),
             _ => None,
         }
     }
@@ -167,6 +175,7 @@ impl From<FnObjHead> for Obj {
             FnObjHead::TupleIndex(p) => p.into(),
             FnObjHead::CartIndex(p) => p.into(),
             FnObjHead::InstantiatedTemplateObj(t) => t.into(),
+            FnObjHead::MatrixOperator(matrix) => (*matrix).clone(),
         }
     }
 }

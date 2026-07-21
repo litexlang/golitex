@@ -1291,6 +1291,7 @@ impl DepCollector {
                     self.collect_obj(arg);
                 }
             }
+            FnObjHead::MatrixOperator(matrix) => self.collect_obj(matrix),
             FnObjHead::Forall(_)
             | FnObjHead::DefHeader(_)
             | FnObjHead::Exist(_)

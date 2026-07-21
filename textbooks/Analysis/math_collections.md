@@ -1577,10 +1577,9 @@ The restriction does not need to be returned as a dependent-typed object:
 `fn(y '[a,x]) R {f(y)}` is already the restriction of `f` to `[a,x]` and is
 accepted in the real caller context. The chapter also checks its subinterval
 integrability by instantiating the two-piece partition interface. The selector
-remains trusted for a separate declaration-level reason: Litex rejects the
-global source-facing parameter list because the types of `f` and `x` depend on
-the earlier endpoints `a,b`. Its postcondition fixes the value to `integral_on`,
-so downstream mathematics does not depend on an opaque restriction object.
+is now the checked `have fn ... by exist!` interface shown above: Litex rebinds
+the dependent parameter carriers into the stored function signature, and
+Riemann-integral uniqueness supplies the selected value.
 The FTCs, antiderivatives-differ-by-a-constant,
 integration by parts, and change of variables are thms consuming `integral_on`
 or `stieltjes_integral_on`. `is_antiderivative_of`,
@@ -1597,12 +1596,11 @@ closed subinterval permits direct use of Chapter 10's zero-derivative
 constancy theorem. A chosen basepoint supplies the constant in the nonempty
 case; the empty case is vacuous.
 
-The Chapter 11 selector remains narrowly trusted because its global parameter
-types depend on earlier endpoint parameters, but it is available only for a
-parent-interval integrable function. The explicit restriction and its
-integrability are checked. `integral_from_left_endpoint_has_value` and
-the selector's equality with `integral_on` expose its ordinary mathematical
-specification to callers. That theorem is the right bridge for FTC proofs;
+The Chapter 11 selector is checked and is available only for a parent-interval
+integrable function. The explicit restriction, its integrability, and unique
+selected value are all verified. `integral_from_left_endpoint_has_value`
+exposes its ordinary mathematical specification to callers and is the right
+bridge for FTC proofs;
 the global predicate `is_integral_function_from_left_endpoint` describes a
 displayed function that has those values for every x. The checked theorem
 `selected_left_endpoint_integral_is_integral_function` supplies the canonical
@@ -1675,9 +1673,8 @@ comparison have their real interfaces.
   when their defining equation cannot be unfolded across a module boundary.
   This is an interface or kernel issue, not a reason for a duplicate wrapper.
 - The changing-domain restriction in the first FTC is an ordinary inline
-  lambda and is checked. The remaining kernel blocker is narrower: the global
-  selector's later parameter types depend on the earlier endpoints. Keep trust
-  exactly on that named selection surface.
+  lambda and is checked. The global selector is also checked: `by exist!`
+  correctly rebinds later parameter carriers that depend on earlier endpoints.
 - The current proof blockers remain in
   scripts/Analysis/todo/03_integration_and_language_blockers.md. This document
   fixes the intended mathematics so later proof work does not redesign the

@@ -862,6 +862,9 @@ impl FnObj {
             FnObjHead::TupleIndex(p) => latex_local_ident(&p.name),
             FnObjHead::CartIndex(p) => latex_local_ident(&p.name),
             FnObjHead::InstantiatedTemplateObj(t) => latex_texttt_escape(&t.to_string()),
+            FnObjHead::MatrixOperator(matrix) => {
+                format!("\\left({}\\right)", matrix.to_latex_string())
+            }
         };
         let mut s = head;
         for group in self.body.iter() {

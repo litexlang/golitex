@@ -715,6 +715,11 @@ impl Runtime {
             }
             // Matrix set: desugar to `FnSet` + store expanded `InFact`.
             Obj::MatrixSet(ms) => {
+                self.store_obj_in_matrix_set(
+                    &in_fact.element,
+                    ms.clone(),
+                    in_fact.line_file.clone(),
+                );
                 let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
                 let mut infer_result =
                     self.infer_membership_in_fn_set_from_in_fact(in_fact, &fn_set)?;

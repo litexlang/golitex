@@ -814,7 +814,7 @@ Names such as `R`, `Q`, `Z`, `N`, `N_pos`, and related signed or punctured varia
 
 #### Matrices
 
-Litex supports matrices in three related ways: a constructor **type** `matrix(S, row_count, col_count)`, **literal** rectangular arrays `[[row1], [row2], …]`, and the same **indexed function space** pattern used for “matrices as maps” from a row–column index set into `S`.
+Litex supports matrices in three related ways: a constructor **type** `matrix(S, row_count, col_count)`, **literal** rectangular arrays `[[row1], [row2], …]`, and the same **indexed function space** pattern used for “matrices as maps” from a row–column index set into `S`. Both dimensions are positive: zero-row and zero-column matrix objects are not part of this interface, and a matrix literal must contain at least one nonempty row.
 
 **Type and literal.** You can bind a matrix object to a literal and read entries with two indices (like applying a function of two arguments):
 
@@ -832,7 +832,18 @@ sketch:
     a(2, 2) = 4
 ```
 
-**Matrix algebra (surface operators).** These are **not** the scalar operators `+`, `-`, `*`, `^`. The apostrophe marks the matrix-level operation: for two matrices of matching shape, `'+` is cell-wise sum and `'-` cell-wise difference. For compatible sizes, `'*` is matrix product (columns of the left match rows of the right). For scalar `c` and matrix `A`, `c *' A` is scalar multiplication. For a square matrix and exponent `n` in `N_pos`, `A '^ n` is matrix power.
+**Real matrix algebra.** These are **not** the scalar operators `+`, `-`, `*`, `^`. The apostrophe marks the matrix-level operation. The formal operator rules currently apply to matrices over `R`: for two real matrices of matching shape, `'+` is cell-wise sum and `'-` cell-wise difference. For compatible sizes, `'*` is matrix product (columns of the left match rows of the right). For `c R` and a real matrix `A`, `c *' A` is scalar multiplication. For a square real matrix and exponent `n` in `N_pos`, `A '^ n` is matrix power. The verifier infers the result `matrix(R, ..., ...)` type for both symbolic and literal operands.
+
+```litex
+forall m, n N_pos, A, B matrix(R, m, n), i, j N_pos:
+    i <= m
+    j <= n
+    =>:
+        A '+ B $in matrix(R, m, n)
+        (A '+ B)(i, j) = A(i, j) + B(i, j)
+```
+
+Matrix multiplication entries unfold to the row-column sum, and positive powers use `A '^ 1 = A` and `A '^ (k + 1) = (A '^ k) '* A`. There is intentionally no zero-power or identity-matrix rule in this interface yet.
 
 ```litex
 eval [[1, 0], [0, 1]] '+ [[1, 0], [0, 1]]
@@ -953,8 +964,8 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | `range(start, end)`, `closed_range(start, end)`, and `start...end` | The endpoints must be integers. These are total finite-set objects: `range(a, b)` is empty when `b <= a`, while `closed_range(a, b)` is empty when `b < a`. |
 | Real intervals `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]`, `'(,a)`, `'(,a]`, `'(a,)`, `'[a,)` | Endpoints must be real-number objects. |
 | `seq(S)`, `finite_seq(S, n)` | `S` must be a set. For `finite_seq(S, n)`, Litex must also prove `n $in N_pos`. |
-| `matrix(S, rows, cols)` and matrix literal `[[...], ...]` | For matrix types, `S` must be a set and both dimensions must be in `N_pos`. Matrix literals must be rectangular and all entries must be well-defined. |
-| Matrix operators `A '+ B`, `A '- B`, `A '* B`, `c *' A`, `A '^ n` | The scalar in `c *' A` must be well-defined. Matrix operands must have known literal shapes. Addition and subtraction require equal shapes; multiplication requires left columns equal right rows; powers require a square base and exponent in `N_pos`. |
+| `matrix(S, rows, cols)` and matrix literal `[[...], ...]` | For matrix types, `S` must be a set and both dimensions must be in `N_pos`. Matrix literals must have at least one row and one column, must be rectangular, and all entries must be well-defined. |
+| Matrix operators `A '+ B`, `A '- B`, `A '* B`, `c *' A`, `A '^ n` | Formal matrix algebra currently requires entries (and the scalar in `c *' A`) in `R`. Addition and subtraction require equal symbolic dimensions; multiplication requires left columns equal right rows; powers require a square base and exponent in `N_pos`. The result retains its symbolic `matrix(R, rows, cols)` type. |
 | Struct object `&Name<args>` | The struct must be defined. Its arguments must satisfy the struct parameter types and domain facts. Instantiated field types and struct filter facts must be well-defined. |
 | Field access `&Name<args>{p}.field` | The struct object must be well-defined, the field must exist, `p` must be well-defined, and Litex must prove `p $in &Name<args>`. |
 | Template instance such as `\T<R>` | The template instance must materialize from a defined template, and the template arguments must satisfy the template's parameter obligations. |

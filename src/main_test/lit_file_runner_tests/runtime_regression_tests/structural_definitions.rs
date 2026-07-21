@@ -881,6 +881,64 @@ forall x A:
 }
 
 #[test]
+fn have_fn_by_exist_rebinds_value_dependent_function_signature() {
+    run_with_large_stack(
+        "have_fn_by_exist_rebinds_value_dependent_function_signature",
+        || {
+            let source_code = r#"
+have fn interval_identity by exist!:
+    ? forall a, b R, x '[a, b]:
+        a <= b
+        =>:
+            exist! y R st {y = x}
+    witness exist y R st {y = x} from x:
+        x = x
+    forall y1, y2 R:
+        y1 = x
+        y2 = x
+        =>:
+            y1 = x = y2
+    exist! y R st {y = x}
+
+forall a, b R, x '[a, b]:
+    a <= b
+    =>:
+        interval_identity(a, b, x) = x
+
+have fn dependent_function_value by exist!:
+    ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
+        exist! y R st {y = f(x)}
+    witness exist y R st {y = f(x)} from f(x):
+        f(x) = f(x)
+    forall y1, y2 R:
+        y1 = f(x)
+        y2 = f(x)
+        =>:
+            y1 = f(x) = y2
+    exist! y R st {y = f(x)}
+
+forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
+    dependent_function_value(a, b, f, x) = f(x)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_fn_by_exist_rebinds_value_dependent_function_signature",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "have fn by exist! should rebind forall parameters into its stored function signature:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn have_fn_by_exist_releases_unique_witness_direction() {
     run_with_large_stack("have_fn_by_exist_releases_unique_witness_direction", || {
         let source_code = r#"

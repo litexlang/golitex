@@ -77,6 +77,7 @@ mod definitions_and_runtime;
 mod finite_set_induction;
 mod functions_sets_and_iterated;
 mod kernel_soundness;
+mod matrix_semantics;
 mod missing_numeric_builtins;
 mod numeric_and_set_rules;
 mod output_contracts;

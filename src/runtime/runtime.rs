@@ -677,6 +677,17 @@ impl Runtime {
         map.insert(name.to_string(), (matrix, merged_member, line_file));
     }
 
+    pub fn store_obj_in_matrix_set(
+        &mut self,
+        obj: &Obj,
+        matrix_set: MatrixSet,
+        line_file: LineFile,
+    ) {
+        self.top_level_env()
+            .known_objs_in_matrix_sets
+            .insert(obj.to_string(), (matrix_set, line_file));
+    }
+
     pub fn matrix_set_to_fn_set(&self, ms: &MatrixSet, line_file: LineFile) -> FnSet {
         let pair = self.generate_random_unused_names(2);
         let p1 = pair[0].clone();

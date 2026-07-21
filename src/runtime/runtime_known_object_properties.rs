@@ -393,6 +393,23 @@ impl Runtime {
         None
     }
 
+    pub fn get_matrix_set_for_obj(&self, obj: &Obj) -> Option<MatrixSet> {
+        let name = obj.to_string();
+        for env in self.iter_environments_from_top() {
+            if let Some((matrix_set, _)) = env.known_objs_in_matrix_sets.get(&name) {
+                return Some(matrix_set.clone());
+            }
+        }
+        if let Some((module_name, local_name)) = split_module_qualified_key(&name) {
+            for env in self.imported_module_environments(module_name) {
+                if let Some((matrix_set, _)) = env.known_objs_in_matrix_sets.get(local_name) {
+                    return Some(matrix_set.clone());
+                }
+            }
+        }
+        None
+    }
+
     pub fn get_object_equal_to_tuple(&self, name: &str) -> Option<Cart> {
         for env in self.iter_environments_from_top() {
             if let Some(cart) = env.known_objs_equal_to_tuple.get(name) {
@@ -908,6 +925,9 @@ fn collect_module_names_from_fn_obj_head(head: &FnObjHead, module_names: &mut Ve
             for arg in template_obj.args.iter() {
                 collect_module_names_from_obj(arg, module_names);
             }
+        }
+        FnObjHead::MatrixOperator(matrix) => {
+            collect_module_names_from_obj(matrix, module_names);
         }
         FnObjHead::Identifier(_)
         | FnObjHead::Forall(_)

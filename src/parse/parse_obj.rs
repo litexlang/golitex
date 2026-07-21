@@ -456,7 +456,18 @@ impl Runtime {
                 return Ok(Tuple::new(args).into());
             } else {
                 tb.skip_token(RIGHT_BRACE)?;
-                return Ok(obj);
+                let Some(head) = FnObjHead::from_callable_obj(obj.clone()) else {
+                    return Ok(obj);
+                };
+                let mut body_vectors = vec![];
+                while !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
+                    let args = self.parse_fn_obj_arg_group(tb)?;
+                    body_vectors.push(args.into_iter().map(Box::new).collect());
+                }
+                if body_vectors.is_empty() {
+                    return Ok(obj);
+                }
+                return Ok(FnObj::new(head, body_vectors).into());
             }
         }
 

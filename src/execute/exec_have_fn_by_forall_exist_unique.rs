@@ -229,10 +229,8 @@ impl Runtime {
         // be an Obj; the forall must have exactly one then fact; that then fact must be an exist!;
         // and the exist! must bind exactly one Obj-typed witness. Effect: define f as a set-theoretic
         // function and store that f satisfies the witness body for each input.
-        let params_def_with_set = Self::param_groups_with_set_from_obj_param_defs(
-            stmt,
-            &stmt.forall.params_def_with_type,
-        )?;
+        let (params_def_with_set, forall_param_to_fn_set_param) = self
+            .param_groups_with_set_from_obj_param_defs(stmt, &stmt.forall.params_def_with_type)?;
         if stmt.forall.then_facts.len() != 1 {
             return Err(Self::have_fn_by_forall_exist_unique_msg(
                 stmt,
@@ -299,7 +297,13 @@ impl Runtime {
 
         let mut dom_facts = Vec::with_capacity(stmt.forall.dom_facts.len());
         for dom_fact in stmt.forall.dom_facts.iter() {
-            dom_facts.push(Self::fn_set_dom_fact_from_fact(stmt, dom_fact)?);
+            let rebound_dom_fact = self.inst_fact(
+                dom_fact,
+                &forall_param_to_fn_set_param,
+                ParamObjType::FnSet,
+                None,
+            )?;
+            dom_facts.push(Self::fn_set_dom_fact_from_fact(stmt, &rebound_dom_fact)?);
         }
 
         for body_fact in exist_body.facts.iter() {
@@ -399,14 +403,28 @@ impl Runtime {
     }
 
     fn param_groups_with_set_from_obj_param_defs(
+        &self,
         stmt: &HaveFnByForallExistUniqueStmt,
         param_defs: &ParamDefWithType,
-    ) -> Result<Vec<ParamGroupWithSet>, RuntimeError> {
+    ) -> Result<(Vec<ParamGroupWithSet>, HashMap<String, Obj>), RuntimeError> {
         let mut result = Vec::with_capacity(param_defs.groups.len());
+        // The source signature uses Forall binders; its stored function type uses FnSet binders.
+        let mut forall_param_to_fn_set_param = HashMap::new();
         for group in param_defs.groups.iter() {
             match &group.param_type {
                 ParamType::Obj(obj) => {
-                    result.push(ParamGroupWithSet::new(group.params.clone(), obj.clone()));
+                    let rebound_param_set =
+                        self.inst_obj(obj, &forall_param_to_fn_set_param, ParamObjType::FnSet)?;
+                    result.push(ParamGroupWithSet::new(
+                        group.params.clone(),
+                        rebound_param_set,
+                    ));
+                    for param_name in group.params.iter() {
+                        forall_param_to_fn_set_param.insert(
+                            param_name.clone(),
+                            obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::FnSet),
+                        );
+                    }
                 }
                 _ => {
                     return Err(Self::have_fn_by_forall_exist_unique_msg(
@@ -416,7 +434,7 @@ impl Runtime {
                 }
             }
         }
-        Ok(result)
+        Ok((result, forall_param_to_fn_set_param))
     }
 
     fn fn_set_dom_fact_from_fact(

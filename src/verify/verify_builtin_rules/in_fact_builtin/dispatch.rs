@@ -517,6 +517,52 @@ impl Runtime {
                     "finite_seq list: length equals n and each entry in co-domain",
                 ))
             }
+            // Real matrix operators preserve their symbolic matrix type.
+            // Example: `A, B matrix(R, m, n)` implies `A '+ B $in matrix(R, m, n)`.
+            (element, Obj::MatrixSet(expected))
+                if matches!(
+                    element,
+                    Obj::MatrixAdd(_)
+                        | Obj::MatrixSub(_)
+                        | Obj::MatrixMul(_)
+                        | Obj::MatrixScalarMul(_)
+                        | Obj::MatrixPow(_)
+                ) =>
+            {
+                let actual = self.real_matrix_type(element, verify_state, "operator")?;
+                let real: Obj = StandardSet::R.into();
+                let same_entry_set = self.verify_objs_are_equal_known_only(
+                    &actual.set,
+                    &expected.set,
+                    in_fact.line_file.clone(),
+                );
+                let expected_is_real = self.verify_objs_are_equal_known_only(
+                    &expected.set,
+                    &real,
+                    in_fact.line_file.clone(),
+                );
+                let same_rows = self.verify_objs_are_equal_known_only(
+                    &actual.row_len,
+                    &expected.row_len,
+                    in_fact.line_file.clone(),
+                );
+                let same_cols = self.verify_objs_are_equal_known_only(
+                    &actual.col_len,
+                    &expected.col_len,
+                    in_fact.line_file.clone(),
+                );
+                if same_entry_set.is_unknown()
+                    || expected_is_real.is_unknown()
+                    || same_rows.is_unknown()
+                    || same_cols.is_unknown()
+                {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "real matrix operator: result dimensions and entry set match matrix(...) type",
+                ))
+            }
             (Obj::MatrixListObj(list), Obj::MatrixSet(ms)) => {
                 let lf = in_fact.line_file.clone();
                 let n_rows_obj: Obj = Number::new(list.rows.len().to_string()).into();
