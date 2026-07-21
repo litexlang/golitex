@@ -1376,6 +1376,15 @@ These predicates express inclusion between sets.
 |-----------|--------------|---------|
 | `A $subset B` | `not A $subset B` | Every element of `A` belongs to `B`. |
 | `A $superset B` | `not A $superset B` | Every element of `B` belongs to `A`. |
+| `A $proper_subset B` | `not A $proper_subset B` | `A` is a subset of `B` and `A != B`. |
+| `A $proper_superset B` | `not A $proper_superset B` | `A` is a superset of `B` and `A != B`. |
+
+#### Proper Set Relations (Preview)
+
+A positive proper relation exposes both parts of its definition to inference.
+Its negation is disjunctive: `not A $proper_subset B` means
+`not A $subset B or A = B`, and similarly for proper superset. Therefore a
+negated proper relation does not by itself expose either disjunct.
 
 ---
 
@@ -3184,6 +3193,8 @@ conjunctive, disjunctive, or negated universal facts.
 | tuple shape predicate | `$is_tuple(t)` |
 | subset relation | `A $subset B` |
 | superset relation | `A $superset B` |
+| proper-subset relation | `A $proper_subset B` |
+| proper-superset relation | `A $proper_superset B` |
 | pointwise equality on a set | `$fn_eq_in(f, g, A)` |
 | global function equality | `$fn_eq(f, g)` |
 | negated user predicate | `not $prime(n)` |
@@ -3200,6 +3211,8 @@ conjunctive, disjunctive, or negated universal facts.
 | negated tuple predicate | `not $is_tuple(t)` |
 | negated subset relation | `not A $subset B` |
 | negated superset relation | `not A $superset B` |
+| negated proper-subset relation | `not A $proper_subset B` |
+| negated proper-superset relation | `not A $proper_superset B` |
 
 #### Facts inside larger facts
 
@@ -4866,6 +4879,22 @@ Subset goals are treated as universal membership: every element of the left set 
 
 Superset and negated subset or superset claims are related to the same membership idea. When a direct subset statement is clumsy, write the universal membership fact explicitly as in an ordinary proof.
 
+Proper inclusion uses containment plus inequality:
+
+```litex
+forall A, B set:
+    A $subset B
+    A != B
+    =>:
+        A $proper_subset B
+        B $proper_superset A
+```
+
+Same-direction inclusion chains may mix strict and non-strict links. An
+endpoint relation is proper exactly when at least one link on that path is
+proper; Litex does not close a chain that switches between subset and superset
+directions.
+
 ---
 
 ### Type Predicate Rules
@@ -5372,6 +5401,10 @@ From `A $superset B`, Litex infers the universal membership consequence in the o
 forall x {1}:
     x $in {1, 2}
 ```
+
+From `A $proper_subset B`, Litex also infers `A $subset B` and `A != B`.
+Proper superset behaves dually. Negated proper relations do not infer either
+branch of their disjunctive definition.
 
 When the conclusion you want is itself universal, write the subset or superset fact first, then write the universal membership consequence as its own line.
 

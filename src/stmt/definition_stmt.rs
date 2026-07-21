@@ -46,8 +46,8 @@ impl DefAbstractPropStmt {
     }
 }
 
-/// `have fn` `{ ... }` piece. Parameter sets may depend on earlier parameters; `ret_set` must not
-/// cite these parameters.
+/// `have fn` `{ ... }` piece. Parameter sets and the return set may depend on
+/// earlier function parameters.
 #[derive(Clone)]
 pub struct FnSetClause {
     pub params_def_with_set: ParamDefWithSet,
@@ -62,7 +62,6 @@ impl FnSetClause {
         ret_set: Obj,
     ) -> Result<Self, RuntimeError> {
         let params_def_with_set = params_def_with_set.into();
-        params_def_with_set.validate_obj_does_not_cite_params(&ret_set, "function return set")?;
         Ok(FnSetClause {
             params_def_with_set,
             dom_facts,

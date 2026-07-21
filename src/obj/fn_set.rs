@@ -6,7 +6,7 @@ use crate::prelude::*;
 pub struct FnSetBody {
     pub params_def_with_set: ParamDefWithSet,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
-    /// Return sets are intentionally non-dependent: they must not cite this function's parameters.
+    /// The return set may depend on the function's parameters and is instantiated at application.
     pub ret_set: Box<Obj>,
 }
 
@@ -46,7 +46,6 @@ impl FnSet {
         ret_set: Obj,
     ) -> Result<Self, RuntimeError> {
         let params_and_their_sets = params_and_their_sets.into();
-        params_and_their_sets.validate_obj_does_not_cite_params(&ret_set, "function return set")?;
         let fn_set = FnSet {
             body: FnSetBody::new(params_and_their_sets, dom_facts, ret_set),
         };
@@ -55,8 +54,6 @@ impl FnSet {
     }
 
     pub fn from_body(body: FnSetBody) -> Result<Self, RuntimeError> {
-        body.params_def_with_set
-            .validate_obj_does_not_cite_params(&body.ret_set, "function return set")?;
         let fn_set = FnSet { body };
         check_fn_set_has_no_duplicate_fn_set_free_parameter(&fn_set)?;
         Ok(fn_set)
@@ -82,8 +79,6 @@ impl AnonymousFn {
         equal_to: Obj,
     ) -> Result<Self, RuntimeError> {
         let params_and_their_sets = params_and_their_sets.into();
-        params_and_their_sets
-            .validate_obj_does_not_cite_params(&ret_set, "anonymous function return set")?;
         let anonymous_fn = AnonymousFn {
             body: FnSetBody::new(params_and_their_sets, dom_facts, ret_set),
             equal_to: Box::new(equal_to),

@@ -56,13 +56,20 @@ element of A is an element of B and vice versa.
 # Litex's `by extension` form proves the same principle for arbitrary sets.
 # Equality reflexivity, symmetry, and transitivity are builtin in Litex.
 
-forall A, B set:
-    forall x A:
-        x $in B
-    forall y B:
-        y $in A
-    =>:
-        A = B
+claim:
+    ? forall A, B set:
+        forall x A:
+            x $in B
+        forall y B:
+            y $in A
+        =>:
+            A = B
+    by extension:
+        ? A = B
+        forall x A:
+            x $in B
+        forall y B:
+            y $in A
 
 """
 Example 3.1.5. Sets with the same members are equal even if the display order
@@ -160,7 +167,16 @@ sketch:
 
     {} != {{}, {{}}}
 
-    {{}} != {{{}}}
+    claim:
+        ? {{}} != {{{}}}
+        by contra:
+            ? {{}} != {{{}}}
+            {{}} = {{{}}}
+            {} $in {{}}
+            {} $in {{{}}}
+            {} = {{}}
+            0 = finite_set_size({}) = finite_set_size({{}}) = 1
+            impossible 0 = 1
 
     {{}} != {{}, {{}}}
 
@@ -215,9 +231,29 @@ operation, not numerical addition.
 sketch:
     by extension:
         ? union({1, 2}, {2, 3}) = {1, 2, 3}
-        by enumerate finite_set:
+        claim:
             ? forall x union({1, 2}, {2, 3}):
                 x $in {1, 2, 3}
+            x $in union({1, 2}, {2, 3})
+            x $in {1, 2} or x $in {2, 3}
+            by cases:
+                ? x $in {1, 2, 3}
+                case x $in {1, 2}:
+                    x = 1 or x = 2
+                    by cases:
+                        ? x $in {1, 2, 3}
+                        case x = 1:
+                            x $in {1, 2, 3}
+                        case x = 2:
+                            x $in {1, 2, 3}
+                case x $in {2, 3}:
+                    x = 2 or x = 3
+                    by cases:
+                        ? x $in {1, 2, 3}
+                        case x = 2:
+                            x $in {1, 2, 3}
+                        case x = 3:
+                            x $in {1, 2, 3}
         by enumerate finite_set:
             ? forall y {1, 2, 3}:
                 y $in union({1, 2}, {2, 3})
@@ -229,9 +265,18 @@ sketch:
             union(A, B) = union(A1, B1)
     by extension:
         ? union({2}, {3}) = {2, 3}
-        by enumerate finite_set:
+        claim:
             ? forall x union({2}, {3}):
                 x $in {2, 3}
+            x $in {2} or x $in {3}
+            by cases:
+                ? x $in {2, 3}
+                case x $in {2}:
+                    x = 2
+                    x $in {2, 3}
+                case x $in {3}:
+                    x = 3
+                    x $in {2, 3}
         by enumerate finite_set:
             ? forall y {2, 3}:
                 y $in union({2}, {3})
@@ -239,10 +284,28 @@ sketch:
     finite_set_size(union({2}, {3})) = finite_set_size({2, 3}) = 2
     2 + 3 = 5
 
-    forall a, b set:
-        a != b
-        =>:
-            {a, b} = union({a}, {b})
+    claim:
+        ? forall a, b set:
+            a != b
+            =>:
+                {a, b} = union({a}, {b})
+        by extension:
+            ? {a, b} = union({a}, {b})
+            by enumerate finite_set:
+                ? forall x {a, b}:
+                    x $in union({a}, {b})
+            claim:
+                ? forall y union({a}, {b}):
+                    y $in {a, b}
+                y $in {a} or y $in {b}
+                by cases:
+                    ? y $in {a, b}
+                    case y $in {a}:
+                        y = a
+                        y $in {a, b}
+                    case y $in {b}:
+                        y = b
+                        y $in {a, b}
 
     forall A, B set:
         union(A, B) = union(B, A)
@@ -284,11 +347,14 @@ forall A, B, C set:
     =>:
         A $subset C
 
-forall A, B set:
-    A $subset B
-    B $subset A
-    =>:
-        A = B
+claim:
+    ? forall A, B set:
+        A $subset B
+        B $subset A
+        =>:
+            A = B
+    by extension:
+        ? A = B
 
 """
 Remark 3.1.16. Subset is also well-defined under equality of sets.
@@ -357,11 +423,35 @@ sketch:
     {1} $subset union({1}, {2, 3})
     {2, 3} $subset union({1}, {2, 3})
 
-    union({1}, {2, 3}) $subset {1, 2, 3}
+    claim:
+        ? union({1}, {2, 3}) $subset {1, 2, 3}
+        claim:
+            ? forall x union({1}, {2, 3}):
+                x $in {1, 2, 3}
+            x $in {1} or x $in {2, 3}
+            by cases:
+                ? x $in {1, 2, 3}
+                case x $in {1}:
+                    x = 1
+                    x $in {1, 2, 3}
+                case x $in {2, 3}:
+                    x = 2 or x = 3
+                    by cases:
+                        ? x $in {1, 2, 3}
+                        case x = 2:
+                            x $in {1, 2, 3}
+                        case x = 3:
+                            x $in {1, 2, 3}
 
-    not {1} $subset {2}
+    by contra:
+        ? not {1} $subset {2}
+        1 $in {2}
+        impossible 1 = 2
 
-    not {2} $subset {1}
+    by contra:
+        ? not {2} $subset {1}
+        2 $in {1}
+        impossible 2 = 1
 
     1 <= 2
 
@@ -400,13 +490,19 @@ sketch:
     2 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
     3 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
 
-    not 4 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
+    by contra:
+        ? not 4 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
+        impossible 4 < 4
 
-    not 5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
+    by contra:
+        ? not 5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
+        impossible 5 < 4
 
     5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 7}
 
-    not 1 $in {n N: n $in {1, 2, 3, 4, 5} and n < 1}
+    by contra:
+        ? not 1 $in {n N: n $in {1, 2, 3, 4, 5} and n < 1}
+        impossible 1 < 1
 
 """
 Definition 3.1.23 (Intersections). An element is in A intersect B iff it is in
@@ -593,9 +689,12 @@ sketch:
         case k = 2: proj(C, 2)
         case k = 3: proj(C, 3)
 
-    projection_factor_on_three(1) = {1, 2}
-    projection_factor_on_three(2) = {3, 4}
-    projection_factor_on_three(3) = {5, 6}
+    projection_factor_on_three(1) = proj(C, 1) = {1, 2}
+    projection_factor_on_three(2) = proj(C, 2) = {3, 4}
+    projection_factor_on_three(3) = proj(C, 3) = {5, 6}
+    projection_factor_on_three(1) $in fn_range(projection_factor_on_three)
+    projection_factor_on_three(2) $in fn_range(projection_factor_on_three)
+    projection_factor_on_three(3) $in fn_range(projection_factor_on_three)
     {1, 2} $in fn_range(projection_factor_on_three)
     {3, 4} $in fn_range(projection_factor_on_three)
     {5, 6} $in fn_range(projection_factor_on_three)
@@ -620,6 +719,7 @@ sketch:
         case n = 5: 1
         case n = 9: 1
 
+    constant1_on_three(3) $in fn_range(constant1_on_three)
     1 $in fn_range(constant1_on_three)
 
     by extension fn_range(constant1_on_three) = {1}:
@@ -628,7 +728,7 @@ sketch:
         forall y {1}:
             y $in fn_range(constant1_on_three)
 
-    finite_set_size(fn_range(constant1_on_three)) = 1
+    finite_set_size(fn_range(constant1_on_three)) = finite_set_size({1}) = 1
 
 """
 Axiom 3.7 (Infinity). There is a set N of natural numbers containing 0 and
@@ -691,9 +791,13 @@ sketch:
     2 $in {n N: n < 4}
     2 $in {n N: n + 1 < 5}
 
-    not 5 $in {n N: n < 4}
+    by contra:
+        ? not 5 $in {n N: n < 4}
+        impossible 5 < 4
 
-    not 5 $in {n N: n + 1 < 5}
+    by contra:
+        ? not 5 $in {n N: n + 1 < 5}
+        impossible 5 + 1 < 5
 
 
 # Chapter 3, Section 3.3: Functions.
@@ -761,7 +865,7 @@ sketch:
             b1 + 1 = a
             b2 + 1 = a
             =>:
-                b1 = b2
+                b1 = (b1 + 1) - 1 = a - 1 = (b2 + 1) - 1 = b2
 
     have fn pred_pos(n N_pos) N = n - 1
 
@@ -997,6 +1101,7 @@ sketch:
     forall x1, x2 N:
         square_N(x1) = square_N(x2)
         =>:
+            x1^2 = square_N(x1) = square_N(x2) = x2^2
             x1 = sqrt(x1^2) = sqrt(x2^2) = x2
     by def $is_injective_fn(N, Z, square_N)
 

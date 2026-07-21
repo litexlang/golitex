@@ -33,6 +33,7 @@ mod verify_number_in_standard_set;
 mod verify_obj_well_defined;
 mod verify_or_fact;
 mod verify_or_fact_with_known_forall;
+pub(crate) mod verify_proper_set_relations_builtin;
 mod verify_state;
 mod verify_well_defined_in_local_env;
 

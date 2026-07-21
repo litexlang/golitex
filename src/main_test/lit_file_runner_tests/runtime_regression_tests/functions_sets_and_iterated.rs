@@ -64,7 +64,7 @@ fn function_space_membership_uses_same_domain_pointwise_values() {
         || {
             let source_code = r#"
 claim:
-    ? forall I set, X set, f fn(alpha I) cup({X}):
+    ? forall I set, X set, f fn(alpha I) big_union({X}):
         forall alpha I:
             f(alpha) $in X
         =>:
@@ -1327,26 +1327,32 @@ f(3, 2) = f(3, 2)
 }
 
 #[test]
-fn fn_return_set_cannot_depend_on_params() {
-    let source_code = r#"
-have f fn(n N_pos) closed_range(1, n)
+fn dependent_fn_return_set_instantiates_with_arguments() {
+    run_with_large_stack(
+        "dependent_fn_return_set_instantiates_with_arguments_large_stack",
+        || {
+            let source_code = r#"
+have g fn(S power_set(R)) fn(x S) R
+g(R)(0) = g(R)(0)
+
+have fn difference_quotient(X power_set(R), f fn(z X) R, x0 X) fn(y set_minus(X, {x0})) R = fn(x set_minus(X, {x0})) R {(f(x) - f(x0)) / (x - x0)}
+difference_quotient(R, fn(z R) R {z}, 0)(1) = 1
 "#;
 
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("fn_return_set_cannot_depend_on_params");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "dependent_fn_return_set_instantiates_with_arguments",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        !run_succeeded,
-        "dependent return set should fail, but succeeded:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("function return set cannot depend on function parameters [n]"),
-        "dependent return set failure had unexpected output:\n{}",
-        run_output
+            assert!(
+                run_succeeded,
+                "dependent return sets should verify and instantiate:\n{}",
+                run_output
+            );
+        },
     );
 }
 

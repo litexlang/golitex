@@ -12,6 +12,11 @@ impl Runtime {
         {
             return Ok(Some(result));
         }
+        if crate::verify::verify_proper_set_relations_builtin::is_builtin_proper_set_relation_fact(
+            atomic_fact,
+        ) {
+            return Ok(None);
+        }
         if let AtomicFact::NormalAtomicFact(n) = atomic_fact {
             return self.verify_normal_atomic_fact_using_its_definition(n, verify_state);
         }

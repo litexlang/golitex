@@ -477,16 +477,20 @@ impl Runtime {
         Ok(())
     }
 
-    // Predicate `P(args)`: check args against `P`'s param types, then store each instantiated `iff` body.
-    // Example: if `P` is defined by `iff` clauses, those clauses become facts with `args` substituted.
+    // Positive builtin predicates expose their definition facts before ordinary `prop` inference.
+    // Example: `A $proper_subset B` infers both `A $subset B` and `A != B`.
+    // For `P(args)`, each instantiated `iff` body is stored after checking parameter types.
     pub fn infer_normal_atomic_fact(
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
     ) -> Result<InferResult, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
-        if let Some(definition_facts) =
-            self.builtin_function_property_definition_facts(normal_atomic_fact)?
-        {
+        let proper_relation_facts = crate::verify::verify_proper_set_relations_builtin::positive_proper_set_relation_definition_facts(normal_atomic_fact);
+        let builtin_definition_facts = match proper_relation_facts {
+            Some(facts) => Some(facts),
+            None => self.builtin_function_property_definition_facts(normal_atomic_fact)?,
+        };
+        if let Some(definition_facts) = builtin_definition_facts {
             let mut infer_result = InferResult::new();
             let source_fact: Fact = normal_atomic_fact.clone().into();
             let reason = InferReason::ByDefinition(ByDefinitionReason::new(

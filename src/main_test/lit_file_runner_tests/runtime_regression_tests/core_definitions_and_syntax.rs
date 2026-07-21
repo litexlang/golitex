@@ -129,7 +129,7 @@ by for forall! i closed_range(3, 2) => {1 = 0}
 fn big_union_membership_has_builtin_intro_and_elim() {
     run_with_large_stack("big_union_membership_has_builtin_intro_and_elim", || {
         let source_code = r#"
-thm tmp_cup_intro_from_member:
+thm tmp_big_union_intro_from_member:
     ? forall x set, F set, A set:
         A $in F
         x $in A
@@ -137,14 +137,14 @@ thm tmp_cup_intro_from_member:
             x $in big_union(F)
     x $in big_union(F)
 
-thm tmp_cup_intro_from_exist:
+thm tmp_big_union_intro_from_exist:
     ? forall x set, F set:
         exist A F st {x $in A}
         =>:
             x $in big_union(F)
     x $in big_union(F)
 
-thm tmp_cup_elim_to_exist:
+thm tmp_big_union_elim_to_exist:
     ? forall x set, F set:
         x $in big_union(F)
         =>:
@@ -153,7 +153,9 @@ thm tmp_cup_elim_to_exist:
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("big_union_membership_has_builtin_intro_and_elim");
+        runtime.new_file_path_new_env_new_name_scope(
+            "big_union_membership_has_builtin_intro_and_elim",
+        );
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);

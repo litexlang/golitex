@@ -866,10 +866,42 @@ thm intersection_of_bounded_intervals_is_bounded_interval:
         =>:
             $is_bounded_interval(intersect(I, J))
     # Source handling: Tao proves this in Exercise 11.1.2 by using Lemma
-    # 11.1.4.
-    # proof_debt: prove boundedness and connectedness of the intersection, then
-    # apply the bounded-connected characterization above.
-    trust $is_bounded_interval(intersect(I, J))
+    # 11.1.4. Boundedness descends from either factor, while connectedness
+    # descends from both.
+    by thm chap9::real_set_operations_stay_in_power_set(I, J)
+    intersect(I, J) $in power_set(R)
+    by thm bounded_intervals_are_bounded_connected(I)
+    by thm bounded_intervals_are_bounded_connected(J)
+    claim:
+        ? intersect(I, J) $subset I
+        forall x intersect(I, J):
+            x $in I
+        intersect(I, J) $subset I
+    by thm chap9::bounded_real_set_subset(intersect(I, J), I)
+    $chap9::is_bounded_real_set(intersect(I, J))
+    claim:
+        ? $is_connected_subset_of_R(intersect(I, J))
+        claim:
+            ? forall x, y intersect(I, J):
+                x < y
+                =>:
+                    '[x, y] $subset intersect(I, J)
+            x $in I
+            y $in I
+            x $in J
+            y $in J
+            '[x, y] $subset I
+            '[x, y] $subset J
+            claim:
+                ? '[x, y] $subset intersect(I, J)
+                forall z '[x, y]:
+                    z $in I
+                    z $in J
+                    z $in intersect(I, J)
+                '[x, y] $subset intersect(I, J)
+        $is_connected_subset_of_R(intersect(I, J))
+    by thm bounded_connected_subsets_are_bounded_intervals(intersect(I, J))
+    $is_bounded_interval(intersect(I, J))
 
 """
 Example 11.1.7.  `[2,4] intersect [4,6]` is the singleton `{4}`, while
@@ -951,18 +983,125 @@ thm interval_endpoint_case_has_total_length:
         finite_set_max(union({b - a}, { 0})) = finite_set_max(union({b - a}, { 0}))
     by thm interval_length_endpoint_case(I, finite_set_max(union({b - a}, { 0})), a, b)
 
+thm nonempty_interval_endpoint_representation_unique:
+    ? forall I power_set(R), a, b, c, d R:
+        $has_interval_endpoints(I, a, b)
+        $has_interval_endpoints(I, c, d)
+        $is_nonempty_set(I)
+        =>:
+            a = c
+            b = d
+    obtain x from exist x I st {x $in I}
+    by thm interval_endpoint_member_is_between(I, a, b, x)
+    by thm interval_endpoint_member_is_between(I, c, d, x)
+    claim:
+        ? a = c
+        by contra:
+            ? a = c
+            a < c or c < a
+            by cases:
+                ? a = c
+                case a < c:
+                    have z R = (a + c) / 2
+                    a < z < c
+                    c <= x <= b
+                    z < b
+                    by thm strict_between_interval_endpoints_is_member(I, a, b, z)
+                    z $in I
+                    by thm interval_endpoint_member_is_between(I, c, d, z)
+                    c <= z
+                    impossible z < c
+                case c < a:
+                    have z R = (c + a) / 2
+                    c < z < a
+                    a <= x <= d
+                    z < d
+                    by thm strict_between_interval_endpoints_is_member(I, c, d, z)
+                    z $in I
+                    by thm interval_endpoint_member_is_between(I, a, b, z)
+                    a <= z
+                    impossible z < a
+            impossible a != c
+    claim:
+        ? b = d
+        by contra:
+            ? b = d
+            b < d or d < b
+            by cases:
+                ? b = d
+                case b < d:
+                    have z R = (b + d) / 2
+                    b < z < d
+                    c = a
+                    a <= x <= b
+                    c < z
+                    by thm strict_between_interval_endpoints_is_member(I, c, d, z)
+                    z $in I
+                    by thm interval_endpoint_member_is_between(I, a, b, z)
+                    z <= b
+                    impossible b < z
+                case d < b:
+                    have z R = (d + b) / 2
+                    d < z < b
+                    a = c
+                    c <= x <= d
+                    a < z
+                    by thm strict_between_interval_endpoints_is_member(I, a, b, z)
+                    z $in I
+                    by thm interval_endpoint_member_is_between(I, c, d, z)
+                    z <= d
+                    impossible d < z
+            impossible b != d
+
 thm interval_length_value_unique:
     ? forall I power_set(R), l1, l2 R:
         $has_interval_length(I, l1)
         $has_interval_length(I, l2)
         =>:
             l1 = l2
-    # Source handling: the endpoint-only definition assigns the same
-    # `finite_set_max(union({b-a}, {0}))` value to every endpoint representation of the same
-    # bounded interval.
-    # proof_debt: split the two endpoint representations and compare their
-    # positive-part lengths by interval extensionality.
-    trust l1 = l2
+    # Source handling: a nonempty interval determines its two order endpoints
+    # even when their membership is open or closed. For the empty interval,
+    # every endpoint representation has nonpositive endpoint difference.
+    obtain a, b from exist a0, b0 R st {$has_interval_length_with_endpoints(I, l1, a0, b0)}
+    obtain c, d from exist c0, d0 R st {$has_interval_length_with_endpoints(I, l2, c0, d0)}
+    $is_nonempty_set(I) or not $is_nonempty_set(I)
+    by cases:
+        ? l1 = l2
+        case not $is_nonempty_set(I):
+            claim:
+                ? b <= a
+                by contra:
+                    ? b <= a
+                    a < b
+                    have z R = (a + b) / 2
+                    a < z < b
+                    by thm strict_between_interval_endpoints_is_member(I, a, b, z)
+                    z $in I
+                    witness $is_nonempty_set(I) from z
+                    impossible not $is_nonempty_set(I)
+            claim:
+                ? d <= c
+                by contra:
+                    ? d <= c
+                    c < d
+                    have z R = (c + d) / 2
+                    c < z < d
+                    by thm strict_between_interval_endpoints_is_member(I, c, d, z)
+                    z $in I
+                    witness $is_nonempty_set(I) from z
+                    impossible not $is_nonempty_set(I)
+            by thm max_positive_part_zero_when_nonpositive(a, b)
+            by thm max_positive_part_zero_when_nonpositive(c, d)
+            l1 = finite_set_max(union({b - a}, { 0})) = 0
+            l2 = finite_set_max(union({d - c}, { 0})) = 0
+            l1 = l2
+        case $is_nonempty_set(I):
+            by thm nonempty_interval_endpoint_representation_unique(I, a, b, c, d)
+            b - a = d - c
+            finite_set_max(union({b - a}, { 0})) = finite_set_max(union({d - c}, { 0}))
+            l1 = finite_set_max(union({b - a}, { 0}))
+            l2 = finite_set_max(union({d - c}, { 0}))
+            l1 = l2
 
 have fn interval_length by exist!:
     ? forall I power_set(R):
@@ -1350,11 +1489,10 @@ have fn partition_piece_containing by exist!:
                 x $in J2
                 =>:
                     J1 = J2
-            exist! J P st {J $in power_set(R), x $in J}
+            exist! H P st {H $in power_set(R), x $in H}
             J1 $in power_set(R)
             J2 $in power_set(R)
             J1 = J2
-        exist! J power_set(R) st {J $in P, x $in J}
 
 thm partition_piece_containing_has_value:
     ? forall I power_set(R), P power_set(power_set(R)), x I:
@@ -1441,8 +1579,7 @@ thm disjoint_nonempty_bounded_intervals_are_ordered:
         $is_nonempty_set(K)
         intersect(J, K) = {}
         =>:
-            $is_strictly_left_of_interval(J, K)
-            or $is_strictly_left_of_interval(K, J)
+            $is_strictly_left_of_interval(J, K) or $is_strictly_left_of_interval(K, J)
     by thm bounded_intervals_are_bounded_connected(J)
     by thm bounded_intervals_are_bounded_connected(K)
     $is_connected_subset_of_R(J)
@@ -1564,15 +1701,19 @@ thm distinct_partition_pieces_are_disjoint:
         claim:
             ? forall x intersect(J, K):
                 x $in {}
-            x $in J
-            x $in K
-            exist! H P st {H $in power_set(R), x $in H}
-            J = K
-            impossible J != K
+            by contra:
+                ? x $in {}
+                x $in J
+                x $in K
+                exist! H P st {H $in power_set(R), x $in H}
+                J = K
+                impossible J != K
         claim:
             ? forall x {}:
                 x $in intersect(J, K)
-            impossible x $in {}
+            by contra:
+                ? x $in intersect(J, K)
+                impossible x $in {}
 
 thm strictly_left_of_intervals_transitive:
     ? forall I, J, K power_set(R):
@@ -1590,123 +1731,85 @@ thm strictly_left_of_intervals_transitive:
         x < z
     $is_strictly_left_of_interval(I, K)
 
+prop is_pairwise_strictly_ordered_nonempty_interval_family(P finite_set):
+    $is_nonempty_set(P)
+    forall J P:
+        J $in power_set(R)
+        $is_nonempty_set(J)
+    forall J, K P:
+        J != K
+        =>:
+            $is_strictly_left_of_interval(J, K) or $is_strictly_left_of_interval(K, J)
+
+prop has_only_nonempty_partition_pieces(P finite_set):
+    forall J P:
+        $is_nonempty_set(J)
+
+prop has_empty_partition_piece(P finite_set):
+    exist J P st {not $is_nonempty_set(J)}
+
+prop is_leftmost_interval_in_family(J0 power_set(R), P finite_set):
+    J0 $in P
+    forall K P:
+        K = J0 or $is_strictly_left_of_interval(J0, K)
+
 # A finite nonempty family whose nonempty members are pairwise strictly
 # ordered has a leftmost member.  The result is existential: no canonical
 # enumeration or global choice function is introduced.
 thm finite_pairwise_ordered_nonempty_intervals_have_leftmost:
     ? forall P finite_set:
-        $is_nonempty_set(P)
-        forall J P:
-            $is_nonempty_set(J)
-        forall J, K P:
-            J != K
-            =>:
-                $is_strictly_left_of_interval(J, K)
-                or $is_strictly_left_of_interval(K, J)
+        $is_pairwise_strictly_ordered_nonempty_interval_family(P)
         =>:
-            exist J0 P st {forall K P: K = J0 or $is_strictly_left_of_interval(J0, K)}
-    prop leftmost_exists_for_finite_interval_family(S set):
-        $is_nonempty_set(S)
-        forall J S:
-            $is_nonempty_set(J)
-        forall J, K S:
-            J != K
-            =>:
-                $is_strictly_left_of_interval(J, K)
-                or $is_strictly_left_of_interval(K, J)
-        =>:
-            exist J0 S st {forall K S: K = J0 or $is_strictly_left_of_interval(J0, K)}
+            exist J0 power_set(R) st {$is_leftmost_interval_in_family(J0, P)}
+    prop has_leftmost_interval_in_finite_family(S finite_set):
+        exist J0 power_set(R) st {$is_leftmost_interval_in_family(J0, S)}
+
+    prop leftmost_exists_for_finite_interval_family(S finite_set):
+        not $is_pairwise_strictly_ordered_nonempty_interval_family(S) or $has_leftmost_interval_in_finite_family(S)
 
     by induc P:
         ? $leftmost_exists_for_finite_interval_family(P)
         ? from P = {}:
             claim:
-                ? $is_nonempty_set({})
-                    forall J {}:
-                        $is_nonempty_set(J)
-                    forall J, K {}:
-                        J != K
-                        =>:
-                            $is_strictly_left_of_interval(J, K)
-                            or $is_strictly_left_of_interval(K, J)
-                    =>:
-                        exist J0 {} st {forall K {}: K = J0 or $is_strictly_left_of_interval(J0, K)}
-                impossible not $is_nonempty_set({})
+                ? not $is_pairwise_strictly_ordered_nonempty_interval_family({})
+                by contra:
+                    ? not $is_pairwise_strictly_ordered_nonempty_interval_family({})
+                    by def $is_pairwise_strictly_ordered_nonempty_interval_family({})
+                    impossible not $is_nonempty_set({})
             by def $leftmost_exists_for_finite_interval_family({})
         ? induc A, T:
             $leftmost_exists_for_finite_interval_family(T)
-            claim:
-                ? $is_nonempty_set(union({A}, T))
-                    forall J union({A}, T):
-                        $is_nonempty_set(J)
-                    forall J, K union({A}, T):
-                        J != K
-                        =>:
-                            $is_strictly_left_of_interval(J, K)
-                            or $is_strictly_left_of_interval(K, J)
-                    =>:
-                        exist J0 union({A}, T) st {forall K union({A}, T): K = J0 or $is_strictly_left_of_interval(J0, K)}
-                $is_nonempty_set(T) or not $is_nonempty_set(T)
-                by cases:
-                    ? exist J0 union({A}, T) st {forall K union({A}, T): K = J0 or $is_strictly_left_of_interval(J0, K)}
-                    case not $is_nonempty_set(T):
-                        claim:
-                            ? T = {}
-                            by extension T = {}:
-                                claim:
-                                    ? forall x T:
-                                        x $in {}
-                                    witness $is_nonempty_set(T) from x
-                                    impossible not $is_nonempty_set(T)
-                                claim:
-                                    ? forall x {}:
-                                        x $in T
-                                    impossible x $in {}
-                        witness exist J0 union({A}, T) st {forall K union({A}, T): K = J0 or $is_strictly_left_of_interval(J0, K)} from A:
-                            A $in union({A}, T)
-                            claim:
-                                ? forall K union({A}, T):
-                                    K = A or $is_strictly_left_of_interval(A, K)
-                                K $in {A} or K $in T
-                                by cases:
-                                    ? K = A or $is_strictly_left_of_interval(A, K)
-                                    case K $in {A}:
-                                        K = A
-                                    case K $in T:
-                                        T = {}
-                                        K $in {}
-                                        impossible K $in {}
-                    case $is_nonempty_set(T):
-                        claim:
-                            ? forall J T:
-                                $is_nonempty_set(J)
-                            J $in union({A}, T)
-                            $is_nonempty_set(J)
-                        claim:
-                            ? forall J, K T:
-                                J != K
-                                =>:
-                                    $is_strictly_left_of_interval(J, K)
-                                    or $is_strictly_left_of_interval(K, J)
-                            J $in union({A}, T)
-                            K $in union({A}, T)
-                            $is_strictly_left_of_interval(J, K) or $is_strictly_left_of_interval(K, J)
-                        obtain M from exist J0 T st {forall K T: K = J0 or $is_strictly_left_of_interval(J0, K)}
-                        claim:
-                            ? A != M
-                            by contra:
-                                ? A != M
-                                A = M
-                                M $in T
-                                A $in T
-                                impossible not A $in T
-                        A $in union({A}, T)
-                        M $in union({A}, T)
-                        $is_strictly_left_of_interval(A, M) or $is_strictly_left_of_interval(M, A)
+            $is_pairwise_strictly_ordered_nonempty_interval_family(union({A}, T)) or not $is_pairwise_strictly_ordered_nonempty_interval_family(union({A}, T))
+            by cases:
+                ? $leftmost_exists_for_finite_interval_family(union({A}, T))
+                case not $is_pairwise_strictly_ordered_nonempty_interval_family(union({A}, T)):
+                    by def $leftmost_exists_for_finite_interval_family(union({A}, T))
+                case $is_pairwise_strictly_ordered_nonempty_interval_family(union({A}, T)):
+                    by def $is_pairwise_strictly_ordered_nonempty_interval_family(union({A}, T))
+                    claim:
+                        ? $has_leftmost_interval_in_finite_family(union({A}, T))
+                        $is_nonempty_set(T) or not $is_nonempty_set(T)
                         by cases:
-                            ? exist J0 union({A}, T) st {forall K union({A}, T): K = J0 or $is_strictly_left_of_interval(J0, K)}
-                            case $is_strictly_left_of_interval(A, M):
-                                witness exist J0 union({A}, T) st {forall K union({A}, T): K = J0 or $is_strictly_left_of_interval(J0, K)} from A:
+                            ? exist J0 power_set(R) st {$is_leftmost_interval_in_family(J0, union({A}, T))}
+                            case not $is_nonempty_set(T):
+                                claim:
+                                    ? T = {}
+                                    by extension T = {}:
+                                        claim:
+                                            ? forall x T:
+                                                x $in {}
+                                            by contra:
+                                                ? x $in {}
+                                                witness $is_nonempty_set(T) from x
+                                                impossible not $is_nonempty_set(T)
+                                        claim:
+                                            ? forall x {}:
+                                                x $in T
+                                            by contra:
+                                                ? x $in T
+                                                impossible x $in {}
+                                witness exist J0 power_set(R) st {$is_leftmost_interval_in_family(J0, union({A}, T))} from A:
+                                    by def $is_leftmost_interval_in_family(A, union({A}, T))
                                     A $in union({A}, T)
                                     claim:
                                         ? forall K union({A}, T):
@@ -1717,33 +1820,186 @@ thm finite_pairwise_ordered_nonempty_intervals_have_leftmost:
                                             case K $in {A}:
                                                 K = A
                                             case K $in T:
-                                                K = M or $is_strictly_left_of_interval(M, K)
+                                                T = {}
+                                                K $in {}
+                                                impossible K $in {}
+                            case $is_nonempty_set(T):
+                                claim:
+                                    ? $is_pairwise_strictly_ordered_nonempty_interval_family(T)
+                                    $is_nonempty_set(T)
+                                    claim:
+                                        ? forall J T:
+                                            J $in power_set(R)
+                                            $is_nonempty_set(J)
+                                        J $in union({A}, T)
+                                        J $in power_set(R)
+                                        $is_nonempty_set(J)
+                                    claim:
+                                        ? forall J, K T:
+                                            J != K
+                                            =>:
+                                                $is_strictly_left_of_interval(J, K) or $is_strictly_left_of_interval(K, J)
+                                        J $in union({A}, T)
+                                        K $in union({A}, T)
+                                        $is_strictly_left_of_interval(J, K) or $is_strictly_left_of_interval(K, J)
+                                    by def $is_pairwise_strictly_ordered_nonempty_interval_family(T)
+                                by def $leftmost_exists_for_finite_interval_family(T)
+                                claim:
+                                    ? $has_leftmost_interval_in_finite_family(T)
+                                    by cases:
+                                        ? $has_leftmost_interval_in_finite_family(T)
+                                        case not $is_pairwise_strictly_ordered_nonempty_interval_family(T):
+                                            by contra:
+                                                ? $has_leftmost_interval_in_finite_family(T)
+                                                impossible $is_pairwise_strictly_ordered_nonempty_interval_family(T)
+                                        case $has_leftmost_interval_in_finite_family(T):
+                                            $has_leftmost_interval_in_finite_family(T)
+                                by def $has_leftmost_interval_in_finite_family(T)
+                                obtain M from exist M power_set(R) st {$is_leftmost_interval_in_family(M, T)}
+                                by def $is_leftmost_interval_in_family(M, T)
+                                claim:
+                                    ? A != M
+                                    by contra:
+                                        ? A != M
+                                        A = M
+                                        M $in T
+                                        A $in T
+                                        impossible not A $in T
+                                A $in union({A}, T)
+                                M $in union({A}, T)
+                                $is_strictly_left_of_interval(A, M) or $is_strictly_left_of_interval(M, A)
+                                by cases:
+                                    ? exist J0 power_set(R) st {$is_leftmost_interval_in_family(J0, union({A}, T))}
+                                    case $is_strictly_left_of_interval(A, M):
+                                        witness exist J0 power_set(R) st {$is_leftmost_interval_in_family(J0, union({A}, T))} from A:
+                                            by def $is_leftmost_interval_in_family(A, union({A}, T))
+                                            A $in union({A}, T)
+                                            claim:
+                                                ? forall K union({A}, T):
+                                                    K = A or $is_strictly_left_of_interval(A, K)
+                                                K $in {A} or K $in T
                                                 by cases:
                                                     ? K = A or $is_strictly_left_of_interval(A, K)
-                                                    case K = M:
-                                                        $is_strictly_left_of_interval(A, K)
-                                                    case $is_strictly_left_of_interval(M, K):
-                                                        by thm strictly_left_of_intervals_transitive(A, M, K)
-                                                        $is_strictly_left_of_interval(A, K)
-                            case $is_strictly_left_of_interval(M, A):
-                                witness exist J0 union({A}, T) st {forall K union({A}, T): K = J0 or $is_strictly_left_of_interval(J0, K)} from M:
-                                    M $in T
-                                    M $in union({A}, T)
-                                    claim:
-                                        ? forall K union({A}, T):
-                                            K = M or $is_strictly_left_of_interval(M, K)
-                                        K $in {A} or K $in T
-                                        by cases:
-                                            ? K = M or $is_strictly_left_of_interval(M, K)
-                                            case K $in {A}:
-                                                K = A
-                                                $is_strictly_left_of_interval(M, K)
-                                            case K $in T:
-                                                K = M or $is_strictly_left_of_interval(M, K)
-            by def $leftmost_exists_for_finite_interval_family(union({A}, T))
+                                                    case K $in {A}:
+                                                        K = A
+                                                    case K $in T:
+                                                        K = M or $is_strictly_left_of_interval(M, K)
+                                                        by cases:
+                                                            ? K = A or $is_strictly_left_of_interval(A, K)
+                                                            case K = M:
+                                                                $is_strictly_left_of_interval(A, K)
+                                                            case $is_strictly_left_of_interval(M, K):
+                                                                by thm strictly_left_of_intervals_transitive(A, M, K)
+                                                                $is_strictly_left_of_interval(A, K)
+                                    case $is_strictly_left_of_interval(M, A):
+                                        witness exist J0 power_set(R) st {$is_leftmost_interval_in_family(J0, union({A}, T))} from M:
+                                            by def $is_leftmost_interval_in_family(M, union({A}, T))
+                                            M $in T
+                                            M $in union({A}, T)
+                                            claim:
+                                                ? forall K union({A}, T):
+                                                    K = M or $is_strictly_left_of_interval(M, K)
+                                                K $in {A} or K $in T
+                                                by cases:
+                                                    ? K = M or $is_strictly_left_of_interval(M, K)
+                                                    case K $in {A}:
+                                                        K = A
+                                                        $is_strictly_left_of_interval(M, K)
+                                                    case K $in T:
+                                                        K = M or $is_strictly_left_of_interval(M, K)
+                        by def $has_leftmost_interval_in_finite_family(union({A}, T))
+                    by def $leftmost_exists_for_finite_interval_family(union({A}, T))
 
     $leftmost_exists_for_finite_interval_family(P)
-    exist J0 P st {forall K P: K = J0 or $is_strictly_left_of_interval(J0, K)}
+    by def $leftmost_exists_for_finite_interval_family(P)
+    claim:
+        ? $has_leftmost_interval_in_finite_family(P)
+        by cases:
+            ? $has_leftmost_interval_in_finite_family(P)
+            case not $is_pairwise_strictly_ordered_nonempty_interval_family(P):
+                by contra:
+                    ? $has_leftmost_interval_in_finite_family(P)
+                    impossible $is_pairwise_strictly_ordered_nonempty_interval_family(P)
+            case $has_leftmost_interval_in_finite_family(P):
+                $has_leftmost_interval_in_finite_family(P)
+    by def $has_leftmost_interval_in_finite_family(P)
+    exist J0 power_set(R) st {$is_leftmost_interval_in_family(J0, P)}
+
+# Removing the leftmost nonempty piece preserves connectedness: if a point x
+# remains, the partition piece containing x lies strictly to the right of the
+# removed piece, so no point between x and a later remaining point was removed.
+thm removing_leftmost_partition_piece_leaves_bounded_interval:
+    ? forall I power_set(R), P finite_set, J0 P:
+        $is_partition_of_bounded_interval(I, P)
+        $is_nonempty_set(J0)
+        forall K P:
+            K = J0 or $is_strictly_left_of_interval(J0, K)
+        =>:
+            $is_bounded_interval(set_minus(I, J0))
+    by thm chap9::real_set_operations_stay_in_power_set(I, J0)
+    set_minus(I, J0) $in power_set(R)
+    by thm bounded_intervals_are_bounded_connected(I)
+    $chap9::is_bounded_real_set(I)
+    $is_connected_subset_of_R(I)
+    claim:
+        ? set_minus(I, J0) $subset I
+        forall x set_minus(I, J0):
+            x $in I
+        set_minus(I, J0) $subset I
+    by thm chap9::bounded_real_set_subset(set_minus(I, J0), I)
+    $chap9::is_bounded_real_set(set_minus(I, J0))
+    claim:
+        ? $is_connected_subset_of_R(set_minus(I, J0))
+        claim:
+            ? forall x, y set_minus(I, J0):
+                x < y
+                =>:
+                    '[x, y] $subset set_minus(I, J0)
+            x $in I
+            y $in I
+            not x $in J0
+            '[x, y] $subset I
+            by thm partition_is_set_of_real_subsets(I, P)
+            P $in power_set(power_set(R))
+            have K power_set(R) = partition_piece_containing(I, P, x)
+            by thm partition_piece_containing_has_value(I, P, x)
+            K $in P
+            x $in K
+            claim:
+                ? K != J0
+                by contra:
+                    ? K != J0
+                    K = J0
+                    x $in J0
+                    impossible not x $in J0
+            K = J0 or $is_strictly_left_of_interval(J0, K)
+            claim:
+                ? $is_strictly_left_of_interval(J0, K)
+                by cases:
+                    ? $is_strictly_left_of_interval(J0, K)
+                    case K = J0:
+                        impossible K != J0
+                    case $is_strictly_left_of_interval(J0, K):
+                        $is_strictly_left_of_interval(J0, K)
+            claim:
+                ? '[x, y] $subset set_minus(I, J0)
+                claim:
+                    ? forall z '[x, y]:
+                        z $in set_minus(I, J0)
+                    z $in I
+                    claim:
+                        ? not z $in J0
+                        by contra:
+                            ? not z $in J0
+                            z $in J0
+                            z < x
+                            x <= z
+                            impossible z < x
+                    z $in set_minus(I, J0)
+                '[x, y] $subset set_minus(I, J0)
+        $is_connected_subset_of_R(set_minus(I, J0))
+    by thm bounded_connected_subsets_are_bounded_intervals(set_minus(I, J0))
+    $is_bounded_interval(set_minus(I, J0))
 
 # Every nonempty finite interval partition has a piece at one of the two ends.
 # Removing such a piece leaves another bounded interval.  This is the geometric
@@ -1754,9 +2010,93 @@ thm partition_has_removable_piece:
         $is_nonempty_set(P)
         =>:
             exist J P st {$is_bounded_interval(set_minus(I, J))}
-    # proof_debt: choose an extreme endpoint among the finitely many nonempty
-    # interval pieces, with the empty-piece case handled separately.
-    trust exist J P st {$is_bounded_interval(set_minus(I, J))}
+    $has_only_nonempty_partition_pieces(P) or not $has_only_nonempty_partition_pieces(P)
+    by cases:
+        ? exist J P st {$is_bounded_interval(set_minus(I, J))}
+        case $has_only_nonempty_partition_pieces(P):
+            claim:
+                ? $is_pairwise_strictly_ordered_nonempty_interval_family(P)
+                $is_nonempty_set(P)
+                claim:
+                    ? forall J P:
+                        J $in power_set(R)
+                        $is_nonempty_set(J)
+                    J $in power_set(R)
+                    $is_nonempty_set(J)
+                claim:
+                    ? forall J, K P:
+                        J != K
+                        =>:
+                            $is_strictly_left_of_interval(J, K) or $is_strictly_left_of_interval(K, J)
+                    by thm distinct_partition_pieces_are_disjoint(I, P, J, K)
+                    intersect(J, K) = {}
+                    by thm disjoint_nonempty_bounded_intervals_are_ordered(J, K)
+                    $is_strictly_left_of_interval(J, K) or $is_strictly_left_of_interval(K, J)
+                by def $is_pairwise_strictly_ordered_nonempty_interval_family(P)
+            by thm finite_pairwise_ordered_nonempty_intervals_have_leftmost(P)
+            obtain J0 from exist J0 power_set(R) st {$is_leftmost_interval_in_family(J0, P)}
+            by def $is_leftmost_interval_in_family(J0, P)
+            $is_nonempty_set(J0)
+            by thm removing_leftmost_partition_piece_leaves_bounded_interval(I, P, J0)
+            witness exist J P st {$is_bounded_interval(set_minus(I, J))} from J0:
+                $is_bounded_interval(set_minus(I, J0))
+        case not $has_only_nonempty_partition_pieces(P):
+            claim:
+                ? $has_empty_partition_piece(P)
+                $has_empty_partition_piece(P) or not $has_empty_partition_piece(P)
+                by cases:
+                    ? $has_empty_partition_piece(P)
+                    case $has_empty_partition_piece(P):
+                        $has_empty_partition_piece(P)
+                    case not $has_empty_partition_piece(P):
+                        claim:
+                            ? forall J P:
+                                $is_nonempty_set(J)
+                            by contra:
+                                ? $is_nonempty_set(J)
+                                not $is_nonempty_set(J)
+                                claim:
+                                    ? $has_empty_partition_piece(P)
+                                    witness exist K P st {not $is_nonempty_set(K)} from J:
+                                        not $is_nonempty_set(J)
+                                    by def $has_empty_partition_piece(P)
+                                impossible $has_empty_partition_piece(P)
+                        by def $has_only_nonempty_partition_pieces(P)
+                        impossible not $has_only_nonempty_partition_pieces(P)
+            by def $has_empty_partition_piece(P)
+            obtain J0 from exist J P st {not $is_nonempty_set(J)}
+            claim:
+                ? J0 = {}
+                by extension J0 = {}:
+                    claim:
+                        ? forall x J0:
+                            x $in {}
+                        by contra:
+                            ? x $in {}
+                            witness $is_nonempty_set(J0) from x
+                            impossible not $is_nonempty_set(J0)
+                    claim:
+                        ? forall x {}:
+                            x $in J0
+                        by contra:
+                            ? x $in J0
+                            impossible x $in {}
+            claim:
+                ? set_minus(I, J0) = I
+                by extension set_minus(I, J0) = I:
+                    claim:
+                        ? forall x set_minus(I, J0):
+                            x $in I
+                        x $in I
+                    claim:
+                        ? forall x I:
+                            x $in set_minus(I, J0)
+                        J0 = {}
+                        not x $in J0
+                        x $in set_minus(I, J0)
+            $is_bounded_interval(set_minus(I, J0))
+            witness exist J P st {$is_bounded_interval(set_minus(I, J))} from J0:
+                $is_bounded_interval(set_minus(I, J0))
 
 # Removing one partition piece leaves a partition of the set-theoretic
 # remainder whenever that remainder is itself a bounded interval.  The
@@ -1780,7 +2120,9 @@ thm partition_removal_partitions_bounded_remainder:
         K $subset I
         claim:
             ? K $subset set_minus(I, J)
-            forall x K:
+            claim:
+                ? forall x K:
+                    x $in set_minus(I, J)
                 x $in I
                 claim:
                     ? not x $in J
@@ -1825,7 +2167,6 @@ thm partition_removal_partitions_bounded_remainder:
                 K2 $in P
                 exist! H P st {H $in power_set(R), x $in H}
                 K1 = K2
-            exist! K0 set_minus(P, {J}) st {K0 $in power_set(R), x $in K0}
     $is_partition_of_bounded_interval(set_minus(I, J), set_minus(P, {J}))
 
 # The same endpoint geometry identifies the length of the ambient interval as
@@ -2165,15 +2506,19 @@ thm interval_weight_is_finitely_additive_over_partition:
                 claim:
                     ? forall x I0:
                         x $in {}
-                    obtain J0 from exist J0 P0 st {J0 $in power_set(R), x $in J0}
-                    J0 $in P0
-                    P0 = {}
-                    J0 $in {}
-                    impossible J0 $in {}
+                    by contra:
+                        ? x $in {}
+                        obtain J0 from exist J0 P0 st {J0 $in power_set(R), x $in J0}
+                        J0 $in P0
+                        P0 = {}
+                        J0 $in {}
+                        impossible J0 $in {}
                 claim:
                     ? forall x {}:
                         x $in I0
-                    impossible x $in {}
+                    by contra:
+                        ? x $in I0
+                        impossible x $in {}
         by thm chap7::finite_set_sum_empty(fn(J0 {}) R {w(J0)})
         w(I0) = w({}) = 0
         finite_set_sum(P0, fn(J0 P0) R {w(J0)}) = finite_set_sum({}, fn(J0 {}) R {w(J0)}) = 0
@@ -2242,16 +2587,20 @@ thm interval_weight_is_finitely_additive_over_partition:
                     claim:
                         ? forall K intersect({J0}, P1):
                             K $in {}
-                        K $in {J0}
-                        K = J0
-                        K $in P1
-                        K $in set_minus(P0, {J0})
-                        not K $in {J0}
-                        impossible not K $in {J0}
+                        by contra:
+                            ? K $in {}
+                            K $in {J0}
+                            K = J0
+                            K $in P1
+                            K $in set_minus(P0, {J0})
+                            not K $in {J0}
+                            impossible not K $in {J0}
                     claim:
                         ? forall K {}:
                             K $in intersect({J0}, P1)
-                        impossible K $in {}
+                        by contra:
+                            ? K $in intersect({J0}, P1)
+                            impossible K $in {}
             by thm chap7::finite_set_sum_disjoint_union({J0}, P1, fn(K union({J0}, P1)) R {w(K)})
             finite_set_sum(union({J0}, P1), fn(K union({J0}, P1)) R {w(K)}) = finite_set_sum({J0}, fn(K {J0}) R {w(K)}) + finite_set_sum(P1, fn(K P1) R {w(K)})
             by thm chap7::finite_set_sum_singleton(J0, fn(K {J0}) R {w(K)})
@@ -7146,28 +7495,39 @@ thm upper_riemann_integral_has_candidate_within:
         $chap9::is_bounded_function_on(I, f)
         =>:
             exist sg R st {$is_upper_riemann_integral_candidate_value(I, f, sg), sg < upper_riemann_integral(I, f) + epsilon}
+    prop has_upper_riemann_candidate_within():
+        exist sg R st {$is_upper_riemann_integral_candidate_value(I, f, sg), sg < upper_riemann_integral(I, f) + epsilon}
+
     $has_upper_riemann_integral(I, f, upper_riemann_integral(I, f))
-    by contra:
-        ? exist sg R st {$is_upper_riemann_integral_candidate_value(I, f, sg), sg < upper_riemann_integral(I, f) + epsilon}
-        not exist sg R st {$is_upper_riemann_integral_candidate_value(I, f, sg), sg < upper_riemann_integral(I, f) + epsilon}
-        claim:
-            ? $is_lower_bound_of_real_set(upper_riemann_integral_candidate_values(I, f), upper_riemann_integral(I, f) + epsilon)
-            forall sg upper_riemann_integral_candidate_values(I, f):
-                by thm upper_riemann_integral_candidate_value_from_member(I, f, sg)
-                $is_upper_riemann_integral_candidate_value(I, f, sg)
-                by contra:
-                    ? upper_riemann_integral(I, f) + epsilon <= sg
-                    upper_riemann_integral(I, f) + epsilon > sg
-                    sg < upper_riemann_integral(I, f) + epsilon
-                    witness exist sg0 R st {$is_upper_riemann_integral_candidate_value(I, f, sg0), sg0 < upper_riemann_integral(I, f) + epsilon} from sg:
-                        $is_upper_riemann_integral_candidate_value(I, f, sg)
+    claim:
+        ? $has_upper_riemann_candidate_within()
+        by contra:
+            ? $has_upper_riemann_candidate_within()
+            claim:
+                ? $is_lower_bound_of_real_set(upper_riemann_integral_candidate_values(I, f), upper_riemann_integral(I, f) + epsilon)
+                claim:
+                    ? forall sg upper_riemann_integral_candidate_values(I, f):
+                        upper_riemann_integral(I, f) + epsilon <= sg
+                    by thm upper_riemann_integral_candidate_value_from_member(I, f, sg)
+                    $is_upper_riemann_integral_candidate_value(I, f, sg)
+                    by contra:
+                        ? upper_riemann_integral(I, f) + epsilon <= sg
+                        upper_riemann_integral(I, f) + epsilon > sg
                         sg < upper_riemann_integral(I, f) + epsilon
-                    impossible not exist sg R st {$is_upper_riemann_integral_candidate_value(I, f, sg), sg < upper_riemann_integral(I, f) + epsilon}
-            $is_lower_bound_of_real_set(upper_riemann_integral_candidate_values(I, f), upper_riemann_integral(I, f) + epsilon)
-        by thm lower_bound_le_upper_riemann_integral(I, f, upper_riemann_integral(I, f), upper_riemann_integral(I, f) + epsilon)
-        upper_riemann_integral(I, f) + epsilon <= upper_riemann_integral(I, f)
-        upper_riemann_integral(I, f) < upper_riemann_integral(I, f) + epsilon
-        impossible upper_riemann_integral(I, f) + epsilon <= upper_riemann_integral(I, f)
+                        claim:
+                            ? $has_upper_riemann_candidate_within()
+                            witness exist sg0 R st {$is_upper_riemann_integral_candidate_value(I, f, sg0), sg0 < upper_riemann_integral(I, f) + epsilon} from sg:
+                                $is_upper_riemann_integral_candidate_value(I, f, sg)
+                                sg < upper_riemann_integral(I, f) + epsilon
+                            by def $has_upper_riemann_candidate_within()
+                        impossible $has_upper_riemann_candidate_within()
+                $is_lower_bound_of_real_set(upper_riemann_integral_candidate_values(I, f), upper_riemann_integral(I, f) + epsilon)
+            by thm lower_bound_le_upper_riemann_integral(I, f, upper_riemann_integral(I, f), upper_riemann_integral(I, f) + epsilon)
+            upper_riemann_integral(I, f) + epsilon <= upper_riemann_integral(I, f)
+            upper_riemann_integral(I, f) < upper_riemann_integral(I, f) + epsilon
+            impossible upper_riemann_integral(I, f) + epsilon <= upper_riemann_integral(I, f)
+    by def $has_upper_riemann_candidate_within()
+    exist sg R st {$is_upper_riemann_integral_candidate_value(I, f, sg), sg < upper_riemann_integral(I, f) + epsilon}
 
 thm lower_riemann_integral_has_candidate_within:
     ? forall I power_set(R), f fn(x I) R, epsilon R_pos:
@@ -7175,28 +7535,39 @@ thm lower_riemann_integral_has_candidate_within:
         $chap9::is_bounded_function_on(I, f)
         =>:
             exist sh R st {$is_lower_riemann_integral_candidate_value(I, f, sh), lower_riemann_integral(I, f) - epsilon < sh}
+    prop has_lower_riemann_candidate_within():
+        exist sh R st {$is_lower_riemann_integral_candidate_value(I, f, sh), lower_riemann_integral(I, f) - epsilon < sh}
+
     $has_lower_riemann_integral(I, f, lower_riemann_integral(I, f))
-    by contra:
-        ? exist sh R st {$is_lower_riemann_integral_candidate_value(I, f, sh), lower_riemann_integral(I, f) - epsilon < sh}
-        not exist sh R st {$is_lower_riemann_integral_candidate_value(I, f, sh), lower_riemann_integral(I, f) - epsilon < sh}
-        claim:
-            ? $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), lower_riemann_integral(I, f) - epsilon)
-            forall sh lower_riemann_integral_candidate_values(I, f):
-                by thm lower_riemann_integral_candidate_value_from_member(I, f, sh)
-                $is_lower_riemann_integral_candidate_value(I, f, sh)
-                by contra:
-                    ? sh <= lower_riemann_integral(I, f) - epsilon
-                    sh > lower_riemann_integral(I, f) - epsilon
-                    lower_riemann_integral(I, f) - epsilon < sh
-                    witness exist sh0 R st {$is_lower_riemann_integral_candidate_value(I, f, sh0), lower_riemann_integral(I, f) - epsilon < sh0} from sh:
-                        $is_lower_riemann_integral_candidate_value(I, f, sh)
+    claim:
+        ? $has_lower_riemann_candidate_within()
+        by contra:
+            ? $has_lower_riemann_candidate_within()
+            claim:
+                ? $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), lower_riemann_integral(I, f) - epsilon)
+                claim:
+                    ? forall sh lower_riemann_integral_candidate_values(I, f):
+                        sh <= lower_riemann_integral(I, f) - epsilon
+                    by thm lower_riemann_integral_candidate_value_from_member(I, f, sh)
+                    $is_lower_riemann_integral_candidate_value(I, f, sh)
+                    by contra:
+                        ? sh <= lower_riemann_integral(I, f) - epsilon
+                        sh > lower_riemann_integral(I, f) - epsilon
                         lower_riemann_integral(I, f) - epsilon < sh
-                    impossible not exist sh R st {$is_lower_riemann_integral_candidate_value(I, f, sh), lower_riemann_integral(I, f) - epsilon < sh}
-            $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), lower_riemann_integral(I, f) - epsilon)
-        by thm lower_riemann_integral_le_upper_bound(I, f, lower_riemann_integral(I, f), lower_riemann_integral(I, f) - epsilon)
-        lower_riemann_integral(I, f) <= lower_riemann_integral(I, f) - epsilon
-        lower_riemann_integral(I, f) - epsilon < lower_riemann_integral(I, f)
-        impossible lower_riemann_integral(I, f) <= lower_riemann_integral(I, f) - epsilon
+                        claim:
+                            ? $has_lower_riemann_candidate_within()
+                            witness exist sh0 R st {$is_lower_riemann_integral_candidate_value(I, f, sh0), lower_riemann_integral(I, f) - epsilon < sh0} from sh:
+                                $is_lower_riemann_integral_candidate_value(I, f, sh)
+                                lower_riemann_integral(I, f) - epsilon < sh
+                            by def $has_lower_riemann_candidate_within()
+                        impossible $has_lower_riemann_candidate_within()
+                $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), lower_riemann_integral(I, f) - epsilon)
+            by thm lower_riemann_integral_le_upper_bound(I, f, lower_riemann_integral(I, f), lower_riemann_integral(I, f) - epsilon)
+            lower_riemann_integral(I, f) <= lower_riemann_integral(I, f) - epsilon
+            lower_riemann_integral(I, f) - epsilon < lower_riemann_integral(I, f)
+            impossible lower_riemann_integral(I, f) <= lower_riemann_integral(I, f) - epsilon
+    by def $has_lower_riemann_candidate_within()
+    exist sh R st {$is_lower_riemann_integral_candidate_value(I, f, sh), lower_riemann_integral(I, f) - epsilon < sh}
 
 # A Darboux approximation records a supplied lower and upper step function;
 # there is deliberately no selected approximation because later epsilon proofs
@@ -7765,7 +8136,9 @@ thm max_of_bounded_functions_is_bounded:
     obtain Mg from exist Mg0 R_pos st {$chap9::is_function_bounded_by(I, g, Mg0)}
     Mf + Mg > 0
     witness exist M R_pos st {$chap9::is_function_bounded_by(I, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}, M)} from Mf + Mg:
-        forall x I:
+        claim:
+            ? forall x I:
+                abs(fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}(x)) <= M
             by cases:
                 ? f(x) >= g(x) or f(x) < g(x)
                 case f(x) >= g(x):
@@ -7805,7 +8178,9 @@ thm darboux_approximations_max:
     obtain sg from exist s R st {$has_piecewise_constant_integral(I, fn(x I) R {finite_set_max(union({gf(x)}, { gg(x)}))}, s)}
     claim:
         ? $minorizes_on(I, fn(x I) R {finite_set_max(union({hf(x)}, { hg(x)}))}, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
-        forall x I:
+        claim:
+            ? forall x I:
+                fn(x I) R {finite_set_max(union({hf(x)}, { hg(x)}))}(x) <= fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}(x)
             hf(x) <= f(x)
             hg(x) <= g(x)
             by cases:
@@ -7829,7 +8204,9 @@ thm darboux_approximations_max:
         $minorizes_on(I, fn(x I) R {finite_set_max(union({hf(x)}, { hg(x)}))}, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
     claim:
         ? $majorizes_on(I, fn(x I) R {finite_set_max(union({gf(x)}, { gg(x)}))}, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
-        forall x I:
+        claim:
+            ? forall x I:
+                fn(x I) R {finite_set_max(union({gf(x)}, { gg(x)}))}(x) >= fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}(x)
             f(x) <= gf(x)
             g(x) <= gg(x)
             by cases:
@@ -7960,7 +8337,9 @@ thm riemann_integrable_nonnegative_bounded_has_clamped_darboux_approximation:
     obtain sg from exist s R st {$has_piecewise_constant_integral(I, fn(x I) R {finite_set_min(union({g0(x)}, { M}))}, s)}
     claim:
         ? $minorizes_on(I, fn(x I) R {finite_set_max(union({h0(x)}, { 0}))}, f)
-        forall x I:
+        claim:
+            ? forall x I:
+                fn(x I) R {finite_set_max(union({h0(x)}, { 0}))}(x) <= f(x)
             h0(x) <= f(x)
             0 <= f(x)
             by cases:
@@ -7979,7 +8358,9 @@ thm riemann_integrable_nonnegative_bounded_has_clamped_darboux_approximation:
         $minorizes_on(I, fn(x I) R {finite_set_max(union({h0(x)}, { 0}))}, f)
     claim:
         ? $majorizes_on(I, fn(x I) R {finite_set_min(union({g0(x)}, { M}))}, f)
-        forall x I:
+        claim:
+            ? forall x I:
+                fn(x I) R {finite_set_min(union({g0(x)}, { M}))}(x) >= f(x)
             f(x) <= g0(x)
             abs(f(x)) <= M
             f(x) <= M
@@ -8774,9 +9155,9 @@ thm lower_riemann_piece_height_has_value:
     s = lower_riemann_piece_height(I, J, f)
     $has_lower_riemann_piece_height(I, J, f, lower_riemann_piece_height(I, J, f))
 
-have fn upper_riemann_partition_step_function(I power_set(R), P power_set(power_set(R)), f fn(x I) R: $is_finite_set(P), $is_partition_of_bounded_interval(I, P), $chap9::is_bounded_function_on(I, f)) fn(x I) R = fn(x I) R {upper_riemann_piece_height(I, partition_piece_containing(I, P, x), f)}
+have fn upper_riemann_partition_step_function(I power_set(R), P power_set(power_set(R)), f fn(t I) R: $is_finite_set(P), $is_partition_of_bounded_interval(I, P), $chap9::is_bounded_function_on(I, f)) fn(y I) R = fn(z I) R {upper_riemann_piece_height(I, partition_piece_containing(I, P, z), f)}
 
-have fn lower_riemann_partition_step_function(I power_set(R), P power_set(power_set(R)), f fn(x I) R: $is_finite_set(P), $is_partition_of_bounded_interval(I, P), $chap9::is_bounded_function_on(I, f)) fn(x I) R = fn(x I) R {lower_riemann_piece_height(I, partition_piece_containing(I, P, x), f)}
+have fn lower_riemann_partition_step_function(I power_set(R), P power_set(power_set(R)), f fn(t I) R: $is_finite_set(P), $is_partition_of_bounded_interval(I, P), $chap9::is_bounded_function_on(I, f)) fn(y I) R = fn(z I) R {lower_riemann_piece_height(I, partition_piece_containing(I, P, z), f)}
 
 thm upper_riemann_partition_step_function_has_value:
     ? forall I power_set(R), P power_set(power_set(R)), f fn(x I) R, x I:
@@ -8818,7 +9199,9 @@ thm upper_riemann_partition_step_function_is_piecewise_constant:
         J $subset I
         witness exist c R st {$has_constant_value_on_subset(I, J, upper_riemann_partition_step_function(I, P, f), c)} from upper_riemann_piece_height(I, J, f):
             J $subset I
-            forall x J:
+            claim:
+                ? forall x J:
+                    upper_riemann_partition_step_function(I, P, f)(x) = upper_riemann_piece_height(I, J, f)
                 x $in I
                 by thm partition_piece_containing_eq_given_piece(I, P, x, J)
                 partition_piece_containing(I, P, x) = J
@@ -8885,7 +9268,9 @@ thm lower_riemann_partition_step_function_is_piecewise_constant:
         J $subset I
         witness exist c R st {$has_constant_value_on_subset(I, J, lower_riemann_partition_step_function(I, P, f), c)} from lower_riemann_piece_height(I, J, f):
             J $subset I
-            forall x J:
+            claim:
+                ? forall x J:
+                    lower_riemann_partition_step_function(I, P, f)(x) = lower_riemann_piece_height(I, J, f)
                 x $in I
                 by thm partition_piece_containing_eq_given_piece(I, P, x, J)
                 partition_piece_containing(I, P, x) = J
@@ -9324,7 +9709,9 @@ thm upper_riemann_partition_step_function_piece_contribution:
     J $subset I
     claim:
         ? $has_constant_value_on_subset(I, J, upper_riemann_partition_step_function(I, P, f), upper_riemann_piece_height(I, J, f))
-        forall x J:
+        claim:
+            ? forall x J:
+                upper_riemann_partition_step_function(I, P, f)(x) = upper_riemann_piece_height(I, J, f)
             x $in I
             by thm partition_piece_containing_eq_given_piece(I, P, x, J)
             partition_piece_containing(I, P, x) = J
@@ -9357,7 +9744,9 @@ thm lower_riemann_partition_step_function_piece_contribution:
     J $subset I
     claim:
         ? $has_constant_value_on_subset(I, J, lower_riemann_partition_step_function(I, P, f), lower_riemann_piece_height(I, J, f))
-        forall x J:
+        claim:
+            ? forall x J:
+                lower_riemann_partition_step_function(I, P, f)(x) = lower_riemann_piece_height(I, J, f)
             x $in I
             by thm partition_piece_containing_eq_given_piece(I, P, x, J)
             partition_piece_containing(I, P, x) = J
@@ -9396,7 +9785,9 @@ thm constant_majorant_bounds_upper_riemann_sum_piece:
             obtain s from exist s R st {$chap5::is_least_upper_bound(function_values_on_subset(I, J, f), s), upper_riemann_sum_piece(I, J, f) = s * interval_length(J)}
             claim:
                 ? $chap5::is_upper_bound(function_values_on_subset(I, J, f), c)
-                forall y function_values_on_subset(I, J, f):
+                claim:
+                    ? forall y function_values_on_subset(I, J, f):
+                        y <= c
                     by thm function_values_on_subset_member_has_preimage(I, J, f, y)
                     obtain x from exist x J st {y = f(x)}
                     x $in I
@@ -9443,7 +9834,9 @@ thm constant_minorant_bounds_lower_riemann_sum_piece:
             obtain s from exist s R st {$is_infimum_of_real_set(function_values_on_subset(I, J, f), s), lower_riemann_sum_piece(I, J, f) = s * interval_length(J)}
             claim:
                 ? $is_lower_bound_of_real_set(function_values_on_subset(I, J, f), c)
-                forall y function_values_on_subset(I, J, f):
+                claim:
+                    ? forall y function_values_on_subset(I, J, f):
+                        c <= y
                     by thm function_values_on_subset_member_has_preimage(I, J, f, y)
                     obtain x from exist x J st {y = f(x)}
                     x $in I
@@ -9734,7 +10127,9 @@ thm upper_riemann_partition_step_function_has_integral_equal_upper_riemann_sum:
     obtain c from exist c fn(J P) R st {$is_upper_riemann_sum_contribution_family(I, P, f, c), U = finite_set_sum(P, c)}
     claim:
         ? $fn_eq(c, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, upper_riemann_partition_step_function(I, P, f))})
-        forall J P:
+        claim:
+            ? forall J P:
+                c(J) = fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, upper_riemann_partition_step_function(I, P, f))}(J)
             $has_upper_riemann_sum_piece_contribution(I, J, f, c(J))
             by thm upper_riemann_sum_piece_has_value(I, J, f)
             $has_upper_riemann_sum_piece_contribution(I, J, f, upper_riemann_sum_piece(I, J, f))
@@ -9765,7 +10160,9 @@ thm lower_riemann_partition_step_function_has_integral_equal_lower_riemann_sum:
     obtain c from exist c fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c), L = finite_set_sum(P, c)}
     claim:
         ? $fn_eq(c, fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, lower_riemann_partition_step_function(I, P, f))})
-        forall J P:
+        claim:
+            ? forall J P:
+                c(J) = fn(J P) R {piecewise_constant_integral_piece_contribution(I, J, lower_riemann_partition_step_function(I, P, f))}(J)
             $has_lower_riemann_sum_piece_contribution(I, J, f, c(J))
             by thm lower_riemann_sum_piece_has_value(I, J, f)
             $has_lower_riemann_sum_piece_contribution(I, J, f, lower_riemann_sum_piece(I, J, f))
@@ -9796,7 +10193,7 @@ thm piecewise_constant_majorant_with_partition_bounds_upper_riemann_sum:
         =>:
             U <= sg
     $is_partition_of_bounded_interval(I, P)
-    obtain u fn(J P) R from exist c fn(J P) R st {$is_upper_riemann_sum_contribution_family(I, P, f, c), U = finite_set_sum(P, c)}
+    obtain u from exist c fn(J P) R st {$is_upper_riemann_sum_contribution_family(I, P, f, c), U = finite_set_sum(P, c)}
     $is_upper_riemann_sum_contribution_family(I, P, f, u)
     U = finite_set_sum(P, u)
     claim:
@@ -9839,7 +10236,7 @@ thm piecewise_constant_minorant_with_partition_bounds_lower_riemann_sum:
         =>:
             sh <= L
     $is_partition_of_bounded_interval(I, P)
-    obtain l fn(J P) R from exist c fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c), L = finite_set_sum(P, c)}
+    obtain l from exist c fn(J P) R st {$is_lower_riemann_sum_contribution_family(I, P, f, c), L = finite_set_sum(P, c)}
     $is_lower_riemann_sum_contribution_family(I, P, f, l)
     L = finite_set_sum(P, l)
     claim:
@@ -10152,7 +10549,9 @@ thm upper_integral_equals_infimum_of_riemann_sums:
     $has_upper_riemann_integral(I, f, upper_riemann_integral(I, f))
     claim:
         ? $is_lower_bound_of_real_set(upper_riemann_sum_values(I, f), upper_riemann_integral(I, f))
-        forall U upper_riemann_sum_values(I, f):
+        claim:
+            ? forall U upper_riemann_sum_values(I, f):
+                upper_riemann_integral(I, f) <= U
             by thm upper_riemann_sum_value_from_member(I, f, U)
             obtain P from exist P finite_set st {$has_upper_riemann_sum(I, P, f, U)}
             by thm upper_riemann_sum_is_upper_riemann_integral_candidate(I, P, f, U)
@@ -10163,13 +10562,16 @@ thm upper_integral_equals_infimum_of_riemann_sums:
     claim:
         ? $is_infimum_of_real_set(upper_riemann_sum_values(I, f), upper_riemann_integral(I, f))
         $is_lower_bound_of_real_set(upper_riemann_sum_values(I, f), upper_riemann_integral(I, f))
-        forall M R:
-            $is_lower_bound_of_real_set(upper_riemann_sum_values(I, f), M)
-            =>:
-                M <= upper_riemann_integral(I, f)
+        claim:
+            ? forall M R:
+                $is_lower_bound_of_real_set(upper_riemann_sum_values(I, f), M)
+                =>:
+                    M <= upper_riemann_integral(I, f)
             claim:
                 ? $is_lower_bound_of_real_set(upper_riemann_integral_candidate_values(I, f), M)
-                forall sg upper_riemann_integral_candidate_values(I, f):
+                claim:
+                    ? forall sg upper_riemann_integral_candidate_values(I, f):
+                        M <= sg
                     by thm upper_riemann_integral_candidate_value_from_member(I, f, sg)
                     $is_upper_riemann_integral_candidate_value(I, f, sg)
                     by thm upper_riemann_integral_candidate_has_no_smaller_upper_sum(I, f, sg)
@@ -10204,7 +10606,9 @@ thm lower_integral_equals_supremum_of_riemann_sums:
     $has_lower_riemann_integral(I, f, lower_riemann_integral(I, f))
     claim:
         ? $is_upper_bound_of_real_set(lower_riemann_sum_values(I, f), lower_riemann_integral(I, f))
-        forall L lower_riemann_sum_values(I, f):
+        claim:
+            ? forall L lower_riemann_sum_values(I, f):
+                L <= lower_riemann_integral(I, f)
             by thm lower_riemann_sum_value_from_member(I, f, L)
             obtain P from exist P finite_set st {$has_lower_riemann_sum(I, P, f, L)}
             by thm lower_riemann_sum_is_lower_riemann_integral_candidate(I, P, f, L)
@@ -10215,13 +10619,16 @@ thm lower_integral_equals_supremum_of_riemann_sums:
     claim:
         ? $is_least_upper_bound(lower_riemann_sum_values(I, f), lower_riemann_integral(I, f))
         $is_upper_bound_of_real_set(lower_riemann_sum_values(I, f), lower_riemann_integral(I, f))
-        forall M R:
-            $is_upper_bound_of_real_set(lower_riemann_sum_values(I, f), M)
-            =>:
-                lower_riemann_integral(I, f) <= M
+        claim:
+            ? forall M R:
+                $is_upper_bound_of_real_set(lower_riemann_sum_values(I, f), M)
+                =>:
+                    lower_riemann_integral(I, f) <= M
             claim:
                 ? $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), M)
-                forall sh lower_riemann_integral_candidate_values(I, f):
+                claim:
+                    ? forall sh lower_riemann_integral_candidate_values(I, f):
+                        sh <= M
                     by thm lower_riemann_integral_candidate_value_from_member(I, f, sh)
                     $is_lower_riemann_integral_candidate_value(I, f, sh)
                     by thm lower_riemann_integral_candidate_has_no_larger_lower_sum(I, f, sh)
@@ -11016,23 +11423,22 @@ thm riemann_integrable_nonnegative_product_has_darboux_approximation:
     claim:
         ? forall x I:
             fn(x I) R {uf(x) * ug(x) - lf(x) * lg(x)}(x) <= fn(x I) R {Mg * (uf(x) - lf(x)) + Mf * (ug(x) - lg(x))}(x)
-        forall x I:
-            lf(x) <= f(x)
-            f(x) <= uf(x)
-            f(x) <= Mf
-            uf(x) <= Mf
-            lg(x) <= g(x)
-            g(x) <= ug(x)
-            ug(x) <= Mg
-            0 <= uf(x) - lf(x)
-            0 <= ug(x) - lg(x)
-            uf(x) * ug(x) - lf(x) * lg(x) = ug(x) * (uf(x) - lf(x)) + lf(x) * (ug(x) - lg(x))
-            ug(x) * (uf(x) - lf(x)) <= Mg * (uf(x) - lf(x))
-            lf(x) * (ug(x) - lg(x)) <= Mf * (ug(x) - lg(x))
-            uf(x) * ug(x) - lf(x) * lg(x) <= Mg * (uf(x) - lf(x)) + Mf * (ug(x) - lg(x))
-            fn(x I) R {uf(x) * ug(x) - lf(x) * lg(x)}(x) = uf(x) * ug(x) - lf(x) * lg(x)
-            fn(x I) R {Mg * (uf(x) - lf(x)) + Mf * (ug(x) - lg(x))}(x) = Mg * (uf(x) - lf(x)) + Mf * (ug(x) - lg(x))
-            fn(x I) R {uf(x) * ug(x) - lf(x) * lg(x)}(x) <= fn(x I) R {Mg * (uf(x) - lf(x)) + Mf * (ug(x) - lg(x))}(x)
+        lf(x) <= f(x)
+        f(x) <= uf(x)
+        f(x) <= Mf
+        uf(x) <= Mf
+        lg(x) <= g(x)
+        g(x) <= ug(x)
+        ug(x) <= Mg
+        0 <= uf(x) - lf(x)
+        0 <= ug(x) - lg(x)
+        uf(x) * ug(x) - lf(x) * lg(x) = ug(x) * (uf(x) - lf(x)) + lf(x) * (ug(x) - lg(x))
+        ug(x) * (uf(x) - lf(x)) <= Mg * (uf(x) - lf(x))
+        lf(x) * (ug(x) - lg(x)) <= Mf * (ug(x) - lg(x))
+        uf(x) * ug(x) - lf(x) * lg(x) <= Mg * (uf(x) - lf(x)) + Mf * (ug(x) - lg(x))
+        fn(x I) R {uf(x) * ug(x) - lf(x) * lg(x)}(x) = uf(x) * ug(x) - lf(x) * lg(x)
+        fn(x I) R {Mg * (uf(x) - lf(x)) + Mf * (ug(x) - lg(x))}(x) = Mg * (uf(x) - lf(x)) + Mf * (ug(x) - lg(x))
+        fn(x I) R {uf(x) * ug(x) - lf(x) * lg(x)}(x) <= fn(x I) R {Mg * (uf(x) - lf(x)) + Mf * (ug(x) - lg(x))}(x)
     by thm piecewise_constant_integral_order_laws(I, fn(x I) R {Mg * (uf(x) - lf(x)) + Mf * (ug(x) - lg(x))}, fn(x I) R {uf(x) * ug(x) - lf(x) * lg(x)}, Mg * (suf - slf) + Mf * (sug - slg), su - sl)
     su - sl <= Mg * (suf - slf) + Mf * (sug - slg)
     by thm piecewise_constant_minorant_integral_le_majorant_integral(I, f, uf, lf, suf, slf)
@@ -11207,6 +11613,200 @@ prop is_small_oscillation_partition(I power_set(R), P finite_set, f fn(x I) R, e
 prop has_small_oscillation_partition(I power_set(R), f fn(x I) R, epsilon R_pos):
     exist P finite_set st {$is_small_oscillation_partition(I, P, f, epsilon)}
 
+thm nonempty_upper_riemann_piece_height_is_lub:
+    ? forall I, J power_set(R), f fn(x I) R:
+        $is_bounded_interval(J)
+        J $subset I
+        $chap9::is_bounded_function_on(I, f)
+        $is_nonempty_set(J)
+        =>:
+            $chap5::is_least_upper_bound(function_values_on_subset(I, J, f), upper_riemann_piece_height(I, J, f))
+    by thm upper_riemann_piece_height_has_value(I, J, f)
+    $has_empty_upper_riemann_piece_height(J, upper_riemann_piece_height(I, J, f)) or $has_nonempty_upper_riemann_piece_height(I, J, f, upper_riemann_piece_height(I, J, f))
+    by cases:
+        ? $chap5::is_least_upper_bound(function_values_on_subset(I, J, f), upper_riemann_piece_height(I, J, f))
+        case $has_empty_upper_riemann_piece_height(J, upper_riemann_piece_height(I, J, f)):
+            not $is_nonempty_set(J)
+            by contra:
+                ? $chap5::is_least_upper_bound(function_values_on_subset(I, J, f), upper_riemann_piece_height(I, J, f))
+                impossible $is_nonempty_set(J)
+        case $has_nonempty_upper_riemann_piece_height(I, J, f, upper_riemann_piece_height(I, J, f)):
+            $chap5::is_least_upper_bound(function_values_on_subset(I, J, f), upper_riemann_piece_height(I, J, f))
+
+thm nonempty_lower_riemann_piece_height_is_infimum:
+    ? forall I, J power_set(R), f fn(x I) R:
+        $is_bounded_interval(J)
+        J $subset I
+        $chap9::is_bounded_function_on(I, f)
+        $is_nonempty_set(J)
+        =>:
+            $is_infimum_of_real_set(function_values_on_subset(I, J, f), lower_riemann_piece_height(I, J, f))
+    by thm lower_riemann_piece_height_has_value(I, J, f)
+    $has_empty_lower_riemann_piece_height(J, lower_riemann_piece_height(I, J, f)) or $has_nonempty_lower_riemann_piece_height(I, J, f, lower_riemann_piece_height(I, J, f))
+    by cases:
+        ? $is_infimum_of_real_set(function_values_on_subset(I, J, f), lower_riemann_piece_height(I, J, f))
+        case $has_empty_lower_riemann_piece_height(J, lower_riemann_piece_height(I, J, f)):
+            not $is_nonempty_set(J)
+            by contra:
+                ? $is_infimum_of_real_set(function_values_on_subset(I, J, f), lower_riemann_piece_height(I, J, f))
+                impossible $is_nonempty_set(J)
+        case $has_nonempty_lower_riemann_piece_height(I, J, f, lower_riemann_piece_height(I, J, f)):
+            $is_infimum_of_real_set(function_values_on_subset(I, J, f), lower_riemann_piece_height(I, J, f))
+
+thm riemann_piece_height_gap_bounded_by_oscillation:
+    ? forall I, J power_set(R), f fn(x I) R, epsilon R_pos:
+        $is_bounded_interval(J)
+        J $subset I
+        $chap9::is_bounded_function_on(I, f)
+        $has_partition_piece_oscillation_at_most(I, J, f, epsilon)
+        =>:
+            upper_riemann_piece_height(I, J, f) - lower_riemann_piece_height(I, J, f) <= epsilon
+    by cases:
+        ? upper_riemann_piece_height(I, J, f) - lower_riemann_piece_height(I, J, f) <= epsilon
+        case $is_nonempty_set(J):
+            by thm nonempty_upper_riemann_piece_height_is_lub(I, J, f)
+            by thm nonempty_lower_riemann_piece_height_is_infimum(I, J, f)
+            $chap5::is_least_upper_bound(function_values_on_subset(I, J, f), upper_riemann_piece_height(I, J, f))
+            $is_infimum_of_real_set(function_values_on_subset(I, J, f), lower_riemann_piece_height(I, J, f))
+            claim:
+                ? $chap5::is_upper_bound(function_values_on_subset(I, J, f), lower_riemann_piece_height(I, J, f) + epsilon)
+                claim:
+                    ? forall y function_values_on_subset(I, J, f):
+                        y <= lower_riemann_piece_height(I, J, f) + epsilon
+                    by thm function_values_on_subset_member_has_preimage(I, J, f, y)
+                    obtain x from exist x J st {y = f(x)}
+                    claim:
+                        ? $is_lower_bound_of_real_set(function_values_on_subset(I, J, f), y - epsilon)
+                        claim:
+                            ? forall z function_values_on_subset(I, J, f):
+                                y - epsilon <= z
+                            by thm function_values_on_subset_member_has_preimage(I, J, f, z)
+                            obtain w from exist w J st {z = f(w)}
+                            abs(f(x) - f(w)) <= epsilon
+                            f(x) - f(w) <= abs(f(x) - f(w))
+                            f(x) - f(w) <= epsilon
+                            (f(x) - f(w)) + f(w) <= epsilon + f(w)
+                            (f(x) - f(w)) + f(w) = f(x)
+                            f(x) <= epsilon + f(w)
+                            f(x) - epsilon <= epsilon + f(w) - epsilon
+                            epsilon + f(w) - epsilon = f(w)
+                            f(x) - epsilon <= f(w)
+                            y - epsilon = f(x) - epsilon
+                            f(w) = z
+                            y - epsilon = f(x) - epsilon <= f(w) = z
+                        $is_lower_bound_of_real_set(function_values_on_subset(I, J, f), y - epsilon)
+                    forall M R:
+                        $is_lower_bound_of_real_set(function_values_on_subset(I, J, f), M)
+                        =>:
+                            M <= lower_riemann_piece_height(I, J, f)
+                    y - epsilon <= lower_riemann_piece_height(I, J, f)
+                    y - epsilon + epsilon <= lower_riemann_piece_height(I, J, f) + epsilon
+                    y - epsilon + epsilon = y
+                    y <= lower_riemann_piece_height(I, J, f) + epsilon
+                function_values_on_subset(I, J, f) $subset R
+                $chap5::is_upper_bound(function_values_on_subset(I, J, f), lower_riemann_piece_height(I, J, f) + epsilon)
+            forall B R:
+                $chap5::is_upper_bound(function_values_on_subset(I, J, f), B)
+                =>:
+                    upper_riemann_piece_height(I, J, f) <= B
+            upper_riemann_piece_height(I, J, f) <= lower_riemann_piece_height(I, J, f) + epsilon
+            upper_riemann_piece_height(I, J, f) - lower_riemann_piece_height(I, J, f) <= epsilon
+        case not $is_nonempty_set(J):
+            by thm upper_riemann_piece_height_has_value(I, J, f)
+            by thm lower_riemann_piece_height_has_value(I, J, f)
+            $has_empty_upper_riemann_piece_height(J, upper_riemann_piece_height(I, J, f)) or $has_nonempty_upper_riemann_piece_height(I, J, f, upper_riemann_piece_height(I, J, f))
+            $has_empty_lower_riemann_piece_height(J, lower_riemann_piece_height(I, J, f)) or $has_nonempty_lower_riemann_piece_height(I, J, f, lower_riemann_piece_height(I, J, f))
+            by cases:
+                ? upper_riemann_piece_height(I, J, f) = 0
+                case $has_empty_upper_riemann_piece_height(J, upper_riemann_piece_height(I, J, f)):
+                    upper_riemann_piece_height(I, J, f) = 0
+                case $has_nonempty_upper_riemann_piece_height(I, J, f, upper_riemann_piece_height(I, J, f)):
+                    $is_nonempty_set(J)
+                    impossible $is_nonempty_set(J)
+            by cases:
+                ? lower_riemann_piece_height(I, J, f) = 0
+                case $has_empty_lower_riemann_piece_height(J, lower_riemann_piece_height(I, J, f)):
+                    lower_riemann_piece_height(I, J, f) = 0
+                case $has_nonempty_lower_riemann_piece_height(I, J, f, lower_riemann_piece_height(I, J, f)):
+                    $is_nonempty_set(J)
+                    impossible $is_nonempty_set(J)
+            upper_riemann_piece_height(I, J, f) - lower_riemann_piece_height(I, J, f) = 0
+            epsilon > 0
+            upper_riemann_piece_height(I, J, f) - lower_riemann_piece_height(I, J, f) <= epsilon
+
+thm small_oscillation_partition_step_integral_gap:
+    ? forall I power_set(R), P finite_set, f fn(x I) R, U, L R, delta R_pos:
+        $is_small_oscillation_partition(I, P, f, delta)
+        $chap9::is_bounded_function_on(I, f)
+        $has_upper_riemann_sum(I, P, f, U)
+        $has_lower_riemann_sum(I, P, f, L)
+        =>:
+            U - L <= delta * interval_length(I)
+    $is_partition_of_bounded_interval(I, P)
+    by thm partition_is_set_of_real_subsets(I, P)
+    P $in power_set(power_set(R))
+    by thm upper_riemann_partition_step_function_has_integral_equal_upper_riemann_sum(I, P, f, U)
+    by thm lower_riemann_partition_step_function_has_integral_equal_lower_riemann_sum(I, P, f, L)
+    $has_piecewise_constant_integral_with_partition(I, P, upper_riemann_partition_step_function(I, P, f), U)
+    $has_piecewise_constant_integral_with_partition(I, P, lower_riemann_partition_step_function(I, P, f), L)
+    claim:
+        ? $has_piecewise_constant_integral_with_partition(I, {I}, fn(x I) R {delta}, delta * interval_length(I))
+        by thm constant_function_is_piecewise_constant_with_one_piece_partition(I, delta)
+        claim:
+            ? $has_constant_value_on_subset(I, I, fn(x I) R {delta}, delta)
+            I $subset I
+            forall x I:
+                fn(x I) R {delta}(x) = delta
+        claim:
+            ? $has_piecewise_constant_integral_piece_contribution(I, I, fn(x I) R {delta}, delta * interval_length(I))
+            witness exist c0 R st {$has_constant_value_on_subset(I, I, fn(x I) R {delta}, c0), delta * interval_length(I) = c0 * interval_length(I)} from delta:
+                $has_constant_value_on_subset(I, I, fn(x I) R {delta}, delta)
+                delta * interval_length(I) = delta * interval_length(I)
+        by thm one_piece_piecewise_constant_integral_with_partition_value(I, fn(x I) R {delta}, delta * interval_length(I))
+        $has_piecewise_constant_integral_with_partition(I, {I}, fn(x I) R {delta}, delta * interval_length(I))
+    claim:
+        ? $is_finer_partition_than(I, P, {I})
+        by thm one_piece_partition_of_bounded_interval(I)
+        claim:
+            ? forall J P:
+                exist K {I} st {J $in power_set(R), K $in power_set(R), J $subset K}
+            J $in power_set(R)
+            J $subset I
+            witness exist K {I} st {J $in power_set(R), K $in power_set(R), J $subset K} from I:
+                I $in power_set(R)
+                J $subset I
+        $is_finer_partition_than(I, P, {I})
+    by thm piecewise_constant_integral_transports_to_finer_partition(I, {I}, P, fn(x I) R {delta}, delta * interval_length(I))
+    $has_piecewise_constant_integral_with_partition(I, P, fn(x I) R {delta}, delta * interval_length(I))
+    by thm piecewise_constant_integral_with_same_partition_add(I, P, lower_riemann_partition_step_function(I, P, f), fn(x I) R {delta}, L, delta * interval_length(I))
+    $has_piecewise_constant_integral_with_partition(I, P, fn(x I) R {lower_riemann_partition_step_function(I, P, f)(x) + delta}, L + delta * interval_length(I))
+    claim:
+        ? forall x I:
+            upper_riemann_partition_step_function(I, P, f)(x) <= lower_riemann_partition_step_function(I, P, f)(x) + delta
+        have J power_set(R) = partition_piece_containing(I, P, x)
+        by thm partition_piece_containing_has_value(I, P, x)
+        J $in P
+        J $in power_set(R)
+        J $subset I
+        $has_partition_piece_oscillation_at_most(I, J, f, delta)
+        by thm riemann_piece_height_gap_bounded_by_oscillation(I, J, f, delta)
+        upper_riemann_piece_height(I, J, f) - lower_riemann_piece_height(I, J, f) <= delta
+        (upper_riemann_piece_height(I, J, f) - lower_riemann_piece_height(I, J, f)) + lower_riemann_piece_height(I, J, f) <= delta + lower_riemann_piece_height(I, J, f)
+        (upper_riemann_piece_height(I, J, f) - lower_riemann_piece_height(I, J, f)) + lower_riemann_piece_height(I, J, f) = upper_riemann_piece_height(I, J, f)
+        delta + lower_riemann_piece_height(I, J, f) = lower_riemann_piece_height(I, J, f) + delta
+        upper_riemann_piece_height(I, J, f) <= lower_riemann_piece_height(I, J, f) + delta
+        by thm upper_riemann_partition_step_function_has_value(I, P, f, x)
+        by thm lower_riemann_partition_step_function_has_value(I, P, f, x)
+        upper_riemann_partition_step_function(I, P, f)(x) = upper_riemann_piece_height(I, J, f)
+        lower_riemann_partition_step_function(I, P, f)(x) = lower_riemann_piece_height(I, J, f)
+        lower_riemann_piece_height(I, J, f) + delta = lower_riemann_partition_step_function(I, P, f)(x) + delta
+        upper_riemann_partition_step_function(I, P, f)(x) = upper_riemann_piece_height(I, J, f) <= lower_riemann_piece_height(I, J, f) + delta = lower_riemann_partition_step_function(I, P, f)(x) + delta
+    by thm piecewise_constant_integral_with_same_partition_monotone(I, P, fn(x I) R {lower_riemann_partition_step_function(I, P, f)(x) + delta}, upper_riemann_partition_step_function(I, P, f), L + delta * interval_length(I), U)
+    U <= L + delta * interval_length(I)
+    U - L <= (L + delta * interval_length(I)) - L
+    (L + delta * interval_length(I)) - L = delta * interval_length(I)
+    U - L <= delta * interval_length(I)
+
 thm uniformly_continuous_on_bounded_interval_is_bounded:
     ? forall I power_set(R), f fn(x I) R:
         $is_bounded_interval(I)
@@ -11249,16 +11849,68 @@ thm darbouxs_criterion_from_small_oscillation_partitions:
             $has_small_oscillation_partition(I, f, epsilon)
         =>:
             $is_riemann_integrable_on(I, f)
-    # Source handling: this is the Darboux criterion used in Tao's proof of
-    # Theorem 11.5.1.  A partition whose pieces have oscillation at most
-    # `epsilon / |I|` makes the upper and lower Riemann sums differ by at most
-    # `epsilon`; Proposition 11.3.12 then gives equality of upper and lower
-    # integrals.
-    # Source handling: this is the Darboux criterion used in Tao's proof of
-    # Theorem 11.5.1.
-    # proof_debt: compare piecewise suprema and infima on each partition piece
-    # and pass the bound through upper/lower Riemann sums and integrals.
-    trust $is_riemann_integrable_on(I, f)
+    # For target error `epsilon`, use piece oscillation
+    # `delta = epsilon / (interval_length(I) + 1)`.  The canonical upper and
+    # lower partition step functions are then a Darboux approximation whose
+    # integral gap is strictly below `epsilon`.
+    claim:
+        ? forall epsilon R_pos:
+            exist h, g fn(x I) R, sh, sg R st {$has_darboux_approximation(I, f, h, g, sh, sg, epsilon)}
+        by thm interval_length_nonnegative(I)
+        interval_length(I) >= 0
+        interval_length(I) + 1 > 0
+        epsilon / (interval_length(I) + 1) > 0
+        have delta R_pos = epsilon / (interval_length(I) + 1)
+        obtain P from exist P finite_set st {$is_small_oscillation_partition(I, P, f, delta)}
+        $is_partition_of_bounded_interval(I, P)
+        by thm partition_is_set_of_real_subsets(I, P)
+        P $in power_set(power_set(R))
+        by thm upper_riemann_sum_has_value(I, P, f)
+        by thm lower_riemann_sum_has_value(I, P, f)
+        have U R = upper_riemann_sum(I, P, f)
+        have L R = lower_riemann_sum(I, P, f)
+        $has_upper_riemann_sum(I, P, f, U)
+        $has_lower_riemann_sum(I, P, f, L)
+        by thm small_oscillation_partition_step_integral_gap(I, P, f, U, L, delta)
+        U - L <= delta * interval_length(I)
+        delta = epsilon / (interval_length(I) + 1)
+        interval_length(I) < interval_length(I) + 1
+        epsilon / (interval_length(I) + 1) * interval_length(I) < epsilon / (interval_length(I) + 1) * (interval_length(I) + 1)
+        epsilon / (interval_length(I) + 1) * (interval_length(I) + 1) = epsilon
+        delta * interval_length(I) < epsilon
+        U - L < epsilon
+
+        by thm upper_riemann_partition_step_function_is_piecewise_constant(I, P, f)
+        by thm lower_riemann_partition_step_function_is_piecewise_constant(I, P, f)
+        by thm piecewise_constant_with_partition_is_piecewise_constant(I, P, upper_riemann_partition_step_function(I, P, f))
+        by thm piecewise_constant_with_partition_is_piecewise_constant(I, P, lower_riemann_partition_step_function(I, P, f))
+        $is_piecewise_constant_on(I, upper_riemann_partition_step_function(I, P, f))
+        $is_piecewise_constant_on(I, lower_riemann_partition_step_function(I, P, f))
+        by thm upper_riemann_partition_step_function_majorizes(I, P, f)
+        by thm lower_riemann_partition_step_function_minorizes(I, P, f)
+        by thm upper_riemann_partition_step_function_has_integral_equal_upper_riemann_sum(I, P, f, U)
+        by thm lower_riemann_partition_step_function_has_integral_equal_lower_riemann_sum(I, P, f, L)
+        claim:
+            ? $has_piecewise_constant_integral(I, upper_riemann_partition_step_function(I, P, f), U)
+            witness exist P0 finite_set st {$is_piecewise_constant_with_partition(I, P0, upper_riemann_partition_step_function(I, P, f)), $has_piecewise_constant_integral_with_partition(I, P0, upper_riemann_partition_step_function(I, P, f), U)} from P:
+                $is_piecewise_constant_with_partition(I, P, upper_riemann_partition_step_function(I, P, f))
+                $has_piecewise_constant_integral_with_partition(I, P, upper_riemann_partition_step_function(I, P, f), U)
+        claim:
+            ? $has_piecewise_constant_integral(I, lower_riemann_partition_step_function(I, P, f), L)
+            witness exist P0 finite_set st {$is_piecewise_constant_with_partition(I, P0, lower_riemann_partition_step_function(I, P, f)), $has_piecewise_constant_integral_with_partition(I, P0, lower_riemann_partition_step_function(I, P, f), L)} from P:
+                $is_piecewise_constant_with_partition(I, P, lower_riemann_partition_step_function(I, P, f))
+                $has_piecewise_constant_integral_with_partition(I, P, lower_riemann_partition_step_function(I, P, f), L)
+        witness exist h, g fn(x I) R, sh, sg R st {$has_darboux_approximation(I, f, h, g, sh, sg, epsilon)} from lower_riemann_partition_step_function(I, P, f), upper_riemann_partition_step_function(I, P, f), L, U:
+            $is_piecewise_constant_on(I, lower_riemann_partition_step_function(I, P, f))
+            $is_piecewise_constant_on(I, upper_riemann_partition_step_function(I, P, f))
+            $minorizes_on(I, lower_riemann_partition_step_function(I, P, f), f)
+            $majorizes_on(I, upper_riemann_partition_step_function(I, P, f), f)
+            $has_piecewise_constant_integral(I, lower_riemann_partition_step_function(I, P, f), L)
+            $has_piecewise_constant_integral(I, upper_riemann_partition_step_function(I, P, f), U)
+            U - L < epsilon
+            $has_darboux_approximation(I, f, lower_riemann_partition_step_function(I, P, f), upper_riemann_partition_step_function(I, P, f), L, U, epsilon)
+    by thm arbitrary_darboux_approximations_imply_riemann_integrable(I, f)
+    $is_riemann_integrable_on(I, f)
 
 thm uniformly_continuous_bounded_interval_riemann_integrable:
     ? forall I power_set(R), f fn(x I) R:
@@ -12171,6 +12823,133 @@ thm dirichlet_rational_indicator_bounded:
         $chap9::is_function_bounded_by('[0, 1], dirichlet_rational_indicator_on_unit, 1)
     $chap9::is_bounded_function_on('[0, 1], dirichlet_rational_indicator_on_unit)
 
+thm positive_length_bounded_interval_has_rational_and_irrational_points:
+    ? forall J power_set(R):
+        $is_bounded_interval(J)
+        interval_length(J) > 0
+        =>:
+            exist q Q st {q $in J}
+            exist z set_minus(R, Q) st {z $in J}
+    # A positive interval length forces strict endpoint order. Density then
+    # supplies both kinds of points strictly between those endpoints, hence in
+    # every open/closed endpoint form at once.
+    obtain a, b from exist a, b R st {$has_interval_endpoints(J, a, b)}
+    by thm interval_endpoint_case_has_total_length(J, a, b)
+    $has_interval_length(J, finite_set_max(union({b - a}, { 0})))
+    $has_interval_length(J, interval_length(J))
+    by thm interval_length_value_unique(J, interval_length(J), finite_set_max(union({b - a}, { 0})))
+    interval_length(J) = finite_set_max(union({b - a}, { 0}))
+    claim:
+        ? a < b
+        by contra:
+            ? a < b
+            b <= a
+            by thm max_positive_part_zero_when_nonpositive(a, b)
+            finite_set_max(union({b - a}, { 0})) = 0
+            interval_length(J) = 0
+            impossible interval_length(J) > 0
+    by thm chap5::rational_density_of_reals(a, b)
+    obtain q from exist q Q st {a < q < b}
+    by thm strict_between_interval_endpoints_is_member(J, a, b, q)
+    q $in J
+    witness exist q0 Q st {q0 $in J} from q:
+        q $in J
+    by thm chap9::irrational_density_of_reals(a, b)
+    obtain z from exist z set_minus(R, Q) st {a < z < b}
+    by thm strict_between_interval_endpoints_is_member(J, a, b, z)
+    z $in J
+    witness exist z0 set_minus(R, Q) st {z0 $in J} from z:
+        z $in J
+
+thm dirichlet_rational_indicator_between_zero_and_one:
+    ? forall x '[0, 1]:
+        0 <= dirichlet_rational_indicator_on_unit(x) <= 1
+    by thm real_point_is_rational_or_irrational(x)
+    by cases:
+        ? 0 <= dirichlet_rational_indicator_on_unit(x) <= 1
+        case x $in Q:
+            dirichlet_rational_indicator_on_unit(x) = 1
+            0 <= dirichlet_rational_indicator_on_unit(x) <= 1
+        case x $in set_minus(R, Q):
+            not x $in Q
+            dirichlet_rational_indicator_on_unit(x) = 0
+            0 <= dirichlet_rational_indicator_on_unit(x) <= 1
+
+thm dirichlet_upper_piece_height_on_positive_length:
+    ? forall J power_set(R):
+        $is_bounded_interval(J)
+        J $subset '[0, 1]
+        interval_length(J) > 0
+        =>:
+            upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) = 1
+    by thm dirichlet_rational_indicator_bounded()
+    by thm upper_riemann_piece_height_has_value('[0, 1], J, dirichlet_rational_indicator_on_unit)
+    $has_upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit, upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit))
+    by thm positive_length_bounded_interval_has_rational_and_irrational_points(J)
+    obtain q from exist q Q st {q $in J}
+    witness $is_nonempty_set(J) from q:
+        q $in J
+    $has_nonempty_upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit, upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit))
+    $chap5::is_least_upper_bound(function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit), upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit))
+    claim:
+        ? $chap5::is_upper_bound(function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit), 1)
+        claim:
+            ? forall y function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit):
+                y <= 1
+            by thm function_values_on_subset_member_has_preimage('[0, 1], J, dirichlet_rational_indicator_on_unit, y)
+            obtain x from exist x J st {y = dirichlet_rational_indicator_on_unit(x)}
+            x $in '[0, 1]
+            by thm dirichlet_rational_indicator_between_zero_and_one(x)
+            y = dirichlet_rational_indicator_on_unit(x) <= 1
+        $chap5::is_upper_bound(function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit), 1)
+    upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) <= 1
+    q $in '[0, 1]
+    dirichlet_rational_indicator_on_unit(q) = 1
+    by thm function_value_on_subset_member('[0, 1], J, dirichlet_rational_indicator_on_unit, q)
+    dirichlet_rational_indicator_on_unit(q) $in function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit)
+    1 $in function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit)
+    $chap5::is_upper_bound(function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit), upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit))
+    1 <= upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit)
+    upper_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) = 1
+
+thm dirichlet_lower_piece_height_on_positive_length:
+    ? forall J power_set(R):
+        $is_bounded_interval(J)
+        J $subset '[0, 1]
+        interval_length(J) > 0
+        =>:
+            lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) = 0
+    by thm dirichlet_rational_indicator_bounded()
+    by thm lower_riemann_piece_height_has_value('[0, 1], J, dirichlet_rational_indicator_on_unit)
+    $has_lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit, lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit))
+    by thm positive_length_bounded_interval_has_rational_and_irrational_points(J)
+    obtain z from exist z set_minus(R, Q) st {z $in J}
+    witness $is_nonempty_set(J) from z:
+        z $in J
+    $has_nonempty_lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit, lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit))
+    $is_infimum_of_real_set(function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit), lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit))
+    claim:
+        ? $is_lower_bound_of_real_set(function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit), 0)
+        claim:
+            ? forall y function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit):
+                0 <= y
+            by thm function_values_on_subset_member_has_preimage('[0, 1], J, dirichlet_rational_indicator_on_unit, y)
+            obtain x from exist x J st {y = dirichlet_rational_indicator_on_unit(x)}
+            x $in '[0, 1]
+            by thm dirichlet_rational_indicator_between_zero_and_one(x)
+            0 <= dirichlet_rational_indicator_on_unit(x) = y
+        $is_lower_bound_of_real_set(function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit), 0)
+    0 <= lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit)
+    z $in '[0, 1]
+    not z $in Q
+    dirichlet_rational_indicator_on_unit(z) = 0
+    by thm function_value_on_subset_member('[0, 1], J, dirichlet_rational_indicator_on_unit, z)
+    dirichlet_rational_indicator_on_unit(z) $in function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit)
+    0 $in function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit)
+    $is_lower_bound_of_real_set(function_values_on_subset('[0, 1], J, dirichlet_rational_indicator_on_unit), lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit))
+    lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) <= 0
+    lower_riemann_piece_height('[0, 1], J, dirichlet_rational_indicator_on_unit) = 0
+
 thm dirichlet_rational_indicator_upper_integral_value:
     ? forall:
         $is_bounded_interval('[0, 1])
@@ -12265,84 +13044,112 @@ prop has_alpha_interval_length(alpha fn(x R) R, I power_set(R), l R):
         =>:
             l = 0
 
-# Source handling: Definition 11.8.1 selects Tao's alpha-length `alpha[I]`.
-# proof_debt: the selector remains specialized to `alpha : R -> R` while the
-# source permits a larger ambient domain.
-trust have alpha_interval_length fn(alpha fn(x R) R, I power_set(R)) R:
-    forall alpha fn(x R) R:
-        alpha_interval_length(alpha, {}) = 0
-    forall alpha fn(x R) R, a R:
-        alpha_interval_length(alpha, {a}) = 0
-    forall alpha fn(x R) R, a, b R:
-        a < b
+thm alpha_interval_length_exists_unique:
+    ? forall alpha fn(x R) R, I power_set(R):
+        $is_bounded_interval(I)
         =>:
-            alpha_interval_length(alpha, '[a, b]) = alpha(b) - alpha(a)
-            alpha_interval_length(alpha, '[a, b)) = alpha(b) - alpha(a)
-            alpha_interval_length(alpha, '(a, b]) = alpha(b) - alpha(a)
-            alpha_interval_length(alpha, '(a, b)) = alpha(b) - alpha(a)
-    forall alpha fn(x R) R, a, b R:
-        b <= a
+            exist! l R st {$has_alpha_interval_length(alpha, I, l)}
+    obtain a, b from exist a, b R st {$has_interval_endpoints(I, a, b)}
+    a < b or not a < b
+    by cases:
+        ? exist! l R st {$has_alpha_interval_length(alpha, I, l)}
+        case a < b:
+            have x R = (a + b) / 2
+            a < x < b
+            by thm strict_between_interval_endpoints_is_member(I, a, b, x)
+            x $in I
+            witness $is_nonempty_set(I) from x
+            claim:
+                ? $has_alpha_interval_length(alpha, I, alpha(b) - alpha(a))
+                claim:
+                    ? forall c, d R:
+                        $has_interval_endpoints(I, c, d)
+                        c < d
+                        =>:
+                            alpha(b) - alpha(a) = alpha(d) - alpha(c)
+                    by thm nonempty_interval_endpoint_representation_unique(I, a, b, c, d)
+                    alpha(b) - alpha(a) = alpha(d) - alpha(c)
+                claim:
+                    ? forall c, d R:
+                        $has_interval_endpoints(I, c, d)
+                        d <= c
+                        =>:
+                            alpha(b) - alpha(a) = 0
+                    by contra:
+                        ? alpha(b) - alpha(a) = 0
+                        by thm nonempty_interval_endpoint_representation_unique(I, a, b, c, d)
+                        d = b
+                        c = a
+                        impossible d <= c
+                by def $has_alpha_interval_length(alpha, I, alpha(b) - alpha(a))
+            claim:
+                ? forall l1, l2 R:
+                    $has_alpha_interval_length(alpha, I, l1)
+                    $has_alpha_interval_length(alpha, I, l2)
+                    =>:
+                        l1 = l2
+                l1 = alpha(b) - alpha(a)
+                l2 = alpha(b) - alpha(a)
+                l1 = l2
+            exist! l R st {$has_alpha_interval_length(alpha, I, l)}
+        case not a < b:
+            b <= a
+            claim:
+                ? $has_alpha_interval_length(alpha, I, 0)
+                claim:
+                    ? forall c, d R:
+                        $has_interval_endpoints(I, c, d)
+                        c < d
+                        =>:
+                            0 = alpha(d) - alpha(c)
+                    by contra:
+                        ? 0 = alpha(d) - alpha(c)
+                        have x R = (2 * c + d) / 3
+                        have y R = (c + 2 * d) / 3
+                        c < x < y < d
+                        by thm strict_between_interval_endpoints_is_member(I, c, d, x)
+                        by thm strict_between_interval_endpoints_is_member(I, c, d, y)
+                        by thm interval_endpoint_member_is_between(I, a, b, x)
+                        by thm interval_endpoint_member_is_between(I, a, b, y)
+                        a <= x <= b <= a
+                        a <= y <= b <= a
+                        x = a
+                        y = a
+                        impossible x < y
+                claim:
+                    ? forall c, d R:
+                        $has_interval_endpoints(I, c, d)
+                        d <= c
+                        =>:
+                            0 = 0
+                    0 = 0
+                by def $has_alpha_interval_length(alpha, I, 0)
+            claim:
+                ? forall l1, l2 R:
+                    $has_alpha_interval_length(alpha, I, l1)
+                    $has_alpha_interval_length(alpha, I, l2)
+                    =>:
+                        l1 = l2
+                l1 = 0
+                l2 = 0
+                l1 = l2
+            exist! l R st {$has_alpha_interval_length(alpha, I, l)}
+
+# Definition 11.8.1 introduces a selected value, not only a candidate
+# relation. The selector is defined from the checked existence and uniqueness
+# theorem above.
+have fn alpha_interval_length by exist!:
+    ? forall alpha fn(x R) R, I power_set(R):
+        $is_bounded_interval(I)
         =>:
-            alpha_interval_length(alpha, '[a, b]) = 0
-            alpha_interval_length(alpha, '[a, b)) = 0
-            alpha_interval_length(alpha, '(a, b]) = 0
-            alpha_interval_length(alpha, '(a, b)) = 0
+            exist! l R st {$has_alpha_interval_length(alpha, I, l)}
+    by thm alpha_interval_length_exists_unique(alpha, I)
 
 thm alpha_interval_length_has_value:
     ? forall alpha fn(x R) R, I power_set(R):
         $is_bounded_interval(I)
         =>:
             $has_alpha_interval_length(alpha, I, alpha_interval_length(alpha, I))
-    claim:
-        ? forall a, b R:
-            $has_interval_endpoints(I, a, b)
-            a < b
-            =>:
-                alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
-        I = '[a, b] or I = '[a, b) or I = '(a, b] or I = '(a, b)
-        by cases:
-            ? alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
-            case I = '[a, b]:
-                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '[a, b])
-                alpha_interval_length(alpha, '[a, b]) = alpha(b) - alpha(a)
-                alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
-            case I = '[a, b):
-                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '[a, b))
-                alpha_interval_length(alpha, '[a, b)) = alpha(b) - alpha(a)
-                alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
-            case I = '(a, b]:
-                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '(a, b])
-                alpha_interval_length(alpha, '(a, b]) = alpha(b) - alpha(a)
-                alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
-            case I = '(a, b):
-                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '(a, b))
-                alpha_interval_length(alpha, '(a, b)) = alpha(b) - alpha(a)
-                alpha_interval_length(alpha, I) = alpha(b) - alpha(a)
-    claim:
-        ? forall a, b R:
-            $has_interval_endpoints(I, a, b)
-            b <= a
-            =>:
-                alpha_interval_length(alpha, I) = 0
-        I = '[a, b] or I = '[a, b) or I = '(a, b] or I = '(a, b)
-        by cases:
-            ? alpha_interval_length(alpha, I) = 0
-            case I = '[a, b]:
-                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '[a, b])
-                alpha_interval_length(alpha, '[a, b]) = 0
-                alpha_interval_length(alpha, I) = 0
-            case I = '[a, b):
-                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '[a, b))
-                alpha_interval_length(alpha, '[a, b)) = 0
-                alpha_interval_length(alpha, I) = 0
-            case I = '(a, b]:
-                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '(a, b])
-                alpha_interval_length(alpha, '(a, b]) = 0
-                alpha_interval_length(alpha, I) = 0
-            case I = '(a, b):
-                alpha_interval_length(alpha, I) = alpha_interval_length(alpha, '(a, b))
-                alpha_interval_length(alpha, '(a, b)) = 0
-                alpha_interval_length(alpha, I) = 0
     $has_alpha_interval_length(alpha, I, alpha_interval_length(alpha, I))
 
 """
@@ -14343,12 +15150,14 @@ prop has_integral_from_left_endpoint(a, b R, f fn(t '[a, b]) R, x '[a, b], s R):
 trust have integral_from_left_endpoint fn(a, b R, f fn(t '[a, b]) R, x '[a, b]) R:
     forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
         a < b
+        $is_riemann_integrable_on('[a, b], f)
         =>:
             exist g fn(u '[a, x]) R st {$is_restriction_to_subset('[a, b], '[a, x], f, g), $has_riemann_integral('[a, x], g, integral_from_left_endpoint(a, b, f, x))}
 
 thm integral_from_left_endpoint_has_value:
     ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
         a < b
+        $is_riemann_integrable_on('[a, b], f)
         =>:
             $has_integral_from_left_endpoint(a, b, f, x, integral_from_left_endpoint(a, b, f, x))
     exist g fn(u '[a, x]) R st {$is_restriction_to_subset('[a, b], '[a, x], f, g), $has_riemann_integral('[a, x], g, integral_from_left_endpoint(a, b, f, x))}
@@ -14361,6 +15170,7 @@ prop is_integral_function_from_left_endpoint(a, b R, f fn(t '[a, b]) R, F fn(x '
 thm selected_left_endpoint_integral_is_integral_function:
     ? forall a, b R, f fn(t '[a, b]) R:
         a < b
+        $is_riemann_integrable_on('[a, b], f)
         =>:
             $is_integral_function_from_left_endpoint(a, b, f, fn(x '[a, b]) R {integral_from_left_endpoint(a, b, f, x)})
     claim:

@@ -59,10 +59,6 @@ pub const SET_MINUS: &str = "set_minus";
 pub const SET_DIFF: &str = "set_diff";
 pub const BIG_UNION: &str = "big_union";
 pub const BIG_INTERSECT: &str = "big_intersect";
-/// Removed family-union spelling; retained only to give a migration error.
-pub const LEGACY_CUP: &str = "cup";
-/// Removed family-intersection spelling; retained only to give a migration error.
-pub const LEGACY_CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const GENERAL_CART: &str = "general_cart";
 pub const FN_LOWER_CASE: &str = "fn";
@@ -249,8 +245,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         SET_DIFF,
         BIG_UNION,
         BIG_INTERSECT,
-        LEGACY_CUP,
-        LEGACY_CAP,
         POWER_SET,
         GENERAL_CART,
         FN_LOWER_CASE,

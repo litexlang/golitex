@@ -52,7 +52,9 @@ impl Runtime {
             Obj::SetMinus(inner) => self.inst_set_minus(inner, param_to_arg_map, param_obj_type),
             Obj::SetDiff(inner) => self.inst_set_diff(inner, param_to_arg_map, param_obj_type),
             Obj::BigUnion(inner) => self.inst_big_union(inner, param_to_arg_map, param_obj_type),
-            Obj::BigIntersect(inner) => self.inst_big_intersect(inner, param_to_arg_map, param_obj_type),
+            Obj::BigIntersect(inner) => {
+                self.inst_big_intersect(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::ListSet(inner) => self.inst_list_set(inner, param_to_arg_map, param_obj_type),
             Obj::SetBuilder(inner) => {
                 self.inst_set_builder(inner, param_to_arg_map, param_obj_type)
@@ -602,7 +604,12 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(BigIntersect::new(self.inst_obj(&big_intersect.left, param_to_arg_map, param_obj_type)?).into())
+        Ok(BigIntersect::new(self.inst_obj(
+            &big_intersect.left,
+            param_to_arg_map,
+            param_obj_type,
+        )?)
+        .into())
     }
 
     pub fn inst_power_set(

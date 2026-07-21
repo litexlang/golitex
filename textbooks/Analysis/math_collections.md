@@ -135,6 +135,322 @@ stops at the existing Chapter 5 trust boundary before it reaches Chapter 6.
 The proof edges above therefore remain part of this human contract until that
 upstream debt is cleared and a strict run can emit them.
 
+## Chapter 10: differentiation
+
+This section is the Chapter 10 design map.  Its source of truth is Tao,
+Analysis I, Sections 10.1--10.5, together with the source-facing declarations
+in `chapter10-differentiation.lit`.  It records the intended mathematical
+interfaces rather than claiming that every current proof or construction is
+checked.  Examples, exercises, and proof-local auxiliary expressions are not
+automatically public concepts.
+
+### Modeling conventions
+
+The ambient data are real subsets `X`, `Y`, points `x0`, `y0`, and displayed
+functions such as `f : X -> R` and `g : Y -> R`.  They are ordinary parameters,
+not templates.  Chapter 10 needs no bundled structure or field projection, so
+it introduces no `struct`.  It also needs no `abstract_prop`: a proof gap does
+not change whether a derivative is a relation, a value, or a function.
+
+Use a `prop` when later mathematics asserts a relation or condition, a
+`have fn` when it applies a formula-defined construction, and a
+`have fn ... by exist!` only for a genuinely uniquely selected value.  A
+`thm` is a named mathematical result, not a substitute for a missing object.
+In particular, `trust` and `axiom` are proof statuses, never semantic roles.
+The inverse-pair, composition, limit, continuity, extremum, and monotonicity
+vocabulary that already belongs to Chapter 9 should be cited from `chap9`, not
+redeclared under new Chapter 10 names.
+
+### Concept inventory
+
+| Source material | Semantic role | Ideal Litex form | Downstream use |
+| --- | --- | --- | --- |
+| Punctured difference quotient | Formula-defined function | `have fn` | State a derivative as a function limit and reuse the quotient in limit proofs. |
+| `has_derivative_at(X,f,x0,L)` | Candidate-value relation | `prop` | State that a displayed real `L` is the derivative. |
+| `is_differentiable_at(X,f,x0)` | Existence property | `prop` | Gate the selected point derivative. |
+| `derivative(X,f,x0)` | Canonical value | `have fn ... by exist!` | Write `f'(x0)` as a real expression. |
+| `is_differentiable_on(X,f)` | Domain property | `prop` | State differentiability at every limit point of a domain. |
+| `has_derivative_function_on(X,f,df)` | Relation between displayed functions | `prop` | Let a theorem consume a supplied derivative function `df`. |
+| `derivative_function(X,f)` | Formula-defined partial function | `have fn` | Apply the canonical derivative exactly at the differentiability points of `f`. |
+| Newton approximation | Candidate linearization relation | `prop` | Give the first-order estimate used by continuity and the chain rule. |
+| Local maximum, minimum, extremum | Local properties | `prop` | State the stationary-point theorem and Rolle's theorem. |
+| Lipschitz continuity | Quantitative property | `prop` | State the bounded-derivative exercise without leaving its named notion informal. |
+| Constantness | Property | `prop` | State the zero-derivative conclusion. |
+| Inverse pair and composition | Relations | imported `chap9` props | State inverse and chain rules without rebuilding Chapter 9 vocabulary. |
+| L'Hopital assumptions and conclusions | Results with local side conditions | `thm` plus proof-local props | Keep denominator nonvanishing and quotient-limit conclusions visibly connected. |
+
+The epsilon/delta witness predicates `is_difference_quotient_close_to`,
+`is_newton_approximation_witness`, local-extremum witnesses, and the
+between-points estimate in the L'Hopital proof are useful implementation
+relations.  They are not replacements for the public mathematical concepts in
+the table.
+
+### Difference quotients and point derivatives
+
+Mathematically, the difference quotient is a function on the punctured domain,
+not merely a repeated formula inside an epsilon estimate:
+
+~~~litex
+have fn difference_quotient(
+    X power_set(R), f fn(z X) R, x0 X
+) fn(y set_minus(X, {x0})) R =
+    fn(x set_minus(X, {x0})) R {
+        (f(x) - f(x0)) / (x - x0)
+    }
+
+prop has_derivative_at(
+    X power_set(R), f fn(x X) R, x0 X, L R
+):
+    $chap9::is_limit_point_of_set(X, x0)
+    $chap9::has_function_limit(
+        set_minus(X, {x0}), difference_quotient(X, f, x0), x0, L
+    )
+
+prop is_differentiable_at(X power_set(R), f fn(x X) R, x0 X):
+    exist L R st {$has_derivative_at(X, f, x0, L)}
+
+have fn derivative by exist!:
+    ? forall X power_set(R), f fn(x X) R, x0 X:
+        $is_differentiable_at(X, f, x0)
+        =>:
+            exist! L R st {$has_derivative_at(X, f, x0, L)}
+~~~
+
+`has_derivative_at` is a relation because proofs must compare a supplied
+candidate `L`; `derivative` is a canonical selection because later statements
+must write its value.  Reject an existence-only API, and reject a proposition
+that merely describes a proposed derivative object without making `L`
+available as an ordinary real.
+
+The displayed `difference_quotient` is now a checked public construction.  The
+kernel instantiates a dependent function return domain when the function is
+applied, so `difference_quotient(X, f, x0)(x)` remains defined only for
+`x in X - {x0}`.  `has_derivative_at` currently preserves the source's direct
+epsilon/delta relation through `is_difference_quotient_close_to`; the checked
+bridge theorems connect that relation to the callable quotient and Chapter 9's
+function-limit interface.  This keeps existing differential-calculus proofs
+stable while making ordinary quotient-limit statements available directly.
+
+`derivative_value_unique` is a theorem with a `uniqueness` edge from
+`has_derivative_at`; it must precede the `derivative` selector.  This is the
+only necessary local source-order deviation: Tao introduces the notation in
+Definition 10.1.1, while Litex must establish unique existence before exposing
+the selected function.  The immediate use probe is:
+
+~~~litex
+$has_derivative_at(X, f, x0, L)
+derivative(X, f, x0) = L
+~~~
+
+### Differentiability on a domain and the derivative function
+
+Definition 10.1.11 quantifies only over limit points of `X`.  The ideal
+definition must preserve that distinction:
+
+~~~litex
+prop is_differentiable_on(X power_set(R), f fn(x X) R):
+    forall x X:
+        $chap9::is_limit_point_of_set(X, x)
+        =>:
+            $is_differentiable_at(X, f, x)
+
+prop has_derivative_function_on(
+    X power_set(R), f, df fn(x X) R
+):
+    forall x X:
+        $chap9::is_limit_point_of_set(X, x)
+        =>:
+            $has_derivative_at(X, f, x, df(x))
+
+have fn derivative_function(
+    X power_set(R), f fn(z X) R
+) fn(y X: $is_differentiable_at(X, f, y)) R =
+    fn(x X: $is_differentiable_at(X, f, x)) R {derivative(X, f, x)}
+~~~
+
+`has_derivative_function_on` remains necessary even after the canonical
+function exists: theorems such as the mean-value and monotonicity theorems
+often receive a displayed `df` whose formula is easier to use than repeatedly
+unfolding a selector.  By contrast, `derivative_function` is a direct
+formula-defined partial function, not a second `exist!` construction.  Its
+domain is the differentiability locus, so it does not assign an arbitrary
+value at an isolated or nondifferentiable point.
+
+The current `is_differentiable_on` requires differentiability at every member
+of `X`, including isolated points.  That is a modeling error, not a harmless
+stronger spelling: Definition 10.1.1 leaves the derivative undefined there.
+It must be corrected before later code treats the predicate as the source
+definition.  The representative function-level probe is:
+
+~~~litex
+$is_differentiable_at(X, f, x)
+$has_derivative_at(X, f, x, derivative_function(X, f)(x))
+~~~
+
+### Newton approximation and differential calculus
+
+Newton approximation is a relation between a supplied slope and a supplied
+function, not a new tangent-line object:
+
+~~~litex
+prop has_newton_approximation_at(
+    X power_set(R), f fn(x X) R, x0 X, L R
+):
+    forall epsilon R_pos:
+        exist delta R_pos st {
+            forall x X:
+                abs(x - x0) <= delta
+                =>:
+                    abs(f(x) - (f(x0) + L * (x - x0)))
+                        <= epsilon * abs(x - x0)
+        }
+~~~
+
+Proposition 10.1.7 should be a source-facing equivalence theorem between this
+relation and `has_derivative_at`.  Directional lemmas may remain as proof
+components, but they do not replace the source theorem.  The resulting
+dependency shape is:
+
+~~~text
+has_derivative_at --proof--> Newton approximation
+Newton approximation + limit point --proof--> has_derivative_at
+has_derivative_at --proof--> continuity at a point
+has_derivative_at --proof--> constant, identity, sum, product,
+                              scalar, difference, reciprocal, quotient laws
+Newton approximation + composition relation --proof--> chain rule
+~~~
+
+The chain rule is a `thm`, not a template.  Its callable composition should
+reuse Chapter 9's composition relation or an already well-defined displayed
+function `h`; a bare anonymous `fn(x X) R {g(f(x))}` cannot become the
+semantic definition when the verifier cannot establish that `f(x)` lies in
+`Y`.  The current Newton-composition trust is therefore a proof or
+well-definedness boundary, not evidence that a composition relation is the
+wrong kind of concept.
+
+### Extrema, mean values, and monotonicity
+
+`is_local_maximum_at`, `is_local_minimum_at`, and
+`is_local_extremum_at` are props.  Their radius-bearing witness forms are
+implementation helpers.  The source order and theorem roles are:
+
+~~~text
+local extrema + point derivative
+  --proof--> local extrema are stationary
+
+Chapter 9 continuity and compact extrema + stationary points
+  --proof--> Rolle's theorem
+Rolle + an affine auxiliary function
+  --proof--> mean value theorem
+mean value theorem + restriction to subintervals
+  --proof--> bounded derivative is Lipschitz
+  --proof--> derivative-sign monotonicity and zero-derivative constancy
+~~~
+
+The exercise-introduced quantitative notion deserves a real relation:
+
+~~~litex
+prop is_lipschitz_with_constant_on(
+    X power_set(R), f fn(x X) R, M R
+):
+    M >= 0
+    forall x, y X:
+        abs(f(x) - f(y)) <= M * abs(x - y)
+~~~
+
+The Chapter 9 monotonicity predicates should remain imported.  In contrast,
+`is_constant_on(X,f)` is a useful Chapter 10 property because it is the direct
+conclusion of the zero-derivative theorem.  Rolle, the mean-value theorem,
+their closed-subinterval transports, and the sign/constant conclusions are
+all `thm`s; they do not manufacture new mathematical objects.
+
+### Inverses and L'Hopital's rule
+
+An inverse pair is already a Chapter 9 relation.  Chapter 10 should consume
+`chap9::is_inverse_pair_on` (or a type-preserving adapter justified by it),
+rather than maintain `is_inverse_pair_between_real_subsets` as duplicate
+vocabulary.  The inverse derivative lemma and the inverse function theorem
+are theorems depending on that relation, the chain rule, continuity of the
+inverse, reciprocal limit laws, and the nonzero derivative condition.
+
+`inverse_function_difference_quotient_estimate` is not a foundational
+assumption of Analysis I.  Its current `axiom` status is an explicit proof
+debt and should eventually become a theorem or a narrow trusted theorem while
+the sequential reciprocal-limit proof is completed.
+
+For Section 10.5, the nonzero punctured-neighborhood condition is a local
+relation used to make the quotient meaningful.  It is not the whole of
+Proposition 10.5.1.  The source-facing first L'Hopital theorem must return
+both that neighborhood and the quotient-limit conclusion.  The second theorem
+has this dependency spine:
+
+~~~text
+Rolle / Cauchy mean value theorem
+  -> pointwise quotient comparison
+  -> right-limit transport between the endpoint and the Cauchy point
+  -> L'Hopital quotient limit
+~~~
+
+The between-points epsilon predicate is a proof helper; it is not a reusable
+replacement for `has_function_limit`.
+
+### Typed dependency map and intended build order
+
+The edge labels in this map are `import`, `signature`, `definition`,
+`existence`, `uniqueness`, `selection`, `well_definedness`, `proof`, and
+`trust/source`.
+
+~~~text
+chap9 limit points, function limits, continuity, extrema, monotonicity,
+composition, inverse pairs
+  --import-->
+punctured difference quotient
+  --definition--> has_derivative_at
+  --definition--> is_differentiable_at
+  --proof--> derivative_value_unique
+is_differentiable_at + derivative_value_unique
+  --existence/uniqueness/selection--> derivative
+has_derivative_at + limit-point guard
+  --definition--> is_differentiable_on
+has_derivative_at + displayed df
+  --definition--> has_derivative_function_on
+is_differentiable_at + derivative
+  --well_definedness--> derivative_function
+
+has_derivative_at <--> Newton approximation
+  --proof--> continuity and differential-calculus laws
+  --proof--> chain rule
+local extrema + has_derivative_at
+  --proof--> stationary points -> Rolle -> mean value theorem
+mean value theorem
+  --proof--> Lipschitz, monotonicity, and constantness
+chain rule + chap9 inverse pair
+  --proof--> inverse derivative and inverse function theorems
+Newton approximation / Cauchy mean value / right-limit transport
+  --proof--> L'Hopital rules
+~~~
+
+Implement in that order.  Keep source-facing definitions and theorems in
+their Tao order; only place derivative uniqueness immediately before the
+canonical selector, and keep Cauchy mean value as a clearly labeled 10.5
+proof-support theorem rather than a fictitious source heading.
+
+### Current boundaries to preserve visibly
+
+- `difference_quotient` now depends on the checked kernel support for
+  parameter-dependent function return domains.  Its punctured carrier is part
+  of the function type, not an after-the-fact side condition.
+- The current chain-rule Newton estimate has a narrow visible trust caused by
+  anonymous-composition well-definedness.  Its epsilon algebra is not the
+  blocker.
+- The current inverse-function estimate is an `axiom` but belongs in the
+  proof-debt column, not the concept column.
+- The current domain-level differentiability predicate and first L'Hopital
+  theorem have source-identity drift described above.  Fix those interfaces
+  before broad proof cleanup.
+- No change in this design section licenses a new template, struct,
+  `abstract_prop`, compatibility alias, or hidden trust wrapper.
+
 ## Chapter 11: Riemann integration
 
 This is the design map for the important Chapter 11 interfaces. It specifies
@@ -226,7 +542,12 @@ The relation is the specification needed for existence and uniqueness. The
 selected interval_length(I) is the ordinary value used by downstream formulas.
 Reject an is_length_of_interval prop as the only API: every sum would then
 carry an unnecessary witness. The endpoint-representation uniqueness proof is
-debt behind this function, not a reason to change its form.
+now exposed as the checked theorem
+`nonempty_interval_endpoint_representation_unique`: a midpoint argument forces
+any two representations of a nonempty interval to have the same left and right
+endpoints. In the empty case, both positive-part endpoint differences are
+zero. Thus `interval_length` is a checked selected value, not a value hidden
+behind a trusted uniqueness claim.
 
 ## Finite decompositions
 
@@ -258,8 +579,64 @@ piecewise-constant functions, Riemann sums, and all later gluing arguments.
 
 ### Removing a partition piece
 
-The endpoint step has three separate theorem roles. First, a nonempty
-partition has some removable endpoint piece:
+The endpoint step separates order structure from selection. Strict leftness
+is a relation on displayed intervals, and the hypotheses saying that a finite
+family is nonempty, has nonempty members, and is pairwise strictly ordered are
+also props:
+
+~~~litex
+prop is_strictly_left_of_interval(J, K power_set(R)):
+    forall x J, y K:
+        x < y
+
+prop is_pairwise_strictly_ordered_nonempty_interval_family(P finite_set):
+    $is_nonempty_set(P)
+    forall J P:
+        $is_nonempty_set(J)
+    forall J, K P:
+        J != K
+        =>:
+            $is_strictly_left_of_interval(J, K)
+            or $is_strictly_left_of_interval(K, J)
+~~~
+
+These are not templates: no declaration family is generated. They are not
+objects either: they state properties of intervals and finite families.
+Disjoint nonempty bounded intervals are checked to be ordered by this
+relation, and a checked finite-set induction proves that every such family has
+a leftmost member. The selection remains existential; a canonical endpoint
+function or canonical leftmost-piece object would add arbitrary choice that
+later proofs do not need.
+
+The geometric consumer says that removing a displayed leftmost partition
+piece leaves a bounded interval:
+
+~~~litex
+thm removing_leftmost_partition_piece_leaves_bounded_interval:
+    ? forall I power_set(R), P finite_set, J0 P:
+        $is_partition_of_bounded_interval(I, P)
+        $is_nonempty_set(J0)
+        forall K P:
+            K = J0 or $is_strictly_left_of_interval(J0, K)
+        =>:
+            $is_bounded_interval(set_minus(I, J0))
+~~~
+
+Its proof is checked: a remaining point belongs to a unique partition piece
+strictly right of `J0`, so connectedness of `I` shows that no point between
+two remaining points was removed. Boundedness descends from `I`, and the
+bounded-connected characterization converts the remainder back to a bounded
+interval. This last conversion still depends transitively on the visible
+trust inside `bounded_connected_subsets_are_bounded_intervals`; the new
+theorem itself has no local trust.
+
+The same pattern checks `intersection_of_bounded_intervals_is_bounded_interval`:
+the intersection is a bounded subset of either factor, and an interval between
+two intersection points lies in both factors. This removes a duplicate local
+trust from the common-refinement path while leaving the shared foundational
+bounded-connected boundary visible.
+
+Consequently, a nonempty partition has some removable piece:
 
 ~~~litex
 thm partition_has_removable_piece:
@@ -273,8 +650,10 @@ thm partition_has_removable_piece:
 This is an existential `thm`, not a canonical `have fn`: later proofs need any
 endpoint piece, and no mathematical choice is distinguished. It is also not a
 new `is_removable_piece` prop; that wrapper would only rename the displayed
-bounded-complement condition. The interface is implemented with visible
-`trust`; its finite-endpoint selection proof remains open.
+bounded-complement condition. Its proof is checked by splitting off an empty
+piece when one exists, and otherwise applying the finite-leftmost theorem and
+the bounded-remainder theorem above. The rejected endpoint-selector object is
+therefore unnecessary.
 
 Second, deleting a supplied removable piece transfers the partition
 structure to the remainder:
@@ -338,8 +717,8 @@ thm interval_length_adds_across_bounded_difference:
 
 Its interface is implemented with visible `trust`; the four endpoint-form
 classification remains open. Consequently Theorem 11.1.13 itself now has a
-checked proof from two explicit geometric theorem interfaces—endpoint-piece
-existence and length splitting—instead of one theorem-wide trust. Section
+checked proof from the checked endpoint-piece selection chain and this one
+trusted length-splitting interface, instead of a theorem-wide trust. Section
 11.8 reuses the same selection, removal, and generic induction core.
 
 ### Common refinement
@@ -1084,8 +1463,8 @@ The proof route is exactly the checked ordinary skeleton with
 `interval_weight_is_finitely_additive_over_partition` supplies the finite
 induction, then the existing refinement route removes empty pieces, reindexes
 nonempty fibers, and splits constant weighted rectangles. Lemma 11.8.4 now has
-a checked proof from `partition_has_removable_piece` and the narrow trusted
-`alpha_interval_length_adds_across_bounded_difference`; its theorem body is no
+a checked proof from the checked `partition_has_removable_piece` chain and the
+narrow trusted `alpha_interval_length_adds_across_bounded_difference`; its theorem body is no
 longer a finite-additivity trust. The full Analysis runner verifies the
 resulting global composition. The final envelope selectors `upper_riemann_stieltjes_integral`,
 `lower_riemann_stieltjes_integral`, and `stieltjes_integral_on` are already
@@ -1100,9 +1479,9 @@ alpha-length. The same-partition theorem then applies finite-sum monotonicity,
 and `piecewise_constant_stieltjes_minorant_integral_le_majorant_integral`
 sends the two witnessing partitions to their common refinement before calling
 it. These are `thm`s: they state order facts about already-selected values,
-not new Stieltjes objects. The upstream debt in this chain is now the shared
-endpoint-piece selector plus the alpha-length bounded-difference law, not a
-second copy of finite-family induction.
+not new Stieltjes objects. The direct numerical debt in this chain is now the
+alpha-length bounded-difference law, not endpoint-piece selection or a second
+copy of finite-family induction.
 
 The identity-integrator theorem is a thm equating `stieltjes_integral_on` with
 `integral_on`. This layer depends on partitions, finite regrouping, step
@@ -1133,6 +1512,7 @@ have fn integral_from_left_endpoint(
 ) R by exist!:
     ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
         a < b
+        $is_riemann_integrable_on('[a, b], f)
         =>:
             exist! s R st {
                 exist g fn(u '[a, x]) R st {
@@ -1144,6 +1524,7 @@ have fn integral_from_left_endpoint(
 thm integral_from_left_endpoint_has_value:
     ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
         a < b
+        $is_riemann_integrable_on('[a, b], f)
         =>:
             $has_integral_from_left_endpoint(
                 a, b, f, x, integral_from_left_endpoint(a, b, f, x)
@@ -1177,10 +1558,14 @@ prop is_composition_on_closed_interval(
 ~~~
 
 The desired function shape is known, but Litex currently rejects the changing
-result domain fn(u '[a,x]) R. This is a kernel_problem about dependent
+result domain fn(u '[a,x]) R. The selector is therefore exposed only under the
+mathematically necessary hypothesis that `f` is Riemann integrable on the
+parent interval; its trusted body still contains the restriction-and-
+subinterval-integrability bridge. This is a kernel_problem about dependent
 restriction-valued functions, not a reason to weaken the construction into an
-existence-only predicate. Keep the trusted selector narrow until the language
-supports that construction. The FTCs, antiderivatives-differ-by-a-constant,
+existence-only predicate or to make the selector total for arbitrary `f`.
+Keep the trusted selector narrow until the language supports that construction.
+The FTCs, antiderivatives-differ-by-a-constant,
 integration by parts, and change of variables are thms consuming `integral_on`
 or `stieltjes_integral_on`. `is_antiderivative_of`,
 `maps_closed_interval_to_closed_interval`, and
@@ -1189,7 +1574,9 @@ about displayed functions; no new selected ``substitution map'' should be
 invented. The current chapter already follows this classification.
 
 The Chapter 11 selector remains narrowly trusted because of the dependent
-restriction-valued function, but `$has_integral_from_left_endpoint` and
+restriction-valued function and the still-unproved restriction-integrability
+transport, but it is available only for a parent-interval integrable function.
+`$has_integral_from_left_endpoint` and
 `integral_from_left_endpoint_has_value` now expose its ordinary mathematical
 specification to callers. That relation is the right bridge for FTC proofs;
 the global predicate `is_integral_function_from_left_endpoint` describes a
@@ -1203,7 +1590,10 @@ for the relational predicate.
 ~~~text
 interval endpoints and membership
   -> bounded intervals -> interval_length
-  -> partitions -> endpoint-piece removal
+  -> partitions
+  -> disjoint nonempty pieces are strictly ordered
+  -> finite ordered families have a leftmost member
+  -> removing a leftmost piece leaves a bounded interval
   -> generic interval-weight finite additivity
   -> common refinement
   -> finite reorganization (support removal, fibers, regrouping)

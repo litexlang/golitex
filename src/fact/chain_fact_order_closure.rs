@@ -54,10 +54,12 @@ fn order_edge_from_prop(p: &AtomicName) -> Option<OrderEdge> {
     }
 }
 
-fn subset_chain_prop(p: &AtomicName) -> Option<&'static str> {
+fn set_inclusion_edge_from_prop(p: &AtomicName) -> Option<(ChainPolarity, bool)> {
     match p.to_string().as_str() {
-        SUBSET => Some(SUBSET),
-        SUPERSET => Some(SUPERSET),
+        SUBSET => Some((ChainPolarity::Up, false)),
+        PROPER_SUBSET => Some((ChainPolarity::Up, true)),
+        SUPERSET => Some((ChainPolarity::Down, false)),
+        PROPER_SUPERSET => Some((ChainPolarity::Down, true)),
         _ => None,
     }
 }
@@ -76,35 +78,48 @@ impl ChainFact {
             return Ok(base);
         }
 
-        if let Some(first_prop) = self.prop_names.first().and_then(subset_chain_prop) {
-            let all_same_subset_prop = self
-                .prop_names
-                .iter()
-                .all(|p| subset_chain_prop(p) == Some(first_prop));
-            if all_same_subset_prop {
-                let mut extra = Vec::new();
-                let lf = self.line_file.clone();
-                for i in 0..n {
-                    for j in i + 2..n {
-                        let fact: AtomicFact = if first_prop == SUBSET {
-                            SubsetFact::new(self.objs[i].clone(), self.objs[j].clone(), lf.clone())
-                                .into()
-                        } else {
-                            SupersetFact::new(
-                                self.objs[i].clone(),
-                                self.objs[j].clone(),
-                                lf.clone(),
-                            )
-                            .into()
-                        };
-                        extra.push(fact);
-                    }
+        if let Some((polarity, _)) = self
+            .prop_names
+            .first()
+            .and_then(set_inclusion_edge_from_prop)
+        {
+            let mut inclusion_edges = Vec::with_capacity(self.prop_names.len());
+            for prop_name in &self.prop_names {
+                let Some(edge) = set_inclusion_edge_from_prop(prop_name) else {
+                    return Ok(base);
+                };
+                if edge.0 != polarity {
+                    return Ok(base);
                 }
-
-                let mut all = base;
-                all.extend(extra);
-                return Ok(dedup_atomic_facts(all));
+                inclusion_edges.push(edge);
             }
+
+            // Same-direction inclusion chains are transitive, and one strict edge
+            // makes every enclosing path strict.
+            // Example: `A $subset B $proper_subset C` yields `A $proper_subset C`.
+            let mut extra = Vec::new();
+            let lf = self.line_file.clone();
+            for i in 0..n {
+                for j in i + 2..n {
+                    let path_is_strict = inclusion_edges[i..j].iter().any(|edge| edge.1);
+                    let predicate = match (polarity, path_is_strict) {
+                        (ChainPolarity::Up, false) => SUBSET,
+                        (ChainPolarity::Up, true) => PROPER_SUBSET,
+                        (ChainPolarity::Down, false) => SUPERSET,
+                        (ChainPolarity::Down, true) => PROPER_SUPERSET,
+                    };
+                    extra.push(AtomicFact::to_atomic_fact(
+                        AtomicName::WithoutMod(predicate.to_string()),
+                        true,
+                        vec![self.objs[i].clone(), self.objs[j].clone()],
+                        lf.clone(),
+                    )?);
+                }
+            }
+
+            let mut all = base;
+            all.extend(extra);
+            return Ok(dedup_atomic_facts(all));
         }
 
         let mut edges: Vec<OrderEdge> = Vec::with_capacity(self.prop_names.len());
@@ -219,5 +234,71 @@ impl ChainFact {
         let mut all = base;
         all.extend(extra);
         Ok(dedup_atomic_facts(all))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    fn obj(name: &str) -> Obj {
+        Identifier::new(name.to_string()).into()
+    }
+
+    fn prop(name: &str) -> AtomicName {
+        AtomicName::WithoutMod(name.to_string())
+    }
+
+    fn closure_strings(objs: &[&str], props: &[&str]) -> Vec<String> {
+        ChainFact::new(
+            objs.iter().map(|name| obj(name)).collect(),
+            props.iter().map(|name| prop(name)).collect(),
+            default_line_file(),
+        )
+        .facts_with_order_transitive_closure()
+        .expect("valid relation chain should have a closure")
+        .into_iter()
+        .map(|fact| fact.to_string())
+        .collect()
+    }
+
+    #[test]
+    fn set_inclusion_closure_is_strict_when_any_path_edge_is_strict() {
+        let facts = closure_strings(&["A", "B", "C", "D"], &[SUBSET, PROPER_SUBSET, SUBSET]);
+
+        for expected in [
+            "A $proper_subset C",
+            "A $proper_subset D",
+            "B $proper_subset D",
+        ] {
+            assert!(facts.iter().any(|fact| fact == expected), "{facts:?}");
+        }
+
+        let reverse_order = closure_strings(&["A", "B", "C"], &[PROPER_SUBSET, SUBSET]);
+        assert!(
+            reverse_order
+                .iter()
+                .any(|fact| fact == "A $proper_subset C"),
+            "{reverse_order:?}"
+        );
+
+        let supersets = closure_strings(&["A", "B", "C"], &[SUPERSET, PROPER_SUPERSET]);
+        assert!(
+            supersets.iter().any(|fact| fact == "A $proper_superset C"),
+            "{supersets:?}"
+        );
+    }
+
+    #[test]
+    fn opposite_inclusion_directions_do_not_create_endpoint_facts() {
+        let facts = closure_strings(&["A", "B", "C"], &[PROPER_SUBSET, PROPER_SUPERSET]);
+
+        assert_eq!(
+            facts,
+            vec![
+                "A $proper_subset B".to_string(),
+                "B $proper_superset C".to_string(),
+            ]
+        );
     }
 }

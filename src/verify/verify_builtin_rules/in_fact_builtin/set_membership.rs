@@ -165,7 +165,7 @@ impl Runtime {
     // Family-union introduction: `x $in big_union(F)` follows from a member set
     // containing `x`, either as a known existential or as concrete facts.
     // Example: `A $in F` and `x $in A` prove `x $in big_union(F)`.
-    pub(super) fn verify_in_fact_in_cup_by_member_witness(
+    pub(super) fn verify_in_fact_in_big_union_by_member_witness(
         &mut self,
         in_fact: &InFact,
         big_union: &BigUnion,
@@ -178,14 +178,17 @@ impl Runtime {
             return Ok(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
-                    "big_union membership: an element of a member set is in the family union".to_string(),
+                    "big_union membership: an element of a member set is in the family union"
+                        .to_string(),
                     vec![exist_result],
                 )
                 .into(),
             );
         }
 
-        for member_set in self.known_member_sets_for_cup_family(in_fact, big_union.left.as_ref()) {
+        for member_set in
+            self.known_member_sets_for_big_union_family(in_fact, big_union.left.as_ref())
+        {
             let member_set_in_family: AtomicFact = InFact::new(
                 member_set.clone(),
                 big_union.left.as_ref().clone(),
@@ -405,7 +408,7 @@ impl Runtime {
         }
     }
 
-    pub(super) fn known_member_sets_for_cup_family(
+    pub(super) fn known_member_sets_for_big_union_family(
         &self,
         in_fact: &InFact,
         family: &Obj,
@@ -415,7 +418,7 @@ impl Runtime {
         let family_keys = self.all_objs_equal_to_arg_for_known_atomic_fact(family, &module_names);
         let mut candidates = Vec::new();
         for environment in self.iter_environments_from_top() {
-            Self::extend_known_member_sets_for_cup_family_from_environment(
+            Self::extend_known_member_sets_for_big_union_family_from_environment(
                 environment,
                 &family_keys,
                 &mut candidates,
@@ -423,7 +426,7 @@ impl Runtime {
         }
         for module_name in module_names.iter() {
             for environment in self.imported_module_environments(module_name) {
-                Self::extend_known_member_sets_for_cup_family_from_environment(
+                Self::extend_known_member_sets_for_big_union_family_from_environment(
                     environment,
                     &family_keys,
                     &mut candidates,
@@ -443,7 +446,7 @@ impl Runtime {
         candidates
     }
 
-    pub(super) fn extend_known_member_sets_for_cup_family_from_environment(
+    pub(super) fn extend_known_member_sets_for_big_union_family_from_environment(
         environment: &Environment,
         family_keys: &[String],
         candidates: &mut Vec<Obj>,

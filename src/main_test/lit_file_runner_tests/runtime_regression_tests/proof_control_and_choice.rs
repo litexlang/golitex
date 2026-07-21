@@ -1200,7 +1200,7 @@ by axiom_of_choice: set S:
     trust forall A S:
         $is_nonempty_set(A)
 
-exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
+exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
@@ -1224,7 +1224,7 @@ trust forall A S:
 
 by axiom_of_choice: set S
 
-exist f fn(A S) cup(S) st {forall! A S => {f(A) $in A}}
+exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(

@@ -600,19 +600,24 @@ claim:
         ? exist m, r N st {$is_euclidean_division(n, q, m, r)}
 
         ? from n = 0:
-            witness exist m, r N st {$is_euclidean_division(0, q, m, r)} from 0, 0
+            witness exist m, r N st {$is_euclidean_division(0, q, m, r)} from 0, 0:
+                0 = 0 * q + 0
 
         ? induc:
             obtain m, r from exist m, r N st {$is_euclidean_division(n, q, m, r)}
+            r < q
+            n = m * q + r
             by cases:
                 ? exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)}
                 case r + 1 < q:
                     witness exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)} from m, r + 1:
-                        n + 1 = m * q + (r + 1)
+                        n + 1 = (m * q + r) + 1 = m * q + (r + 1)
                 case r + 1 >= q:
+                    r + 1 <= q
+                    q <= r + 1
                     r + 1 = q
                     witness exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)} from m + 1, 0:
-                        n + 1 = (m + 1) * q + 0
+                        n + 1 = (m * q + r) + 1 = m * q + (r + 1) = m * q + q = (m + 1) * q + 0
 
 """
 Remark 2.3.10. Dividing a natural number by a positive natural number produces

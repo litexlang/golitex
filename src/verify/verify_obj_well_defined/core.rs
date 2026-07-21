@@ -215,7 +215,8 @@ impl Runtime {
                     ), well_defined_error)))
             })?;
 
-            let set_where_the_next_fn_obj_is_in = space.ret_set_obj();
+            let set_where_the_next_fn_obj_is_in =
+                self.fn_set_return_set_after_args(&space, args)?;
 
             let fn_obj_prefix_body: Vec<Vec<Box<Obj>>> =
                 fn_obj.body[..=i].iter().cloned().collect();
@@ -223,7 +224,7 @@ impl Runtime {
                 FnObj::new(*fn_obj.head.clone(), fn_obj_prefix_body).into();
             let intermediate_in_fact = InFact::new(
                 fn_obj_prefix_as_obj,
-                set_where_the_next_fn_obj_is_in,
+                set_where_the_next_fn_obj_is_in.clone(),
                 default_line_file(),
             );
             let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
@@ -260,7 +261,7 @@ impl Runtime {
                 break;
             }
 
-            space = self.fn_set_space_from_return_set_obj(space.ret_set_obj())?;
+            space = self.fn_set_space_from_return_set_obj(set_where_the_next_fn_obj_is_in)?;
         }
 
         Ok(())

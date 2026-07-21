@@ -81,4 +81,5 @@ mod missing_numeric_builtins;
 mod numeric_and_set_rules;
 mod output_contracts;
 mod proof_control_and_choice;
+mod proper_set_relations;
 mod structural_definitions;

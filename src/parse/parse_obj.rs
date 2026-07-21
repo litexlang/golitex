@@ -325,10 +325,9 @@ impl Runtime {
             }
 
             tb.skip_token(RIGHT_BRACE)?;
-            // Return sets are non-dependent; parse them outside the function-parameter scope.
+            let ret_set_parsed = this.parse_obj(tb)?;
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::FnSet, &all_fn_names);
-            let ret_set_parsed = this.parse_obj(tb)?;
             let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
             Ok(FnSetOrFnSetClause::FnSet(built?))
         });
@@ -400,10 +399,9 @@ impl Runtime {
             }
 
             tb.skip_token(RIGHT_BRACE)?;
-            // Return sets are non-dependent; parse them outside the function-parameter scope.
+            let ret_set_parsed = this.parse_obj(tb)?;
             this.parsing_free_param_collection
                 .end_scope(ParamObjType::FnSet, &all_fn_names);
-            let ret_set_parsed = this.parse_obj(tb)?;
             let clause_ok = FnSetClause::new(params_def_with_set, dom_facts, ret_set_parsed)?;
             Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
         });
@@ -752,19 +750,6 @@ impl Runtime {
                 ))
             })?;
             return Ok(SetDiff::new(left, right).into());
-        }
-        if tok == LEGACY_CAP || tok == LEGACY_CUP {
-            let replacement = if tok == LEGACY_CAP {
-                BIG_INTERSECT
-            } else {
-                BIG_UNION
-            };
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!("`{}` has been replaced by `{}`", tok, replacement),
-                    tb.line_file.clone(),
-                ),
-            )));
         }
         if tok == BIG_INTERSECT {
             tb.skip()?;
@@ -2508,21 +2493,21 @@ mod matrix_operator_parse_tests {
             assert_eq!(obj.kind(), expected_kind, "{source}");
             assert_eq!(obj.to_string(), source, "{source}");
         }
+
+        assert_eq!(ObjKind::BigUnion as u8, 18);
+        assert_eq!(ObjKind::BigIntersect as u8, 19);
     }
 
     #[test]
-    fn legacy_set_family_operators_report_their_replacements() {
+    fn big_set_family_operators_reject_wrong_arity() {
         let cases = [
-            ("cup(F)", "`cup` has been replaced by `big_union`"),
-            (
-                "cap(F)",
-                "`cap` has been replaced by `big_intersect`",
-            ),
+            ("big_union(A, B)", "big_union expects 1 argument"),
+            ("big_intersect(A, B)", "big_intersect expects 1 argument"),
         ];
 
         for (source, expected_message) in cases {
             let error = match parse_obj_line(source) {
-                Ok(obj) => panic!("legacy set-family operator should be rejected, parsed {obj}"),
+                Ok(obj) => panic!("wrong-arity set-family operator parsed as {obj}"),
                 Err(error) => error,
             };
             let RuntimeError::ParseError(error) = error else {

@@ -128,14 +128,22 @@ remain the bridge back to displayed witnesses. The relational specification
 `alpha_interval_length_has_value` are the stable bridge from that value to its
 endpoint cases.
 
+The ordinary `interval_length` selector now has checked existence and
+uniqueness. Its uniqueness proof separates the empty case from the nonempty
+midpoint theorem `nonempty_interval_endpoint_representation_unique`, so
+different open/closed endpoint presentations cannot silently assign different
+values.
+
 The final Chapter 11 layer keeps the same distinction: the integral function
 from a left endpoint is the value API `integral_from_left_endpoint`, while
 `$is_antiderivative_of`, `$maps_closed_interval_to_closed_interval`, and
 `$is_composition_on_closed_interval` are assumptions about displayed
 functions. FTC, integration by parts, and change of variables are theorems.
-The left-endpoint selector has one narrow, visible trust boundary because its
-restriction function has a domain that changes with `x`; its stable
-specification bridge is `$has_integral_from_left_endpoint` together with
+The left-endpoint selector is available only when the integrand is Riemann
+integrable on the parent interval. It has one narrow, visible trust boundary:
+constructing the restriction function whose domain changes with `x` and
+transporting integrability to that subinterval. Its stable specification
+bridge is `$has_integral_from_left_endpoint` together with
 `integral_from_left_endpoint_has_value`. The canonical function satisfies the
 relational global predicate by
 `selected_left_endpoint_integral_is_integral_function`.
@@ -180,13 +188,27 @@ finite regrouping to Proposition 11.2.13.
 `partition_removal_partitions_bounded_remainder` is also checked: after a
 piece is selected whose complement is a bounded interval, it transfers finite
 coverage and uniqueness to the remaining pieces.
+The selection chain is now explicit and checked. The prop
+`$is_strictly_left_of_interval` orders disjoint nonempty bounded intervals;
+`$is_pairwise_strictly_ordered_nonempty_interval_family` classifies the finite
+families to which `finite_pairwise_ordered_nonempty_intervals_have_leftmost`
+applies. `removing_leftmost_partition_piece_leaves_bounded_interval` proves
+that the selected leftmost piece has a bounded-interval complement, while
+`partition_has_removable_piece` handles empty pieces separately. These are
+relations and existential theorems, not canonical endpoint or leftmost-piece
+objects. The bounded-remainder proof still depends transitively on the visible
+trust in `bounded_connected_subsets_are_bounded_intervals`.
+`intersection_of_bounded_intervals_is_bounded_interval` uses the same
+bounded-and-connected route and is also checked relative to that single
+foundational boundary.
 `interval_weight_is_finitely_additive_over_partition` now checks the shared
 empty case, cardinality induction, residual-family step, and finite-sum
 regrouping for any bounded-interval weight with an additive endpoint split.
 Theorem 11.1.13 is its ordinary-length consumer and no longer contains a
-theorem-wide trust. Its two explicit upstream trust interfaces are
-`partition_has_removable_piece` and
-`interval_length_adds_across_bounded_difference`.
+theorem-wide trust. Its direct numerical trust interface is now only
+`interval_length_adds_across_bounded_difference`; its geometric selection
+route is checked relative to the foundational bounded-connected
+characterization just noted.
 `piecewise_constant_integral_with_partition_reindexes_over_refinement`
 composes them with empty-piece removal and unique-cover regrouping, and
 Proposition 11.2.13 then sends two partitions to their selected common
@@ -224,10 +246,11 @@ The Stieltjes piecewise-constant base now mirrors the ordinary one: canonical
 piece and fixed-partition selectors are linked to the existing relation, and
 the global selector is justified by alpha-length refinement transport through
 a common refinement. Lemma 11.8.4 now reuses the checked generic
-interval-weight induction; its remaining upstream debt is the shared
-endpoint-piece selector and
-`alpha_interval_length_adds_across_bounded_difference`, not a second trusted
-finite-additivity proof. The full Analysis runner verifies this composition.
+interval-weight induction; its remaining upstream debt is the foundational
+bounded-connected characterization and
+`alpha_interval_length_adds_across_bounded_difference`, not endpoint-piece
+selection or a second trusted finite-additivity proof. The full Analysis
+runner verifies this composition.
 The corresponding checked order
 layer compares weighted rectangles on one piece, sums them on one partition,
 and sends the two witness partitions to a common refinement; it is exposed by

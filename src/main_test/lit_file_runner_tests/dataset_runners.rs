@@ -5,9 +5,7 @@ use std::time::Instant;
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
-use super::helper::{
-    print_slowest_run_labels, run_with_large_stack, source_has_isolated_import,
-};
+use super::helper::{print_slowest_run_labels, run_with_large_stack, source_has_isolated_import};
 
 #[test]
 fn run_gsm8k_solutions() {
@@ -892,10 +890,17 @@ fn run_litex_file_directory(
     total_solution_duration_ms: &mut f64,
 ) {
     let mut litex_files: Vec<PathBuf> = fs::read_dir(litex_file_dir)
-        .unwrap_or_else(|error_message| panic!("failed to read {:?}: {}", litex_file_dir, error_message))
+        .unwrap_or_else(|error_message| {
+            panic!("failed to read {:?}: {}", litex_file_dir, error_message)
+        })
         .map(|entry| entry.map(|item| item.path()))
         .collect::<Result<Vec<_>, _>>()
-        .unwrap_or_else(|error_message| panic!("failed to enumerate {:?}: {}", litex_file_dir, error_message));
+        .unwrap_or_else(|error_message| {
+            panic!(
+                "failed to enumerate {:?}: {}",
+                litex_file_dir, error_message
+            )
+        });
     litex_files.retain(|path| path.extension().is_some_and(|extension| extension == "lit"));
     litex_files.sort();
 
@@ -904,8 +909,9 @@ fn run_litex_file_directory(
             .file_stem()
             .and_then(|name| name.to_str())
             .unwrap_or_else(|| panic!("invalid Math23K file name {:?}", litex_file_path));
-        let source = fs::read_to_string(litex_file_path)
-            .unwrap_or_else(|error_message| panic!("failed to read {:?}: {}", litex_file_path, error_message));
+        let source = fs::read_to_string(litex_file_path).unwrap_or_else(|error_message| {
+            panic!("failed to read {:?}: {}", litex_file_path, error_message)
+        });
         let source_path_str = litex_file_path
             .to_str()
             .unwrap_or_else(|| panic!("invalid UTF-8 source path {:?}", litex_file_path));
