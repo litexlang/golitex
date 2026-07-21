@@ -1,10 +1,10 @@
 # Linear Algebra Done Right
 
-This module is a source-ordered Litex formalization of Chapters 1–6 of Sheldon
-Axler's *Linear Algebra Done Right*, fourth edition. The repository-local
-transcript dated 9 May 2026 is the source of truth. Standalone exercises are
-omitted; definitions, notation, results, and mathematically useful explanatory
-prose are retained in the order in which the book introduces them.
+This module is a source-ordered Litex formalization of Chapters 1–6 and Sections
+7A–7C of Sheldon Axler's *Linear Algebra Done Right*, fourth edition. The
+repository-local transcript dated 9 May 2026 is the source of truth. Standalone
+exercises are omitted; definitions, notation, results, and mathematically useful
+explanatory prose are retained in the order in which the book introduces them.
 
 ## Run entrypoint and namespaces
 
@@ -15,9 +15,9 @@ target/debug/litex -compact -runner -r textbooks/LinearAlgebraDoneRight
 ```
 
 `litex.config` exports one namespace per source section, from `chap1a`
-through `chap3f`, followed by `chap4`, `chap5a` through `chap5e`, and `chap6a`
-through `chap6c`. Cross-section uses are explicit,
-for example `chap2a::span` and `chap3b::null_space`.
+through `chap3f`, followed by `chap4`, `chap5a` through `chap5e`, `chap6a`
+through `chap6c`, then `chap7a` through `chap7c`. Cross-section uses are
+explicit, for example `chap2a::span` and `chap3b::null_space`.
 
 Chapter files use file-local macros such as `@ScalarSystem`, `@Scalars`,
 `@Space`, and `@LinearMaps` for repeated fully qualified types, structure
@@ -25,7 +25,7 @@ views, and function families. `@ScalarSystem` denotes the bare scalar-system
 type, while `@Scalars` denotes the view of the supplied `scalars` instance.
 These macros are readability-only textual abbreviations: public declarations
 keep their mathematical parameters explicit, and the canonical cross-file
-namespaces remain `chap1a` through `chap6c`.
+namespaces remain `chap1a` through `chap7c`.
 
 The ordinary project runner checks that the exported project loads and that
 the public declarations are well formed. Because project exports are trusted
@@ -70,7 +70,16 @@ The current public surface includes:
   the uniquely selected Riesz representative; and
 - orthogonal complements, pointwise-defined orthogonal projections,
   minimization, null-complement restrictions, pseudoinverses, and their exact
-  algebraic and best-solution properties.
+  algebraic and best-solution properties; and
+- adjoints, conjugate transpose, self-adjoint and normal operators, and the
+  source's null/range, norm, eigenvector, and commuting-part characterizations;
+  and
+- real and complex spectral-theorem interfaces through orthonormal
+  diagonalizing and eigenvector bases, plus the checked calculations in
+  Examples 7.30 and 7.33; and
+- positive operators, square-root candidates, all six source
+  characterizations, the unique positive-square-root interface and callable
+  selected root, plus checked calculations from Examples 7.35, 7.37, and 7.41.
 
 Representative application shape:
 
@@ -90,7 +99,10 @@ and direct `trust` boundaries are counted section by section in
 boundaries are construction of selected complex/vector structures,
 finite-list exchange and basis theorems, quotient well-definedness, rank,
 duality, the analytic input to the fundamental theorem of algebra, and the
-finite-sum algebra behind operator-polynomial multiplicativity.
+finite-sum algebra behind operator-polynomial multiplicativity. Sections 7A
+and 7C each keep one direct typed selector trust, for the adjoint and positive
+square root respectively, because the verifier cannot yet instantiate these
+subtype-valued parameterized selections in a real importing caller.
 
 `math_collections.md` records the intended mathematical interfaces and their
 dependency order. Working plans, item records, verifier notes, and blockers

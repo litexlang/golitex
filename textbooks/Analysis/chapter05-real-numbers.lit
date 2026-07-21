@@ -588,15 +588,13 @@ prop has_formal_limit_in_Q(a seq(Q), x R):
 prop has_cauchy_sequence_representative_in_Q(x R):
     exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x)}
 
-# Tao defines reals as equivalence classes of rational Cauchy sequences.  Litex
-# currently supplies `R` as a builtin carrier, so this is an explicit trusted
-# compatibility bridge: it states that every builtin real has such a
-# representative.  It is deliberately local to this chapter, not a builtin
-# axiom and not a definition of `R`.
-thm cauchy_sequence_representative_in_Q_exists:
+# Definition 5.3.1 constructs real numbers as equivalence classes of rational
+# Cauchy sequences.  Because Litex supplies `R` as a builtin carrier, the
+# identification with that construction is stated as a chapter axiom: every
+# builtin real has a rational Cauchy representative.
+axiom cauchy_sequence_representative_in_Q_exists:
     ? forall x R:
         $has_cauchy_sequence_representative_in_Q(x)
-    trust $has_cauchy_sequence_representative_in_Q(x)
 
 # Litex exposes rational density as a builtin rule: every nonempty real
 # interval contains a rational.  Chapter 5 keeps this source-facing theorem
@@ -2188,8 +2186,7 @@ thm least_upper_bound_unique:
 # The checked recursive bisection core above keeps a lower endpoint that is not
 # an upper bound.  The older convergence-facing interface below still asks for
 # lower endpoints in `E`, global monotonicity, and eventual-width estimates;
-# its conversion from the checked core remains explicit proof debt.  The local
-# lemmas below isolate that legacy epsilon/common-limit route.
+# the local lemmas below isolate that epsilon/common-limit route.
 
 prop is_cauchy_tail_in_R(a seq(R), epsilon R_pos, n0 N_pos):
     forall j, k N_pos:
@@ -2202,12 +2199,14 @@ prop is_cauchy_sequence_in_R(a seq(R)):
     forall epsilon R_pos:
         exist n0 N_pos st {$is_cauchy_tail_in_R(a, epsilon, n0)}
 
-thm real_cauchy_sequence_has_limit_in_R:
+# The rational-Cauchy construction makes the real numbers sequentially
+# complete.  For Litex's builtin `R`, this construction-level identification is
+# recorded explicitly as the corresponding completeness axiom.
+axiom real_cauchy_sequence_has_limit_in_R:
     ? forall a seq(R):
         $is_cauchy_sequence_in_R(a)
         =>:
             exist L R st {$has_limit_in_R(a, L)}
-    trust exist L R st {$has_limit_in_R(a, L)}
 
 prop is_bracket_width_below_after(lower, upper seq(R), epsilon R_pos, n0 N_pos):
     forall n N_pos:

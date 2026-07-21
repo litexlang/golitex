@@ -1,0 +1,42 @@
+# Mathematics still to be completed
+#
+# Chapters 1-3 — foundational linear algebra
+# The remaining gaps are the selected complex and vector-space structures,
+# finite-list exchange and basis theorems, matrix/rank constructions, quotient
+# well-definedness, inverse selection, and dual-space constructions. The
+# source-facing definitions and results are present, but these constructions
+# and proofs have not all been supplied.
+#
+# Chapter 4 — polynomial factorization
+# The coordinate complex-number laws, polynomial representation and division,
+# and the analytic minimum-modulus argument used by the fundamental theorem of
+# algebra still need complete proofs.
+#
+# Chapter 5, Sections 5A-5E — operators
+# The finite-sum algebra for polynomial evaluation, minimal-polynomial
+# existence and consequences, invariant restrictions, triangularization,
+# diagonalization, eigenspace dimension arguments, Gershgorin's theorem, and
+# simultaneous-basis results still contain unproved mathematical steps.
+#
+# Chapter 6, Sections 6A-6C — inner-product spaces
+# The scalar-geometry instances, norm inequalities, Gram-Schmidt and Riesz
+# constructions, orthogonal decompositions and projections, and pseudoinverse
+# results retain incomplete existence or proof steps.
+#
+# Chapter 7, Section 7A — Results 7.5-7.23
+# The adjoint construction is uniquely characterized, and Result 7.4 is
+# checked. The adjoint algebra, null/range identities, self-adjoint criteria,
+# and normal-operator consequences still need their full proofs.
+#
+# Chapter 7, Section 7B — Results 7.26, 7.27, 7.29, and 7.31
+# The four source statements and the concrete calculations in Examples 7.30
+# and 7.33 are present. The quadratic positivity proof, real factor elimination, and the
+# real and complex spectral-theorem arguments remain to be completed.
+#
+# Chapter 7, Section 7C — Results 7.38, 7.39, and 7.43
+# Positivity, square-root candidacy, the six-way characterization, exact unique
+# existence, callable square-root notation, and the three checked source
+# examples are present. The spectral construction and uniqueness proof remain,
+# as does the two-move proof of 7.43. The callable positive-square-root selector
+# is one explicit trust boundary because subtype-valued selection is not yet
+# stable in an importing caller.

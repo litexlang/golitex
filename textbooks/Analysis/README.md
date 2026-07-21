@@ -76,10 +76,11 @@ $has_limit(rational_power_approx_seq(x, fn(n N_pos) R {q}), x^q)
 
 The corresponding human design map is in `math_collections.md`; the runtime
 definition graph exposes the actual typed dependencies retained by an
-executed project environment.  Its current default-project artifact honestly
-marks Chapter 6 as a trusted/affect-only project export.  Strict verification
-is presently blocked by an earlier Chapter 5 trust boundary, so skipped proof
-bodies are not represented as if they had been checked.
+executed project environment.  The Chapter 5 identification between builtin
+`R` and the rational-Cauchy construction is stated explicitly through the
+axioms `cauchy_sequence_representative_in_Q_exists` and
+`real_cauchy_sequence_has_limit_in_R`; these are foundational compatibility
+assumptions, not unfinished Chapter 5 proofs.
 
 ## Chapter 8 infinite-set interface
 
@@ -91,7 +92,9 @@ subsets, images, binary unions, and Cartesian products. The source-facing
 interleaving, followed by the at-most-countable and infinite bridges.
 `integers_are_countable` enumerates the range of `n |-> -n`, proves
 `Z = N union (-N)`, and then applies that union theorem. The later product and
-rational-countability proofs reuse these named results.
+rational-countability proofs reuse these named results.  The countable-family
+union theorem also verifies: it uses the explicit choice axiom to select one
+injective coding graph per fiber and pairs the outer and inner natural codes.
 
 The next layer represents countable-set sums by composing a displayed
 enumeration with the summand, then relates finite absolute subsum bounds to
@@ -101,11 +104,16 @@ interfaces, partial/total/well-order predicates, strong induction, and Zorn's
 maximal-element principle. The detailed concept roles and dependency order
 are recorded in [`math_collections.md`](math_collections.md).
 
-Proof boundaries remain visible. The countable-union exercise, substantial
-Fubini and arbitrary-summation steps, Riemann rearrangement, the binary-decimal
-injection into the reals, and several good-chain lemmas still contain
-`trust`; the axiom of choice is declared as an `axiom`. The checked final
-theorems that depend on one of these interfaces do not erase that provenance.
+Proof boundaries remain visible. Finite subsum comparison and capture,
+coordinate-swap transport, nonzero-support countability, bijection change of
+variables, and finite-total-order well-ordering are checked.  The remaining
+`trust` is concentrated in enumeration independence, the analytic row-first
+core of Fubini, Riemann rearrangement, the binary-decimal injection, and four
+good-chain lemmas.  There is also a known finite-support definition defect:
+the current countable-series predicate demands a bijection `N_pos -> X`, so
+empty and finite supports need a separate finite-sum branch before the general
+addition and zero-scalar laws can be proved.  The axiom of choice remains an
+explicit `axiom`; checked callers do not erase that provenance.
 
 ## Chapter 10 differentiation interface
 

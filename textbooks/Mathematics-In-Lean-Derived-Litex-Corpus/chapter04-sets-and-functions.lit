@@ -1,6 +1,6 @@
 # Chapter 4 — Sets and Functions
 # Independent MIL-derived Litex pressure-test corpus; see README for scope,
-# attribution, and checked/trusted status.
+# attribution, and checked/deferred status.
 
 # This chapter keeps the mathematical interfaces from Mathematics in Lean and
 # omits repeated Lean tactic demonstrations. Sets use Litex's builtin carriers
@@ -20,7 +20,7 @@ have odds power_set(N) = {n N: not $chap1::even(n)}
 
 # Source definition `primes`. Primality already forces positivity, so the
 # carrier is N_pos and the mathematical predicate comes from std/basics.
-have primes power_set(N_pos) = {p N_pos: $std::basics::prime(p)}
+have primes power_set(N_pos) = {p N_pos: $basics::prime(p)}
 
 # ---------------------------------------------------------------------------
 # Section 4.2 — Functions
@@ -54,7 +54,7 @@ prop has_preimage(S, T set, f fn(x S) T, y T):
 # because A has carrier power_set(S); no redundant ambient-membership premise is
 # added to the mathematical definition.
 prop has_preimage_in_subset(S, T set, f fn(x S) T, A power_set(S), y T):
-    exist x A st {y = f(x)}
+    exist x S st {x $in A, y = f(x)}
 
 template<S, T set, f fn(x S) T, A power_set(S)>:
     have set_image power_set(T) = {y T: $has_preimage_in_subset(S, T, f, A, y)}

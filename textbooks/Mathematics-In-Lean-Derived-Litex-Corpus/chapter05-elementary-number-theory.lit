@@ -1,6 +1,6 @@
 # Chapter 5 — Elementary Number Theory
 # Independent MIL-derived Litex pressure-test corpus; see README for scope,
-# attribution, and checked/trusted status.
+# attribution, and checked/deferred status.
 
 # The chapter moves from prime divisibility to induction, recursive functions,
 # infinitude of primes, and Fibonacci identities. Lean proof-script variants
@@ -12,7 +12,7 @@
 # directly, with the guard required by the imported gcd construction.
 prop coprime(a, b N):
     a != 0 or b != 0
-    std::basics::gcd(a, b) = 1
+    basics::gcd(a, b) = 1
 
 # Source theorem: even_of_even_sqr.
 # The source invokes primality of 2. The same prime-divisor-of-a-power step is
@@ -81,14 +81,14 @@ thm coprime_square_not_twice_square:
         obtain b from exist b N st {n = 2 * b}
         witness exist q Z st {m = 2 * q} from a:
             m = 2 * a
-        $std::basics::divides(2, m)
+        $basics::divides(2, m)
         witness exist q Z st {n = 2 * q} from b:
             n = 2 * b
-        $std::basics::divides(2, n)
+        $basics::divides(2, n)
         m != 0 or n != 0
-        std::basics::gcd(m, n) = 1
-        by thm std::basics::common_divisor_le_gcd(m, n, 2)
-        2 <= std::basics::gcd(m, n) = 1
+        basics::gcd(m, n) = 1
+        by thm basics::common_divisor_le_gcd(m, n, 2)
+        2 <= basics::gcd(m, n) = 1
         impossible 2 <= 1
 
 # 5.2 Induction and Recursion
@@ -117,13 +117,13 @@ thm positive_index_divides_factorial:
         i > 0
         i <= n
         =>:
-            $std::basics::divides(i, factorial(n))
+            $basics::divides(i, factorial(n))
     prop _all_positive_indices_divide_factorial(k N):
         forall j N:
             j > 0
             j <= k
             =>:
-                $std::basics::divides(j, factorial(k))
+                $basics::divides(j, factorial(k))
     claim:
         ? forall k N:
             $_all_positive_indices_divide_factorial(k)
@@ -135,9 +135,9 @@ thm positive_index_divides_factorial:
                         j > 0
                         j <= k
                         =>:
-                            $std::basics::divides(j, factorial(k))
+                            $basics::divides(j, factorial(k))
                     by contra:
-                        ? $std::basics::divides(j, factorial(k))
+                        ? $basics::divides(j, factorial(k))
                         j <= 0
                         j = 0
                         j != 0
@@ -150,12 +150,12 @@ thm positive_index_divides_factorial:
                         j > 0
                         j <= k + 1
                         =>:
-                            $std::basics::divides(j, factorial(k + 1))
+                            $basics::divides(j, factorial(k + 1))
                     j <= k or j > k
                     by cases:
-                        ? $std::basics::divides(j, factorial(k + 1))
+                        ? $basics::divides(j, factorial(k + 1))
                         case j <= k:
-                            $std::basics::divides(j, factorial(k))
+                            $basics::divides(j, factorial(k))
                             obtain q from exist q Z st {factorial(k) = j * q}
                             factorial(k) = j * q
                             (k + 1) * factorial(k) = (k + 1) * (j * q)
@@ -166,7 +166,7 @@ thm positive_index_divides_factorial:
                                 ? exist q1 Z st {factorial(k + 1) = j * q1}
                                 witness exist q1 Z st {factorial(k + 1) = j * q1} from (k + 1) * q:
                                     factorial(k + 1) = j * ((k + 1) * q)
-                            $std::basics::divides(j, factorial(k + 1))
+                            $basics::divides(j, factorial(k + 1))
                         case j > k:
                             j = k + 1
                             factorial(k + 1) = (k + 1) * factorial((k + 1) - 1) = (k + 1) * factorial(k)
@@ -175,10 +175,10 @@ thm positive_index_divides_factorial:
                                 ? exist q1 Z st {factorial(k + 1) = j * q1}
                                 witness exist q1 Z st {factorial(k + 1) = j * q1} from factorial(k):
                                     factorial(k + 1) = j * factorial(k)
-                            $std::basics::divides(j, factorial(k + 1))
+                            $basics::divides(j, factorial(k + 1))
                 $_all_positive_indices_divide_factorial(k + 1)
     $_all_positive_indices_divide_factorial(n)
-    $std::basics::divides(i, factorial(n))
+    $basics::divides(i, factorial(n))
 
 # Source theorem: pow_two_le_fac.
 thm power_two_le_factorial:
@@ -258,19 +258,19 @@ thm exists_prime_factor:
     ? forall n N:
         n >= 2
         =>:
-            exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
-    have divisors finite_set = {d range(2, n + 1): $std::basics::divides(d, n)}
+            exist p N_pos st {$basics::prime(p), $basics::divides(p, n)}
+    have divisors finite_set = {d range(2, n + 1): $basics::divides(d, n)}
     n $in range(2, n + 1)
     witness exist q Z st {n = n * q} from 1:
         n = n * 1
-    $std::basics::divides(n, n)
+    $basics::divides(n, n)
     n $in divisors
     $is_nonempty_set(divisors)
     have p N_pos = finite_set_min(divisors)
     p $in divisors
     p $in range(2, n + 1)
     p >= 2
-    $std::basics::divides(p, n)
+    $basics::divides(p, n)
     claim:
         ? forall d range(2, p):
             p % d != 0
@@ -279,12 +279,12 @@ thm exists_prime_factor:
             p % d = 0
             witness exist q Z st {p = d * q} from integer_quotient(p, d):
                 p = d * integer_quotient(p, d) + p % d = d * integer_quotient(p, d)
-            $std::basics::divides(d, p)
+            $basics::divides(d, p)
             obtain a from exist a Z st {p = d * a}
             obtain b from exist b Z st {n = p * b}
             witness exist q Z st {n = d * q} from a * b:
                 n = p * b = d * a * b = d * (a * b)
-            $std::basics::divides(d, n)
+            $basics::divides(d, n)
             d >= 2
             d < p <= n
             d < n + 1
@@ -293,21 +293,21 @@ thm exists_prime_factor:
             finite_set_min(divisors) <= d
             p <= d
             impossible d < p
-    $std::basics::prime(p)
-    witness exist q N_pos st {$std::basics::prime(q), $std::basics::divides(q, n)} from p:
-        $std::basics::prime(p)
-        $std::basics::divides(p, n)
+    $basics::prime(p)
+    witness exist q N_pos st {$basics::prime(q), $basics::divides(q, n)} from p:
+        $basics::prime(p)
+        $basics::divides(p, n)
 
 # Source theorem: primes_infinite. This keeps Euclid's route: choose a prime
 # divisor of n!+1 and show it is larger than n.
 thm primes_infinite:
     ? forall n N:
-        exist p N_pos st {p > n, $std::basics::prime(p)}
+        exist p N_pos st {p > n, $basics::prime(p)}
     by thm factorial_positive(n)
     factorial(n) >= 1
     factorial(n) + 1 >= 2
     by thm exists_prime_factor(factorial(n) + 1)
-    obtain p from exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, factorial(n) + 1)}
+    obtain p from exist p N_pos st {$basics::prime(p), $basics::divides(p, factorial(n) + 1)}
     claim:
         ? p > n
         by contra:
@@ -319,14 +319,14 @@ thm primes_infinite:
             obtain b from exist b Z st {factorial(n) + 1 = p * b}
             witness exist q Z st {1 = p * q} from b - a:
                 1 = (factorial(n) + 1) - factorial(n) = p * b - p * a = p * (b - a)
-            $std::basics::divides(p, 1)
-            by thm std::basics::_positive_divisor_le_abs(p, 1)
+            $basics::divides(p, 1)
+            by thm basics::_positive_divisor_le_abs(p, 1)
             p <= abs(1) = 1
             p >= 2
             impossible p <= 1
-    witness exist q N_pos st {q > n, $std::basics::prime(q)} from p:
+    witness exist q N_pos st {q > n, $basics::prime(q)} from p:
         p > n
-        $std::basics::prime(p)
+        $basics::prime(p)
 
 # Source theorem: mod_4_eq_3_or_mod_4_eq_3.
 thm mod_4_eq_3_factor:
@@ -482,13 +482,13 @@ thm _gcd_comm_for_fibonacci:
         a != 0 or b != 0
         b != 0 or a != 0
         =>:
-            std::basics::gcd(a, b) = std::basics::gcd(b, a)
-    have A power_set(N_pos) = {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, b)}
-    have B power_set(N_pos) = {d N_pos: $std::basics::divides(d, b), $std::basics::divides(d, a)}
-    by thm std::basics::_gcd_divisor_set_is_finite_and_nonempty(a, b)
+            basics::gcd(a, b) = basics::gcd(b, a)
+    have A power_set(N_pos) = {d N_pos: $basics::divides(d, a), $basics::divides(d, b)}
+    have B power_set(N_pos) = {d N_pos: $basics::divides(d, b), $basics::divides(d, a)}
+    by thm basics::_gcd_divisor_set_is_finite_and_nonempty(a, b)
     $is_finite_set(A)
     $is_nonempty_set(A)
-    by thm std::basics::_gcd_divisor_set_is_finite_and_nonempty(b, a)
+    by thm basics::_gcd_divisor_set_is_finite_and_nonempty(b, a)
     $is_finite_set(B)
     $is_nonempty_set(B)
     claim:
@@ -498,9 +498,9 @@ thm _gcd_comm_for_fibonacci:
                 d $in B
             d $in A
             d $in N_pos
-            $std::basics::divides(d, a)
-            $std::basics::divides(d, b)
-            d $in {d N_pos: $std::basics::divides(d, b), $std::basics::divides(d, a)}
+            $basics::divides(d, a)
+            $basics::divides(d, b)
+            d $in {d N_pos: $basics::divides(d, b), $basics::divides(d, a)}
             d $in B
         A $subset B
     claim:
@@ -510,31 +510,31 @@ thm _gcd_comm_for_fibonacci:
                 d $in A
             d $in B
             d $in N_pos
-            $std::basics::divides(d, b)
-            $std::basics::divides(d, a)
-            d $in {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, b)}
+            $basics::divides(d, b)
+            $basics::divides(d, a)
+            d $in {d N_pos: $basics::divides(d, a), $basics::divides(d, b)}
             d $in A
         B $subset A
     by extension A = B
-    std::basics::gcd(a, b) = finite_set_max(A)
-    std::basics::gcd(b, a) = finite_set_max(B)
-    std::basics::gcd(a, b) = std::basics::gcd(b, a)
+    basics::gcd(a, b) = finite_set_max(A)
+    basics::gcd(b, a) = finite_set_max(B)
+    basics::gcd(a, b) = basics::gcd(b, a)
 
 # Adding the first positive input to the second does not change their gcd.
 thm _gcd_add_right_for_fibonacci:
     ? forall a N_pos, b N:
-        std::basics::gcd(a, b) = std::basics::gcd(a, a + b)
+        basics::gcd(a, b) = basics::gcd(a, a + b)
     a != 0
     a != 0 or b != 0
     a + b >= a > 0
     a + b != 0
     a != 0 or a + b != 0
-    have A power_set(N_pos) = {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, b)}
-    have B power_set(N_pos) = {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, a + b)}
-    by thm std::basics::_gcd_divisor_set_is_finite_and_nonempty(a, b)
+    have A power_set(N_pos) = {d N_pos: $basics::divides(d, a), $basics::divides(d, b)}
+    have B power_set(N_pos) = {d N_pos: $basics::divides(d, a), $basics::divides(d, a + b)}
+    by thm basics::_gcd_divisor_set_is_finite_and_nonempty(a, b)
     $is_finite_set(A)
     $is_nonempty_set(A)
-    by thm std::basics::_gcd_divisor_set_is_finite_and_nonempty(a, a + b)
+    by thm basics::_gcd_divisor_set_is_finite_and_nonempty(a, a + b)
     $is_finite_set(B)
     $is_nonempty_set(B)
     claim:
@@ -544,14 +544,14 @@ thm _gcd_add_right_for_fibonacci:
                 d $in B
             d $in A
             d $in N_pos
-            $std::basics::divides(d, a)
-            $std::basics::divides(d, b)
+            $basics::divides(d, a)
+            $basics::divides(d, b)
             obtain q from exist q Z st {a = d * q}
             obtain r from exist r Z st {b = d * r}
             witness exist s Z st {a + b = d * s} from q + r:
                 a + b = d * q + d * r = d * (q + r)
-            $std::basics::divides(d, a + b)
-            d $in {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, a + b)}
+            $basics::divides(d, a + b)
+            d $in {d N_pos: $basics::divides(d, a), $basics::divides(d, a + b)}
             d $in B
         A $subset B
     claim:
@@ -561,20 +561,20 @@ thm _gcd_add_right_for_fibonacci:
                 d $in A
             d $in B
             d $in N_pos
-            $std::basics::divides(d, a)
-            $std::basics::divides(d, a + b)
+            $basics::divides(d, a)
+            $basics::divides(d, a + b)
             obtain q from exist q Z st {a = d * q}
             obtain r from exist r Z st {a + b = d * r}
             witness exist s Z st {b = d * s} from r - q:
                 b = (a + b) - a = d * r - d * q = d * (r - q)
-            $std::basics::divides(d, b)
-            d $in {d N_pos: $std::basics::divides(d, a), $std::basics::divides(d, b)}
+            $basics::divides(d, b)
+            d $in {d N_pos: $basics::divides(d, a), $basics::divides(d, b)}
             d $in A
         B $subset A
     by extension A = B
-    std::basics::gcd(a, b) = finite_set_max(A)
-    std::basics::gcd(a, a + b) = finite_set_max(B)
-    std::basics::gcd(a, b) = std::basics::gcd(a, a + b)
+    basics::gcd(a, b) = finite_set_max(A)
+    basics::gcd(a, a + b) = finite_set_max(B)
+    basics::gcd(a, b) = basics::gcd(a, a + b)
 
 thm _fibonacci_successor_positive:
     ? forall n N:
@@ -600,16 +600,16 @@ thm fib_coprime_fib_succ:
             fibonacci(n + 1) = fibonacci(1) = 1
             fibonacci(n) != 0 or fibonacci(n + 1) != 0
             0 != 0 or 1 != 0
-            by thm std::basics::gcd_euclidean_step(0, 1)
-            std::basics::gcd(0, 1) = std::basics::gcd(1, 0 % abs(1)) = std::basics::gcd(1, 0)
-            by thm std::basics::gcd_euclidean_base(1)
-            std::basics::gcd(1, 0) = abs(1) = 1
-            std::basics::gcd(fibonacci(n), fibonacci(n + 1)) = std::basics::gcd(0, 1) = 1
+            by thm basics::gcd_euclidean_step(0, 1)
+            basics::gcd(0, 1) = basics::gcd(1, 0 % abs(1)) = basics::gcd(1, 0)
+            by thm basics::gcd_euclidean_base(1)
+            basics::gcd(1, 0) = abs(1) = 1
+            basics::gcd(fibonacci(n), fibonacci(n + 1)) = basics::gcd(0, 1) = 1
             $coprime(fibonacci(n), fibonacci(n + 1))
         ? induc:
             $coprime(fibonacci(n), fibonacci(n + 1))
             fibonacci(n) != 0 or fibonacci(n + 1) != 0
-            std::basics::gcd(fibonacci(n), fibonacci(n + 1)) = 1
+            basics::gcd(fibonacci(n), fibonacci(n + 1)) = 1
             by thm _fibonacci_successor_positive(n)
             fibonacci(n + 1) > 0
             fibonacci(n + 1) $in N_pos
@@ -619,11 +619,11 @@ thm fib_coprime_fib_succ:
             fibonacci((n + 1) + 1) = fibonacci(n + 2) = fibonacci(n + 1) + fibonacci(n)
             fibonacci(n + 1) != 0 or fibonacci(n) != 0
             by thm _gcd_comm_for_fibonacci(fibonacci(n), fibonacci(n + 1))
-            std::basics::gcd(fibonacci(n), fibonacci(n + 1)) = std::basics::gcd(fibonacci(n + 1), fibonacci(n))
-            std::basics::gcd(fibonacci(n + 1), fibonacci(n)) = std::basics::gcd(fibonacci(n), fibonacci(n + 1)) = 1
+            basics::gcd(fibonacci(n), fibonacci(n + 1)) = basics::gcd(fibonacci(n + 1), fibonacci(n))
+            basics::gcd(fibonacci(n + 1), fibonacci(n)) = basics::gcd(fibonacci(n), fibonacci(n + 1)) = 1
             by thm _gcd_add_right_for_fibonacci(fibonacci(n + 1), fibonacci(n))
-            std::basics::gcd(fibonacci(n + 1), fibonacci(n)) = std::basics::gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n))
-            std::basics::gcd(fibonacci(n + 1), fibonacci((n + 1) + 1)) = std::basics::gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n)) = 1
+            basics::gcd(fibonacci(n + 1), fibonacci(n)) = basics::gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n))
+            basics::gcd(fibonacci(n + 1), fibonacci((n + 1) + 1)) = basics::gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n)) = 1
             fibonacci(n + 1) != 0 or fibonacci((n + 1) + 1) != 0
             $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
 
@@ -734,21 +734,21 @@ thm ne_one_iff_exists_prime_dvd_forward:
     ? forall n N:
         n != 1
         =>:
-            exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+            exist p N_pos st {$basics::prime(p), $basics::divides(p, n)}
     claim:
         ? forall:
             n != 1
             =>:
-                exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+                exist p N_pos st {$basics::prime(p), $basics::divides(p, n)}
         n = 0 or n != 0
         by cases:
-            ? exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+            ? exist p N_pos st {$basics::prime(p), $basics::divides(p, n)}
             case n = 0:
-                witness exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)} from 2:
-                    $std::basics::prime(2)
+                witness exist p N_pos st {$basics::prime(p), $basics::divides(p, n)} from 2:
+                    $basics::prime(2)
                     witness exist q Z st {n = 2 * q} from 0:
                         n = 0 = 2 * 0
-                    $std::basics::divides(2, n)
+                    $basics::divides(2, n)
             case n != 0:
                 n $in N_pos
                 claim:
@@ -759,20 +759,20 @@ thm ne_one_iff_exists_prime_dvd_forward:
                         n = 1
                         impossible n != 1
                 by thm exists_prime_factor(n)
-                exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
-    exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+                exist p N_pos st {$basics::prime(p), $basics::divides(p, n)}
+    exist p N_pos st {$basics::prime(p), $basics::divides(p, n)}
 
 thm ne_one_iff_exists_prime_dvd_reverse:
     ? forall n N:
-        exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+        exist p N_pos st {$basics::prime(p), $basics::divides(p, n)}
         =>:
             n != 1
-    obtain p from exist p N_pos st {$std::basics::prime(p), $std::basics::divides(p, n)}
+    obtain p from exist p N_pos st {$basics::prime(p), $basics::divides(p, n)}
     by contra:
         ? n != 1
         n = 1
         n != 0
-        by thm std::basics::_positive_divisor_le_abs(p, n)
+        by thm basics::_positive_divisor_le_abs(p, n)
         p <= abs(n) = 1
         p >= 2
         impossible p <= 1

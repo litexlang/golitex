@@ -1,6 +1,6 @@
 # Chapter 10 — Linear Algebra
 # Independent MIL-derived Litex pressure-test corpus; see README for scope,
-# attribution, and checked/trusted status.
+# attribution, and checked/deferred status.
 
 # Carrier-first interfaces make scalar fields, vector operations, maps, and
 # subspaces explicit. Repeated tactic or API demonstrations are represented
@@ -60,19 +60,6 @@ prop is_linear_map(K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn
 template<K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W>:
     have linear_map_space power_set(fn(v V) W) = {phi fn(v V) W: $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)}
 
-# A value of the relation-defined carrier cannot be applied directly by the
-# current kernel, so this is its explicit evaluation interface.
-template<K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W>:
-    trust have linear_map_value fn(phi \linear_map_space<K, V, W, addV, smulV, addW, smulW>, v V) W
-
-thm linear_map_value_agrees:
-    ? forall K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, phi fn(v V) W, v V:
-        $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
-        =>:
-            \linear_map_value<K, V, W, addV, smulV, addW, smulW>(phi, v) = phi(v)
-    # Proof debt: this evaluator is the coercion from the linear-map carrier.
-    trust \linear_map_value<K, V, W, addV, smulV, addW, smulW>(phi, v) = phi(v)
-
 thm linear_map_map_smul:
     ? forall K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, phi fn(v V) W, a K, v V:
         $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
@@ -104,9 +91,24 @@ thm linear_map_composition_closed:
         $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
         $is_linear_map(K, U, V, addU, smulU, addV, smulV, psi)
         =>:
-            $is_linear_map(K, U, W, addU, smulU, addW, smulW, \linear_map_compose_raw<K, U, V, W>(phi, psi))
-    # Proof debt: unfold composition and apply the two linearity laws.
-    trust $is_linear_map(K, U, W, addU, smulU, addW, smulW, \linear_map_compose_raw<K, U, V, W>(phi, psi))
+            $is_linear_map(K, U, W, addU, smulU, addW, smulW, fn(x U) W {phi(psi(x))})
+    thm function_substitution:
+        ? forall A, B set, f fn(x A) B, x, y A:
+            x = y
+            =>:
+                f(x) = f(y)
+        f(x) = f(y)
+    claim:
+        ? forall x, y U:
+            (fn(q U) W {phi(psi(q))})(addU(x, y)) = addW((fn(q U) W {phi(psi(q))})(x), (fn(q U) W {phi(psi(q))})(y))
+        by thm function_substitution(V, W, phi, psi(addU(x, y)), addV(psi(x), psi(y)))
+        (fn(q U) W {phi(psi(q))})(addU(x, y)) = phi(psi(addU(x, y))) = phi(addV(psi(x), psi(y))) = addW(phi(psi(x)), phi(psi(y))) = addW((fn(q U) W {phi(psi(q))})(x), (fn(q U) W {phi(psi(q))})(y))
+    claim:
+        ? forall a K, x U:
+            (fn(q U) W {phi(psi(q))})(smulU(a, x)) = smulW(a, (fn(q U) W {phi(psi(q))})(x))
+        by thm function_substitution(V, W, phi, psi(smulU(a, x)), smulV(a, psi(x)))
+        (fn(q U) W {phi(psi(q))})(smulU(a, x)) = phi(psi(smulU(a, x))) = phi(smulV(a, psi(x))) = smulW(a, phi(psi(x))) = smulW(a, (fn(q U) W {phi(psi(q))})(x))
+    $is_linear_map(K, U, W, addU, smulU, addW, smulW, fn(x U) W {phi(psi(x))})
 
 prop is_linear_equivalence(K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, phi fn(v V) W):
     $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
@@ -156,59 +158,6 @@ thm linear_coproduct_formula:
     ? forall U, V, W set, addU fn(x, y U) U, phi fn(v V) U, psi fn(w W) U, v V, w W:
         \linear_coproduct<U, V, W, addU>(phi, psi)((v, w)) = addU(phi(v), psi(w))
     \linear_coproduct<U, V, W, addU>(phi, psi)((v, w)) = addU(phi(v), psi(w))
-
-# Arbitrary products and direct sums depend on the actual family of summands,
-# not merely on its index type. Litex has no fully dependent carrier yet, so a
-# family is represented by indexed subcarriers of one ambient carrier U.
-template<Index, U set, family fn(i Index) power_set(U)>:
-    trust have direct_product set
-
-template<Index, U set, family fn(i Index) power_set(U)>:
-    trust have direct_sum set
-
-template<Index, U set, family fn(i Index) power_set(U)>:
-    trust have direct_sum_inclusion fn(i Index, value U: value $in family(i)) \direct_sum<Index, U, family>
-
-template<Index, U set, family fn(i Index) power_set(U)>:
-    trust have direct_product_projection fn(i Index, value \direct_product<Index, U, family>) U
-
-prop maps_to_indexed_family(Index, U, W set, family fn(i Index) power_set(U), phi fn(i Index) fn(z W) U):
-    forall i Index, value W:
-        phi(i)(value) $in family(i)
-
-template<Index, U, W set, family fn(i Index) power_set(U)>:
-    trust have direct_sum_to_module fn(phi fn(i Index) fn(z U) W, value \direct_sum<Index, U, family>) W
-
-template<Index, U, W set, family fn(i Index) power_set(U)>:
-    trust have module_to_direct_product fn(phi fn(i Index) fn(z W) U, value W: $maps_to_indexed_family(Index, U, W, family, phi)) \direct_product<Index, U, family>
-
-thm direct_product_projection_mem:
-    ? forall Index, U set, family fn(i Index) power_set(U), i Index, value \direct_product<Index, U, family>:
-        \direct_product_projection<Index, U, family>(i, value) $in family(i)
-    # Proof debt: an element of the product has a value in every indexed summand.
-    trust \direct_product_projection<Index, U, family>(i, value) $in family(i)
-
-thm direct_sum_to_module_on_inclusion:
-    ? forall Index, U, W set, family fn(i Index) power_set(U), phi fn(i Index) fn(z U) W, i Index, z U:
-        z $in family(i)
-        =>:
-            \direct_sum_to_module<Index, U, W, family>(phi, \direct_sum_inclusion<Index, U, family>(i, z)) = phi(i)(z)
-    # Proof debt: the direct-sum fold agrees with its prescribed map on each inclusion.
-    trust \direct_sum_to_module<Index, U, W, family>(phi, \direct_sum_inclusion<Index, U, family>(i, z)) = phi(i)(z)
-
-thm module_to_direct_product_apply:
-    ? forall Index, U, W set, family fn(i Index) power_set(U), phi fn(i Index) fn(z W) U, value W, i Index:
-        $maps_to_indexed_family(Index, U, W, family, phi)
-        =>:
-            \direct_product_projection<Index, U, family>(i, \module_to_direct_product<Index, U, W, family>(phi, value)) = phi(i)(value)
-    # Proof debt: the product map is characterized coordinatewise.
-    trust \direct_product_projection<Index, U, family>(i, \module_to_direct_product<Index, U, W, family>(phi, value)) = phi(i)(value)
-
-thm finite_direct_sum_equiv_product:
-    ? forall Index finite_set, U set, family fn(i Index) power_set(U):
-        $chap9::sets_equinumerous(\direct_sum<Index, U, family>, \direct_product<Index, U, family>)
-    # Proof debt: finite support and unrestricted indexed values coincide on a finite family.
-    trust $chap9::sets_equinumerous(\direct_sum<Index, U, family>, \direct_product<Index, U, family>)
 
 # ---------------------------------------------------------------------------
 # 10.2 Subspaces
@@ -288,9 +237,10 @@ thm span_universal_property:
         $is_subspace(K, V, addV, zeroV, smul, U)
         S $subset U
         =>:
-            \span<K, V, addV, zeroV, smul>(S) $subset U
-    # Proof debt: unfold the intersection-of-all-containing-subspaces definition.
-    trust \span<K, V, addV, zeroV, smul>(S) $subset U
+            {x V: $span_member(K, V, addV, zeroV, smul, S, x)} $subset U
+    forall x {q V: $span_member(K, V, addV, zeroV, smul, S, q)}:
+        x $in U
+    {x V: $span_member(K, V, addV, zeroV, smul, S, x)} $subset U
 
 prop has_linear_map_preimage(V, W set, phi fn(v V) W, U power_set(V), y W):
     exist x V st {x $in U, phi(x) = y}
@@ -306,56 +256,6 @@ template<V, W set, zeroW W, phi fn(v V) W>:
 
 template<V, W set, phi fn(v V) W>:
     have linear_range power_set(W) = \subspace_map<V, W, phi>(V)
-
-# The source gives an iff. Litex records its two mathematical directions as
-# facts, rather than wrapping a theorem conclusion in a zero-use predicate.
-thm injective_iff_kernel_bottom_forward:
-    ? forall K, V, W set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, negW fn(x W) W, smulW fn(a K, w W) W, phi fn(v V) W:
-        $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smulV)
-        $is_vector_space(K, W, addK, zeroK, mulK, oneK, addW, zeroW, negW, smulW)
-        $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
-        $chap4::injective_fn(V, W, phi)
-        =>:
-            \linear_kernel<V, W, zeroW, phi> = {zeroV}
-    # Proof debt: an injective linear map has only zero in its kernel.
-    trust \linear_kernel<V, W, zeroW, phi> = {zeroV}
-
-thm injective_iff_kernel_bottom_reverse:
-    ? forall K, V, W set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, negW fn(x W) W, smulW fn(a K, w W) W, phi fn(v V) W:
-        $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smulV)
-        $is_vector_space(K, W, addK, zeroK, mulK, oneK, addW, zeroW, negW, smulW)
-        $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
-        \linear_kernel<V, W, zeroW, phi> = {zeroV}
-        =>:
-            $chap4::injective_fn(V, W, phi)
-    # Proof debt: a bottom kernel forces injectivity for a linear map.
-    trust $chap4::injective_fn(V, W, phi)
-
-thm surjective_iff_range_top_forward:
-    ? forall K, V, W set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, negW fn(x W) W, smulW fn(a K, w W) W, phi fn(v V) W:
-        $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smulV)
-        $is_vector_space(K, W, addK, zeroK, mulK, oneK, addW, zeroW, negW, smulW)
-        $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
-        $chap4::surjective_fn(V, W, phi)
-        =>:
-            \linear_range<V, W, phi> = W
-    # Proof debt: a surjective linear map has top range.
-    trust \linear_range<V, W, phi> = W
-
-thm surjective_iff_range_top_reverse:
-    ? forall K, V, W set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, negW fn(x W) W, smulW fn(a K, w W) W, phi fn(v V) W:
-        $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smulV)
-        $is_vector_space(K, W, addK, zeroK, mulK, oneK, addW, zeroW, negW, smulW)
-        $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
-        \linear_range<V, W, phi> = W
-        =>:
-            $chap4::surjective_fn(V, W, phi)
-    # Proof debt: top range forces surjectivity for a linear map.
-    trust $chap4::surjective_fn(V, W, phi)
 
 # ---------------------------------------------------------------------------
 # 10.2.5 Quotient spaces
@@ -373,25 +273,6 @@ prop is_subspace_translate(V set, addV fn(x, y V) V, U power_set(V), C power_set
 template<V set, addV fn(x, y V) V>:
     have fn quotient_space(U power_set(V)) power_set(power_set(V)) = {C power_set(V): $is_subspace_translate(V, addV, U, C)}
 
-template<V set, addV fn(x, y V) V>:
-    trust have quotient_space_projection fn(U power_set(V), v V) \quotient_space<V, addV>(U):
-        quotient_space_projection(U, v) = \subspace_translate<V, addV>(U, v)
-
-template<V set, addV fn(x, y V) V>:
-    trust have quotient_space_add fn(U power_set(V), C, D \quotient_space<V, addV>(U)) \quotient_space<V, addV>(U):
-        forall v, w V:
-            C = \subspace_translate<V, addV>(U, v)
-            D = \subspace_translate<V, addV>(U, w)
-            =>:
-                quotient_space_add(U, C, D) = \subspace_translate<V, addV>(U, addV(v, w))
-
-template<K, V set, addV fn(x, y V) V, smul fn(a K, v V) V>:
-    trust have quotient_space_smul fn(U power_set(V), a K, C \quotient_space<V, addV>(U)) \quotient_space<V, addV>(U):
-        forall v V:
-            C = \subspace_translate<V, addV>(U, v)
-            =>:
-                quotient_space_smul(U, a, C) = \subspace_translate<V, addV>(U, smul(a, v))
-
 prop is_quotient_space_lift_compatible(K, V, W set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, negW fn(x W) W, smulW fn(a K, w W) W, U power_set(V), phi fn(v V) W):
     $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
     $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smulV)
@@ -399,28 +280,6 @@ prop is_quotient_space_lift_compatible(K, V, W set, addK fn(x, y K) K, zeroK K, 
     $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
     $is_subspace(K, V, addV, zeroV, smulV, U)
     U $subset \linear_kernel<V, W, zeroW, phi>
-
-template<K, V, W set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, negW fn(x W) W, smulW fn(a K, w W) W>:
-    trust have quotient_space_lift fn(U power_set(V), phi fn(v V) W: $is_quotient_space_lift_compatible(K, V, W, addK, zeroK, negK, mulK, oneK, invK, addV, zeroV, negV, smulV, addW, zeroW, negW, smulW, U, phi)) fn(C \quotient_space<V, addV>(U)) W:
-        forall v V:
-            quotient_space_lift(U, phi)(\quotient_space_projection<V, addV>(U, v)) = phi(v)
-
-template<K, V, W set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, negW fn(x W) W, smulW fn(a K, w W) W>:
-    trust have quotient_space_lift_to_range fn(U power_set(V), phi fn(v V) W: $is_quotient_space_lift_compatible(K, V, W, addK, zeroK, negK, mulK, oneK, invK, addV, zeroV, negV, smulV, addW, zeroW, negW, smulW, U, phi)) fn(C \quotient_space<V, addV>(U)) \linear_range<V, W, phi>:
-        forall v V:
-            quotient_space_lift_to_range(U, phi)(\quotient_space_projection<V, addV>(U, v)) = phi(v)
-
-thm quotient_kernel_equiv_linear_range:
-    ? forall K, V, W set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, negW fn(x W) W, smulW fn(a K, w W) W, phi fn(v V) W:
-        $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smulV)
-        $is_vector_space(K, W, addK, zeroK, mulK, oneK, addW, zeroW, negW, smulW)
-        $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
-        $is_subspace(K, V, addV, zeroV, smulV, \linear_kernel<V, W, zeroW, phi>)
-        =>:
-            $chap4::bijective_fn(\quotient_space<V, addV>(\linear_kernel<V, W, zeroW, phi>), \linear_range<V, W, phi>, \quotient_space_lift_to_range<K, V, W, addK, zeroK, negK, mulK, oneK, invK, addV, zeroV, negV, smulV, addW, zeroW, negW, smulW>(\linear_kernel<V, W, zeroW, phi>, phi))
-    # Proof debt: first isomorphism theorem for vector spaces.
-    trust $chap4::bijective_fn(\quotient_space<V, addV>(\linear_kernel<V, W, zeroW, phi>), \linear_range<V, W, phi>, \quotient_space_lift_to_range<K, V, W, addK, zeroK, negK, mulK, oneK, invK, addV, zeroV, negV, smulV, addW, zeroW, negW, smulW>(\linear_kernel<V, W, zeroW, phi>, phi))
 
 # ---------------------------------------------------------------------------
 # 10.3 Endomorphisms and eigenvalues
@@ -431,29 +290,6 @@ template<K, V set, addV fn(x, y V) V, smul fn(a K, v V) V>:
 
 template<K, V set>:
     have fn endomorphism_comp(phi, psi fn(v V) V) fn(t V) V = fn(x V) V {phi(psi(x))}
-
-template<K, V set, zeroK K, addK fn(x, y K) K, mulK fn(x, y K) K, addV fn(x, y V) V, smul fn(a K, v V) V>:
-    # Trusted finite-support evaluation interface. The two laws below identify
-    # the selected object on X and on scalar constants.
-    trust have polynomial_endomorphism_eval fn(p \chap9::polynomial_ring<K, zeroK>, phi \endomorphism_space<K, V, addV, smul>) \endomorphism_space<K, V, addV, smul>
-
-thm polynomial_endomorphism_eval_X:
-    ? forall K, V set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smul fn(a K, v V) V, phi \endomorphism_space<K, V, addV, smul>:
-        $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smul)
-        =>:
-            \polynomial_endomorphism_eval<K, V, zeroK, addK, mulK, addV, smul>(\chap9::polynomial_X<K, zeroK, oneK>, phi) = phi
-    # Proof debt: evaluation of X at an endomorphism is that endomorphism.
-    trust \polynomial_endomorphism_eval<K, V, zeroK, addK, mulK, addV, smul>(\chap9::polynomial_X<K, zeroK, oneK>, phi) = phi
-
-thm polynomial_endomorphism_eval_C:
-    ? forall K, V set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smul fn(a K, v V) V, phi \endomorphism_space<K, V, addV, smul>, a K:
-        $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smul)
-        =>:
-            \polynomial_endomorphism_eval<K, V, zeroK, addK, mulK, addV, smul>(\chap9::polynomial_C<K, zeroK>(a), phi) = \scalar_endomorphism<K, V, smul>(a)
-    # Proof debt: evaluation of a constant polynomial is scalar identity.
-    trust \polynomial_endomorphism_eval<K, V, zeroK, addK, mulK, addV, smul>(\chap9::polynomial_C<K, zeroK>(a), phi) = \scalar_endomorphism<K, V, smul>(a)
 
 prop has_eigenvector(K, V set, zeroV V, smul fn(a K, v V) V, phi fn(v V) V, a K, v V):
     v != zeroV
@@ -475,60 +311,20 @@ thm eigenvalue_implies_eigenspace_nontrivial:
     ? forall K, V set, zeroV V, smul fn(a K, v V) V, phi fn(v V) V, a K:
         $has_eigenvalue(K, V, zeroV, smul, phi, a)
         =>:
-            $eigenspace_nontrivial(V, zeroV, \eigenspace<K, V, smul>(phi, a))
-    # Proof debt: unpack the nonzero eigenvector witness.
-    trust $eigenspace_nontrivial(V, zeroV, \eigenspace<K, V, smul>(phi, a))
+            $eigenspace_nontrivial(V, zeroV, {v V: phi(v) = smul(a, v)})
+    obtain v from exist v V st {$has_eigenvector(K, V, zeroV, smul, phi, a, v)}
+    witness exist w V st {w $in {q V: phi(q) = smul(a, q)}, w != zeroV} from v
 
 thm eigenspace_nontrivial_implies_eigenvalue:
     ? forall K, V set, zeroV V, smul fn(a K, v V) V, phi fn(v V) V, a K:
-        $eigenspace_nontrivial(V, zeroV, \eigenspace<K, V, smul>(phi, a))
+        $eigenspace_nontrivial(V, zeroV, {v V: phi(v) = smul(a, v)})
         =>:
             $has_eigenvalue(K, V, zeroV, smul, phi, a)
-    # Proof debt: package the nonzero eigenspace witness.
-    trust $has_eigenvalue(K, V, zeroV, smul, phi, a)
-
-# These are selection interfaces for the source's minimal and characteristic
-# polynomials. Their domain is a genuine linear endomorphism, rather than an
-# arbitrary function; construction and minimality remain visible proof debt.
-template<K, V set, zeroK K, addV fn(x, y V) V, smul fn(a K, v V) V>:
-    trust have minimal_polynomial fn(phi \endomorphism_space<K, V, addV, smul>) \chap9::polynomial_ring<K, zeroK>
-
-template<K, V set, zeroK K, addV fn(x, y V) V, smul fn(a K, v V) V>:
-    trust have characteristic_polynomial fn(phi \endomorphism_space<K, V, addV, smul>) \chap9::polynomial_ring<K, zeroK>
-
-thm eigenvalue_is_minimal_polynomial_root:
-    ? forall K, V set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smul fn(a K, v V) V, phi \endomorphism_space<K, V, addV, smul>, a K:
-        $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smul)
-        $has_eigenvalue(K, V, zeroV, smul, phi, a)
-        =>:
-            $chap9::is_polynomial_root(K, zeroK, addK, mulK, \minimal_polynomial<K, V, zeroK, addV, smul>(phi), a)
-    # Proof debt: the minimal polynomial annihilates every eigenvector.
-    trust $chap9::is_polynomial_root(K, zeroK, addK, mulK, \minimal_polynomial<K, V, zeroK, addV, smul>(phi), a)
-
-thm finite_dimensional_minpoly_root_is_eigenvalue:
-    ? forall K, V set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smul fn(a K, v V) V, phi \endomorphism_space<K, V, addV, smul>, a K:
-        $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smul)
-        $is_finite_dimensional(K, V, addV, zeroV, smul)
-        $chap9::is_polynomial_root(K, zeroK, addK, mulK, \minimal_polynomial<K, V, zeroK, addV, smul>(phi), a)
-        =>:
-            $has_eigenvalue(K, V, zeroV, smul, phi, a)
-    # Proof debt: finite-dimensional converse for roots of the minimal polynomial.
-    trust $has_eigenvalue(K, V, zeroV, smul, phi, a)
+    obtain v from exist v V st {v $in {q V: phi(q) = smul(a, q)}, v != zeroV}
+    witness exist w V st {$has_eigenvector(K, V, zeroV, smul, phi, a, w)} from v
 
 template<V set, zeroV V>:
     have zero_endomorphism fn(v V) V = fn(v V) V {zeroV}
-
-thm cayley_hamilton:
-    ? forall K, V set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smul fn(a K, v V) V, phi \endomorphism_space<K, V, addV, smul>:
-        $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smul)
-        $is_finite_dimensional(K, V, addV, zeroV, smul)
-        =>:
-            \polynomial_endomorphism_eval<K, V, zeroK, addK, mulK, addV, smul>(\characteristic_polynomial<K, V, zeroK, addV, smul>(phi), phi) = \zero_endomorphism<V, zeroV>
-    # Proof debt: Cayley-Hamilton theorem.
-    trust \polynomial_endomorphism_eval<K, V, zeroK, addK, mulK, addV, smul>(\characteristic_polynomial<K, V, zeroK, addV, smul>(phi), phi) = \zero_endomorphism<V, zeroV>
 
 # ---------------------------------------------------------------------------
 # 10.4.1 Matrices
@@ -558,30 +354,6 @@ template<A set, m, n N_pos>:
 
 template<A set, n N_pos>:
     have fn vandermonde(v finite_seq(A, n)) matrix(A, n, n) = fn(i N_pos, j N_pos: i <= n, j <= n) A {v(i)^(j - 1)}
-
-template<A set, zero, one A>:
-    trust have matrix2_identity matrix(A, 2, 2):
-        forall i N_pos:
-            i <= 2
-            =>:
-                matrix2_identity(i, i) = one
-        forall i, j N_pos:
-            i <= 2
-            j <= 2
-            i != j
-            =>:
-                matrix2_identity(i, j) = zero
-
-prop is_inverse_matrix2(A set, add fn(x, y A) A, mul fn(x, y A) A, zero, one A, P, B matrix(A, 2, 2)):
-    \matrix2_mul<A, add, mul>(P, B) = \matrix2_identity<A, zero, one>
-    \matrix2_mul<A, add, mul>(B, P) = \matrix2_identity<A, zero, one>
-
-prop is_invertible_matrix2(A set, add fn(x, y A) A, mul fn(x, y A) A, zero, one A, P matrix(A, 2, 2)):
-    exist B matrix(A, 2, 2) st {$is_inverse_matrix2(A, add, mul, zero, one, P, B)}
-
-template<A set, add fn(x, y A) A, mul fn(x, y A) A, zero, one A>:
-    trust have matrix2_inverse fn(P matrix(A, 2, 2): $is_invertible_matrix2(A, add, mul, zero, one, P)) matrix(A, 2, 2):
-        $is_inverse_matrix2(A, add, mul, zero, one, P, matrix2_inverse(P))
 
 # ---------------------------------------------------------------------------
 # 10.4.2 Bases and coordinates
@@ -613,12 +385,6 @@ prop is_basis(K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, b fn
 template<K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V>:
     have basis_space power_set(fn(i I) V) = {b fn(i I) V: $is_basis(K, I, V, addV, zeroV, smul, b)}
 
-# A basis is an object in the basis carrier, with an explicit evaluator for
-# its underlying indexed family. This avoids identifying the basis object with
-# a bare function.
-template<K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V>:
-    trust have basis_value fn(b \basis_space<K, I, V, addV, zeroV, smul>, i I) V
-
 prop coefficient_support_contains_nonzero(K, I set, zeroK K, coefficients fn(i I) K, support finite_set):
     forall i I:
         coefficients(i) != zeroK
@@ -631,92 +397,6 @@ prop has_finite_coefficient_support(K, I set, zeroK K, coefficients fn(i I) K):
 template<K, I set, zeroK K>:
     have finitely_supported_coefficients power_set(fn(i I) K) = {coefficients fn(i I) K: $has_finite_coefficient_support(K, I, zeroK, coefficients)}
 
-template<K, I, V set, zeroK K, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V>:
-    trust have basis_repr fn(b \basis_space<K, I, V, addV, zeroV, smul>, v V) \finitely_supported_coefficients<K, I, zeroK>
-
-# `Basis.mk` consumes independence and spanning through `is_basis` and returns
-# a genuine basis object. Its evaluation law is a separate closed fact.
-template<K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V>:
-    trust have Basis_mk fn(b fn(i I) V: $is_basis(K, I, V, addV, zeroV, smul, b)) \basis_space<K, I, V, addV, zeroV, smul>
-
-thm Basis_mk_apply:
-    ? forall K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, b fn(i I) V, i I:
-        $is_basis(K, I, V, addV, zeroV, smul, b)
-        =>:
-            \basis_value<K, I, V, addV, zeroV, smul>(\Basis_mk<K, I, V, addV, zeroV, smul>(b), i) = b(i)
-    # Proof debt: the constructor's underlying family is the supplied family.
-    trust \basis_value<K, I, V, addV, zeroV, smul>(\Basis_mk<K, I, V, addV, zeroV, smul>(b), i) = b(i)
-
-template<K, I set, zeroK K, oneK K>:
-    trust have canonical_function_basis fn(i I) fn(j I) K:
-        forall i I:
-            canonical_function_basis(i)(i) = oneK
-        forall i, j I:
-            i != j
-            =>:
-                canonical_function_basis(i)(j) = zeroK
-
-template<K, I, V set, zeroK K, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V>:
-    # Trusted finite aggregation interface; coefficients carry their finite
-    # support rather than silently allowing an infinite sum.
-    trust have linear_combination fn(b fn(i I) V, coefficients \finitely_supported_coefficients<K, I, zeroK>) V
-
-thm basis_linear_combination_repr:
-    ? forall K, I, V set, zeroK K, addV fn(x, y V) V, zeroV V, smulV fn(a K, v V) V, b \basis_space<K, I, V, addV, zeroV, smulV>, v V:
-        \linear_combination<K, I, V, zeroK, addV, zeroV, smulV>(fn(i I) V {\basis_value<K, I, V, addV, zeroV, smulV>(b, i)}, \basis_repr<K, I, V, zeroK, addV, zeroV, smulV>(b, v)) = v
-    # Proof debt: the coordinate representation reconstructs the original vector.
-    trust \linear_combination<K, I, V, zeroK, addV, zeroV, smulV>(fn(i I) V {\basis_value<K, I, V, addV, zeroV, smulV>(b, i)}, \basis_repr<K, I, V, zeroK, addV, zeroV, smulV>(b, v)) = v
-
-template<K, I, V, W set, addV fn(x, y V) V, zeroV V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W>:
-    trust have basis_constr fn(b \basis_space<K, I, V, addV, zeroV, smulV>, values fn(i I) W) \linear_map_space<K, V, W, addV, smulV, addW, smulW>
-
-thm basis_constr_apply:
-    ? forall K, I, V, W set, addV fn(x, y V) V, zeroV V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, b \basis_space<K, I, V, addV, zeroV, smulV>, values fn(i I) W, i I:
-        \linear_map_value<K, V, W, addV, smulV, addW, smulW>(\basis_constr<K, I, V, W, addV, zeroV, smulV, addW, smulW>(b, values), \basis_value<K, I, V, addV, zeroV, smulV>(b, i)) = values(i)
-    # Proof debt: the selected linear extension agrees with prescribed basis values.
-    trust \linear_map_value<K, V, W, addV, smulV, addW, smulW>(\basis_constr<K, I, V, W, addV, zeroV, smulV, addW, smulW>(b, values), \basis_value<K, I, V, addV, zeroV, smulV>(b, i)) = values(i)
-
-thm linear_maps_equal_on_basis:
-    ? forall K, I, V, W set, addV fn(x, y V) V, zeroV V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, b \basis_space<K, I, V, addV, zeroV, smulV>, phi, psi \linear_map_space<K, V, W, addV, smulV, addW, smulW>:
-        forall i I:
-            \linear_map_value<K, V, W, addV, smulV, addW, smulW>(phi, \basis_value<K, I, V, addV, zeroV, smulV>(b, i)) = \linear_map_value<K, V, W, addV, smulV, addW, smulW>(psi, \basis_value<K, I, V, addV, zeroV, smulV>(b, i))
-        =>:
-            phi = psi
-    # Proof debt: expand every vector in the basis and use linearity.
-    trust phi = psi
-
-template<K, I, J finite_set, V, W set, zeroK K, addV fn(x, y V) V, zeroV V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, smulW fn(a K, w W) W>:
-    trust have toMatrix fn(bV \basis_space<K, I, V, addV, zeroV, smulV>, bW \basis_space<K, J, W, addW, zeroW, smulW>, phi \linear_map_space<K, V, W, addV, smulV, addW, smulW>) fn(row J) fn(column I) K
-
-thm toMatrix_entry:
-    ? forall K, I, J finite_set, V, W set, zeroK K, addV fn(x, y V) V, zeroV V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, smulW fn(a K, w W) W, bV \basis_space<K, I, V, addV, zeroV, smulV>, bW \basis_space<K, J, W, addW, zeroW, smulW>, phi \linear_map_space<K, V, W, addV, smulV, addW, smulW>, i I, j J:
-        \toMatrix<K, I, J, V, W, zeroK, addV, zeroV, smulV, addW, zeroW, smulW>(bV, bW, phi)(j)(i) = \basis_repr<K, J, W, zeroK, addW, zeroW, smulW>(bW, \linear_map_value<K, V, W, addV, smulV, addW, smulW>(phi, \basis_value<K, I, V, addV, zeroV, smulV>(bV, i)))(j)
-    # Proof debt: a matrix entry is the stated coordinate of phi(b_i).
-    trust \toMatrix<K, I, J, V, W, zeroK, addV, zeroV, smulV, addW, zeroW, smulW>(bV, bW, phi)(j)(i) = \basis_repr<K, J, W, zeroK, addW, zeroW, smulW>(bW, \linear_map_value<K, V, W, addV, smulV, addW, smulW>(phi, \basis_value<K, I, V, addV, zeroV, smulV>(bV, i)))(j)
-
-template<K, J finite_set, zeroK K, addK fn(x, y K) K>:
-    trust have finite_indexed_sum fn(terms fn(j J) K) K
-
-template<K, I, L set, J finite_set, zeroK K, addK fn(x, y K) K, mulK fn(x, y K) K>:
-    trust have indexed_matrix_mul fn(left fn(rowL L) fn(columnJ J) K, right fn(rowJ J) fn(columnI I) K) fn(outputRow L) fn(outputColumn I) K
-
-thm indexed_matrix_mul_entry:
-    ? forall K, I, L set, J finite_set, zeroK K, addK fn(x, y K) K, mulK fn(x, y K) K, left fn(rowL L) fn(columnJ J) K, right fn(rowJ J) fn(columnI I) K, row L, column I:
-        \indexed_matrix_mul<K, I, J, L, zeroK, addK, mulK>(left, right)(row)(column) = \finite_indexed_sum<K, J, zeroK, addK>(fn(j J) K {mulK(left(row)(j), right(j)(column))})
-    # Proof debt: finite matrix multiplication aggregates the displayed terms.
-    trust \indexed_matrix_mul<K, I, J, L, zeroK, addK, mulK>(left, right)(row)(column) = \finite_indexed_sum<K, J, zeroK, addK>(fn(j J) K {mulK(left(row)(j), right(j)(column))})
-
-template<K, W set, addW fn(x, y W) W, smulW fn(a K, w W) W>:
-    trust have identity_linear_map \linear_map_space<K, W, W, addW, smulW, addW, smulW>:
-        forall w W:
-            identity_linear_map(w) = w
-
-thm change_of_basis_matrix_formula:
-    ? forall K, V, W set, I, J, L finite_set, zeroK K, addK fn(x, y K) K, mulK fn(x, y K) K, addV fn(x, y V) V, zeroV V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, smulW fn(a K, w W) W, bI \basis_space<K, I, V, addV, zeroV, smulV>, bJ \basis_space<K, J, W, addW, zeroW, smulW>, bL \basis_space<K, L, W, addW, zeroW, smulW>, phi \linear_map_space<K, V, W, addV, smulV, addW, smulW>:
-        \toMatrix<K, I, L, V, W, zeroK, addV, zeroV, smulV, addW, zeroW, smulW>(bI, bL, phi) = \indexed_matrix_mul<K, I, J, L, zeroK, addK, mulK>(\toMatrix<K, J, L, W, W, zeroK, addW, zeroW, smulW, addW, zeroW, smulW>(bJ, bL, \identity_linear_map<K, W, addW, smulW>), \toMatrix<K, I, J, V, W, zeroK, addV, zeroV, smulV, addW, zeroW, smulW>(bI, bJ, phi))
-    # Proof debt: multiplication of coordinate-change matrices.
-    trust \toMatrix<K, I, L, V, W, zeroK, addV, zeroV, smulV, addW, zeroW, smulW>(bI, bL, phi) = \indexed_matrix_mul<K, I, J, L, zeroK, addK, mulK>(\toMatrix<K, J, L, W, W, zeroK, addW, zeroW, smulW, addW, zeroW, smulW>(bJ, bL, \identity_linear_map<K, W, addW, smulW>), \toMatrix<K, I, J, V, W, zeroK, addV, zeroV, smulV, addW, zeroW, smulW>(bI, bJ, phi))
-
 # ---------------------------------------------------------------------------
 # 10.4.3 Dimension
 # ---------------------------------------------------------------------------
@@ -727,10 +407,6 @@ prop has_dimension(K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, n 
 prop is_finite_dimensional(K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V):
     exist n N st {$has_dimension(K, V, addV, zeroV, smul, n)}
 
-template<K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V: $is_finite_dimensional(K, V, addV, zeroV, smul)>:
-    trust have dimension N:
-        $has_dimension(K, V, addV, zeroV, smul, dimension)
-
 prop is_subspace_basis(K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U power_set(V), b fn(i I) V):
     $is_linearly_independent(K, I, V, addV, zeroV, smul, b)
     \span<K, V, addV, zeroV, smul>(\basis_values<I, V, b>) = U
@@ -738,71 +414,5 @@ prop is_subspace_basis(K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V
 prop has_subspace_dimension(K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U power_set(V), n N):
     exist I finite_set, b fn(i I) V st {$is_subspace_basis(K, I, V, addV, zeroV, smul, U, b), finite_set_size(I) = n}
 
-template<K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V: $is_finite_dimensional(K, V, addV, zeroV, smul)>:
-    trust have subspace_dimension fn(U power_set(V)) N:
-        forall U power_set(V):
-            $is_subspace(K, V, addV, zeroV, smul, U)
-            =>:
-                $has_subspace_dimension(K, V, addV, zeroV, smul, U, subspace_dimension(U))
-
 prop is_nontrivial_space(V set):
     exist u, v V st {u != v}
-
-thm positive_dimension_implies_nontrivial:
-    ? forall K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V:
-        $is_finite_dimensional(K, V, addV, zeroV, smul)
-        \dimension<K, V, addV, zeroV, smul> > 0
-        =>:
-            $is_nontrivial_space(V)
-    # Proof debt: a positive-length basis gives distinct vectors.
-    trust $is_nontrivial_space(V)
-
-thm nontrivial_implies_positive_dimension:
-    ? forall K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V:
-        $is_finite_dimensional(K, V, addV, zeroV, smul)
-        $is_nontrivial_space(V)
-        =>:
-            \dimension<K, V, addV, zeroV, smul> > 0
-    # Proof debt: a nontrivial finite-dimensional space has a nonempty basis.
-    trust \dimension<K, V, addV, zeroV, smul> > 0
-
-thm finite_basis_gives_finite_dimensional:
-    ? forall K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, b \basis_space<K, I, V, addV, zeroV, smul>:
-        $is_finite_set(I)
-        =>:
-            $is_finite_dimensional(K, V, addV, zeroV, smul)
-    # Proof debt: use the finite basis index as the dimension witness.
-    trust $is_finite_dimensional(K, V, addV, zeroV, smul)
-
-thm finite_dimensional_basis_has_finite_index:
-    ? forall K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, b \basis_space<K, I, V, addV, zeroV, smul>:
-        $is_finite_dimensional(K, V, addV, zeroV, smul)
-        =>:
-            $is_finite_set(I)
-    # Proof debt: exchange against a finite basis and compare index sets.
-    trust $is_finite_set(I)
-
-thm dimension_sup_add_dimension_inf:
-    ? forall K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U, W power_set(V):
-        $is_finite_dimensional(K, V, addV, zeroV, smul)
-        $is_subspace(K, V, addV, zeroV, smul, U)
-        $is_subspace(K, V, addV, zeroV, smul, W)
-        =>:
-            \subspace_dimension<K, V, addV, zeroV, smul>(\subspace_join<K, V, addV, zeroV, smul>(U, W)) + \subspace_dimension<K, V, addV, zeroV, smul>(intersect(U, W)) = \subspace_dimension<K, V, addV, zeroV, smul>(U) + \subspace_dimension<K, V, addV, zeroV, smul>(W)
-    # Proof debt: extend a basis of the intersection inside both subspaces.
-    trust \subspace_dimension<K, V, addV, zeroV, smul>(\subspace_join<K, V, addV, zeroV, smul>(U, W)) + \subspace_dimension<K, V, addV, zeroV, smul>(intersect(U, W)) = \subspace_dimension<K, V, addV, zeroV, smul>(U) + \subspace_dimension<K, V, addV, zeroV, smul>(W)
-
-thm subspace_dimension_le:
-    ? forall K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U power_set(V):
-        $is_finite_dimensional(K, V, addV, zeroV, smul)
-        $is_subspace(K, V, addV, zeroV, smul, U)
-        =>:
-            \subspace_dimension<K, V, addV, zeroV, smul>(U) <= \dimension<K, V, addV, zeroV, smul>
-    # Proof debt: extend a basis of the subspace to an ambient basis.
-    trust \subspace_dimension<K, V, addV, zeroV, smul>(U) <= \dimension<K, V, addV, zeroV, smul>
-
-thm basis_index_sets_have_equal_cardinality:
-    ? forall K, I, J, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, bI \basis_space<K, I, V, addV, zeroV, smul>, bJ \basis_space<K, J, V, addV, zeroV, smul>:
-        $chap9::sets_equinumerous(I, J)
-    # Proof debt: exchange theorem for arbitrary bases.
-    trust $chap9::sets_equinumerous(I, J)

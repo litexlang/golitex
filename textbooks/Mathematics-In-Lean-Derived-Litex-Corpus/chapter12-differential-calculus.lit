@@ -1,11 +1,11 @@
 # Chapter 12 — Differential Calculus
 # Independent MIL-derived Litex pressure-test corpus; see README for scope,
-# attribution, and checked/trusted status.
+# attribution, and checked/deferred status.
 
 # Derivative assertions are relations between a function and a candidate
-# derivative.  `deriv`, operator norms, higher derivatives, and local inverses
-# remain callable or selected objects. The source's Banach-Steinhaus passage
-# is outside this definitions-and-main-results slice.
+# derivative. Selected derivatives, operator norms, higher derivatives, and
+# local inverses require existence and uniqueness results that are not yet
+# implemented in this corpus; those source results are recorded in todo.lit.
 
 # ---------------------------------------------------------------------------
 # Section 12.1 — Elementary Differential Calculus
@@ -26,61 +26,7 @@ prop has_derivative_at(f fn(x R) R, x0, L R):
 prop is_differentiable_at(f fn(x R) R, x0 R):
     exist L R st {$has_derivative_at(f, x0, L)}
 
-thm derivative_value_unique:
-    ? forall f fn(x R) R, x0, L1, L2 R:
-        $has_derivative_at(f, x0, L1)
-        $has_derivative_at(f, x0, L2)
-        =>:
-            L1 = L2
-    trust L1 = L2
-
-# Lean's `deriv` is total: at differentiable points it selects the unique
-# derivative and at nondifferentiable points it returns zero.
-trust have deriv_total fn(f fn(x R) R, x0 R) R
-
-# Trigonometric functions are not currently provided by the installed Litex
-# library.  The missing mathematical object is retained as a function, never
-# as a proposition placeholder.
-trust have real_sin fn(x R) R
-trust have real_pi R
-
-# Source result: sin has derivative one at zero.  The equality premise keeps
-# the exact closed source instance inside Litex's universal-theorem form.
-thm sin_has_derivative_at_zero:
-    ? forall x0 R:
-        x0 = 0
-        =>:
-            $has_derivative_at(real_sin, x0, 1)
-    trust $has_derivative_at(real_sin, x0, 1)
-
-thm sin_is_differentiable:
-    ? forall x R:
-        $is_differentiable_at(real_sin, x)
-    trust $is_differentiable_at(real_sin, x)
-
-thm has_derivative_determines_total_deriv:
-    ? forall f fn(x R) R, x, L R:
-        $has_derivative_at(f, x, L)
-        =>:
-            deriv_total(f, x) = L
-    trust deriv_total(f, x) = L
-
-thm total_deriv_is_zero_when_not_differentiable:
-    ? forall f fn(x R) R, x R:
-        not $is_differentiable_at(f, x)
-        =>:
-            deriv_total(f, x) = 0
-    trust deriv_total(f, x) = 0
-
 have fn add_real_functions(f, g fn(t R) R, x R) R = f(x) + g(x)
-
-thm derivative_of_sum:
-    ? forall f, g fn(x R) R, x R:
-        $is_differentiable_at(f, x)
-        $is_differentiable_at(g, x)
-        =>:
-            deriv_total(fn(t R) R {add_real_functions(f, g, t)}, x) = deriv_total(f, x) + deriv_total(g, x)
-    trust deriv_total(fn(t R) R {add_real_functions(f, g, t)}, x) = deriv_total(f, x) + deriv_total(g, x)
 
 prop is_local_minimum_with_radius(f fn(x R) R, a R, delta R_pos):
     forall x R:
@@ -90,13 +36,6 @@ prop is_local_minimum_with_radius(f fn(x R) R, a R, delta R_pos):
 
 prop is_local_minimum(f fn(x R) R, a R):
     exist delta R_pos st {$is_local_minimum_with_radius(f, a, delta)}
-
-thm local_minimum_has_zero_derivative:
-    ? forall f fn(x R) R, a R:
-        $is_local_minimum(f, a)
-        =>:
-            deriv_total(f, a) = 0
-    trust deriv_total(f, a) = 0
 
 have fn closed_interval(a, b R) power_set(R) = {x R: a <= x <= b}
 have fn open_interval(a, b R) power_set(R) = {x R: a < x < b}
@@ -118,44 +57,6 @@ prop is_continuous_on_real_set(S power_set(R), f fn(x R) R):
 prop is_differentiable_on_real_set(S power_set(R), f fn(x R) R):
     forall x S:
         $is_differentiable_at(f, x)
-
-# Source theorem: Rolle's theorem.
-thm rolle_theorem:
-    ? forall f fn(x R) R, a, b R:
-        a < b
-        a != b
-        $is_continuous_on_real_set(closed_interval(a, b), f)
-        f(a) = f(b)
-        =>:
-            exist c open_interval(a, b) st {deriv_total(f, c) = 0}
-    trust exist c open_interval(a, b) st {deriv_total(f, c) = 0}
-
-# Source theorem: the mean value theorem.
-thm mean_value_theorem:
-    ? forall f fn(x R) R, a, b R:
-        a < b
-        a != b
-        $is_continuous_on_real_set(closed_interval(a, b), f)
-        $is_differentiable_on_real_set(open_interval(a, b), f)
-        =>:
-            exist c open_interval(a, b) st {deriv_total(f, c) = (f(b) - f(a)) / (b - a)}
-    trust exist c open_interval(a, b) st {deriv_total(f, c) = (f(b) - f(a)) / (b - a)}
-
-# The source's concrete power-derivative calculation.
-thm derivative_of_fifth_power_at_six:
-    ? forall x R:
-        x = 6
-        =>:
-            deriv_total(fn(t R) R {t^5}, x) = 5 * 6^4
-    trust deriv_total(fn(t R) R {t^5}, x) = 5 * 6^4
-
-# The final elementary example computes the derivative of sin at pi.
-thm derivative_of_sin_at_pi:
-    ? forall x R:
-        x = real_pi
-        =>:
-            deriv_total(real_sin, x) = -1
-    trust deriv_total(real_sin, x) = -1
 
 # ---------------------------------------------------------------------------
 # Section 12.2 — Differential Calculus in Normed Spaces
@@ -196,13 +97,6 @@ prop norm_is_one_lipschitz(E set, add fn(x, y E) E, neg fn(x E) E, norm fn(x E) 
     forall x, y E:
         abs(norm(x) - norm(y)) <= norm(add(x, neg(y)))
 
-thm norm_is_continuous:
-    ? forall E set, add fn(x, y E) E, zero E, neg fn(x E) E, norm fn(x E) R:
-        $is_normed_additive_commutative_group(E, add, zero, neg, norm)
-        =>:
-            $norm_is_one_lipschitz(E, add, neg, norm)
-    trust $norm_is_one_lipschitz(E, add, neg, norm)
-
 # Finite dimensionality is the finite-basis relation developed in Chapter 10.
 # An arbitrary injection into finitely many real coordinates is not enough: it
 # need not be linear or have a spanning inverse.  The Chapter 10 interface
@@ -235,14 +129,6 @@ prop is_complete_normed_space(E set, add fn(x, y E) E, neg fn(x E) E, norm fn(x 
         =>:
             exist x E st {$norm_sequence_converges(E, add, neg, norm, u, x)}
 
-thm finite_dimensional_normed_space_is_complete:
-    ? forall E set, add fn(x, y E) E, zero E, neg fn(x E) E, smul fn(a R, x E) E, norm fn(x E) R:
-        $is_real_normed_space(E, add, zero, neg, smul, norm)
-        $chap10::is_finite_dimensional(R, E, add, zero, smul)
-        =>:
-            $is_complete_normed_space(E, add, neg, norm)
-    trust $is_complete_normed_space(E, add, neg, norm)
-
 prop is_nontrivially_normed_field(K set, mul fn(x, y K) K, one K, norm fn(x K) R):
     forall x, y K:
         norm(mul(x, y)) = norm(x) * norm(y)
@@ -254,14 +140,14 @@ thm norm_is_multiplicative_in_normed_field:
         $is_nontrivially_normed_field(K, mul, one, norm)
         =>:
             norm(mul(x, y)) = norm(x) * norm(y)
-    trust norm(mul(x, y)) = norm(x) * norm(y)
+    norm(mul(x, y)) = norm(x) * norm(y)
 
 thm normed_field_has_element_of_norm_greater_than_one:
     ? forall K set, mul fn(x, y K) K, one K, norm fn(x K) R:
         $is_nontrivially_normed_field(K, mul, one, norm)
         =>:
             exist x K st {norm(x) > 1}
-    trust exist x K st {norm(x) > 1}
+    exist x K st {norm(x) > 1}
 
 # Continuous linear maps are candidate functions satisfying algebraic laws and
 # a global operator bound.
@@ -283,28 +169,14 @@ template<E set>:
 thm identity_is_continuous_linear:
     ? forall E set, add fn(x, y E) E, smul fn(a R, x E) E, norm fn(x E) R:
         $is_continuous_real_linear_map(E, E, add, add, smul, smul, norm, norm, \identity_map<E>)
-    trust $is_continuous_real_linear_map(E, E, add, add, smul, smul, norm, norm, \identity_map<E>)
-
-# Source object `opNorm`: a selected real value attached to a continuous real
-# linear map.  It is not defined for an arbitrary function merely because a
-# norm can be written on its domain and codomain.
-template<E, F set, add_E fn(x, y E) E, add_F fn(x, y F) F, smul_E fn(a R, x E) E, smul_F fn(a R, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, f fn(x E) F: $is_continuous_real_linear_map(E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, f)>:
-    trust have operator_norm R
-
-thm continuous_linear_map_le_operator_norm:
-    ? forall E, F set, add_E fn(x, y E) E, add_F fn(x, y F) F, smul_E fn(a R, x E) E, smul_F fn(a R, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, f fn(x E) F, x E:
-        $is_continuous_real_linear_map(E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, f)
-        =>:
-            norm_F(f(x)) <= \operator_norm<E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, f> * norm_E(x)
-    trust norm_F(f(x)) <= \operator_norm<E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, f> * norm_E(x)
-
-thm operator_norm_le_bound:
-    ? forall E, F set, add_E fn(x, y E) E, add_F fn(x, y F) F, smul_E fn(a R, x E) E, smul_F fn(a R, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, f fn(x E) F, M R:
-        $is_continuous_real_linear_map(E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, f)
-        $is_operator_bound(E, F, norm_E, norm_F, f, M)
-        =>:
-            \operator_norm<E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, f> <= M
-    trust \operator_norm<E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, f> <= M
+    forall x, y E:
+        \identity_map<E>(add(x, y)) = add(x, y) = add(\identity_map<E>(x), \identity_map<E>(y))
+    forall a R, x E:
+        \identity_map<E>(smul(a, x)) = smul(a, x) = smul(a, \identity_map<E>(x))
+    witness exist C R st {$is_operator_bound(E, E, norm, norm, \identity_map<E>, C)} from 1:
+        1 >= 0
+        forall x E:
+            norm(\identity_map<E>(x)) = norm(x) = 1 * norm(x)
 
 # Asymptotic relations are genuine properties of candidate functions and a
 # filter, not selected functions.
@@ -335,37 +207,6 @@ prop has_frechet_derivative_at(E, F set, add_E fn(x, y E) E, add_F fn(x, y F) F,
     forall epsilon R_pos:
         exist delta R_pos st {$frechet_remainder_delta_control(E, F, sub_E, sub_F, norm_E, norm_F, f, fprime, x0, epsilon, delta)}
 
-template<E, F set, f fn(t E) F, x0 E>:
-    trust have frechet_derivative fn(h E) F
-
-thm has_frechet_derivative_determines_fderiv:
-    ? forall E, F set, add_E fn(x, y E) E, add_F fn(x, y F) F, smul_E fn(a R, x E) E, smul_F fn(a R, y F) F, sub_E fn(x, y E) E, sub_F fn(x, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, f fn(x E) F, fprime fn(x E) F, x0 E:
-        $has_frechet_derivative_at(E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, fprime, x0)
-        =>:
-            \frechet_derivative<E, F, f, x0> = fprime
-    trust \frechet_derivative<E, F, f, x0> = fprime
-
-# `iteratedFDeriv` remains a callable n-direction map value.  The direction
-# sequence is explicit because Litex has no native multilinear-map carrier yet.
-template<E, F set, n N, f fn(t E) F, x E>:
-    trust have iterated_frechet_derivative fn(directions fn(k N) E) F
-
-prop iterated_derivative_continuity_control(E, F set, sub_E fn(x, y E) E, sub_F fn(x, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, m N, f fn(x E) F, directions fn(k N) E, x E, epsilon, delta R_pos):
-    forall y E:
-        norm_E(sub_E(y, x)) < delta
-        =>:
-            norm_F(sub_F(\iterated_frechet_derivative<E, F, m, f, y>(directions), \iterated_frechet_derivative<E, F, m, f, x>(directions))) < epsilon
-
-prop is_iterated_derivative_evaluation_continuous(E, F set, sub_E fn(x, y E) E, sub_F fn(x, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, m N, f fn(x E) F, directions fn(k N) E):
-    forall x E, epsilon R_pos:
-        exist delta R_pos st {$iterated_derivative_continuity_control(E, F, sub_E, sub_F, norm_E, norm_F, m, f, directions, x, epsilon, delta)}
-
-prop is_cont_diff_to_order(E, F set, sub_E fn(x, y E) E, sub_F fn(x, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, n N, f fn(x E) F):
-    forall m N, directions fn(k N) E:
-        m <= n
-        =>:
-            $is_iterated_derivative_evaluation_continuous(E, F, sub_E, sub_F, norm_E, norm_F, m, f, directions)
-
 prop strict_frechet_delta_control(E, F set, sub_E fn(x, y E) E, sub_F fn(x, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, f fn(x E) F, fprime fn(x E) F, x0 E, epsilon, delta R_pos):
     forall x, y E:
         norm_E(sub_E(x, x0)) < delta
@@ -389,12 +230,6 @@ prop is_continuous_real_linear_equivalence(E, F set, add_E fn(x, y E) E, add_F f
     forall y F:
         forward(inverse(y)) = y
 
-# Source construction `localInverse` is a selected callable function.  Its
-# type records the strict derivative and continuous-linear-equivalence data
-# that the Lean construction requires.
-template<E, F set, add_E fn(x, y E) E, add_F fn(x, y F) F, smul_E fn(r R, x E) E, smul_F fn(r R, y F) F, sub_E fn(x, y E) E, sub_F fn(x, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, f fn(x E) F, forward fn(x E) F, inverse fn(y F) E, a E: $has_strict_frechet_derivative_at(E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, forward, a), $is_continuous_real_linear_equivalence(E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, forward, inverse)>:
-    trust have local_inverse fn(y F) E
-
 prop near_point_subset(E set, sub_E fn(x, y E) E, norm_E fn(x E) R, a E, P power_set(E), delta R_pos):
     forall x E:
         norm_E(sub_E(x, a)) < delta
@@ -403,27 +238,3 @@ prop near_point_subset(E set, sub_E fn(x, y E) E, norm_E fn(x E) R, a E, P power
 
 prop eventually_near_point(E set, sub_E fn(x, y E) E, norm_E fn(x E) R, a E, P power_set(E)):
     exist delta R_pos st {$near_point_subset(E, sub_E, norm_E, a, P, delta)}
-
-thm local_inverse_eventually_left_inverse:
-    ? forall E, F set, add_E fn(x, y E) E, add_F fn(x, y F) F, smul_E fn(r R, x E) E, smul_F fn(r R, y F) F, sub_E fn(x, y E) E, sub_F fn(x, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, f fn(x E) F, forward fn(x E) F, inverse fn(y F) E, a E:
-        $has_strict_frechet_derivative_at(E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, forward, a)
-        $is_continuous_real_linear_equivalence(E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, forward, inverse)
-        =>:
-            $eventually_near_point(E, sub_E, norm_E, a, {x E: \local_inverse<E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, forward, inverse, a>(f(x)) = x})
-    trust $eventually_near_point(E, sub_E, norm_E, a, {x E: \local_inverse<E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, forward, inverse, a>(f(x)) = x})
-
-thm local_inverse_eventually_right_inverse:
-    ? forall E, F set, add_E fn(x, y E) E, add_F fn(x, y F) F, smul_E fn(r R, x E) E, smul_F fn(r R, y F) F, sub_E fn(x, y E) E, sub_F fn(x, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, f fn(x E) F, forward fn(x E) F, inverse fn(y F) E, a E:
-        $has_strict_frechet_derivative_at(E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, forward, a)
-        $is_continuous_real_linear_equivalence(E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, forward, inverse)
-        =>:
-            $eventually_near_point(F, sub_F, norm_F, f(a), {y F: f(\local_inverse<E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, forward, inverse, a>(y)) = y})
-    trust $eventually_near_point(F, sub_F, norm_F, f(a), {y F: f(\local_inverse<E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, forward, inverse, a>(y)) = y})
-
-thm local_inverse_has_inverse_strict_derivative:
-    ? forall E, F set, add_E fn(x, y E) E, add_F fn(x, y F) F, smul_E fn(r R, x E) E, smul_F fn(r R, y F) F, sub_E fn(x, y E) E, sub_F fn(x, y F) F, norm_E fn(x E) R, norm_F fn(y F) R, f fn(x E) F, forward fn(x E) F, inverse fn(y F) E, a E:
-        $has_strict_frechet_derivative_at(E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, forward, a)
-        $is_continuous_real_linear_equivalence(E, F, add_E, add_F, smul_E, smul_F, norm_E, norm_F, forward, inverse)
-        =>:
-            $has_strict_frechet_derivative_at(F, E, add_F, add_E, smul_F, smul_E, sub_F, sub_E, norm_F, norm_E, \local_inverse<E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, forward, inverse, a>, inverse, f(a))
-    trust $has_strict_frechet_derivative_at(F, E, add_F, add_E, smul_F, smul_E, sub_F, sub_E, norm_F, norm_E, \local_inverse<E, F, add_E, add_F, smul_E, smul_F, sub_E, sub_F, norm_E, norm_F, f, forward, inverse, a>, inverse, f(a))
