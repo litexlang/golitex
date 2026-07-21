@@ -1,0 +1,268 @@
+# Linear Algebra Done Right, fourth edition — Section 7A.
+# Self-Adjoint and Normal Operators.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Geometry "&chap6a::InnerProductScalarGeometry<s, scalars>{scalar_geometry}"
+macro VInnerSpace "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>"
+macro WInnerSpace "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>"
+macro VInner "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}"
+macro WInner "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}"
+macro LinearMaps "\chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>"
+macro ReverseMaps "\chap3a::linear_map_space<s, scalars, W, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space>"
+macro Operators "\chap3a::linear_map_space<s, scalars, V, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space>"
+macro Adjoint "\adjoint<s, scalars, scalar_geometry, V, W, Vinner, Winner>"
+macro OperatorAdjoint "\adjoint<s, scalars, scalar_geometry, V, V, Vinner, Vinner>"
+macro OperatorCompose "\chap3a::linear_map_compose<s, scalars, V, V, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space>"
+
+# Definition 7.1. S is an adjoint of T when moving T across the inner product
+# changes <Tv,w> in W into <v,Sw> in V for every v and w.
+prop is_adjoint_of(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T fn(v V) W, S fn(w W) V):
+    forall v V, w W:
+        @WInner.inner(T(v), w) = @VInner.inner(v, S(w))
+
+# Fix w, apply Riesz to v |-> <Tv,w>, and prove the selected values preserve
+# addition and scalar multiplication. Uniqueness is pointwise Riesz uniqueness.
+axiom adjoint_exists_unique_as_linear_map:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        =>:
+            exist! S @ReverseMaps st {$is_adjoint_of(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, S)}
+
+# Current kernel boundary: selecting a witness whose carrier is a linear-map
+# subtype fails strict execution. The mathematical exist! interface remains
+# above; this trusted callable object carries exactly the selected map type.
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace: $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space)>:
+    trust have adjoint fn(T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>) \chap3a::linear_map_space<s, scalars, W, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space>
+
+axiom adjoint_spec:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        =>:
+            $is_adjoint_of(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, @Adjoint(T))
+
+# Examples 7.2 and 7.3 compute adjoints by rewriting <Tv,w> into <v,x>.
+# Their coordinate and rank-one formulas remain explanatory source prose.
+
+# Result 7.4. The Riesz construction above selects directly in L(W,V), so
+# linearity is exactly the selected function's codomain fact.
+thm adjoint_of_linear_map_is_linear:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        =>:
+            @Adjoint(T) $in @ReverseMaps
+    @Adjoint(T) $in @ReverseMaps
+
+prop has_adjoint_properties(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps):
+    $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+    $chap2a::is_finite_dimensional(s, scalars, W, @WInner.vector_space)
+    forall S @LinearMaps:
+        @Adjoint(\chap3a::linear_map_add<s, scalars, V, W, @VInner.vector_space, @WInner.vector_space>(S, T)) = \chap3a::linear_map_add<s, scalars, W, V, @WInner.vector_space, @VInner.vector_space>(@Adjoint(S), @Adjoint(T))
+    forall lambda s:
+        @Adjoint(\chap3a::linear_map_smul<s, scalars, V, W, @VInner.vector_space, @WInner.vector_space>(lambda, T)) = \chap3a::linear_map_smul<s, scalars, W, V, @WInner.vector_space, @VInner.vector_space>(@Geometry.conjugate(lambda), @Adjoint(T))
+    \adjoint<s, scalars, scalar_geometry, W, V, Winner, Vinner>(@Adjoint(T)) = T
+    forall U nonempty_set, Uinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, U>, S \chap3a::linear_map_space<s, scalars, W, U, @WInner.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, U>{Uinner}.vector_space>:
+        $chap2a::is_finite_dimensional(s, scalars, U, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, U>{Uinner}.vector_space)
+        =>:
+            \adjoint<s, scalars, scalar_geometry, V, U, Vinner, Uinner>(\chap3a::linear_map_compose<s, scalars, V, W, U, @VInner.vector_space, @WInner.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, U>{Uinner}.vector_space>(S, T)) = \chap3a::linear_map_compose<s, scalars, U, W, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, U>{Uinner}.vector_space, @WInner.vector_space, @VInner.vector_space>(@Adjoint(T), \adjoint<s, scalars, scalar_geometry, W, U, Winner, Uinner>(S))
+    @OperatorAdjoint(\chap3a::identity_linear_map<s, scalars, V, @VInner.vector_space>) = \chap3a::identity_linear_map<s, scalars, V, @VInner.vector_space>
+    forall:
+        $chap3d::is_invertible_linear_map(s, scalars, V, W, @VInner.vector_space, @WInner.vector_space, T)
+        =>:
+            $chap3d::is_invertible_linear_map(s, scalars, W, V, @WInner.vector_space, @VInner.vector_space, @Adjoint(T))
+            \chap3d::inverse_linear_map<s, scalars, W, V, @WInner.vector_space, @VInner.vector_space>(@Adjoint(T)) = \adjoint<s, scalars, scalar_geometry, W, V, Winner, Vinner>(\chap3d::inverse_linear_map<s, scalars, V, W, @VInner.vector_space, @WInner.vector_space>(T))
+
+# Result 7.5. Each equality follows by inserting the defining inner-product
+# identity and using uniqueness; the inverse clause takes adjoints of the two
+# inverse identities.
+axiom properties_of_adjoint:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        $chap2a::is_finite_dimensional(s, scalars, W, @WInner.vector_space)
+        =>:
+            $has_adjoint_properties(s, scalars, scalar_geometry, V, W, Vinner, Winner, T)
+
+prop has_adjoint_null_range_relations(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps):
+    $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+    $chap2a::is_finite_dimensional(s, scalars, W, @WInner.vector_space)
+    \chap3b::null_space<s, scalars, W, V, @WInner.vector_space, @VInner.vector_space>(@Adjoint(T)) = \chap6c::orthogonal_complement<s, scalars, scalar_geometry, W>(Winner, \chap3b::range_of<V, W>(T))
+    \chap3b::range_of<W, V>(@Adjoint(T)) = \chap6c::orthogonal_complement<s, scalars, scalar_geometry, V>(Vinner, \chap3b::null_space<s, scalars, V, W, @VInner.vector_space, @WInner.vector_space>(T))
+    \chap3b::null_space<s, scalars, V, W, @VInner.vector_space, @WInner.vector_space>(T) = \chap6c::orthogonal_complement<s, scalars, scalar_geometry, V>(Vinner, \chap3b::range_of<W, V>(@Adjoint(T)))
+    \chap3b::range_of<V, W>(T) = \chap6c::orthogonal_complement<s, scalars, scalar_geometry, W>(Winner, \chap3b::null_space<s, scalars, W, V, @WInner.vector_space, @VInner.vector_space>(@Adjoint(T)))
+
+# Result 7.6. Prove null(T*)=(range T)-perp directly; take orthogonal
+# complements and apply (T*)*=T for the other three identities.
+axiom null_space_and_range_of_adjoint:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        $chap2a::is_finite_dimensional(s, scalars, W, @WInner.vector_space)
+        =>:
+            $has_adjoint_null_range_relations(s, scalars, scalar_geometry, V, W, Vinner, Winner, T)
+
+# Definition 7.7. Conjugate transpose swaps row and column indices and applies
+# the scalar conjugation supplied by the inner-product scalar geometry.
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, m, n N_pos>:
+    have fn conjugate_transpose(A matrix(s, m, n)) matrix(s, n, m) = fn(j N_pos, k N_pos: j <= n, k <= m) s {&chap6a::InnerProductScalarGeometry<s, scalars>{scalar_geometry}.conjugate(A(k, j))}
+
+# Example 7.8 transposes the displayed 2-by-3 matrix and conjugates its two
+# imaginary entries; real matrices specialize to ordinary transpose.
+
+# Result 7.9. In orthonormal bases, a matrix entry is an inner product with a
+# basis vector. Apply the adjoint identity and conjugate symmetry once.
+axiom matrix_of_adjoint_is_conjugate_transpose:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps, n, m N_pos, domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        $chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, V, Vinner, n, domain_basis)
+        $chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, W, Winner, m, codomain_basis)
+        =>:
+            \chap3c::matrix_of_linear_map<s, scalars, W, V, @WInner.vector_space, @VInner.vector_space, m, n>(codomain_basis, domain_basis, @Adjoint(T)) = \conjugate_transpose<s, scalars, scalar_geometry, m, n>(\chap3c::matrix_of_linear_map<s, scalars, V, W, @VInner.vector_space, @WInner.vector_space, n, m>(domain_basis, codomain_basis, T))
+
+# Definition 7.10. A finite-dimensional operator is self-adjoint exactly when
+# it equals its adjoint; no matrix or norm characterization is folded in.
+prop is_self_adjoint(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators):
+    $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+    T = @OperatorAdjoint(T)
+
+# Example 7.11 tests self-adjointness of the displayed 2-by-2 operator by the
+# conjugate-transpose matrix criterion from 7.9.
+
+# Result 7.12. For a nonzero eigenvector v, move T across <Tv,v>; cancel
+# ||v||^2 to obtain lambda=conjugate(lambda).
+axiom eigenvalues_of_self_adjoint_operators_are_real:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators, lambda s:
+        $is_self_adjoint(s, scalars, scalar_geometry, V, Vinner, T)
+        $chap5a::is_eigenvalue(s, scalars, V, @VInner.vector_space, T, lambda)
+        =>:
+            @Geometry.conjugate(lambda) = lambda
+
+prop has_zero_quadratic_form(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators):
+    forall v V:
+        @VInner.inner(T(v), v) = @Scalars.zero
+
+prop zero_quadratic_form_iff_zero_operator(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators):
+    forall:
+        =>:
+            $has_zero_quadratic_form(s, scalars, scalar_geometry, V, Vinner, T)
+        <=>:
+            T = \chap3a::zero_linear_map<s, scalars, V, V, @VInner.vector_space, @VInner.vector_space>
+
+# Result 7.13. Over C, the polarization identity recovers every <Tu,w> from
+# four diagonal values; if all vanish, take w=Tu and use definiteness.
+axiom complex_zero_quadratic_form_iff_zero_operator:
+    ? forall V nonempty_set, Vinner &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space>:
+        $zero_quadratic_form_iff_zero_operator(&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V, Vinner, T)
+
+prop has_real_diagonal_values(V nonempty_set, Vinner &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space>):
+    forall v V:
+        chap4::complex_conjugate(&chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.inner(T(v), v)) = &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.inner(T(v), v)
+
+prop self_adjoint_iff_diagonal_values_real(V nonempty_set, Vinner &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space>):
+    $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space)
+    forall:
+        =>:
+            $is_self_adjoint(&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V, Vinner, T)
+        <=>:
+            $has_real_diagonal_values(V, Vinner, T)
+
+# Result 7.14. Apply 7.13 to T-T*: its diagonal values vanish exactly when
+# every <Tv,v> equals its conjugate, which is exactly being real.
+axiom complex_self_adjoint_iff_diagonal_values_real:
+    ? forall V nonempty_set, Vinner &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space)
+        =>:
+            $self_adjoint_iff_diagonal_values_real(V, Vinner, T)
+
+# Result 7.16. The complex case is 7.13; over R use the two-term polarization
+# identity, then take w=Tu and apply definiteness.
+axiom self_adjoint_zero_quadratic_form_iff_zero_operator:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators:
+        $is_self_adjoint(s, scalars, scalar_geometry, V, Vinner, T)
+        =>:
+            $zero_quadratic_form_iff_zero_operator(s, scalars, scalar_geometry, V, Vinner, T)
+
+# Definition 7.18. Normality is only commutation with the adjoint.
+prop is_normal(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators):
+    $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+    @OperatorCompose(T, @OperatorAdjoint(T)) = @OperatorCompose(@OperatorAdjoint(T), T)
+
+# Example 7.19 compares the two matrix products for the displayed rotation-
+# scaling operator, showing it is normal but not self-adjoint.
+
+prop operator_and_adjoint_have_equal_norms(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators):
+    $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+    forall v V:
+        \chap6a::norm<s, scalars, scalar_geometry, V>(Vinner, T(v)) = \chap6a::norm<s, scalars, scalar_geometry, V>(Vinner, @OperatorAdjoint(T)(v))
+
+prop normal_iff_adjoint_norm_equality(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators):
+    $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+    forall:
+        =>:
+            $is_normal(s, scalars, scalar_geometry, V, Vinner, T)
+        <=>:
+            $operator_and_adjoint_have_equal_norms(s, scalars, scalar_geometry, V, Vinner, T)
+
+# Result 7.20. Apply 7.16 to the self-adjoint commutator T*T-TT*; its diagonal
+# value is ||Tv||^2-||T*v||^2.
+axiom normal_iff_operator_and_adjoint_have_equal_norms:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        =>:
+            $normal_iff_adjoint_norm_equality(s, scalars, scalar_geometry, V, Vinner, T)
+
+prop operator_and_adjoint_eigen_equations_agree(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators, v V, lambda s):
+    $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+    forall:
+        =>:
+            T(v) = @VInner.smul(lambda, v)
+        <=>:
+            @OperatorAdjoint(T)(v) = @VInner.smul(@Geometry.conjugate(lambda), v)
+
+prop has_normal_operator_properties(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators):
+    $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+    \chap3b::null_space<s, scalars, V, V, @VInner.vector_space, @VInner.vector_space>(T) = \chap3b::null_space<s, scalars, V, V, @VInner.vector_space, @VInner.vector_space>(@OperatorAdjoint(T))
+    \chap3b::range_of<V, V>(T) = \chap3b::range_of<V, V>(@OperatorAdjoint(T))
+    $chap1c::is_direct_sum_pair(s, scalars, V, @VInner.vector_space, \chap3b::null_space<s, scalars, V, V, @VInner.vector_space, @VInner.vector_space>(T), \chap3b::range_of<V, V>(T))
+    \chap1c::subspace_sum_pair<s, scalars, V, @VInner.vector_space>(\chap3b::null_space<s, scalars, V, V, @VInner.vector_space, @VInner.vector_space>(T), \chap3b::range_of<V, V>(T)) = V
+    forall lambda s:
+        $is_normal(s, scalars, scalar_geometry, V, Vinner, \chap5a::operator_minus_scalar_identity<s, scalars, V, @VInner.vector_space>(T, lambda))
+    forall v V, lambda s:
+        $operator_and_adjoint_eigen_equations_agree(s, scalars, scalar_geometry, V, Vinner, T, v, lambda)
+
+# Result 7.21. Use 7.20 for null equality, 7.6 for ranges, 6.49 for the
+# decomposition, expand T-lambda I for normality, then apply 7.20 again to its
+# null space for the eigenvector clause.
+axiom range_null_and_eigenvectors_of_normal_operator:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators:
+        $is_normal(s, scalars, scalar_geometry, V, Vinner, T)
+        =>:
+            $has_normal_operator_properties(s, scalars, scalar_geometry, V, Vinner, T)
+
+# Result 7.22. Replace T*v by conjugate(beta)v using 7.21(e); one scalar
+# difference times <u,v> is zero, and distinct eigenvalues force orthogonality.
+axiom eigenvectors_for_distinct_eigenvalues_of_normal_operator_are_orthogonal:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vinner @VInnerSpace, T @Operators, alpha, beta s, u, v V:
+        $is_normal(s, scalars, scalar_geometry, V, Vinner, T)
+        $chap5a::is_eigenvector(s, scalars, V, @VInner.vector_space, T, alpha, u)
+        $chap5a::is_eigenvector(s, scalars, V, @VInner.vector_space, T, beta, v)
+        alpha != beta
+        =>:
+            $chap6a::are_orthogonal(s, scalars, scalar_geometry, V, Vinner, u, v)
+
+prop is_sum_of_commuting_self_adjoint_operators(V nonempty_set, Vinner &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space>):
+    exist A, B \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space> st {$is_self_adjoint(&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V, Vinner, A), $is_self_adjoint(&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V, Vinner, B), $chap5e::operators_commute(&chap1a::Complex, chap1a::complex_scalars, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, A, B), T = \chap3a::linear_map_add<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space>(A, \chap3a::linear_map_smul<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space>((0, 1), B))}
+
+prop normal_iff_sum_of_commuting_self_adjoint_operators(V nonempty_set, Vinner &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space>):
+    $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space)
+    forall:
+        =>:
+            $is_normal(&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V, Vinner, T)
+        <=>:
+            $is_sum_of_commuting_self_adjoint_operators(V, Vinner, T)
+
+# Result 7.23. For normal T, take (T+T*)/2 and (T-T*)/(2i); conversely expand
+# TT*-T*T for a commuting self-adjoint pair A,B.
+axiom complex_normal_iff_sum_of_commuting_self_adjoint_operators:
+    ? forall V nonempty_set, Vinner &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{Vinner}.vector_space)
+        =>:
+            $normal_iff_sum_of_commuting_self_adjoint_operators(V, Vinner, T)

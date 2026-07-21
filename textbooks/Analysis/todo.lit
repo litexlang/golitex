@@ -3,281 +3,127 @@
 # This is a comment-only ledger.  It is not a chapter, is not exported by
 # litex.config, and contains no executable Litex declarations.
 #
-# Snapshot: 2026-07-21.  The book currently contains 68 direct `trust` sites,
-# all in Chapters 5, 7, 8, 9, and 11.  Chapters 1-4, 6, and 10, together with
-# Appendix A, contain no direct `trust` statement.
+# Snapshot: 2026-07-21.  The book currently contains 45 direct `trust` sites,
+# all in Chapters 8, 9, and 11.  Chapters 1-7 and 10, together with Appendix A,
+# contain no direct `trust` statement.
 #
 # Each item names the theorem whose proof contains the hole, gives the current
 # source line for quick lookup, states the missing mathematics, and says which
 # source-facing result the hole supports.  Line numbers are secondary locators
 # and may move as chapters are edited.
 #
-# Chapter 5 — The real numbers (2 direct trust sites)
+# Chapter 7 has no remaining direct `trust`.  Its cleanup exposed several
+# reusable proof packages that are checked locally but may later belong in the
+# standard library.  These are not current proof holes:
 #
-# Item 05-01 — Section 5.3; cauchy_sequence_representative_in_Q_exists.
-# Current location: chapter05-real-numbers.lit, line 593.
-# Missing mathematics: construct, for every builtin real number, a rational
-# Cauchy sequence representing it and prove that the sequence has that formal
-# real limit.  This compatibility statement is not a separate theorem in the
-# source, because the source defines real numbers by the Cauchy construction.
-# It serves the bridge between the source construction of R and Litex's builtin
-# real-number carrier.
+# - finite non-negative sums are monotone under finite-set inclusion, together
+#   with injective finite reindexing and finite permutation-prefix transport;
+# - mutually cofinal monotone partial-sum sequences have the same finite limit;
+# - dyadic harmonic-block lower bounds and condensation-to-geometric rewrites;
+# - paired even/odd induction for alternating finite tails;
+# - finite telescoping products of consecutive ratios and the resulting
+#   eventual ratio-to-nth-root bounds;
+# - adapters between equivalent chapter-local and Chapter 6 limsup predicates.
 #
-# Item 05-02 — Section 5.5; real_cauchy_sequence_has_limit_in_R.
-# Current location: chapter05-real-numbers.lit, line 2204.
-# Missing mathematics: prove sequential completeness of the builtin real
-# numbers from the rational-Cauchy construction.
-# It serves the bisection and least-upper-bound development later in Section
-# 5.5.  The source obtains this from its construction of the real numbers, so
-# Litex needs an explicit compatibility proof that the builtin carrier lacks.
+# The ratio-test cleanup also corrected one over-strong intermediate statement:
+# a ratio liminf above one need not give a finite root limsup, because upper
+# spikes may be unbounded.  The checked proof now derives failure of the zero
+# limit directly, which is exactly what the divergent ratio test requires.
 #
-# Chapter 7 — Series (12 direct trust sites)
+# Chapter 8 — Infinite sets (15 direct trust sites)
 #
-# Item 07-01 — Section 7.2; alternating_series_tail_bound.
-# Current location: chapter07-series.lit, line 1726.
-# Missing mathematics: prove by induction and parity that every finite tail of
-# a decreasing non-negative alternating sequence is bounded in absolute value
-# by its first available term.
-# It supplies the decisive tail estimate for the alternating series test.  The
-# source proof marks several induction and parity steps as "why?".
+# Nine former sites are now checked: countable union (using the explicit
+# choice axiom), the two elementary finite-subsum bridges for nonnegative
+# double series, swapped and column-first transport, one direction of Lemma
+# 8.2.3, countability of nonzero support, bijection change of variables, and
+# finite-total-order well-ordering.  The reusable finite reindexing and
+# finite-set induction packages remain in the chapter as checked lemmas.
 #
-# Item 07-02 — Section 7.2; alternating_series_test_reverse.
-# Current location: chapter07-series.lit, line 1854.
-# Missing mathematics: prove that the harmonic series diverges.
-# It is used to show that the alternating harmonic series is conditionally,
-# rather than absolutely, convergent.  The source routes this through the
-# p-series criterion whose final comparison is left as a "why?" step.
+# Item 08-01 — Section 8.2; countable_set_series_sum_well_defined, trust at line 1926.
+# Prove that two enumerations of one countably infinite set give the same
+# absolutely convergent sum.  This is one of the three retained local bridges.
 #
-# Item 07-03 — Section 7.3; p_series_converges_when_exponent_gt_one.
-# Current location: chapter07-series.lit, line 2992.
-# Missing mathematics: complete Cauchy condensation and the equivalence
-# abs(2^(1-q)) < 1 exactly when q > 1.
-# It supplies the convergent half of Corollary 7.3.7, the p-series criterion;
-# the source leaves the final exponent comparison as "why?".
+# Item 08-02 — Section 8.2; bounded_rectangles_and_capture_give_row_first_sum,
+# trust at line 2199.  Construct all row sums, bound their finite partial sums by L,
+# and use finite-support capture to prove that the iterated sum is exactly L.
+# This is the analytic core of the nonnegative Fubini proof, not a reindexing
+# wrapper; Tao leaves the gap steps to Exercise 8.2.5.
 #
-# Item 07-04 — Section 7.3; p_series_diverges_when_exponent_le_one.
-# Current location: chapter07-series.lit, line 2999.
-# Missing mathematics: prove the divergent half of the condensed geometric
-# series comparison when q <= 1.
-# It completes Corollary 7.3.7 and also supports the harmonic-series
-# divergence used in the alternating-harmonic example.
+# Item 08-03 — Section 8.2; fubini_row_first_general_case, trust at line 2223.
+# Apply the nonnegative case to positive and negative parts and recombine the
+# two row-first sums.  This is the remaining signed Fubini argument.
 #
-# Item 07-05 — Section 7.4; rearranged_partial_sum_le_original_at_bounded_prefix.
-# Current location: chapter07-series.lit, line 3182.
-# Missing mathematics: reindex a finite non-negative sum and show that a
-# rearranged prefix is bounded by an original prefix containing its image.
-# It is one half of the cofinal-partial-sum argument for Proposition 7.4.1 on
-# rearrangements of convergent non-negative series.
+# Item 08-04 — Section 8.2;
+# bounded_finite_subsums_imply_countable_absolute_convergence, trust at line 2359.
+# The statement is false with the current definition: an empty or finite X
+# has bounded finite subsums but admits no bijection N_pos -> X.  Repair the
+# countable-set-series interface so finite sets have a finite-sum branch, then
+# prove the countably infinite branch by bounded nonnegative partial sums.
 #
-# Item 07-06 — Section 7.4; original_partial_sum_le_rearranged_at_bounded_preimage.
-# Current location: chapter07-series.lit, line 3191.
-# Missing mathematics: reindex the finite sum in the reverse direction and
-# bound an original prefix by a rearranged prefix containing all preimages.
-# It is the second half of the cofinal-partial-sum argument for Proposition
-# 7.4.1.
+# Item 08-05 — Section 8.2; arbitrary_set_series_add, trust at line 2528.
+# The current statement can fail when f and g cancel and the resulting support
+# is finite or empty, because has_set_series_sum still demands a bijection from
+# N_pos onto that support.  It depends on the same finite-support repair.
 #
-# Item 07-07 — Section 7.4; nonnegative_series_same_sum_from_cofinal_partial_sums.
-# Current location: chapter07-series.lit, line 3227.
-# Missing mathematics: prove that two non-negative series with mutually
-# cofinal partial sums have the same limit.
-# It converts the two finite-prefix comparisons into the sum-preservation
-# conclusion of Proposition 7.4.1.
+# Item 08-06 — Section 8.2; arbitrary_set_series_scalar_mul, trust at line 2535.
+# The c = 0 case always has empty support, so the current conclusion is false.
+# It depends on the same finite-support repair; c != 0 is then ordinary scalar
+# transport of the support series.
 #
-# Item 07-08 — Section 7.5; eventual_ratio_upper_bound_gives_root_limsup_bound.
-# Current location: chapter07-series.lit, line 4106.
-# Missing mathematics: iterate an eventual ratio upper bound into a finite
-# product estimate and pass it to the limsup of the nth roots.
-# It supplies the upper inequality in Lemma 7.5.2 and hence the convergent side
-# of the ratio test.  The source leaves induction and epsilon-contradiction
-# bridges as "why?" steps.
+# Item 08-07 — Section 8.2; arbitrary_set_series_disjoint_union, trust at line 2547.
+# Interleave the two support enumerations, prove the merged series has sum
+# L1 + L2, and combine the finite absolute-subsums.  This is a genuine series
+# merge proof from Exercise 8.2.3.
 #
-# Item 07-09 — Section 7.5; eventual_ratio_lower_bound_gives_root_liminf_bound.
-# Current location: chapter07-series.lit, line 4117.
-# Missing mathematics: iterate an eventual ratio lower bound and pass the
-# resulting product estimate to the liminf of the nth roots.
-# It supplies the lower inequality in Lemma 7.5.2.  The source leaves this
-# inequality to Exercise 7.5.1.
+# Item 08-08 — Section 8.2;
+# positive_and_negative_parts_of_conditional_series_diverge, trust at line 2714.
+# Show that convergence of either sign subseries together with convergence of
+# the original series would force convergence of the absolute-value series.
+# This is Exercise 8.2.4 and prepares the rearrangement construction.
 #
-# Item 07-10 — Section 7.5; ratio_limsup_less_than_one_gives_root_limsup_below_one.
-# Current location: chapter07-series.lit, line 4173.
-# Missing mathematics: establish existence of the finite root limsup and
-# combine it with the ratio-limsup upper bound to obtain a value below one.
-# It is the bridge from Lemma 7.5.2 to the convergent half of Corollary 7.5.3,
-# the ratio test.
+# Item 08-09 — Section 8.2; riemann_rearrangement_theorem, trust at line 2739.
+# Construct the alternating positive/negative selection permutation, prove its
+# partial sums converge to the target, and retain non-absolute convergence.
+# Tao leaves these details to Exercise 8.2.5.
 #
-# Item 07-11 — Section 7.5; ratio_liminf_greater_than_one_gives_root_limsup_above_one.
-# Current location: chapter07-series.lit, line 4184.
-# Missing mathematics: transfer a ratio liminf above one to a root-test value
-# above one, including the required liminf/limsup existence comparison.
-# It supports the divergent half of Corollary 7.5.3 and depends on the
-# inequality left to Exercise 7.5.1.
+# Item 08-10 — Section 8.3; has_binary_decimal_subset_sum, trust at line 2812.
+# Prove existence and uniqueness of each subset's binary-decimal real sum.
+# This is the second retained local bridge.
 #
-# Item 07-12 — Section 7.5; positive_sequence_ratio_limit_one_gives_root_limit_one.
-# Current location: chapter07-series.lit, line 4194.
-# Missing mathematics: squeeze the root sequence between the two ratio/root
-# bounds when the ratio sequence converges to one.
-# It records the equality case following Lemma 7.5.2; the lower-bound side is
-# part of Exercise 7.5.1.
+# Item 08-11 — Section 8.3; binary_decimal_subset_sum_is_injective, trust at line 2816.
+# At the first differing digit, dominate the later binary tail.  This is the
+# third retained local bridge.
 #
-# Chapter 8 — Infinite sets (24 direct trust sites)
+# Item 08-12 — Section 8.5;
+# good_chain_comparison_forward_from_exercise_8_5_13, trust at line 4816.
+# Prove that every point of W minus Y strictly bounds Y.  This is one half of
+# the source's entire Exercise 8.5.13 comparison argument.
 #
-# Item 08-01 — Section 8.1; countable_union_of_at_most_countable_sets.
-# Current location: chapter08-infinite-sets.lit, line 1753.
-# Missing mathematics: choose an enumeration for every countable fiber and
-# diagonalize the resulting two-index family.
-# It supplies the countable-union theorem used later in the chapter.  The
-# source leaves this extension to Exercise 8.1.9.
+# Item 08-13 — Section 8.5;
+# good_chain_comparison_reverse_from_exercise_8_5_13, trust at line 4826.
+# Prove the symmetric comparison for points of Y minus W.
 #
-# Item 08-02 — Section 8.2; countable_set_series_sum_well_defined.
-# Current location: chapter08-infinite-sets.lit, line 1788.
-# Missing mathematics: prove that two enumerations of one countable set give
-# the same absolutely convergent series sum.
-# It makes Definition 8.2.1 independent of the chosen enumeration by applying
-# the rearrangement theorem from Section 7.4.
+# Item 08-14 — Section 8.5; good_chain_union_is_chain_with_minimum, trust at line 4836.
+# Prove that the union of all good chains is itself well-ordered with x0 as
+# minimum.  The source marks the union-order verification as "why?".
 #
-# Item 08-03 — Section 8.2; nonnegative_double_sum_bounds_finite_subsums.
-# Current location: chapter08-infinite-sets.lit, line 1843.
-# Missing mathematics: dominate every finite subsum of a non-negative double
-# series by the proposed total sum.
-# It begins the non-negative case of Theorem 8.2.2, Fubini's theorem for
-# infinite sums.
+# Item 08-15 — Section 8.5; good_chain_union_has_no_strict_upper_bound,
+# trust at line 4846.  Show that a chosen strict upper bound extends the union to a
+# larger good chain, contradicting the definition of the union.
 #
-# Item 08-04 — Section 8.2; nonnegative_double_sum_has_finite_support_capture.
-# Current location: chapter08-infinite-sets.lit, line 1851.
-# Missing mathematics: for every epsilon, capture all but an epsilon tail of a
-# non-negative double sum inside one finite subset.
-# It supplies the finite-support approximation used in the non-negative case
-# of Theorem 8.2.2.
+# Checked Chapter 8 patterns worth considering for the standard library later
+# (these are not current proof holes):
 #
-# Item 08-05 — Section 8.2; bounded_rectangles_and_capture_give_row_first_sum.
-# Current location: chapter08-infinite-sets.lit, line 1860.
-# Missing mathematics: turn finite-subsum bounds and finite-support capture
-# into convergence of the iterated row-first sum.
-# It completes the row-first conclusion in the non-negative part of Theorem
-# 8.2.2.
-#
-# Item 08-06 — Section 8.2; fubini_row_first_general_case.
-# Current location: chapter08-infinite-sets.lit, line 1884.
-# Missing mathematics: decompose an absolutely convergent double series into
-# positive and negative parts and recombine their row-first sums.
-# It gives the general row-first equality in Theorem 8.2.2.
-#
-# Item 08-07 — Section 8.2; fubini_swapped_double_sum_from_absolute_convergence.
-# Current location: chapter08-infinite-sets.lit, line 1892.
-# Missing mathematics: justify invariance of the absolutely convergent double
-# sum under swapping the two coordinates.
-# It gives the swapped-product equality in Theorem 8.2.2.
-#
-# Item 08-08 — Section 8.2; fubini_column_first_from_swapped_sum.
-# Current location: chapter08-infinite-sets.lit, line 1900.
-# Missing mathematics: identify the row-first sum after swapping coordinates
-# with the original column-first sum.
-# It supplies the final column-first equality in Theorem 8.2.2.
-#
-# Item 08-09 — Section 8.2; countable_absolute_convergence_implies_bounded_finite_subsums.
-# Current location: chapter08-infinite-sets.lit, line 1945.
-# Missing mathematics: derive a uniform bound for finite absolute subsums from
-# absolute convergence along an enumeration.
-# It supplies one direction of the equivalent absolute-convergence criteria in
-# Exercise 8.2.1.
-#
-# Item 08-10 — Section 8.2; bounded_finite_subsums_imply_countable_absolute_convergence.
-# Current location: chapter08-infinite-sets.lit, line 1953.
-# Missing mathematics: construct convergence along an enumeration from a
-# uniform bound on all finite absolute subsums.
-# It supplies the reverse direction of Exercise 8.2.1.
-#
-# Item 08-11 — Section 8.2; absolutely_summable_support_is_at_most_countable.
-# Current location: chapter08-infinite-sets.lit, line 1980.
-# Missing mathematics: split the nonzero support by positive lower bounds on
-# absolute value and prove each level finite.
-# It is the support-countability result requested in Exercise 8.2.2.
-#
-# Item 08-12 — Section 8.2; arbitrary_set_series_add.
-# Current location: chapter08-infinite-sets.lit, line 2007.
-# Missing mathematics: prove termwise addition for absolutely convergent
-# series indexed by an arbitrary set.
-# It supplies the addition law in Exercise 8.2.3.
-#
-# Item 08-13 — Section 8.2; arbitrary_set_series_scalar_mul.
-# Current location: chapter08-infinite-sets.lit, line 2014.
-# Missing mathematics: prove scalar multiplication for an absolutely
-# convergent arbitrary-set series.
-# It supplies the scalar law in Exercise 8.2.3.
-#
-# Item 08-14 — Section 8.2; arbitrary_set_series_disjoint_union.
-# Current location: chapter08-infinite-sets.lit, line 2026.
-# Missing mathematics: split and recombine a series over a disjoint union of
-# index sets.
-# It supplies the disjoint-union law in Exercise 8.2.3.
-#
-# Item 08-15 — Section 8.2; arbitrary_set_series_bijection_change.
-# Current location: chapter08-infinite-sets.lit, line 2034.
-# Missing mathematics: transport an arbitrary-set series through a bijection
-# of index sets without changing its sum.
-# It supplies the change-of-index law in Exercise 8.2.3.
-#
-# Item 08-16 — Section 8.2; positive_and_negative_parts_of_conditional_series_diverge.
-# Current location: chapter08-infinite-sets.lit, line 2061.
-# Missing mathematics: prove that both the positive-index and negative-index
-# subseries of a conditionally convergent series fail absolute convergence.
-# These two conclusions are the preparatory result in Exercise 8.2.4 for the
-# Riemann rearrangement theorem.
-#
-# Item 08-17 — Section 8.2; riemann_rearrangement_theorem.
-# Current location: chapter08-infinite-sets.lit, line 2086.
-# Missing mathematics: construct a permutation that alternately takes enough
-# positive and negative terms to converge to any prescribed real value, and
-# prove that the rearranged series remains conditionally convergent.
-# It is Theorem 8.2.8; the detailed construction is left to Exercise 8.2.5.
-#
-# Item 08-18 — Section 8.3; cantor_theorem, binary expansion existence.
-# Current location: chapter08-infinite-sets.lit, line 2159.
-# Missing mathematics: prove existence and uniqueness of the real sum assigned
-# to every subset of N by its binary-decimal series.
-# It constructs the map used in the proof of Cantor's theorem in Corollary
-# 8.3.4.
-#
-# Item 08-19 — Section 8.3; cantor_theorem, binary expansion injectivity.
-# Current location: chapter08-infinite-sets.lit, line 2163.
-# Missing mathematics: prove that two different subsets have different binary
-# sums by dominating the tail after their first differing index.
-# It proves injectivity of the map from power_set(N) into R and thus supplies
-# the cardinality comparison in Cantor's theorem.
-#
-# Item 08-20 — Section 8.5; right_inverse_principle_implies_axiom_of_choice.
-# Current location: chapter08-infinite-sets.lit, line 3692.
-# Missing mathematics: prove that every finite total order is a well-order.
-# This local step supplies the finite case in the chapter's chain of
-# equivalences surrounding the well-ordering principle.  The source leaves it
-# to Exercise 8.5.8.
-#
-# Item 08-21 — Section 8.5; good_chain_comparison_forward_from_exercise_8_5_13.
-# Current location: chapter08-infinite-sets.lit, line 4004.
-# Missing mathematics: prove that every point of W minus Y is a strict upper
-# bound for Y when Y and W are good well-ordered chains.
-# It is the forward comparison needed by the good-chain construction and is
-# left to Exercise 8.5.13.
-#
-# Item 08-22 — Section 8.5; good_chain_comparison_reverse_from_exercise_8_5_13.
-# Current location: chapter08-infinite-sets.lit, line 4014.
-# Missing mathematics: prove the symmetric comparison for points of Y minus W.
-# It is the reverse half of Exercise 8.5.13 used by the good-chain construction.
-#
-# Item 08-23 — Section 8.5; good_chain_union_is_chain_with_minimum.
-# Current location: chapter08-infinite-sets.lit, line 4024.
-# Missing mathematics: prove that the union of all good chains is itself a
-# well-ordered chain with the prescribed minimum.
-# It supplies the main structural step in the proof of the well-ordering
-# theorem; the source marks the union-order verification as "why?" and uses
-# Exercise 8.5.11 for the extension argument.
-#
-# Item 08-24 — Section 8.5; good_chain_union_has_no_strict_upper_bound.
-# Current location: chapter08-infinite-sets.lit, line 4034.
-# Missing mathematics: prove that a strict upper bound would extend the union
-# of all good chains and contradict its definition.
-# It supplies the maximality step in the well-ordering theorem; the source
-# leaves this final union argument as "why?".
+# - reindex a finite subset through an injective/countable enumeration, and
+#   realize an enumeration prefix as a finite image with the same sum;
+# - compare a finite subsum of nonnegative terms with a convergent full sum;
+# - choose one injective coding graph per member of a family and pair the
+#   outer/inner codes to prove a countable union at most countable;
+# - construct a finite subset of any prescribed size inside a nonfinite set;
+# - strengthen finite-total-order induction to a least-element statement before
+#   deriving the source's minimal-element formulation;
+# - transport countable support and finite absolute subsums through a bijection,
+#   and use coordinate-swap involutions for double-series views.
 #
 # Chapter 9 — Continuous functions on R (7 direct trust sites)
 #

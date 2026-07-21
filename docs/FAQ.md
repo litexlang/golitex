@@ -60,11 +60,20 @@ Anonymous function syntax like`fn(x R) R {-x}` is essential because they are use
 
 The correlation between `tuple` and `cart` and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without any concrete mathematical meaning. By viewing one object as a struct, we can use something like `&Point<R, R>((0,0)).x` to view tuple `(0,0)` as a point in the plane `R x R` and get its first coordinate by `.x`.
 
-## What does "Litex is built on relationships between objects instead of meanings of them"
+## What does "Litex is built on relationships between objects instead of meanings of them" mean?
 
 
 
-Object `Q` (real numbers) can be defined by algebraic extension of `Z`, or it can be defined in other ways, but Litex does not builtin that. Litex allows the user to choose what axiom system he is using. Similarly, a function `f fn(x R, y R)R` can be viewed as a subset of `cart(R, R, R)` or `cart(cart(R, R), R)`, both are reasonable and Litex also does not support that and the user himself can use `trust` keyword to choose which definition he prefers. On the other hand, the properties of `Q`, `fn(x R, y R)R` are builtin, like `all integers are in Q`, so despite not having its definition, we can still use them conveniently.
+The rational numbers `Q` can be constructed as equivalence classes of pairs
+of integers, and the real numbers `R` can be constructed in several different
+ways. Litex does not make one such construction the builtin definition of
+either carrier. Similarly, a function `f fn(x R, y R) R` can be modeled by a
+graph inside `cart(R, R, R)` or by a graph inside `cart(cart(R, R), R)`.
+Litex exposes the function interface directly instead of forcing either graph
+encoding on every user. A development may formalize a particular construction
+when it matters, or mark an assumed compatibility result with `trust`. The
+builtin interface focuses on usable relationships, such as `Z` being contained
+in `Q`, and on the domain and codomain behavior of function application.
 
 When we were learning Euclidean geometry in middle school, our teachers would say that these so-called points, lines, planes, and circles are not actually the real ones we draw on paper. They are imagined constructs that possess specific properties. What they fundamentally are is not important; what matters is that there are certain axioms governing these objects, which form the relationships among them. Although they can be defined by using more abstract math concepts (using cartesian coordinate for example), we don't consider that since we only want to focus on properties like parallel and intersection, which those axioms already can process. Similarly, real numbers, rational numbers, and the like can also be defined using more abstract mathematical concepts—users can construct these definitions themselves using Litex code. In fact, however, what is even more important is the relationships between them, and this is precisely what Litex emphasizes.
 
@@ -331,6 +340,54 @@ The practical rule is:
 So Litex is not anti-foundational. It simply chooses a lighter user-facing
 route for ordinary mathematics: expose the relationships people actually use,
 then make any trusted background facts explicit enough to audit.
+
+## Does Litex define `R` from `Q`?
+
+No. In current Litex, `Q` and `R` are builtin carrier objects. Litex records
+mathematical relationships between them, but the kernel does not say that an
+element of `R` is literally made from an equivalence class of objects from
+`Q`.
+
+The Analysis I translation makes this distinction concrete. Tao's source
+defines real numbers using equivalence classes of rational Cauchy sequences.
+The Litex chapter instead keeps the builtin `R` and introduces the relation
+`$has_formal_limit_in_Q(a, x)`, meaning that a rational Cauchy sequence `a`
+represents the builtin real `x`. The theorem
+`cauchy_sequence_representative_in_Q_exists` says that every builtin real has
+such a representative. It is a representation or compatibility theorem, not
+a definition of `R`. Its proof is currently an explicit `trust` boundary in
+the textbook.
+
+The Cauchy-sequence construction is only one possible presentation of the real
+numbers. Other standard approaches include:
+
+- Dedekind cuts of `Q`;
+- nested rational intervals;
+- infinite decimal expansions, after identifying expressions such as
+  `0.999...` and `1.000...`;
+- a completion of `Q` characterized by a universal property;
+- an axiomatic complete Archimedean ordered field containing `Q`.
+
+To connect the builtin `R` completely with the rational-Cauchy presentation,
+one would want a checked interface stating that:
+
+1. every rational Cauchy sequence represents a unique real;
+2. every real has a rational Cauchy representative;
+3. two rational Cauchy sequences are equivalent exactly when they represent
+   the same real;
+4. addition, multiplication, and order on representatives agree with the
+   corresponding operations on `R`.
+
+With that interface, one may say that the builtin `R` is isomorphic to the
+Cauchy completion of `Q` with the relevant ordered-field structure. One still
+should not say that the two are definitionally the same object. The same
+distinction appears one chapter earlier: integer fractions can represent
+builtin rationals without making builtin `Q` definitionally equal to a
+quotient of pairs of integers.
+
+Litex can formalize a particular construction when that construction is the
+mathematical subject. Its default builtin interface simply does not force all
+later users to inherit one privileged construction history.
 
 ## Why not just import a big library and cite the theorem?
 

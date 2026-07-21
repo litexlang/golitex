@@ -1,196 +1,229 @@
 # MIL-derived Litex mathematical interface map
 
-This manual records the mathematical shapes that organize the independent
-Litex translation pressure-test corpus in this directory. It is not a guide to
-Lean, a reconstruction of Mathlib's architecture, or an alternative edition
-of *Mathematics in Lean*. It is deliberately smaller than the item-by-item
-source manifest: only concepts that determine later Litex declarations or
-proof architecture belong here.
+This is the design manual for the independent Litex translation pressure-test
+corpus in this directory. It records the mathematical nodes that organize the
+executable chapters; it is not an alternative edition of *Mathematics in Lean*
+or a reconstruction of Mathlib's architecture.
 
 Source snapshot: *Mathematics in Lean* at
 `6dfa2c166a410d2f0f278d327ea81ae0fa6d3c32`.
 
-“Checked” below means checked by the current Litex verifier in this project.
-It does not mean Lean-certified. “Trusted” means that a typed proof or
-construction boundary remains explicit. Source names describe provenance;
-the ideal forms below are Litex modeling decisions, not claims that Lean or
-Mathlib should expose the same interface.
+“Checked” means checked by the current Litex verifier in this project. It does
+not mean Lean-certified, and it does not imply that omitted source results have
+been proved. All executable corpus files are free of `trust`, `axiom`, and
+`abstract_prop`. Source mathematics that is not yet implemented is listed in
+the comment-only `todo.lit`.
 
-## Closed facts and reusable properties
+## Closed facts and reusable relationships
 
-Fermat's Last Theorem is a closed universal mathematical assertion. The Lean
-source first names a proposition-valued term `FermatLastTheorem`, then the
-theorem `hard` supplies a term of that proposition using `sorry`. In this
-Litex corpus those two source steps become one direct fact:
+A closed source theorem should remain a direct fact or named `thm`. A `prop`
+is reserved for a relationship that later declarations apply to candidates.
+For example:
 
-~~~litex
-trust:
-    forall x, y, z, n N:
-        n > 2
-        x * y * z != 0
-        =>:
-            x^n + y^n != z^n
-~~~
+```litex
+prop is_even_fn(f fn(x R) R):
+    forall x R:
+        f(-x) = f(x)
+```
 
-The rejected form was `prop fermat_last_theorem()` followed by
-`trust $fermat_last_theorem()`. A `prop` is appropriate when later mathematics
-tests a candidate against a reusable property or relation, as in `even(n)`;
-it is not an extra box around a closed assertion. The Fermat fact depends only
-on natural-number arithmetic, can be specialized directly at any exponent
-greater than two, and retains exactly one proof hole: the source's `sorry`.
+The nearest rejected form is a zero-argument proposition used only to wrap one
+closed theorem. This distinction keeps later hypotheses readable and prevents
+an unproved theorem from masquerading as a definition. It affects every
+chapter: algebraic structure laws, convergence, continuity, differentiability,
+and measurability are reusable relationships; a source identity or existence
+result is a fact and remains executable only when checked.
+
+Fermat's Last Theorem illustrates the boundary. The source item is not
+implemented here, so neither a theorem nor a wrapper proposition appears in
+Chapter 1. Its exact mathematical obligation is recorded in `todo.lit`.
 
 ## Carrier-first algebra
 
-The source's rings and groups are generic structures, not facts specifically
-about real numbers. Their Litex form therefore starts with a carrier and makes
-each operation explicit:
+Groups, rings, fields, modules, and vector spaces are modeled by an explicit
+carrier plus explicit operations:
 
-~~~litex
-prop is_ring(A set, add fn(x, y A) A, zero A, neg fn(x A) A,
-    mul fn(x, y A) A, one A)
-~~~
+```litex
+prop is_monoid(G set, mul fn(x, y G) G, one G)
+prop is_commutative_ring(Ring set, add fn(x, y Ring) Ring, zero Ring,
+    neg fn(x Ring) Ring, mul fn(x, y Ring) Ring, one Ring)
+```
 
-This matters because the cancellation, zero-product, identity, and inverse
-theorems should remain reusable for any carrier satisfying the displayed laws.
-The nearest rejected form was to specialize every theorem to `R`, which would
-change the source mathematics while making the proofs easier. These interfaces
-depend only on ordinary equality and explicit operations. Direct elementary
-consequences are checked where possible; later quotient, selected-carrier, and
-finite-sum constructions retain their own visible debt.
+The rejected form is to specialize a generic source theorem to ordinary real
+or integer arithmetic merely because the verifier can normalize it. These
+interfaces feed homomorphisms, subobjects, actions, ideals, and linear algebra.
+Elementary projections and short closure arguments are checked. Group
+normalization, finite-group theory, selected inverses, and larger structure
+assemblies remain deferred where their supporting proof chain is absent.
 
-## Function bounds, symmetry, and convergence
+## Functions, bounds, relations, and convergence
 
-Chapter 3 packages recurring analytic hypotheses as properties:
+Chapters 3 and 4 distinguish functions from their graphs and properties.
+Bounds and convergence are parameterized relationships; images and inverse
+images are set-valued constructions with explicit witnesses. Generic order is
+represented by a binary relation carrier rather than a proposition-valued
+return type.
 
-~~~litex
-prop is_upper_bound_of_fn(f fn(x R) R, a R)
-prop is_even_fn(f fn(x R) R)
-prop converges_to(s fn(n N) R, a R)
-~~~
+The sequence carrier is `N`, including zero. Replacing it by `N_pos` was
+rejected because it changes the source domain. Epsilon-N and epsilon-delta
+definitions are kept even when their major analytic consequences are deferred,
+because these definitions are useful downstream and have independent
+mathematical content.
 
-Bounds support witness-based closure results, even and odd functions support
-the symmetry examples, and convergence supplies the chapter's epsilon-N
-theorem chain. The index carrier of a sequence is `N`, including zero; using a
-positive-only sequence alias was rejected because it would alter the source
-domain. Generic Lean variants over an arbitrary ordered carrier are not
-specialized silently. A binary order is represented extensionally by
-`le_rel power_set(cart(A,A))`, with `(x,y) $in le_rel` as relation application.
-This carrier-first representation supports explicit preorder, partial-order,
-and linear-order laws, generic function/set bounds, and generic indexed
-convergence without requiring a function whose return type is `prop`.
+Arbitrary choice is not smuggled into a function declaration. The source's
+total inverse-with-default and the recursive Schroeder-Bernstein construction
+remain in `todo.lit`; injective and surjective relationships that do not require
+that choice remain implemented.
 
-## Total inverse and Schroeder-Bernstein
+## Finite and inductive mathematics
 
-The source inverse is a total choice function. Given a preimage it selects one;
-otherwise it returns a supplied default. Its ideal Litex form is callable and
-carrier-dependent:
+Finite sets use the installed finite-set carrier, size, finite unions, and
+explicit indexing. Chapter 6 keeps finite counting objects and specification
+relationships for lists, trees, and propositional formulas.
 
-~~~litex
-template<S, T set, default S>:
-    have inverse fn(f fn(x S) T, y T) S
-~~~
+The rejected shortcut is to identify a new source inductive carrier such as
+`MyNat`, `BinTree`, or `PropForm` with an existing carrier. A real implementation
+must supply its constructors, induction/recursion interface, recursive
+functions, and defining equations. Until then, the source constructions and
+their induction theorems remain in `todo.lit`; independent Boolean and finite-
+set facts stay executable.
 
-Replacing this object by a proposition, or restricting it to bijections, was
-rejected because either choice loses the source construction. The inverse
-feeds `sb_aux`, `sb_set`, and the piecewise `sb_fn`, which in turn supplies the
-final Schroeder-Bernstein witness. Arbitrary choice, recursive functions inside
-carrier templates, and the stage-membership transport proofs remain visible
-trusted boundaries. The final assembly from injectivity and surjectivity to a
-bijection is checked.
+The indexed standard simplex is the set of real coordinate functions on
+`range(0, n)` whose coordinates are nonnegative and whose finite sum is one.
+Its midpoint is therefore a callable pointwise construction:
 
-## Prime-factor exponent and recursive arithmetic
+```litex
+template<n N>:
+    have fn standard_simplex_midpoint(a, b \standard_simplex<n>) fn(i range(0, n)) R
+```
 
-Prime multiplicity is a function, not merely a predicate:
+The corresponding closure theorem is checked by coordinate nonnegativity and
+finite-sum linearity. The nearest rejected form is a proposition merely saying
+that some midpoint exists, because later consumers must evaluate the resulting
+coordinate function.
 
-~~~litex
-have prime_factor_exponent fn(n, p N) N
-~~~
+## Equivalences, subobjects, and quotients
 
-It connects irrational-root arguments to factorization product and power laws.
-The nearest rejected model was a proposition that only asserted the existence
-of an exponent, because downstream formulas must call the exponent. It depends
-on primality, divisibility, and gcd from `std/basics`. The construction and its
-substantial factorization theorems remain proof debt in the current corpus.
+An equivalence is callable forward and inverse data with two inverse laws.
+Submonoids, subgroups, subspaces, subrings, and ideals are subsets with closure
+laws. Intersections are literal set intersections when possible, which keeps
+the proof close to the mathematical argument.
 
-Factorial, finite sums, and Fibonacci numbers are ordinary recursive callable
-objects. Their definitions are checked with `have fn ... by induc`; longer
-induction theorems may retain theorem-local trust without changing the
-functions' public types.
+Quotient work is intentionally layered:
 
-## The source MyNat carrier
+1. define the equivalence relation or coset;
+2. define the quotient carrier;
+3. prove representative independence;
+4. only then expose quotient operations and universal lifts.
 
-`MyNat` is the book's separate Peano construction, not a new spelling of
-Litex's builtin `N`. The closest faithful current form keeps an opaque carrier,
-zero, successor, addition, multiplication, and their equations as explicit
-trusted objects. Identifying the carrier with `N` was rejected because it would
-erase the construction being taught. Checked user-defined inductive carriers,
-constructor principles, and induction over them are the remaining language
-hole; the downstream algebraic theorem statements stay source-faithful and
-visible.
+The current chapters implement several relations, cosets, and quotient
+carriers, but do not postulate steps 3 and 4. The rejected form is an opaque
+selected multiplication or lift whose well-definedness is hidden. Normality,
+ideal membership, or kernel containment must be visible in any future
+implementation. Quotient monoids, quotient groups/rings/spaces, first
+isomorphism theorems, and CRT therefore remain explicit todo families.
 
-## Discrete inductive interfaces
+## Gaussian integers and polynomial carriers
 
-Chapter 6 keeps the source's list, tree, and propositional-formula vocabulary
-separate from builtin finite-set arithmetic. `ListCore` records a carrier plus
-callable `nil` and `cons`; `is_list_append` and `is_list_map` specify candidate
-callable functions without pretending that recursive functions have already
-been constructed. The bounded `triangle` set, its finiteness proof, and the
-two-element Boolean operations are checked directly. Binary-tree,
-propositional-formula, and recursive list constructions are not executable
-interfaces yet: their source-facing mathematical obligations are listed in
-the module's comment-only `todo.lit`. This keeps the checked chapter useful
-without presenting an opaque carrier or selected recursive function as proved.
+Gaussian integers are coordinate pairs with direct addition, multiplication,
+conjugation, norm, and rank functions. Projection, norm-zero, positivity,
+multiplicativity, conjugation, and the checked rank inequality form a usable
+core. The Euclidean-domain construction still depends on centered division and
+a strict remainder-norm proof, so it is deferred rather than represented by a
+trusted structure object.
 
-## Structures, quotients, and algebraic hierarchy
+Polynomials are finite-support coefficient functions. This is the right
+carrier because coefficient lookup is direct and later arithmetic can be
+defined through finite sums. The nearest rejected form is an opaque polynomial
+multiplication or evaluation function with no finite-sum construction. X,
+constants, multiplication, composition, evaluation, roots, and degree theory
+remain in `todo.lit` until those constructions exist.
 
-Chapters 7–9 use `struct` for records that actually store operations and laws,
-and `prop` only for relations on supplied candidates: for example, a subgroup,
-normal subgroup, homomorphism, or ideal. Gaussian integers, scalar actions,
-maps, cosets, quotient carriers, and polynomial evaluation are functions or
-objects whenever later declarations call them.
+## Linear algebra
 
-Quotient operations require their mathematical guards to remain explicit:
-commutativity or normality for representative operations, and compatibility or
-kernel containment for a lift. A selected quotient projection, multiplication,
-inverse, or lift may be trusted, but its type and exact compatibility premise
-remain visible; no quotient well-definedness is replaced by a bare property.
+Chapter 10 builds from fields, vector spaces, and linear maps to binary product
+and coproduct maps, subspaces, span, kernels, ranges, quotient carriers,
+eigen-data, concrete matrices, and basis relationships. Linear-map composition
+and the span universal property follow their short natural proofs and are
+checked.
 
-## Linear algebra and dependent families
+Dependent direct sums, quotient operations, endomorphism polynomials, basis
+coordinates, finite indexed matrix sums, and dimensions require additional
+objects. Their ideal forms are callable functions or selected values justified
+by existence and uniqueness; turning them into propositions was rejected. The
+finite-dimensional interface remains an existence relationship for a finite
+basis, which supports later hypotheses without claiming a selected dimension.
 
-Chapter 10 keeps a vector space on explicit scalar and vector carriers.
-`is_linear_map`, `is_subspace`, eigenvalue conditions, basis conditions, and
-finite-dimensionality are reusable relations. Direct products/sums carry their
-explicit family parameter; quotient lifts display both their subspace and
-kernel-containment compatibility premises. Kernel/range and eigenvalue
-equivalences are recorded as directional theorem facts. `Basis_mk` consumes an
-`is_basis` witness and returns its `basis_space`, while coordinate/matrix
-interfaces retain their finite-support and index guards. These constructions,
-matrices, and dimensions are objects or callable functions because downstream
-statements apply them. Missing dependent-family, finite-support, quotient,
-basis-selection, or dimension constructions therefore own typed object trust;
-theorems such as Cayley-Hamilton retain theorem-local trust rather than becoming
-proposition wrappers.
+## Filters, metrics, and topologies
 
-## Topology, calculus, and integration
+Filters and topologies are families of subsets with closure laws. Metric and
+topological convergence, continuity, compactness, completeness, density, and
+separation are relationships on explicit carriers. Real-distance laws, ball
+center membership, topology axioms, and the open-preimage continuity
+equivalence are checked.
 
-Chapter 11 represents filters as families of large sets, metric/topological
-structures as properties of explicit data, and balls, closures, induced
-topologies, and filters as sets or functions. A source equivalence becomes the
-two source-faithful facts `..._forward` and `..._reverse` when Litex cannot
-state that equivalence as one top-level theorem conclusion.
+This definition-first layer is retained because it gives later theorems the
+right hypotheses. The rejected form is to add a large collection of theorem-
+shaped propositions at the top of the chapter. Filter algebra, compactness and
+completeness theorems, Baire, separation results, extensions, and sequential
+compactness remain in `todo.lit` until their actual proof spines are formalized.
 
-Chapters 12–13 preserve the same distinction across analysis: differentiability,
-continuity, asymptotic, measurability, and integrability conditions are
-relations; derivatives, norms, operator norms, local inverses, measures,
-integrals, product measures, and convolution are callable objects. The
-analytic headline results remain theorem facts with local proof debt, rather
-than being recast as `prop` declarations.
+## Differential calculus
 
-## Trust ownership
+A derivative is first a relationship between a function, a point, and a
+candidate linear value or map:
 
-Trust stays at the smallest declaration or fact that owns the missing
-construction or proof. A `trust` body must be a literal typed declaration or
-the exact fact being deferred; prose after `trust:` is not an executable proof
-boundary. Shared assumptions would belong in `citation.lit`; chapter-local
-debt remains at its source-facing declaration. Repeated tactic scripts are
-collapsed, and a trusted item is never described as a checked proof.
+```litex
+prop has_derivative_at(f fn(x R) R, x0, L R)
+prop has_frechet_derivative_at(E, F set, ..., f fn(x E) F,
+    fprime fn(x E) F, x0 E)
+```
+
+This representation supports honest hypotheses without selecting a derivative.
+A total `deriv`, `fderiv`, or local inverse should be exposed only after the
+needed uniqueness or existence theorem. The rejected form is an arbitrary
+callable selector whose characteristic laws are themselves deferred.
+
+Normed-space, Cauchy/completeness, continuous-linear-map, asymptotic, Frechet,
+strict-Frechet, and continuous-linear-equivalence relationships remain
+implemented. The identity map has the direct bound-one proof. Derivative
+selection, Rolle/MVT, finite-dimensional completeness, operator norms, higher
+derivatives, and the inverse function theorem remain in `todo.lit`.
+
+## Measurable spaces and measure candidates
+
+Chapter 13 keeps sigma-algebras as families of subsets closed under complement
+and countable union. Countable intersection is proved by the textbook route:
+complement every member, take a countable union, then complement again.
+
+The extended nonnegative reals have not yet been constructed in Litex. Instead
+of inventing a false carrier, the checked measure interface exposes the value
+carrier, zero, and infinite-sum operation as parameters:
+
+```litex
+prop is_measure_on(X, V set, M power_set(power_set(X)), zero V,
+    infinite_sum fn(a fn(n N) V) V, mu fn(S power_set(X)) V)
+```
+
+This is a genuine countable-additivity interface and supports a direct
+disjoint-union theorem. It is not claimed to be Mathlib's ENNReal-valued
+measure. The rejected form was a collection of trusted ENNReal, integral,
+product-measure, and Jacobian selectors. ENNReal specialization, interval and
+Bochner integration, dominated convergence, Fubini, convolution, and change of
+variables remain in `todo.lit`.
+
+Almost-everywhere truth is parameterized by the value carrier and its zero and
+uses a measurable zero-valued exceptional set. This preserves the semantic
+role without depending on an unimplemented integral.
+
+## Checked/deferred ownership
+
+Executable chapter files contain only definitions, constructions, and facts
+that the ordered project runner checks. The single `todo.lit` owns all known
+unimplemented source mathematics and is intentionally comment-only and absent
+from `litex.config` exports.
+
+When a todo family is resumed, first reconstruct its natural-language proof or
+construction, then restore the smallest source-facing declaration in source
+order and run a representative use probe. Only after the implementation passes
+should the matching todo paragraph be removed and its JSONL record changed
+from `blocked` to `verified`.

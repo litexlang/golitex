@@ -127,13 +127,11 @@ rational_power_approx_seq_has_limit -> real_power_agrees_with_rational_power`.
 One direct use is a theorem call followed by the displayed `has_limit` fact.
 
 Definition Graph v0.2 reports the edges actually available in its execution
-mode.  The default project export currently uses the trusted/affect-only path,
-so the generated Chapter 6 artifact marks these declarations as direct
-`trust`, records their project-export trust source, and does not pretend that
-skipped proof bodies produced proof edges.  A strict project run currently
-stops at the existing Chapter 5 trust boundary before it reaches Chapter 6.
-The proof edges above therefore remain part of this human contract until that
-upstream debt is cleared and a strict run can emit them.
+mode.  Chapter 5 states the identification between builtin `R` and the
+rational-Cauchy construction through two explicit compatibility axioms rather
+than unfinished theorem proofs.  Generated artifacts should preserve that
+axiom provenance.  The proof edges above remain part of this human contract
+when an execution mode does not expose the checked bodies that establish them.
 
 ## Chapter 8: infinite sets
 
@@ -152,8 +150,8 @@ lemma.
 | --- | --- | --- |
 | `embeds_into(S,T)` | Existence property, hence `prop` | An injective function `S -> T`; used to transfer at-most-countability and infinitude. |
 | `is_countably_infinite(X)` | Cardinality property, hence `prop` | A Chapter 3 bijection `N -> X`; supplies an enumeration. |
-| `is_at_most_countable(X)` | Disjunctive property, hence `prop` | Finite cardinality or countably infinite; closed under subsets and images. |
-| `is_uncountable(X)` | Negative property, hence `prop` | Defined as not at most countable; used by Cantor's theorem and the real-number argument. |
+| `is_at_most_countable(X)` | Existence property, hence `prop` | An injection `X -> N`; closed under subsets, images, and countable unions. |
+| `is_uncountable(X)` | Cardinality property, hence `prop` | Infinite but not countably infinite; the checked bridge shows this excludes an injection into `N`. |
 | Countable enumeration | Relation on a displayed function, hence `prop is_countable_enumeration` | A bijection `N_pos -> X`; turns a set-indexed family into a Chapter 7 sequence. |
 | Countable-set series terms | Formula-defined function, hence `template` plus `have fn` | Applies `f` after an enumeration; feeds Chapter 7 convergence and sum predicates. |
 | Absolute summability and set-series sum | Properties of a displayed family and candidate sum, hence `prop` | Finite absolute subsum bounds and countable support; used by Fubini and rearrangement results. |
@@ -228,6 +226,20 @@ finite absolute subsum bounds
 double-index family --row/swap/column views--> Fubini interfaces
 ~~~
 
+The checked support route now has two reusable intermediate nodes.  A
+nonfinite set contains a finite subset of every prescribed natural size, and
+the support is the countable union of the finite level sets
+`{x : abs(f(x)) >= 1/n}`.  Bijection change of variables is also checked by
+transporting both finite absolute subsums and the enumerated nonzero support.
+
+The present countable-series representation has one known mismatch with the
+ideal arbitrary-set interface.  A displayed enumeration is a bijection
+`N_pos -> X`, so it represents countably infinite carriers only.  Applying it
+directly to a nonzero support excludes finite and empty supports.  The intended
+repair is a finite-sum branch for finite supports plus the existing enumerated
+branch for countably infinite supports; wrappers or trusted special cases
+would preserve the wrong semantic shape.
+
 The row, column, swapped, finite-bound, and finite-capture predicates are
 relations on proposed witnesses. They make the proof route of Fubini visible;
 they are not independently selected mathematical values. The templates for
@@ -262,16 +274,17 @@ upper bound and strict upper bound -> chains
 chains + explicit choice interface -> good-chain construction -> Zorn
 ~~~
 
-The current honest boundaries are concentrated rather than hidden. The
-countable-union exercise, most of the analytic substance of Fubini and
-arbitrary-set summation, the Riemann rearrangement theorem, and the
-binary-expansion construction retain `trust`. Choice itself is recorded as
-`axiom`. The finite-total-order well-ordering bridge and four good-chain
-lemmas in the Zorn route also retain visible `trust`. In contrast,
-Proposition 8.1.10, Corollary 8.1.11, Cantor's theorem, the finite product
-representations, the real supremum-approximating sequence, and the final Zorn
-theorem verify through their displayed dependencies, subject to any named
-trusted or axiomatic theorem they call.
+The current honest boundaries are concentrated rather than hidden.  The
+countable-union exercise and finite-total-order bridge are checked, as are
+finite-subsum transport, support countability, coordinate swapping, and
+bijection change for arbitrary-set sums.  Enumeration independence, the
+analytic row-first core of Fubini, the disjoint support-series merge, Riemann
+rearrangement, and the binary-expansion construction retain `trust`; three
+additional statements wait on the finite-support definition repair described
+above.  Choice itself is recorded as `axiom`.  The four good-chain lemmas in
+the Zorn route also retain visible `trust`.  Checked final theorems verify
+through these displayed dependencies without erasing trusted or axiomatic
+provenance.
 
 ## Chapter 10: differentiation
 

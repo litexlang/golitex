@@ -1,6 +1,6 @@
 # Chapter 9 — Groups and Rings
 # Independent MIL-derived Litex pressure-test corpus; see README for scope,
-# attribution, and checked/trusted status.
+# attribution, and checked/deferred status.
 
 # The chapter follows the source order. Anonymous tactic variants are folded
 # into one mathematical statement, while named constructions remain callable
@@ -77,11 +77,20 @@ thm additive_hom_comp:
         $is_additive_monoid_hom(A, B, addA, zeroA, addB, zeroB, f)
         $is_additive_monoid_hom(B, C, addB, zeroB, addC, zeroC, g)
         =>:
-            $is_additive_monoid_hom(A, C, addA, zeroA, addC, zeroC, \compose_map<A, B, C>(g, f))
-    \compose_map<A, B, C>(g, f)(zeroA) = g(f(zeroA)) = g(zeroB) = zeroC
-    forall x, y A:
-        \compose_map<A, B, C>(g, f)(addA(x, y)) = g(f(addA(x, y))) = g(addB(f(x), f(y))) = addC(g(f(x)), g(f(y))) = addC(\compose_map<A, B, C>(g, f)(x), \compose_map<A, B, C>(g, f)(y))
-    $is_additive_monoid_hom(A, C, addA, zeroA, addC, zeroC, \compose_map<A, B, C>(g, f))
+            $is_additive_monoid_hom(A, C, addA, zeroA, addC, zeroC, fn(x A) C {g(f(x))})
+    (fn(x A) C {g(f(x))})(zeroA) = g(f(zeroA)) = g(zeroB) = zeroC
+    claim:
+        ? forall x, y A:
+            (fn(q A) C {g(f(q))})(addA(x, y)) = addC((fn(q A) C {g(f(q))})(x), (fn(q A) C {g(f(q))})(y))
+        thm function_substitution:
+            ? forall U, V set, h fn(q U) V, u, v U:
+                u = v
+                =>:
+                    h(u) = h(v)
+            h(u) = h(v)
+        by thm function_substitution(B, C, g, f(addA(x, y)), addB(f(x), f(y)))
+        (fn(q A) C {g(f(q))})(addA(x, y)) = g(f(addA(x, y))) = g(addB(f(x), f(y))) = addC(g(f(x)), g(f(y))) = addC((fn(q A) C {g(f(q))})(x), (fn(q A) C {g(f(q))})(y))
+    $is_additive_monoid_hom(A, C, addA, zeroA, addC, zeroC, fn(x A) C {g(f(x))})
 
 # A group homomorphism is a monoid homomorphism between the explicit group
 # carriers from Chapter 2.
@@ -102,49 +111,12 @@ thm group_mul_inv_cancel:
     by thm chap2::mul_inv_cancel(G, mul, one, inv, x)
     mul(x, inv(x)) = one
 
-# Source's `group` normalization example.
-thm group_normalization_identity:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G, x, y, z G:
-        $chap2::is_group(G, mul, one, inv)
-        =>:
-            mul(mul(mul(x, mul(y, z)), inv(mul(x, z))), inv(mul(mul(x, y), inv(x)))) = one
-    # Trust reason: noncommutative group normalization over explicit operations.
-    trust mul(mul(mul(x, mul(y, z)), inv(mul(x, z))), inv(mul(mul(x, y), inv(x)))) = one
-
-# Source's `abel` example, with subtraction represented by explicit inverses.
-thm additive_group_normalization_identity:
-    ? forall G set, add fn(x, y G) G, zero G, neg fn(x G) G, x, y, z G:
-        $chap2::is_additive_commutative_group(G, add, zero, neg)
-        =>:
-            add(add(z, x), add(add(y, neg(z)), neg(x))) = y
-    # Trust reason: additive commutative group normalization.
-    trust add(add(z, x), add(add(y, neg(z)), neg(x))) = y
-
 thm group_hom_map_mul:
     ? forall G, H set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulH fn(x, y H) H, oneH H, invH fn(x H) H, f fn(x G) H, x, y G:
         $is_group_hom(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
         =>:
             f(mulG(x, y)) = mulH(f(x), f(y))
     f(mulG(x, y)) = mulH(f(x), f(y))
-
-thm group_hom_map_inv:
-    ? forall G, H set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulH fn(x, y H) H, oneH H, invH fn(x H) H, f fn(x G) H, x G:
-        $is_group_hom(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
-        =>:
-            f(invG(x)) = invH(f(x))
-    # Trust reason: uniqueness of inverses in the target group.
-    trust f(invG(x)) = invH(f(x))
-
-thm multiplicative_map_is_group_hom:
-    ? forall G, H set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulH fn(x, y H) H, oneH H, invH fn(x H) H, f fn(x G) H:
-        $chap2::is_group(G, mulG, oneG, invG)
-        $chap2::is_group(H, mulH, oneH, invH)
-        forall x, y G:
-            f(mulG(x, y)) = mulH(f(x), f(y))
-        =>:
-            $is_group_hom(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
-    # Trust reason: derive preservation of one by cancellation.
-    trust $is_group_hom(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
 
 thm bijective_group_hom_is_equivalence:
     ? forall G, H set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulH fn(x, y H) H, oneH H, invH fn(x H) H, f fn(x G) H:
@@ -196,38 +168,20 @@ template<G set>:
 template<G set, one G>:
     have subgroup_bottom power_set(G) = {one}
 
-# `closure` and `sup` are genuine set-valued constructions. The current
-# verifier has no arbitrary intersection/choice construction for the least
-# subgroup, so only this selected object is trusted.
-template<G set, mul fn(x, y G) G, one G, inv fn(x G) G>:
-    trust have subgroup_closure fn(S power_set(G)) power_set(G):
-        forall x G:
-            x $in S
-            =>:
-                x $in subgroup_closure(S)
-        $is_subgroup(G, mul, one, inv, subgroup_closure(S))
-        forall H power_set(G):
-            $is_subgroup(G, mul, one, inv, H)
-            S $subset H
-            =>:
-                subgroup_closure(S) $subset H
-
-template<G set, mul fn(x, y G) G, one G, inv fn(x G) G>:
-    have fn subgroup_join(H, K power_set(G)) power_set(G) = \subgroup_closure<G, mul, one, inv>(union(H, K))
-
 thm subgroup_intersection_closed:
     ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G, H, K power_set(G):
         $is_subgroup(G, mul, one, inv, H)
         $is_subgroup(G, mul, one, inv, K)
         =>:
-            $is_subgroup(G, mul, one, inv, \subgroup_intersection<G>(H, K))
-    # Trust reason: fold the three pointwise closure laws through set intersection.
-    trust $is_subgroup(G, mul, one, inv, \subgroup_intersection<G>(H, K))
-
-thm subgroup_join_is_closure_of_union:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G, H, K power_set(G):
-        \subgroup_join<G, mul, one, inv>(H, K) = \subgroup_closure<G, mul, one, inv>(union(H, K))
-    \subgroup_join<G, mul, one, inv>(H, K) = \subgroup_closure<G, mul, one, inv>(union(H, K))
+            $is_subgroup(G, mul, one, inv, {x G: x $in H and x $in K})
+    one $in H
+    one $in K
+    one $in {x G: x $in H and x $in K}
+    forall x, y {q G: q $in H and q $in K}:
+        mul(x, y) $in {q G: q $in H and q $in K}
+    forall x {q G: q $in H and q $in K}:
+        inv(x) $in {q G: q $in H and q $in K}
+    $is_subgroup(G, mul, one, inv, {x G: x $in H and x $in K})
 
 prop has_subgroup_map_preimage(G, H set, f fn(x G) H, S power_set(G), y H):
     exist x G st {x $in S, f(x) = y}
@@ -244,116 +198,10 @@ template<G, H set, oneH H, f fn(x G) H>:
 template<G, H set, f fn(x G) H>:
     have group_range power_set(H) = \subgroup_map<G, H, f>(G)
 
-# The source iff is recorded as its two factual directions: Litex theorem
-# targets are implication-shaped, so no nullary proposition wrapper is used.
-thm group_kernel_membership_forward:
-    ? forall G, H set, oneH H, f fn(x G) H, x G:
-        x $in \group_kernel<G, H, oneH, f>
-        =>:
-            f(x) = oneH
-    # Trust reason: unfold the kernel set-builder.
-    trust f(x) = oneH
-
-thm group_kernel_membership_reverse:
-    ? forall G, H set, oneH H, f fn(x G) H, x G:
-        f(x) = oneH
-        =>:
-            x $in \group_kernel<G, H, oneH, f>
-    # Trust reason: fold the kernel set-builder.
-    trust x $in \group_kernel<G, H, oneH, f>
-
-thm group_range_membership_forward:
-    ? forall G, H set, f fn(x G) H, y H:
-        y $in \group_range<G, H, f>
-        =>:
-            exist x G st {f(x) = y}
-    # Trust reason: unfold the image-witness range definition.
-    trust exist x G st {f(x) = y}
-
-thm group_range_membership_reverse:
-    ? forall G, H set, f fn(x G) H, y H:
-        exist x G st {f(x) = y}
-        =>:
-            y $in \group_range<G, H, f>
-    # Trust reason: fold the image-witness range definition.
-    trust y $in \group_range<G, H, f>
-
-thm subgroup_map_closed:
-    ? forall G, H set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulH fn(x, y H) H, oneH H, invH fn(x H) H, f fn(x G) H, S power_set(G):
-        $is_group_hom(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
-        $is_subgroup(G, mulG, oneG, invG, S)
-        =>:
-            $is_subgroup(H, mulH, oneH, invH, \subgroup_map<G, H, f>(S))
-    # Trust reason: transport subgroup witnesses through a group homomorphism.
-    trust $is_subgroup(H, mulH, oneH, invH, \subgroup_map<G, H, f>(S))
-
-thm subgroup_comap_closed:
-    ? forall G, H set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulH fn(x, y H) H, oneH H, invH fn(x H) H, f fn(x G) H, T power_set(H):
-        $is_group_hom(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
-        $is_subgroup(H, mulH, oneH, invH, T)
-        =>:
-            $is_subgroup(G, mulG, oneG, invG, \subgroup_comap<G, H, f>(T))
-    # Trust reason: unfold inverse image and apply the homomorphism laws.
-    trust $is_subgroup(G, mulG, oneG, invG, \subgroup_comap<G, H, f>(T))
-
-# Lagrange and Sylow are retained in their exact finite-cardinality form.
-thm lagrange_subgroup_order_divides:
-    ? forall G finite_set, mul fn(x, y G) G, one G, inv fn(x G) G, H power_set(G):
-        $chap2::is_group(G, mul, one, inv)
-        $is_subgroup(G, mul, one, inv, H)
-        =>:
-            $std::basics::divides(finite_set_size(H), finite_set_size(G))
-    # Trust reason: finite coset partition and counting.
-    trust $std::basics::divides(finite_set_size(H), finite_set_size(G))
-
-thm sylow_exists_subgroup_of_prime_power_order:
-    ? forall G finite_set, mul fn(x, y G) G, one G, inv fn(x G) G, p N_pos, n N:
-        $chap2::is_group(G, mul, one, inv)
-        $std::basics::prime(p)
-        $std::basics::divides(p^n, finite_set_size(G))
-        =>:
-            exist H power_set(G) st {$is_subgroup(G, mul, one, inv, H), $is_finite_set(H), finite_set_size(H) = p^n}
-    # Trust reason: Sylow existence theorem.
-    trust exist H power_set(G) st {$is_subgroup(G, mul, one, inv, H), $is_finite_set(H), finite_set_size(H) = p^n}
-
-# These named source lemmas follow the finite-group examples and are retained
-# with their own source-facing statements.
-# A finite-set cardinality is used here in place of Lean's `Nat.card`.
-thm subgroup_eq_bottom_iff_card_one_forward:
-    ? forall G finite_set, mul fn(x, y G) G, one G, inv fn(x G) G, H power_set(G):
-        $chap2::is_group(G, mul, one, inv)
-        $is_subgroup(G, mul, one, inv, H)
-        H = \subgroup_bottom<G, one>
-        =>:
-            finite_set_size(H) = 1
-    # Trust reason: the bottom subgroup has exactly the identity element.
-    trust finite_set_size(H) = 1
-
-thm subgroup_eq_bottom_iff_card_one_reverse:
-    ? forall G finite_set, mul fn(x, y G) G, one G, inv fn(x G) G, H power_set(G):
-        $chap2::is_group(G, mul, one, inv)
-        $is_subgroup(G, mul, one, inv, H)
-        finite_set_size(H) = 1
-        =>:
-            H = \subgroup_bottom<G, one>
-    # Trust reason: a subgroup of cardinality one is the bottom subgroup.
-    trust H = \subgroup_bottom<G, one>
-
 # Bézout form gives a local, carrier-independent coprimality condition for
 # the finite subgroup orders in the next source lemma.
 prop group_order_coprime(m, n N):
     exist u, v Z st {u * m + v * n = 1}
-
-thm subgroup_inf_bottom_of_coprime_orders:
-    ? forall G finite_set, mul fn(x, y G) G, one G, inv fn(x G) G, H, K power_set(G):
-        $chap2::is_group(G, mul, one, inv)
-        $is_subgroup(G, mul, one, inv, H)
-        $is_subgroup(G, mul, one, inv, K)
-        $group_order_coprime(finite_set_size(H), finite_set_size(K))
-        =>:
-            \subgroup_intersection<G>(H, K) = \subgroup_bottom<G, one>
-    # Trust reason: a common subgroup order divides two coprime subgroup orders.
-    trust \subgroup_intersection<G>(H, K) = \subgroup_bottom<G, one>
 
 # Source definition `conjugate` and its action law.  The set-level action is
 # defined directly; its preservation of subgroup structure remains implicit in
@@ -363,15 +211,6 @@ prop conjugate_subgroup_member(G set, mul fn(x, y G) G, inv fn(x G) G, H power_s
 
 template<G set, mul fn(x, y G) G, inv fn(x G) G>:
     have fn conjugate_subgroup(g G, H power_set(G)) power_set(G) = {x G: $conjugate_subgroup_member(G, mul, inv, H, g, x)}
-
-thm conjugate_subgroup_one:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G, H power_set(G):
-        $chap2::is_group(G, mul, one, inv)
-        $is_subgroup(G, mul, one, inv, H)
-        =>:
-            \conjugate_subgroup<G, mul, inv>(one, H) = H
-    # Trust reason: conjugation by the identity fixes every subgroup.
-    trust \conjugate_subgroup<G, mul, inv>(one, H) = H
 
 # ---------------------------------------------------------------------------
 # 9.1.4 Permutations, free groups, and presented groups
@@ -388,93 +227,6 @@ template<X set>:
 
 template<X set>:
     have permutation_identity fn(x X) X = fn(x X) X {x}
-
-template<X set>:
-    trust have permutation_inverse fn(sigma \permutation_group<X>) \permutation_group<X>:
-        \permutation_compose<X>(sigma, permutation_inverse(sigma)) = \permutation_identity<X>
-        \permutation_compose<X>(permutation_inverse(sigma), sigma) = \permutation_identity<X>
-
-thm permutation_group_is_group:
-    ? forall X set:
-        $chap2::is_group(\permutation_group<X>, \permutation_compose<X>, \permutation_identity<X>, \permutation_inverse<X>)
-    # Trust reason: bijections are closed under composition and have two-sided inverses.
-    trust $chap2::is_group(\permutation_group<X>, \permutation_compose<X>, \permutation_identity<X>, \permutation_inverse<X>)
-
-# The source's inductive alphabet `S` and its free-group constructions remain
-# distinct opaque carriers. They are objects, not proposition placeholders.
-trust have S nonempty_set
-trust have s_a, s_b, s_c S:
-    s_a != s_b
-    s_a != s_c
-    s_b != s_c
-
-template<A nonempty_set>:
-    trust have FreeGroup nonempty_set
-
-template<A nonempty_set>:
-    trust have free_group_one \FreeGroup<A>
-
-template<A nonempty_set>:
-    trust have free_group_mul fn(x, y \FreeGroup<A>) \FreeGroup<A>
-
-template<A nonempty_set>:
-    trust have free_group_inv fn(x \FreeGroup<A>) \FreeGroup<A>
-
-template<A nonempty_set>:
-    trust have free_group_of fn(a A) \FreeGroup<A>
-
-thm free_group_is_group:
-    ? forall A nonempty_set:
-        $chap2::is_group(\FreeGroup<A>, \free_group_mul<A>, \free_group_one<A>, \free_group_inv<A>)
-    # Trust reason: reduced-word construction of the free group.
-    trust $chap2::is_group(\FreeGroup<A>, \free_group_mul<A>, \free_group_one<A>, \free_group_inv<A>)
-
-# `FreeGroup.lift` is a group homomorphism only after its target is known to
-# be a group.  Its generator equation is retained with that essential guard.
-template<A nonempty_set, H set, mulH fn(x, y H) H, oneH H, invH fn(x H) H>:
-    trust have free_group_lift fn(f fn(a A) H, w \FreeGroup<A>) H:
-        forall f fn(a A) H, a A:
-            $chap2::is_group(H, mulH, oneH, invH)
-            =>:
-                free_group_lift(f, \free_group_of<A>(a)) = f(a)
-
-trust have myElement \FreeGroup<S>:
-    myElement = \free_group_mul<S>(\free_group_of<S>(s_a), \free_group_inv<S>(\free_group_of<S>(s_b)))
-
-have fin5 power_set(N) = range(0, 5)
-
-trust have myMorphism fn(w \FreeGroup<S>) \permutation_group<fin5>:
-    $is_group_hom(\FreeGroup<S>, \permutation_group<fin5>, \free_group_mul<S>, \free_group_one<S>, \free_group_inv<S>, \permutation_compose<fin5>, \permutation_identity<fin5>, \permutation_inverse<fin5>, myMorphism)
-
-have myRelation \FreeGroup<{0}> = \free_group_mul<{0}>(\free_group_mul<{0}>(\free_group_of<{0}>(0), \free_group_of<{0}>(0)), \free_group_of<{0}>(0))
-have myRelations power_set(\FreeGroup<{0}>) = {myRelation}
-
-# The source carrier is `PresentedGroup {FreeGroup.of () ^ 3}`. Litex does not
-# yet have a dependent quotient-carrier constructor, so this is deliberately a
-# *source-specific* trusted carrier rather than a falsely generic operation.
-trust have myGroup nonempty_set
-trust have myGroup_one myGroup
-trust have myGroup_mul fn(x, y myGroup) myGroup
-trust have myGroup_inv fn(x myGroup) myGroup
-
-thm myGroup_is_group:
-    ? forall:
-        $chap2::is_group(myGroup, myGroup_mul, myGroup_one, myGroup_inv)
-    # Trust reason: quotient the named free group by the cubic relation myRelations.
-    trust $chap2::is_group(myGroup, myGroup_mul, myGroup_one, myGroup_inv)
-
-trust have myMap fn(u {0}) \permutation_group<fin5>
-
-thm compat_myMap:
-    ? forall r \FreeGroup<{0}>:
-        r $in myRelations
-        =>:
-            \free_group_lift<{0}, \permutation_group<fin5>, \permutation_compose<fin5>, \permutation_identity<fin5>, \permutation_inverse<fin5>>(myMap, r) = \permutation_identity<fin5>
-    # Trust reason: the chosen 3-cycle satisfies the cubic defining relation.
-    trust \free_group_lift<{0}, \permutation_group<fin5>, \permutation_compose<fin5>, \permutation_identity<fin5>, \permutation_inverse<fin5>>(myMap, r) = \permutation_identity<fin5>
-
-trust have myNewMorphism fn(g myGroup) \permutation_group<fin5>:
-    $is_group_hom(myGroup, \permutation_group<fin5>, myGroup_mul, myGroup_one, myGroup_inv, \permutation_compose<fin5>, \permutation_identity<fin5>, \permutation_inverse<fin5>, myNewMorphism)
 
 # ---------------------------------------------------------------------------
 # 9.1.5 Group actions and orbits
@@ -493,27 +245,11 @@ thm group_action_associativity:
             act(g, act(h, x)) = act(mul(g, h), x)
     act(g, act(h, x)) = act(mul(g, h), x)
 
-thm conjugate_subgroup_action:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G:
-        $chap2::is_group(G, mul, one, inv)
-        =>:
-            $is_group_action(G, power_set(G), mul, one, fn(g G, H power_set(G)) power_set(G) {\conjugate_subgroup<G, mul, inv>(g, H)})
-    # Trust reason: conjugation composes according to group multiplication.
-    trust $is_group_action(G, power_set(G), mul, one, fn(g G, H power_set(G)) power_set(G) {\conjugate_subgroup<G, mul, inv>(g, H)})
-
 template<G, X set, act fn(g G, x X) X>:
     have fn toPermHom(g G) fn(x X) X = fn(y X) X {act(g, y)}
 
 template<G set, mul fn(x, y G) G>:
     have fn CayleyIsoMorphism(g G) fn(x G) G = fn(y G) G {mul(g, y)}
-
-thm cayley_iso_morphism_is_injective:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G:
-        $chap2::is_group(G, mul, one, inv)
-        =>:
-            $chap4::injective_fn(G, fn(x G) G, \CayleyIsoMorphism<G, mul>)
-    # Trust reason: evaluate equal left translations at the identity.
-    trust $chap4::injective_fn(G, fn(x G) G, \CayleyIsoMorphism<G, mul>)
 
 prop orbit_member(G, X set, act fn(g G, x X) X, x, y X):
     exist g G st {y = act(g, x)}
@@ -532,24 +268,6 @@ prop is_orbit_of(G, X set, act fn(g G, x X) X, O power_set(X)):
 
 template<G, X set, act fn(g G, x X) X>:
     have orbit_partition power_set(power_set(X)) = {O power_set(X): $is_orbit_of(G, X, act, O)}
-
-thm orbit_stabilizer_equivalence:
-    ? forall G, X set, mul fn(x, y G) G, one G, inv fn(x G) G, act fn(g G, x X) X, x X:
-        $chap2::is_group(G, mul, one, inv)
-        $is_group_action(G, X, mul, one, act)
-        =>:
-            $sets_equinumerous(\orbit<G, X, act>(x), \quotient_group<G, mul>(\stabilizer<G, X, act, one>(x)))
-    # Trust reason: orbit-stabilizer quotient equivalence.
-    trust $sets_equinumerous(\orbit<G, X, act>(x), \quotient_group<G, mul>(\stabilizer<G, X, act, one>(x)))
-
-thm group_equiv_quotient_times_subgroup:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G, H power_set(G):
-        $chap2::is_group(G, mul, one, inv)
-        $is_subgroup(G, mul, one, inv, H)
-        =>:
-            $sets_equinumerous(G, cart(\quotient_group<G, mul>(H), H))
-    # Trust reason: choose a representative for every left coset.
-    trust $sets_equinumerous(G, cart(\quotient_group<G, mul>(H), H))
 
 # ---------------------------------------------------------------------------
 # 9.1.6 Quotient groups
@@ -573,70 +291,6 @@ prop is_left_coset_of(G set, mul fn(x, y G) G, H power_set(G), C power_set(G)):
 
 template<G set, mul fn(x, y G) G>:
     have fn quotient_group(H power_set(G)) power_set(power_set(G)) = {C power_set(G): $is_left_coset_of(G, mul, H, C)}
-
-template<G set, mul fn(x, y G) G>:
-    trust have quotient_projection fn(H power_set(G), g G) \quotient_group<G, mul>(H):
-        quotient_projection(H, g) = \left_coset<G, mul>(H, g)
-
-# Multiplication and inverse descend to cosets only for a normal subgroup.
-# The guards below are part of the trusted construction, rather than facts
-# silently available for an arbitrary subset H.
-template<G set, mul fn(x, y G) G, one G, inv fn(x G) G>:
-    trust have quotient_group_mul fn(H power_set(G), A, B \quotient_group<G, mul>(H)) \quotient_group<G, mul>(H):
-        forall H power_set(G), A, B \quotient_group<G, mul>(H), g, h G:
-            $chap2::is_group(G, mul, one, inv)
-            $is_normal_subgroup(G, mul, one, inv, H)
-            A = \left_coset<G, mul>(H, g)
-            B = \left_coset<G, mul>(H, h)
-            =>:
-                quotient_group_mul(H, A, B) = \left_coset<G, mul>(H, mul(g, h))
-
-template<G set, mul fn(x, y G) G, one G, inv fn(x G) G>:
-    trust have quotient_group_inv fn(H power_set(G), A \quotient_group<G, mul>(H)) \quotient_group<G, mul>(H):
-        forall H power_set(G), A \quotient_group<G, mul>(H), g G:
-            $chap2::is_group(G, mul, one, inv)
-            $is_normal_subgroup(G, mul, one, inv, H)
-            A = \left_coset<G, mul>(H, g)
-            =>:
-                quotient_group_inv(H, A) = \left_coset<G, mul>(H, inv(g))
-
-# Source construction `QuotientGroup.lift`: the map descends only when the
-# subgroup is normal and is contained in the kernel of the group homomorphism.
-template<G, M set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulM fn(x, y M) M, oneM M, invM fn(x M) M>:
-    trust have quotient_group_lift fn(H power_set(G), f fn(x G) M) fn(A \quotient_group<G, mulG>(H)) M:
-        forall H power_set(G), f fn(x G) M, g G:
-            $is_group_hom(G, M, mulG, oneG, invG, mulM, oneM, invM, f)
-            $is_normal_subgroup(G, mulG, oneG, invG, H)
-            H $subset \group_kernel<G, M, oneM, f>
-            =>:
-                quotient_group_lift(H, f)(\quotient_projection<G, mulG>(H, g)) = f(g)
-
-thm quotient_group_lift_is_group_hom:
-    ? forall G, M set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulM fn(x, y M) M, oneM M, invM fn(x M) M, H power_set(G), f fn(x G) M:
-        $is_group_hom(G, M, mulG, oneG, invG, mulM, oneM, invM, f)
-        $is_normal_subgroup(G, mulG, oneG, invG, H)
-        H $subset \group_kernel<G, M, oneM, f>
-        =>:
-            $is_group_hom(\quotient_group<G, mulG>(H), M, fn(A, B \quotient_group<G, mulG>(H)) \quotient_group<G, mulG>(H) {\quotient_group_mul<G, mulG, oneG, invG>(H, A, B)}, \quotient_projection<G, mulG>(H, oneG), fn(A \quotient_group<G, mulG>(H)) \quotient_group<G, mulG>(H) {\quotient_group_inv<G, mulG, oneG, invG>(H, A)}, mulM, oneM, invM, \quotient_group_lift<G, M, mulG, oneG, invG, mulM, oneM, invM>(H, f))
-    # Trust reason: quotient-group lift preserves multiplication after kernel descent.
-    trust $is_group_hom(\quotient_group<G, mulG>(H), M, fn(A, B \quotient_group<G, mulG>(H)) \quotient_group<G, mulG>(H) {\quotient_group_mul<G, mulG, oneG, invG>(H, A, B)}, \quotient_projection<G, mulG>(H, oneG), fn(A \quotient_group<G, mulG>(H)) \quotient_group<G, mulG>(H) {\quotient_group_inv<G, mulG, oneG, invG>(H, A)}, mulM, oneM, invM, \quotient_group_lift<G, M, mulG, oneG, invG, mulM, oneM, invM>(H, f))
-
-thm quotient_group_is_group:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G, H power_set(G):
-        $chap2::is_group(G, mul, one, inv)
-        $is_normal_subgroup(G, mul, one, inv, H)
-        =>:
-            $chap2::is_group(\quotient_group<G, mul>(H), fn(A, B \quotient_group<G, mul>(H)) \quotient_group<G, mul>(H) {\quotient_group_mul<G, mul, one, inv>(H, A, B)}, \quotient_projection<G, mul>(H, one), fn(A \quotient_group<G, mul>(H)) \quotient_group<G, mul>(H) {\quotient_group_inv<G, mul, one, inv>(H, A)})
-    # Trust reason: well-defined quotient operations on normal-subgroup cosets.
-    trust $chap2::is_group(\quotient_group<G, mul>(H), fn(A, B \quotient_group<G, mul>(H)) \quotient_group<G, mul>(H) {\quotient_group_mul<G, mul, one, inv>(H, A, B)}, \quotient_projection<G, mul>(H, one), fn(A \quotient_group<G, mul>(H)) \quotient_group<G, mul>(H) {\quotient_group_inv<G, mul, one, inv>(H, A)})
-
-thm quotient_kernel_equiv_range:
-    ? forall G, M set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulM fn(x, y M) M, oneM M, invM fn(x M) M, f fn(x G) M:
-        $is_group_hom(G, M, mulG, oneG, invG, mulM, oneM, invM, f)
-        =>:
-            $chap4::bijective_fn(\quotient_group<G, mulG>(\group_kernel<G, M, oneM, f>), \group_range<G, M, f>, \quotient_group_lift<G, M, mulG, oneG, invG, mulM, oneM, invM>(\group_kernel<G, M, oneM, f>, f))
-    # Trust reason: first isomorphism theorem for groups.
-    trust $chap4::bijective_fn(\quotient_group<G, mulG>(\group_kernel<G, M, oneM, f>), \group_range<G, M, f>, \quotient_group_lift<G, M, mulG, oneG, invG, mulM, oneM, invM>(\group_kernel<G, M, oneM, f>, f))
 
 # ---------------------------------------------------------------------------
 # 9.2 Rings
@@ -662,14 +316,6 @@ prop has_no_zero_divisors(A set, zero A, mul fn(x, y A) A):
         =>:
             x = zero or y = zero
 
-thm commutative_ring_square_sum:
-    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, x, y A:
-        $is_commutative_ring(A, add, zero, neg, mul, one)
-        =>:
-            mul(add(x, y), add(x, y)) = add(add(mul(x, x), mul(y, y)), add(mul(x, y), mul(x, y)))
-    # Trust reason: distributive expansion and commutative collection of cross terms.
-    trust mul(add(x, y), add(x, y)) = add(add(mul(x, x), mul(y, y)), add(mul(x, y), mul(x, y)))
-
 thm natural_square_sum:
     ? forall x, y N:
         (x + y)^2 = x^2 + y^2 + 2 * x * y
@@ -681,34 +327,17 @@ prop is_unit(A set, mul fn(x, y A) A, one A, x A):
 template<A set, mul fn(x, y A) A, one A>:
     have units power_set(A) = {x A: $is_unit(A, mul, one, x)}
 
-thm integer_units_forward:
-    ? forall x Z:
-        $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
-        =>:
-            x = 1 or x = -1
-    # Trust reason: forward direction of the integer-unit classification.
-    trust x = 1 or x = -1
-
 thm integer_units_reverse:
     ? forall x Z:
         x = 1 or x = -1
         =>:
             $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
-    # Trust reason: reverse direction of the integer-unit classification.
-    trust $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
-
-template<A set, mul fn(x, y A) A, one A>:
-    trust have unit_inverse fn(x \units<A, mul, one>) \units<A, mul, one>:
-        mul(x, unit_inverse(x)) = one
-        mul(unit_inverse(x), x) = one
-
-thm units_form_group:
-    ? forall A set, mul fn(x, y A) A, one A:
-        $is_monoid(A, mul, one)
-        =>:
-            $chap2::is_group(\units<A, mul, one>, fn(x, y \units<A, mul, one>) \units<A, mul, one> {mul(x, y)}, one, \unit_inverse<A, mul, one>)
-    # Trust reason: closure and inverse laws for the unit carrier.
-    trust $chap2::is_group(\units<A, mul, one>, fn(x, y \units<A, mul, one>) \units<A, mul, one> {mul(x, y)}, one, \unit_inverse<A, mul, one>)
+    by cases:
+        ? $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
+        case x = 1:
+            witness exist y Z st {x * y = 1, y * x = 1} from 1
+        case x = -1:
+            witness exist y Z st {x * y = 1, y * x = 1} from -1
 
 prop is_ring_hom(A, S set, addR fn(x, y A) A, zeroR A, negR fn(x A) A, mulR fn(x, y A) A, oneR A, addS fn(x, y S) S, zeroS S, negS fn(x S) S, mulS fn(x, y S) S, oneS S, f fn(x A) S):
     $chap2::is_ring(A, addR, zeroR, negR, mulR, oneR)
@@ -725,16 +354,6 @@ thm ring_hom_map_add:
         =>:
             f(addR(x, y)) = addS(f(x), f(y))
     f(addR(x, y)) = addS(f(x), f(y))
-
-# The source's `Units.map f` needs a ring homomorphism: this is what sends a
-# two-sided inverse of x to a two-sided inverse of f(x).
-template<A, S set, addR fn(x, y A) A, zeroR A, negR fn(x A) A, mulR fn(x, y A) A, oneR A, addS fn(x, y S) S, zeroS S, negS fn(x S) S, mulS fn(x, y S) S, oneS S, f fn(x A) S>:
-    trust have units_map fn(x \units<A, mulR, oneR>) \units<S, mulS, oneS>:
-        forall x \units<A, mulR, oneR>:
-            $is_ring_hom(A, S, addR, zeroR, negR, mulR, oneR, addS, zeroS, negS, mulS, oneS, f)
-            =>:
-                $is_unit(S, mulS, oneS, f(x))
-                units_map(x) = f(x)
 
 prop is_subring(A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, S power_set(A)):
     zero $in S
@@ -782,46 +401,6 @@ prop is_ideal_coset(A set, add fn(x, y A) A, I power_set(A), C power_set(A)):
 template<A set, add fn(x, y A) A>:
     have fn quotient_ring(I power_set(A)) power_set(power_set(A)) = {C power_set(A): $is_ideal_coset(A, add, I, C)}
 
-template<A set, add fn(x, y A) A>:
-    trust have ideal_quotient_projection fn(I power_set(A), r A) \quotient_ring<A, add>(I):
-        ideal_quotient_projection(I, r) = \ideal_coset<A, add>(I, r)
-
-# Addition and multiplication on quotient classes are valid only for an ideal
-# in a commutative ring.  The trusted equations are therefore conditional on
-# exactly those source-side carrier hypotheses.
-template<A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A>:
-    trust have quotient_ring_add fn(I power_set(A), C, D \quotient_ring<A, add>(I)) \quotient_ring<A, add>(I):
-        forall I power_set(A), C, D \quotient_ring<A, add>(I), x, y A:
-            $is_commutative_ring(A, add, zero, neg, mul, one)
-            $is_ideal(A, add, zero, neg, mul, I)
-            C = \ideal_coset<A, add>(I, x)
-            D = \ideal_coset<A, add>(I, y)
-            =>:
-                quotient_ring_add(I, C, D) = \ideal_coset<A, add>(I, add(x, y))
-
-template<A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A>:
-    trust have quotient_ring_mul fn(I power_set(A), C, D \quotient_ring<A, add>(I)) \quotient_ring<A, add>(I):
-        forall I power_set(A), C, D \quotient_ring<A, add>(I), x, y A:
-            $is_commutative_ring(A, add, zero, neg, mul, one)
-            $is_ideal(A, add, zero, neg, mul, I)
-            C = \ideal_coset<A, add>(I, x)
-            D = \ideal_coset<A, add>(I, y)
-            =>:
-                quotient_ring_mul(I, C, D) = \ideal_coset<A, add>(I, mul(x, y))
-
-# Source construction `Ideal.Quotient.lift`: a ring homomorphism descends
-# precisely when I is contained in its kernel.
-template<A, S set, addR fn(x, y A) A, zeroR A, negR fn(x A) A, mulR fn(x, y A) A, oneR A, addS fn(x, y S) S, zeroS S, negS fn(x S) S, mulS fn(x, y S) S, oneS S>:
-    trust have ideal_quotient_lift fn(I power_set(A), f fn(x A) S) fn(C \quotient_ring<A, addR>(I)) S:
-        forall I power_set(A), f fn(x A) S, x A:
-            $is_commutative_ring(A, addR, zeroR, negR, mulR, oneR)
-            $is_commutative_ring(S, addS, zeroS, negS, mulS, oneS)
-            $is_ring_hom(A, S, addR, zeroR, negR, mulR, oneR, addS, zeroS, negS, mulS, oneS, f)
-            $is_ideal(A, addR, zeroR, negR, mulR, I)
-            I $subset \ring_kernel<A, S, zeroS, f>
-            =>:
-                ideal_quotient_lift(I, f)(\ideal_quotient_projection<A, addR>(I, x)) = f(x)
-
 prop ideal_sum_member(A set, add fn(x, y A) A, I, J power_set(A), x A):
     exist a, b A st {a $in I, b $in J, x = add(a, b)}
 
@@ -830,48 +409,6 @@ template<A set, add fn(x, y A) A>:
 
 template<A set>:
     have fn ideal_infimum_pair(I, J power_set(A)) power_set(A) = intersect(I, J)
-
-template<A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A>:
-    trust have ideal_product fn(I, J power_set(A)) power_set(A):
-        forall I, J power_set(A):
-            $is_commutative_ring(A, add, zero, neg, mul, one)
-            $is_ideal(A, add, zero, neg, mul, I)
-            $is_ideal(A, add, zero, neg, mul, J)
-            =>:
-                $is_ideal(A, add, zero, neg, mul, ideal_product(I, J))
-                ideal_product(I, J) $subset I
-                ideal_product(I, J) $subset J
-
-# The source records all three containment consequences of ideal multiplication.
-thm ideal_product_le_left:
-    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I, J power_set(A):
-        $is_commutative_ring(A, add, zero, neg, mul, one)
-        $is_ideal(A, add, zero, neg, mul, I)
-        $is_ideal(A, add, zero, neg, mul, J)
-        =>:
-            \ideal_product<A, add, zero, neg, mul, one>(I, J) $subset I
-    # Trust reason: ideal products are generated by products with a factor in I.
-    trust \ideal_product<A, add, zero, neg, mul, one>(I, J) $subset I
-
-thm ideal_product_le_right:
-    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I, J power_set(A):
-        $is_commutative_ring(A, add, zero, neg, mul, one)
-        $is_ideal(A, add, zero, neg, mul, I)
-        $is_ideal(A, add, zero, neg, mul, J)
-        =>:
-            \ideal_product<A, add, zero, neg, mul, one>(I, J) $subset J
-    # Trust reason: ideal products are generated by products with a factor in J.
-    trust \ideal_product<A, add, zero, neg, mul, one>(I, J) $subset J
-
-thm ideal_product_le_infimum:
-    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I, J power_set(A):
-        $is_commutative_ring(A, add, zero, neg, mul, one)
-        $is_ideal(A, add, zero, neg, mul, I)
-        $is_ideal(A, add, zero, neg, mul, J)
-        =>:
-            \ideal_product<A, add, zero, neg, mul, one>(I, J) $subset \ideal_infimum_pair<A>(I, J)
-    # Trust reason: combine the two product containment inclusions.
-    trust \ideal_product<A, add, zero, neg, mul, one>(I, J) $subset \ideal_infimum_pair<A>(I, J)
 
 template<A, S set, f fn(x A) S>:
     have fn ideal_comap(J power_set(S)) power_set(A) = {x A: f(x) $in J}
@@ -887,36 +424,6 @@ template<A, S set, zeroS S, f fn(x A) S>:
 
 template<A, S set, f fn(x A) S>:
     have ring_range power_set(S) = \ideal_map<A, S, f>(A)
-
-thm ideal_quotient_kernel_membership_forward:
-    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I power_set(A), x A:
-        $is_commutative_ring(A, add, zero, neg, mul, one)
-        $is_ideal(A, add, zero, neg, mul, I)
-        \ideal_quotient_projection<A, add>(I, x) = \ideal_quotient_projection<A, add>(I, zero)
-        =>:
-            x $in I
-    # Trust reason: equality with the zero coset implies ideal membership.
-    trust x $in I
-
-thm ideal_quotient_kernel_membership_reverse:
-    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I power_set(A), x A:
-        $is_commutative_ring(A, add, zero, neg, mul, one)
-        $is_ideal(A, add, zero, neg, mul, I)
-        x $in I
-        =>:
-            \ideal_quotient_projection<A, add>(I, x) = \ideal_quotient_projection<A, add>(I, zero)
-    # Trust reason: ideal membership gives equality with the zero coset.
-    trust \ideal_quotient_projection<A, add>(I, x) = \ideal_quotient_projection<A, add>(I, zero)
-
-thm ring_quotient_kernel_equiv_range:
-    ? forall A, S set, addR fn(x, y A) A, zeroR A, negR fn(x A) A, mulR fn(x, y A) A, oneR A, addS fn(x, y S) S, zeroS S, negS fn(x S) S, mulS fn(x, y S) S, oneS S, f fn(x A) S:
-        $is_commutative_ring(A, addR, zeroR, negR, mulR, oneR)
-        $is_commutative_ring(S, addS, zeroS, negS, mulS, oneS)
-        $is_ring_hom(A, S, addR, zeroR, negR, mulR, oneR, addS, zeroS, negS, mulS, oneS, f)
-        =>:
-            $chap4::bijective_fn(\quotient_ring<A, addR>(\ring_kernel<A, S, zeroS, f>), \ring_range<A, S, f>, \ideal_quotient_lift<A, \ring_range<A, S, f>, addR, zeroR, negR, mulR, oneR, addS, zeroS, negS, mulS, oneS>(\ring_kernel<A, S, zeroS, f>, f))
-    # Trust reason: first isomorphism theorem for commutative rings.
-    trust $chap4::bijective_fn(\quotient_ring<A, addR>(\ring_kernel<A, S, zeroS, f>), \ring_range<A, S, f>, \ideal_quotient_lift<A, \ring_range<A, S, f>, addR, zeroR, negR, mulR, oneR, addS, zeroS, negS, mulS, oneS>(\ring_kernel<A, S, zeroS, f>, f))
 
 prop is_commutative_ring_ideal_family(Index, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I fn(i Index) power_set(A)):
     $is_commutative_ring(A, add, zero, neg, mul, one)
@@ -950,79 +457,6 @@ prop is_quotient_tuple(Index, A set, add fn(x, y A) A, I fn(i Index) power_set(A
 template<Index, A set, add fn(x, y A) A, I fn(i Index) power_set(A)>:
     have quotient_product power_set(fn(i Index) power_set(A)) = {q fn(i Index) power_set(A): $is_quotient_tuple(Index, A, add, I, q)}
 
-# Source construction `chineseMap`. Its quotient-ring source and target are
-# meaningful only for a commutative ring and a family of actual ideals. Litex
-# records the guarded underlying map and component equation here, rather than
-# falsely claiming a full ring-hom structure without quotient-ring operations.
-template<Index, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I fn(i Index) power_set(A)>:
-    trust have chineseMap fn(C \quotient_ring<A, add>(\ideal_infimum<Index, A, I>)) \quotient_product<Index, A, add, I>:
-        forall x A, i Index:
-            $is_commutative_ring_ideal_family(Index, A, add, zero, neg, mul, one, I)
-            =>:
-                chineseMap(\ideal_quotient_projection<A, add>(\ideal_infimum<Index, A, I>, x))(i) = \ideal_quotient_projection<A, add>(I(i), x)
-
-thm chineseMap_mk:
-    ? forall Index, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I fn(i Index) power_set(A), x A, i Index:
-        $is_commutative_ring_ideal_family(Index, A, add, zero, neg, mul, one, I)
-        =>:
-            \chineseMap<Index, A, add, zero, neg, mul, one, I>(\ideal_quotient_projection<A, add>(\ideal_infimum<Index, A, I>, x))(i) = \ideal_quotient_projection<A, add>(I(i), x)
-    # Trust reason: expose the representative equation stored by chineseMap.
-    trust \chineseMap<Index, A, add, zero, neg, mul, one, I>(\ideal_quotient_projection<A, add>(\ideal_infimum<Index, A, I>, x))(i) = \ideal_quotient_projection<A, add>(I(i), x)
-
-thm chineseMap_mk_prime:
-    ? forall Index, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I fn(i Index) power_set(A), x A, i Index:
-        $is_commutative_ring_ideal_family(Index, A, add, zero, neg, mul, one, I)
-        =>:
-            \chineseMap<Index, A, add, zero, neg, mul, one, I>(\ideal_coset<A, add>(\ideal_infimum<Index, A, I>, x))(i) = \ideal_coset<A, add>(I(i), x)
-    # Trust reason: source lemma chineseMap_mk' in coset notation.
-    trust \chineseMap<Index, A, add, zero, neg, mul, one, I>(\ideal_coset<A, add>(\ideal_infimum<Index, A, I>, x))(i) = \ideal_coset<A, add>(I(i), x)
-
-thm chineseMap_inj:
-    ? forall Index, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I fn(i Index) power_set(A):
-        $is_commutative_ring_ideal_family(Index, A, add, zero, neg, mul, one, I)
-        =>:
-            $chap4::injective_fn(\quotient_ring<A, add>(\ideal_infimum<Index, A, I>), \quotient_product<Index, A, add, I>, \chineseMap<Index, A, add, zero, neg, mul, one, I>)
-    # Trust reason: equal coordinate cosets imply equality modulo the ideal infimum.
-    trust $chap4::injective_fn(\quotient_ring<A, add>(\ideal_infimum<Index, A, I>), \quotient_product<Index, A, add, I>, \chineseMap<Index, A, add, zero, neg, mul, one, I>)
-
-thm isCoprime_Inf:
-    ? forall Index finite_set, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I power_set(A), J fn(i Index) power_set(A):
-        $is_commutative_ring(A, add, zero, neg, mul, one)
-        $is_ideal(A, add, zero, neg, mul, I)
-        $is_commutative_ring_ideal_family(Index, A, add, zero, neg, mul, one, J)
-        forall i Index:
-            $ideals_coprime(A, add, zero, neg, mul, one, I, J(i))
-        =>:
-            $ideals_coprime(A, add, zero, neg, mul, one, I, \ideal_infimum<Index, A, J>)
-    # Trust reason: finite induction on the family of pairwise coprime ideals.
-    trust $ideals_coprime(A, add, zero, neg, mul, one, I, \ideal_infimum<Index, A, J>)
-
-thm chineseMap_surj:
-    ? forall Index finite_set, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I fn(i Index) power_set(A):
-        $ideals_pairwise_coprime(Index, A, add, zero, neg, mul, one, I)
-        =>:
-            $chap4::surjective_fn(\quotient_ring<A, add>(\ideal_infimum<Index, A, I>), \quotient_product<Index, A, add, I>, \chineseMap<Index, A, add, zero, neg, mul, one, I>)
-    # Trust reason: Chinese-remainder idempotent construction.
-    trust $chap4::surjective_fn(\quotient_ring<A, add>(\ideal_infimum<Index, A, I>), \quotient_product<Index, A, add, I>, \chineseMap<Index, A, add, zero, neg, mul, one, I>)
-
-# Source construction `chineseIso`: Litex retains its guarded underlying map
-# and bijectivity fact. A bundled ring equivalence is not claimed until the
-# quotient-ring operation package is available.
-template<Index, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I fn(i Index) power_set(A)>:
-    trust have chineseIso fn(C \quotient_ring<A, add>(\ideal_infimum<Index, A, I>)) \quotient_product<Index, A, add, I>:
-        forall C \quotient_ring<A, add>(\ideal_infimum<Index, A, I>):
-            $ideals_pairwise_coprime(Index, A, add, zero, neg, mul, one, I)
-            =>:
-                chineseIso(C) = \chineseMap<Index, A, add, zero, neg, mul, one, I>(C)
-
-thm chineseIso_is_bijective:
-    ? forall Index finite_set, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I fn(i Index) power_set(A):
-        $ideals_pairwise_coprime(Index, A, add, zero, neg, mul, one, I)
-        =>:
-            $chap4::bijective_fn(\quotient_ring<A, add>(\ideal_infimum<Index, A, I>), \quotient_product<Index, A, add, I>, \chineseIso<Index, A, add, zero, neg, mul, one, I>)
-    # Trust reason: combine chineseMap_inj and chineseMap_surj.
-    trust $chap4::bijective_fn(\quotient_ring<A, add>(\ideal_infimum<Index, A, I>), \quotient_product<Index, A, add, I>, \chineseIso<Index, A, add, zero, neg, mul, one, I>)
-
 # ---------------------------------------------------------------------------
 # 9.2.3 Algebras and polynomials
 # ---------------------------------------------------------------------------
@@ -1051,113 +485,5 @@ prop polynomial_has_finite_support(A set, zero A, p fn(n N) A):
 template<A set, zero A>:
     have polynomial_ring power_set(fn(n N) A) = {p fn(n N) A: $polynomial_has_finite_support(A, zero, p)}
 
-template<A set, zero, one A>:
-    trust have polynomial_X \polynomial_ring<A, zero>:
-        polynomial_X(1) = one
-        forall n N:
-            n != 1
-            =>:
-                polynomial_X(n) = zero
-
-template<A set, zero A>:
-    trust have polynomial_C fn(r A) \polynomial_ring<A, zero>:
-        polynomial_C(r)(0) = r
-        forall n N:
-            n != 0
-            =>:
-                polynomial_C(r)(n) = zero
-
 template<A set, zero A>:
     have fn polynomial_coeff(p \polynomial_ring<A, zero>, n N) A = p(n)
-
-template<A set, zero A, add fn(x, y A) A>:
-    trust have polynomial_add fn(p, q \polynomial_ring<A, zero>) \polynomial_ring<A, zero>:
-        forall n N:
-            polynomial_add(p, q)(n) = add(p(n), q(n))
-
-template<A set, zero A, add fn(x, y A) A, mul fn(x, y A) A>:
-    # The source operation is coefficient convolution.  Litex has no finite
-    # summation interface for the convolution formula yet, so this is only a
-    # selected polynomial operation, with no unproved coefficient equation.
-    trust have polynomial_mul fn(p, q \polynomial_ring<A, zero>) \polynomial_ring<A, zero>
-
-template<A set, zero A>:
-    trust have polynomial_natDegree fn(p \polynomial_ring<A, zero>) N:
-        forall p \polynomial_ring<A, zero>:
-            p = fn(n N) A {zero}
-            =>:
-                polynomial_natDegree(p) = 0
-        forall p \polynomial_ring<A, zero>:
-            p != fn(n N) A {zero}
-            =>:
-                p(polynomial_natDegree(p)) != zero
-        forall p \polynomial_ring<A, zero>, n N:
-            p(n) != zero
-            =>:
-                n <= polynomial_natDegree(p)
-
-template<A set, zero A, add fn(x, y A) A, mul fn(x, y A) A>:
-    # Composition and evaluation are retained as callable source operations;
-    # their recursive/coefficient constructions are not claimed here.
-    trust have polynomial_comp fn(p, q \polynomial_ring<A, zero>) \polynomial_ring<A, zero>
-
-template<A set, zero A, add fn(x, y A) A, mul fn(x, y A) A>:
-    trust have polynomial_eval fn(p \polynomial_ring<A, zero>, x A) A
-
-prop is_polynomial_root(A set, zero A, add fn(x, y A) A, mul fn(x, y A) A, p \polynomial_ring<A, zero>, r A):
-    \polynomial_eval<A, zero, add, mul>(p, r) = zero
-
-template<A set, zero A, add fn(x, y A) A, mul fn(x, y A) A>:
-    have fn polynomial_roots(p \polynomial_ring<A, zero>) power_set(A) = {r A: $is_polynomial_root(A, zero, add, mul, p, r)}
-
-thm polynomial_root_iff_eval_zero_forward:
-    ? forall A set, zero A, add fn(x, y A) A, mul fn(x, y A) A, p \polynomial_ring<A, zero>, r A:
-        r $in \polynomial_roots<A, zero, add, mul>(p)
-        =>:
-            \polynomial_eval<A, zero, add, mul>(p, r) = zero
-    # Trust reason: unfold the root set-builder.
-    trust \polynomial_eval<A, zero, add, mul>(p, r) = zero
-
-thm polynomial_root_iff_eval_zero_reverse:
-    ? forall A set, zero A, add fn(x, y A) A, mul fn(x, y A) A, p \polynomial_ring<A, zero>, r A:
-        \polynomial_eval<A, zero, add, mul>(p, r) = zero
-        =>:
-            r $in \polynomial_roots<A, zero, add, mul>(p)
-    # Trust reason: fold the root set-builder.
-    trust r $in \polynomial_roots<A, zero, add, mul>(p)
-
-thm polynomial_natDegree_mul:
-    ? forall A set, zero, one A, add fn(x, y A) A, mul fn(x, y A) A, p, q \polynomial_ring<A, zero>:
-        $is_semiring(A, add, zero, mul, one)
-        $has_no_zero_divisors(A, zero, mul)
-        p != fn(n N) A {zero}
-        q != fn(n N) A {zero}
-        =>:
-            \polynomial_natDegree<A, zero>(\polynomial_mul<A, zero, add, mul>(p, q)) = \polynomial_natDegree<A, zero>(p) + \polynomial_natDegree<A, zero>(q)
-    # Trust reason: degree of a product over a domain.
-    trust \polynomial_natDegree<A, zero>(\polynomial_mul<A, zero, add, mul>(p, q)) = \polynomial_natDegree<A, zero>(p) + \polynomial_natDegree<A, zero>(q)
-
-thm polynomial_natDegree_comp:
-    ? forall A set, zero, one A, add fn(x, y A) A, mul fn(x, y A) A, p, q \polynomial_ring<A, zero>:
-        $is_semiring(A, add, zero, mul, one)
-        $has_no_zero_divisors(A, zero, mul)
-        =>:
-            \polynomial_natDegree<A, zero>(\polynomial_comp<A, zero, add, mul>(p, q)) = \polynomial_natDegree<A, zero>(p) * \polynomial_natDegree<A, zero>(q)
-    # Trust reason: degree of polynomial composition over a domain.
-    trust \polynomial_natDegree<A, zero>(\polynomial_comp<A, zero, add, mul>(p, q)) = \polynomial_natDegree<A, zero>(p) * \polynomial_natDegree<A, zero>(q)
-
-# The source object is an element of `MvPolynomial (Fin 2) R`, not a function
-# from points to reals.  Litex does not yet expose multivariate-polynomial
-# syntax, so keep a smallest trusted carrier/evaluation interface instead of
-# mislabelling its evaluation formula as the polynomial itself.
-trust have bivariate_polynomial_R nonempty_set
-trust have bivariate_polynomial_eval fn(P bivariate_polynomial_R, p cart(R, R)) R
-trust have circleEquation bivariate_polynomial_R:
-    forall p cart(R, R):
-        bivariate_polynomial_eval(circleEquation, p) = p[1]^2 + p[2]^2 - 1
-
-thm circleEquation_at_one_zero:
-    ? forall:
-        bivariate_polynomial_eval(circleEquation, (1, 0)) = 0
-    # Trust reason: evaluate the source multivariate polynomial at the vector (1, 0).
-    trust bivariate_polynomial_eval(circleEquation, (1, 0)) = 0

@@ -644,6 +644,96 @@ concepts and intermediate nodes that determine later interfaces.
   inverse may remain named proof boundaries. Both selected maps must keep an
   explicit specification bridge until selector elimination is automatic.
 
+### Adjoints, conjugate transpose, self-adjointness, and normality
+
+- **Ordinary meaning:** The adjoint `T* : W -> V` is the unique linear map
+  satisfying `<T v,w>_W = <v,T* w>_V`. Conjugate transpose is its coordinate
+  matrix operation in orthonormal bases. An operator is self-adjoint when
+  `T=T*`, and normal when `T T*=T* T`.
+- **Semantic role:** Canonically selected linear map; formula-defined matrix
+  function; two operator relations.
+- **Ideal Litex form:** Define `prop is_adjoint_of`, prove unique existence in
+  the reverse linear-map carrier, then expose `have fn adjoint by exist!`.
+  Define `conjugate_transpose` entrywise, `is_self_adjoint` by one function
+  equality, and `is_normal` by one composition equality.
+- **Interface sketch:** `$is_adjoint_of(...,T,S)`, `\adjoint(...)(T)`,
+  `\conjugate_transpose(...)(A)`, `$is_self_adjoint(...,T)`, and
+  `$is_normal(...,T)`.
+- **Nearest wrong alternative:** A candidate-only adjoint predicate leaves no
+  `T*` for later chapters; trusting an arbitrary map hides Riesz uniqueness;
+  expanded norm conditions are characterizations of normality, not its
+  definition; public real/imaginary-part helpers used only by Result 7.23
+  would be proof-only API sprawl.
+- **Dependencies:** Riesz representation by `existence/uniqueness`; assembly
+  into a linear map by `proof`; scalar conjugation and matrix coordinates by
+  `definition`; self-adjoint and normal consequences by `proof`.
+- **Downstream uses:** Spectral theorems, positivity, square roots, unitary
+  operators, singular values, polar decomposition, and operator norm.
+- **Allowable hole:** Riesz-to-linear-map assembly remains one named
+  construction boundary. The mathematical unique-existence statement is
+  explicit, but the current verifier rejects `have fn ... by exist!` when its
+  selected value belongs to the linear-map subtype. Thus `adjoint` keeps one
+  typed direct trust and one visible spec bridge until subtype-valued
+  parameterized selection works.
+
+### Orthonormal spectral bases
+
+- **Ordinary meaning:** A spectral basis is an orthonormal basis in which an
+  operator has a diagonal matrix, equivalently an orthonormal basis consisting
+  of eigenvectors. Over the reals this characterizes self-adjoint operators;
+  over the complexes it characterizes normal operators.
+- **Semantic role:** Two existential basis relations and two source-facing
+  three-way equivalence theorems; no canonical basis is selected.
+- **Ideal Litex form:** Use `prop has_orthonormal_diagonalizing_basis` and
+  `prop has_orthonormal_eigenvector_basis`, then state each spectral theorem as
+  two adjacent iff clauses so all three source conditions are genuinely
+  equivalent.
+- **Interface sketch:** `$has_orthonormal_diagonalizing_basis(...,T)`,
+  `$has_orthonormal_eigenvector_basis(...,T)`, `real_spectral_theorem`, and
+  `complex_spectral_theorem`.
+- **Nearest wrong alternative:** Selecting a preferred eigenbasis invents
+  noncanonical data; using only ordinary diagonalizability loses
+  orthonormality; writing `A <=> B and C` is weaker than the source's three-way
+  equivalence because it does not separately imply `B <=> C`.
+- **Dependencies:** Real minimal-polynomial factorization and orthonormal
+  triangularization by `proof` for the real theorem; Schur triangularization,
+  the adjoint matrix bridge, and the normal norm equality by `proof` for the
+  complex theorem.
+- **Downstream uses:** Positive operators, square roots, isometries, singular
+  values, polar decomposition, and operator-norm formulas.
+- **Allowable hole:** The two spectral arguments may remain named proof
+  boundaries until triangular-matrix coefficient elimination and the
+  self-adjoint minimal-polynomial factorization route are checked.
+
+### Positive operators and positive square roots
+
+- **Ordinary meaning:** An operator is positive when it is self-adjoint and
+  its quadratic form is nonnegative. A square root of `T` is an operator `R`
+  with `R^2=T`; a positive operator has exactly one positive square root.
+- **Semantic role:** Positivity and being a square root are relations. The
+  positive square root is a canonical operator selected only after its
+  existence and uniqueness theorem.
+- **Ideal Litex form:** Define `prop is_positive_operator` and
+  `prop is_square_root_of`; state the six conditions in Result 7.38 as
+  adjacent iff clauses; prove `exist! R` for the positive square root and then
+  expose `have fn positive_square_root by exist!`.
+- **Interface sketch:** `$is_positive_operator(...,T)`,
+  `$is_square_root_of(...,T,R)`, and `\positive_square_root(...)(T)`.
+- **Nearest wrong alternative:** Selecting a spectral basis invents
+  noncanonical data; selecting a square root before uniqueness permits the
+  many nonpositive roots; expanding positivity into a repeated eigenbasis
+  construction obscures its one quadratic-form condition.
+- **Dependencies:** The spectral theorem and nonnegative scalar square roots
+  give existence; spectral eigenvectors give uniqueness; the selected root's
+  defining relation gives Result 7.43 in two mathematical moves.
+- **Downstream uses:** Positive-definite operators, Cholesky factorization,
+  singular values, polar decomposition, and operator-norm formulas.
+- **Allowable hole:** The six-condition cycle and spectral uniqueness proof
+  may remain named proof boundaries. The mathematical `exist!` statement is
+  explicit, but the current verifier does not instantiate the subtype-valued
+  selector in a real importing caller; one typed selection boundary and one
+  specification bridge may remain until that works.
+
 ## Dependency map
 
 Edge legend used below: `sig` = signature, `def` = definition, `law` =
@@ -721,6 +811,13 @@ orthonormal coordinates + linear functional --ex/uniq--> Riesz representative
 orthogonality + subset --def--> orthogonal complement --proof--> direct decomposition
 direct decomposition --ex/uniq--> orthogonal projection
 null/range + orthogonal projection + restricted inverse --ex/uniq--> pseudoinverse
+Riesz representative --ex/uniq+proof--> adjoint --def/proof--> self-adjoint / normal
+adjoint + orthonormal coordinates --proof--> conjugate transpose matrix bridge
+self-adjoint + real minimal-polynomial factors + orthonormal triangularization --proof--> real spectral theorem
+normal + Schur + adjoint norm equality --proof--> complex spectral theorem
+real/complex spectral theorem + nonnegative eigenvalues --ex--> positive square root
+positive square-root spectral action --uniq/select--> positive square root
+positive square root + inner-product definiteness --proof--> zero quadratic form criterion
 ```
 
 Current trust boundaries have important downstream fan-out:
@@ -780,6 +877,18 @@ proof debt, not a different concept model.
 16. Define orthogonal complements as sets; prove the finite direct
     decomposition before selecting projections; derive the restricted
     null-complement bijection before selecting pseudoinverses.
+17. Define the adjoint relation from the two inner products; record Riesz
+    unique existence and the current subtype-selection boundary. Then define
+    conjugate transpose, self-adjointness, and normality before their spectral
+    consequences.
+18. Express orthonormal diagonalizing and eigenvector bases as existential
+    relations. Prove the real spectral theorem through minimal-polynomial
+    factorization and the complex theorem through Schur triangularization;
+    never select a canonical spectral basis.
+19. Define positivity and the square-root relation before stating their six
+    equivalent conditions. Prove unique existence of the positive square root,
+    select only that operator, and derive the zero-quadratic-form result from
+    the selected root in the source's two moves.
 This order follows the book through Chapters 1–3. Polynomial representation
 is introduced in Section 2A but its main theorem branch is intentionally
 resumed in Chapter 4 after the shared scalar/list foundations are stable.

@@ -1,6 +1,6 @@
 # Chapter 2 — Basics
 # Independent MIL-derived Litex pressure-test corpus; see README for scope,
-# attribution, and checked/trusted status.
+# attribution, and checked/deferred status.
 
 # 2.1 Calculating
 
@@ -378,17 +378,30 @@ forall a, b R:
 claim:
     ? forall a, b, c R:
         finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) = finite_set_min(union({a}, {finite_set_min(union({b}, {c}))}))
-    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) <= finite_set_min(union({a}, {b})) <= a
-    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) <= finite_set_min(union({a}, {b})) <= b
-    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) <= c
-    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) <= finite_set_min(union({b}, {c}))
-    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) <= finite_set_min(union({a}, {finite_set_min(union({b}, {c}))}))
-    finite_set_min(union({a}, {finite_set_min(union({b}, {c}))})) <= a
-    finite_set_min(union({a}, {finite_set_min(union({b}, {c}))})) <= finite_set_min(union({b}, {c})) <= b
-    finite_set_min(union({a}, {finite_set_min(union({b}, {c}))})) <= finite_set_min(union({b}, {c})) <= c
-    finite_set_min(union({a}, {finite_set_min(union({b}, {c}))})) <= finite_set_min(union({a}, {b}))
-    finite_set_min(union({a}, {finite_set_min(union({b}, {c}))})) <= finite_set_min(union({finite_set_min(union({a}, {b}))}, {c}))
-    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) = finite_set_min(union({a}, {finite_set_min(union({b}, {c}))}))
+    have ab R = finite_set_min(union({a}, {b}))
+    have bc R = finite_set_min(union({b}, {c}))
+    have left R = finite_set_min(union({ab}, {c}))
+    have right R = finite_set_min(union({a}, {bc}))
+    left = finite_set_min(union({ab}, {c})) <= ab
+    ab = finite_set_min(union({a}, {b})) <= a
+    left <= ab = finite_set_min(union({a}, {b})) <= b
+    left = finite_set_min(union({ab}, {c})) <= c
+    left <= b
+    left <= finite_set_min(union({b}, {c})) = bc
+    left <= a
+    left <= finite_set_min(union({a}, {bc})) = right
+    right = finite_set_min(union({a}, {bc})) <= a
+    right = finite_set_min(union({a}, {bc})) <= bc
+    bc = finite_set_min(union({b}, {c})) <= b
+    right <= bc = finite_set_min(union({b}, {c})) <= c
+    right <= b
+    right <= c
+    right <= finite_set_min(union({a}, {b})) = ab
+    right <= finite_set_min(union({ab}, {c})) = left
+    left = right
+    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) = finite_set_min(union({ab}, {c})) = left
+    right = finite_set_min(union({a}, {bc})) = finite_set_min(union({a}, {finite_set_min(union({b}, {c}))}))
+    finite_set_min(union({finite_set_min(union({a}, {b}))}, {c})) = left = right = finite_set_min(union({a}, {finite_set_min(union({b}, {c}))}))
 
 # Translation preserves minimum. For the forward inequality, translate the two
 # defining lower bounds. For the reverse inequality, subtract c, form a lower
@@ -420,10 +433,10 @@ forall a, b R:
 # three visible inputs stay in N.
 claim:
     ? forall x, y, z N:
-        $std::basics::divides(x, y)
-        $std::basics::divides(y, z)
+        $basics::divides(x, y)
+        $basics::divides(y, z)
         =>:
-            $std::basics::divides(x, z)
+            $basics::divides(x, z)
     obtain k from exist k Z st {y = x * k}
     obtain l from exist l Z st {z = y * l}
     witness exist m Z st {z = x * m} from k * l:
@@ -433,19 +446,19 @@ claim:
 # exposes y*z as the witness.
 claim:
     ? forall x, y, z N:
-        $std::basics::divides(x, y * x * z)
+        $basics::divides(x, y * x * z)
     witness exist k Z st {y * x * z = x * k} from y * z:
         y * x * z = x * (y * z)
 
 # Every natural number divides its square, witnessed by the number itself in Z.
 claim:
     ? forall x N:
-        $std::basics::divides(x, x^2)
+        $basics::divides(x, x^2)
     witness exist k Z st {x^2 = x * k} from x:
         x^2 = x * x
 
 # Gcd symmetry on the nonzero natural pairs supported by the frozen std
-# interface. Unlike the source's total Nat.gcd, std::basics::gcd is undefined
+# interface. Unlike the source's total Nat.gcd, basics::gcd is undefined
 # at (0,0), so this is an explicit nonzero adaptation rather than a claim of
 # total-source equivalence. Both guard orientations make the two calls visibly
 # well-defined. Each gcd divides both inputs, hence each is at most the other.
@@ -454,15 +467,15 @@ claim:
         a != 0 or b != 0
         b != 0 or a != 0
         =>:
-            std::basics::gcd(a, b) = std::basics::gcd(b, a)
-    by thm std::basics::gcd_positive(a, b)
-    by thm std::basics::gcd_divides_left(a, b)
-    by thm std::basics::gcd_divides_right(a, b)
-    by thm std::basics::common_divisor_le_gcd(b, a, std::basics::gcd(a, b))
-    std::basics::gcd(a, b) <= std::basics::gcd(b, a)
-    by thm std::basics::gcd_positive(b, a)
-    by thm std::basics::gcd_divides_left(b, a)
-    by thm std::basics::gcd_divides_right(b, a)
-    by thm std::basics::common_divisor_le_gcd(a, b, std::basics::gcd(b, a))
-    std::basics::gcd(b, a) <= std::basics::gcd(a, b)
-    std::basics::gcd(a, b) = std::basics::gcd(b, a)
+            basics::gcd(a, b) = basics::gcd(b, a)
+    by thm basics::gcd_positive(a, b)
+    by thm basics::gcd_divides_left(a, b)
+    by thm basics::gcd_divides_right(a, b)
+    by thm basics::common_divisor_le_gcd(b, a, basics::gcd(a, b))
+    basics::gcd(a, b) <= basics::gcd(b, a)
+    by thm basics::gcd_positive(b, a)
+    by thm basics::gcd_divides_left(b, a)
+    by thm basics::gcd_divides_right(b, a)
+    by thm basics::common_divisor_le_gcd(a, b, basics::gcd(b, a))
+    basics::gcd(b, a) <= basics::gcd(a, b)
+    basics::gcd(a, b) = basics::gcd(b, a)

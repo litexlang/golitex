@@ -1,0 +1,152 @@
+# Linear Algebra Done Right, fourth edition — Section 7C.
+# Positive Operators.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Geometry "&chap6a::InnerProductScalarGeometry<s, scalars>{scalar_geometry}"
+macro InnerSpace "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>"
+macro Inner "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}"
+macro Space "&chap1b::VectorSpace<s, scalars, V>{&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space}"
+macro Operators "\chap3a::linear_map_space<s, scalars, V, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space>"
+macro OperatorAdjoint "\chap7a::adjoint<s, scalars, scalar_geometry, V, V, inner_space, inner_space>"
+
+# A scalar is nonnegative when it is an embedded nonnegative real. This is the
+# scalar condition used for eigenvalues and diagonal entries below.
+prop is_nonnegative_scalar(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, lambda s):
+    exist r R st {r >= 0, lambda = @Geometry.real_embed(r)}
+
+# Definition 7.34. Self-adjointness makes each diagonal inner product real, so
+# positivity needs only its real-part comparison.
+prop is_positive_operator(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
+    $chap7a::is_self_adjoint(s, scalars, scalar_geometry, V, inner_space, T)
+    forall v V:
+        @Geometry.real_part(@Inner.inner(T(v), v)) >= 0
+
+# Terminology note. The source follows operator-theory convention and says
+# positive; positive semidefinite or nonnegative would be more literal names.
+
+# Example 7.35(a). The quadratic-form calculation is completion of a square.
+sketch:
+    forall x, y R:
+        2 * x^2 - 2 * x * y + y^2 = (x - y)^2 + x^2
+        (x - y)^2 + x^2 >= 0
+
+# Definition 7.36. S is a square root of T exactly when S^2=T. This algebraic
+# relation uses only the underlying vector space, not its inner product.
+prop is_square_root_of(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T, S \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>):
+    forall v V:
+        S(S(v)) = T(v)
+
+# Example 7.37. Applying the coordinate shift twice leaves only z3.
+sketch:
+    forall z1, z2, z3 R:
+        [([z2, z3, 0])(2), ([z2, z3, 0])(3), 0] = [z3, 0, 0]
+
+# Conditions (b)-(f) of Result 7.38 are kept as atomic relations so the
+# statement below can preserve the source's six-way equivalence.
+prop is_self_adjoint_with_nonnegative_spectrum(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
+    $chap7a::is_self_adjoint(s, scalars, scalar_geometry, V, inner_space, T)
+    forall lambda s:
+        $chap5a::is_eigenvalue(s, scalars, V, @Inner.vector_space, T, lambda)
+        =>:
+            $is_nonnegative_scalar(s, scalars, scalar_geometry, lambda)
+
+prop has_only_nonnegative_entries(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, n N_pos, values &chap1a::FiniteList<s, n>):
+    forall k N_pos:
+        k <= n
+        =>:
+            $is_nonnegative_scalar(s, scalars, scalar_geometry, &chap1a::FiniteList<s, n>{values}.entries(k))
+
+prop has_nonzero_orthonormal_nonnegative_diagonalization(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, n, basis), $chap5d::is_diagonal_matrix(s, scalars, n, \chap5c::matrix_of_operator<s, scalars, V, @Inner.vector_space, n>(basis, T)), $has_only_nonnegative_entries(s, scalars, scalar_geometry, n, \chap5c::matrix_diagonal<s, n>(\chap5c::matrix_of_operator<s, scalars, V, @Inner.vector_space, n>(basis, T)))}
+
+prop has_orthonormal_nonnegative_diagonalization(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
+    \chap2c::dimension<s, scalars, V, @Inner.vector_space> = 0 or $has_nonzero_orthonormal_nonnegative_diagonalization(s, scalars, scalar_geometry, V, inner_space, T)
+
+prop has_positive_square_root(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
+    exist S @Operators st {$is_positive_operator(s, scalars, scalar_geometry, V, inner_space, S), $is_square_root_of(s, scalars, V, @Inner.vector_space, T, S)}
+
+prop has_self_adjoint_square_root(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
+    exist S @Operators st {$chap7a::is_self_adjoint(s, scalars, scalar_geometry, V, inner_space, S), $is_square_root_of(s, scalars, V, @Inner.vector_space, T, S)}
+
+prop has_adjoint_square_factorization(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
+    exist S @Operators st {T = fn(v V) V {@OperatorAdjoint(S)(S(v))}}
+
+# Result 7.38. The proof follows the source cycle
+# (a)=>(b)=>(c)=>(d)=>(e)=>(f)=>(a), one mathematical move per edge.
+prop positive_operator_characterizations_statement(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
+    forall:
+        =>:
+            $is_positive_operator(s, scalars, scalar_geometry, V, inner_space, T)
+        <=>:
+            $is_self_adjoint_with_nonnegative_spectrum(s, scalars, scalar_geometry, V, inner_space, T)
+    forall:
+        =>:
+            $is_self_adjoint_with_nonnegative_spectrum(s, scalars, scalar_geometry, V, inner_space, T)
+        <=>:
+            $has_orthonormal_nonnegative_diagonalization(s, scalars, scalar_geometry, V, inner_space, T)
+    forall:
+        =>:
+            $has_orthonormal_nonnegative_diagonalization(s, scalars, scalar_geometry, V, inner_space, T)
+        <=>:
+            $has_positive_square_root(s, scalars, scalar_geometry, V, inner_space, T)
+    forall:
+        =>:
+            $has_positive_square_root(s, scalars, scalar_geometry, V, inner_space, T)
+        <=>:
+            $has_self_adjoint_square_root(s, scalars, scalar_geometry, V, inner_space, T)
+    forall:
+        =>:
+            $has_self_adjoint_square_root(s, scalars, scalar_geometry, V, inner_space, T)
+        <=>:
+            $has_adjoint_square_factorization(s, scalars, scalar_geometry, V, inner_space, T)
+
+axiom characterizations_of_positive_operators:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        =>:
+            $positive_operator_characterizations_statement(s, scalars, scalar_geometry, V, inner_space, T)
+
+# Result 7.39. A positive square root is constructed on a spectral basis by
+# taking nonnegative scalar square roots. Any other positive square root has
+# the same action on every T-eigenvector, hence on the whole spectral basis.
+axiom positive_square_root_exists_unique:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        $is_positive_operator(s, scalars, scalar_geometry, V, inner_space, T)
+        =>:
+            exist! S @Operators st {$is_positive_operator(s, scalars, scalar_geometry, V, inner_space, S), $is_square_root_of(s, scalars, V, @Inner.vector_space, T, S)}
+
+# Notation 7.40. Result 7.39 gives the mathematical unique-existence
+# interface. The current verifier does not instantiate this subtype-valued
+# parameterized selector in a real importing caller, so the callable map is the
+# one explicit typed selection boundary.
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace: $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space)>:
+    trust have positive_square_root fn(T @Operators: $is_positive_operator(s, scalars, scalar_geometry, V, inner_space, T)) @Operators
+
+# Selected-value bridge for downstream uses of sqrt(T).
+axiom positive_square_root_spec:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        $is_positive_operator(s, scalars, scalar_geometry, V, inner_space, T)
+        =>:
+            $is_positive_operator(s, scalars, scalar_geometry, V, inner_space, \positive_square_root<s, scalars, scalar_geometry, V, inner_space>(T))
+            $is_square_root_of(s, scalars, V, @Inner.vector_space, T, \positive_square_root<s, scalars, scalar_geometry, V, inner_space>(T))
+
+# Example 7.41. These are the scalar calculations behind the displayed square
+# roots of the two real 2-by-2 matrices.
+sketch:
+    2 >= 0
+    sqrt(2)^2 = 2
+    sqrt(2) != 0
+    (1 / sqrt(2))^2 + (1 / sqrt(2))^2 = 2 / sqrt(2)^2 = 2 / 2 = 1
+
+# Result 7.43. Write T=(sqrt T)^2. The zero quadratic form gives
+# ||sqrt(T)v||^2=0, hence sqrt(T)v=0; applying sqrt(T) once more gives Tv=0.
+axiom positive_operator_zero_quadratic_value_implies_zero_value:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators, v V:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        $is_positive_operator(s, scalars, scalar_geometry, V, inner_space, T)
+        @Inner.inner(T(v), v) = @Scalars.zero
+        =>:
+            T(v) = @Space.zero
