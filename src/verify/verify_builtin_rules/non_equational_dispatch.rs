@@ -77,6 +77,17 @@ impl Runtime {
             AtomicFact::FnEqualFact(fe) => {
                 self.verify_fn_equal_fact_with_builtin_rules(fe, verify_state)
             }
+            AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
+                if crate::verify::verify_proper_set_relations_builtin::is_builtin_proper_set_relation_fact(
+                    atomic_fact,
+                ) =>
+            {
+                // Proper containment is available in nested theorem-domain checks too.
+                // Example: `A $subset B` and `A != B` satisfy an `A $proper_subset B` premise.
+                Ok(self
+                    .verify_builtin_proper_set_relation_by_definition(atomic_fact, verify_state)?
+                    .unwrap_or_else(|| StmtUnknown::new().into()))
+            }
             _ => Ok((StmtUnknown::new()).into()),
         }
     }

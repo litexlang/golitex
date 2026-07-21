@@ -1471,6 +1471,34 @@ thm finite_sum_abs_nonnegative:
     0 <= sum(p, q, fn(i N_pos) R {abs(a(i))})
     sum(p, q, fn(i N_pos) R {abs(a(i))}) >= 0
 
+thm finite_tail_matches_finite_sum:
+    ? forall a seq(R), p, q N_pos:
+        p <= q
+        =>:
+            finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
+    by cases:
+        ? finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
+        case p = 1:
+            p - 1 = 0
+            partial_sum(a, 0) = 0
+            finite_tail_sum(a, p, q) = partial_sum(a, q) - partial_sum(a, p - 1)
+            partial_sum(a, p - 1) = 0
+            partial_sum(a, q) - partial_sum(a, p - 1) = partial_sum(a, q) - 0
+            partial_sum(a, q) - 0 = partial_sum(a, q)
+            finite_tail_sum(a, p, q) = partial_sum(a, q)
+            by thm partial_sum_matches_finite_sum(a, q)
+            partial_sum(a, q) = sum(1, q, fn(i N_pos) R {a(i)})
+            finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
+        case p > 1:
+            finite_tail_sum(a, p, q) = partial_sum(a, q) - partial_sum(a, p - 1)
+            by thm partial_sum_split_after(a, p - 1, q)
+            (p - 1) + 1 = p
+            partial_sum(a, q) = partial_sum(a, p - 1) + sum((p - 1) + 1, q, fn(i N_pos) R {a(i)})
+            sum((p - 1) + 1, q, fn(i N_pos) R {a(i)}) = sum(p, q, fn(i N_pos) R {a(i)})
+            partial_sum(a, q) = partial_sum(a, p - 1) + sum(p, q, fn(i N_pos) R {a(i)})
+            partial_sum(a, q) - partial_sum(a, p - 1) = sum(p, q, fn(i N_pos) R {a(i)})
+            finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
+
 thm finite_tail_abs_nonnegative:
     ? forall a seq(R), p, q N_pos:
         finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) >= 0
@@ -1479,14 +1507,11 @@ thm finite_tail_abs_nonnegative:
         case q < p:
             finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = 0
         case q >= p:
-            by cases:
-                ? finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) >= 0
-                case p = 1:
-                    by thm partial_sum_abs_matches_finite_sum(a, q)
-                    by thm finite_sum_abs_nonnegative(a, 1, q)
-                case p > 1:
-                    by thm partial_sum_split_after(fn(j N_pos) R {abs(a(j))}, p - 1, q)
-                    by thm finite_sum_abs_nonnegative(a, p, q)
+            by thm finite_tail_matches_finite_sum(fn(j N_pos) R {abs(a(j))}, p, q)
+            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)})
+            sum(p, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)}) = sum(p, q, fn(i N_pos) R {abs(a(i))})
+            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i N_pos) R {abs(a(i))})
+            by thm finite_sum_abs_nonnegative(a, p, q)
 
 thm finite_tail_abs_bound:
     ? forall a seq(R), p, q N_pos:
@@ -1497,16 +1522,14 @@ thm finite_tail_abs_bound:
             finite_tail_sum(a, p, q) = 0
             finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = 0
         case q >= p:
-            by cases:
-                ? abs(finite_tail_sum(a, p, q)) <= finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q)
-                case p = 1:
-                    by thm partial_sum_matches_finite_sum(a, q)
-                    by thm partial_sum_abs_matches_finite_sum(a, q)
-                    abs(sum(1, q, fn(i N_pos) R {a(i)})) <= sum(1, q, fn(i N_pos) R {abs(a(i))})
-                case p > 1:
-                    by thm partial_sum_split_after(a, p - 1, q)
-                    by thm partial_sum_split_after(fn(j N_pos) R {abs(a(j))}, p - 1, q)
-                    abs(sum(p, q, fn(i N_pos) R {a(i)})) <= sum(p, q, fn(i N_pos) R {abs(a(i))})
+            by thm finite_tail_matches_finite_sum(a, p, q)
+            by thm finite_tail_matches_finite_sum(fn(j N_pos) R {abs(a(j))}, p, q)
+            finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
+            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)})
+            sum(p, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)}) = sum(p, q, fn(i N_pos) R {abs(a(i))})
+            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i N_pos) R {abs(a(i))})
+            abs(finite_tail_sum(a, p, q)) = abs(sum(p, q, fn(i N_pos) R {a(i)}))
+            abs(sum(p, q, fn(i N_pos) R {a(i)})) <= sum(p, q, fn(i N_pos) R {abs(a(i))})
 
 thm absolute_tail_control:
     ? forall a seq(R), epsilon R_pos, n0 N_pos:
@@ -1728,6 +1751,7 @@ thm nonnegative_partial_sum_le_add:
             (n + h + 1) - 1 = n + h
             partial_sum(a, (n + h + 1) - 1) = partial_sum(a, n + h)
             partial_sum(a, (n + h + 1) - 1) + a(n + h + 1) = partial_sum(a, n + h) + a(n + h + 1)
+            by thm partial_sum_successor(a, n + h + 1)
             partial_sum(a, n + h + 1) = partial_sum(a, n + h) + a(n + h + 1)
             a(n + h + 1) >= 0
             partial_sum(a, n + h) <= partial_sum(a, n + h) + a(n + h + 1)
@@ -2051,6 +2075,7 @@ thm partial_sum_series_shift_plus_prefix:
             partial_sum(series_shift(a, h), 1 - 1) = partial_sum(series_shift(a, h), 0)
             partial_sum(series_shift(a, h), 0) = 0
             series_shift(a, h)(1) = a(1 + h)
+            by thm partial_sum_successor(series_shift(a, h), 1)
             partial_sum(series_shift(a, h), 1) = 0 + a(1 + h)
             0 + a(1 + h) = a(1 + h)
             1 + h $in N_pos
@@ -2068,6 +2093,7 @@ thm partial_sum_series_shift_plus_prefix:
             (k + 1) - 1 = k
             partial_sum(series_shift(a, h), (k + 1) - 1) = partial_sum(series_shift(a, h), k)
             series_shift(a, h)(k + 1) = a(k + 1 + h)
+            by thm partial_sum_successor(series_shift(a, h), k + 1)
             partial_sum(series_shift(a, h), k + 1) = partial_sum(series_shift(a, h), k) + a(k + 1 + h)
             partial_sum(series_shift(a, h), k + 1) + partial_sum(a, h) = (partial_sum(series_shift(a, h), k) + a(k + 1 + h)) + partial_sum(a, h)
             (partial_sum(series_shift(a, h), k) + a(k + 1 + h)) + partial_sum(a, h) = (partial_sum(series_shift(a, h), k) + partial_sum(a, h)) + a(k + 1 + h)
@@ -2075,6 +2101,7 @@ thm partial_sum_series_shift_plus_prefix:
             k + 1 + h $in N_pos
             (k + 1 + h) - 1 = k + h
             partial_sum(a, (k + 1 + h) - 1) = partial_sum(a, k + h)
+            by thm partial_sum_successor(a, k + 1 + h)
             partial_sum(a, k + 1 + h) = partial_sum(a, k + h) + a(k + 1 + h)
             partial_sum(series_shift(a, h), k + 1) + partial_sum(a, h) = partial_sum(a, k + 1 + h)
 
@@ -2099,14 +2126,19 @@ thm series_laws_tail_convergence:
                         n + h >= n >= n0
                         abs(fn(k N_pos) R {partial_sum(a, k)}(n + h) - L) < epsilon
                         fn(n N_pos) R {partial_sum(a, n + h)}(n) = fn(k N_pos) R {partial_sum(a, k)}(n + h)
+                        abs(fn(n N_pos) R {partial_sum(a, n + h)}(n) - L) = abs(fn(k N_pos) R {partial_sum(a, k)}(n + h) - L)
                         abs(fn(n N_pos) R {partial_sum(a, n + h)}(n) - L) < epsilon
         $chap6::has_limit(fn(n N_pos) R {partial_sum(a, n + h)}, L)
     by thm constant_sequence_has_strict_limit(partial_sum(a, h))
     by thm chap6::seq_sub_converges_to(fn(n N_pos) R {partial_sum(a, n + h)}, constant_sequence(partial_sum(a, h)), L, partial_sum(a, h))
     claim:
         ? forall n N_pos:
-            fn(i N_pos) R {partial_sum(a, i + h) - constant_sequence(partial_sum(a, h))(i)}(n) = fn(k N_pos) R {partial_sum(series_shift(a, h), k)}(n)
+            partial_sum(a, n + h) - constant_sequence(partial_sum(a, h))(n) = partial_sum(series_shift(a, h), n)
         by thm partial_sum_series_shift_plus_prefix(a, h, n)
+        constant_sequence(partial_sum(a, h))(n) = partial_sum(a, h)
+        partial_sum(series_shift(a, h), n) + partial_sum(a, h) = partial_sum(a, n + h)
+        partial_sum(a, n + h) - partial_sum(a, h) = partial_sum(series_shift(a, h), n)
+        partial_sum(a, n + h) - constant_sequence(partial_sum(a, h))(n) = partial_sum(series_shift(a, h), n)
     by thm strict_limit_extensional(fn(i N_pos) R {partial_sum(a, i + h) - constant_sequence(partial_sum(a, h))(i)}, fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h))
     by thm strict_limit_implies_closed_limit(fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h))
     witness exist T R st {$has_series_sum(series_shift(a, h), T)} from L - partial_sum(a, h)
@@ -2338,7 +2370,19 @@ thm nonnegative_series_bounded_partial_sums_converge:
         ? forall k N_pos:
             partial_sums(k) <= partial_sums(k + 1)
         by thm nonnegative_partial_sum_le_of_le(a, k, k + 1)
+        partial_sums(k) = partial_sum(a, k)
+        partial_sums(k + 1) = partial_sum(a, k + 1)
+        partial_sums(k) <= partial_sums(k + 1)
     by def $chap6::is_increasing_sequence(partial_sums)
+    claim:
+        ? forall n N_pos:
+            partial_sums(n) <= M
+        partial_sums = fn(k N_pos) R {partial_sum(a, k)}
+        partial_sums(n) = fn(k N_pos) R {partial_sum(a, k)}(n)
+        fn(k N_pos) R {partial_sum(a, k)}(n) = partial_sum(a, n)
+        partial_sums(n) = partial_sum(a, n)
+        partial_sum(a, n) <= M
+    by def $chap6::is_sequence_upper_bound(partial_sums, M)
     witness exist B R st {$chap6::is_sequence_upper_bound(partial_sums, B)} from M
     by thm chap6::bounded_increasing_sequence_converges(partial_sums)
     by thm chap6::convergent_sequence_has_limit(partial_sums)
@@ -2352,6 +2396,7 @@ thm nonnegative_series_bounded_partial_sums_converge:
             forall n N_pos:
                 n >= n0
                 =>:
+                    abs(partial_sums(n) - L) < epsilon
                     abs(partial_sums(n) - L) <= epsilon
     by def $has_limit(partial_sums, L)
     witness exist S R st {$has_series_sum(a, S)} from L
@@ -2577,6 +2622,7 @@ thm geometric_series_formula:
     x^(1 - 1) = x^0
     x^0 = 1
     geometric_series_terms(x)(1) = 1
+    by thm partial_sum_successor(geometric_series_terms(x), 1)
     partial_sum(geometric_series_terms(x), 1) = 0 + 1
     0 + 1 = 1
     partial_sum(geometric_series_terms(x), 1) + x / (1 - x) = 1 + x / (1 - x)
@@ -2622,6 +2668,7 @@ thm condensed_partial_sum_successor:
         partial_sum(condensed_terms(a), K + 1) = partial_sum(condensed_terms(a), K) + 2^K * a(2^K)
     (K + 1) - 1 = K
     partial_sum(condensed_terms(a), (K + 1) - 1) = partial_sum(condensed_terms(a), K)
+    by thm partial_sum_successor(condensed_terms(a), K + 1)
     condensed_terms(a)(K + 1) = 2^((K + 1) - 1) * a(2^((K + 1) - 1))
     (K + 1) - 1 = K
     2^((K + 1) - 1) = 2^K
@@ -2682,10 +2729,11 @@ thm nonnegative_partial_sums_monotone:
                             partial_sum(a, p0) <= partial_sum(a, r)
                             r + 1 $in N_pos
                             a(r + 1) >= 0
-                            (r + 1) - 1 = r
-                            partial_sum(a, (r + 1) - 1) = partial_sum(a, r)
-                            partial_sum(a, (r + 1) - 1) + a(r + 1) = partial_sum(a, r) + a(r + 1)
-                            partial_sum(a, r + 1) = partial_sum(a, r) + a(r + 1)
+                    (r + 1) - 1 = r
+                    partial_sum(a, (r + 1) - 1) = partial_sum(a, r)
+                    partial_sum(a, (r + 1) - 1) + a(r + 1) = partial_sum(a, r) + a(r + 1)
+                    by thm partial_sum_successor(a, r + 1)
+                    partial_sum(a, r + 1) = partial_sum(a, r) + a(r + 1)
                             partial_sum(a, r) <= partial_sum(a, r) + a(r + 1)
                             partial_sum(a, p0) <= partial_sum(a, r) <= partial_sum(a, r + 1)
                             partial_sum(a, p0) <= partial_sum(a, r + 1)
@@ -2788,6 +2836,7 @@ thm cauchy_condensation_partial_sum_lower_bound:
             partial_sum(a, 0) = 0
             partial_sum(a, 1 - 1) + a(1) = partial_sum(a, 0) + a(1)
             partial_sum(a, 0) + a(1) = 0 + a(1)
+            by thm partial_sum_successor(a, 1)
             partial_sum(a, 1) = 0 + a(1)
             0 + a(1) = a(1)
             condensed_terms(a)(1) = 2^(1 - 1) * a(2^(1 - 1))
@@ -2800,6 +2849,7 @@ thm cauchy_condensation_partial_sum_lower_bound:
             partial_sum(condensed_terms(a), 0) = 0
             partial_sum(condensed_terms(a), 1 - 1) + condensed_terms(a)(1) = partial_sum(condensed_terms(a), 0) + condensed_terms(a)(1)
             partial_sum(condensed_terms(a), 0) + condensed_terms(a)(1) = 0 + condensed_terms(a)(1)
+            by thm partial_sum_successor(condensed_terms(a), 1)
             partial_sum(condensed_terms(a), 1) = 0 + condensed_terms(a)(1)
             0 + condensed_terms(a)(1) = condensed_terms(a)(1)
             partial_sum(condensed_terms(a), 1) = a(1)
@@ -2870,6 +2920,7 @@ thm cauchy_condensation_partial_sum_upper_strong:
             partial_sum(condensed_terms(a), 0) = 0
             partial_sum(condensed_terms(a), 1 - 1) + condensed_terms(a)(1) = partial_sum(condensed_terms(a), 0) + condensed_terms(a)(1)
             partial_sum(condensed_terms(a), 0) + condensed_terms(a)(1) = 0 + condensed_terms(a)(1)
+            by thm partial_sum_successor(condensed_terms(a), 1)
             partial_sum(condensed_terms(a), 1) = 0 + condensed_terms(a)(1)
             0 + condensed_terms(a)(1) = condensed_terms(a)(1)
             partial_sum(condensed_terms(a), 1) = a(1)
@@ -2877,6 +2928,7 @@ thm cauchy_condensation_partial_sum_upper_strong:
             partial_sum(a, 0) = 0
             partial_sum(a, 1 - 1) + a(1) = partial_sum(a, 0) + a(1)
             partial_sum(a, 0) + a(1) = 0 + a(1)
+            by thm partial_sum_successor(a, 1)
             partial_sum(a, 1) = 0 + a(1)
             0 + a(1) = a(1)
             2^(1 - 1) = 1
@@ -3765,6 +3817,7 @@ thm example_7_4_4_original_grouped_partial_sums_positive:
             partial_sum(example_7_4_4_original_pair_terms, 0) = 0
             partial_sum(example_7_4_4_original_pair_terms, 1 - 1) + example_7_4_4_original_pair_terms(1) = partial_sum(example_7_4_4_original_pair_terms, 0) + example_7_4_4_original_pair_terms(1)
             partial_sum(example_7_4_4_original_pair_terms, 0) + example_7_4_4_original_pair_terms(1) = 0 + example_7_4_4_original_pair_terms(1)
+            by thm partial_sum_successor(example_7_4_4_original_pair_terms, 1)
             partial_sum(example_7_4_4_original_pair_terms, 1) = 0 + example_7_4_4_original_pair_terms(1)
             0 + example_7_4_4_original_pair_terms(1) = example_7_4_4_original_pair_terms(1)
             by thm example_7_4_4_original_pair_positive(1)
@@ -3776,6 +3829,7 @@ thm example_7_4_4_original_grouped_partial_sums_positive:
             (k + 1) - 1 = k
             partial_sum(example_7_4_4_original_pair_terms, (k + 1) - 1) = partial_sum(example_7_4_4_original_pair_terms, k)
             partial_sum(example_7_4_4_original_pair_terms, (k + 1) - 1) + example_7_4_4_original_pair_terms(k + 1) = partial_sum(example_7_4_4_original_pair_terms, k) + example_7_4_4_original_pair_terms(k + 1)
+            by thm partial_sum_successor(example_7_4_4_original_pair_terms, k + 1)
             partial_sum(example_7_4_4_original_pair_terms, k + 1) = partial_sum(example_7_4_4_original_pair_terms, k) + example_7_4_4_original_pair_terms(k + 1)
             by thm example_7_4_4_original_pair_positive(k + 1)
             partial_sum(example_7_4_4_original_pair_terms, k) + example_7_4_4_original_pair_terms(k + 1) > 0
@@ -3810,6 +3864,7 @@ thm example_7_4_4_rearranged_grouped_partial_sums_negative:
             partial_sum(example_7_4_4_rearranged_block_terms, 0) = 0
             partial_sum(example_7_4_4_rearranged_block_terms, 1 - 1) + example_7_4_4_rearranged_block_terms(1) = partial_sum(example_7_4_4_rearranged_block_terms, 0) + example_7_4_4_rearranged_block_terms(1)
             partial_sum(example_7_4_4_rearranged_block_terms, 0) + example_7_4_4_rearranged_block_terms(1) = 0 + example_7_4_4_rearranged_block_terms(1)
+            by thm partial_sum_successor(example_7_4_4_rearranged_block_terms, 1)
             partial_sum(example_7_4_4_rearranged_block_terms, 1) = 0 + example_7_4_4_rearranged_block_terms(1)
             0 + example_7_4_4_rearranged_block_terms(1) = example_7_4_4_rearranged_block_terms(1)
             by thm example_7_4_4_rearranged_block_negative(1)
@@ -3821,6 +3876,7 @@ thm example_7_4_4_rearranged_grouped_partial_sums_negative:
             (k + 1) - 1 = k
             partial_sum(example_7_4_4_rearranged_block_terms, (k + 1) - 1) = partial_sum(example_7_4_4_rearranged_block_terms, k)
             partial_sum(example_7_4_4_rearranged_block_terms, (k + 1) - 1) + example_7_4_4_rearranged_block_terms(k + 1) = partial_sum(example_7_4_4_rearranged_block_terms, k) + example_7_4_4_rearranged_block_terms(k + 1)
+            by thm partial_sum_successor(example_7_4_4_rearranged_block_terms, k + 1)
             partial_sum(example_7_4_4_rearranged_block_terms, k + 1) = partial_sum(example_7_4_4_rearranged_block_terms, k) + example_7_4_4_rearranged_block_terms(k + 1)
             by thm example_7_4_4_rearranged_block_negative(k + 1)
             partial_sum(example_7_4_4_rearranged_block_terms, k) + example_7_4_4_rearranged_block_terms(k + 1) < 0

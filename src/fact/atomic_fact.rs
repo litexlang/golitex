@@ -685,6 +685,15 @@ impl fmt::Display for NotIsTupleFact {
 
 impl fmt::Display for NormalAtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let AtomicName::WithoutMod(name) = &self.predicate {
+            if self.body.len() == 2 && matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET) {
+                return write!(
+                    f,
+                    "{} {}{} {}",
+                    self.body[0], FACT_PREFIX, name, self.body[1]
+                );
+            }
+        }
         write!(
             f,
             "{}{}{}",
@@ -697,6 +706,15 @@ impl fmt::Display for NormalAtomicFact {
 
 impl fmt::Display for NotNormalAtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let AtomicName::WithoutMod(name) = &self.predicate {
+            if self.body.len() == 2 && matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET) {
+                return write!(
+                    f,
+                    "{} {} {}{} {}",
+                    NOT, self.body[0], FACT_PREFIX, name, self.body[1]
+                );
+            }
+        }
         write!(
             f,
             "{} {}{}{}",
@@ -1022,6 +1040,48 @@ impl AtomicFact {
 
     pub fn transposed_binary_order_equivalent(&self) -> Option<Self> {
         match self {
+            AtomicFact::NormalAtomicFact(f)
+                if f.body.len() == 2
+                    && matches!(
+                        f.predicate.to_string().as_str(),
+                        PROPER_SUBSET | PROPER_SUPERSET
+                    ) =>
+            {
+                let transposed_predicate = if f.predicate.to_string() == PROPER_SUBSET {
+                    PROPER_SUPERSET
+                } else {
+                    PROPER_SUBSET
+                };
+                Some(
+                    NormalAtomicFact::new(
+                        AtomicName::WithoutMod(transposed_predicate.to_string()),
+                        vec![f.body[1].clone(), f.body[0].clone()],
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                )
+            }
+            AtomicFact::NotNormalAtomicFact(f)
+                if f.body.len() == 2
+                    && matches!(
+                        f.predicate.to_string().as_str(),
+                        PROPER_SUBSET | PROPER_SUPERSET
+                    ) =>
+            {
+                let transposed_predicate = if f.predicate.to_string() == PROPER_SUBSET {
+                    PROPER_SUPERSET
+                } else {
+                    PROPER_SUBSET
+                };
+                Some(
+                    NotNormalAtomicFact::new(
+                        AtomicName::WithoutMod(transposed_predicate.to_string()),
+                        vec![f.body[1].clone(), f.body[0].clone()],
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                )
+            }
             AtomicFact::LessFact(f) => {
                 Some(GreaterFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()).into())
             }

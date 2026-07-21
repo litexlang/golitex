@@ -41,7 +41,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(in crate::verify) fn verify_cup_well_defined(
+    pub(in crate::verify) fn verify_big_union_well_defined(
         &mut self,
         x: &BigUnion,
         verify_state: &VerifyState,
@@ -50,7 +50,7 @@ impl Runtime {
         Ok(())
     }
 
-    pub(in crate::verify) fn verify_cap_well_defined(
+    pub(in crate::verify) fn verify_big_intersect_well_defined(
         &mut self,
         x: &BigIntersect,
         verify_state: &VerifyState,

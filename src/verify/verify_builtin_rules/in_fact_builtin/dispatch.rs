@@ -135,7 +135,11 @@ impl Runtime {
                 );
             }
             (_, Obj::BigUnion(big_union)) => {
-                return self.verify_in_fact_in_cup_by_member_witness(in_fact, big_union, verify_state);
+                return self.verify_in_fact_in_big_union_by_member_witness(
+                    in_fact,
+                    big_union,
+                    verify_state,
+                );
             }
             (_, Obj::Replacement(replacement)) => {
                 return self.verify_in_fact_in_replacement_by_relation_witness(

@@ -15,6 +15,14 @@ fn chain_link_infix_latex(prop: &str) -> Option<&'static str> {
         Some(r"\geq")
     } else if prop == IN {
         Some(r"\in")
+    } else if prop == SUBSET {
+        Some(r"\subseteq")
+    } else if prop == SUPERSET {
+        Some(r"\supseteq")
+    } else if prop == PROPER_SUBSET {
+        Some(r"\subsetneq")
+    } else if prop == PROPER_SUPERSET {
+        Some(r"\supsetneq")
     } else {
         None
     }
@@ -1440,6 +1448,21 @@ impl Mul {
 
 impl NormalAtomicFact {
     pub fn to_latex_string(&self) -> String {
+        if let AtomicName::WithoutMod(name) = &self.predicate {
+            if self.body.len() == 2 && matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET) {
+                let operator = if name == PROPER_SUBSET {
+                    r"\subsetneq"
+                } else {
+                    r"\supsetneq"
+                };
+                return format!(
+                    r"{} {} {}",
+                    self.body[0].to_latex_string(),
+                    operator,
+                    self.body[1].to_latex_string()
+                );
+            }
+        }
         let pred = self.predicate.to_latex_string();
         let args = self
             .body
@@ -1563,6 +1586,21 @@ impl NotLessFact {
 
 impl NotNormalAtomicFact {
     pub fn to_latex_string(&self) -> String {
+        if let AtomicName::WithoutMod(name) = &self.predicate {
+            if self.body.len() == 2 && matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET) {
+                let operator = if name == PROPER_SUBSET {
+                    r"\subsetneq"
+                } else {
+                    r"\supsetneq"
+                };
+                return format!(
+                    r"\neg \left( {} {} {} \right)",
+                    self.body[0].to_latex_string(),
+                    operator,
+                    self.body[1].to_latex_string()
+                );
+            }
+        }
         let pred = self.predicate.to_latex_string();
         let args = self
             .body

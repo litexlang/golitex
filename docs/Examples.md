@@ -1654,7 +1654,7 @@ exist x {1, 2} st {intersect(x, {1, 2}) = {}}
 - Purpose: Shows introduction and elimination for family-union membership.
 
 ```litex
-thm cup_intro_from_member:
+thm big_union_intro_from_member:
     ? forall x set, F set, A set:
         A $in F
         x $in A
@@ -1662,12 +1662,43 @@ thm cup_intro_from_member:
             x $in big_union(F)
     x $in big_union(F)
 
-thm cup_elim_to_exist:
+thm big_union_elim_to_exist:
     ? forall x set, F set:
         x $in big_union(F)
         =>:
             exist A F st {x $in A}
     exist A F st {x $in A}
+```
+
+### 43. Proper Subset And Proper Superset (Preview)
+
+- Category: `preview builtin predicate`
+- Purpose: Shows the definition, duality, inference, and mixed-chain behavior
+  of strict set inclusion.
+
+```litex
+forall A, B set:
+    A $subset B
+    A != B
+    =>:
+        A $proper_subset B
+        B $proper_superset A
+
+forall A, B set:
+    A $proper_subset B
+    =>:
+        A $subset B
+        A != B
+
+forall A, B, C set:
+    A $subset B $proper_subset C
+    =>:
+        A $proper_subset C
+
+forall A, B set:
+    A = B
+    =>:
+        not A $proper_subset B
 ```
 
 ---

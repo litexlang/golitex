@@ -8,6 +8,10 @@ at x0 on X with derivative L when the difference quotient tends to L as x
 approaches x0 through X with x != x0.
 """
 
+# The difference quotient is a function on the punctured domain.  Its return
+# domain keeps the exclusion of `x0` visible whenever the quotient is applied.
+have fn difference_quotient(X power_set(R), f fn(z X) R, x0 X) fn(y set_minus(X, {x0})) R = fn(x set_minus(X, {x0})) R {(f(x) - f(x0)) / (x - x0)}
+
 prop is_difference_quotient_close_to(X power_set(R), f fn(x X) R, x0 X, L R, epsilon R_pos, delta R_pos):
     forall x X:
         x - x0 != 0
@@ -778,6 +782,20 @@ prop has_derivative_function_on(X power_set(R), f fn(x X) R, df fn(x X) R):
         $chap9::is_limit_point_of_set(X, x0)
         =>:
             $has_derivative_at(X, f, x0, df(x0))
+
+# The canonical derivative is a partial function: it is callable exactly at
+# the points where the derivative exists, rather than assigning an arbitrary
+# value at an isolated or nondifferentiable point.
+have fn derivative_function(X power_set(R), f fn(z X) R) fn(y X: $is_differentiable_at(X, f, y)) R = fn(x X: $is_differentiable_at(X, f, x)) R {derivative(X, f, x)}
+
+thm derivative_function_has_derivative_at:
+    ? forall X power_set(R), f fn(z X) R, x X:
+        $is_differentiable_at(X, f, x)
+        =>:
+            $has_derivative_at(X, f, x, derivative_function(X, f)(x))
+    $has_derivative_at(X, f, x, derivative(X, f, x))
+    derivative_function(X, f)(x) = derivative(X, f, x)
+    $has_derivative_at(X, f, x, derivative_function(X, f)(x))
 
 """
 Corollary 10.1.12. A function differentiable on X is continuous on X.

@@ -772,7 +772,9 @@ impl Runtime {
                 self.match_arg_when_left_is_set_diff(&a.left, &a.right, given_arg)
             }
             Obj::BigUnion(ref a) => self.match_arg_when_left_is_big_union(&a.left, given_arg),
-            Obj::BigIntersect(ref a) => self.match_arg_when_left_is_big_intersect(&a.left, given_arg),
+            Obj::BigIntersect(ref a) => {
+                self.match_arg_when_left_is_big_intersect(&a.left, given_arg)
+            }
             Obj::GeneralCart(ref left) => self.match_arg_when_left_is_general_cart(left, given_arg),
             Obj::ListSet(ref left) => self.match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(ref left) => self.match_arg_when_left_is_set_builder(left, given_arg),

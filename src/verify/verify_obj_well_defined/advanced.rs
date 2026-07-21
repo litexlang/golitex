@@ -211,7 +211,7 @@ impl Runtime {
         };
 
         for i in 0..fn_obj.body.len() {
-            let ret_set = space.ret_set_obj();
+            let ret_set = self.fn_set_return_set_after_args(&space, &fn_obj.body[i])?;
             if i == fn_obj.body.len() - 1 {
                 return Ok(Some(ret_set));
             }
@@ -219,6 +219,18 @@ impl Runtime {
         }
 
         Ok(None)
+    }
+
+    pub(in crate::verify) fn fn_set_return_set_after_args(
+        &self,
+        space: &FnSetSpace,
+        args: &[Box<Obj>],
+    ) -> Result<Obj, RuntimeError> {
+        let args_as_obj: Vec<Obj> = args.iter().map(|arg| (**arg).clone()).collect();
+        let param_to_arg_map = space
+            .params()
+            .param_defs_and_args_to_param_to_arg_map(&args_as_obj);
+        self.inst_obj(&space.ret_set_obj(), &param_to_arg_map, space.binding())
     }
 
     pub(crate) fn fn_set_space_from_return_set_obj(

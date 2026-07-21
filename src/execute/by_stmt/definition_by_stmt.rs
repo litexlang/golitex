@@ -3,7 +3,10 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_by_def_stmt(&mut self, stmt: &ByDefStmt) -> Result<StmtResult, RuntimeError> {
         let predicate_name = stmt.fact.predicate.to_string();
-        if matches!(predicate_name.as_str(), INJECTIVE | SURJECTIVE | BIJECTIVE) {
+        if matches!(
+            predicate_name.as_str(),
+            INJECTIVE | SURJECTIVE | BIJECTIVE | PROPER_SUBSET | PROPER_SUPERSET
+        ) {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 format!(

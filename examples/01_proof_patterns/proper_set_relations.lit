@@ -1,0 +1,36 @@
+# Proper containment is containment together with inequality.
+forall A, B set:
+    A $subset B
+    A != B
+    =>:
+        A $proper_subset B
+        B $proper_superset A
+
+# A positive proper relation exposes both parts of its definition.
+forall A, B set:
+    A $proper_subset B
+    =>:
+        A $subset B
+        A != B
+
+# Negated proper containment means failed containment or equality.
+forall A, B set:
+    not A $subset B
+    =>:
+        not A $proper_subset B
+
+forall A, B set:
+    A = B
+    =>:
+        not A $proper_subset B
+
+# A same-direction chain is strict when at least one edge is strict.
+forall A, B, C set:
+    A $subset B $proper_subset C
+    =>:
+        A $proper_subset C
+
+forall A, B, C set:
+    A $proper_superset B $superset C
+    =>:
+        A $proper_superset C
