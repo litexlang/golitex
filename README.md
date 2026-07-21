@@ -6,7 +6,7 @@
 
 # Litex: The Language Where Mathematics Verifies Itself
 
-*by Jiachen Shen and The Litex Team, version 0.9.107-beta*
+*by Jiachen Shen and The Litex Team, version 0.9.108-beta*
 
 [![Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
