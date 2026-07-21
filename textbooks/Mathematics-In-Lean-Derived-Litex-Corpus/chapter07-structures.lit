@@ -1,4 +1,6 @@
 # Chapter 7 — Structures
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/trusted status.
 
 # This chapter keeps records and their operations callable. Constructor syntax,
 # projection syntax, typeclass syntax, and repeated proof styles are collapsed

@@ -6,6 +6,7 @@ use std::path::{Component, Path, PathBuf};
 use std::rc::Rc;
 
 const LITEX_CONFIG: &str = "litex.config";
+const LITEX_TODO: &str = "todo.lit";
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RepositoryFileTarget {
@@ -1306,10 +1307,30 @@ fn validate_config_directory_contents(
             )
         })?;
         let name = entry.file_name().to_string_lossy().into_owned();
+        let path = entry.path();
         if name == LITEX_CONFIG {
             continue;
         }
-        let path = entry.path();
+        if name == LITEX_TODO {
+            let source = fs::read_to_string(&path).map_err(|error| {
+                repository_error(
+                    format!("failed to read todo.lit: {}", error),
+                    &path.to_string_lossy(),
+                    0,
+                )
+            })?;
+            if let Some(line) = source
+                .lines()
+                .position(|line| !line.trim().is_empty() && !line.trim().starts_with('#'))
+            {
+                return Err(repository_error(
+                    "todo.lit must be comment-only".to_string(),
+                    &path.to_string_lossy(),
+                    line + 1,
+                ));
+            }
+            continue;
+        }
         let is_litex_source =
             path.extension().and_then(|extension| extension.to_str()) == Some("lit");
         if !path.is_dir() && !is_litex_source {
@@ -1810,6 +1831,47 @@ main = "./main.lit"
 
         let (ok, output) = run_repository(&root);
         assert!(ok, "{output}");
+    }
+
+    #[test]
+    fn configured_folder_allows_comment_only_todo_sidecar() {
+        let fixture = Fixture::new("todo-sidecar");
+        let root = fixture.path("root");
+        write_file(
+            &root.join("litex.config"),
+            r#"[hierarchy]
+module
+
+[export]
+main = "./main.lit"
+"#,
+        );
+        write_file(&root.join("main.lit"), "have value R = 1\n");
+        write_file(&root.join("todo.lit"), "# Missing mathematical result.\n");
+
+        let (ok, output) = run_repository(&root);
+        assert!(ok, "{output}");
+    }
+
+    #[test]
+    fn configured_folder_rejects_executable_todo_sidecar() {
+        let fixture = Fixture::new("executable-todo-sidecar");
+        let root = fixture.path("root");
+        write_file(
+            &root.join("litex.config"),
+            r#"[hierarchy]
+module
+
+[export]
+main = "./main.lit"
+"#,
+        );
+        write_file(&root.join("main.lit"), "have value R = 1\n");
+        write_file(&root.join("todo.lit"), "have hidden R = 2\n");
+
+        let (ok, output) = run_repository(&root);
+        assert!(!ok, "{output}");
+        assert!(output.contains("todo.lit must be comment-only"), "{output}");
     }
 
     #[test]

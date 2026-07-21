@@ -1,7 +1,7 @@
 # Linear Algebra Done Right
 
-This module is a source-ordered Litex formalization of Chapters 1–4 and
-Sections 5A–5B of Sheldon Axler's *Linear Algebra Done Right*, fourth edition. The repository-local
+This module is a source-ordered Litex formalization of Chapters 1–6 of Sheldon
+Axler's *Linear Algebra Done Right*, fourth edition. The repository-local
 transcript dated 9 May 2026 is the source of truth. Standalone exercises are
 omitted; definitions, notation, results, and mathematically useful explanatory
 prose are retained in the order in which the book introduces them.
@@ -15,7 +15,8 @@ target/debug/litex -compact -runner -r textbooks/LinearAlgebraDoneRight
 ```
 
 `litex.config` exports one namespace per source section, from `chap1a`
-through `chap3f`, followed by `chap4`, `chap5a`, and `chap5b`. Cross-section uses are explicit,
+through `chap3f`, followed by `chap4`, `chap5a` through `chap5e`, and `chap6a`
+through `chap6c`. Cross-section uses are explicit,
 for example `chap2a::span` and `chap3b::null_space`.
 
 Chapter files use file-local macros such as `@ScalarSystem`, `@Scalars`,
@@ -24,7 +25,7 @@ views, and function families. `@ScalarSystem` denotes the bare scalar-system
 type, while `@Scalars` denotes the view of the supplied `scalars` instance.
 These macros are readability-only textual abbreviations: public declarations
 keep their mathematical parameters explicit, and the canonical cross-file
-namespaces remain `chap1a` through `chap5b`.
+namespaces remain `chap1a` through `chap6c`.
 
 The ordinary project runner checks that the exported project loads and that
 the public declarations are well formed. Because project exports are trusted
@@ -50,7 +51,26 @@ The current public surface includes:
   spaces and ranges of `p(T)`; and
 - monic and annihilating polynomials, the uniquely selected minimal
   polynomial, restrictions to invariant subspaces, and the source-facing
-  eigenvalue, divisibility, invertibility, and parity results of Section 5B.
+  eigenvalue, divisibility, invertibility, and parity results of Section 5B;
+  and
+- one-basis operator matrices, matrix diagonals, upper-triangular predicates,
+  invariant prefix flags, diagonal products, and triangularization criteria;
+  and
+- diagonal matrices, diagonalizability, callable eigenspaces, square-free
+  minimal-polynomial criteria, invariant restrictions, and Gershgorin disks;
+  and
+- operator and matrix commutation, invariant eigenspaces, common eigenvectors,
+  simultaneous diagonal and upper-triangular forms, and the sum/product
+  eigenvalue results for commuting complex operators; and
+- real/complex inner-product scalar geometry, inner-product spaces, callable
+  norms and one-vector orthogonal decompositions, orthogonality,
+  Cauchy-Schwarz, triangle, Pythagorean, and parallelogram interfaces; and
+- orthonormal lists and bases, coordinate/Parseval formulas, a finite
+  Gram-Schmidt trace, orthonormal triangularization and Schur interfaces, and
+  the uniquely selected Riesz representative; and
+- orthogonal complements, pointwise-defined orthogonal projections,
+  minimization, null-complement restrictions, pseudoinverses, and their exact
+  algebraic and best-solution properties.
 
 Representative application shape:
 

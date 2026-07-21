@@ -9,6 +9,10 @@ Definition 5.1.1. A sequence of rational numbers is a function from the
 positive integers to the rationals.
 """
 
+# The builtin object `seq(S)` is exactly the function space `fn(n N_pos) S`:
+# an element of `seq(S)` is an ordinary sequence whose positive-integer index
+# `n` has a value in `S`.
+
 forall s set:
     seq(s) = fn(x N_pos) s
 
@@ -164,6 +168,8 @@ Proposition 5.1.11. The sequence 1/n is Cauchy.
 # Background interface.  The Archimedean property supplies the reciprocal
 # cutoff used by the rational-sequence estimates below.  The source uses this
 # ordered-field fact as background; its proof remains explicit local trust.
+# The builtin carrier `R_pos` is the set of strictly positive real numbers, so
+# `epsilon R_pos` is the usual assumption `epsilon > 0`.
 thm archimedean_property:
     ? forall epsilon R_pos:
         exist n N_pos st {1 / n < epsilon}
@@ -238,6 +244,8 @@ Lemma 5.1.15. Every Cauchy sequence is bounded.
 # Cauchy sequences.  The mathematical proof is: use the Cauchy condition to
 # control one tail, then use the maximum of the absolute values of the finitely
 # many earlier terms to form a global bound `M`.
+# `finite_set_max(S)` is the largest member of a nonempty finite numeric set
+# `S`; here it updates the previous prefix bound with the next absolute value.
 
 have fn prefix_bound_Q(a seq(Q), n N_pos) Q by induc n from 1:
     case n = 1: abs(a(1))

@@ -138,7 +138,7 @@ jobs:
           SMOKE_DIR="smoke_litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}"
           mkdir -p "${SMOKE_DIR}"
           tar -xzf "litex_${VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.tar.gz" -C "${SMOKE_DIR}"
-          printf '%s\n' 'import std basics' 'by thm basics::nonempty_family_of_nonempty_sets_exists()' > "${SMOKE_DIR}/smoke.lit"
+          printf '%s\n' 'import std basics' 'by thm basics::finite_set_has_bijective_index({1, 2})' > "${SMOKE_DIR}/smoke.lit"
           if ! OUTPUT=$(cd "${SMOKE_DIR}" && ./litex -runner -isolated -f smoke.lit); then
             printf '%s\n' "${OUTPUT}"
             exit 1
@@ -156,7 +156,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $smokeDir | Out-Null
           Expand-Archive -Path "litex_${env:VERSION}_${{ matrix.os_name }}_${{ matrix.arch }}.zip" -DestinationPath $smokeDir -Force
           $smokeFile = Join-Path $smokeDir "smoke.lit"
-          Set-Content -Path $smokeFile -Value "import std basics`nby thm basics::nonempty_family_of_nonempty_sets_exists()"
+          Set-Content -Path $smokeFile -Value "import std basics`nby thm basics::finite_set_has_bijective_index({1, 2})"
           $output = & (Join-Path $smokeDir "litex.exe") -runner -isolated -f $smokeFile
           $outputText = $output -join "`n"
           if ($LASTEXITCODE -ne 0 -or -not $outputText.Contains('"ok": true')) {
@@ -215,7 +215,7 @@ jobs:
         run: |
           sudo dpkg -i "litex_${VERSION}_${{ matrix.deb_arch }}.deb"
           SMOKE_FILE="$(mktemp)"
-          printf '%s\n' 'import std basics' 'by thm basics::nonempty_family_of_nonempty_sets_exists()' > "${SMOKE_FILE}"
+          printf '%s\n' 'import std basics' 'by thm basics::finite_set_has_bijective_index({1, 2})' > "${SMOKE_FILE}"
           if ! OUTPUT=$(litex -runner -isolated -f "${SMOKE_FILE}"); then
             printf '%s\n' "${OUTPUT}"
             exit 1
@@ -278,7 +278,7 @@ jobs:
             throw "MSI did not install the Litex binary at $binary"
           }
           $smokeFile = Join-Path $env:TEMP "litex-msi-smoke.lit"
-          Set-Content -Path $smokeFile -Value "import std basics`nby thm basics::nonempty_family_of_nonempty_sets_exists()"
+          Set-Content -Path $smokeFile -Value "import std basics`nby thm basics::finite_set_has_bijective_index({1, 2})"
           $output = & $binary -isolated -f $smokeFile
           $outputText = $output -join "`n"
           Remove-Item -Force $smokeFile
@@ -410,7 +410,7 @@ jobs:
 
             test do
               assert_match "litex VERSION_PLACEHOLDER", shell_output("#{bin}/litex -version")
-              (testpath/"test.lit").write "import std basics\nby thm basics::nonempty_family_of_nonempty_sets_exists()\n"
+              (testpath/"test.lit").write "import std basics\nby thm basics::finite_set_has_bijective_index({1, 2})\n"
               output = shell_output("#{bin}/litex -isolated -f #{testpath}/test.lit")
               assert_match '"type": "proof by theorem"', output
               refute_match '"result": "error"', output
@@ -552,7 +552,7 @@ jobs:
         run: |
           SMOKE_FILE="$(mktemp)"
           trap 'rm -f "${SMOKE_FILE}"' EXIT
-          printf '%s\n' 'import std basics' 'by thm basics::nonempty_family_of_nonempty_sets_exists()' > "${SMOKE_FILE}"
+          printf '%s\n' 'import std basics' 'by thm basics::finite_set_has_bijective_index({1, 2})' > "${SMOKE_FILE}"
           if ! OUTPUT=$(docker run --rm -v "${SMOKE_FILE}:/tmp/litex-smoke.lit:ro" "ghcr.io/litexlang/litex:${VERSION}" -runner -isolated -f /tmp/litex-smoke.lit); then
             printf '%s\n' "${OUTPUT}"
             exit 1
@@ -603,7 +603,7 @@ jobs:
             litex -version
             SMOKE_FILE="$(mktemp)"
             trap 'rm -f "${SMOKE_FILE}"' EXIT
-            printf '%s\n' 'import std basics' 'by thm basics::nonempty_family_of_nonempty_sets_exists()' > "${SMOKE_FILE}"
+            printf '%s\n' 'import std basics' 'by thm basics::finite_set_has_bijective_index({1, 2})' > "${SMOKE_FILE}"
             if ! OUTPUT=$(litex -runner -isolated -f "${SMOKE_FILE}"); then
               printf '%s\n' "${OUTPUT}"
               exit 1

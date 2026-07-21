@@ -1,0 +1,122 @@
+# Linear Algebra Done Right, fourth edition — Section 5E.
+# Commuting Operators.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Operators "\chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>"
+macro Compose "\chap3a::linear_map_compose<s, scalars, V, V, V, Vspace, Vspace, Vspace>"
+macro OperatorMatrix "\chap5c::matrix_of_operator<s, scalars, V, Vspace, n>"
+
+# Definition 5.71. Composition and matrix multiplication already provide the
+# two products; commutation adds only their equality.
+prop operators_commute(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, S, T @Operators):
+    @Compose(S, T) = @Compose(T, S)
+
+prop matrices_commute(s nonempty_set, scalars @ScalarSystem, n N_pos, A, B matrix(s, n, n)):
+    \chap3c::matrix_mul<s, scalars, n, n, n>(A, B) = \chap3c::matrix_mul<s, scalars, n, n, n>(B, A)
+
+# Example 5.72. The two partial differentiation operators commute because both
+# composite orders multiply every monomial coefficient by the same jk.
+
+prop operator_matrix_commutation_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, S, T @Operators, n N_pos, basis &chap1a::FiniteList<V, n>):
+    forall:
+        =>:
+            $operators_commute(s, scalars, V, Vspace, S, T)
+        <=>:
+            $matrices_commute(s, scalars, n, @OperatorMatrix(basis, S), @OperatorMatrix(basis, T))
+
+# Result 5.74. Proof spine: expand commutation, take matrices, use 3.43 twice,
+# and read the resulting matrix-product equality. The reverse direction uses
+# uniqueness of the operator represented by a matrix in a fixed basis.
+axiom commuting_operators_correspond_to_commuting_matrices:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, S, T @Operators, n N_pos, basis &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        =>:
+            $operator_matrix_commutation_statement(s, scalars, V, Vspace, S, T, n, basis)
+
+# Result 5.75. For v in E(lambda,S), the entire argument is the single chain
+# S(Tv)=(ST)v=(TS)v=T(Sv)=T(lambda v)=lambda Tv.
+axiom eigenspace_is_invariant_under_commuting_operator:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, S, T @Operators, lambda s:
+        $operators_commute(s, scalars, V, Vspace, S, T)
+        =>:
+            $chap5a::is_invariant_subspace(s, scalars, V, Vspace, T, \chap5d::eigenspace<s, scalars, V, Vspace>(S, lambda))
+
+prop have_common_diagonalizing_basis(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, S, T @Operators):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap2b::is_basis(s, scalars, V, Vspace, n, basis), $chap5d::is_diagonal_matrix(s, scalars, n, \chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis, S)), $chap5d::is_diagonal_matrix(s, scalars, n, \chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis, T))}
+
+prop operators_have_common_diagonal_matrix(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, S, T @Operators):
+    \chap2c::dimension<s, scalars, V, Vspace> = 0 or $have_common_diagonalizing_basis(s, scalars, V, Vspace, S, T)
+
+prop simultaneous_diagonalizability_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, S, T @Operators):
+    forall:
+        =>:
+            $operators_have_common_diagonal_matrix(s, scalars, V, Vspace, S, T)
+        <=>:
+            $operators_commute(s, scalars, V, Vspace, S, T)
+
+# Result 5.76. Proof spine: a shared diagonal basis gives commuting matrices;
+# conversely decompose V into S-eigenspaces, restrict T to each invariant
+# eigenspace, and concatenate eigenbases of those restrictions.
+axiom simultaneous_diagonalizability_iff_commutativity:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, S, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap5d::is_diagonalizable(s, scalars, V, Vspace, S)
+        $chap5d::is_diagonalizable(s, scalars, V, Vspace, T)
+        =>:
+            $simultaneous_diagonalizability_statement(s, scalars, V, Vspace, S, T)
+
+prop have_common_eigenvector(V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, S, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>):
+    exist lambda, mu &chap1a::Complex, v V st {$chap5a::is_eigenvector(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, S, lambda, v), $chap5a::is_eigenvector(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T, mu, v)}
+
+# Result 5.78. Choose an eigenvalue lambda of S; 5.75 makes E(lambda,S)
+# T-invariant; an eigenvector of T restricted to that nonzero eigenspace is a
+# common eigenvector.
+axiom common_eigenvector_for_commuting_operators:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, S, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
+        V != {&chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>{Vspace}.zero}
+        $operators_commute(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, S, T)
+        =>:
+            $have_common_eigenvector(V, Vspace, S, T)
+
+# Example 5.79. For the two partial differentiation operators, the common
+# eigenvectors are precisely the nonzero constant polynomials.
+
+prop have_common_upper_triangular_basis(V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, S, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap2b::is_basis(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, n, basis), $chap5c::is_upper_triangular_matrix(&chap1a::Complex, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<&chap1a::Complex, chap1a::complex_scalars, V, Vspace, n>(basis, S)), $chap5c::is_upper_triangular_matrix(&chap1a::Complex, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<&chap1a::Complex, chap1a::complex_scalars, V, Vspace, n>(basis, T))}
+
+prop operators_have_common_upper_triangular_matrix(V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, S, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>):
+    \chap2c::dimension<&chap1a::Complex, chap1a::complex_scalars, V, Vspace> = 0 or $have_common_upper_triangular_basis(V, Vspace, S, T)
+
+# Result 5.80. Proof spine: choose one common eigenvector, pass both operators
+# to a complementary quotient of dimension n-1, apply induction there, and
+# prepend the common eigenvector to the lifted basis.
+axiom commuting_operators_are_simultaneously_upper_triangularizable:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, S, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
+        $operators_commute(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, S, T)
+        =>:
+            $operators_have_common_upper_triangular_matrix(V, Vspace, S, T)
+
+prop every_sum_eigenvalue_splits(V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, S, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>):
+    forall mu &chap1a::Complex:
+        $chap5a::is_eigenvalue(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, \chap3a::linear_map_add<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>(S, T), mu)
+        =>:
+            exist lambda, nu &chap1a::Complex st {$chap5a::is_eigenvalue(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, S, lambda), $chap5a::is_eigenvalue(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T, nu), mu = chap1a::complex_add(lambda, nu)}
+
+prop every_product_eigenvalue_splits(V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, S, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>):
+    forall mu &chap1a::Complex:
+        $chap5a::is_eigenvalue(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, \chap3a::linear_map_compose<&chap1a::Complex, chap1a::complex_scalars, V, V, V, Vspace, Vspace, Vspace>(S, T), mu)
+        =>:
+            exist lambda, nu &chap1a::Complex st {$chap5a::is_eigenvalue(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, S, lambda), $chap5a::is_eigenvalue(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T, nu), mu = chap1a::complex_mul(lambda, nu)}
+
+# Result 5.81. Choose the common upper-triangular basis from 5.80; the diagonal
+# of M(S+T) is the entrywise sum and the diagonal of M(ST) the entrywise
+# product; 5.41 identifies those diagonal entries with all eigenvalues.
+axiom eigenvalues_of_sum_and_product_of_commuting_operators:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, S, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
+        $operators_commute(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, S, T)
+        =>:
+            $every_sum_eigenvalue_splits(V, Vspace, S, T)
+            $every_product_eigenvalue_splits(V, Vspace, S, T)

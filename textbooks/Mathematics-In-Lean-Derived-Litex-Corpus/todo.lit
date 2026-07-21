@@ -1,0 +1,77 @@
+# This file records source mathematics that is not yet implemented in the
+# executable Litex chapters. It is intentionally comment-only and is not
+# exported by litex.config.
+
+# Chapter 1 — Introduction; source labels FermatLastTheorem and hard.
+# Missing mathematics: prove Fermat's Last Theorem for nonzero natural x, y,
+# z and every exponent n greater than two. The upstream item is admitted with
+# sorry, so this corpus does not present it as a checked Litex fact.
+
+# Chapter 4 — Sets and Functions; source definition inverse and theorem
+# inverse_spec.
+# Missing mathematics: construct the source's total choice-with-default inverse
+# on arbitrary carriers and prove its positive-preimage specification. This is
+# genuine arbitrary choice, not the unique inverse available for an injective
+# function.
+
+# Chapter 4 — Sets and Functions; source section Schroeder-Bernstein.
+# Missing mathematics: construct sbAux by recursive restricted images, define
+# sbSet and the piecewise sbFun using the inverse branch, prove the right-
+# inverse lemma and the injective and surjective branches, and assemble the
+# resulting bijection. A future implementation must preserve these callable
+# constructions rather than replacing them by proposition wrappers.
+
+# Chapter 5 — Elementary Number Theory; source section Irrational Roots.
+# Missing mathematics: prove the arbitrary-prime coprime-square obstruction;
+# construct the callable prime_factor_exponent; prove factorization_mul,
+# factorization_pow, prime_factorization_self, the parity obstruction, and
+# power_equation_exponent_divisible. The implementation must first supply a
+# checked decreasing-division definition and its multiplicity laws; the
+# already checked p=2 parity proof is not a substitute for this interface.
+
+# Chapter 5 — Elementary Number Theory; source construction MyNat and the
+# theorems zero_add, succ_add, add_comm, add_assoc, mul_add, zero_mul,
+# succ_mul, and mul_comm.
+# Missing mathematics: construct the source's genuinely separate Peano carrier,
+# its zero and successor constructors, its induction principle, and recursive
+# addition and multiplication. Identifying MyNat with builtin N would erase
+# the mathematical construction and is therefore not an implementation.
+
+# Chapter 5 — Elementary Number Theory; source theorems
+# exists_prime_factor_mod_4_eq_3 and primes_mod_4_eq_3_infinite.
+# Missing mathematics: carry out the strong-induction factorization preserving
+# residue 3 modulo 4, then use the source's Euclid-style number to prove these
+# primes are unbounded. The elementary product-residue lemma itself is checked.
+
+# Chapter 6 — Discrete Mathematics; source theorem finite_product_ne_zero.
+# Missing mathematics: prove by finite-set induction that a product of natural
+# numbers is nonzero when every factor is nonzero. The chapter currently has
+# the finite-product object but no checked induction proof for this result.
+
+# Chapter 6 — Discrete Mathematics; source theorems triangle_card and
+# double_counting.
+# Missing mathematics: count the ordered pairs 0 <= i < j <= n to obtain
+# n * (n + 1) / 2, and prove the double-counting inequality by summing the row
+# and column fiber cardinalities of a finite relation. The callable triangle
+# set and its finiteness proof remain implemented in the chapter.
+
+# Chapter 6 — Discrete Mathematics; source list definitions append and map,
+# and theorems append_nil and map_map.
+# Missing mathematics: construct the recursive append and map functions from a
+# ListCore induction interface, prove their defining equations, and then prove
+# the two structural-induction theorems. The checked ListCore, is_list_append,
+# and is_list_map interfaces remain in source order.
+
+# Chapter 6 — Discrete Mathematics; source construction BinTree, recursive
+# functions size and depth, and theorem BinTree.size_le.
+# Missing mathematics: construct the inductive binary-tree carrier and its
+# recursion principle, define size and depth, and prove size <= 2^depth - 1 by
+# structural induction. The independently useful nat_max function is checked.
+
+# Chapter 6 — Discrete Mathematics; source construction PropForm, recursive
+# functions eval, vars, and subst, valuation update, and theorems eval_eq_eval,
+# subst_eq_of_not_mem_vars, and subst_eval_eq.
+# Missing mathematics: construct propositional formulas with their induction
+# and recursion principles, define these three recursive functions, and prove
+# the agreement and substitution theorems. The finite Boolean carrier and its
+# truth-table operations are implemented and checked in the chapter.

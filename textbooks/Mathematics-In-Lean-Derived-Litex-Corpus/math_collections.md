@@ -1,19 +1,27 @@
-# Mathematics in Lean C01-C13 mathematical collections
+# MIL-derived Litex mathematical interface map
 
-This manual records the mathematical shapes that organize all thirteen
-chapters. It is deliberately smaller than the item-by-item source manifest:
-only concepts that determine later declarations or proof architecture belong
-here.
+This manual records the mathematical shapes that organize the independent
+Litex translation pressure-test corpus in this directory. It is not a guide to
+Lean, a reconstruction of Mathlib's architecture, or an alternative edition
+of *Mathematics in Lean*. It is deliberately smaller than the item-by-item
+source manifest: only concepts that determine later Litex declarations or
+proof architecture belong here.
 
 Source snapshot: *Mathematics in Lean* at
 `6dfa2c166a410d2f0f278d327ea81ae0fa6d3c32`.
+
+“Checked” below means checked by the current Litex verifier in this project.
+It does not mean Lean-certified. “Trusted” means that a typed proof or
+construction boundary remains explicit. Source names describe provenance;
+the ideal forms below are Litex modeling decisions, not claims that Lean or
+Mathlib should expose the same interface.
 
 ## Closed facts and reusable properties
 
 Fermat's Last Theorem is a closed universal mathematical assertion. The Lean
 source first names a proposition-valued term `FermatLastTheorem`, then the
 theorem `hard` supplies a term of that proposition using `sorry`. In this
-Litex textbook those two source steps become one direct fact:
+Litex corpus those two source steps become one direct fact:
 
 ~~~litex
 trust:
@@ -102,7 +110,7 @@ It connects irrational-root arguments to factorization product and power laws.
 The nearest rejected model was a proposition that only asserted the existence
 of an exponent, because downstream formulas must call the exponent. It depends
 on primality, divisibility, and gcd from `std/basics`. The construction and its
-substantial factorization theorems remain proof debt in this first edition.
+substantial factorization theorems remain proof debt in the current corpus.
 
 Factorial, finite sums, and Fibonacci numbers are ordinary recursive callable
 objects. Their definitions are checked with `have fn ... by induc`; longer
@@ -124,12 +132,14 @@ visible.
 
 Chapter 6 keeps the source's list, tree, and propositional-formula vocabulary
 separate from builtin finite-set arithmetic. `ListCore` records a carrier plus
-callable `nil` and `cons`; append and map remain callable selected functions,
-not existential properties. Binary trees and formulas likewise retain opaque
-carriers and typed constructors where user-defined inductive types or generic
-structural recursion are unavailable. Their induction conclusions are named
-theorems with local trust, while finite-set/cardinality identities stay direct
-when the existing finite-set surface suffices.
+callable `nil` and `cons`; `is_list_append` and `is_list_map` specify candidate
+callable functions without pretending that recursive functions have already
+been constructed. The bounded `triangle` set, its finiteness proof, and the
+two-element Boolean operations are checked directly. Binary-tree,
+propositional-formula, and recursive list constructions are not executable
+interfaces yet: their source-facing mathematical obligations are listed in
+the module's comment-only `todo.lit`. This keeps the checked chapter useful
+without presenting an opaque carrier or selected recursive function as proved.
 
 ## Structures, quotients, and algebraic hierarchy
 

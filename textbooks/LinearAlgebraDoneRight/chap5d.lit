@@ -1,0 +1,161 @@
+# Linear Algebra Done Right, fourth edition — Section 5D.
+# Diagonalizable Operators.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Operators "\chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>"
+
+# Definition 5.48. A diagonal matrix vanishes at every off-diagonal position.
+prop is_diagonal_matrix(s nonempty_set, scalars @ScalarSystem, n N_pos, A matrix(s, n, n)):
+    forall row, column N_pos:
+        row <= n
+        column <= n
+        row != column
+        =>:
+            A(row, column) = @Scalars.zero
+
+# Example 5.49. The displayed matrix diag(8,5,5) is diagonal and hence upper
+# triangular; its diagonal entries are its eigenvalues.
+
+prop has_diagonalizing_basis(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap2b::is_basis(s, scalars, V, Vspace, n, basis), $is_diagonal_matrix(s, scalars, n, \chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis, T))}
+
+# Definition 5.50. The zero-dimensional case is explicit because builtin
+# matrices require positive size; otherwise diagonalizability is basis
+# existence, not selection of a canonical basis.
+prop is_diagonalizable(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    \chap2c::dimension<s, scalars, V, Vspace> = 0 or $has_diagonalizing_basis(s, scalars, V, Vspace, T)
+
+# Example 5.51. The source operator on R^2 is not diagonal in the standard
+# basis but is diagonal with eigenbasis (1,4),(7,5).
+
+# Definition 5.52. The eigenspace is the actual null-space set of T-lambda I.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn eigenspace(T @Operators, lambda s) power_set(V) = \chap3b::null_space<s, scalars, V, V, Vspace, Vspace>(\chap5a::operator_minus_scalar_identity<s, scalars, V, Vspace>(T, lambda))
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos>:
+    have fn eigenspace_family(T @Operators, eigenvalues &chap1a::FiniteList<s, m>) finite_seq(power_set(V), m) = fn(k N_pos: k <= m) power_set(V) {\eigenspace<s, scalars, V, Vspace>(T, &chap1a::FiniteList<s, m>{eigenvalues}.entries(k))}
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos>:
+    have fn eigenspace_dimension_sum(T @Operators, eigenvalues &chap1a::FiniteList<s, m>) N = sum(1, m, fn(k N_pos: k <= m) N {\chap2c::dimension<s, scalars, \eigenspace<s, scalars, V, Vspace>(T, &chap1a::FiniteList<s, m>{eigenvalues}.entries(k)), \chap1c::subspace_vector_space<s, scalars, V, Vspace, \eigenspace<s, scalars, V, Vspace>(T, &chap1a::FiniteList<s, m>{eigenvalues}.entries(k))>>})
+
+prop lists_all_distinct_eigenvalues(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N_pos, eigenvalues &chap1a::FiniteList<s, m>):
+    $chap5a::has_distinct_entries(s, m, eigenvalues)
+    forall k N_pos:
+        k <= m
+        =>:
+            $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, &chap1a::FiniteList<s, m>{eigenvalues}.entries(k))
+    forall lambda s:
+        $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, lambda)
+        =>:
+            $chap5c::finite_list_contains(s, m, eigenvalues, lambda)
+
+prop distinct_eigenspace_dimension_bound(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N_pos, eigenvalues &chap1a::FiniteList<s, m>):
+    forall:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            \eigenspace_dimension_sum<s, scalars, V, Vspace, m>(T, eigenvalues) <= \chap2c::dimension<s, scalars, V, Vspace>
+
+# Example 5.53. For diag(8,5,5), the source has E(8,T)=span(v1) and
+# E(5,T)=span(v2,v3).
+
+# Result 5.54. Proof spine: a zero sum of vectors from distinct eigenspaces is
+# a dependence among distinct-eigenvalue eigenvectors; 5.11 makes every term
+# zero; direct-sum dimension is then bounded by the ambient dimension.
+axiom distinct_eigenspaces_form_a_direct_sum:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N_pos, eigenvalues &chap1a::FiniteList<s, m>:
+        $chap5a::has_distinct_entries(s, m, eigenvalues)
+        =>:
+            $chap1c::is_direct_sum(s, scalars, V, Vspace, m, \eigenspace_family<s, scalars, V, Vspace, m>(T, eigenvalues))
+            $distinct_eigenspace_dimension_bound(s, scalars, V, Vspace, T, m, eigenvalues)
+
+prop has_eigenvector_basis(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    exist n N_pos, basis &chap1a::FiniteList<V, n>, eigenvalues &chap1a::FiniteList<s, n> st {$chap2b::is_basis(s, scalars, V, Vspace, n, basis), $chap5a::lists_corresponding_eigenpairs(s, scalars, V, Vspace, T, n, eigenvalues, basis)}
+
+prop eigenspace_sum_fills_space(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N_pos, eigenvalues &chap1a::FiniteList<s, m>):
+    \chap1c::subspace_sum<s, scalars, V, Vspace, m>(\eigenspace_family<s, scalars, V, Vspace, m>(T, eigenvalues)) = V
+
+prop eigenspace_dimensions_fill_dimension(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N_pos, eigenvalues &chap1a::FiniteList<s, m>):
+    \chap2c::dimension<s, scalars, V, Vspace> = \eigenspace_dimension_sum<s, scalars, V, Vspace, m>(T, eigenvalues)
+
+prop diagonalizability_conditions_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N_pos, eigenvalues &chap1a::FiniteList<s, m>):
+    forall:
+        =>:
+            $is_diagonalizable(s, scalars, V, Vspace, T)
+        <=>:
+            $has_eigenvector_basis(s, scalars, V, Vspace, T)
+            $eigenspace_sum_fills_space(s, scalars, V, Vspace, T, m, eigenvalues)
+            $eigenspace_dimensions_fill_dimension(s, scalars, V, Vspace, T, m, eigenvalues)
+
+# Result 5.55. Proof spine: a diagonal matrix is exactly an eigenvector basis;
+# such a basis fills the direct eigenspace sum; full dimension reconstructs an
+# eigenvector basis by concatenating eigenspace bases.
+axiom equivalent_conditions_for_diagonalizability:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N_pos, eigenvalues &chap1a::FiniteList<s, m>:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $lists_all_distinct_eigenvalues(s, scalars, V, Vspace, T, m, eigenvalues)
+        =>:
+            $diagonalizability_conditions_statement(s, scalars, V, Vspace, T, m, eigenvalues)
+
+# Result 5.58. Choose one vector per distinct eigenvalue; 5.11 makes the
+# dim-V-long list independent; Result 2.38 makes it a basis.
+axiom enough_distinct_eigenvalues_implies_diagonalizable:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, eigenvalues &chap1a::FiniteList<s, \chap2c::dimension<s, scalars, V, Vspace>>:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap5a::has_distinct_entries(s, \chap2c::dimension<s, scalars, V, Vspace>, eigenvalues)
+        forall k N_pos:
+            k <= \chap2c::dimension<s, scalars, V, Vspace>
+            =>:
+                $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, &chap1a::FiniteList<s, \chap2c::dimension<s, scalars, V, Vspace>>{eigenvalues}.entries(k))
+        =>:
+            $is_diagonalizable(s, scalars, V, Vspace, T)
+
+# Examples 5.59-5.61 record the source's eigenbasis power computation and the
+# contrast between square-free and repeated minimal-polynomial factors.
+
+prop minimal_polynomial_has_distinct_linear_factors(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    exist m N_pos, roots &chap1a::FiniteList<s, m>, stages fn(k N_pos: k <= m + 1) \chap2a::polynomial_space<s, scalars> st {$chap5a::has_distinct_entries(s, m, roots), $chap5c::is_monic_linear_factorization(s, scalars, \chap5b::minimal_polynomial<s, scalars, V, Vspace>(T), m, roots, stages)}
+
+prop diagonalizable_iff_minimal_polynomial_square_free_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    forall:
+        =>:
+            $is_diagonalizable(s, scalars, V, Vspace, T)
+        <=>:
+            $minimal_polynomial_has_distinct_linear_factors(s, scalars, V, Vspace, T)
+
+# Result 5.62. Proof spine: an eigenvector basis is killed by the product over
+# distinct eigenvalues; conversely split range and null of the final shifted
+# factor and combine their eigenvector bases by induction.
+axiom diagonalizable_iff_minimal_polynomial_has_distinct_linear_factors:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $diagonalizable_iff_minimal_polynomial_square_free_statement(s, scalars, V, Vspace, T)
+
+# Result 5.65. The restriction's minimal polynomial divides the ambient one;
+# distinct linear factors are preserved by divisors; apply 5.62.
+axiom restriction_of_diagonalizable_operator_is_diagonalizable:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, U power_set(V):
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $is_diagonalizable(s, scalars, V, Vspace, T)
+        $chap5a::is_invariant_subspace(s, scalars, V, Vspace, T, U)
+        =>:
+            $is_diagonalizable(s, scalars, U, \chap1c::subspace_vector_space<s, scalars, V, Vspace, U>, \chap5b::restricted_operator<s, scalars, V, Vspace, T, U>)
+
+# Definition 5.66. The finite off-diagonal row sum remains one explicit
+# construction boundary; the disk itself is a callable subset.
+template<s nonempty_set, n N_pos>:
+    trust have gershgorin_radius fn(A matrix(s, n, n), magnitude fn(x s) R, row N_pos: row <= n) R
+
+template<s nonempty_set, scalars @ScalarSystem, n N_pos>:
+    have fn gershgorin_disk(A matrix(s, n, n), magnitude fn(x s) R, row N_pos: row <= n) power_set(s) = {z s: magnitude(@Scalars.add(z, @Scalars.neg(A(row, row)))) <= \gershgorin_radius<s, n>(A, magnitude, row)}
+
+# Result 5.67. Proof spine: expand an eigenvector in the basis; choose a
+# coefficient of maximal magnitude; compare that coordinate in Aw=lambda w and
+# divide by it to obtain one disk inequality.
+axiom gershgorin_disk_theorem:
+    ? forall s nonempty_set, scalars @ScalarSystem, magnitude fn(x s) R, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, basis &chap1a::FiniteList<V, n>, lambda s:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, lambda)
+        =>:
+            exist row N_pos st {row <= n, lambda $in \gershgorin_disk<s, scalars, n>(\chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis, T), magnitude, row)}

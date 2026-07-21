@@ -1,4 +1,6 @@
 # Chapter 12 — Differential Calculus
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/trusted status.
 
 # Derivative assertions are relations between a function and a candidate
 # derivative.  `deriv`, operator norms, higher derivatives, and local inverses

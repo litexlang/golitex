@@ -1,0 +1,219 @@
+# Linear Algebra Done Right, fourth edition — Section 6A.
+# Inner Products and Norms.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro CandidateSpace "&chap1b::VectorSpace<s, scalars, V>{Vspace}"
+macro Geometry "&InnerProductScalarGeometry<s, scalars>{scalar_geometry}"
+macro Inner "&InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}"
+macro Space "&chap1b::VectorSpace<s, scalars, V>{&InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space}"
+
+# Definition 6.1. The dot product is the finite sum of coordinate products;
+# coordinate typing already supplies all index bounds.
+template<n N_pos>:
+    have fn dot_product(x, y finite_seq(R, n)) R = sum(1, n, fn(k N_pos: k <= n) R {x(k) * y(k)})
+
+# Scalar-side data used by both real and complex inner-product spaces. This is
+# packaged once instead of passing four unrelated functions to every theorem.
+struct InnerProductScalarGeometry<s nonempty_set, scalars @ScalarSystem>:
+    conjugate fn(x s) s
+    absolute_value fn(x s) R
+    real_part fn(x s) R
+    real_embed fn(x R) s
+    <=>:
+        forall x, y s:
+            conjugate(@Scalars.add(x, y)) = @Scalars.add(conjugate(x), conjugate(y))
+            conjugate(@Scalars.mul(x, y)) = @Scalars.mul(conjugate(x), conjugate(y))
+        forall x s:
+            conjugate(conjugate(x)) = x
+            absolute_value(x) >= 0
+        forall r R:
+            real_part(real_embed(r)) = r
+            conjugate(real_embed(r)) = real_embed(r)
+            absolute_value(real_embed(r)) = abs(r)
+        real_embed(0) = @Scalars.zero
+        real_embed(1) = @Scalars.one
+
+have fn real_scalar_conjugate(x R) R = x
+have fn real_scalar_absolute_value(x R) R = abs(x)
+have fn real_scalar_real_part(x R) R = x
+have fn real_scalar_real_embed(x R) R = x
+have fn complex_scalar_real_embed(x R) &chap1a::Complex = (x, 0)
+
+# These instances repackage the concrete real operations and the Chapter 4
+# complex conjugate/absolute-value operations. Their remaining law transport
+# stays visible as selected-structure debt.
+trust have real_inner_product_scalar_geometry &InnerProductScalarGeometry<R, chap1a::real_scalars>:
+    real_inner_product_scalar_geometry = (real_scalar_conjugate, real_scalar_absolute_value, real_scalar_real_part, real_scalar_real_embed)
+
+trust have complex_inner_product_scalar_geometry &InnerProductScalarGeometry<&chap1a::Complex, chap1a::complex_scalars>:
+    complex_inner_product_scalar_geometry = (chap4::complex_conjugate, chap4::complex_absolute_value, chap4::real_part, complex_scalar_real_embed)
+
+# Definition 6.2. Positivity says <v,v> is the embedded nonnegative real given
+# by its real part. The two definiteness implications spell out the source iff;
+# the remaining clauses are exactly first-slot linearity and conjugate symmetry.
+prop is_inner_product(s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, inner fn(u, v V) s):
+    forall v V:
+        inner(v, v) = @Geometry.real_embed(@Geometry.real_part(inner(v, v)))
+        @Geometry.real_part(inner(v, v)) >= 0
+    forall v V:
+        inner(v, v) = @Scalars.zero
+        =>:
+            v = @CandidateSpace.zero
+    forall v V:
+        v = @CandidateSpace.zero
+        =>:
+            inner(v, v) = @Scalars.zero
+    forall u, v, w V:
+        inner(@CandidateSpace.add(u, v), w) = @Scalars.add(inner(u, w), inner(v, w))
+        inner(u, v) = @Geometry.conjugate(inner(v, u))
+    forall lambda s, u, v V:
+        inner(@CandidateSpace.smul(lambda, u), v) = @Scalars.mul(lambda, inner(u, v))
+
+# Example 6.3. Euclidean, weighted-coordinate, integral, and polynomial
+# formulas are retained as source examples; analytic integration carriers are
+# not introduced merely to restate them.
+
+# Definition 6.4. An inner-product space equips one existing vector space with
+# one inner product; no canonical choice is asserted.
+struct InnerProductSpace<s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set>:
+    vector_space &chap1b::VectorSpace<s, scalars, V>
+    inner fn(u, v V) s
+    <=>:
+        $is_inner_product(s, scalars, scalar_geometry, V, vector_space, inner)
+
+# Notation 6.5. Parameters named V and W in Chapters 6-7 carry an explicit
+# InnerProductSpace instance; no predicate echo is needed at each use.
+
+prop has_basic_inner_product_properties(s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>):
+    forall v V:
+        $chap3f::is_linear_functional(s, scalars, V, @Inner.vector_space, fn(u V) s {@Inner.inner(u, v)})
+        @Inner.inner(@Space.zero, v) = @Scalars.zero
+        @Inner.inner(v, @Space.zero) = @Scalars.zero
+    forall u, v, w V:
+        @Inner.inner(u, @Space.add(v, w)) = @Scalars.add(@Inner.inner(u, v), @Inner.inner(u, w))
+    forall lambda s, u, v V:
+        @Inner.inner(u, @Space.smul(lambda, v)) = @Scalars.mul(@Geometry.conjugate(lambda), @Inner.inner(u, v))
+
+# Result 6.6. First-slot linearity is definitional; zero follows from linearity;
+# the two second-slot formulas follow by conjugate symmetry, then the matching
+# first-slot law, then conjugate symmetry again.
+axiom basic_properties_of_an_inner_product:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>:
+        $has_basic_inner_product_properties(s, scalars, scalar_geometry, V, inner_space)
+
+# Definition 6.7. The inner-product axioms make the real part nonnegative, so
+# the induced norm is a direct callable value rather than a candidate relation.
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set>:
+    have fn norm(inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, v V) R = sqrt(&InnerProductScalarGeometry<s, scalars>{scalar_geometry}.real_part(&InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.inner(v, v)))
+
+# Example 6.8. The source specializes the norm to Euclidean coordinate and
+# integral formulas.
+
+prop norm_definiteness_statement(s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, v V):
+    forall:
+        =>:
+            \norm<s, scalars, scalar_geometry, V>(inner_space, v) = 0
+        <=>:
+            v = @Space.zero
+
+# Result 6.9. Definiteness passes through the square root; homogeneity expands
+# <lambda v,lambda v>, uses conjugate-linearity in the second slot, and takes
+# the nonnegative square root.
+prop has_basic_norm_properties(s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, v V):
+    $norm_definiteness_statement(s, scalars, scalar_geometry, V, inner_space, v)
+    forall lambda s:
+        \norm<s, scalars, scalar_geometry, V>(inner_space, @Space.smul(lambda, v)) = @Geometry.absolute_value(lambda) * \norm<s, scalars, scalar_geometry, V>(inner_space, v)
+
+axiom basic_properties_of_the_norm:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, v V:
+        $has_basic_norm_properties(s, scalars, scalar_geometry, V, inner_space, v)
+
+# Definition 6.10. Orthogonality is only the vanishing inner product; symmetry
+# is already a consequence of conjugate symmetry.
+prop are_orthogonal(s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V):
+    @Inner.inner(u, v) = @Scalars.zero
+
+# Result 6.11. The zero-vector clause is 6.6; self-orthogonality reduces
+# immediately to definiteness.
+prop orthogonality_and_zero_statement(s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, v V):
+    $are_orthogonal(s, scalars, scalar_geometry, V, inner_space, @Space.zero, v)
+    forall:
+        =>:
+            $are_orthogonal(s, scalars, scalar_geometry, V, inner_space, v, v)
+        <=>:
+            v = @Space.zero
+
+axiom orthogonality_and_zero:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, v V:
+        $orthogonality_and_zero_statement(s, scalars, scalar_geometry, V, inner_space, v)
+
+# Result 6.12. Expand <u+v,u+v>; the two cross terms vanish by orthogonality;
+# the remaining diagonal terms are the two squared norms.
+axiom pythagorean_theorem:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V:
+        $are_orthogonal(s, scalars, scalar_geometry, V, inner_space, u, v)
+        =>:
+            \norm<s, scalars, scalar_geometry, V>(inner_space, @Space.add(u, v))^2 = \norm<s, scalars, scalar_geometry, V>(inner_space, u)^2 + \norm<s, scalars, scalar_geometry, V>(inner_space, v)^2
+
+# The coefficient and remainder in 6.13 are actual reusable values. They are
+# defined once, instead of carrying fresh existential witnesses into 6.14.
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set>:
+    have fn orthogonal_coefficient(inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V) s = @Scalars.mul(&InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.inner(u, v), @Scalars.inv(&InnerProductScalarGeometry<s, scalars>{scalar_geometry}.real_embed(\norm<s, scalars, scalar_geometry, V>(inner_space, v)^2)))
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set>:
+    have fn orthogonal_remainder(inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V) V = @Space.add(u, @Space.smul(@Scalars.neg(\orthogonal_coefficient<s, scalars, scalar_geometry, V>(inner_space, u, v)), v))
+
+# Result 6.13. Substitute the displayed coefficient into u=cv+(u-cv); one
+# inner-product expansion shows the remainder is orthogonal to v.
+axiom orthogonal_decomposition:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V:
+        v != @Space.zero
+        =>:
+            u = @Space.add(@Space.smul(\orthogonal_coefficient<s, scalars, scalar_geometry, V>(inner_space, u, v), v), \orthogonal_remainder<s, scalars, scalar_geometry, V>(inner_space, u, v))
+            $are_orthogonal(s, scalars, scalar_geometry, V, inner_space, \orthogonal_remainder<s, scalars, scalar_geometry, V>(inner_space, u, v), v)
+
+prop one_vector_is_a_scalar_multiple_of_the_other(s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V):
+    exist lambda s st {u = @Space.smul(lambda, v)} or exist lambda s st {v = @Space.smul(lambda, u)}
+
+prop cauchy_schwarz_equality_statement(s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V):
+    forall:
+        =>:
+            @Geometry.absolute_value(@Inner.inner(u, v)) = \norm<s, scalars, scalar_geometry, V>(inner_space, u) * \norm<s, scalars, scalar_geometry, V>(inner_space, v)
+        <=>:
+            $one_vector_is_a_scalar_multiple_of_the_other(s, scalars, scalar_geometry, V, inner_space, u, v)
+
+# Result 6.14. If v=0 the claim is immediate. Otherwise apply 6.12 to the
+# decomposition from 6.13, discard the nonnegative remainder norm, and read
+# equality exactly when that remainder vanishes.
+axiom cauchy_schwarz_inequality:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V:
+        @Geometry.absolute_value(@Inner.inner(u, v)) <= \norm<s, scalars, scalar_geometry, V>(inner_space, u) * \norm<s, scalars, scalar_geometry, V>(inner_space, v)
+        $cauchy_schwarz_equality_statement(s, scalars, scalar_geometry, V, inner_space, u, v)
+
+# Example 6.16. The coordinate and integral inequalities are direct
+# specializations of 6.14 and introduce no additional public interface.
+
+prop one_vector_is_a_nonnegative_real_multiple_of_the_other(s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V):
+    exist r R st {r >= 0, u = @Space.smul(@Geometry.real_embed(r), v)} or exist r R st {r >= 0, v = @Space.smul(@Geometry.real_embed(r), u)}
+
+prop triangle_equality_statement(s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V):
+    forall:
+        =>:
+            \norm<s, scalars, scalar_geometry, V>(inner_space, @Space.add(u, v)) = \norm<s, scalars, scalar_geometry, V>(inner_space, u) + \norm<s, scalars, scalar_geometry, V>(inner_space, v)
+        <=>:
+            $one_vector_is_a_nonnegative_real_multiple_of_the_other(s, scalars, scalar_geometry, V, inner_space, u, v)
+
+# Result 6.17. Expand the squared norm once, bound its real cross term by the
+# absolute value and then by 6.14, and take square roots. Equality is precisely
+# the nonnegative-real scalar-multiple case.
+axiom triangle_inequality:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V:
+        \norm<s, scalars, scalar_geometry, V>(inner_space, @Space.add(u, v)) <= \norm<s, scalars, scalar_geometry, V>(inner_space, u) + \norm<s, scalars, scalar_geometry, V>(inner_space, v)
+        $triangle_equality_statement(s, scalars, scalar_geometry, V, inner_space, u, v)
+
+# Result 6.21. Expand the two squared norms; their conjugate cross terms cancel,
+# leaving two copies of each diagonal term.
+axiom parallelogram_equality:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &InnerProductSpace<s, scalars, scalar_geometry, V>, u, v V:
+        \norm<s, scalars, scalar_geometry, V>(inner_space, @Space.add(u, v))^2 + \norm<s, scalars, scalar_geometry, V>(inner_space, @Space.add(u, @Space.smul(@Scalars.neg(@Scalars.one), v)))^2 = 2 * (\norm<s, scalars, scalar_geometry, V>(inner_space, u)^2 + \norm<s, scalars, scalar_geometry, V>(inner_space, v)^2)

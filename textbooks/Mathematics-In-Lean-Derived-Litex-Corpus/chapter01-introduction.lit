@@ -1,4 +1,6 @@
 # Chapter 1 — Introduction
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/trusted status.
 
 # 1.2 Overview
 
@@ -12,17 +14,6 @@ add_three(2) = 5
 
 # Result (source label: easy). Concrete arithmetic is checked directly.
 2 + 2 = 4
-
-# Fact (source label: FermatLastTheorem) and result (source label: hard).
-# Nonzero natural x, y, z cannot solve the equation at an exponent greater
-# than two. The source admits this fact with sorry, so the exact universal fact
-# is the smallest visible trust boundary; it is not wrapped in a nullary prop.
-trust
-    forall x, y, z, n N:
-        n > 2
-        x * y * z != 0
-        =>:
-            x^n + y^n != z^n
 
 # Definition (source label: Even). An even natural has an explicit half.
 prop even(n N):

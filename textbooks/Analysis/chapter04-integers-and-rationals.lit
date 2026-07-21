@@ -315,6 +315,9 @@ Two quotients a//b and c//d are equal iff ad = cb.
 # Definition 4.2.1 has two mathematical parts: every rational is represented
 # by an integer numerator and a nonzero integer denominator, and two
 # representatives are equal exactly when their cross-products agree.
+# Litex carrier suffixes record the same restrictions: `_nz` means nonzero,
+# while `_pos` and `_neg` mean strictly positive and strictly negative.  Thus
+# `Z_nz` below is the set of nonzero integers.
 
 forall a Z, b Z_nz, c Z, d Z_nz:
     a / b = c / d
@@ -444,6 +447,9 @@ forall x, y, z Q:
     1 * x = x
     x * (y + z) = x * y + x * z
     (y + z) * x = y * x + z * x
+
+# The builtin carrier `Q_nz` is the set of nonzero rational numbers, exactly
+# the domain on which the reciprocal `1/x` is defined.
 
 forall x Q_nz:
     x * (1 / x) = 1
@@ -751,6 +757,8 @@ that is, their rational distance is bounded by the chosen tolerance.
 
 # The definition wording is: `y` is epsilon-close to `x` iff `d(y,x) <= epsilon`.
 # Distance symmetry lets this predicate be used with either argument order.
+# The builtin carrier `Q_pos` is the set of strictly positive rational numbers,
+# so the binder `epsilon Q_pos` is the source assumption `epsilon > 0`.
 
 prop is_close_in_Q(epsilon Q_pos, x, y Q):
     dist_Q(x, y) <= epsilon
@@ -1035,6 +1043,8 @@ lies in a unique interval [n, n+1), and some natural number is bigger than x.
 # First prove the interval statement for an explicit quotient `a / b`.
 # The remainder facts give `a = n*b + r` with `0 <= r < b`; dividing by the
 # positive denominator gives `n <= a/b < n+1`.
+# The builtin value `integer_quotient(a,b)` is the Euclidean quotient `n` in
+# `a = b*n + a%b` for a positive divisor `b`.
 
 claim:
     ? forall a Z, b N_pos:

@@ -1,0 +1,272 @@
+# Linear Algebra Done Right, fourth edition — Section 6C.
+# Orthogonal Complements and Minimization Problems.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Geometry "&chap6a::InnerProductScalarGeometry<s, scalars>{scalar_geometry}"
+macro InnerSpace "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>"
+macro Inner "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}"
+macro VSpace "&chap1b::VectorSpace<s, scalars, V>{&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space}"
+macro Norm "\chap6a::norm<s, scalars, scalar_geometry, V>"
+macro OrthogonalComplement "\orthogonal_complement<s, scalars, scalar_geometry, V>"
+
+# Definition 6.46. Orthogonal complement is the actual subset of all vectors
+# orthogonal to every member of U.
+prop is_orthogonal_to_subspace(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V), v V):
+    forall u U:
+        $chap6a::are_orthogonal(s, scalars, scalar_geometry, V, inner_space, u, v)
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set>:
+    have fn orthogonal_complement(inner_space @InnerSpace, U power_set(V)) power_set(V) = {v V: $is_orthogonal_to_subspace(s, scalars, scalar_geometry, V, inner_space, U, v)}
+
+# Example 6.47. The source's lines, planes, coordinate subspaces, and split
+# orthonormal basis examples remain explanatory prose.
+
+prop has_orthogonal_complement_properties(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V)):
+    $chap1c::is_subspace(s, scalars, V, @Inner.vector_space, @OrthogonalComplement(inner_space, U))
+    @OrthogonalComplement(inner_space, {@VSpace.zero}) = V
+    @OrthogonalComplement(inner_space, V) = {@VSpace.zero}
+    intersect(U, @OrthogonalComplement(inner_space, U)) $subset {@VSpace.zero}
+    forall G, H power_set(V):
+        G $subset H
+        =>:
+            @OrthogonalComplement(inner_space, H) $subset @OrthogonalComplement(inner_space, G)
+
+# Result 6.48. Closure follows from second-slot linearity; the zero, whole-space,
+# intersection, and reversed-inclusion clauses follow directly from the set
+# definition and definiteness.
+axiom properties_of_orthogonal_complement:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V):
+        $has_orthogonal_complement_properties(s, scalars, scalar_geometry, V, inner_space, U)
+
+prop is_finite_dimensional_subspace(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, U power_set(V)):
+    $chap1c::is_subspace(s, scalars, V, Vspace, U)
+    $chap2a::is_finite_dimensional(s, scalars, U, \chap1c::subspace_vector_space<s, scalars, V, Vspace, U>)
+
+prop is_orthogonal_direct_decomposition(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V)):
+    $chap1c::is_direct_sum_pair(s, scalars, V, @Inner.vector_space, U, @OrthogonalComplement(inner_space, U))
+    \chap1c::subspace_sum_pair<s, scalars, V, @Inner.vector_space>(U, @OrthogonalComplement(inner_space, U)) = V
+
+# Result 6.49. Choose an orthonormal basis of U, split each v into its
+# coordinate combination plus orthogonal remainder, and use 6.48(d) for
+# directness.
+axiom direct_sum_of_subspace_and_orthogonal_complement:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V):
+        $is_finite_dimensional_subspace(s, scalars, V, @Inner.vector_space, U)
+        =>:
+            $is_orthogonal_direct_decomposition(s, scalars, scalar_geometry, V, inner_space, U)
+
+# Result 6.51. Apply the direct-sum dimension formula to 6.49.
+axiom dimension_of_orthogonal_complement:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V):
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        $chap1c::is_subspace(s, scalars, V, @Inner.vector_space, U)
+        =>:
+            \chap2c::dimension<s, scalars, @OrthogonalComplement(inner_space, U), \chap1c::subspace_vector_space<s, scalars, V, @Inner.vector_space, @OrthogonalComplement(inner_space, U)>> = \chap2c::dimension<s, scalars, V, @Inner.vector_space> - \chap2c::dimension<s, scalars, U, \chap1c::subspace_vector_space<s, scalars, V, @Inner.vector_space, U>>
+
+# Result 6.52. One inclusion is definitional; decompose a vector in the double
+# complement by 6.49 and use the zero intersection for the reverse inclusion.
+axiom double_orthogonal_complement:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V):
+        $is_finite_dimensional_subspace(s, scalars, V, @Inner.vector_space, U)
+        =>:
+            @OrthogonalComplement(inner_space, @OrthogonalComplement(inner_space, U)) = U
+
+prop zero_orthogonal_complement_iff_whole_space_statement(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V)):
+    forall:
+        =>:
+            @OrthogonalComplement(inner_space, U) = {@VSpace.zero}
+        <=>:
+            U = V
+
+# Result 6.54. Use the double-complement identity and the two zero/whole-space
+# clauses of 6.48.
+axiom zero_orthogonal_complement_iff_whole_space:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V):
+        $is_finite_dimensional_subspace(s, scalars, V, @Inner.vector_space, U)
+        =>:
+            $zero_orthogonal_complement_iff_whole_space_statement(s, scalars, scalar_geometry, V, inner_space, U)
+
+prop is_orthogonal_projection_value(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V), v V, u U):
+    \chap1b::vector_sub<s, scalars, V, @Inner.vector_space>(v, u) $in @OrthogonalComplement(inner_space, U)
+
+prop is_orthogonal_projection_of(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V), P fn(v V) V):
+    P $in \chap3a::linear_map_space<s, scalars, V, V, @Inner.vector_space, @Inner.vector_space>
+    forall v V:
+        P(v) $in U
+        $is_orthogonal_projection_value(s, scalars, scalar_geometry, V, inner_space, U, v, P(v))
+
+# Definition 6.55. The decomposition in 6.49 gives one and only one linear map
+# satisfying the two component clauses above.
+axiom orthogonal_projection_value_exists_unique:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V), v V:
+        $is_finite_dimensional_subspace(s, scalars, V, @Inner.vector_space, U)
+        =>:
+            exist! u U st {$is_orthogonal_projection_value(s, scalars, scalar_geometry, V, inner_space, U, v, u)}
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V): $is_finite_dimensional_subspace(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space, U)>:
+    have fn orthogonal_projection by exist!:
+        ? forall v V:
+            exist! u U st {$is_orthogonal_projection_value(s, scalars, scalar_geometry, V, inner_space, U, v, u)}
+        by thm orthogonal_projection_value_exists_unique(s, scalars, scalar_geometry, V, inner_space, U, v)
+
+axiom orthogonal_projection_spec:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V), v V:
+        $is_finite_dimensional_subspace(s, scalars, V, @Inner.vector_space, U)
+        =>:
+            $is_orthogonal_projection_value(s, scalars, scalar_geometry, V, inner_space, U, v, \orthogonal_projection<s, scalars, scalar_geometry, V, inner_space, U>(v))
+
+prop is_orthonormal_basis_of_subspace(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V), m N, basis &chap1a::FiniteList<V, m>):
+    $chap6b::is_orthonormal(s, scalars, scalar_geometry, V, inner_space, m, basis)
+    \chap2a::span<s, scalars, V, @Inner.vector_space, m>(basis) = U
+
+prop has_orthogonal_projection_properties(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V), P fn(v V) V):
+    $is_orthogonal_projection_of(s, scalars, scalar_geometry, V, inner_space, U, P)
+    forall u U:
+        P(u) = u
+    forall w @OrthogonalComplement(inner_space, U):
+        P(w) = @VSpace.zero
+    \chap3b::range_of<V, V>(P) = U
+    \chap3b::null_space<s, scalars, V, V, @Inner.vector_space, @Inner.vector_space>(P) = @OrthogonalComplement(inner_space, U)
+    \chap3a::linear_map_compose<s, scalars, V, V, V, @Inner.vector_space, @Inner.vector_space, @Inner.vector_space>(P, P) = P
+    forall v V:
+        \chap1b::vector_sub<s, scalars, V, @Inner.vector_space>(v, P(v)) $in @OrthogonalComplement(inner_space, U)
+        @Norm(inner_space, P(v)) <= @Norm(inner_space, v)
+    forall m N, basis &chap1a::FiniteList<V, m>, v V:
+        $is_orthonormal_basis_of_subspace(s, scalars, scalar_geometry, V, inner_space, U, m, basis)
+        =>:
+            P(v) = \chap2a::linear_combination_value<s, scalars, V, @Inner.vector_space, m>(\chap6b::inner_product_coordinates<s, scalars, scalar_geometry, V, m>(inner_space, v, basis), basis)
+
+# Result 6.57. Read each clause from the unique U plus U-perp decomposition;
+# Pythagoras gives the norm bound and orthonormal coordinates give the formula.
+axiom properties_of_orthogonal_projection:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V):
+        $is_finite_dimensional_subspace(s, scalars, V, @Inner.vector_space, U)
+        =>:
+            $has_orthogonal_projection_properties(s, scalars, scalar_geometry, V, inner_space, U, fn(v V) V {\orthogonal_projection<s, scalars, scalar_geometry, V, inner_space, U>(v)})
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set>:
+    have fn riesz_functional(inner_space @InnerSpace, v V) fn(x V) s = fn(u V) s {&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.inner(u, v)}
+
+prop riesz_correspondence_is_bijection(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace):
+    forall v V:
+        \riesz_functional<s, scalars, scalar_geometry, V>(inner_space, v) $in \chap3f::dual_space<s, scalars, V, @Inner.vector_space>
+    forall v1, v2 V:
+        \riesz_functional<s, scalars, scalar_geometry, V>(inner_space, v1) = \riesz_functional<s, scalars, scalar_geometry, V>(inner_space, v2)
+        =>:
+            v1 = v2
+    forall phi \chap3f::dual_space<s, scalars, V, @Inner.vector_space>:
+        exist v V st {phi = \riesz_functional<s, scalars, scalar_geometry, V>(inner_space, v)}
+
+# Result 6.58. Injectivity is definiteness; surjectivity is the Riesz theorem,
+# here recovered by choosing a vector in the orthogonal complement of null phi.
+axiom riesz_representation_revisited:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        =>:
+            $riesz_correspondence_is_bijection(s, scalars, scalar_geometry, V, inner_space)
+
+prop projection_minimizes_distance_statement(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V), v V, u U):
+    @Norm(inner_space, \chap1b::vector_sub<s, scalars, V, @Inner.vector_space>(v, \orthogonal_projection<s, scalars, scalar_geometry, V, inner_space, U>(v))) <= @Norm(inner_space, \chap1b::vector_sub<s, scalars, V, @Inner.vector_space>(v, u))
+    forall:
+        =>:
+            @Norm(inner_space, \chap1b::vector_sub<s, scalars, V, @Inner.vector_space>(v, \orthogonal_projection<s, scalars, scalar_geometry, V, inner_space, U>(v))) = @Norm(inner_space, \chap1b::vector_sub<s, scalars, V, @Inner.vector_space>(v, u))
+        <=>:
+            u = \orthogonal_projection<s, scalars, scalar_geometry, V, inner_space, U>(v)
+
+# Result 6.61. Split v-u into its U-perp projection error and its U component;
+# Pythagoras gives the inequality and definiteness gives the equality case.
+axiom minimizing_distance_to_a_subspace:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, U power_set(V), v V, u U:
+        $is_finite_dimensional_subspace(s, scalars, V, @Inner.vector_space, U)
+        =>:
+            $projection_minimizes_distance_statement(s, scalars, scalar_geometry, V, inner_space, U, v, u)
+
+prop null_complement_restriction_is_bijection(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>):
+    $chap3b::is_injective(\orthogonal_complement<s, scalars, scalar_geometry, V>(Vinner, \chap3b::null_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T)), \chap3b::range_of<V, W>(T), fn(x \orthogonal_complement<s, scalars, scalar_geometry, V>(Vinner, \chap3b::null_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T))) \chap3b::range_of<V, W>(T) {T(x)})
+    $chap3b::is_surjective(\orthogonal_complement<s, scalars, scalar_geometry, V>(Vinner, \chap3b::null_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T)), \chap3b::range_of<V, W>(T), fn(x \orthogonal_complement<s, scalars, scalar_geometry, V>(Vinner, \chap3b::null_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T))) \chap3b::range_of<V, W>(T) {T(x)})
+
+# Result 6.67. The zero intersection proves injectivity; the null-plus-orthogonal
+# decomposition proves surjectivity onto range T.
+axiom null_complement_restriction_is_bijective_onto_range:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>:
+        $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space)
+        =>:
+            $null_complement_restriction_is_bijection(s, scalars, scalar_geometry, V, W, Vinner, Winner, T)
+
+prop is_pseudoinverse_of(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>, D \chap3a::linear_map_space<s, scalars, W, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space>):
+    forall w W:
+        D(w) $in \orthogonal_complement<s, scalars, scalar_geometry, V>(Vinner, \chap3b::null_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T))
+        \chap1b::vector_sub<s, scalars, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(w, T(D(w))) $in \orthogonal_complement<s, scalars, scalar_geometry, W>(Winner, \chap3b::range_of<V, W>(T))
+
+# Definition 6.68. Result 6.67 and orthogonal projection give a unique map with
+# the two geometric clauses above; select it only after this exist! theorem.
+axiom pseudoinverse_exists_unique:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>:
+        $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space)
+        =>:
+            exist! D \chap3a::linear_map_space<s, scalars, W, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space> st {$is_pseudoinverse_of(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, D)}
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>: $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space)>:
+    have fn pseudoinverse by exist!:
+        ? forall T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>:
+            exist! D \chap3a::linear_map_space<s, scalars, W, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space> st {$is_pseudoinverse_of(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, D)}
+        by thm pseudoinverse_exists_unique(s, scalars, scalar_geometry, V, W, Vinner, Winner, T)
+
+axiom pseudoinverse_spec:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>:
+        $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space)
+        =>:
+            $is_pseudoinverse_of(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, \pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T))
+
+prop has_pseudoinverse_algebraic_properties(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>):
+    forall:
+        $chap3d::is_invertible_linear_map(s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, T)
+        =>:
+            \pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T) = \chap3d::inverse_linear_map<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T)
+    $is_orthogonal_projection_of(s, scalars, scalar_geometry, W, Winner, \chap3b::range_of<V, W>(T), \chap3a::linear_map_compose<s, scalars, W, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T, \pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T)))
+    $is_orthogonal_projection_of(s, scalars, scalar_geometry, V, Vinner, \orthogonal_complement<s, scalars, scalar_geometry, V>(Vinner, \chap3b::null_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T)), \chap3a::linear_map_compose<s, scalars, V, W, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space>(\pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T), T))
+
+# Result 6.69. Invertibility collapses null/range to 0/W. On range and its
+# complement, the two composites are exactly the corresponding projections.
+axiom algebraic_properties_of_pseudoinverse:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>:
+        $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space)
+        =>:
+            $has_pseudoinverse_algebraic_properties(s, scalars, scalar_geometry, V, W, Vinner, Winner, T)
+
+prop is_pseudoinverse_solution(s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T fn(v V) W, D fn(w W) V, w W, v V):
+    exist z \chap3b::null_space<s, scalars, V, W, Vspace, Wspace>(T) st {v = &chap1b::VectorSpace<s, scalars, V>{Vspace}.add(D(w), z)}
+
+prop pseudoinverse_residual_equality_iff(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>, w W, v V):
+    forall:
+        =>:
+            \chap6a::norm<s, scalars, scalar_geometry, W>(Winner, \chap1b::vector_sub<s, scalars, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T(\pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T)(w)), w)) = \chap6a::norm<s, scalars, scalar_geometry, W>(Winner, \chap1b::vector_sub<s, scalars, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T(v), w))
+        <=>:
+            $is_pseudoinverse_solution(s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, T, \pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T), w, v)
+
+prop pseudoinverse_norm_equality_iff(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>, w W, v V):
+    forall:
+        =>:
+            \chap6a::norm<s, scalars, scalar_geometry, V>(Vinner, \pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T)(w)) = \chap6a::norm<s, scalars, scalar_geometry, V>(Vinner, v)
+        <=>:
+            v = \pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T)(w)
+
+prop has_pseudoinverse_best_solution_properties(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>, w W):
+    forall v V:
+        \chap6a::norm<s, scalars, scalar_geometry, W>(Winner, \chap1b::vector_sub<s, scalars, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T(\pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T)(w)), w)) <= \chap6a::norm<s, scalars, scalar_geometry, W>(Winner, \chap1b::vector_sub<s, scalars, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(T(v), w))
+        $pseudoinverse_residual_equality_iff(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, w, v)
+    forall v V:
+        $is_pseudoinverse_solution(s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, T, \pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T), w, v)
+        =>:
+            \chap6a::norm<s, scalars, scalar_geometry, V>(Vinner, \pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T)(w)) <= \chap6a::norm<s, scalars, scalar_geometry, V>(Vinner, v)
+            $pseudoinverse_norm_equality_iff(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, w, v)
+
+# Result 6.70. Split the residual into range and range-perpendicular pieces for
+# the best fit; split any best-fit solution into null and null-perpendicular
+# pieces for the minimum norm. Pythagoras supplies both equality cases.
+axiom pseudoinverse_provides_best_solution:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, T \chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>, w W:
+        $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space)
+        =>:
+            $has_pseudoinverse_best_solution_properties(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, w)

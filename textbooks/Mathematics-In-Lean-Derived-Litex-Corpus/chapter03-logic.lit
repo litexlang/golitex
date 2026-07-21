@@ -1,4 +1,6 @@
 # Chapter 3 — Logic
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/trusted status.
 
 # This chapter keeps the mathematical content of the source while collapsing
 # repeated Lean elaboration and tactic variants into one Litex proof route.
@@ -291,9 +293,8 @@ prop is_sum_of_two_squares(A set, add fn(x, y A) A, mul fn(x, y A) A, z A):
     exist a, b A st {z = add(mul(a, a), mul(b, b))}
 
 # Source result sumOfSquares_mul (including its duplicate proof variant).
-# The witnesses are the real and imaginary parts of a product. The one trusted
-# equality is the generic commutative-ring normalization for opaque operations;
-# the existential construction itself remains explicit.
+# Unpack the two representations, use the real and imaginary parts of their
+# product as witnesses, and verify the generic commutative-ring identity.
 thm sum_of_two_squares_mul:
     ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, z, w A:
         $chap2::is_ring(A, add, zero, neg, mul, one)
@@ -307,9 +308,80 @@ thm sum_of_two_squares_mul:
     obtain c, d from exist c, d A st {w = add(mul(c, c), mul(d, d))}
     have p A = add(mul(a, c), neg(mul(b, d)))
     have q A = add(mul(a, d), mul(b, c))
-    # Trust reason: the source closes this exact identity by commutative-ring
-    # normalization; Litex cannot yet normalize arbitrary opaque operations.
-    trust mul(z, w) = add(mul(p, p), mul(q, q))
+    have aa A = mul(a, a)
+    have bb A = mul(b, b)
+    have cc A = mul(c, c)
+    have dd A = mul(d, d)
+    have ac A = mul(a, c)
+    have ad A = mul(a, d)
+    have bc A = mul(b, c)
+    have bd A = mul(b, d)
+    have r A = mul(mul(a, b), mul(c, d))
+    have x1 A = mul(aa, cc)
+    have x2 A = mul(bb, dd)
+    have x3 A = mul(aa, dd)
+    have x4 A = mul(bb, cc)
+
+    by thm chap2::commutative_mul_reorder_four(A, mul, a, c, a, c)
+    mul(ac, ac) = x1
+    by thm chap2::commutative_mul_reorder_four(A, mul, b, d, b, d)
+    mul(bd, bd) = x2
+    by thm chap2::commutative_mul_reorder_four(A, mul, a, d, a, d)
+    mul(ad, ad) = x3
+    by thm chap2::commutative_mul_reorder_four(A, mul, b, c, b, c)
+    mul(bc, bc) = x4
+
+    by thm chap2::commutative_mul_reorder_four(A, mul, a, c, b, d)
+    mul(ac, bd) = r
+    mul(bd, ac) = mul(ac, bd) = r
+    by thm chap2::commutative_mul_reorder_four(A, mul, a, d, b, c)
+    mul(d, c) = mul(c, d)
+    mul(mul(a, b), mul(d, c)) = mul(mul(a, b), mul(c, d)) = r
+    mul(ad, bc) = mul(mul(a, b), mul(d, c)) = r
+    mul(bc, ad) = mul(ad, bc) = r
+
+    by thm chap2::neg_mul_left(A, add, zero, neg, mul, one, bd, ac)
+    mul(neg(bd), ac) = neg(mul(bd, ac)) = neg(r)
+    by thm chap2::mul_neg_right(A, add, zero, neg, mul, one, ac, bd)
+    mul(ac, neg(bd)) = neg(mul(ac, bd)) = neg(r)
+    by thm chap2::neg_mul_neg(A, add, zero, neg, mul, one, bd, bd)
+    mul(neg(bd), neg(bd)) = mul(bd, bd) = x2
+
+    mul(p, p) = mul(add(ac, neg(bd)), add(ac, neg(bd)))
+    mul(add(ac, neg(bd)), add(ac, neg(bd))) = add(mul(add(ac, neg(bd)), ac), mul(add(ac, neg(bd)), neg(bd)))
+    mul(add(ac, neg(bd)), ac) = add(mul(ac, ac), mul(neg(bd), ac)) = add(x1, neg(r))
+    mul(add(ac, neg(bd)), neg(bd)) = add(mul(ac, neg(bd)), mul(neg(bd), neg(bd))) = add(neg(r), x2) = add(x2, neg(r))
+    mul(p, p) = add(add(x1, neg(r)), add(x2, neg(r)))
+    by thm chap2::add_reorder_four(A, add, zero, neg, x1, neg(r), x2, neg(r))
+    mul(p, p) = add(add(x1, x2), add(neg(r), neg(r)))
+
+    mul(q, q) = mul(add(ad, bc), add(ad, bc))
+    mul(add(ad, bc), add(ad, bc)) = add(mul(add(ad, bc), ad), mul(add(ad, bc), bc))
+    mul(add(ad, bc), ad) = add(mul(ad, ad), mul(bc, ad)) = add(x3, r)
+    mul(add(ad, bc), bc) = add(mul(ad, bc), mul(bc, bc)) = add(r, x4) = add(x4, r)
+    mul(q, q) = add(add(x3, r), add(x4, r))
+    by thm chap2::add_reorder_four(A, add, zero, neg, x3, r, x4, r)
+    mul(q, q) = add(add(x3, x4), add(r, r))
+
+    by thm chap2::add_reorder_four(A, add, zero, neg, neg(r), neg(r), r, r)
+    add(add(neg(r), neg(r)), add(r, r)) = add(add(neg(r), r), add(neg(r), r))
+    add(neg(r), r) = zero
+    add(add(neg(r), r), add(neg(r), r)) = add(zero, zero) = zero
+    add(add(neg(r), neg(r)), add(r, r)) = zero
+
+    by thm chap2::add_reorder_four(A, add, zero, neg, add(x1, x2), add(neg(r), neg(r)), add(x3, x4), add(r, r))
+    add(mul(p, p), mul(q, q)) = add(add(add(x1, x2), add(x3, x4)), add(add(neg(r), neg(r)), add(r, r)))
+    add(mul(p, p), mul(q, q)) = add(add(add(x1, x2), add(x3, x4)), zero)
+    by thm chap2::add_zero(A, add, zero, neg, add(add(x1, x2), add(x3, x4)))
+    add(mul(p, p), mul(q, q)) = add(add(x1, x2), add(x3, x4))
+    by thm chap2::add_reorder_four(A, add, zero, neg, x1, x2, x3, x4)
+    add(mul(p, p), mul(q, q)) = add(add(x1, x3), add(x2, x4))
+
+    mul(z, w) = mul(add(aa, bb), add(cc, dd))
+    mul(add(aa, bb), add(cc, dd)) = add(mul(aa, add(cc, dd)), mul(bb, add(cc, dd)))
+    mul(aa, add(cc, dd)) = add(mul(aa, cc), mul(aa, dd)) = add(x1, x3)
+    mul(bb, add(cc, dd)) = add(mul(bb, cc), mul(bb, dd)) = add(x4, x2) = add(x2, x4)
+    mul(z, w) = add(add(x1, x3), add(x2, x4)) = add(mul(p, p), mul(q, q))
     witness exist u, v A st {mul(z, w) = add(mul(u, u), mul(v, v))} from p, q
 
 # 3.4 Conjunction and Iff

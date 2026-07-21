@@ -1,4 +1,6 @@
 # Chapter 11 — Topology
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/trusted status.
 
 # This chapter follows the source order: filters, metric spaces, and then
 # topological spaces. Lean implementation demonstrations are compressed to

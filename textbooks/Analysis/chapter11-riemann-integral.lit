@@ -16308,9 +16308,3 @@ thm change_of_variables_riemann:
     stieltjes_integral_on('[a, b], phi, h) = integral_on('[a, b], fn(x '[a, b]) R {h(x) * dphi(x)})
     integral_on('[a, b], fn(x '[a, b]) R {h(x) * dphi(x)}) = stieltjes_integral_on('[a, b], phi, h)
     integral_on('[a, b], fn(x '[a, b]) R {h(x) * dphi(x)}) = integral_on('[u, v], f)
-
-# Final audit (2026-07-12): 55 non-exercise markers remain across partition
-# additivity, Darboux/Riemann and Riemann-Stieltjes constructions and laws,
-# integrability criteria, the fundamental theorems, and change of variables.
-# 21 source-exercise markers are excluded; the Chapter 9/10 ordered-export
-# entries are separate reuse dependencies.

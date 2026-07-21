@@ -3,7 +3,7 @@
 ## Purpose and scope
 
 This manual records the mathematical spine for the implemented Chapters 1–4
-and the Section 5A operator layer
+and Chapter 5 operator layer
 of Sheldon Axler's *Linear Algebra Done Right*, fourth edition. The
 repository-local transcript dated 9 May 2026 is authoritative. The module keeps
 the source's definitions and named results in pedagogical order, omits
@@ -486,6 +486,164 @@ concepts and intermediate nodes that determine later interfaces.
   triangularizing bases may remain source-facing proof boundaries while the
   matrix predicate and diagonal function remain checked.
 
+### Diagonalization, eigenspaces, and Gershgorin disks
+
+- **Ordinary meaning:** A diagonalizable operator has a diagonal matrix in
+  some basis. Its eigenspace at `lambda` is `null(T-lambda I)`. Gershgorin
+  disks are basis-dependent subsets centered at diagonal matrix entries with
+  radii given by the off-diagonal row magnitudes.
+- **Semantic role:** Matrix relation, operator relation, set-valued eigenspace,
+  and indexed set-valued disk construction.
+- **Ideal Litex form:** `prop is_diagonal_matrix`, `prop is_diagonalizable`,
+  `have fn eigenspace`, and `have fn gershgorin_disk` after a callable finite
+  radius construction.
+- **Interface sketch:** `\eigenspace(...)(T,lambda)` and
+  `\gershgorin_disk(...)(A,j,magnitude)`.
+- **Nearest wrong alternative:** A selected eigenbasis is noncanonical; a
+  predicate-only eigenspace or disk hides the sets needed by direct sums,
+  restrictions, dimensions, and membership conclusions.
+- **Dependencies:** Operator matrix and null space by `definition`; direct sums
+  and dimension by `proof`; minimal-polynomial factorization by `proof`;
+  finite real sums and scalar magnitude by `definition` and `well_definedness`.
+- **Downstream uses:** Simultaneous diagonalization, spectral theorems,
+  generalized eigenspaces, matrix-power calculations, and eigenvalue bounds.
+- **Allowable hole:** Finite eigenspace-family dimension sums and Gershgorin's
+  maximum-coordinate estimate may remain explicit proof debt; disk membership
+  and eigenspaces must remain callable.
+
+### Commuting operators and simultaneous forms
+
+- **Ordinary meaning:** Two operators commute when their two composites are
+  equal. Two square matrices commute by the analogous product equality. A
+  common basis can then expose simultaneous diagonal or upper-triangular form.
+- **Semantic role:** Relations on supplied operators or matrices, followed by
+  existence relations over one shared basis.
+- **Ideal Litex form:** `prop operators_commute`, `prop matrices_commute`,
+  `prop have_common_diagonalizing_basis`, and `prop
+  have_common_upper_triangular_basis`.
+- **Interface sketch:** `$operators_commute(...,S,T)` and
+  `$have_common_diagonalizing_basis(...,S,T)`.
+- **Nearest wrong alternative:** Selecting a canonical common basis would add
+  nonexistent mathematical uniqueness; defining commutation pointwise would
+  duplicate the already callable composition operation.
+- **Dependencies:** Linear-map composition and matrix multiplication by
+  `definition`; matrices of products by `proof`; eigenspace invariance,
+  restrictions, and diagonalization by `proof`.
+- **Downstream uses:** Common eigenvectors, simultaneous triangularization,
+  eigenvalues of sums and products, generalized eigenspaces, and spectral
+  decomposition.
+- **Allowable hole:** The induction that constructs a simultaneous triangular
+  basis and the finite choice of eigenspace bases may remain named proof debt.
+  Commutation itself and the shared-basis conclusions must remain explicit.
+
+### Inner-product scalar geometry
+
+- **Ordinary meaning:** Over `R` or `C`, inner-product formulas use scalar
+  conjugation, absolute value, real part, and the embedding of real numbers
+  into the scalar field.
+- **Semantic role:** A bundled scalar-side structure attached to an existing
+  `ScalarSystem`; it is not an inner product and does not mention vectors.
+- **Ideal Litex form:** `struct InnerProductScalarGeometry<s,scalars>` with
+  callable `conjugate`, `absolute_value`, `real_part`, and `real_embed` fields
+  plus their field-compatible laws; provide the real and complex instances.
+- **Interface sketch:** `@Geometry.conjugate(lambda)` and
+  `@Geometry.absolute_value(lambda)`.
+- **Nearest wrong alternative:** Passing four unrelated functions to every
+  Chapter 6 and 7 declaration obscures which scalar identities are available;
+  folding them into a vector-space structure assigns scalar data to the wrong
+  object.
+- **Dependencies:** `ScalarSystem` by `signature`; the concrete Chapter 4
+  complex conjugate and absolute value by `definition`; their laws by `law`.
+- **Downstream uses:** Inner-product positivity and conjugate symmetry, norms,
+  Cauchy-Schwarz, orthonormality, adjoints, and normal operators.
+- **Allowable hole:** The two concrete instances may remain selected trust
+  boundaries until the real and complex scalar laws are packaged from Chapter
+  4 without projection friction.
+
+### Inner products, norms, and orthogonality
+
+- **Ordinary meaning:** An inner product is positive definite, linear in its
+  first slot, and conjugate symmetric. An inner-product space is a vector space
+  equipped with one. The induced norm is the square root of `<v,v>`, and two
+  vectors are orthogonal exactly when their inner product is zero.
+- **Semantic role:** Relation on a candidate binary scalar-valued function;
+  bundled equipped structure; callable norm and orthogonal-decomposition
+  constructions; orthogonality relation.
+- **Ideal Litex form:** `prop is_inner_product`, `struct InnerProductSpace`,
+  `have fn norm`, `prop are_orthogonal`, and callable coefficient/remainder
+  functions for Result 6.13.
+- **Interface sketch:** `@Inner.inner(u,v)`, `\norm(...)(v)`, and
+  `$are_orthogonal(...,u,v)`.
+- **Nearest wrong alternative:** A predicate-only norm or a relation with a
+  proposed decomposition output forces every inequality to carry avoidable
+  witnesses; selecting a canonical inner product on an arbitrary vector space
+  invents structure absent from the source.
+- **Dependencies:** Scalar geometry and vector-space operations by
+  `definition`; square-root and real order by `definition` and `proof`;
+  conjugate symmetry and linearity by `law`.
+- **Downstream uses:** Cauchy-Schwarz, triangle and parallelogram laws,
+  orthonormal bases, Gram-Schmidt, orthogonal complements, projections, Riesz
+  representation, and adjoints.
+- **Allowable hole:** Square-root transport, equality cases, and generic scalar
+  normalization may remain named theorem debt. The norm and the two pieces of
+  the one-vector orthogonal decomposition must remain callable.
+
+### Orthonormal bases, Gram-Schmidt, and Riesz representation
+
+- **Ordinary meaning:** An orthonormal list has unit vectors with zero mutual
+  inner products; an orthonormal basis is additionally a basis. Gram-Schmidt
+  turns an independent list into an orthonormal list with the same prefix
+  spans. Every finite-dimensional linear functional has one representing
+  vector under the inner product.
+- **Semantic role:** Relations on finite lists; an existence theorem over a
+  finite construction trace; unique existence followed by a canonical
+  selected Riesz representative.
+- **Ideal Litex form:** `prop is_orthonormal`, `prop is_orthonormal_basis`,
+  `prop is_gram_schmidt_trace`, prove the Riesz `exist!`, then `have fn
+  riesz_representative ... by exist!`.
+- **Interface sketch:** `$is_orthonormal(...,vectors)` and
+  `\riesz_representative(...)(phi)`.
+- **Nearest wrong alternative:** Selecting a canonical orthonormal basis is
+  mathematically unjustified; exposing every Gram-Schmidt induction step as a
+  named theorem bloats the API; selecting a Riesz vector before uniqueness
+  hides the dependency needed by adjoints.
+- **Dependencies:** Finite lists, linear combinations, spans, bases, norms,
+  and orthogonality by `definition`; Gram-Schmidt by `proof`; Riesz existence
+  by orthonormal coordinates and uniqueness by definiteness.
+- **Downstream uses:** Orthonormal coordinates, Schur form, orthogonal
+  complements and projections, adjoints, and the spectral theorem.
+- **Allowable hole:** Finite vector-sum normalization and the Gram-Schmidt
+  induction may remain one named proof boundary. The Riesz selector must expose
+  its representing equation through a visible specification bridge.
+
+### Orthogonal complements, projections, and pseudoinverses
+
+- **Ordinary meaning:** `U^perp` is the set of vectors orthogonal to every
+  member of `U`. Finite-dimensional `U` gives `V=U direct-sum U^perp`, hence a
+  unique orthogonal projection. A linear map's pseudoinverse sends `w` to the
+  unique vector in `(null T)^perp` mapped to the projection of `w` onto
+  `range T`.
+- **Semantic role:** Set-valued construction; pointwise unique selection for
+  projection values; unique-existence relation for the pseudoinverse map.
+- **Ideal Litex form:** `have fn orthogonal_complement`; prove the unique
+  `U`-component of each `v`, then define `orthogonal_projection(v)` by
+  pointwise `exist!`; prove linearity in the source projection-properties
+  theorem. Prove/select `pseudoinverse` from its exact range/null
+  characterization.
+- **Interface sketch:** `\orthogonal_complement(...)(U)`,
+  `\orthogonal_projection(...)(U)`, and `\pseudoinverse(...)(T)`.
+- **Nearest wrong alternative:** A predicate-only complement hides the set;
+  selecting a whole projection operator before defining its values reverses
+  the source construction; directly trusting pseudoinverse hides its
+  well-definedness; arbitrary complements lose the canonical geometry.
+- **Dependencies:** Orthogonality by `definition`; finite direct sums by
+  `existence` and `uniqueness`; null/range and inverse restrictions by `proof`.
+- **Downstream uses:** Distance minimization, least-squares solutions,
+  adjoints, positive operators, singular values, and polar decomposition.
+- **Allowable hole:** The direct-sum construction and dependent restricted
+  inverse may remain named proof boundaries. Both selected maps must keep an
+  explicit specification bridge until selector elimination is automatic.
+
 ## Dependency map
 
 Edge legend used below: `sig` = signature, `def` = definition, `law` =
@@ -547,6 +705,22 @@ invariant subspace --wd/law--> restricted operator --proof--> restriction minima
 operator + one basis --def--> square operator matrix --def--> diagonal/upper triangular
                                                     |
 prefix spans --proof-------------------------------+--proof--> invariant flag
+
+operator composition --def--> operator commutation --proof--> eigenspace invariance
+matrix multiplication --def--> matrix commutation <---proof--- matrices of products
+operator commutation + diagonalization --proof--> common diagonalizing basis
+operator commutation + complex eigenvectors --proof--> common upper-triangular basis
+
+ScalarSystem + conjugate/absolute-value/real-part --law--> inner-product scalar geometry
+VectorSpace + scalar geometry + binary scalar function --law--> InnerProductSpace
+InnerProductSpace --def--> norm + orthogonality --def--> one-vector orthogonal decomposition
+orthogonal decomposition --proof--> Cauchy-Schwarz --proof--> triangle inequality
+orthogonality + finite lists --def--> orthonormal list --proof--> Gram-Schmidt
+orthonormal list + basis --def--> orthonormal basis --proof--> coordinates
+orthonormal coordinates + linear functional --ex/uniq--> Riesz representative
+orthogonality + subset --def--> orthogonal complement --proof--> direct decomposition
+direct decomposition --ex/uniq--> orthogonal projection
+null/range + orthogonal projection + restricted inverse --ex/uniq--> pseudoinverse
 ```
 
 Current trust boundaries have important downstream fan-out:
@@ -594,7 +768,18 @@ proof debt, not a different concept model.
 12. Reuse the Chapter 3 matrix construction for one-basis operator matrices;
     define diagonal and triangular predicates before proving their invariant-
     flag and minimal-polynomial characterizations.
-
+13. Define operator and matrix commutation from their existing products; use
+    eigenspace invariance and restrictions to construct common diagonal and
+    upper-triangular bases without selecting either basis canonically.
+14. Package the real/complex scalar geometry once, then define inner products,
+    equipped inner-product spaces, norms, and orthogonality before proving the
+    orthogonal decomposition, Cauchy-Schwarz, and norm identities.
+15. Define orthonormality on finite lists; keep Gram-Schmidt as one finite trace
+    and proof; derive orthonormal bases and coordinates; prove Riesz unique
+    existence before selecting the representative used by adjoints.
+16. Define orthogonal complements as sets; prove the finite direct
+    decomposition before selecting projections; derive the restricted
+    null-complement bijection before selecting pseudoinverses.
 This order follows the book through Chapters 1–3. Polynomial representation
 is introduced in Section 2A but its main theorem branch is intentionally
 resumed in Chapter 4 after the shared scalar/list foundations are stable.
