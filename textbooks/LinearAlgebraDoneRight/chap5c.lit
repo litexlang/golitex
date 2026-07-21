@@ -1,0 +1,145 @@
+# Linear Algebra Done Right, fourth edition — Section 5C.
+# Upper-Triangular Matrices.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Operators "\chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>"
+macro Polynomials "\chap2a::polynomial_space<s, scalars>"
+macro OperatorMatrix "\matrix_of_operator<s, scalars, V, Vspace, n>"
+
+# Definition 5.35. The matrix of an operator uses the same basis for the domain
+# and codomain in Chapter 3's matrix-of-linear-map construction.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N_pos>:
+    have fn matrix_of_operator(basis &chap1a::FiniteList<V, n>, T @Operators) matrix(s, n, n) = \chap3c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(basis, basis, T)
+
+# Example 5.36. The source applies the displayed operator to the three standard
+# basis vectors and obtains columns (2,0,0), (1,5,0), and (0,3,8).
+
+# Definition 5.37. The diagonal is the ordered list of entries A(i,i).
+template<s set, n N_pos>:
+    have fn matrix_diagonal(A matrix(s, n, n)) &chap1a::FiniteList<s, n> = (n, fn(i N_pos: i <= n) s {A(i, i)})
+
+# Definition 5.38. The only positional comparison needed by upper triangularity
+# is that a row index lies strictly below its column index.
+prop is_upper_triangular_matrix(s nonempty_set, scalars @ScalarSystem, n N_pos, A matrix(s, n, n)):
+    forall row, column N_pos:
+        row <= n
+        column <= n
+        column < row
+        =>:
+            A(row, column) = @Scalars.zero
+
+template<V set, n N_pos>:
+    have fn finite_list_prefix(values &chap1a::FiniteList<V, n>, k N_pos: k <= n) &chap1a::FiniteList<V, k> = (k, fn(i N_pos: i <= k) V {&chap1a::FiniteList<V, n>{values}.entries(i)})
+
+prop prefix_spans_are_invariant(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, basis &chap1a::FiniteList<V, n>):
+    forall k N_pos:
+        k <= n
+        =>:
+            $chap5a::is_invariant_subspace(s, scalars, V, Vspace, T, \chap2a::span<s, scalars, V, Vspace, k, \finite_list_prefix<V, n>(basis, k)>)
+
+prop basis_vectors_map_into_prefix_spans(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, basis &chap1a::FiniteList<V, n>):
+    forall k N_pos:
+        k <= n
+        =>:
+            T(&chap1a::FiniteList<V, n>{basis}.entries(k)) $in \chap2a::span<s, scalars, V, Vspace, k, \finite_list_prefix<V, n>(basis, k)>
+
+prop upper_triangular_matrix_conditions_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, basis &chap1a::FiniteList<V, n>):
+    forall:
+        =>:
+            $is_upper_triangular_matrix(s, scalars, n, @OperatorMatrix(basis, T))
+        <=>:
+            $prefix_spans_are_invariant(s, scalars, V, Vspace, T, n, basis)
+            $basis_vectors_map_into_prefix_spans(s, scalars, V, Vspace, T, n, basis)
+
+# Result 5.39. Proof spine: zero entries below the diagonal make every prefix
+# span invariant; invariance gives the basis-vector condition; that condition
+# forces every below-diagonal coefficient to zero.
+axiom conditions_for_upper_triangular_matrix:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, basis &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        =>:
+            $upper_triangular_matrix_conditions_statement(s, scalars, V, Vspace, T, n, basis)
+
+# The partial product contains the first m shifted factors. This one recursive
+# object captures the exact equation used in 5.40 without exporting per-index
+# proof helpers.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N_pos>:
+    have fn shifted_operator_product(T @Operators, diagonal &chap1a::FiniteList<s, n>, m closed_range(0, n)) @Operators by induc m from 0:
+        case m = 0: \chap3a::identity_linear_map<s, scalars, V, Vspace>
+        case m > 0: \chap3a::linear_map_compose<s, scalars, V, V, V, Vspace, Vspace, Vspace>(shifted_operator_product(T, diagonal, m - 1), \chap5a::operator_minus_scalar_identity<s, scalars, V, Vspace>(T, &chap1a::FiniteList<s, n>{diagonal}.entries(m)))
+
+# Result 5.40. Proof spine: the kth shifted factor drops v_k into the previous
+# prefix span; the preceding factors kill that span; vanishing on a basis makes
+# the full product the zero operator.
+axiom upper_triangular_operator_satisfies_diagonal_product_equation:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, basis &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        $is_upper_triangular_matrix(s, scalars, n, @OperatorMatrix(basis, T))
+        =>:
+            \shifted_operator_product<s, scalars, V, Vspace, n>(T, \matrix_diagonal<s, n>(@OperatorMatrix(basis, T)), n) = \chap3a::zero_linear_map<s, scalars, V, V, Vspace, Vspace>
+
+prop finite_list_contains(s set, n N_pos, values &chap1a::FiniteList<s, n>, value s):
+    exist k N_pos st {k <= n, &chap1a::FiniteList<s, n>{values}.entries(k) = value}
+
+prop eigenvalue_iff_diagonal_entry_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, basis &chap1a::FiniteList<V, n>, lambda s):
+    forall:
+        =>:
+            $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, lambda)
+        <=>:
+            $finite_list_contains(s, n, \matrix_diagonal<s, n>(@OperatorMatrix(basis, T)), lambda)
+
+# Result 5.41. Proof spine: each diagonal entry gives a noninjective shifted
+# restriction to one prefix span; 5.40 and minimal-polynomial divisibility show
+# that no other eigenvalue exists.
+axiom eigenvalues_are_exactly_upper_triangular_diagonal_entries:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, basis &chap1a::FiniteList<V, n>, lambda s:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        $is_upper_triangular_matrix(s, scalars, n, @OperatorMatrix(basis, T))
+        =>:
+            $eigenvalue_iff_diagonal_entry_statement(s, scalars, V, Vspace, T, n, basis, lambda)
+
+# Examples 5.42-5.43 retain the source's concrete matrices and the contrast
+# between the unsplit real factor z^2+1 and its two complex linear factors.
+
+prop has_upper_triangular_basis(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap2b::is_basis(s, scalars, V, Vspace, n, basis), $is_upper_triangular_matrix(s, scalars, n, @OperatorMatrix(basis, T))}
+
+prop operator_has_upper_triangular_matrix(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    \chap2c::dimension<s, scalars, V, Vspace> = 0 or $has_upper_triangular_basis(s, scalars, V, Vspace, T)
+
+prop is_monic_linear_factorization(s nonempty_set, scalars @ScalarSystem, p @Polynomials, m N_pos, roots &chap1a::FiniteList<s, m>, stages fn(k N_pos: k <= m + 1) @Polynomials):
+    stages(1) = p
+    stages(m + 1) = \chap4::constant_polynomial<s>(@Scalars.one)
+    forall k N_pos:
+        k <= m
+        =>:
+            stages(k) = \chap5a::polynomial_product<s, scalars>(\chap4::linear_factor<s, scalars>(&chap1a::FiniteList<s, m>{roots}.entries(k)), stages(k + 1))
+
+prop splits_into_monic_linear_factors(s nonempty_set, scalars @ScalarSystem, p @Polynomials):
+    exist m N_pos, roots &chap1a::FiniteList<s, m>, stages fn(k N_pos: k <= m + 1) @Polynomials st {$is_monic_linear_factorization(s, scalars, p, m, roots, stages)}
+
+prop upper_triangular_iff_minimal_polynomial_splits_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    forall:
+        =>:
+            $operator_has_upper_triangular_matrix(s, scalars, V, Vspace, T)
+        <=>:
+            $splits_into_monic_linear_factors(s, scalars, \chap5b::minimal_polynomial<s, scalars, V, Vspace>(T))
+
+# Result 5.44. Proof spine: a triangular diagonal product annihilates T and
+# hence contains the minimal polynomial's factors; conversely remove one
+# linear factor, triangularize the invariant range by induction, and extend its
+# basis to V.
+axiom upper_triangular_iff_minimal_polynomial_splits:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $upper_triangular_iff_minimal_polynomial_splits_statement(s, scalars, V, Vspace, T)
+
+# Result 5.47. The complex minimal polynomial splits by the fundamental theorem
+# of algebra, so 5.44 immediately supplies a triangularizing basis.
+axiom every_complex_operator_has_an_upper_triangular_matrix:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
+        =>:
+            $operator_has_upper_triangular_matrix(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T)

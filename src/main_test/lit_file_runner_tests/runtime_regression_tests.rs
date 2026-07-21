@@ -83,4 +83,5 @@ mod numeric_and_set_rules;
 mod output_contracts;
 mod proof_control_and_choice;
 mod proper_set_relations;
+mod sequence_semantics;
 mod structural_definitions;

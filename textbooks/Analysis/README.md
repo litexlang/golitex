@@ -81,6 +81,32 @@ marks Chapter 6 as a trusted/affect-only project export.  Strict verification
 is presently blocked by an earlier Chapter 5 trust boundary, so skipped proof
 bodies are not represented as if they had been checked.
 
+## Chapter 8 infinite-set interface
+
+Chapter 8 builds on Chapter 3's bijection and finite-cardinality interfaces.
+Its first layer exposes `$embeds_into`, `$is_countably_infinite`,
+`$is_at_most_countable`, and `$is_uncountable`, together with closure under
+subsets, images, binary unions, and Cartesian products. The source-facing
+`union_of_two_countable_sets_is_countable` now verifies by an even/odd
+interleaving, followed by the at-most-countable and infinite bridges.
+`integers_are_countable` enumerates the range of `n |-> -n`, proves
+`Z = N union (-N)`, and then applies that union theorem. The later product and
+rational-countability proofs reuse these named results.
+
+The next layer represents countable-set sums by composing a displayed
+enumeration with the summand, then relates finite absolute subsum bounds to
+sums over arbitrary supports. Chapter 8 also provides Cantor's theorem,
+function-valued infinite Cartesian products, explicit choice-axiom
+interfaces, partial/total/well-order predicates, strong induction, and Zorn's
+maximal-element principle. The detailed concept roles and dependency order
+are recorded in [`math_collections.md`](math_collections.md).
+
+Proof boundaries remain visible. The countable-union exercise, substantial
+Fubini and arbitrary-summation steps, Riemann rearrangement, the binary-decimal
+injection into the reals, and several good-chain lemmas still contain
+`trust`; the axiom of choice is declared as an `axiom`. The checked final
+theorems that depend on one of these interfaces do not erase that provenance.
+
 ## Chapter 10 differentiation interface
 
 Chapter 10 keeps a candidate derivative, its existence predicate, and its

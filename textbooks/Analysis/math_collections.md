@@ -135,6 +135,144 @@ stops at the existing Chapter 5 trust boundary before it reaches Chapter 6.
 The proof edges above therefore remain part of this human contract until that
 upstream debt is cleared and a strict run can emit them.
 
+## Chapter 8: infinite sets
+
+Chapter 8 has one mathematical spine rather than five unrelated collections
+of declarations. Chapter 3 supplies bijections, injections, finite
+cardinality, and Cantor--Schroeder--Bernstein. Section 8.1 turns these into a
+usable countability calculus. Section 8.2 uses countable enumerations to
+define sums over sets. Section 8.3 separates countable from uncountable sets.
+Section 8.4 makes the non-constructive selection principle explicit. Section
+8.5 packages the order vocabulary needed for strong induction and Zorn's
+lemma.
+
+### Concept inventory
+
+| Concept | Semantic role and Litex form | Main dependency and downstream use |
+| --- | --- | --- |
+| `embeds_into(S,T)` | Existence property, hence `prop` | An injective function `S -> T`; used to transfer at-most-countability and infinitude. |
+| `is_countably_infinite(X)` | Cardinality property, hence `prop` | A Chapter 3 bijection `N -> X`; supplies an enumeration. |
+| `is_at_most_countable(X)` | Disjunctive property, hence `prop` | Finite cardinality or countably infinite; closed under subsets and images. |
+| `is_uncountable(X)` | Negative property, hence `prop` | Defined as not at most countable; used by Cantor's theorem and the real-number argument. |
+| Countable enumeration | Relation on a displayed function, hence `prop is_countable_enumeration` | A bijection `N_pos -> X`; turns a set-indexed family into a Chapter 7 sequence. |
+| Countable-set series terms | Formula-defined function, hence `template` plus `have fn` | Applies `f` after an enumeration; feeds Chapter 7 convergence and sum predicates. |
+| Absolute summability and set-series sum | Properties of a displayed family and candidate sum, hence `prop` | Finite absolute subsum bounds and countable support; used by Fubini and rearrangement results. |
+| Infinite Cartesian product | Set of choice functions, hence a `template`-generated set with a membership `prop` | Coordinate membership; supplies the statement of the axiom of choice. |
+| Choice function | Displayed function satisfying a relation, hence `prop` | Pointwise existence plus the explicit choice axiom; used for selections and right inverses. |
+| Partial, total, and well order | Relations and properties, hence `prop` | Pair membership in an order relation; used by minima, induction, chains, and Zorn. |
+| Minimal elements and upper bounds | Properties of displayed elements, hence `prop` | Order plus subset membership; used in strong induction and maximal-element arguments. |
+
+These forms are deliberately not replaced by theorem-shaped wrappers. An
+enumeration is a function witnessed by a bijection, not a predicate invented
+for each particular set. A sum is represented by a candidate-value relation,
+not by an unproved global choice of a numeric value. A partial order remains
+a relation on a carrier rather than a record whose fields would have no later
+projection-based use in this chapter.
+
+### Countability dependency graph
+
+The ideal dependency structure of Section 8.1 is:
+
+~~~text
+chap3::is_bijective_fn --definition--> is_countably_infinite
+chap3::has_finite_cardinality --definition--> is_at_most_countable
+is_at_most_countable --negation--> is_uncountable
+
+is_at_most_countable + injective map --proof--> injection transfer
+injection transfer --proof--> subset and image closure
+
+two enumerations --construction--> even/odd interleaving
+even/odd interleaving --image--> union is at most countable
+enumeration of either input --embedding--> union is infinite
+at most countable + infinite --proof--> union is countably infinite
+
+N --negation map--> -N
+N + -N --set equality--> Z --union theorem--> integers_are_countable
+N x N --diagonal enumeration--> products --quotient map--> Q
+~~~
+
+This ordering is important. The bridge
+`at_most_countable_with_N_embedding_is_countably_infinite` belongs before the
+first closure theorem that needs it, even though a later example also uses it.
+Proof-local constructions such as the even/odd interleaving function and the
+enumeration of `-N` stay inside their source-facing theorems; they are not
+chapter-level mathematical concepts.
+
+Proposition 8.1.10 should follow its three mathematical steps:
+
+1. Interleave bijections `N -> X` and `N -> Y` at even and odd indices.
+2. Identify the resulting image with `X union Y`, obtaining at-most-countability.
+3. Embed `N` through the enumeration of `X`, obtaining infinitude, and combine
+   the two properties.
+
+Corollary 8.1.11 should likewise remain a three-step proof: negate the natural
+enumeration to enumerate `-N`, prove `Z = N union (-N)`, and call Proposition
+8.1.10. The checked declarations are
+`union_of_two_countable_sets_is_countable` and `integers_are_countable`.
+Reject a global `is_negative_natural_part_member` predicate here: the negative
+part is simply the range of the negation function, and the predicate obscures
+the proof's actual nodes.
+
+### Infinite sums and uncountability
+
+Section 8.2 reuses the countability layer rather than creating a second notion
+of enumeration:
+
+~~~text
+is_countable_enumeration
+    --composition--> countable_set_series_terms
+    --Chapter 7 series predicates--> countable-set convergence and sums
+finite absolute subsum bounds
+    --support theorem--> at-most-countable nonzero support
+    --restriction--> arbitrary-set series sum
+double-index family --row/swap/column views--> Fubini interfaces
+~~~
+
+The row, column, swapped, finite-bound, and finite-capture predicates are
+relations on proposed witnesses. They make the proof route of Fubini visible;
+they are not independently selected mathematical values. The templates for
+positive and negative parts and nonzero support are parameterized
+constructions used by later theorems.
+
+Section 8.3 starts from the reusable checked theorem `cantor_theorem`: a set
+cannot be equinumerous with its power set. Singleton embedding transfers this
+to `power_set(N)`. The source's binary-expansion map from subsets of `N` to
+reals should be a function, but its existence specification and injectivity
+are still proof debt; this is why `binary_decimal_subset_sum` is a selected
+function behind a visible trusted boundary rather than a new cardinality prop.
+
+### Choice and order
+
+For a family `X(alpha)` of subsets of one ambient carrier, membership in the
+infinite product means exactly that a function chooses a value in every
+factor. `axiom_of_choice_for_subsets` is therefore an explicit axiom from a
+nonempty-family property to existence of such a function. The finite-product
+comparison theorems are checked representation results and do not depend on
+that axiom. The generic `choice_property` is an external relation parameter
+used only to state the pointwise-choice formulation; it must not become a
+catch-all replacement for concrete source predicates.
+
+The order layer is built in this order:
+
+~~~text
+partial order -> strict comparison -> total order on a subset
+partial/total order -> minimal and maximal elements -> well ordering
+well ordering + induction step -> strong induction
+upper bound and strict upper bound -> chains
+chains + explicit choice interface -> good-chain construction -> Zorn
+~~~
+
+The current honest boundaries are concentrated rather than hidden. The
+countable-union exercise, most of the analytic substance of Fubini and
+arbitrary-set summation, the Riemann rearrangement theorem, and the
+binary-expansion construction retain `trust`. Choice itself is recorded as
+`axiom`. The finite-total-order well-ordering bridge and four good-chain
+lemmas in the Zorn route also retain visible `trust`. In contrast,
+Proposition 8.1.10, Corollary 8.1.11, Cantor's theorem, the finite product
+representations, the real supremum-approximating sequence, and the final Zorn
+theorem verify through their displayed dependencies, subject to any named
+trusted or axiomatic theorem they call.
+
 ## Chapter 10: differentiation
 
 This section is the Chapter 10 design map.  Its source of truth is Tao,

@@ -1721,6 +1721,8 @@ thm alternating_series_tail_bound:
         q >= n0
         =>:
             abs(finite_tail_sum(alternating_series_terms(a), p, q)) <= a(n0)
+    # The original proof reduces this estimate to several induction and parity
+    # steps marked "why?"; those steps are not expanded here.
     trust abs(finite_tail_sum(alternating_series_terms(a), p, q)) <= a(n0)
 
 thm alternating_series_test:
@@ -1847,6 +1849,8 @@ sketch:
 
     claim:
         ? not $is_convergent_series(harmonic_terms)
+        # This uses the p-series conclusion below, whose final exponent
+        # comparison is left as a "why?" step in the original textbook.
         trust not $is_convergent_series(harmonic_terms)
 
     $is_convergent_series(alternating_harmonic_terms)
@@ -2983,6 +2987,8 @@ thm p_series_converges_when_exponent_gt_one:
         q > 1
         =>:
             $is_convergent_series(p_series_terms(q))
+    # The original proof leaves the final equivalence
+    # `abs(2^(1-q)) < 1` iff `q > 1` as a "why?" step.
     trust $is_convergent_series(p_series_terms(q))
 
 thm p_series_diverges_when_exponent_le_one:
@@ -4095,6 +4101,8 @@ thm eventual_ratio_upper_bound_gives_root_limsup_bound:
         $has_finite_limit_superior(root_test_terms(c), A)
         =>:
             A <= r
+    # The original textbook proves this side of Lemma 7.5.2 but leaves its
+    # induction and final epsilon-contradiction bridges as "why?" steps.
     trust A <= r
 
 thm eventual_ratio_lower_bound_gives_root_liminf_bound:
@@ -4181,6 +4189,8 @@ thm positive_sequence_ratio_limit_one_gives_root_limit_one:
         $has_limit(ratio_terms(c), 1)
         =>:
             $has_limit(root_test_terms(c), 1)
+    # This uses both sides of Lemma 7.5.2; the original textbook leaves the
+    # lower-bound side to Exercise 7.5.1.
     trust $has_limit(root_test_terms(c), 1)
 
 """
