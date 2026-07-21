@@ -1,8 +1,7 @@
 # A field is a structure on a nonempty carrier F.  Matrices use the carrier
 # as their entry set and receive the selected field structure when operations
 # need addition, multiplication, or inverses.
-struct Field:
-    F nonempty_set
+struct Field<F nonempty_set>:
     zero F
     one F
     add fn(x, y F) F

@@ -1,4 +1,6 @@
 # Chapter 13 — Integration and Measure Theory
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/trusted status.
 
 # This chapter keeps the source order: elementary interval integration,
 # measurable spaces and measures, and then Bochner integration.  Integrals,

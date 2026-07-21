@@ -5,6 +5,11 @@ Definition 3.1.1 (Informal). We define a set A to be any unordered collection
 of objects. If x is an object, we say that x is an element of A, written x in A.
 """
 
+# A displayed set such as `{3, 8, 5, 2}` is a `finite_set`.  The proof command
+# `by extension` proves set equality by matching members in both directions,
+# while `by enumerate finite_set` checks those membership goals element by
+# element.
+
 sketch:
     by extension:
         ? {3, 8, 5, 2} = {2, 3, 5, 8}
@@ -28,6 +33,10 @@ Axiom 3.1 (Sets are objects). If A is a set, then A is also an object.
 
 forall A set:
     $is_set(A)
+
+# The binders `y R` and `z N` range over Litex's builtin real and natural
+# number sets.  Here they merely provide two familiar kinds of objects; the
+# book-order construction of the reals appears in Chapter 5.
 
 sketch:
     forall y R, z N:
@@ -89,6 +98,9 @@ sketch:
 """
 Axiom 3.2 (Empty set). There exists a set emptyset which contains no elements.
 """
+
+# `$is_nonempty_set(A)` means that `A` has at least one member; correspondingly,
+# a binder `A nonempty_set` ranges only over nonempty sets.
 
 not $is_nonempty_set({})
 
@@ -675,7 +687,10 @@ sketch:
     have replacement_plus_one_image set = replacement(plus_one_relation, {3, 5, 9})
 
 # For a Cartesian product, Replacement collects the factor sets through the
-# functional relation `S = proj(c,x)`; `big_union` then unions those factors.  The
+# functional relation `S = proj(C,k)`: `cart(A,B,C)` is the Cartesian product
+# of its factors, and `proj(C,k)` recovers its kth factor.  `fn_range(f)` is the
+# image of `f`, the set of all values `f(x)` on its declared domain, and
+# `big_union(F)` is the union of every set belonging to the family `F`.  The
 # three-dimensional example below exhibits this construction concretely.
 
 sketch:
@@ -960,6 +975,10 @@ Definition 3.3.7. Two functions with the same domain and codomain are equal
 iff they agree at every input.
 """
 
+# The builtin predicate `$fn_eq(f, g)` expresses exactly this ordinary function
+# equality: the functions have the same function space and equal values at
+# every input.
+
 sketch:
     have fn poly1(x R) R = x^2 + 2 * x + 1
     have fn poly2(x R) R = (x + 1)^2
@@ -977,6 +996,8 @@ on all of R; function equality depends on the chosen domain.
 
 # Domain and codomain are part of the function data: the same formula may be
 # equal on a smaller domain and unequal on a larger one.
+# `abs(x)` is Litex's builtin absolute-value function; its usual piecewise
+# definition is given explicitly when absolute value is introduced in Chapter 4.
 
 sketch:
     have fn id_on_N_pos(x N_pos) R = x
@@ -1085,6 +1106,8 @@ injective.
 # The core of this example is domain dependence.  The failing direction uses
 # `1` and `-1` as counterexamples; the successful direction cancels equal
 # squares using `sqrt(x^2)=x` for `x in N`.
+# `sqrt(t)` is the builtin nonnegative square root, so for a natural number `x`
+# the expression `sqrt(x^2)` returns `x`, not its negative.
 
 sketch:
     have fn square_Z(z Z) Z = z^2
@@ -1307,9 +1330,14 @@ f(A) = {f(x) : x in A}, viewed as a subset of Y.
 # Membership predicate for the restricted image: y is in f(A) exactly when y
 # has a preimage in A.  Since A is a subset of X, the witness is also recorded
 # as an element of X.
+# The builtin set `power_set(X)` is the collection of all subsets of `X`, so the
+# binder `A power_set(X)` is the typed form of the ordinary assumption `A ⊆ X`.
 prop has_preimage_in_subset(X, Y set, A power_set(X), f fn(z X) Y, y Y):
     exist x A st {x $in X, y = f(x)}
 
+# `template<...>` packages a construction uniformly in its displayed
+# parameters; here each choice of `X`, `Y`, `f`, and `A` gets its own
+# restricted-image set.
 template<X set, Y set, f fn(x X) Y, A power_set(X)>:
     have restricted_image set = {y Y: $has_preimage_in_subset(X, Y, A, f, y)}
 
@@ -1781,7 +1809,8 @@ components agree. This differs from unordered pair sets.
 
 # Ordered pairs are written directly as tuple literals `(x,y)` in Litex;
 # projections use `[1]` and `[2]`; the set-theoretic coding is left to the
-# source exercise.
+# source exercise.  `tuple_dim(t)` is the number of coordinates of the tuple
+# `t`.
 
 sketch:
     forall x1, x2 set, y1, y2 set:
@@ -1827,9 +1856,10 @@ to an exercise.
 
 # The binary Cartesian product is written `cart(X,Y)`.  Its points are ordered
 # pairs `(x,y)` with `x` in `X` and `y` in `Y`, and a point of `cart(X,Y)`
-# exposes its two coordinates.  Empty factors have the expected behavior for binary
-# products.  One-fold and zero-fold product conventions are discussed later as
-# finite-product notation, not as binary `cart`.
+# exposes its two coordinates.  `proj(C,i)` is its ith factor and `cart_dim(C)`
+# is the number of factors.  Empty factors have the expected behavior for
+# binary products.  One-fold and zero-fold product conventions are discussed
+# later as finite-product notation, not as binary `cart`.
 
 sketch:
     forall X, Y nonempty_set, x X, y Y:
@@ -2169,6 +2199,8 @@ standard n-element set.
 # Tao uses `{i in N : 1 <= i <= n}`.  This file uses
 # `range(0, n)` as an equivalent n-element model, while concrete examples still
 # compute size with `finite_set_size(X)`.
+# More precisely, `range(a,b)` is the half-open integer interval `[a,b)`, while
+# `closed_range(a,b)` is the closed integer interval `[a,b]`.
 
 prop has_cardinality(X set, n N):
     $has_equal_cardinality(X, range(0, n))
@@ -2283,8 +2315,10 @@ Example 3.6.11. Small concrete finite-cardinality computations agree with the
 expected counts.
 """
 
-# These examples compute finite sizes directly.  The final claim records that
-# every finite set has a natural-number `finite_set_size`.
+# These examples compute finite sizes directly.  In particular, `range(0,4)`
+# is `{0,1,2,3}`, while `closed_range(1,4)` is `{1,2,3,4}`; both have four
+# elements.  The final claim records that every finite set has a natural-number
+# `finite_set_size`.
 
 sketch:
     $is_finite_set({0, 1, 2})

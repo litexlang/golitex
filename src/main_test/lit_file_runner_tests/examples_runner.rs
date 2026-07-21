@@ -14,6 +14,7 @@ use super::helper::{
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
 const ANALYSIS_ONE_CHAPTERS_SUBDIR: &str = "textbooks/Analysis";
+const LINEAR_ALGEBRA_DONE_RIGHT_SUBDIR: &str = "textbooks/LinearAlgebraDoneRight";
 const MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR: &str = "textbooks/The-Mechanics-of-Litex-Proof";
 const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/NumberTheoryForBeginners";
 
@@ -115,6 +116,7 @@ fn run_all_parallel_impl() {
         );
         run_examples_impl();
         run_analysis_one_chapters_impl();
+        run_linear_algebra_done_right_impl();
         run_mechanics_textbook_chapters_impl();
         run_number_theory_for_beginners_impl();
         run_runtime_contract_suite_impl();
@@ -151,6 +153,14 @@ fn run_all_parallel_impl() {
         spawn_with_large_stack(
             "run_all_analysis_one_chapters_large_stack",
             run_analysis_one_chapters_impl,
+        ),
+        &mut failed_dataset_labels,
+    );
+    collect_run_all_dataset_result(
+        "Linear Algebra Done Right chapters",
+        spawn_with_large_stack(
+            "run_all_linear_algebra_done_right_large_stack",
+            run_linear_algebra_done_right_impl,
         ),
         &mut failed_dataset_labels,
     );
@@ -212,6 +222,21 @@ fn run_analysis_one_chapters() {
 
 fn run_analysis_one_chapters_impl() {
     run_textbook_chapters_impl(ANALYSIS_ONE_CHAPTERS_SUBDIR, "Analysis I chapters");
+}
+
+#[test]
+fn run_linear_algebra_done_right() {
+    run_with_large_stack(
+        "run_linear_algebra_done_right_large_stack",
+        run_linear_algebra_done_right_impl,
+    );
+}
+
+fn run_linear_algebra_done_right_impl() {
+    run_textbook_chapters_impl(
+        LINEAR_ALGEBRA_DONE_RIGHT_SUBDIR,
+        "Linear Algebra Done Right chapters",
+    );
 }
 
 #[test]

@@ -589,6 +589,9 @@ forall epsilon R_pos, u, v, x, y R:
     =>:
         abs(finite_set_max(union({u}, { v})) - finite_set_max(union({x}, { y}))) <= epsilon
 
+# `finite_set_min(S)` is the smallest member of a nonempty finite numeric set;
+# the next estimate is the minimum analogue of the maximum estimate above.
+
 forall epsilon R_pos, u, v, x, y R:
     abs(u - x) < epsilon
     abs(v - y) < epsilon
@@ -3149,6 +3152,9 @@ thm limit_point_has_convergent_subsequence:
         $is_epsilon_adherent_to_sequence(a, L, 1 / k, s)
         obtain n from exist n N_pos st {n >= s and abs(a(n) - L) < 1 / k}
         witness $is_nonempty_set(A) from n
+    # `by axiom_of_choice: set fn_range(F)` applies the ordinary axiom of choice
+    # to this family of nonempty witness sets and produces one selected element
+    # of every member of the family.
     by axiom_of_choice: set fn_range(F):
         forall A fn_range(F):
             $is_nonempty_set(A)

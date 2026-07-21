@@ -1,4 +1,6 @@
 # Chapter 10 — Linear Algebra
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/trusted status.
 
 # Carrier-first interfaces make scalar fields, vector operations, maps, and
 # subspaces explicit. Repeated tactic or API demonstrations are represented
@@ -485,7 +487,7 @@ thm eigenspace_nontrivial_implies_eigenvalue:
     # Proof debt: package the nonzero eigenspace witness.
     trust $has_eigenvalue(K, V, zeroV, smul, phi, a)
 
-# These are selection interfaces for the textbook's minimal and characteristic
+# These are selection interfaces for the source's minimal and characteristic
 # polynomials. Their domain is a genuine linear endomorphism, rather than an
 # arbitrary function; construction and minimality remain visible proof debt.
 template<K, V set, zeroK K, addV fn(x, y V) V, smul fn(a K, v V) V>:

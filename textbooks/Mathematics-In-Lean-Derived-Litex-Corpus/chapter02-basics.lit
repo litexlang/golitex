@@ -1,4 +1,6 @@
 # Chapter 2 — Basics
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/trusted status.
 
 # 2.1 Calculating
 
@@ -169,6 +171,94 @@ thm two_mul:
     mul(one, a) = a
     add(mul(one, a), mul(one, a)) = add(a, a)
     mul(add(one, one), a) = add(mul(one, a), mul(one, a)) = add(a, a)
+
+# Reassociate four summands and exchange the two middle terms. This is the
+# small additive-normalization interface used by the sum-of-squares identity.
+thm add_reorder_four:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a, b, c, d A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        =>:
+            add(add(a, b), add(c, d)) = add(add(a, c), add(b, d))
+    add(add(a, b), add(c, d)) = add(a, add(b, add(c, d)))
+    add(b, add(c, d)) = add(add(b, c), d)
+    add(b, c) = add(c, b)
+    add(add(b, c), d) = add(add(c, b), d) = add(c, add(b, d))
+    add(a, add(b, add(c, d))) = add(a, add(c, add(b, d)))
+    add(a, add(c, add(b, d))) = add(add(a, c), add(b, d))
+    add(add(a, b), add(c, d)) = add(add(a, c), add(b, d))
+
+# In an additive group, a summand whose sum with x is zero is -x.
+thm eq_neg_of_add_eq_zero:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, x, y A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        add(x, y) = zero
+        =>:
+            y = neg(x)
+    by thm add_neg_cancel(A, add, zero, neg, x)
+    add(x, y) = zero = add(x, neg(x))
+    by thm add_left_cancel(A, add, zero, neg, x, y, neg(x))
+    y = neg(x)
+
+# Negation is involutive.
+thm neg_neg:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, x A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        =>:
+            neg(neg(x)) = x
+    add(neg(x), x) = zero
+    by thm eq_neg_of_add_eq_zero(A, add, zero, neg, neg(x), x)
+    x = neg(neg(x))
+    neg(neg(x)) = x
+
+# Multiplying by an additive inverse gives the additive inverse of the product.
+thm mul_neg_right:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, x, y A:
+        $is_ring(A, add, zero, neg, mul, one)
+        =>:
+            mul(x, neg(y)) = neg(mul(x, y))
+    by thm mul_zero(A, add, zero, neg, mul, one, x)
+    by thm add_neg_cancel(A, add, zero, neg, y)
+    add(mul(x, y), mul(x, neg(y))) = mul(x, add(y, neg(y))) = mul(x, zero) = zero
+    by thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(x, y), mul(x, neg(y)))
+    mul(x, neg(y)) = neg(mul(x, y))
+
+thm neg_mul_left:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, x, y A:
+        $is_ring(A, add, zero, neg, mul, one)
+        =>:
+            mul(neg(x), y) = neg(mul(x, y))
+    by thm zero_mul(A, add, zero, neg, mul, one, y)
+    by thm add_neg_cancel(A, add, zero, neg, x)
+    add(mul(x, y), mul(neg(x), y)) = mul(add(x, neg(x)), y) = mul(zero, y) = zero
+    by thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(x, y), mul(neg(x), y))
+    mul(neg(x), y) = neg(mul(x, y))
+
+thm neg_mul_neg:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, x, y A:
+        $is_ring(A, add, zero, neg, mul, one)
+        =>:
+            mul(neg(x), neg(y)) = mul(x, y)
+    by thm neg_mul_left(A, add, zero, neg, mul, one, x, neg(y))
+    by thm mul_neg_right(A, add, zero, neg, mul, one, x, y)
+    by thm neg_neg(A, add, zero, neg, mul(x, y))
+    mul(neg(x), neg(y)) = neg(mul(x, neg(y))) = neg(neg(mul(x, y))) = mul(x, y)
+
+# Four factors in a commutative multiplication can exchange the middle pair.
+thm commutative_mul_reorder_four:
+    ? forall A set, mul fn(x, y A) A, a, b, c, d A:
+        forall x, y, z A:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x, y A:
+            mul(x, y) = mul(y, x)
+        =>:
+            mul(mul(a, b), mul(c, d)) = mul(mul(a, c), mul(b, d))
+    mul(mul(a, b), mul(c, d)) = mul(a, mul(b, mul(c, d)))
+    mul(b, mul(c, d)) = mul(mul(b, c), d)
+    mul(b, c) = mul(c, b)
+    mul(mul(b, c), d) = mul(mul(c, b), d) = mul(c, mul(b, d))
+    mul(a, mul(b, mul(c, d))) = mul(a, mul(c, mul(b, d)))
+    mul(a, mul(c, mul(b, d))) = mul(mul(a, c), mul(b, d))
+    mul(mul(a, b), mul(c, d)) = mul(mul(a, c), mul(b, d))
 
 # Private proof machinery for the three source group results. Multiplying both
 # sides on the left by inv(a) proves left cancellation.

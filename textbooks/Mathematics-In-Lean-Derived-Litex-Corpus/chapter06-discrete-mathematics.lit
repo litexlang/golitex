@@ -1,0 +1,130 @@
+# Chapter 6 — Discrete Mathematics
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/blocked status.
+
+# Only source definitions, principal mathematical results, and the constructors
+# needed to use them are retained. Repeated tactic presentations are collapsed.
+
+# 6.1 Finsets and Fintypes
+
+# Source definition: example1. A finite set is unordered and has no duplicate
+# elements; later source spelling variants are presentation examples only.
+have finite_set_example finite_set = {0, 1, 2}
+
+# Source definition: f. The source function is integer-valued and remains
+# callable instead of being replaced by a predicate about squares.
+have fn square_int(n N) Z = n^2
+
+# The source identifies cardinality with a sum of ones. This is checked by the
+# finite constant-sum rule.
+thm finite_set_card_as_sum_ones:
+    ? forall A finite_set:
+        finite_set_size(A) = finite_set_sum(A, fn(x A) N {1})
+    finite_set_sum(A, fn(x A) N {1}) = finite_set_size(A) * 1 = finite_set_size(A)
+
+# 6.2 Counting Arguments
+
+# The first counting formulas are direct finite-set cardinality laws.
+thm card_cartesian_product:
+    ? forall A, B finite_set:
+        finite_set_size(cart(A, B)) = finite_set_size(A) * finite_set_size(B)
+    finite_set_size(cart(A, B)) = finite_set_size(A) * finite_set_size(B)
+
+thm card_union_inclusion_exclusion:
+    ? forall A, B finite_set:
+        finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
+
+# Disjointness is a relation between two candidate sets, so this is correctly a
+# prop. The following named result is a fact, not another proposition wrapper.
+prop disjoint_sets(A, B set):
+    intersect(A, B) = {}
+
+thm card_union_of_disjoint:
+    ? forall A, B finite_set:
+        $disjoint_sets(A, B)
+        =>:
+            finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B)
+    intersect(A, B) = {}
+    finite_set_size(intersect(A, B)) = finite_set_size({}) = 0
+    finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B)) = finite_set_size(A) + finite_set_size(B)
+
+# Source definition: triangle. The object is a callable finite-set-valued
+# function. Finiteness of a filtered Cartesian product is recorded with the
+# object rather than changing triangle into a prop.
+have fn triangle(n N) power_set(cart(N, N)) = {p cart(N, N): p[1] $in range(0, n + 1), p[2] $in range(0, n + 1), p[1] < p[2]}
+
+thm triangle_is_finite:
+    ? forall n N:
+        $is_finite_set(triangle(n))
+    claim:
+        ? triangle(n) $subset cart(range(0, n + 1), range(0, n + 1))
+        claim:
+            ? forall p triangle(n):
+                p $in cart(range(0, n + 1), range(0, n + 1))
+            p $in {q cart(N, N): q[1] $in range(0, n + 1), q[2] $in range(0, n + 1), q[1] < q[2]}
+            p[1] $in range(0, n + 1)
+            p[2] $in range(0, n + 1)
+            p = (p[1], p[2])
+            (p[1], p[2]) $in cart(range(0, n + 1), range(0, n + 1))
+            p $in cart(range(0, n + 1), range(0, n + 1))
+        triangle(n) $subset cart(range(0, n + 1), range(0, n + 1))
+    $is_finite_set(cart(range(0, n + 1), range(0, n + 1)))
+    by thm basics::subset_of_finite_set_is_finite(triangle(n), cart(range(0, n + 1), range(0, n + 1)))
+    $is_finite_set(triangle(n))
+
+# 6.3 Inductive Structures
+
+# Litex does not yet declare user-defined inductive carrier families. The
+# reusable interface therefore keeps the element carrier A and the list carrier
+# L explicit. ListCore packages the callable constructors and their structural
+# induction principle; no nullary prop is used as a fake list object.
+struct ListCore<A set, L nonempty_set>:
+    nil L
+    cons fn(a A, xs L) L
+    <=>:
+        forall P power_set(L):
+            nil $in P
+            forall a A, xs L:
+                xs $in P
+                =>:
+                    cons(a, xs) $in P
+            =>:
+                P = L
+
+# Source definition: append. is_list_append is a property of a candidate
+# callable function; list_append is the corresponding selected function.
+prop is_list_append(A set, L nonempty_set, core &ListCore<A, L>, append fn(xs, ys L) L):
+    forall ys L:
+        append(&ListCore<A, L>{core}.nil, ys) = ys
+    forall a A, xs, ys L:
+        append(&ListCore<A, L>{core}.cons(a, xs), ys) = &ListCore<A, L>{core}.cons(a, append(xs, ys))
+
+# Source definition: map. Its domain and codomain list carriers remain
+# independent, exactly as in List.map.
+prop is_list_map(A, B set, L_A, L_B nonempty_set, core_A &ListCore<A, L_A>, core_B &ListCore<B, L_B>, f fn(x A) B, map_fn fn(xs L_A) L_B):
+    map_fn(&ListCore<A, L_A>{core_A}.nil) = &ListCore<B, L_B>{core_B}.nil
+    forall a A, xs L_A:
+        map_fn(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<B, L_B>{core_B}.cons(f(a), map_fn(xs))
+
+# The source uses Nat.max in the depth recursion.
+have fn nat_max(left, right N) N by cases:
+    case left >= right: left
+    case left < right: right
+
+# Boolean values used by the source's formula evaluator are represented by the
+# actual two-element carrier {0,1}. The formula construction itself is tracked
+# in todo.lit until its recursive interface is checked.
+have Boolean finite_set = {0, 1}
+
+have fn boolean_not(value {0, 1}) {0, 1} by cases:
+    case value = 0: 1
+    case value = 1: 0
+
+have fn boolean_and(left, right {0, 1}) {0, 1} by cases:
+    case left = 0: 0
+    case left = 1: right
+
+have fn boolean_or(left, right {0, 1}) {0, 1} by cases:
+    case left = 0: right
+    case left = 1: 1

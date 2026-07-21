@@ -1,0 +1,81 @@
+# Chapter 4 — Sets and Functions
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/trusted status.
+
+# This chapter keeps the mathematical interfaces from Mathematics in Lean and
+# omits repeated Lean tactic demonstrations. Sets use Litex's builtin carriers
+# and set builders; functions keep their domains and codomains explicit.
+
+# ---------------------------------------------------------------------------
+# Section 4.1 — Sets
+# ---------------------------------------------------------------------------
+
+# Source definition `evens`. A natural number belongs to this set exactly when
+# Chapter 1's existential parity relation supplies a factor of two.
+have evens power_set(N) = {n N: $chap1::even(n)}
+
+# Source definition `odds`. The source presents this as the complement of the
+# even naturals, so the definition retains that logical form.
+have odds power_set(N) = {n N: not $chap1::even(n)}
+
+# Source definition `primes`. Primality already forces positivity, so the
+# carrier is N_pos and the mathematical predicate comes from std/basics.
+have primes power_set(N_pos) = {p N_pos: $std::basics::prime(p)}
+
+# ---------------------------------------------------------------------------
+# Section 4.2 — Functions
+# ---------------------------------------------------------------------------
+
+# A map is injective when equal outputs force equal inputs. This is the
+# explicit-carrier Litex counterpart of Lean's `Function.Injective`.
+prop injective_fn(S, T set, f fn(x S) T):
+    forall x1, x2 S:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
+
+# A map is surjective when every target has a preimage in the source.
+prop surjective_fn(S, T set, f fn(x S) T):
+    forall y T:
+        exist x S st {y = f(x)}
+
+# A bijection is simultaneously injective and surjective.
+prop bijective_fn(S, T set, f fn(x S) T):
+    $injective_fn(S, T, f)
+    $surjective_fn(S, T, f)
+
+# This relation records that a particular target has at least one preimage. It
+# is the condition used by the source's total chosen inverse.
+prop has_preimage(S, T set, f fn(x S) T, y T):
+    exist x S st {f(x) = y}
+
+# Restricted images are used throughout the source and in the
+# Schröder-Bernstein construction. A witness typed in A already lies in S,
+# because A has carrier power_set(S); no redundant ambient-membership premise is
+# added to the mathematical definition.
+prop has_preimage_in_subset(S, T set, f fn(x S) T, A power_set(S), y T):
+    exist x A st {y = f(x)}
+
+template<S, T set, f fn(x S) T, A power_set(S)>:
+    have set_image power_set(T) = {y T: $has_preimage_in_subset(S, T, f, A, y)}
+
+# Source theorem `Cantor`. No function from a set onto its power set can be
+# surjective. The proof forms the diagonal set of inputs which do not belong to
+# their own images, asks surjectivity for its preimage, and obtains the usual
+# membership contradiction.
+thm cantor:
+    ? forall S set, f fn(x S) power_set(S):
+        not $surjective_fn(S, power_set(S), f)
+    by contra:
+        ? not $surjective_fn(S, power_set(S), f)
+        have diagonal_set power_set(S) = {x S: not x $in f(x)}
+        obtain a from exist a S st {diagonal_set = f(a)}
+
+        claim:
+            ? a $in diagonal_set
+            by contra:
+                ? a $in diagonal_set
+                a $in {x S: not x $in f(x)}
+                impossible not a $in diagonal_set
+
+        impossible not a $in f(a)

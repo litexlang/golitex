@@ -1,0 +1,202 @@
+# Linear Algebra Done Right, fourth edition — Section 6B.
+# Orthonormal Bases.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Geometry "&chap6a::InnerProductScalarGeometry<s, scalars>{scalar_geometry}"
+macro InnerSpace "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>"
+macro Inner "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}"
+macro VSpace "&chap1b::VectorSpace<s, scalars, V>{&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space}"
+macro Norm "\chap6a::norm<s, scalars, scalar_geometry, V>"
+
+# Definition 6.22. Unit norm and pairwise orthogonality avoid a redundant
+# diagonal case split in every later use.
+prop is_orthonormal(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, m N, vectors &chap1a::FiniteList<V, m>):
+    forall k N_pos:
+        k <= m
+        =>:
+            @Norm(inner_space, &chap1a::FiniteList<V, m>{vectors}.entries(k)) = 1
+    forall j, k N_pos:
+        j <= m
+        k <= m
+        j != k
+        =>:
+            $chap6a::are_orthogonal(s, scalars, scalar_geometry, V, inner_space, &chap1a::FiniteList<V, m>{vectors}.entries(j), &chap1a::FiniteList<V, m>{vectors}.entries(k))
+
+# Example 6.23. Standard coordinate bases, the displayed vectors in F^3,
+# trigonometric functions, and polynomial examples remain source prose.
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, m N>:
+    have fn coefficient_absolute_square_sum(coefficients &chap1a::FiniteList<s, m>) R = sum(1, m, fn(k N_pos: k <= m) R {&chap6a::InnerProductScalarGeometry<s, scalars>{scalar_geometry}.absolute_value(&chap1a::FiniteList<s, m>{coefficients}.entries(k))^2})
+
+# Result 6.24. Repeatedly apply Pythagoras to the mutually orthogonal scaled
+# vectors; unit norms turn each term into |a_k|^2.
+axiom norm_of_an_orthonormal_linear_combination:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, m N, vectors &chap1a::FiniteList<V, m>, coefficients &chap1a::FiniteList<s, m>:
+        $is_orthonormal(s, scalars, scalar_geometry, V, inner_space, m, vectors)
+        =>:
+            @Norm(inner_space, \chap2a::linear_combination_value<s, scalars, V, @Inner.vector_space, m>(coefficients, vectors))^2 = \coefficient_absolute_square_sum<s, scalars, scalar_geometry, V, m>(coefficients)
+
+# Result 6.25. A zero linear combination has zero squared norm; 6.24 makes the
+# sum of coefficient squares zero, hence every coefficient is zero.
+axiom orthonormal_lists_are_linearly_independent:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, m N, vectors &chap1a::FiniteList<V, m>:
+        $is_orthonormal(s, scalars, scalar_geometry, V, inner_space, m, vectors)
+        =>:
+            $chap2a::is_linearly_independent(s, scalars, V, @Inner.vector_space, m, vectors)
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, m N>:
+    have fn inner_product_coordinates(inner_space @InnerSpace, v V, vectors &chap1a::FiniteList<V, m>) &chap1a::FiniteList<s, m> = (m, fn(k N_pos: k <= m) s {&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.inner(v, &chap1a::FiniteList<V, m>{vectors}.entries(k))})
+
+# Result 6.26. Subtract the orthonormal-coordinate combination from v; the
+# remainder is orthogonal to that combination; Pythagoras and 6.24 give the
+# inequality after discarding the remainder norm.
+axiom bessels_inequality:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, m N, vectors &chap1a::FiniteList<V, m>, v V:
+        $is_orthonormal(s, scalars, scalar_geometry, V, inner_space, m, vectors)
+        =>:
+            \coefficient_absolute_square_sum<s, scalars, scalar_geometry, V, m>(\inner_product_coordinates<s, scalars, scalar_geometry, V, m>(inner_space, v, vectors)) <= @Norm(inner_space, v)^2
+
+# Definition 6.27. Orthonormal basis is the conjunction of the two existing
+# list relations; it does not select a preferred basis.
+prop is_orthonormal_basis(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, n N, basis &chap1a::FiniteList<V, n>):
+    $is_orthonormal(s, scalars, scalar_geometry, V, inner_space, n, basis)
+    $chap2b::is_basis(s, scalars, V, @Inner.vector_space, n, basis)
+
+# Result 6.28. Orthonormality gives independence by 6.25; an independent list
+# whose length is dim V is a basis by 2.38.
+axiom orthonormal_lists_of_dimension_length_are_bases:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, vectors &chap1a::FiniteList<V, \chap2c::dimension<s, scalars, V, @Inner.vector_space>>:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        $is_orthonormal(s, scalars, scalar_geometry, V, inner_space, \chap2c::dimension<s, scalars, V, @Inner.vector_space>, vectors)
+        =>:
+            $is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, \chap2c::dimension<s, scalars, V, @Inner.vector_space>, vectors)
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, n N>:
+    have fn orthonormal_coordinate_pairing(inner_space @InnerSpace, u, v V, basis &chap1a::FiniteList<V, n>) s = \chap3b::scalar_finite_sum<s, scalars, n>(fn(k N_pos: k <= n) s {@Scalars.mul(@Inner.inner(u, &chap1a::FiniteList<V, n>{basis}.entries(k)), @Geometry.conjugate(@Inner.inner(v, &chap1a::FiniteList<V, n>{basis}.entries(k))))})
+
+prop has_orthonormal_basis_coordinate_formulas(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, n N, basis &chap1a::FiniteList<V, n>, u, v V):
+    v = \chap2a::linear_combination_value<s, scalars, V, @Inner.vector_space, n>(\inner_product_coordinates<s, scalars, scalar_geometry, V, n>(inner_space, v, basis), basis)
+    @Norm(inner_space, v)^2 = \coefficient_absolute_square_sum<s, scalars, scalar_geometry, V, n>(\inner_product_coordinates<s, scalars, scalar_geometry, V, n>(inner_space, v, basis))
+    @Inner.inner(u, v) = \orthonormal_coordinate_pairing<s, scalars, scalar_geometry, V, n>(inner_space, u, v, basis)
+
+# Result 6.30. Expand v in the basis and take its inner product with e_k to
+# identify each coefficient; 6.24 gives Parseval; second-slot linearity gives
+# the inner-product coordinate formula.
+axiom writing_vectors_in_an_orthonormal_basis:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, n N, basis &chap1a::FiniteList<V, n>, u, v V:
+        $is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, n, basis)
+        =>:
+            $has_orthonormal_basis_coordinate_formulas(s, scalars, scalar_geometry, V, inner_space, n, basis, u, v)
+
+# Example 6.31. Four inner products give the displayed coordinates directly.
+
+template<X set, n N>:
+    have fn finite_list_initial_segment(values &chap1a::FiniteList<X, n>, k closed_range(0, n)) &chap1a::FiniteList<X, k> = (k, fn(i N_pos: i <= k) X {&chap1a::FiniteList<X, n>{values}.entries(i)})
+
+prop is_gram_schmidt_trace(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, m N_pos, input, orthogonal, normalized &chap1a::FiniteList<V, m>):
+    forall k N_pos:
+        k <= m
+        =>:
+            &chap1a::FiniteList<V, m>{orthogonal}.entries(k) = @VSpace.add(&chap1a::FiniteList<V, m>{input}.entries(k), @VSpace.smul(@Scalars.neg(@Scalars.one), \chap2a::linear_combination_value<s, scalars, V, @Inner.vector_space, k - 1>((k - 1, fn(j N_pos: j <= k - 1) s {\chap6a::orthogonal_coefficient<s, scalars, scalar_geometry, V>(inner_space, &chap1a::FiniteList<V, m>{input}.entries(k), &chap1a::FiniteList<V, m>{orthogonal}.entries(j))}), \finite_list_initial_segment<V, m>(orthogonal, k - 1))))
+            &chap1a::FiniteList<V, m>{normalized}.entries(k) = @VSpace.smul(@Scalars.inv(@Geometry.real_embed(@Norm(inner_space, &chap1a::FiniteList<V, m>{orthogonal}.entries(k)))), &chap1a::FiniteList<V, m>{orthogonal}.entries(k))
+
+prop gram_schmidt_preserves_prefix_spans(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos, input, output &chap1a::FiniteList<V, m>):
+    forall k N_pos:
+        k <= m
+        =>:
+            \chap2a::span<s, scalars, V, Vspace, k>(\finite_list_initial_segment<V, m>(input, k)) = \chap2a::span<s, scalars, V, Vspace, k>(\finite_list_initial_segment<V, m>(output, k))
+
+# Result 6.32. Induct on k: independence keeps f_k nonzero; subtracting the
+# previous projections makes it orthogonal to the earlier list; normalization
+# gives unit norm; the defining formula preserves each prefix span.
+axiom gram_schmidt_procedure:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, m N_pos, input &chap1a::FiniteList<V, m>:
+        $chap2a::is_linearly_independent(s, scalars, V, @Inner.vector_space, m, input)
+        =>:
+            exist orthogonal, normalized &chap1a::FiniteList<V, m> st {$is_gram_schmidt_trace(s, scalars, scalar_geometry, V, inner_space, m, input, orthogonal, normalized), $is_orthonormal(s, scalars, scalar_geometry, V, inner_space, m, normalized), $gram_schmidt_preserves_prefix_spans(s, scalars, V, @Inner.vector_space, m, input, normalized)}
+
+# Example 6.34. Applying the trace to 1,x,x^2 gives the displayed orthonormal
+# polynomial basis; the integral arithmetic remains explanatory prose.
+
+prop has_orthonormal_basis(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace):
+    exist n N, basis &chap1a::FiniteList<V, n> st {$is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, n, basis)}
+
+# Result 6.35. Choose a basis, apply Gram-Schmidt, and use 6.28.
+axiom existence_of_orthonormal_basis:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        =>:
+            $has_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space)
+
+prop is_orthonormal_basis_extension(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, m N, original &chap1a::FiniteList<V, m>, n N, extended &chap1a::FiniteList<V, n>):
+    m <= n
+    $is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, n, extended)
+    forall k N_pos:
+        k <= m
+        =>:
+            &chap1a::FiniteList<V, n>{extended}.entries(k) = &chap1a::FiniteList<V, m>{original}.entries(k)
+
+# Result 6.36. Extend the orthonormal list to a basis, then Gram-Schmidt that
+# basis; the already orthonormal prefix remains unchanged.
+axiom every_orthonormal_list_extends_to_an_orthonormal_basis:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, m N, vectors &chap1a::FiniteList<V, m>:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        $is_orthonormal(s, scalars, scalar_geometry, V, inner_space, m, vectors)
+        =>:
+            exist n N, extended &chap1a::FiniteList<V, n> st {$is_orthonormal_basis_extension(s, scalars, scalar_geometry, V, inner_space, m, vectors, n, extended)}
+
+prop has_orthonormal_upper_triangular_basis(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T \chap3a::linear_map_space<s, scalars, V, V, @Inner.vector_space, @Inner.vector_space>):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, n, basis), $chap5c::is_upper_triangular_matrix(s, scalars, n, \chap5c::matrix_of_operator<s, scalars, V, @Inner.vector_space, n>(basis, T))}
+
+prop orthonormal_upper_triangular_iff_minimal_polynomial_splits_statement(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T \chap3a::linear_map_space<s, scalars, V, V, @Inner.vector_space, @Inner.vector_space>):
+    forall:
+        =>:
+            $has_orthonormal_upper_triangular_basis(s, scalars, scalar_geometry, V, inner_space, T)
+        <=>:
+            $chap5c::splits_into_monic_linear_factors(s, scalars, \chap5b::minimal_polynomial<s, scalars, V, @Inner.vector_space>(T))
+
+# Result 6.37. Gram-Schmidt preserves the invariant prefix spans of any
+# triangularizing basis; 5.39 gives triangularity in the orthonormal output;
+# 5.44 supplies the minimal-polynomial equivalence.
+axiom upper_triangular_matrix_with_respect_to_an_orthonormal_basis:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T \chap3a::linear_map_space<s, scalars, V, V, @Inner.vector_space, @Inner.vector_space>:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        =>:
+            $orthonormal_upper_triangular_iff_minimal_polynomial_splits_statement(s, scalars, scalar_geometry, V, inner_space, T)
+
+# Result 6.38. The complex minimal polynomial splits by the FTA; apply 6.37.
+axiom schurs_theorem:
+    ? forall V nonempty_set, inner_space &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{inner_space}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{inner_space}.vector_space>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{inner_space}.vector_space)
+        =>:
+            $has_orthonormal_upper_triangular_basis(&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V, inner_space, T)
+
+# Definition 6.39. Linear functional and dual space reuse the exact Section 3F
+# interfaces; no inner-product-specific duplicate is introduced.
+
+prop represents_linear_functional(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, phi \chap3f::dual_space<s, scalars, V, @Inner.vector_space>, v V):
+    forall u V:
+        phi(u) = @Inner.inner(u, v)
+
+# Result 6.42. In an orthonormal basis, take the coefficient vector built from
+# phi(e_k); linearity and 6.30 prove existence. If v1 and v2 both represent
+# phi, test their difference against itself to prove uniqueness.
+axiom riesz_representation_theorem:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, phi \chap3f::dual_space<s, scalars, V, @Inner.vector_space>:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        =>:
+            exist! v V st {$represents_linear_functional(s, scalars, scalar_geometry, V, inner_space, phi, v)}
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace: $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space)>:
+    have fn riesz_representative by exist!:
+        ? forall phi \chap3f::dual_space<s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space>:
+            exist! v V st {$represents_linear_functional(s, scalars, scalar_geometry, V, inner_space, phi, v)}
+        by thm riesz_representation_theorem(s, scalars, scalar_geometry, V, inner_space, phi)
+
+# Selection bridge used by the adjoint construction in Chapter 7.
+axiom riesz_representative_spec:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, phi \chap3f::dual_space<s, scalars, V, @Inner.vector_space>:
+        $chap2a::is_finite_dimensional(s, scalars, V, @Inner.vector_space)
+        =>:
+            $represents_linear_functional(s, scalars, scalar_geometry, V, inner_space, phi, \riesz_representative<s, scalars, scalar_geometry, V, inner_space>(phi))

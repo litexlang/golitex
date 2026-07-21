@@ -1627,6 +1627,8 @@ Corollary 8.1.15. The rationals are countable.
 
 # Represent each rational by an integer numerator and nonzero integer
 # denominator; the quotient map from `Z x (Z minus {0})` has image `Q`.
+# The builtin carrier `Z_neg` is the set of strictly negative integers; the
+# displayed function enumerates it as `-1,-2,-3,...`.
 
 forall n N:
     -(n + 1) $in Z_neg
@@ -2210,13 +2212,16 @@ of sets X_alpha inside an ambient universe U, an element of the infinite product
 is a choice function c with c(alpha) in X_alpha for every alpha in I.
 """
 
-template<I set, S nonempty_set, X fn(alpha I) S>:
-    have general_cart_product set = general_cart(I, S, X)
-
 # The indexed Cartesian product `general_cart(I, S, X)` is the set of choice
 # functions: a member picks one value from the factor `X(alpha)` for each
 # index `alpha`.  The theorems below record the two basic uses of this product:
 # it is a function set, and each coordinate lies in the appropriate factor.
+# In the function-set comprehension below, `forall! alpha I => {...}` is the
+# inline form of “for every index alpha, the displayed membership condition
+# holds.”
+
+template<I set, S nonempty_set, X fn(alpha I) S>:
+    have general_cart_product set = general_cart(I, S, X)
 
 thm builtin_general_cart_unfolds_to_choice_function_set:
     ? forall I set, S nonempty_set, X fn(alpha I) S:
@@ -2334,6 +2339,11 @@ thm constant_general_cart_product_is_function_space:
 prop has_coordinate_values_in_family(n N_pos, U set, X fn(i closed_range(1, n)) power_set(U), f fn(i closed_range(1, n)) U):
     forall i closed_range(1, n):
         f(i) $in X(i)
+
+# `$is_cart(C)` means that `C` is a finite Cartesian-product set.  Later in the
+# proof, `have tuple t for i <= n, t[i] = ...` constructs the n-coordinate tuple
+# with the displayed ith coordinate, while `by closed_range as cases` exposes
+# the finitely many indices of a concrete closed range as proof cases.
 
 thm finite_cartesian_product_choice_function_representation:
     ? forall n N_pos, U set, X fn(i closed_range(1, n)) power_set(U), C, P set:
@@ -2621,6 +2631,9 @@ thm three_factor_finite_index_product_representation:
 """
 Axiom 8.1 (Choice). Any family of non-empty sets has a choice function.
 """
+
+# Litex's `axiom` form introduces this as an explicit trusted mathematical
+# assumption rather than presenting it as a checked theorem.
 
 axiom axiom_of_choice_for_general_cart:
     ? forall I set, S nonempty_set, X fn(alpha I) S:

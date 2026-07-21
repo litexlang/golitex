@@ -10,6 +10,8 @@ counting forward indefinitely. We call N the set of natural numbers.
 # This is notation-only: Litex takes `N` as its builtin natural-number set.
 # The following axioms and induction examples express the source's two ways of
 # generating its elements: start at `0`, then repeatedly take a successor.
+# Litex writes ordinary set membership as `x $in S`, so `0 $in N` below reads
+# exactly as “zero is a natural number.”
 
 """
 Remark 2.1.2. In some texts the natural numbers start at 1 instead of 0, but
@@ -29,6 +31,9 @@ Axiom 2.1. 0 is a natural number.
 """
 Axiom 2.2. If n is a natural number, then n++ is also a natural number.
 """
+
+# A binder `forall n N:` reads “for every natural number `n`”; the indented
+# statement is what is asserted for each such `n`.
 
 forall n N:
     n + 1 $in N
@@ -117,6 +122,9 @@ Axiom 2.5 (Principle of mathematical induction). Let P(n) be any property pertai
 
 # Axiom 2.5 is expressed by `by induc`: a base case at `0` and a successor step
 # establish a property for every builtin natural number.
+# In the local demonstration, `abstract_prop induction_demo(n)` is an arbitrary
+# property P(n), `claim:` states the result to prove, and `sketch:` keeps this
+# explanatory proof pattern local rather than adding a textbook theorem.
 
 sketch:
     abstract_prop induction_demo(n)
@@ -172,8 +180,11 @@ Remark 2.1.13. (Informal) One interesting feature about the natural numbers is t
 """
 
 # The source contrasts finite individual numbers with their infinite collection.
-# The formal statement here is that the set `N` is not finite; it uses Litex's
-# finite-set and cardinality interfaces.
+# The formal statement here is that the set `N` is not finite.
+# `$is_finite_set(S)` means that `S` is finite, while `finite_set_size(S)` is
+# its ordinary cardinality.  The `by contra` block assumes finiteness and
+# `impossible` closes the proof once the resulting size inequality contradicts
+# arithmetic.
 
 # The finite-set counting facts used below are builtin rules; their induction
 # proofs are not part of this introductory natural-number discussion.
@@ -309,6 +320,8 @@ Lemma 2.2.10. Let a be a positive number. Then there exists exactly one natural 
 
 # This is the inverse operation for successor.  Since successor is `+1`, the
 # witness is `a-1`, and uniqueness follows by subtracting `1` from both sides.
+# The expression `exist! b N st {...}` reads “there exists exactly one natural
+# number `b` such that ...”; `st` is the literal “such that.”
 
 claim:
     ? forall a N_pos:
@@ -592,6 +605,8 @@ prop is_euclidean_division(n N, q N_pos, m N, r N):
 # remainder `0`.  In the successor step, if `r+1 < q`, keep the quotient and
 # increment the remainder; otherwise `r+1 = q`, reset the remainder to `0` and
 # increment the quotient.
+# Inside the induction step, `obtain m, r from exist ...` names the quotient and
+# remainder supplied by the induction hypothesis.
 
 claim:
     ? forall q N_pos, n N:
