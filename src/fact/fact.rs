@@ -13,7 +13,7 @@ pub enum Fact {
 }
 
 impl fmt::Debug for Fact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", self)
     }
 }
@@ -55,7 +55,7 @@ impl Fact {
 }
 
 impl fmt::Display for Fact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             Fact::AtomicFact(atomic_fact) => write!(f, "{}", atomic_fact),
             Fact::ExistFact(exist_fact) => write!(f, "{}", exist_fact),
@@ -142,7 +142,7 @@ impl NotForallFact {
 }
 
 impl fmt::Display for NotForallFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {}", NOT, self.forall_fact)
     }
 }

@@ -297,7 +297,6 @@ thm closure_contains_set:
         ? forall x X:
             x $in closure_of_real_set(X)
         by thm interval_member_is_adherent(X, x)
-        $is_adherent_point(X, x)
         x $in closure_of_real_set(X)
     X $subset closure_of_real_set(X)
 
@@ -385,7 +384,6 @@ thm closure_of_intersection_subset:
     ? forall X, Y power_set(R):
         closure_of_real_set(intersect(X, Y)) $subset intersect(closure_of_real_set(X), closure_of_real_set(Y))
     by thm real_set_operations_stay_in_power_set(X, Y)
-    intersect(X, Y) $in power_set(R)
     claim:
         ? forall x closure_of_real_set(intersect(X, Y)):
             x $in intersect(closure_of_real_set(X), closure_of_real_set(Y))
@@ -435,7 +433,6 @@ thm closure_union_subset_forward:
     ? forall X, Y power_set(R):
         closure_of_real_set(union(X, Y)) $subset union(closure_of_real_set(X), closure_of_real_set(Y))
     by thm real_set_operations_stay_in_power_set(X, Y)
-    union(X, Y) $in power_set(R)
     claim:
         ? forall z closure_of_real_set(union(X, Y)):
             z $in union(closure_of_real_set(X), closure_of_real_set(Y))
@@ -484,7 +481,6 @@ thm closure_union_subset_reverse:
     ? forall X, Y power_set(R):
         union(closure_of_real_set(X), closure_of_real_set(Y)) $subset closure_of_real_set(union(X, Y))
     by thm real_set_operations_stay_in_power_set(X, Y)
-    union(X, Y) $in power_set(R)
     claim:
         ? forall z union(closure_of_real_set(X), closure_of_real_set(Y)):
             z $in closure_of_real_set(union(X, Y))
@@ -523,9 +519,7 @@ thm closure_union_identity:
     ? forall X, Y power_set(R):
         closure_of_real_set(union(X, Y)) = union(closure_of_real_set(X), closure_of_real_set(Y))
     by thm closure_union_subset_forward(X, Y)
-    closure_of_real_set(union(X, Y)) $subset union(closure_of_real_set(X), closure_of_real_set(Y))
     by thm closure_union_subset_reverse(X, Y)
-    union(closure_of_real_set(X), closure_of_real_set(Y)) $subset closure_of_real_set(union(X, Y))
     by extension closure_of_real_set(union(X, Y)) = union(closure_of_real_set(X), closure_of_real_set(Y))
     closure_of_real_set(union(X, Y)) = union(closure_of_real_set(X), closure_of_real_set(Y))
 
@@ -537,11 +531,8 @@ thm closure_elementary_properties:
         =>:
             closure_of_real_set(X) $subset closure_of_real_set(Y)
     by thm closure_union_identity(X, Y)
-    closure_of_real_set(union(X, Y)) = union(closure_of_real_set(X), closure_of_real_set(Y))
     by thm closure_of_intersection_subset(X, Y)
-    closure_of_real_set(intersect(X, Y)) $subset intersect(closure_of_real_set(X), closure_of_real_set(Y))
     by thm closure_monotone(X, Y)
-    closure_of_real_set(X) $subset closure_of_real_set(Y)
 
 """
 Lemma 9.1.12 (Closures of intervals). Non-degenerate finite intervals have
@@ -687,7 +678,6 @@ thm closed_interval_subset_open_interval_closure:
             ? $is_adherent_point('(a, b), x)
             case x = a:
                 by thm left_endpoint_adherent_to_open_interval(a, b)
-                $is_adherent_point('(a, b), a)
                 $is_adherent_point('(a, b), x)
             case x > a:
                 x = b or x < b
@@ -695,14 +685,12 @@ thm closed_interval_subset_open_interval_closure:
                     ? $is_adherent_point('(a, b), x)
                     case x = b:
                         by thm right_endpoint_adherent_to_open_interval(a, b)
-                        $is_adherent_point('(a, b), b)
                         $is_adherent_point('(a, b), x)
                     case x < b:
                         a < x
                         x < b
                         x $in '(a, b)
                         by thm interval_member_is_adherent('(a, b), x)
-                        $is_adherent_point('(a, b), x)
         $is_adherent_point('(a, b), x)
         x $in closure_of_real_set('(a, b))
     '[a, b] $subset closure_of_real_set('(a, b))
@@ -716,7 +704,6 @@ thm open_interval_closure_subset_closed_interval:
         ? forall x closure_of_real_set('(a, b)):
             x $in '[a, b]
         by thm closure_member_is_adherent('(a, b), x)
-        $is_adherent_point('(a, b), x)
         x < a or x >= a
         by cases:
             ? x $in '[a, b]
@@ -771,9 +758,7 @@ thm closure_of_open_interval:
         =>:
             closure_of_real_set('(a, b)) = '[a, b]
     by thm closed_interval_subset_open_interval_closure(a, b)
-    '[a, b] $subset closure_of_real_set('(a, b))
     by thm open_interval_closure_subset_closed_interval(a, b)
-    closure_of_real_set('(a, b)) $subset '[a, b]
     by extension closure_of_real_set('(a, b)) = '[a, b]
     closure_of_real_set('(a, b)) = '[a, b]
 
@@ -786,7 +771,6 @@ thm closed_interval_closure_subset_closed_interval:
         ? forall x closure_of_real_set('[a, b]):
             x $in '[a, b]
         by thm closure_member_is_adherent('[a, b], x)
-        $is_adherent_point('[a, b], x)
         x < a or x >= a
         by cases:
             ? x $in '[a, b]
@@ -847,9 +831,7 @@ thm closure_of_closed_interval:
         =>:
             closure_of_real_set('[a, b]) = '[a, b]
     by thm closure_contains_set('[a, b])
-    '[a, b] $subset closure_of_real_set('[a, b])
     by thm closed_interval_closure_subset_closed_interval(a, b)
-    closure_of_real_set('[a, b]) $subset '[a, b]
     by extension closure_of_real_set('[a, b]) = '[a, b]
     closure_of_real_set('[a, b]) = '[a, b]
 
@@ -900,17 +882,12 @@ thm closure_of_open_closed_interval:
         =>:
             closure_of_real_set('(a, b]) = '[a, b]
     by thm finite_interval_containment_relations(a, b)
-    '(a, b) $subset '(a, b]
     '(a, b] $subset '[a, b]
     by thm closure_monotone('(a, b), '(a, b])
-    closure_of_real_set('(a, b)) $subset closure_of_real_set('(a, b])
     by thm closure_of_open_interval(a, b)
-    closure_of_real_set('(a, b)) = '[a, b]
     '[a, b] $subset closure_of_real_set('(a, b])
     by thm closure_monotone('(a, b], '[a, b])
-    closure_of_real_set('(a, b]) $subset closure_of_real_set('[a, b])
     by thm closure_of_closed_interval(a, b)
-    closure_of_real_set('[a, b]) = '[a, b]
     closure_of_real_set('(a, b]) $subset '[a, b]
     by extension closure_of_real_set('(a, b]) = '[a, b]
     closure_of_real_set('(a, b]) = '[a, b]
@@ -921,17 +898,12 @@ thm closure_of_closed_open_interval:
         =>:
             closure_of_real_set('[a, b)) = '[a, b]
     by thm finite_interval_containment_relations(a, b)
-    '(a, b) $subset '[a, b)
     '[a, b) $subset '[a, b]
     by thm closure_monotone('(a, b), '[a, b))
-    closure_of_real_set('(a, b)) $subset closure_of_real_set('[a, b))
     by thm closure_of_open_interval(a, b)
-    closure_of_real_set('(a, b)) = '[a, b]
     '[a, b] $subset closure_of_real_set('[a, b))
     by thm closure_monotone('[a, b), '[a, b])
-    closure_of_real_set('[a, b)) $subset closure_of_real_set('[a, b])
     by thm closure_of_closed_interval(a, b)
-    closure_of_real_set('[a, b]) = '[a, b]
     closure_of_real_set('[a, b)) $subset '[a, b]
     by extension closure_of_real_set('[a, b)) = '[a, b]
     closure_of_real_set('[a, b)) = '[a, b]
@@ -980,13 +952,11 @@ thm closed_right_ray_subset_open_right_ray_closure:
             ? $is_adherent_point('(a,), x)
             case x = a:
                 by thm endpoint_adherent_to_open_right_ray(a)
-                $is_adherent_point('(a,), a)
                 $is_adherent_point('(a,), x)
             case x > a:
                 a < x
                 x $in '(a,)
                 by thm interval_member_is_adherent('(a,), x)
-                $is_adherent_point('(a,), x)
         x $in closure_of_real_set('(a,))
     '[a,) $subset closure_of_real_set('(a,))
 
@@ -997,7 +967,6 @@ thm open_right_ray_closure_subset_closed_right_ray:
         ? forall x closure_of_real_set('(a,)):
             x $in '[a,)
         by thm closure_member_is_adherent('(a,), x)
-        $is_adherent_point('(a,), x)
         x < a or x >= a
         by cases:
             ? x $in '[a,)
@@ -1028,9 +997,7 @@ thm closure_of_open_right_ray:
     ? forall a R:
         closure_of_real_set('(a,)) = '[a,)
     by thm open_right_ray_closure_subset_closed_right_ray(a)
-    closure_of_real_set('(a,)) $subset '[a,)
     by thm closed_right_ray_subset_open_right_ray_closure(a)
-    '[a,) $subset closure_of_real_set('(a,))
     by extension closure_of_real_set('(a,)) = '[a,)
     closure_of_real_set('(a,)) = '[a,)
 
@@ -1041,7 +1008,6 @@ thm closed_right_ray_closure_subset_closed_right_ray:
         ? forall x closure_of_real_set('[a,)):
             x $in '[a,)
         by thm closure_member_is_adherent('[a,), x)
-        $is_adherent_point('[a,), x)
         x < a or x >= a
         by cases:
             ? x $in '[a,)
@@ -1077,9 +1043,7 @@ thm closure_of_closed_right_ray:
     ? forall a R:
         closure_of_real_set('[a,)) = '[a,)
     by thm closure_contains_set('[a,))
-    '[a,) $subset closure_of_real_set('[a,))
     by thm closed_right_ray_closure_subset_closed_right_ray(a)
-    closure_of_real_set('[a,)) $subset '[a,)
     by extension closure_of_real_set('[a,)) = '[a,)
     closure_of_real_set('[a,)) = '[a,)
 
@@ -1113,12 +1077,10 @@ thm closed_left_ray_subset_open_left_ray_closure:
             ? $is_adherent_point('(,a), x)
             case x = a:
                 by thm endpoint_adherent_to_open_left_ray(a)
-                $is_adherent_point('(,a), a)
                 $is_adherent_point('(,a), x)
             case x < a:
                 x $in '(,a)
                 by thm interval_member_is_adherent('(,a), x)
-                $is_adherent_point('(,a), x)
         x $in closure_of_real_set('(,a))
     '(,a] $subset closure_of_real_set('(,a))
 
@@ -1129,7 +1091,6 @@ thm open_left_ray_closure_subset_closed_left_ray:
         ? forall x closure_of_real_set('(,a)):
             x $in '(,a]
         by thm closure_member_is_adherent('(,a), x)
-        $is_adherent_point('(,a), x)
         x <= a or x > a
         by cases:
             ? x $in '(,a]
@@ -1156,9 +1117,7 @@ thm closure_of_open_left_ray:
     ? forall a R:
         closure_of_real_set('(,a)) = '(,a]
     by thm open_left_ray_closure_subset_closed_left_ray(a)
-    closure_of_real_set('(,a)) $subset '(,a]
     by thm closed_left_ray_subset_open_left_ray_closure(a)
-    '(,a] $subset closure_of_real_set('(,a))
     by extension closure_of_real_set('(,a)) = '(,a]
     closure_of_real_set('(,a)) = '(,a]
 
@@ -1169,7 +1128,6 @@ thm closed_left_ray_closure_subset_closed_left_ray:
         ? forall x closure_of_real_set('(,a]):
             x $in '(,a]
         by thm closure_member_is_adherent('(,a], x)
-        $is_adherent_point('(,a], x)
         x <= a or x > a
         by cases:
             ? x $in '(,a]
@@ -1200,9 +1158,7 @@ thm closure_of_closed_left_ray:
     ? forall a R:
         closure_of_real_set('(,a]) = '(,a]
     by thm closure_contains_set('(,a])
-    '(,a] $subset closure_of_real_set('(,a])
     by thm closed_left_ray_closure_subset_closed_left_ray(a)
-    closure_of_real_set('(,a]) $subset '(,a]
     by extension closure_of_real_set('(,a]) = '(,a]
     closure_of_real_set('(,a]) = '(,a]
 
@@ -1219,7 +1175,6 @@ thm closure_of_one_sided_intervals:
             ? forall x R:
                 x $in closure_of_real_set(R)
             by thm interval_member_is_adherent(R, x)
-            $is_adherent_point(R, x)
             x $in closure_of_real_set(R)
         by extension closure_of_real_set(R) = R:
             forall x closure_of_real_set(R):
@@ -1228,13 +1183,9 @@ thm closure_of_one_sided_intervals:
                 x $in closure_of_real_set(R)
         closure_of_real_set(R) = R
     by thm closure_of_open_right_ray(a)
-    closure_of_real_set('(a,)) = '[a,)
     by thm closure_of_closed_right_ray(a)
-    closure_of_real_set('[a,)) = '[a,)
     by thm closure_of_open_left_ray(a)
-    closure_of_real_set('(,a)) = '(,a]
     by thm closure_of_closed_left_ray(a)
-    closure_of_real_set('(,a]) = '(,a]
 
 thm closure_of_empty_set:
     ? forall:
@@ -1477,8 +1428,6 @@ thm adherent_integer_point_is_integer:
         A $subset Z
         choose_integer(A) $in Z
     have fn a(n N_pos) R = choose_integer(integer_near_witness_set(n))
-    forall n N_pos:
-        a(n) = choose_integer(integer_near_witness_set(n))
     claim:
         ? forall n N_pos:
             a(n) $in Z
@@ -1619,15 +1568,10 @@ thm closures_of_standard_sets:
     # Source handling: the N/Z clauses use the checked half-isolation bridge;
     # Q uses rational density, and R/the empty set use interval closures.
     by thm closure_of_naturals()
-    closure_of_real_set(N) = N
     by thm closure_of_integers()
-    closure_of_real_set(Z) = Z
     by thm closure_of_rationals()
-    closure_of_real_set(Q) = R
     by thm closure_of_one_sided_intervals(0)
-    closure_of_real_set(R) = R
     by thm closure_of_empty_set()
-    closure_of_real_set({}) = {}
 
 """
 Lemma 9.1.14. A point is adherent to X iff it is the limit of a real sequence
@@ -1677,8 +1621,6 @@ thm adherent_point_sequence_characterization_forward:
         A $subset R
         choose_point(A) $in R
     have fn a(n N_pos) R = choose_point(near_witness_set(n))
-    forall n N_pos:
-        a(n) = choose_point(near_witness_set(n))
     claim:
         ? $is_sequence_in_real_set(a, X)
         claim:
@@ -1782,19 +1724,12 @@ thm standard_closed_sets:
             $is_closed_subset(R)
             $is_closed_subset({})
     by thm closure_of_bounded_intervals(a, b)
-    closure_of_real_set('[a, b]) = '[a, b]
     $is_closed_subset('[a, b])
     by thm closure_of_one_sided_intervals(a)
-    closure_of_real_set('[a,)) = '[a,)
     $is_closed_subset('[a,))
     by thm closure_of_one_sided_intervals(a)
-    closure_of_real_set('(,a]) = '(,a]
     $is_closed_subset('(,a])
     by thm closures_of_standard_sets()
-    closure_of_real_set(N) = N
-    closure_of_real_set(Z) = Z
-    closure_of_real_set(R) = R
-    closure_of_real_set({}) = {}
     $is_closed_subset(N)
     $is_closed_subset(Z)
     $is_closed_subset(R)
@@ -2551,13 +2486,9 @@ thm standard_unbounded_sets:
             n $in Q
             n $in R
     by thm set_containing_positive_naturals_unbounded(N)
-    not $is_bounded_real_set(N)
     by thm set_containing_positive_naturals_unbounded(Z)
-    not $is_bounded_real_set(Z)
     by thm set_containing_positive_naturals_unbounded(Q)
-    not $is_bounded_real_set(Q)
     by thm set_containing_positive_naturals_unbounded(R)
-    not $is_bounded_real_set(R)
 
 """
 Theorem 9.1.24 (Heine-Borel for the line). A subset of R is closed and bounded
@@ -2685,8 +2616,6 @@ thm unbounded_real_set_has_escaping_sequence:
         A $subset R
         choose_point(A) $in R
     have fn a(n N_pos) R = choose_point(escaping_witness_set(n))
-    forall n N_pos:
-        a(n) = choose_point(escaping_witness_set(n))
     claim:
         ? $is_sequence_in_real_set(a, X)
         claim:
@@ -3342,8 +3271,6 @@ thm function_limit_preserves_sequence_limits:
             =>:
                 $chap6::has_limit(fn(n N_pos) R {f(a(n))}, L)
         have fn image_seq(n N_pos) R = f(a(n))
-        forall n N_pos:
-            image_seq(n) = f(a(n))
         claim:
             ? $chap6::has_limit(image_seq, L)
             claim:
@@ -3442,8 +3369,6 @@ thm sequence_limit_preservation_implies_function_limit:
                 E $subset R
                 choose_point(A) $in R
             have fn bad_sequence(n N_pos) R = choose_point(bad_witness_set(n))
-            forall n N_pos:
-                bad_sequence(n) = choose_point(bad_witness_set(n))
             claim:
                 ? $is_sequence_in_real_set(bad_sequence, E)
                 claim:
@@ -4290,8 +4215,6 @@ thm function_limit_quotient_when_nonzero_on_domain:
         =>:
             $has_function_limit(E, fn(x E) R {f(x) / g(x)}, x0, L / M)
     have fn quotient_on_nonzero_domain(x {x E: g(x) != 0}) R = f(x) / g(x)
-    forall y {x E: g(x) != 0}:
-        quotient_on_nonzero_domain(y) = f(y) / g(y)
     by thm function_limit_quotient(E, f, g, x0, L, M)
     $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0, L / M)
     claim:
@@ -5834,8 +5757,6 @@ thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact:
             A $subset X
             choose_preimage(A) $in X
         have fn a(n N_pos) R = choose_preimage(preimage_fiber(n))
-        forall n N_pos:
-            a(n) = choose_preimage(preimage_fiber(n))
         claim:
             ? $is_sequence_in_real_set(a, X)
             claim:
@@ -8399,14 +8320,8 @@ thm not_uniformly_continuous_has_bad_uniform_sequence_pair:
         A $subset cart(R, R)
         choose_pair(A) $in cart(R, R)
     have fn pick_bad_pair(n N_pos) cart(R, R) = choose_pair(F(n))
-    forall n N_pos:
-        pick_bad_pair(n) = choose_pair(F(n))
     have fn bad_left(n N_pos) R = pick_bad_pair(n)[1]
-    forall n N_pos:
-        bad_left(n) = pick_bad_pair(n)[1]
     have fn bad_right(n N_pos) R = pick_bad_pair(n)[2]
-    forall n N_pos:
-        bad_right(n) = pick_bad_pair(n)[2]
     claim:
         ? forall n N_pos:
             $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
@@ -8527,14 +8442,8 @@ thm equivalent_sequence_preservation_implies_uniform_continuity:
             A $subset cart(R, R)
             choose_pair(A) $in cart(R, R)
         have fn pick_bad_pair(n N_pos) cart(R, R) = choose_pair(F(n))
-        forall n N_pos:
-            pick_bad_pair(n) = choose_pair(F(n))
         have fn bad_left(n N_pos) R = pick_bad_pair(n)[1]
-        forall n N_pos:
-            bad_left(n) = pick_bad_pair(n)[1]
         have fn bad_right(n N_pos) R = pick_bad_pair(n)[2]
-        forall n N_pos:
-            bad_right(n) = pick_bad_pair(n)[2]
         claim:
             ? forall n N_pos:
                 $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))

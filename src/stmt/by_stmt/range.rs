@@ -16,7 +16,7 @@ pub struct ByEnumerateRangeStmt {
 }
 
 impl fmt::Display for ByEnumerateRangeStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let keyword = match &self.range {
             ClosedRangeOrRange::ClosedRange(_) => CLOSED_RANGE,
             ClosedRangeOrRange::Range(_) => RANGE,
@@ -40,7 +40,7 @@ impl ByEnumerateRangeStmt {
 }
 
 impl fmt::Display for ByClosedRangeAsCasesStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {} {}{} {} {}{} {}",

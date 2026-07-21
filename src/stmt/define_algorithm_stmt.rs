@@ -50,7 +50,7 @@ impl DefAlgoStmt {
 }
 
 impl fmt::Display for AlgoReturnOrAlgoCase {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             AlgoReturnOrAlgoCase::AlgoReturn(algo_return) => write!(f, "{}", algo_return),
             AlgoReturnOrAlgoCase::AlgoCase(algo_case) => write!(f, "{}", algo_case),
@@ -59,13 +59,13 @@ impl fmt::Display for AlgoReturnOrAlgoCase {
 }
 
 impl fmt::Display for AlgoReturn {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", (&self.value))
     }
 }
 
 impl fmt::Display for AlgoCase {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{} {}",
@@ -78,7 +78,7 @@ impl fmt::Display for AlgoCase {
 }
 
 impl fmt::Display for DefAlgoStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let mut body = self
             .cases
             .iter()

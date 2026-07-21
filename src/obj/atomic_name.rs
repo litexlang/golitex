@@ -9,7 +9,7 @@ pub enum AtomicName {
 }
 
 impl fmt::Display for AtomicName {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             AtomicName::WithoutMod(name) => write!(f, "{}", name),
             AtomicName::WithMod(mod_name, name) => {

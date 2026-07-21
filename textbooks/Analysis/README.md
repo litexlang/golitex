@@ -81,6 +81,32 @@ marks Chapter 6 as a trusted/affect-only project export.  Strict verification
 is presently blocked by an earlier Chapter 5 trust boundary, so skipped proof
 bodies are not represented as if they had been checked.
 
+## Chapter 10 differentiation interface
+
+Chapter 10 keeps a candidate derivative, its existence predicate, and its
+selected value distinct: `$has_derivative_at(X,f,x,L)`,
+`$is_differentiable_at(X,f,x)`, and `derivative(X,f,x)`.  At function level,
+`$is_differentiable_on(X,f)` and `$has_derivative_function_on(X,f,df)` quantify
+only over Chapter 9 limit points.  `derivative_function(X,f)` is the partial
+function on the differentiability locus, so it does not manufacture values at
+isolated or nondifferentiable points.  Corollary 10.1.12 combines derivative
+continuity at limit points with the elementary fact that every function is
+continuous at an isolated domain point.
+
+The Chapter 10 inverse-derivative theorems use
+`chap9::is_inverse_pair_on` directly.  Its inverse has codomain `X`, while
+Litex still permits it wherever the analysis interface accepts a real-valued
+function.  The inverse function theorem is fully checked: its proof composes
+the inverse with the reciprocal of the forward difference quotient on the
+exact nonzero subtype.
+
+The two directions of Proposition 10.1.7 are exposed as reusable theorems,
+and the source equivalence between derivatives and Newton approximations is
+also stated directly.  In Section 10.5, `lhopital_rule_first` returns one
+punctured radius together with the quotient limit on that same local carrier.
+`lhopital_rule_second` is the complete right-hand theorem: it returns both
+denominator nonvanishing on `(a,b]` and the quotient limit.
+
 ## Chapter 11 integration surface
 
 Chapter 11 follows the dependency chain documented in
@@ -96,8 +122,19 @@ are `interval_length`, `common_refinement`,
 Riemann-sum layer also exposes the set-valued object
 `function_values_on_subset`, selected `upper_riemann_sum_piece` and
 `lower_riemann_sum_piece` values, and theorem interfaces from a constant
-majorant/minorant to each piece and then to a fixed partition sum. Its
-lower-level objects `partition_piece_containing`,
+majorant/minorant to each piece and then to a fixed partition sum.
+
+Most compressed source arguments in this chapter are expanded into checked
+Litex proofs. The remaining source-deferred steps are not presented as
+checked: every direct `trust` says whether the source leaves the proof to an
+exercise or gives a proof route with a specific step left implicit, followed
+by the exact unexpanded Litex obligation. The left-endpoint integral uses the
+explicit restriction `fn(y '[a,x]) R {f(y)}`. Its subinterval integrability is
+checked from the already visible two-piece additivity interface. The remaining
+selector trust is only a Litex declaration boundary: its parameter types
+depend on the earlier endpoints `a,b`.
+
+Its lower-level objects `partition_piece_containing`,
 `upper_riemann_piece_height`, and `lower_riemann_piece_height` expose the
 unique piece at a point and its sup/inf height; the sum-piece values are
 verified height-times-length consequences. The canonical objects
@@ -117,6 +154,20 @@ For nonnegative products, `riemann_integrable_nonnegative_bounded_has_clamped_da
 supplies brackets `0 <= h <= f <= g <= M`; their product gap is bounded by the
 two input gaps weighted by `M_f` and `M_g`. This checks the nonnegative case of
 Theorem 11.4.5, from which squares and arbitrary products follow.
+The small-oscillation route is also checked after a partition is supplied:
+piece extrema realize least-upper-bound/infimum values, each rectangle gap is
+bounded by oscillation times interval length, and finite additivity turns the
+piece bounds into the global Darboux gap. Consequently
+`darbouxs_criterion_from_small_oscillation_partitions` has no direct trust.
+The local one-indexed series notation is also connected back to Chapter 7:
+`one_indexed_partial_sum_matches_chapter7` and the two series-sum transport
+theorems prove that both presentations express the same convergence witness.
+Corollary 11.6.5 therefore reuses Chapter 7 for positive exponents; its
+nonpositive branch is checked directly with the zero test.
+For Proposition 11.7.1, rational and irrational density provide witnesses in
+every positive-length partition piece; zero-length pieces contribute zero.
+The resulting upper sum is exactly one and lower sum exactly zero on every
+partition of `[0,1]`, so both displayed Dirichlet integral values are checked.
 Stieltjes layer mirrors the last three with `upper_riemann_stieltjes_integral`,
 `lower_riemann_stieltjes_integral`, and `stieltjes_integral_on`; its interval
 weight is `alpha_interval_length`. Its finite base now also has
@@ -139,13 +190,19 @@ from a left endpoint is the value API `integral_from_left_endpoint`, while
 `$is_antiderivative_of`, `$maps_closed_interval_to_closed_interval`, and
 `$is_composition_on_closed_interval` are assumptions about displayed
 functions. FTC, integration by parts, and change of variables are theorems.
+The source-facing antiderivative uniqueness statement is also checked on every
+bounded interval: subtract the two antiderivatives, restrict to the closed
+subinterval between any two points, and apply the checked zero-derivative
+constancy theorem. This covers open, half-open, degenerate, and empty interval
+forms without a new endpoint-form API.
 The left-endpoint selector is available only when the integrand is Riemann
-integrable on the parent interval. It has one narrow, visible trust boundary:
-constructing the restriction function whose domain changes with `x` and
-transporting integrability to that subinterval. Its stable specification
-bridge is `$has_integral_from_left_endpoint` together with
-`integral_from_left_endpoint_has_value`. The canonical function satisfies the
-relational global predicate by
+integrable on the parent interval. The changing-domain restriction is written
+directly as `fn(y '[a,x]) R {f(y)}`; the chapter checks that this restriction
+is Riemann integrable. `integral_from_left_endpoint_has_value` is its stable
+specification theorem. The selector itself remains narrowly trusted because
+Litex currently rejects a global function declaration whose later parameter
+types `f : '[a,b] -> R` and `x : '[a,b]` depend on the earlier parameters
+`a,b`. The canonical function satisfies the pointwise global predicate by
 `selected_left_endpoint_integral_is_integral_function`.
 
 The checked finite-regrouping bridge consists of
@@ -255,3 +312,7 @@ The corresponding checked order
 layer compares weighted rectangles on one piece, sums them on one partition,
 and sends the two witness partitions to a common refinement; it is exposed by
 `piecewise_constant_stieltjes_minorant_integral_le_majorant_integral`.
+That comparison now checks the first conclusion of Theorem 11.10.2: every
+piecewise-constant function has equal upper and lower Stieltjes envelopes. The
+theorem's remaining direct debt is only the finite identity with the ordinary
+integral of `f*dalpha`.

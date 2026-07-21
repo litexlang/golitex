@@ -71,7 +71,7 @@ impl From<EqualFact> for OrAndChainAtomicFact {
 }
 
 impl fmt::Display for OrAndChainAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             OrAndChainAtomicFact::AtomicFact(a) => write!(f, "{}", a),
             OrAndChainAtomicFact::AndFact(a) => write!(f, "{}", a),

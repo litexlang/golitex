@@ -92,7 +92,7 @@ impl FnEqualInFact {
 }
 
 impl fmt::Display for FnEqualInFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}({}, {}, {})",
@@ -119,7 +119,7 @@ impl FnEqualFact {
 }
 
 impl fmt::Display for FnEqualFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}{}({}, {})", FACT_PREFIX, FN_EQ, self.left, self.right)
     }
 }
@@ -557,7 +557,7 @@ impl NotSupersetFact {
 }
 
 impl fmt::Display for AtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             AtomicFact::NormalAtomicFact(x) => write!(f, "{}", x),
             AtomicFact::EqualFact(x) => write!(f, "{}", x),
@@ -594,7 +594,7 @@ impl fmt::Display for AtomicFact {
 }
 
 impl fmt::Display for SupersetFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{} {}",
@@ -604,7 +604,7 @@ impl fmt::Display for SupersetFact {
 }
 
 impl fmt::Display for NotSupersetFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {}{} {}",
@@ -614,13 +614,13 @@ impl fmt::Display for NotSupersetFact {
 }
 
 impl fmt::Display for SubsetFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {}{} {}", self.left, FACT_PREFIX, SUBSET, self.right)
     }
 }
 
 impl fmt::Display for NotSubsetFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {}{} {}",
@@ -630,13 +630,13 @@ impl fmt::Display for NotSubsetFact {
 }
 
 impl fmt::Display for InFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {}{} {}", self.element, FACT_PREFIX, IN, self.set)
     }
 }
 
 impl fmt::Display for NotInFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {} {}{} {}",
@@ -646,13 +646,13 @@ impl fmt::Display for NotInFact {
 }
 
 impl fmt::Display for IsCartFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}{}{}", FACT_PREFIX, IS_CART, braced_string(&self.set))
     }
 }
 
 impl fmt::Display for NotIsCartFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}{}",
@@ -665,13 +665,13 @@ impl fmt::Display for NotIsCartFact {
 }
 
 impl fmt::Display for IsTupleFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}{}{}", FACT_PREFIX, IS_TUPLE, braced_string(&self.set))
     }
 }
 
 impl fmt::Display for NotIsTupleFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}{}",
@@ -684,7 +684,7 @@ impl fmt::Display for NotIsTupleFact {
 }
 
 impl fmt::Display for NormalAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         if let AtomicName::WithoutMod(name) = &self.predicate {
             if self.body.len() == 2 && matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET) {
                 return write!(
@@ -705,7 +705,7 @@ impl fmt::Display for NormalAtomicFact {
 }
 
 impl fmt::Display for NotNormalAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         if let AtomicName::WithoutMod(name) = &self.predicate {
             if self.body.len() == 2 && matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET) {
                 return write!(
@@ -727,73 +727,73 @@ impl fmt::Display for NotNormalAtomicFact {
 }
 
 impl fmt::Display for EqualFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, EQUAL, self.right)
     }
 }
 
 impl fmt::Display for NotEqualFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, NOT_EQUAL, self.right)
     }
 }
 
 impl fmt::Display for LessFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, LESS, self.right)
     }
 }
 
 impl fmt::Display for NotLessFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {} {}", NOT, self.left, LESS, self.right)
     }
 }
 
 impl fmt::Display for GreaterFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, GREATER, self.right)
     }
 }
 
 impl fmt::Display for NotGreaterFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {} {}", NOT, self.left, GREATER, self.right)
     }
 }
 
 impl fmt::Display for LessEqualFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, LESS_EQUAL, self.right)
     }
 }
 
 impl fmt::Display for NotLessEqualFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {} {}", NOT, self.left, LESS_EQUAL, self.right)
     }
 }
 
 impl fmt::Display for GreaterEqualFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.left, GREATER_EQUAL, self.right)
     }
 }
 
 impl fmt::Display for NotGreaterEqualFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {} {}", NOT, self.left, GREATER_EQUAL, self.right)
     }
 }
 
 impl fmt::Display for IsSetFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}{}{}", FACT_PREFIX, IS_SET, braced_string(&self.set))
     }
 }
 
 impl fmt::Display for NotIsSetFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}{}",
@@ -806,7 +806,7 @@ impl fmt::Display for NotIsSetFact {
 }
 
 impl fmt::Display for IsNonemptySetFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}{}",
@@ -818,7 +818,7 @@ impl fmt::Display for IsNonemptySetFact {
 }
 
 impl fmt::Display for NotIsNonemptySetFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}{}",
@@ -831,7 +831,7 @@ impl fmt::Display for NotIsNonemptySetFact {
 }
 
 impl fmt::Display for IsFiniteSetFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}{}",
@@ -843,7 +843,7 @@ impl fmt::Display for IsFiniteSetFact {
 }
 
 impl fmt::Display for NotIsFiniteSetFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}{}",

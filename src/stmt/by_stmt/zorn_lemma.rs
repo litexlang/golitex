@@ -21,7 +21,7 @@ impl ByZornLemmaStmt {
 }
 
 impl fmt::Display for ByZornLemmaStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         if self.proof.is_empty() {
             return write!(
                 f,

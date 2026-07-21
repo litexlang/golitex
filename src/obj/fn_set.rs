@@ -139,7 +139,7 @@ impl FnSetSpace {
 }
 
 impl fmt::Display for FnSetBody {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let params_with_sets_display: Vec<String> = self
             .params_def_with_set
             .iter()
@@ -156,13 +156,13 @@ impl fmt::Display for FnSetBody {
 }
 
 impl fmt::Display for FnSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", self.body)
     }
 }
 
 impl fmt::Display for AnonymousFn {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}{}",

@@ -26,7 +26,7 @@ pub enum FnObjHead {
 }
 
 impl fmt::Display for FnObjHead {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             FnObjHead::Identifier(x) => write!(f, "{}", x),
             FnObjHead::IdentifierWithMod(x) => write!(f, "{}", x),

@@ -81,7 +81,7 @@ impl DefThmStmt {
 }
 
 impl fmt::Display for DefThmStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         if self.is_axiom() {
             write!(
                 f,

@@ -25,7 +25,7 @@ impl ForallFactWithIff {
 }
 
 impl fmt::Display for ForallFactWithIff {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}\n{}{}\n{}",

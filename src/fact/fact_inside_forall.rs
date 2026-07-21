@@ -11,7 +11,7 @@ pub enum ExistOrAndChainAtomicFact {
 }
 
 impl fmt::Display for ExistOrAndChainAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => write!(f, "{}", atomic_fact),
             ExistOrAndChainAtomicFact::AndFact(and_fact) => write!(f, "{}", and_fact),

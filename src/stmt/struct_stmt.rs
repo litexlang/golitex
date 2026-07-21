@@ -37,7 +37,7 @@ impl DefStructStmt {
 }
 
 impl fmt::Display for DefStructStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let params = match &self.param_def_with_dom {
             Some((param_def, _)) => format!("{}", param_def),
             None => String::new(),

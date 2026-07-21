@@ -71,7 +71,7 @@ pub enum ChainAtomicFact {
 }
 
 impl fmt::Display for ChainAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             ChainAtomicFact::AtomicFact(a) => write!(f, "{}", a),
             ChainAtomicFact::ChainFact(c) => write!(f, "{}", c),
@@ -135,7 +135,7 @@ impl From<GreaterEqualFact> for AndChainAtomicFact {
 }
 
 impl fmt::Display for AndFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}",
@@ -173,7 +173,7 @@ impl AndFact {
 }
 
 impl fmt::Display for ChainFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let mut s = self.objs[0].to_string();
         for (i, obj) in self.objs[1..].iter().enumerate() {
             if is_comparison_str(&self.prop_names[i].to_string()) {
@@ -212,7 +212,7 @@ impl ChainFact {
 }
 
 impl fmt::Display for AndChainAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             AndChainAtomicFact::AtomicFact(a) => write!(f, "{}", a),
             AndChainAtomicFact::AndFact(a) => write!(f, "{}", a),

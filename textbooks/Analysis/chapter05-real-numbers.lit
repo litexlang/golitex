@@ -612,14 +612,10 @@ thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
         epsilon / 2 $in R_pos
         by thm has_rational_between(0, epsilon / 2)
         obtain eta from exist eta Q st {0 < eta < epsilon / 2}
-        eta $in Q_pos
         $has_rational_sequence_limit_in_R(a, x)
         obtain n1 from exist n1 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, epsilon / 2, n1)}
         $has_eventual_closeness_in_Q(a, b, eta)
         obtain n2 from exist n2 N_pos st {$is_tail_close_in_Q(a, b, eta, n2)}
-        finite_set_max(union({n1}, { n2})) $in N_pos
-        finite_set_max(union({n1}, { n2})) >= n1
-        finite_set_max(union({n1}, { n2})) >= n2
         witness exist n3 N_pos st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n3)} from finite_set_max(union({n1}, { n2})):
             claim:
                 ? forall n N_pos:
@@ -655,9 +651,6 @@ thm formal_limit_in_Q_unique:
         $has_rational_sequence_limit_in_R(a, y)
         obtain n1 from exist n1 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, abs(x - y) / 3, n1)}
         obtain n2 from exist n2 N_pos st {$is_rational_sequence_tail_close_to_real(a, y, abs(x - y) / 3, n2)}
-        finite_set_max(union({n1}, { n2})) $in N_pos
-        finite_set_max(union({n1}, { n2})) >= n1
-        finite_set_max(union({n1}, { n2})) >= n2
         abs(a(finite_set_max(union({n1}, { n2}))) - x) < abs(x - y) / 3
         abs(a(finite_set_max(union({n1}, { n2}))) - y) < abs(x - y) / 3
         abs(x - a(finite_set_max(union({n1}, { n2})))) = abs(a(finite_set_max(union({n1}, { n2}))) - x)
@@ -725,9 +718,6 @@ claim:
         $has_eventual_epsilon_steadiness_in_Q(b, epsilon / 2)
         obtain n1 from exist n1 N_pos st {$is_tail_epsilon_steady_in_Q(a, epsilon / 2, n1)}
         obtain n2 from exist n2 N_pos st {$is_tail_epsilon_steady_in_Q(b, epsilon / 2, n2)}
-        finite_set_max(union({n1}, { n2})) $in N_pos
-        finite_set_max(union({n1}, { n2})) >= n1
-        finite_set_max(union({n1}, { n2})) >= n2
         witness exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(seq_add_Q(a, b), epsilon, n0)} from finite_set_max(union({n1}, { n2})):
             forall j, k N_pos:
                 j >= finite_set_max(union({n1}, { n2}))
@@ -817,8 +807,6 @@ claim:
     $is_bounded_sequence_in_Q(b)
     obtain M_a from exist M_a Q st {$is_bounded_by_in_Q(a, M_a)}
     obtain M_b from exist M_b Q st {$is_bounded_by_in_Q(b, M_b)}
-    M_a >= 0
-    M_b >= 0
     M_a + 1 > 0
     M_b + 1 > 0
     M_a + 1 != 0
@@ -836,9 +824,6 @@ claim:
         $has_eventual_epsilon_steadiness_in_Q(b, epsilon / (2 * (M_a + 1)))
         obtain n1 from exist n1 N_pos st {$is_tail_epsilon_steady_in_Q(a, epsilon / (2 * (M_b + 1)), n1)}
         obtain n2 from exist n2 N_pos st {$is_tail_epsilon_steady_in_Q(b, epsilon / (2 * (M_a + 1)), n2)}
-        finite_set_max(union({n1}, { n2})) $in N_pos
-        finite_set_max(union({n1}, { n2})) >= n1
-        finite_set_max(union({n1}, { n2})) >= n2
         witness exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(seq_mul_Q(a, b), epsilon, n0)} from finite_set_max(union({n1}, { n2})):
             forall j, k N_pos:
                 j >= finite_set_max(union({n1}, { n2}))
@@ -878,7 +863,6 @@ claim:
             $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b))
     $is_bounded_sequence_in_Q(b)
     obtain M_b from exist M_b Q st {$is_bounded_by_in_Q(b, M_b)}
-    M_b >= 0
     M_b + 1 > 0
     M_b + 1 != 0
     claim:
@@ -908,7 +892,6 @@ claim:
             $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, b), seq_mul_Q(a, b_prime))
     $is_bounded_sequence_in_Q(a)
     obtain M_a from exist M_a Q st {$is_bounded_by_in_Q(a, M_a)}
-    M_a >= 0
     M_a + 1 > 0
     M_a + 1 != 0
     claim:
@@ -1025,7 +1008,6 @@ sketch:
             ? not $is_bounded_away_from_zero_in_Q(fn(n N_pos) Q {1 / 10^n})
             $is_bounded_away_from_zero_in_Q(fn(n N_pos) Q {1 / 10^n})
             obtain c from exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(fn(n N_pos) Q {1 / 10^n}, c)}
-            c $in R_pos
             by thm archimedean_property(c)
             obtain n0 from exist n0 N_pos st {1 / n0 < c}
             n0 <= 10^n0
@@ -1055,7 +1037,6 @@ sketch:
             ? not $is_bounded_away_from_zero_in_Q(zero_then_decimal_nines_Q)
             $is_bounded_away_from_zero_in_Q(zero_then_decimal_nines_Q)
             obtain c from exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(zero_then_decimal_nines_Q, c)}
-            c > 0
             zero_then_decimal_nines_Q(1) = 0
             abs(zero_then_decimal_nines_Q(1)) = abs(0) = 0
             abs(zero_then_decimal_nines_Q(1)) >= c
@@ -1081,13 +1062,11 @@ sketch:
             ? not $is_bounded_sequence_in_Q(fn(n N_pos) Q {10^n})
             $is_bounded_sequence_in_Q(fn(n N_pos) Q {10^n})
             obtain M from exist M Q st {$is_bounded_by_in_Q(fn(n N_pos) Q {10^n}, M)}
-            M >= 0
             M + 1 > 0
             M + 1 $in R_pos
             1 / (M + 1) $in R_pos
             by thm archimedean_property(1 / (M + 1))
             obtain n0 from exist n0 N_pos st {1 / n0 < 1 / (M + 1)}
-            n0 > 0
             n0 * (M + 1) > 0
             (1 / n0) * (n0 * (M + 1)) < (1 / (M + 1)) * (n0 * (M + 1))
             (1 / n0) * (n0 * (M + 1)) = M + 1
@@ -1176,7 +1155,6 @@ thm nonzero_real_has_bounded_away_rational_representative:
     abs(x) / 4 $in R_pos
     by thm has_rational_between(0, abs(x) / 4)
     obtain c from exist c Q st {0 < c < abs(x) / 4}
-    c $in Q_pos
     2 * c < 4 * c < abs(x)
     by thm cauchy_sequence_representative_in_Q_exists(x)
     obtain a from exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x)}
@@ -1434,7 +1412,6 @@ sketch:
             ? not $is_positively_bounded_away_from_zero_in_Q(alternating_sign_Q)
             $is_positively_bounded_away_from_zero_in_Q(alternating_sign_Q)
             obtain c from exist c Q_pos st {$is_positively_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)}
-            c > 0
             alternating_sign_Q(2) = -1
             alternating_sign_Q(2) >= c
             -1 >= c
@@ -1448,7 +1425,6 @@ sketch:
             ? not $is_negatively_bounded_away_from_zero_in_Q(alternating_sign_Q)
             $is_negatively_bounded_away_from_zero_in_Q(alternating_sign_Q)
             obtain c from exist c Q_pos st {$is_negatively_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)}
-            c > 0
             -c < 0
             alternating_sign_Q(1) = 1
             alternating_sign_Q(1) <= -c
@@ -1888,7 +1864,6 @@ claim:
     $is_positive_real_by_cauchy_sequence(x)
     obtain a from exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x), $is_positively_bounded_away_from_zero_in_Q(a)}
     obtain q from exist q Q_pos st {$is_positively_bounded_away_from_zero_by_in_Q(a, q)}
-    $is_cauchy_sequence_in_Q(a)
     $has_formal_limit_in_Q(a, x)
     $is_positively_bounded_away_from_zero_by_in_Q(a, q)
     by thm positive_representative_lower_bound_passes_to_limit(a, x, q)
@@ -2608,14 +2583,6 @@ thm bisection_bracket_exists:
     obtain b0 from exist b0 R st {$is_upper_bound(E, b0)}
     by thm recursive_bisection_bracket_exists(E, a0, b0)
     obtain lower, upper from exist lower, upper seq(R) st {$is_recursive_bisection_bracket_for_supremum(E, lower, upper)}
-    claim:
-        ? forall n N_pos:
-            not $is_upper_bound(E, lower(n))
-            $is_upper_bound(E, upper(n))
-            lower(n) <= upper(n)
-        not $is_upper_bound(E, lower(n))
-        $is_upper_bound(E, upper(n))
-        lower(n) <= upper(n)
     claim:
         ? forall j, k N_pos:
             j <= k

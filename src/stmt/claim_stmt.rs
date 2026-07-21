@@ -23,7 +23,7 @@ impl ClaimStmt {
 }
 
 impl fmt::Display for ClaimStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}\n{}\n{}",

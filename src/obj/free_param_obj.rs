@@ -44,7 +44,7 @@ fn write_parsing_free_param_tagged_spine(
     f: &mut fmt::Formatter<'_>,
     kind: ParamObjType,
     spine: &str,
-) -> fmt::Result {
+) -> Result<(), fmt::Error> {
     write!(
         f,
         "{}{}{}",
@@ -201,61 +201,61 @@ impl CartIndexFreeParamObj {
 }
 
 impl fmt::Display for ForallFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write_parsing_free_param_tagged_spine(f, ParamObjType::Forall, &self.name)
     }
 }
 
 impl fmt::Display for DefHeaderFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write_parsing_free_param_tagged_spine(f, ParamObjType::DefHeader, &self.name)
     }
 }
 
 impl fmt::Display for ExistFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write_parsing_free_param_tagged_spine(f, ParamObjType::Exist, &self.name)
     }
 }
 
 impl fmt::Display for SetBuilderFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write_parsing_free_param_tagged_spine(f, ParamObjType::SetBuilder, &self.name)
     }
 }
 
 impl fmt::Display for FnSetFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write_parsing_free_param_tagged_spine(f, ParamObjType::FnSet, &self.name)
     }
 }
 
 impl fmt::Display for ByInducFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write_parsing_free_param_tagged_spine(f, ParamObjType::Induc, &self.name)
     }
 }
 
 impl fmt::Display for DefAlgoFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write_parsing_free_param_tagged_spine(f, ParamObjType::DefAlgo, &self.name)
     }
 }
 
 impl fmt::Display for DefStructFieldFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write_parsing_free_param_tagged_spine(f, ParamObjType::DefStructField, &self.name)
     }
 }
 
 impl fmt::Display for TupleIndexFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write_parsing_free_param_tagged_spine(f, ParamObjType::TupleIndex, &self.name)
     }
 }
 
 impl fmt::Display for CartIndexFreeParamObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write_parsing_free_param_tagged_spine(f, ParamObjType::CartIndex, &self.name)
     }
 }

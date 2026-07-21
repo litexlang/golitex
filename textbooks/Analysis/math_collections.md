@@ -174,7 +174,6 @@ redeclared under new Chapter 10 names.
 | `derivative_function(X,f)` | Formula-defined partial function | `have fn` | Apply the canonical derivative exactly at the differentiability points of `f`. |
 | Newton approximation | Candidate linearization relation | `prop` | Give the first-order estimate used by continuity and the chain rule. |
 | Local maximum, minimum, extremum | Local properties | `prop` | State the stationary-point theorem and Rolle's theorem. |
-| Lipschitz continuity | Quantitative property | `prop` | State the bounded-derivative exercise without leaving its named notion informal. |
 | Constantness | Property | `prop` | State the zero-derivative conclusion. |
 | Inverse pair and composition | Relations | imported `chap9` props | State inverse and chain rules without rebuilding Chapter 9 vocabulary. |
 | L'Hopital assumptions and conclusions | Results with local side conditions | `thm` plus proof-local props | Keep denominator nonvanishing and quotient-limit conclusions visibly connected. |
@@ -276,11 +275,11 @@ formula-defined partial function, not a second `exist!` construction.  Its
 domain is the differentiability locus, so it does not assign an arbitrary
 value at an isolated or nondifferentiable point.
 
-The current `is_differentiable_on` requires differentiability at every member
-of `X`, including isolated points.  That is a modeling error, not a harmless
-stronger spelling: Definition 10.1.1 leaves the derivative undefined there.
-It must be corrected before later code treats the predicate as the source
-definition.  The representative function-level probe is:
+The implemented `is_differentiable_on` follows this limit-point guard.  The
+support theorems `non_limit_point_is_isolated` and
+`isolated_point_is_continuous_at` supply the other branch of Corollary
+10.1.12, without pretending an isolated point has a derivative.  The
+representative function-level probe is:
 
 ~~~litex
 $is_differentiable_at(X, f, x)
@@ -324,9 +323,8 @@ The chain rule is a `thm`, not a template.  Its callable composition should
 reuse Chapter 9's composition relation or an already well-defined displayed
 function `h`; a bare anonymous `fn(x X) R {g(f(x))}` cannot become the
 semantic definition when the verifier cannot establish that `f(x)` lies in
-`Y`.  The current Newton-composition trust is therefore a proof or
-well-definedness boundary, not evidence that a composition relation is the
-wrong kind of concept.
+`Y`.  The checked Newton-composition proof therefore keeps the displayed
+function and exact carrier visible throughout the estimate.
 
 ### Extrema, mean values, and monotonicity
 
@@ -347,41 +345,41 @@ mean value theorem + restriction to subintervals
   --proof--> derivative-sign monotonicity and zero-derivative constancy
 ~~~
 
-The exercise-introduced quantitative notion deserves a real relation:
-
-~~~litex
-prop is_lipschitz_with_constant_on(
-    X power_set(R), f fn(x X) R, M R
-):
-    M >= 0
-    forall x, y X:
-        abs(f(x) - f(y)) <= M * abs(x - y)
-~~~
-
 The Chapter 9 monotonicity predicates should remain imported.  In contrast,
 `is_constant_on(X,f)` is a useful Chapter 10 property because it is the direct
 conclusion of the zero-derivative theorem.  Rolle, the mean-value theorem,
 their closed-subinterval transports, and the sign/constant conclusions are
 all `thm`s; they do not manufacture new mathematical objects.
 
+Standalone Exercises 10.2.6 and 10.2.7 are outside the maintained textbook
+surface, so this chapter pass does not add a Lipschitz interface.  If that
+exercise material is requested separately, its quantitative condition should
+then be modeled as a real `prop`, not folded into the mean-value theorem.
+
 ### Inverses and L'Hopital's rule
 
-An inverse pair is already a Chapter 9 relation.  Chapter 10 should consume
-`chap9::is_inverse_pair_on` (or a type-preserving adapter justified by it),
-rather than maintain `is_inverse_pair_between_real_subsets` as duplicate
-vocabulary.  The inverse derivative lemma and the inverse function theorem
-are theorems depending on that relation, the chain rule, continuity of the
-inverse, reciprocal limit laws, and the nonzero derivative condition.
+An inverse pair is already a Chapter 9 relation.  Chapter 10 consumes
+`chap9::is_inverse_pair_on` directly: its inverse is typed
+`g fn(y Y) X`, which records its actual codomain instead of merely saying that
+a real-valued function happens to land in `X`.  When the Chapter 10 proof
+needs the ordinary identity `g(f(x)) = x`, it derives it from Chapter 9's
+existential inverse law locally.  The inverse derivative lemma and the
+inverse function theorem are theorems depending on that relation, the chain
+rule, continuity of the inverse, reciprocal limit laws, and the nonzero
+derivative condition.
 
-`inverse_function_difference_quotient_estimate` is not a foundational
-assumption of Analysis I.  Its current `axiom` status is an explicit proof
-debt and should eventually become a theorem or a narrow trusted theorem while
-the sequential reciprocal-limit proof is completed.
+`inverse_function_difference_quotient_estimate` is a checked proof result, not
+a foundational assumption of Analysis I.  It takes the reciprocal of the
+forward difference-quotient limit on its nonzero subtype, uses inverse
+continuity to map the punctured target domain into that subtype, composes the
+two limits, and simplifies the reciprocal quotient pointwise.
 
 For Section 10.5, the nonzero punctured-neighborhood condition is a local
 relation used to make the quotient meaningful.  It is not the whole of
-Proposition 10.5.1.  The source-facing first L'Hopital theorem must return
-both that neighborhood and the quotient-limit conclusion.  The second theorem
+Proposition 10.5.1.  The checked source-facing `lhopital_rule_first` returns
+both that neighborhood and the quotient-limit conclusion using one radius.
+The checked source-facing `lhopital_rule_second` similarly returns both
+nonvanishing on `(a,b]` and the right-hand quotient limit.  The second theorem
 has this dependency spine:
 
 ~~~text
@@ -410,7 +408,7 @@ punctured difference quotient
   --proof--> derivative_value_unique
 is_differentiable_at + derivative_value_unique
   --existence/uniqueness/selection--> derivative
-has_derivative_at + limit-point guard
+is_differentiable_at + limit-point guard
   --definition--> is_differentiable_on
 has_derivative_at + displayed df
   --definition--> has_derivative_function_on
@@ -423,7 +421,7 @@ has_derivative_at <--> Newton approximation
 local extrema + has_derivative_at
   --proof--> stationary points -> Rolle -> mean value theorem
 mean value theorem
-  --proof--> Lipschitz, monotonicity, and constantness
+  --proof--> monotonicity and constantness
 chain rule + chap9 inverse pair
   --proof--> inverse derivative and inverse function theorems
 Newton approximation / Cauchy mean value / right-limit transport
@@ -440,14 +438,14 @@ proof-support theorem rather than a fictitious source heading.
 - `difference_quotient` now depends on the checked kernel support for
   parameter-dependent function return domains.  Its punctured carrier is part
   of the function type, not an after-the-fact side condition.
-- The current chain-rule Newton estimate has a narrow visible trust caused by
-  anonymous-composition well-definedness.  Its epsilon algebra is not the
-  blocker.
-- The current inverse-function estimate is an `axiom` but belongs in the
-  proof-debt column, not the concept column.
-- The current domain-level differentiability predicate and first L'Hopital
-  theorem have source-identity drift described above.  Fix those interfaces
-  before broad proof cleanup.
+- The chain-rule Newton estimate is checked.  Its proof uses the exact
+  composition carrier and an explicit transitive epsilon bound.
+- The inverse-function estimate and Theorem 10.4.2 are checked; neither adds a
+  new primitive concept or trust boundary.
+- The domain-level differentiability predicate now follows the source's
+  limit-point guard.  Both L'Hopital propositions now have complete
+  source-facing theorem interfaces; their proof-support theorems remain
+  subordinate to those interfaces.
 - No change in this design section licenses a new template, struct,
   `abstract_prop`, compatibility alias, or hidden trust wrapper.
 
@@ -1372,6 +1370,30 @@ is_riemann_integrable_on; they should not select a preferred partition because
 ordinary proofs need existence for each epsilon and can use different
 partitions.
 
+The complete bridge from supplied small-oscillation partitions to Darboux
+integrability is checked. On each nonempty piece, the upper and lower heights
+are respectively the least upper bound and infimum of the image of `f`; this
+turns a pointwise oscillation bound into a bound on the height gap. Multiplying
+by interval length and summing over the finite partition gives the step-
+integral gap. Thus the only trust on the uniform-continuity route is the
+construction of a suitable partition, not the Darboux conversion.
+
+Chapter 11's one-indexed partial sum is a presentation bridge, not a second
+theory of series. `one_indexed_partial_sum_matches_chapter7` proves equality
+with Chapter 7's partial sum, and the two witness-transport theorems carry
+series sums in both directions. This lets the p-series corollary reuse the
+existing positive-exponent theorem and the zero test. The nearest rejected
+form is a second trusted p-series theorem merely to accommodate the shifted
+local notation.
+
+The Dirichlet example is a checked use probe for this public surface, rather
+than another definition. Density supplies rational and irrational witnesses
+inside each positive-length bounded interval, forcing its selected upper and
+lower heights to be one and zero. Zero-length pieces vanish, `$fn_eq` identifies
+the contribution families, and finite interval-length additivity proves that
+every upper sum on `[0,1]` is one and every lower sum is zero. The selected
+envelopes therefore have the claimed values.
+
 ## Riemann--Stieltjes integration
 
 Alpha-length is a value, while monotonicity of alpha and Stieltjes
@@ -1429,13 +1451,12 @@ have fn stieltjes_integral_on by exist!:
             exist! s R st {$has_riemann_stieltjes_integral(I, alpha, f, s)}
 ~~~
 
-The desired alpha-length selector is the `have fn ... by exist!` shown above.
-The current source-facing function is still a narrow trusted selector, because
-its all-endpoint uniqueness proof is not yet formalized, but it now has the
-real relation `$has_alpha_interval_length` and the checked bridge theorem
-`alpha_interval_length_has_value`. Thus callers can state and transport the
-mathematical specification without treating the trusted declaration itself as
-the only interface.
+The alpha-length selector is the `have fn ... by exist!` shown above. Its
+existence and all-endpoint uniqueness are checked through
+`$has_alpha_interval_length`; `alpha_interval_length_has_value` is the stable
+elimination theorem for callers. The remaining direct numerical trust is the
+bounded-difference splitting law used by finite additivity, not selection of
+the alpha-length value.
 
 `has_piecewise_constant_stieltjes_integral` and its selected value are the
 Stieltjes analogues of the ordinary step-integral relation and value. The
@@ -1483,6 +1504,14 @@ not new Stieltjes objects. The direct numerical debt in this chain is now the
 alpha-length bounded-difference law, not endpoint-piece selection or a second
 copy of finite-family induction.
 
+A piecewise-constant function itself is now the selected witness on both sides
+of the Stieltjes envelope. Its finite Stieltjes value lies above the selected
+upper value and below the selected lower value; the checked global
+minorant/majorant comparison supplies the reverse inequality. Thus the
+integrability conclusion of Theorem 11.10.2 is checked. Its remaining debt is
+the source-facing finite identity with the ordinary integral of `f*dalpha`,
+not existence of the Stieltjes integral.
+
 The identity-integrator theorem is a thm equating `stieltjes_integral_on` with
 `integral_on`. This layer depends on partitions, finite regrouping, step
 integrals, and the ordinary order-envelope architecture.
@@ -1490,23 +1519,10 @@ integrals, and the ordinary order-envelope architecture.
 ## Fundamental theorems and change of variables
 
 The integral from the left endpoint is a function of x, not a prop. Its
-specification needs a restriction of f to the changing interval [a,x].
+specification needs a restriction of f to the changing interval [a,x]. The
+ideal interface is:
 
 ~~~litex
-prop is_restriction_to_subset(I, J power_set(R), f fn(x I) R, g fn(x J) R):
-    J $subset I
-    forall x J:
-        g(x) = f(x)
-
-prop has_integral_from_left_endpoint(
-    a, b R, f fn(t '[a, b]) R, x '[a, b], s R
-):
-    a < b
-    exist g fn(u '[a, x]) R st {
-        $is_restriction_to_subset('[a, b], '[a, x], f, g),
-        $has_riemann_integral('[a, x], g, s)
-    }
-
 have fn integral_from_left_endpoint(
     a, b R, f fn(t '[a, b]) R, x '[a, b]
 ) R by exist!:
@@ -1515,10 +1531,9 @@ have fn integral_from_left_endpoint(
         $is_riemann_integrable_on('[a, b], f)
         =>:
             exist! s R st {
-                exist g fn(u '[a, x]) R st {
-                    $is_restriction_to_subset('[a, b], '[a, x], f, g),
-                    $has_riemann_integral('[a, x], g, s)
-                }
+                $has_riemann_integral(
+                    '[a, x], fn(y '[a, x]) R {f(y)}, s
+                )
             }
 
 thm integral_from_left_endpoint_has_value:
@@ -1526,15 +1541,16 @@ thm integral_from_left_endpoint_has_value:
         a < b
         $is_riemann_integrable_on('[a, b], f)
         =>:
-            $has_integral_from_left_endpoint(
-                a, b, f, x, integral_from_left_endpoint(a, b, f, x)
+            $has_riemann_integral(
+                '[a, x], fn(y '[a, x]) R {f(y)},
+                integral_from_left_endpoint(a, b, f, x)
             )
 
 prop is_integral_function_from_left_endpoint(
     a, b R, f fn(t '[a, b]) R, F fn(x '[a, b]) R
 ):
     forall x '[a, b]:
-        $has_integral_from_left_endpoint(a, b, f, x, F(x))
+        $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, F(x))
 
 prop is_antiderivative_of(I power_set(R), f fn(x I) R, F fn(x I) R):
     forall x I:
@@ -1557,14 +1573,14 @@ prop is_composition_on_closed_interval(
         h(x) = f(phi(x))
 ~~~
 
-The desired function shape is known, but Litex currently rejects the changing
-result domain fn(u '[a,x]) R. The selector is therefore exposed only under the
-mathematically necessary hypothesis that `f` is Riemann integrable on the
-parent interval; its trusted body still contains the restriction-and-
-subinterval-integrability bridge. This is a kernel_problem about dependent
-restriction-valued functions, not a reason to weaken the construction into an
-existence-only predicate or to make the selector total for arbitrary `f`.
-Keep the trusted selector narrow until the language supports that construction.
+The restriction does not need to be returned as a dependent-typed object:
+`fn(y '[a,x]) R {f(y)}` is already the restriction of `f` to `[a,x]` and is
+accepted in the real caller context. The chapter also checks its subinterval
+integrability by instantiating the two-piece partition interface. The selector
+remains trusted for a separate declaration-level reason: Litex rejects the
+global source-facing parameter list because the types of `f` and `x` depend on
+the earlier endpoints `a,b`. Its postcondition fixes the value to `integral_on`,
+so downstream mathematics does not depend on an opaque restriction object.
 The FTCs, antiderivatives-differ-by-a-constant,
 integration by parts, and change of variables are thms consuming `integral_on`
 or `stieltjes_integral_on`. `is_antiderivative_of`,
@@ -1573,12 +1589,20 @@ or `stieltjes_integral_on`. `is_antiderivative_of`,
 about displayed functions; no new selected ``substitution map'' should be
 invented. The current chapter already follows this classification.
 
-The Chapter 11 selector remains narrowly trusted because of the dependent
-restriction-valued function and the still-unproved restriction-integrability
-transport, but it is available only for a parent-interval integrable function.
-`$has_integral_from_left_endpoint` and
-`integral_from_left_endpoint_has_value` now expose its ordinary mathematical
-specification to callers. That relation is the right bridge for FTC proofs;
+`antiderivatives_differ_by_constant` is checked without a separate
+bounded-interval zero-derivative primitive. Given two points of a bounded
+interval, connectedness puts the closed interval between them inside the
+ambient domain. Restricting the checked zero derivative of `F-G` to that
+closed subinterval permits direct use of Chapter 10's zero-derivative
+constancy theorem. A chosen basepoint supplies the constant in the nonempty
+case; the empty case is vacuous.
+
+The Chapter 11 selector remains narrowly trusted because its global parameter
+types depend on earlier endpoint parameters, but it is available only for a
+parent-interval integrable function. The explicit restriction and its
+integrability are checked. `integral_from_left_endpoint_has_value` and
+the selector's equality with `integral_on` expose its ordinary mathematical
+specification to callers. That theorem is the right bridge for FTC proofs;
 the global predicate `is_integral_function_from_left_endpoint` describes a
 displayed function that has those values for every x. The checked theorem
 `selected_left_endpoint_integral_is_integral_function` supplies the canonical
@@ -1615,6 +1639,8 @@ canonical steps and candidate witness partitions
   -> Riemann integrability -> integral_on
   -> has_darboux_approximation (for every epsilon)
   -> step/candidate algebra -> integral laws
+  -> supplied small-oscillation partitions -> Darboux integrability
+  -> exact partition sums for the Dirichlet example
 
 alpha_interval_length + alpha bounded-difference splitting
   -> generic interval-weight finite additivity
@@ -1648,9 +1674,10 @@ comparison have their real interfaces.
 - Imported set-valued functions need a usable membership or unfolding theorem
   when their defining equation cannot be unfolded across a module boundary.
   This is an interface or kernel issue, not a reason for a duplicate wrapper.
-- The changing-domain restriction in the first FTC is a dependent-codomain
-  kernel blocker. Keep the intended have-fn shape visible and keep trust
-  exactly on that construction.
+- The changing-domain restriction in the first FTC is an ordinary inline
+  lambda and is checked. The remaining kernel blocker is narrower: the global
+  selector's later parameter types depend on the earlier endpoints. Keep trust
+  exactly on that named selection surface.
 - The current proof blockers remain in
   scripts/Analysis/todo/03_integration_and_language_blockers.md. This document
   fixes the intended mathematics so later proof work does not redesign the

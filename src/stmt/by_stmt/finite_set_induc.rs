@@ -39,7 +39,7 @@ impl ByFiniteSetInducStmt {
 }
 
 impl fmt::Display for ByFiniteSetInducStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let question_goals = self
             .to_prove
             .iter()

@@ -187,7 +187,7 @@ impl Environment {
 }
 
 impl fmt::Display for Environment {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "Environment {{\n")?;
         write!(f, "    objs: {:?}\n", self.defined_identifiers.len())?;
         write!(f, "    def_props: {:?}\n", self.defined_def_props.len())?;

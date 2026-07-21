@@ -14,7 +14,7 @@ impl TryStmt {
 }
 
 impl fmt::Display for TryStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}\n{}",

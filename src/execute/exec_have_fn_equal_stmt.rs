@@ -278,8 +278,13 @@ impl Runtime {
         return_set_representatives
             .extend(self.get_all_obj_representatives_equal_to_given(&declared_return_set));
         for return_set_representative in return_set_representatives {
-            let Obj::SetBuilder(_) = return_set_representative else {
-                continue;
+            // A named carrier may unfold to a function space.
+            // Example: `\Matrix<F, field, m, n> = fn(i, j) F` accepts an
+            // anonymous row-column function as a `matrix_add` return value.
+            let representative_kind = match &return_set_representative {
+                Obj::FnSet(_) => "function-space alias",
+                Obj::SetBuilder(_) => "set-builder alias",
+                _ => continue,
             };
             let representative_membership: AtomicFact = InFact::new(
                 value_fn.clone().into(),
@@ -301,7 +306,10 @@ impl Runtime {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     membership_fact,
-                    "anonymous fn satisfies a declared set-builder return set".to_string(),
+                    format!(
+                        "anonymous fn satisfies a declared return set through an equal {}",
+                        representative_kind
+                    ),
                     vec![representative_result],
                 )
                 .into(),

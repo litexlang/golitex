@@ -109,9 +109,6 @@ even_natural_numbers = {n N: $is_even_natural_number(n)}
 
 have fn identity_on_N(x N) N = x
 
-forall x N:
-    identity_on_N(x) = x
-
 claim:
     ? $is_countably_infinite(N)
     claim:
@@ -133,8 +130,6 @@ claim:
 claim:
     ? $is_countably_infinite(N_pos)
     have fn succ_N(n N) N_pos = n + 1
-    forall n N:
-        succ_N(n) = n + 1
     claim:
         ? $chap3::is_injective_fn(N, N_pos, succ_N)
         forall x1, x2 N:
@@ -161,8 +156,6 @@ claim:
         witness exist k N st {2 * n = 2 * k} from n
         2 * n $in {n N: $is_even_natural_number(n)}
     have fn double_to_even(n N) even_natural_numbers = 2 * n
-    forall n N:
-        double_to_even(n) = 2 * n
     claim:
         ? $chap3::is_injective_fn(N, even_natural_numbers, double_to_even)
         forall x1, x2 N:
@@ -214,7 +207,6 @@ thm natural_subset_has_unique_minimum:
             n $in closed_range(0, a)
         S $subset closed_range(0, a)
         by thm basics::subset_of_finite_set_is_finite(S, closed_range(0, a))
-        $is_finite_set(S)
     claim:
         ? $is_nonempty_set(S)
         witness $is_nonempty_set(S) from a:
@@ -546,8 +538,6 @@ thm infinite_subset_has_recursive_min_enumeration:
     forall n N:
         increasing_N_subset_enum_value(X, n) $in X
     have fn recursive_enum_to_subset(n N) X = increasing_N_subset_enum_value(X, n)
-    forall n N:
-        recursive_enum_to_subset(n) = increasing_N_subset_enum_value(X, n)
     witness exist f fn(n N) X st {$is_recursive_min_enumeration_from_N_to_subset(X, f)} from recursive_enum_to_subset
 
 thm recursive_min_enumeration_step_is_increasing:
@@ -733,7 +723,6 @@ thm recursive_min_enumeration_is_bijective:
                     n2 - n1 >= 1
                     n2 - n1 - 1 $in N
                     by thm recursive_min_enumeration_strictly_increases_after_steps(X, f, n1, n2 - n1 - 1)
-                    f(n1) < f(n1 + (n2 - n1 - 1) + 1)
                     n1 + (n2 - n1 - 1) + 1 = n2
                     f(n1 + (n2 - n1 - 1) + 1) = f(n2)
                     f(n1) < f(n2)
@@ -747,7 +736,6 @@ thm recursive_min_enumeration_is_bijective:
                             n1 - n2 >= 1
                             n1 - n2 - 1 $in N
                             by thm recursive_min_enumeration_strictly_increases_after_steps(X, f, n2, n1 - n2 - 1)
-                            f(n2) < f(n2 + (n1 - n2 - 1) + 1)
                             n2 + (n1 - n2 - 1) + 1 = n1
                             f(n2 + (n1 - n2 - 1) + 1) = f(n1)
                             f(n2) < f(n1)
@@ -756,7 +744,6 @@ thm recursive_min_enumeration_is_bijective:
                             n1 = n2
         $chap3::is_injective_fn(N, X, f)
     by thm recursive_min_enumeration_is_surjective(X, f)
-    $chap3::is_surjective_fn(N, X, f)
     $chap3::is_bijective_fn(N, X, f)
 
 thm increasing_bijection_zero_is_minimum:
@@ -783,7 +770,6 @@ thm increasing_bijection_zero_is_minimum:
             case m > 0:
                 m - 1 $in N
                 by thm successor_strict_increase_has_strict_growth(X, f, 0, m - 1)
-                f(0) < f(0 + (m - 1) + 1)
                 0 + (m - 1) + 1 = m
                 f(0 + (m - 1) + 1) = f(m) = z
                 f(0) < z
@@ -819,7 +805,6 @@ thm increasing_bijection_successor_is_least_above:
                         n - m >= 1
                         n - m - 1 $in N
                         by thm successor_strict_increase_has_strict_growth(X, f, m, n - m - 1)
-                        f(m) < f(m + (n - m - 1) + 1)
                         m + (n - m - 1) + 1 = n
                         f(m + (n - m - 1) + 1) = f(n)
                         f(m) < f(n)
@@ -849,7 +834,6 @@ thm increasing_bijection_successor_is_least_above:
                         m - (n + 1) >= 1
                         m - (n + 1) - 1 $in N
                         by thm successor_strict_increase_has_strict_growth(X, f, n + 1, m - (n + 1) - 1)
-                        f(n + 1) < f(n + 1 + (m - (n + 1) - 1) + 1)
                         n + 1 + (m - (n + 1) - 1) + 1 = m
                         f(n + 1 + (m - (n + 1) - 1) + 1) = f(m) = z
                         f(n + 1) < z
@@ -869,7 +853,6 @@ thm increasing_bijection_from_N_to_subset_is_recursive_min_enumeration:
             ? f(n) = increasing_N_subset_enum_value(X, n)
             ? from n = 0:
                 by thm increasing_bijection_zero_is_minimum(X, f)
-                $is_minimum_of_natural_subset(X, f(0))
                 $is_minimum_of_natural_subset(X, first_in_infinite_N_subset_value(X))
                 exist! y N st {$is_minimum_of_natural_subset(X, y)}
                 f(0) = first_in_infinite_N_subset_value(X)
@@ -878,7 +861,6 @@ thm increasing_bijection_from_N_to_subset_is_recursive_min_enumeration:
             ? induc:
                 f(n) = increasing_N_subset_enum_value(X, n)
                 by thm increasing_bijection_successor_is_least_above(X, f, n)
-                $is_least_natural_element_above_in_subset(X, f(n), f(n + 1))
                 $is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, n), f(n + 1))
                 $is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, n), next_in_infinite_N_subset_value(X, increasing_N_subset_enum_value(X, n)))
                 exist! y N st {$is_least_natural_element_above_in_subset(X, increasing_N_subset_enum_value(X, n), y)}
@@ -2260,7 +2242,6 @@ thm constant_general_cart_product_is_function_space:
             ? forall f fn(alpha I) X:
                 f $in general_cart(I, {X}, F)
             by thm function_space_members_satisfy_constant_product_conditions(I, X, F, f)
-            $is_constant_general_cart_product_candidate(I, X, F, f)
             forall alpha I:
                 f(alpha) $in F(alpha)
             big_union({X}) = X
@@ -2399,7 +2380,6 @@ thm finite_index_product_agrees_with_chapter3_cartesian_product:
             f $in {f fn(i closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)}
             f $in P
     by thm finite_cartesian_product_choice_function_representation(n, U, X, C, coordinate_product)
-    $chap3::has_equal_cardinality(C, coordinate_product)
     coordinate_product = P
     $chap3::has_equal_cardinality(C, P)
 
@@ -2412,14 +2392,6 @@ thm binary_cartesian_product_choice_function_representation:
             $chap3::has_equal_cardinality(cart(A, B), P)
     P = {f fn(i closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
     have fn choice_tuple_encode(p cart(A, B)) P = fn(i closed_range(1, 2)) U {p[i]}
-    claim:
-        ? forall p cart(A, B):
-            choice_tuple_encode(p)(1) = p[1]
-        choice_tuple_encode(p)(1) = p[1]
-    claim:
-        ? forall p cart(A, B):
-            choice_tuple_encode(p)(2) = p[2]
-        choice_tuple_encode(p)(2) = p[2]
     claim:
         ? $chap3::is_injective_fn(cart(A, B), P, choice_tuple_encode)
         claim:
@@ -2498,18 +2470,6 @@ thm ternary_cartesian_product_choice_function_representation:
             $chap3::has_equal_cardinality(cart(A, B, C), P)
     P = {f fn(i closed_range(1, 3)) U: f(1) $in A and f(2) $in B and f(3) $in C}
     have fn choice_tuple_encode(p cart(A, B, C)) P = fn(i closed_range(1, 3)) U {p[i]}
-    claim:
-        ? forall p cart(A, B, C):
-            choice_tuple_encode(p)(1) = p[1]
-        choice_tuple_encode(p)(1) = p[1]
-    claim:
-        ? forall p cart(A, B, C):
-            choice_tuple_encode(p)(2) = p[2]
-        choice_tuple_encode(p)(2) = p[2]
-    claim:
-        ? forall p cart(A, B, C):
-            choice_tuple_encode(p)(3) = p[3]
-        choice_tuple_encode(p)(3) = p[3]
     claim:
         ? $chap3::is_injective_fn(cart(A, B, C), P, choice_tuple_encode)
         claim:
@@ -2690,8 +2650,6 @@ thm supremum_window_choice_sequence_exists:
         =>:
             exist a seq(R) st {$is_supremum_window_choice_sequence(E, M, a)}
     have fn window_family(n N_pos) power_set(R) = \supremum_window<E, M, n>
-    forall n N_pos:
-        window_family(n) = \supremum_window<E, M, n>
     claim:
         ? forall n N_pos:
             $is_nonempty_set(window_family(n))
@@ -2789,8 +2747,6 @@ thm choice_function_from_pointwise_existence:
         =>:
             exist f fn(x X) Y st {$is_choice_function_for_property(X, Y, f)}
     have fn fiber_family(x X) power_set(Y) = {y Y: $choice_property(x, y)}
-    forall x X:
-        fiber_family(x) = {y Y: $choice_property(x, y)}
     claim:
         ? forall x X:
             $is_nonempty_set(fiber_family(x))
@@ -2938,8 +2894,6 @@ thm surjection_has_injective_right_inverse_from_choice:
         =>:
             exist f fn(a A) B st {$chap3::is_injective_fn(A, B, f), $is_right_inverse_of_surjection(A, B, g, f)}
     have fn fiber_family(a A) power_set(B) = {b B: g(b) = a}
-    forall a A:
-        fiber_family(a) = {b B: g(b) = a}
     claim:
         ? forall a A:
             $is_nonempty_set(fiber_family(a))
@@ -3888,8 +3842,6 @@ thm strict_upper_bound_choice_relation_exists:
         =>:
             exist C power_set(cart(power_set(X), X)) st {$is_strict_upper_bound_choice_relation(X, le, x0, C)}
     have fn upper_choice_family(Y power_set(X)) power_set(X) = {u X: not $is_well_ordered_chain_with_minimum(X, le, x0, Y) or $is_strict_upper_bound(X, le, Y, u)}
-    forall Y power_set(X):
-        upper_choice_family(Y) = {u X: not $is_well_ordered_chain_with_minimum(X, le, x0, Y) or $is_strict_upper_bound(X, le, Y, u)}
     claim:
         ? forall Y power_set(X):
             $is_nonempty_set(upper_choice_family(Y))
@@ -4100,7 +4052,6 @@ thm zorn_maximal_element_principle:
                             (y, z) $in le
                         (y, u) $in le
                         by thm partial_order_transitive_step(X, le, y, u, z)
-                        (y, z) $in le
                     $is_upper_bound(X, le, Y, z)
                 claim:
                     ? not z $in Y
@@ -4108,7 +4059,6 @@ thm zorn_maximal_element_principle:
                         ? not z $in Y
                         (z, u) $in le
                         by thm partial_order_antisymmetric_step(X, le, z, u)
-                        z = u
                         impossible u != z
                 $is_strict_upper_bound(X, le, Y, z)
                 witness exist s X st {$is_strict_upper_bound(X, le, Y, s)} from z:

@@ -91,6 +91,39 @@ claim:
 }
 
 #[test]
+fn template_function_space_alias_accepts_anonymous_function_return() {
+    run_with_large_stack(
+        "template_function_space_alias_accepts_anonymous_function_return",
+        || {
+            let source_code = r#"
+template<S set>:
+    have FunctionCarrier set = fn(x S) S
+
+template<S set>:
+    have fn keep(f \FunctionCarrier<S>) \FunctionCarrier<S> = fn(x S) S {f(x)}
+
+forall S set, f \FunctionCarrier<S>:
+    \keep<S>(f) $in \FunctionCarrier<S>
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "template_function_space_alias_accepts_anonymous_function_return",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "template function-space aliases should accept matching anonymous returns:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn anonymous_fn_restriction_over_abstract_subset_is_well_defined() {
     run_with_large_stack(
         "anonymous_fn_restriction_over_abstract_subset_is_well_defined_large_stack",

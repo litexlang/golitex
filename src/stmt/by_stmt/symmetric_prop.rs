@@ -10,7 +10,7 @@ pub struct BySymmetricPropStmt {
 }
 
 impl fmt::Display for BySymmetricPropStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}:\n{}",

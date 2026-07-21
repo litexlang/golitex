@@ -28,7 +28,7 @@ impl UseStrategyStmt {
 }
 
 impl fmt::Display for UseStrategyStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", USE, STRATEGY, self.name)
     }
 }
@@ -40,7 +40,7 @@ impl StopStrategyStmt {
 }
 
 impl fmt::Display for StopStrategyStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", STOP, STRATEGY, self.name)
     }
 }
@@ -62,7 +62,7 @@ impl DefStrategyStmt {
 }
 
 impl fmt::Display for DefStrategyStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}{}\n{}",

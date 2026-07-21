@@ -9,7 +9,7 @@ pub struct ByReflexivePropStmt {
 }
 
 impl fmt::Display for ByReflexivePropStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{} {}:\n{}",
