@@ -1,0 +1,190 @@
+# Linear Algebra Done Right, fourth edition — Section 5B.
+# The Minimal Polynomial.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Operators "\chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>"
+macro Polynomials "\chap2a::polynomial_space<s, scalars>"
+macro ZeroOperator "\chap3a::zero_linear_map<s, scalars, V, V, Vspace, Vspace>"
+macro MinimalPolynomial "\minimal_polynomial<s, scalars, V, Vspace>"
+
+# Result 5.19. Proof spine: choose a nonzero v and a shortest nonzero
+# polynomial p with p(T)v=0; factor p at a complex zero lambda; minimality makes
+# q(T)v nonzero and (T-lambda I)q(T)v=0 supplies the eigenvector.
+axiom complex_operator_has_an_eigenvalue:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
+        \chap2c::dimension<&chap1a::Complex, chap1a::complex_scalars, V, Vspace> > 0
+        =>:
+            exist lambda &chap1a::Complex st {$chap5a::is_eigenvalue(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T, lambda)}
+
+# Example 5.20. Multiplication by z on P(C) has no eigenvalues because it
+# raises the degree of every nonzero polynomial; finite dimensionality in 5.19
+# is therefore essential.
+
+# Definition 5.21. A monic degree-m polynomial has selected degree m and a
+# coefficient representation whose highest coefficient is one.
+prop is_monic_polynomial_of_degree(s nonempty_set, scalars @ScalarSystem, p @Polynomials, m N):
+    \chap2a::degree<s, scalars, p> = chap2a::finite_polynomial_degree(m)
+    exist coefficients &chap1a::FiniteList<s, m + 1> st {$chap2a::represents_polynomial(s, scalars, m + 1, coefficients, p), &chap1a::FiniteList<s, m + 1>{coefficients}.entries(m + 1) = @Scalars.one}
+
+prop annihilates_operator(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, p @Polynomials, T @Operators):
+    \chap5a::polynomial_at_operator<s, scalars, V, Vspace>(p, T) = @ZeroOperator
+
+# A candidate is monic, annihilates T, and has no larger degree than any other
+# monic annihilator. Epistemic status is deliberately not folded into this
+# mathematical relation.
+prop is_least_monic_annihilator_degree(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N):
+    forall q @Polynomials, n N:
+        $is_monic_polynomial_of_degree(s, scalars, q, n)
+        $annihilates_operator(s, scalars, V, Vspace, q, T)
+        =>:
+            m <= n
+
+prop is_minimal_polynomial_of(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, p @Polynomials):
+    exist m N st {$is_monic_polynomial_of_degree(s, scalars, p, m), $annihilates_operator(s, scalars, V, Vspace, p, T), $is_least_monic_annihilator_degree(s, scalars, V, Vspace, T, m)}
+
+prop minimal_polynomial_degree_is_bounded(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    forall p @Polynomials:
+        $is_minimal_polynomial_of(s, scalars, V, Vspace, T, p)
+        =>:
+            exist m N st {$is_monic_polynomial_of_degree(s, scalars, p, m), m <= \chap2c::dimension<s, scalars, V, Vspace>}
+
+# Result 5.22. Proof spine: construct a bounded-degree monic annihilator by
+# induction on dim V; choose one of least degree; subtract two least-degree
+# monic annihilators to prove uniqueness.
+axiom minimal_polynomial_exists_unique_and_has_bounded_degree:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            exist! p @Polynomials st {$is_minimal_polynomial_of(s, scalars, V, Vspace, T, p)}
+            $minimal_polynomial_degree_is_bounded(s, scalars, V, Vspace, T)
+
+# Definition 5.24. Selection occurs only after Result 5.22's unique-existence
+# interface; later theorems consume the exact candidate relation.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>: $chap2a::is_finite_dimensional(s, scalars, V, Vspace)>:
+    have fn minimal_polynomial by exist!:
+        ? forall T @Operators:
+            exist! p @Polynomials st {$is_minimal_polynomial_of(s, scalars, V, Vspace, T, p)}
+        by thm minimal_polynomial_exists_unique_and_has_bounded_degree(s, scalars, V, Vspace, T)
+
+# Kernel boundary: expose the selected value's defining relation after the
+# parameterized unique-existence construction.
+axiom minimal_polynomial_satisfies_spec:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $is_minimal_polynomial_of(s, scalars, V, Vspace, T, @MinimalPolynomial(T))
+
+# Example 5.26. For the displayed companion-type operator on F^5, the orbit of
+# e1 is the standard basis through T^4e1 and T^5e1=-3e1+6e2, giving minimal
+# polynomial 3-6z+z^5.
+
+prop has_monic_complex_linear_factorization(p \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>, m N_pos):
+    exist roots fn(i N_pos: i <= m) &chap1a::Complex, stages fn(j N_pos: j <= m + 1) fn(t &chap1a::Complex) &chap1a::Complex st {$chap4::is_complete_complex_linear_factorization(p, m, chap1a::complex_one, roots, stages)}
+
+# Result 5.27(a). Proof spine: a zero lambda factors p=(z-lambda)q and
+# minimality makes q(T) nonzero somewhere; conversely an eigenvector turns
+# p(T)v=0 into p(lambda)v=0.
+prop minimal_polynomial_zero_iff_eigenvalue_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s):
+    forall:
+        =>:
+            $chap4::is_zero_of_polynomial(s, scalars, @MinimalPolynomial(T), lambda)
+        <=>:
+            $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, lambda)
+
+axiom eigenvalues_are_zeros_of_minimal_polynomial:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $minimal_polynomial_zero_iff_eigenvalue_statement(s, scalars, V, Vspace, T, lambda)
+
+# Result 5.27(b). Apply 5.27(a) to the second version of the fundamental
+# theorem of algebra; monicity makes the leading constant one.
+axiom complex_minimal_polynomial_factors_by_eigenvalues:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
+        \chap2c::dimension<&chap1a::Complex, chap1a::complex_scalars, V, Vspace> > 0
+        =>:
+            exist m N_pos st {$has_monic_complex_linear_factorization(\minimal_polynomial<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>(T), m)}
+
+# Example 5.28. The source's companion operator on C^5 has minimal polynomial
+# 3-6z+z^5; its five eigenvalues are therefore exactly that polynomial's five
+# zeros, which are recorded numerically only as explanatory prose.
+
+prop is_polynomial_multiple(s nonempty_set, scalars @ScalarSystem, multiple, divisor @Polynomials):
+    exist factor @Polynomials st {multiple = \chap5a::polynomial_product<s, scalars>(divisor, factor)}
+
+prop annihilator_iff_minimal_polynomial_multiple_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, q @Polynomials):
+    forall:
+        =>:
+            $annihilates_operator(s, scalars, V, Vspace, q, T)
+        <=>:
+            $is_polynomial_multiple(s, scalars, q, @MinimalPolynomial(T))
+
+# Result 5.29. Proof spine: divide q by the minimal polynomial; q(T)=0 forces
+# the lower-degree remainder to vanish; the converse is one use of
+# multiplicativity and p(T)=0.
+axiom annihilating_polynomials_are_exactly_minimal_polynomial_multiples:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, q @Polynomials:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $annihilator_iff_minimal_polynomial_multiple_statement(s, scalars, V, Vspace, T, q)
+
+# Restriction to an invariant subspace is callable and pointwise identical to
+# T. The remaining trust is only the dependent codomain and inherited-linearity
+# packaging.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, U power_set(V): $chap5a::is_invariant_subspace(s, scalars, V, Vspace, T, U)>:
+    trust have restricted_operator \chap3a::linear_map_space<s, scalars, U, U, \chap1c::subspace_vector_space<s, scalars, V, Vspace, U>, \chap1c::subspace_vector_space<s, scalars, V, Vspace, U>>:
+        forall u U:
+            restricted_operator(u) = T(u)
+
+# Result 5.31. Restricting p(T)=0 to U gives p(T|U)=0; Result 5.29 for the
+# restricted operator supplies divisibility.
+axiom minimal_polynomial_of_restriction_divides_ambient_minimal_polynomial:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, U power_set(V):
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $chap5a::is_invariant_subspace(s, scalars, V, Vspace, T, U)
+        =>:
+            $is_polynomial_multiple(s, scalars, @MinimalPolynomial(T), \minimal_polynomial<s, scalars, U, \chap1c::subspace_vector_space<s, scalars, V, Vspace, U>>(\restricted_operator<s, scalars, V, Vspace, T, U>))
+
+template<s nonempty_set, scalars @ScalarSystem>:
+    have fn polynomial_constant_term(p @Polynomials) s = p(@Scalars.zero)
+
+prop noninvertible_iff_minimal_constant_zero_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    forall:
+        =>:
+            not $chap3d::is_invertible_linear_map(s, scalars, V, V, Vspace, Vspace, T)
+        <=>:
+            \polynomial_constant_term<s, scalars>(@MinimalPolynomial(T)) = @Scalars.zero
+
+# Result 5.32. Proof spine: T is noninvertible iff zero is an eigenvalue; by
+# 5.27 this is equivalent to p(0)=0; p(0) is the constant term.
+axiom noninvertible_iff_minimal_polynomial_constant_term_is_zero:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $noninvertible_iff_minimal_constant_zero_statement(s, scalars, V, Vspace, T)
+
+template<V nonempty_set, Vspace &chap1b::VectorSpace<R, chap1a::real_scalars, V>>:
+    have fn real_quadratic_at_operator(T \chap3a::linear_map_space<R, chap1a::real_scalars, V, V, Vspace, Vspace>, b, c R) \chap3a::linear_map_space<R, chap1a::real_scalars, V, V, Vspace, Vspace> = \chap3a::linear_map_add<R, chap1a::real_scalars, V, V, Vspace, Vspace>(\chap3a::linear_map_add<R, chap1a::real_scalars, V, V, Vspace, Vspace>(\chap5a::operator_power<R, chap1a::real_scalars, V, Vspace>(T, 2), \chap3a::linear_map_smul<R, chap1a::real_scalars, V, V, Vspace, Vspace>(b, T)), \chap3a::linear_map_smul<R, chap1a::real_scalars, V, V, Vspace, Vspace>(c, \chap3a::identity_linear_map<R, chap1a::real_scalars, V, Vspace>))
+
+# Result 5.33. Proof spine: restrict T to the invariant quadratic null space;
+# the positive real quadratic forbids eigenvectors; enlarge a maximal
+# even-dimensional invariant subspace by span(w,Tw), a two-dimensional block.
+axiom real_irreducible_quadratic_has_even_dimensional_null_space:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<R, chap1a::real_scalars, V>, T \chap3a::linear_map_space<R, chap1a::real_scalars, V, V, Vspace, Vspace>, b, c R:
+        $chap2a::is_finite_dimensional(R, chap1a::real_scalars, V, Vspace)
+        b^2 < 4 * c
+        =>:
+            exist k N st {\chap2c::dimension<R, chap1a::real_scalars, \chap3b::null_space<R, chap1a::real_scalars, V, V, Vspace, Vspace>(\real_quadratic_at_operator<V, Vspace>(T, b, c)), \chap1c::subspace_vector_space<R, chap1a::real_scalars, V, Vspace, \chap3b::null_space<R, chap1a::real_scalars, V, V, Vspace, Vspace>(\real_quadratic_at_operator<V, Vspace>(T, b, c))>> = 2 * k}
+
+# Result 5.34. Proof spine: factor the real minimal polynomial; a linear factor
+# gives an eigenvalue, while an irreducible quadratic produces a proper
+# invariant odd-dimensional range and closes induction in steps of two.
+axiom real_operator_on_odd_dimensional_space_has_an_eigenvalue:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<R, chap1a::real_scalars, V>, T \chap3a::linear_map_space<R, chap1a::real_scalars, V, V, Vspace, Vspace>, k N:
+        $chap2a::is_finite_dimensional(R, chap1a::real_scalars, V, Vspace)
+        \chap2c::dimension<R, chap1a::real_scalars, V, Vspace> = 2 * k + 1
+        =>:
+            exist lambda R st {$chap5a::is_eigenvalue(R, chap1a::real_scalars, V, Vspace, T, lambda)}

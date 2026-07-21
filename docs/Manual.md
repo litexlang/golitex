@@ -951,7 +951,7 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | Function space `fn(x S: domain facts) T` | Parameter sets must be well-defined. Domain facts are checked in the local parameter context, and the return set `T` must be well-defined. Later parameter sets may depend on earlier parameters. |
 | Anonymous function `fn(x S) T {body}` | The function-space obligations must hold, and the body must be well-defined under the parameter and domain assumptions. |
 | Function application `f(a)` | The function head must have a known function-space fact or be an anonymous function. The arguments must be well-defined and must satisfy the parameter sets and domain facts. Curried applications repeat this check at each layer. |
-| Finite sequence literal `[a, b, ...]` | Each entry must be well-defined. When used as a function head, the index must be in `N_pos` and no larger than the list length. |
+| Finite sequence literal `[a, b, ...]` | The literal must contain at least one element, and each entry must be well-defined. When used as a function head, the index must be in `N_pos` and no larger than the list length. The empty literal `[]` is not a well-defined object. |
 | Cartesian product `cart(A, B, ...)` and tuple `(a, b, ...)` | Each component must be well-defined. |
 | `cart_dim(C)` | `C` must be well-defined and Litex must prove `$is_cart(C)`. |
 | `proj(C, i)` | `C` must be a Cartesian product, `i` must be provably in `N_pos`, and Litex must prove `i <= cart_dim(C)`. Concrete numeric indices are normalized before this check. |

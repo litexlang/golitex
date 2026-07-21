@@ -82,6 +82,13 @@ impl Runtime {
         x: &FiniteSeqListObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
+        if x.objs.is_empty() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(
+                    "finite sequence literal must have at least one element".to_string(),
+                ),
+            )));
+        }
         for o in x.objs.iter() {
             self.verify_obj_well_defined_and_store_cache(o, verify_state)?;
         }

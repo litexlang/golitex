@@ -977,6 +977,70 @@ thm infinite_at_most_countable_is_countably_infinite:
         $chap3::is_injective_fn(N, X, enumerate_X)
         $chap3::is_surjective_fn(N, X, enumerate_X)
 
+thm proposition_3_6_14_N_embedding_implies_infinite:
+    ? forall X set:
+        $embeds_into(N, X)
+        =>:
+            $chap3::has_infinite_cardinality(X)
+    obtain f from exist f fn(n N) X st {$chap3::is_injective_fn(N, X, f)}
+    claim:
+        ? not $chap3::has_finite_cardinality(X)
+        by contra:
+            ? not $chap3::has_finite_cardinality(X)
+            obtain k from exist k N st {$chap3::has_cardinality(X, k)}
+            obtain code from exist code fn(x X) range(0, k) st {$chap3::is_bijective_fn(X, range(0, k), code)}
+            have fn inverse_code by exist!:
+                ? forall y range(0, k):
+                    exist! x X st {y = code(x)}
+                by thm chap3::injective_fn_has_unique_preimage_in_range(X, range(0, k), code, y)
+            $is_finite_set(fn_range(inverse_code))
+            claim:
+                ? fn_range(inverse_code) = X
+                by extension:
+                    ? fn_range(inverse_code) = X
+                    fn_range(inverse_code) $subset X
+                    forall x X:
+                        x = inverse_code(code(x))
+                        inverse_code(code(x)) $in fn_range(inverse_code)
+                        x $in fn_range(inverse_code)
+            $is_finite_set(X)
+            claim:
+                ? $is_finite_set(fn_range(f))
+                fn_range(f) $subset X
+                by thm basics::subset_of_finite_set_is_finite(fn_range(f), X)
+            have fn inverse_f by exist!:
+                ? forall y fn_range(f):
+                    exist! n N st {y = f(n)}
+                by thm chap3::injective_fn_has_unique_preimage_in_range(N, X, f, y)
+            $is_finite_set(fn_range(inverse_f))
+            claim:
+                ? fn_range(inverse_f) = N
+                by extension:
+                    ? fn_range(inverse_f) = N
+                    fn_range(inverse_f) $subset N
+                    forall n N:
+                        n = inverse_f(f(n))
+                        inverse_f(f(n)) $in fn_range(inverse_f)
+                        n $in fn_range(inverse_f)
+            $is_finite_set(N)
+            forall n 0...finite_set_size(N):
+                n $in N
+            0...finite_set_size(N) $subset N
+            $is_finite_set(0...finite_set_size(N))
+            finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
+            finite_set_size(0...finite_set_size(N)) = finite_set_size(N) - 0 + 1
+            finite_set_size(N) + 1 = finite_set_size(N) - 0 + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
+            impossible finite_set_size(N) + 1 <= finite_set_size(N)
+
+thm at_most_countable_with_N_embedding_is_countably_infinite:
+    ? forall X set:
+        $is_at_most_countable(X)
+        $embeds_into(N, X)
+        =>:
+            $is_countably_infinite(X)
+    by thm proposition_3_6_14_N_embedding_implies_infinite(X)
+    by thm infinite_at_most_countable_is_countably_infinite(X)
+
 thm uncountable_is_not_at_most_countable:
     ? forall X set:
         $is_uncountable(X)
@@ -1088,8 +1152,9 @@ thm countable_image_is_at_most_countable:
 Proposition 8.1.10. The union of two countable sets is countable.
 """
 
-# Interleave two enumerations by sending even indices to one set and odd
-# indices to the other, then use image countability.
+# Interleave enumerations of `X` and `Y` at even and odd indices.  The image is
+# the whole union, so it is at most countable; the copy of `N` coming from `X`
+# also shows that the union is infinite.
 
 thm union_of_two_countable_sets_is_countable:
     ? forall X, Y set:
@@ -1097,83 +1162,130 @@ thm union_of_two_countable_sets_is_countable:
         $is_countably_infinite(Y)
         =>:
             $is_countably_infinite(union(X, Y))
-    # The original textbook leaves Proposition 8.1.10 to Exercise 8.1.7.
-    trust $is_countably_infinite(union(X, Y))
+    obtain enumX from exist enumX fn(x N) X st {$chap3::is_bijective_fn(N, X, enumX)}
+    obtain enumY from exist enumY fn(x N) Y st {$chap3::is_bijective_fn(N, Y, enumY)}
+    claim:
+        ? forall k N:
+            (2 * k) % 2 = 0
+            integer_quotient(2 * k, 2) = k
+            (2 * k + 1) % 2 = 1
+            integer_quotient(2 * k + 1, 2) = k
+        2 % 2 = 0
+        (2 * k) % 2 = ((2 % 2) * (k % 2)) % 2
+        ((2 % 2) * (k % 2)) % 2 = (0 * (k % 2)) % 2
+        0 * (k % 2) = 0
+        (0 * (k % 2)) % 2 = 0 % 2 = 0
+        2 * k = 2 * integer_quotient(2 * k, 2) + (2 * k) % 2 = 2 * integer_quotient(2 * k, 2)
+        k = (2 * k) / 2 = (2 * integer_quotient(2 * k, 2)) / 2 = integer_quotient(2 * k, 2)
+        (2 * k + 1) % 2 = ((2 * k) % 2 + 1 % 2) % 2 = (0 + 1) % 2 = 1
+        2 * k + 1 = 2 * integer_quotient(2 * k + 1, 2) + (2 * k + 1) % 2 = 2 * integer_quotient(2 * k + 1, 2) + 1
+        k = ((2 * k + 1) - 1) / 2 = ((2 * integer_quotient(2 * k + 1, 2) + 1) - 1) / 2 = integer_quotient(2 * k + 1, 2)
+    have fn interleaved_enum(n N) union(X, Y) by cases:
+        case n % 2 = 0: enumX(integer_quotient(n, 2))
+        case n % 2 = 1: enumY(integer_quotient(n, 2))
+    claim:
+        ? $chap3::is_surjective_fn(N, union(X, Y), interleaved_enum)
+        claim:
+            ? forall z union(X, Y):
+                exist n N st {z = interleaved_enum(n)}
+            by cases:
+                ? exist n N st {z = interleaved_enum(n)}
+                case z $in X:
+                    obtain k from exist k N st {z = enumX(k)}
+                    (2 * k) % 2 = 0
+                    integer_quotient(2 * k, 2) = k
+                    interleaved_enum(2 * k) = enumX(integer_quotient(2 * k, 2)) = enumX(k) = z
+                    witness exist n N st {z = interleaved_enum(n)} from 2 * k
+                case z $in Y:
+                    obtain k from exist k N st {z = enumY(k)}
+                    (2 * k + 1) % 2 = 1
+                    integer_quotient(2 * k + 1, 2) = k
+                    interleaved_enum(2 * k + 1) = enumY(integer_quotient(2 * k + 1, 2)) = enumY(k) = z
+                    witness exist n N st {z = interleaved_enum(n)} from 2 * k + 1
+        by def $chap3::is_surjective_fn(N, union(X, Y), interleaved_enum)
+    by thm natural_image_is_at_most_countable(union(X, Y), interleaved_enum)
+    claim:
+        ? union(X, Y) $subset fn_range(interleaved_enum)
+        claim:
+            ? forall z union(X, Y):
+                z $in fn_range(interleaved_enum)
+            obtain n from exist n N st {z = interleaved_enum(n)}
+            interleaved_enum(n) $in fn_range(interleaved_enum)
+            z $in fn_range(interleaved_enum)
+    by thm subset_of_at_most_countable_is_at_most_countable(fn_range(interleaved_enum), union(X, Y))
+    have fn embed_N(n N) union(X, Y) = enumX(n)
+    claim:
+        ? $chap3::is_injective_fn(N, union(X, Y), embed_N)
+        forall n1, n2 N:
+            embed_N(n1) = embed_N(n2)
+            =>:
+                enumX(n1) = embed_N(n1) = embed_N(n2) = enumX(n2)
+                n1 = n2
+        by def $chap3::is_injective_fn(N, union(X, Y), embed_N)
+    witness exist e fn(x N) union(X, Y) st {$chap3::is_injective_fn(N, union(X, Y), e)} from embed_N
+    by thm at_most_countable_with_N_embedding_is_countably_infinite(union(X, Y))
 
 """
 Corollary 8.1.11. The integers are countable.
 """
 
-# Split the integers into non-negative and negative parts, enumerate both, and
-# combine them with the two-set union result.
+# The map `n |-> -n` enumerates `-N`; the integers are `N union (-N)`, so the
+# result follows from Proposition 8.1.10.
 
-prop is_negative_natural_part_member(z Z):
-    exist n N st {z = -n}
-
-have negative_natural_part set = {z Z: $is_negative_natural_part_member(z)}
-negative_natural_part = {z Z: $is_negative_natural_part_member(z)}
-
-claim:
-    ? forall n N:
+thm integers_are_countable:
+    ? forall:
+        $is_countably_infinite(Z)
+    have fn negate_natural(n N) Z = -n
+    have negative_natural_part set = fn_range(negate_natural)
+    forall n N:
+        negate_natural(n) = -n
+        negate_natural(n) $in fn_range(negate_natural)
         -n $in negative_natural_part
-    witness exist k N st {-n = -k} from n
-    -n $in {z Z: $is_negative_natural_part_member(z)}
-
-have fn neg_to_negative_part(n N) negative_natural_part = -n
-
-forall n N:
-    neg_to_negative_part(n) = -n
-
-claim:
-    ? $chap3::is_injective_fn(N, negative_natural_part, neg_to_negative_part)
-    forall x1, x2 N:
-        neg_to_negative_part(x1) = neg_to_negative_part(x2)
-        =>:
-            -x1 = neg_to_negative_part(x1) = neg_to_negative_part(x2) = -x2
-            x1 = -(-x1) = -(-x2) = x2
-
-claim:
-    ? $chap3::is_surjective_fn(N, negative_natural_part, neg_to_negative_part)
+    have fn enumerate_negative_naturals(n N) negative_natural_part = -n
     claim:
-        ? forall y negative_natural_part:
-            exist x N st {y = neg_to_negative_part(x)}
-        y $in negative_natural_part
-        y $in {z Z: $is_negative_natural_part_member(z)}
-        $is_negative_natural_part_member(y)
-        obtain n from exist n N st {y = -n}
-        neg_to_negative_part(n) = -n
-        y = neg_to_negative_part(n)
-        witness exist x N st {y = neg_to_negative_part(x)} from n
-
-witness exist f fn(x N) negative_natural_part st {$chap3::is_bijective_fn(N, negative_natural_part, f)} from neg_to_negative_part
-
-claim:
-    ? union(N, negative_natural_part) = Z
-    by extension:
+        ? $chap3::is_injective_fn(N, negative_natural_part, enumerate_negative_naturals)
+        forall n1, n2 N:
+            enumerate_negative_naturals(n1) = enumerate_negative_naturals(n2)
+            =>:
+                -n1 = enumerate_negative_naturals(n1) = enumerate_negative_naturals(n2) = -n2
+                n1 = -(-n1) = -(-n2) = n2
+        by def $chap3::is_injective_fn(N, negative_natural_part, enumerate_negative_naturals)
+    claim:
+        ? $chap3::is_surjective_fn(N, negative_natural_part, enumerate_negative_naturals)
+        claim:
+            ? forall z negative_natural_part:
+                exist n N st {z = enumerate_negative_naturals(n)}
+            have by preimage n from z $in fn_range(negate_natural)
+            z = negate_natural(n) = -n = enumerate_negative_naturals(n)
+            witness exist k N st {z = enumerate_negative_naturals(k)} from n
+        by def $chap3::is_surjective_fn(N, negative_natural_part, enumerate_negative_naturals)
+    witness exist f fn(x N) negative_natural_part st {$chap3::is_bijective_fn(N, negative_natural_part, f)} from enumerate_negative_naturals
+    claim:
         ? union(N, negative_natural_part) = Z
-        claim:
-            ? forall x union(N, negative_natural_part):
-                x $in Z
-            by cases:
-                ? x $in Z
-                case x $in N:
+        by extension:
+            ? union(N, negative_natural_part) = Z
+            claim:
+                ? forall x union(N, negative_natural_part):
                     x $in Z
-                case x $in negative_natural_part:
-                    x $in Z
-        claim:
-            ? forall z Z:
-                z $in union(N, negative_natural_part)
-            by cases:
-                ? z $in union(N, negative_natural_part)
-                case z >= 0:
-                    z $in N
-                case z < 0:
-                    abs(z) $in N
-                    abs(z) = -z
-                    witness exist k N st {z = -k} from abs(z)
-                    z $in negative_natural_part
-
-by thm union_of_two_countable_sets_is_countable(N, negative_natural_part)
+                by cases:
+                    ? x $in Z
+                    case x $in N:
+                        x $in Z
+                    case x $in negative_natural_part:
+                        x $in Z
+            claim:
+                ? forall z Z:
+                    z $in union(N, negative_natural_part)
+                by cases:
+                    ? z $in union(N, negative_natural_part)
+                    case z >= 0:
+                        z $in N
+                    case z < 0:
+                        abs(z) $in N
+                        negate_natural(abs(z)) = -abs(z) = z
+                        negate_natural(abs(z)) $in fn_range(negate_natural)
+                        z $in negative_natural_part
+    by thm union_of_two_countable_sets_is_countable(N, negative_natural_part)
 
 """
 Lemma 8.1.12. The triangular subset `{(n,m) in N x N : m <= n}` is countable.
@@ -1470,70 +1582,6 @@ claim:
 
 by thm union_of_two_countable_sets_is_countable(natural_triangle, upper_natural_triangle)
 
-thm proposition_3_6_14_N_embedding_implies_infinite:
-    ? forall X set:
-        $embeds_into(N, X)
-        =>:
-            $chap3::has_infinite_cardinality(X)
-    obtain f from exist f fn(n N) X st {$chap3::is_injective_fn(N, X, f)}
-    claim:
-        ? not $chap3::has_finite_cardinality(X)
-        by contra:
-            ? not $chap3::has_finite_cardinality(X)
-            obtain k from exist k N st {$chap3::has_cardinality(X, k)}
-            obtain code from exist code fn(x X) range(0, k) st {$chap3::is_bijective_fn(X, range(0, k), code)}
-            have fn inverse_code by exist!:
-                ? forall y range(0, k):
-                    exist! x X st {y = code(x)}
-                by thm chap3::injective_fn_has_unique_preimage_in_range(X, range(0, k), code, y)
-            $is_finite_set(fn_range(inverse_code))
-            claim:
-                ? fn_range(inverse_code) = X
-                by extension:
-                    ? fn_range(inverse_code) = X
-                    fn_range(inverse_code) $subset X
-                    forall x X:
-                        x = inverse_code(code(x))
-                        inverse_code(code(x)) $in fn_range(inverse_code)
-                        x $in fn_range(inverse_code)
-            $is_finite_set(X)
-            claim:
-                ? $is_finite_set(fn_range(f))
-                fn_range(f) $subset X
-                by thm basics::subset_of_finite_set_is_finite(fn_range(f), X)
-            have fn inverse_f by exist!:
-                ? forall y fn_range(f):
-                    exist! n N st {y = f(n)}
-                by thm chap3::injective_fn_has_unique_preimage_in_range(N, X, f, y)
-            $is_finite_set(fn_range(inverse_f))
-            claim:
-                ? fn_range(inverse_f) = N
-                by extension:
-                    ? fn_range(inverse_f) = N
-                    fn_range(inverse_f) $subset N
-                    forall n N:
-                        n = inverse_f(f(n))
-                        inverse_f(f(n)) $in fn_range(inverse_f)
-                        n $in fn_range(inverse_f)
-            $is_finite_set(N)
-            forall n 0...finite_set_size(N):
-                n $in N
-            0...finite_set_size(N) $subset N
-            $is_finite_set(0...finite_set_size(N))
-            finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
-            finite_set_size(0...finite_set_size(N)) = finite_set_size(N) - 0 + 1
-            finite_set_size(N) + 1 = finite_set_size(N) - 0 + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
-            impossible finite_set_size(N) + 1 <= finite_set_size(N)
-
-thm at_most_countable_with_N_embedding_is_countably_infinite:
-    ? forall X set:
-        $is_at_most_countable(X)
-        $embeds_into(N, X)
-        =>:
-            $is_countably_infinite(X)
-    by thm proposition_3_6_14_N_embedding_implies_infinite(X)
-    by thm infinite_at_most_countable_is_countably_infinite(X)
-
 """
 Corollary 8.1.14. A Cartesian product of two countable sets is countable.
 """
@@ -1661,6 +1709,7 @@ claim:
             obtain p from exist p cart(Z, Z_nz) st {q = rational_quotient(p)}
             rational_quotient(p) $in fn_range(rational_quotient)
 
+by thm integers_are_countable()
 by thm product_of_countable_sets_is_countable(Z, Z_nz)
 by thm countable_image_is_at_most_countable(cart(Z, Z_nz), Q, rational_quotient)
 

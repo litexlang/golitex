@@ -1,0 +1,214 @@
+# Linear Algebra Done Right, fourth edition — Section 5A.
+# Invariant Subspaces.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Space "&chap1b::VectorSpace<s, scalars, V>{Vspace}"
+macro Operators "\chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>"
+macro OperatorVectorSpace "\chap3a::linear_map_vector_space<s, scalars, V, V, Vspace, Vspace>"
+macro OperatorAdd "\chap3a::linear_map_add<s, scalars, V, V, Vspace, Vspace>"
+macro OperatorSmul "\chap3a::linear_map_smul<s, scalars, V, V, Vspace, Vspace>"
+macro Compose "\chap3a::linear_map_compose<s, scalars, V, V, V, Vspace, Vspace, Vspace>"
+macro IdentityOperator "\chap3a::identity_linear_map<s, scalars, V, Vspace>"
+macro Polynomials "\chap2a::polynomial_space<s, scalars>"
+macro NullSpace "\chap3b::null_space<s, scalars, V, V, Vspace, Vspace>"
+macro Range "\chap3b::range_of<V, V>"
+
+# Definition 5.1. An operator is a linear map from V to itself. This source
+# name reuses the callable linear-map carrier instead of introducing a second
+# opaque kind of map.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have operator_space set = @Operators
+
+# Definition 5.2. U is invariant under T exactly when U is a subspace and T
+# maps each of its vectors back into U.
+prop is_invariant_subspace(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, U power_set(V)):
+    $chap1c::is_subspace(s, scalars, V, Vspace, U)
+    forall u U:
+        T(u) $in U
+
+# Example 5.3. Differentiation preserves P_4(R). The derivative operation on
+# the function-based polynomial carrier has not yet been developed, so the
+# source example remains an explicit prose example rather than a fake map.
+
+# Example 5.4. {0}, V, null T, and range T are invariant under T. Each case
+# has one reason: T(0)=0, codomain typing, T(0)=0 again, and closure of an image
+# under another application of T, respectively.
+
+# Definition 5.5. An eigenvalue is a scalar with a nonzero eigenvector witness.
+prop is_eigenvalue(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s):
+    exist v V st {v != @Space.zero, T(v) = @Space.smul(lambda, v)}
+
+# Example 5.6. For the displayed operator on F^3, the source checks the single
+# equation T(3,1,-1)=6(3,1,-1), so 6 is an eigenvalue.
+
+# T-lambda I is a reusable operator expression needed throughout eigenvalue
+# theory; subtraction is addition of the scalar negative.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn operator_minus_scalar_identity(T @Operators, lambda s) @Operators = @OperatorAdd(T, @OperatorSmul(@Scalars.neg(lambda), @IdentityOperator))
+
+# Result 5.7. Proof spine: first rewrite Tv=lambda v as
+# (T-lambda I)v=0; then apply Result 3.65 to identify noninjective,
+# nonsurjective, and noninvertible endomorphisms in finite dimension.
+prop eigenvalue_equivalent_conditions_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s):
+    forall:
+        =>:
+            $is_eigenvalue(s, scalars, V, Vspace, T, lambda)
+        <=>:
+            not $chap3b::is_injective(V, V, \operator_minus_scalar_identity<s, scalars, V, Vspace>(T, lambda))
+            not $chap3b::is_surjective(V, V, \operator_minus_scalar_identity<s, scalars, V, Vspace>(T, lambda))
+            not $chap3d::is_invertible_linear_map(s, scalars, V, V, Vspace, Vspace, \operator_minus_scalar_identity<s, scalars, V, Vspace>(T, lambda))
+
+axiom equivalent_conditions_to_be_an_eigenvalue:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $eigenvalue_equivalent_conditions_statement(s, scalars, V, Vspace, T, lambda)
+
+# Definition 5.8. An eigenvector relation records only the two mathematical
+# conditions on the supplied vector. It does not repeat that lambda is an
+# eigenvalue, because these conditions already witness that fact.
+prop is_eigenvector(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s, v V):
+    v != @Space.zero
+    T(v) = @Space.smul(lambda, v)
+
+# Example 5.9. The quarter-turn on R^2 has no eigenvalue; on C^2 its
+# eigenvalues are i and -i, obtained from lambda^2=-1. This stays prose until
+# the concrete Complex coordinate space and its scalar action are connected.
+
+# A finite eigenvalue list is distinct when equal entries have equal indices.
+# This avoids carrying both index inequality and scalar inequality premises.
+prop has_distinct_entries(s set, n N, values &chap1a::FiniteList<s, n>):
+    forall j, k N_pos:
+        j <= n
+        k <= n
+        &chap1a::FiniteList<s, n>{values}.entries(j) = &chap1a::FiniteList<s, n>{values}.entries(k)
+        =>:
+            j = k
+
+prop lists_corresponding_eigenpairs(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N, eigenvalues &chap1a::FiniteList<s, n>, eigenvectors &chap1a::FiniteList<V, n>):
+    forall k N_pos:
+        k <= n
+        =>:
+            $is_eigenvector(s, scalars, V, Vspace, T, &chap1a::FiniteList<s, n>{eigenvalues}.entries(k), &chap1a::FiniteList<V, n>{eigenvectors}.entries(k))
+
+# Result 5.11. Proof spine: choose a shortest dependent eigenvector list;
+# apply T-lambda_m I to delete the last term; the remaining nonzero
+# coefficients contradict that minimality.
+axiom eigenvectors_for_distinct_eigenvalues_are_linearly_independent:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N, eigenvalues &chap1a::FiniteList<s, n>, eigenvectors &chap1a::FiniteList<V, n>:
+        $has_distinct_entries(s, n, eigenvalues)
+        $lists_corresponding_eigenpairs(s, scalars, V, Vspace, T, n, eigenvalues, eigenvectors)
+        =>:
+            $chap2a::is_linearly_independent(s, scalars, V, Vspace, n, eigenvectors)
+
+# Result 5.12. Proof spine: choose one eigenvector for each distinct
+# eigenvalue; Result 5.11 makes that list independent; Result 2.22 bounds its
+# length by the length of a basis.
+axiom number_of_distinct_eigenvalues_is_bounded_by_dimension:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N, eigenvalues &chap1a::FiniteList<s, n>:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $has_distinct_entries(s, n, eigenvalues)
+        forall k N_pos:
+            k <= n
+            =>:
+                $is_eigenvalue(s, scalars, V, Vspace, T, &chap1a::FiniteList<s, n>{eigenvalues}.entries(k))
+        =>:
+            n <= \chap2c::dimension<s, scalars, V, Vspace>
+
+# Notation 5.13. Nonnegative powers are the identity followed by repeated
+# composition. Negative powers are available only for invertible operators.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn operator_power(T @Operators, n N) @Operators by induc n from 0:
+        case n = 0: @IdentityOperator
+        case n > 0: @Compose(T, operator_power(T, n - 1))
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    trust have negative_operator_power fn(T @Operators, n N_pos: $chap3d::is_invertible_linear_map(s, scalars, V, V, Vspace, Vspace, T)) @Operators
+
+# The n powers I,T,...,T^(n-1) form the ordered operator list paired with a
+# length-n coefficient representation.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N_pos>:
+    have fn operator_power_list(T @Operators) &chap1a::FiniteList<@Operators, n> = (n, fn(k N_pos: k <= n) @Operators {\operator_power<s, scalars, V, Vspace>(T, k - 1)})
+
+# Notation 5.14. A candidate p(T) is the finite linear combination of
+# I,T,... determined by any coefficient representation of p.
+prop is_polynomial_at_operator_value(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, p @Polynomials, T, value @Operators):
+    exist n N_pos, coefficients &chap1a::FiniteList<s, n> st {$chap2a::represents_polynomial(s, scalars, n, coefficients, p), value = \chap2a::linear_combination_value<s, scalars, @Operators, @OperatorVectorSpace, n>(coefficients, \operator_power_list<s, scalars, V, Vspace, n>(T))}
+
+# Trust boundary: existence follows from a coefficient representation;
+# uniqueness requires transporting Chapter 2's coefficient uniqueness through
+# the operator-valued finite linear combination.
+axiom polynomial_at_operator_exists_unique:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, p @Polynomials, T @Operators:
+        exist! value @Operators st {$is_polynomial_at_operator_value(s, scalars, V, Vspace, p, T, value)}
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn polynomial_at_operator by exist!:
+        ? forall p @Polynomials, T @Operators:
+            exist! value @Operators st {$is_polynomial_at_operator_value(s, scalars, V, Vspace, p, T, value)}
+        by thm polynomial_at_operator_exists_unique(s, scalars, V, Vspace, p, T)
+
+# Kernel boundary: expose the selected value's defining relation after
+# template instantiation.
+axiom polynomial_at_operator_satisfies_spec:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, p @Polynomials, T @Operators:
+        $is_polynomial_at_operator_value(s, scalars, V, Vspace, p, T, \polynomial_at_operator<s, scalars, V, Vspace>(p, T))
+
+# Example 5.15. For differentiation D and p(x)=7-3x+5x^2, the source obtains
+# p(D)=7I-3D+5D^2 and hence p(D)q=7q-3q'+5q''. The derivative interface is the
+# only missing object, so the example remains prose rather than a trusted fake.
+
+# Definition 5.16. Polynomial multiplication is pointwise multiplication. The
+# result is kept in the polynomial carrier; closure is the visible trust step.
+template<s nonempty_set, scalars @ScalarSystem>:
+    trust have polynomial_product fn(p, q @Polynomials) @Polynomials:
+        forall z s:
+            polynomial_product(p, q)(z) = @Scalars.mul(p(z), q(z))
+
+# Result 5.17. Proof spine: expanding the two finite coefficient sums gives
+# (pq)(T)=p(T)q(T); applying this twice and using pq=qp gives commutation.
+axiom multiplicative_properties_of_polynomials_applied_to_operator:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, p, q @Polynomials, T @Operators:
+        \polynomial_at_operator<s, scalars, V, Vspace>(\polynomial_product<s, scalars>(p, q), T) = @Compose(\polynomial_at_operator<s, scalars, V, Vspace>(p, T), \polynomial_at_operator<s, scalars, V, Vspace>(q, T))
+        @Compose(\polynomial_at_operator<s, scalars, V, Vspace>(p, T), \polynomial_at_operator<s, scalars, V, Vspace>(q, T)) = @Compose(\polynomial_at_operator<s, scalars, V, Vspace>(q, T), \polynomial_at_operator<s, scalars, V, Vspace>(p, T))
+
+# Immediate reusable specialization of 5.17(b) to the polynomial z. It is the
+# sole algebraic bridge consumed by 5.18 and later restriction arguments.
+axiom polynomial_at_operator_commutes_with_operator:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, p @Polynomials, T @Operators:
+        @Compose(\polynomial_at_operator<s, scalars, V, Vspace>(p, T), T) = @Compose(T, \polynomial_at_operator<s, scalars, V, Vspace>(p, T))
+
+# Result 5.18. Proof spine: 5.17 makes p(T) commute with T; applying that
+# equality to a null-space vector keeps it in the null space; applying it to a
+# represented range vector gives another represented range vector.
+thm null_space_and_range_of_polynomial_are_invariant:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, p @Polynomials, T @Operators:
+        $is_invariant_subspace(s, scalars, V, Vspace, T, @NullSpace(\polynomial_at_operator<s, scalars, V, Vspace>(p, T)))
+        $is_invariant_subspace(s, scalars, V, Vspace, T, @Range(\polynomial_at_operator<s, scalars, V, Vspace>(p, T)))
+    have P @Operators = \polynomial_at_operator<s, scalars, V, Vspace>(p, T)
+    by thm chap3b::null_space_is_subspace(s, scalars, V, V, Vspace, Vspace, P)
+    by thm chap3b::range_is_subspace(s, scalars, V, V, Vspace, Vspace, P)
+    by thm polynomial_at_operator_commutes_with_operator(s, scalars, V, Vspace, p, T)
+    claim:
+        ? forall u @NullSpace(P):
+            T(u) $in @NullSpace(P)
+        P(u) = @Space.zero
+        @Compose(P, T) = @Compose(T, P)
+        @Compose(P, T)(u) = P(T(u))
+        @Compose(T, P)(u) = T(P(u))
+        by thm chap3a::linear_maps_take_zero_to_zero(s, scalars, V, V, Vspace, Vspace, T)
+        P(T(u)) = @Compose(P, T)(u) = @Compose(T, P)(u) = T(P(u)) = T(@Space.zero) = @Space.zero
+    claim:
+        ? forall u @Range(P):
+            T(u) $in @Range(P)
+        obtain v from exist v V st {u = P(v)}
+        @Compose(P, T) = @Compose(T, P)
+        @Compose(P, T)(v) = P(T(v))
+        @Compose(T, P)(v) = T(P(v))
+        witness exist w V st {T(u) = P(w)} from T(v):
+            T(u) = T(P(v)) = @Compose(T, P)(v) = @Compose(P, T)(v) = P(T(v))
+    $chap1c::is_subspace(s, scalars, V, Vspace, @NullSpace(P))
+    $chap1c::is_subspace(s, scalars, V, Vspace, @Range(P))
+    $is_invariant_subspace(s, scalars, V, Vspace, T, @NullSpace(P))
+    $is_invariant_subspace(s, scalars, V, Vspace, T, @Range(P))
