@@ -66,6 +66,30 @@ thm add_neg_cancel:
             add(a, neg(a)) = zero
     add(a, neg(a)) = add(neg(a), a) = zero
 
+# Litex can instead package the carrier, operations, and the same primitive
+# laws in one struct value. The nonempty carrier records the existence of zero.
+# This is a bundled alternative for users who want the structure passed as data;
+# the preceding prop remains the source-facing, explicit-parameter interface.
+struct AdditiveCommutativeGroup<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+    <=>:
+        forall x, y, z s:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x s:
+            add(zero, x) = x
+            add(neg(x), x) = zero
+        forall x, y s:
+            add(x, y) = add(y, x)
+
+# The same theorem can use the operations and laws projected from the bundled
+# object. Litex fills in the struct fields and its law block from `group`.
+thm additive_commutative_group_add_neg_cancel:
+    ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a s:
+        &AdditiveCommutativeGroup<s>{group}.add(a, &AdditiveCommutativeGroup<s>{group}.neg(a)) = &AdditiveCommutativeGroup<s>{group}.zero
+    &AdditiveCommutativeGroup<s>{group}.add(a, &AdditiveCommutativeGroup<s>{group}.neg(a)) = &AdditiveCommutativeGroup<s>{group}.add(&AdditiveCommutativeGroup<s>{group}.neg(a), a) = &AdditiveCommutativeGroup<s>{group}.zero
+
 # Result (source label: neg_add_cancel_left). Reassociate, cancel a on the
 # left, and use the identity law.
 thm neg_add_cancel_left:
@@ -428,15 +452,174 @@ claim:
 forall a, b R:
     abs(a) - abs(b) <= abs(a - b)
 
-# Divisibility transitivity on the source's natural-number carrier. The shared
-# std relation is integer-valued, so its witnesses remain integers while the
-# three visible inputs stay in N.
+# Divisibility is defined here with integer witnesses. This keeps the corpus
+# self-contained while allowing the visible source inputs to remain natural.
+prop divides(a Z, b Z):
+    exist k Z st {b = a * k}
+
+# A positive divisor of a nonzero integer is at most its absolute value.
+thm _positive_divisor_le_abs:
+    ? forall d N_pos, a Z:
+        $divides(d, a)
+        a != 0
+        =>:
+            d <= abs(a)
+    obtain k from exist k Z st {a = d * k}
+    by contra:
+        ? k != 0
+        k = 0
+        a = d * k = d * 0 = 0
+        impossible a != 0
+    abs(k) > 0
+    abs(k) $in N_pos
+    d * 1 <= d * abs(k)
+    abs(d) = d
+    abs(a) = abs(d * k) = abs(d) * abs(k) = d * abs(k)
+    d = d * 1 <= d * abs(k) = abs(a)
+
+# For a nonzero pair, the positive common divisors form a finite nonempty set.
+# This is the well-definedness bridge for the source-local gcd construction.
+thm _gcd_divisor_set_is_finite_and_nonempty:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
+            $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
+    have C power_set(N) = {d N_pos: $divides(d, a), $divides(d, b)}
+    claim:
+        ? $is_finite_set(C)
+        by cases:
+            ? $is_finite_set(C)
+            case a != 0:
+                claim:
+                    ? forall d C:
+                        d $in closed_range(1, abs(a))
+                    d $in C
+                    d $in N_pos
+                    d >= 1
+                    $divides(d, a)
+                    by thm _positive_divisor_le_abs(d, a)
+                    d <= abs(a)
+                    d $in closed_range(1, abs(a))
+                C $subset closed_range(1, abs(a))
+                C = set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), C))
+                $is_finite_set(set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), C)))
+                $is_finite_set(C)
+            case b != 0:
+                claim:
+                    ? forall d C:
+                        d $in closed_range(1, abs(b))
+                    d $in C
+                    d $in N_pos
+                    d >= 1
+                    $divides(d, b)
+                    by thm _positive_divisor_le_abs(d, b)
+                    d <= abs(b)
+                    d $in closed_range(1, abs(b))
+                C $subset closed_range(1, abs(b))
+                C = set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), C))
+                $is_finite_set(set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), C)))
+                $is_finite_set(C)
+    witness $is_nonempty_set(C) from 1:
+        1 $in N_pos
+        witness exist k Z st {a = 1 * k} from a:
+            a = 1 * a
+        $divides(1, a)
+        witness exist k Z st {b = 1 * k} from b:
+            b = 1 * b
+        $divides(1, b)
+        1 $in {d N_pos: $divides(d, a), $divides(d, b)}
+        1 $in C
+    $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
+    $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
+
+# The local gcd is the greatest positive common divisor. It is defined only
+# when the input pair is nonzero.
+have fn gcd(a, b Z: a != 0 or b != 0) N = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+
+thm gcd_positive:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            gcd(a, b) $in N_pos
+    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
+    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    gcd(a, b) $in N_pos
+
+thm gcd_divides_left:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $divides(gcd(a, b), a)
+    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
+    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    $divides(gcd(a, b), a)
+
+thm gcd_divides_right:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $divides(gcd(a, b), b)
+    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
+    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    $divides(gcd(a, b), b)
+
+thm common_divisor_le_gcd:
+    ? forall a, b Z, d N_pos:
+        a != 0 or b != 0
+        $divides(d, a)
+        $divides(d, b)
+        =>:
+            d <= gcd(a, b)
+    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
+    d $in {d N_pos: $divides(d, a), $divides(d, b)}
+    d <= finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    d <= gcd(a, b)
+
+thm gcd_euclidean_base:
+    ? forall a Z:
+        a != 0
+        =>:
+            gcd(a, 0) = abs(a)
+    by thm gcd_positive(a, 0)
+    by thm gcd_divides_left(a, 0)
+    by thm _positive_divisor_le_abs(gcd(a, 0), a)
+    gcd(a, 0) <= abs(a)
+    abs(a) > 0
+    abs(a) $in N_pos
+    by cases:
+        ? $divides(abs(a), a)
+        case a >= 0:
+            abs(a) = a
+            a = a * 1
+            abs(a) * 1 = a * 1
+            a = abs(a) * 1
+            witness exist k Z st {a = abs(a) * k} from 1
+        case a < 0:
+            abs(a) = -a
+            a = abs(a) * (-1)
+            witness exist k Z st {a = abs(a) * k} from -1
+    witness exist k Z st {0 = abs(a) * k} from 0:
+        0 = abs(a) * 0
+    $divides(abs(a), 0)
+    by thm common_divisor_le_gcd(a, 0, abs(a))
+    abs(a) <= gcd(a, 0)
+    gcd(a, 0) = abs(a)
+
+# Divisibility transitivity on the source's natural-number carrier.
 claim:
     ? forall x, y, z N:
-        $basics::divides(x, y)
-        $basics::divides(y, z)
+        $divides(x, y)
+        $divides(y, z)
         =>:
-            $basics::divides(x, z)
+            $divides(x, z)
     obtain k from exist k Z st {y = x * k}
     obtain l from exist l Z st {z = y * l}
     witness exist m Z st {z = x * m} from k * l:
@@ -446,36 +629,36 @@ claim:
 # exposes y*z as the witness.
 claim:
     ? forall x, y, z N:
-        $basics::divides(x, y * x * z)
+        $divides(x, y * x * z)
     witness exist k Z st {y * x * z = x * k} from y * z:
         y * x * z = x * (y * z)
 
 # Every natural number divides its square, witnessed by the number itself in Z.
 claim:
     ? forall x N:
-        $basics::divides(x, x^2)
+        $divides(x, x^2)
     witness exist k Z st {x^2 = x * k} from x:
         x^2 = x * x
 
-# Gcd symmetry on the nonzero natural pairs supported by the frozen std
-# interface. Unlike the source's total Nat.gcd, basics::gcd is undefined
+# Gcd symmetry on the nonzero natural pairs supported by the local construction.
+# Unlike the source's total Nat.gcd, this gcd is undefined
 # at (0,0), so this is an explicit nonzero adaptation rather than a claim of
 # total-source equivalence. Both guard orientations make the two calls visibly
 # well-defined. Each gcd divides both inputs, hence each is at most the other.
-claim:
+thm gcd_comm:
     ? forall a, b N:
         a != 0 or b != 0
         b != 0 or a != 0
         =>:
-            basics::gcd(a, b) = basics::gcd(b, a)
-    by thm basics::gcd_positive(a, b)
-    by thm basics::gcd_divides_left(a, b)
-    by thm basics::gcd_divides_right(a, b)
-    by thm basics::common_divisor_le_gcd(b, a, basics::gcd(a, b))
-    basics::gcd(a, b) <= basics::gcd(b, a)
-    by thm basics::gcd_positive(b, a)
-    by thm basics::gcd_divides_left(b, a)
-    by thm basics::gcd_divides_right(b, a)
-    by thm basics::common_divisor_le_gcd(a, b, basics::gcd(b, a))
-    basics::gcd(b, a) <= basics::gcd(a, b)
-    basics::gcd(a, b) = basics::gcd(b, a)
+            gcd(a, b) = gcd(b, a)
+    by thm gcd_positive(a, b)
+    by thm gcd_divides_left(a, b)
+    by thm gcd_divides_right(a, b)
+    by thm common_divisor_le_gcd(b, a, gcd(a, b))
+    gcd(a, b) <= gcd(b, a)
+    by thm gcd_positive(b, a)
+    by thm gcd_divides_left(b, a)
+    by thm gcd_divides_right(b, a)
+    by thm common_divisor_le_gcd(a, b, gcd(b, a))
+    gcd(b, a) <= gcd(a, b)
+    gcd(a, b) = gcd(b, a)

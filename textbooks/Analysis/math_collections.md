@@ -154,6 +154,7 @@ lemma.
 | `is_uncountable(X)` | Cardinality property, hence `prop` | Infinite but not countably infinite; the checked bridge shows this excludes an injection into `N`. |
 | Countable enumeration | Relation on a displayed function, hence `prop is_countable_enumeration` | A bijection `N_pos -> X`; turns a set-indexed family into a Chapter 7 sequence. |
 | Countable-set series terms | Formula-defined function, hence `template` plus `have fn` | Applies `f` after an enumeration; feeds Chapter 7 convergence and sum predicates. |
+| At-most-countable convergence and sum | Finite/enumerated alternatives, hence paired `prop` interfaces | Finite carriers use `finite_set_sum`; countably infinite carriers use a bijection `N_pos -> X`. |
 | Absolute summability and set-series sum | Properties of a displayed family and candidate sum, hence `prop` | Finite absolute subsum bounds and countable support; used by Fubini and rearrangement results. |
 | Infinite Cartesian product | Set of choice functions, hence a `template`-generated set with a membership `prop` | Coordinate membership; supplies the statement of the axiom of choice. |
 | Choice function | Displayed function satisfying a relation, hence `prop` | Pointwise existence plus the explicit choice axiom; used for selections and right inverses. |
@@ -174,6 +175,7 @@ The ideal dependency structure of Section 8.1 is:
 ~~~text
 chap3::is_bijective_fn --definition--> is_countably_infinite
 chap3::has_finite_cardinality --definition--> is_at_most_countable
+chap3::subset_of_finite_set_is_finite --proof--> finite subfamilies in Chapter 8 and Chapter 11
 is_at_most_countable --negation--> is_uncountable
 
 is_at_most_countable + injective map --proof--> injection transfer
@@ -219,10 +221,18 @@ of enumeration:
 ~~~text
 is_countable_enumeration
     --composition--> countable_set_series_terms
-    --Chapter 7 series predicates--> countable-set convergence and sums
+    --Chapter 7 series predicates--> countably-infinite convergence and sums
+finite carrier --finite_set_sum--> finite-family convergence and sum
+finite/enumerated alternatives --> at-most-countable convergence and sum
 finite absolute subsum bounds
+    --bounded nonnegative partial sums--> at-most-countable absolute convergence
     --support theorem--> at-most-countable nonzero support
-    --restriction--> arbitrary-set series sum
+    --finite/enumerated restriction--> arbitrary-set series sum
+at-most-countable support sum
+    --zero extension/reflection--> common-support sum
+two common-support sums --Chapter 7 addition--> sum on the common support
+common-support sum --remove cancelled zero terms--> sum on the nonzero support
+two disjoint restricted sums --zero extension + addition--> sum on their union
 double-index family --row/swap/column views--> Fubini interfaces
 ~~~
 
@@ -232,13 +242,27 @@ the support is the countable union of the finite level sets
 `{x : abs(f(x)) >= 1/n}`.  Bijection change of variables is also checked by
 transporting both finite absolute subsums and the enumerated nonzero support.
 
-The present countable-series representation has one known mismatch with the
-ideal arbitrary-set interface.  A displayed enumeration is a bijection
-`N_pos -> X`, so it represents countably infinite carriers only.  Applying it
-directly to a nonzero support excludes finite and empty supports.  The intended
-repair is a finite-sum branch for finite supports plus the existing enumerated
-branch for countably infinite supports; wrappers or trusted special cases
-would preserve the wrong semantic shape.
+The strict countable-series representation deliberately remains a bijection
+`N_pos -> X`, so it represents countably infinite carriers only.  The broader
+interfaces `is_absolutely_convergent_at_most_countable_set_series` and
+`has_at_most_countable_set_series_sum` add the mathematically separate finite
+branch; the latter identifies the value with `finite_set_sum`.  Arbitrary-set
+sums use this broader relation on their nonzero support.  Replacing bijectivity
+with a repeating enumeration was rejected: it would count a finite term more
+than once and would destroy the meaning of the series rather than model its
+finite sum.
+
+Zero extension is now a checked value-preserving operation on an at-most-
+countable carrier.  Its finite branch is ordinary finite-sum deletion of zero
+terms; its countably infinite branch handles both finite support and an
+absolutely convergent enumerated support.  The reverse theorem obtains a sum
+on the smaller carrier, extends it back, and uses uniqueness.  Consequently
+the addition law uses the union of the two nonzero supports as one common
+carrier, applies the Chapter 7 series-addition law there, and then reflects the
+sum to the possibly smaller support left after cancellation.  The disjoint-
+union law is the direct corollary: zero-extend each restricted family to the
+union, add them, and use disjointness to identify the pointwise sum with the
+original family.
 
 The row, column, swapped, finite-bound, and finite-capture predicates are
 relations on proposed witnesses. They make the proof route of Fubini visible;
@@ -248,10 +272,27 @@ constructions used by later theorems.
 
 Section 8.3 starts from the reusable checked theorem `cantor_theorem`: a set
 cannot be equinumerous with its power set. Singleton embedding transfers this
-to `power_set(N)`. The source's binary-expansion map from subsets of `N` to
-reals should be a function, but its existence specification and injectivity
-are still proof debt; this is why `binary_decimal_subset_sum` is a selected
-function behind a visible trusted boundary rather than a new cardinality prop.
+to `power_set(N)`.  For `A : power_set(N)`, `binary_decimal_terms(A)` is the
+ordinary Chapter 7 sequence whose positive index `k` carries
+`(1/10)^(k-1)` when `k-1` belongs to `A`, and zero otherwise.  Thus
+`has_binary_decimal_subset_sum(A,L)` is a candidate-value `prop`, defined by
+`chap7::has_series_sum(binary_decimal_terms(A),L)`.  Comparison with the
+geometric series proves existence, series-sum uniqueness proves uniqueness,
+and only then does `binary_decimal_subset_sum` become a selected `have fn`.
+Its injectivity is a theorem: at the least natural number where two subsets
+differ, the leading contribution `(1/10)^n` is strictly larger than the whole
+remaining geometric tail `(1/10)^n/9`.  Modeling the selected value directly
+as an abstract property was rejected because it hid both the analytic
+construction and the mathematical reason for injectivity.
+
+~~~text
+subset A of N
+    --conditional decimal digits--> binary_decimal_terms(A)
+    --geometric comparison--> has_binary_decimal_subset_sum(A,L)
+    --series-sum uniqueness--> binary_decimal_subset_sum(A)
+least differing digit + geometric tail bound
+    --proof--> binary_decimal_subset_sum_is_injective
+~~~
 
 ### Choice and order
 
@@ -276,15 +317,22 @@ chains + explicit choice interface -> good-chain construction -> Zorn
 
 The current honest boundaries are concentrated rather than hidden.  The
 countable-union exercise and finite-total-order bridge are checked, as are
-finite-subsum transport, support countability, coordinate swapping, and
-bijection change for arbitrary-set sums.  Enumeration independence, the
-analytic row-first core of Fubini, the disjoint support-series merge, Riemann
-rearrangement, and the binary-expansion construction retain `trust`; three
-additional statements wait on the finite-support definition repair described
-above.  Choice itself is recorded as `axiom`.  The four good-chain lemmas in
-the Zorn route also retain visible `trust`.  Checked final theorems verify
-through these displayed dependencies without erasing trusted or axiomatic
-provenance.
+finite-subsum transport, support countability, coordinate swapping, scalar
+multiplication, both finite and countably infinite branches of bijection
+change, and zero-extension in both directions for arbitrary-set sums.  The
+at-most-countable convergence and sum interfaces have explicit finite and
+enumerated branches, so no statement is blocked merely because a support is
+finite or empty.  Enumeration independence is checked by constructing the
+permutation between two enumerations and applying absolute rearrangement plus
+series-sum uniqueness.  Signed Fubini is checked by positive/negative-part
+decomposition; arbitrary-set addition is checked on a common support; and the
+binary-decimal selector and its least-differing-digit injectivity proof are
+checked.  The disjoint support-series law is checked by zero-extending each
+restriction to the union and applying arbitrary-set addition.  Riemann
+rearrangement retains `trust`.  Choice itself is recorded as `axiom`.  The four
+good-chain lemmas in the Zorn route also retain visible `trust`.  Checked final
+theorems verify through these displayed dependencies without erasing trusted
+or axiomatic provenance.
 
 ## Chapter 10: differentiation
 
@@ -850,7 +898,7 @@ empty-family case, strong induction on `finite_set_size(P)`, the checked
 partition removal, cardinality decrease, and disjoint-union sum regrouping.
 Ordinary length and alpha-length are its two current consumers.
 
-The remaining numerical input for ordinary length is the theorem-level law
+The numerical input for ordinary length is the theorem-level law
 
 ~~~litex
 thm interval_length_adds_across_bounded_difference:
@@ -864,11 +912,15 @@ thm interval_length_adds_across_bounded_difference:
                 interval_length(J) + interval_length(set_minus(I, J))
 ~~~
 
-Its interface is implemented with visible `trust`; the four endpoint-form
-classification remains open. Consequently Theorem 11.1.13 itself now has a
-checked proof from the checked endpoint-piece selection chain and this one
-trusted length-splitting interface, instead of a theorem-wide trust. Section
-11.8 reuses the same selection, removal, and generic induction core.
+This law is checked without enumerating the sixteen open/closed endpoint
+pairs. For nonempty `J` and `I-J`, the order theorem puts one piece strictly
+to the left of the other; midpoint contradictions then show that their inner
+endpoints agree and that their outer endpoints are those of `I`. The three
+length values are therefore `b-a`, `c-b`, and `c-a`, so the conclusion is one
+telescoping equality. Empty pieces use the checked zero-length theorem.
+Consequently Theorem 11.1.13 is checked from the endpoint-piece selection
+chain and a checked numerical splitting interface. Section 11.8 reuses the
+same selection, removal, and generic induction core.
 
 ### Common refinement
 

@@ -1,0 +1,261 @@
+# Linear Algebra Done Right, fourth edition — Section 7E.
+# Singular Value Decomposition.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Geometry "&chap6a::InnerProductScalarGeometry<s, scalars>{scalar_geometry}"
+macro VInnerSpace "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>"
+macro WInnerSpace "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>"
+macro VInner "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}"
+macro WInner "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}"
+macro VSpace "&chap1b::VectorSpace<s, scalars, V>{&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space}"
+macro WSpace "&chap1b::VectorSpace<s, scalars, W>{&chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space}"
+macro LinearMaps "\chap3a::linear_map_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>"
+macro Adjoint "\chap7a::adjoint<s, scalars, scalar_geometry, V, W, Vinner, Winner>"
+macro GramOperator "\chap3a::linear_map_compose<s, scalars, V, W, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space>(\chap7a::adjoint<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T), T)"
+
+# A value has multiplicity m in a finite list when m distinct listed indices
+# are exactly all positions at which the value occurs. This shared finite-list
+# relation records the repetitions used by singular and eigenvalue lists.
+prop is_value_multiplicity_index_list(X set, n N, values &chap1a::FiniteList<X, n>, value X, m N, indices &chap1a::FiniteList<N_pos, m>):
+    $chap5a::has_distinct_entries(N_pos, m, indices)
+    forall j N_pos:
+        j <= m
+        =>:
+            &chap1a::FiniteList<N_pos, m>{indices}.entries(j) <= n
+            &chap1a::FiniteList<X, n>{values}.entries(&chap1a::FiniteList<N_pos, m>{indices}.entries(j)) = value
+    forall k N_pos:
+        k <= n
+        &chap1a::FiniteList<X, n>{values}.entries(k) = value
+        =>:
+            exist j N_pos st {j <= m, &chap1a::FiniteList<N_pos, m>{indices}.entries(j) = k}
+
+prop finite_list_value_has_multiplicity(X set, n N, values &chap1a::FiniteList<X, n>, value X, m N):
+    exist indices &chap1a::FiniteList<N_pos, m> st {$is_value_multiplicity_index_list(X, n, values, value, m, indices)}
+
+prop finite_list_contains_value(X set, n N, values &chap1a::FiniteList<X, n>, value X):
+    exist k N_pos st {k <= n, &chap1a::FiniteList<X, n>{values}.entries(k) = value}
+
+template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+    have fn linear_map_range_dimension(T \chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>) N = \chap2c::dimension<s, scalars, \chap3b::range_of<V, W>(T), \chap1c::subspace_vector_space<s, scalars, W, Wspace, \chap3b::range_of<V, W>(T)>>
+
+# Result 7.64. T* T is positive; its null space equals null T, its range
+# equals range T*, and all three relevant ranges have the same dimension.
+# The source proves these in four moves: the adjoint quadratic identity, norm
+# definiteness, null/range orthogonality, and rank-nullity.
+prop has_gram_operator_properties(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps):
+    $chap7c::is_positive_operator(s, scalars, scalar_geometry, V, Vinner, @GramOperator)
+    \chap3b::null_space<s, scalars, V, V, @VInner.vector_space, @VInner.vector_space>(@GramOperator) = \chap3b::null_space<s, scalars, V, W, @VInner.vector_space, @WInner.vector_space>(T)
+    \chap3b::range_of<V, V>(@GramOperator) = \chap3b::range_of<W, V>(@Adjoint(T))
+    \linear_map_range_dimension<s, scalars, V, W, @VInner.vector_space, @WInner.vector_space>(T) = \linear_map_range_dimension<s, scalars, W, V, @WInner.vector_space, @VInner.vector_space>(@Adjoint(T))
+    \linear_map_range_dimension<s, scalars, W, V, @WInner.vector_space, @VInner.vector_space>(@Adjoint(T)) = \linear_map_range_dimension<s, scalars, V, V, @VInner.vector_space, @VInner.vector_space>(@GramOperator)
+
+axiom properties_of_adjoint_composition:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        $chap2a::is_finite_dimensional(s, scalars, W, @WInner.vector_space)
+        =>:
+            $has_gram_operator_properties(s, scalars, scalar_geometry, V, W, Vinner, Winner, T)
+
+# Definition 7.65. A singular-value list has length dim V, is decreasing and
+# nonnegative, and lists the square roots of the eigenvalues of T* T with the
+# corresponding eigenspace dimensions as multiplicities.
+prop is_singular_value_list(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps, n N, values &chap1a::FiniteList<R, n>):
+    n = \chap2c::dimension<s, scalars, V, @VInner.vector_space>
+    forall k N_pos:
+        k <= n
+        =>:
+            &chap1a::FiniteList<R, n>{values}.entries(k) >= 0
+            $chap5a::is_eigenvalue(s, scalars, V, @VInner.vector_space, @GramOperator, @Geometry.real_embed(&chap1a::FiniteList<R, n>{values}.entries(k)^2))
+    forall j, k N_pos:
+        j <= k
+        k <= n
+        =>:
+            &chap1a::FiniteList<R, n>{values}.entries(j) >= &chap1a::FiniteList<R, n>{values}.entries(k)
+    forall r R:
+        r >= 0
+        $chap5a::is_eigenvalue(s, scalars, V, @VInner.vector_space, @GramOperator, @Geometry.real_embed(r^2))
+        =>:
+            $finite_list_value_has_multiplicity(R, n, values, r, \chap2c::dimension<s, scalars, \chap5d::eigenspace<s, scalars, V, @VInner.vector_space>(@GramOperator, @Geometry.real_embed(r^2)), \chap1c::subspace_vector_space<s, scalars, V, @VInner.vector_space, \chap5d::eigenspace<s, scalars, V, @VInner.vector_space>(@GramOperator, @Geometry.real_embed(r^2))>>)
+
+axiom singular_value_list_exists_unique:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        =>:
+            exist! values &chap1a::FiniteList<R, \chap2c::dimension<s, scalars, V, @VInner.vector_space>> st {$is_singular_value_list(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, \chap2c::dimension<s, scalars, V, @VInner.vector_space>, values)}
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace>:
+    # The ordered list is selected only after the exact existence-and-uniqueness
+    # interface above; the dependent-length selection proof remains open.
+    trust have singular_values fn(T @LinearMaps) &chap1a::FiniteList<R, \chap2c::dimension<s, scalars, V, @VInner.vector_space>>
+
+axiom singular_values_spec:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        =>:
+            $is_singular_value_list(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, \chap2c::dimension<s, scalars, V, @VInner.vector_space>, \singular_values<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T))
+
+# Examples 7.66-7.67. The displayed Gram matrices expose the eigenvalues;
+# taking their nonnegative square roots with multiplicity gives the two lists.
+sketch:
+    have gram_766 matrix(R, 4, 4) = [[9, 0, 0, 0], [0, 4, 0, 0], [0, 0, 0, 0], [0, 0, 0, 9]]
+    have singular_766 finite_seq(R, 4) = [3, 3, 2, 0]
+    gram_766(1, 1) = singular_766(1)^2
+    gram_766(4, 4) = singular_766(2)^2
+    gram_766(2, 2) = singular_766(3)^2
+    gram_766(3, 3) = singular_766(4)^2
+    have gram_767 matrix(R, 4, 4) = [[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 25]]
+    have singular_767 finite_seq(R, 4) = [5, sqrt(2), 0, 0]
+    gram_767(4, 4) = singular_767(1)^2
+    singular_767(2)^2 = 2
+    sqrt(9) = 3
+    sqrt(4) = 2
+
+prop has_positive_singular_values(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps, m N, positive_values &chap1a::FiniteList<R, m>):
+    m <= \chap2c::dimension<s, scalars, V, @VInner.vector_space>
+    forall k N_pos:
+        k <= m
+        =>:
+            &chap1a::FiniteList<R, m>{positive_values}.entries(k) = &chap1a::FiniteList<R, \chap2c::dimension<s, scalars, V, @VInner.vector_space>>{\singular_values<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T)}.entries(k)
+            &chap1a::FiniteList<R, m>{positive_values}.entries(k) > 0
+    forall k N_pos:
+        m < k
+        k <= \chap2c::dimension<s, scalars, V, @VInner.vector_space>
+        =>:
+            &chap1a::FiniteList<R, \chap2c::dimension<s, scalars, V, @VInner.vector_space>>{\singular_values<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T)}.entries(k) = 0
+
+# Result 7.68. Zero detects failure of injectivity; the number of positive
+# singular values is rank T; surjectivity means that number is dim W.
+prop positive_singular_value_roles_statement(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps, m N, positive_values &chap1a::FiniteList<R, m>):
+    forall:
+        =>:
+            $chap3b::is_injective(V, W, T)
+        <=>:
+            not $finite_list_contains_value(R, \chap2c::dimension<s, scalars, V, @VInner.vector_space>, \singular_values<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T), 0)
+    m = \linear_map_range_dimension<s, scalars, V, W, @VInner.vector_space, @WInner.vector_space>(T)
+    forall:
+        =>:
+            $chap3b::is_surjective(V, W, T)
+        <=>:
+            m = \chap2c::dimension<s, scalars, W, @WInner.vector_space>
+
+axiom role_of_positive_singular_values:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps, m N, positive_values &chap1a::FiniteList<R, m>:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        $chap2a::is_finite_dimensional(s, scalars, W, @WInner.vector_space)
+        $has_positive_singular_values(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, m, positive_values)
+        =>:
+            $positive_singular_value_roles_statement(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, m, positive_values)
+
+prop all_singular_values_equal_one(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps):
+    forall k N_pos:
+        k <= \chap2c::dimension<s, scalars, V, @VInner.vector_space>
+        =>:
+            &chap1a::FiniteList<R, \chap2c::dimension<s, scalars, V, @VInner.vector_space>>{\singular_values<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T)}.entries(k) = 1
+
+# Result 7.69. Apply 7.49 to S* S: S is an isometry exactly when every
+# eigenvalue of S* S, hence every singular value of S, equals one.
+prop isometry_singular_value_characterization_statement(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, S @LinearMaps):
+    forall:
+        =>:
+            $chap7d::is_isometry(s, scalars, scalar_geometry, V, W, Vinner, Winner, S)
+        <=>:
+            $all_singular_values_equal_one(s, scalars, scalar_geometry, V, W, Vinner, Winner, S)
+
+axiom isometries_are_exactly_maps_with_all_singular_values_one:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, S @LinearMaps:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        =>:
+            $isometry_singular_value_characterization_statement(s, scalars, scalar_geometry, V, W, Vinner, Winner, S)
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, m N>:
+    have fn svd_forward_coefficients(v V, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<V, m>) &chap1a::FiniteList<s, m> = (m, fn(k N_pos: k <= m) s {@Scalars.mul(@Geometry.real_embed(&chap1a::FiniteList<R, m>{values}.entries(k)), @VInner.inner(v, &chap1a::FiniteList<V, m>{domain_vectors}.entries(k)))})
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, m N>:
+    have fn svd_forward_value(v V, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<V, m>, range_vectors &chap1a::FiniteList<W, m>) W = \chap2a::linear_combination_value<s, scalars, W, @WInner.vector_space, m>(\svd_forward_coefficients<s, scalars, scalar_geometry, V, W, Vinner, Winner, m>(v, values, domain_vectors), range_vectors)
+
+prop is_singular_value_decomposition(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps, m N, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<V, m>, range_vectors &chap1a::FiniteList<W, m>):
+    $has_positive_singular_values(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, m, values)
+    $chap6b::is_orthonormal(s, scalars, scalar_geometry, V, Vinner, m, domain_vectors)
+    $chap6b::is_orthonormal(s, scalars, scalar_geometry, W, Winner, m, range_vectors)
+    forall v V:
+        T(v) = \svd_forward_value<s, scalars, scalar_geometry, V, W, Vinner, Winner, m>(v, values, domain_vectors, range_vectors)
+
+# Result 7.70. Diagonalize T* T, retain the positive-eigenvalue basis vectors,
+# and normalize their T-images. Expanding an arbitrary vector in that basis
+# gives the displayed SVD formula.
+axiom singular_value_decomposition:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps, m N, values &chap1a::FiniteList<R, m>:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        $has_positive_singular_values(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, m, values)
+        =>:
+            exist domain_vectors &chap1a::FiniteList<V, m>, range_vectors &chap1a::FiniteList<W, m> st {$is_singular_value_decomposition(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, m, values, domain_vectors, range_vectors)}
+
+# Definition 7.74. A rectangular matrix is diagonal when every off-diagonal
+# entry vanishes; only positions (k,k) can be nonzero.
+prop is_rectangular_diagonal_matrix(s nonempty_set, scalars @ScalarSystem, rows, columns N_pos, A matrix(s, rows, columns)):
+    forall j, k N_pos:
+        j <= rows
+        k <= columns
+        j != k
+        =>:
+            A(j, k) = @Scalars.zero
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, m N>:
+    have fn svd_adjoint_coefficients(w W, values &chap1a::FiniteList<R, m>, range_vectors &chap1a::FiniteList<W, m>) &chap1a::FiniteList<s, m> = (m, fn(k N_pos: k <= m) s {@Scalars.mul(@Geometry.real_embed(&chap1a::FiniteList<R, m>{values}.entries(k)), @WInner.inner(w, &chap1a::FiniteList<W, m>{range_vectors}.entries(k)))})
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, m N>:
+    have fn svd_pseudoinverse_coefficients(w W, values &chap1a::FiniteList<R, m>, range_vectors &chap1a::FiniteList<W, m>) &chap1a::FiniteList<s, m> = (m, fn(k N_pos: k <= m) s {@Scalars.mul(@Scalars.inv(@Geometry.real_embed(&chap1a::FiniteList<R, m>{values}.entries(k))), @WInner.inner(w, &chap1a::FiniteList<W, m>{range_vectors}.entries(k)))})
+
+prop has_svd_adjoint_and_pseudoinverse_formulas(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps, m N, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<V, m>, range_vectors &chap1a::FiniteList<W, m>):
+    forall w W:
+        @Adjoint(T)(w) = \chap2a::linear_combination_value<s, scalars, V, @VInner.vector_space, m>(\svd_adjoint_coefficients<s, scalars, scalar_geometry, V, W, Vinner, Winner, m>(w, values, range_vectors), domain_vectors)
+        \chap6c::pseudoinverse<s, scalars, scalar_geometry, V, W, Vinner, Winner>(T)(w) = \chap2a::linear_combination_value<s, scalars, V, @VInner.vector_space, m>(\svd_pseudoinverse_coefficients<s, scalars, scalar_geometry, V, W, Vinner, Winner, m>(w, values, range_vectors), domain_vectors)
+
+# Result 7.75. Move the SVD sum through the inner product to obtain T*; divide
+# each positive coefficient by its singular value to obtain the pseudoinverse.
+axiom singular_value_decomposition_of_adjoint_and_pseudoinverse:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner @VInnerSpace, Winner @WInnerSpace, T @LinearMaps, m N, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<V, m>, range_vectors &chap1a::FiniteList<W, m>:
+        $chap2a::is_finite_dimensional(s, scalars, V, @VInner.vector_space)
+        $is_singular_value_decomposition(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, m, values, domain_vectors, range_vectors)
+        =>:
+            $has_svd_adjoint_and_pseudoinverse_formulas(s, scalars, scalar_geometry, V, W, Vinner, Winner, T, m, values, domain_vectors, range_vectors)
+
+# Example 7.79. The displayed matrix, singular values, and normalized domain
+# and range vectors are the concrete data in the source's two-term SVD.
+sketch:
+    have A matrix(R, 3, 4) = [[0, 0, 0, -5], [0, 0, 0, 0], [1, 1, 0, 0]]
+    have values finite_seq(R, 2) = [5, sqrt(2)]
+    have e1 finite_seq(R, 4) = [0, 0, 0, 1]
+    have e2 finite_seq(R, 4) = [1 / sqrt(2), 1 / sqrt(2), 0, 0]
+    have f1 finite_seq(R, 3) = [-1, 0, 0]
+    have f2 finite_seq(R, 3) = [0, 0, 1]
+    A(1, 4) = -values(1)
+    A(3, 1) = A(3, 2) = 1
+    e1(4) = 1
+    f1(1) = -1
+    f2(3) = 1
+    sqrt(2) > 0
+    e2(1)^2 + e2(2)^2 = 1
+
+prop has_positive_real_diagonal_entries(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, n N_pos, A matrix(s, n, n)):
+    forall k N_pos:
+        k <= n
+        =>:
+            exist r R st {r > 0, A(k, k) = @Geometry.real_embed(r)}
+
+prop is_matrix_singular_value_decomposition(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, p, n, m N_pos, A matrix(s, p, n), Bm matrix(s, p, m), Dm matrix(s, m, m), Cm matrix(s, n, m)):
+    $chap7d::are_matrix_columns_orthonormal(s, scalars, scalar_geometry, p, m, Bm)
+    $is_rectangular_diagonal_matrix(s, scalars, m, m, Dm)
+    $has_positive_real_diagonal_entries(s, scalars, scalar_geometry, m, Dm)
+    $chap7d::are_matrix_columns_orthonormal(s, scalars, scalar_geometry, n, m, Cm)
+    A = \chap3c::matrix_mul<s, scalars, p, m, n>(\chap3c::matrix_mul<s, scalars, p, m, m>(Bm, Dm), \chap7a::conjugate_transpose<s, scalars, scalar_geometry, n, m>(Cm))
+
+# Result 7.80. Apply the operator SVD to the map represented by A. Put its
+# range vectors, positive singular values, and domain vectors into B,D,C; the
+# orthonormal-column identities give A=B D C*.
+axiom matrix_singular_value_decomposition:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, p, n, m N_pos, A matrix(s, p, n):
+        \chap3c::matrix_rank<s, scalars, p, n>(A) = m
+        =>:
+            exist Bm matrix(s, p, m), Dm matrix(s, m, m), Cm matrix(s, n, m) st {$is_matrix_singular_value_decomposition(s, scalars, scalar_geometry, p, n, m, A, Bm, Dm, Cm)}

@@ -9,22 +9,25 @@ nodes that determine the module's current shape.
 
 Mathematically, every subset of a finite set is finite. This fact is needed to
 construct bounded sets such as the positive common divisors of two integers.
-Its current Litex form is a named standard-library axiom:
+Its current Litex form is a named checked standard-library theorem:
 
 <!-- litex:skip-test -->
 ```litex
-axiom subset_of_finite_set_is_finite:
+thm subset_of_finite_set_is_finite:
     ? forall A set, B finite_set:
         A $subset B
         =>:
             $is_finite_set(A)
+    A = set_minus(B, set_minus(B, A))
+    $is_finite_set(set_minus(B, set_minus(B, A)))
+    $is_finite_set(A)
 ```
 
-The nearest rejected form is a hidden builtin verifier rule. Keeping the fact
-as an axiom makes its trust boundary and theorem dependency visible. It depends
-only on builtin set membership, subset, and finite-set predicates. Its source
-proof remains open; downstream users include the finite common-divisor set used
-to define `gcd`.
+The nearest rejected form is a dedicated finite-subset builtin rule. The theorem
+instead uses the narrower builtin identity that recovers a subset as a double
+relative complement, together with finite set difference. It depends only on
+builtin set membership, subset, equality, and finite-set predicates; downstream
+users include the finite common-divisor set used to define `gcd`.
 
 ## Zero-based indexing of finite sets
 
@@ -68,6 +71,26 @@ spelling and supports the finite-source consequences used by cardinality
 arguments: injections preserve the size of their function range, surjections
 bound the finite target size, and bijections preserve size. This module adds no
 wrapper or separate proof debt around those facts.
+
+## Euclidean quotient selection
+
+For an integer `a` and positive integer `d`, Euclidean division determines one
+integer `q` satisfying `a = d * q + a % d`. The module exposes that selected
+value as an ordinary source function:
+
+<!-- litex:skip-test -->
+```litex
+have fn integer_quotient by exist!:
+    ? forall a Z, d N_pos:
+        exist! q Z st {a = d * q + a % d}
+```
+
+The rejected form is a dedicated `IntegerQuotient` kernel object and reserved
+parser token. The kernel now owns only the narrow unique-existence fact; the
+name, function object, defining equation, and namespace remain inspectable
+source-level data. Clients import this module and write
+`basics::integer_quotient`, while a textbook may own the same small selection
+locally when that better preserves its dependency structure.
 
 ## Divisibility, primality, and greatest common divisors
 

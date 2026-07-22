@@ -42,7 +42,7 @@ $finite_set_induction_test({1, 2})
                 run_output
             );
             assert!(
-                run_output.contains("forall P finite_set"),
+                run_output.contains("forall #binder_") && run_output.contains("finite_set"),
                 "finite-set induction should store a finite-set forall fact:\n{}",
                 run_output
             );
@@ -89,7 +89,7 @@ $finite_set_induction_carrier_test(A)
             run_output
         );
         assert!(
-            run_output.contains("P $subset A"),
+            run_output.contains("~1#binder_") && run_output.contains("$subset A"),
             "the generated conclusion should expose the carrier restriction:\n{}",
             run_output
         );

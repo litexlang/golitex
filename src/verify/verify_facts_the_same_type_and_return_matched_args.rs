@@ -136,8 +136,23 @@ impl Runtime {
     }
 
     pub fn _verify_exist_fact_the_same_type_and_return_matched_args(
+        &self,
         fact: &ExistFactEnum,
         other: &ExistFactEnum,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
+        let mut next_forall_scope_id = 0;
+        self._verify_exist_fact_the_same_type_and_return_matched_args_with_scope_counter(
+            fact,
+            other,
+            &mut next_forall_scope_id,
+        )
+    }
+
+    fn _verify_exist_fact_the_same_type_and_return_matched_args_with_scope_counter(
+        &self,
+        fact: &ExistFactEnum,
+        other: &ExistFactEnum,
+        next_forall_scope_id: &mut usize,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         if fact.is_not_exist() != other.is_not_exist() {
             return Ok(None);
@@ -183,13 +198,15 @@ impl Runtime {
             }
         }
         for (fact_item, other_item) in fact.facts().iter().zip(other.facts().iter()) {
-            let sub_matched_args =
-                match Self::_verify_exist_body_facts_the_same_type_and_return_matched_args(
-                    fact_item, other_item,
+            let sub_matched_args = match self
+                ._verify_exist_body_facts_the_same_type_and_return_matched_args(
+                    fact_item,
+                    other_item,
+                    next_forall_scope_id,
                 )? {
-                    Some(value) => value,
-                    None => return Ok(None),
-                };
+                Some(value) => value,
+                None => return Ok(None),
+            };
             for matched_arg in sub_matched_args {
                 matched_args.push(matched_arg);
             }
@@ -199,8 +216,10 @@ impl Runtime {
     }
 
     fn _verify_exist_body_facts_the_same_type_and_return_matched_args(
+        &self,
         fact: &ExistBodyFact,
         other: &ExistBodyFact,
+        next_forall_scope_id: &mut usize,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         match (fact, other) {
             (ExistBodyFact::AtomicFact(a), ExistBodyFact::AtomicFact(b)) => {
@@ -215,12 +234,206 @@ impl Runtime {
             (ExistBodyFact::OrFact(a), ExistBodyFact::OrFact(b)) => {
                 Self::_verify_or_fact_the_same_type_and_return_matched_args(a, b)
             }
-            (ExistBodyFact::InlineForall(a), ExistBodyFact::InlineForall(b)) => {
-                if a.to_string() == b.to_string() {
-                    Ok(Some(vec![]))
-                } else {
-                    Ok(None)
+            (ExistBodyFact::InlineForall(a), ExistBodyFact::InlineForall(b)) => self
+                ._verify_forall_fact_the_same_type_and_return_matched_args(
+                    a,
+                    b,
+                    next_forall_scope_id,
+                ),
+            _ => Ok(None),
+        }
+    }
+
+    fn _verify_forall_fact_the_same_type_and_return_matched_args(
+        &self,
+        fact: &ForallFact,
+        other: &ForallFact,
+        next_forall_scope_id: &mut usize,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
+        if fact.params_def_with_type.groups.len() != other.params_def_with_type.groups.len()
+            || fact.dom_facts.len() != other.dom_facts.len()
+            || fact.then_facts.len() != other.then_facts.len()
+        {
+            return Ok(None);
+        }
+
+        let fact_names = fact.params_def_with_type.collect_param_names();
+        let other_names = other.params_def_with_type.collect_param_names();
+        if fact_names.len() != other_names.len() {
+            return Ok(None);
+        }
+        let forall_scope_id = *next_forall_scope_id;
+        *next_forall_scope_id += 1;
+        let canonical_names: Vec<String> = (0..fact_names.len())
+            .map(|index| format!("#forall_match_{}_{}", forall_scope_id, index))
+            .collect();
+        let fact_map = fact_names
+            .iter()
+            .cloned()
+            .zip(
+                canonical_names
+                    .iter()
+                    .cloned()
+                    .map(|name| ForallFreeParamObj::new(name).into()),
+            )
+            .collect();
+        let other_map = other_names
+            .iter()
+            .cloned()
+            .zip(
+                canonical_names
+                    .iter()
+                    .cloned()
+                    .map(|name| ForallFreeParamObj::new(name).into()),
+            )
+            .collect();
+        let fact = self.alpha_rename_forall_fact(fact, &fact_map)?;
+        let other = self.alpha_rename_forall_fact(other, &other_map)?;
+
+        let mut matched_args = Vec::new();
+        for (fact_group, other_group) in fact
+            .params_def_with_type
+            .groups
+            .iter()
+            .zip(other.params_def_with_type.groups.iter())
+        {
+            if fact_group.params.len() != other_group.params.len() {
+                return Ok(None);
+            }
+            match (&fact_group.param_type, &other_group.param_type) {
+                (ParamType::Obj(left), ParamType::Obj(right)) => {
+                    matched_args.push((left.clone(), right.clone()));
                 }
+                (ParamType::Set(_), ParamType::Set(_))
+                | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
+                | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => {}
+                _ => return Ok(None),
+            }
+        }
+
+        for (left, right) in fact.dom_facts.iter().zip(other.dom_facts.iter()) {
+            let Some(pairs) = self._verify_fact_the_same_type_and_return_matched_args(
+                left,
+                right,
+                next_forall_scope_id,
+            )?
+            else {
+                return Ok(None);
+            };
+            matched_args.extend(pairs);
+        }
+        for (left, right) in fact.then_facts.iter().zip(other.then_facts.iter()) {
+            let Some(pairs) = self
+                ._verify_exist_or_and_chain_fact_the_same_type_and_return_matched_args(
+                    left,
+                    right,
+                    next_forall_scope_id,
+                )?
+            else {
+                return Ok(None);
+            };
+            matched_args.extend(pairs);
+        }
+        Ok(Some(matched_args))
+    }
+
+    fn _verify_fact_the_same_type_and_return_matched_args(
+        &self,
+        fact: &Fact,
+        other: &Fact,
+        next_forall_scope_id: &mut usize,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
+        match (fact, other) {
+            (Fact::AtomicFact(left), Fact::AtomicFact(right)) => {
+                Self::_verify_atomic_fact_the_same_type_and_return_matched_args(left, right)
+            }
+            (Fact::ExistFact(left), Fact::ExistFact(right)) => self
+                ._verify_exist_fact_the_same_type_and_return_matched_args_with_scope_counter(
+                    left,
+                    right,
+                    next_forall_scope_id,
+                ),
+            (Fact::OrFact(left), Fact::OrFact(right)) => {
+                Self::_verify_or_fact_the_same_type_and_return_matched_args(left, right)
+            }
+            (Fact::AndFact(left), Fact::AndFact(right)) => {
+                Self::_verify_and_fact_the_same_type_and_return_matched_args(left, right)
+            }
+            (Fact::ChainFact(left), Fact::ChainFact(right)) => {
+                Self::_verify_chain_fact_the_same_type_and_return_matched_args(left, right)
+            }
+            (Fact::ForallFact(left), Fact::ForallFact(right)) => self
+                ._verify_forall_fact_the_same_type_and_return_matched_args(
+                    left,
+                    right,
+                    next_forall_scope_id,
+                ),
+            (Fact::ForallFactWithIff(left), Fact::ForallFactWithIff(right)) => {
+                let Some(mut pairs) = self
+                    ._verify_forall_fact_the_same_type_and_return_matched_args(
+                        &left.forall_fact,
+                        &right.forall_fact,
+                        next_forall_scope_id,
+                    )?
+                else {
+                    return Ok(None);
+                };
+                if left.iff_facts.len() != right.iff_facts.len() {
+                    return Ok(None);
+                }
+                for (left_iff, right_iff) in left.iff_facts.iter().zip(right.iff_facts.iter()) {
+                    let Some(iff_pairs) = self
+                        ._verify_exist_or_and_chain_fact_the_same_type_and_return_matched_args(
+                            left_iff,
+                            right_iff,
+                            next_forall_scope_id,
+                        )?
+                    else {
+                        return Ok(None);
+                    };
+                    pairs.extend(iff_pairs);
+                }
+                Ok(Some(pairs))
+            }
+            (Fact::NotForall(left), Fact::NotForall(right)) => self
+                ._verify_forall_fact_the_same_type_and_return_matched_args(
+                    &left.forall_fact,
+                    &right.forall_fact,
+                    next_forall_scope_id,
+                ),
+            _ => Ok(None),
+        }
+    }
+
+    fn _verify_exist_or_and_chain_fact_the_same_type_and_return_matched_args(
+        &self,
+        fact: &ExistOrAndChainAtomicFact,
+        other: &ExistOrAndChainAtomicFact,
+        next_forall_scope_id: &mut usize,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
+        match (fact, other) {
+            (
+                ExistOrAndChainAtomicFact::ExistFact(left),
+                ExistOrAndChainAtomicFact::ExistFact(right),
+            ) => self._verify_exist_fact_the_same_type_and_return_matched_args_with_scope_counter(
+                left,
+                right,
+                next_forall_scope_id,
+            ),
+            (
+                ExistOrAndChainAtomicFact::AtomicFact(left),
+                ExistOrAndChainAtomicFact::AtomicFact(right),
+            ) => Self::_verify_atomic_fact_the_same_type_and_return_matched_args(left, right),
+            (
+                ExistOrAndChainAtomicFact::AndFact(left),
+                ExistOrAndChainAtomicFact::AndFact(right),
+            ) => Self::_verify_and_fact_the_same_type_and_return_matched_args(left, right),
+            (
+                ExistOrAndChainAtomicFact::ChainFact(left),
+                ExistOrAndChainAtomicFact::ChainFact(right),
+            ) => Self::_verify_chain_fact_the_same_type_and_return_matched_args(left, right),
+            (ExistOrAndChainAtomicFact::OrFact(left), ExistOrAndChainAtomicFact::OrFact(right)) => {
+                Self::_verify_or_fact_the_same_type_and_return_matched_args(left, right)
             }
             _ => Ok(None),
         }

@@ -120,14 +120,14 @@ prop same_remainder_mod(m N_pos, x, y Z):
 thm standard_remainder_mod_exists_unique:
     ? forall m N_pos, x Z:
         exist! r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)}
-    x = m * integer_quotient(x, m) + x % m
-    x - x % m = (m * integer_quotient(x, m) + x % m) - x % m = m * integer_quotient(x, m)
+    x = m * section2citation::integer_quotient(x, m) + x % m
+    x - x % m = (m * section2citation::integer_quotient(x, m) + x % m) - x % m = m * section2citation::integer_quotient(x, m)
     witness exist r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)} from x % m:
         0 <= x % m < m
         $has_standard_remainder_mod(m, x, x % m)
-        x - x % m = m * integer_quotient(x, m)
-        witness exist k Z st {x - x % m = m * k} from integer_quotient(x, m):
-            x - x % m = m * integer_quotient(x, m)
+        x - x % m = m * section2citation::integer_quotient(x, m)
+        witness exist k Z st {x - x % m = m * k} from section2citation::integer_quotient(x, m):
+            x - x % m = m * section2citation::integer_quotient(x, m)
         $congruent_mod(m, x, x % m)
     forall r, r1 Z:
         0 <= r < m
@@ -146,11 +146,11 @@ thm congruent_mod_has_same_remainder:
         =>:
             $same_remainder_mod(m, x, y)
     obtain k from exist k Z st {x - y = m * k}
-    y = m * integer_quotient(y, m) + y % m
+    y = m * section2citation::integer_quotient(y, m) + y % m
     x = (x - y) + y = m * k + y = y + m * k
-    x = y + m * k = (m * integer_quotient(y, m) + y % m) + m * k = m * (integer_quotient(y, m) + k) + y % m
+    x = y + m * k = (m * section2citation::integer_quotient(y, m) + y % m) + m * k = m * (section2citation::integer_quotient(y, m) + k) + y % m
     0 <= y % m < m
-    x = m * (integer_quotient(y, m) + k) + y % m
+    x = m * (section2citation::integer_quotient(y, m) + k) + y % m
     x % m = y % m
     $same_remainder_mod(m, x, y)
 
@@ -159,13 +159,13 @@ thm same_remainder_mod_is_congruent:
         $same_remainder_mod(m, x, y)
         =>:
             $congruent_mod(m, x, y)
-    x = m * integer_quotient(x, m) + x % m
-    y = m * integer_quotient(y, m) + y % m
+    x = m * section2citation::integer_quotient(x, m) + x % m
+    y = m * section2citation::integer_quotient(y, m) + y % m
     x % m = y % m
-    y = m * integer_quotient(y, m) + x % m
-    x - y = (m * integer_quotient(x, m) + x % m) - (m * integer_quotient(y, m) + x % m) = m * integer_quotient(x, m) - m * integer_quotient(y, m) = m * (integer_quotient(x, m) - integer_quotient(y, m))
-    witness exist k Z st {x - y = m * k} from integer_quotient(x, m) - integer_quotient(y, m):
-        x - y = m * (integer_quotient(x, m) - integer_quotient(y, m))
+    y = m * section2citation::integer_quotient(y, m) + x % m
+    x - y = (m * section2citation::integer_quotient(x, m) + x % m) - (m * section2citation::integer_quotient(y, m) + x % m) = m * section2citation::integer_quotient(x, m) - m * section2citation::integer_quotient(y, m) = m * (section2citation::integer_quotient(x, m) - section2citation::integer_quotient(y, m))
+    witness exist k Z st {x - y = m * k} from section2citation::integer_quotient(x, m) - section2citation::integer_quotient(y, m):
+        x - y = m * (section2citation::integer_quotient(x, m) - section2citation::integer_quotient(y, m))
     $congruent_mod(m, x, y)
 
 """

@@ -669,6 +669,260 @@ have cart c for i <= n, proj(d, i) = i
 }
 
 #[test]
+fn tuple_and_cart_coordinate_foralls_freshen_cross_kind_index_names() {
+    run_with_large_stack(
+        "tuple_and_cart_coordinate_foralls_freshen_cross_kind_index_names",
+        || {
+            let source_code = r#"
+claim:
+    ? forall i N_pos:
+        i = 2
+        =>:
+            0 = 0
+    have tuple t for i <= i, t[i] = 0
+    t[1] = 0
+    have cart C for i <= i, proj(C, i) = R
+    proj(C, 1) = R
+    0 = 0
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "tuple_and_cart_coordinate_foralls_freshen_cross_kind_index_names",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+            assert!(
+                run_succeeded,
+                "cross-kind tuple/cart indices should keep the captured dimension rigid:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("forall #binder_")
+                    && run_output.contains("closed_range(1, i)"),
+                "stored coordinate foralls should freshen the index but retain the outer bound:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn fn_eq_generated_forall_freshens_cross_kind_function_parameter_name() {
+    run_with_large_stack(
+        "fn_eq_generated_forall_freshens_cross_kind_function_parameter_name",
+        || {
+            // One point of equality at the captured outer x cannot prove that two real
+            // functions are pointwise equal on all of R.
+            let invalid_source_code = r#"
+claim:
+    ? forall x R, f, g fn(x R) R:
+        f(x) = g(x)
+        =>:
+            $fn_eq(f, g)
+    f(x) = g(x)
+    $fn_eq(f, g)
+"#;
+
+            let mut invalid_runtime = Runtime::new();
+            invalid_runtime.new_file_path_new_env_new_name_scope(
+                "fn_eq_generated_forall_rejects_captured_outer_point",
+            );
+            let (invalid_results, invalid_error) =
+                run_source_code(invalid_source_code, &mut invalid_runtime);
+            let (invalid_succeeded, invalid_output) = render_run_source_code_output(
+                &invalid_runtime,
+                &invalid_results,
+                &invalid_error,
+                false,
+            );
+            assert!(
+                !invalid_succeeded,
+                "a captured outer point must not close generated pointwise equality:\n{}",
+                invalid_output
+            );
+
+            let valid_source_code = r#"
+claim:
+    ? forall x R, f, g fn(x R) R:
+        forall y R:
+            f(y) = g(y)
+        =>:
+            $fn_eq(f, g)
+    forall y R:
+        f(y) = g(y)
+    $fn_eq(f, g)
+"#;
+
+            let mut valid_runtime = Runtime::new();
+            valid_runtime.new_file_path_new_env_new_name_scope(
+                "fn_eq_generated_forall_accepts_real_pointwise_equality",
+            );
+            let (valid_results, valid_error) =
+                run_source_code(valid_source_code, &mut valid_runtime);
+            let (valid_succeeded, valid_output) =
+                render_run_source_code_output(&valid_runtime, &valid_results, &valid_error, false);
+            assert!(
+                valid_succeeded,
+                "real pointwise equality should still prove function equality:\n{}",
+                valid_output
+            );
+        },
+    );
+}
+
+#[test]
+fn have_fn_by_cases_freshens_parameter_but_keeps_outer_singleton_domain() {
+    run_with_large_stack(
+        "have_fn_by_cases_freshens_parameter_but_keeps_outer_singleton_domain",
+        || {
+            let source_code = r#"
+claim:
+    ? forall x R:
+        x = x
+    have fn h(x {x}) R by cases:
+        case x = x: 0
+    h(x) = 0
+    x = x
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_fn_by_cases_freshens_parameter_but_keeps_outer_singleton_domain",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+
+            assert!(
+                run_succeeded,
+                "same-spelling function parameter and outer value should remain well scoped:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("forall #binder_") && run_output.contains("{x}"),
+                "stored definition should freshen its binder and retain the captured singleton:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn have_fn_by_cases_result_rewrites_membership_at_equal_indices() {
+    run_with_large_stack(
+        "have_fn_by_cases_result_rewrites_membership_at_equal_indices",
+        || {
+            let source_code = r#"
+claim:
+    ? forall m, k N_pos, parts finite_seq(power_set(R), m):
+        k <= m
+        =>:
+            0 = 0
+    claim:
+        ? forall x parts(k), i N_pos:
+            x $in R
+            i <= m
+            i = k
+            =>:
+                x = x
+        have zero R = 0
+        have fn terms(j N_pos: j <= m) R by cases:
+            case j = k: x
+            case j != k: zero
+        terms(i) = x
+        terms(i) $in parts(i)
+        x = x
+    0 = 0
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_fn_by_cases_result_rewrites_membership_at_equal_indices",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "casewise function results should preserve membership through an equal index:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn known_membership_rewrites_through_equal_set_and_equal_singleton_element() {
+    run_with_large_stack(
+        "known_membership_rewrites_through_equal_set_and_equal_singleton_element",
+        || {
+            let source_code = r#"
+have U power_set(R)
+have W power_set(R)
+have delta R
+have zero R
+trust delta $in intersect(U, W)
+trust intersect(U, W) = {0}
+trust zero = 0
+delta $in {zero}
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "known_membership_rewrites_through_equal_set_and_equal_singleton_element",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "membership should rewrite through a stored set equality and singleton congruence:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn current_module_qualified_struct_function_field_remains_callable() {
+    run_with_large_stack(
+        "current_module_qualified_struct_function_field_remains_callable",
+        || {
+            let source_code = r#"
+struct ScalarSystem<s nonempty_set>:
+    zero s
+    add fn(x, y s) s
+
+have fn real_add(x, y R) R = x + y
+have real_scalars &ScalarSystem<R> = (0, real_add)
+
+have fn coordinate_add(x, y finite_seq(R, 2)) finite_seq(R, 2) = fn(i N_pos: i <= 2) R {&Current::ScalarSystem<R>{Current::real_scalars}.add(x(i), y(i))}
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "current_module_qualified_struct_function_field_remains_callable",
+            );
+            runtime.current_module_mut().module_name = "Current".to_string();
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a struct function field should keep its type through current-module qualification:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn template_can_define_symbolic_tuple_and_cart() {
     run_with_large_stack("template_can_define_symbolic_tuple_and_cart", || {
         let source_code = r#"

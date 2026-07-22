@@ -1319,7 +1319,9 @@ fn validate_config_directory_contents(
                     0,
                 )
             })?;
-            if let Some(line) = source
+            let source_without_documentation =
+                Tokenizer::new().strip_triple_quote_comment_blocks(&source);
+            if let Some(line) = source_without_documentation
                 .lines()
                 .position(|line| !line.trim().is_empty() && !line.trim().starts_with('#'))
             {
@@ -1634,7 +1636,10 @@ B = "./B"
 root_after = "./root_after.lit"
 "#,
             );
-            write_file(&root.join("root_first.lit"), "have root_value R = 1\n");
+            write_file(
+                &root.join("root_first.lit"),
+                "have root_value R = 1\n1 = 0\n",
+            );
             write_file(&root.join("root_after.lit"), "1 = 0\n");
             write_file(
                 &root.join("B/litex.config"),
@@ -1661,6 +1666,21 @@ after = "./after.lit"
             let (ok, output) = run_source_code_in_file_with_ok(target.as_str());
             assert!(ok, "{output}");
             assert!(output.contains("target_value"), "{output}");
+            assert!(output.contains("project_export"), "{output}");
+
+            let (project_ok, project_output) = run_repository(&root);
+            assert!(
+                !project_ok,
+                "a complete project run must verify the earlier export: {project_output}"
+            );
+            assert!(project_output.contains("1 = 0"), "{project_output}");
+
+            let mut strict_runtime = Runtime::new();
+            strict_runtime.strict_mode = true;
+            let (_, strict_error) =
+                run_file_with_project_context(target.as_str(), &mut strict_runtime, false);
+            let strict_error = strict_error.expect("strict -f must verify its export prefix");
+            assert!(format!("{strict_error:?}").contains("1 = 0"));
         });
     }
 
@@ -1854,6 +1874,29 @@ main = "./main.lit"
     }
 
     #[test]
+    fn configured_folder_allows_documentation_only_todo_sidecar() {
+        let fixture = Fixture::new("documentation-todo-sidecar");
+        let root = fixture.path("root");
+        write_file(
+            &root.join("litex.config"),
+            r#"[hierarchy]
+module
+
+[export]
+main = "./main.lit"
+"#,
+        );
+        write_file(&root.join("main.lit"), "have value R = 1\n");
+        write_file(
+            &root.join("todo.lit"),
+            "\"\"\"\nMissing mathematical result.\n\"\"\"\n",
+        );
+
+        let (ok, output) = run_repository(&root);
+        assert!(ok, "{output}");
+    }
+
+    #[test]
     fn configured_folder_rejects_executable_todo_sidecar() {
         let fixture = Fixture::new("executable-todo-sidecar");
         let root = fixture.path("root");
@@ -1867,7 +1910,10 @@ main = "./main.lit"
 "#,
         );
         write_file(&root.join("main.lit"), "have value R = 1\n");
-        write_file(&root.join("todo.lit"), "have hidden R = 2\n");
+        write_file(
+            &root.join("todo.lit"),
+            "\"\"\"\nDocumentation only.\n\"\"\"\nhave hidden R = 2\n",
+        );
 
         let (ok, output) = run_repository(&root);
         assert!(!ok, "{output}");
@@ -2291,9 +2337,9 @@ main = "./main.lit"
     }
 
     #[test]
-    fn exports_are_trusted_by_default_and_strict_mode_verifies_them() {
-        run_repository_test_with_large_stack("default-trusted-export", || {
-            let fixture = Fixture::new("default-trusted-export");
+    fn exports_are_verified_by_default_and_strict_mode_rejects_user_trust() {
+        run_repository_test_with_large_stack("verified-export", || {
+            let fixture = Fixture::new("verified-export");
             let root = fixture.path("root");
             write_file(
                 &root.join("litex.config"),
@@ -2316,10 +2362,22 @@ main = "./main.lit"
                 OutputLanguage::English,
                 true,
             );
-            assert!(ordinary_ok, "{ordinary_output}");
-            assert!(ordinary_output.contains("unverified import warning"));
-            assert!(ordinary_output.contains("project_export"));
-            assert!(ordinary_output.contains("\"name\": \"assumption\""));
+            assert!(!ordinary_ok, "{ordinary_output}");
+            assert!(ordinary_output.contains("1 = 0"), "{ordinary_output}");
+            assert!(
+                !ordinary_output.contains("project_export"),
+                "ordinary project runs must not trust [export] entries: {ordinary_output}"
+            );
+
+            write_file(&root.join("assumption.lit"), "trust 1 = 1\n");
+            let (ordinary_trust_ok, ordinary_trust_output) = run_repository_with_output(
+                root_string.as_str(),
+                false,
+                false,
+                OutputLanguage::English,
+                true,
+            );
+            assert!(ordinary_trust_ok, "{ordinary_trust_output}");
             let (strict_ok, strict_output) = run_repository_with_output(
                 root_string.as_str(),
                 false,
@@ -2328,7 +2386,10 @@ main = "./main.lit"
                 false,
             );
             assert!(!strict_ok);
-            assert!(strict_output.contains("1 = 0"), "{strict_output}");
+            assert!(
+                strict_output.contains("strict mode rejects user trust"),
+                "{strict_output}"
+            );
         });
     }
 

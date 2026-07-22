@@ -1,0 +1,3 @@
+# Every rational number has a reduced integer fraction with a positive denominator.
+forall a Q:
+    exist! p Z, q N_pos st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}

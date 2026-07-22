@@ -580,36 +580,6 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Sqrt::new(arg).into());
         }
-        if tok == INTEGER_QUOTIENT {
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 2 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "integer_quotient expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let dividend = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "integer_quotient expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            let divisor = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "integer_quotient expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return Ok(IntegerQuotient::new(dividend, divisor).into());
-        }
         if tok == LOG {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;

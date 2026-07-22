@@ -27,7 +27,7 @@ impl Runtime {
     ) -> Result<
         (
             (usize, usize),
-            Option<HashMap<String, Obj>>,
+            Option<(HashMap<String, Obj>, HashMap<String, Obj>)>,
             Option<(ExistFactEnum, Rc<KnownForallFactParamsAndDom>)>,
         ),
         RuntimeError,
@@ -59,27 +59,25 @@ impl Runtime {
                 };
                 for j in start_index..known_forall_facts_count {
                     let entry_idx = known_forall_facts_count - 1 - j;
-                    let (fact_args_in_known_forall, given_fact_args, current_known_forall) = {
-                        let current_known_forall = &merged_bucket[entry_idx];
-                        (
-                            current_known_forall.0.get_args_from_fact_ref(),
-                            given_exist_fact.get_args_from_fact_ref(),
-                            current_known_forall.clone(),
-                        )
-                    };
-                    if Runtime::_verify_exist_fact_the_same_type_and_return_matched_args(
-                        &current_known_forall.0,
-                        given_exist_fact,
-                    )?
-                    .is_none()
-                    {
+                    let current_known_forall = merged_bucket[entry_idx].clone();
+                    let Some(matched_args) = self
+                        ._verify_exist_fact_the_same_type_and_return_matched_args(
+                            &current_known_forall.0,
+                            given_exist_fact,
+                        )?
+                    else {
                         continue;
-                    }
-                    let match_result = self
-                        .match_args_in_fact_in_known_forall_fact_with_given_args(
-                            &fact_args_in_known_forall,
-                            &given_fact_args,
-                        )?;
+                    };
+                    let fact_args_in_known_forall: Vec<&Obj> =
+                        matched_args.iter().map(|(known, _)| known).collect();
+                    let given_fact_args: Vec<&Obj> =
+                        matched_args.iter().map(|(_, given)| given).collect();
+                    let match_result = self.match_args_in_fact_with_known_forall_bindings(
+                        &fact_args_in_known_forall,
+                        &given_fact_args,
+                        &current_known_forall.1.params_def,
+                        Some(current_known_forall.0.params_def_with_type()),
+                    )?;
                     if let Some(arg_map) = match_result {
                         let exist_in_forall = &current_known_forall.0;
                         if !exist_in_forall.can_be_used_to_verify_goal(given_exist_fact) {
@@ -110,12 +108,16 @@ impl Runtime {
             )?;
             let ((i, j), arg_map_opt, known_forall_opt) = result;
             match (arg_map_opt, known_forall_opt) {
-                (Some(arg_map), Some((exist_fact_in_known_forall, forall_rc))) => {
+                (
+                    Some((forall_arg_map, exist_arg_map)),
+                    Some((exist_fact_in_known_forall, forall_rc)),
+                ) => {
                     if let Some(fact_verified) = self
                         .verify_exist_fact_args_satisfy_forall_requirements(
                             &exist_fact_in_known_forall,
                             &forall_rc,
-                            arg_map,
+                            forall_arg_map,
+                            exist_arg_map,
                             exist_fact,
                             verify_state,
                         )?
@@ -134,7 +136,8 @@ impl Runtime {
         &mut self,
         exist_fact_in_known_forall: &ExistFactEnum,
         known_forall: &Rc<KnownForallFactParamsAndDom>,
-        arg_map: HashMap<String, Obj>,
+        forall_arg_map: HashMap<String, Obj>,
+        exist_arg_map: HashMap<String, Obj>,
         given_exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
@@ -151,7 +154,7 @@ impl Runtime {
             .collect_param_names();
         if !known_exist_param_names
             .iter()
-            .all(|param_name| arg_map.contains_key(param_name))
+            .all(|param_name| exist_arg_map.contains_key(param_name))
         {
             return Ok(None);
         }
@@ -160,37 +163,21 @@ impl Runtime {
             return Ok(None);
         }
 
-        let mut known_exist_params_to_given_exist_params_map: Vec<Obj> = Vec::new();
         for (known_param_name, given_param_name) in known_exist_param_names
             .iter()
             .zip(given_exist_param_names.iter())
         {
-            let obj = match arg_map.get(known_param_name) {
-                Some(v) => {
-                    if !Self::obj_matches_exist_forall_binding_name(v, given_param_name) {
-                        return Ok(None);
-                    }
-                    v
-                }
-                None => return Ok(None),
+            let Some(obj) = exist_arg_map.get(known_param_name) else {
+                return Ok(None);
             };
-            known_exist_params_to_given_exist_params_map.push(obj.clone());
-        }
-
-        // given exist param can only match known exist param, it can not match other params
-        for (key, obj) in arg_map.iter() {
-            if let Some(spine) = Self::obj_binding_spine_name_for_arg_map(obj) {
-                if given_exist_param_names.iter().any(|n| n == spine) {
-                    if !known_exist_param_names.contains(key) {
-                        return Ok(None);
-                    }
-                }
+            if !Self::obj_matches_exist_forall_binding_name(obj, given_param_name) {
+                return Ok(None);
             }
         }
 
         let param_names = known_forall.params_def.collect_param_names();
         for param_name in param_names.iter() {
-            let Some(obj) = arg_map.get(param_name) else {
+            let Some(obj) = forall_arg_map.get(param_name) else {
                 return Ok(None);
             };
             if Self::obj_depends_on_given_exist_param(obj, &given_exist_param_names) {
@@ -201,7 +188,7 @@ impl Runtime {
         let Some((instantiation, requirements)) = self
             .verify_known_forall_requirements_and_build_evidence(
                 known_forall.as_ref(),
-                &arg_map,
+                &forall_arg_map,
                 given_exist_fact.clone().into(),
                 verify_state,
             )?
@@ -227,30 +214,8 @@ impl Runtime {
         Ok(Some(fact_verified))
     }
 
-    fn obj_binding_spine_name_for_arg_map(obj: &Obj) -> Option<&str> {
-        match obj {
-            Obj::Atom(AtomObj::Exist(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::Forall(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::Def(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::Induc(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.as_str()),
-            _ => None,
-        }
-    }
-
     fn obj_matches_exist_forall_binding_name(obj: &Obj, name: &str) -> bool {
-        match obj {
-            Obj::Atom(AtomObj::Exist(p)) => p.name == name,
-            Obj::Atom(AtomObj::Forall(p)) => p.name == name,
-            Obj::Atom(AtomObj::FnSet(p)) => p.name == name,
-            Obj::Atom(AtomObj::Def(p)) => p.name == name,
-            Obj::Atom(AtomObj::SetBuilder(p)) => p.name == name,
-            Obj::Atom(AtomObj::Induc(p)) => p.name == name,
-            Obj::Atom(AtomObj::DefAlgo(p)) => p.name == name,
-            _ => obj.to_string() == name,
-        }
+        matches!(obj, Obj::Atom(AtomObj::Exist(p)) if p.name == name)
     }
 
     pub(crate) fn obj_depends_on_given_exist_param(obj: &Obj, names: &[String]) -> bool {
@@ -280,11 +245,6 @@ impl Runtime {
             Obj::Mod(x) => Self::obj_pair_depends_on_given_exist_param(
                 x.left.as_ref(),
                 x.right.as_ref(),
-                names,
-            ),
-            Obj::IntegerQuotient(x) => Self::obj_pair_depends_on_given_exist_param(
-                x.dividend.as_ref(),
-                x.divisor.as_ref(),
                 names,
             ),
             Obj::Pow(x) => Self::obj_pair_depends_on_given_exist_param(
@@ -555,5 +515,17 @@ mod tests {
         let fn_obj: Obj = FnObj::new(head, vec![vec![Box::new(arg)]]).into();
 
         assert!(Runtime::obj_depends_on_given_exist_param(&fn_obj, &names));
+    }
+
+    #[test]
+    fn existential_binding_validation_preserves_binder_kind() {
+        let exist: Obj = ExistFreeParamObj::new("x".to_string()).into();
+        let captured_forall: Obj = ForallFreeParamObj::new("x".to_string()).into();
+
+        assert!(Runtime::obj_matches_exist_forall_binding_name(&exist, "x"));
+        assert!(!Runtime::obj_matches_exist_forall_binding_name(
+            &captured_forall,
+            "x"
+        ));
     }
 }

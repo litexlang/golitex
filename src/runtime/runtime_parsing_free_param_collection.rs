@@ -24,36 +24,41 @@ impl FreeParamCollection {
         self.params.clear();
     }
 
-    fn push_param(
-        &mut self,
-        name: String,
-        kind: ParamObjType,
-        line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        let stack = self.params.entry(name.clone()).or_default();
-        if stack.iter().any(|b| b.kind == kind) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!(
-                        "free parameter `{}` is already bound as {:?} in an active scope",
-                        name, kind
-                    ),
-                    line_file,
-                ),
-            )));
-        }
-        stack.push(FreeParamTypeAndLineFile { kind, line_file });
-        Ok(())
-    }
-
     pub fn begin_scope(
         &mut self,
         kind: ParamObjType,
         names: &[String],
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
+        let mut names_in_new_scope: Vec<&String> = Vec::with_capacity(names.len());
         for n in names {
-            self.push_param(n.clone(), kind, line_file.clone())?;
+            let duplicates_new_name = names_in_new_scope.contains(&n);
+            let duplicates_active_binding = self
+                .params
+                .get(n)
+                .map(|stack| stack.iter().any(|binding| binding.kind == kind))
+                .unwrap_or(false);
+            if duplicates_new_name || duplicates_active_binding {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "free parameter `{}` is already bound as {:?} in an active scope",
+                            n, kind
+                        ),
+                        line_file,
+                    ),
+                )));
+            }
+            names_in_new_scope.push(n);
+        }
+        for n in names {
+            self.params
+                .entry(n.clone())
+                .or_default()
+                .push(FreeParamTypeAndLineFile {
+                    kind,
+                    line_file: line_file.clone(),
+                });
         }
         Ok(())
     }
@@ -103,8 +108,10 @@ impl FreeParamCollection {
             ParamObjType::TupleIndex => TupleIndexFreeParamObj::new(name.to_string()).into(),
             ParamObjType::CartIndex => CartIndexFreeParamObj::new(name.to_string()).into(),
             ParamObjType::Identifier => Identifier::new(name.to_string()).into(),
-            ParamObjType::TheoremInstantiation => unreachable!(
-                "resolve_identifier_to_free_param_obj: theorem instantiation is not a parser scope"
+            ParamObjType::TheoremInstantiation
+            | ParamObjType::AlphaRename
+            | ParamObjType::BinderRetag(_) => unreachable!(
+                "resolve_identifier_to_free_param_obj: instantiation modes are not parser scopes"
             ),
         }
     }

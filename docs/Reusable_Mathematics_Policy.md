@@ -34,8 +34,10 @@ source-local cite package. Translation work should treat a missing fact as
 evidence about the current source, package design, or kernel—not as a reason to
 restore a global mathematical environment.
 
-No exception carries trusted mathematical theory globally. A core primitive
-must be a small semantic interface, such as the Euclidean
-`integer_quotient(a, d)` paired with `%`; every ordinary theorem, including
-Archimedean, rational-density, reduced-fraction, power, and extrema facts,
-keeps an explicit source-owned proof or `trust` boundary.
+No exception carries trusted mathematical theory globally. A core builtin must
+be a small semantic fact, such as the unique existence of `q Z` satisfying
+`a = d * q + a % d` for `a Z` and `d N_pos`. A selected
+`integer_quotient(a, d)` is then an ordinary source-level `have fn ... by
+exist!`; every broad theorem, including Archimedean, rational-density,
+reduced-fraction, power, and extrema facts, keeps an explicit source-owned
+proof or `trust` boundary.

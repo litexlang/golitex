@@ -1599,11 +1599,6 @@ sketch:
             case n % 2 = 1:
                 (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
                 n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
-        witness exist q N st {n * (n + 1) = 2 * q} from integer_quotient(n * (n + 1), 2):
-            integer_quotient(n * (n + 1), 2) $in N
-            n * (n + 1) = 2 * integer_quotient(n * (n + 1), 2) + n * (n + 1) % 2
-            n * (n + 1) % 2 = 0
-            n * (n + 1) = 2 * integer_quotient(n * (n + 1), 2)
         obtain r from exist r N st {n * (n + 1) = 2 * r}
         witness exist y N st {2 * y = n * (n + 1)} from r:
             n * (n + 1) = 2 * r

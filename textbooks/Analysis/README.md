@@ -46,6 +46,10 @@ region, and uses the unique inverse of `g` on its complement.  Later chapters
 can call it as `chap3::cantor_schroeder_bernstein` without importing a separate
 cardinality module or assuming any form of choice.
 
+The same chapter proves `chap3::subset_of_finite_set_is_finite`.  It expresses
+a subset as a double set difference inside its finite ambient set, so Chapters
+8 and 11 can reuse the checked result without importing `std`.
+
 ## Chapter 6 concept-first surface
 
 Chapter 6 separates the candidate-limit relation `$has_limit(a,L)` from the
@@ -105,14 +109,31 @@ maximal-element principle. The detailed concept roles and dependency order
 are recorded in [`math_collections.md`](math_collections.md).
 
 Proof boundaries remain visible. Finite subsum comparison and capture,
-coordinate-swap transport, nonzero-support countability, bijection change of
-variables, and finite-total-order well-ordering are checked.  The remaining
-`trust` is concentrated in enumeration independence, the analytic row-first
-core of Fubini, Riemann rearrangement, the binary-decimal injection, and four
-good-chain lemmas.  There is also a known finite-support definition defect:
-the current countable-series predicate demands a bijection `N_pos -> X`, so
-empty and finite supports need a separate finite-sum branch before the general
-addition and zero-scalar laws can be proved.  The axiom of choice remains an
+coordinate-swap transport, nonzero-support countability, scalar
+multiplication, bijection change of variables, finite-total-order
+well-ordering, enumeration independence for absolutely convergent
+countable-set sums, and both the nonnegative and signed row-first Fubini
+arguments are checked.
+Bijection change treats finite support by finite
+substitution and countably infinite support by transported enumeration.  The
+row-first argument constructs the row sums, proves the
+finite-row series law by induction, and compares arbitrary finite supports
+with finite rectangles.  The signed argument applies that result to positive
+and negative parts and recombines the row sums.  The strict enumerated series
+predicates still describe countably infinite carriers, while the
+at-most-countable interface has a finite-sum branch and an enumerated branch.
+Lemma 8.2.3 is checked in both directions, and arbitrary-set sums use the
+repaired interface on their nonzero support.  Zero extension and reflection
+transport values between an at-most-countable support and a larger common
+carrier; addition applies the Chapter 7 law on that common carrier and then
+removes terms cancelled to zero.  The disjoint-union law zero-extends both
+restricted families to the union, applies addition, and uses disjointness
+pointwise.  The scalar law, including the zero-scalar empty-support branch,
+is checked.  The binary-decimal map is selected from a
+proved unique series sum, and its injectivity is checked using the first
+differing digit and a geometric-tail bound.  The remaining Chapter 8 `trust`
+is concentrated in the conditional-sign and Riemann rearrangement exercises
+and four good-chain lemmas.  The axiom of choice remains an
 explicit `axiom`; checked callers do not erase that provenance.
 
 ## Chapter 10 differentiation interface
@@ -295,10 +316,12 @@ foundational boundary.
 empty case, cardinality induction, residual-family step, and finite-sum
 regrouping for any bounded-interval weight with an additive endpoint split.
 Theorem 11.1.13 is its ordinary-length consumer and no longer contains a
-theorem-wide trust. Its direct numerical trust interface is now only
-`interval_length_adds_across_bounded_difference`; its geometric selection
-route is checked relative to the foundational bounded-connected
-characterization just noted.
+theorem-wide trust. Its numerical input
+`interval_length_adds_across_bounded_difference` is also checked: the proof
+orders the two nonempty difference pieces, identifies their adjacent
+endpoints, and telescopes the three endpoint differences. Its geometric
+selection route remains checked relative to the foundational
+bounded-connected characterization just noted.
 `piecewise_constant_integral_with_partition_reindexes_over_refinement`
 composes them with empty-piece removal and unique-cover regrouping, and
 Proposition 11.2.13 then sends two partitions to their selected common
@@ -328,8 +351,8 @@ $has_upper_riemann_sum(I, P, f, U)
 ```
 
 The selected step-integral and ordinary/Stieltjes integral values are
-verified interfaces. Their remaining `trust` is limited to endpoint geometry,
-approximation, and later gluing theorems recorded in
+verified interfaces. Their remaining `trust` is limited to the foundational
+bounded-connected characterization, approximation, and later gluing theorems recorded in
 `scripts/Analysis/todo/03_integration_and_language_blockers.md`.
 
 The Stieltjes piecewise-constant base now mirrors the ordinary one: canonical

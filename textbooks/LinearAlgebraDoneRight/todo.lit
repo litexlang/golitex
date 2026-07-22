@@ -40,3 +40,63 @@
 # as does the two-move proof of 7.43. The callable positive-square-root selector
 # is one explicit trust boundary because subtype-valued selection is not yet
 # stable in an importing caller.
+#
+# Chapter 7, Section 7D — Results 7.49, 7.53, 7.55, 7.57, 7.58, 7.61, 7.63
+# The four source definitions, all eight results, and the three explanatory
+# examples are present. Result 7.54 has a checked source-length proof. The two
+# characterization cycles, the complex spectral description, QR, the strict
+# positivity characterization, and Cholesky retain seven named axiom
+# boundaries. No direct trust was added in this section.
+#
+# A direct importing caller of the coordinate matrix helpers can expose the
+# existing nested-template binding failure in chap3b::scalar_finite_sum. That
+# verifier issue is tracked as kernel_problem in the working todo rather than
+# being hidden as mathematical proof debt.
+#
+# Chapter 7, Section 7E — Results 7.64-7.80
+# The ordered singular-value interface, its multiplicities, the operator and
+# matrix SVD relations, and all three source examples are present. Spectral
+# ordering, SVD construction, adjoint/pseudoinverse formulas, and the matrix
+# coordinate transport remain to be proved. Selecting the dependent-length
+# ordered list is one explicit trust boundary after exact unique existence.
+#
+# Chapter 7, Section 7F — Results 7.82-7.111
+# Operator norm, low-rank truncation, polar decomposition, and all geometric
+# set-valued constructions are present, together with five formal examples.
+# The SVD norm estimates, best-approximation lower bound, polar factors, image
+# equalities, and volume scaling remain. General volume is visibly trusted at
+# the analytic boundary explicitly deferred by the source.
+#
+# Chapter 8, Sections 8A-8D — complexification, generalized eigenspaces,
+# nilpotent operators, and trace
+# Every retained definition and result is present. The remaining work is the
+# complexification transport, primary-decomposition and Jordan-chain
+# constructions, nilpotent block bases, trace basis independence, and the
+# eigenvalue/coefficient/inner-product trace formulas. The selected
+# generalized-eigenvalue list and operator trace remain explicit trust
+# boundaries after their source relations are stated.
+#
+# Chapter 9, Section 9A — bilinear and quadratic forms
+# Bilinear, symmetric, alternating, and quadratic-form carriers are callable,
+# and all retained matrix, decomposition, characterization, and
+# diagonalization results are present. Coordinate reconstruction,
+# polarization, and diagonal-basis constructions remain named proof debt.
+#
+# Chapter 9, Section 9B — alternating multilinear forms
+# Slot replacement, permutations, inversion sign, signed coordinate sums, and
+# full alternating-form spaces are explicit. Finite permutation enumeration,
+# swap parity, multilinear expansion, and the one-dimensionality argument
+# remain trust boundaries.
+#
+# Chapter 9, Section 9C — determinants
+# The basis-free operator determinant, matrix determinant, both characteristic
+# polynomial routes, evaluation rules, and geometric applications are all
+# present. Their remaining proofs depend on full alternating-form expansion,
+# triangularization, spectral transport, QR, and finite polynomial identities.
+#
+# Chapter 9, Section 9D — tensor products
+# Two-space and finite-family tensor products follow the source's
+# multilinear-functional-on-duals construction. Pure tensors, dimensions,
+# bases, inner products, and both universal-map directions are callable. The
+# dependent component/dual structures, tensor-basis arguments, and universal
+# extension proofs remain explicit trust boundaries.

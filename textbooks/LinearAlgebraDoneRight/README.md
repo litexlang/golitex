@@ -1,7 +1,7 @@
 # Linear Algebra Done Right
 
-This module is a source-ordered Litex formalization of Chapters 1–6 and Sections
-7A–7C of Sheldon Axler's *Linear Algebra Done Right*, fourth edition. The
+This module is a source-ordered Litex formalization of all nine chapters of
+Sheldon Axler's *Linear Algebra Done Right*, fourth edition. The
 repository-local transcript dated 9 May 2026 is the source of truth. Standalone
 exercises are omitted; definitions, notation, results, and mathematically useful
 explanatory prose are retained in the order in which the book introduces them.
@@ -15,9 +15,9 @@ target/debug/litex -compact -runner -r textbooks/LinearAlgebraDoneRight
 ```
 
 `litex.config` exports one namespace per source section, from `chap1a`
-through `chap3f`, followed by `chap4`, `chap5a` through `chap5e`, `chap6a`
-through `chap6c`, then `chap7a` through `chap7c`. Cross-section uses are
-explicit, for example `chap2a::span` and `chap3b::null_space`.
+through `chap9d` (with the unsectioned polynomial chapter exported as
+`chap4`). Cross-section uses are explicit, for example `chap2a::span`,
+`chap8b::characteristic_polynomial`, and `chap9c::operator_determinant`.
 
 Chapter files use file-local macros such as `@ScalarSystem`, `@Scalars`,
 `@Space`, and `@LinearMaps` for repeated fully qualified types, structure
@@ -25,12 +25,13 @@ views, and function families. `@ScalarSystem` denotes the bare scalar-system
 type, while `@Scalars` denotes the view of the supplied `scalars` instance.
 These macros are readability-only textual abbreviations: public declarations
 keep their mathematical parameters explicit, and the canonical cross-file
-namespaces remain `chap1a` through `chap7c`.
+namespaces remain `chap1a` through `chap9d`.
 
 The ordinary project runner checks that the exported project loads and that
 the public declarations are well formed. Because project exports are trusted
-for speed, theorem-body checking uses the flattened isolated gate documented
-in `scripts/linear_algebra_done_right/source_manifest.yaml`.
+for speed, the routine body gate also runs every exported section directly
+with `-runner -f`; the optional flattened isolated gate is documented in
+`scripts/linear_algebra_done_right/source_manifest.yaml`.
 
 ## Implemented mathematical surface
 
@@ -79,7 +80,23 @@ The current public surface includes:
   Examples 7.30 and 7.33; and
 - positive operators, square-root candidates, all six source
   characterizations, the unique positive-square-root interface and callable
-  selected root, plus checked calculations from Examples 7.35, 7.37, and 7.41.
+  selected root, plus checked calculations from Examples 7.35, 7.37, and 7.41;
+  and
+- isometries, unitary operators and matrices, coordinate inner products and
+  matrix-vector products, the source characterizations, exact QR and Cholesky
+  factorization relations, and a checked source-length proof that every
+  eigenvalue of a unitary operator has absolute value 1; and
+- ordered singular values, operator and matrix SVD, operator norm, low-rank
+  approximation, polar decomposition, and the book's geometric image and
+  volume constructions; and
+- complexification, generalized eigenspaces and multiplicities, nilpotent and
+  Jordan-basis interfaces, and basis-independent operator trace; and
+- bilinear, symmetric, alternating, and quadratic forms, finite multilinear
+  forms, permutations and signs, the basis-free operator determinant, matrix
+  determinant, and the determinant characteristic polynomial; and
+- two-space and finite-family tensor products defined as multilinear
+  functionals on duals, with pure tensors, dimension and basis formulas,
+  tensor inner products, and both universal linearization directions.
 
 Representative application shape:
 
@@ -102,7 +119,19 @@ duality, the analytic input to the fundamental theorem of algebra, and the
 finite-sum algebra behind operator-polynomial multiplicativity. Sections 7A
 and 7C each keep one direct typed selector trust, for the adjoint and positive
 square root respectively, because the verifier cannot yet instantiate these
-subtype-valued parameterized selections in a real importing caller.
+subtype-valued parameterized selections in a real importing caller. Later
+chapters also keep visible selection or structure-packaging trust for ordered
+singular-value lists, generalized-eigenvalue data, operator trace,
+bilinear/multilinear function spaces, determinant values, and dependent
+tensor-product component and dual structures. The substantial spectral,
+permutation, determinant, and universal-property arguments remain named
+axioms rather than being disguised as checked proofs.
+
+Result 7.54 has a checked source-length proof and is independently exercised
+from an importing caller. Instantiating some coordinate matrix helpers from an
+importing caller can still expose the existing cross-module template-binding
+problem in `chap3b::scalar_finite_sum`; that verifier issue is recorded as
+`kernel_problem` in the working todo.
 
 `math_collections.md` records the intended mathematical interfaces and their
 dependency order. Working plans, item records, verifier notes, and blockers

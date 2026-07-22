@@ -1,0 +1,125 @@
+# Linear Algebra Done Right, fourth edition — Section 8D.
+# Trace: A Connection Between Matrices and Operators.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Operators "\chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>"
+macro Compose "\chap3a::linear_map_compose<s, scalars, V, V, V, Vspace, Vspace, Vspace>"
+
+# Definition 8.47. Matrix trace is the finite scalar sum of diagonal entries.
+template<s nonempty_set, scalars @ScalarSystem, n N_pos>:
+    have fn matrix_trace(A matrix(s, n, n)) s = \chap3b::scalar_finite_sum<s, scalars, n>(fn(k N_pos: k <= n) s {A(k, k)})
+
+# Example 8.48. The displayed diagonal entries sum to 5.
+sketch:
+    have A matrix(R, 3, 3) = [[3, -1, -2], [5, 2, -3], [1, 6, 0]]
+    A(1, 1) + A(2, 2) + A(3, 3) = 3 + 2 + 0 = 5
+
+# Result 8.49. Expand both traces as the same finite double sum and exchange
+# the two summation indices.
+axiom trace_of_matrix_products_is_cyclic:
+    ? forall s nonempty_set, scalars @ScalarSystem, m, n N_pos, A matrix(s, m, n), B matrix(s, n, m):
+        \matrix_trace<s, scalars, m>(\chap3c::matrix_mul<s, scalars, m, n, m>(A, B)) = \matrix_trace<s, scalars, n>(\chap3c::matrix_mul<s, scalars, n, m, n>(B, A))
+
+# Result 8.50. Change of basis writes the two matrices as C^-1 B C; apply
+# Result 8.49 once and cancel the inverse pair.
+axiom trace_of_operator_matrix_is_basis_independent:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, basis1, basis2 &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis1)
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis2)
+        =>:
+            \matrix_trace<s, scalars, n>(\chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis1, T)) = \matrix_trace<s, scalars, n>(\chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis2, T))
+
+prop is_operator_trace_value(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, value s):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap2b::is_basis(s, scalars, V, Vspace, n, basis), value = \matrix_trace<s, scalars, n>(\chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis, T))}
+
+axiom operator_trace_exists_unique:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        \chap2c::dimension<s, scalars, V, Vspace> > 0
+        =>:
+            exist! value s st {$is_operator_trace_value(s, scalars, V, Vspace, T, value)}
+
+# Definition 8.51. Basis independence turns the unique matrix-trace value into
+# a callable scalar-valued function on operators.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>: $chap2a::is_finite_dimensional(s, scalars, V, Vspace), \chap2c::dimension<s, scalars, V, Vspace> > 0>:
+    # Selection from the exact basis-independent relation remains explicit.
+    trust have operator_trace fn(T @Operators) s
+
+axiom operator_trace_spec:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        \chap2c::dimension<s, scalars, V, Vspace> > 0
+        =>:
+            $is_operator_trace_value(s, scalars, V, Vspace, T, \operator_trace<s, scalars, V, Vspace>(T))
+
+template<s nonempty_set, scalars @ScalarSystem>:
+    have fn scalar_natural_multiple(x s, d N) s by induc d from 0:
+        case d = 0: @Scalars.zero
+        case d > 0: @Scalars.add(scalar_natural_multiple(x, d - 1), x)
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos>:
+    have fn eigenvalue_sum_with_multiplicity(T @Operators, eigenvalues &chap1a::FiniteList<s, m>) s = \chap3b::scalar_finite_sum<s, scalars, m>(fn(k N_pos: k <= m) s {\scalar_natural_multiple<s, scalars>(&chap1a::FiniteList<s, m>{eigenvalues}.entries(k), \chap8b::eigenvalue_multiplicity<s, scalars, V, Vspace>(T, &chap1a::FiniteList<s, m>{eigenvalues}.entries(k)))})
+
+# Result 8.52. Choose the upper-triangular basis from 8.37; its diagonal lists
+# every eigenvalue exactly as many times as its multiplicity.
+axiom complex_operator_trace_equals_eigenvalue_sum:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
+        \chap2c::dimension<&chap1a::Complex, chap1a::complex_scalars, V, Vspace> > 0
+        $chap5d::lists_all_distinct_eigenvalues(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T, m, eigenvalues)
+        =>:
+            \operator_trace<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>(T) = \eigenvalue_sum_with_multiplicity<&chap1a::Complex, chap1a::complex_scalars, V, Vspace, m>(T, eigenvalues)
+
+# Example 8.53. The diagonal calculation gives trace 5; the three listed
+# eigenvalues also sum to the same scalar.
+sketch:
+    have A matrix(R, 3, 3) = [[3, -1, -2], [3, 2, -3], [1, 2, 0]]
+    A(1, 1) + A(2, 2) + A(3, 3) = 5
+    1 + 2 + 2 = 5
+    3 + -1 * 3 = 0
+
+# Result 8.54. In a coefficient list of length n+1, entry n multiplies
+# z^(n-1); expansion of the eigenvalue product makes it minus the trace.
+axiom trace_is_negative_next_to_leading_characteristic_coefficient:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>, n N_pos, coefficients &chap1a::FiniteList<&chap1a::Complex, n + 1>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
+        n = \chap2c::dimension<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>
+        $chap2a::represents_polynomial(&chap1a::Complex, chap1a::complex_scalars, n + 1, coefficients, \chap8b::characteristic_polynomial<V, Vspace>(T))
+        =>:
+            \operator_trace<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>(T) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.neg(&chap1a::FiniteList<&chap1a::Complex, n + 1>{coefficients}.entries(n))
+
+template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, n N_pos>:
+    have fn orthonormal_diagonal_sum(T \chap3a::linear_map_space<s, scalars, V, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space>, basis &chap1a::FiniteList<V, n>) s = \chap3b::scalar_finite_sum<s, scalars, n>(fn(k N_pos: k <= n) s {&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.inner(T(&chap1a::FiniteList<V, n>{basis}.entries(k)), &chap1a::FiniteList<V, n>{basis}.entries(k))})
+
+# Result 8.55. Each diagonal matrix entry in an orthonormal basis is the inner
+# product of T e_k with e_k.
+axiom trace_on_inner_product_space:
+    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, T \chap3a::linear_map_space<s, scalars, V, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space>, n N_pos, basis &chap1a::FiniteList<V, n>:
+        $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space)
+        $chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, n, basis)
+        =>:
+            \operator_trace<s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space>(T) = \orthonormal_diagonal_sum<s, scalars, scalar_geometry, V, inner_space, n>(T, basis)
+
+prop operator_trace_linearity_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>):
+    $chap3f::is_linear_functional(s, scalars, @Operators, \chap3a::linear_map_vector_space<s, scalars, V, V, Vspace, Vspace>, \operator_trace<s, scalars, V, Vspace>)
+    forall S, T @Operators:
+        \operator_trace<s, scalars, V, Vspace>(@Compose(S, T)) = \operator_trace<s, scalars, V, Vspace>(@Compose(T, S))
+
+# Result 8.56. Matrix formation preserves addition, scalar multiplication, and
+# composition; apply matrix-trace linearity and Result 8.49.
+axiom trace_is_linear_and_cyclic:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        \chap2c::dimension<s, scalars, V, Vspace> > 0
+        =>:
+            $operator_trace_linearity_statement(s, scalars, V, Vspace)
+
+# Result 8.57. Every commutator has trace zero by 8.56, whereas the identity
+# has trace dim V, which is nonzero in positive dimension.
+axiom identity_operator_is_not_a_commutator:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, S, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        \chap2c::dimension<s, scalars, V, Vspace> > 0
+        =>:
+            \chap7f::linear_map_difference<s, scalars, V, V, Vspace, Vspace>(@Compose(S, T), @Compose(T, S)) != \chap3a::identity_linear_map<s, scalars, V, Vspace>

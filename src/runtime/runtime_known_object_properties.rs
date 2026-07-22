@@ -118,6 +118,7 @@ impl Runtime {
         let key = match fn_obj.head.as_ref() {
             FnObjHead::Identifier(i) => i.to_string(),
             FnObjHead::IdentifierWithMod(i) => i.to_string(),
+            FnObjHead::InstantiatedTemplateObj(i) => i.to_string(),
             _ => return Ok(None),
         };
         let Some((fn_set_body, equal_to_expr, _)) =
@@ -182,6 +183,17 @@ impl Runtime {
         let key = obj.to_string();
         if let Some(info) = self.get_known_fn_info_for_key_from_current_envs(&key) {
             return Some(info.clone());
+        }
+
+        for module_name in self.obj_referenced_module_names(obj) {
+            if self.is_current_parse_module(&module_name) {
+                continue;
+            }
+            for env in self.imported_module_environments(&module_name) {
+                if let Some(info) = env.known_objs_in_fn_sets.get(&key) {
+                    return Some(info.clone());
+                }
+            }
         }
 
         if let Some((module_name, local_name)) = module_qualified_obj_name(obj) {
@@ -759,9 +771,6 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Mul(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Div(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Mod(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
-        Obj::IntegerQuotient(x) => {
-            collect_module_names_from_two(&x.dividend, &x.divisor, module_names)
-        }
         Obj::Pow(x) => collect_module_names_from_two(&x.base, &x.exponent, module_names),
         Obj::Log(x) => collect_module_names_from_two(&x.base, &x.arg, module_names),
         Obj::Union(x) => collect_module_names_from_two(&x.left, &x.right, module_names),

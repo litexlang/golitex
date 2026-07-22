@@ -158,33 +158,6 @@ impl Runtime {
         Ok(())
     }
 
-    pub(in crate::verify) fn verify_integer_quotient_well_defined(
-        &mut self,
-        quotient: &IntegerQuotient,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&quotient.dividend, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&quotient.divisor, verify_state)?;
-        self.require_obj_in_z(&quotient.dividend, verify_state)?;
-
-        let divisor_in_n_pos: AtomicFact = InFact::new(
-            (*quotient.divisor).clone(),
-            StandardSet::NPos.into(),
-            default_line_file(),
-        )
-        .into();
-        let divisor_result = self.verify_atomic_fact(&divisor_in_n_pos, verify_state)?;
-        if divisor_result.is_unknown() {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(format!(
-                    "integer_quotient: divisor `{}` must be in N_pos",
-                    quotient.divisor
-                )),
-            )));
-        }
-        Ok(())
-    }
-
     pub(in crate::verify) fn verify_abs_well_defined(
         &mut self,
         abs: &Abs,

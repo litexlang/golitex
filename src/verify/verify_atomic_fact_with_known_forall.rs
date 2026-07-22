@@ -18,6 +18,16 @@ impl Runtime {
             return Ok((fact_verified).into());
         }
 
+        if let Some(resolved_fact) = self.resolved_atomic_fact_for_lookup(atomic_fact) {
+            if let Some(mut fact_verified) =
+                self.try_verify_with_known_forall_facts_in_envs(&resolved_fact, verify_state)?
+            {
+                fact_verified.stmt = atomic_fact.clone().into();
+                known_forall_profile::record_success();
+                return Ok(fact_verified.into());
+            }
+        }
+
         if let AtomicFact::EqualFact(equal_fact) = atomic_fact {
             let fact_with_reversed_args = EqualFact::new(
                 equal_fact.right.clone(),
@@ -96,6 +106,7 @@ impl Runtime {
                 let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
                     &atomic_fact_in_known_forall,
                     given_fact,
+                    &current_known_forall.1.params_def,
                 )?;
                 if let Some(arg_map) = match_result {
                     known_forall_profile::record_arg_match();
@@ -162,7 +173,7 @@ impl Runtime {
             let matching_atomic_fact = self.inst_atomic_fact(
                 atomic_fact,
                 &module_local_identifiers,
-                ParamObjType::Forall,
+                ParamObjType::Identifier,
                 None,
             )?;
             let candidates = self
@@ -248,6 +259,7 @@ impl Runtime {
         let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
             &atomic_fact_in_known_forall_fact,
             matching_atomic_fact,
+            &forall_rc.params_def,
         )?;
         if let Some(arg_map) = match_result {
             known_forall_profile::record_arg_match();
@@ -448,7 +460,7 @@ impl Runtime {
         let matching_atomic_fact = self.inst_atomic_fact(
             atomic_fact,
             &module_local_identifiers,
-            ParamObjType::Forall,
+            ParamObjType::Identifier,
             None,
         )?;
         let candidates = self
@@ -560,6 +572,7 @@ impl Runtime {
                         .match_atomic_fact_args_against_known_forall_ordered_args(
                             dom_atomic_fact,
                             &candidate,
+                            &known_forall.params_def,
                         )?
                     else {
                         continue;
@@ -625,6 +638,31 @@ impl Runtime {
         &mut self,
         atomic_fact_in_known_forall: &AtomicFact,
         given_fact: &AtomicFact,
+        known_forall_params: &ParamDefWithType,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let previous_bindings = std::mem::replace(
+            &mut self.active_arg_match_bindings,
+            arg_match_bindings_for_params(known_forall_params, None),
+        );
+        let result = self.match_atomic_fact_args_in_active_binding_scope(
+            atomic_fact_in_known_forall,
+            given_fact,
+        );
+        self.active_arg_match_bindings = previous_bindings;
+        let Some(raw_arg_map) = result? else {
+            return Ok(None);
+        };
+        Ok(Some(arg_match_map_for_params(
+            &raw_arg_map,
+            known_forall_params,
+            ParamObjType::Forall,
+        )))
+    }
+
+    fn match_atomic_fact_args_in_active_binding_scope(
+        &mut self,
+        atomic_fact_in_known_forall: &AtomicFact,
+        given_fact: &AtomicFact,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         if let Some(match_result) =
             self.match_in_fact_standard_set_target(atomic_fact_in_known_forall, given_fact)?
@@ -634,10 +672,8 @@ impl Runtime {
 
         let atomic_fact_args_in_known_forall = atomic_fact_in_known_forall.args_ref();
         let given_args = given_fact.args_ref();
-        let forward = self.match_args_in_fact_in_known_forall_fact_with_given_args(
-            &atomic_fact_args_in_known_forall,
-            &given_args,
-        )?;
+        let forward = self
+            .match_args_in_active_binding_scope(&atomic_fact_args_in_known_forall, &given_args)?;
         return Ok(forward);
     }
 
@@ -682,7 +718,32 @@ impl Runtime {
         Ok(Some(None))
     }
 
-    pub fn match_args_in_fact_in_known_forall_fact_with_given_args(
+    pub(crate) fn match_args_in_fact_with_known_forall_bindings(
+        &mut self,
+        fact_args_in_known_forall: &[&Obj],
+        given_fact_args: &[&Obj],
+        known_forall_params: &ParamDefWithType,
+        known_exist_params: Option<&ParamDefWithType>,
+    ) -> Result<Option<(HashMap<String, Obj>, HashMap<String, Obj>)>, RuntimeError> {
+        let previous_bindings = std::mem::replace(
+            &mut self.active_arg_match_bindings,
+            arg_match_bindings_for_params(known_forall_params, known_exist_params),
+        );
+        let result =
+            self.match_args_in_active_binding_scope(fact_args_in_known_forall, given_fact_args);
+        self.active_arg_match_bindings = previous_bindings;
+        let Some(raw_arg_map) = result? else {
+            return Ok(None);
+        };
+        let forall_arg_map =
+            arg_match_map_for_params(&raw_arg_map, known_forall_params, ParamObjType::Forall);
+        let exist_arg_map = known_exist_params
+            .map(|params| arg_match_map_for_params(&raw_arg_map, params, ParamObjType::Exist))
+            .unwrap_or_default();
+        Ok(Some((forall_arg_map, exist_arg_map)))
+    }
+
+    fn match_args_in_active_binding_scope(
         &mut self,
         fact_args_in_known_forall: &[&Obj],
         given_fact_args: &[&Obj],
@@ -754,9 +815,6 @@ impl Runtime {
             Obj::Mul(ref a) => self.match_arg_when_left_is_mul(&a.left, &a.right, given_arg),
             Obj::Div(ref a) => self.match_arg_when_left_is_div(&a.left, &a.right, given_arg),
             Obj::Mod(ref a) => self.match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
-            Obj::IntegerQuotient(ref a) => {
-                self.match_arg_when_left_is_integer_quotient(&a.dividend, &a.divisor, given_arg)
-            }
             Obj::Pow(ref a) => self.match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
             Obj::Abs(ref a) => self.match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
             Obj::Sqrt(ref a) => self.match_arg_when_left_is_sqrt(a.arg.as_ref(), given_arg),
@@ -933,9 +991,14 @@ impl Runtime {
                 Ok(Some(HashMap::new()))
             }
             Obj::Atom(AtomObj::Exist(ref p)) => match given_arg {
-                Obj::Atom(AtomObj::Exist(_)) => {
+                Obj::Atom(AtomObj::Exist(_))
+                    if self.arg_match_binding_is_active(ParamObjType::Exist, &p.name) =>
+                {
                     let mut m = HashMap::new();
-                    m.insert(p.name.clone(), given_arg.clone());
+                    m.insert(
+                        arg_match_binding_key(ParamObjType::Exist, &p.name),
+                        given_arg.clone(),
+                    );
                     Ok(Some(m))
                 }
                 _ => {
@@ -976,13 +1039,33 @@ impl Runtime {
                 Ok(Some(HashMap::new()))
             }
             Obj::Atom(AtomObj::TupleIndex(ref p)) => {
+                if !self.arg_match_binding_is_active(ParamObjType::TupleIndex, &p.name) {
+                    return if p.to_string() == given_arg.to_string() {
+                        Ok(Some(HashMap::new()))
+                    } else {
+                        Ok(None)
+                    };
+                }
                 let mut map = HashMap::new();
-                map.insert(p.name.clone(), given_arg.clone());
+                map.insert(
+                    arg_match_binding_key(ParamObjType::TupleIndex, &p.name),
+                    given_arg.clone(),
+                );
                 Ok(Some(map))
             }
             Obj::Atom(AtomObj::CartIndex(ref p)) => {
+                if !self.arg_match_binding_is_active(ParamObjType::CartIndex, &p.name) {
+                    return if p.to_string() == given_arg.to_string() {
+                        Ok(Some(HashMap::new()))
+                    } else {
+                        Ok(None)
+                    };
+                }
                 let mut map = HashMap::new();
-                map.insert(p.name.clone(), given_arg.clone());
+                map.insert(
+                    arg_match_binding_key(ParamObjType::CartIndex, &p.name),
+                    given_arg.clone(),
+                );
                 Ok(Some(map))
             }
         }
@@ -993,9 +1076,25 @@ impl Runtime {
         id_known: &ForallFreeParamObj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        if !self.arg_match_binding_is_active(ParamObjType::Forall, &id_known.name) {
+            return if id_known.to_string() == given_arg.to_string() {
+                Ok(Some(HashMap::new()))
+            } else {
+                Ok(None)
+            };
+        }
         let mut map = HashMap::new();
-        map.insert(id_known.name.clone(), given_arg.clone());
+        map.insert(
+            arg_match_binding_key(ParamObjType::Forall, &id_known.name),
+            given_arg.clone(),
+        );
         Ok(Some(map))
+    }
+
+    fn arg_match_binding_is_active(&self, kind: ParamObjType, name: &str) -> bool {
+        self.active_arg_match_bindings
+            .iter()
+            .any(|(active_kind, active_name)| *active_kind == kind && active_name == name)
     }
 
     fn match_arg_when_left_is_identifier_with_mod(
@@ -1305,20 +1404,6 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_integer_quotient(
-        &mut self,
-        dividend: &Obj,
-        divisor: &Obj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::IntegerQuotient(given) => {
-                self.match_arg_binary_then_merge(dividend, divisor, &given.dividend, &given.divisor)
-            }
-            _ => Ok(None),
-        }
-    }
-
     fn match_arg_when_left_is_pow(
         &mut self,
         left_left: &Obj,
@@ -1622,7 +1707,7 @@ impl Runtime {
 
         let left_args = left.get_args_from_fact_ref();
         let given_args = given.get_args_from_fact_ref();
-        self.match_args_in_fact_in_known_forall_fact_with_given_args(&left_args, &given_args)
+        self.match_args_in_active_binding_scope(&left_args, &given_args)
     }
 
     fn match_arg_exist_body_fact_in_known_forall(
@@ -1635,7 +1720,7 @@ impl Runtime {
         }
         let left_args = left.get_args_from_fact_ref();
         let given_args = given.get_args_from_fact_ref();
-        self.match_args_in_fact_in_known_forall_fact_with_given_args(&left_args, &given_args)
+        self.match_args_in_active_binding_scope(&left_args, &given_args)
     }
 
     fn match_arg_when_left_is_set_builder(
@@ -1687,7 +1772,7 @@ impl Runtime {
         let Obj::GeneralCart(given) = given_arg else {
             return Ok(None);
         };
-        self.match_args_in_fact_in_known_forall_fact_with_given_args(
+        self.match_args_in_active_binding_scope(
             &[
                 left.index_set.as_ref(),
                 left.family_set.as_ref(),
@@ -1939,43 +2024,7 @@ impl Runtime {
                 obj_for_bound_param_in_scope(alpha_name.clone(), ParamObjType::FnSet),
             );
         }
-
-        let mut params_def_with_set =
-            Vec::with_capacity(anonymous_fn.body.params_def_with_set.len());
-        let mut next_alpha_name = 0;
-        for group in anonymous_fn.body.params_def_with_set.iter() {
-            let group_len = group.params.len();
-            let params = alpha_names[next_alpha_name..next_alpha_name + group_len].to_vec();
-            next_alpha_name += group_len;
-            let param_set =
-                self.inst_obj(group.set_obj(), &param_to_alpha_name, ParamObjType::FnSet)?;
-            params_def_with_set.push(ParamGroupWithSet::new(params, param_set));
-        }
-
-        let mut dom_facts = Vec::with_capacity(anonymous_fn.body.dom_facts.len());
-        for dom_fact in anonymous_fn.body.dom_facts.iter() {
-            dom_facts.push(self.inst_or_and_chain_atomic_fact(
-                dom_fact,
-                &param_to_alpha_name,
-                ParamObjType::FnSet,
-                None,
-            )?);
-        }
-
-        AnonymousFn::new(
-            params_def_with_set,
-            dom_facts,
-            self.inst_obj(
-                anonymous_fn.body.ret_set.as_ref(),
-                &param_to_alpha_name,
-                ParamObjType::FnSet,
-            )?,
-            self.inst_obj(
-                anonymous_fn.equal_to.as_ref(),
-                &param_to_alpha_name,
-                ParamObjType::FnSet,
-            )?,
-        )
+        self.alpha_rename_anonymous_fn(anonymous_fn, &param_to_alpha_name)
     }
 
     fn match_arg_in_anonymous_fn_body_with_given_arg(
@@ -2038,14 +2087,6 @@ impl Runtime {
                 given.right.as_ref(),
                 anonymous_fn_body,
             ),
-            (Obj::IntegerQuotient(left), Obj::IntegerQuotient(given)) => self
-                .match_binary_in_anonymous_fn_body(
-                    left.dividend.as_ref(),
-                    left.divisor.as_ref(),
-                    given.dividend.as_ref(),
-                    given.divisor.as_ref(),
-                    anonymous_fn_body,
-                ),
             (Obj::Pow(left), Obj::Pow(given)) => self.match_binary_in_anonymous_fn_body(
                 left.base.as_ref(),
                 left.exponent.as_ref(),
@@ -2246,6 +2287,9 @@ impl Runtime {
         let FnObjHead::Forall(forall_param) = fn_obj.head.as_ref() else {
             return Ok(None);
         };
+        if !self.arg_match_binding_is_active(ParamObjType::Forall, &forall_param.name) {
+            return Ok(None);
+        }
         if !Self::fn_obj_applies_to_exact_anonymous_fn_params(fn_obj, anonymous_fn_body) {
             return Ok(None);
         }
@@ -2257,7 +2301,10 @@ impl Runtime {
             given_arg.clone(),
         )?;
         let mut map = HashMap::new();
-        map.insert(forall_param.name.clone(), anonymous_fn.into());
+        map.insert(
+            arg_match_binding_key(ParamObjType::Forall, &forall_param.name),
+            anonymous_fn.into(),
+        );
         Ok(Some(map))
     }
 
@@ -2947,6 +2994,46 @@ impl Runtime {
         map.insert(given_arg.to_string(), given_arg.clone());
         Ok(Some(map))
     }
+}
+
+fn arg_match_bindings_for_params(
+    known_forall_params: &ParamDefWithType,
+    known_exist_params: Option<&ParamDefWithType>,
+) -> Vec<(ParamObjType, String)> {
+    let mut bindings = known_forall_params
+        .collect_param_names()
+        .into_iter()
+        .map(|name| (ParamObjType::Forall, name))
+        .collect::<Vec<_>>();
+    if let Some(exist_params) = known_exist_params {
+        bindings.extend(
+            exist_params
+                .collect_param_names()
+                .into_iter()
+                .map(|name| (ParamObjType::Exist, name)),
+        );
+    }
+    bindings
+}
+
+fn arg_match_map_for_params(
+    raw_arg_map: &HashMap<String, Obj>,
+    params: &ParamDefWithType,
+    kind: ParamObjType,
+) -> HashMap<String, Obj> {
+    let mut result = HashMap::new();
+    for name in params.collect_param_names() {
+        let key = arg_match_binding_key(kind, &name);
+        if let Some(obj) = raw_arg_map.get(&key) {
+            result.insert(name, obj.clone());
+        }
+    }
+    result
+}
+
+fn arg_match_binding_key(kind: ParamObjType, name: &str) -> String {
+    // Preserve binder kind in the raw merge key, matching the parser's tagged identity.
+    obj_for_bound_param_in_scope(name.to_string(), kind).to_string()
 }
 
 fn atomic_fact_in_forall_lookup_arg_shape_keys(

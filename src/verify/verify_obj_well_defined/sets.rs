@@ -627,10 +627,13 @@ impl Runtime {
 
         self.verify_obj_well_defined_and_store_cache(&x.source_set, verify_state)?;
         let uniqueness_fact = self.replacement_uniqueness_fact(x)?;
-        if self
-            .verify_fact_from_cache_using_display_string(&uniqueness_fact.clone().into())
-            .is_none()
-        {
+        let uniqueness_as_fact: Fact = uniqueness_fact.clone().into();
+        let exact_cached = self
+            .verify_fact_from_cache_using_display_string(&uniqueness_as_fact)
+            .is_some();
+        let alpha_normalized_key = self.alpha_normalized_forall_cache_key(&uniqueness_fact)?;
+        let (alpha_cached, _) = self.cache_known_facts_contains(&alpha_normalized_key);
+        if !exact_cached && !alpha_cached {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "replacement({}, {}) needs uniqueness of `{}` over `{}`: {}",
@@ -664,9 +667,9 @@ impl Runtime {
         &self,
         x: &Replacement,
     ) -> Result<ForallFact, RuntimeError> {
-        let x_name = "x".to_string();
-        let y_name = "y".to_string();
-        let y2_name = "y2".to_string();
+        let x_name = self.generate_internal_binder_name();
+        let y_name = self.generate_internal_binder_name();
+        let y2_name = self.generate_internal_binder_name();
         let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
         let y_obj = obj_for_bound_param_in_scope(y_name.clone(), ParamObjType::Forall);
         let y2_obj = obj_for_bound_param_in_scope(y2_name.clone(), ParamObjType::Forall);

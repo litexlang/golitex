@@ -1,0 +1,247 @@
+# Linear Algebra Done Right, fourth edition — Section 8A.
+# Generalized Eigenvectors and Nilpotent Operators.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Space "&chap1b::VectorSpace<s, scalars, V>{Vspace}"
+macro Operators "\chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>"
+macro Power "\chap5a::operator_power<s, scalars, V, Vspace>"
+macro Shift "\chap5a::operator_minus_scalar_identity<s, scalars, V, Vspace>"
+macro ZeroOperator "\chap3a::zero_linear_map<s, scalars, V, V, Vspace, Vspace>"
+
+# The null space and range of a power are actual set-valued functions used by
+# every stabilization and generalized-eigenspace statement in this chapter.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn power_null_space(T @Operators, k N) power_set(V) = \chap3b::null_space<s, scalars, V, V, Vspace, Vspace>(@Power(T, k))
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn power_range(T @Operators, k N) power_set(V) = \chap3b::range_of<V, V>(@Power(T, k))
+
+prop increasing_null_space_sequence_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    \power_null_space<s, scalars, V, Vspace>(T, 0) = {@Space.zero}
+    forall k N:
+        \power_null_space<s, scalars, V, Vspace>(T, k) $subset \power_null_space<s, scalars, V, Vspace>(T, k + 1)
+
+# Result 8.1. A vector killed by T^k is killed after one more application of
+# T; T^0=I gives the singleton zero null space.
+axiom sequence_of_increasing_null_spaces:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $increasing_null_space_sequence_statement(s, scalars, V, Vspace, T)
+
+prop null_space_equality_propagates_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N):
+    forall k N:
+        m <= k
+        =>:
+            \power_null_space<s, scalars, V, Vspace>(T, k) = \power_null_space<s, scalars, V, Vspace>(T, m)
+
+# Result 8.2. For v killed by T^(m+k+1), the vector T^k v lies in null
+# T^(m+1)=null T^m, hence v is already killed by T^(m+k).
+axiom equality_in_sequence_of_null_spaces:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N:
+        \power_null_space<s, scalars, V, Vspace>(T, m) = \power_null_space<s, scalars, V, Vspace>(T, m + 1)
+        =>:
+            $null_space_equality_propagates_statement(s, scalars, V, Vspace, T, m)
+
+prop null_spaces_stabilize_at_dimension_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    forall k N:
+        \chap2c::dimension<s, scalars, V, Vspace> <= k
+        =>:
+            \power_null_space<s, scalars, V, Vspace>(T, k) = \power_null_space<s, scalars, V, Vspace>(T, \chap2c::dimension<s, scalars, V, Vspace>)
+
+# Result 8.3. If growth continued past dim V, each strict inclusion would
+# raise dimension and produce a subspace larger than V; then apply Result 8.2.
+axiom null_spaces_stop_growing:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $null_spaces_stabilize_at_dimension_statement(s, scalars, V, Vspace, T)
+
+prop power_null_range_direct_sum_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    $chap1c::is_direct_sum_pair(s, scalars, V, Vspace, \power_null_space<s, scalars, V, Vspace>(T, \chap2c::dimension<s, scalars, V, Vspace>), \power_range<s, scalars, V, Vspace>(T, \chap2c::dimension<s, scalars, V, Vspace>))
+    \chap1c::subspace_sum_pair<s, scalars, V, Vspace>(\power_null_space<s, scalars, V, Vspace>(T, \chap2c::dimension<s, scalars, V, Vspace>), \power_range<s, scalars, V, Vspace>(T, \chap2c::dimension<s, scalars, V, Vspace>)) = V
+
+# Result 8.4. Stabilization makes the null/range intersection zero; rank-nullity
+# then makes their direct sum have the full dimension of V.
+axiom domain_is_direct_sum_of_stable_null_space_and_range:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $power_null_range_direct_sum_statement(s, scalars, V, Vspace, T)
+
+# Example 8.6. The displayed operator has T^3(z1,z2,z3)=(0,0,125z3), so its
+# stable null space is the first two axes and its stable range is the third.
+sketch:
+    forall z1, z2, z3 R:
+        [0, 0, 125 * z3] = [0, 0, 5^3 * z3]
+    have null_basis_1 finite_seq(R, 3) = [1, 0, 0]
+    have null_basis_2 finite_seq(R, 3) = [0, 1, 0]
+    have range_basis finite_seq(R, 3) = [0, 0, 1]
+    null_basis_1(3) = null_basis_2(3) = 0
+    range_basis(1) = range_basis(2) = 0
+
+# Definition 8.8. A generalized eigenvector is nonzero and is killed by some
+# positive power of T-lambda I; lambda is explicitly required to be an eigenvalue.
+prop is_generalized_eigenvector(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s, v V):
+    $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, lambda)
+    v != @Space.zero
+    exist k N_pos st {@Power(@Shift(T, lambda), k)(v) = @Space.zero}
+
+prop is_generalized_eigenvector_at_dimension(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s, v V):
+    $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, lambda)
+    v != @Space.zero
+    @Power(@Shift(T, lambda), \chap2c::dimension<s, scalars, V, Vspace>)(v) = @Space.zero
+
+prop generalized_eigenvector_dimension_criterion_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s, v V):
+    forall:
+        =>:
+            $is_generalized_eigenvector(s, scalars, V, Vspace, T, lambda, v)
+        <=>:
+            $is_generalized_eigenvector_at_dimension(s, scalars, V, Vspace, T, lambda, v)
+
+axiom generalized_eigenvector_dimension_criterion:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s, v V:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $generalized_eigenvector_dimension_criterion_statement(s, scalars, V, Vspace, T, lambda, v)
+
+prop is_generalized_eigenvector_basis(V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>, n N_pos, basis &chap1a::FiniteList<V, n>):
+    $chap2b::is_basis(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, n, basis)
+    forall k N_pos:
+        k <= n
+        =>:
+            exist lambda &chap1a::Complex st {$is_generalized_eigenvector(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T, lambda, &chap1a::FiniteList<V, n>{basis}.entries(k))}
+
+# Result 8.9. Induct on dimension: split at null/range of a stable shifted
+# power, use the induction hypothesis on the invariant range, and adjoin bases.
+axiom basis_of_generalized_eigenvectors:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
+        \chap2c::dimension<&chap1a::Complex, chap1a::complex_scalars, V, Vspace> > 0
+        =>:
+            exist n N_pos, basis &chap1a::FiniteList<V, n> st {$is_generalized_eigenvector_basis(V, Vspace, T, n, basis)}
+
+# Example 8.10. The standard basis vectors are generalized eigenvectors for
+# the displayed operator: the first two correspond to 0 and the third to 5.
+sketch:
+    have e1 finite_seq(R, 3) = [1, 0, 0]
+    have e2 finite_seq(R, 3) = [0, 1, 0]
+    have e3 finite_seq(R, 3) = [0, 0, 1]
+    [0, 0, 125 * e1(3)] = [0, 0, 0]
+    [0, 0, 125 * e2(3)] = [0, 0, 0]
+    e3(3) = 1
+
+# Result 8.11. Choose the least alpha-exponent, expand the lambda-shift by the
+# binomial theorem, and apply one fewer alpha-shift; its nonzero value forces
+# (alpha-lambda)^n=0.
+axiom generalized_eigenvector_has_unique_eigenvalue:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, v V, alpha, lambda s:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $is_generalized_eigenvector(s, scalars, V, Vspace, T, alpha, v)
+        $is_generalized_eigenvector(s, scalars, V, Vspace, T, lambda, v)
+        =>:
+            alpha = lambda
+
+prop is_distinct_generalized_eigenvector_list(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, vectors &chap1a::FiniteList<V, n>, eigenvalues &chap1a::FiniteList<s, n>):
+    $chap5a::has_distinct_entries(s, n, eigenvalues)
+    forall k N_pos:
+        k <= n
+        =>:
+            $is_generalized_eigenvector(s, scalars, V, Vspace, T, &chap1a::FiniteList<s, n>{eigenvalues}.entries(k), &chap1a::FiniteList<V, n>{vectors}.entries(k))
+
+# Result 8.12. Apply the last shift to a shortest dependent list; Result 8.11
+# keeps every earlier transformed vector nonzero with its original eigenvalue,
+# contradicting minimality.
+axiom generalized_eigenvectors_for_distinct_eigenvalues_are_independent:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, n N_pos, vectors &chap1a::FiniteList<V, n>, eigenvalues &chap1a::FiniteList<s, n>:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $is_distinct_generalized_eigenvector_list(s, scalars, V, Vspace, T, n, vectors, eigenvalues)
+        =>:
+            $chap2a::is_linearly_independent(s, scalars, V, Vspace, n, vectors)
+
+# Definition 8.14. Nilpotence is the existence of a positive zero power.
+prop is_nilpotent(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    exist k N_pos st {@Power(T, k) = @ZeroOperator}
+
+# Example 8.15. The first displayed map squares to zero; the source's second
+# matrix cubes to zero.
+sketch:
+    forall z1, z2, z3, z4 R:
+        [0, 0, ([0, 0, z1, z2])(1), ([0, 0, z1, z2])(2)] = [0, 0, 0, 0]
+    have A matrix(R, 3, 3) = [[-3, 9, 0], [-7, 9, 6], [4, 0, -6]]
+    A(1, 1) + A(2, 2) + A(3, 3) = 0
+
+# Result 8.16. A zero power makes its null space all of V; Results 8.1 and 8.3
+# move that equality down to the dimension power.
+axiom nilpotent_power_at_dimension_is_zero:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        $is_nilpotent(s, scalars, V, Vspace, T)
+        =>:
+            @Power(T, \chap2c::dimension<s, scalars, V, Vspace>) = @ZeroOperator
+
+prop nilpotent_eigenvalue_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, @Scalars.zero)
+    forall lambda s:
+        $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, lambda)
+        =>:
+            lambda = @Scalars.zero
+
+# Result 8.17. A nilpotent eigenpair gives lambda^m v=0; conversely, over C,
+# the minimal polynomial has only zero as a root and is therefore a power of z.
+axiom eigenvalues_of_nilpotent_operator:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        \chap2c::dimension<s, scalars, V, Vspace> > 0
+        $is_nilpotent(s, scalars, V, Vspace, T)
+        =>:
+            $nilpotent_eigenvalue_statement(s, scalars, V, Vspace, T)
+
+axiom complex_operator_with_only_zero_eigenvalue_is_nilpotent:
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
+        \chap2c::dimension<&chap1a::Complex, chap1a::complex_scalars, V, Vspace> > 0
+        forall lambda &chap1a::Complex:
+            $chap5a::is_eigenvalue(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T, lambda)
+            =>:
+                lambda = chap1a::complex_zero
+        =>:
+            $is_nilpotent(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T)
+
+prop is_coordinate_power_polynomial(s nonempty_set, scalars @ScalarSystem, p \chap2a::polynomial_space<s, scalars>, m N_pos):
+    forall z s:
+        p(z) = z^m
+
+prop minimal_polynomial_is_coordinate_power(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    exist m N_pos st {$is_coordinate_power_polynomial(s, scalars, \chap5b::minimal_polynomial<s, scalars, V, Vspace>(T), m)}
+
+prop is_strictly_upper_triangular_matrix(s nonempty_set, scalars @ScalarSystem, n N_pos, A matrix(s, n, n)):
+    forall row, column N_pos:
+        row <= n
+        column <= n
+        column <= row
+        =>:
+            A(row, column) = @Scalars.zero
+
+prop has_strictly_upper_triangular_matrix(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap2b::is_basis(s, scalars, V, Vspace, n, basis), $is_strictly_upper_triangular_matrix(s, scalars, n, \chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis, T))}
+
+# Result 8.18. Nilpotence makes the minimal polynomial divide z^n; a coordinate
+# power has only zero roots and triangularizes with zero diagonal; a strictly
+# upper-triangular n-by-n matrix has nth power zero.
+prop nilpotent_operator_characterizations_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators):
+    forall:
+        =>:
+            $is_nilpotent(s, scalars, V, Vspace, T)
+        <=>:
+            $minimal_polynomial_is_coordinate_power(s, scalars, V, Vspace, T)
+    forall:
+        =>:
+            $minimal_polynomial_is_coordinate_power(s, scalars, V, Vspace, T)
+        <=>:
+            $has_strictly_upper_triangular_matrix(s, scalars, V, Vspace, T)
+
+axiom minimal_polynomial_and_upper_triangular_matrix_of_nilpotent_operator:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        =>:
+            $nilpotent_operator_characterizations_statement(s, scalars, V, Vspace, T)

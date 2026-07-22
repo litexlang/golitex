@@ -311,14 +311,15 @@ impl Runtime {
         &mut self,
         stmt: &ByFiniteSetInducStmt,
     ) -> Result<Fact, RuntimeError> {
-        let param = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Forall);
-        let param_to_forall = HashMap::from([(stmt.param.clone(), param.clone())]);
+        let (forall_names, param_to_forall) =
+            self.fresh_binder_retag_plan(&[stmt.param.clone()], ParamObjType::Forall);
+        let param = param_to_forall[&stmt.param].clone();
         let mut then_facts = Vec::with_capacity(stmt.to_prove.len());
         for fact in stmt.to_prove.iter() {
             then_facts.push(self.inst_exist_or_and_chain_atomic_fact(
                 fact,
                 &param_to_forall,
-                ParamObjType::Forall,
+                ParamObjType::BinderRetag(BinderRetagSource::Induc),
                 None,
             )?);
         }
@@ -330,7 +331,7 @@ impl Runtime {
         }
         Ok(ForallFact::new(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![stmt.param.clone()],
+                vec![forall_names[0].clone()],
                 ParamType::FiniteSet(FiniteSet::new()),
             )]),
             dom_facts,

@@ -1,8 +1,35 @@
 use crate::prelude::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 impl Runtime {
+    pub(crate) fn generate_internal_binder_name(&self) -> String {
+        let id = self.next_internal_binder_id.get();
+        self.next_internal_binder_id.set(
+            id.checked_add(1)
+                .expect("internal binder identity counter exhausted"),
+        );
+        format!("#binder_{}", id)
+    }
+
+    pub(crate) fn fresh_binder_retag_plan(
+        &self,
+        source_names: &[String],
+        target_kind: ParamObjType,
+    ) -> (Vec<String>, HashMap<String, Obj>) {
+        let mut target_names = Vec::with_capacity(source_names.len());
+        let mut source_to_target = HashMap::with_capacity(source_names.len());
+        for source_name in source_names {
+            let target_name = self.generate_internal_binder_name();
+            source_to_target.insert(
+                source_name.clone(),
+                obj_for_bound_param_in_scope(target_name.clone(), target_kind),
+            );
+            target_names.push(target_name);
+        }
+        (target_names, source_to_target)
+    }
+
     fn generated_name_is_available_with_reserved(
         &self,
         candidate_name: &str,
@@ -66,17 +93,28 @@ impl Runtime {
     }
 
     pub fn generate_random_unused_names(&self, count: usize) -> Vec<String> {
-        let mut reserved_names: HashSet<String> = HashSet::with_capacity(count);
-        let mut generated_names: Vec<String> = Vec::with_capacity(count);
-        for _ in 0..count {
-            let generated_name = self.generate_one_unused_name_with_reserved(&reserved_names);
-            reserved_names.insert(generated_name.clone());
-            generated_names.push(generated_name);
-        }
-        generated_names
+        (0..count)
+            .map(|_| self.generate_internal_binder_name())
+            .collect()
     }
 
     pub fn generate_random_unused_name(&self) -> String {
-        self.generate_one_unused_name_with_reserved(&HashSet::new())
+        self.generate_internal_binder_name()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn generated_kernel_binders_are_unique_and_not_user_names() {
+        let runtime = Runtime::new();
+        let first = runtime.generate_random_unused_name();
+        let second = runtime.generate_random_unused_name();
+
+        assert_ne!(first, second);
+        assert!(first.starts_with("#binder_"));
+        assert!(is_valid_litex_name(&first).is_err());
     }
 }

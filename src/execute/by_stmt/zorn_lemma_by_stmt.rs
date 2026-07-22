@@ -59,6 +59,7 @@ impl Runtime {
             }
 
             let obligations = zorn_lemma_obligations(
+                rt,
                 stmt.set.clone(),
                 stmt.prop_name.clone(),
                 stmt.line_file.clone(),
@@ -92,6 +93,7 @@ impl Runtime {
         // and chain upper-bound obligations on S, infer a maximal element of S.
         // Example: by zorn_lemma: set S, prop leq: stores exist m S st {forall! x S: $leq(m, x) => {x = m}}.
         let maximal_fact = zorn_lemma_maximal_fact(
+            self,
             stmt.set.clone(),
             stmt.prop_name.clone(),
             stmt.line_file.clone(),
@@ -154,6 +156,7 @@ impl Runtime {
         }
 
         let maximal_fact = zorn_lemma_maximal_fact(
+            self,
             stmt.set.clone(),
             stmt.prop_name.clone(),
             stmt.line_file.clone(),
@@ -167,6 +170,7 @@ impl Runtime {
 }
 
 fn zorn_lemma_obligations(
+    runtime: &Runtime,
     set: Obj,
     prop_name: AtomicName,
     line_file: LineFile,
@@ -178,29 +182,30 @@ fn zorn_lemma_obligations(
         ),
         (
             "reflexive".to_string(),
-            zorn_reflexive_fact(set.clone(), prop_name.clone(), line_file.clone())?,
+            zorn_reflexive_fact(runtime, set.clone(), prop_name.clone(), line_file.clone())?,
         ),
         (
             "transitive".to_string(),
-            zorn_transitive_fact(set.clone(), prop_name.clone(), line_file.clone())?,
+            zorn_transitive_fact(runtime, set.clone(), prop_name.clone(), line_file.clone())?,
         ),
         (
             "antisymmetric".to_string(),
-            zorn_antisymmetric_fact(set.clone(), prop_name.clone(), line_file.clone())?,
+            zorn_antisymmetric_fact(runtime, set.clone(), prop_name.clone(), line_file.clone())?,
         ),
         (
             "chain_upper_bound".to_string(),
-            zorn_chain_upper_bound_fact(set, prop_name, line_file)?,
+            zorn_chain_upper_bound_fact(runtime, set, prop_name, line_file)?,
         ),
     ])
 }
 
 fn zorn_reflexive_fact(
+    runtime: &Runtime,
     set: Obj,
     prop_name: AtomicName,
     line_file: LineFile,
 ) -> Result<Fact, RuntimeError> {
-    let x_name = "x".to_string();
+    let x_name = runtime.generate_internal_binder_name();
     let x = forall_obj(&x_name);
     Ok(ForallFact::new(
         ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -215,13 +220,14 @@ fn zorn_reflexive_fact(
 }
 
 fn zorn_transitive_fact(
+    runtime: &Runtime,
     set: Obj,
     prop_name: AtomicName,
     line_file: LineFile,
 ) -> Result<Fact, RuntimeError> {
-    let x_name = "x".to_string();
-    let y_name = "y".to_string();
-    let z_name = "z".to_string();
+    let x_name = runtime.generate_internal_binder_name();
+    let y_name = runtime.generate_internal_binder_name();
+    let z_name = runtime.generate_internal_binder_name();
     let x = forall_obj(&x_name);
     let y = forall_obj(&y_name);
     let z = forall_obj(&z_name);
@@ -246,12 +252,13 @@ fn zorn_transitive_fact(
 }
 
 fn zorn_antisymmetric_fact(
+    runtime: &Runtime,
     set: Obj,
     prop_name: AtomicName,
     line_file: LineFile,
 ) -> Result<Fact, RuntimeError> {
-    let x_name = "x".to_string();
-    let y_name = "y".to_string();
+    let x_name = runtime.generate_internal_binder_name();
+    let y_name = runtime.generate_internal_binder_name();
     let x = forall_obj(&x_name);
     let y = forall_obj(&y_name);
     Ok(ForallFact::new(
@@ -280,15 +287,17 @@ fn zorn_antisymmetric_fact(
 }
 
 fn zorn_chain_upper_bound_fact(
+    runtime: &Runtime,
     set: Obj,
     prop_name: AtomicName,
     line_file: LineFile,
 ) -> Result<Fact, RuntimeError> {
-    let c_name = "C".to_string();
+    let c_name = runtime.generate_internal_binder_name();
     let c = forall_obj(&c_name);
-    let chain_total_fact = zorn_chain_total_fact(c.clone(), prop_name.clone(), line_file.clone())?;
+    let chain_total_fact =
+        zorn_chain_total_fact(runtime, c.clone(), prop_name.clone(), line_file.clone())?;
     let upper_bound_fact =
-        zorn_upper_bound_exist_fact(set.clone(), c, prop_name, line_file.clone())?;
+        zorn_upper_bound_exist_fact(runtime, set.clone(), c, prop_name, line_file.clone())?;
 
     Ok(ForallFact::new(
         ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -303,12 +312,13 @@ fn zorn_chain_upper_bound_fact(
 }
 
 fn zorn_chain_total_fact(
+    runtime: &Runtime,
     chain: Obj,
     prop_name: AtomicName,
     line_file: LineFile,
 ) -> Result<Fact, RuntimeError> {
-    let x_name = "x".to_string();
-    let y_name = "y".to_string();
+    let x_name = runtime.generate_internal_binder_name();
+    let y_name = runtime.generate_internal_binder_name();
     let x = forall_obj(&x_name);
     let y = forall_obj(&y_name);
     let left: AndChainAtomicFact = normal_prop_fact(
@@ -333,14 +343,16 @@ fn zorn_chain_total_fact(
 }
 
 fn zorn_upper_bound_exist_fact(
+    runtime: &Runtime,
     set: Obj,
     chain: Obj,
     prop_name: AtomicName,
     line_file: LineFile,
 ) -> Result<ExistFactEnum, RuntimeError> {
-    let u_name = "u".to_string();
+    let u_name = runtime.generate_internal_binder_name();
     let u = exist_obj(&u_name);
-    let upper_forall = zorn_upper_bound_forall_fact(chain, u, prop_name, line_file.clone())?;
+    let upper_forall =
+        zorn_upper_bound_forall_fact(runtime, chain, u, prop_name, line_file.clone())?;
     let body = ExistFactBody::new(
         ParamDefWithType::new(vec![ParamGroupWithParamType::new(
             vec![u_name],
@@ -353,12 +365,13 @@ fn zorn_upper_bound_exist_fact(
 }
 
 fn zorn_upper_bound_forall_fact(
+    runtime: &Runtime,
     chain: Obj,
     upper: Obj,
     prop_name: AtomicName,
     line_file: LineFile,
 ) -> Result<ForallFact, RuntimeError> {
-    let x_name = "x".to_string();
+    let x_name = runtime.generate_internal_binder_name();
     let x = forall_obj(&x_name);
     ForallFact::new(
         ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -372,14 +385,20 @@ fn zorn_upper_bound_forall_fact(
 }
 
 fn zorn_lemma_maximal_fact(
+    runtime: &Runtime,
     set: Obj,
     prop_name: AtomicName,
     line_file: LineFile,
 ) -> Result<Fact, RuntimeError> {
-    let m_name = "m".to_string();
+    let m_name = runtime.generate_internal_binder_name();
     let m = exist_obj(&m_name);
-    let maximal_forall =
-        zorn_maximal_forall_fact(set.clone(), m.clone(), prop_name, line_file.clone())?;
+    let maximal_forall = zorn_maximal_forall_fact(
+        runtime,
+        set.clone(),
+        m.clone(),
+        prop_name,
+        line_file.clone(),
+    )?;
     let body = ExistFactBody::new(
         ParamDefWithType::new(vec![ParamGroupWithParamType::new(
             vec![m_name],
@@ -392,12 +411,13 @@ fn zorn_lemma_maximal_fact(
 }
 
 fn zorn_maximal_forall_fact(
+    runtime: &Runtime,
     set: Obj,
     maximal: Obj,
     prop_name: AtomicName,
     line_file: LineFile,
 ) -> Result<ForallFact, RuntimeError> {
-    let x_name = "x".to_string();
+    let x_name = runtime.generate_internal_binder_name();
     let x = forall_obj(&x_name);
     ForallFact::new(
         ParamDefWithType::new(vec![ParamGroupWithParamType::new(

@@ -494,6 +494,99 @@ exist a Z, b Z_nz st {sqrt(2) = a / b}
 }
 
 #[test]
+fn rational_reduced_fraction_representations_are_builtin_rules() {
+    let source_code = r#"
+forall a Q:
+    exist p Z, q N_pos st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}
+
+forall a Q:
+    exist p Z, q N_pos st {p / q = a, forall! z N_pos: 0 = q % z and 0 = p % z => {1 = z}}
+
+forall a Q:
+    exist! p Z, q N_pos st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "rational_reduced_fraction_representations_are_builtin_rules",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "reduced rational fractions should verify without std facts:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("exist: rational reduced fraction with positive denominator"),
+        "reduced rational fractions should expose builtin provenance:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("exist!: unique rational reduced fraction with positive denominator"),
+        "unique reduced rational fractions should expose builtin provenance:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn rational_reduced_fraction_builtin_rejects_nearby_shapes() {
+    run_with_large_stack(
+        "rational_reduced_fraction_builtin_rejects_nearby_shapes",
+        || {
+            let rules = [
+                "exist: rational reduced fraction with positive denominator",
+                "exist!: unique rational reduced fraction with positive denominator",
+            ];
+            for (label, source_code) in [
+                (
+                    "irrational_target",
+                    r#"
+exist p Z, q N_pos st {sqrt(2) = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}
+"#,
+                ),
+                (
+                    "wrong_unique_reducedness_conclusion",
+                    r#"
+forall a Q:
+    exist! p Z, q N_pos st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 2}}
+"#,
+                ),
+                (
+                    "wrong_witness_carriers",
+                    r#"
+forall a Q:
+    exist p N, q Z_nz st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}
+"#,
+                ),
+            ] {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(
+                    format!("rational_reduced_fraction_builtin_rejects_{}", label).as_str(),
+                );
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                assert!(
+                    !run_succeeded,
+                    "{} must not receive a reduced-fraction builtin proof:\n{}",
+                    label, run_output
+                );
+                assert!(
+                    rules.iter().all(|rule| !run_output.contains(rule)),
+                    "{} must not expose reduced-fraction builtin provenance:\n{}",
+                    label,
+                    run_output
+                );
+            }
+        },
+    );
+}
+
+#[test]
 fn real_line_comparison_builtins_require_real_operands() {
     run_with_large_stack(
         "real_line_comparison_builtins_require_real_operands",
@@ -974,6 +1067,48 @@ forall x A, y B:
 }
 
 #[test]
+fn have_fn_by_exist_caches_alpha_equivalent_uniqueness_forall() {
+    run_with_large_stack(
+        "have_fn_by_exist_caches_alpha_equivalent_uniqueness_forall",
+        || {
+            let source_code = r#"
+abstract_prop F(x, y)
+abstract_prop P(x)
+
+have fn f by exist!:
+    ? forall x R:
+        exist! y R st {$F(x, y)}
+    trust exist! y R st {$F(x, y)}
+
+trust forall z R:
+    forall u R, v R:
+        $F(u, v)
+        =>:
+            v = f(u)
+    =>:
+        $P(z)
+
+$P(0)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "have_fn_by_exist_caches_alpha_equivalent_uniqueness_forall",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "have fn by exist! should cache its generated uniqueness forall modulo binder names:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn have_fn_by_exist_unique_witness_direction_keeps_all_body_facts() {
     run_with_large_stack(
         "have_fn_by_exist_unique_witness_direction_keeps_all_body_facts",
@@ -1098,6 +1233,17 @@ A $subset union(A, B)
 B $subset union(A, B)
 set_minus(A, B) $subset A
 set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
+
+trust B $subset A
+B = set_minus(A, set_minus(A, B))
+set_minus(A, set_minus(A, B)) = B
+
+forall F finite_set, C set:
+    C $subset F
+    =>:
+        C = set_minus(F, set_minus(F, C))
+        $is_finite_set(set_minus(F, set_minus(F, C)))
+        $is_finite_set(C)
 "#;
 
     let mut runtime = Runtime::new();
@@ -1119,6 +1265,7 @@ set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
         "operand subset union",
         "set minus subset left operand",
         "set diff as union of asymmetric differences",
+        "set minus recovers subset from relative complement",
     ] {
         assert!(
             run_output.contains(rule),
@@ -1126,4 +1273,29 @@ set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
             run_output
         );
     }
+}
+
+#[test]
+fn set_minus_relative_complement_requires_subset() {
+    let source_code = r#"
+have A, B set
+B = set_minus(A, set_minus(A, B))
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("set_minus_relative_complement_requires_subset");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "relative-complement recovery must require a subset premise:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("set minus recovers subset from relative complement"),
+        "the builtin rule must not apply without a subset premise:\n{}",
+        run_output
+    );
 }

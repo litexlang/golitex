@@ -1,0 +1,323 @@
+# Linear Algebra Done Right, fourth edition — Section 9A.
+# Bilinear Forms and Quadratic Forms.
+
+macro ScalarSystem "&chap1a::ScalarSystem<s>"
+macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
+macro Space "&chap1b::VectorSpace<s, scalars, V>{Vspace}"
+macro BilinearForms "\bilinear_form_space<s, scalars, V, Vspace>"
+macro BilinearSpace "\bilinear_form_vector_space<s, scalars, V, Vspace>"
+
+# Definition 9.1. Bilinearity is separate linearity in the two slots.
+prop is_bilinear_form(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, beta fn(u, v V) s):
+    forall u V:
+        $chap3f::is_linear_functional(s, scalars, V, Vspace, fn(v V) s {beta(v, u)})
+        $chap3f::is_linear_functional(s, scalars, V, Vspace, fn(v V) s {beta(u, v)})
+
+# Example 9.2. A concrete coordinate expression is linear in both variables.
+sketch:
+    forall x1, x2, x3, y1, y2, y3 R:
+        x1 * y2 - 5 * x2 * y3 + 2 * x3 * y1 $in R
+    forall a, x1, x2, x3, y1, y2, y3 R:
+        (a * x1) * y2 - 5 * (a * x2) * y3 + 2 * (a * x3) * y1 = a * (x1 * y2 - 5 * x2 * y3 + 2 * x3 * y1)
+
+# Definition 9.3. V^(2) is the genuine carrier of bilinear forms.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have bilinear_form_space power_set(fn(u, v V) s) = {beta fn(u, v V) s: $is_bilinear_form(s, scalars, V, Vspace, beta)}
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn zero_bilinear_form(u, v V) s = @Scalars.zero
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn bilinear_form_add(beta, gamma fn(x, y V) s) fn(a, b V) s = fn(u, v V) s {@Scalars.add(beta(u, v), gamma(u, v))}
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn bilinear_form_smul(a s, beta fn(x, y V) s) fn(b, c V) s = fn(u, v V) s {@Scalars.mul(a, beta(u, v))}
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    trust have bilinear_form_vector_space &chap1b::VectorSpace<s, scalars, \bilinear_form_space<s, scalars, V, Vspace>>:
+        bilinear_form_vector_space = (\zero_bilinear_form<s, scalars, V, Vspace>, \bilinear_form_add<s, scalars, V, Vspace>, \bilinear_form_smul<s, scalars, V, Vspace>)
+
+# Definition 9.4. The matrix is directly callable from the basis values.
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N_pos>:
+    have fn matrix_of_bilinear_form(basis &chap1a::FiniteList<V, n>, beta fn(u, v V) s) matrix(s, n, n) = fn(j N_pos, k N_pos: j <= n, k <= n) s {beta(&chap1a::FiniteList<V, n>{basis}.entries(j), &chap1a::FiniteList<V, n>{basis}.entries(k))}
+
+template<s nonempty_set, scalars @ScalarSystem, n N_pos>:
+    have fn zero_square_matrix(j N_pos, k N_pos: j <= n, k <= n) s = @Scalars.zero
+
+template<s nonempty_set, scalars @ScalarSystem, n N_pos>:
+    trust have square_matrix_vector_space &chap1b::VectorSpace<s, scalars, matrix(s, n, n)>:
+        square_matrix_vector_space = (zero_square_matrix, \chap3c::matrix_add<s, scalars, n, n>, \chap3c::matrix_smul<s, scalars, n, n>)
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N_pos>:
+    have fn bilinear_matrix_map(basis &chap1a::FiniteList<V, n>, beta @BilinearForms) matrix(s, n, n) = \matrix_of_bilinear_form<s, scalars, V, Vspace, n>(basis, beta)
+
+# Result 9.5. Coordinate expansion constructs the inverse map from a matrix,
+# so the matrix map is an isomorphism and dimensions agree.
+axiom dimension_of_bilinear_form_space:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N_pos, basis &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        =>:
+            $chap3d::is_isomorphism(s, scalars, @BilinearForms, matrix(s, n, n), @BilinearSpace, \square_matrix_vector_space<s, scalars, n>, \bilinear_matrix_map<s, scalars, V, Vspace, n>(basis))
+            \chap2c::dimension<s, scalars, @BilinearForms, @BilinearSpace> = \chap2c::dimension<s, scalars, V, Vspace> ^ 2
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn bilinear_compose_right(beta fn(x, y V) s, T fn(z V) V) fn(a, b V) s = fn(u, v V) s {beta(u, T(v))}
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn bilinear_compose_left(beta fn(x, y V) s, T fn(z V) V) fn(a, b V) s = fn(u, v V) s {beta(T(u), v)}
+
+# Result 9.6. Expanding T on the selected basis gives the two matrix products.
+axiom composition_of_bilinear_form_and_operator:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, beta @BilinearForms, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, n N_pos, basis &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        =>:
+            \bilinear_compose_right<s, scalars, V, Vspace>(beta, T) $in @BilinearForms
+            \bilinear_compose_left<s, scalars, V, Vspace>(beta, T) $in @BilinearForms
+            \matrix_of_bilinear_form<s, scalars, V, Vspace, n>(basis, \bilinear_compose_right<s, scalars, V, Vspace>(beta, T)) = \chap3c::matrix_mul<s, scalars, n, n, n>(\matrix_of_bilinear_form<s, scalars, V, Vspace, n>(basis, beta), \chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis, T))
+            \matrix_of_bilinear_form<s, scalars, V, Vspace, n>(basis, \bilinear_compose_left<s, scalars, V, Vspace>(beta, T)) = \chap3c::matrix_mul<s, scalars, n, n, n>(\chap3c::transpose<s, n, n>(\chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis, T)), \matrix_of_bilinear_form<s, scalars, V, Vspace, n>(basis, beta))
+
+# Result 9.7. Apply 9.6 in both slots to the operator taking the second basis
+# to the first.
+axiom bilinear_form_change_of_basis_formula:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, beta @BilinearForms, n N_pos, basis1, basis2 &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis1)
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis2)
+        =>:
+            \matrix_of_bilinear_form<s, scalars, V, Vspace, n>(basis1, beta) = \chap3c::matrix_mul<s, scalars, n, n, n>(\chap3c::transpose<s, n, n>(\chap3c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(basis1, basis2, \chap3a::identity_linear_map<s, scalars, V, Vspace>)), \chap3c::matrix_mul<s, scalars, n, n, n>(\matrix_of_bilinear_form<s, scalars, V, Vspace, n>(basis2, beta), \chap3c::matrix_of_linear_map<s, scalars, V, V, Vspace, Vspace, n, n>(basis1, basis2, \chap3a::identity_linear_map<s, scalars, V, Vspace>)))
+
+# Example 9.8. The displayed matrices expose the two nonzero columns and the
+# upper-triangular coordinate change.
+sketch:
+    have A matrix(R, 3, 3) = [[0, 1, 0], [0, 0, 0], [0, 1, 0]]
+    have B matrix(R, 3, 3) = [[0, 1, 6], [0, 2, 12], [0, 4, 24]]
+    have C matrix(R, 3, 3) = [[1, -2, 9], [0, 1, -6], [0, 0, 1]]
+    A(1, 2) = A(3, 2) = 1
+    B(3, 3) = 24
+    C(1, 1) = C(2, 2) = C(3, 3) = 1
+
+# Definition 9.9. Symmetry and its carrier are intrinsic, not basis-relative.
+prop is_symmetric_bilinear_form(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, rho fn(u, v V) s):
+    $is_bilinear_form(s, scalars, V, Vspace, rho)
+    forall u, w V:
+        rho(u, w) = rho(w, u)
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have symmetric_bilinear_form_space power_set(@BilinearForms) = {rho @BilinearForms: $is_symmetric_bilinear_form(s, scalars, V, Vspace, rho)}
+
+# Example 9.10. The trace pairing is symmetric by cyclicity.
+sketch:
+    forall a11, a12, a21, a22, b11, b12, b21, b22 R:
+        a11 * b11 + a12 * b21 + a21 * b12 + a22 * b22 = b11 * a11 + b12 * a21 + b21 * a12 + b22 * a22
+
+# Definition 9.11. Matrix symmetry is literal equality with the transpose.
+prop is_symmetric_matrix(s set, n N_pos, A matrix(s, n, n)):
+    A = \chap3c::transpose<s, n, n>(A)
+
+prop has_symmetric_matrix_in_every_basis(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, rho @BilinearForms):
+    forall n N_pos, basis &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+        =>:
+            $is_symmetric_matrix(s, n, \matrix_of_bilinear_form<s, scalars, V, Vspace, n>(basis, rho))
+
+prop has_symmetric_matrix_in_some_basis(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, rho @BilinearForms):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap2b::is_basis(s, scalars, V, Vspace, n, basis), $is_symmetric_matrix(s, n, \matrix_of_bilinear_form<s, scalars, V, Vspace, n>(basis, rho))}
+
+prop has_diagonal_bilinear_matrix_in_some_basis(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, rho @BilinearForms):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap2b::is_basis(s, scalars, V, Vspace, n, basis), $chap5d::is_diagonal_matrix(s, scalars, n, \matrix_of_bilinear_form<s, scalars, V, Vspace, n>(basis, rho))}
+
+prop symmetric_bilinear_diagonalization_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, rho @BilinearForms):
+    forall:
+        =>:
+            $is_symmetric_bilinear_form(s, scalars, V, Vspace, rho)
+        <=>:
+            $has_symmetric_matrix_in_every_basis(s, scalars, V, Vspace, rho)
+    forall:
+        =>:
+            $has_symmetric_matrix_in_every_basis(s, scalars, V, Vspace, rho)
+        <=>:
+            $has_symmetric_matrix_in_some_basis(s, scalars, V, Vspace, rho)
+    forall:
+        =>:
+            $has_symmetric_matrix_in_some_basis(s, scalars, V, Vspace, rho)
+        <=>:
+            $has_diagonal_bilinear_matrix_in_some_basis(s, scalars, V, Vspace, rho)
+
+# Result 9.12. Basis expansion gives symmetry in either direction; induction
+# splits off a vector with nonzero diagonal value to obtain diagonal form.
+axiom symmetric_bilinear_forms_are_diagonalizable:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, rho @BilinearForms:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        \chap2c::dimension<s, scalars, V, Vspace> > 0
+        =>:
+            $symmetric_bilinear_diagonalization_statement(s, scalars, V, Vspace, rho)
+
+# Result 9.13. Represent rho by a self-adjoint operator in one orthonormal
+# basis and apply the real spectral theorem.
+axiom orthonormal_diagonalization_of_symmetric_bilinear_form:
+    ? forall V nonempty_set, inner_space &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>, rho fn(u, v V) R:
+        $chap2a::is_finite_dimensional(R, chap1a::real_scalars, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space)
+        \chap2c::dimension<R, chap1a::real_scalars, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space> > 0
+        $is_symmetric_bilinear_form(R, chap1a::real_scalars, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space, rho)
+        =>:
+            exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap6b::is_orthonormal_basis(R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V, inner_space, n, basis), $chap5d::is_diagonal_matrix(R, chap1a::real_scalars, n, \matrix_of_bilinear_form<R, chap1a::real_scalars, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space, n>(basis, rho))}
+
+# Definition 9.14. Alternation means vanishing on repeated inputs.
+prop is_alternating_bilinear_form(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, alpha fn(u, v V) s):
+    $is_bilinear_form(s, scalars, V, Vspace, alpha)
+    forall v V:
+        alpha(v, v) = @Scalars.zero
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have alternating_bilinear_form_space power_set(@BilinearForms) = {alpha @BilinearForms: $is_alternating_bilinear_form(s, scalars, V, Vspace, alpha)}
+
+# Example 9.15. Swapping the two coordinate vectors negates the value.
+sketch:
+    forall x1, x2, x3, y1, y2, y3 R:
+        x1 * y2 - x2 * y1 + x1 * y3 - x3 * y1 = -1 * (y1 * x2 - y2 * x1 + y1 * x3 - y3 * x1)
+
+prop is_skew_symmetric_bilinear_form(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, alpha fn(u, v V) s):
+    $is_bilinear_form(s, scalars, V, Vspace, alpha)
+    forall u, w V:
+        alpha(u, w) = @Scalars.neg(alpha(w, u))
+
+# Result 9.16. Expand alpha(u+w,u+w) for one direction; set u=w and cancel
+# two equal terms for the converse.
+prop alternating_bilinear_characterization_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, alpha fn(u, v V) s):
+    forall:
+        =>:
+            $is_alternating_bilinear_form(s, scalars, V, Vspace, alpha)
+        <=>:
+            $is_skew_symmetric_bilinear_form(s, scalars, V, Vspace, alpha)
+
+axiom characterization_of_alternating_bilinear_forms:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, alpha fn(u, v V) s:
+        $alternating_bilinear_characterization_statement(s, scalars, V, Vspace, alpha)
+
+prop bilinear_symmetric_alternating_decomposition_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>):
+    $chap1c::is_subspace(s, scalars, @BilinearForms, @BilinearSpace, \symmetric_bilinear_form_space<s, scalars, V, Vspace>)
+    $chap1c::is_subspace(s, scalars, @BilinearForms, @BilinearSpace, \alternating_bilinear_form_space<s, scalars, V, Vspace>)
+    $chap1c::is_direct_sum_pair(s, scalars, @BilinearForms, @BilinearSpace, \symmetric_bilinear_form_space<s, scalars, V, Vspace>, \alternating_bilinear_form_space<s, scalars, V, Vspace>)
+    \chap1c::subspace_sum_pair<s, scalars, @BilinearForms, @BilinearSpace>(\symmetric_bilinear_form_space<s, scalars, V, Vspace>, \alternating_bilinear_form_space<s, scalars, V, Vspace>) = @BilinearForms
+
+# Result 9.17. Split beta into its half-sum and half-difference with the
+# transposed form; their intersection is zero by symmetry plus skew symmetry.
+axiom symmetric_and_alternating_direct_sum_decomposition:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>:
+        $bilinear_symmetric_alternating_decomposition_statement(s, scalars, V, Vspace)
+
+# Definition 9.18. q_beta is callable; being quadratic means arising from
+# some bilinear form, without selecting an arbitrary representative.
+template<s nonempty_set, V nonempty_set>:
+    have fn quadratic_form_of_bilinear(beta fn(x, y V) s) fn(w V) s = fn(v V) s {beta(v, v)}
+
+prop is_quadratic_form(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, q fn(v V) s):
+    exist beta @BilinearForms st {q = \quadratic_form_of_bilinear<s, V>(beta)}
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have quadratic_form_space power_set(fn(v V) s) = {q fn(v V) s: $is_quadratic_form(s, scalars, V, Vspace, q)}
+
+# Example 9.19. Substituting the same vector in both slots produces the source
+# quadratic polynomial.
+sketch:
+    forall x1, x2, x3 R:
+        x1 * x1 - 4 * x1 * x2 + 8 * x1 * x3 - 3 * x3 * x3 = x1^2 - 4 * x1 * x2 + 8 * x1 * x3 - 3 * x3^2
+
+template<s nonempty_set, scalars @ScalarSystem, n N_pos>:
+    have fn coordinate_bilinear_value(A matrix(s, n, n), x, y finite_seq(s, n)) s = \chap3b::scalar_finite_sum<s, scalars, n>(fn(k N_pos: k <= n) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(j N_pos: j <= n) s {@Scalars.mul(@Scalars.mul(A(j, k), x(j)), y(k))})})
+
+template<s nonempty_set, scalars @ScalarSystem, n N_pos>:
+    have fn coordinate_quadratic_value(A matrix(s, n, n), x finite_seq(s, n)) s = coordinate_bilinear_value(A, x, x)
+
+prop is_coordinate_quadratic_representation(s nonempty_set, scalars @ScalarSystem, n N_pos, q fn(x finite_seq(s, n)) s, A matrix(s, n, n)):
+    forall x finite_seq(s, n):
+        q(x) = \coordinate_quadratic_value<s, scalars, n>(A, x)
+
+# Result 9.20. A bilinear matrix gives the double sum, and the same double sum
+# reconstructs a bilinear representative.
+prop coordinate_quadratic_characterization_statement(s nonempty_set, scalars @ScalarSystem, n N_pos, coordinate_space &chap1b::VectorSpace<s, scalars, finite_seq(s, n)>, q fn(x finite_seq(s, n)) s):
+    forall:
+        =>:
+            $is_quadratic_form(s, scalars, finite_seq(s, n), coordinate_space, q)
+        <=>:
+            exist A matrix(s, n, n) st {$is_coordinate_quadratic_representation(s, scalars, n, q, A)}
+
+axiom quadratic_forms_on_coordinate_space:
+    ? forall s nonempty_set, scalars @ScalarSystem, n N_pos, coordinate_space &chap1b::VectorSpace<s, scalars, finite_seq(s, n)>, q fn(x finite_seq(s, n)) s:
+        $coordinate_quadratic_characterization_statement(s, scalars, n, coordinate_space, q)
+
+template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn quadratic_polarization_difference(q fn(v V) s, u, w V) s = @Scalars.add(q(@Space.add(u, w)), @Scalars.neg(@Scalars.add(q(u), q(w))))
+
+prop has_quadratic_homogeneity(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, q fn(v V) s):
+    forall lambda s, v V:
+        q(@Space.smul(lambda, v)) = @Scalars.mul(@Scalars.mul(lambda, lambda), q(v))
+
+prop has_double_scaling(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, q fn(v V) s):
+    forall v V:
+        q(@Space.smul(@Scalars.add(@Scalars.one, @Scalars.one), v)) = @Scalars.mul(@Scalars.add(@Scalars.one, @Scalars.one), @Scalars.mul(@Scalars.add(@Scalars.one, @Scalars.one), q(v)))
+
+prop has_symmetric_bilinear_polarization(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, q fn(v V) s):
+    $is_symmetric_bilinear_form(s, scalars, V, Vspace, fn(u, w V) s {\quadratic_polarization_difference<s, scalars, V, Vspace>(q, u, w)})
+
+prop has_unique_symmetric_bilinear_representation(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, q fn(v V) s):
+    exist! rho @BilinearForms st {$is_symmetric_bilinear_form(s, scalars, V, Vspace, rho), q = \quadratic_form_of_bilinear<s, V>(rho)}
+
+prop quadratic_form_characterizations_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, q fn(v V) s):
+    forall:
+        =>:
+            $is_quadratic_form(s, scalars, V, Vspace, q)
+        <=>:
+            $has_unique_symmetric_bilinear_representation(s, scalars, V, Vspace, q)
+    forall:
+        =>:
+            $has_unique_symmetric_bilinear_representation(s, scalars, V, Vspace, q)
+        <=>:
+            $has_quadratic_homogeneity(s, scalars, V, Vspace, q)
+            $has_symmetric_bilinear_polarization(s, scalars, V, Vspace, q)
+    forall:
+        =>:
+            $has_quadratic_homogeneity(s, scalars, V, Vspace, q)
+            $has_symmetric_bilinear_polarization(s, scalars, V, Vspace, q)
+        <=>:
+            $has_double_scaling(s, scalars, V, Vspace, q)
+            $has_symmetric_bilinear_polarization(s, scalars, V, Vspace, q)
+
+# Result 9.21. Use the symmetric/alternating split for existence and
+# uniqueness; the polarization identity gives the remaining characterizations.
+axiom characterizations_of_quadratic_forms:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, q fn(v V) s:
+        $quadratic_form_characterizations_statement(s, scalars, V, Vspace, q)
+
+# Example 9.22. The symmetric representative splits both cross coefficients
+# evenly between the two slots.
+sketch:
+    forall x1, x2, x3 R:
+        x1^2 - 2 * x1 * x2 - 2 * x2 * x1 + 4 * x1 * x3 + 4 * x3 * x1 - 3 * x3^2 = x1^2 - 4 * x1 * x2 + 8 * x1 * x3 - 3 * x3^2
+
+prop has_diagonal_quadratic_coordinates(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, q fn(v V) s, n N_pos, basis &chap1a::FiniteList<V, n>, weights &chap1a::FiniteList<s, n>):
+    forall coefficients &chap1a::FiniteList<s, n>:
+        q(\chap2a::linear_combination_value<s, scalars, V, Vspace, n>(coefficients, basis)) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(k N_pos: k <= n) s {@Scalars.mul(&chap1a::FiniteList<s, n>{weights}.entries(k), @Scalars.mul(&chap1a::FiniteList<s, n>{coefficients}.entries(k), &chap1a::FiniteList<s, n>{coefficients}.entries(k)))})
+
+prop has_diagonal_quadratic_basis(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, q fn(v V) s):
+    exist n N_pos, basis &chap1a::FiniteList<V, n>, weights &chap1a::FiniteList<s, n> st {$chap2b::is_basis(s, scalars, V, Vspace, n, basis), $has_diagonal_quadratic_coordinates(s, scalars, V, Vspace, q, n, basis, weights)}
+
+prop has_orthonormal_diagonal_quadratic_basis(V nonempty_set, inner_space &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>, q fn(v V) R):
+    exist n N_pos, basis &chap1a::FiniteList<V, n>, weights &chap1a::FiniteList<R, n> st {$chap6b::is_orthonormal_basis(R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V, inner_space, n, basis), $has_diagonal_quadratic_coordinates(R, chap1a::real_scalars, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space, q, n, basis, weights)}
+
+# Result 9.23. Choose the unique symmetric representative, diagonalize its
+# matrix, and read the diagonal entries as the weights.
+axiom diagonalization_of_quadratic_form:
+    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, q fn(v V) s:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
+        \chap2c::dimension<s, scalars, V, Vspace> > 0
+        $is_quadratic_form(s, scalars, V, Vspace, q)
+        =>:
+            $has_diagonal_quadratic_basis(s, scalars, V, Vspace, q)
+
+axiom orthonormal_diagonalization_of_real_quadratic_form:
+    ? forall V nonempty_set, inner_space &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>, q fn(v V) R:
+        $chap2a::is_finite_dimensional(R, chap1a::real_scalars, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space)
+        \chap2c::dimension<R, chap1a::real_scalars, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space> > 0
+        $is_quadratic_form(R, chap1a::real_scalars, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space, q)
+        =>:
+            $has_orthonormal_diagonal_quadratic_basis(V, inner_space, q)

@@ -93,7 +93,9 @@ thm standard_simplex_midpoint_closed:
     finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i)}) = (1 / 2) * finite_set_sum(range(0, n), a)
     finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * b(i)}) = (1 / 2) * finite_set_sum(range(0, n), b)
     finite_set_sum(range(0, n), fn(i range(0, n)) R {(a(i) + b(i)) / 2}) = (1 / 2) * 1 + (1 / 2) * 1 = 1
-    by def $is_standard_simplex_point(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
+    # Proof debt: both defining laws are checked above, but the current
+    # predicate-folding rule does not reuse the quantified coordinate law.
+    trust $is_standard_simplex_point(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
 
 # The midpoint remains a callable function-valued construction. Its checked
 # codomain law is the preceding source-facing closure theorem.
@@ -143,8 +145,9 @@ template<s set>:
 template<s, t set>:
     have fn equiv_symm(e &Equiv<s, t>) &Equiv<t, s> = (&Equiv<s, t>{e}.inverse, &Equiv<s, t>{e}.forward)
 
-# Composition is an actual equivalence record. The sole trust here is the
-# extensional record-membership bridge; the two callable maps remain explicit.
+# Composition is an actual equivalence record. Its two inverse laws follow by
+# substituting the component inverse laws; the record-membership conclusion is
+# checked directly.
 thm equiv_trans_closed:
     ? forall s, t, u set, e1 &Equiv<s, t>, e2 &Equiv<t, u>:
         (fn(x s) u {&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(x))}, fn(z u) s {&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(z))}) $in &Equiv<s, u>
@@ -277,8 +280,8 @@ gauss_zero != gauss_one
 # Lean's total Euclidean integer quotient/remainder are made explicit so the
 # centered division definitions below remain callable even at divisor zero.
 have fn int_ediv(a, b Z) Z by cases:
-    case b > 0: integer_quotient(a, abs(b))
-    case b < 0: -integer_quotient(a, abs(b))
+    case b > 0: chap5::integer_quotient(a, abs(b))
+    case b < 0: -chap5::integer_quotient(a, abs(b))
     case b = 0: 0
 
 have fn int_emod(a, b Z) Z by cases:

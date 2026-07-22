@@ -65,16 +65,16 @@ sketch:
         by cases:
             ? $even(n) or $odd(n)
             case n % 2 = 0:
-                witness exist q Z st {n = 2 * q + n % 2} from integer_quotient(n, 2):
-                    n = 2 * integer_quotient(n, 2) + n % 2
+                witness exist q Z st {n = 2 * q + n % 2} from basics::integer_quotient(n, 2):
+                    n = 2 * basics::integer_quotient(n, 2) + n % 2
                 obtain k from exist k Z st {n = 2 * k + n % 2}
                 witness exist l Z st {n = 2 * l} from k:
                     n = 2 * k + 0 = 2 * k
                 $even(n)
                 $even(n) or $odd(n)
             case n % 2 = 1:
-                witness exist q Z st {n = 2 * q + n % 2} from integer_quotient(n, 2):
-                    n = 2 * integer_quotient(n, 2) + n % 2
+                witness exist q Z st {n = 2 * q + n % 2} from basics::integer_quotient(n, 2):
+                    n = 2 * basics::integer_quotient(n, 2) + n % 2
                 obtain k from exist k Z st {n = 2 * k + n % 2}
                 witness exist l Z st {n = 2 * l + 1} from k:
                     n = 2 * k + 1
@@ -1108,13 +1108,13 @@ sketch:
 
                         obtain d from exist p N_pos st {$prime(p), c % p = 0}
 
-                        witness exist q Z st {n + 1 = c * q + (n + 1) % c} from integer_quotient(n + 1, c):
-                            n + 1 = c * integer_quotient(n + 1, c) + (n + 1) % c
+                        witness exist q Z st {n + 1 = c * q + (n + 1) % c} from basics::integer_quotient(n + 1, c):
+                            n + 1 = c * basics::integer_quotient(n + 1, c) + (n + 1) % c
                         obtain e from exist q Z st {n + 1 = c * q + (n + 1) % c}
                         n + 1 = c * e + (n + 1) % c = c * e = e * c
 
-                        witness exist q Z st {c = d * q + c % d} from integer_quotient(c, d):
-                            c = d * integer_quotient(c, d) + c % d
+                        witness exist q Z st {c = d * q + c % d} from basics::integer_quotient(c, d):
+                            c = d * basics::integer_quotient(c, d) + c % d
                         obtain f from exist r Z st {c = d * r + c % d}
                         c = d * f + c % d = d * f = f * d
 
@@ -1137,8 +1137,8 @@ sketch:
                 exist p N_pos st {$prime(p), $dvdN(p, n)}
         obtain p from exist p N_pos st {$prime(p), n % p = 0}
         p != 0
-        witness exist q Z st {n = p * q + n % p} from integer_quotient(n, p):
-            n = p * integer_quotient(n, p) + n % p
+        witness exist q Z st {n = p * q + n % p} from basics::integer_quotient(n, p):
+            n = p * basics::integer_quotient(n, p) + n % p
         obtain k from exist q Z st {n = p * q + n % p}
         n = p * k + n % p = p * k = k * p
         witness exist c Z st {n = p * c} from k:

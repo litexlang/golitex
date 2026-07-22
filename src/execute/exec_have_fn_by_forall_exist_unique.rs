@@ -204,8 +204,7 @@ impl Runtime {
             .inst_have_fn_forall_fact_for_store(uniqueness_forall)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
         // Derived from the same `exist!`: if a witness satisfies the body, it is the chosen value.
-        self.top_level_env()
-            .store_fact(uniqueness_fact)
+        self.store_fact_without_forall_coverage_check_and_infer(uniqueness_fact)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
 
         Ok(infer_result)
@@ -300,7 +299,7 @@ impl Runtime {
             let rebound_dom_fact = self.inst_fact(
                 dom_fact,
                 &forall_param_to_fn_set_param,
-                ParamObjType::FnSet,
+                ParamObjType::BinderRetag(BinderRetagSource::Forall),
                 None,
             )?;
             dom_facts.push(Self::fn_set_dom_fact_from_fact(stmt, &rebound_dom_fact)?);
@@ -342,7 +341,7 @@ impl Runtime {
                 .inst_exist_body_fact(
                     body_fact,
                     &witness_map,
-                    ParamObjType::Exist,
+                    ParamObjType::BinderRetag(BinderRetagSource::Exist),
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
@@ -368,24 +367,23 @@ impl Runtime {
             self.declared_identifier_obj(&stmt.fn_name),
             &forall_param_names,
         );
-        let witness_obj =
-            obj_for_bound_param_in_scope(shape.witness_name.clone(), ParamObjType::Forall);
+        let (witness_names, witness_map) =
+            self.fresh_binder_retag_plan(&[shape.witness_name.clone()], ParamObjType::Forall);
+        let witness_obj = witness_map[&shape.witness_name].clone();
 
         let mut params = stmt.forall.params_def_with_type.groups.clone();
         params.push(ParamGroupWithParamType::new(
-            vec![shape.witness_name.clone()],
+            witness_names,
             shape.witness_param_type.clone(),
         ));
 
         let mut dom_facts = stmt.forall.dom_facts.clone();
-        let mut witness_map = HashMap::new();
-        witness_map.insert(shape.witness_name.clone(), witness_obj.clone());
         for body_fact in shape.exist_body_facts.iter() {
             let inst_body_fact = self
                 .inst_exist_body_fact(
                     body_fact,
                     &witness_map,
-                    ParamObjType::Exist,
+                    ParamObjType::BinderRetag(BinderRetagSource::Exist),
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
@@ -409,22 +407,32 @@ impl Runtime {
     ) -> Result<(Vec<ParamGroupWithSet>, HashMap<String, Obj>), RuntimeError> {
         let mut result = Vec::with_capacity(param_defs.groups.len());
         // The source signature uses Forall binders; its stored function type uses FnSet binders.
+        let source_names = param_defs.collect_param_names();
+        let (fn_set_names, full_forall_param_to_fn_set_param) =
+            self.fresh_binder_retag_plan(&source_names, ParamObjType::FnSet);
         let mut forall_param_to_fn_set_param = HashMap::new();
+        let mut name_index = 0;
         for group in param_defs.groups.iter() {
             match &group.param_type {
                 ParamType::Obj(obj) => {
-                    let rebound_param_set =
-                        self.inst_obj(obj, &forall_param_to_fn_set_param, ParamObjType::FnSet)?;
+                    let rebound_param_set = self.inst_obj(
+                        obj,
+                        &forall_param_to_fn_set_param,
+                        ParamObjType::BinderRetag(BinderRetagSource::Forall),
+                    )?;
+                    let group_fn_set_names =
+                        fn_set_names[name_index..name_index + group.params.len()].to_vec();
                     result.push(ParamGroupWithSet::new(
-                        group.params.clone(),
+                        group_fn_set_names,
                         rebound_param_set,
                     ));
                     for param_name in group.params.iter() {
                         forall_param_to_fn_set_param.insert(
                             param_name.clone(),
-                            obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::FnSet),
+                            full_forall_param_to_fn_set_param[param_name].clone(),
                         );
                     }
+                    name_index += group.params.len();
                 }
                 _ => {
                     return Err(Self::have_fn_by_forall_exist_unique_msg(

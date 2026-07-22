@@ -13,7 +13,6 @@ pub enum Obj {
     Mul(Mul),
     Div(Div),
     Mod(Mod),
-    IntegerQuotient(IntegerQuotient),
     Pow(Pow),
     Abs(Abs),
     Sqrt(Sqrt),
@@ -137,7 +136,6 @@ pub enum ObjKind {
     TupleIndexFreeParam = 67,
     CartIndexFreeParam = 68,
     GeneralCart = 69,
-    IntegerQuotient = 70,
 }
 
 impl ObjKind {
@@ -551,13 +549,6 @@ pub struct Mod {
     pub right: Box<Obj>,
 }
 
-/// Euclidean quotient of an integer dividend by a positive integer divisor.
-#[derive(Clone)]
-pub struct IntegerQuotient {
-    pub dividend: Box<Obj>,
-    pub divisor: Box<Obj>,
-}
-
 #[derive(Clone)]
 pub struct Pow {
     pub base: Box<Obj>,
@@ -701,15 +692,6 @@ impl Mod {
         Mod {
             left: Box::new(left),
             right: Box::new(right),
-        }
-    }
-}
-
-impl IntegerQuotient {
-    pub fn new(dividend: Obj, divisor: Obj) -> Self {
-        IntegerQuotient {
-            dividend: Box::new(dividend),
-            divisor: Box::new(divisor),
         }
     }
 }
@@ -1065,11 +1047,7 @@ impl ProductOfFiniteSet {
 fn precedence(o: &Obj) -> u8 {
     match o {
         Obj::Add(_) | Obj::Sub(_) => 3,
-        Obj::Mul(_)
-        | Obj::Div(_)
-        | Obj::Mod(_)
-        | Obj::IntegerQuotient(_)
-        | Obj::MatrixScalarMul(_) => 2,
+        Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::MatrixScalarMul(_) => 2,
         Obj::Pow(_)
         | Obj::Abs(_)
         | Obj::Sqrt(_)
@@ -1112,7 +1090,6 @@ impl Obj {
             Obj::Mul(_) => ObjKind::Mul,
             Obj::Div(_) => ObjKind::Div,
             Obj::Mod(_) => ObjKind::Mod,
-            Obj::IntegerQuotient(_) => ObjKind::IntegerQuotient,
             Obj::Pow(_) => ObjKind::Pow,
             Obj::Abs(_) => ObjKind::Abs,
             Obj::Sqrt(_) => ObjKind::Sqrt,
@@ -1183,7 +1160,6 @@ impl Obj {
             Obj::Mul(_) => MUL.to_string(),
             Obj::Div(_) => DIV.to_string(),
             Obj::Mod(_) => MOD.to_string(),
-            Obj::IntegerQuotient(_) => INTEGER_QUOTIENT.to_string(),
             Obj::Pow(_) => POW.to_string(),
             Obj::Abs(_) => ABS.to_string(),
             Obj::Sqrt(_) => SQRT.to_string(),
@@ -1263,13 +1239,6 @@ impl Obj {
                 m.left.fmt_with_precedence(f, 2)?;
                 write!(f, " {} ", MOD)?;
                 m.right.fmt_with_precedence(f, 2)?;
-            }
-            Obj::IntegerQuotient(q) => {
-                write!(f, "{} {}", INTEGER_QUOTIENT, LEFT_BRACE)?;
-                q.dividend.fmt_with_precedence(f, 0)?;
-                write!(f, "{} ", COMMA)?;
-                q.divisor.fmt_with_precedence(f, 0)?;
-                write!(f, "{}", RIGHT_BRACE)?;
             }
             Obj::Pow(p) => {
                 p.base.fmt_with_precedence(f, 1)?;
@@ -1412,11 +1381,6 @@ impl Obj {
             Obj::Mod(x) => Mod::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
-            )
-            .into(),
-            Obj::IntegerQuotient(x) => IntegerQuotient::new(
-                Obj::replace_bound_identifier(*x.dividend, from, to),
-                Obj::replace_bound_identifier(*x.divisor, from, to),
             )
             .into(),
             Obj::Pow(x) => Pow::new(
@@ -2329,16 +2293,6 @@ impl fmt::Display for Mod {
     }
 }
 
-impl fmt::Display for IntegerQuotient {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "{} {}{}{}{}{}",
-            INTEGER_QUOTIENT, LEFT_BRACE, self.dividend, COMMA, self.divisor, RIGHT_BRACE
-        )
-    }
-}
-
 impl fmt::Display for Pow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.base, POW, self.exponent)
@@ -2598,12 +2552,6 @@ impl From<Div> for Obj {
 impl From<Mod> for Obj {
     fn from(m: Mod) -> Self {
         Obj::Mod(m)
-    }
-}
-
-impl From<IntegerQuotient> for Obj {
-    fn from(q: IntegerQuotient) -> Self {
-        Obj::IntegerQuotient(q)
     }
 }
 

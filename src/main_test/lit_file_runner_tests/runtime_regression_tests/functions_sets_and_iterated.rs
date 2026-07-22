@@ -1,6 +1,43 @@
 use super::*;
 
 #[test]
+fn anonymous_function_application_in_unfolded_forall_uses_pointwise_fact() {
+    run_with_large_stack(
+        "anonymous_function_application_in_unfolded_forall_uses_pointwise_fact",
+        || {
+            let source_code = r#"
+prop simplex_shape(n N, v fn(i range(0, n)) R):
+    forall i range(0, n):
+        v(i) >= 0
+    finite_set_sum(range(0, n), v) = 1
+
+claim:
+    ? forall n N, a, b fn(i range(0, n)) R:
+        forall i range(0, n):
+            (a(i) + b(i)) / 2 >= 0
+        finite_set_sum(range(0, n), fn(i range(0, n)) R {(a(i) + b(i)) / 2}) = 1
+        =>:
+            $simplex_shape(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
+    by def $simplex_shape(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_function_application_in_unfolded_forall_uses_pointwise_fact",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "unfolded forall should beta-reduce the anonymous function application before using the pointwise fact:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn obtain_body_well_defined_can_use_forall_domain_fact() {
     run_with_large_stack(
         "obtain_body_well_defined_can_use_forall_domain_fact",
@@ -84,6 +121,145 @@ claim:
             assert!(
                 run_succeeded,
                 "same-domain pointwise function membership failed:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn function_space_membership_freshens_generated_pointwise_binder() {
+    run_with_large_stack(
+        "function_space_membership_freshens_generated_pointwise_binder",
+        || {
+            let invalid_source_code = r#"
+claim:
+    ? forall x R, f fn(x R) R:
+        f(x) = 0
+        =>:
+            f $in fn(x R) {0}
+    f(x) = 0
+    f $in fn(x R) {0}
+"#;
+
+            let mut invalid_runtime = Runtime::new();
+            invalid_runtime.new_file_path_new_env_new_name_scope(
+                "function_space_membership_rejects_captured_outer_value",
+            );
+            let (invalid_results, invalid_error) =
+                run_source_code(invalid_source_code, &mut invalid_runtime);
+            let (invalid_succeeded, invalid_output) = render_run_source_code_output(
+                &invalid_runtime,
+                &invalid_results,
+                &invalid_error,
+                false,
+            );
+
+            // Countermodel: outer x = 0 and f(t) = t. The premise f(x) = 0 holds,
+            // but f does not map every real into {0}.
+            assert!(
+                !invalid_succeeded,
+                "one captured point value must not prove whole-function membership:\n{}",
+                invalid_output
+            );
+
+            let valid_source_code = r#"
+claim:
+    ? forall x R, f fn(x R) R:
+        forall y R:
+            f(y) $in {y}
+        =>:
+            f $in fn(x R) {x}
+    forall y R:
+        f(y) $in {y}
+    f $in fn(x R) {x}
+"#;
+
+            let mut valid_runtime = Runtime::new();
+            valid_runtime.new_file_path_new_env_new_name_scope(
+                "function_space_membership_accepts_full_pointwise_proof_with_same_name",
+            );
+            let (valid_results, valid_error) =
+                run_source_code(valid_source_code, &mut valid_runtime);
+            let (valid_succeeded, valid_output) =
+                render_run_source_code_output(&valid_runtime, &valid_results, &valid_error, false);
+            assert!(
+                valid_succeeded,
+                "freshening must preserve a full pointwise proof:\n{}",
+                valid_output
+            );
+        },
+    );
+}
+
+#[test]
+fn function_space_membership_assumes_generated_domain_facts_before_application_check() {
+    run_with_large_stack(
+        "function_space_membership_assumes_generated_domain_facts_before_application_check",
+        || {
+            let source_code = r#"
+have fn f(x R: x >= 0) R = 0
+
+forall y R:
+    y >= 0
+    =>:
+        f(y) $in {0}
+
+f $in fn(x R: x >= 0) {0}
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "function_space_membership_assumes_generated_domain_facts_before_application_check",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "generated pointwise application must be checked after its domain facts are assumed:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn parameter_membership_follows_known_subset_graph_transitively() {
+    run_with_large_stack(
+        "parameter_membership_follows_known_subset_graph_transitively",
+        || {
+            let source_code = r#"
+have S0, U0, T0 nonempty_set
+trust S0 $subset U0
+trust U0 $subset T0
+have x0 S0
+x0 $in T0
+
+forall A, B, C set:
+    A $subset B
+    B $subset C
+    =>:
+        A $subset C
+
+forall A, B, C set:
+    A $subset B
+    B $subset A
+    B $subset C
+    =>:
+        A $subset C
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "parameter_membership_follows_known_subset_graph_transitively",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "parameter membership should follow transitive subset chains and terminate on cycles:\n{}",
                 run_output
             );
         },
@@ -579,6 +755,30 @@ forall p cart(R, R):
     assert!(
         run_succeeded,
         "set-valued have fn applications should unfold for membership:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn template_set_valued_have_fn_application_unfolds_for_membership() {
+    let source_code = r#"
+template<s set>:
+    have fn selected(S power_set(s)) power_set(s) = {x s: x $in S}
+
+1 $in \selected<R>({1})
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "template_set_valued_have_fn_application_unfolds_for_membership",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "a materialized template function returning a set builder should unfold for membership:\n{}",
         run_output
     );
 }
@@ -1471,6 +1671,498 @@ x $in Z
 }
 
 #[test]
+fn known_forall_does_not_substitute_captured_outer_param() {
+    let source_code = r#"
+abstract_prop p(x, S)
+
+claim:
+    ? forall S, T set:
+        forall x R:
+            $p(x, S)
+        =>:
+            $p(1, T)
+    $p(1, T)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "known_forall_does_not_substitute_captured_outer_param",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "known forall must keep captured outer parameters rigid:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn known_forall_accepts_identical_captured_outer_param() {
+    let source_code = r#"
+abstract_prop p(x, S)
+
+claim:
+    ? forall S set:
+        forall x R:
+            $p(x, S)
+        =>:
+            $p(1, S)
+    $p(1, S)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "known_forall_accepts_identical_captured_outer_param",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "known forall should accept an unchanged captured outer parameter:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn known_forall_does_not_substitute_captured_exist_param() {
+    let source_code = r#"
+abstract_prop p(x, S)
+
+prop all_p(S set):
+    forall x R:
+        $p(x, S)
+
+witness exist S, T set st {$all_p(S), $p(1, T)} from N, {}:
+    trust $all_p(S)
+    $p(1, T)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "known_forall_does_not_substitute_captured_exist_param",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "known forall must keep captured existential parameters rigid:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn known_forall_distinguishes_same_name_forall_and_exist_bindings() {
+    let source_code = r#"
+abstract_prop p(x)
+have S set
+
+trust:
+    forall x set:
+        exist x x st {$p(x)}
+
+exist y S st {$p(y)}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "known_forall_distinguishes_same_name_forall_and_exist_bindings",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "same spelling in different binder kinds must not collide:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn known_forall_matcher_entry_points_keep_captured_params_rigid() {
+    let cases = [
+        (
+            "equality_rejects_changed_capture",
+            r#"
+claim:
+    ? forall a, b R:
+        forall x R:
+            x + a = x
+        =>:
+            1 + b = 1
+    1 + b = 1
+"#,
+            false,
+        ),
+        (
+            "equality_accepts_same_capture",
+            r#"
+claim:
+    ? forall a R:
+        forall x R:
+            x + a = x
+        =>:
+            1 + a = 1
+    1 + a = 1
+"#,
+            true,
+        ),
+        (
+            "and_rejects_changed_capture",
+            r#"
+abstract_prop p(x, S)
+abstract_prop q(x, S)
+claim:
+    ? forall S, T set:
+        forall x R:
+            $p(x, S) and $q(x, S)
+        =>:
+            $p(1, T) and $q(1, T)
+    $p(1, T) and $q(1, T)
+"#,
+            false,
+        ),
+        (
+            "and_accepts_same_capture",
+            r#"
+abstract_prop p(x, S)
+abstract_prop q(x, S)
+claim:
+    ? forall S set:
+        forall x R:
+            $p(x, S) and $q(x, S)
+        =>:
+            $p(1, S) and $q(1, S)
+    $p(1, S) and $q(1, S)
+"#,
+            true,
+        ),
+        (
+            "or_rejects_changed_capture",
+            r#"
+abstract_prop p(x, S)
+abstract_prop q(x, S)
+claim:
+    ? forall S, T set:
+        forall x R:
+            $p(x, S) or $q(x, S)
+        =>:
+            $p(1, T) or $q(1, T)
+    $p(1, T) or $q(1, T)
+"#,
+            false,
+        ),
+        (
+            "or_accepts_same_capture",
+            r#"
+abstract_prop p(x, S)
+abstract_prop q(x, S)
+claim:
+    ? forall S set:
+        forall x R:
+            $p(x, S) or $q(x, S)
+        =>:
+            $p(1, S) or $q(1, S)
+    $p(1, S) or $q(1, S)
+"#,
+            true,
+        ),
+        (
+            "exist_rejects_changed_capture",
+            r#"
+abstract_prop p(x, S)
+claim:
+    ? forall S, T set:
+        forall x R:
+            exist y R st {$p(x, S), y = x}
+        =>:
+            exist z R st {$p(1, T), z = 1}
+    exist z R st {$p(1, T), z = 1}
+"#,
+            false,
+        ),
+        (
+            "exist_accepts_same_capture",
+            r#"
+abstract_prop p(x, S)
+claim:
+    ? forall S set:
+        forall x R:
+            exist y R st {$p(x, S), y = x}
+        =>:
+            exist z R st {$p(1, S), z = 1}
+    exist z R st {$p(1, S), z = 1}
+"#,
+            true,
+        ),
+        (
+            "strategy_rejects_changed_capture",
+            r#"
+abstract_prop p(x, S)
+have S, T set
+strategy use_p:
+    ? forall x R:
+        $p(x, S)
+
+    trust:
+        forall y R:
+            $p(y, S)
+use strategy use_p
+$p(1, T)
+"#,
+            false,
+        ),
+        (
+            "strategy_accepts_same_capture",
+            r#"
+abstract_prop p(x, S)
+have S set
+strategy use_p:
+    ? forall x R:
+        $p(x, S)
+
+    trust:
+        forall y R:
+            $p(y, S)
+use strategy use_p
+$p(1, S)
+"#,
+            true,
+        ),
+    ];
+
+    for (name, source_code, expected_success) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(name);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert_eq!(
+            run_succeeded, expected_success,
+            "known-forall matcher case {name} returned the wrong result:\n{run_output}"
+        );
+    }
+}
+
+#[test]
+fn instantiation_avoids_capturing_forall_arguments() {
+    let cases = [
+        (
+            "definition_rejects_captured_argument",
+            r#"
+abstract_prop p(x)
+
+prop q(n R):
+    $p(n)
+    forall n R:
+        $p(n)
+
+claim:
+    ? forall n R:
+        $p(n)
+        =>:
+            $q(n)
+    $q(n)
+"#,
+            false,
+        ),
+        (
+            "theorem_rejects_captured_argument",
+            r#"
+abstract_prop p(x, y)
+abstract_prop q(x)
+axiom t:
+    ? forall a R:
+        forall n R:
+            $p(a, n)
+        =>:
+            $q(a)
+claim:
+    ? forall n R:
+        $p(n, n)
+        =>:
+            $q(n)
+    by thm t(n)
+    $q(n)
+"#,
+            false,
+        ),
+        (
+            "compound_argument_rejects_capture",
+            r#"
+abstract_prop p(x, y)
+abstract_prop q(x)
+axiom t:
+    ? forall a R:
+        forall n R:
+            $p(a, n)
+        =>:
+            $q(a)
+claim:
+    ? forall n R:
+        $p(n + 0, n)
+        =>:
+            $q(n + 0)
+    by thm t(n + 0)
+    $q(n + 0)
+"#,
+            false,
+        ),
+        (
+            "forall_iff_rejects_captured_argument",
+            r#"
+abstract_prop p(x, y)
+abstract_prop r(x, y)
+prop q(a R):
+    forall n R:
+        =>:
+            $p(a, n)
+        <=>:
+            $r(a, n)
+claim:
+    ? forall n R:
+        $p(n, n)
+        $r(n, n)
+        =>:
+            $q(n)
+    $q(n)
+"#,
+            false,
+        ),
+        (
+            "alpha_rename_preserves_same_named_identifier_in_binder_type",
+            r#"
+have n set
+abstract_prop p(x, y)
+abstract_prop q(x)
+axiom t:
+    ? forall a set:
+        forall n n:
+            $p(a, n)
+        =>:
+            $q(a)
+claim:
+    ? forall n set:
+        n $in n
+        $p(n, n)
+        =>:
+            $q(n)
+    by thm t(n)
+    $q(n)
+"#,
+            false,
+        ),
+        (
+            "definition_accepts_explicit_universal_premise",
+            r#"
+abstract_prop p(x)
+
+prop q(a R):
+    $p(a)
+    forall m R:
+        $p(m)
+
+claim:
+    ? forall n R:
+        $p(n)
+        forall m R:
+            $p(m)
+        =>:
+            $q(n)
+    $q(n)
+"#,
+            true,
+        ),
+        (
+            "theorem_accepts_explicit_universal_premise",
+            r#"
+abstract_prop p(x, y)
+abstract_prop q(x)
+axiom t:
+    ? forall a R:
+        forall k R:
+            $p(a, k)
+        =>:
+            $q(a)
+claim:
+    ? forall n R:
+        forall k R:
+            $p(n, k)
+        =>:
+            $q(n)
+    by thm t(n)
+    $q(n)
+"#,
+            true,
+        ),
+    ];
+
+    for (name, source_code, expected_success) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(name);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert_eq!(
+            run_succeeded, expected_success,
+            "capture-avoiding instantiation case {name} returned the wrong result:\n{run_output}"
+        );
+    }
+}
+
+#[test]
+fn instantiation_avoids_capturing_exist_arguments() {
+    let cases = [
+        (
+            "exist_rejects_captured_definition_argument",
+            r#"
+abstract_prop p(x, y)
+prop q(a R):
+    exist n R st {$p(a, n)}
+
+trust exist w R st {$p(w, w)}
+witness exist n R st {$q(n)} from 0:
+    $q(n)
+"#,
+            false,
+        ),
+        (
+            "exist_accepts_an_explicit_witness_after_alpha_rename",
+            r#"
+abstract_prop p(x, y)
+prop q(a R):
+    exist n R st {$p(a, n)}
+
+trust $p(0, 1)
+witness exist n R st {$q(n)} from 0:
+    witness exist m R st {$p(n, m)} from 1
+    $q(n)
+"#,
+            true,
+        ),
+    ];
+
+    for (name, source_code, expected_success) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(name);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert_eq!(
+            run_succeeded, expected_success,
+            "exist capture-avoidance case {name} returned the wrong result:\n{run_output}"
+        );
+    }
+}
+
+#[test]
 fn known_forall_equality_uses_indexed_function_head() {
     let source_code = r#"
 have f fn(x R) R
@@ -1704,20 +2396,20 @@ fn eval_recursive_algo_memoizes_overlapping_calls() {
         || {
             let source_code = r#"
 sketch:
-    have fib fn(x R) R
+    have fib fn(x N) N
 
     trust:
-        forall x R:
+        forall x N:
             x = 0
             =>:
                 fib(x) = 0
 
-        forall x R:
+        forall x N:
             x = 1
             =>:
                 fib(x) = 1
 
-        forall x R:
+        forall x N:
             x > 1
             =>:
                 fib(x) = fib(x - 1) + fib(x - 2)
@@ -1725,7 +2417,7 @@ sketch:
     have algo for fib(x):
         case x = 0: 0
         case x = 1: 1
-        fib(x - 1) + fib(x - 2)
+        case x > 1: fib(x - 1) + fib(x - 2)
 
     eval fib(25)
     fib(25) = 75025

@@ -2,8 +2,7 @@
 
 ## Purpose and scope
 
-This manual records the mathematical spine for the implemented Chapters 1–4
-and Chapter 5 operator layer
+This manual records the mathematical spine for the implemented nine chapters
 of Sheldon Axler's *Linear Algebra Done Right*, fourth edition. The
 repository-local transcript dated 9 May 2026 is authoritative. The module keeps
 the source's definitions and named results in pedagogical order, omits
@@ -734,6 +733,218 @@ concepts and intermediate nodes that determine later interfaces.
   selector in a real importing caller; one typed selection boundary and one
   specification bridge may remain until that works.
 
+### Isometries, unitary objects, and triangular factorizations
+
+- **Ordinary meaning:** An isometry preserves norms. A unitary operator is an
+  invertible isometry; in this book's finite-dimensional setting this is
+  equivalently an isometry on one space. A unitary matrix has orthonormal
+  columns. QR writes an independent-column matrix uniquely as a unitary factor
+  times an upper-triangular factor with positive diagonal; Cholesky writes a
+  positive definite matrix uniquely as `R* R` with the same triangular
+  normalization.
+- **Semantic role:** Relations on supplied maps and matrices, reusable
+  coordinate inner-product and matrix-vector functions, and existence plus
+  uniqueness statements for supplied factor witnesses. Neither factorization
+  introduces a primitive selected factor function.
+- **Ideal Litex form:** Define `prop is_isometry`; define `prop
+  is_unitary_operator` from the standing finite-dimensional condition and
+  isometry, leaving inverse data to the characterization theorem; define
+  `prop is_unitary_matrix`; construct finite matrix row and column lists,
+  a coordinate inner product, and matrix-vector multiplication; define
+  `prop is_qr_factorization`, `prop is_positive_definite_matrix`, and `prop
+  is_cholesky_factorization`; state QR by existence plus joint uniqueness and
+  Cholesky as `exist! R`.
+- **Interface sketch:** `$is_isometry(...,S)`, `$is_unitary_matrix(...,Q)`,
+  `$is_qr_factorization(...,A,Q,R)`, and
+  `exist! R matrix(s,n,n) st {$is_cholesky_factorization(...,B,R)}`.
+- **Nearest wrong alternative:** Selecting a canonical orthonormal basis or
+  unitary operator invents uniqueness. Selecting `Q` and `R` independently
+  loses their coupled equation and joint uniqueness. Treating positive
+  definiteness as positivity of entries confuses a quadratic-form condition
+  with an entrywise condition.
+- **Dependencies:** Norms and adjoints by `definition/proof`; orthonormal lists
+  and Gram-Schmidt by `proof`; matrix multiplication, conjugate transpose,
+  inverse matrices, and upper triangularity by `definition`; positive square
+  factors by `proof`; QR uniqueness and Cholesky uniqueness by `uniqueness`.
+- **Downstream uses:** Singular values, polar decomposition, operator norms,
+  determinant magnitude, numerical linear systems, and Hadamard's inequality.
+- **Allowable hole:** The long equivalence cycles and the finite
+  Gram-Schmidt-to-matrix transport may remain named proof boundaries. The
+  eigenvalue result should retain only its one norm chain, and the Cholesky
+  proof should retain only the source's adjoint-square, QR, and uniqueness
+  moves rather than expanding matrix associativity entry by entry.
+
+### Singular values, operator norm, polar decomposition, and volume
+
+- **Ordinary meaning:** The singular values of `T : V -> W` are the
+  nonnegative square roots of the eigenvalues of `T* T`, listed in decreasing
+  order with multiplicity. Orthonormal bases aligned with those values give
+  the singular value decomposition. The largest singular value is the norm of
+  `T`; the same data gives the polar decomposition and the factor by which `T`
+  scales volume.
+- **Semantic role:** Singular values and the operator norm are canonical
+  functions after existence and uniqueness. SVD and polar decomposition are
+  relations on supplied witnesses. Balls, ellipsoids, images,
+  parallelepipeds, and boxes are set-valued constructions or residual
+  relations; volume is a canonical nonnegative real value once
+  representation independence is proved.
+- **Ideal Litex form:** Define `prop is_singular_value_list`, prove its exact
+  unique existence, then expose `have fn singular_values ... by exist!`.
+  Define `prop is_singular_value_decomposition` and
+  `prop is_polar_decomposition` without selecting bases or factors. Define
+  `have fn linear_map_norm`; define `have fn ball`, `ellipsoid`,
+  `linear_image`, and `parallelepiped`; define `prop is_box`; prove
+  representation-independent unique volume before exposing `have fn volume`.
+- **Interface sketch:** `singular_values(T)(k)`,
+  `$is_singular_value_decomposition(...,T,basisV,basisW)`,
+  `linear_map_norm(T)`, `$is_polar_decomposition(...,T,S)`, and
+  `volume(P) = product(singular_values(T)) * volume(source)`.
+- **Nearest wrong alternative:** An unordered existential set loses
+  multiplicity and the top singular value. Selecting SVD bases invents
+  uniqueness. Defining volume from one arbitrary parallelepiped description
+  without an invariance theorem makes the function ill defined.
+- **Dependencies:** Adjoint, positive square root, spectral bases, unitary
+  operators, pseudoinverse, matrix coordinates, finite maxima/products, and
+  orthogonal bases by `definition/existence/uniqueness/proof`.
+- **Downstream uses:** Generalized inverse formulas, operator estimates,
+  determinant magnitude, Hadamard's inequality, and geometric volume change.
+- **Allowable hole:** Ordering with multiplicity, basis alignment, optimal
+  low-rank approximation, polar uniqueness, and volume independence may remain
+  named proof boundaries. The public data must nevertheless keep the ordered
+  function and exact witness relations.
+
+### Generalized eigenspaces, Jordan form, characteristic polynomial, and trace
+
+- **Ordinary meaning:** Generalized eigenvectors lie in a null space of a
+  power of `T-lambda I`; in finite dimension the power `dim V` captures the
+  whole generalized eigenspace. These spaces decompose a complex vector space,
+  their dimensions are eigenvalue multiplicities, and adapted chains produce
+  Jordan form. The characteristic polynomial records those multiplicities;
+  trace is the basis-independent diagonal sum.
+- **Semantic role:** Generalized eigenvector and nilpotent are relations.
+  Generalized eigenspace is a set-valued function, multiplicity and trace are
+  canonical numeric/scalar functions, characteristic polynomial is a
+  canonical polynomial function, and Jordan basis/block form are relations on
+  supplied bases and matrices.
+- **Ideal Litex form:** Define `prop is_generalized_eigenvector` and
+  `prop is_nilpotent`; define `have fn generalized_eigenspace`; define
+  `have fn eigenvalue_multiplicity` through its dimension; define
+  `have fn characteristic_polynomial` from the finite eigenvalue-multiplicity
+  product; define `prop is_jordan_basis`; define matrix trace by a finite
+  diagonal sum, prove basis independence, then expose operator trace as a
+  selected function.
+- **Interface sketch:** `generalized_eigenspace(T,lambda)`,
+  `eigenvalue_multiplicity(T,lambda)`, `characteristic_polynomial(T)`,
+  `$is_jordan_basis(...,T,basis)`, `matrix_trace(A)`, and `operator_trace(T)`.
+- **Nearest wrong alternative:** A generalized eigenspace predicate on a
+  proposed set prevents ordinary membership and dimension use. Treating
+  multiplicity, characteristic polynomial, or trace as only an existential
+  relation deprives later determinant results of callable values. A selected
+  Jordan basis would invent canonicity.
+- **Dependencies:** Operator powers, null/range, dimension, direct sums,
+  minimal polynomials, finite eigenvalue lists, upper-triangular/block
+  matrices, and finite scalar sums by `definition/proof/existence`.
+- **Downstream uses:** Cayley-Hamilton, determinant, matrix functions,
+  commutators, square roots of invertible complex operators, and tensor traces.
+- **Allowable hole:** Stabilization, generalized-eigenspace decomposition,
+  Jordan-chain construction, basis independence, and the Chapter 8/Chapter 9
+  characteristic-polynomial equivalence may remain named proof boundaries.
+
+### Bilinear and quadratic forms
+
+- **Ordinary meaning:** A bilinear form is scalar-valued and linear in each
+  variable. Symmetric and alternating forms are subspaces of this function
+  space; a quadratic form is the diagonal function `q_beta(v)=beta(v,v)`.
+- **Semantic role:** Bilinearity, symmetry, alternation, and matrix
+  representation are relations on supplied functions/data. Spaces of forms
+  are set-valued functions with inherited vector-space structures. The
+  associated quadratic form is a callable function.
+- **Ideal Litex form:** Define `prop is_bilinear_form`, callable
+  `bilinear_form_space`, `prop is_matrix_of_bilinear_form`, symmetric and
+  alternating subspaces, `have fn quadratic_form`, and the source-facing
+  diagonalization relations. Reuse spectral theorems for the orthonormal
+  version.
+- **Interface sketch:** `beta $in bilinear_form_space(V)`,
+  `$is_symmetric_bilinear_form(beta)`, `quadratic_form(beta)(v)`, and
+  `$is_diagonal_matrix_of_bilinear_form(...,beta,basis)`.
+- **Nearest wrong alternative:** A proposition-only `quadratic_form(beta,q)`
+  forces every later evaluation to carry a witness. Treating symmetry or
+  alternation as new function objects confuses residual laws with data.
+- **Dependencies:** Function spaces, linearity, bases, matrices, direct sums,
+  inner products, and self-adjoint spectral results by
+  `signature/definition/proof`.
+- **Downstream uses:** Alternating multilinear forms, determinants, geometry of
+  conics, and tensor-product inner products.
+- **Allowable hole:** Basis-change, diagonalization, and reconstruction of a
+  symmetric bilinear form from a quadratic form may remain named proof debt.
+
+### Alternating multilinear forms, permutations, and determinants
+
+- **Ordinary meaning:** An `m`-linear form is linear in every slot; it is
+  alternating when repeated arguments force zero. Finite permutations act on
+  slots with a sign. In full dimension the alternating-form space is
+  one-dimensional, so precomposition by an operator acts by one scalar: the
+  determinant.
+- **Semantic role:** Multilinearity and alternation are relations on supplied
+  functions; their spaces are set-valued functions. A permutation is a finite
+  bijection, its sign is a canonical selected scalar, transformed forms are
+  callable functions, and operator/matrix determinants are canonical scalar
+  functions after unique existence.
+- **Ideal Litex form:** Define finite tuple carriers, `prop is_multilinear_form`,
+  `prop is_alternating_form`, `prop is_permutation`, and a selected
+  `have fn permutation_sign`; define `have fn transformed_alternating_form`;
+  prove the one-dimensional scalar action uniquely determines `det(T)`, then
+  expose operator and matrix determinant functions. Keep the Chapter 9
+  characteristic polynomial as `det(zI-T)` and prove it equals the Chapter 8
+  multiplicity product.
+- **Interface sketch:** `$is_alternating_form(...,alpha)`,
+  `permutation_sign(sigma)`, `transformed_alternating_form(T,alpha)`,
+  `determinant(T)`, and `matrix_determinant(A)`.
+- **Nearest wrong alternative:** An unconstrained integer sign loses the
+  parity uniqueness. Introducing determinant by the permutation formula before
+  the one-dimensional action reverses the source dependency and hides the
+  basis-free construction.
+- **Dependencies:** Finite tuples, bijections, parity, linear dependence,
+  one-dimensional spaces, bilinear/multilinear function spaces, trace,
+  singular values, and volume by `definition/existence/uniqueness/proof`.
+- **Downstream uses:** Invertibility, eigenvalue products, similarity,
+  characteristic polynomials, volume scaling, Hadamard, and Vandermonde.
+- **Allowable hole:** Permutation parity, one-dimensionality, determinant
+  multiplicativity, and the explicit finite permutation formula may remain
+  named proof boundaries, but determinant remains a function, not a predicate.
+
+### Tensor products and multilinear maps
+
+- **Ordinary meaning:** Axler defines `V tensor W` as the dual of the space of
+  bilinear functionals; `v tensor w` is the evaluation functional. The same
+  dual-of-multilinear-functionals construction handles several spaces.
+  Bilinear and multilinear maps then correspond to ordinary linear maps out of
+  the tensor product.
+- **Semantic role:** Bilinear/multilinear functional spaces and tensor-product
+  carriers are parameterized set/space constructions. Tensoring elements is a
+  callable function. Bilinear/multilinear map conditions are relations on
+  supplied functions; the induced linear map is an existentially unique
+  construction.
+- **Ideal Litex form:** Define callable functional spaces, tensor carriers and
+  element tensor functions; define `prop is_bilinear_map` and
+  `prop is_multilinear_map`; state exact unique existence of the corresponding
+  linear map. Define the tensor inner product only after proving the basis
+  formula is independent of chosen coordinates.
+- **Interface sketch:** `tensor_product_space(V,W)`, `tensor(v,w)`,
+  `$is_bilinear_map(...,B)`, and
+  `exist! T linear_map_space(tensor_product_space(V,W),X) st {T(tensor(v,w))=B(v,w)}`.
+- **Nearest wrong alternative:** A quotient-of-free-space construction would
+  replace the source's chosen model. A proposition-only tensor relation would
+  prevent callers from applying linear maps to `v tensor w`. Selecting a
+  tensor basis invents canonicity.
+- **Dependencies:** Dual spaces, bilinear and multilinear functional spaces,
+  bases, dimension, inner products, finite Cartesian products, and linear-map
+  unique extension by `definition/existence/uniqueness/proof`.
+- **Downstream uses:** Universal multilinear constructions, tensor bases,
+  product inner products, and higher-order linearization.
+- **Allowable hole:** Dimension counts, basis independence of the inner
+  product, and the universal mapping theorems may remain named proof debt.
+
 ## Dependency map
 
 Edge legend used below: `sig` = signature, `def` = definition, `law` =
@@ -818,6 +1029,19 @@ normal + Schur + adjoint norm equality --proof--> complex spectral theorem
 real/complex spectral theorem + nonnegative eigenvalues --ex--> positive square root
 positive square-root spectral action --uniq/select--> positive square root
 positive square root + inner-product definiteness --proof--> zero quadratic form criterion
+isometry --def/proof--> unitary operator --proof--> unitary spectral data
+matrix rows/columns + coordinate inner product --def--> unitary matrix
+independent matrix columns + Gram-Schmidt --ex/uniq--> QR factorization
+positive operator square factor + QR --proof--> positive-definite matrix --ex/uniq--> Cholesky factorization
+adjoint + positive spectral data --ex/uniq--> ordered singular values --proof--> SVD
+ordered singular values --select/proof--> linear-map norm + polar decomposition + volume scale
+operator powers + null/range stabilization --def/proof--> generalized eigenspaces --proof--> Jordan basis
+generalized eigenspace dimensions --def--> characteristic polynomial --proof--> trace
+linear maps + function spaces --def--> bilinear forms --def--> quadratic forms
+finite tuples + slotwise linearity --def--> alternating multilinear forms
+permutations --uniq/select--> permutation sign --proof--> one-dimensional alternating forms
+one-dimensional alternating forms + operator action --uniq/select--> determinant
+bilinear/multilinear functional spaces + duals --def--> tensor products --ex/uniq--> universal linear maps
 ```
 
 Current trust boundaries have important downstream fan-out:
@@ -889,6 +1113,29 @@ proof debt, not a different concept model.
     equivalent conditions. Prove unique existence of the positive square root,
     select only that operator, and derive the zero-quadratic-form result from
     the selected root in the source's two moves.
+20. Define isometries directly by norm preservation and, under the standing
+    finite-dimensional hypothesis, define unitary operators by isometry on one
+    space. Reuse finite row/column constructions for unitary matrices; obtain
+    QR from Gram-Schmidt and Cholesky from an adjoint-square factor plus QR,
+    keeping both uniqueness arguments relational.
+21. Define singular-value candidate lists from `T* T`, prove ordering and
+    uniqueness before selecting the list, then state SVD. Derive linear-map
+    norm, polar decomposition, the geometric image constructions, and volume
+    scaling from that same ordered data.
+22. Reuse operator powers and null/range stabilization to define generalized
+    eigenspaces. Build multiplicities, the Chapter 8 characteristic
+    polynomial, nilpotent/Jordan relations, and only then the basis-independent
+    operator trace.
+23. Define bilinear forms and their spaces, symmetric/alternating subspaces,
+    matrices, and callable quadratic forms before their diagonalization
+    theorems.
+24. Generalize to finite multilinear forms, then permutations and sign. Prove
+    the full-dimensional alternating-form space is one-dimensional before
+    selecting determinant, and derive the Chapter 9 characteristic polynomial
+    from `det(zI-T)` without replacing the Chapter 8 interface.
+25. Construct tensor-product carriers as duals of multilinear-functional
+    spaces, make element tensoring callable, and finish with the unique linear
+    maps induced by bilinear and multilinear maps.
 This order follows the book through Chapters 1–3. Polynomial representation
 is introduced in Section 2A but its main theorem branch is intentionally
 resumed in Chapter 4 after the shared scalar/list foundations are stable.

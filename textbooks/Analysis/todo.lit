@@ -1,326 +1,219 @@
-# Analysis I mathematics still to be completed
-#
-# This is a comment-only ledger.  It is not a chapter, is not exported by
-# litex.config, and contains no executable Litex declarations.
-#
-# Snapshot: 2026-07-21.  The book currently contains 45 direct `trust` sites,
-# all in Chapters 8, 9, and 11.  Chapters 1-7 and 10, together with Appendix A,
-# contain no direct `trust` statement.
-#
-# Each item names the theorem whose proof contains the hole, gives the current
-# source line for quick lookup, states the missing mathematics, and says which
-# source-facing result the hole supports.  Line numbers are secondary locators
-# and may move as chapters are edited.
-#
-# Chapter 7 has no remaining direct `trust`.  Its cleanup exposed several
-# reusable proof packages that are checked locally but may later belong in the
-# standard library.  These are not current proof holes:
-#
-# - finite non-negative sums are monotone under finite-set inclusion, together
-#   with injective finite reindexing and finite permutation-prefix transport;
-# - mutually cofinal monotone partial-sum sequences have the same finite limit;
-# - dyadic harmonic-block lower bounds and condensation-to-geometric rewrites;
-# - paired even/odd induction for alternating finite tails;
-# - finite telescoping products of consecutive ratios and the resulting
-#   eventual ratio-to-nth-root bounds;
-# - adapters between equivalent chapter-local and Chapter 6 limsup predicates.
-#
-# The ratio-test cleanup also corrected one over-strong intermediate statement:
-# a ratio liminf above one need not give a finite root limsup, because upper
-# spikes may be unbounded.  The checked proof now derives failure of the zero
-# limit directly, which is exactly what the divergent ratio test requires.
-#
-# Chapter 8 — Infinite sets (15 direct trust sites)
-#
-# Nine former sites are now checked: countable union (using the explicit
-# choice axiom), the two elementary finite-subsum bridges for nonnegative
-# double series, swapped and column-first transport, one direction of Lemma
-# 8.2.3, countability of nonzero support, bijection change of variables, and
-# finite-total-order well-ordering.  The reusable finite reindexing and
-# finite-set induction packages remain in the chapter as checked lemmas.
-#
-# Item 08-01 — Section 8.2; countable_set_series_sum_well_defined, trust at line 1926.
-# Prove that two enumerations of one countably infinite set give the same
-# absolutely convergent sum.  This is one of the three retained local bridges.
-#
-# Item 08-02 — Section 8.2; bounded_rectangles_and_capture_give_row_first_sum,
-# trust at line 2199.  Construct all row sums, bound their finite partial sums by L,
-# and use finite-support capture to prove that the iterated sum is exactly L.
-# This is the analytic core of the nonnegative Fubini proof, not a reindexing
-# wrapper; Tao leaves the gap steps to Exercise 8.2.5.
-#
-# Item 08-03 — Section 8.2; fubini_row_first_general_case, trust at line 2223.
-# Apply the nonnegative case to positive and negative parts and recombine the
-# two row-first sums.  This is the remaining signed Fubini argument.
-#
-# Item 08-04 — Section 8.2;
-# bounded_finite_subsums_imply_countable_absolute_convergence, trust at line 2359.
-# The statement is false with the current definition: an empty or finite X
-# has bounded finite subsums but admits no bijection N_pos -> X.  Repair the
-# countable-set-series interface so finite sets have a finite-sum branch, then
-# prove the countably infinite branch by bounded nonnegative partial sums.
-#
-# Item 08-05 — Section 8.2; arbitrary_set_series_add, trust at line 2528.
-# The current statement can fail when f and g cancel and the resulting support
-# is finite or empty, because has_set_series_sum still demands a bijection from
-# N_pos onto that support.  It depends on the same finite-support repair.
-#
-# Item 08-06 — Section 8.2; arbitrary_set_series_scalar_mul, trust at line 2535.
-# The c = 0 case always has empty support, so the current conclusion is false.
-# It depends on the same finite-support repair; c != 0 is then ordinary scalar
-# transport of the support series.
-#
-# Item 08-07 — Section 8.2; arbitrary_set_series_disjoint_union, trust at line 2547.
-# Interleave the two support enumerations, prove the merged series has sum
-# L1 + L2, and combine the finite absolute-subsums.  This is a genuine series
-# merge proof from Exercise 8.2.3.
-#
-# Item 08-08 — Section 8.2;
-# positive_and_negative_parts_of_conditional_series_diverge, trust at line 2714.
-# Show that convergence of either sign subseries together with convergence of
-# the original series would force convergence of the absolute-value series.
-# This is Exercise 8.2.4 and prepares the rearrangement construction.
-#
-# Item 08-09 — Section 8.2; riemann_rearrangement_theorem, trust at line 2739.
-# Construct the alternating positive/negative selection permutation, prove its
-# partial sums converge to the target, and retain non-absolute convergence.
-# Tao leaves these details to Exercise 8.2.5.
-#
-# Item 08-10 — Section 8.3; has_binary_decimal_subset_sum, trust at line 2812.
-# Prove existence and uniqueness of each subset's binary-decimal real sum.
-# This is the second retained local bridge.
-#
-# Item 08-11 — Section 8.3; binary_decimal_subset_sum_is_injective, trust at line 2816.
-# At the first differing digit, dominate the later binary tail.  This is the
-# third retained local bridge.
-#
-# Item 08-12 — Section 8.5;
-# good_chain_comparison_forward_from_exercise_8_5_13, trust at line 4816.
-# Prove that every point of W minus Y strictly bounds Y.  This is one half of
-# the source's entire Exercise 8.5.13 comparison argument.
-#
-# Item 08-13 — Section 8.5;
-# good_chain_comparison_reverse_from_exercise_8_5_13, trust at line 4826.
-# Prove the symmetric comparison for points of Y minus W.
-#
-# Item 08-14 — Section 8.5; good_chain_union_is_chain_with_minimum, trust at line 4836.
-# Prove that the union of all good chains is itself well-ordered with x0 as
-# minimum.  The source marks the union-order verification as "why?".
-#
-# Item 08-15 — Section 8.5; good_chain_union_has_no_strict_upper_bound,
-# trust at line 4846.  Show that a chosen strict upper bound extends the union to a
-# larger good chain, contradicting the definition of the union.
-#
-# Checked Chapter 8 patterns worth considering for the standard library later
-# (these are not current proof holes):
-#
-# - reindex a finite subset through an injective/countable enumeration, and
-#   realize an enumeration prefix as a finite image with the same sum;
-# - compare a finite subsum of nonnegative terms with a convergent full sum;
-# - choose one injective coding graph per member of a family and pair the
-#   outer/inner codes to prove a countable union at most countable;
-# - construct a finite subset of any prescribed size inside a nonfinite set;
-# - strengthen finite-total-order induction to a least-element statement before
-#   deriving the source's minimal-element formulation;
-# - transport countable support and finite absolute subsums through a bijection,
-#   and use coordinate-swap involutions for double-series views.
-#
-# Chapter 9 — Continuous functions on R (7 direct trust sites)
-#
-# Item 09-01 — Section 9.4; positive_base_exponentiation_continuous.
-# Current location: chapter09-continuous-functions.lit, line 6138.
-# Missing mathematics: prove the epsilon-delta continuity of x mapped to a^x
-# for a fixed positive base using the real-exponentiation estimates of Chapter
-# 6.  This is Proposition 9.4.10, whose proof is Exercise 9.4.3.
-#
-# Item 09-02 — Section 9.4; positive_domain_power_function_continuous.
-# Current location: chapter09-continuous-functions.lit, line 6158.
-# Missing mathematics: reduce continuity of x mapped to x^p on the positive
-# real axis to exponentiation continuity and the real-power limit laws.
-# This is Proposition 9.4.11, whose proof is Exercise 9.4.4.
-#
-# Item 09-03 — Section 9.4; example_9_4_14_powered_abs_quadratic_continuous.
-# Current location: chapter09-continuous-functions.lit, line 6452.
-# Missing mathematics: extend positive-input power continuity through the
-# zero endpoint of abs(x^2 - 8x + 7), then compose the functions.
-# It supplies the numerator-continuity step in Example 9.4.14 and hence the
-# continuity of the displayed quotient.
-#
-# Item 09-04 — Section 9.7; continuous_image_of_interval_is_interval.
-# Current location: chapter09-continuous-functions.lit, line 7773.
-# Missing mathematics: choose preimages of two attained values and apply the
-# intermediate value theorem to every value between them.
-# It is Corollary 9.7.4, whose proof is left to Exercise 9.7.1.
-#
-# Item 09-05 — Section 9.8; continuous_strictly_increasing_inverse.
-# Current location: chapter09-continuous-functions.lit, line 7877.
-# Missing mathematics: combine strict-monotonicity injectivity, intermediate-
-# value surjectivity onto the image, and epsilon-delta continuity of the inverse.
-# It is Proposition 9.8.3 and supports the root-construction example; the
-# source leaves the combined proof to Exercise 9.8.4.
-#
-# Item 09-06 — Section 9.9; uniformly_continuous_has_limit_at_adherent_point.
-# Current location: chapter09-continuous-functions.lit, line 9042.
-# Missing mathematics: take a sequence in the domain approaching the adherent
-# point, prove its image is Cauchy, and show the resulting limit is independent
-# of the chosen sequence.
-# It is Corollary 9.9.14, whose proof is Exercise 9.9.4.
-#
-# Item 09-07 — Section 9.9; uniformly_continuous_maps_bounded_sets_to_bounded_sets.
-# Current location: chapter09-continuous-functions.lit, line 9074.
-# Missing mathematics: cover a bounded set by finitely many uniformly small
-# intervals, or derive a contradiction from an unbounded image sequence.
-# It is Proposition 9.9.15, whose proof is Exercise 9.9.5.
-#
-# Chapter 11 — The Riemann integral (23 direct trust sites)
-#
-# Item 11-01 — Section 11.1; bounded_connected_subsets_are_bounded_intervals.
-# Current location: chapter11-riemann-integral.lit, line 726.
-# Missing mathematics: construct the endpoints of a bounded connected subset
-# and classify the four open/closed endpoint cases.
-# It supplies Lemma 11.1.4.  The endpoint construction is deferred to Exercise
-# 11.1.1.
-#
-# Item 11-02 — Section 11.1; interval_length_adds_across_bounded_difference.
-# Current location: chapter11-riemann-integral.lit, line 2189.
-# Missing mathematics: classify compatible endpoint forms of nested bounded
-# intervals and prove the corresponding length-subtraction identities.
-# It supplies the length split used in Theorem 11.1.13; the source leaves the
-# endpoint bookkeeping implicit.
-#
-# Item 11-03 — Section 11.4; riemann_integral_extension_by_zero.
-# Current location: chapter11-riemann-integral.lit, line 11027.
-# Missing mathematics: compare upper and lower approximations after extending
-# an integrable function by zero from I to a larger bounded interval J.
-# The two missing conclusions are integrability of the extension and equality
-# of the two integrals.  They are Theorem 11.4.1(g), left to Exercise 11.4.1.
-#
-# Item 11-04 — Section 11.4; riemann_integral_additive_over_two_piece_partition.
-# Current location: chapter11-riemann-integral.lit, line 11050.
-# Missing mathematics: compare Darboux sums over two interval pieces and glue
-# their restrictions back into the whole interval.
-# The three missing conclusions are integrability on each piece and additivity
-# of their integrals.  They are Theorem 11.4.1(h), left to Exercise 11.4.1.
-#
-# Item 11-05 — Section 11.5; uniformly_continuous_on_bounded_interval_has_small_oscillation_partitions.
-# Current location: chapter11-riemann-integral.lit, line 11846.
-# Missing mathematics: construct a sufficiently fine finite partition in all
-# endpoint conventions and prove the oscillation estimate on each piece.
-# It supplies the partition step in Theorem 11.5.1; the source marks the
-# construction as "How?".
-#
-# Item 11-06 — Section 11.5; continuous_bounded_interval_has_integrable_closed_trims.
-# Current location: chapter11-riemann-integral.lit, line 11999.
-# Missing mathematics: choose closed endpoint trims for all four bounded-
-# interval forms and prove continuity of the restricted function.
-# It supplies the closed-trim step in Proposition 11.5.3.
-#
-# Item 11-07 — Section 11.5; darbouxs_criterion_from_integrable_closed_trims_and_bounded_tails.
-# Current location: chapter11-riemann-integral.lit, line 12014.
-# Missing mathematics: adjoin the finitely many endpoint-tail pieces to a
-# closed trim and bound their Darboux contribution by the tail length.
-# It completes the endpoint gluing calculation in Proposition 11.5.3.
-#
-# Item 11-08 — Section 11.5; riemann_integrable_from_partition_piece_integrability.
-# Current location: chapter11-riemann-integral.lit, line 12513.
-# Missing mathematics: induct over a finite interval partition and compare the
-# restricted piece integrals with the whole-domain Darboux sums.
-# It supplies Proposition 11.5.6 and is left to Exercise 11.5.1.
-#
-# Item 11-09 — Section 11.6; monotone_closed_interval_riemann_integrable.
-# Current location: chapter11-riemann-integral.lit, line 12573.
-# Missing mathematics: prove boundedness, construct equal partitions, evaluate
-# extrema, and telescope the upper-minus-lower sum estimate.
-# It supplies Proposition 11.6.1; the source compresses these construction and
-# limiting steps.
-#
-# Item 11-10 — Section 11.6; bounded_monotone_bounded_interval_riemann_integrable.
-# Current location: chapter11-riemann-integral.lit, line 12596.
-# Missing mathematics: trim an arbitrary bounded interval to closed
-# subintervals and control its endpoint tails using boundedness.
-# It supplies Corollary 11.6.3, whose proof is Exercise 11.6.1.
-#
-# Item 11-11 — Section 11.6; integral_test_series_implies_finite_integral_supremum.
-# Current location: chapter11-riemann-integral.lit, line 12824.
-# Missing mathematics: compare finite sums with integrals for a decreasing
-# non-negative function and bound the integral supremum by convergent partial
-# sums.  This is one direction of Proposition 11.6.4, left to Exercise 11.6.3.
-#
-# Item 11-12 — Section 11.6; integral_test_finite_integral_supremum_implies_series.
-# Current location: chapter11-riemann-integral.lit, line 12837.
-# Missing mathematics: use the reverse rectangle comparison to bound partial
-# sums and obtain a real series sum.
-# It is the other direction of Proposition 11.6.4, left to Exercise 11.6.3.
-#
-# Item 11-13 — Section 11.8; alpha_interval_length_adds_across_bounded_difference.
-# Current location: chapter11-riemann-integral.lit, line 13707.
-# Missing mathematics: classify endpoint forms and telescope the alpha-values
-# when a bounded subinterval is removed.
-# It supplies finite additivity of alpha-length in Lemma 11.8.4 and is left to
-# Exercise 11.8.1.
-#
-# Item 11-14 — Section 11.9; first_fundamental_theorem_integral_function_continuous.
-# Current location: chapter11-riemann-integral.lit, line 15663.
-# Missing mathematics: prove changing-interval additivity and bound F(y)-F(x)
-# by M times abs(y-x) for an integrable bounded function.
-# It supplies the continuity part of Theorem 11.9.1.
-#
-# Item 11-15 — Section 11.9; first_fundamental_theorem_integral_function_derivative_at_continuity_point.
-# Current location: chapter11-riemann-integral.lit, line 15677.
-# Missing mathematics: squeeze the average integral over the changing interval
-# between nearby values of f and pass to the difference quotient.
-# It supplies the derivative conclusion of Theorem 11.9.1.
-#
-# Item 11-16 — Section 11.9; antiderivative_boundary_difference_between_riemann_integral_bounds.
-# Current location: chapter11-riemann-integral.lit, line 15737.
-# Missing mathematics: apply the mean value theorem on each partition piece,
-# sum the endpoint differences, and compare with both Darboux bounds.
-# The two missing inequalities place F(b)-F(a) between the lower and upper
-# Riemann integrals and form the main estimate in Theorem 11.9.4.
-#
-# Item 11-17 — Section 11.10; stieltjes_piecewise_constant_as_riemann_integral.
-# Current location: chapter11-riemann-integral.lit, line 16082.
-# Missing mathematics: use the second fundamental theorem on every
-# piecewise-constant piece, transport endpoints, and regroup the finite sum.
-# It supplies Theorem 11.10.2, identifying the Stieltjes integral with the
-# ordinary integral against alpha-prime in the piecewise-constant case.
-#
-# Item 11-18 — Section 11.10; stieltjes_to_riemann_integrability_by_piecewise_approximation.
-# Current location: chapter11-riemann-integral.lit, line 16105.
-# Missing mathematics: transfer the piecewise Stieltjes upper and lower
-# approximations to Darboux bounds for f times alpha-prime.
-# It supplies the ordinary Riemann-integrability step in Corollary 11.10.3.
-#
-# Item 11-19 — Section 11.10; stieltjes_to_riemann_identity_by_piecewise_approximation.
-# Current location: chapter11-riemann-integral.lit, line 16123.
-# Missing mathematics: carry the upper/lower Stieltjes squeeze through the
-# selected integral values and use non-negativity of alpha-prime.
-# It supplies the equality of Stieltjes and ordinary integrals in Corollary
-# 11.10.3.
-#
-# Item 11-20 — Section 11.10; change_of_variables_piecewise_constant, preimage partition.
-# Current location: chapter11-riemann-integral.lit, line 16199.
-# Missing mathematics: construct the preimage partition under the increasing
-# change of variables and prove that every preimage piece is an interval.
-# It supplies the piecewise-constant structural step in Lemma 11.10.5; the
-# source leaves the marked "why?" gaps to Exercise 11.10.2.
-#
-# Item 11-21 — Section 11.10; change_of_variables_piecewise_constant, integral identity.
-# Current location: chapter11-riemann-integral.lit, line 16209.
-# Missing mathematics: prove that phi maps each preimage piece to a piece of
-# the same length and sum the resulting finite identities.
-# The two missing conclusions are Stieltjes integrability of the composition
-# and equality with the original Riemann integral in Lemma 11.10.5; these
-# details are left to Exercise 11.10.2.
-#
-# Item 11-22 — Section 11.10; change_of_variables_stieltjes_integrability_by_piecewise_approximation.
-# Current location: chapter11-riemann-integral.lit, line 16233.
-# Missing mathematics: pull back piecewise majorants and minorants through the
-# monotone map and transfer the Darboux squeeze.
-# It supplies the integrability half of Proposition 11.10.6.
-#
-# Item 11-23 — Section 11.10; change_of_variables_stieltjes_identity_by_piecewise_approximation.
-# Current location: chapter11-riemann-integral.lit, line 16253.
-# Missing mathematics: pass the equality for piecewise-constant approximants
-# to the selected Stieltjes and Riemann integral values.
-# It supplies the final change-of-variables identity in Proposition 11.10.6.
+"""
+Analysis I unchecked mathematical interfaces
+
+This is a documentation-only ledger.  It is not a chapter, is not exported by
+litex.config, and contains no executable Litex declarations.
+
+Snapshot: 2026-07-22.  The book currently contains 34 direct `trust` sites:
+11 formalization gaps and 23 source-deferred proofs.  They all occur in
+Chapters 8, 9, and 11.  Chapters 1-7 and 10, together with Appendix A,
+contain no direct `trust` statement.
+
+A formalization gap is mathematics supplied or used by the source whose
+Litex proof remains unfinished.  A source-deferred proof is an unchecked
+theorem whose source explicitly says `Exercise`, `why?`, or `How?`; it is a
+visible trust boundary, not an omitted source proof.  Each item states the
+missing mathematics and the source-facing result it supports.
+
+Chapter 8 — Infinite sets (6 direct trust sites)
+
+Source-deferred unchecked proofs (6)
+
+Item 08-05 — Section 8.2;
+positive_and_negative_parts_of_conditional_series_diverge, trust at line 4628.
+Show that convergence of either sign subseries together with convergence of
+the original series would force convergence of the absolute-value series.
+This is Exercise 8.2.4 and prepares the rearrangement construction.
+
+Item 08-06 — Section 8.2; riemann_rearrangement_theorem, trust at line 4653.
+Construct the alternating positive/negative selection permutation, prove its
+partial sums converge to the target, and retain non-absolute convergence.
+The source leaves these details to Exercise 8.2.5.
+
+Item 08-09 — Section 8.5;
+good_chain_comparison_forward_from_exercise_8_5_13, trust at line 7050.
+Prove that every point of W minus Y strictly bounds Y.  This is one half of
+the source's entire Exercise 8.5.13 comparison argument.
+
+Item 08-10 — Section 8.5;
+good_chain_comparison_reverse_from_exercise_8_5_13, trust at line 7063.
+Prove the symmetric comparison for points of Y minus W.
+
+Item 08-11 — Section 8.5; good_chain_union_is_chain_with_minimum, trust at line 7075.
+Prove that the union of all good chains is itself well-ordered with x0 as
+minimum.  The source marks the union-order verification as "why?".
+
+Item 08-12 — Section 8.5; good_chain_union_has_no_strict_upper_bound,
+trust at line 7087.  Show that a chosen strict upper bound extends the union to a
+larger good chain, contradicting the definition of the union.
+
+Chapter 9 — Continuous functions on R (6 direct trust sites)
+
+Source-deferred unchecked proofs (6)
+
+Item 09-01 — Section 9.4; positive_base_exponentiation_continuous.
+Prove the epsilon-delta continuity of x mapped to a^x for a fixed positive
+base using the real-exponentiation estimates of Chapter 6.  This is
+Proposition 9.4.10, whose proof is Exercise 9.4.3.
+
+Item 09-02 — Section 9.4; positive_domain_power_function_continuous.
+Reduce continuity of x mapped to x^p on the positive real axis to
+exponentiation continuity and the real-power limit laws.  This is
+Proposition 9.4.11, whose proof is Exercise 9.4.4.
+
+Item 09-04 — Section 9.7; continuous_image_of_interval_is_interval.
+Choose preimages of two attained values and apply the intermediate value
+theorem to every value between them.
+It is Corollary 9.7.4, whose proof is left to Exercise 9.7.1.
+
+Item 09-05 — Section 9.8; continuous_strictly_increasing_inverse.
+Combine strict-monotonicity injectivity, intermediate-value surjectivity onto
+the image, and epsilon-delta continuity of the inverse.
+It is Proposition 9.8.3 and supports the root-construction example; the
+source leaves the combined proof to Exercise 9.8.4.
+
+Item 09-06 — Section 9.9; uniformly_continuous_has_limit_at_adherent_point.
+Take a sequence in the domain approaching the adherent point, prove its image
+is Cauchy, and show the resulting limit is independent of the chosen sequence.
+It is Corollary 9.9.14, whose proof is Exercise 9.9.4.
+
+Item 09-07 — Section 9.9; uniformly_continuous_maps_bounded_sets_to_bounded_sets.
+Cover a bounded set by finitely many uniformly small intervals, or derive a
+contradiction from an unbounded image sequence.
+It is Proposition 9.9.15, whose proof is Exercise 9.9.5.
+
+Chapter 11 — The Riemann integral (22 direct trust sites)
+
+Formalization gaps (11)
+
+Item 11-06 — Section 11.5; continuous_bounded_interval_has_integrable_closed_trims.
+Current location: chapter11-riemann-integral.lit, line 12316.
+Missing mathematics: choose closed endpoint trims for all four bounded-
+interval forms and prove continuity of the restricted function.
+It supplies the closed-trim step in Proposition 11.5.3.
+
+Item 11-07 — Section 11.5; darbouxs_criterion_from_integrable_closed_trims_and_bounded_tails.
+Current location: chapter11-riemann-integral.lit, line 12329.
+Missing mathematics: adjoin the finitely many endpoint-tail pieces to a
+closed trim and bound their Darboux contribution by the tail length.
+It completes the endpoint gluing calculation in Proposition 11.5.3.
+
+Item 11-09 — Section 11.6; monotone_closed_interval_riemann_integrable.
+Current location: chapter11-riemann-integral.lit, line 12890.
+Missing mathematics: prove boundedness, construct equal partitions, evaluate
+extrema, and telescope the upper-minus-lower sum estimate.
+It supplies Proposition 11.6.1; the source compresses these construction and
+limiting steps.
+
+Item 11-14 — Section 11.9; first_fundamental_theorem_integral_function_continuous.
+Current location: chapter11-riemann-integral.lit, line 15979.
+Missing mathematics: prove changing-interval additivity and bound F(y)-F(x)
+by M times abs(y-x) for an integrable bounded function.
+It supplies the continuity part of Theorem 11.9.1.
+
+Item 11-15 — Section 11.9; first_fundamental_theorem_integral_function_derivative_at_continuity_point.
+Current location: chapter11-riemann-integral.lit, line 15993.
+Missing mathematics: squeeze the average integral over the changing interval
+between nearby values of f and pass to the difference quotient.
+It supplies the derivative conclusion of Theorem 11.9.1.
+
+Item 11-16 — Section 11.9; antiderivative_boundary_difference_between_riemann_integral_bounds.
+Current location: chapter11-riemann-integral.lit, line 16052.
+Missing mathematics: apply the mean value theorem on each partition piece,
+sum the endpoint differences, and compare with both Darboux bounds.
+The two missing inequalities place F(b)-F(a) between the lower and upper
+Riemann integrals and form the main estimate in Theorem 11.9.4.
+
+Item 11-17 — Section 11.10; stieltjes_piecewise_constant_as_riemann_integral.
+Current location: chapter11-riemann-integral.lit, line 16334.
+Missing mathematics: use the second fundamental theorem on every
+piecewise-constant piece, transport endpoints, and regroup the finite sum.
+It supplies Theorem 11.10.2, identifying the Stieltjes integral with the
+ordinary integral against alpha-prime in the piecewise-constant case.
+
+Item 11-18 — Section 11.10; stieltjes_to_riemann_integrability_by_piecewise_approximation.
+Current location: chapter11-riemann-integral.lit, line 16417.
+Missing mathematics: transfer the piecewise Stieltjes upper and lower
+approximations to Darboux bounds for f times alpha-prime.
+It supplies the ordinary Riemann-integrability step in Corollary 11.10.3.
+
+Item 11-19 — Section 11.10; stieltjes_to_riemann_identity_by_piecewise_approximation.
+Current location: chapter11-riemann-integral.lit, line 16435.
+Missing mathematics: carry the upper/lower Stieltjes squeeze through the
+selected integral values and use non-negativity of alpha-prime.
+It supplies the equality of Stieltjes and ordinary integrals in Corollary
+11.10.3.
+
+Item 11-22 — Section 11.10; change_of_variables_stieltjes_integrability_by_piecewise_approximation.
+Current location: chapter11-riemann-integral.lit, line 16545.
+Missing mathematics: pull back piecewise majorants and minorants through the
+monotone map and transfer the Darboux squeeze.
+It supplies the integrability half of Proposition 11.10.6.
+
+Item 11-23 — Section 11.10; change_of_variables_stieltjes_identity_by_piecewise_approximation.
+Current location: chapter11-riemann-integral.lit, line 16563.
+Missing mathematics: pass the equality for piecewise-constant approximants
+to the selected Stieltjes and Riemann integral values.
+It supplies the final change-of-variables identity in Proposition 11.10.6.
+
+Source-deferred unchecked proofs (11)
+
+Item 11-01 — Section 11.1; bounded_connected_subsets_are_bounded_intervals.
+Construct the endpoints of a bounded connected subset and classify the four
+open/closed endpoint cases.  It supplies Lemma 11.1.4.  The endpoint
+construction is deferred to Exercise 11.1.1.
+
+Item 11-03 — Section 11.4; riemann_integral_extension_by_zero.
+Compare upper and lower approximations after extending an integrable function
+by zero from I to a larger bounded interval J.  The two conclusions are
+integrability of the extension and equality of the two integrals.  They are
+Theorem 11.4.1(g), left to Exercise 11.4.1.
+
+Item 11-04 — Section 11.4; riemann_integral_additive_over_two_piece_partition.
+Compare Darboux sums over two interval pieces and glue their restrictions
+back into the whole interval.  The three conclusions are integrability on
+each piece and additivity of their integrals.  They are Theorem 11.4.1(h),
+left to Exercise 11.4.1.
+
+Item 11-05 — Section 11.5; uniformly_continuous_on_bounded_interval_has_small_oscillation_partitions.
+Construct a sufficiently fine finite partition in all endpoint conventions
+and prove the oscillation estimate on each piece.  It supplies the partition
+step in Theorem 11.5.1; the source marks the construction as "How?".
+
+Item 11-08 — Section 11.5; riemann_integrable_from_partition_piece_integrability.
+Induct over a finite interval partition and compare the restricted piece
+integrals with the whole-domain Darboux sums.  It supplies Proposition 11.5.6
+and is left to Exercise 11.5.1.
+
+Item 11-10 — Section 11.6; bounded_monotone_bounded_interval_riemann_integrable.
+Trim an arbitrary bounded interval to closed subintervals and control its
+endpoint tails using boundedness.  It supplies Corollary 11.6.3, whose proof
+is Exercise 11.6.1.
+
+Item 11-11 — Section 11.6; integral_test_series_implies_finite_integral_supremum.
+Compare finite sums with integrals for a decreasing non-negative function and
+bound the integral supremum by convergent partial sums.  This is one direction
+of Proposition 11.6.4, left to Exercise 11.6.3.
+
+Item 11-12 — Section 11.6; integral_test_finite_integral_supremum_implies_series.
+Use the reverse rectangle comparison to bound partial sums and obtain a real
+series sum.  It is the other direction of Proposition 11.6.4, left to
+Exercise 11.6.3.
+
+Item 11-13 — Section 11.8; alpha_interval_length_adds_across_bounded_difference.
+Classify endpoint forms and telescope the alpha-values when a bounded
+subinterval is removed.  It supplies finite additivity of alpha-length in
+Lemma 11.8.4 and is left to Exercise 11.8.1.
+
+Item 11-20 — Section 11.10; change_of_variables_piecewise_constant, preimage partition.
+Construct the preimage partition under the increasing change of variables
+and prove that every preimage piece is an interval.  It supplies the
+piecewise-constant structural step in Lemma 11.10.5; the source leaves the
+marked "why?" gaps to Exercise 11.10.2.
+
+Item 11-21 — Section 11.10; change_of_variables_piecewise_constant, integral identity.
+Prove that phi maps each preimage piece to a piece of the same length and sum
+the resulting finite identities.  The conclusions are Stieltjes
+integrability of the composition and equality with the original Riemann
+integral in Lemma 11.10.5; they are left to Exercise 11.10.2.
+"""

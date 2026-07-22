@@ -29,14 +29,18 @@ impl Runtime {
                 ));
             }
         };
+        let (_, algo_param_to_forall_obj) =
+            self.fresh_binder_retag_plan(&def_algo_stmt.params, ParamObjType::Forall);
 
         let (requirement_facts_for_param, algo_param_defs_with_type) = self
             .collect_requirement_facts_and_algo_param_defs(
                 def_algo_stmt,
                 &fn_set_where_algo_belongs,
+                &algo_param_to_forall_obj,
             )?;
 
-        let fn_call_obj_for_verification = self.build_algo_verification_fn_call_obj(def_algo_stmt);
+        let fn_call_obj_for_verification =
+            self.build_algo_verification_fn_call_obj(def_algo_stmt, &algo_param_to_forall_obj);
         let requirement_dom_facts = Self::requirement_facts_to_exist_or_and_chain_dom_facts(
             def_algo_stmt,
             &requirement_facts_for_param,
@@ -47,12 +51,22 @@ impl Runtime {
             &algo_param_defs_with_type,
             &fn_call_obj_for_verification,
             &requirement_dom_facts,
+            &algo_param_to_forall_obj,
+        )?;
+
+        self.verify_def_algo_default_implies_return(
+            def_algo_stmt,
+            &algo_param_defs_with_type,
+            &fn_call_obj_for_verification,
+            &requirement_dom_facts,
+            &algo_param_to_forall_obj,
         )?;
 
         self.verify_def_algo_case_coverage_when_no_default_return(
             def_algo_stmt,
             &algo_param_defs_with_type,
             &requirement_dom_facts,
+            &algo_param_to_forall_obj,
         )?;
 
         Ok(NonFactualStmtSuccess::new_with_stmt(def_algo_stmt.clone().into()).into())
@@ -74,10 +88,12 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_where_algo_belongs: &FnSetBody,
+        algo_param_to_forall_obj: &HashMap<String, Obj>,
     ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeError> {
         self.requirement_facts_and_param_defs_for_fn_set_with_dom(
             def_algo_stmt,
             fn_set_where_algo_belongs,
+            algo_param_to_forall_obj,
         )
     }
 
@@ -85,13 +101,11 @@ impl Runtime {
         &self,
         def_algo_stmt: &DefAlgoStmt,
         fn_set_with_dom: &FnSetBody,
+        algo_param_to_forall_obj: &HashMap<String, Obj>,
     ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeError> {
         let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
         for param_name in def_algo_stmt.params.iter() {
-            args_for_algo_params.push(obj_for_bound_param_in_scope(
-                param_name.clone(),
-                ParamObjType::Forall,
-            ));
+            args_for_algo_params.push(algo_param_to_forall_obj[param_name].clone());
         }
 
         let param_satisfy_fn_param_set_facts_atomic =
@@ -99,7 +113,7 @@ impl Runtime {
                 self,
                 &fn_set_with_dom.params_def_with_set,
                 &args_for_algo_params,
-                ParamObjType::FnSet,
+                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
             )
             .map_err(|runtime_error| {
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
@@ -130,13 +144,14 @@ impl Runtime {
         {
             fn_set_param_name_to_algo_arg_obj.insert(
                 fn_set_param_name.clone(),
-                obj_for_bound_param_in_scope(algo_param_name.clone(), ParamObjType::Forall),
+                algo_param_to_forall_obj[algo_param_name].clone(),
             );
         }
 
         let mut requirement_facts: Vec<Fact> = Vec::new();
         let mut algo_param_defs_with_type: Vec<ParamGroupWithParamType> =
             Vec::with_capacity(fn_set_with_dom.params_def_with_set.len());
+        let mut active_fn_set_param_map = HashMap::new();
 
         for param_def_with_set in fn_set_with_dom.params_def_with_set.iter() {
             let mut mapped_param_names: Vec<String> =
@@ -166,8 +181,8 @@ impl Runtime {
             let instantiated_param_type = ParamType::Obj(
                 self.inst_obj(
                     param_def_with_set.set_obj(),
-                    &fn_set_param_name_to_algo_arg_obj,
-                    ParamObjType::FnSet,
+                    &active_fn_set_param_map,
+                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
                 )
                 .map_err(|runtime_error| {
                     Self::def_algo_verify_exec_error_with_message_and_optional_cause(
@@ -181,6 +196,12 @@ impl Runtime {
                 mapped_param_names,
                 instantiated_param_type,
             ));
+            for fn_set_param_name in &param_def_with_set.params {
+                active_fn_set_param_map.insert(
+                    fn_set_param_name.clone(),
+                    fn_set_param_name_to_algo_arg_obj[fn_set_param_name].clone(),
+                );
+            }
         }
 
         for in_fact_atomic in param_satisfy_fn_param_set_facts_atomic.iter() {
@@ -191,7 +212,7 @@ impl Runtime {
                 .inst_or_and_chain_atomic_fact(
                     dom_fact,
                     &fn_set_param_name_to_algo_arg_obj,
-                    ParamObjType::FnSet,
+                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
                     None,
                 )
                 .map_err(|runtime_error| {
@@ -210,13 +231,14 @@ impl Runtime {
         ))
     }
 
-    fn build_algo_verification_fn_call_obj(&self, def_algo_stmt: &DefAlgoStmt) -> Obj {
+    fn build_algo_verification_fn_call_obj(
+        &self,
+        def_algo_stmt: &DefAlgoStmt,
+        algo_param_to_forall_obj: &HashMap<String, Obj>,
+    ) -> Obj {
         let mut fn_call_arg_boxes: Vec<Box<Obj>> = Vec::with_capacity(def_algo_stmt.params.len());
         for algo_param_name in def_algo_stmt.params.iter() {
-            fn_call_arg_boxes.push(Box::new(obj_for_bound_param_in_scope(
-                algo_param_name.clone(),
-                ParamObjType::Forall,
-            )));
+            fn_call_arg_boxes.push(Box::new(algo_param_to_forall_obj[algo_param_name].clone()));
         }
         let function_head = FnObjHead::given_an_atom_return_a_fn_obj_head(
             self.declared_identifier_obj(&def_algo_stmt.name),
@@ -254,36 +276,24 @@ impl Runtime {
         Ok(requirement_dom_facts)
     }
 
-    fn def_algo_verification_forall_param_map(algo_param_names: &[String]) -> HashMap<String, Obj> {
-        let mut param_to_arg_map = HashMap::with_capacity(algo_param_names.len());
-        for name in algo_param_names.iter() {
-            param_to_arg_map.insert(
-                name.clone(),
-                obj_for_bound_param_in_scope(name.clone(), ParamObjType::Forall),
-            );
-        }
-        param_to_arg_map
-    }
-
     fn forall_fact_for_def_algo_case(
         &self,
         algo_param_defs_with_type: &ParamDefWithType,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_case: &AlgoCase,
         fn_call_obj: &Obj,
-        algo_param_names: &[String],
+        algo_param_to_forall_obj: &HashMap<String, Obj>,
     ) -> Result<Fact, RuntimeError> {
-        let param_to_arg_map = Self::def_algo_verification_forall_param_map(algo_param_names);
         let inst_condition = self.inst_atomic_fact(
             &algo_case.condition,
-            &param_to_arg_map,
-            ParamObjType::Forall,
+            algo_param_to_forall_obj,
+            ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
             None,
         )?;
         let inst_return_value = self.inst_obj(
             &algo_case.return_stmt.value,
-            &param_to_arg_map,
-            ParamObjType::Forall,
+            algo_param_to_forall_obj,
+            ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
         )?;
 
         let mut case_dom_facts: Vec<Fact> = Vec::with_capacity(requirement_dom_facts.len() + 1);
@@ -314,6 +324,7 @@ impl Runtime {
         algo_param_defs_with_type: &ParamDefWithType,
         fn_call_obj: &Obj,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
+        algo_param_to_forall_obj: &HashMap<String, Obj>,
     ) -> Result<(), RuntimeError> {
         let verify_state = VerifyState::new(0, false);
         for algo_case in def_algo_stmt.cases.iter() {
@@ -322,7 +333,7 @@ impl Runtime {
                 requirement_dom_facts,
                 algo_case,
                 fn_call_obj,
-                &def_algo_stmt.params,
+                algo_param_to_forall_obj,
             )?;
             self.verify_fact_return_err_if_not_true(&case_forall_fact, &verify_state)
                 .map_err(|runtime_error| {
@@ -339,11 +350,77 @@ impl Runtime {
         Ok(())
     }
 
+    fn verify_def_algo_default_implies_return(
+        &mut self,
+        def_algo_stmt: &DefAlgoStmt,
+        algo_param_defs_with_type: &ParamDefWithType,
+        fn_call_obj: &Obj,
+        requirement_dom_facts: &[ExistOrAndChainAtomicFact],
+        algo_param_to_forall_obj: &HashMap<String, Obj>,
+    ) -> Result<(), RuntimeError> {
+        let Some(default_return) = &def_algo_stmt.default_return else {
+            return Ok(());
+        };
+
+        let mut dom_facts: Vec<Fact> = requirement_dom_facts
+            .iter()
+            .cloned()
+            .map(ExistOrAndChainAtomicFact::to_fact)
+            .collect();
+        for algo_case in &def_algo_stmt.cases {
+            let condition = self.inst_atomic_fact(
+                &algo_case.condition,
+                algo_param_to_forall_obj,
+                ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
+                None,
+            )?;
+            let negated_condition = condition.logical_negation().map_err(|runtime_error| {
+                Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                    def_algo_stmt,
+                    format!(
+                        "algo verify: default branch cannot negate case condition `{}`",
+                        condition
+                    ),
+                    Some(runtime_error),
+                )
+            })?;
+            dom_facts.push(negated_condition.into());
+        }
+        let return_value = self.inst_obj(
+            &default_return.value,
+            algo_param_to_forall_obj,
+            ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
+        )?;
+        let verification_fact: Fact = ForallFact::new(
+            algo_param_defs_with_type.clone(),
+            dom_facts,
+            vec![EqualFact::new(
+                fn_call_obj.clone(),
+                return_value,
+                default_return.line_file.clone(),
+            )
+            .into()],
+            default_return.line_file.clone(),
+        )?
+        .into();
+
+        self.verify_fact_return_err_if_not_true(&verification_fact, &VerifyState::new(0, false))
+            .map_err(|runtime_error| {
+                Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                    def_algo_stmt,
+                    "algo verify: default return does not equal the declared function".to_string(),
+                    Some(runtime_error),
+                )
+            })?;
+        Ok(())
+    }
+
     fn verify_def_algo_case_coverage_when_no_default_return(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
         algo_param_defs_with_type: &ParamDefWithType,
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
+        algo_param_to_forall_obj: &HashMap<String, Obj>,
     ) -> Result<(), RuntimeError> {
         if def_algo_stmt.default_return.is_some() {
             return Ok(());
@@ -359,14 +436,13 @@ impl Runtime {
             );
         }
 
-        let param_to_arg_map = Self::def_algo_verification_forall_param_map(&def_algo_stmt.params);
         let mut case_conditions: Vec<AndChainAtomicFact> =
             Vec::with_capacity(def_algo_stmt.cases.len());
         for algo_case in def_algo_stmt.cases.iter() {
             let inst_condition = self.inst_atomic_fact(
                 &algo_case.condition,
-                &param_to_arg_map,
-                ParamObjType::Forall,
+                algo_param_to_forall_obj,
+                ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
                 None,
             )?;
             case_conditions.push(inst_condition.into());

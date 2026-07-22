@@ -28,21 +28,25 @@ impl Runtime {
             return Ok(None);
         }
 
+        let source_names = forall.params_def_with_type.collect_param_names();
+        let (exist_names, full_param_to_exist_obj) =
+            self.fresh_binder_retag_plan(&source_names, ParamObjType::Exist);
         let mut param_to_exist_obj: HashMap<String, Obj> = HashMap::new();
         let mut exist_groups: Vec<ParamGroupWithParamType> = Vec::new();
+        let mut name_index = 0;
         for group in forall.params_def_with_type.groups.iter() {
+            let param_type = self.inst_param_type(
+                &group.param_type,
+                &param_to_exist_obj,
+                ParamObjType::BinderRetag(BinderRetagSource::Forall),
+            )?;
+            let group_exist_names =
+                exist_names[name_index..name_index + group.params.len()].to_vec();
             for name in group.params.iter() {
-                param_to_exist_obj.insert(
-                    name.clone(),
-                    obj_for_bound_param_in_scope(name.clone(), ParamObjType::Exist),
-                );
+                param_to_exist_obj.insert(name.clone(), full_param_to_exist_obj[name].clone());
             }
-            let param_type =
-                self.inst_param_type(&group.param_type, &param_to_exist_obj, ParamObjType::Forall)?;
-            exist_groups.push(ParamGroupWithParamType::new(
-                group.params.clone(),
-                param_type,
-            ));
+            name_index += group.params.len();
+            exist_groups.push(ParamGroupWithParamType::new(group_exist_names, param_type));
         }
 
         let mut body_facts: Vec<ExistBodyFact> = Vec::new();
@@ -94,7 +98,12 @@ impl Runtime {
         fact: &Fact,
         param_to_exist_obj: &HashMap<String, Obj>,
     ) -> Result<Option<OrAndChainAtomicFact>, RuntimeError> {
-        let instantiated = self.inst_fact(fact, param_to_exist_obj, ParamObjType::Forall, None)?;
+        let instantiated = self.inst_fact(
+            fact,
+            param_to_exist_obj,
+            ParamObjType::BinderRetag(BinderRetagSource::Forall),
+            None,
+        )?;
         Ok(match instantiated {
             Fact::AtomicFact(f) => Some(OrAndChainAtomicFact::AtomicFact(f)),
             Fact::AndFact(f) => Some(OrAndChainAtomicFact::AndFact(f)),
@@ -115,7 +124,7 @@ impl Runtime {
         let instantiated = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             param_to_exist_obj,
-            ParamObjType::Forall,
+            ParamObjType::BinderRetag(BinderRetagSource::Forall),
             None,
         )?;
         Ok(match instantiated {

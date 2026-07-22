@@ -172,7 +172,7 @@ have fn fib(n Z: n >= 0) Z by induc n from 0:
 have algo for fib(n):
     case n = 0: 0
     case n = 1: 1
-    fib(n - 1) + fib(n - 2)
+    case n > 1: fib(n - 1) + fib(n - 2)
 
 eval fib(10)
 fib(10) = 55

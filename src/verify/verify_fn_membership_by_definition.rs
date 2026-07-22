@@ -3,9 +3,9 @@ use std::collections::HashMap;
 
 struct FnMembershipProofFlow {
     in_fact: InFact,
-    expected_fn_set: FnSet,
     forall_params: ParamDefWithType,
     forall_dom_facts: Vec<Fact>,
+    pointwise_ret_set: Obj,
     applied_fn_obj: Obj,
 }
 
@@ -29,7 +29,7 @@ impl Runtime {
 
         let then_facts = vec![InFact::new(
             flow.applied_fn_obj.clone(),
-            (*flow.expected_fn_set.body.ret_set).clone(),
+            flow.pointwise_ret_set,
             flow.in_fact.line_file.clone(),
         )
         .into()];
@@ -76,19 +76,57 @@ impl Runtime {
         let Some(fn_head) = FnObjHead::given_an_atom_return_a_fn_obj_head(element.clone()) else {
             return Ok(None);
         };
-        let forall_params = self.build_forall_params_from_fn_set(&expected_fn_set.body)?;
-        let forall_dom_facts = Self::build_forall_dom_facts_from_fn_set(&expected_fn_set.body);
+        let (forall_param_names, full_param_to_forall_obj) =
+            self.fresh_binder_retag_plan(&expected_flat_param_names, ParamObjType::Forall);
+        let mut active_param_to_forall_obj = HashMap::new();
+        let mut forall_param_type_groups = Vec::new();
+        let mut name_index = 0;
+        for group in expected_fn_set.body.params_def_with_set.iter() {
+            let param_set = self.inst_obj(
+                group.set_obj(),
+                &active_param_to_forall_obj,
+                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+            )?;
+            let group_forall_names =
+                forall_param_names[name_index..name_index + group.params.len()].to_vec();
+            forall_param_type_groups.push(ParamGroupWithParamType::new(
+                group_forall_names,
+                ParamType::Obj(param_set),
+            ));
+            for name in group.params.iter() {
+                active_param_to_forall_obj
+                    .insert(name.clone(), full_param_to_forall_obj[name].clone());
+            }
+            name_index += group.params.len();
+        }
+        let mut forall_dom_facts = Vec::with_capacity(expected_fn_set.body.dom_facts.len());
+        for fact in expected_fn_set.body.dom_facts.iter() {
+            forall_dom_facts.push(
+                self.inst_or_and_chain_atomic_fact(
+                    fact,
+                    &full_param_to_forall_obj,
+                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                    None,
+                )?
+                .into(),
+            );
+        }
+        let pointwise_ret_set = self.inst_obj(
+            expected_fn_set.body.ret_set.as_ref(),
+            &full_param_to_forall_obj,
+            ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+        )?;
         let applied_fn_obj: Obj = FnObj::new(
             fn_head,
-            Self::build_full_application_arg_groups(&known_fn_body, &expected_flat_param_names),
+            Self::build_full_application_arg_groups(&known_fn_body, &forall_param_names),
         )
         .into();
 
         Ok(Some(FnMembershipProofFlow {
             in_fact: in_fact.clone(),
-            expected_fn_set: expected_fn_set.clone(),
-            forall_params,
+            forall_params: ParamDefWithType::new(forall_param_type_groups),
             forall_dom_facts,
+            pointwise_ret_set,
             applied_fn_obj,
         }))
     }
@@ -117,11 +155,6 @@ impl Runtime {
         flow: &FnMembershipProofFlow,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_with_its_local_def(
-            flow.expected_fn_set.body.params_def_with_set.clone(),
-            ParamObjType::Forall,
-            flow.applied_fn_obj.clone(),
-        )?;
         let stub = ForallFact::new(
             flow.forall_params.clone(),
             flow.forall_dom_facts.clone(),
@@ -142,36 +175,6 @@ impl Runtime {
             }
         }
         out
-    }
-
-    fn build_forall_params_from_fn_set(
-        &self,
-        body: &FnSetBody,
-    ) -> Result<ParamDefWithType, RuntimeError> {
-        let mut groups = Vec::new();
-        let mut param_to_forall_obj = HashMap::new();
-        for group in body.params_def_with_set.iter() {
-            let param_type = ParamType::Obj(self.inst_obj(
-                group.set_obj(),
-                &param_to_forall_obj,
-                ParamObjType::FnSet,
-            )?);
-            groups.push(ParamGroupWithParamType::new(
-                group.params.clone(),
-                param_type,
-            ));
-            for name in group.params.iter() {
-                param_to_forall_obj.insert(
-                    name.clone(),
-                    obj_for_bound_param_in_scope(name.clone(), ParamObjType::Forall),
-                );
-            }
-        }
-        Ok(ParamDefWithType::new(groups))
-    }
-
-    fn build_forall_dom_facts_from_fn_set(body: &FnSetBody) -> Vec<Fact> {
-        body.dom_facts.iter().cloned().map(Into::into).collect()
     }
 
     fn build_full_application_arg_groups(

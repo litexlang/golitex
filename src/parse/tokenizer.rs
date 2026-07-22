@@ -166,7 +166,7 @@ impl Tokenizer {
         Ok(expanded)
     }
 
-    fn strip_triple_quote_comment_blocks(&self, source_code: &str) -> String {
+    pub(crate) fn strip_triple_quote_comment_blocks(&self, source_code: &str) -> String {
         // Treat a line that consists only of `"` characters (after trimming) as a delimiter.
         // Between two delimiter lines, everything is replaced with empty lines so
         // the parser will ignore those lines.

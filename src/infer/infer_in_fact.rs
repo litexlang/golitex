@@ -242,7 +242,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let fn_set_fact: Fact = InFact::new(
             in_fact.element.clone(),
-            general_cart_member_fn_set(general_cart)?,
+            general_cart_member_fn_set(self, general_cart)?,
             in_fact.line_file.clone(),
         )
         .into();
@@ -251,9 +251,12 @@ impl Runtime {
         infer_result.new_fact(&fn_set_fact);
         self.verify_well_defined_and_store_and_infer_with_default_verify_state(fn_set_fact)?;
 
-        if let Some(pointwise_fact) =
-            general_cart_member_pointwise_fact(general_cart, &in_fact.element, &in_fact.line_file)?
-        {
+        if let Some(pointwise_fact) = general_cart_member_pointwise_fact(
+            self,
+            general_cart,
+            &in_fact.element,
+            &in_fact.line_file,
+        )? {
             infer_result.new_fact(&pointwise_fact);
             self.verify_well_defined_and_store_and_infer_with_default_verify_state(pointwise_fact)?;
         }
@@ -592,10 +595,20 @@ impl Runtime {
 
                 let mut field_map: HashMap<String, Obj> = HashMap::new();
                 let mut projection_field_map: HashMap<String, Obj> = HashMap::new();
+                let field_access_element = match &in_fact.element {
+                    Obj::Atom(AtomObj::Identifier(identifier)) => self
+                        .current_parse_namespace()
+                        .map(|module_name| {
+                            IdentifierWithMod::new(module_name.to_string(), identifier.name.clone())
+                                .into()
+                        })
+                        .unwrap_or_else(|| in_fact.element.clone()),
+                    _ => in_fact.element.clone(),
+                };
                 for (index, (field_name, _)) in def.fields.iter().enumerate() {
                     let field_access: Obj = ObjAsStructInstanceWithFieldAccess::new(
                         struct_obj.clone(),
-                        in_fact.element.clone(),
+                        field_access_element.clone(),
                         field_name.clone(),
                     )
                     .into();
@@ -973,7 +986,7 @@ impl Runtime {
         in_fact: &InFact,
         big_union: &BigUnion,
     ) -> Result<InferResult, RuntimeError> {
-        let member_name = "item".to_string();
+        let member_name = self.generate_internal_binder_name();
         let member_obj = obj_for_bound_param_in_scope(member_name.clone(), ParamObjType::Exist);
         let element_in_member: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -1003,7 +1016,7 @@ impl Runtime {
         in_fact: &InFact,
         replacement: &Replacement,
     ) -> Result<InferResult, RuntimeError> {
-        let preimage_name = "x".to_string();
+        let preimage_name = self.generate_internal_binder_name();
         let preimage_obj = obj_for_bound_param_in_scope(preimage_name.clone(), ParamObjType::Exist);
         let relation_fact: AtomicFact = NormalAtomicFact::new(
             replacement.prop_name.clone(),

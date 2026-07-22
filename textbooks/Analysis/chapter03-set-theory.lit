@@ -1160,7 +1160,10 @@ sketch:
     by contra:
         ? not exist n Z st {square_Z(n) = -1}
         obtain k from exist n Z st {square_Z(n) = -1}
+        square_Z(k) = k^2
+        k^2 = square_Z(k) = -1
         k^2 >= 0
+        -1 >= 0
         impossible -1 >= 0
 
     by contra:
@@ -1232,6 +1235,10 @@ sketch:
         case x = 1: 4
         case x = 2: 5
 
+    finite_bijection(0) = 3
+    finite_bijection(1) = 4
+    finite_bijection(2) = 5
+
     by enumerate finite_set:
         ? forall x1, x2 {0, 1, 2}:
             finite_bijection(x1) = finite_bijection(x2)
@@ -1267,7 +1274,7 @@ sketch:
     forall x1, x2 N:
         succ(x1) = succ(x2)
         =>:
-            x1 = x2
+            x1 = (x1 + 1) - 1 = succ(x1) - 1 = succ(x2) - 1 = (x2 + 1) - 1 = x2
     by def $is_injective_fn(N, N_pos, succ)
 
     claim:
@@ -1287,6 +1294,7 @@ sketch:
         ? not exist x N st {succ_to_N(x) = 0}
         obtain k from exist x N st {succ_to_N(x) = 0}
         k + 1 $in N_pos
+        0 = succ_to_N(k) = k + 1
         impossible 0 $in N_pos
 
     by contra:
@@ -1397,6 +1405,10 @@ sketch:
         case n = 2: 4
         case n = 3: 6
 
+    double_on_three(1) = 2
+    double_on_three(2) = 4
+    double_on_three(3) = 6
+
     by enumerate finite_set:
         ? forall y {2, 4, 6}:
             exist x {1, 2, 3} st {y = double_on_three(x)}
@@ -1410,7 +1422,17 @@ sketch:
                 witness exist x {1, 2, 3} st {y = double_on_three(x)} from 3
     by def $is_forward_image_of({1, 2, 3}, {2, 4, 6}, double_on_three, {1, 2, 3}, {2, 4, 6})
 
+    witness exist x {1, 2, 3} st {x $in N, double_nat(1) = double_nat(x)} from 1
+    by def $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, double_nat(1))
+    \restricted_image<N, N, double_nat, {1, 2, 3}> = {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
+    double_nat(1) $in {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
     double_nat(1) $in \restricted_image<N, N, double_nat, {1, 2, 3}>
+
+    claim:
+        ? forall y {2, 4, 6}:
+            y $in fn_range(double_on_three)
+        obtain x from exist x {1, 2, 3} st {y = double_on_three(x)}
+        double_on_three(x) $in fn_range(double_on_three)
 
     by extension:
         ? fn_range(double_on_three) = {2, 4, 6}
@@ -1432,6 +1454,11 @@ sketch:
         case z = 1: 1
         case z = 2: 4
 
+    square_on_example(-1) = 1
+    square_on_example(0) = 0
+    square_on_example(1) = 1
+    square_on_example(2) = 4
+
     by enumerate finite_set:
         ? forall y {0, 1, 4}:
             exist z {-1, 0, 1, 2} st {y = square_on_example(z)}
@@ -1444,6 +1471,12 @@ sketch:
             case y = 4:
                 witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from 2
     by def $is_forward_image_of({-1, 0, 1, 2}, {0, 1, 4}, square_on_example, {-1, 0, 1, 2}, {0, 1, 4})
+
+    claim:
+        ? forall y {0, 1, 4}:
+            y $in fn_range(square_on_example)
+        obtain z from exist z {-1, 0, 1, 2} st {y = square_on_example(z)}
+        square_on_example(z) $in fn_range(square_on_example)
 
     by extension:
         ? fn_range(square_on_example) = {0, 1, 4}
@@ -1511,13 +1544,13 @@ sketch:
         by cases:
             ? x $in {1}
             case double_nat(x) = 1:
-                x = 1 / 2
+                x = (2 * x) / 2 = double_nat(x) / 2 = 1 / 2
                 impossible not 1 / 2 $in N
             case double_nat(x) = 2:
-                x = 1
+                x = (2 * x) / 2 = double_nat(x) / 2 = 2 / 2 = 1
                 x $in {1}
             case double_nat(x) = 3:
-                x = 3 / 2
+                x = (2 * x) / 2 = double_nat(x) / 2 = 3 / 2
                 impossible not 3 / 2 $in N
     by def $is_inverse_image_of(N, N, double_nat, {1, 2, 3}, {1})
 
@@ -1557,10 +1590,11 @@ sketch:
         by cases:
             ? z $in {-2, -1, 0, 1, 2}
             case square_Z(z) = 0:
+                z^2 = square_Z(z) = 0
                 z = 0
                 z $in {-2, -1, 0, 1, 2}
             case square_Z(z) = 1:
-                (z - 1) * (z + 1) = z^2 - 1 = 0
+                (z - 1) * (z + 1) = z^2 - 1 = square_Z(z) - 1 = 0
                 z - 1 = 0 or z + 1 = 0
                 by cases:
                     ? z $in {-2, -1, 0, 1, 2}
@@ -1571,7 +1605,7 @@ sketch:
                         z = -1
                         z $in {-2, -1, 0, 1, 2}
             case square_Z(z) = 4:
-                (z - 2) * (z + 2) = z^2 - 4 = 0
+                (z - 2) * (z + 2) = z^2 - 4 = square_Z(z) - 4 = 0
                 z - 2 = 0 or z + 2 = 0
                 by cases:
                     ? z $in {-2, -1, 0, 1, 2}
@@ -1613,6 +1647,7 @@ sketch:
                 =>:
                     x $in A
             obtain a from exist a A st {f(x) = f(a)}
+            a $in S
             x = a
         by def $is_inverse_image_of(S, T, f, B, A)
 
@@ -1738,6 +1773,13 @@ sketch:
         case i = 2: {3, 4}
         case i = 3: {4, 5}
 
+    A(1) = {2, 3}
+    2 $in {2, 3}
+    2 $in A(1)
+    witness exist i {1, 2, 3} st {2 $in A(i)} from 1
+    by def $is_in_indexed_union({1, 2, 3}, N, A, 2)
+    \indexed_union<{1, 2, 3}, N, A> = {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)}
+    2 $in {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)}
     2 $in \indexed_union<{1, 2, 3}, N, A>
 
 """
@@ -1762,9 +1804,21 @@ sketch:
         case i = 2: {3, 4}
         case i = 3: {3, 5}
 
+    A(1) = {2, 3}
+    3 $in {2, 3}
+    3 $in A(1)
+    A(2) = {3, 4}
+    3 $in {3, 4}
+    3 $in A(2)
+    A(3) = {3, 5}
+    3 $in {3, 5}
+    3 $in A(3)
     by enumerate finite_set:
         ? forall i {1, 2, 3}:
             3 $in A(i)
+    by def $is_in_indexed_intersection({1, 2, 3}, N, A, 3)
+    \indexed_intersection<{1, 2, 3}, N, A> = {z N: $is_in_indexed_intersection({1, 2, 3}, N, A, z)}
+    3 $in {z N: $is_in_indexed_intersection({1, 2, 3}, N, A, z)}
     3 $in \indexed_intersection<{1, 2, 3}, N, A>
 
 """
@@ -2373,7 +2427,17 @@ are finite with the expected cardinality bounds or formulas.
 # need their own later lemmas.
 
 # Inclusion-exclusion and finite-subset cardinality are kernel builtin rules.
-# Subset finiteness is cited explicitly from `basics` below.
+# For finiteness itself, write a subset as the finite set with its complement
+# in the ambient finite set removed.
+
+thm subset_of_finite_set_is_finite:
+    ? forall A set, B finite_set:
+        A $subset B
+        =>:
+            $is_finite_set(A)
+    A = set_minus(B, set_minus(B, A))
+    $is_finite_set(set_minus(B, set_minus(B, A)))
+    $is_finite_set(A)
 
 sketch:
     forall X, Y finite_set:
@@ -2394,7 +2458,7 @@ sketch:
             =>:
                 $is_finite_set(Y)
                 finite_set_size(Y) <= finite_set_size(X)
-        by thm basics::subset_of_finite_set_is_finite(Y, X)
+        by thm subset_of_finite_set_is_finite(Y, X)
 
     have fn double_on_three(n {1, 2, 3}) {2, 4, 6} by cases:
         case n = 1: 2

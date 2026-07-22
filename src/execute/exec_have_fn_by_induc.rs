@@ -187,41 +187,25 @@ impl Runtime {
             );
         }
 
-        let mut generated_groups: Vec<ParamGroupWithSet> =
-            Vec::with_capacity(stmt.fn_set_clause.params_def_with_set.len());
-        let mut generated_index = 0;
-        for group in stmt.fn_set_clause.params_def_with_set.iter() {
-            let mut generated_group_names = Vec::with_capacity(group.params.len());
-            for _ in group.params.iter() {
-                generated_group_names.push(generated_names[generated_index].clone());
-                generated_index += 1;
-            }
-            let generated_set = self
-                .inst_obj(
-                    group.set_obj(),
-                    &param_to_generated_obj,
-                    ParamObjType::FnSet,
-                )
-                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-            generated_groups.push(ParamGroupWithSet::new(generated_group_names, generated_set));
-        }
-
-        let mut recursive_dom_facts: Vec<OrAndChainAtomicFact> =
-            Vec::with_capacity(stmt.fn_set_clause.dom_facts.len() + 2);
-        for dom_fact in stmt.fn_set_clause.dom_facts.iter() {
-            recursive_dom_facts.push(
-                self.inst_or_and_chain_atomic_fact(
-                    dom_fact,
-                    &param_to_generated_obj,
-                    ParamObjType::FnSet,
-                    None,
-                )
-                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?,
-            );
-        }
+        let generated_body = self
+            .alpha_rename_fn_set_body(
+                &FnSetBody::new(
+                    stmt.fn_set_clause.params_def_with_set.clone(),
+                    stmt.fn_set_clause.dom_facts.clone(),
+                    stmt.fn_set_clause.ret_set.clone(),
+                ),
+                &param_to_generated_obj,
+            )
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        let generated_groups = generated_body.params_def_with_set;
+        let mut recursive_dom_facts = generated_body.dom_facts;
 
         let generated_measure = self
-            .inst_obj(&stmt.measure, &param_to_generated_obj, ParamObjType::FnSet)
+            .inst_obj(
+                &stmt.measure,
+                &param_to_generated_obj,
+                ParamObjType::AlphaRename,
+            )
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         recursive_dom_facts.push(OrAndChainAtomicFact::AtomicFact(
             LessFact::new(
@@ -240,13 +224,7 @@ impl Runtime {
             .into(),
         ));
 
-        let generated_ret_set = self
-            .inst_obj(
-                &stmt.fn_set_clause.ret_set,
-                &param_to_generated_obj,
-                ParamObjType::FnSet,
-            )
-            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        let generated_ret_set = *generated_body.ret_set;
         let recursive_fn_set = self
             .new_fn_set(generated_groups, recursive_dom_facts, generated_ret_set)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;

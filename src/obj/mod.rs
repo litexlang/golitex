@@ -17,19 +17,18 @@ pub use fn_set::{AnonymousFn, FnSet, FnSetBody, FnSetSpace};
 pub use free_param_obj::{
     obj_for_bound_param_in_scope, param_binding_element_obj_for_store,
     strip_free_param_numeric_tags_in_display, strip_parsing_free_param_tags_for_user_display,
-    ByInducFreeParamObj, CartIndexFreeParamObj, DefAlgoFreeParamObj, DefHeaderFreeParamObj,
-    DefStructFieldFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj, ForallFreeParamObj,
-    ParamObjType, SetBuilderFreeParamObj, TupleIndexFreeParamObj,
+    BinderRetagSource, ByInducFreeParamObj, CartIndexFreeParamObj, DefAlgoFreeParamObj,
+    DefHeaderFreeParamObj, DefStructFieldFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj,
+    ForallFreeParamObj, ParamObjType, SetBuilderFreeParamObj, TupleIndexFreeParamObj,
 };
 pub use obj::{
     fn_obj_to_string, Abs, Add, BigIntersect, BigUnion, Cart, CartDim, ClosedRange, Div,
     FiniteSeqListObj, FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnObj, FnRange,
-    GeneralCart, InstantiatedTemplateObj, IntegerQuotient, Intersect, IntervalObj,
-    IntervalObjStruct, ListSet, Log, MatrixAdd, MatrixListObj, MatrixMul, MatrixPow,
-    MatrixScalarMul, MatrixSet, MatrixSub, Mod, Mul, Number, Obj,
-    ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind, OneSideInfinityIntervalObj,
-    OneSideInfinityIntervalObjStruct, Pow, PowerSet, Product, ProductOfFiniteSet, Proj, Range,
-    Replacement, SeqSet, SetBuilder, SetDiff, SetMinus, Sqrt, StructObj, Sub, Sum, SumOfFiniteSet,
-    Tuple, TupleDim, Union,
+    GeneralCart, InstantiatedTemplateObj, Intersect, IntervalObj, IntervalObjStruct, ListSet, Log,
+    MatrixAdd, MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Mod,
+    Mul, Number, Obj, ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind,
+    OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, Pow, PowerSet, Product,
+    ProductOfFiniteSet, Proj, Range, Replacement, SeqSet, SetBuilder, SetDiff, SetMinus, Sqrt,
+    StructObj, Sub, Sum, SumOfFiniteSet, Tuple, TupleDim, Union,
 };
 pub use standard_set::StandardSet;

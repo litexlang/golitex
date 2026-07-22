@@ -66,16 +66,24 @@ impl Runtime {
         obj: &Obj,
         binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
-        let type_fact = InFact::new(
+        let type_fact: Fact = InFact::new(
             param_binding_element_obj_for_store(name.to_string(), binding_kind),
             obj.clone(),
             default_line_file(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+        let mut infer_result = self
+            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                type_fact.clone(),
+                InferReason::ParameterDefinition,
+            )?;
+        infer_result.new_infer_result_inside(self.store_param_memberships_in_known_supersets(
+            name,
+            binding_kind,
+            obj,
             type_fact,
-            InferReason::ParameterDefinition,
-        )
+        )?);
+        Ok(infer_result)
     }
 
     fn define_parameter_by_binding_set(
