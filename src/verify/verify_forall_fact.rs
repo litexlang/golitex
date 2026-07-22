@@ -170,6 +170,25 @@ impl Runtime {
         {
             return Ok(cached_result);
         }
+        let alpha_normalized_key = self.alpha_normalized_forall_cache_key(forall_fact)?;
+        let (alpha_cached, cite_fact_source) =
+            self.cache_known_facts_contains(&alpha_normalized_key);
+        if alpha_cached {
+            let fact: Fact = forall_fact.clone().into();
+            let trust_summary = self.trust_summary_for_cached_fact(&alpha_normalized_key);
+            self.top_level_env()
+                .store_fact_to_cache_known_fact_with_trust(
+                    fact.to_string(),
+                    cite_fact_source.clone(),
+                    trust_summary,
+                )?;
+            return Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
+                fact.clone(),
+                VerifiedByResult::cached_fact(fact, cite_fact_source),
+                Vec::new(),
+            )
+            .into());
+        }
 
         if !verify_state.is_round_0() {
             return Ok(StmtUnknown::new().into());

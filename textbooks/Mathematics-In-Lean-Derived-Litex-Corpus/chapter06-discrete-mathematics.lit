@@ -49,29 +49,16 @@ thm card_union_of_disjoint:
     finite_set_size(intersect(A, B)) = finite_set_size({}) = 0
     finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B)) = finite_set_size(A) + finite_set_size(B)
 
-# Source definition: triangle. The object is a callable finite-set-valued
-# function. Finiteness of a filtered Cartesian product is recorded with the
-# object rather than changing triangle into a prop.
-have fn triangle(n N) power_set(cart(N, N)) = {p cart(N, N): p[1] $in range(0, n + 1), p[2] $in range(0, n + 1), p[1] < p[2]}
+# Source definition: triangle. Delete pairs whose first coordinate is at least
+# their second from the finite Cartesian square. The dependent codomain keeps
+# triangle callable and records its exact finite ambient carrier.
+have fn triangle(n N) power_set(cart(range(0, n + 1), range(0, n + 1))) = set_minus(cart(range(0, n + 1), range(0, n + 1)), {p cart(range(0, n + 1), range(0, n + 1)): p[1] >= p[2]})
 
 thm triangle_is_finite:
     ? forall n N:
         $is_finite_set(triangle(n))
-    claim:
-        ? triangle(n) $subset cart(range(0, n + 1), range(0, n + 1))
-        claim:
-            ? forall p triangle(n):
-                p $in cart(range(0, n + 1), range(0, n + 1))
-            p $in {q cart(N, N): q[1] $in range(0, n + 1), q[2] $in range(0, n + 1), q[1] < q[2]}
-            p[1] $in range(0, n + 1)
-            p[2] $in range(0, n + 1)
-            p = (p[1], p[2])
-            (p[1], p[2]) $in cart(range(0, n + 1), range(0, n + 1))
-            p $in cart(range(0, n + 1), range(0, n + 1))
-        triangle(n) $subset cart(range(0, n + 1), range(0, n + 1))
-    $is_finite_set(cart(range(0, n + 1), range(0, n + 1)))
-    by thm basics::subset_of_finite_set_is_finite(triangle(n), cart(range(0, n + 1), range(0, n + 1)))
-    $is_finite_set(triangle(n))
+    triangle(n) = set_minus(cart(range(0, n + 1), range(0, n + 1)), {p cart(range(0, n + 1), range(0, n + 1)): p[1] >= p[2]})
+    $is_finite_set(set_minus(cart(range(0, n + 1), range(0, n + 1)), {p cart(range(0, n + 1), range(0, n + 1)): p[1] >= p[2]}))
 
 # 6.3 Inductive Structures
 
@@ -107,6 +94,60 @@ prop is_list_map(A, B set, L_A, L_B nonempty_set, core_A &ListCore<A, L_A>, core
     forall a A, xs L_A:
         map_fn(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<B, L_B>{core_B}.cons(f(a), map_fn(xs))
 
+# Source theorem: append_nil. Structural induction uses the nil equation as the
+# base case and the cons equation to transport the induction hypothesis.
+thm list_append_nil:
+    ? forall A set, L nonempty_set, core &ListCore<A, L>, append fn(x, y L) L, target L:
+        $is_list_append(A, L, core, append)
+        =>:
+            append(target, &ListCore<A, L>{core}.nil) = target
+    have P power_set(L) = {z L: append(z, &ListCore<A, L>{core}.nil) = z}
+    &ListCore<A, L>{core}.nil $in {z L: append(z, &ListCore<A, L>{core}.nil) = z}
+    &ListCore<A, L>{core}.nil $in P
+    claim:
+        ? forall a A, xs L:
+            xs $in P
+            =>:
+                &ListCore<A, L>{core}.cons(a, xs) $in P
+        append(&ListCore<A, L>{core}.cons(a, xs), &ListCore<A, L>{core}.nil) = &ListCore<A, L>{core}.cons(a, append(xs, &ListCore<A, L>{core}.nil))
+        append(&ListCore<A, L>{core}.cons(a, xs), &ListCore<A, L>{core}.nil) = &ListCore<A, L>{core}.cons(a, xs)
+        &ListCore<A, L>{core}.cons(a, xs) $in {z L: append(z, &ListCore<A, L>{core}.nil) = z}
+        &ListCore<A, L>{core}.cons(a, xs) $in P
+    P = L
+    target $in P
+    target $in {z L: append(z, &ListCore<A, L>{core}.nil) = z}
+
+# Source theorem: map_map. Structural induction compares the three map
+# specifications; the cons case composes g(f(a)) and reuses the tail result.
+thm list_map_map:
+    ? forall A, B, C set, L_A, L_B, L_C nonempty_set, core_A &ListCore<A, L_A>, core_B &ListCore<B, L_B>, core_C &ListCore<C, L_C>, f fn(x A) B, g fn(y B) C, map_f fn(xs L_A) L_B, map_g fn(ys L_B) L_C, map_gf fn(xs L_A) L_C, target L_A:
+        $is_list_map(A, B, L_A, L_B, core_A, core_B, f, map_f)
+        $is_list_map(B, C, L_B, L_C, core_B, core_C, g, map_g)
+        $is_list_map(A, C, L_A, L_C, core_A, core_C, fn(x A) C {g(f(x))}, map_gf)
+        =>:
+            map_g(map_f(target)) = map_gf(target)
+    have P power_set(L_A) = {z L_A: map_g(map_f(z)) = map_gf(z)}
+    &ListCore<A, L_A>{core_A}.nil $in {z L_A: map_g(map_f(z)) = map_gf(z)}
+    &ListCore<A, L_A>{core_A}.nil $in P
+    claim:
+        ? forall a A, xs L_A:
+            xs $in P
+            =>:
+                &ListCore<A, L_A>{core_A}.cons(a, xs) $in P
+        map_f(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<B, L_B>{core_B}.cons(f(a), map_f(xs))
+        map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = map_g(&ListCore<B, L_B>{core_B}.cons(f(a), map_f(xs)))
+        map_g(&ListCore<B, L_B>{core_B}.cons(f(a), map_f(xs))) = &ListCore<C, L_C>{core_C}.cons(g(f(a)), map_g(map_f(xs)))
+        map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = &ListCore<C, L_C>{core_C}.cons(g(f(a)), map_g(map_f(xs)))
+        map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<C, L_C>{core_C}.cons((fn(x A) C {g(f(x))})(a), map_gf(xs))
+        (fn(x A) C {g(f(x))})(a) = g(f(a))
+        map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<C, L_C>{core_C}.cons(g(f(a)), map_gf(xs))
+        map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs))
+        &ListCore<A, L_A>{core_A}.cons(a, xs) $in {z L_A: map_g(map_f(z)) = map_gf(z)}
+        &ListCore<A, L_A>{core_A}.cons(a, xs) $in P
+    P = L_A
+    target $in P
+    target $in {z L_A: map_g(map_f(z)) = map_gf(z)}
+
 # The source uses Nat.max in the depth recursion.
 have fn nat_max(left, right N) N by cases:
     case left >= right: left
@@ -128,3 +169,11 @@ have fn boolean_and(left, right {0, 1}) {0, 1} by cases:
 have fn boolean_or(left, right {0, 1}) {0, 1} by cases:
     case left = 0: right
     case left = 1: 1
+
+# The source's substitution proof updates one input of a Boolean valuation.
+# Keep that construction callable while the surrounding formula syntax and
+# evaluator remain tracked separately.
+template<valuation fn(i N) {0, 1}, idx N, bit {0, 1}>:
+    have fn updated_boolean_valuation(m N) {0, 1} by cases:
+        case m = idx: bit
+        case m != idx: valuation(m)

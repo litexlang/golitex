@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::collections::HashMap;
 
 impl Runtime {
     pub fn exec_have_tuple_stmt(
@@ -241,17 +240,15 @@ impl Runtime {
         &self,
         stmt: &HaveTupleStmt,
     ) -> Result<ForallFact, RuntimeError> {
-        let index_obj = obj_for_bound_param_in_scope(stmt.index_name.clone(), ParamObjType::Forall);
-        let value = self.value_with_public_forall_index(
-            &stmt.value,
-            &stmt.index_name,
-            ParamObjType::TupleIndex,
-        )?;
+        let (index_names, index_map) =
+            self.fresh_binder_retag_plan(&[stmt.index_name.clone()], ParamObjType::Forall);
+        let index_obj = index_map[&stmt.index_name].clone();
+        let value = self.inst_obj(&stmt.value, &index_map, ParamObjType::TupleIndex)?;
         let target = self.declared_identifier_obj(&stmt.name);
         let left: Obj = ObjAtIndex::new(target, index_obj).into();
         let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
         ForallFact::new(
-            tuple_or_cart_index_param_def(&stmt.index_name, stmt.dimension.clone()),
+            tuple_or_cart_index_param_def(&index_names[0], stmt.dimension.clone()),
             vec![],
             vec![equal_fact.into()],
             stmt.line_file.clone(),
@@ -259,35 +256,19 @@ impl Runtime {
     }
 
     fn cart_coordinate_forall_fact(&self, stmt: &HaveCartStmt) -> Result<ForallFact, RuntimeError> {
-        let index_obj = obj_for_bound_param_in_scope(stmt.index_name.clone(), ParamObjType::Forall);
-        let value = self.value_with_public_forall_index(
-            &stmt.value,
-            &stmt.index_name,
-            ParamObjType::CartIndex,
-        )?;
+        let (index_names, index_map) =
+            self.fresh_binder_retag_plan(&[stmt.index_name.clone()], ParamObjType::Forall);
+        let index_obj = index_map[&stmt.index_name].clone();
+        let value = self.inst_obj(&stmt.value, &index_map, ParamObjType::CartIndex)?;
         let target = self.declared_identifier_obj(&stmt.name);
         let left: Obj = Proj::new(target, index_obj).into();
         let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
         ForallFact::new(
-            tuple_or_cart_index_param_def(&stmt.index_name, stmt.dimension.clone()),
+            tuple_or_cart_index_param_def(&index_names[0], stmt.dimension.clone()),
             vec![],
             vec![equal_fact.into()],
             stmt.line_file.clone(),
         )
-    }
-
-    fn value_with_public_forall_index(
-        &self,
-        value: &Obj,
-        index_name: &str,
-        index_kind: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        let mut param_to_arg_map = HashMap::new();
-        param_to_arg_map.insert(
-            index_name.to_string(),
-            obj_for_bound_param_in_scope(index_name.to_string(), ParamObjType::Forall),
-        );
-        self.inst_obj(value, &param_to_arg_map, index_kind)
     }
 }
 

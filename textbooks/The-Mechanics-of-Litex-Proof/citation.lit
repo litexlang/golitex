@@ -63,6 +63,7 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
                     d <= abs(a)
                     d $in closed_range(1, abs(a))
                 C $subset closed_range(1, abs(a))
+                by thm basics::subset_of_finite_set_is_finite(C, closed_range(1, abs(a)))
                 $is_finite_set(C)
             case b != 0:
                 claim:
@@ -76,6 +77,7 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
                     d <= abs(b)
                     d $in closed_range(1, abs(b))
                 C $subset closed_range(1, abs(b))
+                by thm basics::subset_of_finite_set_is_finite(C, closed_range(1, abs(b)))
                 $is_finite_set(C)
     witness $is_nonempty_set(C) from 1:
         1 $in N_pos
@@ -85,6 +87,7 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
         witness exist k Z st {b = 1 * k} from b:
             b = 1 * b
         $divides(1, b)
+        1 $in {d N_pos: $divides(d, a), $divides(d, b)}
         1 $in C
     $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
     $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
@@ -133,9 +136,9 @@ thm common_divisor_le_gcd:
         =>:
             d <= gcd(a, b)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    d $in {c N_pos: $divides(c, a), $divides(c, b)}
-    d <= finite_set_max({c N_pos: $divides(c, a), $divides(c, b)})
-    gcd(a, b) = finite_set_max({c N_pos: $divides(c, a), $divides(c, b)})
+    d $in {d N_pos: $divides(d, a), $divides(d, b)}
+    d <= finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     d <= gcd(a, b)
 
 thm gcd_euclidean_base:
@@ -152,7 +155,8 @@ thm gcd_euclidean_base:
     by cases:
         ? $divides(abs(a), a)
         case a >= 0:
-            abs(a) = a = abs(a) * 1
+            abs(a) = a
+            a = a * 1 = abs(a) * 1
             witness exist k Z st {a = abs(a) * k} from 1
         case a < 0:
             abs(a) = -a
@@ -192,8 +196,8 @@ thm gcd_euclidean_step:
     $divides(gcd(b, a % abs(b)), abs(b))
     obtain x from exist k Z st {abs(b) = gcd(b, a % abs(b)) * k}
     obtain y from exist k Z st {a % abs(b) = gcd(b, a % abs(b)) * k}
-    witness exist q Z st {a = abs(b) * q + a % abs(b)} from integer_quotient(a, abs(b)):
-        a = abs(b) * integer_quotient(a, abs(b)) + a % abs(b)
+    witness exist q Z st {a = abs(b) * q + a % abs(b)} from basics::integer_quotient(a, abs(b)):
+        a = abs(b) * basics::integer_quotient(a, abs(b)) + a % abs(b)
     obtain q from exist q Z st {a = abs(b) * q + a % abs(b)}
     witness exist t Z st {a = gcd(b, a % abs(b)) * t} from x * q + y:
         a = abs(b) * q + a % abs(b) = (gcd(b, a % abs(b)) * x) * q + gcd(b, a % abs(b)) * y = gcd(b, a % abs(b)) * (x * q + y)
@@ -207,8 +211,8 @@ thm gcd_euclidean_step:
     $divides(gcd(a, b), abs(b))
     obtain u from exist k Z st {a = gcd(a, b) * k}
     obtain v from exist k Z st {abs(b) = gcd(a, b) * k}
-    witness exist r Z st {a = abs(b) * r + a % abs(b)} from integer_quotient(a, abs(b)):
-        a = abs(b) * integer_quotient(a, abs(b)) + a % abs(b)
+    witness exist r Z st {a = abs(b) * r + a % abs(b)} from basics::integer_quotient(a, abs(b)):
+        a = abs(b) * basics::integer_quotient(a, abs(b)) + a % abs(b)
     obtain r from exist r Z st {a = abs(b) * r + a % abs(b)}
     witness exist t Z st {a % abs(b) = gcd(a, b) * t} from u - v * r:
         a % abs(b) = a - abs(b) * r = gcd(a, b) * u - (gcd(a, b) * v) * r = gcd(a, b) * (u - v * r)
@@ -222,114 +226,28 @@ thm bezout_identity:
         a != 0 or b != 0
         =>:
             exist x Z, y Z st {gcd(a, b) = x * a + y * b}
+    by thm basics::bezout_identity(a, b)
 
-    have fn euclid_bezout_pair(u, v Z) cart(Z, Z) by induc abs(v) from 0:
-        case v = 0:
-            case u >= 0: (1, 0)
-            case u < 0: (-1, 0)
-        case v != 0:
-            case v >= 0: (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] - integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])
-            case v < 0: (euclid_bezout_pair(v, u % abs(v))[2], euclid_bezout_pair(v, u % abs(v))[1] + integer_quotient(u, abs(v)) * euclid_bezout_pair(v, u % abs(v))[2])
+    by thm gcd_positive(a, b)
+    by thm gcd_divides_left(a, b)
+    by thm gcd_divides_right(a, b)
+    $basics::divides(gcd(a, b), a)
+    $basics::divides(gcd(a, b), b)
+    by thm basics::common_divisor_le_gcd(a, b, gcd(a, b))
+    gcd(a, b) <= basics::gcd(a, b)
 
-    have fn euclid_bezout_l(u, v Z) Z = euclid_bezout_pair(u, v)[1]
-    have fn euclid_bezout_r(u, v Z) Z = euclid_bezout_pair(u, v)[2]
+    by thm basics::gcd_positive(a, b)
+    by thm basics::gcd_divides_left(a, b)
+    by thm basics::gcd_divides_right(a, b)
+    $divides(basics::gcd(a, b), a)
+    $divides(basics::gcd(a, b), b)
+    by thm common_divisor_le_gcd(a, b, basics::gcd(a, b))
+    basics::gcd(a, b) <= gcd(a, b)
+    gcd(a, b) = basics::gcd(a, b)
 
-    prop euclid_bezout_identity_at_measure(m Z):
-        forall u, v Z:
-            u != 0 or v != 0
-            abs(v) = m
-            =>:
-                euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
-
-    claim:
-        ? forall u, v Z:
-            u != 0 or v != 0
-            abs(v) = 0
-            =>:
-                euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
-        v = 0
-        by cases:
-            ? u != 0
-            case u != 0:
-                do_nothing
-            case v != 0:
-                impossible v = 0
-        by thm gcd_euclidean_base(u)
-        by cases:
-            ? euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
-            case u >= 0:
-                euclid_bezout_pair(u, v) = (1, 0)
-                euclid_bezout_l(u, v) = 1
-                euclid_bezout_r(u, v) = 0
-                abs(u) = u
-                euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = 1 * u + 0 * v = u = abs(u) = gcd(u, v)
-            case u < 0:
-                euclid_bezout_pair(u, v) = (-1, 0)
-                euclid_bezout_l(u, v) = -1
-                euclid_bezout_r(u, v) = 0
-                abs(u) = -u
-                euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = -1 * u + 0 * v = -u = abs(u) = gcd(u, v)
-    $euclid_bezout_identity_at_measure(0)
-
-    claim:
-        ? forall m Z:
-            m >= 0
-            forall y Z:
-                y >= 0
-                y <= m
-                =>:
-                    $euclid_bezout_identity_at_measure(y)
-            =>:
-                $euclid_bezout_identity_at_measure(m + 1)
-        claim:
-            ? forall u, v Z:
-                u != 0 or v != 0
-                abs(v) = m + 1
-                =>:
-                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
-            m + 1 > 0
-            by contra:
-                ? v != 0
-                v = 0
-                abs(v) = 0 = m + 1
-                impossible m + 1 > 0
-            abs(v) > 0
-            abs(v) $in N_pos
-            abs(u % abs(v)) >= 0
-            abs(u % abs(v)) = u % abs(v)
-            u % abs(v) < abs(v)
-            abs(u % abs(v)) < abs(v) = m + 1
-            abs(u % abs(v)) <= m
-            $euclid_bezout_identity_at_measure(abs(u % abs(v)))
-            by thm gcd_euclidean_step(u, v)
-            by cases:
-                ? euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
-                case v >= 0:
-                    abs(v) = v
-                    euclid_bezout_l(u, v) = euclid_bezout_r(v, u % abs(v))
-                    euclid_bezout_r(u, v) = euclid_bezout_l(v, u % abs(v)) - integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
-                    u - v * integer_quotient(u, abs(v)) = u % abs(v)
-                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_l(v, u % abs(v)) * v + euclid_bezout_r(v, u % abs(v)) * (u % abs(v)) = gcd(v, u % abs(v)) = gcd(u, v)
-                case v < 0:
-                    abs(v) = -v
-                    euclid_bezout_l(u, v) = euclid_bezout_r(v, u % abs(v))
-                    euclid_bezout_r(u, v) = euclid_bezout_l(v, u % abs(v)) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, u % abs(v))
-                    u + v * integer_quotient(u, abs(v)) = u % abs(v)
-                    euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_l(v, u % abs(v)) * v + euclid_bezout_r(v, u % abs(v)) * (u % abs(v)) = gcd(v, u % abs(v)) = gcd(u, v)
-        $euclid_bezout_identity_at_measure(m + 1)
-
-    by strong_induc m from 0:
-        ? $euclid_bezout_identity_at_measure(m)
-        ? from m = 0:
-            $euclid_bezout_identity_at_measure(0)
-        ? strong_induc:
-            $euclid_bezout_identity_at_measure(m + 1)
-
-    abs(b) >= 0
-    $euclid_bezout_identity_at_measure(abs(b))
-    euclid_bezout_l(a, b) * a + euclid_bezout_r(a, b) * b = gcd(a, b)
-    witness exist x Z, y Z st {gcd(a, b) = x * a + y * b} from euclid_bezout_l(a, b), euclid_bezout_r(a, b):
-        gcd(a, b) = euclid_bezout_l(a, b) * a + euclid_bezout_r(a, b) * b
+    obtain x, y from exist x Z, y Z st {basics::gcd(a, b) = x * a + y * b}
+    witness exist x0 Z, y0 Z st {gcd(a, b) = x0 * a + y0 * b} from x, y:
+        gcd(a, b) = basics::gcd(a, b) = x * a + y * b
 
 thm gcd_of_prime_is_one_or_prime:
     ? forall a Z, p N_pos:

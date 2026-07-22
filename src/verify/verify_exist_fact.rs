@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::result::Result;
 
 fn real_line_comparison_exist_fact_non_witness_operands(
@@ -191,6 +191,52 @@ fn rational_positive_denominator_exist_fact_non_witness_operand(
     Some(ratio_other)
 }
 
+fn euclidean_quotient_exist_unique_operands(exist_fact: &ExistFactEnum) -> Option<(Obj, Obj)> {
+    if !exist_fact.is_exist_unique() || exist_fact.facts().len() != 1 {
+        return None;
+    }
+
+    let params = exist_fact
+        .params_def_with_type()
+        .collect_param_names_with_types();
+    let [(witness_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = params.as_slice()
+    else {
+        return None;
+    };
+    let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = &exist_fact.facts()[0]
+    else {
+        return None;
+    };
+
+    let Obj::Add(decomposition) = &equal_fact.right else {
+        return None;
+    };
+    let Obj::Mul(product) = decomposition.left.as_ref() else {
+        return None;
+    };
+    if !matches!(
+        product.right.as_ref(),
+        Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name
+    ) {
+        return None;
+    }
+    let Obj::Mod(remainder) = decomposition.right.as_ref() else {
+        return None;
+    };
+
+    let dividend = equal_fact.left.clone();
+    let divisor = product.left.as_ref().clone();
+    if dividend.to_string() != remainder.left.to_string()
+        || divisor.to_string() != remainder.right.to_string()
+        || Runtime::obj_depends_on_given_exist_param(&dividend, &[witness_name.clone()])
+        || Runtime::obj_depends_on_given_exist_param(&divisor, &[witness_name.clone()])
+    {
+        return None;
+    }
+
+    Some((dividend, divisor))
+}
+
 fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFactEnum) -> Option<(Obj, Obj)> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
         return None;
@@ -376,6 +422,124 @@ fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
     Some(witness_set.clone())
 }
 
+fn rational_reduced_fraction_exist_fact_non_witness_operand(
+    exist_fact: &ExistFactEnum,
+) -> Option<Obj> {
+    if (!exist_fact.is_plain_exist() && !exist_fact.is_exist_unique())
+        || exist_fact.facts().len() != 2
+    {
+        return None;
+    }
+
+    let params = exist_fact
+        .params_def_with_type()
+        .collect_param_names_with_types();
+    let [(numerator_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z))), (denominator_name, ParamType::Obj(Obj::StandardSet(StandardSet::NPos)))] =
+        params.as_slice()
+    else {
+        return None;
+    };
+
+    let is_named_exist_param = |obj: &Obj, name: &str| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name == name);
+    let is_selected_ratio = |obj: &Obj| match obj {
+        Obj::Div(div) => {
+            is_named_exist_param(div.left.as_ref(), numerator_name)
+                && is_named_exist_param(div.right.as_ref(), denominator_name)
+        }
+        _ => false,
+    };
+    let is_zero = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "0");
+    let is_one = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "1");
+
+    let rational = exist_fact.facts().iter().find_map(|fact| {
+        let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = fact else {
+            return None;
+        };
+        if is_selected_ratio(&equal_fact.left) {
+            Some(equal_fact.right.clone())
+        } else if is_selected_ratio(&equal_fact.right) {
+            Some(equal_fact.left.clone())
+        } else {
+            None
+        }
+    })?;
+    if Runtime::obj_depends_on_given_exist_param(
+        &rational,
+        &[numerator_name.clone(), denominator_name.clone()],
+    ) {
+        return None;
+    }
+
+    let reducedness_forall = exist_fact.facts().iter().find_map(|fact| match fact {
+        ExistBodyFact::InlineForall(forall_fact) => Some(forall_fact),
+        _ => None,
+    })?;
+    let common_divisor_params = reducedness_forall
+        .params_def_with_type
+        .collect_param_names_with_types();
+    let [(common_divisor_name, ParamType::Obj(Obj::StandardSet(StandardSet::NPos)))] =
+        common_divisor_params.as_slice()
+    else {
+        return None;
+    };
+
+    let mut divisibility_premises = Vec::new();
+    for domain_fact in reducedness_forall.dom_facts.iter() {
+        match domain_fact {
+            Fact::AtomicFact(atomic_fact) => divisibility_premises.push(atomic_fact),
+            Fact::AndFact(and_fact) => divisibility_premises.extend(and_fact.facts.iter()),
+            _ => return None,
+        }
+    }
+    if divisibility_premises.len() != 2 || reducedness_forall.then_facts.len() != 1 {
+        return None;
+    }
+
+    let divides_witness = |atomic_fact: &AtomicFact, dividend_name: &str| {
+        let AtomicFact::EqualFact(equal_fact) = atomic_fact else {
+            return false;
+        };
+        let is_remainder = |obj: &Obj| match obj {
+            Obj::Mod(modulo) => {
+                is_named_exist_param(modulo.left.as_ref(), dividend_name)
+                    && matches!(
+                        modulo.right.as_ref(),
+                        Obj::Atom(AtomObj::Forall(param)) if param.name == *common_divisor_name
+                    )
+            }
+            _ => false,
+        };
+        (is_remainder(&equal_fact.left) && is_zero(&equal_fact.right))
+            || (is_zero(&equal_fact.left) && is_remainder(&equal_fact.right))
+    };
+    let numerator_divisible = divisibility_premises
+        .iter()
+        .any(|premise| divides_witness(premise, numerator_name));
+    let denominator_divisible = divisibility_premises
+        .iter()
+        .any(|premise| divides_witness(premise, denominator_name));
+    if !numerator_divisible || !denominator_divisible {
+        return None;
+    }
+
+    let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(conclusion)) =
+        &reducedness_forall.then_facts[0]
+    else {
+        return None;
+    };
+    let common_divisor_is_one = |left: &Obj, right: &Obj| {
+        matches!(left, Obj::Atom(AtomObj::Forall(param)) if param.name == *common_divisor_name)
+            && is_one(right)
+    };
+    if !common_divisor_is_one(&conclusion.left, &conclusion.right)
+        && !common_divisor_is_one(&conclusion.right, &conclusion.left)
+    {
+        return None;
+    }
+
+    Some(rational)
+}
+
 impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
@@ -443,6 +607,32 @@ impl Runtime {
             }
         }
 
+        // Every rational has one unique reduced integer fraction with a positive
+        // denominator. Example: `exist! p Z, q N_pos st {a = p / q, forall! z
+        // N_pos: p % z = 0 and q % z = 0 => {z = 1}}` for `a Q`.
+        if let Some(rational) = rational_reduced_fraction_exist_fact_non_witness_operand(exist_fact)
+        {
+            let in_q: AtomicFact =
+                InFact::new(rational, StandardSet::Q.into(), exist_fact.line_file()).into();
+            let rational_membership =
+                self.verify_non_equational_known_then_builtin_rules_only(&in_q, verify_state)?;
+            if rational_membership.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        exist_fact.clone().into(),
+                        if exist_fact.is_exist_unique() {
+                            "exist!: unique rational reduced fraction with positive denominator"
+                                .to_string()
+                        } else {
+                            "exist: rational reduced fraction with positive denominator".to_string()
+                        },
+                        vec![rational_membership],
+                    )
+                    .into(),
+                );
+            }
+        }
+
         // Every rational has an integer fraction form with a positive denominator.
         // Example: `exist a, b Z st {b > 0, q = a / b}` for `q Q`.
         if let Some(rational) =
@@ -487,6 +677,34 @@ impl Runtime {
                         exist_fact.clone().into(),
                         "exist: rational integer ratio representation".to_string(),
                         vec![rational_membership],
+                    )
+                    .into(),
+                );
+            }
+        }
+
+        // Euclidean division by a positive integer determines a unique integer quotient.
+        // Example: a Z, d N_pos => exist! q Z st {a = d * q + a % d}.
+        if let Some((dividend, divisor)) = euclidean_quotient_exist_unique_operands(exist_fact) {
+            let dividend_in_z: AtomicFact =
+                InFact::new(dividend, StandardSet::Z.into(), exist_fact.line_file()).into();
+            let divisor_in_n_pos: AtomicFact =
+                InFact::new(divisor, StandardSet::NPos.into(), exist_fact.line_file()).into();
+            let dividend_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &dividend_in_z,
+                verify_state,
+            )?;
+            let divisor_result = self.verify_non_equational_known_then_builtin_rules_only(
+                &divisor_in_n_pos,
+                verify_state,
+            )?;
+            if dividend_result.is_true() && divisor_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        exist_fact.clone().into(),
+                        "exist!: unique Euclidean quotient for an integer and positive divisor"
+                            .to_string(),
+                        vec![dividend_result, divisor_result],
                     )
                     .into(),
                 );
@@ -722,8 +940,24 @@ impl Runtime {
         let lf = exist_fact.line_file();
         let flat_orig = exist_fact.params_def_with_type().collect_param_names();
         let n = flat_orig.len();
-        let flat_a: Vec<String> = flat_orig.iter().map(|name| format!("{}1", name)).collect();
-        let flat_b: Vec<String> = flat_orig.iter().map(|name| format!("{}2", name)).collect();
+        let mut reserved_names = HashSet::new();
+        self.collect_param_obj_names_in_exist_fact(
+            exist_fact,
+            ParamObjType::Forall,
+            &mut reserved_names,
+        );
+        let mut flat_a = Vec::with_capacity(n);
+        let mut flat_b = Vec::with_capacity(n);
+        for _ in flat_orig.iter() {
+            let name = self.generate_one_unused_name_with_reserved(&reserved_names);
+            reserved_names.insert(name.clone());
+            flat_a.push(name);
+        }
+        for _ in flat_orig.iter() {
+            let name = self.generate_one_unused_name_with_reserved(&reserved_names);
+            reserved_names.insert(name.clone());
+            flat_b.push(name);
+        }
 
         let mut map_running_a: HashMap<String, Obj> = HashMap::new();
         let mut map_running_b: HashMap<String, Obj> = HashMap::new();
@@ -732,32 +966,50 @@ impl Runtime {
             let chunk_a: Vec<String> = group
                 .params
                 .iter()
-                .map(|name| format!("{}1", name))
+                .map(|name| {
+                    let index = flat_orig
+                        .iter()
+                        .position(|original| original == name)
+                        .expect("exist uniqueness binder must be in flattened parameter list");
+                    flat_a[index].clone()
+                })
                 .collect();
+            let pt_a = self.inst_param_type(
+                &group.param_type,
+                &map_running_a,
+                ParamObjType::BinderRetag(BinderRetagSource::Exist),
+            )?;
             for (orig, nm) in group.params.iter().zip(chunk_a.iter()) {
                 map_running_a.insert(
                     orig.clone(),
                     obj_for_bound_param_in_scope(nm.clone(), ParamObjType::Forall),
                 );
             }
-            let pt_a =
-                self.inst_param_type(&group.param_type, &map_running_a, ParamObjType::Forall)?;
             forall_groups.push(ParamGroupWithParamType::new(chunk_a, pt_a));
         }
         for group in exist_fact.params_def_with_type().groups.iter() {
             let chunk_b: Vec<String> = group
                 .params
                 .iter()
-                .map(|name| format!("{}2", name))
+                .map(|name| {
+                    let index = flat_orig
+                        .iter()
+                        .position(|original| original == name)
+                        .expect("exist uniqueness binder must be in flattened parameter list");
+                    flat_b[index].clone()
+                })
                 .collect();
+            let pt_b = self.inst_param_type(
+                &group.param_type,
+                &map_running_b,
+                ParamObjType::BinderRetag(BinderRetagSource::Exist),
+            )?;
             for (orig, nm) in group.params.iter().zip(chunk_b.iter()) {
                 map_running_b.insert(
                     orig.clone(),
                     obj_for_bound_param_in_scope(nm.clone(), ParamObjType::Forall),
                 );
             }
-            let pt_b =
-                self.inst_param_type(&group.param_type, &map_running_b, ParamObjType::Forall)?;
             forall_groups.push(ParamGroupWithParamType::new(chunk_b, pt_b));
         }
 
@@ -782,15 +1034,25 @@ impl Runtime {
             )
             .collect();
 
-        // Witness parameters in `exist_fact.facts` are [`ExistFreeParamObj`]; only `inst_*` with
-        // [`ParamObjType::Exist`] substitutes them from `map_a` / `map_b` into the forall copies.
+        // Retag only existential witness atoms into the two forall copies. Concrete identifiers
+        // with the same spelling are captured from the surrounding environment and stay rigid.
         let mut dom_facts: Vec<Fact> = Vec::new();
         for inner in exist_fact.facts().iter() {
-            let f_a = self.inst_exist_body_fact(inner, &map_a, ParamObjType::Exist, None)?;
+            let f_a = self.inst_exist_body_fact(
+                inner,
+                &map_a,
+                ParamObjType::BinderRetag(BinderRetagSource::Exist),
+                None,
+            )?;
             dom_facts.push(f_a.to_fact());
         }
         for inner in exist_fact.facts().iter() {
-            let f_b = self.inst_exist_body_fact(inner, &map_b, ParamObjType::Exist, None)?;
+            let f_b = self.inst_exist_body_fact(
+                inner,
+                &map_b,
+                ParamObjType::BinderRetag(BinderRetagSource::Exist),
+                None,
+            )?;
             dom_facts.push(f_b.to_fact());
         }
 
@@ -836,34 +1098,12 @@ impl Runtime {
             then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(eq.into()));
         }
 
-        let forall_fact = ForallFact::new(
+        ForallFact::new(
             ParamDefWithType::new(forall_groups),
             dom_facts,
             then_facts,
             lf,
-        )?;
-
-        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        for group in forall_fact.params_def_with_type.groups.iter() {
-            for param in group.params.iter() {
-                param_to_arg_map
-                    .insert(param.clone(), ForallFreeParamObj::new(param.clone()).into());
-            }
-        }
-
-        let forall_fact = self.inst_fact(
-            &forall_fact.into(),
-            &param_to_arg_map,
-            ParamObjType::Forall,
-            None,
-        )?;
-
-        match forall_fact {
-            Fact::ForallFact(x) => Ok(x.clone()),
-            _ => {
-                unreachable!();
-            }
-        }
+        )
     }
 
     fn try_verify_exist_unique_by_exist_and_uniqueness_forall(
@@ -986,9 +1226,11 @@ impl Runtime {
     }
 
     fn known_exist_lookup_keys(goal: &ExistFactEnum) -> Vec<String> {
-        let mut keys = vec![goal.key()];
+        let mut keys = vec![goal.alpha_normalized_key(), goal.key()];
         if let ExistFactEnum::ExistFact(body) = goal {
-            keys.push(ExistFactEnum::ExistUniqueFact(body.clone()).key());
+            let unique = ExistFactEnum::ExistUniqueFact(body.clone());
+            keys.push(unique.alpha_normalized_key());
+            keys.push(unique.key());
         }
         keys.sort();
         keys.dedup();
@@ -1000,11 +1242,9 @@ impl Runtime {
         exist_fact: &ExistFactEnum,
     ) -> Result<String, RuntimeError> {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        let mut normalized_params: Vec<ParamGroupWithParamType> = Vec::new();
         let mut param_index: usize = 0;
 
         for param_def_with_type in exist_fact.params_def_with_type().groups.iter() {
-            let mut new_param_names: Vec<String> = Vec::new();
             for original_name in param_def_with_type.params.iter() {
                 let normalized_name = format!("#{}", param_index);
                 param_index += 1;
@@ -1013,35 +1253,43 @@ impl Runtime {
                     original_name.clone(),
                     obj_for_bound_param_in_scope(normalized_name.clone(), ParamObjType::Exist),
                 );
-                new_param_names.push(normalized_name);
             }
-
-            let instantiated_param_type = runtime.inst_param_type(
-                &param_def_with_type.param_type,
-                &param_to_arg_map,
-                ParamObjType::Exist,
-            )?;
-            normalized_params.push(ParamGroupWithParamType::new(
-                new_param_names,
-                instantiated_param_type,
-            ));
         }
 
         let instantiated_exist_fact =
-            runtime.inst_exist_fact(exist_fact, &param_to_arg_map, ParamObjType::Exist, None)?;
+            runtime.alpha_rename_exist_fact(exist_fact, &param_to_arg_map)?;
 
         let mut fact_strings: Vec<String> = Vec::new();
         for fact in instantiated_exist_fact.facts().iter() {
             let fact_as_fact = fact.from_ref_to_cloned_fact();
-            fact_strings.push(fact_as_fact.to_string());
+            match fact_as_fact {
+                Fact::ForallFact(forall_fact) => {
+                    fact_strings.push(runtime.alpha_normalized_forall_cache_key(&forall_fact)?);
+                }
+                fact => fact_strings.push(fact.to_string()),
+            }
         }
 
         let mut params_string_parts: Vec<String> = Vec::new();
-        for param_def_with_type in normalized_params.iter() {
+        for param_def_with_type in instantiated_exist_fact.params_def_with_type().groups.iter() {
+            let param_type_string = match &param_def_with_type.param_type {
+                ParamType::Obj(Obj::FnSet(fn_set)) => {
+                    let canonical_names =
+                        ParamGroupWithSet::collect_param_names(&fn_set.body.params_def_with_set)
+                            .iter()
+                            .enumerate()
+                            .map(|(index, _)| format!("#exist_fn_param_{}", index))
+                            .collect::<Vec<_>>();
+                    runtime
+                        .fn_set_alpha_renamed_for_display_compare(&fn_set.body, &canonical_names)?
+                        .to_string()
+                }
+                param_type => param_type.to_string(),
+            };
             params_string_parts.push(format!(
                 "{} {}",
                 param_def_with_type.params.join(","),
-                param_def_with_type.param_type
+                param_type_string
             ));
         }
         let params_string = params_string_parts.join("; ");

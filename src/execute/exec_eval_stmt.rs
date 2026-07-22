@@ -149,19 +149,6 @@ impl Runtime {
                 )?;
                 Ok(Mod::new(l, r).into())
             }
-            Obj::IntegerQuotient(q) => {
-                let dividend = self.eval_reduce_nested_sum_product_in_obj(
-                    (*q.dividend).clone(),
-                    eval_stmt,
-                    active_fn_calls,
-                )?;
-                let divisor = self.eval_reduce_nested_sum_product_in_obj(
-                    (*q.divisor).clone(),
-                    eval_stmt,
-                    active_fn_calls,
-                )?;
-                Ok(IntegerQuotient::new(dividend, divisor).into())
-            }
             Obj::Pow(p) => {
                 let base = self.eval_reduce_nested_sum_product_in_obj(
                     (*p.base).clone(),

@@ -78,14 +78,14 @@ impl Runtime {
             self.all_objs_equal_to_arg_for_known_atomic_fact(args[1], &module_names);
 
         for environment in self.iter_environments_from_top() {
-            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
+            let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
             if result.is_true() {
                 return Ok(result);
             }
         }
         for module_name in module_names.iter() {
             for environment in self.imported_module_environments(module_name) {
-                let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
+                let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
                 if result.is_true() {
                     return Ok(result);
                 }
@@ -315,6 +315,47 @@ impl Runtime {
         }
     }
 
+    pub(crate) fn resolved_atomic_fact_for_lookup(
+        &self,
+        atomic_fact: &AtomicFact,
+    ) -> Option<AtomicFact> {
+        let args = atomic_fact.args_ref();
+        let resolved_args = args
+            .iter()
+            .map(|arg| self.resolve_obj(arg))
+            .collect::<Vec<_>>();
+        if args
+            .iter()
+            .zip(resolved_args.iter())
+            .all(|(arg, resolved)| arg.to_string() == resolved.to_string())
+        {
+            return None;
+        }
+
+        match resolved_args.as_slice() {
+            [arg] => Some(Self::atomic_fact_with_resolved_unary_operand(
+                atomic_fact,
+                arg.clone(),
+            )),
+            [left, right] => Some(Self::atomic_fact_with_resolved_binary_operands(
+                atomic_fact,
+                left.clone(),
+                right.clone(),
+            )),
+            _ if matches!(
+                atomic_fact,
+                AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
+            ) =>
+            {
+                Some(Self::atomic_fact_with_resolved_predicate_args(
+                    atomic_fact,
+                    resolved_args,
+                ))
+            }
+            _ => None,
+        }
+    }
+
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(
         environment: &Environment,
         atomic_fact: &AtomicFact,
@@ -344,6 +385,7 @@ impl Runtime {
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(
+        &self,
         environment: &Environment,
         atomic_fact: &AtomicFact,
         all_objs_equal_to_arg0: &Vec<String>,
@@ -369,6 +411,34 @@ impl Runtime {
                         ))
                         .into());
                     }
+                }
+            }
+
+            let given_args = atomic_fact.args_ref();
+            for known_atomic_fact in known_facts_map.values() {
+                let known_args = known_atomic_fact.args_ref();
+                let args_match =
+                    known_args
+                        .iter()
+                        .zip(given_args.iter())
+                        .all(|(known_arg, given_arg)| {
+                            self.objs_match_for_known_atomic_fact_lookup(
+                                known_arg,
+                                given_arg,
+                                atomic_fact.line_file(),
+                            )
+                        });
+                if args_match {
+                    return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
+                        atomic_fact.clone().into(),
+                        VerifiedByResult::cited_fact(
+                            atomic_fact.clone().into(),
+                            known_atomic_fact.clone().into(),
+                            Some("corresponding arguments are known equal".to_string()),
+                        ),
+                        Vec::new(),
+                    ))
+                    .into());
                 }
             }
         }
@@ -401,6 +471,52 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn objs_match_for_known_atomic_fact_lookup(
+        &self,
+        known_arg: &Obj,
+        given_arg: &Obj,
+        line_file: LineFile,
+    ) -> bool {
+        if self
+            .verify_objs_are_equal_known_only(known_arg, given_arg, line_file.clone())
+            .is_true()
+            || self
+                .try_verify_equal_by_same_shape_and_known_equality_args(
+                    known_arg,
+                    given_arg,
+                    line_file.clone(),
+                )
+                .is_some_and(|result| result.is_true())
+        {
+            return true;
+        }
+
+        let mut known_candidates = vec![known_arg.clone()];
+        known_candidates.extend(self.get_all_obj_representatives_equal_to_given(known_arg));
+        let mut given_candidates = vec![given_arg.clone()];
+        given_candidates.extend(self.get_all_obj_representatives_equal_to_given(given_arg));
+
+        // Reuse a fact through both a stored equality and structural congruence.
+        // Example: A = {a} and a = b let membership in A imply membership in {b}.
+        known_candidates.iter().any(|known_candidate| {
+            given_candidates.iter().any(|given_candidate| {
+                self.verify_objs_are_equal_known_only(
+                    known_candidate,
+                    given_candidate,
+                    line_file.clone(),
+                )
+                .is_true()
+                    || self
+                        .try_verify_equal_by_same_shape_and_known_equality_args(
+                            known_candidate,
+                            given_candidate,
+                            line_file.clone(),
+                        )
+                        .is_some_and(|result| result.is_true())
+            })
+        })
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(

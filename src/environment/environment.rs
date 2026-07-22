@@ -354,9 +354,18 @@ impl Environment {
     fn store_exist_fact(&mut self, exist_fact: ExistFactEnum) -> Result<(), RuntimeError> {
         let key: ExistFactKey = exist_fact.key();
         if let Some(vec_ref) = self.known_exist_facts.get_mut(&key) {
-            vec_ref.push(exist_fact);
+            vec_ref.push(exist_fact.clone());
         } else {
-            self.known_exist_facts.insert(key, vec![exist_fact]);
+            self.known_exist_facts
+                .insert(key.clone(), vec![exist_fact.clone()]);
+        }
+        let alpha_key = exist_fact.alpha_normalized_key();
+        if alpha_key != key {
+            if let Some(vec_ref) = self.known_exist_facts.get_mut(&alpha_key) {
+                vec_ref.push(exist_fact);
+            } else {
+                self.known_exist_facts.insert(alpha_key, vec![exist_fact]);
+            }
         }
         Ok(())
     }

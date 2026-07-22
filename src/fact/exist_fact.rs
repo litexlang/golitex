@@ -480,31 +480,28 @@ impl ExistFactEnum {
         )
     }
 
-    /// Key for indexing `known_exist_facts_in_forall_facts`: exist witnesses renamed to `#0`, `#1`, …
-    /// so different witness names match the same stored shape.
+    /// Conservative alpha-invariant bucket for existential facts stored under a forall.
+    /// Exact typed matching is still required after lookup; this key intentionally contains no
+    /// object names, so captured identifiers can never be rewritten as witness binders here.
     pub fn alpha_normalized_key(&self) -> String {
         let b = self.body();
-        let names = b.params_def_with_type.collect_param_names();
-        let mut normalized_facts: Vec<ExistBodyFact> = b.facts.clone();
-        for (i, name) in names.iter().enumerate() {
-            let ph = format!("#{}", i);
-            normalized_facts = normalized_facts
-                .into_iter()
-                .map(|f| f.replace_bound_identifier(name, &ph))
-                .collect();
-        }
-        let head = self.keyword_prefix();
+        let fact_shape = b
+            .facts
+            .iter()
+            .map(|fact| match fact {
+                ExistBodyFact::AtomicFact(_) => "atomic",
+                ExistBodyFact::AndFact(_) => "and",
+                ExistBodyFact::ChainFact(_) => "chain",
+                ExistBodyFact::OrFact(_) => "or",
+                ExistBodyFact::InlineForall(_) => "forall",
+            })
+            .collect::<Vec<&str>>()
+            .join(",");
         format!(
-            "{} {}{}{}",
-            head,
-            LEFT_CURLY_BRACE,
-            vec_to_string_join_by_comma(
-                &normalized_facts
-                    .iter()
-                    .map(|fact| fact.key())
-                    .collect::<Vec<String>>()
-            ),
-            RIGHT_CURLY_BRACE
+            "#exist-alpha-bucket:{}:{}:{}",
+            self.keyword_prefix(),
+            b.params_def_with_type.number_of_params(),
+            fact_shape
         )
     }
 

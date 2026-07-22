@@ -1,0 +1,2 @@
+forall A finite_set, B set:
+    $is_finite_set(set_minus(A, B))

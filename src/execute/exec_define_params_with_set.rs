@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::{HashSet, VecDeque};
 
 impl Runtime {
     pub fn define_params_with_set(
@@ -119,11 +120,12 @@ impl Runtime {
     }
 
     /// Parameter membership bridge through already-known subset facts.
-    /// When defining `x S`, if the environment already has `S $subset T`, record
-    /// `x $in T` in the same local environment. This supports function bodies such
-    /// as `fn(x E) R {f(x)}` when `E $subset E2` and `f fn(x E2) R`, without making
-    /// every ordinary membership fact recursively infer through all known subsets.
-    fn store_param_memberships_in_known_supersets(
+    /// When defining `x S`, follow the known subset graph from `S` and record
+    /// `x $in T` for every reachable superset `T` in the same local environment.
+    /// Example: `S $subset U` and `U $subset T` let a parameter `x S` infer both
+    /// `x $in U` and `x $in T`, without recursively expanding arbitrary membership
+    /// facts outside parameter definition.
+    pub(crate) fn store_param_memberships_in_known_supersets(
         &mut self,
         name: &str,
         binding_scope: ParamObjType,
@@ -141,27 +143,67 @@ impl Runtime {
                 search_environments.extend(self.imported_module_environments(&identifier.mod_name));
             }
         }
-        let mut target_sets: Vec<Obj> = Vec::new();
+        let mut subset_edges = Vec::new();
         for env in search_environments {
             let Some(known_subset_facts) = env.known_atomic_facts_with_2_args.get(&lookup_key)
             else {
                 continue;
             };
-            for ((left_key, _), known_fact) in known_subset_facts.iter() {
-                if !source_set_keys.iter().any(|key| key == left_key) {
-                    continue;
-                }
+            for known_fact in known_subset_facts.values() {
                 let AtomicFact::SubsetFact(subset_fact) = known_fact else {
                     continue;
                 };
-                target_sets.push(subset_fact.right.clone());
+                let mut left_keys = vec![subset_fact.left.to_string()];
+                if let Obj::Atom(AtomObj::IdentifierWithMod(identifier)) = &subset_fact.left {
+                    if self.is_current_parse_module(&identifier.mod_name) {
+                        left_keys.push(identifier.name.clone());
+                    }
+                }
+                let mut right_keys = vec![subset_fact.right.to_string()];
+                if let Obj::Atom(AtomObj::IdentifierWithMod(identifier)) = &subset_fact.right {
+                    if self.is_current_parse_module(&identifier.mod_name) {
+                        right_keys.push(identifier.name.clone());
+                    }
+                }
+                subset_edges.push((left_keys, subset_fact.right.clone(), right_keys));
             }
         }
 
-        let param_obj = obj_for_bound_param_in_scope(name.to_string(), binding_scope);
+        let mut pending_set_keys = VecDeque::new();
+        let mut reachable_set_keys = HashSet::new();
+        for source_set_key in source_set_keys.iter() {
+            if reachable_set_keys.insert(source_set_key.clone()) {
+                pending_set_keys.push_back(source_set_key.clone());
+            }
+        }
+        let mut target_sets = Vec::new();
+        let mut target_set_keys = HashSet::new();
+        while let Some(current_set_key) = pending_set_keys.pop_front() {
+            for (left_keys, right, right_keys) in subset_edges.iter() {
+                if !left_keys
+                    .iter()
+                    .any(|left_key| left_key == &current_set_key)
+                {
+                    continue;
+                }
+                if target_set_keys.insert(right.to_string()) {
+                    target_sets.push((right.clone(), right_keys.clone()));
+                }
+                for right_key in right_keys {
+                    if reachable_set_keys.insert(right_key.clone()) {
+                        pending_set_keys.push_back(right_key.clone());
+                    }
+                }
+            }
+        }
+
+        let param_obj = param_binding_element_obj_for_store(name.to_string(), binding_scope);
         let mut infer_result = InferResult::new();
-        for target_set in target_sets {
-            if target_set.to_string() == source_set_key {
+        for (target_set, target_keys) in target_sets {
+            if target_keys
+                .iter()
+                .any(|target_key| source_set_keys.contains(target_key))
+            {
                 continue;
             }
             let inferred_fact: AtomicFact =

@@ -17,13 +17,16 @@ trust have pi R:
 trust have euler_e R:
     euler_e > 0
 
-# A subset of a finite set is finite. This is a standard-library axiom rather
-# than a verifier builtin, so ordinary theorem matching supplies the fact.
-axiom subset_of_finite_set_is_finite:
+# A subset of a finite set is finite. Recover the subset as a double relative
+# complement, then use the builtin fact that a difference of a finite set is finite.
+thm subset_of_finite_set_is_finite:
     ? forall A set, B finite_set:
         A $subset B
         =>:
             $is_finite_set(A)
+    A = set_minus(B, set_minus(B, A))
+    $is_finite_set(set_minus(B, set_minus(B, A)))
+    $is_finite_set(A)
 
 # ---------------------------------------------------------------------------
 # Rational normalization
@@ -210,6 +213,12 @@ prop prime(p N_pos):
     2 <= p
     forall d range(2, p):
         p % d != 0
+
+# The Euclidean quotient is an ordinary source-defined selection. The kernel
+# verifies only the narrow unique-existence fact used by this declaration.
+have fn integer_quotient by exist!:
+    ? forall a Z, d N_pos:
+        exist! q Z st {a = d * q + a % d}
 
 prop divides(a Z, b Z):
     exist k Z st {b = a * k}

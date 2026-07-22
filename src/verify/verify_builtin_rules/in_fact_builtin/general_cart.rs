@@ -1,9 +1,13 @@
 use super::*;
 
-pub(crate) fn general_cart_member_fn_set(general_cart: &GeneralCart) -> Result<Obj, RuntimeError> {
+pub(crate) fn general_cart_member_fn_set(
+    runtime: &Runtime,
+    general_cart: &GeneralCart,
+) -> Result<Obj, RuntimeError> {
+    let param_name = runtime.generate_internal_binder_name();
     Ok(FnSet::new(
         vec![ParamGroupWithSet::new(
-            vec!["t".to_string()],
+            vec![param_name],
             general_cart.index_set.as_ref().clone(),
         )],
         vec![],
@@ -13,6 +17,7 @@ pub(crate) fn general_cart_member_fn_set(general_cart: &GeneralCart) -> Result<O
 }
 
 pub(crate) fn general_cart_member_pointwise_fact(
+    runtime: &Runtime,
     general_cart: &GeneralCart,
     member: &Obj,
     line_file: &LineFile,
@@ -24,7 +29,7 @@ pub(crate) fn general_cart_member_pointwise_fact(
     else {
         return Ok(None);
     };
-    let param_name = "t".to_string();
+    let param_name = runtime.generate_internal_binder_name();
     let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall);
     let member_at_param: Obj =
         FnObj::new(member_head, vec![vec![Box::new(param_obj.clone())]]).into();

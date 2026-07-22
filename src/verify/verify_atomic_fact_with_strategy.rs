@@ -21,8 +21,12 @@ impl Runtime {
 
         let then_args = then_atomic_fact.args_ref();
         let atomic_args = atomic_fact.args_ref();
-        let Some(arg_map) =
-            self.match_args_in_fact_in_known_forall_fact_with_given_args(&then_args, &atomic_args)?
+        let Some((arg_map, _)) = self.match_args_in_fact_with_known_forall_bindings(
+            &then_args,
+            &atomic_args,
+            &strategy.forall_fact.params_def_with_type,
+            None,
+        )?
         else {
             return Ok(StmtUnknown::new().into());
         };

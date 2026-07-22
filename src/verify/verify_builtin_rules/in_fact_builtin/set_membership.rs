@@ -234,7 +234,7 @@ impl Runtime {
         in_fact: &InFact,
         big_union: &BigUnion,
     ) -> Result<ExistFactEnum, RuntimeError> {
-        let member_name = "item".to_string();
+        let member_name = self.generate_internal_binder_name();
         let member_obj = obj_for_bound_param_in_scope(member_name.clone(), ParamObjType::Exist);
         let element_in_member: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -323,7 +323,7 @@ impl Runtime {
         in_fact: &InFact,
         replacement: &Replacement,
     ) -> Result<ExistFactEnum, RuntimeError> {
-        let preimage_name = "x".to_string();
+        let preimage_name = self.generate_internal_binder_name();
         let preimage_obj = obj_for_bound_param_in_scope(preimage_name.clone(), ParamObjType::Exist);
         let relation_fact: AtomicFact = NormalAtomicFact::new(
             replacement.prop_name.clone(),
@@ -583,7 +583,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let fn_set_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
-            general_cart_member_fn_set(general_cart)?,
+            general_cart_member_fn_set(self, general_cart)?,
             in_fact.line_file.clone(),
         )
         .into();
@@ -593,8 +593,12 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
 
-        let Some(pointwise_fact) =
-            general_cart_member_pointwise_fact(general_cart, &in_fact.element, &in_fact.line_file)?
+        let Some(pointwise_fact) = general_cart_member_pointwise_fact(
+            self,
+            general_cart,
+            &in_fact.element,
+            &in_fact.line_file,
+        )?
         else {
             return Ok((StmtUnknown::new()).into());
         };

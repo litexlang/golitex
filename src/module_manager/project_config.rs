@@ -357,7 +357,7 @@ fn config_trust_removed_error(config_path: &str, line: usize) -> RuntimeError {
     config_error(
         config_path,
         line,
-        "`trust` has been removed from litex.config: imports and exports are trusted by default. Remove `trust`; use `litex -strict` to verify loaded code",
+        "`trust` has been removed from litex.config: imports are trusted by default, while project exports run normally. Remove `trust`; use `litex -strict` to verify loaded dependencies",
     )
 }
 

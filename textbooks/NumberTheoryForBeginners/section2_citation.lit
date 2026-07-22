@@ -12,8 +12,8 @@
 # consequences of the gcd definition are checked directly.
 # litex_code: This file runs Section I first and then adds Section II.
 # comments: The binary-gcd existence, divisor, and Bezout interfaces are
-# checked in this file. The kernel Euclidean quotient object supplies the
-# quotient-remainder witness without a source-level helper.
+# checked in this file. The Euclidean quotient is selected below as a visible
+# source function from its unique quotient-remainder characterization.
 
 """
 Lemma. For integers d,a with d>0 there is a unique quotient and remainder:
@@ -43,9 +43,12 @@ prop has_unique_euclidean_division_Z(a Z, d N_pos):
             q = q1
             r = r1
 
-# The first-class Euclidean quotient is the unique integer q characterized by
-# `a = d * q + a % d`. Its defining equation is a kernel rule, so the source
-# proof can choose that q directly without a local trusted interface.
+# The first-class Euclidean quotient is the source-selected integer q
+# characterized by `a = d * q + a % d`.
+have fn integer_quotient by exist!:
+    ? forall a Z, d N_pos:
+        exist! q Z st {a = d * q + a % d}
+
 thm euclidean_division_exists:
     ? forall a Z, d N_pos:
         exist q, r Z st {$euclidean_division_Z(a, d, q, r)}
@@ -1063,5 +1066,4 @@ and positive denominator.
 sketch:
     # Exercise retained as source text; exercises are outside this theorem-only
     # translation scope.
-
 

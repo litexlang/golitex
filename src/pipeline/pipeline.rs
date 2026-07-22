@@ -452,7 +452,7 @@ fn unverified_import_warning_json(runtime: &Runtime) -> String {
             (
                 "message".to_string(),
                 JsonValue::JsonString(
-                    "imports and exports are trusted by default for faster runs; rerun with -strict to verify loaded code"
+                    "configured imports and -f prefix exports are trusted by default for faster runs; rerun with -strict to verify loaded dependencies"
                         .to_string(),
                 ),
             ),

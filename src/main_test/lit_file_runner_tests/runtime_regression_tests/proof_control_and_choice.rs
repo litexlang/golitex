@@ -827,6 +827,48 @@ y $in replacement(rel, {1, 2})
 }
 
 #[test]
+fn replacement_uniqueness_keeps_outer_same_spelling_parameter_rigid() {
+    run_with_large_stack(
+        "replacement_uniqueness_keeps_outer_same_spelling_parameter_rigid",
+        || {
+            let source_code = r#"
+abstract_prop rel(a, y)
+
+claim:
+    ? forall x set:
+        forall a {x}, y, y2 set:
+            $rel(a, y)
+            $rel(a, y2)
+            =>:
+                y = y2
+        =>:
+            replacement(rel, {x}) = replacement(rel, {x})
+    forall a {x}, y, y2 set:
+        $rel(a, y)
+        $rel(a, y2)
+        =>:
+            y = y2
+    replacement(rel, {x}) = replacement(rel, {x})
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "replacement_uniqueness_keeps_outer_same_spelling_parameter_rigid",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "replacement uniqueness must not capture the outer `x` in the source set:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn nested_forall_reusing_outer_param_is_rejected() {
     let source_code = r#"
 forall x R:
@@ -851,6 +893,75 @@ forall x R:
         run_output.contains("free parameter `x` is already bound as Forall in an active scope")
             || run_output.contains("duplicate Forall free parameter `x` in nested scope"),
         "failure should mention duplicate forall parameter:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn parser_scope_allows_different_kinds_and_releases_finished_scopes() {
+    let source_code = r#"
+trust exist x R st {forall! x R => {x = x}}
+
+trust forall x R:
+    x = x
+
+trust forall x R:
+    x = x
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "parser_scope_allows_different_kinds_and_releases_finished_scopes",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "different binder kinds may share a name, and completed scopes must release it:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn failed_scope_begin_does_not_leak_a_partial_binding() {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("failed_scope_begin_does_not_leak");
+
+    let (_, first_error) = run_source_code("trust have x, x R", &mut runtime);
+    assert!(
+        first_error.is_some(),
+        "the duplicate binding must be rejected"
+    );
+
+    let (stmt_results, runtime_error) = run_source_code("trust have x R", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "a failed scope begin must not leave a partial binding:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn failed_statement_parse_rolls_back_all_new_bindings() {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("failed_statement_parse_rolls_back_bindings");
+
+    let (_, first_error) = run_source_code("trust have x R, y", &mut runtime);
+    assert!(
+        first_error.is_some(),
+        "the incomplete declaration must fail"
+    );
+
+    let (stmt_results, runtime_error) = run_source_code("trust have x R", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "a failed statement parse must roll back every new binding:\n{}",
         run_output
     );
 }
@@ -1211,6 +1322,33 @@ exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}
     assert!(
         run_succeeded,
         "by_axiom_of_choice_stores_choice_function_exist_fact failed:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn by_axiom_of_choice_keeps_outer_same_spelling_family_rigid() {
+    let source_code = r#"
+claim:
+    ? forall A set:
+        forall member A:
+            $is_nonempty_set(member)
+        =>:
+            exist f fn(member A) big_union(A) st {forall! member A => {f(member) $in member}}
+    by axiom_of_choice: set A:
+        forall member A:
+            $is_nonempty_set(member)
+    exist f fn(member A) big_union(A) st {forall! member A => {f(member) $in member}}
+"#;
+
+    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
+        source_code,
+        "by_axiom_of_choice_keeps_outer_same_spelling_family_rigid",
+    );
+
+    assert!(
+        run_succeeded,
+        "generated choice binders must not capture the outer family `A`:\n{}",
         run_output
     );
 }

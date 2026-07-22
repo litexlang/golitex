@@ -10,9 +10,12 @@ Source snapshot: *Mathematics in Lean* at
 
 “Checked” means checked by the current Litex verifier in this project. It does
 not mean Lean-certified, and it does not imply that omitted source results have
-been proved. All executable corpus files are free of `trust`, `axiom`, and
-`abstract_prop`. Source mathematics that is not yet implemented is listed in
-the comment-only `todo.lit`.
+been proved. All executable corpus files are free of `trust`, `know`, `axiom`,
+and `abstract_prop`. Source mathematics that is not yet implemented is listed in
+the comment-only `todo.lit`. The project imports no Litex standard-library
+module and has no cite module. Its kernel builtin rules remain part of the
+verifier boundary, so this source-level independence is not a claim that the
+development is independent of the Litex implementation.
 
 ## Closed facts and reusable relationships
 
@@ -55,6 +58,47 @@ Elementary projections and short closure arguments are checked. Group
 normalization, finite-group theory, selected inverses, and larger structure
 assemblies remain deferred where their supporting proof chain is absent.
 
+Chapter 2 deliberately presents the same additive-commutative-group content in
+two forms. `is_additive_commutative_group(A, add, zero, neg)` is a predicate on
+operations supplied by the caller, matching the source-facing proof lesson.
+`AdditiveCommutativeGroup<s>` is the bundled alternative: one value contains
+the operations and their law block, and
+`additive_commutative_group_add_neg_cancel` accesses them through projections.
+The nearest rejected design is replacing every Chapter 2 theorem with the
+struct form; that would hide the explicit parameters which the chapter is
+teaching. The struct requires a nonempty carrier because it stores `zero`.
+
+Chapter 8's ordinary integer ring is a checked `Ring<Z>` object whose fields
+are integer addition, zero, negation, multiplication, and one. This preserves
+the source instance as usable callable data; the rejected form is a proposition
+merely asserting that the integers form a ring. The separate generic theorem
+deriving additive commutativity from the weaker ring axioms remains deferred.
+
+The integer natural-scalar instance is likewise an actual
+`AdditiveMonoidWithNSmul<Z>` object. Its action is `(n,x) |-> n*x`, so the zero
+and successor laws normalize directly. The generic recursive natural-scalar
+selection and the componentwise product instance remain separate deferred
+interfaces; they are not prerequisites for this concrete object.
+
+## Source-local elementary number theory
+
+The elementary number-theory vocabulary used across the early chapters is
+defined inside this project rather than imported. Chapter 2 defines integer
+divisibility by an explicit witness and defines gcd as the maximum of the
+finite nonempty set of positive common divisors. Finiteness is proved in place:
+the common-divisor set is bounded by a finite interval and is recovered as a
+double relative complement. The gcd positivity, divisibility, greatestness,
+base, and symmetry laws are ordinary checked theorems built on that definition.
+
+Chapter 4 defines primality directly on `N_pos`. Chapter 5 introduces
+`integer_quotient` as a callable function with `have fn ... by exist!`; the
+kernel discharges only the narrow unique-existence fact for Euclidean division.
+This division of responsibility is intentional: the mathematical vocabulary
+and reusable proof route remain visible Litex, while arithmetic, remainder,
+finite-set difference, finite extrema, and Euclidean-quotient existence are
+explicit builtin boundaries. The rejected form is an empty cite package or an
+imported theorem whose simple local proof is hidden from the corpus reader.
+
 ## Functions, bounds, relations, and convergence
 
 Chapters 3 and 4 distinguish functions from their graphs and properties.
@@ -69,6 +113,15 @@ definitions are kept even when their major analytic consequences are deferred,
 because these definitions are useful downstream and have independent
 mathematical content.
 
+Lean's truncated natural predecessor is represented by the callable function
+`natural_predecessor : N -> N`, with a zero branch and the ordinary `n - 1`
+branch for positive naturals. This keeps the source domain and makes the
+factorial power bound well-typed at zero. The rejected form is to reuse
+ordinary integer subtraction at zero, where `0 - 1` is `-1` rather than a
+natural exponent. The piecewise function and the factorial power bound are
+checked; no existence or well-definedness hole remains in this local
+interface.
+
 Arbitrary choice is not smuggled into a function declaration. The source's
 total inverse-with-default and the recursive Schroeder-Bernstein construction
 remain in `todo.lit`; injective and surjective relationships that do not require
@@ -80,12 +133,27 @@ Finite sets use the installed finite-set carrier, size, finite unions, and
 explicit indexing. Chapter 6 keeps finite counting objects and specification
 relationships for lists, trees, and propositional formulas.
 
+The finite triangle is a callable subset of its exact Cartesian ambient
+carrier:
+
+```litex
+have fn triangle(n N) power_set(cart(range(0, n + 1), range(0, n + 1)))
+```
+
+It is represented by deleting pairs whose first coordinate is at least their
+second. This makes finiteness follow from the finite Cartesian square and
+finite-set difference. The rejected form is an untyped subset plus a trusted
+subset-finiteness bridge. Its cardinality formula remains separate source debt
+in `todo.lit`.
+
 The rejected shortcut is to identify a new source inductive carrier such as
 `MyNat`, `BinTree`, or `PropForm` with an existing carrier. A real implementation
 must supply its constructors, induction/recursion interface, recursive
-functions, and defining equations. Until then, the source constructions and
-their induction theorems remain in `todo.lit`; independent Boolean and finite-
-set facts stay executable.
+functions, and defining equations. Chapter 6 can nevertheless prove
+`list_append_nil` and `list_map_map` for every callable candidate satisfying
+the checked recursion specifications. Its piecewise updated Boolean valuation
+is also a callable template. The missing canonical list selections and the
+larger `BinTree` and `PropForm` recursion families remain in `todo.lit`.
 
 The indexed standard simplex is the set of real coordinate functions on
 `range(0, n)` whose coordinates are nonnegative and whose finite sum is one.
@@ -107,6 +175,12 @@ An equivalence is callable forward and inverse data with two inverse laws.
 Submonoids, subgroups, subspaces, subrings, and ideals are subsets with closure
 laws. Intersections are literal set intersections when possible, which keeps
 the proof close to the mathematical argument.
+
+A checked submonoid carrier now inherits an actual `Monoid<carrier>` object by
+restricting ambient multiplication and identity. The exact tuple is first
+proved to satisfy the monoid structure; only then does a template expose the
+callable inherited object. The nearest rejected form is a proposition saying
+that an inherited monoid exists without supplying its operations.
 
 Quotient work is intentionally layered:
 
@@ -146,6 +220,14 @@ eigen-data, concrete matrices, and basis relationships. Linear-map composition
 and the span universal property follow their short natural proofs and are
 checked.
 
+The callable product, coproduct, identity, and countable-set templates remain
+the intended interfaces. Strict verification currently cannot unfold some of
+their applications while carrier parameters remain symbolic, so the affected
+C10-C13 pointwise facts are checked in explicitly labeled definition-expanded
+lambda or set-builder form. This is a tracked `kernel_problem`, not a reason to
+replace the callable objects with propositions or to claim named-template
+unfolding evidence.
+
 Dependent direct sums, quotient operations, endomorphism polynomials, basis
 coordinates, finite indexed matrix sums, and dimensions require additional
 objects. Their ideal forms are callable functions or selected values justified
@@ -158,14 +240,33 @@ basis, which supports later hypotheses without claiming a selected dimension.
 Filters and topologies are families of subsets with closure laws. Metric and
 topological convergence, continuity, compactness, completeness, density, and
 separation are relationships on explicit carriers. Real-distance laws, ball
-center membership, topology axioms, and the open-preimage continuity
-equivalence are checked.
+center membership, topology axioms, limit and continuous-map composition,
+eventual conjunction and implication, preservation of real limits under
+eventual equality, the open-preimage continuity equivalence, the forward
+pairwise-to-anchored Cauchy bridge, and the direct convergence consequence of
+completeness are checked.
+
+The checked `topologically_continuous_composition` theorem is ordinary
+composition between three fixed topologies. The retained source item instead
+asks for an iff after replacing the middle topology by the topology coinduced
+along the first map. That topology-changing composition equivalence remains
+explicit source debt in `todo.lit`; ordinary composition does not discharge
+it.
 
 This definition-first layer is retained because it gives later theorems the
 right hypotheses. The rejected form is to add a large collection of theorem-
-shaped propositions at the top of the chapter. Filter algebra, compactness and
-completeness theorems, Baire, separation results, extensions, and sequential
-compactness remain in `todo.lit` until their actual proof spines are formalized.
+shaped propositions at the top of the chapter. Filter algebra, the named
+closure interface, the reverse Cauchy bridge, other compactness and completeness
+theorems, Baire, separation results, extensions, and sequential compactness
+remain in `todo.lit` until their actual proof spines are formalized.
+
+The C11 pressure test exposed a kernel bug in which automatic universal-fact
+matching replaced a non-quantified free set parameter. The matcher now treats
+only the fact's own quantified header as instantiable and keeps captured outer
+parameters rigid. Eventuality and limit proofs still call small projection
+theorems with every set and filter argument explicit because that interface is
+mathematically clear; the former counterexample is retained as a rejecting
+kernel regression rather than live proof debt.
 
 ## Differential calculus
 

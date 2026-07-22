@@ -6423,10 +6423,429 @@ thm example_9_4_14_denominator_eval:
     example_9_4_14_denominator(x) = fn(x R) R {x^2 + 1}(x)
     fn(x R) R {x^2 + 1}(x) = x^2 + 1
 
-have fn example_9_4_14_abs_quadratic_nonnegative(x R) '[0,) = abs(x^2 - 8 * x + 7)
+have fn example_9_4_14_abs_quadratic_nonnegative(x R) R = abs(x^2 - 8 * x + 7)
 have fn example_9_4_14_sqrt_two_power_on_nonnegative(t '[0,)) R = t^sqrt(2)
 have fn example_9_4_14_powered_abs_quadratic(x R) R = abs(x^2 - 8 * x + 7)^sqrt(2)
 have fn example_9_4_14_complex(x R) R = abs(x^2 - 8 * x + 7)^sqrt(2) / (x^2 + 1)
+
+# The endpoint estimate below uses that the exponent is greater than one.
+# Strict monotonicity of the principal square root supplies this directly.
+thm example_9_4_14_sqrt_two_gt_one:
+    ? forall:
+        sqrt(2) > 1
+    sqrt(1) < sqrt(2)
+    sqrt(1) = 1
+    sqrt(2) > 1
+
+# Proposition 9.4.11 gives continuity away from zero.  At zero, if
+# `0 < t < 1`, then `t^sqrt(2) < t`; choosing `delta <= min(epsilon, 1/2)`
+# therefore extends the power function continuously to the closed ray.
+thm example_9_4_14_sqrt_two_power_continuous_on_nonnegative:
+    ? forall:
+        $is_continuous_on('[0,), example_9_4_14_sqrt_two_power_on_nonnegative)
+    claim:
+        ? forall t0 '[0,):
+            $is_continuous_at('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0)
+        by thm interval_member_is_adherent('[0,), t0)
+        claim:
+            ? forall epsilon R_pos:
+                $is_locally_epsilon_close_to('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0, example_9_4_14_sqrt_two_power_on_nonnegative(t0), epsilon)
+            t0 = 0 or t0 != 0
+            by cases:
+                ? $is_locally_epsilon_close_to('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0, example_9_4_14_sqrt_two_power_on_nonnegative(t0), epsilon)
+                case t0 = 0:
+                    finite_set_min(union({epsilon}, {1 / 2})) $in R_pos
+                    finite_set_min(union({epsilon}, {1 / 2})) <= epsilon
+                    finite_set_min(union({epsilon}, {1 / 2})) <= 1 / 2
+                    witness exist delta R_pos st {$is_delta_neighborhood_close_to('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0, example_9_4_14_sqrt_two_power_on_nonnegative(t0), epsilon, delta)} from finite_set_min(union({epsilon}, {1 / 2})):
+                        claim:
+                            ? forall y '[0,):
+                                abs(y - t0) < finite_set_min(union({epsilon}, {1 / 2}))
+                                =>:
+                                    abs(example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0)) <= epsilon
+                            y >= 0
+                            y - t0 = y - 0
+                            abs(y - t0) = abs(y - 0)
+                            abs(y - t0) < finite_set_min(union({epsilon}, {1 / 2}))
+                            abs(y - 0) < finite_set_min(union({epsilon}, {1 / 2}))
+                            y - 0 = y
+                            abs(y - 0) = abs(y)
+                            abs(y) < finite_set_min(union({epsilon}, {1 / 2}))
+                            abs(y) = y
+                            y < finite_set_min(union({epsilon}, {1 / 2})) <= 1 / 2
+                            y < 1 / 2
+                            1 / 2 < 1
+                            y < 1
+                            y = 0 or y != 0
+                            by cases:
+                                ? abs(example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0)) <= epsilon
+                                case y = 0:
+                                    example_9_4_14_sqrt_two_power_on_nonnegative(y) = 0^sqrt(2)
+                                    0^sqrt(2) = 0
+                                    example_9_4_14_sqrt_two_power_on_nonnegative(y) = 0
+                                    example_9_4_14_sqrt_two_power_on_nonnegative(t0) = 0^sqrt(2)
+                                    example_9_4_14_sqrt_two_power_on_nonnegative(t0) = 0
+                                    example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0) = 0 - 0
+                                    0 - 0 = 0
+                                    abs(example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0)) = abs(0)
+                                    abs(0) = 0
+                                    0 <= epsilon
+                                case y != 0:
+                                    claim:
+                                        ? y > 0
+                                        by contra:
+                                            ? y > 0
+                                            y <= 0
+                                            y >= 0
+                                            y = 0
+                                            impossible y = 0
+                                    y > 0
+                                    y $in R_pos
+                                    by thm example_9_4_14_sqrt_two_gt_one()
+                                    by thm chap6::real_power_exponent_strict_antimono_below_one(y, sqrt(2), 1)
+                                    y^sqrt(2) < y^1
+                                    y^1 = y
+                                    y^sqrt(2) < y
+                                    y^sqrt(2) <= y
+                                    y < finite_set_min(union({epsilon}, {1 / 2})) <= epsilon
+                                    y < epsilon
+                                    y <= epsilon
+                                    by thm chap6::real_power_positive(y, sqrt(2))
+                                    y^sqrt(2) >= 0
+                                    example_9_4_14_sqrt_two_power_on_nonnegative(y) = y^sqrt(2)
+                                    example_9_4_14_sqrt_two_power_on_nonnegative(t0) = 0^sqrt(2)
+                                    0^sqrt(2) = 0
+                                    example_9_4_14_sqrt_two_power_on_nonnegative(t0) = 0
+                                    example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0) = y^sqrt(2) - 0
+                                    y^sqrt(2) - 0 = y^sqrt(2)
+                                    abs(example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0)) = abs(y^sqrt(2))
+                                    abs(y^sqrt(2)) = y^sqrt(2)
+                                    abs(example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0)) = y^sqrt(2)
+                                    abs(example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0)) <= y <= epsilon
+                                    abs(example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0)) <= epsilon
+                        $is_delta_neighborhood_close_to('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0, example_9_4_14_sqrt_two_power_on_nonnegative(t0), epsilon, finite_set_min(union({epsilon}, {1 / 2})))
+                    $is_locally_epsilon_close_to('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0, example_9_4_14_sqrt_two_power_on_nonnegative(t0), epsilon)
+                case t0 != 0:
+                    claim:
+                        ? t0 > 0
+                        by contra:
+                            ? t0 > 0
+                            t0 <= 0
+                            t0 >= 0
+                            t0 = 0
+                            impossible t0 = 0
+                    t0 > 0
+                    t0 $in R_pos
+                    by thm positive_domain_power_function_continuous(sqrt(2))
+                    $is_continuous_on(R_pos, fn(t R_pos) R {t^sqrt(2)})
+                    $is_continuous_at(R_pos, fn(t R_pos) R {t^sqrt(2)}, t0)
+                    fn(t R_pos) R {t^sqrt(2)}(t0) = t0^sqrt(2)
+                    $has_function_limit(R_pos, fn(t R_pos) R {t^sqrt(2)}, t0, t0^sqrt(2))
+                    $is_locally_epsilon_close_to(R_pos, fn(t R_pos) R {t^sqrt(2)}, t0, t0^sqrt(2), epsilon)
+                    obtain delta0 from exist delta0 R_pos st {$is_delta_neighborhood_close_to(R_pos, fn(t R_pos) R {t^sqrt(2)}, t0, t0^sqrt(2), epsilon, delta0)}
+                    t0 / 2 $in R_pos
+                    finite_set_min(union({delta0}, {t0 / 2})) $in R_pos
+                    finite_set_min(union({delta0}, {t0 / 2})) <= delta0
+                    finite_set_min(union({delta0}, {t0 / 2})) <= t0 / 2
+                    witness exist delta R_pos st {$is_delta_neighborhood_close_to('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0, example_9_4_14_sqrt_two_power_on_nonnegative(t0), epsilon, delta)} from finite_set_min(union({delta0}, {t0 / 2})):
+                        claim:
+                            ? forall y '[0,):
+                                abs(y - t0) < finite_set_min(union({delta0}, {t0 / 2}))
+                                =>:
+                                    abs(example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0)) <= epsilon
+                            t0 - y = -(y - t0)
+                            -(y - t0) <= abs(y - t0)
+                            abs(y - t0) < finite_set_min(union({delta0}, {t0 / 2})) <= delta0
+                            abs(y - t0) < delta0
+                            t0 - y <= abs(y - t0) < finite_set_min(union({delta0}, {t0 / 2}))
+                            t0 - y < finite_set_min(union({delta0}, {t0 / 2})) <= t0 / 2
+                            t0 - y < t0 / 2
+                            (t0 - y) + y < t0 / 2 + y
+                            (t0 - y) + y = t0
+                            t0 / 2 + y = y + t0 / 2
+                            t0 < y + t0 / 2
+                            t0 - t0 / 2 < y
+                            t0 - t0 / 2 = t0 / 2
+                            t0 / 2 > 0
+                            0 < t0 / 2 < y
+                            y > 0
+                            y $in R_pos
+                            abs(fn(t R_pos) R {t^sqrt(2)}(y) - t0^sqrt(2)) <= epsilon
+                            fn(t R_pos) R {t^sqrt(2)}(y) = y^sqrt(2)
+                            fn(t R_pos) R {t^sqrt(2)}(t0) = t0^sqrt(2)
+                            abs(fn(t R_pos) R {t^sqrt(2)}(y) - fn(t R_pos) R {t^sqrt(2)}(t0)) = abs(fn(t R_pos) R {t^sqrt(2)}(y) - t0^sqrt(2))
+                            abs(fn(t R_pos) R {t^sqrt(2)}(y) - fn(t R_pos) R {t^sqrt(2)}(t0)) <= epsilon
+                            example_9_4_14_sqrt_two_power_on_nonnegative(y) = y^sqrt(2)
+                            example_9_4_14_sqrt_two_power_on_nonnegative(t0) = t0^sqrt(2)
+                            example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0) = fn(t R_pos) R {t^sqrt(2)}(y) - fn(t R_pos) R {t^sqrt(2)}(t0)
+                            abs(example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0)) = abs(fn(t R_pos) R {t^sqrt(2)}(y) - fn(t R_pos) R {t^sqrt(2)}(t0))
+                            abs(example_9_4_14_sqrt_two_power_on_nonnegative(y) - example_9_4_14_sqrt_two_power_on_nonnegative(t0)) <= epsilon
+                        $is_delta_neighborhood_close_to('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0, example_9_4_14_sqrt_two_power_on_nonnegative(t0), epsilon, finite_set_min(union({delta0}, {t0 / 2})))
+                    $is_locally_epsilon_close_to('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0, example_9_4_14_sqrt_two_power_on_nonnegative(t0), epsilon)
+        $has_function_limit('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0, example_9_4_14_sqrt_two_power_on_nonnegative(t0))
+        $is_continuous_at('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0)
+    $is_continuous_on('[0,), example_9_4_14_sqrt_two_power_on_nonnegative)
+
+# Extend the positive-input power through the zero endpoint by setting the
+# negative half-line to zero.  The three cases are negative points, the zero
+# endpoint, and positive points where Proposition 9.4.11 applies directly.
+have fn example_9_4_14_sqrt_two_power_extension(t R) R by cases:
+    case t >= 0: t^sqrt(2)
+    case t < 0: 0
+
+thm example_9_4_14_sqrt_two_power_extension_continuous:
+    ? forall:
+        $is_continuous_on(R, example_9_4_14_sqrt_two_power_extension)
+    claim:
+        ? forall t0 R:
+            $is_continuous_at(R, example_9_4_14_sqrt_two_power_extension, t0)
+        by thm interval_member_is_adherent(R, t0)
+        claim:
+            ? forall epsilon R_pos:
+                $is_locally_epsilon_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon)
+            t0 < 0 or t0 >= 0
+            by cases:
+                ? $is_locally_epsilon_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon)
+                case t0 < 0:
+                    0 - t0 > 0
+                    witness exist delta R_pos st {$is_delta_neighborhood_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon, delta)} from (0 - t0) / 2:
+                        claim:
+                            ? forall y R:
+                                abs(y - t0) < (0 - t0) / 2
+                                =>:
+                                    abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) <= epsilon
+                            y - t0 <= abs(y - t0)
+                            y - t0 < (0 - t0) / 2
+                            y - t0 + t0 < (0 - t0) / 2 + t0
+                            y - t0 + t0 = y
+                            (0 - t0) / 2 + t0 = t0 / 2
+                            y < t0 / 2
+                            2 > 0
+                            1 / 2 > 0
+                            t0 * (1 / 2) < 0 * (1 / 2)
+                            t0 * (1 / 2) = t0 / 2
+                            0 * (1 / 2) = 0
+                            t0 / 2 < 0
+                            y < 0
+                            example_9_4_14_sqrt_two_power_extension(y) = 0
+                            example_9_4_14_sqrt_two_power_extension(t0) = 0
+                            example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0) = 0 - 0
+                            0 - 0 = 0
+                            abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) = abs(0)
+                            abs(0) = 0
+                            0 <= epsilon
+                        $is_delta_neighborhood_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon, (0 - t0) / 2)
+                    $is_locally_epsilon_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon)
+                case t0 >= 0:
+                    t0 = 0 or t0 > 0
+                    by cases:
+                        ? $is_locally_epsilon_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon)
+                        case t0 = 0:
+                            finite_set_min(union({epsilon}, {1 / 2})) $in R_pos
+                            finite_set_min(union({epsilon}, {1 / 2})) <= epsilon
+                            finite_set_min(union({epsilon}, {1 / 2})) <= 1 / 2
+                            witness exist delta R_pos st {$is_delta_neighborhood_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon, delta)} from finite_set_min(union({epsilon}, {1 / 2})):
+                                claim:
+                                    ? forall y R:
+                                        abs(y - t0) < finite_set_min(union({epsilon}, {1 / 2}))
+                                        =>:
+                                            abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) <= epsilon
+                                    y - t0 = y - 0
+                                    abs(y - t0) = abs(y - 0)
+                                    abs(y - 0) < finite_set_min(union({epsilon}, {1 / 2}))
+                                    y - 0 = y
+                                    abs(y - 0) = abs(y)
+                                    abs(y) < finite_set_min(union({epsilon}, {1 / 2}))
+                                    y < finite_set_min(union({epsilon}, {1 / 2})) <= 1 / 2
+                                    y < 1 / 2
+                                    1 / 2 < 1
+                                    y < 1
+                                    y < 0 or y >= 0
+                                    by cases:
+                                        ? abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) <= epsilon
+                                        case y < 0:
+                                            example_9_4_14_sqrt_two_power_extension(y) = 0
+                                            t0 = 0
+                                            example_9_4_14_sqrt_two_power_extension(t0) = example_9_4_14_sqrt_two_power_extension(0)
+                                            example_9_4_14_sqrt_two_power_extension(0) = 0^sqrt(2)
+                                            example_9_4_14_sqrt_two_power_extension(t0) = 0^sqrt(2)
+                                            0^sqrt(2) = 0
+                                            example_9_4_14_sqrt_two_power_extension(t0) = 0
+                                            example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0) = 0 - 0
+                                            0 - 0 = 0
+                                            abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) = abs(0)
+                                            abs(0) = 0
+                                            0 <= epsilon
+                                        case y >= 0:
+                                            y = 0 or y != 0
+                                            by cases:
+                                                ? abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) <= epsilon
+                                                case y = 0:
+                                                    example_9_4_14_sqrt_two_power_extension(y) = example_9_4_14_sqrt_two_power_extension(0)
+                                                    example_9_4_14_sqrt_two_power_extension(0) = 0^sqrt(2)
+                                                    example_9_4_14_sqrt_two_power_extension(y) = 0^sqrt(2)
+                                                    0^sqrt(2) = 0
+                                                    example_9_4_14_sqrt_two_power_extension(y) = 0
+                                                    t0 = 0
+                                                    example_9_4_14_sqrt_two_power_extension(t0) = example_9_4_14_sqrt_two_power_extension(0)
+                                                    example_9_4_14_sqrt_two_power_extension(0) = 0^sqrt(2)
+                                                    example_9_4_14_sqrt_two_power_extension(t0) = 0^sqrt(2)
+                                                    example_9_4_14_sqrt_two_power_extension(t0) = 0
+                                                    example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0) = 0 - 0
+                                                    0 - 0 = 0
+                                                    abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) = abs(0)
+                                                    abs(0) = 0
+                                                    0 <= epsilon
+                                                case y != 0:
+                                                    claim:
+                                                        ? y > 0
+                                                        by contra:
+                                                            ? y > 0
+                                                            y <= 0
+                                                            y >= 0
+                                                            y = 0
+                                                            impossible y = 0
+                                                    y > 0
+                                                    y $in R_pos
+                                                    by thm example_9_4_14_sqrt_two_gt_one()
+                                                    by thm chap6::real_power_exponent_strict_antimono_below_one(y, sqrt(2), 1)
+                                                    y^sqrt(2) < y^1
+                                                    y^1 = y
+                                                    y^sqrt(2) < y
+                                                    y^sqrt(2) <= y
+                                                    y < finite_set_min(union({epsilon}, {1 / 2})) <= epsilon
+                                                    y <= epsilon
+                                                    by thm chap6::real_power_positive(y, sqrt(2))
+                                                    y^sqrt(2) >= 0
+                                                    example_9_4_14_sqrt_two_power_extension(y) = y^sqrt(2)
+                                                    t0 = 0
+                                                    example_9_4_14_sqrt_two_power_extension(t0) = example_9_4_14_sqrt_two_power_extension(0)
+                                                    example_9_4_14_sqrt_two_power_extension(0) = 0^sqrt(2)
+                                                    example_9_4_14_sqrt_two_power_extension(t0) = 0^sqrt(2)
+                                                    0^sqrt(2) = 0
+                                                    example_9_4_14_sqrt_two_power_extension(t0) = 0
+                                                    example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0) = y^sqrt(2) - 0
+                                                    y^sqrt(2) - 0 = y^sqrt(2)
+                                                    abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) = abs(y^sqrt(2))
+                                                    abs(y^sqrt(2)) = y^sqrt(2)
+                                                    abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) = y^sqrt(2)
+                                                    abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) <= y <= epsilon
+                                                    abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) <= epsilon
+                                $is_delta_neighborhood_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon, finite_set_min(union({epsilon}, {1 / 2})))
+                            $is_locally_epsilon_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon)
+                        case t0 > 0:
+                            t0 $in R_pos
+                            by thm positive_domain_power_function_continuous(sqrt(2))
+                            $is_continuous_on(R_pos, fn(t R_pos) R {t^sqrt(2)})
+                            $is_continuous_at(R_pos, fn(t R_pos) R {t^sqrt(2)}, t0)
+                            fn(t R_pos) R {t^sqrt(2)}(t0) = t0^sqrt(2)
+                            $has_function_limit(R_pos, fn(t R_pos) R {t^sqrt(2)}, t0, t0^sqrt(2))
+                            $is_locally_epsilon_close_to(R_pos, fn(t R_pos) R {t^sqrt(2)}, t0, t0^sqrt(2), epsilon)
+                            obtain delta0 from exist delta0 R_pos st {$is_delta_neighborhood_close_to(R_pos, fn(t R_pos) R {t^sqrt(2)}, t0, t0^sqrt(2), epsilon, delta0)}
+                            t0 / 2 $in R_pos
+                            finite_set_min(union({delta0}, {t0 / 2})) $in R_pos
+                            finite_set_min(union({delta0}, {t0 / 2})) <= delta0
+                            finite_set_min(union({delta0}, {t0 / 2})) <= t0 / 2
+                            witness exist delta R_pos st {$is_delta_neighborhood_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon, delta)} from finite_set_min(union({delta0}, {t0 / 2})):
+                                claim:
+                                    ? forall y R:
+                                        abs(y - t0) < finite_set_min(union({delta0}, {t0 / 2}))
+                                        =>:
+                                            abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) <= epsilon
+                                    abs(y - t0) < finite_set_min(union({delta0}, {t0 / 2})) <= delta0
+                                    abs(y - t0) < delta0
+                                    t0 - y = -(y - t0)
+                                    -(y - t0) <= abs(y - t0)
+                                    t0 - y <= abs(y - t0) < finite_set_min(union({delta0}, {t0 / 2})) <= t0 / 2
+                                    t0 - y < t0 / 2
+                                    t0 - y + y < t0 / 2 + y
+                                    t0 - y + y = t0
+                                    t0 / 2 + y = y + t0 / 2
+                                    t0 < y + t0 / 2
+                                    t0 - t0 / 2 < y
+                                    t0 - t0 / 2 = t0 / 2
+                                    t0 / 2 > 0
+                                    0 < t0 / 2 < y
+                                    y > 0
+                                    y $in R_pos
+                                    abs(fn(t R_pos) R {t^sqrt(2)}(y) - t0^sqrt(2)) <= epsilon
+                                    fn(t R_pos) R {t^sqrt(2)}(y) = y^sqrt(2)
+                                    example_9_4_14_sqrt_two_power_extension(y) = y^sqrt(2)
+                                    example_9_4_14_sqrt_two_power_extension(t0) = t0^sqrt(2)
+                                    abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) = abs(fn(t R_pos) R {t^sqrt(2)}(y) - t0^sqrt(2))
+                                    abs(example_9_4_14_sqrt_two_power_extension(y) - example_9_4_14_sqrt_two_power_extension(t0)) <= epsilon
+                                $is_delta_neighborhood_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon, finite_set_min(union({delta0}, {t0 / 2})))
+                            $is_locally_epsilon_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon)
+            $is_locally_epsilon_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon)
+        $has_function_limit(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0))
+        $is_continuous_at(R, example_9_4_14_sqrt_two_power_extension, t0)
+    $is_continuous_on(R, example_9_4_14_sqrt_two_power_extension)
+
+# The absolute-value expression is nonnegative, while its real-valued adapter
+# keeps the endpoint proof and the composition theorem on the chapter's common
+# real-valued continuity interface.
+thm example_9_4_14_abs_quadratic_continuous_into_nonnegative:
+    ? forall:
+        $is_continuous_on(R, example_9_4_14_abs_quadratic_nonnegative)
+    by thm example_9_4_14_abs_quadratic_continuous()
+    claim:
+        ? forall x0 R:
+            $is_continuous_at(R, example_9_4_14_abs_quadratic_nonnegative, x0)
+        by thm interval_member_is_adherent(R, x0)
+        claim:
+            ? forall epsilon R_pos:
+                $is_locally_epsilon_close_to(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0), epsilon)
+            $is_continuous_at(R, example_9_4_14_abs_quadratic, x0)
+            $has_function_limit(R, example_9_4_14_abs_quadratic, x0, example_9_4_14_abs_quadratic(x0))
+            $is_locally_epsilon_close_to(R, example_9_4_14_abs_quadratic, x0, example_9_4_14_abs_quadratic(x0), epsilon)
+            obtain delta from exist delta R_pos st {$is_delta_neighborhood_close_to(R, example_9_4_14_abs_quadratic, x0, example_9_4_14_abs_quadratic(x0), epsilon, delta)}
+            witness exist eta R_pos st {$is_delta_neighborhood_close_to(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0), epsilon, eta)} from delta:
+                claim:
+                    ? forall y R:
+                        abs(y - x0) < delta
+                        =>:
+                            abs(example_9_4_14_abs_quadratic_nonnegative(y) - example_9_4_14_abs_quadratic_nonnegative(x0)) <= epsilon
+                    example_9_4_14_abs_quadratic_nonnegative(y) $in R
+                    example_9_4_14_abs_quadratic_nonnegative(x0) $in R
+                    abs(example_9_4_14_abs_quadratic(y) - example_9_4_14_abs_quadratic(x0)) <= epsilon
+                    example_9_4_14_abs_quadratic_nonnegative = fn(x R) R {abs(x^2 - 8 * x + 7)}
+                    example_9_4_14_abs_quadratic_nonnegative(y) = fn(x R) R {abs(x^2 - 8 * x + 7)}(y)
+                    fn(x R) R {abs(x^2 - 8 * x + 7)}(y) = abs(y^2 - 8 * y + 7)
+                    example_9_4_14_abs_quadratic_nonnegative(y) = abs(y^2 - 8 * y + 7)
+                    example_9_4_14_abs_quadratic = fn(x R) R {abs(x^2 - 8 * x + 7)}
+                    example_9_4_14_abs_quadratic(y) = fn(x R) R {abs(x^2 - 8 * x + 7)}(y)
+                    fn(x R) R {abs(x^2 - 8 * x + 7)}(y) = abs(y^2 - 8 * y + 7)
+                    example_9_4_14_abs_quadratic(y) = abs(y^2 - 8 * y + 7)
+                    example_9_4_14_abs_quadratic_nonnegative(y) = example_9_4_14_abs_quadratic(y)
+                    example_9_4_14_abs_quadratic_nonnegative(x0) = abs(x0^2 - 8 * x0 + 7)
+                    example_9_4_14_abs_quadratic(x0) = abs(x0^2 - 8 * x0 + 7)
+                    example_9_4_14_abs_quadratic_nonnegative(x0) = example_9_4_14_abs_quadratic(x0)
+                    example_9_4_14_abs_quadratic_nonnegative(y) - example_9_4_14_abs_quadratic_nonnegative(x0) = example_9_4_14_abs_quadratic(y) - example_9_4_14_abs_quadratic(x0)
+                    abs(example_9_4_14_abs_quadratic_nonnegative(y) - example_9_4_14_abs_quadratic_nonnegative(x0)) = abs(example_9_4_14_abs_quadratic(y) - example_9_4_14_abs_quadratic(x0))
+                    abs(example_9_4_14_abs_quadratic_nonnegative(y) - example_9_4_14_abs_quadratic_nonnegative(x0)) <= epsilon
+                $is_delta_neighborhood_close_to(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0), epsilon, delta)
+            $is_locally_epsilon_close_to(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0), epsilon)
+        $has_function_limit(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0))
+        $is_continuous_at(R, example_9_4_14_abs_quadratic_nonnegative, x0)
+    $is_continuous_on(R, example_9_4_14_abs_quadratic_nonnegative)
+
+thm example_9_4_14_powered_abs_quadratic_is_composition:
+    ? forall:
+        $is_composition_of_real_functions(R, R, example_9_4_14_abs_quadratic_nonnegative, example_9_4_14_sqrt_two_power_extension, example_9_4_14_powered_abs_quadratic)
+    claim:
+        ? forall x R:
+            example_9_4_14_powered_abs_quadratic(x) = example_9_4_14_sqrt_two_power_extension(example_9_4_14_abs_quadratic_nonnegative(x))
+        example_9_4_14_powered_abs_quadratic(x) = abs(x^2 - 8 * x + 7)^sqrt(2)
+        example_9_4_14_abs_quadratic_nonnegative(x) = abs(x^2 - 8 * x + 7)
+        example_9_4_14_abs_quadratic_nonnegative = fn(x R) R {abs(x^2 - 8 * x + 7)}
+        example_9_4_14_abs_quadratic_nonnegative(x) = fn(x R) R {abs(x^2 - 8 * x + 7)}(x)
+        fn(x R) R {abs(x^2 - 8 * x + 7)}(x) = abs(x^2 - 8 * x + 7)
+        abs(x^2 - 8 * x + 7) >= 0
+        example_9_4_14_abs_quadratic_nonnegative(x) >= 0
+        example_9_4_14_sqrt_two_power_extension(example_9_4_14_abs_quadratic_nonnegative(x)) = example_9_4_14_abs_quadratic_nonnegative(x)^sqrt(2)
+        example_9_4_14_abs_quadratic_nonnegative(x)^sqrt(2) = abs(x^2 - 8 * x + 7)^sqrt(2)
+        example_9_4_14_powered_abs_quadratic(x) = example_9_4_14_sqrt_two_power_extension(example_9_4_14_abs_quadratic_nonnegative(x))
+    $is_composition_of_real_functions(R, R, example_9_4_14_abs_quadratic_nonnegative, example_9_4_14_sqrt_two_power_extension, example_9_4_14_powered_abs_quadratic)
 
 thm example_9_4_14_complex_is_quotient:
     ? forall x R:
@@ -6443,13 +6862,14 @@ thm example_9_4_14_complex_is_quotient:
 thm example_9_4_14_powered_abs_quadratic_continuous:
     ? forall:
         $is_continuous_on(R, example_9_4_14_powered_abs_quadratic)
-    by thm example_9_4_14_abs_quadratic_continuous()
-    $is_continuous_on(R, example_9_4_14_abs_quadratic)
-    # Source handling: this example combines the real-power continuity rule
-    # with the preceding absolute-value polynomial.
-    # proof_debt: Proposition 9.4.11 only covers positive inputs, while this
-    # composition also needs the endpoint where the absolute value is zero.
-    trust $is_continuous_on(R, example_9_4_14_powered_abs_quadratic)
+    by thm example_9_4_14_abs_quadratic_continuous_into_nonnegative()
+    $is_continuous_on(R, example_9_4_14_abs_quadratic_nonnegative)
+    by thm example_9_4_14_sqrt_two_power_extension_continuous()
+    $is_continuous_on(R, example_9_4_14_sqrt_two_power_extension)
+    by thm example_9_4_14_powered_abs_quadratic_is_composition()
+    $is_composition_of_real_functions(R, R, example_9_4_14_abs_quadratic_nonnegative, example_9_4_14_sqrt_two_power_extension, example_9_4_14_powered_abs_quadratic)
+    by thm composition_preserves_continuity(R, R, example_9_4_14_abs_quadratic_nonnegative, example_9_4_14_sqrt_two_power_extension, example_9_4_14_powered_abs_quadratic)
+    $is_continuous_on(R, example_9_4_14_powered_abs_quadratic)
 
 thm example_9_4_14_complex_continuous:
     ? forall:

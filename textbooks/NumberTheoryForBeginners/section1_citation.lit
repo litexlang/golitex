@@ -120,7 +120,9 @@ thm subset_finite_background:
         A $subset B
         =>:
             $is_finite_set(A)
-    trust: finite-set subset background
+    A = set_minus(B, set_minus(B, A))
+    $is_finite_set(set_minus(B, set_minus(B, A)))
+    $is_finite_set(A)
 
 thm intersect_with_singleton:
     ? forall T set, a set:
@@ -366,7 +368,7 @@ thm section_I_strong_induction:
                     ? x > 0
                     x = 0
                     0 $in S
-                    $section_I_induction_statement(x)
+                    x $in S
                     impossible not x $in S
             $is_positive_integer_set(bad)
         $is_positive_integer_set(bad)
@@ -399,6 +401,4 @@ thm section_I_strong_induction:
                 m $in N_pos
                 m $in S
         impossible not m $in S
-
-
 

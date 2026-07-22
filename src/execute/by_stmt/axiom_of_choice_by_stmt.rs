@@ -37,7 +37,7 @@ impl Runtime {
             }
 
             let obligations =
-                axiom_of_choice_obligations(stmt.family.clone(), stmt.line_file.clone())?;
+                axiom_of_choice_obligations(rt, stmt.family.clone(), stmt.line_file.clone())?;
             let mut obligations_for_output = Vec::new();
             for (label, fact) in obligations {
                 if section_inferred_fact(&inside_results, &fact) {
@@ -67,7 +67,8 @@ impl Runtime {
         // nonempty, infer the existence of a function choosing one element
         // from each member. Example: by axiom_of_choice: set S: stores
         // exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}.
-        let choice_fact = axiom_of_choice_exist_fact(stmt.family.clone(), stmt.line_file.clone())?;
+        let choice_fact =
+            axiom_of_choice_exist_fact(self, stmt.family.clone(), stmt.line_file.clone())?;
         let choice_fact_string = choice_fact.to_string();
         let infer_result = self
             .verify_well_defined_and_store_and_infer_with_default_verify_state(choice_fact)
@@ -100,7 +101,8 @@ impl Runtime {
         &mut self,
         stmt: &ByAxiomOfChoiceStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let choice_fact = axiom_of_choice_exist_fact(stmt.family.clone(), stmt.line_file.clone())?;
+        let choice_fact =
+            axiom_of_choice_exist_fact(self, stmt.family.clone(), stmt.line_file.clone())?;
         let infer_result = self.store_trusted_fact_and_infer_with_reason(
             choice_fact,
             InferReason::VerifiedStatement,
@@ -110,6 +112,7 @@ impl Runtime {
 }
 
 fn axiom_of_choice_obligations(
+    runtime: &Runtime,
     family: Obj,
     line_file: LineFile,
 ) -> Result<Vec<(String, Fact)>, RuntimeError> {
@@ -120,16 +123,17 @@ fn axiom_of_choice_obligations(
         ),
         (
             "members_nonempty".to_string(),
-            axiom_of_choice_members_nonempty_fact(family, line_file)?,
+            axiom_of_choice_members_nonempty_fact(runtime, family, line_file)?,
         ),
     ])
 }
 
 fn axiom_of_choice_members_nonempty_fact(
+    runtime: &Runtime,
     family: Obj,
     line_file: LineFile,
 ) -> Result<Fact, RuntimeError> {
-    let a_name = "A".to_string();
+    let a_name = runtime.generate_internal_binder_name();
     let a = forall_obj(&a_name);
     Ok(ForallFact::new(
         ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -143,9 +147,13 @@ fn axiom_of_choice_members_nonempty_fact(
     .into())
 }
 
-fn axiom_of_choice_exist_fact(family: Obj, line_file: LineFile) -> Result<Fact, RuntimeError> {
-    let f_name = "f".to_string();
-    let a_name = "A".to_string();
+fn axiom_of_choice_exist_fact(
+    runtime: &Runtime,
+    family: Obj,
+    line_file: LineFile,
+) -> Result<Fact, RuntimeError> {
+    let f_name = runtime.generate_internal_binder_name();
+    let a_name = runtime.generate_internal_binder_name();
     let choice_fn_set = FnSet::new(
         vec![ParamGroupWithSet::new(vec![a_name.clone()], family.clone())],
         vec![],

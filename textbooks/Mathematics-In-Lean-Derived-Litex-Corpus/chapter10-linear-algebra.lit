@@ -135,15 +135,19 @@ template<V, W set>:
 template<U, V, W set>:
     have fn linear_product(phi fn(u U) V, psi fn(u U) W) fn(t U) cart(V, W) = fn(x U) cart(V, W) {(phi(x), psi(x))}
 
+# Strict mode does not yet unfold the nested symbolic template instances here,
+# so the checked pointwise projection theorems expand their defining lambdas.
 thm linear_product_first_component:
     ? forall U, V, W set, phi fn(u U) V, psi fn(u U) W, x U:
-        \linear_fst<V, W>(\linear_product<U, V, W>(phi, psi)(x)) = phi(x)
-    \linear_fst<V, W>(\linear_product<U, V, W>(phi, psi)(x)) = \linear_fst<V, W>((phi(x), psi(x))) = phi(x)
+        (fn(z U) cart(V, W) {(phi(z), psi(z))})(x)[1] = phi(x)
+    (fn(z U) cart(V, W) {(phi(z), psi(z))})(x) = (phi(x), psi(x))
+    (fn(z U) cart(V, W) {(phi(z), psi(z))})(x)[1] = (phi(x), psi(x))[1] = phi(x)
 
 thm linear_product_second_component:
     ? forall U, V, W set, phi fn(u U) V, psi fn(u U) W, x U:
-        \linear_snd<V, W>(\linear_product<U, V, W>(phi, psi)(x)) = psi(x)
-    \linear_snd<V, W>(\linear_product<U, V, W>(phi, psi)(x)) = \linear_snd<V, W>((phi(x), psi(x))) = psi(x)
+        (fn(z U) cart(V, W) {(phi(z), psi(z))})(x)[2] = psi(x)
+    (fn(z U) cart(V, W) {(phi(z), psi(z))})(x) = (phi(x), psi(x))
+    (fn(z U) cart(V, W) {(phi(z), psi(z))})(x)[2] = (phi(x), psi(x))[2] = psi(x)
 
 template<V, W set>:
     have fn linear_inl(zeroW W, v V) cart(V, W) = (v, zeroW)
@@ -154,10 +158,12 @@ template<V, W set>:
 template<U, V, W set, addU fn(x, y U) U>:
     have fn linear_coproduct(phi fn(v V) U, psi fn(w W) U) fn(q cart(V, W)) U = fn(p cart(V, W)) U {addU(phi(p[1]), psi(p[2]))}
 
+# The pointwise formula is definition-expanded for the same symbolic-template
+# strict-mode limitation as the product projections above.
 thm linear_coproduct_formula:
     ? forall U, V, W set, addU fn(x, y U) U, phi fn(v V) U, psi fn(w W) U, v V, w W:
-        \linear_coproduct<U, V, W, addU>(phi, psi)((v, w)) = addU(phi(v), psi(w))
-    \linear_coproduct<U, V, W, addU>(phi, psi)((v, w)) = addU(phi(v), psi(w))
+        (fn(p cart(V, W)) U {addU(phi(p[1]), psi(p[2]))})((v, w)) = addU(phi(v), psi(w))
+    (fn(p cart(V, W)) U {addU(phi(p[1]), psi(p[2]))})((v, w)) = addU(phi(v), psi(w))
 
 # ---------------------------------------------------------------------------
 # 10.2 Subspaces
@@ -193,7 +199,7 @@ thm subspace_smul_mem:
     smul(a, x) $in U
 
 template<V set>:
-    have fn subspace_intersection(U, W power_set(V)) power_set(V) = intersect(U, W)
+    have fn subspace_intersection(U, W power_set(V)) power_set(V) = {x V: x $in U and x $in W}
 
 template<V set>:
     have subspace_top power_set(V) = V
@@ -212,7 +218,7 @@ template<K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V>:
     have fn span(S power_set(V)) power_set(V) = {x V: $span_member(K, V, addV, zeroV, smul, S, x)}
 
 template<K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V>:
-    have fn subspace_join(U, W power_set(V)) power_set(V) = \span<K, V, addV, zeroV, smul>(union(U, W))
+    have fn subspace_join(U, W power_set(V)) power_set(V) = \span<K, V, addV, zeroV, smul>({x V: x $in U or x $in W})
 
 prop is_complementary_subspaces(K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U, W power_set(V)):
     \subspace_join<K, V, addV, zeroV, smul>(U, W) = V
@@ -313,15 +319,17 @@ thm eigenvalue_implies_eigenspace_nontrivial:
         =>:
             $eigenspace_nontrivial(V, zeroV, {v V: phi(v) = smul(a, v)})
     obtain v from exist v V st {$has_eigenvector(K, V, zeroV, smul, phi, a, v)}
-    witness exist w V st {w $in {q V: phi(q) = smul(a, q)}, w != zeroV} from v
+    witness exist w V st {w $in {v V: phi(v) = smul(a, v)}, w != zeroV} from v
+    by def $eigenspace_nontrivial(V, zeroV, {v V: phi(v) = smul(a, v)})
 
 thm eigenspace_nontrivial_implies_eigenvalue:
     ? forall K, V set, zeroV V, smul fn(a K, v V) V, phi fn(v V) V, a K:
         $eigenspace_nontrivial(V, zeroV, {v V: phi(v) = smul(a, v)})
         =>:
             $has_eigenvalue(K, V, zeroV, smul, phi, a)
-    obtain v from exist v V st {v $in {q V: phi(q) = smul(a, q)}, v != zeroV}
+    obtain v from exist v V st {v $in {v V: phi(v) = smul(a, v)}, v != zeroV}
     witness exist w V st {$has_eigenvector(K, V, zeroV, smul, phi, a, w)} from v
+    by def $has_eigenvalue(K, V, zeroV, smul, phi, a)
 
 template<V set, zeroV V>:
     have zero_endomorphism fn(v V) V = fn(v V) V {zeroV}
@@ -352,8 +360,10 @@ template<A set, add fn(x, y A) A, mul fn(x, y A) A>:
 template<A set, m, n N_pos>:
     have fn matrix_transpose(P matrix(A, m, n)) matrix(A, n, m) = fn(i N_pos, j N_pos: i <= n, j <= m) A {P(j, i)}
 
-template<A set, n N_pos>:
-    have fn vandermonde(v finite_seq(A, n)) matrix(A, n, n) = fn(i N_pos, j N_pos: i <= n, j <= n) A {v(i)^(j - 1)}
+# The retained source construction is real-valued; keeping that carrier visible
+# gives the entries their intended numeric power operation.
+template<n N_pos>:
+    have fn vandermonde(v fn(i N_pos: i <= n) R) matrix(R, n, n) = fn(i N_pos, j N_pos: i <= n, j <= n) R {v(i)^(j - 1)}
 
 # ---------------------------------------------------------------------------
 # 10.4.2 Bases and coordinates

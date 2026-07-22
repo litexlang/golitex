@@ -191,7 +191,8 @@ Remark 2.1.13. (Informal) One interesting feature about the natural numbers is t
 
 by contra:
     ? not $is_finite_set(N)
-    finite_set_size(N) + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
+    0...finite_set_size(N) $subset N
+    finite_set_size(N) + 1 = finite_set_size(N) - 0 + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
     impossible finite_set_size(N) + 1 <= finite_set_size(N)
 
 """

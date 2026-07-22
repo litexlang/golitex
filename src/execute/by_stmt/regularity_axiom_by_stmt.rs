@@ -38,7 +38,7 @@ impl Runtime {
         // disjoint from A. Example: by regularity_axiom(A) stores
         // exist x A st {intersect(x, A) = {}}.
         let regularity_fact =
-            regularity_axiom_exist_fact(stmt.set.clone(), stmt.line_file.clone())?;
+            regularity_axiom_exist_fact(self, stmt.set.clone(), stmt.line_file.clone())?;
         let regularity_fact_string = regularity_fact.to_string();
         let infer_result = self
             .verify_well_defined_and_store_and_infer_with_default_verify_state(regularity_fact)
@@ -72,7 +72,7 @@ impl Runtime {
         stmt: &ByRegularityAxiomStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let regularity_fact =
-            regularity_axiom_exist_fact(stmt.set.clone(), stmt.line_file.clone())?;
+            regularity_axiom_exist_fact(self, stmt.set.clone(), stmt.line_file.clone())?;
         let infer_result = self.store_trusted_fact_and_infer_with_reason(
             regularity_fact,
             InferReason::VerifiedStatement,
@@ -81,8 +81,12 @@ impl Runtime {
     }
 }
 
-fn regularity_axiom_exist_fact(set: Obj, line_file: LineFile) -> Result<Fact, RuntimeError> {
-    let x_name = "x".to_string();
+fn regularity_axiom_exist_fact(
+    runtime: &Runtime,
+    set: Obj,
+    line_file: LineFile,
+) -> Result<Fact, RuntimeError> {
+    let x_name = runtime.generate_internal_binder_name();
     let x = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Exist);
     let empty_set: Obj = ListSet::new(vec![]).into();
     let disjoint_fact = EqualFact::new(

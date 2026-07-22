@@ -1,8 +1,7 @@
 use crate::prelude::*;
 
 use super::exec_have_fn_equal_shared::{
-    build_declared_function_obj_with_param_names, case_conditions_are_disjoint,
-    forall_param_defs_dom_and_map_from_have_fn_clause,
+    case_conditions_are_disjoint, forall_param_defs_dom_and_map_from_have_fn_clause,
 };
 
 impl Runtime {
@@ -67,13 +66,20 @@ impl Runtime {
                 self,
                 &have_fn_equal_case_by_case_stmt.fn_set_clause,
             )?;
-        let param_names = ParamGroupWithSet::collect_param_names(
-            &have_fn_equal_case_by_case_stmt
-                .fn_set_clause
-                .params_def_with_set,
-        );
-        let function_obj =
-            build_declared_function_obj_with_param_names(function_identifier_obj, &param_names);
+        let param_names = param_defs_with_type.collect_param_names();
+        let function_head =
+            FnObjHead::given_an_atom_return_a_fn_obj_head(function_identifier_obj.clone())
+                .expect("declared function identifier should be an atom");
+        let function_args = param_names
+            .iter()
+            .map(|name| {
+                Box::new(obj_for_bound_param_in_scope(
+                    name.clone(),
+                    ParamObjType::Forall,
+                ))
+            })
+            .collect();
+        let function_obj: Obj = FnObj::new(function_head, vec![function_args]).into();
 
         for case_index in 0..have_fn_equal_case_by_case_stmt.cases.len() {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
@@ -86,15 +92,20 @@ impl Runtime {
                 self.inst_and_chain_atomic_fact(
                     case_fact,
                     &fn_set_param_to_forall_param,
-                    ParamObjType::FnSet,
+                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
                     None,
                 )?
                 .into(),
             );
 
+            let equal_to = self.inst_obj(
+                equal_to,
+                &fn_set_param_to_forall_param,
+                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+            )?;
             let function_equals_equal_to_fact: AtomicFact = EqualFact::new(
                 function_obj.clone(),
-                equal_to.clone(),
+                equal_to,
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
             )
             .into();
@@ -104,16 +115,7 @@ impl Runtime {
                 vec![function_equals_equal_to_fact.into()],
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
             )?;
-            let forall_as_fact = self
-                .inst_have_fn_forall_fact_for_store(forall_fact)
-                .map_err(|store_inst_error| {
-                    short_exec_error(
-                        have_fn_equal_case_by_case_stmt.clone().into(),
-                        "have_fn_equal_case_by_case_stmt: inst forall for store failed".to_string(),
-                        Some(store_inst_error),
-                        vec![],
-                    )
-                })?;
+            let forall_as_fact: Fact = forall_fact.into();
 
             let forall_infer_result = self
                 .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(

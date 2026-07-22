@@ -36,21 +36,25 @@ impl Runtime {
         }
 
         let lf = not_exist.line_file();
+        let source_names = not_exist.params_def_with_type().collect_param_names();
+        let (forall_names, full_param_to_forall_obj) =
+            self.fresh_binder_retag_plan(&source_names, ParamObjType::Forall);
         let mut param_to_forall_obj: HashMap<String, Obj> = HashMap::new();
         let mut forall_groups: Vec<ParamGroupWithParamType> = Vec::new();
+        let mut name_index = 0;
         for group in not_exist.params_def_with_type().groups.iter() {
+            let param_type = self.inst_param_type(
+                &group.param_type,
+                &param_to_forall_obj,
+                ParamObjType::BinderRetag(BinderRetagSource::Exist),
+            )?;
+            let group_forall_names =
+                forall_names[name_index..name_index + group.params.len()].to_vec();
             for name in group.params.iter() {
-                param_to_forall_obj.insert(
-                    name.clone(),
-                    obj_for_bound_param_in_scope(name.clone(), ParamObjType::Forall),
-                );
+                param_to_forall_obj.insert(name.clone(), full_param_to_forall_obj[name].clone());
             }
-            let param_type =
-                self.inst_param_type(&group.param_type, &param_to_forall_obj, ParamObjType::Exist)?;
-            forall_groups.push(ParamGroupWithParamType::new(
-                group.params.clone(),
-                param_type,
-            ));
+            name_index += group.params.len();
+            forall_groups.push(ParamGroupWithParamType::new(group_forall_names, param_type));
         }
 
         let mut disjuncts: Vec<AndChainAtomicFact> = Vec::new();
@@ -58,7 +62,7 @@ impl Runtime {
             let forall_conjunct = self.inst_exist_body_fact(
                 conjunct,
                 &param_to_forall_obj,
-                ParamObjType::Exist,
+                ParamObjType::BinderRetag(BinderRetagSource::Exist),
                 None,
             )?;
             let Some(forall_conjunct) =

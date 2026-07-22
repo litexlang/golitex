@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 impl Runtime {
     fn line_file_after_inst(original: &LineFile, inst_to_line_file: Option<&LineFile>) -> LineFile {
@@ -809,6 +809,23 @@ impl Runtime {
         to_inst_param_type: ParamObjType,
         inst_lf: Option<&LineFile>,
     ) -> Result<ExistFactEnum, RuntimeError> {
+        let rename_map = self.exist_capture_avoiding_rename_map(exist_fact, param_to_arg_map);
+        let renamed_exist_fact = self.alpha_rename_exist_fact(exist_fact, &rename_map)?;
+        self.inst_exist_fact_without_capture_preparation(
+            &renamed_exist_fact,
+            param_to_arg_map,
+            to_inst_param_type,
+            inst_lf,
+        )
+    }
+
+    fn inst_exist_fact_without_capture_preparation(
+        &self,
+        exist_fact: &ExistFactEnum,
+        param_to_arg_map: &HashMap<String, Obj>,
+        to_inst_param_type: ParamObjType,
+        inst_lf: Option<&LineFile>,
+    ) -> Result<ExistFactEnum, RuntimeError> {
         let mut groups = Vec::with_capacity(exist_fact.params_def_with_type().groups.len());
         for param_def_with_type in exist_fact.params_def_with_type().groups.iter() {
             groups.push(ParamGroupWithParamType::new(
@@ -834,6 +851,83 @@ impl Runtime {
             params_def_with_type,
             facts,
             Self::line_file_after_inst(&exist_fact.body().line_file, inst_lf),
+        )?;
+        Ok(match exist_fact {
+            ExistFactEnum::ExistFact(_) => ExistFactEnum::ExistFact(body),
+            ExistFactEnum::ExistUniqueFact(_) => ExistFactEnum::ExistUniqueFact(body),
+            ExistFactEnum::NotExistFact(_) => ExistFactEnum::NotExistFact(body),
+        })
+    }
+
+    fn exist_capture_avoiding_rename_map(
+        &self,
+        exist_fact: &ExistFactEnum,
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> HashMap<String, Obj> {
+        let mut replacement_exist_names = HashSet::new();
+        for replacement in param_to_arg_map.values() {
+            replacement_exist_names
+                .extend(replacement.collect_param_obj_names(ParamObjType::Exist));
+        }
+
+        let mut reserved_names = replacement_exist_names.clone();
+        collect_param_obj_names_in_exist_fact(exist_fact, ParamObjType::Exist, &mut reserved_names);
+
+        let mut rename_map = HashMap::new();
+        for name in exist_fact.params_def_with_type().collect_param_names() {
+            if !replacement_exist_names.contains(&name) {
+                continue;
+            }
+            let fresh_name = self.generate_one_unused_name_with_reserved(&reserved_names);
+            reserved_names.insert(fresh_name.clone());
+            rename_map.insert(name, ExistFreeParamObj::new(fresh_name).into());
+        }
+        rename_map
+    }
+
+    pub(crate) fn alpha_rename_exist_fact(
+        &self,
+        exist_fact: &ExistFactEnum,
+        rename_map: &HashMap<String, Obj>,
+    ) -> Result<ExistFactEnum, RuntimeError> {
+        if rename_map.is_empty() {
+            return Ok(exist_fact.clone());
+        }
+
+        let mut groups = Vec::with_capacity(exist_fact.params_def_with_type().groups.len());
+        let mut active_rename_map = HashMap::new();
+        for group in exist_fact.params_def_with_type().groups.iter() {
+            let param_type = self.inst_param_type(
+                &group.param_type,
+                &active_rename_map,
+                ParamObjType::AlphaRename,
+            )?;
+            let params = group
+                .params
+                .iter()
+                .map(|name| renamed_exist_param_name(name, rename_map))
+                .collect();
+            groups.push(ParamGroupWithParamType::new(params, param_type));
+            for name in group.params.iter() {
+                if let Some(replacement) = rename_map.get(name) {
+                    active_rename_map.insert(name.clone(), replacement.clone());
+                }
+            }
+        }
+
+        let mut facts = Vec::with_capacity(exist_fact.facts().len());
+        for fact in exist_fact.facts().iter() {
+            facts.push(self.inst_exist_body_fact(
+                fact,
+                rename_map,
+                ParamObjType::AlphaRename,
+                None,
+            )?);
+        }
+        let body = ExistFactBody::new(
+            ParamDefWithType::new(groups),
+            facts,
+            exist_fact.body().line_file.clone(),
         )?;
         Ok(match exist_fact {
             ExistFactEnum::ExistFact(_) => ExistFactEnum::ExistFact(body),
@@ -911,6 +1005,24 @@ impl Runtime {
         to_inst_param_type: ParamObjType,
         inst_lf: Option<&LineFile>,
     ) -> Result<ForallFact, RuntimeError> {
+        let rename_map =
+            self.forall_capture_avoiding_rename_map(forall_fact, &[], param_to_arg_map);
+        let renamed_forall_fact = self.alpha_rename_forall_fact(forall_fact, &rename_map)?;
+        self.inst_forall_fact_without_capture_preparation(
+            &renamed_forall_fact,
+            param_to_arg_map,
+            to_inst_param_type,
+            inst_lf,
+        )
+    }
+
+    pub(crate) fn inst_forall_fact_without_capture_preparation(
+        &self,
+        forall_fact: &ForallFact,
+        param_to_arg_map: &HashMap<String, Obj>,
+        to_inst_param_type: ParamObjType,
+        inst_lf: Option<&LineFile>,
+    ) -> Result<ForallFact, RuntimeError> {
         let mut groups = Vec::with_capacity(forall_fact.params_def_with_type.groups.len());
         for param_def_with_type in forall_fact.params_def_with_type.groups.iter() {
             groups.push(ParamGroupWithParamType::new(
@@ -956,16 +1068,29 @@ impl Runtime {
         to_inst_param_type: ParamObjType,
         inst_lf: Option<&LineFile>,
     ) -> Result<ForallFactWithIff, RuntimeError> {
-        let forall_fact = self.inst_forall_fact(
+        let rename_map = self.forall_capture_avoiding_rename_map(
             &forall_fact_with_iff.forall_fact,
+            &forall_fact_with_iff.iff_facts,
+            param_to_arg_map,
+        );
+        let renamed_forall_fact =
+            self.alpha_rename_forall_fact(&forall_fact_with_iff.forall_fact, &rename_map)?;
+        let forall_fact = self.inst_forall_fact_without_capture_preparation(
+            &renamed_forall_fact,
             param_to_arg_map,
             to_inst_param_type,
             inst_lf,
         )?;
         let mut iff_facts = Vec::with_capacity(forall_fact_with_iff.iff_facts.len());
         for iff_fact in forall_fact_with_iff.iff_facts.iter() {
-            iff_facts.push(self.inst_exist_or_and_chain_atomic_fact(
+            let renamed_iff_fact = self.inst_exist_or_and_chain_atomic_fact(
                 iff_fact,
+                &rename_map,
+                ParamObjType::AlphaRename,
+                None,
+            )?;
+            iff_facts.push(self.inst_exist_or_and_chain_atomic_fact(
+                &renamed_iff_fact,
                 param_to_arg_map,
                 to_inst_param_type,
                 inst_lf,
@@ -976,5 +1101,487 @@ impl Runtime {
             iff_facts,
             Self::line_file_after_inst(&forall_fact_with_iff.line_file, inst_lf),
         )?)
+    }
+
+    fn forall_capture_avoiding_rename_map(
+        &self,
+        forall_fact: &ForallFact,
+        extra_scope_facts: &[ExistOrAndChainAtomicFact],
+        param_to_arg_map: &HashMap<String, Obj>,
+    ) -> HashMap<String, Obj> {
+        let mut replacement_forall_names = HashSet::new();
+        for replacement in param_to_arg_map.values() {
+            replacement_forall_names.extend(replacement.collect_forall_free_param_names());
+        }
+
+        let mut reserved_names = replacement_forall_names.clone();
+        collect_param_obj_names_in_forall_fact(
+            forall_fact,
+            ParamObjType::Forall,
+            &mut reserved_names,
+        );
+        for fact in extra_scope_facts {
+            collect_param_obj_names_in_exist_or_fact(
+                fact,
+                ParamObjType::Forall,
+                &mut reserved_names,
+            );
+        }
+
+        let mut rename_map = HashMap::new();
+        for name in forall_fact.params_def_with_type.collect_param_names() {
+            if !replacement_forall_names.contains(&name) {
+                continue;
+            }
+            let fresh_name = self.generate_one_unused_name_with_reserved(&reserved_names);
+            reserved_names.insert(fresh_name.clone());
+            rename_map.insert(name, ForallFreeParamObj::new(fresh_name).into());
+        }
+        rename_map
+    }
+
+    pub(crate) fn alpha_rename_forall_fact(
+        &self,
+        forall_fact: &ForallFact,
+        rename_map: &HashMap<String, Obj>,
+    ) -> Result<ForallFact, RuntimeError> {
+        if rename_map.is_empty() {
+            return Ok(forall_fact.clone());
+        }
+
+        let mut groups = Vec::with_capacity(forall_fact.params_def_with_type.groups.len());
+        let mut active_rename_map = HashMap::new();
+        for group in forall_fact.params_def_with_type.groups.iter() {
+            let param_type = self.inst_param_type(
+                &group.param_type,
+                &active_rename_map,
+                ParamObjType::AlphaRename,
+            )?;
+            let params = group
+                .params
+                .iter()
+                .map(|name| renamed_forall_param_name(name, rename_map))
+                .collect();
+            groups.push(ParamGroupWithParamType::new(params, param_type));
+            for name in group.params.iter() {
+                if let Some(replacement) = rename_map.get(name) {
+                    active_rename_map.insert(name.clone(), replacement.clone());
+                }
+            }
+        }
+
+        let mut dom_facts = Vec::with_capacity(forall_fact.dom_facts.len());
+        for fact in forall_fact.dom_facts.iter() {
+            dom_facts.push(self.inst_fact(fact, rename_map, ParamObjType::AlphaRename, None)?);
+        }
+        let mut then_facts = Vec::with_capacity(forall_fact.then_facts.len());
+        for fact in forall_fact.then_facts.iter() {
+            then_facts.push(self.inst_exist_or_and_chain_atomic_fact(
+                fact,
+                rename_map,
+                ParamObjType::AlphaRename,
+                None,
+            )?);
+        }
+
+        ForallFact::new(
+            ParamDefWithType::new(groups),
+            dom_facts,
+            then_facts,
+            forall_fact.line_file.clone(),
+        )
+    }
+
+    pub(crate) fn alpha_normalized_forall_cache_key(
+        &self,
+        forall_fact: &ForallFact,
+    ) -> Result<String, RuntimeError> {
+        let rename_map = forall_fact
+            .params_def_with_type
+            .collect_param_names()
+            .into_iter()
+            .enumerate()
+            .map(|(index, name)| {
+                (
+                    name,
+                    ForallFreeParamObj::new(format!("#forall_cache_{}", index)).into(),
+                )
+            })
+            .collect();
+        let mut normalized = self.alpha_rename_forall_fact(forall_fact, &rename_map)?;
+        let groups = normalized
+            .params_def_with_type
+            .groups
+            .iter()
+            .flat_map(|group| {
+                group.params.iter().map(|param| {
+                    ParamGroupWithParamType::new(vec![param.clone()], group.param_type.clone())
+                })
+            })
+            .collect();
+        normalized.params_def_with_type = ParamDefWithType::new(groups);
+        Ok(Fact::from(normalized).to_string())
+    }
+
+    pub(crate) fn collect_param_obj_names_in_exist_fact(
+        &self,
+        exist_fact: &ExistFactEnum,
+        kind: ParamObjType,
+        names: &mut HashSet<String>,
+    ) {
+        collect_param_obj_names_in_exist_fact(exist_fact, kind, names);
+    }
+}
+
+fn renamed_forall_param_name(name: &str, rename_map: &HashMap<String, Obj>) -> String {
+    match rename_map.get(name) {
+        Some(Obj::Atom(AtomObj::Forall(param))) => param.name.clone(),
+        _ => name.to_string(),
+    }
+}
+
+fn renamed_exist_param_name(name: &str, rename_map: &HashMap<String, Obj>) -> String {
+    match rename_map.get(name) {
+        Some(Obj::Atom(AtomObj::Exist(param))) => param.name.clone(),
+        _ => name.to_string(),
+    }
+}
+
+fn collect_param_obj_names_in_forall_fact(
+    forall_fact: &ForallFact,
+    kind: ParamObjType,
+    names: &mut HashSet<String>,
+) {
+    collect_param_obj_names_in_param_def(
+        &forall_fact.params_def_with_type,
+        ParamObjType::Forall,
+        kind,
+        names,
+    );
+    for fact in forall_fact.dom_facts.iter() {
+        collect_param_obj_names_in_fact(fact, kind, names);
+    }
+    for fact in forall_fact.then_facts.iter() {
+        collect_param_obj_names_in_exist_or_fact(fact, kind, names);
+    }
+}
+
+fn collect_param_obj_names_in_fact(fact: &Fact, kind: ParamObjType, names: &mut HashSet<String>) {
+    match fact {
+        Fact::ExistFact(fact) => collect_param_obj_names_in_exist_fact(fact, kind, names),
+        Fact::ForallFact(fact) => collect_param_obj_names_in_forall_fact(fact, kind, names),
+        Fact::ForallFactWithIff(fact) => {
+            collect_param_obj_names_in_forall_fact(&fact.forall_fact, kind, names);
+            for iff_fact in fact.iff_facts.iter() {
+                collect_param_obj_names_in_exist_or_fact(iff_fact, kind, names);
+            }
+        }
+        Fact::NotForall(fact) => {
+            collect_param_obj_names_in_forall_fact(&fact.forall_fact, kind, names)
+        }
+        Fact::AtomicFact(fact) => {
+            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+        }
+        Fact::OrFact(fact) => {
+            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+        }
+        Fact::AndFact(fact) => {
+            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+        }
+        Fact::ChainFact(fact) => {
+            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+        }
+    }
+}
+
+pub(crate) fn collect_param_obj_names_in_exist_fact(
+    exist_fact: &ExistFactEnum,
+    kind: ParamObjType,
+    names: &mut HashSet<String>,
+) {
+    collect_param_obj_names_in_param_def(
+        exist_fact.params_def_with_type(),
+        ParamObjType::Exist,
+        kind,
+        names,
+    );
+    for fact in exist_fact.facts().iter() {
+        match fact {
+            ExistBodyFact::InlineForall(forall_fact) => {
+                collect_param_obj_names_in_forall_fact(forall_fact, kind, names)
+            }
+            _ => collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names),
+        }
+    }
+}
+
+fn collect_param_obj_names_in_exist_or_fact(
+    fact: &ExistOrAndChainAtomicFact,
+    kind: ParamObjType,
+    names: &mut HashSet<String>,
+) {
+    match fact {
+        ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
+            collect_param_obj_names_in_exist_fact(exist_fact, kind, names)
+        }
+        ExistOrAndChainAtomicFact::AtomicFact(fact) => {
+            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+        }
+        ExistOrAndChainAtomicFact::AndFact(fact) => {
+            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+        }
+        ExistOrAndChainAtomicFact::ChainFact(fact) => {
+            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+        }
+        ExistOrAndChainAtomicFact::OrFact(fact) => {
+            collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names)
+        }
+    }
+}
+
+fn collect_param_obj_names_in_param_def(
+    params: &ParamDefWithType,
+    binding_kind: ParamObjType,
+    target_kind: ParamObjType,
+    names: &mut HashSet<String>,
+) {
+    for group in params.groups.iter() {
+        if binding_kind == target_kind {
+            names.extend(group.params.iter().cloned());
+        }
+        if let ParamType::Obj(obj) = &group.param_type {
+            names.extend(obj.collect_param_obj_names(target_kind));
+        }
+    }
+}
+
+fn collect_param_obj_names_in_args(
+    args: Vec<&Obj>,
+    kind: ParamObjType,
+    names: &mut HashSet<String>,
+) {
+    for arg in args {
+        names.extend(arg.collect_param_obj_names(kind));
+    }
+}
+
+#[cfg(test)]
+mod capture_avoidance_tests {
+    use crate::prelude::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn forall_alpha_rename_avoids_every_existing_same_kind_name() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("forall_alpha_rename_reserved_names");
+        let body: AtomicFact = EqualFact::new(
+            DefHeaderFreeParamObj::new("a".to_string()).into(),
+            Add::new(
+                ForallFreeParamObj::new("n".to_string()).into(),
+                ForallFreeParamObj::new("x1".to_string()).into(),
+            )
+            .into(),
+            default_line_file(),
+        )
+        .into();
+        let fact = ForallFact::new(
+            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec!["n".to_string()],
+                ParamType::Set(Set::new()),
+            )]),
+            vec![],
+            vec![body.into()],
+            default_line_file(),
+        )
+        .unwrap();
+        let map = HashMap::from([(
+            "a".to_string(),
+            Obj::from(ForallFreeParamObj::new("n".to_string())),
+        )]);
+
+        let instantiated = runtime
+            .inst_forall_fact(&fact, &map, ParamObjType::DefHeader, None)
+            .unwrap();
+        let fresh_name = &instantiated.params_def_with_type.groups[0].params[0];
+        assert_ne!(fresh_name, "n");
+        assert_ne!(fresh_name, "x1");
+        let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(equality)) =
+            &instantiated.then_facts[0]
+        else {
+            panic!("expected equality body");
+        };
+        assert!(matches!(
+            &equality.left,
+            Obj::Atom(AtomObj::Forall(param)) if param.name == "n"
+        ));
+        assert!(matches!(
+            &equality.right,
+            Obj::Add(add)
+                if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name == *fresh_name)
+                    && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name == "x1")
+        ));
+    }
+
+    #[test]
+    fn exist_alpha_rename_avoids_every_existing_same_kind_name() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("exist_alpha_rename_reserved_names");
+        let body: AtomicFact = EqualFact::new(
+            DefHeaderFreeParamObj::new("a".to_string()).into(),
+            Add::new(
+                ExistFreeParamObj::new("n".to_string()).into(),
+                ExistFreeParamObj::new("x1".to_string()).into(),
+            )
+            .into(),
+            default_line_file(),
+        )
+        .into();
+        let fact = ExistFactEnum::ExistFact(
+            ExistFactBody::new(
+                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                    vec!["n".to_string()],
+                    ParamType::Set(Set::new()),
+                )]),
+                vec![body.into()],
+                default_line_file(),
+            )
+            .unwrap(),
+        );
+        let map = HashMap::from([(
+            "a".to_string(),
+            Obj::from(ExistFreeParamObj::new("n".to_string())),
+        )]);
+
+        let instantiated = runtime
+            .inst_exist_fact(&fact, &map, ParamObjType::DefHeader, None)
+            .unwrap();
+        let fresh_name = &instantiated.params_def_with_type().groups[0].params[0];
+        assert_ne!(fresh_name, "n");
+        assert_ne!(fresh_name, "x1");
+        let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equality)) = &instantiated.facts()[0]
+        else {
+            panic!("expected equality body");
+        };
+        assert!(matches!(
+            &equality.left,
+            Obj::Atom(AtomObj::Exist(param)) if param.name == "n"
+        ));
+        assert!(matches!(
+            &equality.right,
+            Obj::Add(add)
+                if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == *fresh_name)
+                    && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == "x1")
+        ));
+    }
+
+    #[test]
+    fn forall_alpha_rename_respects_dependent_parameter_scope() {
+        let runtime = Runtime::new();
+        let fact = ForallFact::new(
+            ParamDefWithType::new(vec![
+                ParamGroupWithParamType::new(
+                    vec!["n".to_string()],
+                    ParamType::Obj(ForallFreeParamObj::new("n".to_string()).into()),
+                ),
+                ParamGroupWithParamType::new(
+                    vec!["m".to_string()],
+                    ParamType::Obj(ForallFreeParamObj::new("n".to_string()).into()),
+                ),
+            ]),
+            vec![],
+            vec![AtomicFact::from(EqualFact::new(
+                ForallFreeParamObj::new("n".to_string()).into(),
+                ForallFreeParamObj::new("m".to_string()).into(),
+                default_line_file(),
+            ))
+            .into()],
+            default_line_file(),
+        )
+        .unwrap();
+        let rename_map = HashMap::from([
+            (
+                "n".to_string(),
+                Obj::from(ForallFreeParamObj::new("n_fresh".to_string())),
+            ),
+            (
+                "m".to_string(),
+                Obj::from(ForallFreeParamObj::new("m_fresh".to_string())),
+            ),
+        ]);
+
+        let renamed = runtime
+            .alpha_rename_forall_fact(&fact, &rename_map)
+            .unwrap();
+        assert!(matches!(
+            &renamed.params_def_with_type.groups[0].param_type,
+            ParamType::Obj(Obj::Atom(AtomObj::Forall(param))) if param.name == "n"
+        ));
+        assert!(matches!(
+            &renamed.params_def_with_type.groups[1].param_type,
+            ParamType::Obj(Obj::Atom(AtomObj::Forall(param))) if param.name == "n_fresh"
+        ));
+        assert_eq!(
+            renamed.params_def_with_type.groups[0].params,
+            vec!["n_fresh"]
+        );
+        assert_eq!(
+            renamed.params_def_with_type.groups[1].params,
+            vec!["m_fresh"]
+        );
+    }
+
+    #[test]
+    fn exist_alpha_rename_respects_dependent_parameter_scope() {
+        let runtime = Runtime::new();
+        let fact = ExistFactEnum::ExistFact(
+            ExistFactBody::new(
+                ParamDefWithType::new(vec![
+                    ParamGroupWithParamType::new(
+                        vec!["n".to_string()],
+                        ParamType::Obj(ExistFreeParamObj::new("n".to_string()).into()),
+                    ),
+                    ParamGroupWithParamType::new(
+                        vec!["m".to_string()],
+                        ParamType::Obj(ExistFreeParamObj::new("n".to_string()).into()),
+                    ),
+                ]),
+                vec![AtomicFact::from(EqualFact::new(
+                    ExistFreeParamObj::new("n".to_string()).into(),
+                    ExistFreeParamObj::new("m".to_string()).into(),
+                    default_line_file(),
+                ))
+                .into()],
+                default_line_file(),
+            )
+            .unwrap(),
+        );
+        let rename_map = HashMap::from([
+            (
+                "n".to_string(),
+                Obj::from(ExistFreeParamObj::new("n_fresh".to_string())),
+            ),
+            (
+                "m".to_string(),
+                Obj::from(ExistFreeParamObj::new("m_fresh".to_string())),
+            ),
+        ]);
+
+        let renamed = runtime.alpha_rename_exist_fact(&fact, &rename_map).unwrap();
+        assert!(matches!(
+            &renamed.params_def_with_type().groups[0].param_type,
+            ParamType::Obj(Obj::Atom(AtomObj::Exist(param))) if param.name == "n"
+        ));
+        assert!(matches!(
+            &renamed.params_def_with_type().groups[1].param_type,
+            ParamType::Obj(Obj::Atom(AtomObj::Exist(param))) if param.name == "n_fresh"
+        ));
+        assert_eq!(
+            renamed.params_def_with_type().groups[0].params,
+            vec!["n_fresh"]
+        );
+        assert_eq!(
+            renamed.params_def_with_type().groups[1].params,
+            vec!["m_fresh"]
+        );
     }
 }

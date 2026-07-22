@@ -160,7 +160,7 @@ thm subgroup_inv_mem:
     inv(x) $in H
 
 template<G set>:
-    have fn subgroup_intersection(H, K power_set(G)) power_set(G) = intersect(H, K)
+    have fn subgroup_intersection(H, K power_set(G)) power_set(G) = {x G: x $in H and x $in K}
 
 template<G set>:
     have subgroup_top power_set(G) = G
@@ -316,6 +316,21 @@ prop has_no_zero_divisors(A set, zero A, mul fn(x, y A) A):
         =>:
             x = zero or y = zero
 
+# Source example: expand a square in a generic commutative ring. Distribute
+# twice, commute the mixed product, and reorder the four additive terms.
+thm commutative_ring_square_sum:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, x, y A:
+        $is_commutative_ring(A, add, zero, neg, mul, one)
+        =>:
+            mul(add(x, y), add(x, y)) = add(add(mul(x, x), mul(y, y)), add(mul(x, y), mul(x, y)))
+    mul(add(x, y), add(x, y)) = add(mul(x, add(x, y)), mul(y, add(x, y)))
+    mul(x, add(x, y)) = add(mul(x, x), mul(x, y))
+    mul(y, add(x, y)) = add(mul(y, x), mul(y, y))
+    mul(y, x) = mul(x, y)
+    add(mul(y, x), mul(y, y)) = add(mul(y, y), mul(y, x)) = add(mul(y, y), mul(x, y))
+    mul(add(x, y), add(x, y)) = add(add(mul(x, x), mul(x, y)), add(mul(y, y), mul(x, y)))
+    by thm chap2::add_reorder_four(A, add, zero, neg, mul(x, x), mul(x, y), mul(y, y), mul(x, y))
+
 thm natural_square_sum:
     ? forall x, y N:
         (x + y)^2 = x^2 + y^2 + 2 * x * y
@@ -327,6 +342,58 @@ prop is_unit(A set, mul fn(x, y A) A, one A, x A):
 template<A set, mul fn(x, y A) A, one A>:
     have units power_set(A) = {x A: $is_unit(A, mul, one, x)}
 
+# Source example: Int.units_eq_one_or. Extract a two-sided inverse y; sign
+# cases and x * y = 1 force the integer unit x to be 1 or -1.
+thm integer_units_forward:
+    ? forall x Z:
+        $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
+        =>:
+            x = 1 or x = -1
+    obtain y from exist y Z st {fn(a, b Z) Z {a * b}(x, y) = 1, fn(a, b Z) Z {a * b}(y, x) = 1}
+    fn(a, b Z) Z {a * b}(x, y) = x * y
+    x * y = fn(a, b Z) Z {a * b}(x, y) = 1
+    by cases:
+        ? x = 1 or x = -1
+        case x > 0:
+            by cases:
+                ? x = 1 or x = -1
+                case y > 0:
+                    x >= 1
+                    y >= 1
+                    x * y >= x * 1 = x
+                    x <= 1
+                    x = 1
+                case y = 0:
+                    x * y = x * 0 = 0
+                    impossible x * y = 1
+                case y < 0:
+                    x * y < 0 < 1 = x * y
+                    impossible x * y < x * y
+        case x = 0:
+            x * y = 0 * y = 0
+            impossible x * y = 1
+        case x < 0:
+            by cases:
+                ? x = 1 or x = -1
+                case y > 0:
+                    x * y < 0 < 1 = x * y
+                    impossible x * y < x * y
+                case y = 0:
+                    x * y = x * 0 = 0
+                    impossible x * y = 1
+                case y < 0:
+                    -x > 0
+                    -y > 0
+                    -x >= 1
+                    -y >= 1
+                    (-x) * (-y) = x * y = 1
+                    (-x) * (-y) >= (-x) * 1 = -x
+                    -x <= 1
+                    -x = 1
+                    x = -1
+
+# Converse proof for the source unit classification. In either allowed case,
+# choose x itself as the explicit two-sided inverse and unfold is_unit.
 thm integer_units_reverse:
     ? forall x Z:
         x = 1 or x = -1
@@ -335,9 +402,11 @@ thm integer_units_reverse:
     by cases:
         ? $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
         case x = 1:
-            witness exist y Z st {x * y = 1, y * x = 1} from 1
+            witness exist y Z st {fn(a, b Z) Z {a * b}(x, y) = 1, fn(a, b Z) Z {a * b}(y, x) = 1} from 1
+            by def $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
         case x = -1:
-            witness exist y Z st {x * y = 1, y * x = 1} from -1
+            witness exist y Z st {fn(a, b Z) Z {a * b}(x, y) = 1, fn(a, b Z) Z {a * b}(y, x) = 1} from -1
+            by def $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
 
 prop is_ring_hom(A, S set, addR fn(x, y A) A, zeroR A, negR fn(x A) A, mulR fn(x, y A) A, oneR A, addS fn(x, y S) S, zeroS S, negS fn(x S) S, mulS fn(x, y S) S, oneS S, f fn(x A) S):
     $chap2::is_ring(A, addR, zeroR, negR, mulR, oneR)
@@ -408,7 +477,7 @@ template<A set, add fn(x, y A) A>:
     have fn ideal_sum(I, J power_set(A)) power_set(A) = {x A: $ideal_sum_member(A, add, I, J, x)}
 
 template<A set>:
-    have fn ideal_infimum_pair(I, J power_set(A)) power_set(A) = intersect(I, J)
+    have fn ideal_infimum_pair(I, J power_set(A)) power_set(A) = {x A: x $in I and x $in J}
 
 template<A, S set, f fn(x A) S>:
     have fn ideal_comap(J power_set(S)) power_set(A) = {x A: f(x) $in J}

@@ -304,8 +304,11 @@ impl Runtime {
             // `$is_nonempty_set(general_cart(I, s, g))`.
             // Also accepts the pointwise form `forall alpha I: $is_nonempty_set(g(alpha))`.
             Obj::GeneralCart(general_cart) => {
-                let global_fact =
-                    general_cart_global_family_nonempty_fact(general_cart, is_nonempty_set_fact);
+                let global_fact = general_cart_global_family_nonempty_fact(
+                    self,
+                    general_cart,
+                    is_nonempty_set_fact,
+                );
                 let global_result = self.verify_fact_full(&global_fact, _verify_state)?;
                 if global_result.is_true() {
                     return Ok(
@@ -320,6 +323,7 @@ impl Runtime {
                 }
 
                 let Some(pointwise_fact) = general_cart_pointwise_family_nonempty_fact(
+                    self,
                     general_cart,
                     is_nonempty_set_fact,
                 )?
@@ -999,10 +1003,11 @@ impl Runtime {
 }
 
 fn general_cart_global_family_nonempty_fact(
+    runtime: &Runtime,
     general_cart: &GeneralCart,
     source_fact: &IsNonemptySetFact,
 ) -> Fact {
-    let param_name = "X".to_string();
+    let param_name = runtime.generate_internal_binder_name();
     let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall);
     ForallFact::new(
         ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -1018,13 +1023,14 @@ fn general_cart_global_family_nonempty_fact(
 }
 
 fn general_cart_pointwise_family_nonempty_fact(
+    runtime: &Runtime,
     general_cart: &GeneralCart,
     source_fact: &IsNonemptySetFact,
 ) -> Result<Option<Fact>, RuntimeError> {
     let Some(head) = FnObjHead::from_callable_obj(general_cart.family_fn.as_ref().clone()) else {
         return Ok(None);
     };
-    let param_name = "alpha".to_string();
+    let param_name = runtime.generate_internal_binder_name();
     let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall);
     let factor: Obj = FnObj::new(head, vec![vec![Box::new(param_obj.clone())]]).into();
     Ok(Some(

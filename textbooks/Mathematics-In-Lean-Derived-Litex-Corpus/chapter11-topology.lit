@@ -61,6 +61,65 @@ prop tends_to_by_preimage(X, Y set, f fn(x X) Y, F power_set(power_set(X)), G po
 prop tends_to_by_map(X, Y set, f fn(x X) Y, F power_set(power_set(X)), G power_set(power_set(Y))):
     $filter_le(Y, \map_filter<X, Y>(f, F), G)
 
+thm tends_to_by_preimage_member:
+    ? forall X, Y set, f fn(x X) Y, F power_set(power_set(X)), G power_set(power_set(Y)), V power_set(Y):
+        $tends_to_by_preimage(X, Y, f, F, G)
+        V $in G
+        =>:
+            {x X: f(x) $in V} $in F
+
+thm tends_to_by_preimage_intro:
+    ? forall X, Y set, f fn(x X) Y, F power_set(power_set(X)), G power_set(power_set(Y)):
+        forall V G:
+            {x X: f(x) $in V} $in F
+        =>:
+            $tends_to_by_preimage(X, Y, f, F, G)
+    by def $tends_to_by_preimage(X, Y, f, F, G)
+
+# Source limit-composition theorem in the preimage formulation. The explicit
+# projection and introduction helpers lock every filter parameter.
+thm filter_limits_compose:
+    ? forall X, Y, W set, f fn(x X) Y, g fn(y Y) W, F power_set(power_set(X)), G power_set(power_set(Y)), H power_set(power_set(W)):
+        $tends_to_by_preimage(X, Y, f, F, G)
+        $tends_to_by_preimage(Y, W, g, G, H)
+        =>:
+            $tends_to_by_preimage(X, W, fn(x X) W {g(f(x))}, F, H)
+    claim:
+        ? forall V H:
+            {x X: g(f(x)) $in V} $in F
+        have S power_set(Y) = {x Y: g(x) $in V}
+        by thm tends_to_by_preimage_member(Y, W, g, G, H, V)
+        S $in G
+        by thm tends_to_by_preimage_member(X, Y, f, F, G, S)
+        have A power_set(X) = {x X: f(x) $in S}
+        have B power_set(X) = {x X: g(f(x)) $in V}
+        claim:
+            ? A $subset B
+            claim:
+                ? forall z A:
+                    z $in B
+                z $in {x X: f(x) $in S}
+                f(z) $in S
+                f(z) $in {x Y: g(x) $in V}
+                g(f(z)) $in V
+                z $in {x X: g(f(x)) $in V}
+                z $in B
+        claim:
+            ? B $subset A
+            claim:
+                ? forall z B:
+                    z $in A
+                z $in {x X: g(f(x)) $in V}
+                g(f(z)) $in V
+                f(z) $in {x Y: g(x) $in V}
+                f(z) $in S
+                z $in {x X: f(x) $in S}
+                z $in A
+        by extension A = B
+        A $in F
+        B $in F
+    by thm tends_to_by_preimage_intro(X, W, fn(x X) W {g(f(x))}, F, H)
+
 # The epsilon-N formulation of real sequence convergence is used throughout
 # the later metric development.
 prop real_sequence_is_epsilon_close_from(u fn(n N) R, x0 R, epsilon R_pos, N0 N):
@@ -108,6 +167,173 @@ prop eventually_equal_real_sequences(u, v fn(n N) R):
 prop intersection_membership_implies(P, Qset, R0 power_set(N), n N):
     not n $in intersect(P, Qset) or n $in R0
 
+# These projections keep each set argument explicit. This matters here because
+# the verifier must not infer a different set parameter while applying a
+# universal membership fact.
+thm natural_tail_contains_later:
+    ? forall a N, S power_set(N), n N:
+        $contains_natural_tail_from(a, S)
+        n >= a
+        =>:
+            n $in S
+
+# Source `Filter.Eventually` conjunction law, specialized to the concrete
+# atTop filter on N used by this chapter.
+thm eventually_conjunction_on_N:
+    ? forall P, Qset power_set(N):
+        $eventually_on_N(P)
+        $eventually_on_N(Qset)
+        =>:
+            $eventually_on_N(intersect(P, Qset))
+    intersect(P, Qset) $subset P $subset N
+    intersect(P, Qset) $in power_set(N)
+    obtain a from exist a0 N st {$contains_natural_tail_from(a0, P)}
+    obtain b from exist b0 N st {$contains_natural_tail_from(b0, Qset)}
+    have c N = a + b
+    claim:
+        ? forall n N:
+            n >= c
+            =>:
+                n $in intersect(P, Qset)
+        a + b >= a
+        a + b >= b
+        n >= c = a + b >= a
+        n >= c = a + b >= b
+        by thm natural_tail_contains_later(a, P, n)
+        by thm natural_tail_contains_later(b, Qset, n)
+    witness exist k N st {$contains_natural_tail_from(k, intersect(P, Qset))} from c:
+        by def $contains_natural_tail_from(c, intersect(P, Qset))
+    by def $contains_natural_tail(intersect(P, Qset))
+    by def $eventually_on_N(intersect(P, Qset))
+
+thm real_sequence_close_later:
+    ? forall u fn(n N) R, x0 R, epsilon R_pos, N0, n N:
+        $real_sequence_is_epsilon_close_from(u, x0, epsilon, N0)
+        n >= N0
+        =>:
+            abs(u(n) - x0) < epsilon
+
+thm eventual_equality_later:
+    ? forall u, v fn(n N) R, a, k N:
+        $contains_natural_tail_from(a, {n N: u(n) = v(n)})
+        k >= a
+        =>:
+            u(k) = v(k)
+    by thm natural_tail_contains_later(a, {n N: u(n) = v(n)}, k)
+    k $in {n N: u(n) = v(n)}
+
+# Eventual equality is symmetric. This lets the reverse limit implication
+# reuse the checked forward theorem instead of repeating its epsilon proof.
+thm eventually_equal_real_sequences_symmetric:
+    ? forall u, v fn(n N) R:
+        $eventually_equal_real_sequences(u, v)
+        =>:
+            $eventually_equal_real_sequences(v, u)
+    $eventually_on_N({n N: u(n) = v(n)})
+    $contains_natural_tail({n N: u(n) = v(n)})
+    obtain a from exist a0 N st {$contains_natural_tail_from(a0, {n N: u(n) = v(n)})}
+    claim:
+        ? forall n N:
+            n >= a
+            =>:
+                v(n) = u(n)
+        by thm eventual_equality_later(u, v, a, n)
+    witness exist k N st {$contains_natural_tail_from(k, {n N: v(n) = u(n)})} from a:
+        by def $contains_natural_tail_from(a, {n N: v(n) = u(n)})
+    by def $contains_natural_tail({n N: v(n) = u(n)})
+    by def $eventually_on_N({n N: v(n) = u(n)})
+    by def $eventually_equal_real_sequences(v, u)
+
+# Source `tendsto_congr'`: eventual equality preserves a real-sequence limit.
+# Both directions are kept explicit because the source presents an iff.
+thm eventually_equal_preserves_real_limit_forward:
+    ? forall u, v fn(n N) R, x0 R:
+        $eventually_equal_real_sequences(u, v)
+        $real_sequence_converges(u, x0)
+        =>:
+            $real_sequence_converges(v, x0)
+    $eventually_on_N({n N: u(n) = v(n)})
+    $contains_natural_tail({n N: u(n) = v(n)})
+    obtain a from exist a0 N st {$contains_natural_tail_from(a0, {n N: u(n) = v(n)})}
+    claim:
+        ? forall epsilon R_pos:
+            exist N0 N st {$real_sequence_is_epsilon_close_from(v, x0, epsilon, N0)}
+        obtain b from exist b0 N st {$real_sequence_is_epsilon_close_from(u, x0, epsilon, b0)}
+        have c N = a + b
+        claim:
+            ? forall n N:
+                n >= c
+                =>:
+                    abs(v(n) - x0) < epsilon
+            a + b >= a
+            a + b >= b
+            n >= c = a + b >= a
+            n >= c = a + b >= b
+            by thm eventual_equality_later(u, v, a, n)
+            by thm real_sequence_close_later(u, x0, epsilon, b, n)
+            abs(v(n) - x0) = abs(u(n) - x0) < epsilon
+        witness exist N0 N st {$real_sequence_is_epsilon_close_from(v, x0, epsilon, N0)} from c:
+            by def $real_sequence_is_epsilon_close_from(v, x0, epsilon, c)
+    by def $real_sequence_converges(v, x0)
+
+thm eventually_equal_preserves_real_limit_reverse:
+    ? forall u, v fn(n N) R, x0 R:
+        $eventually_equal_real_sequences(u, v)
+        $real_sequence_converges(v, x0)
+        =>:
+            $real_sequence_converges(u, x0)
+    by thm eventually_equal_real_sequences_symmetric(u, v)
+    by thm eventually_equal_preserves_real_limit_forward(v, u, x0)
+
+thm _intersection_membership_implies_apply:
+    ? forall P, Qset, R0 power_set(N), n N:
+        $intersection_membership_implies(P, Qset, R0, n)
+        n $in P
+        n $in Qset
+        =>:
+            n $in R0
+    n $in intersect(P, Qset)
+    not n $in intersect(P, Qset) or n $in R0
+    by cases:
+        ? n $in R0
+        case not n $in intersect(P, Qset):
+            impossible not n $in intersect(P, Qset)
+        case n $in R0:
+            do_nothing
+
+# Source `Filter.Eventually` implication law on the same concrete filter.
+thm eventually_implication_on_N:
+    ? forall P, Qset, R0 power_set(N):
+        $eventually_on_N(P)
+        $eventually_on_N(Qset)
+        $eventually_on_N({n N: $intersection_membership_implies(P, Qset, R0, n)})
+        =>:
+            $eventually_on_N(R0)
+    obtain a from exist a0 N st {$contains_natural_tail_from(a0, P)}
+    obtain b from exist b0 N st {$contains_natural_tail_from(b0, Qset)}
+    obtain d from exist d0 N st {$contains_natural_tail_from(d0, {n N: $intersection_membership_implies(P, Qset, R0, n)})}
+    have c N = a + b + d
+    claim:
+        ? forall n N:
+            n >= c
+            =>:
+                n $in R0
+        a + b + d >= a
+        a + b + d >= b
+        a + b + d >= d
+        n >= c = a + b + d >= a
+        n >= c = a + b + d >= b
+        n >= c = a + b + d >= d
+        by thm natural_tail_contains_later(a, P, n)
+        by thm natural_tail_contains_later(b, Qset, n)
+        by thm natural_tail_contains_later(d, {m N: $intersection_membership_implies(P, Qset, R0, m)}, n)
+        $intersection_membership_implies(P, Qset, R0, n)
+        by thm _intersection_membership_implies_apply(P, Qset, R0, n)
+    witness exist k N st {$contains_natural_tail_from(k, R0)} from c:
+        by def $contains_natural_tail_from(c, R0)
+    by def $contains_natural_tail(R0)
+    by def $eventually_on_N(R0)
+
 # ---------------------------------------------------------------------------
 # Section 11.2 — Metric Spaces
 # ---------------------------------------------------------------------------
@@ -145,9 +371,9 @@ thm real_distance_separates_points_forward:
         real_distance(x, y) = 0
         =>:
             x = y
-    real_distance(x, y) = abs(x - y) = 0
+    real_distance(x, y) = abs(x - y)
+    abs(x - y) = real_distance(x, y) = 0
     x - y = 0
-    x = y
 
 thm real_distance_separates_points_reverse:
     ? forall x, y R:
@@ -307,11 +533,40 @@ prop is_cauchy_sequence_anchored(X set, dist fn(x, y X) R, u fn(n N) X):
     forall epsilon R_pos:
         exist N0 N st {$is_cauchy_anchored_after(X, dist, u, epsilon, N0)}
 
+# Source examples Metric.cauchySeq_iff and Metric.cauchySeq_iff'. The forward
+# bridge uses the same cutoff and anchors the second index at that cutoff.
+thm cauchy_characterizations_equivalent_forward:
+    ? forall X set, dist fn(x, y X) R, u fn(n N) X:
+        $is_metric_space(X, dist)
+        $is_cauchy_sequence(X, dist, u)
+        =>:
+            $is_cauchy_sequence_anchored(X, dist, u)
+    claim:
+        ? forall epsilon R_pos:
+            exist K N st {$is_cauchy_anchored_after(X, dist, u, epsilon, K)}
+        obtain N0 from exist K N st {$is_cauchy_after(X, dist, u, epsilon, K)}
+        witness exist K N st {$is_cauchy_anchored_after(X, dist, u, epsilon, K)} from N0:
+            forall n N:
+                n >= N0
+                =>:
+                    N0 >= N0
+                    dist(u(n), u(N0)) < epsilon
+
 prop is_complete_metric_space(X set, dist fn(x, y X) R):
     forall u fn(n N) X:
         $is_cauchy_sequence(X, dist, u)
         =>:
             exist x X st {$metric_sequence_converges(X, dist, u, x)}
+
+# Source example cauchySeq_tendsto_of_complete. This is the direct operational
+# consequence of the explicit completeness interface above.
+thm cauchy_sequence_converges_in_complete_space:
+    ? forall X set, dist fn(x, y X) R, u fn(n N) X:
+        $is_complete_metric_space(X, dist)
+        $is_cauchy_sequence(X, dist, u)
+        =>:
+            exist x X st {$metric_sequence_converges(X, dist, u, x)}
+    exist x X st {$metric_sequence_converges(X, dist, u, x)}
 
 prop has_geometric_step_bound(X set, dist fn(x, y X) R, u fn(n N) X):
     forall n N:
@@ -415,6 +670,44 @@ thm continuous_iff_open_preimages_reverse:
         =>:
             $is_topologically_continuous(X, Y, T_X, T_Y, f)
     $is_topologically_continuous(X, Y, T_X, T_Y, f)
+
+# Supplementary ordinary continuity-composition lemma. The retained source
+# item changes the middle topology to a coinduced topology and remains in
+# todo.lit; named intermediate preimages make this fixed-topology proof explicit.
+thm topologically_continuous_composition:
+    ? forall A, B, C set, T_A power_set(power_set(A)), T_B power_set(power_set(B)), T_C power_set(power_set(C)), f fn(x A) B, g fn(y B) C:
+        $is_topologically_continuous(A, B, T_A, T_B, f)
+        $is_topologically_continuous(B, C, T_B, T_C, g)
+        =>:
+            $is_topologically_continuous(A, C, T_A, T_C, fn(x A) C {g(f(x))})
+    by thm continuous_iff_open_preimages_forward(A, B, T_A, T_B, f)
+    by thm continuous_iff_open_preimages_forward(B, C, T_B, T_C, g)
+    claim:
+        ? forall U T_C:
+            {x A: g(f(x)) $in U} $in T_A
+        {x B: g(x) $in U} $in T_B
+        have V T_B = {x B: g(x) $in U}
+        {x A: f(x) $in V} $in T_A
+        have pre1 T_A = {x A: f(x) $in V}
+        have pre2 power_set(A) = {x A: g(f(x)) $in U}
+        claim:
+            ? pre1 $subset pre2
+            forall z pre1:
+                f(z) $in V
+                g(f(z)) $in U
+                z $in {x A: g(f(x)) $in U}
+                z $in pre2
+        claim:
+            ? pre2 $subset pre1
+            forall z pre2:
+                g(f(z)) $in U
+                f(z) $in {x B: g(x) $in U}
+                f(z) $in V
+                z $in {x A: f(x) $in V}
+                z $in pre1
+        by extension pre1 = pre2
+        pre2 $in T_A
+    by def $is_topologically_continuous(A, C, T_A, T_C, fn(x A) C {g(f(x))})
 
 # Source constructions `coinduced` and `induced` are topology-valued functions.
 template<X, Y set>:

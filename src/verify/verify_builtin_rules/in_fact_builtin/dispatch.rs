@@ -236,8 +236,6 @@ impl Runtime {
             (Obj::FnObj(fn_obj), Obj::FnRange(fn_range)) => {
                 self.verify_in_fact_fn_application_in_fn_range(in_fact, fn_obj, fn_range)
             }
-            (Obj::IntegerQuotient(quotient), Obj::StandardSet(StandardSet::N)) => self
-                .verify_in_fact_nonnegative_integer_quotient_in_n(in_fact, quotient, verify_state),
             (_, Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_n_by_nonnegative_integer(in_fact, verify_state)
             }
@@ -293,13 +291,7 @@ impl Runtime {
                     verify_state,
                 ),
             (
-                Obj::Add(_)
-                | Obj::Sub(_)
-                | Obj::Mul(_)
-                | Obj::Mod(_)
-                | Obj::IntegerQuotient(_)
-                | Obj::Pow(_)
-                | Obj::Abs(_),
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Mod(_) | Obj::Pow(_) | Obj::Abs(_),
                 Obj::StandardSet(StandardSet::Z),
             ) => self.verify_in_fact_arithmetic_expression_in_z(in_fact, verify_state),
             (
@@ -336,7 +328,6 @@ impl Runtime {
                 | Obj::Mul(_)
                 | Obj::Div(_)
                 | Obj::Mod(_)
-                | Obj::IntegerQuotient(_)
                 | Obj::Pow(_)
                 | Obj::Abs(_)
                 | Obj::Sqrt(_)

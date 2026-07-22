@@ -22,7 +22,7 @@ pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
     let mut layers: Vec<Vec<String>> = Vec::new();
     let mut fn_set_param_to_forall_param: HashMap<String, Obj> = HashMap::new();
 
-    append_fn_set_param_groups_as_forall_param_type_groups(
+    let first_layer_names = append_fn_set_param_groups_as_forall_param_type_groups(
         runtime,
         &clause.params_def_with_set,
         &mut fn_set_param_to_forall_param,
@@ -34,19 +34,17 @@ pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
                 .inst_or_and_chain_atomic_fact(
                     d,
                     &fn_set_param_to_forall_param,
-                    ParamObjType::FnSet,
+                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
                     None,
                 )?
                 .into(),
         );
     }
-    layers.push(ParamGroupWithSet::collect_param_names(
-        &clause.params_def_with_set,
-    ));
+    layers.push(first_layer_names);
 
     let mut ret_set = clause.ret_set.clone();
     while let Obj::FnSet(inner) = ret_set {
-        append_fn_set_param_groups_as_forall_param_type_groups(
+        let layer_names = append_fn_set_param_groups_as_forall_param_type_groups(
             runtime,
             &inner.body.params_def_with_set,
             &mut fn_set_param_to_forall_param,
@@ -59,26 +57,19 @@ pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
                     .inst_or_and_chain_atomic_fact(
                         d,
                         &fn_set_param_to_forall_param,
-                        ParamObjType::FnSet,
+                        ParamObjType::BinderRetag(BinderRetagSource::FnSet),
                         None,
                     )?
                     .into(),
             );
         }
 
-        let layer_names: Vec<String> = inner
-            .body
-            .params_def_with_set
-            .iter()
-            .flat_map(|pg| pg.params.iter())
-            .cloned()
-            .collect();
         layers.push(layer_names);
 
         ret_set = runtime.inst_obj(
             inner.body.ret_set.as_ref(),
             &fn_set_param_to_forall_param,
-            ParamObjType::FnSet,
+            ParamObjType::BinderRetag(BinderRetagSource::FnSet),
         )?;
     }
 
@@ -226,7 +217,7 @@ pub(crate) fn forall_param_defs_dom_and_map_from_have_fn_clause(
                 .inst_or_and_chain_atomic_fact(
                     dom_fact,
                     &fn_set_param_to_forall_param,
-                    ParamObjType::FnSet,
+                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
                     None,
                 )?
                 .into(),
@@ -245,25 +236,26 @@ fn append_fn_set_param_groups_as_forall_param_type_groups(
     params_def_with_set: &ParamDefWithSet,
     fn_set_param_to_forall_param: &mut HashMap<String, Obj>,
     groups: &mut Vec<ParamGroupWithParamType>,
-) -> Result<(), RuntimeError> {
+) -> Result<Vec<String>, RuntimeError> {
+    let mut forall_names = Vec::new();
     for param_def_with_set in params_def_with_set.iter() {
         let param_set = runtime.inst_obj(
             param_def_with_set.set_obj(),
             fn_set_param_to_forall_param,
-            ParamObjType::FnSet,
+            ParamObjType::BinderRetag(BinderRetagSource::FnSet),
         )?;
+        let (group_forall_names, group_map) =
+            runtime.fresh_binder_retag_plan(&param_def_with_set.params, ParamObjType::Forall);
         groups.push(ParamGroupWithParamType::new(
-            param_def_with_set.params.clone(),
+            group_forall_names.clone(),
             ParamType::Obj(param_set),
         ));
         for param_name in param_def_with_set.params.iter() {
-            fn_set_param_to_forall_param.insert(
-                param_name.clone(),
-                obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall),
-            );
+            fn_set_param_to_forall_param.insert(param_name.clone(), group_map[param_name].clone());
         }
+        forall_names.extend(group_forall_names);
     }
-    Ok(())
+    Ok(forall_names)
 }
 
 pub(crate) fn case_conditions_are_disjoint(

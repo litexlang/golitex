@@ -29,6 +29,23 @@ forall A, B set:
     set_minus(A, B) $subset A
     set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
 
+# A subset is recovered by removing its relative complement from the container.
+
+forall A, B set:
+    B $subset A
+    =>:
+        B = set_minus(A, set_minus(A, B))
+        set_minus(A, set_minus(A, B)) = B
+
+# Together with finite set difference, this proves that every finite subset is finite.
+
+forall A finite_set, B set:
+    B $subset A
+    =>:
+        B = set_minus(A, set_minus(A, B))
+        $is_finite_set(set_minus(A, set_minus(A, B)))
+        $is_finite_set(B)
+
 # Removing a finite set from an infinite set leaves an infinite set.
 
 forall X set, s finite_set:
@@ -41,8 +58,7 @@ forall X set, s finite_set:
 forall A, B finite_set:
     finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
 
-# The following cardinality identities and bounds are builtin rules. Arbitrary
-# subset finiteness is instead an explicit axiom in `std/basics`.
+# The following cardinality identities and bounds are builtin rules.
 
 forall A, B finite_set:
     B $subset A

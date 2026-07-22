@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -36,6 +37,13 @@ pub struct Runtime {
     pub run_mode: RunMode,
     pub parsing_free_param_collection: FreeParamCollection,
     pub parsing_local_binding_scope_depth: usize,
+    /// Parameters that the active recursive fact matcher may instantiate.
+    /// Captured parameters of the same object kind must remain rigid.
+    pub(crate) active_arg_match_bindings: Vec<(ParamObjType, String)>,
+    /// Monotonic identity source for kernel-generated binders. The `#` prefix is not user syntax,
+    /// so generated binders cannot collide with a user binder that is active outside the AST
+    /// fragment currently being transformed.
+    pub(crate) next_internal_binder_id: Cell<u64>,
     pub detail_output: bool,
     pub output_style: OutputStyle,
     pub strict_mode: bool,
@@ -52,6 +60,8 @@ impl Runtime {
             run_mode: RunMode::File,
             parsing_free_param_collection: FreeParamCollection::new(),
             parsing_local_binding_scope_depth: 0,
+            active_arg_match_bindings: vec![],
+            next_internal_binder_id: Cell::new(0),
             detail_output: false,
             output_style: OutputStyle::Normal,
             strict_mode: false,

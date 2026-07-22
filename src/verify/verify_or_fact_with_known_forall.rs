@@ -27,7 +27,7 @@ impl Runtime {
     ) -> Result<
         (
             (usize, usize),
-            Option<HashMap<String, Obj>>,
+            Option<(HashMap<String, Obj>, HashMap<String, Obj>)>,
             Option<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
         ),
         RuntimeError,
@@ -70,9 +70,11 @@ impl Runtime {
                 };
                 let fact_args_in_known_forall = current_known_forall.0.get_args_from_fact_ref();
                 let given_fact_args = given_or_fact.get_args_from_fact_ref();
-                let match_result = self.match_args_in_fact_in_known_forall_fact_with_given_args(
+                let match_result = self.match_args_in_fact_with_known_forall_bindings(
                     &fact_args_in_known_forall,
                     &given_fact_args,
+                    &current_known_forall.1.params_def,
+                    None,
                 )?;
                 if let Some(arg_map) = match_result {
                     return Ok(((i, j), Some(arg_map), Some(current_known_forall)));
@@ -99,7 +101,7 @@ impl Runtime {
             )?;
             let ((i, j), arg_map_opt, known_forall_opt) = result;
             match (arg_map_opt, known_forall_opt) {
-                (Some(arg_map), Some((or_fact_in_known_forall, forall_rc))) => {
+                (Some((arg_map, _)), Some((or_fact_in_known_forall, forall_rc))) => {
                     if let Some(fact_verified) = self
                         .verify_or_fact_args_satisfy_forall_requirements(
                             &or_fact_in_known_forall,

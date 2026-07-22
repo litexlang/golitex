@@ -1728,6 +1728,12 @@ forall A, B, C set:
 forall A, B, C set:
     set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
 
+forall A, B set:
+    B $subset A
+    =>:
+        B = set_minus(A, set_minus(A, B))
+        set_minus(A, set_minus(A, B)) = B
+
 have A, B, C set
 intersect(A, B) = intersect(B, A)
 intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
@@ -1749,6 +1755,35 @@ union(set_minus(A, B), set_minus(A, C)) = set_minus(A, intersect(B, C))
     assert!(
         run_succeeded,
         "common_set_algebra_equalities_are_builtin failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("set minus recovers subset from relative complement"),
+        "the subset recovery equality should report its builtin rule:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn set_minus_subset_recovery_requires_subset() {
+    let source_code = r#"
+have A, B set
+B = set_minus(A, set_minus(A, B))
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("set_minus_subset_recovery_requires_subset");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "subset recovery must require the subset premise:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("UnknownError"),
+        "the missing subset premise should leave the equality unknown:\n{}",
         run_output
     );
 }
@@ -1935,63 +1970,70 @@ fn one_sided_interval_literal_rejects_invalid_delimiters() {
 }
 
 #[test]
-fn integer_quotient_has_euclidean_contract_and_requires_positive_divisor() {
-    let source_code = r#"
+fn euclidean_quotient_unique_existence_is_builtin() {
+    run_with_large_stack("euclidean_quotient_unique_existence_is_builtin", || {
+        let source_code = r#"
+forall a Z, d N_pos:
+    exist! q Z st {a = d * q + a % d}
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime
+            .new_file_path_new_env_new_name_scope("euclidean_quotient_unique_existence_is_builtin");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "Euclidean quotient unique existence should be builtin:\n{}",
+            run_output
+        );
+        assert!(
+            run_output
+                .contains("exist!: unique Euclidean quotient for an integer and positive divisor"),
+            "missing Euclidean quotient unique-existence provenance:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn source_defined_integer_quotient_uses_unique_existence_builtin() {
+    run_with_large_stack(
+        "source_defined_integer_quotient_uses_unique_existence_builtin",
+        || {
+            let source_code = r#"
+have fn integer_quotient by exist!:
+    ? forall a Z, d N_pos:
+        exist! q Z st {a = d * q + a % d}
+
 forall a Z, d N_pos:
     integer_quotient(a, d) $in Z
     a = d * integer_quotient(a, d) + a % d
-
-forall a Z, m N_pos, q Z, r N:
-    r < m
-    a = m * q + r
-    =>:
-        a % m = r
-
-integer_quotient(-7, 3) = -3
--7 % 3 = 2
 "#;
 
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "integer_quotient_has_euclidean_contract_and_requires_positive_divisor",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "source_defined_integer_quotient_uses_unique_existence_builtin",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-    assert!(
-        run_succeeded,
-        "integer quotient Euclidean contract failed:\n{}",
-        run_output
-    );
-    for rule in [
-        "equality: Euclidean quotient defining equation a = d * integer_quotient(a, d) + a % d",
-        "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m",
-    ] {
-        assert!(
-            run_output.contains(rule),
-            "missing integer quotient builtin provenance `{}`:\n{}",
-            rule,
-            run_output
-        );
-    }
-
-    let mut invalid_runtime = Runtime::new();
-    invalid_runtime
-        .new_file_path_new_env_new_name_scope("integer_quotient_rejects_nonpositive_divisor");
-    let (invalid_results, invalid_error) =
-        run_source_code("integer_quotient(7, -3) = -2", &mut invalid_runtime);
-    let (invalid_succeeded, invalid_output) =
-        render_run_source_code_output(&invalid_runtime, &invalid_results, &invalid_error, false);
-    assert!(
-        !invalid_succeeded,
-        "integer quotient must reject a non-positive divisor:\n{}",
-        invalid_output
-    );
-    assert!(
-        invalid_output.contains("integer_quotient: divisor `-1 * 3` must be in N_pos"),
-        "unexpected integer quotient domain error:\n{}",
-        invalid_output
+            assert!(
+                run_succeeded,
+                "source-defined Euclidean quotient should verify from exist!:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains(
+                    "exist!: unique Euclidean quotient for an integer and positive divisor"
+                ),
+                "missing source-defined Euclidean quotient provenance:\n{}",
+                run_output
+            );
+        },
     );
 }
 

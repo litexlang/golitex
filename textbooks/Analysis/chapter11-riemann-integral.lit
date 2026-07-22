@@ -1420,6 +1420,62 @@ thm empty_interval_has_length_zero:
     $has_interval_length({}, finite_set_max(union({0 - 0}, { 0})))
     $has_interval_length({}, 0)
 
+thm nonempty_bounded_interval_length_from_endpoints:
+    ? forall I power_set(R), a, b R:
+        $is_bounded_interval(I)
+        $has_interval_endpoints(I, a, b)
+        $is_nonempty_set(I)
+        =>:
+            interval_length(I) = b - a
+    obtain x from exist x I st {x $in I}
+    by thm interval_endpoint_member_is_between(I, a, b, x)
+    a <= b
+    a < b or a = b
+    by cases:
+        ? interval_length(I) = b - a
+        case a < b:
+            by thm interval_endpoint_case_has_total_length(I, a, b)
+            by thm max_positive_part_identity_when_positive(a, b)
+            by thm interval_length_value_unique(I, interval_length(I), b - a)
+        case a = b:
+            b <= a
+            by thm interval_endpoint_case_has_total_length(I, a, b)
+            by thm max_positive_part_zero_when_nonpositive(a, b)
+            by thm interval_length_value_unique(I, interval_length(I), 0)
+            interval_length(I) = 0 = b - a
+
+thm empty_interval_length_value:
+    ? forall:
+        interval_length({}) = 0
+    by thm empty_interval_is_bounded()
+    $has_interval_length({}, interval_length({}))
+    by thm empty_interval_has_length_zero()
+    by thm interval_length_value_unique({}, interval_length({}), 0)
+
+thm empty_bounded_interval_length_value:
+    ? forall J power_set(R):
+        $is_bounded_interval(J)
+        not $is_nonempty_set(J)
+        =>:
+            interval_length(J) = 0
+    by extension J = {}:
+        claim:
+            ? forall x J:
+                x $in {}
+            by contra:
+                ? x $in {}
+                x $in J
+                witness $is_nonempty_set(J) from x
+                impossible $is_nonempty_set(J)
+        claim:
+            ? forall x {}:
+                x $in J
+            by contra:
+                ? x $in J
+                impossible x $in {}
+    by thm empty_interval_length_value()
+    interval_length(J) = interval_length({}) = 0
+
 """
 Example 11.1.9.  `[3,5]` and `(3,5)` both have length `2`; a singleton and
 the empty set have length `0`.
@@ -1570,9 +1626,199 @@ prop is_strictly_left_of_interval(J, K power_set(R)):
     forall x J, y K:
         x < y
 
-# Two nonempty disjoint intervals are linearly separated: every point of one
-# lies strictly to one side of every point of the other.  This order-geometric
-# fact is shared by endpoint-piece selection and interval-length splitting.
+"""
+If two nonempty intervals occur in left-to-right order and their union is an
+interval, there is neither a gap nor an overlap between them.  Thus the outer
+endpoints come from the two pieces and their inner endpoints agree.
+"""
+
+thm ordered_nonempty_interval_union_has_adjacent_endpoints:
+    ? forall I, J, K power_set(R), p, q, a, b, c, d R:
+        $has_interval_endpoints(I, p, q)
+        $has_interval_endpoints(J, a, b)
+        $has_interval_endpoints(K, c, d)
+        I = union(J, K)
+        $is_nonempty_set(J)
+        $is_nonempty_set(K)
+        $is_strictly_left_of_interval(J, K)
+        =>:
+            p = a
+            b = c
+            q = d
+    obtain j from exist j J st {j $in J}
+    obtain k from exist k K st {k $in K}
+    j $in union(J, K)
+    k $in union(J, K)
+    j $in I
+    k $in I
+    by thm interval_endpoint_member_is_between(I, p, q, j)
+    by thm interval_endpoint_member_is_between(I, p, q, k)
+    by thm interval_endpoint_member_is_between(J, a, b, j)
+    by thm interval_endpoint_member_is_between(K, c, d, k)
+    j < k
+
+    claim:
+        ? j <= c
+        by contra:
+            ? j <= c
+            c < j
+            have x R = (c + j) / 2
+            (j - c) / 2 > 0
+            c < c + (j - c) / 2 = x
+            x = j - (j - c) / 2 < j
+            x < j < k <= d
+            by thm strict_between_interval_endpoints_is_member(K, c, d, x)
+            j < x < j
+            j < j
+            impossible j < j
+
+    claim:
+        ? b <= k
+        by contra:
+            ? b <= k
+            k < b
+            have x R = (k + b) / 2
+            (b - k) / 2 > 0
+            k < k + (b - k) / 2 = x
+            x = b - (b - k) / 2 < b
+            a <= j < k < x
+            by thm strict_between_interval_endpoints_is_member(J, a, b, x)
+            k < x < k
+            k < k
+            impossible k < k
+
+    claim:
+        ? b = c
+        b < c or b = c or b > c
+        by cases:
+            ? b = c
+            case b < c:
+                have x R = (b + c) / 2
+                (c - b) / 2 > 0
+                b < b + (c - b) / 2 = x
+                x = c - (c - b) / 2 < c
+                p <= j <= b < x
+                x < c <= k <= q
+                by thm strict_between_interval_endpoints_is_member(I, p, q, x)
+                x $in union(J, K)
+                x $in J or x $in K
+                by cases:
+                    ? b = c
+                    case x $in J:
+                        by thm interval_endpoint_member_is_between(J, a, b, x)
+                        b < x <= b
+                        b < b
+                        impossible b < b
+                    case x $in K:
+                        by thm interval_endpoint_member_is_between(K, c, d, x)
+                        c <= x < c
+                        c < c
+                        impossible c < c
+            case b = c:
+                b = c
+            case b > c:
+                have x R = (c + b) / 2
+                (b - c) / 2 > 0
+                c < c + (b - c) / 2 = x
+                x = b - (b - c) / 2 < b
+                a <= j <= c < x
+                x < b <= k <= d
+                by thm strict_between_interval_endpoints_is_member(J, a, b, x)
+                by thm strict_between_interval_endpoints_is_member(K, c, d, x)
+                x < x
+                impossible x < x
+
+    claim:
+        ? p = a
+        p < a or p = a or p > a
+        by cases:
+            ? p = a
+            case p < a:
+                have x R = (p + a) / 2
+                (a - p) / 2 > 0
+                p < p + (a - p) / 2 = x
+                x = a - (a - p) / 2 < a
+                x < a <= j <= q
+                by thm strict_between_interval_endpoints_is_member(I, p, q, x)
+                x $in union(J, K)
+                x $in J or x $in K
+                by cases:
+                    ? p = a
+                    case x $in J:
+                        by thm interval_endpoint_member_is_between(J, a, b, x)
+                        a <= x < a
+                        a < a
+                        impossible a < a
+                    case x $in K:
+                        by thm interval_endpoint_member_is_between(K, c, d, x)
+                        b = c
+                        x < a <= j <= b = c
+                        c <= x < c
+                        c < c
+                        impossible c < c
+            case p = a:
+                p = a
+            case p > a:
+                have x R = (a + p) / 2
+                (p - a) / 2 > 0
+                a < a + (p - a) / 2 = x
+                x = p - (p - a) / 2 < p
+                x < p <= j <= b
+                by thm strict_between_interval_endpoints_is_member(J, a, b, x)
+                x $in union(J, K)
+                x $in I
+                by thm interval_endpoint_member_is_between(I, p, q, x)
+                p <= x < p
+                p < p
+                impossible p < p
+
+    claim:
+        ? q = d
+        q < d or q = d or q > d
+        by cases:
+            ? q = d
+            case q < d:
+                have x R = (q + d) / 2
+                (d - q) / 2 > 0
+                q < q + (d - q) / 2 = x
+                x = d - (d - q) / 2 < d
+                c <= k <= q < x
+                by thm strict_between_interval_endpoints_is_member(K, c, d, x)
+                x $in union(J, K)
+                x $in I
+                by thm interval_endpoint_member_is_between(I, p, q, x)
+                q < x <= q
+                q < q
+                impossible q < q
+            case q = d:
+                q = d
+            case q > d:
+                have x R = (d + q) / 2
+                (q - d) / 2 > 0
+                d < d + (q - d) / 2 = x
+                x = q - (q - d) / 2 < q
+                p <= j <= b = c <= k <= d < x
+                by thm strict_between_interval_endpoints_is_member(I, p, q, x)
+                x $in union(J, K)
+                x $in J or x $in K
+                by cases:
+                    ? q = d
+                    case x $in J:
+                        by thm interval_endpoint_member_is_between(J, a, b, x)
+                        b < x <= b
+                        b < b
+                        impossible b < b
+                    case x $in K:
+                        by thm interval_endpoint_member_is_between(K, c, d, x)
+                        d < x <= d
+                        d < d
+                        impossible d < d
+
+"""
+Two nonempty disjoint intervals are linearly separated: every point of one
+lies strictly to one side of every point of the other.  This order-geometric
+fact is shared by endpoint-piece selection and interval-length splitting.
+"""
 thm disjoint_nonempty_bounded_intervals_are_ordered:
     ? forall J, K power_set(R):
         $is_bounded_interval(J)
@@ -2171,8 +2417,10 @@ thm partition_removal_partitions_bounded_remainder:
                 K1 = K2
     $is_partition_of_bounded_interval(set_minus(I, J), set_minus(P, {J}))
 
-# The same endpoint geometry identifies the length of the ambient interval as
-# the length of the removed endpoint piece plus the bounded remainder.
+"""
+The same endpoint geometry identifies the length of the ambient interval as
+the length of the removed endpoint piece plus the bounded remainder.
+"""
 thm interval_length_adds_across_bounded_difference:
     ? forall I, J power_set(R):
         $is_bounded_interval(I)
@@ -2181,12 +2429,129 @@ thm interval_length_adds_across_bounded_difference:
         $is_bounded_interval(set_minus(I, J))
         =>:
             interval_length(I) = interval_length(J) + interval_length(set_minus(I, J))
-    # Source handling: the proof of Theorem 11.1.13 uses this length split but
-    # leaves the compatible open/closed endpoint cases implicit.  The trust
-    # keeps that compressed source step visible.
-    # proof_debt: classify the endpoint forms of I and J and reduce each
-    # possible bounded-remainder case to subtraction of their endpoints.
-    trust interval_length(I) = interval_length(J) + interval_length(set_minus(I, J))
+    have K power_set(R) = set_minus(I, J)
+    claim:
+        ? I = union(J, K)
+        by extension I = union(J, K):
+            claim:
+                ? forall x I:
+                    x $in union(J, K)
+                x $in J or not x $in J
+                by cases:
+                    ? x $in union(J, K)
+                    case x $in J:
+                        x $in union(J, K)
+                    case not x $in J:
+                        x $in set_minus(I, J)
+                        x $in K
+                        x $in union(J, K)
+            claim:
+                ? forall x union(J, K):
+                    x $in I
+                x $in J or x $in K
+                by cases:
+                    ? x $in I
+                    case x $in J:
+                        x $in I
+                    case x $in K:
+                        x $in set_minus(I, J)
+                        x $in I
+    claim:
+        ? intersect(J, K) = {}
+        by extension intersect(J, K) = {}:
+            claim:
+                ? forall x intersect(J, K):
+                    x $in {}
+                by contra:
+                    ? x $in {}
+                    x $in J
+                    x $in K
+                    x $in set_minus(I, J)
+                    not x $in J
+                    impossible not x $in J
+            claim:
+                ? forall x {}:
+                    x $in intersect(J, K)
+                by contra:
+                    ? x $in intersect(J, K)
+                    impossible x $in {}
+
+    $is_nonempty_set(J) or not $is_nonempty_set(J)
+    by cases:
+        ? interval_length(I) = interval_length(J) + interval_length(K)
+        case not $is_nonempty_set(J):
+            by thm empty_bounded_interval_length_value(J)
+            claim:
+                ? K = I
+                by extension K = I:
+                    claim:
+                        ? forall x K:
+                            x $in I
+                        x $in set_minus(I, J)
+                        x $in I
+                    claim:
+                        ? forall x I:
+                            x $in K
+                        claim:
+                            ? not x $in J
+                            by contra:
+                                ? not x $in J
+                                x $in J
+                                witness $is_nonempty_set(J) from x
+                                impossible $is_nonempty_set(J)
+                        x $in set_minus(I, J)
+                        x $in K
+            interval_length(I) = 0 + interval_length(I) = interval_length(J) + interval_length(K)
+        case $is_nonempty_set(J):
+            $is_nonempty_set(K) or not $is_nonempty_set(K)
+            by cases:
+                ? interval_length(I) = interval_length(J) + interval_length(K)
+                case not $is_nonempty_set(K):
+                    by thm empty_bounded_interval_length_value(K)
+                    claim:
+                        ? J = I
+                        by extension J = I:
+                            claim:
+                                ? forall x J:
+                                    x $in I
+                                x $in I
+                            claim:
+                                ? forall x I:
+                                    x $in J
+                                x $in union(J, K)
+                                x $in J or x $in K
+                                by cases:
+                                    ? x $in J
+                                    case x $in J:
+                                        x $in J
+                                    case x $in K:
+                                        witness $is_nonempty_set(K) from x
+                                        impossible $is_nonempty_set(K)
+                    interval_length(I) = interval_length(I) + 0 = interval_length(J) + interval_length(K)
+                case $is_nonempty_set(K):
+                    by thm disjoint_nonempty_bounded_intervals_are_ordered(J, K)
+                    obtain p, q from exist p, q R st {$has_interval_endpoints(I, p, q)}
+                    obtain a, b from exist a, b R st {$has_interval_endpoints(J, a, b)}
+                    obtain c, d from exist c, d R st {$has_interval_endpoints(set_minus(I, J), c, d)}
+                    $has_interval_endpoints(K, c, d)
+                    by cases:
+                        ? interval_length(I) = interval_length(J) + interval_length(K)
+                        case $is_strictly_left_of_interval(J, K):
+                            by thm ordered_nonempty_interval_union_has_adjacent_endpoints(I, J, K, p, q, a, b, c, d)
+                            by thm nonempty_bounded_interval_length_from_endpoints(I, p, q)
+                            by thm nonempty_bounded_interval_length_from_endpoints(J, a, b)
+                            by thm nonempty_bounded_interval_length_from_endpoints(K, c, d)
+                            q - p = d - a = (c - a) + (d - c) = (b - a) + (d - c)
+                            interval_length(I) = q - p = interval_length(J) + interval_length(K)
+                        case $is_strictly_left_of_interval(K, J):
+                            I = union(J, K) = union(K, J)
+                            by thm ordered_nonempty_interval_union_has_adjacent_endpoints(I, K, J, p, q, c, d, a, b)
+                            by thm nonempty_bounded_interval_length_from_endpoints(I, p, q)
+                            by thm nonempty_bounded_interval_length_from_endpoints(J, a, b)
+                            by thm nonempty_bounded_interval_length_from_endpoints(K, c, d)
+                            q - p = b - c = (a - c) + (b - a) = (d - c) + (b - a) = (b - a) + (d - c)
+                            interval_length(I) = q - p = interval_length(J) + interval_length(K)
+    interval_length(I) = interval_length(J) + interval_length(K) = interval_length(J) + interval_length(set_minus(I, J))
 
 """
 Remark 11.1.11.  A partition is a finite set whose elements are intervals, so
@@ -2291,43 +2656,6 @@ thm example_11_1_12_outside_piece_breaks_containment:
         4 <= 3
         3 < 4
         impossible 4 <= 3
-
-thm empty_interval_length_value:
-    ? forall:
-        interval_length({}) = 0
-    by thm empty_interval_is_bounded()
-    $has_interval_length({}, interval_length({}))
-    by thm empty_interval_has_length_zero()
-    by thm interval_length_value_unique({}, interval_length({}), 0)
-    interval_length({}) = 0
-
-thm empty_bounded_interval_length_value:
-    ? forall J power_set(R):
-        $is_bounded_interval(J)
-        not $is_nonempty_set(J)
-        =>:
-            interval_length(J) = 0
-    by extension J = {}:
-        claim:
-            ? forall x J:
-                x $in {}
-            by contra:
-                ? x $in {}
-                x $in J
-                not $is_nonempty_set(J)
-                witness $is_nonempty_set(J) from x
-                impossible $is_nonempty_set(J)
-        claim:
-            ? forall x {}:
-                x $in J
-            by contra:
-                ? x $in J
-                x $in {}
-                not $is_nonempty_set({})
-                witness $is_nonempty_set({}) from x
-                impossible $is_nonempty_set({})
-    by thm empty_interval_length_value()
-    interval_length(J) = interval_length({}) = 0
 
 thm singleton_interval_length_value:
     ? forall a R:
@@ -3136,7 +3464,7 @@ thm refinement_fiber_exists:
         ? {J Pfine: $is_nonempty_set(J), J $subset K} $subset Pfine
         forall J {J Pfine: $is_nonempty_set(J), J $subset K}:
             J $in Pfine
-    by thm basics::subset_of_finite_set_is_finite({J Pfine: $is_nonempty_set(J), J $subset K}, Pfine)
+    by thm chap3::subset_of_finite_set_is_finite({J Pfine: $is_nonempty_set(J), J $subset K}, Pfine)
     claim:
         ? $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
         $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
@@ -3217,7 +3545,7 @@ thm refinement_fiber_has_finite_representative:
         ? {J Pfine: $is_nonempty_set(J), J $subset K} $subset Pfine
         forall J {J Pfine: $is_nonempty_set(J), J $subset K}:
             J $in Pfine
-    by thm basics::subset_of_finite_set_is_finite({J Pfine: $is_nonempty_set(J), J $subset K}, Pfine)
+    by thm chap3::subset_of_finite_set_is_finite({J Pfine: $is_nonempty_set(J), J $subset K}, Pfine)
     claim:
         ? $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
         $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
@@ -3474,7 +3802,7 @@ thm nonempty_refinement_support_is_finite:
         ? nonempty_refinement_support(Pfine) $subset Pfine
         forall J nonempty_refinement_support(Pfine):
             J $in Pfine
-    by thm basics::subset_of_finite_set_is_finite(nonempty_refinement_support(Pfine), Pfine)
+    by thm chap3::subset_of_finite_set_is_finite(nonempty_refinement_support(Pfine), Pfine)
     $is_finite_set(nonempty_refinement_support(Pfine))
 
 # Generic finite-family vocabulary for the later regrouping theorem.  The
@@ -3557,9 +3885,9 @@ thm finite_unique_cover_residual_after_removing_index:
         S0 $subset S
         S $subset U
         S0 $subset U
-        by thm basics::subset_of_finite_set_is_finite(S0, S)
+        by thm chap3::subset_of_finite_set_is_finite(S0, S)
         T0 $subset T
-        by thm basics::subset_of_finite_set_is_finite(T0, T)
+        by thm chap3::subset_of_finite_set_is_finite(T0, T)
         claim:
             ? forall L T0:
                 $is_finite_set(F0(L))
@@ -3946,13 +4274,13 @@ thm finite_set_sum_ignores_zero_outside_subset:
                 h(x) = 0
         =>:
             finite_set_sum(S, fn(x S) R {h(x)}) = finite_set_sum(T, fn(x T) R {h(x)})
-    by thm basics::subset_of_finite_set_is_finite(T, S)
+    by thm chap3::subset_of_finite_set_is_finite(T, S)
     $is_finite_set(T)
     T $subset U
     have R0 power_set(power_set(R)) = set_minus(S, T)
     R0 $subset S
     R0 $subset U
-    by thm basics::subset_of_finite_set_is_finite(R0, S)
+    by thm chap3::subset_of_finite_set_is_finite(R0, S)
     $is_finite_set(R0)
     claim:
         ? S = union(T, R0)

@@ -103,7 +103,8 @@ struct AdditiveCommutativeGroup<s nonempty_set>:
             add(neg(x), x) = zero
 
 # Ring3 deliberately assumes only an additive group, not additive
-# commutativity. The latter is derived below, matching the source hierarchy.
+# commutativity. The source derives the latter later; that generic proof
+# remains deferred here.
 struct Ring<s nonempty_set>:
     add fn(x, y s) s
     zero s
@@ -124,6 +125,10 @@ struct Ring<s nonempty_set>:
             mul(x, one) = x
             mul(zero, x) = zero
             mul(x, zero) = zero
+
+# Source instance Ring₃ ℤ. Ordinary integer operations satisfy all five-field
+# Ring laws directly, so the instance is an actual checked structure object.
+have integer_ring &Ring<Z> = (fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
 
 # The source's LE1/Preorder1/PartialOrder1/OrderedCommMonoid1 block is an
 # alternate hierarchy presentation and is outside this core slice.
@@ -156,6 +161,10 @@ struct AdditiveMonoidWithNSmul<s nonempty_set>:
             nsmul(0, x) = zero
         forall n N, x s:
             nsmul(n + 1, x) = add(x, nsmul(n, x))
+
+# Source instance AddMonoid4 Z. Integer addition, zero, and multiplication by
+# a natural scalar satisfy the customized scalar laws directly.
+have integer_additive_monoid_with_nsmul &AdditiveMonoidWithNSmul<Z> = (fn(x, y Z) Z {x + y}, 0, fn(n N, x Z) Z {n * x})
 
 # 8.2 Morphisms
 
@@ -221,6 +230,27 @@ thm submonoid_carrier_nonempty:
             $is_nonempty_set(carrier)
     witness $is_nonempty_set(carrier) from &Monoid<M>{monoid}.one:
         &Monoid<M>{monoid}.one $in carrier
+
+thm _inherited_submonoid_tuple_is_monoid:
+    ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M):
+        $is_submonoid(M, monoid, carrier)
+        $is_nonempty_set(carrier)
+        =>:
+            (fn(x, y carrier) carrier {&Monoid<M>{monoid}.mul(x, y)}, &Monoid<M>{monoid}.one) $in &Monoid<carrier>
+    forall x, y, z carrier:
+        x $in M
+        y $in M
+        z $in M
+        (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})((fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(x, y), z) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(x, y), z) = &Monoid<M>{monoid}.mul(x, &Monoid<M>{monoid}.mul(y, z)) = (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(x, (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(y, z))
+    forall x carrier:
+        x $in M
+        (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(&Monoid<M>{monoid}.one, x) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.one, x) = x
+        (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(x, &Monoid<M>{monoid}.one) = &Monoid<M>{monoid}.mul(x, &Monoid<M>{monoid}.one) = x
+
+# Source SubMonoid1Monoid instance. The explicit nonempty guard remains a
+# template premise; submonoid_carrier_nonempty proves it is available.
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $is_nonempty_set(carrier)>:
+    have inherited_submonoid &Monoid<carrier> = (fn(x, y carrier) carrier {&Monoid<M>{monoid}.mul(x, y)}, &Monoid<M>{monoid}.one)
 
 thm submonoid_intersection_closed:
     ? forall M nonempty_set, monoid &Monoid<M>, left, right power_set(M):

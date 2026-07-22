@@ -1429,16 +1429,6 @@ impl Mod {
     }
 }
 
-impl IntegerQuotient {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{integer\_quotient}}\left({}, {}\right)",
-            self.dividend.to_latex_string(),
-            self.divisor.to_latex_string(),
-        )
-    }
-}
-
 impl Mul {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2029,7 +2019,6 @@ impl Obj {
             Obj::Mul(x) => x.to_latex_string(),
             Obj::Div(x) => x.to_latex_string(),
             Obj::Mod(x) => x.to_latex_string(),
-            Obj::IntegerQuotient(x) => x.to_latex_string(),
             Obj::Pow(x) => x.to_latex_string(),
             Obj::Abs(x) => x.to_latex_string(),
             Obj::Sqrt(x) => x.to_latex_string(),

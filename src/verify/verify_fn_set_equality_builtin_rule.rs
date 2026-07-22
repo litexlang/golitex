@@ -149,7 +149,7 @@ impl Runtime {
             .inst_obj(
                 &source.body.ret_set,
                 &source_param_to_generated_arg_map,
-                ParamObjType::FnSet,
+                ParamObjType::AlphaRename,
             )
             .map_err(|e| {
                 fn_set_equality_verify_error(
@@ -164,7 +164,7 @@ impl Runtime {
             .inst_obj(
                 &target.body.ret_set,
                 &target_param_to_generated_arg_map,
-                ParamObjType::FnSet,
+                ParamObjType::AlphaRename,
             )
             .map_err(|e| {
                 fn_set_equality_verify_error(
@@ -214,21 +214,7 @@ impl Runtime {
             );
         }
         let map = Self::build_param_to_generated_arg_map(&flat, generated_flat_names);
-        let mut new_params = Vec::with_capacity(fn_set.params_def_with_set.len());
-        let mut c_idx: usize = 0;
-        for g in fn_set.params_def_with_set.iter() {
-            let n = g.params.len();
-            let names = generated_flat_names[c_idx..c_idx + n].to_vec();
-            c_idx += n;
-            let new_set = self.inst_obj(g.set_obj(), &map, ParamObjType::FnSet)?;
-            new_params.push(ParamGroupWithSet::new(names, new_set));
-        }
-        let mut new_dom = Vec::with_capacity(fn_set.dom_facts.len());
-        for d in fn_set.dom_facts.iter() {
-            new_dom.push(self.inst_or_and_chain_atomic_fact(d, &map, ParamObjType::FnSet, None)?);
-        }
-        let new_ret = self.inst_obj(fn_set.ret_set.as_ref(), &map, ParamObjType::FnSet)?;
-        Ok(FnSet::new(new_params, new_dom, new_ret)?.into())
+        Ok(FnSet::from_body(self.alpha_rename_fn_set_body(fn_set, &map)?)?.into())
     }
 
     fn define_directional_source_fn_set_params_in_local_env(
@@ -250,7 +236,7 @@ impl Runtime {
                 .inst_obj(
                     param_def_with_set.set_obj(),
                     &source_param_to_generated_arg_map,
-                    ParamObjType::FnSet,
+                    ParamObjType::AlphaRename,
                 )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
@@ -305,7 +291,7 @@ impl Runtime {
                 .inst_or_and_chain_atomic_fact(
                     dom_fact,
                     source_param_to_generated_arg_map,
-                    ParamObjType::FnSet,
+                    ParamObjType::AlphaRename,
                     None,
                 )
                 .map_err(|e| {
@@ -347,7 +333,7 @@ impl Runtime {
                 self.inst_obj(
                     param_def_with_set.set_obj(),
                     target_param_to_generated_arg_map,
-                    ParamObjType::FnSet,
+                    ParamObjType::AlphaRename,
                 )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
@@ -398,7 +384,7 @@ impl Runtime {
                 .inst_or_and_chain_atomic_fact(
                     dom_fact,
                     target_param_to_generated_arg_map,
-                    ParamObjType::FnSet,
+                    ParamObjType::AlphaRename,
                     None,
                 )
                 .map_err(|e| {

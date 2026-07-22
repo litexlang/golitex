@@ -2020,8 +2020,8 @@ thm alternating_series_tail_bound:
         case q >= p:
             have h N = q - p
             p + h = q
-            have k N = integer_quotient(h, 2)
-            h = 2 * integer_quotient(h, 2) + h % 2 = 2 * k + h % 2
+            have k N = chap4::integer_quotient(h, 2)
+            h = 2 * chap4::integer_quotient(h, 2) + h % 2 = 2 * k + h % 2
             h % 2 = 0 or h % 2 = 1
             by cases:
                 ? abs(finite_tail_sum(alternating_series_terms(a), p, q)) <= a(n0)

@@ -241,7 +241,9 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_set_minus_equalities(left, right, line_file.clone()) {
+        if let Some(done) =
+            self.try_verify_set_minus_equalities(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(done);
         }
 
@@ -762,15 +764,6 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_integer_quotient_defining_equation(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
         if let Some(done) = self.try_verify_mod_eq_remainder_from_euclidean_division(
             left,
             right,
@@ -1104,22 +1097,23 @@ impl Runtime {
     }
 
     fn try_verify_set_minus_equalities(
-        &self,
+        &mut self,
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-    ) -> Option<StmtResult> {
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
         // A symmetric difference is the union of its two asymmetric differences.
         // Example: `set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))`.
         if Self::set_diff_as_union_of_asymmetric_differences_shape(left, right)
             || Self::set_diff_as_union_of_asymmetric_differences_shape(right, left)
         {
-            return Some(Self::set_equality_success(
+            return Ok(Some(Self::set_equality_success(
                 left,
                 right,
                 line_file,
                 "set_diff_as_union_of_asymmetric_differences",
-            ));
+            )));
         }
 
         // Set-minus distributes over union by De Morgan's law, accepted in either direction.
@@ -1127,12 +1121,12 @@ impl Runtime {
         if Self::set_minus_union_de_morgan_shape(left, right)
             || Self::set_minus_union_de_morgan_shape(right, left)
         {
-            return Some(Self::set_equality_success(
+            return Ok(Some(Self::set_equality_success(
                 left,
                 right,
                 line_file,
                 "set_minus_union_de_morgan",
-            ));
+            )));
         }
 
         // Set-minus distributes over intersection by De Morgan's law, accepted in either direction.
@@ -1140,15 +1134,36 @@ impl Runtime {
         if Self::set_minus_intersect_de_morgan_shape(left, right)
             || Self::set_minus_intersect_de_morgan_shape(right, left)
         {
-            return Some(Self::set_equality_success(
+            return Ok(Some(Self::set_equality_success(
                 left,
                 right,
                 line_file,
                 "set_minus_intersect_de_morgan",
-            ));
+            )));
         }
 
-        None
+        // A subset is recovered by removing its relative complement from the container.
+        // Example: `B $subset A` gives `B = set_minus(A, set_minus(A, B))`.
+        if let Some((container, subset)) = Self::set_minus_recovers_subset_shape(left, right)
+            .or_else(|| Self::set_minus_recovers_subset_shape(right, left))
+        {
+            let subset_fact: AtomicFact =
+                SubsetFact::new(subset, container, line_file.clone()).into();
+            let subset_result = self
+                .verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+            if subset_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                        "set_minus_recovers_subset_from_relative_complement".to_string(),
+                        vec![subset_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        Ok(None)
     }
 
     fn try_verify_cart_finite_set_size_product_equality(
@@ -1609,6 +1624,25 @@ impl Runtime {
             right_left_set_minus,
             right_right_set_minus,
         )
+    }
+
+    fn set_minus_recovers_subset_shape(
+        subset_side: &Obj,
+        double_difference_side: &Obj,
+    ) -> Option<(Obj, Obj)> {
+        let Obj::SetMinus(outer_difference) = double_difference_side else {
+            return None;
+        };
+        let Obj::SetMinus(inner_difference) = outer_difference.right.as_ref() else {
+            return None;
+        };
+        if verify_equality_by_they_are_the_same(&outer_difference.left, &inner_difference.left)
+            && verify_equality_by_they_are_the_same(subset_side, &inner_difference.right)
+        {
+            Some((outer_difference.left.as_ref().clone(), subset_side.clone()))
+        } else {
+            None
+        }
     }
 
     fn set_minus_de_morgan_args_match(

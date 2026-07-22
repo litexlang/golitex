@@ -253,12 +253,11 @@ There are three layers to keep distinct:
   signed variants like `R_pos` and `Z_nz`, arithmetic operators, `abs`, `sqrt`,
   `log`, set displays, set builders, `union`, `intersect`, `set_minus`,
   `power_set`, `cart`, `fn(...)`, `seq(...)`, `matrix(...)`, finite sums and
-  products, integer ranges, real intervals, tuples, struct views, and the
-  Euclidean integer quotient `integer_quotient(a, d)`.
+  products, integer ranges, real intervals, tuples, and struct views.
 - **Builtin verification rules** are Rust-level verifier patterns that close
   goals automatically. Arithmetic normalization, order algebra, membership
-  checks, tuple/product facts, Euclidean quotient/remainder semantics, and
-  many equality patterns live at this layer.
+  checks, tuple/product facts, the unique-existence fact behind Euclidean
+  division, and many equality patterns live at this layer.
 - **Source-local package objects and facts** are ordinary named Litex
   interfaces. Import them explicitly from the source or project that owns
   their proof debt; broad theorem background never appears implicitly.
@@ -284,13 +283,29 @@ theorem is broad, textbook-facing, or domain-specific, keep it in the relevant
 source-local cite package with an explicit proof-debt boundary if needed.
 
 For `a Z` and `d N_pos`, `%` uses the Euclidean remainder convention
-`0 <= a % d < d`. The corresponding selected quotient is
-`integer_quotient(a, d) : Z`, with its defining equation available directly:
+`0 <= a % d < d`. The kernel verifies the narrow unique-existence fact behind
+Euclidean division:
 
 ```litex
 forall a Z, d N_pos:
+    exist! q Z st {a = d * q + a % d}
+```
+
+A source module can turn that fact into an ordinary selected function:
+
+```litex
+have fn integer_quotient by exist!:
+    ? forall a Z, d N_pos:
+        exist! q Z st {a = d * q + a % d}
+
+forall a Z, d N_pos:
     a = d * integer_quotient(a, d) + a % d
 ```
+
+Here `integer_quotient` is a source-level function name, not reserved syntax
+or a builtin object. Projects that use the shared definition import `basics`
+and write `basics::integer_quotient`; a source can instead define the same
+small interface locally when that keeps its dependency boundary explicit.
 
 The same kernel rules expose the canonical interval and division interfaces:
 
@@ -633,7 +648,7 @@ If a struct has no `<=>:` filter facts, Litex can prove `&Name<args>` is nonempt
 
 #### Finite-set size
 
-`finite_set_size(S)` is the size of a finite set, and Litex knows it is a natural number. The `std/basics` axiom `subset_of_finite_set_is_finite` supplies the fact that a subset of a finite set is finite; cardinality monotonicity remains a direct verifier rule. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` (symmetric difference) are finite; Litex checks inclusion-exclusion, the intersection-plus-remainder partition, and the symmetric-difference formula directly. It also checks the standard cardinality upper bounds and the sizes of natural-number `closed_range` and `range` intervals. A Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `finite_set_size(cart(A_1,...,A_n))` reduces to `finite_set_size(A_1) * ... * finite_set_size(A_n)` in calculations.
+`finite_set_size(S)` is the size of a finite set, and Litex knows it is a natural number. A subset `B` of `A` is recovered as `set_minus(A, set_minus(A, B))`; because a difference of a finite set is finite, this directly proves that every finite subset is finite. Cardinality monotonicity remains a direct verifier rule. For two finite sets, `union`, `intersect`, `set_minus`, and `set_diff` (symmetric difference) are finite; Litex checks inclusion-exclusion, the intersection-plus-remainder partition, and the symmetric-difference formula directly. It also checks the standard cardinality upper bounds and the sizes of natural-number `closed_range` and `range` intervals. A Cartesian product `cart(A, B, ...)` is finite when every factor is finite, and `finite_set_size(cart(A_1,...,A_n))` reduces to `finite_set_size(A_1) * ... * finite_set_size(A_n)` in calculations.
 
 ```litex
 finite_set_size({1, 2, 3}) = 3
@@ -1273,6 +1288,15 @@ forall x R:
 Read this as: for every `x` in `R`, if `0 < x`, then `x != 0`.
 
 The lines before `=>:` are the **domain assumptions** or **hypotheses**. The lines under `=>:` are the **conclusions**.
+
+A `forall` body may refer to parameters from an enclosing scope. Those outer
+parameters are captured constants, not additional variables that automatic
+matching may replace. While a binder scope is active, Litex rejects rebinding
+the same spelling with the same binder kind; the spelling may be reused by a
+different binder kind, and it becomes available again after the inner scope
+ends. Binders introduced by kernel transformations after parsing use private
+`#binder_N` identities that cannot be written as Litex source names, together
+with capture-avoiding substitution.
 
 > Hint: Without assumptions, put conclusions directly under `forall`. With assumptions, put the assumptions first, then `=>:`, then indent the conclusions one more level.
 
@@ -2230,7 +2254,7 @@ trusted assumption with a clear reason.
 
 If the run uses `-strict`, user `trust`, `trust have`, and `axiom` statements
 are rejected instead of being stored. It also verifies every configured import
-and export, so a successful strict run audits the complete loaded source graph.
+and every export loaded by `-f`; `-r` already verifies the complete export tree.
 
 ```litex
 # three primitive terms:
@@ -2436,7 +2460,9 @@ mount path. If a module imports the same physical folder as `First` and
 inside `First` are available to First and its exported submodules, but are not
 automatically public to First's importer.
 
-Project configuration entries are trusted by default in ordinary runs:
+`litex -r` verifies every ordered `[export]` entry in the selected project's
+complete recursive tree. `litex -f` instead trusts the earlier `[export]`
+entries needed as context and verifies the selected file:
 
 ```ini
 [export]
@@ -2444,10 +2470,11 @@ background = "./background.lit"
 main = "./main.lit"
 ```
 
-The same rule applies to `[import]` and `[import std]`. Litex emits an
-`unverified_import` warning with each loaded entry; `-strict` verifies them.
-Older `trust name = "path"` entries are rejected with a migration message:
-remove `trust` rather than keeping a redundant marker.
+`[import]` and `[import std]` are trusted by default. Litex emits an
+`unverified_import` warning for them and for trusted `-f` prefix entries;
+`-strict` verifies all loaded dependencies. Older `trust name = "path"` entries
+are rejected with a migration message: remove `trust` rather than keeping a
+redundant marker.
 
 For textbook-style developments, treat imports as visible background, not as a
 replacement for the chapter's mathematics. Prefer local definitions, local
@@ -3296,7 +3323,8 @@ code, evaluate an expression, or register a reusable proof pattern.
 | declare a project file export | `local = "./local.lit"` in the `[export]` table of `litex.config` |
 | cite an earlier project file inside a source | `chapter3::local` |
 | order project dependencies for `-r` and `-f` | place dependencies earlier in recursive `[export]` order |
-| audit every imported/exported project source | run the project with `litex -strict -r <project>` |
+| verify every project export | run the project with `litex -r <project>` |
+| audit every imported project source too | run the project with `litex -strict -r <project>` |
 | explicit no-op | `do_nothing` |
 | clear the current user environment | `clear` |
 | evaluate an object expression | `eval 1 + 2` |
@@ -4038,6 +4066,29 @@ Most examples are real `litex` code. They are meant to show the shape of facts L
 There are many entries here because basic mathematical concepts have many simple pairwise relationships. Each relationship is usually easy, but the total number of combinations is large. One of Litex's main design choices is to build in many of these simple-but-numerous relationships. The result is that user code can stay closer to everyday mathematical writing without giving up runtime speed.
 
 When a rule does not apply, the usual fix is to write an intermediate fact that makes the goal look more like one of these patterns.
+
+---
+
+### Reduced Rational Fractions (Preview)
+
+Litex recognizes the standard unique reduced-fraction statement for a
+rational number. The numerator is an integer, the denominator is a positive
+natural number, and every positive integer dividing both is `1`:
+
+```litex
+forall a Q:
+    exist! p Z, q N_pos st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}
+```
+
+This is a narrow builtin rule for either `exist` or `exist!`. The latter proves
+uniqueness of the ordered witness pair `(p, q)`. The rule accepts the same
+equality in the opposite direction and either order for the two divisibility
+premises, then records either `exist: rational reduced fraction with positive
+denominator` or `exist!: unique rational reduced fraction with positive
+denominator` in the verification provenance. Here `forall!` remains the
+compact universal reducedness condition, not a uniqueness binder. The rule
+applies only to witnesses in `Z` and `N_pos`; it does not replace the checked
+gcd construction in `std/basics`.
 
 ---
 

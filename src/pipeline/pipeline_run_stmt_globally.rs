@@ -279,7 +279,7 @@ fn run_repository_module_prefix_with_mode(
 fn run_repository_module_plan_to_target(
     runtime: &mut Runtime,
     module_id: ModuleId,
-    _execution_mode: ExecutionMode,
+    execution_mode: ExecutionMode,
     selected_target: RepositoryFileTarget,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let (mut results, import_error) = run_config_imports(runtime, module_id);
@@ -303,13 +303,17 @@ fn run_repository_module_plan_to_target(
     }
     let run_targets = module.run_targets.clone();
     for target in run_targets {
-        let target_execution_mode = project_target_execution_mode(runtime, module_id, target);
         let target_matches = repository_target_matches_import_target(selected_target, target);
         let target_contains = match target {
             ImportTarget::Module(child_module_id) => {
                 repository_target_is_inside_module(runtime, selected_target, child_module_id)
             }
             ImportTarget::File { .. } => false,
+        };
+        let target_execution_mode = if target_matches || target_contains {
+            execution_mode
+        } else {
+            project_target_execution_mode(runtime, module_id, target)
         };
         let (mut target_results, runtime_error) = if target_contains && !target_matches {
             let ImportTarget::Module(child_module_id) = target else {
@@ -343,7 +347,7 @@ fn run_repository_module_plan_to_target(
 fn run_repository_module_plan(
     runtime: &mut Runtime,
     module_id: ModuleId,
-    _execution_mode: ExecutionMode,
+    execution_mode: ExecutionMode,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let (mut results, import_error) = run_config_imports(runtime, module_id);
     if let Some(error) = import_error {
@@ -366,9 +370,8 @@ fn run_repository_module_plan(
     }
     let run_targets = module.run_targets.clone();
     for target in run_targets {
-        let target_execution_mode = project_target_execution_mode(runtime, module_id, target);
         let (mut target_results, runtime_error) =
-            run_repository_import_target(runtime, target, target_execution_mode);
+            run_repository_import_target(runtime, target, execution_mode);
         results.append(&mut target_results);
         if let Some(error) = runtime_error {
             return (results, Some(error));

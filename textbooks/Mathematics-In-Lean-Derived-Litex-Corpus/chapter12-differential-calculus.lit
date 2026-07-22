@@ -166,17 +166,22 @@ prop is_continuous_real_linear_map(E, F set, add_E fn(x, y E) E, add_F fn(x, y F
 template<E set>:
     have fn identity_map(x E) E = x
 
+# Strict mode does not yet unfold this symbolic template instance, so the
+# checked identity-map theorem uses its defining lambda pointwise.
 thm identity_is_continuous_linear:
     ? forall E set, add fn(x, y E) E, smul fn(a R, x E) E, norm fn(x E) R:
-        $is_continuous_real_linear_map(E, E, add, add, smul, smul, norm, norm, \identity_map<E>)
+        $is_continuous_real_linear_map(E, E, add, add, smul, smul, norm, norm, fn(x E) E {x})
     forall x, y E:
-        \identity_map<E>(add(x, y)) = add(x, y) = add(\identity_map<E>(x), \identity_map<E>(y))
+        (fn(z E) E {z})(add(x, y)) = add(x, y) = add((fn(z E) E {z})(x), (fn(z E) E {z})(y))
     forall a R, x E:
-        \identity_map<E>(smul(a, x)) = smul(a, x) = smul(a, \identity_map<E>(x))
-    witness exist C R st {$is_operator_bound(E, E, norm, norm, \identity_map<E>, C)} from 1:
+        (fn(z E) E {z})(smul(a, x)) = smul(a, x) = smul(a, (fn(z E) E {z})(x))
+    witness exist C R st {$is_operator_bound(E, E, norm, norm, fn(x E) E {x}, C)} from 1:
         1 >= 0
         forall x E:
-            norm(\identity_map<E>(x)) = norm(x) = 1 * norm(x)
+            norm((fn(z E) E {z})(x)) = norm(x) = 1 * norm(x)
+            norm((fn(z E) E {z})(x)) <= 1 * norm(x)
+        by def $is_operator_bound(E, E, norm, norm, fn(x E) E {x}, 1)
+    by def $is_continuous_real_linear_map(E, E, add, add, smul, smul, norm, norm, fn(x E) E {x})
 
 # Asymptotic relations are genuine properties of candidate functions and a
 # filter, not selected functions.

@@ -1124,7 +1124,6 @@ impl DepCollector {
             Obj::Mul(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Div(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Mod(x) => self.collect_two_objs(&x.left, &x.right),
-            Obj::IntegerQuotient(x) => self.collect_two_objs(&x.dividend, &x.divisor),
             Obj::Pow(x) => self.collect_two_objs(&x.base, &x.exponent),
             Obj::Log(x) => self.collect_two_objs(&x.base, &x.arg),
             Obj::Union(x) => self.collect_two_objs(&x.left, &x.right),

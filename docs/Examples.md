@@ -3669,9 +3669,11 @@ These examples are syntax only because they depend on local project files.
   and `[import std]`, direct-child `[export]` entries, and complete configured
   folder contents are validated during discovery; `clear` has no structural
   checks.
-- Truth verification: `[import]`, `[import std]`, and `[export]` entries load
-  trusted by default in an ordinary run. Litex reports each as an
-  `unverified_import`; `-strict` verifies the complete configured load graph.
+- Truth verification: `-r` verifies the complete ordered `[export]` tree.
+  `-f` trusts earlier exports needed as project context and verifies its target.
+  `[import]` and `[import std]` are trusted by default; Litex reports each
+  trusted dependency as an `unverified_import`, while `-strict` verifies every
+  loaded dependency.
 - Environment effects: configured imports update the module manager; `clear`
   removes the current user environment. Configured packages remain registered.
 
@@ -3806,30 +3808,27 @@ forall A, B set:
 ### 4. Euclid's Theorem On Arbitrarily Large Primes
 
 - Category: `case study`
-- Purpose: The first-class `integer_quotient(a, d)` and Euclidean-remainder
-  interface is available. This historical case study remains withheld until
-  its own source proof is translated and checked.
+- Purpose: A source-level `integer_quotient(a, d)` can be selected from the
+  checked Euclidean unique-existence fact. This historical case study remains
+  withheld until its own source proof is translated and checked.
 
 ### 5. The Euclidean Algorithm And Bezout Coefficients
 
 - Category: `case study`
-- Purpose: This historical development will use the first-class
-  `integer_quotient(a, d)` interface when its source proof is translated;
-  deprecated package calls are not retained as documentation.
+- Purpose: This historical development will use an explicitly imported or
+  source-local `integer_quotient(a, d)` when its proof is translated.
 
 ### 6. A Bijection From `N^2` To `N`
 
 - Category: `case study`
-- Purpose: The former triangular-number construction needs a source-specific
-  divisibility-to-quotient proof. It will be rewritten against the first-class
-  quotient interface; no deprecated package code is retained here.
+- Purpose: The triangular-number construction only needs a divisibility
+  witness, so it can obtain that witness directly instead of naming a quotient.
 
 ### 7. Every Integer Is Odd Or Even
 
 - Category: `case study`
-- Purpose: This parity proof will use the Euclidean quotient/remainder
-  interface rather than older modular-normalization lemmas or a compatibility
-  package.
+- Purpose: This parity proof can obtain the Euclidean witness directly; code
+  that needs the selected quotient uses an explicit source-level function.
 
 ### 8. Nonnegative Integers Modulo 2
 

@@ -25,9 +25,13 @@ Names beginning with `_` are implementation details, not client API.
 | --- | --- | --- |
 | `pi` | a positive real constant | Trusted |
 | `euler_e` | a positive real constant | Trusted |
+| `integer_quotient(a, d)` | the integer `q` selected by `a = d * q + a % d`, for `d : N_pos` | Checked |
 | `gcd(a, b)` | positive greatest common divisor of a nonzero integer pair | Checked |
 
-`gcd(a, b)` requires the side condition `a != 0 or b != 0`.
+`integer_quotient` is an ordinary source-level function selected from the
+kernel's narrow Euclidean unique-existence fact; it is not reserved syntax or
+a dedicated kernel object. `gcd(a, b)` requires the side condition
+`a != 0 or b != 0`.
 
 ## Predicates
 
@@ -53,6 +57,7 @@ is a separate, currently trusted unique-normal-form interface.
 
 | Theorem | Conclusion | Status |
 | --- | --- | --- |
+| `subset_of_finite_set_is_finite(A, B)` | a subset of a finite set is finite | Checked |
 | `finite_set_has_bijective_index(s)` | there is `idx : range(0, finite_set_size(s)) -> s` satisfying the kernel predicate `$bijective(range(0, finite_set_size(s)), s, idx)` | Checked |
 
 The module does not define `zero_index`, `zero_index_set`, or a local
@@ -81,12 +86,6 @@ they belong to the set and bound every member. Literal calls such as
 
 Except where a row states a stronger condition, gcd theorems require
 `a != 0 or b != 0`.
-
-## Other explicit background interface
-
-| Declaration | Meaning | Status |
-| --- | --- | --- |
-| `subset_of_finite_set_is_finite(A, B)` | a subset of a finite set is finite | Axiom |
 
 ## Minimal use
 

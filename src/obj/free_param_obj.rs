@@ -15,6 +15,17 @@ pub enum ParamObjType {
     TupleIndex,
     CartIndex,
     TheoremInstantiation,
+    AlphaRename,
+    BinderRetag(BinderRetagSource),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BinderRetagSource {
+    Forall,
+    Exist,
+    FnSet,
+    Induc,
+    DefAlgo,
 }
 
 impl ParamObjType {
@@ -31,8 +42,10 @@ impl ParamObjType {
             ParamObjType::DefStructField => 8,
             ParamObjType::TupleIndex => 9,
             ParamObjType::CartIndex => 10,
-            ParamObjType::TheoremInstantiation => {
-                unreachable!("theorem instantiation is not a free parameter display kind")
+            ParamObjType::TheoremInstantiation
+            | ParamObjType::AlphaRename
+            | ParamObjType::BinderRetag(_) => {
+                unreachable!("instantiation modes are not free parameter display kinds")
             }
         }
     }
@@ -333,7 +346,10 @@ pub fn obj_for_bound_param_in_scope(name: String, scope: ParamObjType) -> Obj {
         ParamObjType::DefStructField => DefStructFieldFreeParamObj::new(name).into(),
         ParamObjType::TupleIndex => TupleIndexFreeParamObj::new(name).into(),
         ParamObjType::CartIndex => CartIndexFreeParamObj::new(name).into(),
-        ParamObjType::Identifier | ParamObjType::TheoremInstantiation => {
+        ParamObjType::Identifier
+        | ParamObjType::TheoremInstantiation
+        | ParamObjType::AlphaRename
+        | ParamObjType::BinderRetag(_) => {
             unreachable!(
                 "obj_for_bound_param_in_scope: {:?} is not a bare-name binding scope",
                 scope
@@ -356,8 +372,10 @@ pub fn param_binding_element_obj_for_store(name: String, binding_kind: ParamObjT
         | ParamObjType::DefStructField
         | ParamObjType::TupleIndex
         | ParamObjType::CartIndex => obj_for_bound_param_in_scope(name, binding_kind),
-        ParamObjType::TheoremInstantiation => unreachable!(
-            "param_binding_element_obj_for_store: theorem instantiation is not a binding kind"
+        ParamObjType::TheoremInstantiation
+        | ParamObjType::AlphaRename
+        | ParamObjType::BinderRetag(_) => unreachable!(
+            "param_binding_element_obj_for_store: instantiation modes are not binding kinds"
         ),
     }
 }

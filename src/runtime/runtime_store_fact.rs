@@ -267,6 +267,12 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
+        let alpha_normalized_forall_key = match &fact {
+            Fact::ForallFact(forall_fact) => {
+                Some(self.alpha_normalized_forall_cache_key(forall_fact)?)
+            }
+            _ => None,
+        };
         let fact_for_infer = fact.clone();
         let chain_atomic_facts = match &fact {
             Fact::ChainFact(chain_fact) => chain_fact.facts_with_order_transitive_closure()?,
@@ -281,7 +287,21 @@ impl Runtime {
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         self.top_level_env()
-            .store_fact_to_cache_known_fact_with_trust(fact_string, line_file, trust_summary)?;
+            .store_fact_to_cache_known_fact_with_trust(
+                fact_string.clone(),
+                line_file.clone(),
+                trust_summary.clone(),
+            )?;
+        if let Some(alpha_key) = alpha_normalized_forall_key {
+            if alpha_key != fact_string {
+                self.top_level_env()
+                    .store_fact_to_cache_known_fact_with_trust(
+                        alpha_key,
+                        line_file,
+                        trust_summary,
+                    )?;
+            }
+        }
 
         Ok(self.infer(&fact_for_infer)?)
     }

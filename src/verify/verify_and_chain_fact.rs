@@ -88,11 +88,13 @@ impl Runtime {
                     };
                     current_known_forall.clone()
                 };
-                let match_result = self.match_args_in_fact_in_known_forall_fact_with_given_args(
+                let match_result = self.match_args_in_fact_with_known_forall_bindings(
                     &and_fact_in_known_forall.get_args_from_fact_ref(),
                     &and_fact.get_args_from_fact_ref(),
+                    &current_known_forall.params_def,
+                    None,
                 )?;
-                if let Some(arg_map) = match_result {
+                if let Some((arg_map, _)) = match_result {
                     if let Some(fact_verified) = self
                         .verify_and_fact_args_satisfy_forall_requirements(
                             &and_fact_in_known_forall,
