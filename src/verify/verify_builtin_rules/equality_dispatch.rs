@@ -945,7 +945,7 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let target_key = obj_at_index.obj.to_string();
+        let target_key = obj_equality_key(obj_at_index.obj.as_ref());
         for env in self.iter_environments_from_top() {
             let Some((_, equal_objs)) = env.known_equality.get(&target_key) else {
                 continue;
@@ -2304,17 +2304,19 @@ impl Runtime {
         }
 
         let index_name = self.generate_random_unused_name();
-        let index_obj = obj_for_bound_param_in_scope(index_name.clone(), ParamObjType::Forall);
+        let coordinate_group = self.fresh_param_group_with_type(
+            vec![index_name],
+            ParamType::Obj(ClosedRange::new(Number::new("1".to_string()).into(), left_dim).into()),
+        )?;
+        let index_obj =
+            obj_for_bound_param_in_scope(&coordinate_group.params[0], ParamObjType::Forall);
         let coordinate_equality: AtomicFact = EqualFact::new(
             ObjAtIndex::new(left.clone(), index_obj.clone()).into(),
             ObjAtIndex::new(right.clone(), index_obj).into(),
             line_file.clone(),
         )
         .into();
-        let coordinate_params = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-            vec![index_name],
-            ParamType::Obj(ClosedRange::new(Number::new("1".to_string()).into(), left_dim).into()),
-        )]);
+        let coordinate_params = ParamDefWithType::new(vec![coordinate_group]);
         let coordinate_result = self.run_in_local_env(|rt| {
             rt.define_params_with_type(&coordinate_params, false, ParamObjType::Forall)?;
             rt.verify_atomic_fact_with_known_forall(&coordinate_equality, verify_state)
@@ -2751,7 +2753,7 @@ impl Runtime {
     }
 
     fn known_equal_objs_for_template_candidate(&self, obj: &Obj) -> Vec<Obj> {
-        let key = obj.to_string();
+        let key = obj_equality_key(obj);
         let mut result: Vec<Obj> = Vec::new();
         for env in self.iter_environments_from_top() {
             let Some((_, equal_objs)) = env.known_equality.get(&key) else {
@@ -2889,10 +2891,10 @@ impl Runtime {
             return Ok(false);
         }
 
-        let param_name = forall_fact.params_def_with_type.collect_param_names()[0].clone();
-        let param_obj = obj_for_bound_param_in_scope(param_name, ParamObjType::Forall);
+        let param_binding = forall_fact.params_def_with_type.collect_param_bindings()[0].clone();
+        let param_obj = obj_for_bound_param_in_scope(param_binding, ParamObjType::Forall);
         let member_obj =
-            obj_for_bound_param_in_scope(set_builder.param.clone(), ParamObjType::SetBuilder);
+            obj_for_bound_param_in_scope(&set_builder.param_binding, ParamObjType::SetBuilder);
         let Some(member_head) = FnObjHead::from_callable_obj(member_obj) else {
             return Ok(false);
         };
@@ -2951,7 +2953,7 @@ impl Runtime {
                 continue;
             };
             let bound_param =
-                obj_for_bound_param_in_scope(set_builder.param.clone(), ParamObjType::SetBuilder);
+                obj_for_bound_param_in_scope(&set_builder.param_binding, ParamObjType::SetBuilder);
             let (upper_left_matches, upper_right_matches) = match (right_closed, upper) {
                 (true, AtomicFact::LessEqualFact(fact)) => (
                     verify_equality_by_they_are_the_same(&fact.left, &bound_param),

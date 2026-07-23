@@ -28,6 +28,7 @@ pub type AtomicFactInForallArgShapeIndex = HashMap<
 /// - strategy registrations and stopped-strategy state.
 #[derive(Clone)]
 pub struct Environment {
+    pub symbols: SymbolTable,
     pub defined_identifiers: HashMap<IdentifierName, ParamObjType>,
     pub defined_def_props: HashMap<PropName, DefPropStmt>,
     pub defined_abstract_props: HashMap<AbstractPropName, DefAbstractPropStmt>,
@@ -147,6 +148,7 @@ impl Environment {
         cache_known_fact_trust: HashMap<FactString, ProofTrustSummary>,
     ) -> Self {
         Environment {
+            symbols: SymbolTable::new(),
             defined_identifiers: objs,
             defined_def_props: def_props,
             defined_abstract_props: abstract_props,
@@ -624,8 +626,10 @@ impl Environment {
     }
 
     pub fn store_equality(&mut self, equality: &EqualFact) -> Result<(), RuntimeError> {
-        let left_as_string: ObjString = equality.left.to_string();
-        let right_as_string: ObjString = equality.right.to_string();
+        let left_raw_string: ObjString = equality.left.to_string();
+        let right_raw_string: ObjString = equality.right.to_string();
+        let left_as_string: ObjString = obj_equality_key(&equality.left);
+        let right_as_string: ObjString = obj_equality_key(&equality.right);
         if left_as_string == right_as_string {
             return Ok(());
         }
@@ -653,8 +657,10 @@ impl Environment {
                     for obj in left_vec.iter().chain(right_vec.iter()) {
                         merged.push(obj.clone());
                     }
-                    merged.sort_by(|a_obj, b_obj| a_obj.to_string().cmp(&b_obj.to_string()));
-                    merged.dedup_by(|a_obj, b_obj| a_obj.to_string() == b_obj.to_string());
+                    merged.sort_by_key(obj_equality_key);
+                    merged.dedup_by(|a_obj, b_obj| {
+                        obj_equality_key(a_obj) == obj_equality_key(b_obj)
+                    });
                     merged
                 };
                 let new_equiv_rc = Rc::new(merged_vec);
@@ -719,7 +725,7 @@ impl Environment {
                 let mut proof_for_new_right: HashMap<ObjString, AtomicFact> = HashMap::new();
                 proof_for_new_right.insert(left_as_string.clone(), equal_atomic_fact.clone());
                 self.known_equality
-                    .insert(right_as_string, (proof_for_new_right, new_equiv_rc));
+                    .insert(right_as_string.clone(), (proof_for_new_right, new_equiv_rc));
             }
             (None, Some(existing_class_rc)) => {
                 let mut new_vec = (*existing_class_rc).clone();
@@ -752,7 +758,7 @@ impl Environment {
                 let mut proof_for_new_left: HashMap<ObjString, AtomicFact> = HashMap::new();
                 proof_for_new_left.insert(right_as_string.clone(), equal_atomic_fact.clone());
                 self.known_equality
-                    .insert(left_as_string, (proof_for_new_left, new_equiv_rc));
+                    .insert(left_as_string.clone(), (proof_for_new_left, new_equiv_rc));
             }
             (None, None) => {
                 let equiv_members = vec![equality.left.clone(), equality.right.clone()];
@@ -768,15 +774,29 @@ impl Environment {
                     left_as_string.clone(),
                     (left_direct_proof_map, Rc::clone(&new_equiv_rc)),
                 );
-                self.known_equality
-                    .insert(right_as_string, (right_direct_proof_map, new_equiv_rc));
+                self.known_equality.insert(
+                    right_as_string.clone(),
+                    (right_direct_proof_map, new_equiv_rc),
+                );
+            }
+        }
+
+        for (raw_key, normalized_key) in [
+            (left_raw_string, left_as_string.clone()),
+            (right_raw_string, right_as_string.clone()),
+        ] {
+            if raw_key == normalized_key {
+                continue;
+            }
+            if let Some(entry) = self.known_equality.get(&normalized_key).cloned() {
+                self.known_equality.insert(raw_key, entry);
             }
         }
 
         if let Some(derived) =
             super::equality_linear_derive::maybe_derived_linear_equal_fact(equality)
         {
-            if derived.left.to_string() != derived.right.to_string() {
+            if obj_equality_key(&derived.left) != obj_equality_key(&derived.right) {
                 self.store_equality(&derived)?;
             }
         }

@@ -1,4 +1,5 @@
 mod execution_frame;
+mod parse_context;
 pub mod runtime;
 mod runtime_define_parameter;
 mod runtime_generate_unused_names;
@@ -12,7 +13,9 @@ mod runtime_proof_trust;
 mod runtime_resolve_obj;
 mod runtime_store_arg_satisfy_param_type_when_not_defining_new_identifiers;
 mod runtime_store_fact;
+mod runtime_symbol;
 
 pub use execution_frame::{ExecutionFrame, ExecutionLayer, ExecutionMode};
+pub use parse_context::{ParseContext, ScopeFrame};
 pub use runtime::{OutputStyle, RunMode, Runtime};
 pub use runtime_parsing_free_param_collection::{FreeParamCollection, FreeParamTypeAndLineFile};

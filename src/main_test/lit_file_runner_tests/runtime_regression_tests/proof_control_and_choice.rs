@@ -284,7 +284,7 @@ try:
         assert!(
             run_output.contains("try:")
                 || run_output.contains("have a R")
-                || run_output.contains("free parameter `a` is already bound"),
+                || run_output.contains("name `a` is already active"),
             "try should report the failing inner statement:\n{}",
             run_output
         );
@@ -890,18 +890,77 @@ forall x R:
         run_output
     );
     assert!(
-        run_output.contains("free parameter `x` is already bound as Forall in an active scope")
-            || run_output.contains("duplicate Forall free parameter `x` in nested scope"),
+        run_output.contains("name `x` is already active in this scope"),
         "failure should mention duplicate forall parameter:\n{}",
         run_output
     );
 }
 
 #[test]
-fn parser_scope_allows_different_kinds_and_releases_finished_scopes() {
+fn induction_proof_local_names_do_not_leak_outside_their_proof_block() {
     let source_code = r#"
-trust exist x R st {forall! x R => {x = x}}
+abstract_prop p(a)
+trust $p(0)
+trust forall m N:
+    $p(m)
+    =>:
+        $p(m + 1)
 
+by induc n from 0:
+    ? $p(n)
+
+    ? from n = 0:
+        have x N = 0
+        $p(0)
+
+    ? induc:
+        have y N = n
+        $p(n + 1)
+
+trust exist x R st {x = x}
+trust exist y R st {y = y}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "induction_proof_local_names_do_not_leak_outside_their_proof_block",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "induction proof locals must be released after their branch:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn parser_scope_rejects_active_cross_kind_reuse_and_releases_finished_scopes() {
+    let invalid_source_code = r#"
+trust exist x R st {forall! x R => {x = x}}
+"#;
+
+    let mut invalid_runtime = Runtime::new();
+    invalid_runtime
+        .new_file_path_new_env_new_name_scope("parser_scope_rejects_active_cross_kind_reuse");
+    let (invalid_results, invalid_error) =
+        run_source_code(invalid_source_code, &mut invalid_runtime);
+    let (invalid_succeeded, invalid_output) =
+        render_run_source_code_output(&invalid_runtime, &invalid_results, &invalid_error, false);
+    assert!(
+        !invalid_succeeded,
+        "different binder kinds must not reuse an active spelling:\n{}",
+        invalid_output
+    );
+    assert!(
+        invalid_output.contains("name `x` is already active in this scope"),
+        "the parser should identify the active-name collision:\n{}",
+        invalid_output
+    );
+
+    let valid_source_code = r#"
 trust forall x R:
     x = x
 
@@ -910,16 +969,14 @@ trust forall x R:
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "parser_scope_allows_different_kinds_and_releases_finished_scopes",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    runtime.new_file_path_new_env_new_name_scope("parser_scope_releases_finished_scopes");
+    let (stmt_results, runtime_error) = run_source_code(valid_source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "different binder kinds may share a name, and completed scopes must release it:\n{}",
+        "completed sibling scopes must release their spelling:\n{}",
         run_output
     );
 }

@@ -874,13 +874,31 @@ impl Runtime {
         collect_param_obj_names_in_exist_fact(exist_fact, ParamObjType::Exist, &mut reserved_names);
 
         let mut rename_map = HashMap::new();
-        for name in exist_fact.params_def_with_type().collect_param_names() {
-            if !replacement_exist_names.contains(&name) {
-                continue;
+        for group in &exist_fact.params_def_with_type().groups {
+            for binding in &group.params {
+                let conflicts_with_visible_binding = self
+                    .visible_symbol_definition(binding.name())
+                    .is_some_and(|visible| visible.binding().id() != binding.id());
+                if !replacement_exist_names.contains(binding.name())
+                    && !conflicts_with_visible_binding
+                {
+                    continue;
+                }
+                let fresh_binding = if conflicts_with_visible_binding {
+                    self.allocate_internal_symbol_binding()
+                        .expect("internal binder identity counter exhausted")
+                } else {
+                    let fresh_name = self.generate_one_unused_name_with_reserved(&reserved_names);
+                    reserved_names.insert(fresh_name.clone());
+                    self.allocate_local_symbol_binding(fresh_name)
+                        .expect("internal binder identity counter exhausted")
+                };
+                insert_symbol_substitution(
+                    &mut rename_map,
+                    binding,
+                    ExistFreeParamObj::new(&fresh_binding).into(),
+                );
             }
-            let fresh_name = self.generate_one_unused_name_with_reserved(&reserved_names);
-            reserved_names.insert(fresh_name.clone());
-            rename_map.insert(name, ExistFreeParamObj::new(fresh_name).into());
         }
         rename_map
     }
@@ -905,12 +923,16 @@ impl Runtime {
             let params = group
                 .params
                 .iter()
-                .map(|name| renamed_exist_param_name(name, rename_map))
-                .collect();
+                .map(|binding| renamed_exist_param_binding(binding, rename_map))
+                .collect::<Vec<_>>();
             groups.push(ParamGroupWithParamType::new(params, param_type));
-            for name in group.params.iter() {
-                if let Some(replacement) = rename_map.get(name) {
-                    active_rename_map.insert(name.clone(), replacement.clone());
+            for binding in group.params.iter() {
+                if let Some(replacement) = rename_map.get(&binding.substitution_key()) {
+                    insert_symbol_substitution(
+                        &mut active_rename_map,
+                        binding,
+                        replacement.clone(),
+                    );
                 }
             }
         }
@@ -1129,13 +1151,31 @@ impl Runtime {
         }
 
         let mut rename_map = HashMap::new();
-        for name in forall_fact.params_def_with_type.collect_param_names() {
-            if !replacement_forall_names.contains(&name) {
-                continue;
+        for group in &forall_fact.params_def_with_type.groups {
+            for binding in &group.params {
+                let conflicts_with_visible_binding = self
+                    .visible_symbol_definition(binding.name())
+                    .is_some_and(|visible| visible.binding().id() != binding.id());
+                if !replacement_forall_names.contains(binding.name())
+                    && !conflicts_with_visible_binding
+                {
+                    continue;
+                }
+                let fresh_binding = if conflicts_with_visible_binding {
+                    self.allocate_internal_symbol_binding()
+                        .expect("internal binder identity counter exhausted")
+                } else {
+                    let fresh_name = self.generate_one_unused_name_with_reserved(&reserved_names);
+                    reserved_names.insert(fresh_name.clone());
+                    self.allocate_local_symbol_binding(fresh_name)
+                        .expect("internal binder identity counter exhausted")
+                };
+                insert_symbol_substitution(
+                    &mut rename_map,
+                    binding,
+                    ForallFreeParamObj::new(&fresh_binding).into(),
+                );
             }
-            let fresh_name = self.generate_one_unused_name_with_reserved(&reserved_names);
-            reserved_names.insert(fresh_name.clone());
-            rename_map.insert(name, ForallFreeParamObj::new(fresh_name).into());
         }
         rename_map
     }
@@ -1160,12 +1200,16 @@ impl Runtime {
             let params = group
                 .params
                 .iter()
-                .map(|name| renamed_forall_param_name(name, rename_map))
-                .collect();
+                .map(|binding| renamed_forall_param_binding(binding, rename_map))
+                .collect::<Vec<_>>();
             groups.push(ParamGroupWithParamType::new(params, param_type));
-            for name in group.params.iter() {
-                if let Some(replacement) = rename_map.get(name) {
-                    active_rename_map.insert(name.clone(), replacement.clone());
+            for binding in group.params.iter() {
+                if let Some(replacement) = rename_map.get(&binding.substitution_key()) {
+                    insert_symbol_substitution(
+                        &mut active_rename_map,
+                        binding,
+                        replacement.clone(),
+                    );
                 }
             }
         }
@@ -1196,18 +1240,20 @@ impl Runtime {
         &self,
         forall_fact: &ForallFact,
     ) -> Result<String, RuntimeError> {
-        let rename_map = forall_fact
-            .params_def_with_type
-            .collect_param_names()
-            .into_iter()
-            .enumerate()
-            .map(|(index, name)| {
-                (
-                    name,
-                    ForallFreeParamObj::new(format!("#forall_cache_{}", index)).into(),
-                )
-            })
-            .collect();
+        let mut rename_map = HashMap::new();
+        let mut index = 0;
+        for group in &forall_fact.params_def_with_type.groups {
+            for source_binding in &group.params {
+                let target_binding =
+                    SymbolBinding::alpha_canonical(index, format!("#forall_cache_{}", index));
+                insert_symbol_substitution(
+                    &mut rename_map,
+                    source_binding,
+                    ForallFreeParamObj::new(&target_binding).into(),
+                );
+                index += 1;
+            }
+        }
         let mut normalized = self.alpha_rename_forall_fact(forall_fact, &rename_map)?;
         let groups = normalized
             .params_def_with_type
@@ -1220,7 +1266,9 @@ impl Runtime {
             })
             .collect();
         normalized.params_def_with_type = ParamDefWithType::new(groups);
-        Ok(Fact::from(normalized).to_string())
+        Ok(nested_obj_binder_normalized_fact_key(&Fact::from(
+            normalized,
+        )))
     }
 
     pub(crate) fn collect_param_obj_names_in_exist_fact(
@@ -1233,17 +1281,23 @@ impl Runtime {
     }
 }
 
-fn renamed_forall_param_name(name: &str, rename_map: &HashMap<String, Obj>) -> String {
-    match rename_map.get(name) {
-        Some(Obj::Atom(AtomObj::Forall(param))) => param.name.clone(),
-        _ => name.to_string(),
+fn renamed_forall_param_binding(
+    binding: &SymbolBinding,
+    rename_map: &HashMap<String, Obj>,
+) -> SymbolBinding {
+    match rename_map.get(&binding.substitution_key()) {
+        Some(Obj::Atom(AtomObj::Forall(param))) => param.symbol.to_local_binding(),
+        _ => binding.clone(),
     }
 }
 
-fn renamed_exist_param_name(name: &str, rename_map: &HashMap<String, Obj>) -> String {
-    match rename_map.get(name) {
-        Some(Obj::Atom(AtomObj::Exist(param))) => param.name.clone(),
-        _ => name.to_string(),
+fn renamed_exist_param_binding(
+    binding: &SymbolBinding,
+    rename_map: &HashMap<String, Obj>,
+) -> SymbolBinding {
+    match rename_map.get(&binding.substitution_key()) {
+        Some(Obj::Atom(AtomObj::Exist(param))) => param.symbol.to_local_binding(),
+        _ => binding.clone(),
     }
 }
 
@@ -1347,7 +1401,12 @@ fn collect_param_obj_names_in_param_def(
 ) {
     for group in params.groups.iter() {
         if binding_kind == target_kind {
-            names.extend(group.params.iter().cloned());
+            names.extend(
+                group
+                    .params
+                    .iter()
+                    .map(|binding| binding.name().to_string()),
+            );
         }
         if let ParamType::Obj(obj) = &group.param_type {
             names.extend(obj.collect_param_obj_names(target_kind));
@@ -1374,35 +1433,43 @@ mod capture_avoidance_tests {
     fn forall_alpha_rename_avoids_every_existing_same_kind_name() {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("forall_alpha_rename_reserved_names");
+        let a_binding = runtime
+            .allocate_local_symbol_binding("a".to_string())
+            .unwrap();
+        let n_group = runtime
+            .fresh_param_group_with_type(vec!["n".to_string()], ParamType::Set(Set::new()))
+            .unwrap();
+        let x1_binding = runtime
+            .allocate_local_symbol_binding("x1".to_string())
+            .unwrap();
         let body: AtomicFact = EqualFact::new(
-            DefHeaderFreeParamObj::new("a".to_string()).into(),
+            DefHeaderFreeParamObj::new(&a_binding).into(),
             Add::new(
-                ForallFreeParamObj::new("n".to_string()).into(),
-                ForallFreeParamObj::new("x1".to_string()).into(),
+                ForallFreeParamObj::new(&n_group.params[0]).into(),
+                ForallFreeParamObj::new(&x1_binding).into(),
             )
             .into(),
             default_line_file(),
         )
         .into();
         let fact = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec!["n".to_string()],
-                ParamType::Set(Set::new()),
-            )]),
+            ParamDefWithType::new(vec![n_group.clone()]),
             vec![],
             vec![body.into()],
             default_line_file(),
         )
         .unwrap();
-        let map = HashMap::from([(
-            "a".to_string(),
-            Obj::from(ForallFreeParamObj::new("n".to_string())),
-        )]);
+        let mut map = HashMap::new();
+        insert_symbol_substitution(
+            &mut map,
+            &a_binding,
+            ForallFreeParamObj::new(&n_group.params[0]).into(),
+        );
 
         let instantiated = runtime
             .inst_forall_fact(&fact, &map, ParamObjType::DefHeader, None)
             .unwrap();
-        let fresh_name = &instantiated.params_def_with_type.groups[0].params[0];
+        let fresh_name = instantiated.params_def_with_type.groups[0].params[0].name();
         assert_ne!(fresh_name, "n");
         assert_ne!(fresh_name, "x1");
         let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(equality)) =
@@ -1417,7 +1484,7 @@ mod capture_avoidance_tests {
         assert!(matches!(
             &equality.right,
             Obj::Add(add)
-                if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name == *fresh_name)
+                if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name == fresh_name)
                     && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name == "x1")
         ));
     }
@@ -1426,11 +1493,20 @@ mod capture_avoidance_tests {
     fn exist_alpha_rename_avoids_every_existing_same_kind_name() {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("exist_alpha_rename_reserved_names");
+        let a_binding = runtime
+            .allocate_local_symbol_binding("a".to_string())
+            .unwrap();
+        let n_group = runtime
+            .fresh_param_group_with_type(vec!["n".to_string()], ParamType::Set(Set::new()))
+            .unwrap();
+        let x1_binding = runtime
+            .allocate_local_symbol_binding("x1".to_string())
+            .unwrap();
         let body: AtomicFact = EqualFact::new(
-            DefHeaderFreeParamObj::new("a".to_string()).into(),
+            DefHeaderFreeParamObj::new(&a_binding).into(),
             Add::new(
-                ExistFreeParamObj::new("n".to_string()).into(),
-                ExistFreeParamObj::new("x1".to_string()).into(),
+                ExistFreeParamObj::new(&n_group.params[0]).into(),
+                ExistFreeParamObj::new(&x1_binding).into(),
             )
             .into(),
             default_line_file(),
@@ -1438,24 +1514,23 @@ mod capture_avoidance_tests {
         .into();
         let fact = ExistFactEnum::ExistFact(
             ExistFactBody::new(
-                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                    vec!["n".to_string()],
-                    ParamType::Set(Set::new()),
-                )]),
+                ParamDefWithType::new(vec![n_group.clone()]),
                 vec![body.into()],
                 default_line_file(),
             )
             .unwrap(),
         );
-        let map = HashMap::from([(
-            "a".to_string(),
-            Obj::from(ExistFreeParamObj::new("n".to_string())),
-        )]);
+        let mut map = HashMap::new();
+        insert_symbol_substitution(
+            &mut map,
+            &a_binding,
+            ExistFreeParamObj::new(&n_group.params[0]).into(),
+        );
 
         let instantiated = runtime
             .inst_exist_fact(&fact, &map, ParamObjType::DefHeader, None)
             .unwrap();
-        let fresh_name = &instantiated.params_def_with_type().groups[0].params[0];
+        let fresh_name = instantiated.params_def_with_type().groups[0].params[0].name();
         assert_ne!(fresh_name, "n");
         assert_ne!(fresh_name, "x1");
         let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equality)) = &instantiated.facts()[0]
@@ -1469,7 +1544,7 @@ mod capture_avoidance_tests {
         assert!(matches!(
             &equality.right,
             Obj::Add(add)
-                if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == *fresh_name)
+                if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == fresh_name)
                     && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == "x1")
         ));
     }
@@ -1477,37 +1552,50 @@ mod capture_avoidance_tests {
     #[test]
     fn forall_alpha_rename_respects_dependent_parameter_scope() {
         let runtime = Runtime::new();
+        let outer_n = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
+        let first_group = runtime
+            .fresh_param_group_with_type(
+                vec!["n".to_string()],
+                ParamType::Obj(ForallFreeParamObj::new(&outer_n).into()),
+            )
+            .unwrap();
+        let second_group = runtime
+            .fresh_param_group_with_type(
+                vec!["m".to_string()],
+                ParamType::Obj(ForallFreeParamObj::new(&first_group.params[0]).into()),
+            )
+            .unwrap();
         let fact = ForallFact::new(
-            ParamDefWithType::new(vec![
-                ParamGroupWithParamType::new(
-                    vec!["n".to_string()],
-                    ParamType::Obj(ForallFreeParamObj::new("n".to_string()).into()),
-                ),
-                ParamGroupWithParamType::new(
-                    vec!["m".to_string()],
-                    ParamType::Obj(ForallFreeParamObj::new("n".to_string()).into()),
-                ),
-            ]),
+            ParamDefWithType::new(vec![first_group.clone(), second_group.clone()]),
             vec![],
             vec![AtomicFact::from(EqualFact::new(
-                ForallFreeParamObj::new("n".to_string()).into(),
-                ForallFreeParamObj::new("m".to_string()).into(),
+                ForallFreeParamObj::new(&first_group.params[0]).into(),
+                ForallFreeParamObj::new(&second_group.params[0]).into(),
                 default_line_file(),
             ))
             .into()],
             default_line_file(),
         )
         .unwrap();
-        let rename_map = HashMap::from([
-            (
-                "n".to_string(),
-                Obj::from(ForallFreeParamObj::new("n_fresh".to_string())),
-            ),
-            (
-                "m".to_string(),
-                Obj::from(ForallFreeParamObj::new("m_fresh".to_string())),
-            ),
-        ]);
+        let n_fresh = runtime
+            .allocate_local_symbol_binding("n_fresh".to_string())
+            .unwrap();
+        let m_fresh = runtime
+            .allocate_local_symbol_binding("m_fresh".to_string())
+            .unwrap();
+        let mut rename_map = HashMap::new();
+        insert_symbol_substitution(
+            &mut rename_map,
+            &first_group.params[0],
+            ForallFreeParamObj::new(n_fresh).into(),
+        );
+        insert_symbol_substitution(
+            &mut rename_map,
+            &second_group.params[0],
+            ForallFreeParamObj::new(m_fresh).into(),
+        );
 
         let renamed = runtime
             .alpha_rename_forall_fact(&fact, &rename_map)
@@ -1521,33 +1609,39 @@ mod capture_avoidance_tests {
             ParamType::Obj(Obj::Atom(AtomObj::Forall(param))) if param.name == "n_fresh"
         ));
         assert_eq!(
-            renamed.params_def_with_type.groups[0].params,
-            vec!["n_fresh"]
+            renamed.params_def_with_type.groups[0].param_names(),
+            vec!["n_fresh"],
         );
         assert_eq!(
-            renamed.params_def_with_type.groups[1].params,
-            vec!["m_fresh"]
+            renamed.params_def_with_type.groups[1].param_names(),
+            vec!["m_fresh"],
         );
     }
 
     #[test]
     fn exist_alpha_rename_respects_dependent_parameter_scope() {
         let runtime = Runtime::new();
+        let outer_n = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
+        let first_group = runtime
+            .fresh_param_group_with_type(
+                vec!["n".to_string()],
+                ParamType::Obj(ExistFreeParamObj::new(&outer_n).into()),
+            )
+            .unwrap();
+        let second_group = runtime
+            .fresh_param_group_with_type(
+                vec!["m".to_string()],
+                ParamType::Obj(ExistFreeParamObj::new(&first_group.params[0]).into()),
+            )
+            .unwrap();
         let fact = ExistFactEnum::ExistFact(
             ExistFactBody::new(
-                ParamDefWithType::new(vec![
-                    ParamGroupWithParamType::new(
-                        vec!["n".to_string()],
-                        ParamType::Obj(ExistFreeParamObj::new("n".to_string()).into()),
-                    ),
-                    ParamGroupWithParamType::new(
-                        vec!["m".to_string()],
-                        ParamType::Obj(ExistFreeParamObj::new("n".to_string()).into()),
-                    ),
-                ]),
+                ParamDefWithType::new(vec![first_group.clone(), second_group.clone()]),
                 vec![AtomicFact::from(EqualFact::new(
-                    ExistFreeParamObj::new("n".to_string()).into(),
-                    ExistFreeParamObj::new("m".to_string()).into(),
+                    ExistFreeParamObj::new(&first_group.params[0]).into(),
+                    ExistFreeParamObj::new(&second_group.params[0]).into(),
                     default_line_file(),
                 ))
                 .into()],
@@ -1555,16 +1649,23 @@ mod capture_avoidance_tests {
             )
             .unwrap(),
         );
-        let rename_map = HashMap::from([
-            (
-                "n".to_string(),
-                Obj::from(ExistFreeParamObj::new("n_fresh".to_string())),
-            ),
-            (
-                "m".to_string(),
-                Obj::from(ExistFreeParamObj::new("m_fresh".to_string())),
-            ),
-        ]);
+        let n_fresh = runtime
+            .allocate_local_symbol_binding("n_fresh".to_string())
+            .unwrap();
+        let m_fresh = runtime
+            .allocate_local_symbol_binding("m_fresh".to_string())
+            .unwrap();
+        let mut rename_map = HashMap::new();
+        insert_symbol_substitution(
+            &mut rename_map,
+            &first_group.params[0],
+            ExistFreeParamObj::new(n_fresh).into(),
+        );
+        insert_symbol_substitution(
+            &mut rename_map,
+            &second_group.params[0],
+            ExistFreeParamObj::new(m_fresh).into(),
+        );
 
         let renamed = runtime.alpha_rename_exist_fact(&fact, &rename_map).unwrap();
         assert!(matches!(
@@ -1576,12 +1677,12 @@ mod capture_avoidance_tests {
             ParamType::Obj(Obj::Atom(AtomObj::Exist(param))) if param.name == "n_fresh"
         ));
         assert_eq!(
-            renamed.params_def_with_type().groups[0].params,
-            vec!["n_fresh"]
+            renamed.params_def_with_type().groups[0].param_names(),
+            vec!["n_fresh"],
         );
         assert_eq!(
-            renamed.params_def_with_type().groups[1].params,
-            vec!["m_fresh"]
+            renamed.params_def_with_type().groups[1].param_names(),
+            vec!["m_fresh"],
         );
     }
 }

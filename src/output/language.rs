@@ -1273,8 +1273,6 @@ const ZH_TEXTS: &[(&str, &str)] = &[
         "抽象谓词接口定义",
     ),
     ("predicate definition", "谓词定义"),
-    ("predicate alias", "谓词别名"),
-    ("theorem alias", "定理别名"),
     ("unproved object definition", "未经证明的对象定义"),
     ("object definition", "对象定义"),
     ("object definition by existence", "由存在性定义对象"),

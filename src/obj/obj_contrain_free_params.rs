@@ -302,7 +302,7 @@ fn collect_forall_free_param_names_in_fn_set_body(
 ) {
     for group in body.params_def_with_set.iter() {
         for name in &group.params {
-            collector.insert_binder(ParamObjType::FnSet, name);
+            collector.insert_binder(ParamObjType::FnSet, name.name());
         }
         group.param_type.collect_free_param_names_into(collector);
     }
@@ -447,7 +447,7 @@ fn collect_forall_free_param_names_in_param_def(
 ) {
     for group in &params.groups {
         for name in &group.params {
-            collector.insert_binder(binding_kind, name);
+            collector.insert_binder(binding_kind, name.name());
         }
         if let ParamType::Obj(obj) = &group.param_type {
             obj.collect_free_param_names_into(collector);
@@ -461,15 +461,18 @@ mod tests {
 
     #[test]
     fn collects_forall_names_through_nested_object_fact_shapes() {
+        let runtime = Runtime::new();
         let nested_exist = ExistFactEnum::ExistFact(
             ExistFactBody::new(
-                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                    vec!["exist_bound".to_string()],
-                    ParamType::Set(Set::new()),
-                )]),
+                ParamDefWithType::new(vec![runtime
+                    .fresh_param_group_with_type(
+                        vec!["exist_bound".to_string()],
+                        ParamType::Set(Set::new()),
+                    )
+                    .unwrap()]),
                 vec![
-                    exist_equality("exist_bound").into(),
-                    exist_equality("exist_free").into(),
+                    exist_equality(&runtime, "exist_bound").into(),
+                    exist_equality(&runtime, "exist_free").into(),
                 ],
                 default_line_file(),
             )
@@ -477,44 +480,48 @@ mod tests {
         );
         let iff_forall = ForallFact::new(
             ParamDefWithType::new(vec![]),
-            vec![forall_equality("iff_dom").into()],
-            vec![forall_equality("iff_then").into()],
+            vec![forall_equality(&runtime, "iff_dom").into()],
+            vec![forall_equality(&runtime, "iff_then").into()],
             default_line_file(),
         )
         .unwrap();
         let iff = ForallFactWithIff::new(
             iff_forall,
-            vec![forall_equality("iff_reverse").into()],
+            vec![forall_equality(&runtime, "iff_reverse").into()],
             default_line_file(),
         )
         .unwrap();
         let negated_forall = ForallFact::new(
             ParamDefWithType::new(vec![]),
             vec![],
-            vec![forall_equality("not_forall").into()],
+            vec![forall_equality(&runtime, "not_forall").into()],
             default_line_file(),
         )
         .unwrap();
         let inline_forall = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec!["bound".to_string()],
-                ParamType::Obj(forall_obj("param_type")),
-            )]),
+            ParamDefWithType::new(vec![runtime
+                .fresh_param_group_with_type(
+                    vec!["bound".to_string()],
+                    ParamType::Obj(forall_obj(&runtime, "param_type")),
+                )
+                .unwrap()]),
             vec![
                 iff.into(),
                 NotForallFact::new(negated_forall).into(),
                 nested_exist.into(),
             ],
             vec![
-                forall_equality("bound").into(),
-                forall_equality("inline_free").into(),
+                forall_equality(&runtime, "bound").into(),
+                forall_equality(&runtime, "inline_free").into(),
             ],
             default_line_file(),
         )
         .unwrap();
         let object: Obj = SetBuilder::new(
-            "element".to_string(),
-            forall_obj("source"),
+            runtime
+                .allocate_local_symbol_binding("element".to_string())
+                .unwrap(),
+            forall_obj(&runtime, "source"),
             vec![ExistBodyFact::InlineForall(inline_forall)],
         )
         .unwrap()
@@ -545,9 +552,13 @@ mod tests {
 
     #[test]
     fn collects_forall_name_from_function_head() {
+        let runtime = Runtime::new();
+        let function_binding = runtime
+            .allocate_local_symbol_binding("function".to_string())
+            .unwrap();
         let object: Obj = FnObj::new(
-            ForallFreeParamObj::new("function".to_string()).into(),
-            vec![vec![Box::new(forall_obj("argument"))]],
+            ForallFreeParamObj::new(&function_binding).into(),
+            vec![vec![Box::new(forall_obj(&runtime, "argument"))]],
         )
         .into();
 
@@ -559,17 +570,28 @@ mod tests {
 
     #[test]
     fn separates_set_builder_and_fn_set_function_head_names() {
+        let runtime = Runtime::new();
+        let builder_head = runtime
+            .allocate_local_symbol_binding("builder_head".to_string())
+            .unwrap();
+        let fn_argument = runtime
+            .allocate_local_symbol_binding("fn_argument".to_string())
+            .unwrap();
+        let fn_head = runtime
+            .allocate_local_symbol_binding("fn_head".to_string())
+            .unwrap();
+        let builder_argument = runtime
+            .allocate_local_symbol_binding("builder_argument".to_string())
+            .unwrap();
         let set_builder_head: Obj = FnObj::new(
-            SetBuilderFreeParamObj::new("builder_head".to_string()).into(),
-            vec![vec![Box::new(
-                FnSetFreeParamObj::new("fn_argument".to_string()).into(),
-            )]],
+            SetBuilderFreeParamObj::new(&builder_head).into(),
+            vec![vec![Box::new(FnSetFreeParamObj::new(&fn_argument).into())]],
         )
         .into();
         let fn_set_head: Obj = FnObj::new(
-            FnSetFreeParamObj::new("fn_head".to_string()).into(),
+            FnSetFreeParamObj::new(&fn_head).into(),
             vec![vec![Box::new(
-                SetBuilderFreeParamObj::new("builder_argument".to_string()).into(),
+                SetBuilderFreeParamObj::new(&builder_argument).into(),
             )]],
         )
         .into();
@@ -587,21 +609,23 @@ mod tests {
 
     #[test]
     fn collects_fn_set_and_anonymous_function_binder_headers() {
+        let runtime = Runtime::new();
         let fn_set: Obj = FnSet::new(
-            vec![ParamGroupWithSet::new(
-                vec!["fn_bound".to_string()],
-                StandardSet::R.into(),
-            )],
+            vec![runtime
+                .fresh_param_group_with_set(vec!["fn_bound".to_string()], StandardSet::R.into())
+                .unwrap()],
             vec![],
             StandardSet::R.into(),
         )
         .unwrap()
         .into();
         let anonymous_fn: Obj = AnonymousFn::new(
-            vec![ParamGroupWithSet::new(
-                vec!["anonymous_bound".to_string()],
-                StandardSet::R.into(),
-            )],
+            vec![runtime
+                .fresh_param_group_with_set(
+                    vec!["anonymous_bound".to_string()],
+                    StandardSet::R.into(),
+                )
+                .unwrap()],
             vec![],
             StandardSet::R.into(),
             Number::new("0".to_string()).into(),
@@ -618,18 +642,20 @@ mod tests {
 
     #[test]
     fn contains_forall_param_checks_occurrences_not_only_binder_headers() {
+        let runtime = Runtime::new();
         let inline_forall = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec!["bound".to_string()],
-                ParamType::Set(Set::new()),
-            )]),
+            ParamDefWithType::new(vec![runtime
+                .fresh_param_group_with_type(vec!["bound".to_string()], ParamType::Set(Set::new()))
+                .unwrap()]),
             vec![],
             vec![],
             default_line_file(),
         )
         .unwrap();
         let object: Obj = SetBuilder::new(
-            "element".to_string(),
+            runtime
+                .allocate_local_symbol_binding("element".to_string())
+                .unwrap(),
             StandardSet::R.into(),
             vec![ExistBodyFact::InlineForall(inline_forall)],
         )
@@ -643,22 +669,28 @@ mod tests {
         assert!(!object.contains_forall_free_param_obj());
     }
 
-    fn forall_obj(name: &str) -> Obj {
-        ForallFreeParamObj::new(name.to_string()).into()
+    fn forall_obj(runtime: &Runtime, name: &str) -> Obj {
+        let binding = runtime
+            .allocate_local_symbol_binding(name.to_string())
+            .unwrap();
+        ForallFreeParamObj::new(&binding).into()
     }
 
-    fn forall_equality(name: &str) -> AtomicFact {
+    fn forall_equality(runtime: &Runtime, name: &str) -> AtomicFact {
         EqualFact::new(
-            forall_obj(name),
+            forall_obj(runtime, name),
             Number::new("0".to_string()).into(),
             default_line_file(),
         )
         .into()
     }
 
-    fn exist_equality(name: &str) -> AtomicFact {
+    fn exist_equality(runtime: &Runtime, name: &str) -> AtomicFact {
+        let binding = runtime
+            .allocate_local_symbol_binding(name.to_string())
+            .unwrap();
         EqualFact::new(
-            ExistFreeParamObj::new(name.to_string()).into(),
+            ExistFreeParamObj::new(&binding).into(),
             Number::new("0".to_string()).into(),
             default_line_file(),
         )

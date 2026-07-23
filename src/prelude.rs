@@ -116,7 +116,10 @@ pub use crate::module_manager::{
     ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport,
     ProjectStdImport, RepositoryFileTarget,
 };
+pub use crate::obj::nested_obj_binder_normalized_key;
+pub use crate::obj::obj_equality_key;
 pub use crate::obj::obj_for_bound_param_in_scope;
+pub use crate::obj::objs_equal_with_nested_binder_alpha_equivalence;
 pub use crate::obj::param_binding_element_obj_for_store;
 pub use crate::obj::Abs;
 pub use crate::obj::Add;
@@ -247,7 +250,6 @@ pub use crate::result::ClaimFactVerificationResult;
 pub use crate::result::ClaimForallVerificationResult;
 pub use crate::result::ClaimVerificationResult;
 pub use crate::result::CommandStmtResult;
-pub use crate::result::DefAliasStmtResult;
 pub use crate::result::DefInterfaceStmtResult;
 pub use crate::result::DefObjStmtResult;
 pub use crate::result::DefPredicateStmtResult;
@@ -296,7 +298,9 @@ pub use crate::runner::{
 };
 pub use crate::runtime::ExecutionMode;
 pub use crate::runtime::FreeParamCollection;
+pub use crate::runtime::ParseContext;
 pub use crate::runtime::RunMode;
+pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{ExecutionFrame, ExecutionLayer, OutputStyle, Runtime};
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
 pub use crate::stmt::by_stmt::ByAxiomOfChoiceStmt;
@@ -360,15 +364,12 @@ pub use crate::stmt::trust_stmt::TrustStmt;
 pub use crate::stmt::try_stmt::TryStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
-pub use crate::stmt::AliasPropStmt;
-pub use crate::stmt::AliasThmStmt;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
 pub use crate::stmt::ByDefStmt;
 pub use crate::stmt::ByEnumerateRangeStmt;
 pub use crate::stmt::ByStmt;
 pub use crate::stmt::ByThmStmt;
 pub use crate::stmt::CommandStmt;
-pub use crate::stmt::DefAliasStmt;
 pub use crate::stmt::DefInterfaceStmt;
 pub use crate::stmt::DefObjStmt;
 pub use crate::stmt::DefPredicateStmt;
@@ -382,8 +383,13 @@ pub use crate::stmt::StopStrategyStmt;
 pub use crate::stmt::UnsafeStmt;
 pub use crate::stmt::UseStrategyStmt;
 pub use crate::stmt::WitnessStmt;
+pub use crate::symbol::{
+    builtin_symbol_ref, insert_symbol_substitution, IntoSymbolRef, SymbolBinding, SymbolDefinition,
+    SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable,
+};
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;
+pub(crate) use crate::verify::nested_obj_binder_normalized_fact_key;
 pub use crate::verify::VerifyState;
 
 pub use crate::cli::run_cli;
@@ -417,7 +423,6 @@ pub use crate::common::keywords::ABS;
 pub use crate::common::keywords::ABSTRACT_PROP;
 pub use crate::common::keywords::ADD;
 pub use crate::common::keywords::ALGO;
-pub use crate::common::keywords::ALIAS;
 pub use crate::common::keywords::AND;
 pub use crate::common::keywords::ANTISYMMETRIC_PROP;
 pub use crate::common::keywords::AS;

@@ -267,6 +267,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
+        let nested_obj_binder_key = nested_obj_binder_normalized_fact_key(&fact);
         let alpha_normalized_forall_key = match &fact {
             Fact::ForallFact(forall_fact) => {
                 Some(self.alpha_normalized_forall_cache_key(forall_fact)?)
@@ -292,6 +293,14 @@ impl Runtime {
                 line_file.clone(),
                 trust_summary.clone(),
             )?;
+        if nested_obj_binder_key != fact_string {
+            self.top_level_env()
+                .store_fact_to_cache_known_fact_with_trust(
+                    nested_obj_binder_key,
+                    line_file.clone(),
+                    trust_summary.clone(),
+                )?;
+        }
         if let Some(alpha_key) = alpha_normalized_forall_key {
             if alpha_key != fact_string {
                 self.top_level_env()
@@ -323,8 +332,6 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let reason_text = reason.into();
         let trust_summary = ProofTrustSummary::from_store_reason(&reason_text, fact.line_file());
-        let line_file = fact.line_file();
-        let fact_string: FactString = fact.to_string();
         let fact_for_infer: Fact = fact.clone().into();
         let chain_atomic_facts = match &fact {
             AndChainAtomicFact::ChainFact(chain_fact) => {
@@ -342,8 +349,7 @@ impl Runtime {
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts, trust_summary.clone())?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
-        self.top_level_env()
-            .store_fact_to_cache_known_fact_with_trust(fact_string, line_file, trust_summary)?;
+        self.store_fact_cache_keys_with_nested_obj_binders(&fact_for_infer, trust_summary)?;
 
         let inferred_facts = self.infer(&fact_for_infer)?.inferred_facts();
         let mut infer_result = InferResult::new();
@@ -368,13 +374,10 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let reason_text = reason.into();
         let trust_summary = ProofTrustSummary::from_store_reason(&reason_text, fact.line_file());
-        let line_file = fact.line_file();
-        let fact_string: FactString = fact.to_string();
         let infer_wrapped_fact: Fact = fact.clone().into();
         self.top_level_env().store_atomic_fact(fact)?;
 
-        self.top_level_env()
-            .store_fact_to_cache_known_fact_with_trust(fact_string, line_file, trust_summary)?;
+        self.store_fact_cache_keys_with_nested_obj_binders(&infer_wrapped_fact, trust_summary)?;
 
         let inferred_facts = self.infer(&infer_wrapped_fact)?.inferred_facts();
         let mut infer_result = InferResult::new();
@@ -413,8 +416,6 @@ impl Runtime {
         trust_summary: ProofTrustSummary,
     ) -> Result<InferResult, RuntimeError> {
         let reason_text = reason.into();
-        let line_file = fact.line_file();
-        let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
         let chain_atomic_facts = match &fact {
             ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
@@ -433,10 +434,8 @@ impl Runtime {
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts, trust_summary.clone())?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
-        self.top_level_env()
-            .store_fact_to_cache_known_fact_with_trust(fact_string, line_file, trust_summary)?;
-
         let output_fact = fact_for_infer.clone().to_fact();
+        self.store_fact_cache_keys_with_nested_obj_binders(&output_fact, trust_summary)?;
         let inferred_facts = self
             .infer_exist_or_and_chain_atomic_fact(&fact_for_infer)?
             .inferred_facts();
@@ -462,8 +461,6 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let reason_text = reason.into();
         let trust_summary = ProofTrustSummary::from_store_reason(&reason_text, fact.line_file());
-        let line_file = fact.line_file();
-        let fact_string: FactString = fact.to_string();
         let fact_for_infer = fact.clone();
         let chain_atomic_facts = match &fact {
             OrAndChainAtomicFact::ChainFact(chain_fact) => {
@@ -481,10 +478,8 @@ impl Runtime {
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts, trust_summary.clone())?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
-        self.top_level_env()
-            .store_fact_to_cache_known_fact_with_trust(fact_string, line_file, trust_summary)?;
-
         let output_fact = fact_for_infer.clone().to_fact();
+        self.store_fact_cache_keys_with_nested_obj_binders(&output_fact, trust_summary)?;
         let inferred_facts = self
             .infer_or_and_chain_atomic_fact(&fact_for_infer)?
             .inferred_facts();
@@ -509,12 +504,34 @@ impl Runtime {
         trust_summary: ProofTrustSummary,
     ) -> Result<(), RuntimeError> {
         for atomic_fact in facts {
-            let line_file = atomic_fact.line_file();
+            self.store_fact_cache_keys_with_nested_obj_binders(
+                &atomic_fact.into(),
+                trust_summary.clone(),
+            )?;
+        }
+        Ok(())
+    }
+
+    fn store_fact_cache_keys_with_nested_obj_binders(
+        &mut self,
+        fact: &Fact,
+        trust_summary: ProofTrustSummary,
+    ) -> Result<(), RuntimeError> {
+        let line_file = fact.line_file();
+        let fact_string = fact.to_string();
+        let normalized_key = nested_obj_binder_normalized_fact_key(fact);
+        self.top_level_env()
+            .store_fact_to_cache_known_fact_with_trust(
+                fact_string.clone(),
+                line_file.clone(),
+                trust_summary.clone(),
+            )?;
+        if normalized_key != fact_string {
             self.top_level_env()
                 .store_fact_to_cache_known_fact_with_trust(
-                    atomic_fact.to_string(),
+                    normalized_key,
                     line_file,
-                    trust_summary.clone(),
+                    trust_summary,
                 )?;
         }
         Ok(())

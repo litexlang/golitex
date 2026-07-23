@@ -45,7 +45,7 @@ impl Runtime {
         }
 
         let x_name = self.generate_random_unused_name();
-        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
 
         let Some(l_inst) =
             self.instantiate_unary_anonymous_summand_at(sum_m.func.as_ref(), &x_obj)?
@@ -72,7 +72,7 @@ impl Runtime {
             LessEqualFact::new(x_obj.clone(), (*sum_m.end).clone(), line_file.clone()).into();
 
         let r = self.verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-            x_name,
+            x_binding,
             vec![dom_lo, dom_hi],
             &then_fact,
             verify_state,
@@ -122,14 +122,14 @@ impl Runtime {
 
     pub(crate) fn verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
         &mut self,
-        param_name: String,
+        param_binding: SymbolBinding,
         dom_facts: Vec<Fact>,
         then_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![param_name],
+                vec![param_binding],
                 ParamType::Obj(StandardSet::Z.into()),
             )]);
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
@@ -791,7 +791,7 @@ impl Runtime {
                 continue;
             }
             let y_name = self.generate_random_unused_name();
-            let y_obj = obj_for_bound_param_in_scope(y_name.clone(), ParamObjType::Forall);
+            let (y_binding, y_obj) = self.fresh_bound_param(y_name, ParamObjType::Forall)?;
             let index_for_left = Sub::new(y_obj.clone(), k.clone()).into();
             let Some(at_l) =
                 self.instantiate_unary_anonymous_summand_at(l_sum.func.as_ref(), &index_for_left)?
@@ -809,7 +809,7 @@ impl Runtime {
             let dom_hi: Fact =
                 LessEqualFact::new(y_obj.clone(), (*r_sum.end).clone(), line_file.clone()).into();
             let r = self.verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-                y_name,
+                y_binding,
                 vec![dom_lo, dom_hi],
                 &then_fact,
                 verify_state,
@@ -941,7 +941,7 @@ impl Runtime {
                 }
 
                 let x_name = self.generate_random_unused_name();
-                let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+                let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
                 let Some(sum_inst) =
                     self.instantiate_unary_anonymous_summand_at(sum.func.as_ref(), &x_obj)?
                 else {
@@ -962,7 +962,7 @@ impl Runtime {
                     LessEqualFact::new(x_obj.clone(), (*sum.end).clone(), line_file.clone()).into();
                 let pointwise_result = self
                     .verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-                        x_name,
+                        x_binding,
                         vec![dom_lo, dom_hi],
                         &pointwise_fact,
                         verify_state,

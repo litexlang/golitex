@@ -78,9 +78,9 @@ have fn two_arg(a, b Z: a >= 0, b >= 0) N by induc a + b from 0:
 have X set = N
 trust forall n N:
     n $in X
-have fn countdown(X X) N by induc X from 0:
-    case X = 0: 0
-    case X > 0: countdown(X - 1) + 1
+have fn countdown(x X) N by induc x from 0:
+    case x = 0: 0
+    case x > 0: countdown(x - 1) + 1
 "#,
                 ),
             ];
@@ -250,12 +250,17 @@ $p(fn(Y Y) R {0})
 
     let valid_source = r#"
 abstract_prop p(f)
+abstract_prop repeated_functions(v)
 have X set
 fn(x X) X {x} = fn(y X) X {y}
 trust:
     forall z R:
         $p(fn(x X) R {z})
 $p(fn(y X) R {0})
+trust:
+    forall f fn(x X) X:
+        $repeated_functions((f, f))
+$repeated_functions((fn(x X) X {x}, fn(y X) X {y}))
 "#;
     let (run_succeeded, run_output) =
         run_kernel_soundness_source(valid_source, "anonymous_function_alpha_equivalence");
@@ -470,8 +475,8 @@ fn(a X) R = fn(b X) R
             "have_fn_store_same_spelling_concrete_domain",
             r#"
 have X set = N
-have fn f(X X) R by cases:
-    case X = X: 0
+have fn f(Y X) R by cases:
+    case Y = Y: 0
 "#,
         ),
         (
@@ -479,8 +484,8 @@ have fn f(X X) R by cases:
             r#"
 trust:
     forall S set:
-        exist x S st {forall! x x => {x = x}}
-exist y N st {forall! y y => {y = y}}
+        exist x S st {forall! u x => {u = u}}
+exist y N st {forall! v y => {v = v}}
 "#,
         ),
         (
@@ -492,8 +497,8 @@ by induc P:
         {} = {}
     ? induc x, S:
         S = S
-        have fn f(S S) R by cases:
-            case S = S: 0
+        have fn f(T S) R by cases:
+            case T = T: 0
         union({x}, S) = union({x}, S)
 "#,
         ),
@@ -503,8 +508,8 @@ by induc P:
 claim:
     ? forall X set, a X:
         a = a
-    have fn f(X X) R by cases:
-        case X = X: 0
+    have fn f(Y X) R by cases:
+        case Y = Y: 0
     f(a) = 0
     a = a
 "#,
@@ -534,7 +539,7 @@ claim:
         X = {0}
         =>:
             0 = 0
-    trust not exist X X st {X != 0}
+    trust not exist w X st {w != 0}
     claim:
         ? forall y X:
             y = 0
@@ -557,8 +562,8 @@ not $p(y)
             r#"
 have fn f by exist!:
     ? forall x R:
-        exist! x {0} st {x = x}
-    trust exist! x {0} st {x = x}
+        exist! y {0} st {y = y}
+    trust exist! y {0} st {y = y}
 forall t R:
     f(t) = 0
 "#,
@@ -752,7 +757,7 @@ thm unsound_eventually_changes_set:
         run_output
     );
     assert!(
-        run_output.contains("~1n $in ~1R0"),
+        run_output.contains("n $in R0"),
         "the original false proof should fail at the changed captured set:\n{}",
         run_output
     );

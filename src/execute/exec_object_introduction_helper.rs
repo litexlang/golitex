@@ -23,15 +23,18 @@ impl Runtime {
         binding_kind: ParamObjType,
     ) -> Vec<ObjectIntroductionItem> {
         let mut items = Vec::new();
-        for (name, param_type) in param_defs.collect_param_names_with_types() {
-            let obj = param_binding_element_obj_for_store(name.clone(), binding_kind);
+        for (binding, param_type) in param_defs.collect_param_bindings_with_types() {
+            let obj = param_binding_element_obj_for_store(&binding, binding_kind);
             let fact = self.object_introduction_fact_for_param_type(
                 obj,
                 &param_type,
                 line_file.clone(),
                 true,
             );
-            items.push(ObjectIntroductionItem::new(name, vec![fact]));
+            items.push(ObjectIntroductionItem::new(
+                binding.name().to_string(),
+                vec![fact],
+            ));
         }
         items
     }

@@ -4,30 +4,31 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 impl Runtime {
     pub(crate) fn generate_internal_binder_name(&self) -> String {
-        let id = self.next_internal_binder_id.get();
-        self.next_internal_binder_id.set(
-            id.checked_add(1)
-                .expect("internal binder identity counter exhausted"),
-        );
-        format!("#binder_{}", id)
+        let id = self
+            .allocate_symbol_id()
+            .expect("internal binder identity counter exhausted");
+        format!("#binder_{}", id.value())
     }
 
-    pub(crate) fn fresh_binder_retag_plan(
+    pub(crate) fn fresh_binder_retag_plan_for_bindings(
         &self,
-        source_names: &[String],
+        source_bindings: &[SymbolBinding],
         target_kind: ParamObjType,
-    ) -> (Vec<String>, HashMap<String, Obj>) {
-        let mut target_names = Vec::with_capacity(source_names.len());
-        let mut source_to_target = HashMap::with_capacity(source_names.len());
-        for source_name in source_names {
-            let target_name = self.generate_internal_binder_name();
-            source_to_target.insert(
-                source_name.clone(),
-                obj_for_bound_param_in_scope(target_name.clone(), target_kind),
+    ) -> (Vec<SymbolBinding>, HashMap<String, Obj>) {
+        let mut target_bindings = Vec::with_capacity(source_bindings.len());
+        let mut source_to_target = HashMap::with_capacity(source_bindings.len() * 2);
+        for source_binding in source_bindings {
+            let target_binding = self
+                .allocate_internal_symbol_binding()
+                .expect("internal binder identity counter exhausted");
+            insert_symbol_substitution(
+                &mut source_to_target,
+                source_binding,
+                obj_for_bound_param_in_scope(&target_binding, target_kind),
             );
-            target_names.push(target_name);
+            target_bindings.push(target_binding);
         }
-        (target_names, source_to_target)
+        (target_bindings, source_to_target)
     }
 
     fn generated_name_is_available_with_reserved(

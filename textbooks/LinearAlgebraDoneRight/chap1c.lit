@@ -223,8 +223,8 @@ thm each_subspace_is_contained_in_sum:
                         @Space.add(x, zero) = @Space.add(zero, x) = @Space.add(@Space.zero, x) = x
             $is_partial_sum_sequence(s, scalars, v, space, m, terms, partial)
         partial(m) = x
-        witness exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, scalars, v, space, m, terms, x)} from terms:
-            witness exist partial finite_seq(v, m) st {$is_partial_sum_sequence(s, scalars, v, space, m, terms, partial), partial(m) = x} from partial
+        witness exist summand_terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, summand_terms), $is_finite_vector_sum(s, scalars, v, space, m, summand_terms, x)} from terms:
+            witness exist accumulated_partial finite_seq(v, m) st {$is_partial_sum_sequence(s, scalars, v, space, m, terms, accumulated_partial), accumulated_partial(m) = x} from partial
             $is_finite_vector_sum(s, scalars, v, space, m, terms, x)
 
 thm subspace_sum_is_least:

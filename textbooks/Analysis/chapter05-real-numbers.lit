@@ -175,6 +175,42 @@ thm archimedean_property:
         exist n N_pos st {1 / n < epsilon}
     exist n N_pos st {1 / n < epsilon}
 
+thm reciprocal_rational_sequence_tail_terms_are_close:
+    ? forall epsilon Q_pos, n0, j, k N_pos:
+        1 / n0 < epsilon / 2
+        j >= n0
+        k >= n0
+        =>:
+            $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k))
+    n0 <= j
+    n0 * j > 0
+    1 / j = n0 / (n0 * j)
+    n0 / (n0 * j) <= j / (n0 * j)
+    j / (n0 * j) = 1 / n0
+    1 / j <= 1 / n0
+    1 / j <= epsilon / 2
+    n0 <= k
+    n0 * k > 0
+    1 / k = n0 / (n0 * k)
+    n0 / (n0 * k) <= k / (n0 * k)
+    k / (n0 * k) = 1 / n0
+    1 / k <= 1 / n0
+    1 / k <= epsilon / 2
+    1 / k > 0
+    1 / j - 1 / k <= 1 / j <= epsilon / 2 < epsilon
+    -(1 / j - 1 / k) = 1 / k - 1 / j
+    1 / j > 0
+    1 / k - 1 / j <= 1 / k <= epsilon / 2 < epsilon
+    -(1 / j - 1 / k) <= epsilon
+    abs(1 / j - 1 / k) <= epsilon
+    fn(n N_pos) Q {1 / n}(j) = 1 / j
+    fn(n N_pos) Q {1 / n}(k) = 1 / k
+    by thm chap4::rational_distance_formula(1 / j, 1 / k)
+    chap4::dist_Q(1 / j, 1 / k) = abs(1 / j - 1 / k) <= epsilon
+    by def $chap4::is_close_in_Q(epsilon, 1 / j, 1 / k)
+    $chap4::is_close_in_Q(epsilon, 1 / j, 1 / k)
+    $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k))
+
 claim:
     ? forall epsilon Q_pos:
         $has_eventual_epsilon_steadiness_in_Q(fn(n N_pos) Q {1 / n}, epsilon)
@@ -186,14 +222,6 @@ claim:
             j >= n0
             k >= n0
             =>:
-                1 / j <= 1 / n0
-                1 / j <= epsilon / 2
-                1 / k <= 1 / n0
-                1 / k <= epsilon / 2
-                1 / j - 1 / k <= epsilon
-                -(1 / j - 1 / k) = 1 / k - 1 / j
-                -(1 / j - 1 / k) <= epsilon
-                abs(1 / j - 1 / k) <= epsilon
                 $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k))
 by def $is_cauchy_sequence_in_Q(fn(n N_pos) Q {1 / n})
 
@@ -258,9 +286,25 @@ claim:
         ? $is_finite_prefix_bounded_in_Q(a, n, prefix_bound_Q(a, n))
 
         ? from n = 1:
+            prefix_bound_Q(a, 1) = abs(a(1)) >= 0
+            forall i N_pos:
+                i <= 1
+                =>:
+                    i >= 1
+                    i = 1
+                    abs(a(i)) = abs(a(1)) = prefix_bound_Q(a, 1)
+                    abs(a(i)) <= prefix_bound_Q(a, 1)
             by def $is_finite_prefix_bounded_in_Q(a, 1, prefix_bound_Q(a, 1))
 
         ? induc:
+            n + 1 > 1
+            prefix_bound_Q(a, n + 1) = finite_set_max(union({prefix_bound_Q(a, n + 1 - 1)}, { abs(a(n + 1))}))
+            n + 1 - 1 = n
+            prefix_bound_Q(a, n + 1 - 1) = prefix_bound_Q(a, n)
+            prefix_bound_Q(a, n + 1 - 1) <= finite_set_max(union({prefix_bound_Q(a, n + 1 - 1)}, { abs(a(n + 1))}))
+            prefix_bound_Q(a, n) = prefix_bound_Q(a, n + 1 - 1) <= finite_set_max(union({prefix_bound_Q(a, n + 1 - 1)}, { abs(a(n + 1))})) = prefix_bound_Q(a, n + 1)
+            prefix_bound_Q(a, n) <= prefix_bound_Q(a, n + 1)
+            abs(a(n + 1)) <= finite_set_max(union({prefix_bound_Q(a, n + 1 - 1)}, { abs(a(n + 1))})) = prefix_bound_Q(a, n + 1)
             0 <= prefix_bound_Q(a, n) <= prefix_bound_Q(a, n + 1)
             claim:
                 ? forall i N_pos:
@@ -284,6 +328,7 @@ claim:
             $is_bounded_sequence_in_Q(a)
     $has_eventual_epsilon_steadiness_in_Q(a, 1)
     obtain n0 from exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(a, 1, n0)}
+    $is_finite_prefix_bounded_in_Q(a, n0, prefix_bound_Q(a, n0))
     claim:
         ? forall i N_pos:
             abs(a(i)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
@@ -293,6 +338,17 @@ claim:
             case i <= n0:
                 abs(a(i)) <= prefix_bound_Q(a, n0) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
             case i >= n0 + 1:
+                i >= n0 + 1 > n0
+                i >= n0
+                n0 >= n0
+                $chap4::is_close_in_Q(1, a(i), a(n0))
+                chap4::dist_Q(a(i), a(n0)) <= 1
+                by thm chap4::rational_distance_formula(a(i), a(n0))
+                chap4::dist_Q(a(i), a(n0)) = abs(a(i) - a(n0)) <= 1
+                a(i) = (a(i) - a(n0)) + a(n0)
+                abs(a(i)) = abs((a(i) - a(n0)) + a(n0)) <= abs(a(i) - a(n0)) + abs(a(n0))
+                abs(a(i) - a(n0)) + abs(a(n0)) <= 1 + abs(a(n0))
+                1 + abs(a(n0)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
                 abs(a(i)) <= abs(a(i) - a(n0)) + abs(a(n0)) <= 1 + abs(a(n0)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
     witness exist M Q st {$is_bounded_by_in_Q(a, M)} from prefix_bound_Q(a, n0) + abs(a(n0)) + 1
 
@@ -333,29 +389,37 @@ sketch:
         case n % 2 = 1: 1.1
         case n % 2 = 0: -1.1
 
-    forall n N_pos:
-        n % 2 = 1
-        =>:
-            alternating_one(n) = 1
-            alternating_one_point_one(n) = 1.1
-            chap4::dist_Q(alternating_one(n), alternating_one_point_one(n)) = abs(1 - 1.1) = abs(-0.1) = 0.1
-            $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
+    claim:
+        ? forall n N_pos:
+            n % 2 = 1
+            =>:
+                $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
+        alternating_one(n) = 1
+        alternating_one_point_one(n) = 1.1
+        by thm chap4::rational_distance_formula(alternating_one(n), alternating_one_point_one(n))
+        chap4::dist_Q(alternating_one(n), alternating_one_point_one(n)) = abs(1 - 1.1) = abs(-0.1) = 0.1
+        $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
 
-    forall n N_pos:
-        n % 2 = 0
-        =>:
-            alternating_one(n) = -1
-            alternating_one_point_one(n) = -1.1
-            chap4::dist_Q(alternating_one(n), alternating_one_point_one(n)) = abs(-1 - (-1.1)) = abs(0.1) = 0.1
-            $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
+    claim:
+        ? forall n N_pos:
+            n % 2 = 0
+            =>:
+                $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
+        alternating_one(n) = -1
+        alternating_one_point_one(n) = -1.1
+        by thm chap4::rational_distance_formula(alternating_one(n), alternating_one_point_one(n))
+        chap4::dist_Q(alternating_one(n), alternating_one_point_one(n)) = abs(-1 - (-1.1)) = abs(0.1) = 0.1
+        $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
 
     alternating_one(1) = 1
     alternating_one(2) = -1
+    by thm chap4::rational_distance_formula(alternating_one(1), alternating_one(2))
     chap4::dist_Q(alternating_one(1), alternating_one(2)) = abs(1 - (-1)) = 2
     2 > 0.1
 
     alternating_one_point_one(1) = 1.1
     alternating_one_point_one(2) = -1.1
+    by thm chap4::rational_distance_formula(alternating_one_point_one(1), alternating_one_point_one(2))
     chap4::dist_Q(alternating_one_point_one(1), alternating_one_point_one(2)) = abs(1.1 - (-1.1)) = 2.2
     2.2 > 0.1
 
@@ -442,6 +506,7 @@ claim:
     claim:
         ? forall epsilon Q_pos:
             $has_eventual_closeness_in_Q(b, a, epsilon)
+        $has_eventual_closeness_in_Q(a, b, epsilon)
         obtain n0 from exist n0 N_pos st {$is_tail_close_in_Q(a, b, epsilon, n0)}
         witness exist n1 N_pos st {$is_tail_close_in_Q(b, a, epsilon, n1)} from n0:
             forall n N_pos:
@@ -460,16 +525,23 @@ claim:
         ? forall epsilon Q_pos:
             $has_eventual_closeness_in_Q(a, c, epsilon)
         epsilon / 2 $in Q_pos
+        $has_eventual_closeness_in_Q(a, b, epsilon / 2)
+        $has_eventual_closeness_in_Q(b, c, epsilon / 2)
         obtain n1 from exist n1 N_pos st {$is_tail_close_in_Q(a, b, epsilon / 2, n1)}
         obtain n2 from exist n2 N_pos st {$is_tail_close_in_Q(b, c, epsilon / 2, n2)}
         witness exist n0 N_pos st {$is_tail_close_in_Q(a, c, epsilon, n0)} from finite_set_max(union({n1}, { n2})):
             forall n N_pos:
                 n >= finite_set_max(union({n1}, { n2}))
                 =>:
+                    n1 <= finite_set_max(union({n1}, { n2}))
+                    n2 <= finite_set_max(union({n1}, { n2}))
+                    n >= finite_set_max(union({n1}, { n2})) >= n1
+                    n >= finite_set_max(union({n1}, { n2})) >= n2
                     n >= n1
                     n >= n2
                     $chap4::is_close_in_Q(epsilon / 2, a(n), b(n))
                     $chap4::is_close_in_Q(epsilon / 2, b(n), c(n))
+                    $chap4::is_close_in_Q(epsilon / 2 + epsilon / 2, a(n), c(n))
                     epsilon / 2 + epsilon / 2 = epsilon
                     $chap4::is_close_in_Q(epsilon, a(n), c(n))
 
@@ -493,6 +565,9 @@ claim:
 
         ? induc:
             n <= 10^n
+            n >= 1
+            9 * n >= 9 * 1 = 9 >= 1
+            n * 10 = n + 9 * n >= n + 1
             n * 10 >= n + 1
             10^n * 10 >= n * 10 >= n + 1
             10^(n + 1) = 10^n * 10^1 = 10^n * 10
@@ -505,15 +580,20 @@ claim:
     by thm archimedean_property(epsilon / 2)
     obtain n0 from exist n0 N_pos st {1 / n0 < epsilon / 2}
     witness exist n1 N_pos st {$is_tail_close_in_Q(fn(n N_pos) Q {1 + 1 / 10^n}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon, n1)} from n0:
-        forall n N_pos:
-            n >= n0
+        forall i N_pos:
+            i >= n0
             =>:
-                n <= 10^n
-                n0 <= 10^n
-                1 / 10^n <= 1 / n0
-                1 / 10^n <= epsilon / 2
-                2 / 10^n <= epsilon
-                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 + 1 / 10^n}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n))
+                i <= 10^i
+                n0 <= 10^i
+                1 / 10^i = n0 / (n0 * 10^i) <= 10^i / (n0 * 10^i) = 1 / n0 < epsilon / 2
+                2 / 10^i = 2 * (1 / 10^i) < 2 * (epsilon / 2) = epsilon
+                fn(n N_pos) Q {1 + 1 / 10^n}(i) = 1 + 1 / 10^i
+                fn(n N_pos) Q {1 - 1 / 10^n}(i) = 1 - 1 / 10^i
+                (1 + 1 / 10^i) - (1 - 1 / 10^i) = 2 / 10^i > 0
+                (1 + 1 / 10^i) - (1 - 1 / 10^i) > 0
+                abs((1 + 1 / 10^i) - (1 - 1 / 10^i)) = (1 + 1 / 10^i) - (1 - 1 / 10^i) = 2 / 10^i
+                chap4::dist_Q(fn(n N_pos) Q {1 + 1 / 10^n}(i), fn(n N_pos) Q {1 - 1 / 10^n}(i)) = abs((1 + 1 / 10^i) - (1 - 1 / 10^i))
+                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 + 1 / 10^n}(i), fn(n N_pos) Q {1 - 1 / 10^n}(i))
 by def $is_equivalent_cauchy_sequence_in_Q(fn(n N_pos) Q {1 + 1 / 10^n}, fn(n N_pos) Q {1 - 1 / 10^n})
 
 """
@@ -533,14 +613,19 @@ claim:
     by thm archimedean_property(epsilon)
     obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
     witness exist n1 N_pos st {$is_tail_close_in_Q(fn(n N_pos) Q {1}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon, n1)} from n0:
-        forall n N_pos:
-            n >= n0
+        forall i N_pos:
+            i >= n0
             =>:
-                n <= 10^n
-                n0 <= 10^n
-                1 / 10^n <= 1 / n0
-                1 / 10^n <= epsilon
-                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1}(n), fn(n N_pos) Q {1 - 1 / 10^n}(n))
+                i <= 10^i
+                n0 <= 10^i
+                1 / 10^i = n0 / (n0 * 10^i) <= 10^i / (n0 * 10^i) = 1 / n0 < epsilon
+                fn(n N_pos) Q {1}(i) = 1
+                fn(n N_pos) Q {1 - 1 / 10^n}(i) = 1 - 1 / 10^i
+                1 - (1 - 1 / 10^i) = 1 / 10^i > 0
+                1 - (1 - 1 / 10^i) > 0
+                abs(1 - (1 - 1 / 10^i)) = 1 - (1 - 1 / 10^i) = 1 / 10^i
+                chap4::dist_Q(fn(n N_pos) Q {1}(i), fn(n N_pos) Q {1 - 1 / 10^n}(i)) = abs(1 - (1 - 1 / 10^i))
+                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1}(i), fn(n N_pos) Q {1 - 1 / 10^n}(i))
 by def $is_equivalent_cauchy_sequence_in_Q(fn(n N_pos) Q {1}, fn(n N_pos) Q {1 - 1 / 10^n})
 
 
@@ -628,15 +713,22 @@ thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
                     n >= finite_set_max(union({n1}, { n2}))
                     =>:
                         abs(b(n) - x) < epsilon
+                n1 <= finite_set_max(union({n1}, { n2}))
+                n2 <= finite_set_max(union({n1}, { n2}))
+                n >= finite_set_max(union({n1}, { n2})) >= n1
+                n >= finite_set_max(union({n1}, { n2})) >= n2
                 n >= n1
                 n >= n2
                 abs(a(n) - x) < epsilon / 2
                 $chap4::is_close_in_Q(eta, a(n), b(n))
+                by thm chap4::rational_distance_formula(a(n), b(n))
                 abs(a(n) - b(n)) <= eta
                 abs(a(n) - b(n)) < epsilon / 2
-                abs(b(n) - x) <= abs(b(n) - a(n)) + abs(a(n) - x)
+                b(n) - x = (b(n) - a(n)) + (a(n) - x)
+                abs(b(n) - x) = abs((b(n) - a(n)) + (a(n) - x)) <= abs(b(n) - a(n)) + abs(a(n) - x)
                 abs(b(n) - a(n)) = abs(a(n) - b(n))
-                abs(b(n) - x) < epsilon
+                abs(b(n) - a(n)) + abs(a(n) - x) = abs(a(n) - b(n)) + abs(a(n) - x) < epsilon / 2 + epsilon / 2 = epsilon
+                abs(b(n) - x) <= abs(b(n) - a(n)) + abs(a(n) - x) < epsilon
 
 # This uniqueness part is ordinary uniqueness of real limits.  It does not need
 # the quotient-construction work used to prove that every real has a rational
@@ -660,8 +752,12 @@ thm formal_limit_in_Q_unique:
         abs(a(finite_set_max(union({n1}, { n2}))) - x) < abs(x - y) / 3
         abs(a(finite_set_max(union({n1}, { n2}))) - y) < abs(x - y) / 3
         abs(x - a(finite_set_max(union({n1}, { n2})))) = abs(a(finite_set_max(union({n1}, { n2}))) - x)
-        abs(x - y) <= abs(x - a(finite_set_max(union({n1}, { n2})))) + abs(a(finite_set_max(union({n1}, { n2}))) - y)
-        abs(x - a(finite_set_max(union({n1}, { n2})))) + abs(a(finite_set_max(union({n1}, { n2}))) - y) < abs(x - y)
+        x - y = (x - a(finite_set_max(union({n1}, { n2})))) + (a(finite_set_max(union({n1}, { n2}))) - y)
+        abs(x - y) = abs((x - a(finite_set_max(union({n1}, { n2})))) + (a(finite_set_max(union({n1}, { n2}))) - y)) <= abs(x - a(finite_set_max(union({n1}, { n2})))) + abs(a(finite_set_max(union({n1}, { n2}))) - y)
+        2 * abs(x - y) < 3 * abs(x - y)
+        abs(x - y) / 3 + abs(x - y) / 3 = 2 * abs(x - y) / 3 < 3 * abs(x - y) / 3 = abs(x - y)
+        abs(x - a(finite_set_max(union({n1}, { n2})))) + abs(a(finite_set_max(union({n1}, { n2}))) - y) = abs(a(finite_set_max(union({n1}, { n2}))) - x) + abs(a(finite_set_max(union({n1}, { n2}))) - y) < abs(x - y) / 3 + abs(x - y) / 3 < abs(x - y)
+        abs(x - y) <= abs(x - a(finite_set_max(union({n1}, { n2})))) + abs(a(finite_set_max(union({n1}, { n2}))) - y) < abs(x - y)
         impossible abs(x - y) = abs(x - y)
 
 # Equivalent rational Cauchy representatives determine the same builtin real:
@@ -697,6 +793,74 @@ Definition 5.3.4. Addition of reals is defined by adding representatives.
 
 have fn seq_add_Q(a, b seq(Q)) fn(k N_pos) Q = fn(n N_pos) Q {a(n) + b(n)}
 
+thm rational_closeness_absolute_difference_bound:
+    ? forall epsilon Q_pos, x, y Q:
+        $chap4::is_close_in_Q(epsilon, x, y)
+        =>:
+            abs(x - y) <= epsilon
+    by thm chap4::rational_distance_formula(x, y)
+    chap4::dist_Q(x, y) <= epsilon
+    abs(x - y) = chap4::dist_Q(x, y) <= epsilon
+
+thm absolute_difference_bound_gives_rational_closeness:
+    ? forall epsilon Q_pos, x, y Q:
+        abs(x - y) <= epsilon
+        =>:
+            $chap4::is_close_in_Q(epsilon, x, y)
+    by thm chap4::rational_distance_formula(x, y)
+    chap4::dist_Q(x, y) = abs(x - y) <= epsilon
+    $chap4::is_close_in_Q(epsilon, x, y)
+
+thm equal_rationals_are_close:
+    ? forall epsilon Q_pos, x, y Q:
+        x = y
+        =>:
+            $chap4::is_close_in_Q(epsilon, x, y)
+    by thm chap4::rational_closeness_is_reflexive(epsilon, x)
+    $chap4::is_close_in_Q(epsilon, x, x)
+    $chap4::is_close_in_Q(epsilon, x, y)
+
+thm seq_add_Q_preserves_termwise_closeness:
+    ? forall a, b seq(Q), epsilon Q_pos, j, k N_pos:
+        $chap4::is_close_in_Q(epsilon / 2, a(j), a(k))
+        $chap4::is_close_in_Q(epsilon / 2, b(j), b(k))
+        =>:
+            $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(j), seq_add_Q(a, b)(k))
+    seq_add_Q(a, b)(j) = a(j) + b(j)
+    seq_add_Q(a, b)(k) = a(k) + b(k)
+    by thm chap4::rational_closeness_preserved_by_addition_and_subtraction(epsilon / 2, epsilon / 2, a(j), a(k), b(j), b(k))
+    epsilon / 2 + epsilon / 2 = epsilon
+    $chap4::is_close_in_Q(epsilon, a(j) + b(j), a(k) + b(k))
+    $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(j), seq_add_Q(a, b)(k))
+
+thm seq_add_Q_same_right_distance:
+    ? forall a, a_prime, b seq(Q), n N_pos:
+        chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = chap4::dist_Q(a(n), a_prime(n))
+    seq_add_Q(a, b)(n) = a(n) + b(n)
+    seq_add_Q(a_prime, b)(n) = a_prime(n) + b(n)
+    by thm chap4::rational_distance_formula(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n))
+    by thm chap4::rational_distance_formula(a(n), a_prime(n))
+    (a(n) + b(n)) - (a_prime(n) + b(n)) = a(n) - a_prime(n)
+    seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n) = a(n) - a_prime(n)
+    abs(seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n)) = abs(a(n) - a_prime(n))
+    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = abs(seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n)) = abs(a(n) - a_prime(n))
+    abs(a(n) - a_prime(n)) = chap4::dist_Q(a(n), a_prime(n))
+    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = chap4::dist_Q(a(n), a_prime(n))
+
+thm seq_add_Q_same_left_distance:
+    ? forall a, b, b_prime seq(Q), n N_pos:
+        chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = chap4::dist_Q(b(n), b_prime(n))
+    seq_add_Q(a, b)(n) = a(n) + b(n)
+    seq_add_Q(a, b_prime)(n) = a(n) + b_prime(n)
+    by thm chap4::rational_distance_formula(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n))
+    by thm chap4::rational_distance_formula(b(n), b_prime(n))
+    (a(n) + b(n)) - (a(n) + b_prime(n)) = b(n) - b_prime(n)
+    seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n) = b(n) - b_prime(n)
+    abs(seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n)) = abs(b(n) - b_prime(n))
+    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = abs(seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n)) = abs(b(n) - b_prime(n))
+    abs(b(n) - b_prime(n)) = chap4::dist_Q(b(n), b_prime(n))
+    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = chap4::dist_Q(b(n), b_prime(n))
+
 """
 Example 5.3.5. Adding representative Cauchy sequences gives the expected
 arithmetic behavior for simple decimal examples.
@@ -729,17 +893,18 @@ claim:
                 j >= finite_set_max(union({n1}, { n2}))
                 k >= finite_set_max(union({n1}, { n2}))
                 =>:
+                    n1 <= finite_set_max(union({n1}, { n2}))
+                    n2 <= finite_set_max(union({n1}, { n2}))
+                    j >= finite_set_max(union({n1}, { n2})) >= n1
+                    k >= finite_set_max(union({n1}, { n2})) >= n1
+                    j >= finite_set_max(union({n1}, { n2})) >= n2
+                    k >= finite_set_max(union({n1}, { n2})) >= n2
                     j >= n1
                     k >= n1
                     j >= n2
                     k >= n2
                     $chap4::is_close_in_Q(epsilon / 2, a(j), a(k))
                     $chap4::is_close_in_Q(epsilon / 2, b(j), b(k))
-                    chap4::dist_Q(a(j), a(k)) <= epsilon / 2
-                    chap4::dist_Q(b(j), b(k)) <= epsilon / 2
-                    chap4::dist_Q(seq_add_Q(a, b)(j), seq_add_Q(a, b)(k)) <= chap4::dist_Q(a(j), a(k)) + chap4::dist_Q(b(j), b(k))
-                    chap4::dist_Q(a(j), a(k)) + chap4::dist_Q(b(j), b(k)) <= epsilon / 2 + epsilon / 2
-                    chap4::dist_Q(seq_add_Q(a, b)(j), seq_add_Q(a, b)(k)) <= epsilon
                     $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(j), seq_add_Q(a, b)(k))
 
 """
@@ -795,6 +960,24 @@ Definition 5.3.9. Multiplication of reals is defined by multiplying representati
 
 have fn seq_mul_Q(a, b seq(Q)) fn(k N_pos) Q = fn(n N_pos) Q {a(n) * b(n)}
 
+thm seq_mul_Q_same_right_absolute_difference:
+    ? forall a, a_prime, b seq(Q), n N_pos:
+        abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n)) = abs(a(n) - a_prime(n)) * abs(b(n))
+    seq_mul_Q(a, b)(n) = a(n) * b(n)
+    seq_mul_Q(a_prime, b)(n) = a_prime(n) * b(n)
+    a(n) * b(n) - a_prime(n) * b(n) = (a(n) - a_prime(n)) * b(n)
+    seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n) = (a(n) - a_prime(n)) * b(n)
+    abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n)) = abs((a(n) - a_prime(n)) * b(n)) = abs(a(n) - a_prime(n)) * abs(b(n))
+
+thm seq_mul_Q_same_left_absolute_difference:
+    ? forall a, b, b_prime seq(Q), n N_pos:
+        abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n)) = abs(a(n)) * abs(b(n) - b_prime(n))
+    seq_mul_Q(a, b)(n) = a(n) * b(n)
+    seq_mul_Q(a, b_prime)(n) = a(n) * b_prime(n)
+    a(n) * b(n) - a(n) * b_prime(n) = a(n) * (b(n) - b_prime(n))
+    seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n) = a(n) * (b(n) - b_prime(n))
+    abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n)) = abs(a(n) * (b(n) - b_prime(n))) = abs(a(n)) * abs(b(n) - b_prime(n))
+
 """
 Proposition 5.3.10. Multiplication is well-defined.
 """
@@ -835,6 +1018,12 @@ claim:
                 j >= finite_set_max(union({n1}, { n2}))
                 k >= finite_set_max(union({n1}, { n2}))
                 =>:
+                    n1 <= finite_set_max(union({n1}, { n2}))
+                    n2 <= finite_set_max(union({n1}, { n2}))
+                    j >= finite_set_max(union({n1}, { n2})) >= n1
+                    k >= finite_set_max(union({n1}, { n2})) >= n1
+                    j >= finite_set_max(union({n1}, { n2})) >= n2
+                    k >= finite_set_max(union({n1}, { n2})) >= n2
                     j >= n1
                     k >= n1
                     j >= n2
@@ -849,13 +1038,17 @@ claim:
                     abs(a(k)) <= M_a + 1
                     abs((a(j) - a(k)) * b(j)) = abs(a(j) - a(k)) * abs(b(j))
                     abs(a(k) * (b(j) - b(k))) = abs(a(k)) * abs(b(j) - b(k))
-                    abs(a(j) - a(k)) * abs(b(j)) <= (epsilon / (2 * (M_b + 1))) * (M_b + 1)
+                    abs(a(j) - a(k)) * abs(b(j)) <= (epsilon / (2 * (M_b + 1))) * (M_b + 1) = epsilon / 2
                     abs((a(j) - a(k)) * b(j)) <= epsilon / 2
-                    abs(a(k)) * abs(b(j) - b(k)) <= (M_a + 1) * (epsilon / (2 * (M_a + 1)))
+                    abs(a(k)) * abs(b(j) - b(k)) <= (M_a + 1) * (epsilon / (2 * (M_a + 1))) = epsilon / 2
                     abs(a(k) * (b(j) - b(k))) <= epsilon / 2
-                    abs((a(j) - a(k)) * b(j)) + abs(a(k) * (b(j) - b(k))) <= epsilon / 2 + epsilon / 2
-                    abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) <= abs((a(j) - a(k)) * b(j)) + abs(a(k) * (b(j) - b(k)))
-                    abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) <= epsilon
+                    abs((a(j) - a(k)) * b(j)) + abs(a(k) * (b(j) - b(k))) <= epsilon / 2 + epsilon / 2 = epsilon
+                    seq_mul_Q(a, b)(j) = a(j) * b(j)
+                    seq_mul_Q(a, b)(k) = a(k) * b(k)
+                    a(j) * b(j) - a(k) * b(k) = (a(j) - a(k)) * b(j) + a(k) * (b(j) - b(k))
+                    seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k) = (a(j) - a(k)) * b(j) + a(k) * (b(j) - b(k))
+                    abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) = abs((a(j) - a(k)) * b(j) + a(k) * (b(j) - b(k))) <= abs((a(j) - a(k)) * b(j)) + abs(a(k) * (b(j) - b(k)))
+                    abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) <= abs((a(j) - a(k)) * b(j)) + abs(a(k) * (b(j) - b(k))) <= epsilon
                     $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(j), seq_mul_Q(a, b)(k))
 
 # Changing one representative preserves the product representative, once the
@@ -886,7 +1079,7 @@ claim:
                     abs(b(n)) <= M_b
                     abs(b(n)) <= M_b + 1
                     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n)) = abs(a(n) - a_prime(n)) * abs(b(n))
-                    abs(a(n) - a_prime(n)) * abs(b(n)) <= (epsilon / (M_b + 1)) * (M_b + 1)
+                    abs(a(n) - a_prime(n)) * abs(b(n)) <= (epsilon / (M_b + 1)) * (M_b + 1) = epsilon
                     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n)) <= epsilon
                     $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(n), seq_mul_Q(a_prime, b)(n))
 
@@ -915,7 +1108,7 @@ claim:
                     abs(a(n)) <= M_a
                     abs(a(n)) <= M_a + 1
                     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n)) = abs(a(n)) * abs(b(n) - b_prime(n))
-                    abs(a(n)) * abs(b(n) - b_prime(n)) <= (M_a + 1) * (epsilon / (M_a + 1))
+                    abs(a(n)) * abs(b(n) - b_prime(n)) <= (M_a + 1) * (epsilon / (M_a + 1)) = epsilon
                     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n)) <= epsilon
                     $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(n), seq_mul_Q(a, b_prime)(n))
 
@@ -930,6 +1123,17 @@ Proposition 5.3.11. The reals obey the laws of algebra.
 # Algebra laws for reals are stated directly over `R`.  Below, we also keep
 # Tao's representative-level distributive law: the representative sequences on
 # the two sides agree termwise, so they are certainly equivalent.
+
+thm seq_mul_Q_distributes_over_seq_add_Q_term:
+    ? forall a, b, c seq(Q), n N_pos:
+        seq_mul_Q(a, seq_add_Q(b, c))(n) = seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n)
+    seq_add_Q(b, c)(n) = b(n) + c(n)
+    seq_mul_Q(a, seq_add_Q(b, c))(n) = a(n) * seq_add_Q(b, c)(n) = a(n) * (b(n) + c(n))
+    seq_mul_Q(a, b)(n) = a(n) * b(n)
+    seq_mul_Q(a, c)(n) = a(n) * c(n)
+    seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n) = seq_mul_Q(a, b)(n) + seq_mul_Q(a, c)(n) = a(n) * b(n) + a(n) * c(n)
+    a(n) * (b(n) + c(n)) = a(n) * b(n) + a(n) * c(n)
+    seq_mul_Q(a, seq_add_Q(b, c))(n) = seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n)
 
 claim:
     ? forall a, b, c seq(Q):

@@ -29,14 +29,15 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let bound_param_name = self.generate_random_unused_name();
+        let bound_param = self.fresh_param_group_with_type(
+            vec![bound_param_name],
+            ParamType::Obj(subset_fact.left.clone()),
+        )?;
         let membership_forall_fact = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![bound_param_name.clone()],
-                ParamType::Obj(subset_fact.left.clone()),
-            )]),
+            ParamDefWithType::new(vec![bound_param.clone()]),
             vec![],
             vec![InFact::new(
-                obj_for_bound_param_in_scope(bound_param_name.clone(), ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&bound_param.params[0], ParamObjType::Forall),
                 subset_fact.right.clone(),
                 subset_fact.line_file.clone(),
             )
@@ -64,14 +65,15 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let bound_param_name = self.generate_random_unused_name();
+        let bound_param = self.fresh_param_group_with_type(
+            vec![bound_param_name],
+            ParamType::Obj(superset_fact.right.clone()),
+        )?;
         let membership_forall_fact = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![bound_param_name.clone()],
-                ParamType::Obj(superset_fact.right.clone()),
-            )]),
+            ParamDefWithType::new(vec![bound_param.clone()]),
             vec![],
             vec![InFact::new(
-                obj_for_bound_param_in_scope(bound_param_name.clone(), ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&bound_param.params[0], ParamObjType::Forall),
                 superset_fact.left.clone(),
                 superset_fact.line_file.clone(),
             )

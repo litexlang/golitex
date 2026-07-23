@@ -42,31 +42,58 @@ impl Runtime {
 
         let goal_line = tb.body[0].line_file.clone();
         let goal_param = [param.clone()];
-        let mut to_prove = Vec::new();
-        self.parse_in_local_free_param_scope(
+        let (
+            (
+                to_prove,
+                base_proof,
+                element_param,
+                element_param_binding,
+                smaller_set_param,
+                smaller_set_param_binding,
+                step_proof,
+            ),
+            param_bindings,
+        ) = self.parse_in_local_free_param_scope_with_bindings(
             ParamObjType::Induc,
             &goal_param,
             goal_line,
             |this| {
+                let mut to_prove = Vec::new();
                 for block in tb.body.iter_mut().take(question_goal_count) {
                     to_prove.push(this.parse_question_goal_exist_or_and_chain_atomic_fact(
                         block,
                         "finite-set induc",
                     )?);
                 }
-                Ok(())
+                let (
+                    base_proof,
+                    element_param,
+                    element_param_binding,
+                    smaller_set_param,
+                    smaller_set_param_binding,
+                    step_proof,
+                ) = this.parse_finite_set_induc_proof_blocks(tb, &param, question_goal_count)?;
+                Ok((
+                    to_prove,
+                    base_proof,
+                    element_param,
+                    element_param_binding,
+                    smaller_set_param,
+                    smaller_set_param_binding,
+                    step_proof,
+                ))
             },
         )?;
-
-        let (base_proof, element_param, smaller_set_param, step_proof) =
-            self.parse_finite_set_induc_proof_blocks(tb, &param, question_goal_count)?;
 
         Ok(ByFiniteSetInducStmt::new(
             to_prove,
             param,
+            param_bindings[0].clone(),
             carrier_set,
             element_param,
+            element_param_binding,
             smaller_set_param,
+            smaller_set_param_binding,
             base_proof,
             step_proof,
             tb.line_file.clone(),
@@ -79,9 +106,19 @@ impl Runtime {
         tb: &mut TokenBlock,
         param: &str,
         goal_body_skip: usize,
-    ) -> Result<(Vec<Stmt>, String, String, Vec<Stmt>), RuntimeError> {
+    ) -> Result<
+        (
+            Vec<Stmt>,
+            String,
+            SymbolBinding,
+            String,
+            SymbolBinding,
+            Vec<Stmt>,
+        ),
+        RuntimeError,
+    > {
         let mut base_proof: Option<Vec<Stmt>> = None;
-        let mut step: Option<(String, String, Vec<Stmt>)> = None;
+        let mut step: Option<(String, SymbolBinding, String, SymbolBinding, Vec<Stmt>)> = None;
 
         for block in tb.body.iter_mut().skip(goal_body_skip) {
             if Self::is_finite_set_induc_base_proof_block(block) {
@@ -91,21 +128,14 @@ impl Runtime {
                         block.line_file.clone(),
                     ));
                 }
-                let names = [param.to_string()];
-                let line_file = block.line_file.clone();
-                base_proof = Some(self.parse_stmts_with_optional_free_param_scope(
-                    ParamObjType::Induc,
-                    &names,
-                    line_file,
-                    |this| {
-                        this.verify_finite_set_induc_base_proof_header(block, param)?;
-                        block
-                            .body
-                            .iter_mut()
-                            .map(|body_block| this.parse_stmt(body_block))
-                            .collect()
-                    },
-                )?);
+                self.verify_finite_set_induc_base_proof_header(block, param)?;
+                base_proof = Some(
+                    block
+                        .body
+                        .iter_mut()
+                        .map(|body_block| self.parse_stmt(body_block))
+                        .collect::<Result<Vec<_>, _>>()?,
+                );
                 continue;
             }
 
@@ -120,7 +150,7 @@ impl Runtime {
                     self.parse_finite_set_induc_step_header(block, param)?;
                 let names = [element_param.clone(), smaller_set_param.clone()];
                 let line_file = block.line_file.clone();
-                let proof = self.parse_stmts_with_optional_free_param_scope(
+                let (proof, bindings) = self.parse_stmts_with_free_param_scope_and_bindings(
                     ParamObjType::Induc,
                     &names,
                     line_file,
@@ -132,7 +162,13 @@ impl Runtime {
                             .collect()
                     },
                 )?;
-                step = Some((element_param, smaller_set_param, proof));
+                step = Some((
+                    element_param,
+                    bindings[0].clone(),
+                    smaller_set_param,
+                    bindings[1].clone(),
+                    proof,
+                ));
                 continue;
             }
 
@@ -149,13 +185,26 @@ impl Runtime {
                 tb.line_file.clone(),
             )
         })?;
-        let (element_param, smaller_set_param, step_proof) = step.ok_or_else(|| {
+        let (
+            element_param,
+            element_param_binding,
+            smaller_set_param,
+            smaller_set_param_binding,
+            step_proof,
+        ) = step.ok_or_else(|| {
             Self::finite_set_induc_parse_error(
                 "finite-set induc: missing `? induc x, S:` block".to_string(),
                 tb.line_file.clone(),
             )
         })?;
-        Ok((base_proof, element_param, smaller_set_param, step_proof))
+        Ok((
+            base_proof,
+            element_param,
+            element_param_binding,
+            smaller_set_param,
+            smaller_set_param_binding,
+            step_proof,
+        ))
     }
 
     fn verify_finite_set_induc_base_proof_header(
@@ -173,7 +222,13 @@ impl Runtime {
                 block.line_file.clone(),
             ));
         };
-        let expected_param = obj_for_bound_param_in_scope(param.to_string(), ParamObjType::Induc);
+        let binding = self.active_parse_symbol_binding(param).ok_or_else(|| {
+            Self::finite_set_induc_parse_error(
+                format!("finite-set induc: parameter `{}` is not active", param),
+                block.line_file.clone(),
+            )
+        })?;
+        let expected_param = obj_for_bound_param_in_scope(&binding, ParamObjType::Induc);
         let empty_set: Obj = ListSet::new(vec![]).into();
         if equal_fact.left.to_string() != expected_param.to_string()
             || equal_fact.right.to_string() != empty_set.to_string()

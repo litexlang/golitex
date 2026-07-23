@@ -694,7 +694,7 @@ claim:
             f(x1) = y = f(x2)
             x1 = x2
 
-        exist! x S st {y = f(x)}
+        exist! unique_input S st {y = f(unique_input)}
 
     $exist_unique_preimage(S, T, f)
 
@@ -1599,7 +1599,11 @@ sketch:
             case n % 2 = 1:
                 (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
                 n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
-        obtain r from exist r N st {n * (n + 1) = 2 * r}
+        have quotient Z = basics::integer_quotient(n * (n + 1), 2)
+        n * (n + 1) = 2 * basics::integer_quotient(n * (n + 1), 2) + n * (n + 1) % 2 = 2 * quotient
+        quotient = n * (n + 1) / 2 >= 0
+        quotient $in N
+        have r N = quotient
         witness exist y N st {2 * y = n * (n + 1)} from r:
             n * (n + 1) = 2 * r
             2 * r = n * (n + 1)

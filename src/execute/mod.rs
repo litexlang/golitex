@@ -1,5 +1,4 @@
 mod by_stmt;
-mod exec_alias_stmt;
 mod exec_claim_stmt;
 mod exec_def_abstract_prop_stmt;
 mod exec_def_algo_stmt;

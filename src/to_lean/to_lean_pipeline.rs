@@ -107,26 +107,17 @@ impl LeanEmitter {
                 "Lean extractor MVP refuses to emit a Litex axiom as a Lean axiom",
             ));
         }
-        if stmt.names.is_empty() {
-            return Err(lean_extract_error(
-                &stmt.line_file,
-                "Lean extractor cannot emit a theorem without a name",
-            ));
-        }
-
-        for name in &stmt.names {
-            self.push_blank_line();
-            self.push_evidence_comment(result, 0);
-            let signature = self.forall_signature(&stmt.forall_fact)?;
-            self.lines.push(format!(
-                "theorem {}{} : {} := by",
-                lean_name(name),
-                signature.binders,
-                signature.conclusion
-            ));
-            self.emit_local_steps(&stmt.prove_process, 1)?;
-            self.emit_then_facts_proof(&stmt.forall_fact.then_facts, 1)?;
-        }
+        self.push_blank_line();
+        self.push_evidence_comment(result, 0);
+        let signature = self.forall_signature(&stmt.forall_fact)?;
+        self.lines.push(format!(
+            "theorem {}{} : {} := by",
+            lean_name(&stmt.name),
+            signature.binders,
+            signature.conclusion
+        ));
+        self.emit_local_steps(&stmt.prove_process, 1)?;
+        self.emit_then_facts_proof(&stmt.forall_fact.then_facts, 1)?;
         Ok(())
     }
 
@@ -305,7 +296,7 @@ impl LeanEmitter {
             }
             let mut names = Vec::new();
             for name in &group.params {
-                names.push(lean_name(name));
+                names.push(lean_name(name.name()));
             }
             binder_groups.push(format!("({} : ℝ)", names.join(" ")));
         }

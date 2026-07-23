@@ -326,7 +326,7 @@ impl Runtime {
         pname: &str,
     ) -> Option<Obj> {
         for g in params_def {
-            if g.params.iter().any(|n| n == pname) {
+            if g.params.iter().any(|n| n.name() == pname) {
                 return Some(g.set_obj().clone());
             }
         }
@@ -397,11 +397,12 @@ impl Runtime {
                 )),
             )));
         }
-        let param_names = ParamGroupWithSet::collect_param_names(&fs_body.params_def_with_set);
-        let pname = param_names[0].clone();
-        let Some(param_set_for_index) =
-            Self::unary_param_set_from_params_def(&fs_body.params_def_with_set, &pname)
-        else {
+        let param_bindings = fs_body.params_def_with_set.collect_param_bindings();
+        let param_binding = param_bindings[0].clone();
+        let Some(param_set_for_index) = Self::unary_param_set_from_params_def(
+            &fs_body.params_def_with_set,
+            param_binding.name(),
+        ) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{op}: could not find index parameter in params_def_with_set"
@@ -431,7 +432,7 @@ impl Runtime {
                         ))
                     })?;
             }
-            let k = obj_for_bound_param_in_scope(pname, ParamObjType::FnSet);
+            let k = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
             let le_lo = OrAndChainAtomicFact::AtomicFact(
                 LessEqualFact::new(start_c.clone(), k.clone(), default_line_file()).into(),
             );
@@ -572,11 +573,12 @@ impl Runtime {
                 )),
             )));
         }
-        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
-        let pname = param_names[0].clone();
-        let Some(param_set_for_index) =
-            Self::unary_param_set_from_params_def(&af.body.params_def_with_set, &pname)
-        else {
+        let param_bindings = af.body.params_def_with_set.collect_param_bindings();
+        let param_binding = param_bindings[0].clone();
+        let Some(param_set_for_index) = Self::unary_param_set_from_params_def(
+            &af.body.params_def_with_set,
+            param_binding.name(),
+        ) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{op}: could not find index parameter in params_def_with_set"
@@ -597,7 +599,7 @@ impl Runtime {
                         RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not bind index parameter in local well-defined check"), e)))
                     })?;
             }
-            let k = obj_for_bound_param_in_scope(pname, ParamObjType::FnSet);
+            let k = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
             let le_lo = OrAndChainAtomicFact::AtomicFact(
                 LessEqualFact::new(start.clone(), k.clone(), default_line_file()).into(),
             );

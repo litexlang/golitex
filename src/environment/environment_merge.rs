@@ -18,6 +18,18 @@ impl Environment {
     }
 
     fn merge_defined_names(&mut self, child: &Environment) -> Result<(), RuntimeError> {
+        for (name, definition) in child.symbols.iter() {
+            if let Some(existing) = self.symbols.get(name) {
+                return Err(merge_name_conflict_error(
+                    name,
+                    existing.role().description(),
+                ));
+            }
+            self.symbols
+                .insert(definition.clone())
+                .expect("symbol was checked absent before merge");
+        }
+
         for (name, kind) in child.defined_identifiers.iter() {
             if self.defined_identifiers.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "identifier"));
@@ -179,6 +191,7 @@ impl Environment {
         child: Environment,
     ) -> Result<(), RuntimeError> {
         let Environment {
+            symbols: _,
             defined_identifiers: _,
             defined_def_props: _,
             defined_abstract_props: _,

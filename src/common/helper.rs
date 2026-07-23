@@ -75,13 +75,14 @@ pub fn vec_to_string_join_by_comma<T: fmt::Display>(vec: &Vec<T>) -> String {
 }
 
 /// Comma-separated fn-set parameter names for display; strips a leading `__` if present (legacy).
-pub fn comma_separated_stored_fn_params_as_user_source(params: &[String]) -> String {
+pub fn comma_separated_stored_fn_params_as_user_source<T: AsRef<str>>(params: &[T]) -> String {
     params
         .iter()
         .map(|p| {
+            let p = p.as_ref();
             p.strip_prefix(DEFAULT_MANGLED_FN_PARAM_PREFIX)
                 .map(String::from)
-                .unwrap_or_else(|| p.clone())
+                .unwrap_or_else(|| p.to_string())
         })
         .collect::<Vec<_>>()
         .join(", ")

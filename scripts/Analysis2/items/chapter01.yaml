@@ -1,0 +1,195 @@
+- source: "Tao, Analysis II, 4e, Lemma 1.1.1"
+  problem: "A real sequence converges to a iff its distance from a converges to zero."
+  proof_idea: "Unfold both epsilon-tail definitions and use abs(abs(t)) = abs(t)."
+  litex_code: "real_convergence_implies_distance_convergence_to_zero; distance_convergence_to_zero_implies_real_convergence"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.1.1"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.1.2"
+  problem: "Define a metric space by identity, positivity/separation, symmetry, and triangle inequality."
+  proof_idea: "Represent the carrier and callable distance separately; keep the residual laws in is_metric_space."
+  litex_code: "prop is_metric_space(X set, dist fn(x, y X) R)"
+  comments: {status: checkable, verifier: "project runner success"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.1.14"
+  problem: "Define convergence of an X-valued positive-index sequence to a point in a metric."
+  proof_idea: "Expose an eventual tail predicate, then quantify over every positive epsilon."
+  litex_code: "has_metric_limit; is_metric_convergent"
+  comments: {status: checkable, verifier: "project runner success"}
+
+- source: "Tao, Analysis II, 4e, Proposition 1.1.18"
+  problem: "Finite-dimensional l1, l2, linf, and coordinatewise convergence are equivalent."
+  proof_idea: "Use finite-dimensional norm bounds and one common tail index for finitely many coordinates."
+  litex_code: "l2_convergence_implies_l1_convergence; l1_convergence_implies_linf_convergence; linf_convergence_implies_coordinatewise_convergence; coordinatewise_convergence_implies_l2_convergence"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.1.12"}
+
+- source: "Tao, Analysis II, 4e, Proposition 1.1.19"
+  problem: "Discrete-metric convergence is equivalent to eventual equality with the limit."
+  proof_idea: "Use epsilon = 1/2 forward; use zero distance on an eventually constant tail backward."
+  litex_code: "discrete_metric_convergence_iff_eventually_constant_forward; discrete_metric_convergence_iff_eventually_constant_reverse"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.1.13"}
+
+- source: "Tao, Analysis II, 4e, Proposition 1.1.20"
+  problem: "A sequence in a metric space has at most one limit."
+  proof_idea: "Assume distinct limits, use epsilon = dist(a,b)/3, and contradict the triangle inequality."
+  litex_code: "thm metric_limit_unique"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.1.14"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.2.1"
+  problem: "Define the open metric ball centered at a point with positive radius."
+  proof_idea: "Use a template-contained set-valued function because its return type depends on X."
+  litex_code: "template<X,dist>: have fn metric_ball(center X, radius R_pos) power_set(X)"
+  comments: {status: checkable, verifier: "metric_ball_contains_center verified"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.2.5"
+  problem: "Define interior, exterior, and boundary points and their corresponding sets."
+  proof_idea: "Use point predicates for local ball conditions and template-contained set builders for the canonical sets."
+  litex_code: "is_metric_interior_point; is_metric_exterior_point; is_metric_boundary_point; metric_interior; metric_exterior; metric_boundary"
+  comments: {status: checkable, verifier: "project runner success"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.2.9"
+  problem: "Define adherent points and closure using nonempty intersection with every positive-radius ball."
+  proof_idea: "Keep adherence pointwise and collect adherent points into a canonical closure function."
+  litex_code: "is_metric_adherent_point; metric_closure"
+  comments: {status: checkable, verifier: "project runner success"}
+
+- source: "Tao, Analysis II, 4e, Proposition 1.2.10"
+  problem: "Adherence, interior-or-boundary membership, and being a sequential limit from E are equivalent."
+  proof_idea: "Use local ball logic for the first equivalence and choose one point from each 1/n ball for the sequence."
+  litex_code: "adherent_implies_interior_or_boundary; interior_or_boundary_implies_adherent; adherent_iff_sequence_from_set_forward; adherent_iff_sequence_from_set_reverse"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.2.2"}
+
+- source: "Tao, Analysis II, 4e, Corollary 1.2.11"
+  problem: "Closure equals interior union boundary and the complement of the exterior."
+  proof_idea: "Apply Proposition 1.2.10 pointwise and close both set equalities by extensionality."
+  litex_code: "thm metric_closure_decomposition"
+  comments: {status: translated, blocker: trust}
+
+- source: "Tao, Analysis II, 4e, Definition 1.2.12"
+  problem: "Define open sets by excluding boundary points and closed sets by containing them."
+  proof_idea: "Preserve Tao's boundary formulation rather than silently replacing it with an equivalent later characterization."
+  litex_code: "is_metric_open; is_metric_closed"
+  comments: {status: checkable, verifier: "project runner success"}
+
+- source: "Tao, Analysis II, 4e, Proposition 1.2.15"
+  problem: "Establish the basic closure laws for open and closed sets, balls, complements, families, interior, and closure."
+  proof_idea: "Split the eight source parts into reusable theorem directions and prove them in source dependency order."
+  litex_code: "metric_open_iff_equals_interior_forward through metric_closure_is_smallest_closed_superset"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.2.3"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.3.3"
+  problem: "Define relative openness and closedness in the metric subspace Y."
+  proof_idea: "Apply the existing open/closed predicates to Y and the restricted distance."
+  litex_code: "is_relatively_metric_open; is_relatively_metric_closed"
+  comments: {status: checkable, verifier: "project runner success"}
+
+- source: "Tao, Analysis II, 4e, Proposition 1.3.4"
+  problem: "Relatively open or closed subsets are exactly intersections with ambient open or closed sets."
+  proof_idea: "For open sets, union ambient balls selected at each point; obtain the closed half by complements."
+  litex_code: "relatively_open_is_ambient_open_intersection; ambient_open_intersection_is_relatively_open; relatively_closed_is_ambient_closed_intersection; ambient_closed_intersection_is_relatively_closed"
+  comments: {status: translated, blocker: trust, source_proof: "part (b) is Exercise 1.3.1"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.4.1"
+  problem: "Define a subsequence using a strictly increasing positive-index map."
+  proof_idea: "Expose the witness map and function equality instead of hiding the selected indices."
+  litex_code: "is_strictly_increasing_index; is_subsequence_of"
+  comments: {status: checkable, verifier: "project runner success"}
+
+- source: "Tao, Analysis II, 4e, Lemma 1.4.3"
+  problem: "Every subsequence of a convergent sequence converges to the same limit."
+  proof_idea: "A strictly increasing positive-index map satisfies phi(n) >= n, so the original tail controls the subsequence."
+  litex_code: "thm convergent_subsequence_has_same_limit"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.4.1"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.4.4"
+  problem: "Define a sequence limit point by arbitrarily late terms inside every positive tolerance."
+  proof_idea: "Quantify directly over the lower index bound and epsilon, then expose the witnessing later index."
+  litex_code: "prop is_metric_sequence_limit_point"
+  comments: {status: checkable, verifier: "project runner success"}
+
+- source: "Tao, Analysis II, 4e, Proposition 1.4.5"
+  problem: "A point is a limit point of a sequence iff some subsequence converges to it."
+  proof_idea: "Recursively choose increasingly late terms in 1/j balls; reverse by using arbitrarily late subsequence indices."
+  litex_code: "sequence_limit_point_has_convergent_subsequence; convergent_subsequence_gives_sequence_limit_point"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.4.2"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.4.6"
+  problem: "Define a Cauchy sequence by eventual pairwise epsilon-closeness."
+  proof_idea: "Separate the fixed-tail predicate from the outer epsilon quantifier."
+  litex_code: "is_metric_cauchy_after; is_metric_cauchy"
+  comments: {status: checkable, verifier: "project runner success"}
+
+- source: "Tao, Analysis II, 4e, Lemma 1.4.7"
+  problem: "Every convergent metric sequence is Cauchy."
+  proof_idea: "Put both late terms within epsilon/3 of the limit and use the triangle inequality."
+  litex_code: "thm metric_convergent_implies_cauchy"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.4.3"}
+
+- source: "Tao, Analysis II, 4e, Lemma 1.4.9"
+  problem: "A Cauchy sequence with a convergent subsequence converges to the same point."
+  proof_idea: "Compare a late original term to a late subsequence term, then that term to the subsequential limit."
+  litex_code: "thm cauchy_with_convergent_subsequence_converges"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.4.4"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.4.10"
+  problem: "Define completeness by convergence of every Cauchy sequence."
+  proof_idea: "Quantify over X-valued positive-index sequences and reuse the existing Cauchy and convergence predicates."
+  litex_code: "prop is_complete_metric_space"
+  comments: {status: checkable, verifier: "complete_metric_space_use_probe verified"}
+
+- source: "Tao, Analysis II, 4e, Proposition 1.4.12"
+  problem: "Complete subspaces are closed; closed subspaces of complete spaces are complete."
+  proof_idea: "Use sequential closure forward and keep Cauchy/convergence unchanged under restricted distance backward."
+  litex_code: "complete_metric_subspace_is_closed; closed_subspace_of_complete_metric_space_is_complete"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.4.7"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.5.1"
+  problem: "Define compactness sequentially: every sequence has a subsequence converging to a point in the subset."
+  proof_idea: "Expose both the strictly increasing index map and the limit point in Y."
+  litex_code: "prop is_metric_compact"
+  comments: {status: checkable, verifier: "compact_metric_space_use_probe verified"}
+
+- source: "Tao, Analysis II, 4e, Definition 1.5.3"
+  problem: "Define boundedness by containment in some finite-radius ball around every ambient center."
+  proof_idea: "Use Tao's quantified-center formulation directly."
+  litex_code: "prop is_metric_bounded"
+  comments: {status: checkable, verifier: "project runner success"}
+
+- source: "Tao, Analysis II, 4e, Proposition 1.5.5"
+  problem: "Every compact metric space is complete and bounded."
+  proof_idea: "For each failure, use choice to construct a sequence with no convergent subsequence."
+  litex_code: "thm compact_metric_space_is_complete_and_bounded"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.5.2"}
+
+- source: "Tao, Analysis II, 4e, Corollary 1.5.6"
+  problem: "Every compact subset of a metric space is closed and bounded."
+  proof_idea: "Apply Proposition 1.5.5 to the subspace and Proposition 1.4.12(a) for ambient closedness."
+  litex_code: "thm compact_metric_subset_is_closed_and_bounded"
+  comments: {status: translated, blocker: trust}
+
+- source: "Tao, Analysis II, 4e, Theorem 1.5.7"
+  problem: "In finite-dimensional real l1, l2, or linf space, compactness is equivalent to closedness and boundedness."
+  proof_idea: "Transport through coordinatewise convergence and apply finite-dimensional Bolzano-Weierstrass."
+  litex_code: "finite_dimensional_heine_borel_forward; finite_dimensional_heine_borel_reverse"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.5.3"}
+
+- source: "Tao, Analysis II, 4e, Theorem 1.5.8"
+  problem: "Every open cover of a compact metric subset has a finite subcover."
+  proof_idea: "Follow Tao's radius-infimum split and rule out a uniformly separated sequence using compactness."
+  litex_code: "thm compact_metric_subset_has_finite_open_subcover"
+  comments: {status: translated, blocker: trust, source_proof: "source supplies proof; not yet formalized"}
+
+- source: "Tao, Analysis II, 4e, Corollary 1.5.9"
+  problem: "A nested sequence of nonempty compact subsets has nonempty intersection."
+  proof_idea: "Assume empty intersection and use complements as an open cover of the first compact set."
+  litex_code: "thm nested_nonempty_compact_intersection_is_nonempty"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.5.6"}
+
+- source: "Tao, Analysis II, 4e, Theorem 1.5.10"
+  problem: "Closed subsets of compact sets are compact, finite unions of compact sets are compact, and finite sets are compact."
+  proof_idea: "Use closed-subspace compactness, finite pigeonhole selection, and constant subsequences."
+  litex_code: "closed_subset_of_compact_metric_subset_is_compact; compact_subset_of_compact_metric_subset_is_closed; finite_union_of_compact_metric_subsets_is_compact; finite_metric_subset_is_compact"
+  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.5.7"}
+
+# Verification: `target/debug/litex -runner -r textbooks/Analysis2` returned
+# wrapper JSON result `success`. A successful runner result includes explicit
+# trust; see textbooks/Analysis2/todo.lit.

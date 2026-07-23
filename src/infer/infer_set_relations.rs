@@ -46,12 +46,12 @@ impl Runtime {
             return Ok(InferResult::new());
         }
         let generated_param_name = self.generate_random_unused_name();
-        let parameter_definition = ParamGroupWithParamType::new(
+        let parameter_definition = self.fresh_param_group_with_type(
             vec![generated_param_name.clone()],
             ParamType::Obj(subset_fact.left.clone()),
-        );
+        )?;
         let in_fact_for_forall_then = InFact::new(
-            obj_for_bound_param_in_scope(generated_param_name.clone(), ParamObjType::Forall),
+            obj_for_bound_param_in_scope(&parameter_definition.params[0], ParamObjType::Forall),
             subset_fact.right.clone(),
             subset_fact.line_file.clone(),
         )
@@ -91,12 +91,12 @@ impl Runtime {
         superset_fact: &SupersetFact,
     ) -> Result<InferResult, RuntimeError> {
         let generated_param_name = self.generate_random_unused_name();
-        let parameter_definition = ParamGroupWithParamType::new(
+        let parameter_definition = self.fresh_param_group_with_type(
             vec![generated_param_name.clone()],
             ParamType::Obj(superset_fact.right.clone()),
-        );
+        )?;
         let in_fact_for_forall_then = InFact::new(
-            obj_for_bound_param_in_scope(generated_param_name.clone(), ParamObjType::Forall),
+            obj_for_bound_param_in_scope(&parameter_definition.params[0], ParamObjType::Forall),
             superset_fact.left.clone(),
             superset_fact.line_file.clone(),
         )

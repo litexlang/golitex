@@ -20,6 +20,7 @@ pub struct ExecutionFrame {
     pub source_path: Rc<str>,
     pub execution_mode: ExecutionMode,
     pub local_environment_stack: Vec<Box<Environment>>,
+    pub parse_context: ParseContext,
 }
 
 impl ExecutionFrame {
@@ -39,6 +40,7 @@ impl ExecutionFrame {
             source_path: Rc::from(source_path),
             execution_mode,
             local_environment_stack: vec![],
+            parse_context: ParseContext::new(),
         }
     }
 }

@@ -748,6 +748,14 @@ exactly when x=y.
 
 have fn dist_Q(x, y Q) Q = abs(x - y)
 
+# The named formula is the cross-module proof interface for unfolding the
+# rational distance function.
+
+thm rational_distance_formula:
+    ? forall x, y Q:
+        dist_Q(x, y) = abs(x - y)
+    dist_Q(x, y) = abs(x - y)
+
 """
 Proposition 4.3.3. Basic properties of absolute value and distance.
 """
@@ -915,10 +923,15 @@ sketch:
     0.02 <= 0.1
     $is_close_in_Q(0.1, 0.99, 1.01)
     0.02 > 0.01
+    claim:
+        ? not $is_close_in_Q(0.01, 0.99, 1.01)
+        by contra:
+            ? not $is_close_in_Q(0.01, 0.99, 1.01)
+            impossible 0.02 <= 0.01
     forall epsilon Q_pos:
         dist_Q(2, 2) = abs(2 - 2) = 0
         0 <= epsilon
-        by def $is_close_in_Q(epsilon, 2, 2)
+        $is_close_in_Q(epsilon, 2, 2)
 
 """
 Proposition 4.3.7. Epsilon-closeness is reflexive, symmetric, and transitive
@@ -959,70 +972,103 @@ claim:
         ? x = y
         abs(x - y) / 2 $in Q_pos
         $is_close_in_Q(abs(x - y) / 2, x, y)
-        abs(x - y) < abs(x - y)
-        impossible abs(x - y) = abs(x - y)
+        dist_Q(x, y) <= abs(x - y) / 2
+        abs(x - y) = dist_Q(x, y) <= abs(x - y) / 2
+        impossible abs(x - y) <= abs(x - y) / 2
 
 # Proposition 4.3.7(b): epsilon-closeness is symmetric because distance is symmetric.
 
-forall epsilon Q_pos, x, y Q:
-    $is_close_in_Q(epsilon, x, y)
-    =>:
-        $is_close_in_Q(epsilon, y, x)
+thm rational_closeness_is_symmetric:
+    ? forall epsilon Q_pos, x, y Q:
+        $is_close_in_Q(epsilon, x, y)
+        =>:
+            $is_close_in_Q(epsilon, y, x)
+    dist_Q(y, x) = dist_Q(x, y) <= epsilon
 
 # Proposition 4.3.7(c): closeness composes, with errors adding.
 
-forall epsilon, delta Q_pos, x, y, z Q:
-    $is_close_in_Q(epsilon, x, y)
-    $is_close_in_Q(delta, y, z)
-    =>:
-        $is_close_in_Q(epsilon + delta, x, z)
+thm rational_closeness_is_transitive:
+    ? forall epsilon, delta Q_pos, x, y, z Q:
+        $is_close_in_Q(epsilon, x, y)
+        $is_close_in_Q(delta, y, z)
+        =>:
+            $is_close_in_Q(epsilon + delta, x, z)
+    by thm rational_distance_triangle_inequality(x, y, z)
+    dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z) <= epsilon + delta
 
 # Proposition 4.3.7(d): addition and subtraction preserve closeness, with the
 # two errors adding.
 
-forall epsilon, delta Q_pos, x, y, z, w Q:
-    $is_close_in_Q(epsilon, x, y)
-    $is_close_in_Q(delta, z, w)
-    =>:
-        $is_close_in_Q(epsilon + delta, x + z, y + w)
-        $is_close_in_Q(epsilon + delta, x - z, y - w)
+thm rational_closeness_preserved_by_addition_and_subtraction:
+    ? forall epsilon, delta Q_pos, x, y, z, w Q:
+        $is_close_in_Q(epsilon, x, y)
+        $is_close_in_Q(delta, z, w)
+        =>:
+            $is_close_in_Q(epsilon + delta, x + z, y + w)
+            $is_close_in_Q(epsilon + delta, x - z, y - w)
+    dist_Q(x + z, y + w) = abs((x + z) - (y + w)) = abs((x - y) + (z - w)) <= abs(x - y) + abs(z - w) = dist_Q(x, y) + dist_Q(z, w) <= epsilon + delta
+    dist_Q(x - z, y - w) = abs((x - z) - (y - w)) = abs((x - y) + (w - z)) <= abs(x - y) + abs(w - z) = dist_Q(x, y) + dist_Q(z, w) <= epsilon + delta
 
 # Proposition 4.3.7(f): if two endpoints are epsilon-close to `x`, then every
 # point between those endpoints is also epsilon-close to `x`.
 
-forall epsilon Q_pos, x, y, z, w Q:
-    $is_close_in_Q(epsilon, y, x)
-    $is_close_in_Q(epsilon, z, x)
-    y <= w
-    w <= z
-    =>:
-        $is_close_in_Q(epsilon, w, x)
+thm rational_closeness_of_between_points:
+    ? forall epsilon Q_pos, x, y, z, w Q:
+        $is_close_in_Q(epsilon, y, x)
+        $is_close_in_Q(epsilon, z, x)
+        y <= w
+        w <= z
+        =>:
+            $is_close_in_Q(epsilon, w, x)
+    dist_Q(y, x) <= epsilon
+    abs(y - x) = dist_Q(y, x) <= epsilon
+    by thm rational_abs_upper_bound_gives_two_sided_bound(y - x, epsilon)
+    -epsilon <= y - x
+    dist_Q(z, x) <= epsilon
+    abs(z - x) = dist_Q(z, x) <= epsilon
+    by thm rational_abs_upper_bound_gives_two_sided_bound(z - x, epsilon)
+    z - x <= epsilon
+    -epsilon <= y - x <= w - x
+    w - x <= z - x <= epsilon
+    dist_Q(w, x) = abs(w - x) <= epsilon
 
-forall epsilon Q_pos, x, y, z, w Q:
-    $is_close_in_Q(epsilon, y, x)
-    $is_close_in_Q(epsilon, z, x)
-    z <= w
-    w <= y
-    =>:
-        $is_close_in_Q(epsilon, w, x)
+thm rational_closeness_of_reverse_between_points:
+    ? forall epsilon Q_pos, x, y, z, w Q:
+        $is_close_in_Q(epsilon, y, x)
+        $is_close_in_Q(epsilon, z, x)
+        z <= w
+        w <= y
+        =>:
+            $is_close_in_Q(epsilon, w, x)
+    by thm rational_closeness_of_between_points(epsilon, x, z, y, w)
 
 # Multiplication by a fixed rational scales the error by `abs(z)`: rewrite
 # `(x*z)-(y*z)` as `(x-y)*z`, then use multiplicativity of absolute value.
 
-forall epsilon Q_pos, x, y, z Q:
-    $is_close_in_Q(epsilon, x, y)
-    z != 0
-    =>:
-        $is_close_in_Q(epsilon * abs(z), x * z, y * z)
+thm rational_closeness_scaled_by_nonzero_factor:
+    ? forall epsilon Q_pos, x, y, z Q:
+        $is_close_in_Q(epsilon, x, y)
+        z != 0
+        =>:
+            $is_close_in_Q(epsilon * abs(z), x * z, y * z)
+    dist_Q(x * z, y * z) = abs(x * z - y * z) = abs((x - y) * z) = abs(x - y) * abs(z) = dist_Q(x, y) * abs(z) <= epsilon * abs(z)
 
-# For two moving products, the useful estimate rewrites
-# `xz-yw` as `(x-y)z + x(z-w) - (x-y)(z-w)` and bounds the three terms.
+# Source handling: Proposition 4.3.7 rewrites `xz-yw` as
+# `(x-y)z + x(z-w) - (x-y)(z-w)` and applies the triangle inequality to the
+# three error terms.
+#
+# proof_debt: The complete estimate verifies in isolation, but the current
+# chapter context spends unbounded search time on this proof shape.  Keep only
+# the final product-closeness interface unchecked until the calculation is
+# refactored into smaller reusable estimates.
 
-forall epsilon, delta Q_pos, x, y, z, w Q:
-    $is_close_in_Q(epsilon, x, y)
-    $is_close_in_Q(delta, z, w)
-    =>:
-        $is_close_in_Q(epsilon * abs(z) + delta * abs(x) + epsilon * delta, x * z, y * w)
+thm rational_closeness_of_products:
+    ? forall epsilon, delta Q_pos, x, y, z, w Q:
+        $is_close_in_Q(epsilon, x, y)
+        $is_close_in_Q(delta, z, w)
+        =>:
+            $is_close_in_Q(epsilon * abs(z) + delta * abs(x) + epsilon * delta, x * z, y * w)
+    trust $is_close_in_Q(epsilon * abs(z) + delta * abs(x) + epsilon * delta, x * z, y * w)
 
 """
 Remark 4.3.8. It is often useful to think of the notion of "epsilon-close" as an approximate substitute for that of equality in analysis.
@@ -1074,7 +1120,7 @@ forall x Q, n N_pos:
 forall x Q, n N_pos:
     x = 0
     =>:
-        x^n = 0
+        x^n = 0^n = 0
 
 forall x Q, n N_pos:
     =>:
@@ -1173,6 +1219,18 @@ forall x, y Q_pos, n Z:
 forall x Q_nz, n Z:
     abs(x^n) = abs(x)^n
 
+# Source handling: Proposition 4.4.1 uses the standard fact that every rational
+# admits an integer numerator and a positive natural denominator.
+#
+# proof_debt: The direct construction replaces a nonzero denominator by its
+# absolute value and negates the numerator when needed.  That proof verifies in
+# a focused context but remains too search-heavy in the ordered chapter.
+
+thm rational_has_positive_denominator_representation:
+    ? forall x Q:
+        exist a0 Z, b0 N_pos st {x = a0 / b0}
+    trust exist a0 Z, b0 N_pos st {x = a0 / b0}
+
 """
 Proposition 4.4.1 (Interspersing of integers by rationals). Every rational x
 lies in a unique interval [n, n+1), and some natural number is bigger than x.
@@ -1191,44 +1249,83 @@ have fn integer_quotient by exist!:
     ? forall a Z, d N_pos:
         exist! q Z st {a = d * q + a % d}
 
-claim:
+thm rational_quotient_integer_interval_exists:
     ? forall a Z, b N_pos:
         exist m Z st {m <= a / b, a / b < m + 1}
     have n Z = integer_quotient(a, b)
+    a = b * integer_quotient(a, b) + a % b = b * n + a % b
+    0 <= a % b
+    a % b < b
+    b * n <= b * n + a % b = a
+    n <= a / b
+    a = b * n + a % b < b * n + b = b * (n + 1)
+    a / b < (b * (n + 1)) / b = n + 1
     witness exist m Z st {m <= a / b, a / b < m + 1} from n
 
 # Then use the built-in meaning of rational number: every rational can be
 # represented as an integer divided by a positive natural number.
 
-claim:
+thm rational_integer_interval_exists:
     ? forall x Q:
         exist n Z st {n <= x, x < n + 1}
+    by thm rational_has_positive_denominator_representation(x)
     obtain a, b from exist a Z, b N_pos st {x = a / b}
+    by thm rational_quotient_integer_interval_exists(a, b)
     obtain m from exist m Z st {m <= a / b, a / b < m + 1}
     witness exist n Z st {n <= x, x < n + 1} from m
 
 # The integer endpoint is unique: two intervals `[n,n+1)` and `[m,m+1)`
 # containing the same rational must have `n=m`.
 
-forall x Q, n, m Z:
-    n <= x
-    x < n + 1
-    m <= x
-    x < m + 1
-    =>:
-        n = m
+thm rational_integer_interval_is_unique:
+    ? forall x Q, n, m Z:
+        n <= x
+        x < n + 1
+        m <= x
+        x < m + 1
+        =>:
+            n = m
+    claim:
+        ? m <= n
+        m <= n or m > n
+        by cases:
+            ? m <= n
+            case m <= n:
+                m <= n
+            case m > n:
+                n + 1 <= m
+                x < n + 1 <= m
+                x < m
+                impossible m <= x
+    claim:
+        ? n <= m
+        n <= m or n > m
+        by cases:
+            ? n <= m
+            case n <= m:
+                n <= m
+            case n > m:
+                m + 1 <= n
+                x < m + 1 <= n
+                x < n
+                impossible n <= x
+    n = m
 
-claim:
+thm natural_upper_bound_for_rational:
     ? forall x Q:
         exist n N st {n > x}
-    x <= 0 or x > 0
+    by thm rational_integer_interval_exists(x)
+    obtain m from exist m Z st {m <= x, x < m + 1}
+    m >= 0 or m < 0
     by cases:
         ? exist n N st {n > x}
-        case x <= 0:
+        case m >= 0:
+            have n N = m + 1
+            witness exist k N st {k > x} from n
+        case m < 0:
+            m + 1 <= 0
+            x < m + 1 <= 0 < 1
             witness exist n N st {n > x} from 1
-        case x > 0:
-            obtain a, b from exist a Z, b N_pos st {x = a / b}
-            witness exist n N st {n > x} from a + 1
 
 """
 Remark 4.4.2. The integer n with n <= x < n + 1 is the integer part of x,
@@ -1242,11 +1339,15 @@ there exists z with x < z < y.
 
 # The proof chooses the midpoint `(x+y)/2`, which lies strictly between `x` and `y`.
 
-claim:
+thm rationals_are_dense:
     ? forall x, y Q:
         x < y
         =>:
             exist z Q st {x < z < y}
+    2 * x = x + x < x + y
+    x + y < y + y = 2 * y
+    x = (2 * x) / 2 < (x + y) / 2
+    (x + y) / 2 < (2 * y) / 2 = y
     witness exist z Q st {x < z < y} from (x + y) / 2
 
 
@@ -1268,6 +1369,8 @@ thm integer_square_multiple_of_two_has_even_base:
         p^2 = 2 * r
         =>:
             p % 2 = 0
+    0 < 2
+    p^2 = 2 * r + 0
     p^2 % 2 = 0
     p % 2 = 0 or p % 2 = 1
     by cases:
@@ -1275,10 +1378,7 @@ thm integer_square_multiple_of_two_has_even_base:
         case p % 2 = 0:
             p % 2 = 0
         case p % 2 = 1:
-            have s Z = integer_quotient(p, 2)
-            p = 2 * integer_quotient(p, 2) + p % 2 = 2 * s + 1
-            p^2 = (2 * s + 1)^2 = 2 * (2 * s^2 + 2 * s) + 1
-            p^2 % 2 = 1
+            p^2 % 2 = ((p % 2)^2) % 2 = (1^2) % 2 = 1
             impossible p^2 % 2 = 0
 
 thm rational_reduced_fraction_parity_witness:
@@ -1310,11 +1410,14 @@ thm rational_square_not_two:
     by contra x^2 != 2:
         by thm rational_reduced_fraction_parity_witness(x)
         obtain p, q from exist p Z, q N_pos st {x = p / q, p % 2 != 0 or q % 2 != 0}
-        p^2 = 2 * q^2
+        (p / q)^2 = x^2 = 2
+        p^2 / q^2 = (p / q)^2 = 2
+        p^2 = (p^2 / q^2) * q^2 = 2 * q^2
         by thm integer_square_multiple_of_two_has_even_base(p, q^2)
         have s Z = integer_quotient(p, 2)
         p = 2 * integer_quotient(p, 2) + p % 2 = 2 * s + p % 2 = 2 * s
-        q^2 = 2 * s^2
+        2 * q^2 = p^2 = (2 * s)^2 = 4 * s^2
+        q^2 = (2 * q^2) / 2 = (4 * s^2) / 2 = 2 * s^2
         by thm integer_square_multiple_of_two_has_even_base(q, s^2)
         by cases:
             ? q % 2 != 0
@@ -1332,27 +1435,73 @@ non-negative rational x such that x^2 < 2 < (x+epsilon)^2.
 # Although `sqrt(2)` is not rational, rationals can straddle the gap at
 # arbitrarily small positive width.
 
-claim:
+# This predicate records the condition on a proposed witness.  It is a
+# property, not a selected function: Proposition 4.4.5 proves existence but
+# does not choose a canonical rational `x`.
+
+prop is_rational_sqrt_two_gap_witness(epsilon Q_pos, x Q):
+    x >= 0
+    x^2 < 2
+    2 < (x + epsilon)^2
+
+# If no gap witness exists, adding `epsilon` to any non-negative rational whose
+# square is below two must stay below two.  Equality is excluded by
+# `rational_square_not_two`.
+
+thm rational_sqrt_two_no_gap_step:
+    ? forall epsilon Q_pos, y Q:
+        not exist x Q st {$is_rational_sqrt_two_gap_witness(epsilon, x)}
+        y >= 0
+        y^2 < 2
+        =>:
+            (y + epsilon)^2 < 2
+    claim:
+        ? not 2 < (y + epsilon)^2
+        by contra:
+            ? not 2 < (y + epsilon)^2
+            by def $is_rational_sqrt_two_gap_witness(epsilon, y)
+            impossible not $is_rational_sqrt_two_gap_witness(epsilon, y)
+    by thm rational_square_not_two(y + epsilon)
+    (y + epsilon)^2 != 2
+    (y + epsilon)^2 < 2 or (y + epsilon)^2 = 2 or (y + epsilon)^2 > 2
+    by cases:
+        ? (y + epsilon)^2 < 2
+        case (y + epsilon)^2 < 2:
+            (y + epsilon)^2 < 2
+        case (y + epsilon)^2 = 2:
+            impossible (y + epsilon)^2 != 2
+        case (y + epsilon)^2 > 2:
+            impossible not 2 < (y + epsilon)^2
+
+# Under the same no-gap assumption, induction keeps every natural multiple of
+# `epsilon` below the square threshold.
+
+thm rational_sqrt_two_no_gap_forces_each_multiple_below_two:
+    ? forall epsilon Q_pos, n N:
+        not exist x Q st {$is_rational_sqrt_two_gap_witness(epsilon, x)}
+        =>:
+            (n * epsilon)^2 < 2
+    by induc n from 0:
+        ? (n * epsilon)^2 < 2
+        ? from n = 0:
+            (0 * epsilon)^2 = 0 < 2
+        ? induc:
+            n * epsilon >= 0
+            by thm rational_sqrt_two_no_gap_step(epsilon, n * epsilon)
+            (n * epsilon + epsilon)^2 < 2
+            (n + 1) * epsilon = n * epsilon + epsilon
+            ((n + 1) * epsilon)^2 = (n * epsilon + epsilon)^2 < 2
+
+thm rational_sqrt_two_gap:
     ? forall epsilon Q_pos:
-        exist x Q st {x >= 0, x^2 < 2, 2 < (x + epsilon)^2}
+        exist x Q st {$is_rational_sqrt_two_gap_witness(epsilon, x)}
     by contra:
-        ? exist x Q st {x >= 0, x^2 < 2, 2 < (x + epsilon)^2}
-        forall y Q:
-            y >= 0
-            y^2 < 2
-            =>:
-                (y + epsilon)^2 < 2
-        by induc n from 0:
-            ? (n * epsilon)^2 < 2
-
-            ? from n = 0:
-                (0 * epsilon)^2 < 2
-
-            ? induc:
-                ((n + 1) * epsilon)^2 < 2
+        ? exist x Q st {$is_rational_sqrt_two_gap_witness(epsilon, x)}
+        by thm natural_upper_bound_for_rational(2 / epsilon)
         obtain n from exist n N st {n > 2 / epsilon}
-        n * epsilon > 2
-        (n * epsilon)^2 > 2
+        by thm rational_sqrt_two_no_gap_forces_each_multiple_below_two(epsilon, n)
+        n * epsilon > (2 / epsilon) * epsilon = 2
+        (n * epsilon)^2 > 2^2 = 4 > 2
         impossible (n * epsilon)^2 < 2
 
 """

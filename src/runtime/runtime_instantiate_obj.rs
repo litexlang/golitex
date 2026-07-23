@@ -1,14 +1,17 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-fn remove_param_names_from_param_to_arg_map(
+fn remove_param_bindings_from_param_to_arg_map(
     param_to_arg_map: &HashMap<String, Obj>,
-    param_names: &Vec<String>,
+    param_bindings: &[SymbolBinding],
 ) -> HashMap<String, Obj> {
     let mut filtered_param_to_arg_map = HashMap::new();
-    for (param_name, arg) in param_to_arg_map.iter() {
-        if !param_names.contains(param_name) {
-            filtered_param_to_arg_map.insert(param_name.clone(), arg.clone());
+    for (key, arg) in param_to_arg_map.iter() {
+        if !param_bindings
+            .iter()
+            .any(|binding| key == binding.name() || key == &binding.substitution_key())
+        {
+            filtered_param_to_arg_map.insert(key.clone(), arg.clone());
         }
     }
     filtered_param_to_arg_map
@@ -22,6 +25,11 @@ impl Runtime {
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
         if let Obj::Atom(atom) = obj {
+            if let Some(symbol) = atom.symbol_ref() {
+                if let Some(replacement) = param_to_arg_map.get(&symbol.substitution_key()) {
+                    return Ok(replacement.clone());
+                }
+            }
             match param_obj_type {
                 ParamObjType::AlphaRename => {
                     return Ok(
@@ -33,6 +41,9 @@ impl Runtime {
                         .unwrap_or_else(|| obj.clone()));
                 }
                 _ => {}
+            }
+            if atom.symbol_ref().is_some() {
+                return Ok(obj.clone());
             }
         }
         match obj {
@@ -167,7 +178,21 @@ impl Runtime {
                 for arg in template_obj.args.iter() {
                     args.push(self.inst_obj(arg, param_to_arg_map, param_obj_type)?);
                 }
-                Ok(InstantiatedTemplateObj::new(template_obj.template_name.clone(), args).into())
+                let surface_name = format!(
+                    "{}{}{}{}{}",
+                    TEMPLATE_INSTANCE_PREFIX,
+                    template_obj.template_name,
+                    LESS,
+                    vec_to_string_join_by_comma(&args),
+                    GREATER
+                );
+                let binding = self.intern_template_instance_symbol_binding(&surface_name)?;
+                Ok(InstantiatedTemplateObj::new(
+                    template_obj.template_name.clone(),
+                    args,
+                    binding.as_ref(),
+                )
+                .into())
             }
             Obj::Atom(AtomObj::Forall(p)) => {
                 if param_obj_type == ParamObjType::Forall
@@ -643,7 +668,7 @@ impl Runtime {
         let target: Obj = set_builder.clone().into();
         let rename_map = self.capture_avoiding_obj_binder_rename_map(
             ParamObjType::SetBuilder,
-            &[set_builder.param.clone()],
+            std::slice::from_ref(&set_builder.param_binding),
             &target,
             param_to_arg_map,
         );
@@ -658,8 +683,13 @@ impl Runtime {
         let Obj::SetBuilder(instantiated) = instantiated else {
             unreachable!("set-builder instantiation must return a set builder");
         };
+        let restored = self.alpha_rename_set_builder(&instantiated, &restore_map)?;
+        let visible_rename_map = self.visible_binding_conflict_rename_map(
+            std::slice::from_ref(&restored.param_binding),
+            ParamObjType::SetBuilder,
+        )?;
         Ok(self
-            .alpha_rename_set_builder(&instantiated, &restore_map)?
+            .alpha_rename_set_builder(&restored, &visible_rename_map)?
             .into())
     }
 
@@ -669,9 +699,11 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let param_names = vec![set_builder.param.clone()];
         let filtered_param_to_arg_map = if param_obj_type == ParamObjType::SetBuilder {
-            remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names)
+            remove_param_bindings_from_param_to_arg_map(
+                param_to_arg_map,
+                std::slice::from_ref(&set_builder.param_binding),
+            )
         } else {
             param_to_arg_map.clone()
         };
@@ -685,7 +717,7 @@ impl Runtime {
             )?);
         }
         Ok(SetBuilder::new(
-            set_builder.param.clone(),
+            set_builder.param_binding.clone(),
             self.inst_obj(
                 &set_builder.param_set,
                 &filtered_param_to_arg_map,
@@ -716,12 +748,16 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let param_names =
-            ParamGroupWithSet::collect_param_names(&fn_set_with_params.body.params_def_with_set);
+        let param_bindings = fn_set_with_params
+            .body
+            .params_def_with_set
+            .iter()
+            .flat_map(|group| group.params.iter().cloned())
+            .collect::<Vec<_>>();
         let target: Obj = fn_set_with_params.clone().into();
         let rename_map = self.capture_avoiding_obj_binder_rename_map(
             ParamObjType::FnSet,
-            &param_names,
+            &param_bindings,
             &target,
             param_to_arg_map,
         );
@@ -736,8 +772,12 @@ impl Runtime {
         let Obj::FnSet(instantiated) = instantiated else {
             unreachable!("function-set instantiation must return a function set");
         };
+        let restored = self.alpha_rename_fn_set(&instantiated, &restore_map)?;
+        let restored_bindings = restored.body.params_def_with_set.collect_param_bindings();
+        let visible_rename_map =
+            self.visible_binding_conflict_rename_map(&restored_bindings, ParamObjType::FnSet)?;
         Ok(self
-            .alpha_rename_fn_set(&instantiated, &restore_map)?
+            .alpha_rename_fn_set(&restored, &visible_rename_map)?
             .into())
     }
 
@@ -747,10 +787,12 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let param_names =
-            ParamGroupWithSet::collect_param_names(&fn_set_with_params.body.params_def_with_set);
+        let param_bindings = fn_set_with_params
+            .body
+            .params_def_with_set
+            .collect_param_bindings();
         let filtered_param_to_arg_map = if param_obj_type == ParamObjType::FnSet {
-            remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names)
+            remove_param_bindings_from_param_to_arg_map(param_to_arg_map, &param_bindings)
         } else {
             param_to_arg_map.clone()
         };
@@ -793,11 +835,16 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+        let param_bindings = af
+            .body
+            .params_def_with_set
+            .iter()
+            .flat_map(|group| group.params.iter().cloned())
+            .collect::<Vec<_>>();
         let target: Obj = af.clone().into();
         let rename_map = self.capture_avoiding_obj_binder_rename_map(
             ParamObjType::FnSet,
-            &param_names,
+            &param_bindings,
             &target,
             param_to_arg_map,
         );
@@ -812,8 +859,12 @@ impl Runtime {
         let Obj::AnonymousFn(instantiated) = instantiated else {
             unreachable!("anonymous-function instantiation must return an anonymous function");
         };
+        let restored = self.alpha_rename_anonymous_fn(&instantiated, &restore_map)?;
+        let restored_bindings = restored.body.params_def_with_set.collect_param_bindings();
+        let visible_rename_map =
+            self.visible_binding_conflict_rename_map(&restored_bindings, ParamObjType::FnSet)?;
         Ok(self
-            .alpha_rename_anonymous_fn(&instantiated, &restore_map)?
+            .alpha_rename_anonymous_fn(&restored, &visible_rename_map)?
             .into())
     }
 
@@ -823,9 +874,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+        let param_bindings = af.body.params_def_with_set.collect_param_bindings();
         let filtered_param_to_arg_map = if param_obj_type == ParamObjType::FnSet {
-            remove_param_names_from_param_to_arg_map(param_to_arg_map, &param_names)
+            remove_param_bindings_from_param_to_arg_map(param_to_arg_map, &param_bindings)
         } else {
             param_to_arg_map.clone()
         };
@@ -869,7 +920,7 @@ impl Runtime {
     fn capture_avoiding_obj_binder_rename_map(
         &self,
         binder_kind: ParamObjType,
-        binder_names: &[String],
+        binder_bindings: &[SymbolBinding],
         target: &Obj,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> HashMap<String, Obj> {
@@ -881,21 +932,25 @@ impl Runtime {
         let mut reserved_names = replacement_names.clone();
         reserved_names.extend(target.collect_param_obj_names(binder_kind));
         let mut rename_map = HashMap::new();
-        for name in binder_names {
-            if !replacement_names.contains(name) {
+        for binding in binder_bindings {
+            if !replacement_names.contains(binding.name()) {
                 continue;
             }
             let fresh_name = self.generate_one_unused_name_with_reserved(&reserved_names);
             reserved_names.insert(fresh_name.clone());
-            rename_map.insert(
-                name.clone(),
-                obj_for_bound_param_in_scope(fresh_name, binder_kind),
+            let fresh_binding = self
+                .allocate_local_symbol_binding(fresh_name)
+                .expect("internal binder identity counter exhausted");
+            insert_symbol_substitution(
+                &mut rename_map,
+                binding,
+                obj_for_bound_param_in_scope(&fresh_binding, binder_kind),
             );
         }
         rename_map
     }
 
-    fn alpha_rename_set_builder(
+    pub(crate) fn alpha_rename_set_builder(
         &self,
         set_builder: &SetBuilder,
         rename_map: &HashMap<String, Obj>,
@@ -913,7 +968,11 @@ impl Runtime {
             )?);
         }
         SetBuilder::new(
-            renamed_bound_param_name(&set_builder.param, rename_map, ParamObjType::SetBuilder),
+            renamed_bound_param_binding(
+                &set_builder.param_binding,
+                rename_map,
+                ParamObjType::SetBuilder,
+            ),
             self.inst_obj(
                 set_builder.param_set.as_ref(),
                 rename_map,
@@ -923,7 +982,7 @@ impl Runtime {
         )
     }
 
-    fn alpha_rename_fn_set(
+    pub(crate) fn alpha_rename_fn_set(
         &self,
         fn_set: &FnSet,
         rename_map: &HashMap<String, Obj>,
@@ -956,6 +1015,29 @@ impl Runtime {
         )
     }
 
+    pub(crate) fn visible_binding_conflict_rename_map(
+        &self,
+        bindings: &[SymbolBinding],
+        target_kind: ParamObjType,
+    ) -> Result<HashMap<String, Obj>, RuntimeError> {
+        let mut rename_map = HashMap::new();
+        for binding in bindings {
+            let Some(visible) = self.visible_symbol_definition(binding.name()) else {
+                continue;
+            };
+            if visible.binding().id() == binding.id() {
+                continue;
+            }
+            let fresh = self.allocate_internal_symbol_binding()?;
+            insert_symbol_substitution(
+                &mut rename_map,
+                binding,
+                obj_for_bound_param_in_scope(&fresh, target_kind),
+            );
+        }
+        Ok(rename_map)
+    }
+
     pub(crate) fn alpha_rename_fn_set_body(
         &self,
         body: &FnSetBody,
@@ -972,12 +1054,18 @@ impl Runtime {
             let params = group
                 .params
                 .iter()
-                .map(|name| renamed_bound_param_name(name, rename_map, ParamObjType::FnSet))
-                .collect();
+                .map(|binding| {
+                    renamed_bound_param_binding(binding, rename_map, ParamObjType::FnSet)
+                })
+                .collect::<Vec<_>>();
             params_def_with_set.push(ParamGroupWithSet::new(params, param_set));
-            for name in group.params.iter() {
-                if let Some(replacement) = rename_map.get(name) {
-                    active_rename_map.insert(name.clone(), replacement.clone());
+            for binding in group.params.iter() {
+                if let Some(replacement) = rename_map.get(&binding.substitution_key()) {
+                    insert_symbol_substitution(
+                        &mut active_rename_map,
+                        binding,
+                        replacement.clone(),
+                    );
                 }
             }
         }
@@ -1379,8 +1467,8 @@ impl Runtime {
                 };
             instantiated_param_sets.push(instantiated_param_set);
 
-            for param_name in param_def.params.iter() {
-                param_to_arg_map.insert(param_name.clone(), args[arg_index].clone());
+            for binding in param_def.params.iter() {
+                insert_symbol_substitution(&mut param_to_arg_map, binding, args[arg_index].clone());
                 arg_index += 1;
             }
         }
@@ -1416,9 +1504,9 @@ impl Runtime {
                 param_def.param_type.clone()
             };
 
-            for param_name in param_def.params.iter() {
+            for binding in param_def.params.iter() {
                 new_types.push(new_type.clone());
-                param_arg_map.insert(param_name.clone(), args[arg_index].clone());
+                insert_symbol_substitution(&mut param_arg_map, binding, args[arg_index].clone());
                 arg_index += 1;
             }
         }
@@ -1434,24 +1522,52 @@ fn safe_obj_binder_restore_map(
 ) -> HashMap<String, Obj> {
     let remaining_names = instantiated.collect_param_obj_names(binder_kind);
     let mut restore_map = HashMap::new();
-    for (original_name, fresh_obj) in rename_map {
+    for (source_key, fresh_obj) in rename_map {
+        let Some(source_id) = SymbolId::from_substitution_key(source_key) else {
+            continue;
+        };
+        let Obj::Atom(fresh_atom) = fresh_obj else {
+            continue;
+        };
+        let Some(fresh_symbol) = fresh_atom.symbol_ref() else {
+            continue;
+        };
+        let Some(original_name) = rename_map.iter().find_map(|(candidate, candidate_obj)| {
+            if SymbolId::from_substitution_key(candidate).is_some() {
+                return None;
+            }
+            let Obj::Atom(candidate_atom) = candidate_obj else {
+                return None;
+            };
+            candidate_atom
+                .symbol_ref()
+                .is_some_and(|symbol| symbol.id() == fresh_symbol.id())
+                .then_some(candidate.as_str())
+        }) else {
+            continue;
+        };
         if remaining_names.contains(original_name) {
             continue;
         }
-        let fresh_name = match (binder_kind, fresh_obj) {
-            (ParamObjType::SetBuilder, Obj::Atom(AtomObj::SetBuilder(param))) => &param.name,
-            (ParamObjType::FnSet, Obj::Atom(AtomObj::FnSet(param))) => &param.name,
-            _ => continue,
-        };
-        restore_map.insert(
-            fresh_name.clone(),
-            obj_for_bound_param_in_scope(original_name.clone(), binder_kind),
+        let source_binding = SymbolBinding::new(
+            source_id,
+            original_name.to_string(),
+            original_name.to_string(),
+        );
+        let fresh_binding = fresh_symbol.to_local_binding();
+        insert_symbol_substitution(
+            &mut restore_map,
+            &fresh_binding,
+            obj_for_bound_param_in_scope(&source_binding, binder_kind),
         );
     }
     restore_map
 }
 
 fn alpha_renamed_atom(atom: &AtomObj, rename_map: &HashMap<String, Obj>) -> Option<Obj> {
+    if let Some(symbol) = atom.symbol_ref() {
+        return rename_map.get(&symbol.substitution_key()).cloned();
+    }
     let name = match atom {
         AtomObj::Identifier(_) | AtomObj::IdentifierWithMod(_) => return None,
         AtomObj::Forall(param) => &param.name,
@@ -1480,6 +1596,9 @@ fn binder_retagged_atom(
     binding_map: &HashMap<String, Obj>,
     source: BinderRetagSource,
 ) -> Option<Obj> {
+    if let Some(symbol) = atom.symbol_ref() {
+        return binding_map.get(&symbol.substitution_key()).cloned();
+    }
     let name = match (source, atom) {
         (BinderRetagSource::Forall, AtomObj::Forall(param)) => &param.name,
         (BinderRetagSource::Exist, AtomObj::Exist(param)) => &param.name,
@@ -1491,17 +1610,19 @@ fn binder_retagged_atom(
     binding_map.get(name).cloned()
 }
 
-fn renamed_bound_param_name(
-    name: &str,
+fn renamed_bound_param_binding(
+    binding: &SymbolBinding,
     rename_map: &HashMap<String, Obj>,
     kind: ParamObjType,
-) -> String {
-    match (kind, rename_map.get(name)) {
+) -> SymbolBinding {
+    match (kind, rename_map.get(&binding.substitution_key())) {
         (ParamObjType::SetBuilder, Some(Obj::Atom(AtomObj::SetBuilder(param)))) => {
-            param.name.clone()
+            param.symbol.to_local_binding()
         }
-        (ParamObjType::FnSet, Some(Obj::Atom(AtomObj::FnSet(param)))) => param.name.clone(),
-        _ => name.to_string(),
+        (ParamObjType::FnSet, Some(Obj::Atom(AtomObj::FnSet(param)))) => {
+            param.symbol.to_local_binding()
+        }
+        _ => binding.clone(),
     }
 }
 
@@ -1511,26 +1632,64 @@ mod capture_avoidance_tests {
     use std::collections::HashMap;
 
     #[test]
+    fn exact_symbol_substitution_does_not_replace_a_same_name_binding() {
+        let runtime = Runtime::new();
+        let target_binding = runtime
+            .allocate_local_symbol_binding("x".to_string())
+            .unwrap();
+        let other_binding = runtime
+            .allocate_local_symbol_binding("x".to_string())
+            .unwrap();
+        let target: Obj = DefHeaderFreeParamObj::new(&target_binding).into();
+        let mut map = HashMap::new();
+        insert_symbol_substitution(
+            &mut map,
+            &other_binding,
+            Number::new("1".to_string()).into(),
+        );
+
+        let instantiated = runtime
+            .inst_obj(&target, &map, ParamObjType::DefHeader)
+            .unwrap();
+
+        assert!(matches!(
+            instantiated,
+            Obj::Atom(AtomObj::Def(param)) if param.symbol.id() == target_binding.id()
+        ));
+    }
+
+    #[test]
     fn set_builder_instantiation_alpha_renames_only_its_own_binder_kind() {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("set_builder_capture_avoidance");
+        let a_binding = runtime
+            .allocate_local_symbol_binding("a".to_string())
+            .unwrap();
+        let n_binding = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
+        let replacement_n = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
         let body_fact: AtomicFact = EqualFact::new(
-            DefHeaderFreeParamObj::new("a".to_string()).into(),
-            SetBuilderFreeParamObj::new("n".to_string()).into(),
+            DefHeaderFreeParamObj::new(&a_binding).into(),
+            SetBuilderFreeParamObj::new(&n_binding).into(),
             default_line_file(),
         )
         .into();
         let object: Obj = SetBuilder::new(
-            "n".to_string(),
+            n_binding,
             Identifier::new("n".to_string()).into(),
             vec![body_fact.into()],
         )
         .unwrap()
         .into();
-        let map = HashMap::from([(
-            "a".to_string(),
-            Obj::from(SetBuilderFreeParamObj::new("n".to_string())),
-        )]);
+        let mut map = HashMap::new();
+        insert_symbol_substitution(
+            &mut map,
+            &a_binding,
+            SetBuilderFreeParamObj::new(&replacement_n).into(),
+        );
 
         let instantiated = runtime
             .inst_obj(&object, &map, ParamObjType::DefHeader)
@@ -1561,31 +1720,41 @@ mod capture_avoidance_tests {
     fn surviving_closed_set_builder_replacement_keeps_outer_binder_fresh() {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("closed_set_builder_replacement");
+        let a_binding = runtime
+            .allocate_local_symbol_binding("a".to_string())
+            .unwrap();
+        let target_n = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
         let target: Obj = SetBuilder::new(
-            "n".to_string(),
+            target_n.clone(),
             StandardSet::R.into(),
             vec![EqualFact::new(
-                DefHeaderFreeParamObj::new("a".to_string()).into(),
-                SetBuilderFreeParamObj::new("n".to_string()).into(),
+                DefHeaderFreeParamObj::new(&a_binding).into(),
+                SetBuilderFreeParamObj::new(&target_n).into(),
                 default_line_file(),
             )
             .into()],
         )
         .unwrap()
         .into();
+        let replacement_n = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
         let replacement: Obj = SetBuilder::new(
-            "n".to_string(),
+            replacement_n.clone(),
             StandardSet::R.into(),
             vec![EqualFact::new(
-                SetBuilderFreeParamObj::new("n".to_string()).into(),
-                SetBuilderFreeParamObj::new("n".to_string()).into(),
+                SetBuilderFreeParamObj::new(&replacement_n).into(),
+                SetBuilderFreeParamObj::new(&replacement_n).into(),
                 default_line_file(),
             )
             .into()],
         )
         .unwrap()
         .into();
-        let map = HashMap::from([("a".to_string(), replacement)]);
+        let mut map = HashMap::new();
+        insert_symbol_substitution(&mut map, &a_binding, replacement);
 
         let instantiated = runtime
             .inst_obj(&target, &map, ParamObjType::DefHeader)
@@ -1595,12 +1764,15 @@ mod capture_avoidance_tests {
         };
         assert_ne!(instantiated.param, "n");
 
+        let unused_n = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
         let unused_target: Obj = SetBuilder::new(
-            "n".to_string(),
+            unused_n.clone(),
             StandardSet::R.into(),
             vec![EqualFact::new(
-                SetBuilderFreeParamObj::new("n".to_string()).into(),
-                SetBuilderFreeParamObj::new("n".to_string()).into(),
+                SetBuilderFreeParamObj::new(&unused_n).into(),
+                SetBuilderFreeParamObj::new(&unused_n).into(),
                 default_line_file(),
             )
             .into()],
@@ -1620,26 +1792,38 @@ mod capture_avoidance_tests {
     fn function_binder_instantiation_preserves_outer_argument_and_concrete_type() {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("function_binder_capture_avoidance");
+        let a_binding = runtime
+            .allocate_local_symbol_binding("a".to_string())
+            .unwrap();
+        let group = runtime
+            .fresh_param_group_with_set(
+                vec!["n".to_string()],
+                Identifier::new("n".to_string()).into(),
+            )
+            .unwrap();
+        let n_binding = group.params[0].clone();
         let dom_fact: AtomicFact = EqualFact::new(
-            DefHeaderFreeParamObj::new("a".to_string()).into(),
-            FnSetFreeParamObj::new("n".to_string()).into(),
+            DefHeaderFreeParamObj::new(&a_binding).into(),
+            FnSetFreeParamObj::new(&n_binding).into(),
             default_line_file(),
         )
         .into();
         let object: Obj = FnSet::new(
-            vec![ParamGroupWithSet::new(
-                vec!["n".to_string()],
-                Identifier::new("n".to_string()).into(),
-            )],
+            vec![group],
             vec![dom_fact.into()],
             Identifier::new("ret".to_string()).into(),
         )
         .unwrap()
         .into();
-        let map = HashMap::from([(
-            "a".to_string(),
-            Obj::from(FnSetFreeParamObj::new("n".to_string())),
-        )]);
+        let replacement_n = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
+        let mut map = HashMap::new();
+        insert_symbol_substitution(
+            &mut map,
+            &a_binding,
+            FnSetFreeParamObj::new(&replacement_n).into(),
+        );
 
         let instantiated = runtime
             .inst_obj(&object, &map, ParamObjType::DefHeader)
@@ -1647,7 +1831,7 @@ mod capture_avoidance_tests {
         let Obj::FnSet(instantiated) = instantiated else {
             panic!("expected function set");
         };
-        let fresh_name = &instantiated.body.params_def_with_set[0].params[0];
+        let fresh_name = instantiated.body.params_def_with_set[0].params[0].name();
         assert_ne!(fresh_name, "n");
         assert!(matches!(
             instantiated.body.params_def_with_set[0].set_obj(),
@@ -1664,7 +1848,7 @@ mod capture_avoidance_tests {
         ));
         assert!(matches!(
             &equality.right,
-            Obj::Atom(AtomObj::FnSet(param)) if param.name == *fresh_name
+            Obj::Atom(AtomObj::FnSet(param)) if param.name == fresh_name
         ));
     }
 
@@ -1672,29 +1856,34 @@ mod capture_avoidance_tests {
     fn anonymous_function_restores_binder_only_after_collision_disappears() {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("closed_anonymous_function_replacement");
+        let f_binding = runtime
+            .allocate_local_symbol_binding("f".to_string())
+            .unwrap();
+        let target_group = runtime
+            .fresh_param_group_with_set(vec!["x".to_string()], StandardSet::R.into())
+            .unwrap();
         let target: Obj = AnonymousFn::new(
-            vec![ParamGroupWithSet::new(
-                vec!["x".to_string()],
-                StandardSet::R.into(),
-            )],
+            vec![target_group],
             vec![],
             StandardSet::R.into(),
-            DefHeaderFreeParamObj::new("f".to_string()).into(),
+            DefHeaderFreeParamObj::new(&f_binding).into(),
         )
         .unwrap()
         .into();
+        let replacement_group = runtime
+            .fresh_param_group_with_set(vec!["x".to_string()], StandardSet::R.into())
+            .unwrap();
+        let replacement_x = replacement_group.params[0].clone();
         let replacement: Obj = AnonymousFn::new(
-            vec![ParamGroupWithSet::new(
-                vec!["x".to_string()],
-                StandardSet::R.into(),
-            )],
+            vec![replacement_group],
             vec![],
             StandardSet::R.into(),
-            FnSetFreeParamObj::new("x".to_string()).into(),
+            FnSetFreeParamObj::new(&replacement_x).into(),
         )
         .unwrap()
         .into();
-        let map = HashMap::from([("f".to_string(), replacement)]);
+        let mut map = HashMap::new();
+        insert_symbol_substitution(&mut map, &f_binding, replacement);
 
         let instantiated = runtime
             .inst_obj(&target, &map, ParamObjType::DefHeader)
@@ -1702,26 +1891,32 @@ mod capture_avoidance_tests {
         let Obj::AnonymousFn(instantiated) = instantiated else {
             panic!("expected anonymous function");
         };
-        assert_ne!(instantiated.body.params_def_with_set[0].params, vec!["x"]);
+        assert_ne!(
+            instantiated.body.params_def_with_set[0].param_names(),
+            vec!["x"]
+        );
 
+        let beta_group = runtime
+            .fresh_param_group_with_set(vec!["x".to_string()], StandardSet::R.into())
+            .unwrap();
+        let beta_x = beta_group.params[0].clone();
+        let theorem_f = runtime
+            .allocate_local_symbol_binding("f".to_string())
+            .unwrap();
         let beta_target: Obj = AnonymousFn::new(
-            vec![ParamGroupWithSet::new(
-                vec!["x".to_string()],
-                StandardSet::R.into(),
-            )],
+            vec![beta_group],
             vec![],
             StandardSet::R.into(),
             FnObj::new(
-                ForallFreeParamObj::new("f".to_string()).into(),
-                vec![vec![Box::new(
-                    FnSetFreeParamObj::new("x".to_string()).into(),
-                )]],
+                ForallFreeParamObj::new(&theorem_f).into(),
+                vec![vec![Box::new(FnSetFreeParamObj::new(&beta_x).into())]],
             )
             .into(),
         )
         .unwrap()
         .into();
-        let theorem_map = HashMap::from([("f".to_string(), map["f"].clone())]);
+        let mut theorem_map = HashMap::new();
+        insert_symbol_substitution(&mut theorem_map, &theorem_f, map["f"].clone());
         let restored = runtime
             .inst_obj(
                 &beta_target,
@@ -1732,29 +1927,43 @@ mod capture_avoidance_tests {
         let Obj::AnonymousFn(restored) = restored else {
             panic!("expected anonymous function");
         };
-        assert_eq!(restored.body.params_def_with_set[0].params, vec!["x"]);
+        assert_eq!(
+            restored.body.params_def_with_set[0].param_names(),
+            vec!["x"]
+        );
     }
 
     #[test]
     fn set_builder_alpha_rename_updates_a_dependent_parameter_set() {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("set_builder_dependent_type_alpha_rename");
+        let n_binding = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
+        let a_binding = runtime
+            .allocate_local_symbol_binding("a".to_string())
+            .unwrap();
         let object: Obj = SetBuilder::new(
-            "n".to_string(),
-            SetBuilderFreeParamObj::new("n".to_string()).into(),
+            n_binding.clone(),
+            SetBuilderFreeParamObj::new(&n_binding).into(),
             vec![EqualFact::new(
-                DefHeaderFreeParamObj::new("a".to_string()).into(),
-                SetBuilderFreeParamObj::new("n".to_string()).into(),
+                DefHeaderFreeParamObj::new(&a_binding).into(),
+                SetBuilderFreeParamObj::new(&n_binding).into(),
                 default_line_file(),
             )
             .into()],
         )
         .unwrap()
         .into();
-        let map = HashMap::from([(
-            "a".to_string(),
-            Obj::from(SetBuilderFreeParamObj::new("n".to_string())),
-        )]);
+        let replacement_n = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
+        let mut map = HashMap::new();
+        insert_symbol_substitution(
+            &mut map,
+            &a_binding,
+            SetBuilderFreeParamObj::new(&replacement_n).into(),
+        );
 
         let instantiated = runtime
             .inst_obj(&object, &map, ParamObjType::DefHeader)
@@ -1772,30 +1981,45 @@ mod capture_avoidance_tests {
     #[test]
     fn function_alpha_rename_respects_dependent_parameter_scope() {
         let runtime = Runtime::new();
+        let external_n = runtime
+            .allocate_local_symbol_binding("n".to_string())
+            .unwrap();
+        let n_group = runtime
+            .fresh_param_group_with_set(
+                vec!["n".to_string()],
+                FnSetFreeParamObj::new(&external_n).into(),
+            )
+            .unwrap();
+        let n_binding = n_group.params[0].clone();
+        let m_group = runtime
+            .fresh_param_group_with_set(
+                vec!["m".to_string()],
+                FnSetFreeParamObj::new(&n_binding).into(),
+            )
+            .unwrap();
+        let m_binding = m_group.params[0].clone();
         let body = FnSetBody::new(
-            vec![
-                ParamGroupWithSet::new(
-                    vec!["n".to_string()],
-                    FnSetFreeParamObj::new("n".to_string()).into(),
-                ),
-                ParamGroupWithSet::new(
-                    vec!["m".to_string()],
-                    FnSetFreeParamObj::new("n".to_string()).into(),
-                ),
-            ],
+            vec![n_group, m_group],
             vec![],
-            FnSetFreeParamObj::new("m".to_string()).into(),
+            FnSetFreeParamObj::new(&m_binding).into(),
         );
-        let rename_map = HashMap::from([
-            (
-                "n".to_string(),
-                Obj::from(FnSetFreeParamObj::new("n_fresh".to_string())),
-            ),
-            (
-                "m".to_string(),
-                Obj::from(FnSetFreeParamObj::new("m_fresh".to_string())),
-            ),
-        ]);
+        let n_fresh = runtime
+            .allocate_local_symbol_binding("n_fresh".to_string())
+            .unwrap();
+        let m_fresh = runtime
+            .allocate_local_symbol_binding("m_fresh".to_string())
+            .unwrap();
+        let mut rename_map = HashMap::new();
+        insert_symbol_substitution(
+            &mut rename_map,
+            &n_binding,
+            FnSetFreeParamObj::new(&n_fresh).into(),
+        );
+        insert_symbol_substitution(
+            &mut rename_map,
+            &m_binding,
+            FnSetFreeParamObj::new(&m_fresh).into(),
+        );
 
         let renamed = runtime
             .alpha_rename_fn_set_body(&body, &rename_map)
@@ -1808,8 +2032,14 @@ mod capture_avoidance_tests {
             renamed.params_def_with_set[1].set_obj(),
             Obj::Atom(AtomObj::FnSet(param)) if param.name == "n_fresh"
         ));
-        assert_eq!(renamed.params_def_with_set[0].params, vec!["n_fresh"]);
-        assert_eq!(renamed.params_def_with_set[1].params, vec!["m_fresh"]);
+        assert_eq!(
+            renamed.params_def_with_set[0].param_names(),
+            vec!["n_fresh"]
+        );
+        assert_eq!(
+            renamed.params_def_with_set[1].param_names(),
+            vec!["m_fresh"]
+        );
         assert!(matches!(
             renamed.ret_set.as_ref(),
             Obj::Atom(AtomObj::FnSet(param)) if param.name == "m_fresh"

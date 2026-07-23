@@ -115,13 +115,13 @@ impl Runtime {
         let Obj::AnonymousFn(function) = sum.func.as_ref() else {
             return Ok(None);
         };
-        let params = function.body.get_params();
+        let params = function.body.get_param_bindings();
         if params.len() != 1 {
             return Ok(None);
         }
-        let index = obj_for_bound_param_in_scope(params[0].clone(), ParamObjType::FnSet);
+        let index = obj_for_bound_param_in_scope(&params[0], ParamObjType::FnSet);
         let mut map = HashMap::new();
-        map.insert(params[0].clone(), index.clone());
+        insert_symbol_substitution(&mut map, &params[0], index.clone());
         let actual_term = self.inst_obj(&function.equal_to, &map, ParamObjType::FnSet)?;
         let left_head = FnObjHead::from_callable_obj((*product.left).clone())
             .expect("well-defined matrix operand is callable");

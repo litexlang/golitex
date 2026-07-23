@@ -938,7 +938,7 @@ impl Runtime {
         component_conclusion: bool,
     ) -> Result<ForallFact, RuntimeError> {
         let lf = exist_fact.line_file();
-        let flat_orig = exist_fact.params_def_with_type().collect_param_names();
+        let flat_orig = exist_fact.params_def_with_type().collect_param_bindings();
         let n = flat_orig.len();
         let mut reserved_names = HashSet::new();
         self.collect_param_obj_names_in_exist_fact(
@@ -948,28 +948,28 @@ impl Runtime {
         );
         let mut flat_a = Vec::with_capacity(n);
         let mut flat_b = Vec::with_capacity(n);
-        for _ in flat_orig.iter() {
+        for _ in &flat_orig {
             let name = self.generate_one_unused_name_with_reserved(&reserved_names);
             reserved_names.insert(name.clone());
-            flat_a.push(name);
+            flat_a.push(self.allocate_local_symbol_binding(name)?);
         }
-        for _ in flat_orig.iter() {
+        for _ in &flat_orig {
             let name = self.generate_one_unused_name_with_reserved(&reserved_names);
             reserved_names.insert(name.clone());
-            flat_b.push(name);
+            flat_b.push(self.allocate_local_symbol_binding(name)?);
         }
 
         let mut map_running_a: HashMap<String, Obj> = HashMap::new();
         let mut map_running_b: HashMap<String, Obj> = HashMap::new();
         let mut forall_groups: Vec<ParamGroupWithParamType> = Vec::new();
         for group in exist_fact.params_def_with_type().groups.iter() {
-            let chunk_a: Vec<String> = group
+            let chunk_a: Vec<SymbolBinding> = group
                 .params
                 .iter()
-                .map(|name| {
+                .map(|binding| {
                     let index = flat_orig
                         .iter()
-                        .position(|original| original == name)
+                        .position(|original| original.id() == binding.id())
                         .expect("exist uniqueness binder must be in flattened parameter list");
                     flat_a[index].clone()
                 })
@@ -979,22 +979,23 @@ impl Runtime {
                 &map_running_a,
                 ParamObjType::BinderRetag(BinderRetagSource::Exist),
             )?;
-            for (orig, nm) in group.params.iter().zip(chunk_a.iter()) {
-                map_running_a.insert(
-                    orig.clone(),
-                    obj_for_bound_param_in_scope(nm.clone(), ParamObjType::Forall),
+            for (orig, target) in group.params.iter().zip(chunk_a.iter()) {
+                insert_symbol_substitution(
+                    &mut map_running_a,
+                    orig,
+                    obj_for_bound_param_in_scope(target, ParamObjType::Forall),
                 );
             }
             forall_groups.push(ParamGroupWithParamType::new(chunk_a, pt_a));
         }
         for group in exist_fact.params_def_with_type().groups.iter() {
-            let chunk_b: Vec<String> = group
+            let chunk_b: Vec<SymbolBinding> = group
                 .params
                 .iter()
-                .map(|name| {
+                .map(|binding| {
                     let index = flat_orig
                         .iter()
-                        .position(|original| original == name)
+                        .position(|original| original.id() == binding.id())
                         .expect("exist uniqueness binder must be in flattened parameter list");
                     flat_b[index].clone()
                 })
@@ -1004,35 +1005,30 @@ impl Runtime {
                 &map_running_b,
                 ParamObjType::BinderRetag(BinderRetagSource::Exist),
             )?;
-            for (orig, nm) in group.params.iter().zip(chunk_b.iter()) {
-                map_running_b.insert(
-                    orig.clone(),
-                    obj_for_bound_param_in_scope(nm.clone(), ParamObjType::Forall),
+            for (orig, target) in group.params.iter().zip(chunk_b.iter()) {
+                insert_symbol_substitution(
+                    &mut map_running_b,
+                    orig,
+                    obj_for_bound_param_in_scope(target, ParamObjType::Forall),
                 );
             }
             forall_groups.push(ParamGroupWithParamType::new(chunk_b, pt_b));
         }
 
-        let map_a: HashMap<String, Obj> = flat_orig
-            .iter()
-            .cloned()
-            .zip(
-                flat_a
-                    .iter()
-                    .cloned()
-                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Forall)),
-            )
-            .collect();
-        let map_b: HashMap<String, Obj> = flat_orig
-            .iter()
-            .cloned()
-            .zip(
-                flat_b
-                    .iter()
-                    .cloned()
-                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Forall)),
-            )
-            .collect();
+        let mut map_a = HashMap::new();
+        let mut map_b = HashMap::new();
+        for ((source, target_a), target_b) in flat_orig.iter().zip(&flat_a).zip(&flat_b) {
+            insert_symbol_substitution(
+                &mut map_a,
+                source,
+                obj_for_bound_param_in_scope(target_a, ParamObjType::Forall),
+            );
+            insert_symbol_substitution(
+                &mut map_b,
+                source,
+                obj_for_bound_param_in_scope(target_b, ParamObjType::Forall),
+            );
+        }
 
         // Retag only existential witness atoms into the two forall copies. Concrete identifiers
         // with the same spelling are captured from the surrounding environment and stay rigid.
@@ -1059,18 +1055,18 @@ impl Runtime {
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         if n == 1 {
             let eq = EqualFact::new(
-                obj_for_bound_param_in_scope(flat_a[0].clone(), ParamObjType::Forall),
-                obj_for_bound_param_in_scope(flat_b[0].clone(), ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&flat_a[0], ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&flat_b[0], ParamObjType::Forall),
                 lf.clone(),
             );
             then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(eq.into()));
         } else if component_conclusion {
             let mut equal_facts: Vec<AtomicFact> = Vec::new();
-            for (left_name, right_name) in flat_a.iter().zip(flat_b.iter()) {
+            for (left, right) in flat_a.iter().zip(flat_b.iter()) {
                 equal_facts.push(
                     EqualFact::new(
-                        obj_for_bound_param_in_scope(left_name.clone(), ParamObjType::Forall),
-                        obj_for_bound_param_in_scope(right_name.clone(), ParamObjType::Forall),
+                        obj_for_bound_param_in_scope(left, ParamObjType::Forall),
+                        obj_for_bound_param_in_scope(right, ParamObjType::Forall),
                         lf.clone(),
                     )
                     .into(),
@@ -1081,16 +1077,14 @@ impl Runtime {
             let left_tuple: Obj = Tuple::new(
                 flat_a
                     .iter()
-                    .cloned()
-                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Forall))
+                    .map(|binding| obj_for_bound_param_in_scope(binding, ParamObjType::Forall))
                     .collect::<Vec<Obj>>(),
             )
             .into();
             let right_tuple: Obj = Tuple::new(
                 flat_b
                     .iter()
-                    .cloned()
-                    .map(|s| obj_for_bound_param_in_scope(s, ParamObjType::Forall))
+                    .map(|binding| obj_for_bound_param_in_scope(binding, ParamObjType::Forall))
                     .collect::<Vec<Obj>>(),
             )
             .into();
@@ -1245,13 +1239,15 @@ impl Runtime {
         let mut param_index: usize = 0;
 
         for param_def_with_type in exist_fact.params_def_with_type().groups.iter() {
-            for original_name in param_def_with_type.params.iter() {
+            for original_binding in param_def_with_type.params.iter() {
                 let normalized_name = format!("#{}", param_index);
+                let normalized_binding =
+                    SymbolBinding::alpha_canonical(param_index, normalized_name);
                 param_index += 1;
-
-                param_to_arg_map.insert(
-                    original_name.clone(),
-                    obj_for_bound_param_in_scope(normalized_name.clone(), ParamObjType::Exist),
+                insert_symbol_substitution(
+                    &mut param_to_arg_map,
+                    original_binding,
+                    obj_for_bound_param_in_scope(&normalized_binding, ParamObjType::Exist),
                 );
             }
         }
@@ -1266,29 +1262,19 @@ impl Runtime {
                 Fact::ForallFact(forall_fact) => {
                     fact_strings.push(runtime.alpha_normalized_forall_cache_key(&forall_fact)?);
                 }
-                fact => fact_strings.push(fact.to_string()),
+                fact => fact_strings.push(nested_obj_binder_normalized_fact_key(&fact)),
             }
         }
 
         let mut params_string_parts: Vec<String> = Vec::new();
         for param_def_with_type in instantiated_exist_fact.params_def_with_type().groups.iter() {
             let param_type_string = match &param_def_with_type.param_type {
-                ParamType::Obj(Obj::FnSet(fn_set)) => {
-                    let canonical_names =
-                        ParamGroupWithSet::collect_param_names(&fn_set.body.params_def_with_set)
-                            .iter()
-                            .enumerate()
-                            .map(|(index, _)| format!("#exist_fn_param_{}", index))
-                            .collect::<Vec<_>>();
-                    runtime
-                        .fn_set_alpha_renamed_for_display_compare(&fn_set.body, &canonical_names)?
-                        .to_string()
-                }
+                ParamType::Obj(obj) => obj_equality_key(obj),
                 param_type => param_type.to_string(),
             };
             params_string_parts.push(format!(
                 "{} {}",
-                param_def_with_type.params.join(","),
+                vec_to_string_with_sep(&param_def_with_type.params, ",".to_string()),
                 param_type_string
             ));
         }

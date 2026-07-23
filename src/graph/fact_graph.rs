@@ -496,20 +496,17 @@ impl FactGraphBuilder {
     fn add_theorem_nodes(&mut self, stmt: &DefThmStmt, full_stmt: &Stmt) {
         let interface_fact: Fact = stmt.forall_fact.clone().into();
         let interface_line = line_key(&interface_fact.line_file());
-        for name in &stmt.names {
-            let theorem_id = theorem_id(name);
-            self.ensure_node(
-                theorem_id.clone(),
-                "fact",
-                name.to_string(),
-                Some(&stmt.line_file),
-                Some(&full_stmt.to_string()),
-                Some("thm"),
-                None,
-            );
-            self.theorem_node_by_line
-                .insert(interface_line.clone(), theorem_id);
-        }
+        let theorem_id = theorem_id(&stmt.name);
+        self.ensure_node(
+            theorem_id.clone(),
+            "fact",
+            stmt.name.clone(),
+            Some(&stmt.line_file),
+            Some(&full_stmt.to_string()),
+            Some("thm"),
+            None,
+        );
+        self.theorem_node_by_line.insert(interface_line, theorem_id);
     }
 
     fn add_claim_nodes(&mut self, stmt: &ClaimStmt, full_stmt: &Stmt) {
@@ -544,7 +541,7 @@ impl FactGraphBuilder {
                 self.node_index.contains_key(&node_id).then_some(node_id)
             }
             Stmt::DefThmStmt(def_thm) => {
-                let name = def_thm.names.first()?;
+                let name = &def_thm.name;
                 let node_id = theorem_id(name);
                 self.ensure_node(
                     node_id.clone(),
@@ -597,9 +594,7 @@ impl FactGraphBuilder {
         };
         match &success.stmt {
             Stmt::DefThmStmt(stmt) => {
-                for name in &stmt.names {
-                    self.add_edge(&last_fact_id, &theorem_id(name), "proves");
-                }
+                self.add_edge(&last_fact_id, &theorem_id(&stmt.name), "proves");
             }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
                 self.add_edge(&last_fact_id, &claim_id(&stmt.line_file), "proves");
@@ -725,11 +720,7 @@ impl FactGraphBuilder {
             return vec![];
         };
         match &success.stmt {
-            Stmt::DefThmStmt(stmt) => stmt
-                .names
-                .first()
-                .map(|name| vec![theorem_id(name)])
-                .unwrap_or_default(),
+            Stmt::DefThmStmt(stmt) => vec![theorem_id(&stmt.name)],
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
                 vec![claim_id(&stmt.line_file)]
             }
@@ -836,7 +827,7 @@ impl FactGraphBuilder {
         }
         let success = result.non_factual_success()?;
         match &success.stmt {
-            Stmt::DefThmStmt(stmt) => stmt.names.first().map(|name| theorem_id(name)),
+            Stmt::DefThmStmt(stmt) => Some(theorem_id(&stmt.name)),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => Some(claim_id(&stmt.line_file)),
             Stmt::By(ByStmt::ByDefStmt(stmt)) => {
                 let fact: Fact = stmt.fact.clone().into();

@@ -243,6 +243,10 @@ impl ModuleManager {
         self.module_by_name.get(module_name).copied()
     }
 
+    pub fn module_id_by_path(&self, module_root_path: &str) -> Option<ModuleId> {
+        self.module_by_path.get(module_root_path).copied()
+    }
+
     pub fn finish_loading_module(&mut self, module_id: ModuleId) {
         if let Some(module) = self.modules.get_mut(&module_id) {
             module.status = ModuleStatus::Loaded;

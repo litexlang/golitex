@@ -60,14 +60,18 @@ impl Runtime {
                         &VerifyState::new(0, false),
                     )?;
 
+                let left_to_right_param = rt.fresh_param_group_with_type(
+                    vec![unused_name.clone()],
+                    ParamType::Obj(stmt.left.clone()),
+                )?;
                 let left_to_right_forall_fact = ForallFact::new(
-                    ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                        vec![unused_name.clone()],
-                        ParamType::Obj(stmt.left.clone()),
-                    )]),
+                    ParamDefWithType::new(vec![left_to_right_param.clone()]),
                     vec![],
                     vec![InFact::new(
-                        obj_for_bound_param_in_scope(unused_name.clone(), ParamObjType::Forall),
+                        obj_for_bound_param_in_scope(
+                            &left_to_right_param.params[0],
+                            ParamObjType::Forall,
+                        ),
                         stmt.right.clone(),
                         stmt.line_file.clone(),
                     )
@@ -108,14 +112,18 @@ impl Runtime {
                         &VerifyState::new(0, false),
                     )?;
 
+                let right_to_left_param = rt.fresh_param_group_with_type(
+                    vec![unused_name.clone()],
+                    ParamType::Obj(stmt.right.clone()),
+                )?;
                 let right_to_left_forall_fact = ForallFact::new(
-                    ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                        vec![unused_name.clone()],
-                        ParamType::Obj(stmt.right.clone()),
-                    )]),
+                    ParamDefWithType::new(vec![right_to_left_param.clone()]),
                     vec![],
                     vec![InFact::new(
-                        obj_for_bound_param_in_scope(unused_name.clone(), ParamObjType::Forall),
+                        obj_for_bound_param_in_scope(
+                            &right_to_left_param.params[0],
+                            ParamObjType::Forall,
+                        ),
                         stmt.left.clone(),
                         stmt.line_file.clone(),
                     )
@@ -167,14 +175,15 @@ impl Runtime {
             )?,
         );
 
+        let left_to_right_param = self.fresh_param_group_with_type(
+            vec!["x".to_string()],
+            ParamType::Obj(stmt.left.clone()),
+        )?;
         let left_to_right_subset = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec!["x".to_string()],
-                ParamType::Obj(stmt.left.clone()),
-            )]),
+            ParamDefWithType::new(vec![left_to_right_param.clone()]),
             vec![],
             vec![InFact::new(
-                obj_for_bound_param_in_scope("x".to_string(), ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&left_to_right_param.params[0], ParamObjType::Forall),
                 stmt.right.clone(),
                 stmt.line_file.clone(),
             )
@@ -182,14 +191,15 @@ impl Runtime {
             stmt.line_file.clone(),
         )?
         .to_string();
+        let right_to_left_param = self.fresh_param_group_with_type(
+            vec!["x".to_string()],
+            ParamType::Obj(stmt.right.clone()),
+        )?;
         let right_to_left_subset = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec!["x".to_string()],
-                ParamType::Obj(stmt.right.clone()),
-            )]),
+            ParamDefWithType::new(vec![right_to_left_param.clone()]),
             vec![],
             vec![InFact::new(
-                obj_for_bound_param_in_scope("x".to_string(), ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&right_to_left_param.params[0], ParamObjType::Forall),
                 stmt.left.clone(),
                 stmt.line_file.clone(),
             )

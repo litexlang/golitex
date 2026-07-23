@@ -2,19 +2,17 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        let saved_free_params = self.parsing_free_param_collection.clone();
-        let saved_local_binding_scope_depth = self.parsing_local_binding_scope_depth;
+        self.ensure_execution_frame_for_parse();
+        let saved_parse_context = self.current_parse_context().clone();
         let result = self.parse_stmt_inner(tb);
         if result.is_err() {
-            self.parsing_free_param_collection = saved_free_params;
-            self.parsing_local_binding_scope_depth = saved_local_binding_scope_depth;
+            *self.current_parse_context_mut() = saved_parse_context;
         }
         result
     }
 
     fn parse_stmt_inner(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         match tb.current()? {
-            ALIAS => self.parse_alias_stmt(tb),
             PROP => self.parse_def_prop_stmt(tb),
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
             HAVE => match tb.token_at_add_index(1) {

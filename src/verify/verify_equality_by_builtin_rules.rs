@@ -3,7 +3,7 @@ use crate::prelude::*;
 /// Structural alignment for builtin patterns: two objects match iff their `Display` text matches.
 #[inline]
 pub fn objs_equal_by_display_string(a: &Obj, b: &Obj) -> bool {
-    a.to_string() == b.to_string()
+    objs_equal_with_nested_binder_alpha_equivalence(a, b)
 }
 
 pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {

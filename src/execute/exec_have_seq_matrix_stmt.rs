@@ -7,11 +7,12 @@ struct HaveIndexedFnDefinitionShape {
 
 impl Runtime {
     pub fn exec_have_seq_stmt(&mut self, stmt: &HaveSeqStmt) -> Result<StmtResult, RuntimeError> {
-        let anonymous_fn = build_have_seq_anonymous_fn(stmt)
+        let anonymous_fn = build_have_seq_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape = self.exec_have_indexed_fn_definition_verify_well_definedness(
             stmt.clone().into(),
             &stmt.name,
+            &stmt.symbol_binding,
             &stmt.seq_set.clone().into(),
             anonymous_fn,
         )?;
@@ -25,6 +26,7 @@ impl Runtime {
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
             &stmt.name,
+            &stmt.symbol_binding,
             stmt.seq_set.clone().into(),
             shape,
             HaveSeqStmt::store_reason(),
@@ -37,13 +39,14 @@ impl Runtime {
         &mut self,
         stmt: &HaveSeqStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let anonymous_fn = build_have_seq_anonymous_fn(stmt)
+        let anonymous_fn = build_have_seq_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape =
             self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
             &stmt.name,
+            &stmt.symbol_binding,
             stmt.seq_set.clone().into(),
             shape,
             HaveSeqStmt::store_reason(),
@@ -56,11 +59,12 @@ impl Runtime {
         &mut self,
         stmt: &HaveFiniteSeqStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let anonymous_fn = build_have_finite_seq_anonymous_fn(stmt)
+        let anonymous_fn = build_have_finite_seq_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape = self.exec_have_indexed_fn_definition_verify_well_definedness(
             stmt.clone().into(),
             &stmt.name,
+            &stmt.symbol_binding,
             &stmt.finite_seq_set.clone().into(),
             anonymous_fn,
         )?;
@@ -82,6 +86,7 @@ impl Runtime {
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
             &stmt.name,
+            &stmt.symbol_binding,
             stmt.finite_seq_set.clone().into(),
             shape,
             HaveFiniteSeqStmt::store_reason(),
@@ -94,13 +99,14 @@ impl Runtime {
         &mut self,
         stmt: &HaveFiniteSeqStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let anonymous_fn = build_have_finite_seq_anonymous_fn(stmt)
+        let anonymous_fn = build_have_finite_seq_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape =
             self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
             &stmt.name,
+            &stmt.symbol_binding,
             stmt.finite_seq_set.clone().into(),
             shape,
             HaveFiniteSeqStmt::store_reason(),
@@ -113,11 +119,12 @@ impl Runtime {
         &mut self,
         stmt: &HaveMatrixStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let anonymous_fn = build_have_matrix_anonymous_fn(stmt)
+        let anonymous_fn = build_have_matrix_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape = self.exec_have_indexed_fn_definition_verify_well_definedness(
             stmt.clone().into(),
             &stmt.name,
+            &stmt.symbol_binding,
             &stmt.matrix_set.clone().into(),
             anonymous_fn,
         )?;
@@ -146,6 +153,7 @@ impl Runtime {
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
             &stmt.name,
+            &stmt.symbol_binding,
             stmt.matrix_set.clone().into(),
             shape,
             HaveMatrixStmt::store_reason(),
@@ -158,13 +166,14 @@ impl Runtime {
         &mut self,
         stmt: &HaveMatrixStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let anonymous_fn = build_have_matrix_anonymous_fn(stmt)
+        let anonymous_fn = build_have_matrix_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape =
             self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
             &stmt.name,
+            &stmt.symbol_binding,
             stmt.matrix_set.clone().into(),
             shape,
             HaveMatrixStmt::store_reason(),
@@ -176,14 +185,15 @@ impl Runtime {
     fn exec_have_indexed_fn_definition_verify_well_definedness(
         &mut self,
         stmt: Stmt,
-        name: &str,
+        _name: &str,
+        binding: &SymbolBinding,
         surface_set: &Obj,
         anonymous_fn: AnonymousFn,
     ) -> Result<HaveIndexedFnDefinitionShape, RuntimeError> {
         let fn_set = FnSet::from_body(anonymous_fn.body.clone())
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
 
-        self.verify_have_indexed_fn_name_available(stmt.clone(), name)?;
+        self.verify_have_indexed_fn_name_available(stmt.clone(), binding)?;
         self.verify_have_indexed_fn_definition_well_defined(
             stmt.clone(),
             &anonymous_fn,
@@ -232,15 +242,16 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         name: &str,
+        binding: &SymbolBinding,
         surface_set: Obj,
         shape: HaveIndexedFnDefinitionShape,
         store_reason: &'static str,
         line_file: LineFile,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_free_param_or_identifier_name(name, ParamObjType::Identifier)
+        self.store_parameter_binding(binding, ParamObjType::Identifier)
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
 
-        let function_identifier_obj: Obj = Identifier::new(name.to_string()).into();
+        let function_identifier_obj = self.declared_identifier_obj(name);
         let surface_membership_fact: AtomicFact = InFact::new(
             function_identifier_obj.clone(),
             surface_set,
@@ -283,10 +294,10 @@ impl Runtime {
     fn verify_have_indexed_fn_name_available(
         &mut self,
         stmt: Stmt,
-        name: &str,
+        binding: &SymbolBinding,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(name, ParamObjType::Identifier)
+            rt.store_parameter_binding(binding, ParamObjType::Identifier)
                 .map_err(|e| short_exec_error(stmt, String::new(), Some(e), vec![]))
         })
     }
@@ -408,10 +419,13 @@ impl Runtime {
     }
 }
 
-fn build_have_seq_anonymous_fn(stmt: &HaveSeqStmt) -> Result<AnonymousFn, RuntimeError> {
+fn build_have_seq_anonymous_fn(
+    _runtime: &Runtime,
+    stmt: &HaveSeqStmt,
+) -> Result<AnonymousFn, RuntimeError> {
     AnonymousFn::new(
         vec![ParamGroupWithSet::new(
-            vec![stmt.index_name.clone()],
+            vec![stmt.index_binding.clone()],
             StandardSet::NPos.into(),
         )],
         vec![],
@@ -421,12 +435,13 @@ fn build_have_seq_anonymous_fn(stmt: &HaveSeqStmt) -> Result<AnonymousFn, Runtim
 }
 
 fn build_have_finite_seq_anonymous_fn(
+    _runtime: &Runtime,
     stmt: &HaveFiniteSeqStmt,
 ) -> Result<AnonymousFn, RuntimeError> {
-    let index_obj = obj_for_bound_param_in_scope(stmt.index_name.clone(), ParamObjType::FnSet);
+    let index_obj = obj_for_bound_param_in_scope(&stmt.index_binding, ParamObjType::FnSet);
     AnonymousFn::new(
         vec![ParamGroupWithSet::new(
-            vec![stmt.index_name.clone()],
+            vec![stmt.index_binding.clone()],
             StandardSet::NPos.into(),
         )],
         vec![AtomicFact::from(LessEqualFact::new(
@@ -440,13 +455,22 @@ fn build_have_finite_seq_anonymous_fn(
     )
 }
 
-fn build_have_matrix_anonymous_fn(stmt: &HaveMatrixStmt) -> Result<AnonymousFn, RuntimeError> {
-    let row_obj = obj_for_bound_param_in_scope(stmt.row_index_name.clone(), ParamObjType::FnSet);
-    let col_obj = obj_for_bound_param_in_scope(stmt.col_index_name.clone(), ParamObjType::FnSet);
+fn build_have_matrix_anonymous_fn(
+    _runtime: &Runtime,
+    stmt: &HaveMatrixStmt,
+) -> Result<AnonymousFn, RuntimeError> {
+    let row_obj = obj_for_bound_param_in_scope(&stmt.row_index_binding, ParamObjType::FnSet);
+    let col_obj = obj_for_bound_param_in_scope(&stmt.col_index_binding, ParamObjType::FnSet);
     AnonymousFn::new(
         vec![
-            ParamGroupWithSet::new(vec![stmt.row_index_name.clone()], StandardSet::NPos.into()),
-            ParamGroupWithSet::new(vec![stmt.col_index_name.clone()], StandardSet::NPos.into()),
+            ParamGroupWithSet::new(
+                vec![stmt.row_index_binding.clone()],
+                StandardSet::NPos.into(),
+            ),
+            ParamGroupWithSet::new(
+                vec![stmt.col_index_binding.clone()],
+                StandardSet::NPos.into(),
+            ),
         ],
         vec![
             AtomicFact::from(LessEqualFact::new(

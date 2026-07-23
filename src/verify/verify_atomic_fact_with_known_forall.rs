@@ -496,9 +496,18 @@ impl Runtime {
         let mut identifiers = HashMap::new();
         for environment in self.imported_module_environments(module_name) {
             for name in environment.defined_identifiers.keys() {
-                identifiers.insert(
-                    format!("{}{}{}", module_name, MOD_SIGN, name),
-                    IdentifierWithMod::new(module_name.to_string(), name.clone()).into(),
+                let Some(definition) = environment.symbols.get(name) else {
+                    continue;
+                };
+                insert_symbol_substitution(
+                    &mut identifiers,
+                    definition.binding(),
+                    IdentifierWithMod::new_bound(
+                        module_name.to_string(),
+                        name.clone(),
+                        definition.binding().as_ref(),
+                    )
+                    .into(),
                 );
             }
         }
@@ -995,10 +1004,7 @@ impl Runtime {
                     if self.arg_match_binding_is_active(ParamObjType::Exist, &p.name) =>
                 {
                     let mut m = HashMap::new();
-                    m.insert(
-                        arg_match_binding_key(ParamObjType::Exist, &p.name),
-                        given_arg.clone(),
-                    );
+                    m.insert(arg_match_binding_key(&p.symbol), given_arg.clone());
                     Ok(Some(m))
                 }
                 _ => {
@@ -1047,10 +1053,7 @@ impl Runtime {
                     };
                 }
                 let mut map = HashMap::new();
-                map.insert(
-                    arg_match_binding_key(ParamObjType::TupleIndex, &p.name),
-                    given_arg.clone(),
-                );
+                map.insert(arg_match_binding_key(&p.symbol), given_arg.clone());
                 Ok(Some(map))
             }
             Obj::Atom(AtomObj::CartIndex(ref p)) => {
@@ -1062,10 +1065,7 @@ impl Runtime {
                     };
                 }
                 let mut map = HashMap::new();
-                map.insert(
-                    arg_match_binding_key(ParamObjType::CartIndex, &p.name),
-                    given_arg.clone(),
-                );
+                map.insert(arg_match_binding_key(&p.symbol), given_arg.clone());
                 Ok(Some(map))
             }
         }
@@ -1084,10 +1084,7 @@ impl Runtime {
             };
         }
         let mut map = HashMap::new();
-        map.insert(
-            arg_match_binding_key(ParamObjType::Forall, &id_known.name),
-            given_arg.clone(),
-        );
+        map.insert(arg_match_binding_key(&id_known.symbol), given_arg.clone());
         Ok(Some(map))
     }
 
@@ -1594,7 +1591,7 @@ impl Runtime {
     ) -> bool {
         for (k, v) in from {
             if let Some(existing) = into.get(&k) {
-                if existing.to_string() != v.to_string()
+                if obj_equality_key(existing) != obj_equality_key(&v)
                     && !existing.two_objs_can_be_calculated_and_equal_by_calculation(&v)
                 {
                     return false;
@@ -1731,6 +1728,29 @@ impl Runtime {
         let Obj::SetBuilder(given) = given_arg else {
             return Ok(None);
         };
+        let shared_binding = self.allocate_internal_symbol_binding()?;
+        let mut left_rename_map = HashMap::new();
+        insert_symbol_substitution(
+            &mut left_rename_map,
+            &left.param_binding,
+            obj_for_bound_param_in_scope(&shared_binding, ParamObjType::SetBuilder),
+        );
+        let mut given_rename_map = HashMap::new();
+        insert_symbol_substitution(
+            &mut given_rename_map,
+            &given.param_binding,
+            obj_for_bound_param_in_scope(&shared_binding, ParamObjType::SetBuilder),
+        );
+        let left = self.alpha_rename_set_builder(left, &left_rename_map)?;
+        let given = self.alpha_rename_set_builder(given, &given_rename_map)?;
+        self.match_alpha_renamed_set_builder(&left, &given)
+    }
+
+    fn match_alpha_renamed_set_builder(
+        &mut self,
+        left: &SetBuilder,
+        given: &SetBuilder,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         if left.param != given.param {
             return Ok(None);
         }
@@ -1794,6 +1814,31 @@ impl Runtime {
         let Obj::FnSet(given) = given_arg else {
             return Ok(None);
         };
+        let left_param_count = ParamGroupWithSet::number_of_params(&left.body.params_def_with_set);
+        let given_param_count =
+            ParamGroupWithSet::number_of_params(&given.body.params_def_with_set);
+        if left_param_count != given_param_count {
+            return Ok(None);
+        }
+        let alpha_names = Self::anonymous_fn_alpha_param_names(left_param_count);
+        let Obj::FnSet(left) =
+            self.fn_set_alpha_renamed_for_display_compare(&left.body, &alpha_names)?
+        else {
+            unreachable!("function-set alpha normalization must return a function set");
+        };
+        let Obj::FnSet(given) =
+            self.fn_set_alpha_renamed_for_display_compare(&given.body, &alpha_names)?
+        else {
+            unreachable!("function-set alpha normalization must return a function set");
+        };
+        self.match_alpha_renamed_fn_set_with_params(&left, &given)
+    }
+
+    fn match_alpha_renamed_fn_set_with_params(
+        &mut self,
+        left: &FnSet,
+        given: &FnSet,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         if left.body.params_def_with_set.len() != given.body.params_def_with_set.len() {
             return Ok(None);
         }
@@ -2007,9 +2052,11 @@ impl Runtime {
         anonymous_fn: &AnonymousFn,
         alpha_names: &[String],
     ) -> Result<AnonymousFn, RuntimeError> {
-        let param_names =
-            ParamGroupWithSet::collect_param_names(&anonymous_fn.body.params_def_with_set);
-        if param_names.len() != alpha_names.len() {
+        let param_bindings = anonymous_fn
+            .body
+            .params_def_with_set
+            .collect_param_bindings();
+        if param_bindings.len() != alpha_names.len() {
             return Err(VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg(
                 "internal: anonymous-function alpha rename needs one name per parameter"
                     .to_string(),
@@ -2017,11 +2064,17 @@ impl Runtime {
             .into());
         }
 
-        let mut param_to_alpha_name = HashMap::with_capacity(param_names.len());
-        for (param_name, alpha_name) in param_names.iter().zip(alpha_names.iter()) {
-            param_to_alpha_name.insert(
-                param_name.clone(),
-                obj_for_bound_param_in_scope(alpha_name.clone(), ParamObjType::FnSet),
+        let alpha_bindings = alpha_names
+            .iter()
+            .enumerate()
+            .map(|(index, name)| SymbolBinding::alpha_canonical(index, name.clone()))
+            .collect::<Vec<_>>();
+        let mut param_to_alpha_name = HashMap::with_capacity(param_bindings.len() * 2);
+        for (param_binding, alpha_binding) in param_bindings.iter().zip(alpha_bindings.iter()) {
+            insert_symbol_substitution(
+                &mut param_to_alpha_name,
+                param_binding,
+                obj_for_bound_param_in_scope(alpha_binding, ParamObjType::FnSet),
             );
         }
         self.alpha_rename_anonymous_fn(anonymous_fn, &param_to_alpha_name)
@@ -2302,7 +2355,7 @@ impl Runtime {
         )?;
         let mut map = HashMap::new();
         map.insert(
-            arg_match_binding_key(ParamObjType::Forall, &forall_param.name),
+            arg_match_binding_key(&forall_param.symbol),
             anonymous_fn.into(),
         );
         Ok(Some(map))
@@ -2312,8 +2365,8 @@ impl Runtime {
         fn_obj: &FnObj,
         anonymous_fn_body: &FnSetBody,
     ) -> bool {
-        let expected_param_names = anonymous_fn_body.get_params();
-        let expected_len = expected_param_names.len();
+        let expected_param_bindings = anonymous_fn_body.get_param_bindings();
+        let expected_len = expected_param_bindings.len();
         let actual_args_count: usize = fn_obj.body.iter().map(|row| row.len()).sum();
         if actual_args_count != expected_len {
             return false;
@@ -2323,7 +2376,7 @@ impl Runtime {
         for row in fn_obj.body.iter() {
             for arg in row.iter() {
                 let expected = obj_for_bound_param_in_scope(
-                    expected_param_names[flat_index].clone(),
+                    &expected_param_bindings[flat_index],
                     ParamObjType::FnSet,
                 );
                 if arg.to_string() != expected.to_string() {
@@ -3019,21 +3072,20 @@ fn arg_match_bindings_for_params(
 fn arg_match_map_for_params(
     raw_arg_map: &HashMap<String, Obj>,
     params: &ParamDefWithType,
-    kind: ParamObjType,
+    _kind: ParamObjType,
 ) -> HashMap<String, Obj> {
     let mut result = HashMap::new();
-    for name in params.collect_param_names() {
-        let key = arg_match_binding_key(kind, &name);
+    for binding in params.collect_param_bindings() {
+        let key = binding.substitution_key();
         if let Some(obj) = raw_arg_map.get(&key) {
-            result.insert(name, obj.clone());
+            insert_symbol_substitution(&mut result, &binding, obj.clone());
         }
     }
     result
 }
 
-fn arg_match_binding_key(kind: ParamObjType, name: &str) -> String {
-    // Preserve binder kind in the raw merge key, matching the parser's tagged identity.
-    obj_for_bound_param_in_scope(name.to_string(), kind).to_string()
+fn arg_match_binding_key(symbol: &SymbolRef) -> String {
+    symbol.substitution_key()
 }
 
 fn atomic_fact_in_forall_lookup_arg_shape_keys(

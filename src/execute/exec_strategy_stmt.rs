@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         stmt: &DefStrategyStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let strategy_names = stmt.names.join(", ");
+        let strategy_name = stmt.name.clone();
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall_fact.clone()),
             &VerifyState::new(0, false),
@@ -43,10 +43,7 @@ impl Runtime {
                     return Err(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new_with_output(
                             Some(proof_stmt.clone()),
-                            format!(
-                                "strategy `{}` failed: proof step is unknown",
-                                strategy_names
-                            ),
+                            format!("strategy `{}` failed: proof step is unknown", strategy_name),
                             proof_stmt.line_file(),
                             None,
                             vec![],
@@ -76,7 +73,7 @@ impl Runtime {
                             Some(then_goal.clone().into()),
                             format!(
                                 "strategy `{}` failed: cannot prove then-clause",
-                                strategy_names
+                                strategy_name
                             ),
                             then_fact.line_file(),
                             None,
@@ -107,9 +104,7 @@ impl Runtime {
                 stmt.forall_fact.clone(),
             ))?;
 
-        for name in stmt.names.iter() {
-            self.activate_strategy(stmt, name, stmt.clone().into())?;
-        }
+        self.activate_strategy(stmt, &stmt.name, stmt.clone().into())?;
 
         Ok(body_exec_result.with_infers(infer_result_after_store))
     }
@@ -167,9 +162,7 @@ impl Runtime {
             InferReason::VerifiedStatement,
         )?;
 
-        for name in stmt.names.iter() {
-            self.activate_strategy(stmt, name, stmt.clone().into())?;
-        }
+        self.activate_strategy(stmt, &stmt.name, stmt.clone().into())?;
 
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }

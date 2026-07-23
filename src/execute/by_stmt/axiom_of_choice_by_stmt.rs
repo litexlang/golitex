@@ -134,12 +134,11 @@ fn axiom_of_choice_members_nonempty_fact(
     line_file: LineFile,
 ) -> Result<Fact, RuntimeError> {
     let a_name = runtime.generate_internal_binder_name();
-    let a = forall_obj(&a_name);
+    let a_group =
+        runtime.fresh_param_group_with_type(vec![a_name], ParamType::Obj(family.clone()))?;
+    let a = obj_for_bound_param_in_scope(&a_group.params[0], ParamObjType::Forall);
     Ok(ForallFact::new(
-        ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-            vec![a_name],
-            ParamType::Obj(family),
-        )]),
+        ParamDefWithType::new(vec![a_group]),
         vec![],
         vec![IsNonemptySetFact::new(a, line_file.clone()).into()],
         line_file,
@@ -154,19 +153,21 @@ fn axiom_of_choice_exist_fact(
 ) -> Result<Fact, RuntimeError> {
     let f_name = runtime.generate_internal_binder_name();
     let a_name = runtime.generate_internal_binder_name();
+    let choice_param_group =
+        runtime.fresh_param_group_with_set(vec![a_name.clone()], family.clone())?;
     let choice_fn_set = FnSet::new(
-        vec![ParamGroupWithSet::new(vec![a_name.clone()], family.clone())],
+        vec![choice_param_group],
         vec![],
         BigUnion::new(family.clone()).into(),
     )?;
+    let f_group =
+        runtime.fresh_param_group_with_type(vec![f_name], ParamType::Obj(choice_fn_set.into()))?;
     let body = ExistFactBody::new(
-        ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-            vec![f_name.clone()],
-            ParamType::Obj(choice_fn_set.into()),
-        )]),
+        ParamDefWithType::new(vec![f_group.clone()]),
         vec![ExistBodyFact::InlineForall(axiom_of_choice_value_fact(
+            runtime,
             family,
-            f_name,
+            &f_group.params[0],
             a_name,
             line_file.clone(),
         )?)],
@@ -176,25 +177,20 @@ fn axiom_of_choice_exist_fact(
 }
 
 fn axiom_of_choice_value_fact(
+    runtime: &Runtime,
     family: Obj,
-    f_name: String,
+    f_binding: &SymbolBinding,
     a_name: String,
     line_file: LineFile,
 ) -> Result<ForallFact, RuntimeError> {
-    let a = forall_obj(&a_name);
-    let f_head: FnObjHead = ExistFreeParamObj::new(f_name).into();
+    let a_group = runtime.fresh_param_group_with_type(vec![a_name], ParamType::Obj(family))?;
+    let a = obj_for_bound_param_in_scope(&a_group.params[0], ParamObjType::Forall);
+    let f_head: FnObjHead = ExistFreeParamObj::new(f_binding).into();
     let f_of_a: Obj = FnObj::new(f_head, vec![vec![Box::new(a.clone())]]).into();
     ForallFact::new(
-        ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-            vec![a_name],
-            ParamType::Obj(family),
-        )]),
+        ParamDefWithType::new(vec![a_group]),
         vec![],
         vec![InFact::new(f_of_a, a, line_file.clone()).into()],
         line_file,
     )
-}
-
-fn forall_obj(name: &str) -> Obj {
-    obj_for_bound_param_in_scope(name.to_string(), ParamObjType::Forall)
 }

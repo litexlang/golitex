@@ -40,8 +40,11 @@ impl Runtime {
                 summary.add_dependency("trust_have", None, trust_have.line_file.clone());
             }
             Stmt::DefThmStmt(def_thm) if def_thm.is_axiom() => {
-                let name = def_thm.names.first().cloned();
-                summary.add_dependency("axiom", name, def_thm.line_file.clone());
+                summary.add_dependency(
+                    "axiom",
+                    Some(def_thm.name.clone()),
+                    def_thm.line_file.clone(),
+                );
             }
             Stmt::Fact(fact) => {
                 summary.merge(&self.trust_summary_for_cached_fact(&fact.to_string()));

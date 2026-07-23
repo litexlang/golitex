@@ -437,7 +437,7 @@ impl Runtime {
             return Ok(None);
         }
         let x_name = self.generate_random_unused_name();
-        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
         let Some(left_inst) =
             self.instantiate_unary_function_at(left_product.func.as_ref(), &x_obj)?
         else {
@@ -450,7 +450,7 @@ impl Runtime {
         };
         let then_fact: AtomicFact = EqualFact::new(left_inst, right_inst, line_file.clone()).into();
         let r = self.verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-            x_name,
+            x_binding,
             left_product.set.as_ref().clone(),
             &then_fact,
             verify_state,
@@ -518,7 +518,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let x_name = self.generate_random_unused_name();
-        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
         let Some(left_inst) = self.instantiate_unary_function_at(left_func, &x_obj)? else {
             return Ok(StmtResult::Unknown(StmtUnknown::new()));
         };
@@ -527,7 +527,7 @@ impl Runtime {
         };
         let pointwise_fact: AtomicFact = EqualFact::new(left_inst, right_inst, line_file).into();
         self.verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-            x_name,
+            x_binding,
             set,
             &pointwise_fact,
             verify_state,
@@ -544,7 +544,7 @@ impl Runtime {
             return Ok(None);
         };
         let outer_name = self.generate_random_unused_name();
-        let outer_obj = obj_for_bound_param_in_scope(outer_name.clone(), ParamObjType::Forall);
+        let (_, outer_obj) = self.fresh_bound_param(outer_name.clone(), ParamObjType::Forall)?;
         let Some(inner_sum_obj) =
             self.instantiate_unary_function_at(outer_sum.func.as_ref(), &outer_obj)?
         else {
@@ -558,7 +558,7 @@ impl Runtime {
         }
 
         let inner_name = format!("{}_inner", outer_name);
-        let inner_obj = obj_for_bound_param_in_scope(inner_name.clone(), ParamObjType::Forall);
+        let (_, inner_obj) = self.fresh_bound_param(inner_name, ParamObjType::Forall)?;
         let Some(summand) =
             self.instantiate_unary_function_at(inner_sum.func.as_ref(), &inner_obj)?
         else {
@@ -653,14 +653,14 @@ impl Runtime {
 
     pub(super) fn verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
         &mut self,
-        param_name: String,
+        param_binding: SymbolBinding,
         set: Obj,
         then_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![param_name],
+                vec![param_binding],
                 ParamType::Obj(set),
             )]);
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
@@ -685,12 +685,12 @@ impl Runtime {
         if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
             return Ok(None);
         }
-        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
-        let Some(param_name) = param_names.first() else {
+        let param_bindings = af.body.params_def_with_set.collect_param_bindings();
+        let Some(param_binding) = param_bindings.first() else {
             return Ok(None);
         };
         let Some(index_set) =
-            Self::set_for_unary_param(&af.body.params_def_with_set, param_name.as_str())
+            Self::set_for_unary_param(&af.body.params_def_with_set, param_binding.name())
         else {
             return Ok(None);
         };
@@ -720,7 +720,7 @@ impl Runtime {
         if enumerator_call.body.len() != 1 || enumerator_call.body[0].len() != 1 {
             return Ok(None);
         }
-        let index_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::FnSet);
+        let index_obj = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
         if !verify_equality_by_they_are_the_same(enumerator_call.body[0][0].as_ref(), &index_obj) {
             return Ok(None);
         }
@@ -810,25 +810,23 @@ impl Runtime {
 
         let x_name = self.generate_random_unused_name();
         let i_name = format!("{}_idx", x_name);
-        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
-        let i_obj = obj_for_bound_param_in_scope(i_name.clone(), ParamObjType::Exist);
+        let x_group = self
+            .fresh_param_group_with_type(vec![x_name], ParamType::Obj(shape.target_set.clone()))?;
+        let i_group = self
+            .fresh_param_group_with_type(vec![i_name], ParamType::Obj(shape.index_set.clone()))?;
+        let x_obj = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Forall);
+        let i_obj = obj_for_bound_param_in_scope(&i_group.params[0], ParamObjType::Exist);
         let enumerator_at_i: Obj =
             FnObj::new(shape.enumerator_head.clone(), vec![vec![Box::new(i_obj)]]).into();
         let body_fact: AtomicFact =
             EqualFact::new(enumerator_at_i, x_obj, line_file.clone()).into();
         let exist_body = ExistFactBody::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![i_name],
-                ParamType::Obj(shape.index_set.clone()),
-            )]),
+            ParamDefWithType::new(vec![i_group]),
             vec![ExistBodyFact::AtomicFact(body_fact)],
             line_file.clone(),
         )?;
         let forall_fact = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![x_name],
-                ParamType::Obj(shape.target_set.clone()),
-            )]),
+            ParamDefWithType::new(vec![x_group]),
             vec![],
             vec![ExistFactEnum::ExistUniqueFact(exist_body).into()],
             line_file,
@@ -843,7 +841,7 @@ impl Runtime {
         param_name: &str,
     ) -> Option<Obj> {
         for group in params_def.iter() {
-            if group.params.iter().any(|p| p == param_name) {
+            if group.params.iter().any(|p| p.name() == param_name) {
                 return Some(group.set_obj().clone());
             }
         }

@@ -158,7 +158,7 @@ impl Runtime {
             )?;
             if !exact_func_result.is_true() {
                 let x_name = self.generate_random_unused_name();
-                let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+                let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
                 let Some(finite_inst) =
                     self.instantiate_unary_function_at(finite_sum.func.as_ref(), &x_obj)?
                 else {
@@ -181,7 +181,7 @@ impl Runtime {
                     LessEqualFact::new(x_obj, (*range_sum.end).clone(), line_file.clone()).into();
                 let pointwise_result = self
                     .verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-                        x_name,
+                        x_binding,
                         vec![dom_lo, dom_hi],
                         &pointwise_fact,
                         verify_state,
@@ -296,7 +296,7 @@ impl Runtime {
             return Ok(None);
         }
         let x_name = self.generate_random_unused_name();
-        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
         let Some(left_inst) = self.instantiate_unary_function_at(left_sum.func.as_ref(), &x_obj)?
         else {
             return Ok(None);
@@ -308,7 +308,7 @@ impl Runtime {
         };
         let then_fact: AtomicFact = EqualFact::new(left_inst, right_inst, line_file.clone()).into();
         let r = self.verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-            x_name,
+            x_binding,
             left_sum.set.as_ref().clone(),
             &then_fact,
             verify_state,
@@ -345,7 +345,7 @@ impl Runtime {
             };
 
             let y_name = self.generate_random_unused_name();
-            let y_obj = obj_for_bound_param_in_scope(y_name.clone(), ParamObjType::Forall);
+            let (y_binding, y_obj) = self.fresh_bound_param(y_name, ParamObjType::Forall)?;
             let Some(pullback_at_y) =
                 self.instantiate_unary_function_at(pullback_sum.func.as_ref(), &y_obj)?
             else {
@@ -366,7 +366,7 @@ impl Runtime {
                 EqualFact::new(pullback_at_y, source_at_map_y, line_file.clone()).into();
             let pointwise_result = self
                 .verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-                    y_name,
+                    y_binding,
                     pullback_sum.set.as_ref().clone(),
                     &pointwise_fact,
                     verify_state,
@@ -378,9 +378,17 @@ impl Runtime {
             let base_name = self.generate_random_unused_name();
             let x_name = format!("{}a", base_name);
             let exist_y_name = format!("{}b", base_name);
-            let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+            let x_group = self.fresh_param_group_with_type(
+                vec![x_name],
+                ParamType::Obj(source_sum.set.as_ref().clone()),
+            )?;
+            let exist_y_group = self.fresh_param_group_with_type(
+                vec![exist_y_name],
+                ParamType::Obj(pullback_sum.set.as_ref().clone()),
+            )?;
+            let x_obj = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Forall);
             let exist_y_obj =
-                obj_for_bound_param_in_scope(exist_y_name.clone(), ParamObjType::Exist);
+                obj_for_bound_param_in_scope(&exist_y_group.params[0], ParamObjType::Exist);
             let Some(pullback_at_exist_y) =
                 self.instantiate_unary_function_at(pullback_sum.func.as_ref(), &exist_y_obj)?
             else {
@@ -407,20 +415,14 @@ impl Runtime {
             let preimage_eq: AtomicFact =
                 EqualFact::new(map_exist_y, x_obj, line_file.clone()).into();
             let exist_body = ExistFactBody::new(
-                ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                    vec![exist_y_name],
-                    ParamType::Obj(pullback_sum.set.as_ref().clone()),
-                )]),
+                ParamDefWithType::new(vec![exist_y_group]),
                 vec![ExistBodyFact::AtomicFact(preimage_eq)],
                 line_file.clone(),
             )?;
             let unique_preimage_fact: Fact = ExistFactEnum::ExistUniqueFact(exist_body).into();
             if !known_bijection {
                 let unique_preimage_result = self.run_in_local_env(|rt| {
-                    let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                        vec![x_name],
-                        ParamType::Obj(source_sum.set.as_ref().clone()),
-                    )]);
+                    let params_def = ParamDefWithType::new(vec![x_group]);
                     rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
                     rt.verify_fact_full(&unique_preimage_fact, verify_state)
                 })?;
@@ -573,7 +575,7 @@ impl Runtime {
             }
 
             let x_name = self.generate_random_unused_name();
-            let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+            let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
             let Some(sum_inst) = self.instantiate_unary_function_at(sum.func.as_ref(), &x_obj)?
             else {
                 continue;
@@ -593,7 +595,7 @@ impl Runtime {
                 EqualFact::new(sum_inst, expected, line_file.clone()).into();
             let pointwise_result = self
                 .verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-                    x_name,
+                    x_binding,
                     sum.set.as_ref().clone(),
                     &pointwise_fact,
                     verify_state,
@@ -648,7 +650,7 @@ impl Runtime {
                 }
 
                 let x_name = self.generate_random_unused_name();
-                let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+                let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
                 let Some(sum_inst) =
                     self.instantiate_unary_function_at(sum.func.as_ref(), &x_obj)?
                 else {
@@ -664,7 +666,7 @@ impl Runtime {
                     EqualFact::new(sum_inst, expected, line_file.clone()).into();
                 let pointwise_result = self
                     .verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-                        x_name,
+                        x_binding,
                         sum.set.as_ref().clone(),
                         &pointwise_fact,
                         verify_state,

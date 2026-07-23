@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        self.ensure_execution_frame_for_parse();
         self.parse_obj_hierarchy1(tb)
     }
 
@@ -230,11 +231,10 @@ impl Runtime {
             tb.skip_token(FN_LOWER_CASE)?;
             let fn_set = self.parse_fn_set(tb)?;
             let mut result: Obj = if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
-                let all_fn_names =
-                    ParamGroupWithSet::collect_param_names(&fn_set.body.params_def_with_set);
-                let equal_to = self.parse_in_local_free_param_scope(
+                let fn_param_bindings = fn_set.get_param_bindings();
+                let equal_to = self.parse_in_existing_free_param_scope(
                     ParamObjType::FnSet,
-                    &all_fn_names,
+                    &fn_param_bindings,
                     tb.line_file.clone(),
                     |this| {
                         tb.skip_token(LEFT_CURLY_BRACE)?;
@@ -284,12 +284,13 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
-                let param_group = ParamGroupWithSet::new(current_params, this.parse_obj(tb)?);
-                this.parsing_free_param_collection.begin_scope(
+                let param_set = this.parse_obj(tb)?;
+                let bindings = this.begin_parsing_scope(
                     ParamObjType::FnSet,
-                    &param_group.params,
+                    &current_params,
                     tb.line_file.clone(),
                 )?;
+                let param_group = ParamGroupWithSet::new(bindings, param_set);
 
                 params_def_with_set.push(param_group);
 
@@ -326,8 +327,7 @@ impl Runtime {
 
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
-            this.parsing_free_param_collection
-                .end_scope(ParamObjType::FnSet, &all_fn_names);
+            this.end_parsing_scope(ParamObjType::FnSet, &all_fn_names);
             let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
             Ok(FnSetOrFnSetClause::FnSet(built?))
         });
@@ -358,12 +358,13 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
-                let param_group = ParamGroupWithSet::new(current_params, this.parse_obj(tb)?);
-                this.parsing_free_param_collection.begin_scope(
+                let param_set = this.parse_obj(tb)?;
+                let bindings = this.begin_parsing_scope(
                     ParamObjType::FnSet,
-                    &param_group.params,
+                    &current_params,
                     tb.line_file.clone(),
                 )?;
+                let param_group = ParamGroupWithSet::new(bindings, param_set);
 
                 params_def_with_set.push(param_group);
 
@@ -400,8 +401,7 @@ impl Runtime {
 
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
-            this.parsing_free_param_collection
-                .end_scope(ParamObjType::FnSet, &all_fn_names);
+            this.end_parsing_scope(ParamObjType::FnSet, &all_fn_names);
             let clause_ok = FnSetClause::new(params_def_with_set, dom_facts, ret_set_parsed)?;
             Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
         });
@@ -423,7 +423,11 @@ impl Runtime {
         if tb.current_token_is_equal_to(SUB) {
             if minus_token_is_standalone_operator_obj(tb) {
                 tb.skip()?;
-                return Ok(Identifier::new(SUB.to_string()).into());
+                return Ok(Identifier::new_bound(
+                    SUB.to_string(),
+                    builtin_symbol_ref(SUB).expect("minus is a builtin symbol"),
+                )
+                .into());
             }
             tb.skip()?;
             let obj = self.parse_number_or_primary_obj_or_fn_obj(tb)?;
@@ -1300,10 +1304,12 @@ impl Runtime {
                     return Ok(standard);
                 }
                 let is_bound_in_parse_scope = self
-                    .parsing_free_param_collection
+                    .current_parse_context()
+                    .free_params
                     .name_is_in_any_free_param_map(&id.name);
                 let resolved = self
-                    .parsing_free_param_collection
+                    .current_parse_context()
+                    .free_params
                     .resolve_identifier_to_free_param_obj(&id.name);
                 if is_bound_in_parse_scope {
                     return Ok(resolved);
@@ -1636,7 +1642,16 @@ impl Runtime {
             }
         }
         tb.skip_token(right_token)?;
-        Ok(InstantiatedTemplateObj::new(template_name, args).into())
+        let surface_name = format!(
+            "{}{}{}{}{}",
+            TEMPLATE_INSTANCE_PREFIX,
+            template_name,
+            LESS,
+            vec_to_string_join_by_comma(&args),
+            GREATER
+        );
+        let binding = self.template_instance_symbol_binding(&surface_name)?;
+        Ok(InstantiatedTemplateObj::new(template_name, args, binding.as_ref()).into())
     }
 
     /// Parse set builder or list set after the first identifier; wraps body in a name block for the bound variable.
@@ -1647,7 +1662,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
             let set_builder_param = [a.name.clone()];
-            this.parsing_free_param_collection.begin_scope(
+            let bindings = this.begin_parsing_scope(
                 ParamObjType::SetBuilder,
                 &set_builder_param,
                 tb.line_file.clone(),
@@ -1678,7 +1693,7 @@ impl Runtime {
                     }
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-                    Ok(SetBuilder::new(a.name.clone(), second_inst, facts_inst)?.into())
+                    Ok(SetBuilder::new(bindings[0].clone(), second_inst, facts_inst)?.into())
                 } else {
                     Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -1688,8 +1703,7 @@ impl Runtime {
                     )))
                 }
             })();
-            this.parsing_free_param_collection
-                .end_scope(ParamObjType::SetBuilder, &set_builder_param);
+            this.end_parsing_scope(ParamObjType::SetBuilder, &set_builder_param);
             parsed
         })
     }
@@ -1747,7 +1761,11 @@ impl Runtime {
                 ),
             )));
         }
-        Ok(IdentifierWithMod::new(left, right).into())
+        let identifier = match self.resolved_qualified_identifier_symbol(&left, &right) {
+            Some(symbol) => IdentifierWithMod::new_bound(left, right, symbol),
+            None => IdentifierWithMod::new(left, right),
+        };
+        Ok(identifier.into())
     }
 
     /// Unqualified or `::`-qualified name / field name; returns a name-shaped [`Obj`].
@@ -1846,12 +1864,21 @@ impl Runtime {
 
     fn qualify_bare_identifier_if_needed(&self, id: Identifier) -> Obj {
         if is_builtin_identifier_name(&id.name) {
-            return id.into();
+            let symbol =
+                builtin_symbol_ref(&id.name).expect("builtin identifiers have stable symbol IDs");
+            return Identifier::new_bound(id.name, symbol).into();
         }
+        let symbol = self.resolved_identifier_symbol(&id.name);
         let Some(module_name) = self.current_parse_module_name() else {
-            return id.into();
+            return match symbol {
+                Some(symbol) => Identifier::new_bound(id.name, symbol).into(),
+                None => id.into(),
+            };
         };
-        IdentifierWithMod::new(module_name, id.name).into()
+        match symbol {
+            Some(symbol) => IdentifierWithMod::new_bound(module_name, id.name, symbol).into(),
+            None => IdentifierWithMod::new(module_name, id.name).into(),
+        }
     }
 
     fn qualify_bare_atomic_name_if_needed(&self, name: String) -> AtomicName {

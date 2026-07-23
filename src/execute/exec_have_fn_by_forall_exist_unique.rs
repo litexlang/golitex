@@ -1,11 +1,12 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-use super::exec_have_fn_equal_shared::build_declared_function_obj_with_param_names;
+use super::exec_have_fn_equal_shared::build_declared_function_obj_with_param_bindings;
 
 struct HaveFnByForallExistUniqueShape {
     fn_set_clause: FnSetClause,
     witness_name: String,
+    witness_binding: SymbolBinding,
     witness_param_type: ParamType,
     exist_body_facts: Vec<ExistBodyFact>,
 }
@@ -164,12 +165,17 @@ impl Runtime {
             .fn_set_from_fn_set_clause(&shape.fn_set_clause)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
 
-        self.store_free_param_or_identifier_name(&stmt.fn_name, ParamObjType::Identifier)
+        self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+        let function_binding = self
+            .visible_symbol_definition(&stmt.fn_name)
+            .expect("function symbol was just stored")
+            .binding()
+            .clone();
 
         let bind_infer = self
             .define_parameter_by_binding_param_type(
-                &stmt.fn_name,
+                &function_binding,
                 &ParamType::Obj(fn_set.clone().into()),
                 ParamObjType::Identifier,
             )
@@ -255,13 +261,15 @@ impl Runtime {
         }
 
         let mut witness_name = String::new();
+        let mut witness_binding: Option<SymbolBinding> = None;
         let mut witness_param_type: Option<ParamType> = None;
         let mut ret_set: Option<Obj> = None;
         for group in exist_body.params_def_with_type.groups.iter() {
             match &group.param_type {
                 ParamType::Obj(obj) => {
                     if !group.params.is_empty() {
-                        witness_name = group.params[0].clone();
+                        witness_name = group.params[0].name().to_string();
+                        witness_binding = Some(group.params[0].clone());
                         witness_param_type = Some(group.param_type.clone());
                         ret_set = Some(obj.clone());
                     }
@@ -293,6 +301,7 @@ impl Runtime {
                 ));
             }
         };
+        let witness_binding = witness_binding.expect("exist! witness binding was checked present");
 
         let mut dom_facts = Vec::with_capacity(stmt.forall.dom_facts.len());
         for dom_fact in stmt.forall.dom_facts.iter() {
@@ -317,6 +326,7 @@ impl Runtime {
         Ok(HaveFnByForallExistUniqueShape {
             fn_set_clause: FnSetClause::new(params_def_with_set, dom_facts, ret_set)?,
             witness_name,
+            witness_binding,
             witness_param_type,
             exist_body_facts: exist_body.facts.clone(),
         })
@@ -327,13 +337,13 @@ impl Runtime {
         stmt: &HaveFnByForallExistUniqueStmt,
         shape: &HaveFnByForallExistUniqueShape,
     ) -> Result<ForallFact, RuntimeError> {
-        let forall_param_names = stmt.forall.params_def_with_type.collect_param_names();
-        let function_obj = build_declared_function_obj_with_param_names(
+        let forall_param_bindings = stmt.forall.params_def_with_type.collect_param_bindings();
+        let function_obj = build_declared_function_obj_with_param_bindings(
             self.declared_identifier_obj(&stmt.fn_name),
-            &forall_param_names,
+            &forall_param_bindings,
         );
         let mut witness_map = HashMap::new();
-        witness_map.insert(shape.witness_name.clone(), function_obj);
+        insert_symbol_substitution(&mut witness_map, &shape.witness_binding, function_obj);
 
         let mut then_facts = Vec::with_capacity(shape.exist_body_facts.len());
         for body_fact in shape.exist_body_facts.iter() {
@@ -362,13 +372,15 @@ impl Runtime {
         stmt: &HaveFnByForallExistUniqueStmt,
         shape: &HaveFnByForallExistUniqueShape,
     ) -> Result<ForallFact, RuntimeError> {
-        let forall_param_names = stmt.forall.params_def_with_type.collect_param_names();
-        let function_obj = build_declared_function_obj_with_param_names(
+        let forall_param_bindings = stmt.forall.params_def_with_type.collect_param_bindings();
+        let function_obj = build_declared_function_obj_with_param_bindings(
             self.declared_identifier_obj(&stmt.fn_name),
-            &forall_param_names,
+            &forall_param_bindings,
         );
-        let (witness_names, witness_map) =
-            self.fresh_binder_retag_plan(&[shape.witness_name.clone()], ParamObjType::Forall);
+        let (witness_names, witness_map) = self.fresh_binder_retag_plan_for_bindings(
+            std::slice::from_ref(&shape.witness_binding),
+            ParamObjType::Forall,
+        );
         let witness_obj = witness_map[&shape.witness_name].clone();
 
         let mut params = stmt.forall.params_def_with_type.groups.clone();
@@ -407,9 +419,9 @@ impl Runtime {
     ) -> Result<(Vec<ParamGroupWithSet>, HashMap<String, Obj>), RuntimeError> {
         let mut result = Vec::with_capacity(param_defs.groups.len());
         // The source signature uses Forall binders; its stored function type uses FnSet binders.
-        let source_names = param_defs.collect_param_names();
+        let source_bindings = param_defs.collect_param_bindings();
         let (fn_set_names, full_forall_param_to_fn_set_param) =
-            self.fresh_binder_retag_plan(&source_names, ParamObjType::FnSet);
+            self.fresh_binder_retag_plan_for_bindings(&source_bindings, ParamObjType::FnSet);
         let mut forall_param_to_fn_set_param = HashMap::new();
         let mut name_index = 0;
         for group in param_defs.groups.iter() {
@@ -426,9 +438,11 @@ impl Runtime {
                         group_fn_set_names,
                         rebound_param_set,
                     ));
-                    for param_name in group.params.iter() {
-                        forall_param_to_fn_set_param.insert(
-                            param_name.clone(),
+                    for param_binding in group.params.iter() {
+                        let param_name = param_binding.name();
+                        insert_symbol_substitution(
+                            &mut forall_param_to_fn_set_param,
+                            param_binding,
                             full_forall_param_to_fn_set_param[param_name].clone(),
                         );
                     }

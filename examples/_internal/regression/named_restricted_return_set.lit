@@ -7,7 +7,7 @@ thm named_restricted_return_set_supports_nested_function_use:
     have fn encode(p {u}) P = fn(i closed_range(1, 2)) U {u}
     encode(u)(1) = u
     forall i closed_range(1, 2):
-        encode(u)(i) = fn(i closed_range(1, 2)) U {u}(i)
+        encode(u)(i) = fn(j closed_range(1, 2)) U {u}(i)
     encode(u) $in P
     encode(u) $in fn(i closed_range(1, 2)) U
     $fn_eq(encode(u), fn(i closed_range(1, 2)) U {u})

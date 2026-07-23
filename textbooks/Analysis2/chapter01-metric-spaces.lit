@@ -1,0 +1,755 @@
+# Chapter 1: Metric Spaces
+#
+# This chapter follows Tao's source order. Standalone exercises are omitted.
+# When the source assigns a named result's proof to an exercise, the theorem
+# remains here and only the omitted proof is marked as trust.
+
+# Lemma 1.1.1. Real convergence is equivalent to convergence of the distance
+# from the proposed limit to zero. Its formal statement appears immediately
+# after the local convergence relation needed to make this volume a standalone
+# Litex project; Tao assigns the proof to Exercise 1.1.1.
+
+# Definition 1.1.2 (Metric spaces). A metric is a nonnegative real-valued
+# distance with identity, symmetry, and the triangle inequality.
+prop is_metric_space(X set, dist fn(x, y X) R):
+    forall x, y X:
+        dist(x, y) >= 0
+    forall x X:
+        dist(x, x) = 0
+    forall x, y X:
+        dist(x, y) = 0
+        =>:
+            x = y
+    forall x, y X:
+        dist(x, y) = dist(y, x)
+    forall x, y, z X:
+        dist(x, z) <= dist(x, y) + dist(y, z)
+
+have fn real_distance(x, y R) R = abs(x - y)
+
+template<X set, dist fn(x, y X) R, Y power_set(X)>:
+    have fn restricted_distance(x, y Y) R = dist(x, y)
+
+# Definition 1.1.14 (Convergence in a metric space). The helper relation
+# exposes the eventual tail bound used by later proofs.
+prop is_metric_tail_close_to(X set, dist fn(x, y X) R, u fn(n N_pos) X, a X, epsilon R_pos, N0 N_pos):
+    forall n N_pos:
+        n >= N0
+        =>:
+            dist(u(n), a) <= epsilon
+
+prop has_eventual_metric_closeness(X set, dist fn(x, y X) R, u fn(n N_pos) X, a X, epsilon R_pos):
+    exist N0 N_pos st {$is_metric_tail_close_to(X, dist, u, a, epsilon, N0)}
+
+prop has_metric_limit(X set, dist fn(x, y X) R, u fn(n N_pos) X, a X):
+    forall epsilon R_pos:
+        $has_eventual_metric_closeness(X, dist, u, a, epsilon)
+
+prop is_metric_convergent(X set, dist fn(x, y X) R, u fn(n N_pos) X):
+    exist a X st {$has_metric_limit(X, dist, u, a)}
+
+# Formal statement and the two reusable directions for Lemma 1.1.1.
+thm real_convergence_implies_distance_convergence_to_zero:
+    ? forall u fn(n N_pos) R, a R:
+        $has_metric_limit(R, real_distance, u, a)
+        =>:
+            $has_metric_limit(R, real_distance, fn(n N_pos) R {real_distance(u(n), a)}, 0)
+    # proof_debt: unfold both epsilon-N definitions and use abs(abs(t))=abs(t).
+    trust $has_metric_limit(R, real_distance, fn(n N_pos) R {real_distance(u(n), a)}, 0)
+
+thm distance_convergence_to_zero_implies_real_convergence:
+    ? forall u fn(n N_pos) R, a R:
+        $has_metric_limit(R, real_distance, fn(n N_pos) R {real_distance(u(n), a)}, 0)
+        =>:
+            $has_metric_limit(R, real_distance, u, a)
+    # proof_debt: the reverse unfolding of the source-deferred equivalence.
+    trust $has_metric_limit(R, real_distance, u, a)
+
+# The finite real coordinate space used in Proposition 1.1.18 and Theorem
+# 1.5.7. Its distance functions remain explicit parameters until the finite
+# maximum interface for the l-infinity formula is available.
+template<n N_pos>:
+    have finite_real_vector set = fn(j N_pos: j <= n) R
+
+template<n N_pos>:
+    have fn l1_distance(x, y \finite_real_vector<n>) R = sum(1, n, fn(j N_pos: j <= n) R {abs(x(j) - y(j))})
+
+template<n N_pos>:
+    have fn l2_distance(x, y \finite_real_vector<n>) R = sqrt(abs(sum(1, n, fn(j N_pos: j <= n) R {(x(j) - y(j))^2})))
+
+prop is_linf_distance_value(n N_pos, x, y \finite_real_vector<n>, M R):
+    forall j N_pos:
+        j <= n
+        =>:
+            abs(x(j) - y(j)) <= M
+    exist j closed_range(1, n) st {M = abs(x(j) - y(j))}
+
+have fn linf_distance by exist!:
+    ? forall n N_pos, x, y \finite_real_vector<n>:
+        exist! M R st {$is_linf_distance_value(n, x, y, M)}
+    # proof_debt: finite_set_max over this nonempty finite image is unique.
+    # A direct recursive template currently fails when instantiated because
+    # its recursive function name is not resolved; see scripts/Analysis2/todo.md.
+    trust exist! M R st {$is_linf_distance_value(n, x, y, M)}
+
+template<n N_pos>:
+    have fn linf_distance_for_dimension(x, y \finite_real_vector<n>) R = linf_distance(n, x, y)
+
+prop has_coordinatewise_limit(n N_pos, u fn(k N_pos) \finite_real_vector<n>, x \finite_real_vector<n>):
+    forall j N_pos:
+        j <= n
+        =>:
+            $has_metric_limit(R, real_distance, fn(k N_pos) R {u(k)(j)}, x(j))
+
+# Proposition 1.1.18 (Equivalence of l1, l2, and l-infinity convergence).
+# These four directions retain the source's four equivalent criteria.
+thm l2_convergence_implies_l1_convergence:
+    ? forall n N_pos, u fn(k N_pos) \finite_real_vector<n>, x \finite_real_vector<n>:
+        $has_metric_limit(\finite_real_vector<n>, \l2_distance<n>, u, x)
+        =>:
+            $has_metric_limit(\finite_real_vector<n>, \l1_distance<n>, u, x)
+    # proof_debt: source Exercise 1.1.12; use d1 <= n*d2 and epsilon/n.
+    trust $has_metric_limit(\finite_real_vector<n>, \l1_distance<n>, u, x)
+
+thm l1_convergence_implies_linf_convergence:
+    ? forall n N_pos, u fn(k N_pos) \finite_real_vector<n>, x \finite_real_vector<n>:
+        $has_metric_limit(\finite_real_vector<n>, \l1_distance<n>, u, x)
+        =>:
+            $has_metric_limit(\finite_real_vector<n>, \linf_distance_for_dimension<n>, u, x)
+    # proof_debt: source Exercise 1.1.12; use dinf <= d1.
+    trust $has_metric_limit(\finite_real_vector<n>, \linf_distance_for_dimension<n>, u, x)
+
+thm linf_convergence_implies_coordinatewise_convergence:
+    ? forall n N_pos, u fn(k N_pos) \finite_real_vector<n>, x \finite_real_vector<n>:
+        $has_metric_limit(\finite_real_vector<n>, \linf_distance_for_dimension<n>, u, x)
+        =>:
+            $has_coordinatewise_limit(n, u, x)
+    # proof_debt: source Exercise 1.1.12; each coordinate is bounded by dinf.
+    trust $has_coordinatewise_limit(n, u, x)
+
+thm coordinatewise_convergence_implies_l2_convergence:
+    ? forall n N_pos, u fn(k N_pos) \finite_real_vector<n>, x \finite_real_vector<n>:
+        $has_coordinatewise_limit(n, u, x)
+        =>:
+            $has_metric_limit(\finite_real_vector<n>, \l2_distance<n>, u, x)
+    # proof_debt: source Exercise 1.1.12; choose one tail index for finitely
+    # many coordinates and apply the finite-dimensional comparison bounds.
+    trust $has_metric_limit(\finite_real_vector<n>, \l2_distance<n>, u, x)
+
+prop is_eventually_equal_after(X set, u fn(n N_pos) X, a X, N0 N_pos):
+    forall n N_pos:
+        n >= N0
+        =>:
+            u(n) = a
+
+prop is_eventually_equal_to(X set, u fn(n N_pos) X, a X):
+    exist N0 N_pos st {$is_eventually_equal_after(X, u, a, N0)}
+
+# Proposition 1.1.19 (Convergence in the discrete metric). The distance is
+# parameterized by its defining zero/one law to avoid an arbitrary choice.
+prop is_discrete_metric(X set, dist fn(x, y X) R):
+    forall x X:
+        dist(x, x) = 0
+    forall x, y X:
+        x != y
+        =>:
+            dist(x, y) = 1
+
+template<X set>:
+    have fn discrete_distance(x, y X) R by cases:
+        case x = y: 0
+        case x != y: 1
+
+thm discrete_metric_convergence_iff_eventually_constant_forward:
+    ? forall X set, dist fn(x, y X) R, u fn(n N_pos) X, a X:
+        $is_discrete_metric(X, dist)
+        $has_metric_limit(X, dist, u, a)
+        =>:
+            $is_eventually_equal_to(X, u, a)
+    # proof_debt: source Exercise 1.1.13; apply convergence with epsilon=1/2.
+    trust $is_eventually_equal_to(X, u, a)
+
+thm discrete_metric_convergence_iff_eventually_constant_reverse:
+    ? forall X set, dist fn(x, y X) R, u fn(n N_pos) X, a X:
+        $is_discrete_metric(X, dist)
+        $is_eventually_equal_to(X, u, a)
+        =>:
+            $has_metric_limit(X, dist, u, a)
+    # proof_debt: source Exercise 1.1.13; the tail distances are zero.
+    trust $has_metric_limit(X, dist, u, a)
+
+# Proposition 1.1.20 (Uniqueness of limits). Tao assigns the proof to
+# Exercise 1.1.14.
+thm metric_limit_unique:
+    ? forall X set, dist fn(x, y X) R, u fn(n N_pos) X, a, b X:
+        $is_metric_space(X, dist)
+        $has_metric_limit(X, dist, u, a)
+        $has_metric_limit(X, dist, u, b)
+        =>:
+            a = b
+    # proof_debt: use epsilon=dist(a,b)/3 and the triangle inequality.
+    trust a = b
+
+# Definition 1.2.1 (Balls).
+template<X set, dist fn(x, y X) R>:
+    have fn metric_ball(center X, radius R_pos) power_set(X) = {x X: dist(x, center) < radius}
+
+template<X set, dist fn(x, y X) R>:
+    have fn metric_closed_ball(center X, radius R_pos) power_set(X) = {x X: dist(x, center) <= radius}
+
+thm metric_ball_contains_center:
+    ? forall X set, dist fn(x, y X) R, center X, radius R_pos:
+        $is_metric_space(X, dist)
+        =>:
+            center $in \metric_ball<X, dist>(center, radius)
+    dist(center, center) = 0 < radius
+    center $in {x X: dist(x, center) < radius}
+
+# Definition 1.2.5 (Interior, exterior, and boundary).
+prop is_metric_interior_point(X set, dist fn(x, y X) R, E power_set(X), x X):
+    exist radius R_pos st {\metric_ball<X, dist>(x, radius) $subset E}
+
+prop is_metric_exterior_point(X set, dist fn(x, y X) R, E power_set(X), x X):
+    exist radius R_pos st {intersect(\metric_ball<X, dist>(x, radius), E) = {}}
+
+prop is_metric_boundary_point(X set, dist fn(x, y X) R, E power_set(X), x X):
+    not $is_metric_interior_point(X, dist, E, x)
+    not $is_metric_exterior_point(X, dist, E, x)
+
+template<X set, dist fn(x, y X) R>:
+    have fn metric_interior(E power_set(X)) power_set(X) = {x X: $is_metric_interior_point(X, dist, E, x)}
+
+template<X set, dist fn(x, y X) R>:
+    have fn metric_exterior(E power_set(X)) power_set(X) = {x X: $is_metric_exterior_point(X, dist, E, x)}
+
+template<X set, dist fn(x, y X) R>:
+    have fn metric_boundary(E power_set(X)) power_set(X) = {x X: $is_metric_boundary_point(X, dist, E, x)}
+
+# Definition 1.2.9 (Closure).
+prop is_metric_adherent_point(X set, dist fn(x, y X) R, E power_set(X), x X):
+    forall radius R_pos:
+        not intersect(\metric_ball<X, dist>(x, radius), E) = {}
+
+template<X set, dist fn(x, y X) R>:
+    have fn metric_closure(E power_set(X)) power_set(X) = {x X: $is_metric_adherent_point(X, dist, E, x)}
+
+prop has_convergent_sequence_from_set(X set, dist fn(x, y X) R, E power_set(X), a X):
+    exist u fn(n N_pos) E st {$has_metric_limit(X, dist, fn(n N_pos) X {u(n)}, a)}
+
+# Proposition 1.2.10. Adherence, interior-or-boundary membership, and being a
+# limit of a sequence from E are equivalent. The proof is Exercise 1.2.2.
+thm adherent_implies_interior_or_boundary:
+    ? forall X set, dist fn(x, y X) R, E power_set(X), x X:
+        $is_metric_space(X, dist)
+        $is_metric_adherent_point(X, dist, E, x)
+        =>:
+            $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
+    # proof_debt: source Exercise 1.2.2; split on interior and use adherence.
+    trust $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
+
+thm interior_or_boundary_implies_adherent:
+    ? forall X set, dist fn(x, y X) R, E power_set(X), x X:
+        $is_metric_space(X, dist)
+        $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
+        =>:
+            $is_metric_adherent_point(X, dist, E, x)
+    # proof_debt: source Exercise 1.2.2; every ball meets E in either case.
+    trust $is_metric_adherent_point(X, dist, E, x)
+
+thm adherent_iff_sequence_from_set_forward:
+    ? forall X set, dist fn(x, y X) R, E power_set(X), x X:
+        $is_metric_space(X, dist)
+        $is_metric_adherent_point(X, dist, E, x)
+        =>:
+            $has_convergent_sequence_from_set(X, dist, E, x)
+    # proof_debt: source Exercise 1.2.2; choose a point in each 1/n ball.
+    trust $has_convergent_sequence_from_set(X, dist, E, x)
+
+thm adherent_iff_sequence_from_set_reverse:
+    ? forall X set, dist fn(x, y X) R, E power_set(X), x X:
+        $is_metric_space(X, dist)
+        $has_convergent_sequence_from_set(X, dist, E, x)
+        =>:
+            $is_metric_adherent_point(X, dist, E, x)
+    # proof_debt: source Exercise 1.2.2; take a sufficiently late sequence term.
+    trust $is_metric_adherent_point(X, dist, E, x)
+
+# Corollary 1.2.11. Closure is interior union boundary and the complement of
+# the exterior.
+thm metric_closure_decomposition:
+    ? forall X set, dist fn(x, y X) R, E power_set(X):
+        $is_metric_space(X, dist)
+        =>:
+            \metric_closure<X, dist>(E) = union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
+            \metric_closure<X, dist>(E) = set_minus(X, \metric_exterior<X, dist>(E))
+    # proof_debt: extensionality plus Proposition 1.2.10.
+    trust:
+        \metric_closure<X, dist>(E) = union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
+        \metric_closure<X, dist>(E) = set_minus(X, \metric_exterior<X, dist>(E))
+
+# Definition 1.2.12 (Open and closed sets). These definitions follow Tao's
+# boundary formulation; Proposition 1.2.15 supplies the usual equivalents.
+prop is_metric_open(X set, dist fn(x, y X) R, E power_set(X)):
+    intersect(\metric_boundary<X, dist>(E), E) = {}
+
+prop is_metric_closed(X set, dist fn(x, y X) R, E power_set(X)):
+    \metric_boundary<X, dist>(E) $subset E
+
+prop is_in_set_family_union(X set, A set, family fn(alpha A) power_set(X), x X):
+    exist alpha A st {x $in family(alpha)}
+
+prop is_in_set_family_intersection(X set, A set, family fn(alpha A) power_set(X), x X):
+    forall alpha A:
+        x $in family(alpha)
+
+template<X set, A set, family fn(alpha A) power_set(X)>:
+    have set_family_union power_set(X) = {x X: $is_in_set_family_union(X, A, family, x)}
+
+template<X set, A set, family fn(alpha A) power_set(X)>:
+    have set_family_intersection power_set(X) = {x X: $is_in_set_family_intersection(X, A, family, x)}
+
+# Proposition 1.2.15(a)-(h). Tao assigns all proofs to Exercise 1.2.3. The
+# source-facing API is split into reusable theorem interfaces.
+thm metric_open_iff_equals_interior_forward:
+    ? forall X set, dist fn(x, y X) R, E power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_open(X, dist, E)
+        =>:
+            E = \metric_interior<X, dist>(E)
+    trust E = \metric_interior<X, dist>(E)
+
+thm metric_open_iff_equals_interior_reverse:
+    ? forall X set, dist fn(x, y X) R, E power_set(X):
+        $is_metric_space(X, dist)
+        E = \metric_interior<X, dist>(E)
+        =>:
+            $is_metric_open(X, dist, E)
+    trust $is_metric_open(X, dist, E)
+
+thm metric_closed_iff_contains_closure_forward:
+    ? forall X set, dist fn(x, y X) R, E power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_closed(X, dist, E)
+        =>:
+            \metric_closure<X, dist>(E) $subset E
+    trust \metric_closure<X, dist>(E) $subset E
+
+thm metric_closed_iff_contains_closure_reverse:
+    ? forall X set, dist fn(x, y X) R, E power_set(X):
+        $is_metric_space(X, dist)
+        \metric_closure<X, dist>(E) $subset E
+        =>:
+            $is_metric_closed(X, dist, E)
+    trust $is_metric_closed(X, dist, E)
+
+thm metric_open_and_closed_ball_properties:
+    ? forall X set, dist fn(x, y X) R, center X, radius R_pos:
+        $is_metric_space(X, dist)
+        =>:
+            $is_metric_open(X, dist, \metric_ball<X, dist>(center, radius))
+            $is_metric_closed(X, dist, \metric_closed_ball<X, dist>(center, radius))
+    trust:
+        $is_metric_open(X, dist, \metric_ball<X, dist>(center, radius))
+        $is_metric_closed(X, dist, \metric_closed_ball<X, dist>(center, radius))
+
+thm metric_singleton_is_closed:
+    ? forall X set, dist fn(x, y X) R, x X:
+        $is_metric_space(X, dist)
+        =>:
+            $is_metric_closed(X, dist, {x})
+    trust $is_metric_closed(X, dist, {x})
+
+thm metric_open_iff_complement_closed:
+    ? forall X set, dist fn(x, y X) R, E power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_open(X, dist, E)
+        =>:
+            $is_metric_closed(X, dist, set_minus(X, E))
+    trust $is_metric_closed(X, dist, set_minus(X, E))
+
+thm metric_complement_closed_implies_open:
+    ? forall X set, dist fn(x, y X) R, E power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_closed(X, dist, set_minus(X, E))
+        =>:
+            $is_metric_open(X, dist, E)
+    trust $is_metric_open(X, dist, E)
+
+thm arbitrary_union_of_metric_open_sets_is_open:
+    ? forall X set, dist fn(x, y X) R, A set, family fn(alpha A) power_set(X):
+        $is_metric_space(X, dist)
+        forall alpha A:
+            $is_metric_open(X, dist, family(alpha))
+        =>:
+            $is_metric_open(X, dist, \set_family_union<X, A, family>)
+    trust $is_metric_open(X, dist, \set_family_union<X, A, family>)
+
+thm arbitrary_intersection_of_metric_closed_sets_is_closed:
+    ? forall X set, dist fn(x, y X) R, A set, family fn(alpha A) power_set(X):
+        $is_metric_space(X, dist)
+        forall alpha A:
+            $is_metric_closed(X, dist, family(alpha))
+        =>:
+            $is_metric_closed(X, dist, \set_family_intersection<X, A, family>)
+    trust $is_metric_closed(X, dist, \set_family_intersection<X, A, family>)
+
+thm metric_interior_is_largest_open_subset:
+    ? forall X set, dist fn(x, y X) R, E, V power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_open(X, dist, V)
+        V $subset E
+        =>:
+            $is_metric_open(X, dist, \metric_interior<X, dist>(E))
+            V $subset \metric_interior<X, dist>(E)
+    trust:
+        $is_metric_open(X, dist, \metric_interior<X, dist>(E))
+        V $subset \metric_interior<X, dist>(E)
+
+thm metric_closure_is_smallest_closed_superset:
+    ? forall X set, dist fn(x, y X) R, E, K power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_closed(X, dist, K)
+        E $subset K
+        =>:
+            $is_metric_closed(X, dist, \metric_closure<X, dist>(E))
+            \metric_closure<X, dist>(E) $subset K
+    trust:
+        $is_metric_closed(X, dist, \metric_closure<X, dist>(E))
+        \metric_closure<X, dist>(E) $subset K
+
+# Definition 1.3.3 (Relative topology).
+prop is_relatively_metric_open(X set, dist fn(x, y X) R, Y power_set(X), E power_set(Y)):
+    $is_metric_open(Y, fn(x, y Y) R {dist(x, y)}, E)
+
+prop is_relatively_metric_closed(X set, dist fn(x, y X) R, Y power_set(X), E power_set(Y)):
+    $is_metric_closed(Y, fn(x, y Y) R {dist(x, y)}, E)
+
+# Proposition 1.3.4. Part (a) is proved in the source; part (b) is Exercise
+# 1.3.1. Both interfaces remain source-facing and their current proof debt is
+# distinguished in the local todo.
+thm relatively_open_is_ambient_open_intersection:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X), E power_set(Y):
+        $is_metric_space(X, dist)
+        $is_relatively_metric_open(X, dist, Y, E)
+        =>:
+            exist V power_set(X) st {$is_metric_open(X, dist, V), E = intersect(V, Y)}
+    # proof_debt: formalize the source's chosen-radius union construction.
+    trust exist V power_set(X) st {$is_metric_open(X, dist, V), E = intersect(V, Y)}
+
+thm ambient_open_intersection_is_relatively_open:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X), E power_set(Y), V power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_open(X, dist, V)
+        E = intersect(V, Y)
+        =>:
+            $is_relatively_metric_open(X, dist, Y, E)
+    # proof_debt: restrict each ambient ball to Y.
+    trust $is_relatively_metric_open(X, dist, Y, E)
+
+thm relatively_closed_is_ambient_closed_intersection:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X), E power_set(Y):
+        $is_metric_space(X, dist)
+        $is_relatively_metric_closed(X, dist, Y, E)
+        =>:
+            exist K power_set(X) st {$is_metric_closed(X, dist, K), E = intersect(K, Y)}
+    # proof_debt: source Exercise 1.3.1.
+    trust exist K power_set(X) st {$is_metric_closed(X, dist, K), E = intersect(K, Y)}
+
+thm ambient_closed_intersection_is_relatively_closed:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X), E power_set(Y), K power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_closed(X, dist, K)
+        E = intersect(K, Y)
+        =>:
+            $is_relatively_metric_closed(X, dist, Y, E)
+    # proof_debt: source Exercise 1.3.1.
+    trust $is_relatively_metric_closed(X, dist, Y, E)
+
+# Definition 1.4.1 (Subsequences).
+prop is_strictly_increasing_index(phi fn(n N_pos) N_pos):
+    forall m, n N_pos:
+        m < n
+        =>:
+            phi(m) < phi(n)
+
+prop is_subsequence_of(X set, v, u fn(n N_pos) X):
+    exist phi fn(n N_pos) N_pos st {$is_strictly_increasing_index(phi), $fn_eq(v, fn(n N_pos) X {u(phi(n))})}
+
+# Lemma 1.4.3. A subsequence of a convergent sequence has the same limit.
+thm convergent_subsequence_has_same_limit:
+    ? forall X set, dist fn(x, y X) R, u, v fn(n N_pos) X, a X:
+        $is_metric_space(X, dist)
+        $has_metric_limit(X, dist, u, a)
+        $is_subsequence_of(X, v, u)
+        =>:
+            $has_metric_limit(X, dist, v, a)
+    # proof_debt: source Exercise 1.4.1; strictly increasing phi satisfies
+    # phi(n)>=n, so a tail of u controls the subsequence.
+    trust $has_metric_limit(X, dist, v, a)
+
+# Definition 1.4.4 (Limit points of a sequence).
+prop is_metric_sequence_limit_point(X set, dist fn(x, y X) R, u fn(n N_pos) X, a X):
+    forall N0 N_pos, epsilon R_pos:
+        exist n N_pos st {n >= N0, dist(u(n), a) <= epsilon}
+
+# Proposition 1.4.5. A point is a sequence limit point iff some subsequence
+# converges to it. Tao assigns the proof to Exercise 1.4.2.
+thm sequence_limit_point_has_convergent_subsequence:
+    ? forall X set, dist fn(x, y X) R, u fn(n N_pos) X, a X:
+        $is_metric_space(X, dist)
+        $is_metric_sequence_limit_point(X, dist, u, a)
+        =>:
+            exist v fn(n N_pos) X st {$is_subsequence_of(X, v, u), $has_metric_limit(X, dist, v, a)}
+    trust exist v fn(n N_pos) X st {$is_subsequence_of(X, v, u), $has_metric_limit(X, dist, v, a)}
+
+thm convergent_subsequence_gives_sequence_limit_point:
+    ? forall X set, dist fn(x, y X) R, u, v fn(n N_pos) X, a X:
+        $is_metric_space(X, dist)
+        $is_subsequence_of(X, v, u)
+        $has_metric_limit(X, dist, v, a)
+        =>:
+            $is_metric_sequence_limit_point(X, dist, u, a)
+    trust $is_metric_sequence_limit_point(X, dist, u, a)
+
+# Definition 1.4.6 (Cauchy sequences).
+prop is_metric_cauchy_after(X set, dist fn(x, y X) R, u fn(n N_pos) X, epsilon R_pos, N0 N_pos):
+    forall j, k N_pos:
+        j >= N0
+        k >= N0
+        =>:
+            dist(u(j), u(k)) < epsilon
+
+prop is_metric_cauchy(X set, dist fn(x, y X) R, u fn(n N_pos) X):
+    forall epsilon R_pos:
+        exist N0 N_pos st {$is_metric_cauchy_after(X, dist, u, epsilon, N0)}
+
+# Lemma 1.4.7 (Convergent sequences are Cauchy). The proof is Exercise 1.4.3.
+thm metric_convergent_implies_cauchy:
+    ? forall X set, dist fn(x, y X) R, u fn(n N_pos) X, a X:
+        $is_metric_space(X, dist)
+        $has_metric_limit(X, dist, u, a)
+        =>:
+            $is_metric_cauchy(X, dist, u)
+    # proof_debt: use epsilon/3 twice and the triangle inequality.
+    trust $is_metric_cauchy(X, dist, u)
+
+# Lemma 1.4.9. A Cauchy sequence with a convergent subsequence converges.
+thm cauchy_with_convergent_subsequence_converges:
+    ? forall X set, dist fn(x, y X) R, u, v fn(n N_pos) X, a X:
+        $is_metric_space(X, dist)
+        $is_metric_cauchy(X, dist, u)
+        $is_subsequence_of(X, v, u)
+        $has_metric_limit(X, dist, v, a)
+        =>:
+            $has_metric_limit(X, dist, u, a)
+    # proof_debt: source Exercise 1.4.4; combine a late u term with one late
+    # subsequence term and use the triangle inequality.
+    trust $has_metric_limit(X, dist, u, a)
+
+# Definition 1.4.10 (Complete metric spaces).
+prop is_complete_metric_space(X set, dist fn(x, y X) R):
+    forall u fn(n N_pos) X:
+        $is_metric_cauchy(X, dist, u)
+        =>:
+            $is_metric_convergent(X, dist, u)
+
+# Proposition 1.4.12. Complete subspaces are closed, and closed subspaces of a
+# complete metric space are complete. Tao assigns the proof to Exercise 1.4.7.
+thm complete_metric_subspace_is_closed:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X):
+        $is_metric_space(X, dist)
+        $is_complete_metric_space(Y, fn(x, y Y) R {dist(x, y)})
+        =>:
+            $is_metric_closed(X, dist, Y)
+    trust $is_metric_closed(X, dist, Y)
+
+thm closed_subspace_of_complete_metric_space_is_complete:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X):
+        $is_metric_space(X, dist)
+        $is_complete_metric_space(X, dist)
+        $is_metric_closed(X, dist, Y)
+        =>:
+            $is_complete_metric_space(Y, fn(x, y Y) R {dist(x, y)})
+    trust $is_complete_metric_space(Y, fn(x, y Y) R {dist(x, y)})
+
+# Definition 1.5.1 (Compactness). This is Tao's sequential definition.
+prop is_metric_compact(X set, dist fn(x, y X) R, Y power_set(X)):
+    forall u fn(n N_pos) Y:
+        exist a Y, phi fn(n N_pos) N_pos st {$is_strictly_increasing_index(phi), $has_metric_limit(Y, fn(x, y Y) R {dist(x, y)}, fn(n N_pos) Y {u(phi(n))}, a)}
+
+# Definition 1.5.3 (Bounded subsets).
+prop is_metric_bounded(X set, dist fn(x, y X) R, Y power_set(X)):
+    forall center X:
+        exist radius R_pos st {Y $subset \metric_ball<X, dist>(center, radius)}
+
+# Proposition 1.5.5. Compact metric spaces are complete and bounded.
+thm compact_metric_space_is_complete_and_bounded:
+    ? forall X set, dist fn(x, y X) R:
+        $is_metric_space(X, dist)
+        $is_metric_compact(X, dist, X)
+        =>:
+            $is_complete_metric_space(X, dist)
+            $is_metric_bounded(X, dist, X)
+    # proof_debt: source Exercise 1.5.2; both contradiction arguments require
+    # selected sequences.
+    trust:
+        $is_complete_metric_space(X, dist)
+        $is_metric_bounded(X, dist, X)
+
+# Corollary 1.5.6 (Compact subsets are closed and bounded).
+thm compact_metric_subset_is_closed_and_bounded:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_compact(X, dist, Y)
+        =>:
+            $is_metric_closed(X, dist, Y)
+            $is_metric_bounded(X, dist, Y)
+    # proof_debt: specialize Proposition 1.5.5 to Y, then apply 1.4.12(a).
+    trust:
+        $is_metric_closed(X, dist, Y)
+        $is_metric_bounded(X, dist, Y)
+
+prop metric_convergence_implies_coordinatewise(n N_pos, dist fn(x, y \finite_real_vector<n>) R):
+    forall u fn(k N_pos) \finite_real_vector<n>, x \finite_real_vector<n>:
+        $has_metric_limit(\finite_real_vector<n>, dist, u, x)
+        =>:
+            $has_coordinatewise_limit(n, u, x)
+
+prop coordinatewise_convergence_implies_metric(n N_pos, dist fn(x, y \finite_real_vector<n>) R):
+    forall u fn(k N_pos) \finite_real_vector<n>, x \finite_real_vector<n>:
+        $has_coordinatewise_limit(n, u, x)
+        =>:
+            $has_metric_limit(\finite_real_vector<n>, dist, u, x)
+
+# Theorem 1.5.7 (Heine-Borel in finite-dimensional real space). The source
+# proof is Exercise 1.5.3 and relies on Proposition 1.1.18 plus Analysis I.
+thm finite_dimensional_heine_borel_forward:
+    ? forall n N_pos, dist fn(x, y \finite_real_vector<n>) R, E power_set(\finite_real_vector<n>):
+        $is_metric_space(\finite_real_vector<n>, dist)
+        $metric_convergence_implies_coordinatewise(n, dist)
+        $coordinatewise_convergence_implies_metric(n, dist)
+        $is_metric_compact(\finite_real_vector<n>, dist, E)
+        =>:
+            $is_metric_closed(\finite_real_vector<n>, dist, E)
+            $is_metric_bounded(\finite_real_vector<n>, dist, E)
+    trust:
+        $is_metric_closed(\finite_real_vector<n>, dist, E)
+        $is_metric_bounded(\finite_real_vector<n>, dist, E)
+
+thm finite_dimensional_heine_borel_reverse:
+    ? forall n N_pos, dist fn(x, y \finite_real_vector<n>) R, E power_set(\finite_real_vector<n>):
+        $is_metric_space(\finite_real_vector<n>, dist)
+        $metric_convergence_implies_coordinatewise(n, dist)
+        $coordinatewise_convergence_implies_metric(n, dist)
+        $is_metric_closed(\finite_real_vector<n>, dist, E)
+        $is_metric_bounded(\finite_real_vector<n>, dist, E)
+        =>:
+            $is_metric_compact(\finite_real_vector<n>, dist, E)
+    # proof_debt: source Exercise 1.5.3; invoke finite-dimensional
+    # Bolzano-Weierstrass from Analysis I coordinate by coordinate.
+    trust $is_metric_compact(\finite_real_vector<n>, dist, E)
+
+prop is_metric_open_cover(X set, dist fn(x, y X) R, Y power_set(X), A set, cover fn(alpha A) power_set(X)):
+    forall alpha A:
+        $is_metric_open(X, dist, cover(alpha))
+    Y $subset \set_family_union<X, A, cover>
+
+prop has_finite_metric_subcover(X set, dist fn(x, y X) R, Y power_set(X), A set, cover fn(alpha A) power_set(X)):
+    exist F finite_set st {F $subset A, Y $subset \set_family_union<X, F, fn(alpha F) power_set(X) {cover(alpha)}>}
+
+# Theorem 1.5.8. Every open cover of a compact subset has a finite subcover.
+# The source supplies the long three-case proof.
+thm compact_metric_subset_has_finite_open_subcover:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X), A set, cover fn(alpha A) power_set(X):
+        $is_metric_space(X, dist)
+        $is_metric_compact(X, dist, Y)
+        $is_metric_open_cover(X, dist, Y, A, cover)
+        =>:
+            $has_finite_metric_subcover(X, dist, Y, A, cover)
+    # proof_debt: formalize the source's radius infimum and separated-sequence
+    # argument; this is source-supplied proof debt, not an omitted exercise.
+    trust $has_finite_metric_subcover(X, dist, Y, A, cover)
+
+prop is_nested_nonempty_compact_sequence(X set, dist fn(x, y X) R, K fn(n N_pos) power_set(X)):
+    forall n N_pos:
+        $is_nonempty_set(K(n))
+        $is_metric_compact(X, dist, K(n))
+        K(n + 1) $subset K(n)
+
+prop is_in_nested_set_intersection(X set, K fn(n N_pos) power_set(X), x X):
+    forall n N_pos:
+        x $in K(n)
+
+template<X set, K fn(n N_pos) power_set(X)>:
+    have nested_set_intersection power_set(X) = {x X: $is_in_nested_set_intersection(X, K, x)}
+
+# Corollary 1.5.9. A nested sequence of nonempty compact subsets has nonempty
+# intersection. Tao assigns the proof to Exercise 1.5.6.
+thm nested_nonempty_compact_intersection_is_nonempty:
+    ? forall X set, dist fn(x, y X) R, K fn(n N_pos) power_set(X):
+        $is_metric_space(X, dist)
+        $is_nested_nonempty_compact_sequence(X, dist, K)
+        =>:
+            $is_nonempty_set(\nested_set_intersection<X, K>)
+    # proof_debt: apply Theorem 1.5.8 to the complementary open cover.
+    trust $is_nonempty_set(\nested_set_intersection<X, K>)
+
+# Theorem 1.5.10(a). Closed subsets of compact subsets are exactly the compact
+# subsets.
+thm closed_subset_of_compact_metric_subset_is_compact:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X), W power_set(Y):
+        $is_metric_space(X, dist)
+        $is_metric_compact(X, dist, Y)
+        $is_metric_closed(X, dist, W)
+        =>:
+            $is_metric_compact(X, dist, W)
+    # proof_debt: source Exercise 1.5.7.
+    trust $is_metric_compact(X, dist, W)
+
+thm compact_subset_of_compact_metric_subset_is_closed:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X), W power_set(Y):
+        $is_metric_space(X, dist)
+        $is_metric_compact(X, dist, Y)
+        $is_metric_compact(X, dist, W)
+        =>:
+            $is_metric_closed(X, dist, W)
+    # proof_debt: source Exercise 1.5.7; apply Corollary 1.5.6.
+    trust $is_metric_closed(X, dist, W)
+
+# Theorem 1.5.10(b). A finite union of compact subsets is compact.
+thm finite_union_of_compact_metric_subsets_is_compact:
+    ? forall X set, dist fn(x, y X) R, I finite_set, family fn(i I) power_set(X):
+        $is_metric_space(X, dist)
+        forall i I:
+            $is_metric_compact(X, dist, family(i))
+        =>:
+            $is_metric_compact(X, dist, \set_family_union<X, I, family>)
+    # proof_debt: source Exercise 1.5.7; one family member contains infinitely
+    # many terms of any sequence in the finite union.
+    trust $is_metric_compact(X, dist, \set_family_union<X, I, family>)
+
+# Theorem 1.5.10(c). Every finite subset, including the empty set, is compact.
+thm finite_metric_subset_is_compact:
+    ? forall X set, dist fn(x, y X) R, E finite_set:
+        E $subset X
+        $is_metric_space(X, dist)
+        =>:
+            $is_metric_compact(X, dist, E)
+    # proof_debt: source Exercise 1.5.7; use the infinite pigeonhole principle.
+    trust $is_metric_compact(X, dist, E)
+
+# Representative use probes keep the main interfaces live.
+thm complete_metric_space_use_probe:
+    ? forall X set, dist fn(x, y X) R, u fn(n N_pos) X:
+        $is_complete_metric_space(X, dist)
+        $is_metric_cauchy(X, dist, u)
+        =>:
+            $is_metric_convergent(X, dist, u)
+    $is_metric_convergent(X, dist, u)
+
+thm compact_metric_space_use_probe:
+    ? forall X set, dist fn(x, y X) R, u fn(n N_pos) X:
+        $is_metric_compact(X, dist, X)
+        =>:
+            exist a X, phi fn(n N_pos) N_pos st {$is_strictly_increasing_index(phi), $has_metric_limit(X, fn(x, y X) R {dist(x, y)}, fn(n N_pos) X {u(phi(n))}, a)}
+    exist a X, phi fn(n N_pos) N_pos st {$is_strictly_increasing_index(phi), $has_metric_limit(X, fn(x, y X) R {dist(x, y)}, fn(n N_pos) X {u(phi(n))}, a)}

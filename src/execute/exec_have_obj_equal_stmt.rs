@@ -106,7 +106,11 @@ impl Runtime {
                 }
                 check_results.push(verify_result);
 
-                param_to_obj_map.insert(name.clone(), current_param_equal_to.clone());
+                insert_symbol_substitution(
+                    &mut param_to_obj_map,
+                    name,
+                    current_param_equal_to.clone(),
+                );
                 current_index += 1;
             }
         }
@@ -148,14 +152,14 @@ impl Runtime {
             .relabel_all_added_facts_with_store_reason(HaveObjEqualStmt::store_reason());
         infer_result.new_infer_result_inside(param_infer_result);
 
-        for (name, obj) in have_obj_equal_stmt
+        for (binding, obj) in have_obj_equal_stmt
             .param_def
-            .collect_param_names()
+            .collect_param_bindings()
             .iter()
             .zip(have_obj_equal_stmt.objs_equal_to.iter())
         {
             let equal_to_fact: AtomicFact = EqualFact::new(
-                Identifier::new(name.clone()).into(),
+                Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into(),
                 obj.clone(),
                 have_obj_equal_stmt.line_file.clone(),
             )

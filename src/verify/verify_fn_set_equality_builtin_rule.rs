@@ -102,20 +102,24 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        let target_flat_param_names =
-            ParamGroupWithSet::collect_param_names(&target.body.params_def_with_set);
+        let target_flat_param_bindings = target.body.params_def_with_set.collect_param_bindings();
         let generated_param_names =
-            self.generate_random_unused_names(target_flat_param_names.len());
+            self.generate_random_unused_names(target_flat_param_bindings.len());
+        let generated_param_bindings = generated_param_names
+            .iter()
+            .enumerate()
+            .map(|(index, name)| SymbolBinding::alpha_canonical(index, name.clone()))
+            .collect::<Vec<_>>();
         let source_param_to_generated_arg_map = self
             .define_directional_source_fn_set_params_in_local_env(
                 source,
-                &generated_param_names,
+                &generated_param_bindings,
                 target,
                 line_file.clone(),
             )?;
         let target_param_to_generated_arg_map = Self::build_param_to_generated_arg_map(
-            &target_flat_param_names,
-            &generated_param_names,
+            &target_flat_param_bindings,
+            &generated_param_bindings,
         );
 
         self.assume_directional_source_fn_set_dom_facts_in_local_env(
@@ -181,17 +185,19 @@ impl Runtime {
     }
 
     fn build_param_to_generated_arg_map(
-        flat_param_names: &[String],
-        generated_param_names: &[String],
+        flat_param_bindings: &[SymbolBinding],
+        generated_param_bindings: &[SymbolBinding],
     ) -> HashMap<String, Obj> {
         let mut param_to_generated_arg_map: HashMap<String, Obj> =
-            HashMap::with_capacity(flat_param_names.len());
-        for (param_name, generated_param_name) in
-            flat_param_names.iter().zip(generated_param_names.iter())
+            HashMap::with_capacity(flat_param_bindings.len() * 2);
+        for (param_binding, generated_binding) in flat_param_bindings
+            .iter()
+            .zip(generated_param_bindings.iter())
         {
-            param_to_generated_arg_map.insert(
-                param_name.clone(),
-                obj_for_bound_param_in_scope(generated_param_name.clone(), ParamObjType::FnSet),
+            insert_symbol_substitution(
+                &mut param_to_generated_arg_map,
+                param_binding,
+                obj_for_bound_param_in_scope(generated_binding, ParamObjType::FnSet),
             );
         }
         param_to_generated_arg_map
@@ -205,7 +211,7 @@ impl Runtime {
         fn_set: &FnSetBody,
         generated_flat_names: &[String],
     ) -> Result<Obj, RuntimeError> {
-        let flat = ParamGroupWithSet::collect_param_names(&fn_set.params_def_with_set);
+        let flat = fn_set.params_def_with_set.collect_param_bindings();
         if flat.len() != generated_flat_names.len() {
             return Err(
                 VerifyRuntimeError(RuntimeErrorStruct::new_with_just_msg("internal: fn_set alpha rename requires generated_flat_names len == flat param count"
@@ -213,25 +219,30 @@ impl Runtime {
                 .into(),
             );
         }
-        let map = Self::build_param_to_generated_arg_map(&flat, generated_flat_names);
+        let generated_bindings = generated_flat_names
+            .iter()
+            .enumerate()
+            .map(|(index, name)| SymbolBinding::alpha_canonical(index, name.clone()))
+            .collect::<Vec<_>>();
+        let map = Self::build_param_to_generated_arg_map(&flat, &generated_bindings);
         Ok(FnSet::from_body(self.alpha_rename_fn_set_body(fn_set, &map)?)?.into())
     }
 
     fn define_directional_source_fn_set_params_in_local_env(
         &mut self,
         source: &FnSet,
-        generated_param_names: &[String],
+        generated_param_bindings: &[SymbolBinding],
         target: &FnSet,
         line_file: LineFile,
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
         let mut source_param_to_generated_arg_map: HashMap<String, Obj> =
-            HashMap::with_capacity(generated_param_names.len());
+            HashMap::with_capacity(generated_param_bindings.len() * 2);
         let mut flat_index: usize = 0;
 
         for param_def_with_set in source.body.params_def_with_set.iter() {
             let next_flat_index = flat_index + param_def_with_set.params.len();
-            let generated_names_for_current_group =
-                generated_param_names[flat_index..next_flat_index].to_vec();
+            let generated_bindings_for_current_group =
+                generated_param_bindings[flat_index..next_flat_index].to_vec();
             let instantiated_param_set = self
                 .inst_obj(
                     param_def_with_set.set_obj(),
@@ -248,7 +259,7 @@ impl Runtime {
                     )
                 })?;
             let generated_param_def = ParamGroupWithSet::new(
-                generated_names_for_current_group.clone(),
+                generated_bindings_for_current_group,
                 instantiated_param_set,
             );
             self.define_params_with_set(&generated_param_def)
@@ -263,14 +274,15 @@ impl Runtime {
                     )
                 })?;
 
-            for (source_param_name, generated_param_name) in param_def_with_set
+            for (source_param_binding, generated_param_binding) in param_def_with_set
                 .params
                 .iter()
-                .zip(generated_names_for_current_group.iter())
+                .zip(generated_param_def.params.iter())
             {
-                source_param_to_generated_arg_map.insert(
-                    source_param_name.clone(),
-                    obj_for_bound_param_in_scope(generated_param_name.clone(), ParamObjType::FnSet),
+                insert_symbol_substitution(
+                    &mut source_param_to_generated_arg_map,
+                    source_param_binding,
+                    obj_for_bound_param_in_scope(generated_param_binding, ParamObjType::FnSet),
                 );
             }
             flat_index = next_flat_index;
@@ -346,8 +358,9 @@ impl Runtime {
                 })?,
             );
             for param_name in param_def_with_set.params.iter() {
-                let Some(generated_param_obj) =
-                    target_param_to_generated_arg_map.get(param_name).cloned()
+                let Some(generated_param_obj) = target_param_to_generated_arg_map
+                    .get(param_name.name())
+                    .cloned()
                 else {
                     return Err(fn_set_equality_verify_error(
                         source,

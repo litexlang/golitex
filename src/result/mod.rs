@@ -1,6 +1,5 @@
 mod by_stmt_result;
 mod command_stmt_result;
-mod def_alias_stmt_result;
 mod def_interface_stmt_result;
 mod def_obj_stmt_result;
 mod def_predicate_stmt_result;
@@ -17,7 +16,6 @@ mod witness_stmt_result;
 
 pub use by_stmt_result::ByStmtResult;
 pub use command_stmt_result::CommandStmtResult;
-pub use def_alias_stmt_result::DefAliasStmtResult;
 pub use def_interface_stmt_result::DefInterfaceStmtResult;
 pub use def_obj_stmt_result::DefObjStmtResult;
 pub use def_predicate_stmt_result::DefPredicateStmtResult;

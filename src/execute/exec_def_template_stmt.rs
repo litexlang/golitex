@@ -42,6 +42,10 @@ impl Runtime {
         template_obj: &InstantiatedTemplateObj,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
+        let instance_name = template_obj.surface_name();
+        if self.is_name_used_for_identifier(&instance_name) {
+            return Ok(());
+        }
         let template_name = template_obj.template_name.to_string();
         let def = self
             .get_template_definition_by_name(&template_name)
@@ -110,14 +114,23 @@ impl Runtime {
             )?;
         }
 
-        let instance_name = template_obj.to_string();
         let stmt = self.inst_template_body_stmt(
             &def.template_def_stmt,
             &param_to_arg_map,
             &instance_name,
+            &template_obj.declaration_binding(),
             &def.line_file,
         )?;
         self.exec_stmt(&stmt)?;
+        let instance_identifier = self.declared_identifier_obj(&instance_name);
+        self.store_atomic_fact_without_well_defined_verified_and_infer(
+            EqualFact::new(
+                template_obj.clone().into(),
+                instance_identifier,
+                def.line_file.clone(),
+            )
+            .into(),
+        )?;
         Ok(())
     }
 
@@ -126,6 +139,7 @@ impl Runtime {
         stmt: &TemplateDefEnum,
         param_to_arg_map: &HashMap<String, Obj>,
         instance_name: &str,
+        instance_binding: &SymbolBinding,
         line_file: &LineFile,
     ) -> Result<Stmt, RuntimeError> {
         match stmt {
@@ -133,7 +147,7 @@ impl Runtime {
                 let param_def = self.inst_single_result_param_def(
                     &s.param_def,
                     param_to_arg_map,
-                    instance_name,
+                    instance_binding,
                 )?;
                 Ok(HaveObjInNonemptySetOrParamTypeStmt::new(param_def, line_file.clone()).into())
             }
@@ -141,7 +155,7 @@ impl Runtime {
                 let param_def = self.inst_single_result_param_def(
                     &s.param_def,
                     param_to_arg_map,
-                    instance_name,
+                    instance_binding,
                 )?;
                 let mut objs_equal_to = Vec::with_capacity(s.objs_equal_to.len());
                 for obj in s.objs_equal_to.iter() {
@@ -164,6 +178,7 @@ impl Runtime {
                 )?;
                 Ok(HaveByExistStmt::new(
                     vec![instance_name.to_string()],
+                    vec![instance_binding.clone()],
                     exist_fact,
                     line_file.clone(),
                 )
@@ -173,19 +188,23 @@ impl Runtime {
                 let param_def = self.inst_single_result_param_def(
                     &s.param_def,
                     param_to_arg_map,
-                    instance_name,
+                    instance_binding,
                 )?;
-                let defined_name = s.single_defined_name().ok_or_else(|| {
-                    RuntimeError::from(InstantiateRuntimeError(
+                let defined_bindings = s.param_def.collect_param_bindings();
+                if defined_bindings.len() != 1 {
+                    return Err(RuntimeError::from(InstantiateRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(
                             "template `trust have` body must define exactly one object".to_string(),
                         ),
-                    ))
-                })?;
+                    )));
+                }
+                let defined_binding = &defined_bindings[0];
                 let mut body_param_to_arg_map = param_to_arg_map.clone();
-                body_param_to_arg_map.insert(
-                    defined_name,
-                    Identifier::new(instance_name.to_string()).into(),
+                insert_symbol_substitution(
+                    &mut body_param_to_arg_map,
+                    defined_binding,
+                    Identifier::new_bound(instance_name.to_string(), instance_binding.as_ref())
+                        .into(),
                 );
                 let mut facts = Vec::with_capacity(s.facts.len());
                 for fact in s.facts.iter() {
@@ -207,6 +226,7 @@ impl Runtime {
                 )?;
                 Ok(HaveByExistStmt::new(
                     vec![instance_name.to_string()],
+                    vec![instance_binding.clone()],
                     exist_fact,
                     line_file.clone(),
                 )
@@ -226,14 +246,13 @@ impl Runtime {
                         ),
                     )));
                 };
-                Ok(
-                    HaveFnEqualStmt::new(
-                        instance_name.to_string(),
-                        anonymous_fn,
-                        line_file.clone(),
-                    )
-                    .into(),
+                Ok(HaveFnEqualStmt::new(
+                    instance_name.to_string(),
+                    instance_binding.clone(),
+                    anonymous_fn,
+                    line_file.clone(),
                 )
+                .into())
             }
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(s) => {
                 let fn_set_clause = self.inst_fn_set_clause(&s.fn_set_clause, param_to_arg_map)?;
@@ -256,6 +275,7 @@ impl Runtime {
                 }
                 Ok(HaveFnEqualCaseByCaseStmt::new(
                     instance_name.to_string(),
+                    instance_binding.clone(),
                     fn_set_clause,
                     cases,
                     equal_tos,
@@ -275,6 +295,7 @@ impl Runtime {
                 }
                 Ok(HaveFnByInducStmt::new(
                     instance_name.to_string(),
+                    instance_binding.clone(),
                     fn_set_clause,
                     measure,
                     lower_bound,
@@ -290,13 +311,36 @@ impl Runtime {
                     ParamObjType::DefHeader,
                     Some(line_file),
                 )?;
+                let mut proof_param_to_arg_map = param_to_arg_map.clone();
+                for (source_binding, instantiated_binding) in s
+                    .forall
+                    .params_def_with_type
+                    .collect_param_bindings()
+                    .iter()
+                    .zip(
+                        forall
+                            .params_def_with_type
+                            .collect_param_bindings()
+                            .iter(),
+                    )
+                {
+                    insert_symbol_substitution(
+                        &mut proof_param_to_arg_map,
+                        source_binding,
+                        obj_for_bound_param_in_scope(
+                            instantiated_binding,
+                            ParamObjType::Forall,
+                        ),
+                    );
+                }
                 let prove_process = self.inst_template_proof_process(
                     &s.prove_process,
-                    param_to_arg_map,
+                    &proof_param_to_arg_map,
                     line_file,
                 )?;
                 Ok(HaveFnByForallExistUniqueStmt::new(
                     instance_name.to_string(),
+                    instance_binding.clone(),
                     forall,
                     prove_process,
                     line_file.clone(),
@@ -304,12 +348,21 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::HaveTupleStmt(s) => {
+                let index_binding = self.allocate_local_symbol_binding(s.index_name.clone())?;
+                let mut body_map = param_to_arg_map.clone();
+                insert_symbol_substitution(
+                    &mut body_map,
+                    &s.index_binding,
+                    obj_for_bound_param_in_scope(&index_binding, ParamObjType::TupleIndex),
+                );
                 let dimension =
                     self.inst_obj(&s.dimension, param_to_arg_map, ParamObjType::DefHeader)?;
-                let value = self.inst_obj(&s.value, param_to_arg_map, ParamObjType::DefHeader)?;
+                let value = self.inst_obj(&s.value, &body_map, ParamObjType::TupleIndex)?;
                 Ok(HaveTupleStmt::new(
                     instance_name.to_string(),
+                    instance_binding.clone(),
                     s.index_name.clone(),
+                    index_binding,
                     dimension,
                     value,
                     line_file.clone(),
@@ -317,12 +370,21 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::HaveCartStmt(s) => {
+                let index_binding = self.allocate_local_symbol_binding(s.index_name.clone())?;
+                let mut body_map = param_to_arg_map.clone();
+                insert_symbol_substitution(
+                    &mut body_map,
+                    &s.index_binding,
+                    obj_for_bound_param_in_scope(&index_binding, ParamObjType::CartIndex),
+                );
                 let dimension =
                     self.inst_obj(&s.dimension, param_to_arg_map, ParamObjType::DefHeader)?;
-                let value = self.inst_obj(&s.value, param_to_arg_map, ParamObjType::DefHeader)?;
+                let value = self.inst_obj(&s.value, &body_map, ParamObjType::CartIndex)?;
                 Ok(HaveCartStmt::new(
                     instance_name.to_string(),
+                    instance_binding.clone(),
                     s.index_name.clone(),
+                    index_binding,
                     dimension,
                     value,
                     line_file.clone(),
@@ -330,19 +392,35 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::HaveSeqStmt(s) => {
+                let index_binding = self.allocate_local_symbol_binding(s.index_name.clone())?;
+                let mut body_map = param_to_arg_map.clone();
+                insert_symbol_substitution(
+                    &mut body_map,
+                    &s.index_binding,
+                    obj_for_bound_param_in_scope(&index_binding, ParamObjType::FnSet),
+                );
                 let set =
                     self.inst_obj(&s.seq_set.set, param_to_arg_map, ParamObjType::DefHeader)?;
-                let value = self.inst_obj(&s.value, param_to_arg_map, ParamObjType::DefHeader)?;
+                let value = self.inst_obj(&s.value, &body_map, ParamObjType::FnSet)?;
                 Ok(HaveSeqStmt::new(
                     instance_name.to_string(),
+                    instance_binding.clone(),
                     SeqSet::new(set),
                     s.index_name.clone(),
+                    index_binding,
                     value,
                     line_file.clone(),
                 )
                 .into())
             }
             TemplateDefEnum::HaveFiniteSeqStmt(s) => {
+                let index_binding = self.allocate_local_symbol_binding(s.index_name.clone())?;
+                let mut body_map = param_to_arg_map.clone();
+                insert_symbol_substitution(
+                    &mut body_map,
+                    &s.index_binding,
+                    obj_for_bound_param_in_scope(&index_binding, ParamObjType::FnSet),
+                );
                 let set = self.inst_obj(
                     &s.finite_seq_set.set,
                     param_to_arg_map,
@@ -354,11 +432,13 @@ impl Runtime {
                     ParamObjType::DefHeader,
                 )?;
                 let bound = self.inst_obj(&s.bound, param_to_arg_map, ParamObjType::DefHeader)?;
-                let value = self.inst_obj(&s.value, param_to_arg_map, ParamObjType::DefHeader)?;
+                let value = self.inst_obj(&s.value, &body_map, ParamObjType::FnSet)?;
                 Ok(HaveFiniteSeqStmt::new(
                     instance_name.to_string(),
+                    instance_binding.clone(),
                     FiniteSeqSet::new(set, n),
                     s.index_name.clone(),
+                    index_binding,
                     bound,
                     value,
                     line_file.clone(),
@@ -366,6 +446,21 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::HaveMatrixStmt(s) => {
+                let row_index_binding =
+                    self.allocate_local_symbol_binding(s.row_index_name.clone())?;
+                let col_index_binding =
+                    self.allocate_local_symbol_binding(s.col_index_name.clone())?;
+                let mut body_map = param_to_arg_map.clone();
+                insert_symbol_substitution(
+                    &mut body_map,
+                    &s.row_index_binding,
+                    obj_for_bound_param_in_scope(&row_index_binding, ParamObjType::FnSet),
+                );
+                insert_symbol_substitution(
+                    &mut body_map,
+                    &s.col_index_binding,
+                    obj_for_bound_param_in_scope(&col_index_binding, ParamObjType::FnSet),
+                );
                 let set =
                     self.inst_obj(&s.matrix_set.set, param_to_arg_map, ParamObjType::DefHeader)?;
                 let row_len = self.inst_obj(
@@ -382,13 +477,16 @@ impl Runtime {
                     self.inst_obj(&s.row_bound, param_to_arg_map, ParamObjType::DefHeader)?;
                 let col_bound =
                     self.inst_obj(&s.col_bound, param_to_arg_map, ParamObjType::DefHeader)?;
-                let value = self.inst_obj(&s.value, param_to_arg_map, ParamObjType::DefHeader)?;
+                let value = self.inst_obj(&s.value, &body_map, ParamObjType::FnSet)?;
                 Ok(HaveMatrixStmt::new(
                     instance_name.to_string(),
+                    instance_binding.clone(),
                     MatrixSet::new(set, row_len, col_len),
                     s.row_index_name.clone(),
+                    row_index_binding,
                     row_bound,
                     s.col_index_name.clone(),
+                    col_index_binding,
                     col_bound,
                     value,
                     line_file.clone(),
@@ -487,7 +585,7 @@ impl Runtime {
         &self,
         param_def: &ParamDefWithType,
         param_to_arg_map: &HashMap<String, Obj>,
-        instance_name: &str,
+        instance_binding: &SymbolBinding,
     ) -> Result<ParamDefWithType, RuntimeError> {
         let mut groups = Vec::with_capacity(param_def.groups.len());
         let mut first = true;
@@ -495,7 +593,7 @@ impl Runtime {
             let mut params = Vec::with_capacity(g.params.len());
             for _ in g.params.iter() {
                 if first {
-                    params.push(instance_name.to_string());
+                    params.push(instance_binding.clone());
                     first = false;
                 }
             }
@@ -516,10 +614,15 @@ impl Runtime {
     ) -> Result<FnSetClause, RuntimeError> {
         let mut params_def_with_set = Vec::with_capacity(clause.params_def_with_set.len());
         for g in clause.params_def_with_set.iter() {
-            params_def_with_set.push(ParamGroupWithSet::new(
-                g.params.clone(),
-                self.inst_obj(g.set_obj(), param_to_arg_map, ParamObjType::DefHeader)?,
-            ));
+            params_def_with_set.push(
+                self.fresh_param_group_with_set(
+                    g.params
+                        .iter()
+                        .map(|binding| binding.name().to_string())
+                        .collect(),
+                    self.inst_obj(g.set_obj(), param_to_arg_map, ParamObjType::DefHeader)?,
+                )?,
+            );
         }
         let mut dom_facts = Vec::with_capacity(clause.dom_facts.len());
         for fact in clause.dom_facts.iter() {

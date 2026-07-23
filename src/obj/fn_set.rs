@@ -28,9 +28,18 @@ impl FnSetBody {
             &self.params_def_with_set,
         ));
         for param_def_with_set in self.params_def_with_set.iter() {
-            ret.extend(param_def_with_set.params.iter().cloned());
+            ret.extend(
+                param_def_with_set
+                    .params
+                    .iter()
+                    .map(|binding| binding.name().to_string()),
+            );
         }
         ret
+    }
+
+    pub fn get_param_bindings(&self) -> Vec<SymbolBinding> {
+        self.params_def_with_set.collect_param_bindings()
     }
 }
 
@@ -61,6 +70,10 @@ impl FnSet {
 
     pub fn get_params(&self) -> Vec<String> {
         self.body.get_params()
+    }
+
+    pub fn get_param_bindings(&self) -> Vec<SymbolBinding> {
+        self.body.get_param_bindings()
     }
 }
 

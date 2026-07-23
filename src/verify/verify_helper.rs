@@ -5,7 +5,13 @@ impl Runtime {
     /// If the fact string is in the known-facts cache, return the cached verification result.
     pub fn verify_fact_from_cache_using_display_string(&self, fact: &Fact) -> Option<StmtResult> {
         let key = fact.to_string();
+        let normalized_key = nested_obj_binder_normalized_fact_key(fact);
         let (cache_ok, cite_fact_source) = self.cache_known_facts_contains(&key);
+        let (cache_ok, cite_fact_source) = if cache_ok || normalized_key == key {
+            (cache_ok, cite_fact_source)
+        } else {
+            self.cache_known_facts_contains(&normalized_key)
+        };
         if cache_ok {
             Some(
                 (FactualStmtSuccess::new_with_verified_by_known_fact(
@@ -349,6 +355,28 @@ impl Runtime {
             requirements.push(KnownForallRequirementResult::new(requirement_fact, result));
         }
         Ok(true)
+    }
+}
+
+pub(crate) fn nested_obj_binder_normalized_fact_key(fact: &Fact) -> String {
+    let text = fact.to_string();
+    match fact {
+        Fact::AtomicFact(fact) => {
+            nested_obj_binder_normalized_key(&text, fact.get_args_from_fact_ref())
+        }
+        Fact::ExistFact(fact) => {
+            nested_obj_binder_normalized_key(&text, fact.get_args_from_fact_ref())
+        }
+        Fact::OrFact(fact) => {
+            nested_obj_binder_normalized_key(&text, fact.get_args_from_fact_ref())
+        }
+        Fact::AndFact(fact) => {
+            nested_obj_binder_normalized_key(&text, fact.get_args_from_fact_ref())
+        }
+        Fact::ChainFact(fact) => {
+            nested_obj_binder_normalized_key(&text, fact.get_args_from_fact_ref())
+        }
+        Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => text,
     }
 }
 

@@ -136,9 +136,9 @@ thm common_divisor_le_gcd:
         =>:
             d <= gcd(a, b)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    d $in {d N_pos: $divides(d, a), $divides(d, b)}
-    d <= finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    d $in {divisor N_pos: $divides(divisor, a), $divides(divisor, b)}
+    d <= finite_set_max({divisor N_pos: $divides(divisor, a), $divides(divisor, b)})
+    gcd(a, b) = finite_set_max({divisor N_pos: $divides(divisor, a), $divides(divisor, b)})
     d <= gcd(a, b)
 
 thm gcd_euclidean_base:

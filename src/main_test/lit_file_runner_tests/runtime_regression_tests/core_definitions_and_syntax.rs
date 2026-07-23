@@ -669,40 +669,66 @@ have cart c for i <= n, proj(d, i) = i
 }
 
 #[test]
-fn tuple_and_cart_coordinate_foralls_freshen_cross_kind_index_names() {
+fn tuple_and_cart_coordinate_binders_reject_active_names_and_keep_outer_bounds() {
     run_with_large_stack(
-        "tuple_and_cart_coordinate_foralls_freshen_cross_kind_index_names",
+        "tuple_and_cart_coordinate_binders_reject_active_names_and_keep_outer_bounds",
         || {
-            let source_code = r#"
+            let invalid_source_code = r#"
 claim:
     ? forall i N_pos:
         i = 2
         =>:
             0 = 0
     have tuple t for i <= i, t[i] = 0
+    0 = 0
+"#;
+
+            let mut invalid_runtime = Runtime::new();
+            invalid_runtime
+                .new_file_path_new_env_new_name_scope("tuple_coordinate_rejects_active_outer_name");
+            let (invalid_results, invalid_error) =
+                run_source_code(invalid_source_code, &mut invalid_runtime);
+            let (invalid_succeeded, invalid_output) = render_run_source_code_output(
+                &invalid_runtime,
+                &invalid_results,
+                &invalid_error,
+                false,
+            );
+            assert!(
+                !invalid_succeeded,
+                "a coordinate binder must not reuse an active outer spelling:\n{}",
+                invalid_output
+            );
+            assert!(
+                invalid_output.contains("name `i` is already active in this scope"),
+                "the parser should identify the active coordinate-name collision:\n{}",
+                invalid_output
+            );
+
+            let valid_source_code = r#"
+claim:
+    ? forall i N_pos:
+        i = 2
+        =>:
+            0 = 0
+    have tuple t for j <= i, t[j] = 0
     t[1] = 0
-    have cart C for i <= i, proj(C, i) = R
+    have cart C for j <= i, proj(C, j) = R
     proj(C, 1) = R
     0 = 0
 "#;
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "tuple_and_cart_coordinate_foralls_freshen_cross_kind_index_names",
+                "tuple_and_cart_coordinate_binders_keep_outer_bounds",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = run_source_code(valid_source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
 
             assert!(
                 run_succeeded,
-                "cross-kind tuple/cart indices should keep the captured dimension rigid:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("forall #binder_")
-                    && run_output.contains("closed_range(1, i)"),
-                "stored coordinate foralls should freshen the index but retain the outer bound:\n{}",
+                "distinct coordinate binders should retain the captured outer dimension:\n{}",
                 run_output
             );
         },
@@ -718,7 +744,7 @@ fn fn_eq_generated_forall_freshens_cross_kind_function_parameter_name() {
             // functions are pointwise equal on all of R.
             let invalid_source_code = r#"
 claim:
-    ? forall x R, f, g fn(x R) R:
+    ? forall x R, f, g fn(z R) R:
         f(x) = g(x)
         =>:
             $fn_eq(f, g)
@@ -746,7 +772,7 @@ claim:
 
             let valid_source_code = r#"
 claim:
-    ? forall x R, f, g fn(x R) R:
+    ? forall x R, f, g fn(z R) R:
         forall y R:
             f(y) = g(y)
         =>:
@@ -774,36 +800,63 @@ claim:
 }
 
 #[test]
-fn have_fn_by_cases_freshens_parameter_but_keeps_outer_singleton_domain() {
+fn have_fn_by_cases_rejects_active_parameter_name_and_keeps_outer_singleton_domain() {
     run_with_large_stack(
-        "have_fn_by_cases_freshens_parameter_but_keeps_outer_singleton_domain",
+        "have_fn_by_cases_rejects_active_parameter_name_and_keeps_outer_singleton_domain",
         || {
-            let source_code = r#"
+            let invalid_source_code = r#"
 claim:
     ? forall x R:
         x = x
     have fn h(x {x}) R by cases:
         case x = x: 0
+    x = x
+"#;
+
+            let mut invalid_runtime = Runtime::new();
+            invalid_runtime.new_file_path_new_env_new_name_scope(
+                "have_fn_by_cases_rejects_active_parameter_name",
+            );
+            let (invalid_results, invalid_error) =
+                run_source_code(invalid_source_code, &mut invalid_runtime);
+            let (invalid_succeeded, invalid_output) = render_run_source_code_output(
+                &invalid_runtime,
+                &invalid_results,
+                &invalid_error,
+                false,
+            );
+            assert!(
+                !invalid_succeeded,
+                "a function parameter must not reuse an active outer spelling:\n{}",
+                invalid_output
+            );
+            assert!(
+                invalid_output.contains("name `x` is already active in this scope"),
+                "the parser should identify the active function-parameter collision:\n{}",
+                invalid_output
+            );
+
+            let valid_source_code = r#"
+claim:
+    ? forall x R:
+        x = x
+    have fn h(y {x}) R by cases:
+        case y = x: 0
     h(x) = 0
     x = x
 "#;
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "have_fn_by_cases_freshens_parameter_but_keeps_outer_singleton_domain",
+                "have_fn_by_cases_keeps_outer_singleton_domain",
             );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (stmt_results, runtime_error) = run_source_code(valid_source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
 
             assert!(
                 run_succeeded,
-                "same-spelling function parameter and outer value should remain well scoped:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("forall #binder_") && run_output.contains("{x}"),
-                "stored definition should freshen its binder and retain the captured singleton:\n{}",
+                "a distinct function parameter should retain the captured singleton domain:\n{}",
                 run_output
             );
         },

@@ -5,6 +5,7 @@ mod fn_obj_head;
 mod fn_set;
 mod free_param_obj;
 mod obj;
+mod obj_alpha_key;
 mod obj_contrain_free_params;
 mod standard_set;
 pub use atom::{
@@ -30,5 +31,9 @@ pub use obj::{
     OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, Pow, PowerSet, Product,
     ProductOfFiniteSet, Proj, Range, Replacement, SeqSet, SetBuilder, SetDiff, SetMinus, Sqrt,
     StructObj, Sub, Sum, SumOfFiniteSet, Tuple, TupleDim, Union,
+};
+pub use obj_alpha_key::{
+    nested_obj_binder_normalized_key, obj_equality_key,
+    objs_equal_with_nested_binder_alpha_equivalence,
 };
 pub use standard_set::StandardSet;

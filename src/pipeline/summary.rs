@@ -11,12 +11,10 @@ pub struct RunSummary {
     pub prop_definitions: usize,
     pub abstract_prop_definitions: usize,
     pub theorem_statements: usize,
-    pub theorem_names: usize,
     pub by_statements: usize,
     pub proof_blocks: usize,
     pub object_definitions: usize,
     pub function_definitions: usize,
-    pub alias_statements: usize,
     pub direct_trust: usize,
     pub indirect_trust: usize,
     pub axioms: usize,
@@ -148,9 +146,6 @@ impl RunSummary {
                 self.abstract_prop_definitions += 1;
                 self.abstract_interfaces += 1;
             }
-            Stmt::DefAliasStmt(_) => {
-                self.alias_statements += 1;
-            }
             Stmt::DefInterfaceStmt(_) => {
                 self.abstract_interfaces += 1;
             }
@@ -159,7 +154,6 @@ impl RunSummary {
                     self.axioms += 1;
                 } else {
                     self.theorem_statements += 1;
-                    self.theorem_names += def_thm.names.len();
                 }
             }
             Stmt::By(_) => {

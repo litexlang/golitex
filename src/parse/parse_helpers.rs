@@ -1,18 +1,20 @@
 use crate::prelude::*;
 
-/// Top-level `forall` parameters from `facts` (e.g. goal facts in `by cases`), deduped by first occurrence.
-pub(crate) fn collect_forall_param_names_from_facts(facts: &[Fact]) -> Vec<String> {
-    let mut names = Vec::new();
-    for f in facts {
-        if let Fact::ForallFact(ff) = f {
-            for n in ff.params_def_with_type.collect_param_names() {
-                if !names.contains(&n) {
-                    names.push(n);
+pub(crate) fn collect_forall_param_bindings_from_facts(facts: &[Fact]) -> Vec<SymbolBinding> {
+    let mut bindings = Vec::new();
+    for fact in facts {
+        if let Fact::ForallFact(forall_fact) = fact {
+            for binding in forall_fact.params_def_with_type.collect_param_bindings() {
+                if !bindings
+                    .iter()
+                    .any(|existing: &SymbolBinding| existing.id() == binding.id())
+                {
+                    bindings.push(binding);
                 }
             }
         }
     }
-    names
+    bindings
 }
 
 impl Runtime {

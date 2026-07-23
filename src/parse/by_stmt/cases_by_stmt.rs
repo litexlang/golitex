@@ -1,4 +1,4 @@
-use crate::parse::parse_helpers::collect_forall_param_names_from_facts;
+use crate::parse::parse_helpers::collect_forall_param_bindings_from_facts;
 use crate::prelude::*;
 
 impl Runtime {
@@ -35,14 +35,14 @@ impl Runtime {
                 ),
             )));
         }
-        let forall_param_names = collect_forall_param_names_from_facts(&then_facts);
+        let forall_param_bindings = collect_forall_param_bindings_from_facts(&then_facts);
         let line_file = tb.line_file.clone();
-        let (cases, proofs, impossible_facts) = if forall_param_names.is_empty() {
+        let (cases, proofs, impossible_facts) = if forall_param_bindings.is_empty() {
             self.parse_by_cases_case_and_proof_blocks(tb, case_body_skip)?
         } else {
-            self.parse_in_local_free_param_scope(
+            self.parse_in_existing_free_param_scope(
                 ParamObjType::Forall,
-                &forall_param_names,
+                &forall_param_bindings,
                 line_file,
                 |rt| rt.parse_by_cases_case_and_proof_blocks(tb, case_body_skip),
             )?

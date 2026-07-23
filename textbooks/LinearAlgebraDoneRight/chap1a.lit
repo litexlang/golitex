@@ -51,8 +51,8 @@ struct ScalarSystem<s nonempty_set>:
             =>:
                 mul(x, inv(x)) = one
 
-prop is_scalar_system(s nonempty_set, zero, one s, add fn(x, y s) s, neg fn(x s) s, mul fn(x, y s) s, inv fn(x s) s):
-    (zero, one, add, neg, mul, inv) $in @ScalarSystem
+prop is_scalar_system(s nonempty_set, scalar_zero, scalar_one s, scalar_add fn(x, y s) s, scalar_neg fn(x s) s, scalar_mul fn(x, y s) s, scalar_inv fn(x s) s):
+    (scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv) $in @ScalarSystem
 
 # Remaining proof boundary: strict verification does not yet normalize the
 # repeated Complex projections through nested operation calls.

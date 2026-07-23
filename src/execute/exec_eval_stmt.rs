@@ -293,8 +293,8 @@ impl Runtime {
                 vec![],
             ));
         }
-        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
-        let pname = param_names[0].clone();
+        let param_bindings = af.body.params_def_with_set.collect_param_bindings();
+        let param_binding = &param_bindings[0];
         let mut acc_obj: Obj = if is_product {
             Number::new("1".to_string()).into()
         } else {
@@ -302,7 +302,11 @@ impl Runtime {
         };
         for k in ai..=bi {
             let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-            param_to_arg_map.insert(pname.clone(), Number::new(k.to_string()).into());
+            insert_symbol_substitution(
+                &mut param_to_arg_map,
+                param_binding,
+                Number::new(k.to_string()).into(),
+            );
             let inst =
                 self.inst_obj(af.equal_to.as_ref(), &param_to_arg_map, ParamObjType::FnSet)?;
             let term = self.resolve_obj(&inst);
@@ -1071,7 +1075,7 @@ impl Runtime {
         }
 
         active_fn_calls.insert(call_key.clone());
-        let fn_name = evaluated_fn_obj.head.to_string();
+        let fn_name = eval_algorithm_name(evaluated_fn_obj.head.as_ref());
         let return_expr = self.dispatch_algo_one_return_expr_with_number_args(
             &fn_name,
             &flattened_number_args,
@@ -1112,16 +1116,17 @@ impl Runtime {
             return Ok(None);
         };
 
-        let fn_name = evaluated_fn_obj.head.to_string();
+        let fn_name = eval_algorithm_name(evaluated_fn_obj.head.as_ref());
         let Some(algo_definition) = self.get_algo_definition_by_name(&fn_name) else {
             return Ok(None);
         };
         if algo_definition.params.len() != 1 {
             return Ok(None);
         }
-        let Some((start_value, _tail_bound)) =
-            Self::unary_integer_algo_base_range(&algo_definition, &algo_definition.params[0])
-        else {
+        let Some((start_value, _tail_bound)) = Self::unary_integer_algo_base_range(
+            &algo_definition,
+            &algo_definition.param_bindings[0],
+        ) else {
             return Ok(None);
         };
         if target_value < start_value {
@@ -1194,19 +1199,19 @@ impl Runtime {
 
     fn unary_integer_algo_base_range(
         algo_definition: &DefAlgoStmt,
-        param_name: &str,
+        param_binding: &SymbolBinding,
     ) -> Option<(i128, i128)> {
         let mut equal_values: Vec<i128> = Vec::new();
         let mut tail_bounds: Vec<i128> = Vec::new();
         for algo_case in algo_definition.cases.iter() {
             if let Some(value) =
-                Self::equal_case_integer_value_for_param(&algo_case.condition, param_name)
+                Self::equal_case_integer_value_for_param(&algo_case.condition, param_binding)
             {
                 equal_values.push(value);
             }
             if let Some(value) = Self::strict_upper_tail_case_integer_value_for_param(
                 &algo_case.condition,
-                param_name,
+                param_binding,
             ) {
                 tail_bounds.push(value);
             }
@@ -1230,12 +1235,12 @@ impl Runtime {
 
     fn equal_case_integer_value_for_param(
         atomic_fact: &AtomicFact,
-        param_name: &str,
+        param_binding: &SymbolBinding,
     ) -> Option<i128> {
         let AtomicFact::EqualFact(equal) = atomic_fact else {
             return None;
         };
-        let param_obj = obj_for_bound_param_in_scope(param_name.to_string(), ParamObjType::DefAlgo);
+        let param_obj = obj_for_bound_param_in_scope(param_binding, ParamObjType::DefAlgo);
         if equal.left.to_string() == param_obj.to_string() {
             return Self::integer_value_for_eval_obj(&equal.right);
         }
@@ -1247,9 +1252,9 @@ impl Runtime {
 
     fn strict_upper_tail_case_integer_value_for_param(
         atomic_fact: &AtomicFact,
-        param_name: &str,
+        param_binding: &SymbolBinding,
     ) -> Option<i128> {
-        let param_obj = obj_for_bound_param_in_scope(param_name.to_string(), ParamObjType::DefAlgo);
+        let param_obj = obj_for_bound_param_in_scope(param_binding, ParamObjType::DefAlgo);
         match atomic_fact {
             AtomicFact::GreaterFact(greater)
                 if greater.left.to_string() == param_obj.to_string() =>
@@ -1340,12 +1345,12 @@ impl Runtime {
         }
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        for (param_name, arg_obj) in algo_definition
-            .params
+        for (param_binding, arg_obj) in algo_definition
+            .param_bindings
             .iter()
             .zip(flattened_number_args.iter())
         {
-            param_to_arg_map.insert(param_name.clone(), arg_obj.clone());
+            insert_symbol_substitution(&mut param_to_arg_map, param_binding, arg_obj.clone());
         }
 
         for algo_case in algo_definition.cases.iter() {
@@ -1489,5 +1494,15 @@ impl Runtime {
                 .with_reported_store_facts(reported_store_facts))
             .into(),
         )
+    }
+}
+
+fn eval_algorithm_name(head: &FnObjHead) -> String {
+    match head {
+        FnObjHead::Identifier(identifier) => identifier.name.clone(),
+        FnObjHead::IdentifierWithMod(identifier) => {
+            format!("{}{}{}", identifier.mod_name, MOD_SIGN, identifier.name)
+        }
+        _ => head.to_string(),
     }
 }

@@ -8,6 +8,7 @@ impl Runtime {
         self.exec_have_exist_obj_core(
             have_exist_obj_stmt.clone().into(),
             &have_exist_obj_stmt.equal_tos,
+            &have_exist_obj_stmt.equal_to_bindings,
             &have_exist_obj_stmt.exist_fact_in_have_obj_st,
             have_exist_obj_stmt.line_file.clone(),
         )
@@ -19,7 +20,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_exist_obj_stmt_affect_environment(
             have_exist_obj_stmt.clone().into(),
-            &have_exist_obj_stmt.equal_tos,
+            &have_exist_obj_stmt.equal_to_bindings,
             &have_exist_obj_stmt.exist_fact_in_have_obj_st,
             have_exist_obj_stmt.line_file.clone(),
         )?;
@@ -41,9 +42,11 @@ impl Runtime {
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         let exist_fact = ExistFactEnum::ExistFact(body);
         let equal_tos = stmt.param_def.collect_param_names();
+        let equal_to_bindings = stmt.param_def.collect_param_bindings();
         self.exec_have_exist_obj_core(
             stmt.clone().into(),
             &equal_tos,
+            &equal_to_bindings,
             &exist_fact,
             stmt.line_file.clone(),
         )
@@ -60,10 +63,10 @@ impl Runtime {
         )
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         let exist_fact = ExistFactEnum::ExistFact(body);
-        let equal_tos = stmt.param_def.collect_param_names();
+        let equal_to_bindings = stmt.param_def.collect_param_bindings();
         let infer_result = self.exec_have_exist_obj_stmt_affect_environment(
             stmt.clone().into(),
-            &equal_tos,
+            &equal_to_bindings,
             &exist_fact,
             stmt.line_file.clone(),
         )?;
@@ -74,19 +77,21 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         equal_tos: &[String],
+        equal_to_bindings: &[SymbolBinding],
         exist_fact_in_have_obj_stmt: &ExistFactEnum,
         line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_have_exist_obj_stmt_verify_well_definedness(
             stmt.clone(),
             equal_tos,
+            equal_to_bindings,
             exist_fact_in_have_obj_stmt,
         )?;
         let inside_results = self
             .exec_have_exist_obj_stmt_verify_process(stmt.clone(), exist_fact_in_have_obj_stmt)?;
         let infer_result = self.exec_have_exist_obj_stmt_affect_environment(
             stmt.clone(),
-            equal_tos,
+            equal_to_bindings,
             exist_fact_in_have_obj_stmt,
             line_file,
         )?;
@@ -98,6 +103,7 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         equal_tos: &[String],
+        equal_to_bindings: &[SymbolBinding],
         exist_fact_in_have_obj_stmt: &ExistFactEnum,
     ) -> Result<(), RuntimeError> {
         if exist_fact_in_have_obj_stmt
@@ -122,8 +128,8 @@ impl Runtime {
             .map_err(|well_defined_error| {
                 exec_stmt_error_with_stmt_and_cause(stmt.clone(), well_defined_error)
             })?;
-            for obj in equal_tos.iter() {
-                rt.store_free_param_or_identifier_name(obj, ParamObjType::Exist)
+            for binding in equal_to_bindings {
+                rt.store_parameter_binding(binding, ParamObjType::Identifier)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
             }
             Ok(())
@@ -157,17 +163,19 @@ impl Runtime {
     fn exec_have_exist_obj_stmt_affect_environment(
         &mut self,
         stmt: Stmt,
-        equal_tos: &[String],
+        equal_to_bindings: &[SymbolBinding],
         exist_fact_in_have_obj_stmt: &ExistFactEnum,
         line_file: LineFile,
     ) -> Result<InferResult, RuntimeError> {
-        for obj in equal_tos.iter() {
-            self.store_free_param_or_identifier_name(obj, ParamObjType::Exist)?;
+        for binding in equal_to_bindings {
+            self.store_parameter_binding(binding, ParamObjType::Identifier)?;
         }
 
-        let new_obj_names_as_identifier_objs: Vec<Obj> = equal_tos
+        let new_obj_names_as_identifier_objs: Vec<Obj> = equal_to_bindings
             .iter()
-            .map(|s| Identifier::new(s.clone()).into())
+            .map(|binding| {
+                Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()
+            })
             .collect();
 
         let mut infer_result = self

@@ -87,6 +87,19 @@ fn run_isolated_import(
         runtime.module_manager = module_manager_before;
         return Err(error);
     }
+    let alias = match import {
+        ImportStmt::Module(stmt) => stmt.alias.as_str(),
+        ImportStmt::Std(stmt) => stmt.name.as_str(),
+    };
+    if let Err(error) = runtime.register_declared_symbol(alias, SymbolRole::Module) {
+        runtime.module_manager = module_manager_before;
+        return Err(short_exec_error(
+            import.clone().into(),
+            format!("cannot register imported module name `{}`", alias),
+            Some(error),
+            vec![],
+        ));
+    }
     Ok(NonFactualStmtSuccess::new_with_stmt(import.clone().into()).into())
 }
 
@@ -175,7 +188,6 @@ fn run_repository_module_target_with_mode(
     }
 
     let module_manager_before = runtime.module_manager.clone();
-    let parsing_free_params_before = runtime.parsing_free_param_collection.clone();
     if let Err(message) = runtime
         .module_manager
         .begin_loading_discovered_module(module_id)
@@ -193,11 +205,9 @@ fn run_repository_module_target_with_mode(
         .module_mut(module_id)
         .expect("registered project module should exist")
         .execution_mode = execution_mode;
-    runtime.parsing_free_param_collection = FreeParamCollection::new();
     runtime.push_module_execution_frame_with_mode(module_id, module_path.as_str(), execution_mode);
     let result = run_repository_module_plan(runtime, module_id, execution_mode);
     runtime.pop_execution_frame();
-    runtime.parsing_free_param_collection = parsing_free_params_before;
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
         return result;
@@ -240,7 +250,6 @@ fn run_repository_module_prefix_with_mode(
         );
     }
     let module_manager_before = runtime.module_manager.clone();
-    let parsing_free_params_before = runtime.parsing_free_param_collection.clone();
     if let Err(message) = runtime
         .module_manager
         .begin_loading_discovered_module(module_id)
@@ -258,11 +267,9 @@ fn run_repository_module_prefix_with_mode(
         .module_mut(module_id)
         .expect("registered project module should exist")
         .execution_mode = execution_mode;
-    runtime.parsing_free_param_collection = FreeParamCollection::new();
     runtime.push_module_execution_frame_with_mode(module_id, module_path.as_str(), execution_mode);
     let result = run_repository_module_plan_to_target(runtime, module_id, execution_mode, target);
     runtime.pop_execution_frame();
-    runtime.parsing_free_param_collection = parsing_free_params_before;
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
         return result;
@@ -475,6 +482,20 @@ fn run_config_imports(
         if let Some(error) = import_error {
             return (results, Some(error));
         }
+        if let Err(error) =
+            runtime.register_declared_symbol(&config_import.name, SymbolRole::Module)
+        {
+            return (
+                results,
+                Some(repository_target_error(
+                    format!(
+                        "cannot register imported module name `{}`: {}",
+                        config_import.name, error
+                    )
+                    .as_str(),
+                )),
+            );
+        }
         runtime
             .module_manager
             .record_import_dependency(module_id, config_import.module_id);
@@ -555,7 +576,6 @@ fn run_repository_exported_file_target_with_mode(
     }
 
     let module_manager_before = runtime.module_manager.clone();
-    let parsing_free_params_before = runtime.parsing_free_param_collection.clone();
     runtime
         .module_manager
         .module_mut(module_id)
@@ -568,7 +588,6 @@ fn run_repository_exported_file_target_with_mode(
         .and_then(|module| module.file_mut(file_id))
         .expect("registered project file should exist")
         .execution_mode = execution_mode;
-    runtime.parsing_free_param_collection = FreeParamCollection::new();
     runtime.push_file_execution_frame_with_mode(
         module_id,
         file_id,
@@ -577,7 +596,6 @@ fn run_repository_exported_file_target_with_mode(
     );
     let result = run_repository_source_file(runtime, source_path.as_str());
     runtime.pop_execution_frame();
-    runtime.parsing_free_param_collection = parsing_free_params_before;
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
         return result;

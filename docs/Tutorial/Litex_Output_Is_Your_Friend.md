@@ -519,7 +519,7 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "predicate definition",
   "line": 16,
-  "statement": "prop is_one_tmp(t R):\n    ~2t = 1"
+  "statement": "prop is_one_tmp(t R):\n    t = 1"
 }
 
 {
@@ -532,7 +532,7 @@ The output explains the proof process step by step. By looking at the output, yo
     "cite_source": {
       "line": 16
     },
-    "cited_statement": "prop is_one_tmp(t R):\n    ~2t = 1",
+    "cited_statement": "prop is_one_tmp(t R):\n    t = 1",
     "detail": "prop with meaning `is_one_tmp` (param constraints and definition clauses)"
   },
   "store_facts": [
@@ -594,10 +594,10 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "unproved assumption",
   "line": 27,
-  "statement": "trust forall t R:\n    ~1t = 1\n    =>:\n        $forall_p_tmp(~1t)",
+  "statement": "trust forall t R:\n    t = 1\n    =>:\n        $forall_p_tmp(t)",
   "store_facts": [
     {
-      "fact": "forall t R:\n    ~1t = 1\n    =>:\n        $forall_p_tmp(~1t)",
+      "fact": "forall t R:\n    t = 1\n    =>:\n        $forall_p_tmp(t)",
       "reason": "warning: unproved trust assumption"
     }
   ]
@@ -613,7 +613,7 @@ The output explains the proof process step by step. By looking at the output, yo
     "cite_source": {
       "line": 28
     },
-    "cited_statement": "forall t R:\n    ~1t = 1\n    =>:\n        $forall_p_tmp(~1t)"
+    "cited_statement": "forall t R:\n    t = 1\n    =>:\n        $forall_p_tmp(t)"
   },
   "store_facts": [
     {
@@ -627,7 +627,7 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "predicate definition",
   "line": 35,
-  "statement": "prop claim_p_tmp(t R):\n    ~2t = 5"
+  "statement": "prop claim_p_tmp(t R):\n    t = 5"
 }
 
 {
@@ -675,14 +675,14 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "predicate definition",
   "line": 44,
-  "statement": "prop thm_p_tmp(t R):\n    ~2t = 4"
+  "statement": "prop thm_p_tmp(t R):\n    t = 4"
 }
 
 {
   "result": "success",
   "type": "theorem",
   "line": 46,
-  "statement": "thm thm_proves_p_tmp:\n    ? forall t R:\n        ~1t = 4\n        =>:\n            $thm_p_tmp(~1t)\n    ~1t = 4"
+  "statement": "thm thm_proves_p_tmp:\n    ? forall t R:\n        t = 4\n        =>:\n            $thm_p_tmp(t)\n    t = 4"
 }
 
 {
@@ -730,14 +730,14 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "predicate definition",
   "line": 58,
-  "statement": "prop sym_p_tmp(u set, v set):\n    ~2u = ~2v"
+  "statement": "prop sym_p_tmp(u set, v set):\n    u = v"
 }
 
 {
   "result": "success",
   "type": "proof by symmetry",
   "line": 60,
-  "statement": "by symmetric_prop:\n    ? forall u, v set:\n        $sym_p_tmp(~1u, ~1v)\n        =>:\n            $sym_p_tmp(~1v, ~1u)\n    ~1u = ~1v\n    ~1v = ~1u"
+  "statement": "by symmetric_prop:\n    ? forall u, v set:\n        $sym_p_tmp(u, v)\n        =>:\n            $sym_p_tmp(v, u)\n    u = v\n    v = u"
 }
 
 {
@@ -820,7 +820,7 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "proof by reflexivity",
   "line": 77,
-  "statement": "by reflexive_prop:\n    ? forall u set:\n        $refl_p_tmp(~1u, ~1u)\n    trust $refl_p_tmp(~1u, ~1u)"
+  "statement": "by reflexive_prop:\n    ? forall u set:\n        $refl_p_tmp(u, u)\n    trust $refl_p_tmp(u, u)"
 }
 
 {
@@ -864,10 +864,10 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "unproved assumption",
   "line": 87,
-  "statement": "trust exist m R st {$exists_p_tmp(~3m)}",
+  "statement": "trust exist m R st {$exists_p_tmp(m)}",
   "store_facts": [
     {
-      "fact": "exist m R st {$exists_p_tmp(~3m)}",
+      "fact": "exist m R st {$exists_p_tmp(m)}",
       "reason": "warning: unproved trust assumption"
     }
   ]
@@ -877,7 +877,7 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "object definition by existence",
   "line": 88,
-  "statement": "obtain witness_tmp", from exist m R st {$exists_p_tmp(~3m)}
+  "statement": "obtain witness_tmp", from exist m R st {$exists_p_tmp(m)}
   "store_facts": [
     {
       "fact": "witness_tmp $in R",
@@ -914,14 +914,14 @@ The output explains the proof process step by step. By looking at the output, yo
   "result": "success",
   "type": "function definition",
   "line": 93,
-  "statement": "have fn id_tmp(t R)= ~5t",
+  "statement": "have fn id_tmp(t R)= t",
   "store_facts": [
     {
       "fact": "id_tmp $in fn (t R) R",
       "reason": "function definition"
     },
     {
-      "fact": "id_tmp = fn(t R) R {~5t}",
+      "fact": "id_tmp = fn(t R) R {t}",
       "reason": "function definition"
     }
   ]

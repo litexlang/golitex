@@ -214,14 +214,19 @@ impl Runtime {
         let mut inside_results = Vec::new();
         let mut assignment = Vec::new();
         let mut assumptions = Vec::new();
+        let param_bindings = stmt
+            .forall_fact
+            .params_def_with_type
+            .collect_param_bindings();
         for (parameter_position, parameter_name) in params.iter().enumerate() {
+            let parameter_binding = &param_bindings[parameter_position];
             let assigned_obj = (*param_sets[parameter_position].list
                 [parameter_index_assignment[parameter_position]])
                 .clone();
             assignment.push((parameter_name.clone(), assigned_obj.to_string()));
-            self.store_free_param_or_identifier_name(parameter_name, ParamObjType::Forall)?;
+            self.store_parameter_binding(parameter_binding, ParamObjType::Forall)?;
             let parameter_equal_to_assigned_obj_atomic_fact: AtomicFact = EqualFact::new(
-                obj_for_bound_param_in_scope(parameter_name.to_string(), ParamObjType::Forall),
+                obj_for_bound_param_in_scope(parameter_binding, ParamObjType::Forall),
                 assigned_obj,
                 stmt.line_file.clone(),
             )
@@ -346,7 +351,7 @@ impl Runtime {
             };
 
             for name in group.params.iter() {
-                params.push(name.clone());
+                params.push(name.name().to_string());
                 param_sets.push(list_set.clone());
             }
         }

@@ -73,32 +73,38 @@ impl Runtime {
         let goal_body_skip = question_goal_count;
         let goal_line = tb.body[0].line_file.clone();
         let induc_param = [param.clone()];
-        let mut to_prove: Vec<ExistOrAndChainAtomicFact> = Vec::new();
-        self.parse_in_local_free_param_scope(
-            ParamObjType::Induc,
-            &induc_param,
-            goal_line,
-            |this| {
-                for block in tb.body.iter_mut().take(question_goal_count) {
-                    to_prove.push(
-                        this.parse_question_goal_exist_or_and_chain_atomic_fact(block, "induc")?,
-                    );
-                }
-                Ok(())
-            },
-        )?;
-
-        let proof_line = tb.line_file.clone();
-        let (proof, base_proof, step_proof) = self.with_optional_free_param_scope(
-            ParamObjType::Induc,
-            &induc_param,
-            proof_line,
-            |this| this.parse_induc_proof_blocks(tb, &param, &induc_from, strong, goal_body_skip),
-        )?;
+        let ((to_prove, proof, base_proof, step_proof), param_bindings) = self
+            .parse_in_local_free_param_scope_with_bindings(
+                ParamObjType::Induc,
+                &induc_param,
+                goal_line,
+                |this| {
+                    let mut to_prove = Vec::new();
+                    for block in tb.body.iter_mut().take(question_goal_count) {
+                        to_prove.push(
+                            this.parse_question_goal_exist_or_and_chain_atomic_fact(
+                                block, "induc",
+                            )?,
+                        );
+                    }
+                    let (proof, base_proof, step_proof) =
+                        this.run_in_local_proof_parsing_scope(|inner| {
+                            inner.parse_induc_proof_blocks(
+                                tb,
+                                &param,
+                                &induc_from,
+                                strong,
+                                goal_body_skip,
+                            )
+                        })?;
+                    Ok((to_prove, proof, base_proof, step_proof))
+                },
+            )?;
 
         Ok(ByInducStmt::new(
             to_prove,
             param,
+            param_bindings[0].clone(),
             induc_from,
             proof,
             base_proof,
@@ -202,11 +208,13 @@ impl Runtime {
         &mut self,
         block: &mut TokenBlock,
     ) -> Result<Vec<Stmt>, RuntimeError> {
-        let mut proof = Vec::with_capacity(block.body.len());
-        for body_block in block.body.iter_mut() {
-            proof.push(self.parse_stmt(body_block)?);
-        }
-        Ok(proof)
+        self.run_in_local_proof_parsing_scope(|this| {
+            let mut proof = Vec::with_capacity(block.body.len());
+            for body_block in block.body.iter_mut() {
+                proof.push(this.parse_stmt(body_block)?);
+            }
+            Ok(proof)
+        })
     }
 
     fn verify_induc_base_proof_header(
@@ -225,7 +233,10 @@ impl Runtime {
                 block.line_file.clone(),
             ));
         };
-        let expected_param = obj_for_bound_param_in_scope(param.to_string(), ParamObjType::Induc);
+        let param_binding = self
+            .active_parse_symbol_binding(param)
+            .expect("induction parameter is active while parsing its proof");
+        let expected_param = obj_for_bound_param_in_scope(param_binding, ParamObjType::Induc);
         if equal_fact.left.to_string() != expected_param.to_string()
             || equal_fact.right.to_string() != induc_from.to_string()
         {

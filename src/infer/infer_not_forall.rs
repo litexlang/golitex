@@ -28,9 +28,9 @@ impl Runtime {
             return Ok(None);
         }
 
-        let source_names = forall.params_def_with_type.collect_param_names();
+        let source_bindings = forall.params_def_with_type.collect_param_bindings();
         let (exist_names, full_param_to_exist_obj) =
-            self.fresh_binder_retag_plan(&source_names, ParamObjType::Exist);
+            self.fresh_binder_retag_plan_for_bindings(&source_bindings, ParamObjType::Exist);
         let mut param_to_exist_obj: HashMap<String, Obj> = HashMap::new();
         let mut exist_groups: Vec<ParamGroupWithParamType> = Vec::new();
         let mut name_index = 0;
@@ -42,8 +42,13 @@ impl Runtime {
             )?;
             let group_exist_names =
                 exist_names[name_index..name_index + group.params.len()].to_vec();
-            for name in group.params.iter() {
-                param_to_exist_obj.insert(name.clone(), full_param_to_exist_obj[name].clone());
+            for binding in group.params.iter() {
+                let name = binding.name();
+                insert_symbol_substitution(
+                    &mut param_to_exist_obj,
+                    binding,
+                    full_param_to_exist_obj[name].clone(),
+                );
             }
             name_index += group.params.len();
             exist_groups.push(ParamGroupWithParamType::new(group_exist_names, param_type));

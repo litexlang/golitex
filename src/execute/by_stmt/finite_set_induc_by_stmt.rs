@@ -138,7 +138,7 @@ impl Runtime {
         stmt: &ByFiniteSetInducStmt,
     ) -> Result<(), RuntimeError> {
         let params = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-            vec![stmt.param.clone()],
+            vec![stmt.param_binding.clone()],
             ParamType::FiniteSet(FiniteSet::new()),
         )]);
         self.define_params_with_type(&params, false, ParamObjType::Induc)
@@ -152,7 +152,7 @@ impl Runtime {
             })?;
         let empty_set: Obj = ListSet::new(vec![]).into();
         let base_eq: Fact = EqualFact::new(
-            obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc),
+            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
             empty_set,
             stmt.line_file.clone(),
         )
@@ -168,7 +168,7 @@ impl Runtime {
             })?;
         if let Some(carrier_set) = &stmt.carrier_set {
             let base_subset: Fact = SubsetFact::new(
-                obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc),
+                obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
                 carrier_set.clone(),
                 stmt.line_file.clone(),
             )
@@ -195,9 +195,9 @@ impl Runtime {
             None => ParamType::Set(Set::new()),
         };
         let params = ParamDefWithType::new(vec![
-            ParamGroupWithParamType::new(vec![stmt.element_param.clone()], element_type),
+            ParamGroupWithParamType::new(vec![stmt.element_param_binding.clone()], element_type),
             ParamGroupWithParamType::new(
-                vec![stmt.smaller_set_param.clone()],
+                vec![stmt.smaller_set_param_binding.clone()],
                 ParamType::FiniteSet(FiniteSet::new()),
             ),
         ]);
@@ -211,9 +211,10 @@ impl Runtime {
                 )
             })?;
 
-        let element = obj_for_bound_param_in_scope(stmt.element_param.clone(), ParamObjType::Induc);
+        let element =
+            obj_for_bound_param_in_scope(&stmt.element_param_binding, ParamObjType::Induc);
         let smaller_set =
-            obj_for_bound_param_in_scope(stmt.smaller_set_param.clone(), ParamObjType::Induc);
+            obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding, ParamObjType::Induc);
         let fresh_fact: Fact =
             NotInFact::new(element, smaller_set.clone(), stmt.line_file.clone()).into();
         self.verify_well_defined_and_store_and_infer_with_default_verify_state(fresh_fact)
@@ -294,16 +295,18 @@ impl Runtime {
         fact: &ExistOrAndChainAtomicFact,
         set: Obj,
     ) -> Result<Fact, RuntimeError> {
-        let param_to_set = HashMap::from([(stmt.param.clone(), set)]);
+        let mut param_to_set = HashMap::new();
+        insert_symbol_substitution(&mut param_to_set, &stmt.param_binding, set);
         Ok(self
             .inst_exist_or_and_chain_atomic_fact(fact, &param_to_set, ParamObjType::Induc, None)?
             .to_fact())
     }
 
     fn finite_set_induc_extension_obj(&self, stmt: &ByFiniteSetInducStmt) -> Obj {
-        let element = obj_for_bound_param_in_scope(stmt.element_param.clone(), ParamObjType::Induc);
+        let element =
+            obj_for_bound_param_in_scope(&stmt.element_param_binding, ParamObjType::Induc);
         let smaller_set =
-            obj_for_bound_param_in_scope(stmt.smaller_set_param.clone(), ParamObjType::Induc);
+            obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding, ParamObjType::Induc);
         Union::new(ListSet::new(vec![element]).into(), smaller_set).into()
     }
 
@@ -311,8 +314,10 @@ impl Runtime {
         &mut self,
         stmt: &ByFiniteSetInducStmt,
     ) -> Result<Fact, RuntimeError> {
-        let (forall_names, param_to_forall) =
-            self.fresh_binder_retag_plan(&[stmt.param.clone()], ParamObjType::Forall);
+        let (forall_names, param_to_forall) = self.fresh_binder_retag_plan_for_bindings(
+            std::slice::from_ref(&stmt.param_binding),
+            ParamObjType::Forall,
+        );
         let param = param_to_forall[&stmt.param].clone();
         let mut then_facts = Vec::with_capacity(stmt.to_prove.len());
         for fact in stmt.to_prove.iter() {
@@ -346,7 +351,7 @@ impl Runtime {
         stmt: &ByFiniteSetInducStmt,
         generated_forall: &Fact,
     ) -> Result<ByInducVerificationResult, RuntimeError> {
-        let param = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
+        let param = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
         let empty_set: Obj = ListSet::new(vec![]).into();
         let mut base_assumptions = vec![
             (
@@ -366,9 +371,10 @@ impl Runtime {
             ));
         }
 
-        let element = obj_for_bound_param_in_scope(stmt.element_param.clone(), ParamObjType::Induc);
+        let element =
+            obj_for_bound_param_in_scope(&stmt.element_param_binding, ParamObjType::Induc);
         let smaller_set =
-            obj_for_bound_param_in_scope(stmt.smaller_set_param.clone(), ParamObjType::Induc);
+            obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding, ParamObjType::Induc);
         let mut step_assumptions = vec![
             (
                 IsFiniteSetFact::new(smaller_set.clone(), stmt.line_file.clone()).to_string(),

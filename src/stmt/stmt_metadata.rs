@@ -7,7 +7,6 @@ impl Stmt {
             Stmt::UnsafeStmt(stmt) => stmt.line_file(),
             Stmt::DefObjStmt(stmt) => stmt.line_file(),
             Stmt::DefPredicateStmt(stmt) => stmt.line_file(),
-            Stmt::DefAliasStmt(stmt) => stmt.line_file(),
             Stmt::DefInterfaceStmt(stmt) => stmt.line_file(),
             Stmt::DefAlgoStmt(stmt) => stmt.line_file.clone(),
             Stmt::DefThmStmt(stmt) => stmt.line_file.clone(),
@@ -25,7 +24,6 @@ impl Stmt {
             Stmt::UnsafeStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefObjStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefPredicateStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::DefAliasStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefInterfaceStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefAlgoStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DefThmStmt(stmt) => stmt.stmt_type_name(),
@@ -43,7 +41,6 @@ impl Stmt {
             Stmt::UnsafeStmt(stmt) => stmt.output_type_string(),
             Stmt::DefObjStmt(stmt) => stmt.output_type_string(),
             Stmt::DefPredicateStmt(stmt) => stmt.output_type_string(),
-            Stmt::DefAliasStmt(stmt) => stmt.output_type_string(),
             Stmt::DefInterfaceStmt(stmt) => stmt.output_type_string(),
             Stmt::DefAlgoStmt(_) => DefAlgoStmt::output_type_string(),
             Stmt::DefThmStmt(stmt) => stmt.output_type_string_for_stmt(),
@@ -163,29 +160,6 @@ impl DefPredicateStmt {
         match self {
             DefPredicateStmt::DefPropStmt(_) => DefPropStmt::output_type_string(),
             DefPredicateStmt::DefAbstractPropStmt(_) => DefAbstractPropStmt::output_type_string(),
-        }
-    }
-}
-
-impl DefAliasStmt {
-    pub fn line_file(&self) -> LineFile {
-        match self {
-            DefAliasStmt::AliasPropStmt(stmt) => stmt.line_file.clone(),
-            DefAliasStmt::AliasThmStmt(stmt) => stmt.line_file.clone(),
-        }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        match self {
-            DefAliasStmt::AliasPropStmt(stmt) => stmt.stmt_type_name(),
-            DefAliasStmt::AliasThmStmt(stmt) => stmt.stmt_type_name(),
-        }
-    }
-
-    pub fn output_type_string(&self) -> String {
-        match self {
-            DefAliasStmt::AliasPropStmt(_) => AliasPropStmt::output_type_string(),
-            DefAliasStmt::AliasThmStmt(_) => AliasThmStmt::output_type_string(),
         }
     }
 }

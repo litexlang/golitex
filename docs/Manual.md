@@ -1291,12 +1291,11 @@ The lines before `=>:` are the **domain assumptions** or **hypotheses**. The lin
 
 A `forall` body may refer to parameters from an enclosing scope. Those outer
 parameters are captured constants, not additional variables that automatic
-matching may replace. While a binder scope is active, Litex rejects rebinding
-the same spelling with the same binder kind; the spelling may be reused by a
-different binder kind, and it becomes available again after the inner scope
-ends. Binders introduced by kernel transformations after parsing use private
-`#binder_N` identities that cannot be written as Litex source names, together
-with capture-avoiding substitution.
+matching may replace. While any local or global binding is active, Litex
+rejects introducing another binding with the same spelling, regardless of its
+kind. A local spelling becomes available again after its scope ends. Internally,
+each binding has a hidden symbol identity, so substitution and alpha-renaming
+do not depend on display text. These identities never appear in normal output.
 
 > Hint: Without assumptions, put conclusions directly under `forall`. With assumptions, put the assumptions first, then `=>:`, then indent the conclusions one more level.
 
@@ -1566,50 +1565,6 @@ $p(1)
 ```
 
 > Example: after defining `prop p(x R): ...`, you can write `$p(1)` instead of repeating the definition each time.
-
----
-
-### Alias names (`alias prop` / `alias thm`)
-
-Use **`alias prop new_name <=> old_name`** to copy an existing concrete `prop`
-definition under a new name. The alias has the same parameters and definition
-body as the target prop. `abstract_prop` targets are intentionally not accepted
-by this form, because they do not carry a checked definition body.
-
-Use **`alias thm new_name <=> old_name`** to copy an existing theorem
-under a new theorem name. The new name can then be used with `by thm`.
-An alias can use a local-language name. This lets a file keep an English,
-source-package, or Lean-facing theorem name while giving learners a name they
-can read directly.
-
-```litex
-prop is_one(x R):
-    x = 1
-
-alias prop one_prop <=> is_one
-$one_prop(1)
-
-alias prop 是一 <=> is_one
-$是一(1)
-
-thm eq_one_reuses_hyp:
-    ? forall x R:
-        x = 1
-        =>:
-            x = 1
-
-alias thm same_eq_one <=> eq_one_reuses_hyp
-1 = 1
-by thm same_eq_one(1)
-
-thm self_eq_en:
-    ? forall x R:
-        x = x
-    x = x
-
-alias thm 自反等式 <=> self_eq_en
-by thm 自反等式(1)
-```
 
 ---
 
@@ -2979,11 +2934,11 @@ by antisymmetric_prop:
 
 have a, b set
 
-forall a, b set:
-    $p(a, b)
-    $p(b, a)
+forall u, v set:
+    $p(u, v)
+    $p(v, u)
     =>:
-        a = b
+        u = v
 ```
 
 ---
@@ -3015,7 +2970,6 @@ The sections above explain the common use cases. This table is a quick map of th
 |-----------|----------|
 | fact line | Verify a mathematical fact from the current context |
 | `prop` | Define a named mathematical property |
-| `alias prop` | Copy a concrete prop definition under a new name |
 | `abstract_prop` | Declare a predicate symbol without defining it |
 | `have x S` | Introduce an object with a type or set |
 | `have x S = expr` | Introduce a named value |
@@ -3035,7 +2989,6 @@ The sections above explain the common use cases. This table is a quick map of th
 | `claim` | State a goal and prove it in a sub-block |
 | `thm name` | Name a verified `forall` theorem, store it for ordinary matching, and make it available for explicit `by thm` calls |
 | `axiom name` | Name a trusted `forall` fact without proof, using the same citation interface as `thm` |
-| `alias thm` | Copy a theorem under a new name |
 | `trust` | Add explicit unproved assumptions to the current context |
 | `sketch` | Open a checked sketch block whose facts stay local |
 | `? <fact>` | Internal proof target for `claim`, `thm`, `strategy`, and related proof forms |
@@ -3096,9 +3049,10 @@ only after a predicate or relation talks about one or more objects.
 
 #### Names and bound objects
 
-The same written name can appear in different places: as an object you already
-introduced, as a parameter in a `forall`, as a witness in an `exist`, or as the
-bound variable in a set builder.
+The same written name can be used in separate, non-overlapping scopes: as an
+object you introduced after an earlier `forall` has ended, as a witness in a
+separate `exist`, or as the bound variable in a later set builder. It cannot be
+reintroduced while an existing binding with that spelling is still active.
 
 | Meaning | Example |
 |---------|---------|
@@ -3280,7 +3234,6 @@ code, evaluate an expression, or register a reusable proof pattern.
 |---------|---------|
 | verify and store a fact | `1 + 1 = 2` |
 | define a predicate by equivalent facts | `prop is_one(x R):`<br>`x = 1` |
-| copy a concrete prop definition under a new name | `alias prop one_prop <=> is_one` |
 | declare an uninterpreted predicate symbol | `abstract_prop prime(n)` |
 | introduce object parameters by type/set | `have x R` |
 | introduce object parameters equal to expressions | `have x R = 1` |
@@ -3310,7 +3263,6 @@ code, evaluate an expression, or register a reusable proof pattern.
 | open a checked sketch block whose facts stay local | `sketch:`<br>`1 = 1` |
 | define a named theorem for explicit calls | `thm self_eq:`<br>`? forall x R:`<br>`x = x` |
 | define a named theorem that also becomes a known `forall` fact | `lemma self_eq_auto:`<br>`? forall x R:`<br>`x = x` |
-| copy a theorem under a new name | `alias thm eq_refl <=> self_eq` |
 | call a named theorem with arguments | `by thm self_eq(1)` |
 | explicitly verify a concrete prop by its definition | `by def $is_unit_pair(1, 1)` |
 | define a reusable non-equational proof strategy | `strategy positive_nonzero:`<br>`? forall x R:`<br>`x > 0`<br>`=>:`<br>`x != 0` |

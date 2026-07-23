@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn _verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
@@ -257,36 +258,28 @@ impl Runtime {
             return Ok(None);
         }
 
-        let fact_names = fact.params_def_with_type.collect_param_names();
-        let other_names = other.params_def_with_type.collect_param_names();
-        if fact_names.len() != other_names.len() {
+        let fact_bindings = fact.params_def_with_type.collect_param_bindings();
+        let other_bindings = other.params_def_with_type.collect_param_bindings();
+        if fact_bindings.len() != other_bindings.len() {
             return Ok(None);
         }
         let forall_scope_id = *next_forall_scope_id;
         *next_forall_scope_id += 1;
-        let canonical_names: Vec<String> = (0..fact_names.len())
+        let canonical_names: Vec<String> = (0..fact_bindings.len())
             .map(|index| format!("#forall_match_{}_{}", forall_scope_id, index))
             .collect();
-        let fact_map = fact_names
+        let canonical_bindings = self.allocate_local_symbol_bindings(&canonical_names)?;
+        let mut fact_map = HashMap::new();
+        let mut other_map = HashMap::new();
+        for ((fact_binding, other_binding), canonical_binding) in fact_bindings
             .iter()
-            .cloned()
-            .zip(
-                canonical_names
-                    .iter()
-                    .cloned()
-                    .map(|name| ForallFreeParamObj::new(name).into()),
-            )
-            .collect();
-        let other_map = other_names
-            .iter()
-            .cloned()
-            .zip(
-                canonical_names
-                    .iter()
-                    .cloned()
-                    .map(|name| ForallFreeParamObj::new(name).into()),
-            )
-            .collect();
+            .zip(other_bindings.iter())
+            .zip(canonical_bindings.iter())
+        {
+            let canonical_obj: Obj = ForallFreeParamObj::new(canonical_binding).into();
+            insert_symbol_substitution(&mut fact_map, fact_binding, canonical_obj.clone());
+            insert_symbol_substitution(&mut other_map, other_binding, canonical_obj);
+        }
         let fact = self.alpha_rename_forall_fact(fact, &fact_map)?;
         let other = self.alpha_rename_forall_fact(other, &other_map)?;
 

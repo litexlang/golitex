@@ -170,8 +170,8 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let left_string = left.to_string();
-        let right_string = right.to_string();
+        let left_string = obj_equality_key(left);
+        let right_string = obj_equality_key(right);
 
         let known_pairs =
             self.collect_known_equality_pairs_from_envs(&left_string, &right_string, left, right);
@@ -1063,13 +1063,13 @@ fn known_equality_class_across_environments(
             };
             found_equality = true;
             for object in equivalent_objects.iter() {
-                let object_key = object.to_string();
+                let object_key = obj_equality_key(object);
                 if !keys.contains(&object_key) {
                     keys.push(object_key.clone());
                 }
                 if !objects
                     .iter()
-                    .any(|known: &Obj| known.to_string() == object_key)
+                    .any(|known: &Obj| obj_equality_key(known) == object_key)
                 {
                     objects.push(object.clone());
                 }
