@@ -1,30 +1,28 @@
 # Linear Algebra Done Right, fourth edition — Section 9D.
 # Tensor Products.
 
-macro ScalarSystem "&chap1a::ScalarSystem<s>"
-macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
 
 # Definition 9.68. A bilinear functional is separately linear on two possibly
 # different vector spaces.
-prop is_bilinear_functional(s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, beta fn(v V, w W) s):
+prop is_bilinear_functional(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, beta fn(v V, w W) s):
     forall w W:
         $chap3f::is_linear_functional(s, scalars, V, Vspace, fn(v V) s {beta(v, w)})
     forall v V:
         $chap3f::is_linear_functional(s, scalars, W, Wspace, fn(w W) s {beta(v, w)})
 
-template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
     have bilinear_functional_space power_set(fn(v V, w W) s) = {beta fn(v V, w W) s: $is_bilinear_functional(s, scalars, V, W, Vspace, Wspace, beta)}
 
-template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
-    have fn zero_bilinear_functional(v V, w W) s = @Scalars.zero
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+    have fn zero_bilinear_functional(v V, w W) s = scalars.zero
 
-template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
-    have fn bilinear_functional_add(beta, gamma fn(v V, w W) s) fn(x V, y W) s = fn(v V, w W) s {@Scalars.add(beta(v, w), gamma(v, w))}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+    have fn bilinear_functional_add(beta, gamma fn(v V, w W) s) fn(x V, y W) s = fn(v V, w W) s {scalars.add(beta(v, w), gamma(v, w))}
 
-template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
-    have fn bilinear_functional_smul(a s, beta fn(v V, w W) s) fn(x V, y W) s = fn(v V, w W) s {@Scalars.mul(a, beta(v, w))}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+    have fn bilinear_functional_smul(a s, beta fn(v V, w W) s) fn(x V, y W) s = fn(v V, w W) s {scalars.mul(a, beta(v, w))}
 
-template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
     trust have bilinear_functional_vector_space &chap1b::VectorSpace<s, scalars, \bilinear_functional_space<s, scalars, V, W, Vspace, Wspace>>:
         bilinear_functional_vector_space = (\zero_bilinear_functional<s, scalars, V, W, Vspace, Wspace>, \bilinear_functional_add<s, scalars, V, W, Vspace, Wspace>, \bilinear_functional_smul<s, scalars, V, W, Vspace, Wspace>)
 
@@ -38,7 +36,7 @@ sketch:
 # Result 9.70. Basis values identify a bilinear functional with an m-by-n
 # matrix; coordinate expansion gives the inverse map.
 axiom dimension_of_bilinear_functional_space:
-    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>:
         $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
         $chap2a::is_finite_dimensional(s, scalars, W, Wspace)
         =>:
@@ -46,23 +44,23 @@ axiom dimension_of_bilinear_functional_space:
 
 # Definition 9.71. V tensor W is B(V',W'); a pure tensor evaluates a pair of
 # dual functionals at its two vectors and multiplies the values.
-template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
     have tensor_product_space set = \bilinear_functional_space<s, scalars, \chap3f::dual_space<s, scalars, V, Vspace>, \chap3f::dual_space<s, scalars, W, Wspace>, \chap3f::dual_vector_space<s, scalars, V, Vspace>, \chap3f::dual_vector_space<s, scalars, W, Wspace>>
 
-template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
     trust have tensor_product_vector_space &chap1b::VectorSpace<s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>>:
         tensor_product_vector_space = \bilinear_functional_vector_space<s, scalars, \chap3f::dual_space<s, scalars, V, Vspace>, \chap3f::dual_space<s, scalars, W, Wspace>, \chap3f::dual_vector_space<s, scalars, V, Vspace>, \chap3f::dual_vector_space<s, scalars, W, Wspace>>
 
-template<s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
-    have fn tensor_product_element(v V, w W) fn(left_functional \chap3f::dual_space<s, scalars, V, Vspace>, right_functional \chap3f::dual_space<s, scalars, W, Wspace>) s = fn(phi \chap3f::dual_space<s, scalars, V, Vspace>, tau \chap3f::dual_space<s, scalars, W, Wspace>) s {@Scalars.mul(phi(v), tau(w))}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>>:
+    have fn tensor_product_element(v V, w W) fn(left_functional \chap3f::dual_space<s, scalars, V, Vspace>, right_functional \chap3f::dual_space<s, scalars, W, Wspace>) s = fn(phi \chap3f::dual_space<s, scalars, V, Vspace>, tau \chap3f::dual_space<s, scalars, W, Wspace>) s {scalars.mul(phi(v), tau(w))}
 
 axiom pure_tensor_is_in_tensor_product_space:
-    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, v V, w W:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, v V, w W:
         \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, w) $in \tensor_product_space<s, scalars, V, W, Vspace, Wspace>
 
 # Result 9.72. Apply Result 9.70 to the dual spaces and use dim V'=dim V.
 axiom dimension_of_tensor_product_of_two_spaces:
-    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>:
         $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
         $chap2a::is_finite_dimensional(s, scalars, W, Wspace)
         =>:
@@ -71,24 +69,24 @@ axiom dimension_of_tensor_product_of_two_spaces:
 # Result 9.73. Function extensionality reduces all three identities to
 # linearity of the two dual functionals.
 axiom bilinearity_of_tensor_product_elements:
-    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, v, v1, v2 V, w, w1, w2 W, a s:
-        \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(&chap1b::VectorSpace<s, scalars, V>{Vspace}.add(v1, v2), w) = &chap1b::VectorSpace<s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>>{\tensor_product_vector_space<s, scalars, V, W, Vspace, Wspace>}.add(\tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v1, w), \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v2, w))
-        \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, &chap1b::VectorSpace<s, scalars, W>{Wspace}.add(w1, w2)) = &chap1b::VectorSpace<s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>>{\tensor_product_vector_space<s, scalars, V, W, Vspace, Wspace>}.add(\tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, w1), \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, w2))
-        &chap1b::VectorSpace<s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>>{\tensor_product_vector_space<s, scalars, V, W, Vspace, Wspace>}.smul(a, \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, w)) = \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(&chap1b::VectorSpace<s, scalars, V>{Vspace}.smul(a, v), w)
-        \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(&chap1b::VectorSpace<s, scalars, V>{Vspace}.smul(a, v), w) = \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, &chap1b::VectorSpace<s, scalars, W>{Wspace}.smul(a, w))
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, v, v1, v2 V, w, w1, w2 W, a s:
+        \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(Vspace.add(v1, v2), w) = &chap1b::VectorSpace<s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>>{\tensor_product_vector_space<s, scalars, V, W, Vspace, Wspace>}.add(\tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v1, w), \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v2, w))
+        \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, Wspace.add(w1, w2)) = &chap1b::VectorSpace<s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>>{\tensor_product_vector_space<s, scalars, V, W, Vspace, Wspace>}.add(\tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, w1), \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, w2))
+        &chap1b::VectorSpace<s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>>{\tensor_product_vector_space<s, scalars, V, W, Vspace, Wspace>}.smul(a, \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, w)) = \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(Vspace.smul(a, v), w)
+        \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(Vspace.smul(a, v), w) = \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, Wspace.smul(a, w))
 
-prop lists_all_pairwise_tensors(s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, m, n N_pos, left &chap1a::FiniteList<V, m>, right &chap1a::FiniteList<W, n>, tensors &chap1a::FiniteList<\tensor_product_space<s, scalars, V, W, Vspace, Wspace>, m * n>):
+prop lists_all_pairwise_tensors(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, m, n N_pos, left &chap1a::FiniteList<V, m>, right &chap1a::FiniteList<W, n>, tensors &chap1a::FiniteList<\tensor_product_space<s, scalars, V, W, Vspace, Wspace>, m * n>):
     forall j, k N_pos:
         j <= m
         k <= n
         =>:
-            exist! r N_pos st {r <= m * n, &chap1a::FiniteList<\tensor_product_space<s, scalars, V, W, Vspace, Wspace>, m * n>{tensors}.entries(r) = \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(&chap1a::FiniteList<V, m>{left}.entries(j), &chap1a::FiniteList<W, n>{right}.entries(k))}
+            exist! r N_pos st {r <= m * n, tensors.entries(r) = \tensor_product_element<s, scalars, V, W, Vspace, Wspace>(left.entries(j), right.entries(k))}
 
 # Result 9.74. Dual coordinate functionals isolate each coefficient of a
 # linear combination of pairwise tensors; the dimension count then gives a
 # basis when both input lists are bases.
 axiom pairwise_tensors_of_independent_lists_are_independent:
-    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, m, n N_pos, left &chap1a::FiniteList<V, m>, right &chap1a::FiniteList<W, n>, tensors &chap1a::FiniteList<\tensor_product_space<s, scalars, V, W, Vspace, Wspace>, m * n>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, m, n N_pos, left &chap1a::FiniteList<V, m>, right &chap1a::FiniteList<W, n>, tensors &chap1a::FiniteList<\tensor_product_space<s, scalars, V, W, Vspace, Wspace>, m * n>:
         $chap2a::is_linearly_independent(s, scalars, V, Vspace, m, left)
         $chap2a::is_linearly_independent(s, scalars, W, Wspace, n, right)
         $lists_all_pairwise_tensors(s, scalars, V, W, Vspace, Wspace, m, n, left, right, tensors)
@@ -96,7 +94,7 @@ axiom pairwise_tensors_of_independent_lists_are_independent:
             $chap2a::is_linearly_independent(s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>, \tensor_product_vector_space<s, scalars, V, W, Vspace, Wspace>, m * n, tensors)
 
 axiom pairwise_tensors_of_bases_form_basis:
-    ? forall s nonempty_set, scalars @ScalarSystem, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, m, n N_pos, left &chap1a::FiniteList<V, m>, right &chap1a::FiniteList<W, n>, tensors &chap1a::FiniteList<\tensor_product_space<s, scalars, V, W, Vspace, Wspace>, m * n>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, m, n N_pos, left &chap1a::FiniteList<V, m>, right &chap1a::FiniteList<W, n>, tensors &chap1a::FiniteList<\tensor_product_space<s, scalars, V, W, Vspace, Wspace>, m * n>:
         $chap2b::is_basis(s, scalars, V, Vspace, m, left)
         $chap2b::is_basis(s, scalars, W, Wspace, n, right)
         $lists_all_pairwise_tensors(s, scalars, V, W, Vspace, Wspace, m, n, left, right, tensors)
@@ -114,7 +112,7 @@ sketch:
 
 # Definition 9.77. A bilinear map has the same separate-linearity interface,
 # now with an arbitrary vector-space codomain.
-prop is_bilinear_map(s nonempty_set, scalars @ScalarSystem, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, Uspace &chap1b::VectorSpace<s, scalars, U>, Gamma fn(v V, w W) U):
+prop is_bilinear_map(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, Uspace &chap1b::VectorSpace<s, scalars, U>, Gamma fn(v V, w W) U):
     forall w W:
         $chap3a::is_linear_map(s, scalars, V, U, Vspace, Uspace, fn(v V) U {Gamma(v, w)})
     forall v V:
@@ -124,18 +122,18 @@ prop is_bilinear_map(s nonempty_set, scalars @ScalarSystem, V, W, U nonempty_set
 # examples of bilinear maps; the defining interfaces above make their roles
 # explicit without duplicating their routine closure calculations.
 
-prop linearization_agrees_on_pure_tensors(s nonempty_set, scalars @ScalarSystem, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, Gamma fn(v V, w W) U, linearized fn(t \tensor_product_space<s, scalars, V, W, Vspace, Wspace>) U):
+prop linearization_agrees_on_pure_tensors(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, Gamma fn(v V, w W) U, linearized fn(t \tensor_product_space<s, scalars, V, W, Vspace, Wspace>) U):
     forall v V, w W:
         linearized(\tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, w)) = Gamma(v, w)
 
-prop delinearization_agrees_on_pure_tensors(s nonempty_set, scalars @ScalarSystem, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T fn(t \tensor_product_space<s, scalars, V, W, Vspace, Wspace>) U, delinearized fn(v V, w W) U):
+prop delinearization_agrees_on_pure_tensors(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T fn(t \tensor_product_space<s, scalars, V, W, Vspace, Wspace>) U, delinearized fn(v V, w W) U):
     forall v V, w W:
         delinearized(v, w) = T(\tensor_product_element<s, scalars, V, W, Vspace, Wspace>(v, w))
 
 # Result 9.79. Pairwise tensor bases extend a bilinear map uniquely; composing
 # a linear map with pure tensoring gives the converse bilinear map.
 axiom bilinear_maps_linearize_uniquely:
-    ? forall s nonempty_set, scalars @ScalarSystem, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, Uspace &chap1b::VectorSpace<s, scalars, U>, Gamma fn(v V, w W) U:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, Uspace &chap1b::VectorSpace<s, scalars, U>, Gamma fn(v V, w W) U:
         $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
         $chap2a::is_finite_dimensional(s, scalars, W, Wspace)
         $is_bilinear_map(s, scalars, V, W, U, Vspace, Wspace, Uspace, Gamma)
@@ -143,132 +141,131 @@ axiom bilinear_maps_linearize_uniquely:
             exist! linearized \chap3a::linear_map_space<s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>, U, \tensor_product_vector_space<s, scalars, V, W, Vspace, Wspace>, Uspace> st {$linearization_agrees_on_pure_tensors(s, scalars, V, W, U, Vspace, Wspace, Gamma, linearized)}
 
 axiom linear_maps_delinearize_uniquely:
-    ? forall s nonempty_set, scalars @ScalarSystem, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, Uspace &chap1b::VectorSpace<s, scalars, U>, T \chap3a::linear_map_space<s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>, U, \tensor_product_vector_space<s, scalars, V, W, Vspace, Wspace>, Uspace>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W, U nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, Uspace &chap1b::VectorSpace<s, scalars, U>, T \chap3a::linear_map_space<s, scalars, \tensor_product_space<s, scalars, V, W, Vspace, Wspace>, U, \tensor_product_vector_space<s, scalars, V, W, Vspace, Wspace>, Uspace>:
         exist! delinearized fn(v V, w W) U st {$is_bilinear_map(s, scalars, V, W, U, Vspace, Wspace, Uspace, delinearized), $delinearization_agrees_on_pure_tensors(s, scalars, V, W, U, Vspace, Wspace, T, delinearized)}
 
-prop is_tensor_product_inner_product(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, candidate fn(a, b \tensor_product_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>) s):
-    $chap6a::is_inner_product(s, scalars, scalar_geometry, \tensor_product_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>, \tensor_product_vector_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>, candidate)
+prop is_tensor_product_inner_product(s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, candidate fn(a, b \tensor_product_space<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>) s):
+    $chap6a::is_inner_product(s, scalars, scalar_geometry, \tensor_product_space<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>, \tensor_product_vector_space<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>, candidate)
     forall v, u V, w, x W:
-        candidate(\tensor_product_element<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(v, w), \tensor_product_element<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(u, x)) = @Scalars.mul(&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.inner(v, u), &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.inner(w, x))
+        candidate(\tensor_product_element<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>(v, w), \tensor_product_element<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>(u, x)) = scalars.mul(Vinner.inner(v, u), Winner.inner(w, x))
 
 # Result 9.80. Define the inner product on a tensor basis from orthonormal
 # bases; the pure-tensor equation makes the result basis independent and unique.
 axiom tensor_product_inner_product_exists_unique:
-    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>:
-        $chap2a::is_finite_dimensional(s, scalars, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space)
-        $chap2a::is_finite_dimensional(s, scalars, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space)
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>:
+        $chap2a::is_finite_dimensional(s, scalars, V, Vinner.vector_space)
+        $chap2a::is_finite_dimensional(s, scalars, W, Winner.vector_space)
         =>:
-            exist! inner fn(a, b \tensor_product_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>) s st {$is_tensor_product_inner_product(s, scalars, scalar_geometry, V, W, Vinner, Winner, inner)}
+            exist! inner fn(a, b \tensor_product_space<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>) s st {$is_tensor_product_inner_product(s, scalars, scalar_geometry, V, W, Vinner, Winner, inner)}
 
 # Definition 9.82. Select the unique inner product from Result 9.80.
-template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>>:
-    trust have tensor_product_inner fn(a, b \tensor_product_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>) s
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>>:
+    trust have tensor_product_inner fn(a, b \tensor_product_space<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>) s
 
-template<s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>>:
-    trust have tensor_product_inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, \tensor_product_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>>:
-        tensor_product_inner_space = (\tensor_product_vector_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>, \tensor_product_inner<s, scalars, scalar_geometry, V, W, Vinner, Winner>)
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>>:
+    trust have tensor_product_inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, \tensor_product_space<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>>:
+        tensor_product_inner_space = (\tensor_product_vector_space<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>, \tensor_product_inner<s, scalars, scalar_geometry, V, W, Vinner, Winner>)
 
 axiom norm_of_pure_tensor:
-    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, v V, w W:
-        \chap6a::norm<s, scalars, scalar_geometry, \tensor_product_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>>(\tensor_product_inner_space<s, scalars, scalar_geometry, V, W, Vinner, Winner>, \tensor_product_element<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>(v, w)) = \chap6a::norm<s, scalars, scalar_geometry, V>(Vinner, v) * \chap6a::norm<s, scalars, scalar_geometry, W>(Winner, w)
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, v V, w W:
+        \chap6a::norm<s, scalars, scalar_geometry, \tensor_product_space<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>>(\tensor_product_inner_space<s, scalars, scalar_geometry, V, W, Vinner, Winner>, \tensor_product_element<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>(v, w)) = \chap6a::norm<s, scalars, scalar_geometry, V>(Vinner, v) * \chap6a::norm<s, scalars, scalar_geometry, W>(Winner, w)
 
 # Result 9.83. Result 9.74 supplies the basis; the defining inner-product
 # formula makes distinct pairwise tensors orthogonal and each norm one.
 axiom pairwise_tensors_of_orthonormal_bases_are_orthonormal_basis:
-    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, m, n N_pos, left &chap1a::FiniteList<V, m>, right &chap1a::FiniteList<W, n>, tensors &chap1a::FiniteList<\tensor_product_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>, m * n>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, Winner &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>, m, n N_pos, left &chap1a::FiniteList<V, m>, right &chap1a::FiniteList<W, n>, tensors &chap1a::FiniteList<\tensor_product_space<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>, m * n>:
         $chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, V, Vinner, m, left)
         $chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, W, Winner, n, right)
-        $lists_all_pairwise_tensors(s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space, m, n, left, right, tensors)
+        $lists_all_pairwise_tensors(s, scalars, V, W, Vinner.vector_space, Winner.vector_space, m, n, left, right, tensors)
         =>:
-            $chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, \tensor_product_space<s, scalars, V, W, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{Vinner}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, W>{Winner}.vector_space>, \tensor_product_inner_space<s, scalars, scalar_geometry, V, W, Vinner, Winner>, m * n, tensors)
+            $chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, \tensor_product_space<s, scalars, V, W, Vinner.vector_space, Winner.vector_space>, \tensor_product_inner_space<s, scalars, scalar_geometry, V, W, Vinner, Winner>, m * n, tensors)
 
 # Notation 9.84. A finite family of vector spaces is encoded inside one tagged
 # ambient carrier U. Each slot has its own carrier and operations, so the
 # interface does not identify the spaces merely because their elements share U.
-struct FiniteVectorSpaceFamily<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos>:
+struct FiniteVectorSpaceFamily<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos>:
     carriers finite_seq(power_set(U), m)
     zeros finite_seq(U, m)
     adds finite_seq(fn(x, y U) U, m)
     smuls finite_seq(fn(a s, x U) U, m)
 
-macro Family "&FiniteVectorSpaceFamily<s, scalars, U, m>{family}"
 
-prop is_vector_space_family(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>):
+prop is_vector_space_family(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>):
     forall k N_pos:
         k <= m
         =>:
-            $is_nonempty_set(@Family.carriers(k))
-            @Family.zeros(k) $in @Family.carriers(k)
+            $is_nonempty_set(family.carriers(k))
+            family.zeros(k) $in family.carriers(k)
     forall k N_pos, x, y U:
         k <= m
-        x $in @Family.carriers(k)
-        y $in @Family.carriers(k)
+        x $in family.carriers(k)
+        y $in family.carriers(k)
         =>:
-            @Family.adds(k)(x, y) $in @Family.carriers(k)
-            @Family.adds(k)(x, y) = @Family.adds(k)(y, x)
+            family.adds(k)(x, y) $in family.carriers(k)
+            family.adds(k)(x, y) = family.adds(k)(y, x)
     forall k N_pos, a s, x U:
         k <= m
-        x $in @Family.carriers(k)
+        x $in family.carriers(k)
         =>:
-            @Family.smuls(k)(a, x) $in @Family.carriers(k)
+            family.smuls(k)(a, x) $in family.carriers(k)
     forall k N_pos, x, y, z U:
         k <= m
-        x $in @Family.carriers(k)
-        y $in @Family.carriers(k)
-        z $in @Family.carriers(k)
+        x $in family.carriers(k)
+        y $in family.carriers(k)
+        z $in family.carriers(k)
         =>:
-            @Family.adds(k)(@Family.adds(k)(x, y), z) = @Family.adds(k)(x, @Family.adds(k)(y, z))
+            family.adds(k)(family.adds(k)(x, y), z) = family.adds(k)(x, family.adds(k)(y, z))
     forall k N_pos, x U:
         k <= m
-        x $in @Family.carriers(k)
+        x $in family.carriers(k)
         =>:
-            @Family.adds(k)(@Family.zeros(k), x) = x
-            exist y U st {y $in @Family.carriers(k), @Family.adds(k)(x, y) = @Family.zeros(k)}
-            @Family.smuls(k)(@Scalars.one, x) = x
+            family.adds(k)(family.zeros(k), x) = x
+            exist y U st {y $in family.carriers(k), family.adds(k)(x, y) = family.zeros(k)}
+            family.smuls(k)(scalars.one, x) = x
     forall k N_pos, a, b s, x U:
         k <= m
-        x $in @Family.carriers(k)
+        x $in family.carriers(k)
         =>:
-            @Family.smuls(k)(@Scalars.mul(a, b), x) = @Family.smuls(k)(a, @Family.smuls(k)(b, x))
-            @Family.smuls(k)(@Scalars.add(a, b), x) = @Family.adds(k)(@Family.smuls(k)(a, x), @Family.smuls(k)(b, x))
+            family.smuls(k)(scalars.mul(a, b), x) = family.smuls(k)(a, family.smuls(k)(b, x))
+            family.smuls(k)(scalars.add(a, b), x) = family.adds(k)(family.smuls(k)(a, x), family.smuls(k)(b, x))
     forall k N_pos, a s, x, y U:
         k <= m
-        x $in @Family.carriers(k)
-        y $in @Family.carriers(k)
+        x $in family.carriers(k)
+        y $in family.carriers(k)
         =>:
-            @Family.smuls(k)(a, @Family.adds(k)(x, y)) = @Family.adds(k)(@Family.smuls(k)(a, x), @Family.smuls(k)(a, y))
+            family.smuls(k)(a, family.adds(k)(x, y)) = family.adds(k)(family.smuls(k)(a, x), family.smuls(k)(a, y))
 
 # The laws above are exact. Selecting the corresponding dependent VectorSpace
 # record is the only remaining structure-packaging boundary.
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, k N_pos: k <= m, $is_vector_space_family(s, scalars, U, m, family)>:
-    trust have family_component_vector_space &chap1b::VectorSpace<s, scalars, @Family.carriers(k)>:
-        family_component_vector_space = (@Family.zeros(k), fn(x, y @Family.carriers(k)) @Family.carriers(k) {@Family.adds(k)(x, y)}, fn(a s, x @Family.carriers(k)) @Family.carriers(k) {@Family.smuls(k)(a, x)})
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, k N_pos: k <= m, $is_vector_space_family(s, scalars, U, m, family)>:
+    trust have family_component_vector_space &chap1b::VectorSpace<s, scalars, family.carriers(k)>:
+        family_component_vector_space = (family.zeros(k), fn(x, y family.carriers(k)) family.carriers(k) {family.adds(k)(x, y)}, fn(a s, x family.carriers(k)) family.carriers(k) {family.smuls(k)(a, x)})
 
-prop is_finite_dimensional_vector_space_family(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>):
+prop is_finite_dimensional_vector_space_family(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>):
     $is_vector_space_family(s, scalars, U, m, family)
     forall k N_pos:
         k <= m
         =>:
-            $chap2a::is_finite_dimensional(s, scalars, @Family.carriers(k), \family_component_vector_space<s, scalars, U, m, family, k>)
+            $chap2a::is_finite_dimensional(s, scalars, family.carriers(k), \family_component_vector_space<s, scalars, U, m, family, k>)
 
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
-    have fn family_component_dimension(k N_pos: k <= m) N = \chap2c::dimension<s, scalars, @Family.carriers(k), \family_component_vector_space<s, scalars, U, m, family, k>>
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+    have fn family_component_dimension(k N_pos: k <= m) N = \chap2c::dimension<s, scalars, family.carriers(k), \family_component_vector_space<s, scalars, U, m, family, k>>
 
 template<m N_pos>:
     have fn finite_natural_product(values finite_seq(N, m), k closed_range(0, m)) N by induc k from 0:
         case k = 0: 1
         case k > 0: finite_natural_product(values, k - 1) * values(k)
 
-prop is_family_tuple(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, values finite_seq(U, m)):
+prop is_family_tuple(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, values finite_seq(U, m)):
     forall k N_pos:
         k <= m
         =>:
-            values(k) $in @Family.carriers(k)
+            values(k) $in family.carriers(k)
 
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>>:
     have family_tuple_space power_set(finite_seq(U, m)) = {values finite_seq(U, m): $is_family_tuple(s, scalars, U, m, family, values)}
 
-prop is_family_slot_replacement(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, original, changed \family_tuple_space<s, scalars, U, m, family>, k N_pos, value @Family.carriers(k)):
+prop is_family_slot_replacement(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, original, changed \family_tuple_space<s, scalars, U, m, family>, k N_pos, value family.carriers(k)):
     k <= m
     changed(k) = value
     forall j N_pos:
@@ -277,39 +274,39 @@ prop is_family_slot_replacement(s nonempty_set, scalars @ScalarSystem, U nonempt
         =>:
             changed(j) = original(j)
 
-prop agrees_with_family_functional_in_slot(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, beta fn(values \family_tuple_space<s, scalars, U, m, family>) s, original \family_tuple_space<s, scalars, U, m, family>, k N_pos, ell fn(x @Family.carriers(k)) s):
-    forall value @Family.carriers(k), changed \family_tuple_space<s, scalars, U, m, family>:
+prop agrees_with_family_functional_in_slot(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, beta fn(values \family_tuple_space<s, scalars, U, m, family>) s, original \family_tuple_space<s, scalars, U, m, family>, k N_pos, ell fn(x family.carriers(k)) s):
+    forall value family.carriers(k), changed \family_tuple_space<s, scalars, U, m, family>:
         $is_family_slot_replacement(s, scalars, U, m, family, original, changed, k, value)
         =>:
             ell(value) = beta(changed)
 
-prop is_linear_in_family_slot(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, beta fn(values \family_tuple_space<s, scalars, U, m, family>) s, original \family_tuple_space<s, scalars, U, m, family>, k N_pos):
+prop is_linear_in_family_slot(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, beta fn(values \family_tuple_space<s, scalars, U, m, family>) s, original \family_tuple_space<s, scalars, U, m, family>, k N_pos):
     k <= m
-    exist ell fn(x @Family.carriers(k)) s st {$chap3f::is_linear_functional(s, scalars, @Family.carriers(k), \family_component_vector_space<s, scalars, U, m, family, k>, ell), $agrees_with_family_functional_in_slot(s, scalars, U, m, family, beta, original, k, ell)}
+    exist ell fn(x family.carriers(k)) s st {$chap3f::is_linear_functional(s, scalars, family.carriers(k), \family_component_vector_space<s, scalars, U, m, family, k>, ell), $agrees_with_family_functional_in_slot(s, scalars, U, m, family, beta, original, k, ell)}
 
 # Definition 9.85. Multilinearity is separate linearity in every component;
 # the carrier and its pointwise operations are explicit.
-prop is_multilinear_functional_on_family(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, beta fn(values \family_tuple_space<s, scalars, U, m, family>) s):
+prop is_multilinear_functional_on_family(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, beta fn(values \family_tuple_space<s, scalars, U, m, family>) s):
     forall original \family_tuple_space<s, scalars, U, m, family>, k N_pos:
         k <= m
         =>:
             $is_linear_in_family_slot(s, scalars, U, m, family, beta, original, k)
 
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
     trust have multilinear_functional_space_on_family set:
         multilinear_functional_space_on_family = {beta fn(values \family_tuple_space<s, scalars, U, m, family>) s: $is_multilinear_functional_on_family(s, scalars, U, m, family, beta)}
         $is_nonempty_set(multilinear_functional_space_on_family)
 
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
-    have fn zero_multilinear_functional_on_family(values \family_tuple_space<s, scalars, U, m, family>) s = @Scalars.zero
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+    have fn zero_multilinear_functional_on_family(values \family_tuple_space<s, scalars, U, m, family>) s = scalars.zero
 
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
-    have fn multilinear_functional_on_family_add(beta, gamma fn(values \family_tuple_space<s, scalars, U, m, family>) s) fn(input \family_tuple_space<s, scalars, U, m, family>) s = fn(values \family_tuple_space<s, scalars, U, m, family>) s {@Scalars.add(beta(values), gamma(values))}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+    have fn multilinear_functional_on_family_add(beta, gamma fn(values \family_tuple_space<s, scalars, U, m, family>) s) fn(input \family_tuple_space<s, scalars, U, m, family>) s = fn(values \family_tuple_space<s, scalars, U, m, family>) s {scalars.add(beta(values), gamma(values))}
 
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
-    have fn multilinear_functional_on_family_smul(a s, beta fn(values \family_tuple_space<s, scalars, U, m, family>) s) fn(input \family_tuple_space<s, scalars, U, m, family>) s = fn(values \family_tuple_space<s, scalars, U, m, family>) s {@Scalars.mul(a, beta(values))}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+    have fn multilinear_functional_on_family_smul(a s, beta fn(values \family_tuple_space<s, scalars, U, m, family>) s) fn(input \family_tuple_space<s, scalars, U, m, family>) s = fn(values \family_tuple_space<s, scalars, U, m, family>) s {scalars.mul(a, beta(values))}
 
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
     trust have multilinear_functional_on_family_vector_space &chap1b::VectorSpace<s, scalars, \multilinear_functional_space_on_family<s, scalars, U, m, family>>:
         multilinear_functional_on_family_vector_space = (\zero_multilinear_functional_on_family<s, scalars, U, m, family>, \multilinear_functional_on_family_add<s, scalars, U, m, family>, \multilinear_functional_on_family_smul<s, scalars, U, m, family>)
 
@@ -323,61 +320,60 @@ sketch:
 
 # Result 9.87. Values on products of component bases give the dimension.
 axiom dimension_of_multilinear_functionals_on_family:
-    ? forall s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>:
         m > 1
         $is_finite_dimensional_vector_space_family(s, scalars, U, m, family)
         =>:
             \chap2c::dimension<s, scalars, \multilinear_functional_space_on_family<s, scalars, U, m, family>, \multilinear_functional_on_family_vector_space<s, scalars, U, m, family>> = \finite_natural_product<m>(fn(k N_pos: k <= m) N {\family_component_dimension<s, scalars, U, m, family>(k)}, m)
 
-macro DualFamily "&FiniteVectorSpaceFamily<s, scalars, fn(u U) s, m>{dual_family}"
 
-prop is_dual_vector_space_family(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, dual_family &FiniteVectorSpaceFamily<s, scalars, fn(u U) s, m>):
+prop is_dual_vector_space_family(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, dual_family &FiniteVectorSpaceFamily<s, scalars, fn(u U) s, m>):
     $is_vector_space_family(s, scalars, U, m, family)
     $is_vector_space_family(s, scalars, fn(u U) s, m, dual_family)
     forall k N_pos, phi fn(u U) s:
         k <= m
         =>:
-            phi $in @DualFamily.carriers(k)
+            phi $in dual_family.carriers(k)
         <=>:
-            $chap3f::is_linear_functional(s, scalars, @Family.carriers(k), \family_component_vector_space<s, scalars, U, m, family, k>, fn(x @Family.carriers(k)) s {phi(x)})
+            $chap3f::is_linear_functional(s, scalars, family.carriers(k), \family_component_vector_space<s, scalars, U, m, family, k>, fn(x family.carriers(k)) s {phi(x)})
     forall k N_pos, x U:
         k <= m
         =>:
-            @DualFamily.zeros(k)(x) = @Scalars.zero
+            dual_family.zeros(k)(x) = scalars.zero
     forall k N_pos, phi, tau fn(u U) s, x U:
         k <= m
         =>:
-            @DualFamily.adds(k)(phi, tau)(x) = @Scalars.add(phi(x), tau(x))
+            dual_family.adds(k)(phi, tau)(x) = scalars.add(phi(x), tau(x))
     forall k N_pos, a s, phi fn(u U) s, x U:
         k <= m
         =>:
-            @DualFamily.smuls(k)(a, phi)(x) = @Scalars.mul(a, phi(x))
+            dual_family.smuls(k)(a, phi)(x) = scalars.mul(a, phi(x))
 
 # The ambient-function encoding extends each component functional outside its
 # tagged carrier. Those irrelevant values do not affect any tensor evaluation.
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
     trust have dual_vector_space_family &FiniteVectorSpaceFamily<s, scalars, fn(u U) s, m>:
         $is_dual_vector_space_family(s, scalars, U, m, family, dual_vector_space_family)
 
 # Definition 9.88. The tensor product of the family is the space of
 # multilinear functionals on the component duals.
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
     have tensor_product_space_of_family set = \multilinear_functional_space_on_family<s, scalars, fn(u U) s, m, \dual_vector_space_family<s, scalars, U, m, family>>
 
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
     trust have tensor_product_of_family_vector_space &chap1b::VectorSpace<s, scalars, \tensor_product_space_of_family<s, scalars, U, m, family>>:
         tensor_product_of_family_vector_space = \multilinear_functional_on_family_vector_space<s, scalars, fn(u U) s, m, \dual_vector_space_family<s, scalars, U, m, family>>
 
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
     have fn family_tensor_evaluation_product(vectors finite_seq(U, m), functionals \family_tuple_space<s, scalars, fn(u U) s, m, \dual_vector_space_family<s, scalars, U, m, family>>, k closed_range(0, m)) s by induc k from 0:
-        case k = 0: @Scalars.one
-        case k > 0: @Scalars.mul(family_tensor_evaluation_product(vectors, functionals, k - 1), functionals(k)(vectors(k)))
+        case k = 0: scalars.one
+        case k > 0: scalars.mul(family_tensor_evaluation_product(vectors, functionals, k - 1), functionals(k)(vectors(k)))
 
-template<s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>: $is_vector_space_family(s, scalars, U, m, family)>:
     have fn tensor_product_element_of_family(vectors finite_seq(U, m)) fn(input \family_tuple_space<s, scalars, fn(u U) s, m, \dual_vector_space_family<s, scalars, U, m, family>>) s = fn(functionals \family_tuple_space<s, scalars, fn(u U) s, m, \dual_vector_space_family<s, scalars, U, m, family>>) s {\family_tensor_evaluation_product<s, scalars, U, m, family>(vectors, functionals, m)}
 
 axiom pure_family_tensor_is_in_tensor_product_space:
-    ? forall s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, vectors finite_seq(U, m):
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, vectors finite_seq(U, m):
         m > 1
         $is_vector_space_family(s, scalars, U, m, family)
         $is_family_tuple(s, scalars, U, m, family, vectors)
@@ -387,23 +383,23 @@ axiom pure_family_tensor_is_in_tensor_product_space:
 # Result 9.89. The duals have the same dimensions as their components, so
 # Result 9.87 gives the product formula again.
 axiom dimension_of_tensor_product_of_family:
-    ? forall s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>:
         m > 1
         $is_finite_dimensional_vector_space_family(s, scalars, U, m, family)
         =>:
             \chap2c::dimension<s, scalars, \tensor_product_space_of_family<s, scalars, U, m, family>, \tensor_product_of_family_vector_space<s, scalars, U, m, family>> = \finite_natural_product<m>(fn(k N_pos: k <= m) N {\family_component_dimension<s, scalars, U, m, family>(k)}, m)
 
-prop component_basis_list_matches(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, k N_pos, n N, entries fn(slot, index N_pos) U, vectors &chap1a::FiniteList<@Family.carriers(k), n>):
+prop component_basis_list_matches(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, k N_pos, n N, entries fn(slot, index N_pos) U, vectors &chap1a::FiniteList<family.carriers(k), n>):
     forall j N_pos:
         j <= n
         =>:
-            entries(k, j) = &chap1a::FiniteList<@Family.carriers(k), n>{vectors}.entries(j)
+            entries(k, j) = vectors.entries(j)
 
-prop is_component_basis_data(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, lengths finite_seq(N, m), entries fn(slot, index N_pos) U):
+prop is_component_basis_data(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, lengths finite_seq(N, m), entries fn(slot, index N_pos) U):
     forall k N_pos:
         k <= m
         =>:
-            exist vectors &chap1a::FiniteList<@Family.carriers(k), lengths(k)> st {$chap2b::is_basis(s, scalars, @Family.carriers(k), \family_component_vector_space<s, scalars, U, m, family, k>, lengths(k), vectors), $component_basis_list_matches(s, scalars, U, m, family, k, lengths(k), entries, vectors)}
+            exist vectors &chap1a::FiniteList<family.carriers(k), lengths(k)> st {$chap2b::is_basis(s, scalars, family.carriers(k), \family_component_vector_space<s, scalars, U, m, family, k>, lengths(k), vectors), $component_basis_list_matches(s, scalars, U, m, family, k, lengths(k), entries, vectors)}
 
 prop is_family_multi_index(m N_pos, lengths finite_seq(N, m), indices finite_seq(N_pos, m)):
     forall k N_pos:
@@ -418,20 +414,20 @@ template<U nonempty_set, m N_pos>:
     have fn family_basis_tensor_values(entries fn(slot, index N_pos) U, indices finite_seq(N_pos, m)) finite_seq(U, m) = fn(k N_pos: k <= m) U {entries(k, indices(k))}
 
 axiom family_basis_tensor_values_form_family_tuple:
-    ? forall s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, lengths finite_seq(N, m), entries fn(slot, index N_pos) U, indices \family_multi_index_space<m>(lengths):
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, lengths finite_seq(N, m), entries fn(slot, index N_pos) U, indices \family_multi_index_space<m>(lengths):
         $is_vector_space_family(s, scalars, U, m, family)
         $is_component_basis_data(s, scalars, U, m, family, lengths, entries)
         =>:
             $is_family_tuple(s, scalars, U, m, family, \family_basis_tensor_values<U, m>(entries, indices))
 
-prop lists_all_family_basis_tensors(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, lengths finite_seq(N, m), entries fn(slot, index N_pos) U, tensors &chap1a::FiniteList<\tensor_product_space_of_family<s, scalars, U, m, family>, \finite_natural_product<m>(lengths, m)>):
+prop lists_all_family_basis_tensors(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, lengths finite_seq(N, m), entries fn(slot, index N_pos) U, tensors &chap1a::FiniteList<\tensor_product_space_of_family<s, scalars, U, m, family>, \finite_natural_product<m>(lengths, m)>):
     forall indices \family_multi_index_space<m>(lengths):
-        exist! r N_pos st {r <= \finite_natural_product<m>(lengths, m), &chap1a::FiniteList<\tensor_product_space_of_family<s, scalars, U, m, family>, \finite_natural_product<m>(lengths, m)>{tensors}.entries(r) = \tensor_product_element_of_family<s, scalars, U, m, family>(\family_basis_tensor_values<U, m>(entries, indices))}
+        exist! r N_pos st {r <= \finite_natural_product<m>(lengths, m), tensors.entries(r) = \tensor_product_element_of_family<s, scalars, U, m, family>(\family_basis_tensor_values<U, m>(entries, indices))}
 
 # Result 9.90. The pure tensors obtained by choosing one vector from each
 # component basis form a basis of the family tensor product.
 axiom tensors_of_component_bases_form_basis:
-    ? forall s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, lengths finite_seq(N, m), entries fn(slot, index N_pos) U, tensors &chap1a::FiniteList<\tensor_product_space_of_family<s, scalars, U, m, family>, \finite_natural_product<m>(lengths, m)>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, lengths finite_seq(N, m), entries fn(slot, index N_pos) U, tensors &chap1a::FiniteList<\tensor_product_space_of_family<s, scalars, U, m, family>, \finite_natural_product<m>(lengths, m)>:
         m > 1
         $is_finite_dimensional_vector_space_family(s, scalars, U, m, family)
         $is_component_basis_data(s, scalars, U, m, family, lengths, entries)
@@ -441,30 +437,30 @@ axiom tensors_of_component_bases_form_basis:
 
 # Definition 9.91. An m-linear map is separately linear in every component,
 # with an arbitrary vector-space target.
-prop agrees_with_family_map_in_slot(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, Gamma fn(values \family_tuple_space<s, scalars, U, m, family>) Y, original \family_tuple_space<s, scalars, U, m, family>, k N_pos, ell fn(x @Family.carriers(k)) Y):
-    forall value @Family.carriers(k), changed \family_tuple_space<s, scalars, U, m, family>:
+prop agrees_with_family_map_in_slot(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, Gamma fn(values \family_tuple_space<s, scalars, U, m, family>) Y, original \family_tuple_space<s, scalars, U, m, family>, k N_pos, ell fn(x family.carriers(k)) Y):
+    forall value family.carriers(k), changed \family_tuple_space<s, scalars, U, m, family>:
         $is_family_slot_replacement(s, scalars, U, m, family, original, changed, k, value)
         =>:
             ell(value) = Gamma(changed)
 
-prop is_multilinear_map_on_family(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, Yspace &chap1b::VectorSpace<s, scalars, Y>, Gamma fn(values \family_tuple_space<s, scalars, U, m, family>) Y):
+prop is_multilinear_map_on_family(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, Yspace &chap1b::VectorSpace<s, scalars, Y>, Gamma fn(values \family_tuple_space<s, scalars, U, m, family>) Y):
     forall original \family_tuple_space<s, scalars, U, m, family>, k N_pos:
         k <= m
         =>:
-            exist ell fn(x @Family.carriers(k)) Y st {$chap3a::is_linear_map(s, scalars, @Family.carriers(k), Y, \family_component_vector_space<s, scalars, U, m, family, k>, Yspace, ell), $agrees_with_family_map_in_slot(s, scalars, U, m, family, Y, Gamma, original, k, ell)}
+            exist ell fn(x family.carriers(k)) Y st {$chap3a::is_linear_map(s, scalars, family.carriers(k), Y, \family_component_vector_space<s, scalars, U, m, family, k>, Yspace, ell), $agrees_with_family_map_in_slot(s, scalars, U, m, family, Y, Gamma, original, k, ell)}
 
-prop family_linearization_agrees_on_pure_tensors(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, Gamma fn(values \family_tuple_space<s, scalars, U, m, family>) Y, linearized fn(t \tensor_product_space_of_family<s, scalars, U, m, family>) Y):
+prop family_linearization_agrees_on_pure_tensors(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, Gamma fn(values \family_tuple_space<s, scalars, U, m, family>) Y, linearized fn(t \tensor_product_space_of_family<s, scalars, U, m, family>) Y):
     forall vectors \family_tuple_space<s, scalars, U, m, family>:
         linearized(\tensor_product_element_of_family<s, scalars, U, m, family>(vectors)) = Gamma(vectors)
 
-prop family_delinearization_agrees_on_pure_tensors(s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, T fn(t \tensor_product_space_of_family<s, scalars, U, m, family>) Y, delinearized fn(values \family_tuple_space<s, scalars, U, m, family>) Y):
+prop family_delinearization_agrees_on_pure_tensors(s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, T fn(t \tensor_product_space_of_family<s, scalars, U, m, family>) Y, delinearized fn(values \family_tuple_space<s, scalars, U, m, family>) Y):
     forall vectors \family_tuple_space<s, scalars, U, m, family>:
         delinearized(vectors) = T(\tensor_product_element_of_family<s, scalars, U, m, family>(vectors))
 
 # Result 9.92. Pure tensors determine a unique linearization, and composition
 # with pure tensoring gives the unique converse multilinear map.
 axiom multilinear_maps_on_family_linearize_uniquely:
-    ? forall s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, Yspace &chap1b::VectorSpace<s, scalars, Y>, Gamma fn(values \family_tuple_space<s, scalars, U, m, family>) Y:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, Yspace &chap1b::VectorSpace<s, scalars, Y>, Gamma fn(values \family_tuple_space<s, scalars, U, m, family>) Y:
         m > 1
         $is_finite_dimensional_vector_space_family(s, scalars, U, m, family)
         $is_multilinear_map_on_family(s, scalars, U, m, family, Y, Yspace, Gamma)
@@ -472,7 +468,7 @@ axiom multilinear_maps_on_family_linearize_uniquely:
             exist! linearized \chap3a::linear_map_space<s, scalars, \tensor_product_space_of_family<s, scalars, U, m, family>, Y, \tensor_product_of_family_vector_space<s, scalars, U, m, family>, Yspace> st {$family_linearization_agrees_on_pure_tensors(s, scalars, U, m, family, Y, Gamma, linearized)}
 
 axiom linear_maps_on_family_tensor_product_delinearize_uniquely:
-    ? forall s nonempty_set, scalars @ScalarSystem, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, Yspace &chap1b::VectorSpace<s, scalars, Y>, T \chap3a::linear_map_space<s, scalars, \tensor_product_space_of_family<s, scalars, U, m, family>, Y, \tensor_product_of_family_vector_space<s, scalars, U, m, family>, Yspace>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, scalars, U, m>, Y nonempty_set, Yspace &chap1b::VectorSpace<s, scalars, Y>, T \chap3a::linear_map_space<s, scalars, \tensor_product_space_of_family<s, scalars, U, m, family>, Y, \tensor_product_of_family_vector_space<s, scalars, U, m, family>, Yspace>:
         m > 1
         $is_finite_dimensional_vector_space_family(s, scalars, U, m, family)
         =>:

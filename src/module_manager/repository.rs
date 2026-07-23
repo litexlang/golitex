@@ -922,7 +922,7 @@ fn reject_unauthorized_project_references(runtime: &Runtime) -> Result<(), Runti
                 0,
             )
         })?;
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let blocks = tokenizer.parse_blocks(&source, Rc::from(source_path.as_str()))?;
         let mut references = vec![];
         collect_project_reference_targets(

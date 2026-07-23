@@ -57,8 +57,12 @@ have fn triangle(n N) power_set(cart(range(0, n + 1), range(0, n + 1))) = set_mi
 thm triangle_is_finite:
     ? forall n N:
         $is_finite_set(triangle(n))
-    triangle(n) = set_minus(cart(range(0, n + 1), range(0, n + 1)), {p cart(range(0, n + 1), range(0, n + 1)): p[1] >= p[2]})
-    $is_finite_set(set_minus(cart(range(0, n + 1), range(0, n + 1)), {p cart(range(0, n + 1), range(0, n + 1)): p[1] >= p[2]}))
+    triangle(n) $in power_set(cart(range(0, n + 1), range(0, n + 1)))
+    triangle(n) $subset cart(range(0, n + 1), range(0, n + 1))
+    $is_finite_set(cart(range(0, n + 1), range(0, n + 1)))
+    triangle(n) = set_minus(cart(range(0, n + 1), range(0, n + 1)), set_minus(cart(range(0, n + 1), range(0, n + 1)), triangle(n)))
+    $is_finite_set(set_minus(cart(range(0, n + 1), range(0, n + 1)), set_minus(cart(range(0, n + 1), range(0, n + 1)), triangle(n))))
+    $is_finite_set(triangle(n))
 
 # 6.3 Inductive Structures
 

@@ -1254,15 +1254,15 @@ sketch:
 
     witness exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(fn(n N_pos) Q {10^n}, c)} from 1:
         1 $in Q_pos
-        forall n N_pos:
-            n >= 1
-            n <= 10^n
-            1 <= n <= 10^n
-            10^n >= 0
-            abs(10^n) = 10^n
-            fn(n N_pos) Q {10^n}(n) = 10^n
-            abs(fn(n N_pos) Q {10^n}(n)) = abs(10^n) = 10^n
-            abs(fn(n N_pos) Q {10^n}(n)) >= 1
+        forall i N_pos:
+            i >= 1
+            i <= 10^i
+            1 <= i <= 10^i
+            10^i >= 0
+            abs(10^i) = 10^i
+            fn(n N_pos) Q {10^n}(i) = 10^i
+            abs(fn(n N_pos) Q {10^n}(i)) = abs(10^i) = 10^i
+            abs(fn(n N_pos) Q {10^n}(i)) >= 1
         $is_bounded_away_from_zero_by_in_Q(fn(n N_pos) Q {10^n}, 1)
     by def $is_bounded_away_from_zero_in_Q(fn(n N_pos) Q {10^n})
 
@@ -1365,6 +1365,9 @@ thm nonzero_real_has_bounded_away_rational_representative:
     abs(x) / 4 $in R_pos
     by thm has_rational_between(0, abs(x) / 4)
     obtain c from exist c Q st {0 < c < abs(x) / 4}
+    c > 0
+    2 * c < 4 * c
+    4 * c < 4 * (abs(x) / 4) = abs(x)
     2 * c < 4 * c < abs(x)
     by thm cauchy_sequence_representative_in_Q_exists(x)
     obtain a from exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x)}
@@ -1390,8 +1393,14 @@ thm nonzero_real_has_bounded_away_rational_representative:
                 b(n) = a(n)
                 abs(a(n) - x) < c
                 abs(x - a(n)) = abs(a(n) - x)
+                x = (x - a(n)) + a(n)
+                abs(x) = abs((x - a(n)) + a(n)) <= abs(x - a(n)) + abs(a(n))
+                abs(x - a(n)) + abs(a(n)) = abs(a(n) - x) + abs(a(n)) < c + abs(a(n))
                 abs(x) <= abs(x - a(n)) + abs(a(n)) < c + abs(a(n))
                 2 * c < abs(x) < c + abs(a(n))
+                2 * c - c < c + abs(a(n)) - c
+                2 * c - c = c
+                c + abs(a(n)) - c = abs(a(n))
                 c < abs(a(n))
                 abs(b(n)) = abs(a(n)) >= c
     by def $is_bounded_away_from_zero_by_in_Q(b, c)
@@ -1416,6 +1425,8 @@ thm reciprocal_abs_diff_bound_Q:
     abs(1 / x - 1 / y) * abs(x * y) = abs((1 / x - 1 / y) * (x * y)) = abs(y - x) = abs(x - y)
     abs(1 / x - 1 / y) * (c_x * c_y) <= abs(x - y) <= c_x * c_y * epsilon
     abs(1 / x - 1 / y) * (c_x * c_y) / (c_x * c_y) <= (c_x * c_y * epsilon) / (c_x * c_y)
+    abs(1 / x - 1 / y) * (c_x * c_y) / (c_x * c_y) = abs(1 / x - 1 / y)
+    (c_x * c_y * epsilon) / (c_x * c_y) = epsilon
     abs(1 / x - 1 / y) <= epsilon
 
 prop is_nonzero_sequence_in_Q(a seq(Q)):
@@ -1439,12 +1450,35 @@ claim:
         =>:
             $is_nonzero_sequence_in_Q(a)
     obtain c from exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(a, c)}
-    forall n N_pos:
+    claim:
+        ? forall n N_pos:
+            a(n) != 0
         abs(a(n)) >= c > 0
-        a(n) != 0
+        by contra:
+            ? a(n) != 0
+            a(n) = 0
+            abs(a(n)) = abs(0) = 0
+            impossible abs(a(n)) > 0
     by def $is_nonzero_sequence_in_Q(a)
 
 have fn seq_recip_Q(a seq(Q): $is_nonzero_sequence_in_Q(a)) fn(k N_pos) Q = fn(n N_pos) Q {1 / a(n)}
+
+thm seq_recip_Q_values_are_close:
+    ? forall a, b seq(Q), c_a, c_b, epsilon Q_pos, j, k N_pos:
+        $is_nonzero_sequence_in_Q(a)
+        $is_nonzero_sequence_in_Q(b)
+        abs(a(j)) >= c_a
+        abs(b(k)) >= c_b
+        abs(a(j) - b(k)) <= c_a * c_b * epsilon
+        =>:
+            $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(b)(k))
+    a(j) != 0
+    b(k) != 0
+    by thm reciprocal_abs_diff_bound_Q(a(j), b(k), c_a, c_b, epsilon)
+    seq_recip_Q(a)(j) = 1 / a(j)
+    seq_recip_Q(b)(k) = 1 / b(k)
+    abs(seq_recip_Q(a)(j) - seq_recip_Q(b)(k)) = abs(1 / a(j) - 1 / b(k)) <= epsilon
+    $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(b)(k))
 
 """
 Lemma 5.3.15. If a Cauchy sequence is bounded away from zero, then its
@@ -1469,17 +1503,13 @@ claim:
                 j >= n0
                 k >= n0
                 =>:
+                    $chap4::is_close_in_Q(c^2 * epsilon, a(j), a(k))
+                    abs(a(j) - a(k)) <= c^2 * epsilon
+                    c * c * epsilon = c^2 * epsilon
+                    abs(a(j) - a(k)) <= c * c * epsilon
+                    abs(a(j)) >= c
+                    abs(a(k)) >= c
                     $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(a)(k))
-            $chap4::is_close_in_Q(c^2 * epsilon, a(j), a(k))
-            chap4::dist_Q(a(j), a(k)) <= c^2 * epsilon
-            abs(a(j) - a(k)) <= c^2 * epsilon
-            c * c * epsilon = c^2 * epsilon
-            abs(a(j) - a(k)) <= c * c * epsilon
-            abs(a(j)) >= c
-            abs(a(k)) >= c
-            by thm reciprocal_abs_diff_bound_Q(a(j), a(k), c, c, epsilon)
-            abs(seq_recip_Q(a)(j) - seq_recip_Q(a)(k)) = abs(1 / a(j) - 1 / a(k))
-            $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(a)(k))
     by def $is_cauchy_sequence_in_Q(seq_recip_Q(a))
 
 """
@@ -1519,15 +1549,11 @@ claim:
             forall n N_pos:
                 n >= n0
                 =>:
+                    $chap4::is_close_in_Q(c_a * c_b * epsilon, a(n), b(n))
+                    abs(a(n) - b(n)) <= c_a * c_b * epsilon
+                    abs(a(n)) >= c_a
+                    abs(b(n)) >= c_b
                     $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(n), seq_recip_Q(b)(n))
-            $chap4::is_close_in_Q(c_a * c_b * epsilon, a(n), b(n))
-            chap4::dist_Q(a(n), b(n)) <= c_a * c_b * epsilon
-            abs(a(n) - b(n)) <= c_a * c_b * epsilon
-            abs(a(n)) >= c_a
-            abs(b(n)) >= c_b
-            by thm reciprocal_abs_diff_bound_Q(a(n), b(n), c_a, c_b, epsilon)
-            abs(seq_recip_Q(a)(n) - seq_recip_Q(b)(n)) = abs(1 / a(n) - 1 / b(n))
-            $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(n), seq_recip_Q(b)(n))
     by def $is_equivalent_cauchy_sequence_in_Q(seq_recip_Q(a), seq_recip_Q(b))
 
 
@@ -1885,11 +1911,14 @@ claim:
         obtain n0 from exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, -x / 2, n0)}
         abs(a(n0) - x) < -x / 2
         a(n0) >= 0
-        a(n0) - x >= -x
+        a(n0) - x >= 0 - x = -x
         a(n0) - x <= abs(a(n0) - x)
-        abs(a(n0) - x) >= -x
+        abs(a(n0) - x) >= a(n0) - x >= -x
         -x > -x / 2
-        impossible abs(a(n0) - x) = abs(a(n0) - x)
+        abs(a(n0) - x) >= -x > -x / 2
+        abs(a(n0) - x) > -x / 2
+        -x / 2 < abs(a(n0) - x) < -x / 2
+        impossible -x / 2 < -x / 2
 
 """
 Corollary 5.4.10. Pointwise inequalities pass to formal limits.
@@ -1925,13 +1954,28 @@ thm pointwise_order_passes_to_formal_limits_in_Q:
         finite_set_max(union({n1}, { n2})) >= n2
         abs(a(finite_set_max(union({n1}, { n2}))) - x) < (y - x) / 3
         abs(b(finite_set_max(union({n1}, { n2}))) - y) < (y - x) / 3
+        a(finite_set_max(union({n1}, { n2}))) - x <= abs(a(finite_set_max(union({n1}, { n2}))) - x) < (y - x) / 3
+        a(finite_set_max(union({n1}, { n2}))) - x < (y - x) / 3
+        a(finite_set_max(union({n1}, { n2}))) - x + x < (y - x) / 3 + x
+        a(finite_set_max(union({n1}, { n2}))) - x + x = a(finite_set_max(union({n1}, { n2})))
+        (y - x) / 3 + x = x + (y - x) / 3
         a(finite_set_max(union({n1}, { n2}))) < x + (y - x) / 3
+        abs(y - b(finite_set_max(union({n1}, { n2})))) = abs(b(finite_set_max(union({n1}, { n2}))) - y)
+        y - b(finite_set_max(union({n1}, { n2}))) <= abs(y - b(finite_set_max(union({n1}, { n2})))) = abs(b(finite_set_max(union({n1}, { n2}))) - y) < (y - x) / 3
+        y - b(finite_set_max(union({n1}, { n2}))) < (y - x) / 3
+        y - b(finite_set_max(union({n1}, { n2}))) + b(finite_set_max(union({n1}, { n2}))) < (y - x) / 3 + b(finite_set_max(union({n1}, { n2})))
+        y - b(finite_set_max(union({n1}, { n2}))) + b(finite_set_max(union({n1}, { n2}))) = y
+        y < (y - x) / 3 + b(finite_set_max(union({n1}, { n2})))
+        y - (y - x) / 3 < (y - x) / 3 + b(finite_set_max(union({n1}, { n2}))) - (y - x) / 3 = b(finite_set_max(union({n1}, { n2})))
         y - (y - x) / 3 < b(finite_set_max(union({n1}, { n2})))
         a(finite_set_max(union({n1}, { n2}))) >= b(finite_set_max(union({n1}, { n2})))
         y - (y - x) / 3 < b(finite_set_max(union({n1}, { n2}))) <= a(finite_set_max(union({n1}, { n2}))) < x + (y - x) / 3
         y - (y - x) / 3 < x + (y - x) / 3
+        (y - x) / 3 < 2 * (y - x) / 3
+        x + (y - x) / 3 < x + 2 * (y - x) / 3 = y - (y - x) / 3
         x + (y - x) / 3 < y - (y - x) / 3
-        impossible y - (y - x) / 3 = y - (y - x) / 3
+        y - (y - x) / 3 < x + (y - x) / 3 < y - (y - x) / 3
+        impossible y - (y - x) / 3 < y - (y - x) / 3
 
 """
 Remark 5.4.11. Strict inequalities do not pass to formal limits.
@@ -1961,9 +2005,14 @@ claim:
         forall n N_pos:
             n >= n0
             =>:
-                1 / n <= 1 / n0
-                1 / n <= epsilon / 2
-                2 / n <= epsilon
+                1 / n = n0 / (n0 * n) <= n / (n0 * n) = 1 / n0 < epsilon / 2
+                2 / n = 2 * (1 / n) < 2 * (epsilon / 2) = epsilon
+                fn(k N_pos) Q {1 + 1 / k}(n) = 1 + 1 / n
+                fn(k N_pos) Q {1 - 1 / k}(n) = 1 - 1 / n
+                (1 + 1 / n) - (1 - 1 / n) = 2 / n > 0
+                (1 + 1 / n) - (1 - 1 / n) > 0
+                abs((1 + 1 / n) - (1 - 1 / n)) = (1 + 1 / n) - (1 - 1 / n) = 2 / n
+                abs(fn(k N_pos) Q {1 + 1 / k}(n) - fn(k N_pos) Q {1 - 1 / k}(n)) = 2 / n < epsilon
                 $chap4::is_close_in_Q(epsilon, fn(k N_pos) Q {1 + 1 / k}(n), fn(k N_pos) Q {1 - 1 / k}(n))
 by def $is_equivalent_cauchy_sequence_in_Q(fn(k N_pos) Q {1 + 1 / k}, fn(k N_pos) Q {1 - 1 / k})
 
@@ -2085,6 +2134,10 @@ claim:
     1 / x $in R_pos
     by thm archimedean_property(1 / x)
     obtain n from exist n N_pos st {1 / n < 1 / x}
+    n * x > 0
+    (1 / n) * (n * x) < (1 / x) * (n * x)
+    (1 / n) * (n * x) = x
+    (1 / x) * (n * x) = n
     x < n
     witness exist n0 N_pos st {x <= n0} from n
 
@@ -2101,7 +2154,11 @@ claim:
     x / epsilon $in R_pos
     exist n_bound N_pos st {x / epsilon <= n_bound}
     obtain n from exist n N_pos st {x / epsilon <= n}
+    n < n + 1
+    x / epsilon <= n < n + 1
     x / epsilon < n + 1
+    (x / epsilon) * epsilon < (n + 1) * epsilon
+    (x / epsilon) * epsilon = x
     (n + 1) * epsilon > x
     witness exist M N_pos st {M * epsilon > x} from n + 1
 
@@ -2531,27 +2588,41 @@ thm recursive_bisection_pair_states_exist:
             ? from n = 0:
                 $is_bisection_pair_state(E, pair(0))
             ? induc:
-                pair(n + 1) = step(pair(n))
+                n + 1 > 0
+                pair(n + 1) = step(pair(n + 1 - 1))
+                n + 1 - 1 = n
+                step(pair(n + 1 - 1)) = step(pair(n))
+                pair(n + 1) = step(pair(n + 1 - 1)) = step(pair(n))
                 by cases:
                     ? $is_bisection_pair_state(E, pair(n + 1))
                     case $is_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
                         by thm upper_midpoint_step_preserves_bisection_state(E, pair(n))
                         step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
-                    case $is_not_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                    case not $is_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                        by def $is_not_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2)
                         by thm nonupper_midpoint_step_preserves_bisection_state(E, pair(n))
                         step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
     claim:
         ? forall n N:
             $has_bisection_step_invariants(pair(n), pair(n + 1))
-        pair(n + 1) = step(pair(n))
+        n + 1 > 0
+        pair(n + 1) = step(pair(n + 1 - 1))
+        n + 1 - 1 = n
+        step(pair(n + 1 - 1)) = step(pair(n))
+        pair(n + 1) = step(pair(n + 1 - 1)) = step(pair(n))
         by cases:
             ? $has_bisection_step_invariants(pair(n), pair(n + 1))
             case $is_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
                 by thm upper_midpoint_step_preserves_bisection_state(E, pair(n))
                 step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
-            case $is_not_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                pair(n + 1) = step(pair(n)) = (pair(n)[1], (pair(n)[1] + pair(n)[2]) / 2)
+                by def $has_bisection_step_invariants(pair(n), pair(n + 1))
+            case not $is_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2):
+                by def $is_not_upper_bound(E, (pair(n)[1] + pair(n)[2]) / 2)
                 by thm nonupper_midpoint_step_preserves_bisection_state(E, pair(n))
                 step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
+                pair(n + 1) = step(pair(n)) = ((pair(n)[1] + pair(n)[2]) / 2, pair(n)[2])
+                by def $has_bisection_step_invariants(pair(n), pair(n + 1))
     by def $is_bisection_pair_state_sequence(E, pair)
     witness exist pair0 fn(n N) cart(R, R) st {$is_bisection_pair_state_sequence(E, pair0)} from pair
 
@@ -2582,6 +2653,14 @@ thm recursive_bisection_bracket_exists:
             $is_upper_bound(E, upper(n))
             lower(n) <= upper(n)
         $is_bisection_pair_state(E, pair(n - 1))
+        lower(n) = pair(n - 1)[1]
+        upper(n) = pair(n - 1)[2]
+        not $is_upper_bound(E, pair(n - 1)[1])
+        $is_upper_bound(E, pair(n - 1)[2])
+        pair(n - 1)[1] <= pair(n - 1)[2]
+        not $is_upper_bound(E, lower(n))
+        $is_upper_bound(E, upper(n))
+        lower(n) <= upper(n)
     claim:
         ? forall n N_pos:
             lower(n) <= lower(n + 1)
@@ -2590,6 +2669,18 @@ thm recursive_bisection_bracket_exists:
         $has_bisection_step_invariants(pair(n - 1), pair((n - 1) + 1))
         (n - 1) + 1 = n
         (n + 1) - 1 = n
+        pair((n - 1) + 1) = pair(n)
+        pair((n + 1) - 1) = pair(n)
+        lower(n) = pair(n - 1)[1]
+        lower(n + 1) = pair((n + 1) - 1)[1] = pair(n)[1]
+        upper(n) = pair(n - 1)[2]
+        upper(n + 1) = pair((n + 1) - 1)[2] = pair(n)[2]
+        pair(n - 1)[1] <= pair((n - 1) + 1)[1] = pair(n)[1]
+        pair(n)[2] = pair((n - 1) + 1)[2] <= pair(n - 1)[2]
+        pair(n)[2] - pair(n)[1] = pair((n - 1) + 1)[2] - pair((n - 1) + 1)[1] = (pair(n - 1)[2] - pair(n - 1)[1]) / 2
+        lower(n) <= lower(n + 1)
+        upper(n + 1) <= upper(n)
+        upper(n + 1) - lower(n + 1) = pair(n)[2] - pair(n)[1] = pair((n - 1) + 1)[2] - pair((n - 1) + 1)[1] = (pair(n - 1)[2] - pair(n - 1)[1]) / 2 = (upper(n) - lower(n)) / 2
     by def $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
     witness exist lower0, upper0 seq(R) st {$is_recursive_bisection_bracket_for_supremum(E, lower0, upper0)} from lower, upper
 
@@ -2721,6 +2812,9 @@ thm recursive_bisection_lower_le_add:
         ? lower(n) <= lower(n + k)
         ? from k = 0:
             n + 0 = n
+            lower(n + 0) = lower(n)
+            lower(n) <= lower(n)
+            lower(n) <= lower(n + 0)
         ? induc:
             lower(n) <= lower(n + k)
             n + k $in N_pos
@@ -2748,6 +2842,9 @@ thm recursive_bisection_upper_le_add:
         ? upper(n + k) <= upper(n)
         ? from k = 0:
             n + 0 = n
+            upper(n + 0) = upper(n)
+            upper(n) <= upper(n)
+            upper(n + 0) <= upper(n)
         ? induc:
             upper(n + k) <= upper(n)
             n + k $in N_pos
@@ -2826,6 +2923,9 @@ thm bisection_lower_endpoint_tail_close:
             lower(j) <= lower(k)
             lower(k) <= upper(k) <= upper(j)
             0 <= lower(k) - lower(j) <= upper(j) - lower(j) < epsilon
+            lower(j) - lower(k) <= 0
+            abs(lower(j) - lower(k)) = -(lower(j) - lower(k))
+            -(lower(j) - lower(k)) = lower(k) - lower(j)
             abs(lower(j) - lower(k)) = lower(k) - lower(j) < epsilon
             dist_R(lower(j), lower(k)) = abs(lower(j) - lower(k)) < epsilon
             $is_close_in_R(epsilon, lower(j), lower(k))
@@ -2834,6 +2934,7 @@ thm bisection_lower_endpoint_tail_close:
             lower(k) <= lower(j)
             lower(j) <= upper(j) <= upper(k)
             0 <= lower(j) - lower(k) <= upper(k) - lower(k) < epsilon
+            lower(j) - lower(k) >= 0
             abs(lower(j) - lower(k)) = lower(j) - lower(k) < epsilon
             dist_R(lower(j), lower(k)) = abs(lower(j) - lower(k)) < epsilon
             $is_close_in_R(epsilon, lower(j), lower(k))
@@ -2881,6 +2982,7 @@ thm bisection_upper_endpoint_tail_close:
             upper(k) <= upper(j)
             lower(j) <= lower(k) <= upper(k)
             0 <= upper(j) - upper(k) <= upper(j) - lower(j) < epsilon
+            upper(j) - upper(k) >= 0
             abs(upper(j) - upper(k)) = upper(j) - upper(k) < epsilon
             dist_R(upper(j), upper(k)) = abs(upper(j) - upper(k)) < epsilon
             $is_close_in_R(epsilon, upper(j), upper(k))
@@ -2889,6 +2991,9 @@ thm bisection_upper_endpoint_tail_close:
             upper(j) <= upper(k)
             lower(k) <= lower(j) <= upper(j)
             0 <= upper(k) - upper(j) <= upper(k) - lower(k) < epsilon
+            upper(j) - upper(k) <= 0
+            abs(upper(j) - upper(k)) = -(upper(j) - upper(k))
+            -(upper(j) - upper(k)) = upper(k) - upper(j)
             abs(upper(j) - upper(k)) = upper(k) - upper(j) < epsilon
             dist_R(upper(j), upper(k)) = abs(upper(j) - upper(k)) < epsilon
             $is_close_in_R(epsilon, upper(j), upper(k))
@@ -2939,14 +3044,23 @@ thm bisection_upper_endpoint_has_lower_limit:
                     n1 <= finite_set_max(union({n1}, { n2})) <= n
                     n2 <= finite_set_max(union({n1}, { n2})) <= n
                     $is_close_in_R(epsilon / 2, lower(n), L)
-                    dist_R(lower(n), L) = abs(lower(n) - L) <= epsilon / 2
+                    dist_R(lower(n), L) <= epsilon / 2
+                    dist_R(lower(n), L) = abs(lower(n) - L)
+                    abs(lower(n) - L) = dist_R(lower(n), L)
+                    abs(lower(n) - L) = dist_R(lower(n), L) <= epsilon / 2
                     lower(n) <= upper(n)
                     upper(n) - lower(n) < epsilon / 2
                     0 <= upper(n) - lower(n) < epsilon / 2
                     abs(upper(n) - lower(n)) = upper(n) - lower(n) < epsilon / 2
                     upper(n) - L = (upper(n) - lower(n)) + (lower(n) - L)
-                    abs(upper(n) - L) <= abs(upper(n) - lower(n)) + abs(lower(n) - L) <= epsilon / 2 + epsilon / 2 = epsilon
-                    dist_R(upper(n), L) = abs(upper(n) - L) <= epsilon
+                    abs(upper(n) - L) = abs((upper(n) - lower(n)) + (lower(n) - L))
+                    abs((upper(n) - lower(n)) + (lower(n) - L)) <= abs(upper(n) - lower(n)) + abs(lower(n) - L)
+                    abs(upper(n) - L) = abs((upper(n) - lower(n)) + (lower(n) - L)) <= abs(upper(n) - lower(n)) + abs(lower(n) - L)
+                    abs(upper(n) - lower(n)) + abs(lower(n) - L) < epsilon / 2 + epsilon / 2 = epsilon
+                    abs(upper(n) - L) <= abs(upper(n) - lower(n)) + abs(lower(n) - L) < epsilon
+                    abs(upper(n) - L) < epsilon
+                    dist_R(upper(n), L) = abs(upper(n) - L) < epsilon
+                    dist_R(upper(n), L) <= epsilon
                     $is_close_in_R(epsilon, upper(n), L)
     by def $has_limit_in_R(upper, L)
 
@@ -3111,7 +3225,7 @@ thm real_supremum_domain_intro:
         $is_nonempty_bounded_above_subset_of_reals(E)
         =>:
             E $in real_supremum_domain
-    E $in {E power_set(R): $is_nonempty_bounded_above_subset_of_reals(E)}
+    E $in {F power_set(R): $is_nonempty_bounded_above_subset_of_reals(F)}
     E $in real_supremum_domain
 
 have fn sup by exist!:
@@ -3138,6 +3252,15 @@ thm sqrt_two_low_perturbation_epsilon:
     x^2 >= 0
     (2 - x^2) / 10 <= 2 / 10 < 1
     epsilon < 1
+    5 * epsilon = 5 * ((2 - x^2) / 10) = (2 - x^2) / 2
+    x^2 + 5 * epsilon = x^2 + (2 - x^2) / 2 = x^2 / 2 + 1
+    2 > 0
+    x^2 / 2 < 2 / 2
+    2 / 2 = 1
+    x^2 / 2 < 2 / 2 = 1
+    x^2 / 2 + 1 < 1 + 1
+    1 + 1 = 2
+    x^2 / 2 + 1 < 1 + 1 = 2
     x^2 + 5 * epsilon = x^2 / 2 + 1 < 2
     witness exist epsilon0 R_pos st {epsilon0 < 1, x^2 + 5 * epsilon0 < 2} from epsilon
 
@@ -3149,10 +3272,22 @@ thm sqrt_two_low_perturbation_square:
         x^2 + 5 * epsilon < 2
         =>:
             (x + epsilon)^2 < 2
-    2 * x <= 4
+    2 >= 0
+    2 * x <= 2 * 2
+    2 * 2 = 4
+    2 * x <= 2 * 2 = 4
     2 * x * epsilon <= 4 * epsilon
-    epsilon^2 < epsilon
-    2 * x * epsilon + epsilon^2 < 5 * epsilon
+    epsilon > 0
+    epsilon * epsilon < 1 * epsilon
+    epsilon^2 = epsilon * epsilon
+    1 * epsilon = epsilon
+    epsilon^2 = epsilon * epsilon < 1 * epsilon = epsilon
+    2 * x * epsilon + epsilon^2 < 4 * epsilon + epsilon
+    4 * epsilon + epsilon = 5 * epsilon
+    2 * x * epsilon + epsilon^2 < 4 * epsilon + epsilon = 5 * epsilon
+    x^2 + 2 * x * epsilon + epsilon^2 = x^2 + (2 * x * epsilon + epsilon^2)
+    x^2 + (2 * x * epsilon + epsilon^2) < x^2 + 5 * epsilon
+    x^2 + 2 * x * epsilon + epsilon^2 = x^2 + (2 * x * epsilon + epsilon^2) < x^2 + 5 * epsilon
     (x + epsilon)^2 = x^2 + 2 * x * epsilon + epsilon^2 < x^2 + 5 * epsilon < 2
 
 thm sqrt_two_high_perturbation_epsilon:
@@ -3166,6 +3301,15 @@ thm sqrt_two_high_perturbation_epsilon:
     x^2 <= 2^2 = 4
     (x^2 - 2) / 8 <= 2 / 8 < 1
     epsilon < 1
+    4 * epsilon = 4 * ((x^2 - 2) / 8) = (x^2 - 2) / 2
+    x^2 - 4 * epsilon = x^2 - (x^2 - 2) / 2 = x^2 / 2 + 1
+    2 > 0
+    x^2 / 2 > 2 / 2
+    2 / 2 = 1
+    x^2 / 2 > 2 / 2 = 1
+    x^2 / 2 + 1 > 1 + 1
+    1 + 1 = 2
+    x^2 / 2 + 1 > 1 + 1 = 2
     x^2 - 4 * epsilon = x^2 / 2 + 1 > 2
     witness exist epsilon0 R_pos st {epsilon0 < 1, x^2 - 4 * epsilon0 > 2} from epsilon
 
@@ -3191,9 +3335,23 @@ thm sqrt_two_high_perturbation_upper_bound:
         x - epsilon > x - 1 > 0
         x - epsilon >= 0
         y^2 > (x - epsilon)^2
-        2 * x <= 4
+        2 >= 0
+        2 * x <= 2 * 2
+        2 * 2 = 4
+        2 * x <= 2 * 2 = 4
         2 * x * epsilon <= 4 * epsilon
-        (x - epsilon)^2 >= x^2 - 4 * epsilon > 2
+        -1 < 0
+        -1 * (2 * x * epsilon) >= -1 * (4 * epsilon)
+        -1 * (2 * x * epsilon) = -2 * x * epsilon
+        -1 * (4 * epsilon) = -4 * epsilon
+        -2 * x * epsilon = -1 * (2 * x * epsilon) >= -1 * (4 * epsilon) = -4 * epsilon
+        epsilon^2 >= 0
+        -2 * x * epsilon + epsilon^2 >= -4 * epsilon + 0 = -4 * epsilon
+        x^2 - 2 * x * epsilon + epsilon^2 = x^2 + (-2 * x * epsilon + epsilon^2)
+        x^2 + (-2 * x * epsilon + epsilon^2) >= x^2 + (-4 * epsilon)
+        x^2 + (-4 * epsilon) = x^2 - 4 * epsilon
+        x^2 + (-2 * x * epsilon + epsilon^2) >= x^2 + (-4 * epsilon) = x^2 - 4 * epsilon
+        (x - epsilon)^2 = x^2 - 2 * x * epsilon + epsilon^2 = x^2 + (-2 * x * epsilon + epsilon^2) >= x^2 - 4 * epsilon > 2
         y^2 > (x - epsilon)^2 > 2
         impossible y^2 < 2
 
@@ -3202,7 +3360,11 @@ claim:
     have sqrt_two_candidate_set power_set(R) = {y R: y >= 0 and y^2 < 2}
     claim:
         ? 1 $in sqrt_two_candidate_set
+        1 >= 0
         1^2 = 1 < 2
+        1 >= 0 and 1^2 < 2
+        1 $in {y R: y >= 0 and y^2 < 2}
+        1 $in sqrt_two_candidate_set
     witness $is_nonempty_set(sqrt_two_candidate_set) from 1
     claim:
         ? forall y sqrt_two_candidate_set:
@@ -3219,6 +3381,10 @@ claim:
     by def $is_nonempty_bounded_above_subset_of_reals(sqrt_two_candidate_set)
     by thm real_supremum_domain_intro(sqrt_two_candidate_set)
     have x R = sup(sqrt_two_candidate_set)
+    $is_least_upper_bound(sqrt_two_candidate_set, sup(sqrt_two_candidate_set))
+    sup(sqrt_two_candidate_set) = x
+    $is_least_upper_bound(sqrt_two_candidate_set, x)
+    $is_upper_bound(sqrt_two_candidate_set, x)
     1 <= x
     x <= 2
     x > 0
@@ -3231,6 +3397,9 @@ claim:
             obtain epsilon from exist epsilon R_pos st {epsilon < 1, x^2 + 5 * epsilon < 2}
             by thm sqrt_two_low_perturbation_square(x, epsilon)
             x + epsilon >= 0
+            (x + epsilon)^2 < 2
+            x + epsilon >= 0 and (x + epsilon)^2 < 2
+            x + epsilon $in {y R: y >= 0 and y^2 < 2}
             x + epsilon $in sqrt_two_candidate_set
             x + epsilon <= x
             impossible x + epsilon <= x
@@ -3592,16 +3761,17 @@ thm nonnegative_root_strict_mono_forward:
         x > y
         =>:
             x^(1 / n) > y^(1 / n)
-    y = 0 or y > 0
-    by cases:
+    by contra:
         ? x^(1 / n) > y^(1 / n)
-        case y = 0:
-            x > 0
-            y^(1 / n) = 0^(1 / n) = 0
-        case y > 0:
-            have xp R_pos = x
-            have yp R_pos = y
-            xp^(1 / n) > yp^(1 / n)
+        x^(1 / n) <= y^(1 / n)
+        by thm nth_root_nonnegative(x, n)
+        by thm nth_root_nonnegative(y, n)
+        (x^(1 / n))^n <= (y^(1 / n))^n
+        by thm nth_root_power_identity_nonnegative(x, n)
+        by thm nth_root_power_identity_nonnegative(y, n)
+        x = (x^(1 / n))^n <= (y^(1 / n))^n = y
+        x <= y
+        impossible x > y
 
 thm nonnegative_root_strict_mono_reverse:
     ? forall x, y R, n N_pos:
@@ -3787,7 +3957,11 @@ thm rational_power_exponent_strict_mono_above_one:
             x^q > x^r
     q - r > 0
     by thm positive_base_power_above_one(x, q - r)
-    x^q = x^(r + (q - r)) = x^r * x^(q - r) > x^r
+    x^r $in R_pos
+    x^r > 0
+    x^r * x^(q - r) > x^r * 1
+    x^r * 1 = x^r
+    x^q = x^(r + (q - r)) = x^r * x^(q - r) > x^r * 1 = x^r
 
 thm rational_power_exponent_strict_mono_above_one_reverse:
     ? forall x R_pos, q, r Q:
@@ -3800,7 +3974,11 @@ thm rational_power_exponent_strict_mono_above_one_reverse:
         q <= r
         q - r <= 0
         by thm positive_base_power_at_most_one_for_nonpositive_exp(x, q - r)
-        x^q = x^(r + (q - r)) = x^r * x^(q - r) <= x^r
+        x^r $in R_pos
+        x^r >= 0
+        x^r * x^(q - r) <= x^r * 1
+        x^r * 1 = x^r
+        x^q = x^(r + (q - r)) = x^r * x^(q - r) <= x^r * 1 = x^r
         impossible x^q > x^r
 
 thm rational_power_exponent_strict_antimono_below_one:
@@ -3811,7 +3989,11 @@ thm rational_power_exponent_strict_antimono_below_one:
             x^q < x^r
     q - r > 0
     by thm positive_base_power_below_one(x, q - r)
-    x^q = x^(r + (q - r)) = x^r * x^(q - r) < x^r
+    x^r $in R_pos
+    x^r > 0
+    x^r * x^(q - r) < x^r * 1
+    x^r * 1 = x^r
+    x^q = x^(r + (q - r)) = x^r * x^(q - r) < x^r * 1 = x^r
 
 thm rational_power_exponent_strict_antimono_below_one_reverse:
     ? forall x R_pos, q, r Q:
@@ -3824,7 +4006,11 @@ thm rational_power_exponent_strict_antimono_below_one_reverse:
         q >= r
         q - r >= 0
         by thm positive_base_power_at_most_one_below_one_for_nonnegative_exp(x, q - r)
-        x^q = x^(r + (q - r)) = x^r * x^(q - r) <= x^r
+        x^r $in R_pos
+        x^r >= 0
+        x^r * x^(q - r) <= x^r * 1
+        x^r * 1 = x^r
+        x^q = x^(r + (q - r)) = x^r * x^(q - r) <= x^r * 1 = x^r
         impossible x^q > x^r
 
 thm nth_roots_decrease_above_one:

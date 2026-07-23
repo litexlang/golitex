@@ -617,16 +617,16 @@ thm converges_to_add:
         $converges_to(s, a)
         $converges_to(t, b)
         =>:
-            $converges_to(fn(n N) R {s(n) + t(n)}, a + b)
+            $converges_to(fn(k N) R {s(k) + t(k)}, a + b)
     claim:
         ? forall epsilon R_pos:
-            exist N0 N st {$_is_eventually_close(fn(n N) R {s(n) + t(n)}, a + b, epsilon, N0)}
+            exist N0 N st {$_is_eventually_close(fn(k N) R {s(k) + t(k)}, a + b, epsilon, N0)}
         epsilon / 2 $in R_pos
         obtain Ns from exist N0 N st {$_is_eventually_close(s, a, epsilon / 2, N0)}
         obtain Nt from exist N0 N st {$_is_eventually_close(t, b, epsilon / 2, N0)}
         finite_set_max(union({Ns}, {Nt})) >= Ns
         finite_set_max(union({Ns}, {Nt})) >= Nt
-        witness exist N0 N st {$_is_eventually_close(fn(n N) R {s(n) + t(n)}, a + b, epsilon, N0)} from finite_set_max(union({Ns}, {Nt})):
+        witness exist N0 N st {$_is_eventually_close(fn(k N) R {s(k) + t(k)}, a + b, epsilon, N0)} from finite_set_max(union({Ns}, {Nt})):
             forall n N:
                 n >= finite_set_max(union({Ns}, {Nt}))
                 =>:
@@ -634,10 +634,11 @@ thm converges_to_add:
                     n >= finite_set_max(union({Ns}, {Nt})) >= Nt
                     abs(s(n) - a) < epsilon / 2
                     abs(t(n) - b) < epsilon / 2
-                    abs((s(n) + t(n)) - (a + b)) = abs((s(n) - a) + (t(n) - b))
+                    abs(fn(k N) R {s(k) + t(k)}(n) - (a + b)) = abs((s(n) + t(n)) - (a + b)) = abs((s(n) - a) + (t(n) - b))
                     abs((s(n) - a) + (t(n) - b)) <= abs(s(n) - a) + abs(t(n) - b) < epsilon / 2 + epsilon / 2 = epsilon
-            by def $_is_eventually_close(fn(n N) R {s(n) + t(n)}, a + b, epsilon, finite_set_max(union({Ns}, {Nt})))
-    $converges_to(fn(n N) R {s(n) + t(n)}, a + b)
+                    abs(fn(k N) R {s(k) + t(k)}(n) - (a + b)) < epsilon
+            by def $_is_eventually_close(fn(k N) R {s(k) + t(k)}, a + b, epsilon, finite_set_max(union({Ns}, {Nt})))
+    $converges_to(fn(k N) R {s(k) + t(k)}, a + b)
 
 # Source theorem convergesTo_mul_const. The always-positive scale |c| + 1
 # avoids a separate zero case while still providing a sufficiently small tail.

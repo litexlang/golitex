@@ -53,22 +53,22 @@ Mathlib coverage, or to compare source-line counts between the two systems.
 
 ## Evidence and limits
 
-The current item ledger was last audited on 2026-07-22. All thirteen chapters
+The current item ledger was last audited on 2026-07-23. All thirteen chapters
 run in strict ordered-export mode without executable proof debt.
 
 | Status | Count | Meaning |
 | --- | ---: | --- |
-| Checked records | 201 | The retained Litex item has a checked local proof or construction route. |
+| Checked records | 202 | The retained Litex item has a checked local proof or construction route. |
 | Trusted records | 0 | No status record relies on an executable trusted declaration. |
 | Blocked records | 89 | The source mathematics is not claimed in executable code and is recorded in comment-only `todo.lit`. |
-| Total records | 290 | Workflow records for retained definitions/results and grouped construction or proof families. |
+| Total records | 291 | Workflow records for retained definitions/results and grouped construction or proof families. |
 | Executable debt directives | 0 | Corpus `.lit` files contain no `trust`, `know`, `axiom`, or `abstract_prop` declaration. |
 
-On 2026-07-22 the current no-`std` project completed the full strict ordered
+On 2026-07-23 the current no-`std` project completed the full strict ordered
 runner. Every configured export from Chapter 1 through Chapter 13 was verified
-in source order. The former predicate-folding debt was removed by stating the
-required unconditional pointwise facts and closing the concrete definitions
-with `by def`.
+in source order. Earlier definition-folding compatibility failures were
+repaired by stating the required unconditional pointwise facts and closing the
+concrete definitions with `by def`.
 
 At the Litex source-module level, this project has no configured `std` import
 and no cite module. The small shared number-theory layer is ordinary checked
@@ -83,12 +83,11 @@ The detailed chapter counts and blocker labels are in
 [`scripts/mathematics_in_litex/coverage.md`](../../scripts/mathematics_in_litex/coverage.md)
 and [`blocker_taxonomy.md`](../../scripts/mathematics_in_litex/blocker_taxonomy.md).
 
-The ordinary project success establishes that the configured no-`std` graph
-loads and runs with every exported chapter executed; the focused strict checks
-establish the localized interfaces listed above. Neither result means that
-every source result has been formalized. Unimplemented source mathematics is
-absent from executable code and listed honestly in the comment-only,
-unexported `todo.lit`.
+The full strict project success establishes that the configured no-`std` graph
+loads and verifies every exported chapter in order. It does not mean that every
+source result has been formalized. Unimplemented source mathematics is absent
+from executable code and listed honestly in the comment-only, unexported
+`todo.lit`.
 
 The same pressure test found a verifier issue in automatic universal-fact
 matching across unrelated free set parameters. It was fixed on 2026-07-22:
@@ -97,12 +96,14 @@ while captured outer parameters remain rigid. The C11 proofs retain their
 explicit projection theorems as readable interfaces, and the former semantic
 counterexample is now a rejecting kernel regression.
 
-Strict verification also does not currently unfold some carrier-dependent
-template applications when their carrier arguments remain symbolic. The
-affected C10-C13 pointwise facts use explicitly labeled, definition-expanded
-lambdas or set builders. A strict failing reproduction is tracked as
-`kernel_problem`; these workarounds do not claim that the named template
-applications themselves unfolded.
+Two former completeness gaps are now closed. Nested anonymous functions are
+matched up to alpha-equivalence without confusing captured variables, and
+carrier-dependent template applications unfold when their carrier arguments
+remain symbolic. The strict C10 template reproduction and the nested-function
+lookup reproduction both pass on 2026-07-23. Some C10-C13 theorems retain
+definition-expanded lambdas or set builders because those forms expose the
+pointwise mathematics directly, not because named template unfolding is still
+blocked.
 
 The current Litex-to-Lean bridge supports only a limited trust-free arithmetic
 subset. This thirteen-chapter project is not currently compiled to Lean.
@@ -119,10 +120,15 @@ From the `golitex` repository root:
 RUST_MIN_STACK=8388608 target/debug/litex -runner -r textbooks/Mathematics-In-Lean-Derived-Litex-Corpus -compact
 ~~~
 
-The corresponding full strict audit adds `-strict`. At the current checkpoint
-that audit has the Chapter 3 limitation recorded above, so ordinary success and
-the focused strict number-theory checks should not be presented as a complete
-strict-project result.
+The full project acceptance gate is:
+
+~~~sh
+RUST_MIN_STACK=8388608 target/release/litex -runner -r textbooks/Mathematics-In-Lean-Derived-Litex-Corpus -compact -strict
+~~~
+
+At the current checkpoint this command returns outer runner fields
+`result: "success"` and `ok: true`. This is the complete strict-project result,
+not a focused `-f` check with preceding exports loaded as trusted.
 
 The project exports only `chap1` through `chap13` in source order. It has no
 `[import std]` section and no cite export. Cross-chapter objects, functions,

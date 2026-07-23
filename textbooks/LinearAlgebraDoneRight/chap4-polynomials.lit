@@ -1,22 +1,16 @@
 # Linear Algebra Done Right, fourth edition - Chapter 4: Polynomials.
 # The standing scalar choices are R and the Complex carrier from Section 1A.
 
-macro ScalarSystem "&chap1a::ScalarSystem<s>"
-macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
-macro ComplexCoefficients "&chap1a::FiniteList<&chap1a::Complex, n>{coefficients}"
-macro Polynomials "\chap2a::polynomial_space<s, scalars>"
-macro ComplexPolynomials "\chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>"
-macro RealPolynomials "\chap2a::polynomial_space<R, chap1a::real_scalars>"
 
 # Definition 4.1. The real and imaginary parts are the two real coordinates of
 # the Complex record introduced in Section 1A. Both are callable projections.
-have fn real_part(z &chap1a::Complex) R = &chap1a::Complex{z}.re
-have fn imaginary_part(z &chap1a::Complex) R = &chap1a::Complex{z}.im
+have fn real_part(z &chap1a::Complex) R = z.re
+have fn imaginary_part(z &chap1a::Complex) R = z.im
 
 # Definition 4.2. Conjugation negates the imaginary coordinate. Absolute value
 # is the Euclidean length of the coordinate pair.
-have fn complex_conjugate(z &chap1a::Complex) &chap1a::Complex = (&chap1a::Complex{z}.re, -&chap1a::Complex{z}.im)
-have fn complex_absolute_value(z &chap1a::Complex) R = sqrt(&chap1a::Complex{z}.re^2 + &chap1a::Complex{z}.im^2)
+have fn complex_conjugate(z &chap1a::Complex) &chap1a::Complex = (z.re, -z.im)
+have fn complex_absolute_value(z &chap1a::Complex) R = sqrt(z.re^2 + z.im^2)
 
 # Example 4.3 (commented as requested). For z=(3,2), the definitions give real
 # part 3, imaginary part 2, conjugate (3,-2), and absolute value sqrt(13).
@@ -61,13 +55,13 @@ thm complex_with_zero_imaginary_part_is_self_conjugate:
         imaginary_part(z) = 0
         =>:
             complex_conjugate(z) = z
-    imaginary_part(z) = &chap1a::Complex{z}.im
-    &chap1a::Complex{z}.im = 0
-    -&chap1a::Complex{z}.im = 0
-    complex_conjugate(z) = (&chap1a::Complex{z}.re, -&chap1a::Complex{z}.im)
-    complex_conjugate(z) = (&chap1a::Complex{z}.re, 0)
-    z = (&chap1a::Complex{z}.re, &chap1a::Complex{z}.im)
-    z = (&chap1a::Complex{z}.re, 0)
+    imaginary_part(z) = z.im
+    z.im = 0
+    -z.im = 0
+    complex_conjugate(z) = (z.re, -z.im)
+    complex_conjugate(z) = (z.re, 0)
+    z = (z.re, z.im)
+    z = (z.re, 0)
     complex_conjugate(z) = z
 
 thm complex_scalar_system_fields:
@@ -111,49 +105,49 @@ have fn complex_polynomial_eval(coeff fn(j N) &chap1a::Complex, z &chap1a::Compl
     case n = 0: coeff(0)
     case n > 0: chap1a::complex_add(complex_polynomial_eval(coeff, z, n - 1), chap1a::complex_mul(coeff(n), complex_power(z, n)))
 
-prop coefficient_function_matches_finite_list(s nonempty_set, scalars @ScalarSystem, n N_pos, coefficients &chap1a::FiniteList<s, n>, coeff fn(k N) s):
+prop coefficient_function_matches_finite_list(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, coefficients &chap1a::FiniteList<s, n>, coeff fn(k N) s):
     forall i N_pos:
         i <= n
         =>:
-            coeff(i - 1) = &chap1a::FiniteList<s, n>{coefficients}.entries(i)
+            coeff(i - 1) = coefficients.entries(i)
     forall k N:
         k >= n
         =>:
-            coeff(k) = @Scalars.zero
+            coeff(k) = scalars.zero
 
-prop is_executable_coefficient_bridge(s nonempty_set, scalars @ScalarSystem, evaluation fn(coeff fn(j N) s, y s, d N) s, n N_pos, coefficients &chap1a::FiniteList<s, n>, coeff fn(k N) s, p @Polynomials):
+prop is_executable_coefficient_bridge(s nonempty_set, scalars &chap1a::ScalarSystem<s>, evaluation fn(coeff fn(j N) s, y s, d N) s, n N_pos, coefficients &chap1a::FiniteList<s, n>, coeff fn(k N) s, p \chap2a::polynomial_space<s, scalars>):
     $chap2a::represents_polynomial(s, scalars, n, coefficients, p)
     $coefficient_function_matches_finite_list(s, scalars, n, coefficients, coeff)
     forall x s:
         p(x) = evaluation(coeff, x, n - 1)
 
-template<s nonempty_set, scalars @ScalarSystem>:
-    have fn polynomial_add(p, q fn(x s) s) fn(t s) s = fn(y s) s {@Scalars.add(p(y), q(y))}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>>:
+    have fn polynomial_add(p, q fn(x s) s) fn(t s) s = fn(y s) s {scalars.add(p(y), q(y))}
 
-template<s nonempty_set, scalars @ScalarSystem>:
-    have fn polynomial_mul(p, q fn(x s) s) fn(t s) s = fn(y s) s {@Scalars.mul(p(y), q(y))}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>>:
+    have fn polynomial_mul(p, q fn(x s) s) fn(t s) s = fn(y s) s {scalars.mul(p(y), q(y))}
 
-template<s nonempty_set, scalars @ScalarSystem>:
-    have fn linear_factor(lambda s) fn(t s) s = fn(y s) s {@Scalars.add(y, @Scalars.neg(lambda))}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>>:
+    have fn linear_factor(lambda s) fn(t s) s = fn(y s) s {scalars.add(y, scalars.neg(lambda))}
 
-template<s nonempty_set, scalars @ScalarSystem>:
-    have zero_polynomial fn(t s) s = fn(y s) s {@Scalars.zero}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>>:
+    have zero_polynomial fn(t s) s = fn(y s) s {scalars.zero}
 
 template<s nonempty_set>:
     have fn constant_polynomial(c s) fn(t s) s = fn(y s) s {c}
 
 # Definition 4.5. A scalar lambda is a zero (root) of p exactly when p(lambda)
 # is the scalar zero.  The carrier is exactly Section 2A's polynomial_space.
-prop is_zero_of_polynomial(s nonempty_set, scalars @ScalarSystem, p @Polynomials, lambda s):
-    p(lambda) = @Scalars.zero
+prop is_zero_of_polynomial(s nonempty_set, scalars &chap1a::ScalarSystem<s>, p \chap2a::polynomial_space<s, scalars>, lambda s):
+    p(lambda) = scalars.zero
 
-template<s nonempty_set, scalars @ScalarSystem>:
-    have fn polynomial_zero_set(p @Polynomials) power_set(s) = {lambda s: $is_zero_of_polynomial(s, scalars, p, lambda)}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>>:
+    have fn polynomial_zero_set(p \chap2a::polynomial_space<s, scalars>) power_set(s) = {lambda s: $is_zero_of_polynomial(s, scalars, p, lambda)}
 
-prop has_degree_one_factor(s nonempty_set, scalars @ScalarSystem, p @Polynomials, m N_pos, lambda s):
-    exist q @Polynomials st {\chap2a::degree<s, scalars, q> = chap2a::finite_polynomial_degree(m - 1), p = \polynomial_mul<s, scalars>(\linear_factor<s, scalars>(lambda), q)}
+prop has_degree_one_factor(s nonempty_set, scalars &chap1a::ScalarSystem<s>, p \chap2a::polynomial_space<s, scalars>, m N_pos, lambda s):
+    exist q \chap2a::polynomial_space<s, scalars> st {\chap2a::degree<s, scalars, q> = chap2a::finite_polynomial_degree(m - 1), p = \polynomial_mul<s, scalars>(\linear_factor<s, scalars>(lambda), q)}
 
-prop zero_corresponds_to_degree_one_factor(s nonempty_set, scalars @ScalarSystem, p @Polynomials, m N_pos, lambda s):
+prop zero_corresponds_to_degree_one_factor(s nonempty_set, scalars &chap1a::ScalarSystem<s>, p \chap2a::polynomial_space<s, scalars>, m N_pos, lambda s):
     forall:
         =>:
             $is_zero_of_polynomial(s, scalars, p, lambda)
@@ -163,39 +157,39 @@ prop zero_corresponds_to_degree_one_factor(s nonempty_set, scalars @ScalarSystem
 # Result 4.6. A zero is equivalent to a degree-one factor, with the quotient's
 # degree exactly one less than the degree of the original polynomial.
 axiom zero_iff_degree_one_factor:
-    ? forall s nonempty_set, scalars @ScalarSystem, p @Polynomials, m N_pos, lambda s:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, p \chap2a::polynomial_space<s, scalars>, m N_pos, lambda s:
         \chap2a::degree<s, scalars, p> = chap2a::finite_polynomial_degree(m)
         =>:
             $zero_corresponds_to_degree_one_factor(s, scalars, p, m, lambda)
 
 # Result 4.8. A degree-m polynomial has a finite zero set of size at most m.
 axiom polynomial_degree_bounds_number_of_zeros:
-    ? forall s nonempty_set, scalars @ScalarSystem, p @Polynomials, m N_pos:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, p \chap2a::polynomial_space<s, scalars>, m N_pos:
         \chap2a::degree<s, scalars, p> = chap2a::finite_polynomial_degree(m)
         =>:
             exist roots finite_set st {roots = \polynomial_zero_set<s, scalars>(p), finite_set_size(roots) <= m}
 
-prop has_lower_polynomial_degree(s nonempty_set, scalars @ScalarSystem, divisor, r @Polynomials):
+prop has_lower_polynomial_degree(s nonempty_set, scalars &chap1a::ScalarSystem<s>, divisor, r \chap2a::polynomial_space<s, scalars>):
     &chap2a::PolynomialDegree{\chap2a::degree<s, scalars, r>}.finite_flag = 1
     &chap2a::PolynomialDegree{\chap2a::degree<s, scalars, divisor>}.finite_flag = 1
     &chap2a::PolynomialDegree{\chap2a::degree<s, scalars, r>}.value < &chap2a::PolynomialDegree{\chap2a::degree<s, scalars, divisor>}.value
 
-prop is_polynomial_remainder(s nonempty_set, scalars @ScalarSystem, divisor, r @Polynomials):
+prop is_polynomial_remainder(s nonempty_set, scalars &chap1a::ScalarSystem<s>, divisor, r \chap2a::polynomial_space<s, scalars>):
     r = \zero_polynomial<s, scalars> or $has_lower_polynomial_degree(s, scalars, divisor, r)
 
 # Result 4.9. Division by a nonzero polynomial gives unique quotient and
 # remainder, with the remainder zero or of smaller degree than the divisor.
 axiom polynomial_division_algorithm:
-    ? forall s nonempty_set, scalars @ScalarSystem, p, divisor @Polynomials:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, p, divisor \chap2a::polynomial_space<s, scalars>:
         divisor != \zero_polynomial<s, scalars>
         =>:
-            exist! q, r @Polynomials st {p = \polynomial_add<s, scalars>(\polynomial_mul<s, scalars>(divisor, q), r), $is_polynomial_remainder(s, scalars, divisor, r)}
+            exist! q, r \chap2a::polynomial_space<s, scalars> st {p = \polynomial_add<s, scalars>(\polynomial_mul<s, scalars>(divisor, q), r), $is_polynomial_remainder(s, scalars, divisor, r)}
 
 # Result 4.12. Every nonconstant complex polynomial has a complex zero.
 # Axiom boundary: Axler's proof uses global-minimum and continuity facts from
 # analysis; this remains a source-facing axiom, never a builtin rule.
 axiom fundamental_theorem_of_algebra_first_version:
-    ? forall p @ComplexPolynomials, m N_pos:
+    ? forall p \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>, m N_pos:
         \chap2a::degree<&chap1a::Complex, chap1a::complex_scalars, p> = chap2a::finite_polynomial_degree(m)
         =>:
             exist lambda &chap1a::Complex st {$is_zero_of_polynomial(&chap1a::Complex, chap1a::complex_scalars, p, lambda)}
@@ -223,7 +217,7 @@ prop complex_roots_match_under_permutation(m N_pos, roots, other fn(i N_pos: i <
             permutation(i) <= m
             roots(i) = other(permutation(i))
 
-prop is_complete_complex_linear_factorization(p @ComplexPolynomials, m N_pos, c &chap1a::Complex, roots fn(i N_pos: i <= m) &chap1a::Complex, stages fn(j N_pos: j <= m + 1) fn(t &chap1a::Complex) &chap1a::Complex):
+prop is_complete_complex_linear_factorization(p \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>, m N_pos, c &chap1a::Complex, roots fn(i N_pos: i <= m) &chap1a::Complex, stages fn(j N_pos: j <= m + 1) fn(t &chap1a::Complex) &chap1a::Complex):
     c != chap1a::complex_zero
     stages(1) = p
     stages(m + 1) = \constant_polynomial<&chap1a::Complex>(c)
@@ -235,10 +229,10 @@ prop is_complete_complex_linear_factorization(p @ComplexPolynomials, m N_pos, c 
 prop same_complex_roots_up_to_order(m N_pos, roots, other fn(i N_pos: i <= m) &chap1a::Complex):
     exist permutation fn(k N_pos: k <= m) N_pos st {$is_index_permutation(m, permutation), $complex_roots_match_under_permutation(m, roots, other, permutation)}
 
-prop has_complete_complex_linear_factorization(p @ComplexPolynomials, m N_pos):
+prop has_complete_complex_linear_factorization(p \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>, m N_pos):
     exist c &chap1a::Complex, roots fn(i N_pos: i <= m) &chap1a::Complex, stages fn(j N_pos: j <= m + 1) fn(t &chap1a::Complex) &chap1a::Complex st {$is_complete_complex_linear_factorization(p, m, c, roots, stages)}
 
-prop complete_complex_linear_factorization_is_unique(p @ComplexPolynomials, m N_pos):
+prop complete_complex_linear_factorization_is_unique(p \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>, m N_pos):
     forall c1, c2 &chap1a::Complex, roots1, roots2 fn(i N_pos: i <= m) &chap1a::Complex, stages1, stages2 fn(j N_pos: j <= m + 1) fn(t &chap1a::Complex) &chap1a::Complex:
         $is_complete_complex_linear_factorization(p, m, c1, roots1, stages1)
         $is_complete_complex_linear_factorization(p, m, c2, roots2, stages2)
@@ -249,7 +243,7 @@ prop complete_complex_linear_factorization_is_unique(p @ComplexPolynomials, m N_
 # Result 4.13. A degree-m complex polynomial factors into a nonzero leading
 # constant and m linear factors; the constant and roots are unique up to order.
 axiom fundamental_theorem_of_algebra_second_version:
-    ? forall p @ComplexPolynomials, m N_pos:
+    ? forall p \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>, m N_pos:
         \chap2a::degree<&chap1a::Complex, chap1a::complex_scalars, p> = chap2a::finite_polynomial_degree(m)
         =>:
             $has_complete_complex_linear_factorization(p, m)
@@ -262,15 +256,15 @@ prop finite_list_has_real_entries(n N_pos, coefficients &chap1a::FiniteList<&cha
     forall k N_pos:
         k <= n
         =>:
-            imaginary_part(@ComplexCoefficients.entries(k)) = 0
+            imaginary_part(coefficients.entries(k)) = 0
 
-prop has_real_coefficients(p @ComplexPolynomials):
+prop has_real_coefficients(p \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>):
     exist n N_pos, coefficients &chap1a::FiniteList<&chap1a::Complex, n> st {$chap2a::represents_polynomial(&chap1a::Complex, chap1a::complex_scalars, n, coefficients, p), $finite_list_has_real_entries(n, coefficients)}
 
 # Result 4.14. Nonreal zeros of a complex polynomial with real coefficients
 # occur in conjugate pairs.
 thm real_coefficient_polynomial_has_conjugate_zeros:
-    ? forall p @ComplexPolynomials, lambda &chap1a::Complex:
+    ? forall p \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>, lambda &chap1a::Complex:
         $has_real_coefficients(p)
         $is_zero_of_polynomial(&chap1a::Complex, chap1a::complex_scalars, p, lambda)
         =>:
@@ -280,7 +274,7 @@ thm real_coefficient_polynomial_has_conjugate_zeros:
     forall j N_pos:
         j <= n
         =>:
-            imaginary_part(@ComplexCoefficients.entries(j)) = 0
+            imaginary_part(coefficients.entries(j)) = 0
     obtain powers1, partial1 from exist powers, partial_sums fn(k N) &chap1a::Complex st {$chap2a::is_polynomial_evaluation_trace(&chap1a::Complex, chap1a::complex_scalars, n, coefficients, p, lambda, powers, partial_sums)}
     obtain powers2, partial2 from exist powers, partial_sums fn(k N) &chap1a::Complex st {$chap2a::is_polynomial_evaluation_trace(&chap1a::Complex, chap1a::complex_scalars, n, coefficients, p, complex_conjugate(lambda), powers, partial_sums)}
     $chap2a::is_polynomial_evaluation_trace(&chap1a::Complex, chap1a::complex_scalars, n, coefficients, p, lambda, powers1, partial1)
@@ -290,12 +284,12 @@ thm real_coefficient_polynomial_has_conjugate_zeros:
         j <= n
         =>:
             powers1(j) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(powers1(j - 1), lambda)
-            partial1(j) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial1(j - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(@ComplexCoefficients.entries(j), powers1(j - 1)))
+            partial1(j) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial1(j - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(coefficients.entries(j), powers1(j - 1)))
     forall j N_pos:
         j <= n
         =>:
             powers2(j) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(powers2(j - 1), complex_conjugate(lambda))
-            partial2(j) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial2(j - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(@ComplexCoefficients.entries(j), powers2(j - 1)))
+            partial2(j) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial2(j - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(coefficients.entries(j), powers2(j - 1)))
     have fn conjugated_powers1(k N) &chap1a::Complex by cases:
         case k <= n: complex_conjugate(powers1(k))
         case k > n: chap1a::complex_zero
@@ -387,31 +381,31 @@ thm real_coefficient_polynomial_has_conjugate_zeros:
                         complex_conjugate(powers1(k)) = powers2(k)
                         conjugated_partial1(k + 1) = complex_conjugate(partial1(k + 1))
                         extended_partial2(k + 1) = partial2(k + 1)
-                        imaginary_part(@ComplexCoefficients.entries(k + 1)) = 0
-                        by thm complex_with_zero_imaginary_part_is_self_conjugate(@ComplexCoefficients.entries(k + 1))
-                        complex_conjugate(@ComplexCoefficients.entries(k + 1)) = @ComplexCoefficients.entries(k + 1)
-                        partial1(next_index) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial1(next_index - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(@ComplexCoefficients.entries(next_index), powers1(next_index - 1)))
-                        partial2(next_index) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial2(next_index - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(@ComplexCoefficients.entries(next_index), powers2(next_index - 1)))
+                        imaginary_part(coefficients.entries(k + 1)) = 0
+                        by thm complex_with_zero_imaginary_part_is_self_conjugate(coefficients.entries(k + 1))
+                        complex_conjugate(coefficients.entries(k + 1)) = coefficients.entries(k + 1)
+                        partial1(next_index) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial1(next_index - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(coefficients.entries(next_index), powers1(next_index - 1)))
+                        partial2(next_index) = &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial2(next_index - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(coefficients.entries(next_index), powers2(next_index - 1)))
                         next_index - 1 = k
                         by thm complex_scalar_system_fields()
                         &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add = chap1a::complex_add
                         &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul = chap1a::complex_mul
-                        by thm complex_scalar_system_add_mul_value(partial1(next_index - 1), @ComplexCoefficients.entries(next_index), powers1(next_index - 1))
-                        &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial1(next_index - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(@ComplexCoefficients.entries(next_index), powers1(next_index - 1))) = chap1a::complex_add(partial1(next_index - 1), chap1a::complex_mul(@ComplexCoefficients.entries(next_index), powers1(next_index - 1)))
-                        by thm complex_scalar_system_add_mul_value(partial2(next_index - 1), @ComplexCoefficients.entries(next_index), powers2(next_index - 1))
-                        &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial2(next_index - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(@ComplexCoefficients.entries(next_index), powers2(next_index - 1))) = chap1a::complex_add(partial2(next_index - 1), chap1a::complex_mul(@ComplexCoefficients.entries(next_index), powers2(next_index - 1)))
-                        partial1(next_index) = chap1a::complex_add(partial1(next_index - 1), chap1a::complex_mul(@ComplexCoefficients.entries(next_index), powers1(next_index - 1)))
-                        partial2(next_index) = chap1a::complex_add(partial2(next_index - 1), chap1a::complex_mul(@ComplexCoefficients.entries(next_index), powers2(next_index - 1)))
-                        partial1(k + 1) = partial1(next_index) = chap1a::complex_add(partial1(next_index - 1), chap1a::complex_mul(@ComplexCoefficients.entries(next_index), powers1(next_index - 1))) = chap1a::complex_add(partial1(k), chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers1(k)))
-                        partial2(k + 1) = partial2(next_index) = chap1a::complex_add(partial2(next_index - 1), chap1a::complex_mul(@ComplexCoefficients.entries(next_index), powers2(next_index - 1))) = chap1a::complex_add(partial2(k), chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers2(k)))
-                        by thm properties_of_complex_numbers(@ComplexCoefficients.entries(k + 1), powers1(k))
-                        complex_conjugate(chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers1(k))) = chap1a::complex_mul(complex_conjugate(@ComplexCoefficients.entries(k + 1)), complex_conjugate(powers1(k)))
-                        by thm properties_of_complex_numbers(partial1(k), chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers1(k)))
-                        complex_conjugate(chap1a::complex_add(partial1(k), chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers1(k)))) = chap1a::complex_add(complex_conjugate(partial1(k)), complex_conjugate(chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers1(k))))
-                        chap1a::complex_mul(complex_conjugate(@ComplexCoefficients.entries(k + 1)), complex_conjugate(powers1(k))) = chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), complex_conjugate(powers1(k)))
-                        chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), complex_conjugate(powers1(k))) = chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers2(k))
-                        chap1a::complex_add(complex_conjugate(partial1(k)), chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers2(k))) = chap1a::complex_add(partial2(k), chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers2(k)))
-                        complex_conjugate(partial1(k + 1)) = complex_conjugate(chap1a::complex_add(partial1(k), chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers1(k)))) = chap1a::complex_add(complex_conjugate(partial1(k)), complex_conjugate(chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers1(k)))) = chap1a::complex_add(complex_conjugate(partial1(k)), chap1a::complex_mul(complex_conjugate(@ComplexCoefficients.entries(k + 1)), complex_conjugate(powers1(k)))) = chap1a::complex_add(complex_conjugate(partial1(k)), chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), complex_conjugate(powers1(k)))) = chap1a::complex_add(complex_conjugate(partial1(k)), chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers2(k))) = chap1a::complex_add(partial2(k), chap1a::complex_mul(@ComplexCoefficients.entries(k + 1), powers2(k))) = partial2(k + 1)
+                        by thm complex_scalar_system_add_mul_value(partial1(next_index - 1), coefficients.entries(next_index), powers1(next_index - 1))
+                        &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial1(next_index - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(coefficients.entries(next_index), powers1(next_index - 1))) = chap1a::complex_add(partial1(next_index - 1), chap1a::complex_mul(coefficients.entries(next_index), powers1(next_index - 1)))
+                        by thm complex_scalar_system_add_mul_value(partial2(next_index - 1), coefficients.entries(next_index), powers2(next_index - 1))
+                        &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.add(partial2(next_index - 1), &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(coefficients.entries(next_index), powers2(next_index - 1))) = chap1a::complex_add(partial2(next_index - 1), chap1a::complex_mul(coefficients.entries(next_index), powers2(next_index - 1)))
+                        partial1(next_index) = chap1a::complex_add(partial1(next_index - 1), chap1a::complex_mul(coefficients.entries(next_index), powers1(next_index - 1)))
+                        partial2(next_index) = chap1a::complex_add(partial2(next_index - 1), chap1a::complex_mul(coefficients.entries(next_index), powers2(next_index - 1)))
+                        partial1(k + 1) = partial1(next_index) = chap1a::complex_add(partial1(next_index - 1), chap1a::complex_mul(coefficients.entries(next_index), powers1(next_index - 1))) = chap1a::complex_add(partial1(k), chap1a::complex_mul(coefficients.entries(k + 1), powers1(k)))
+                        partial2(k + 1) = partial2(next_index) = chap1a::complex_add(partial2(next_index - 1), chap1a::complex_mul(coefficients.entries(next_index), powers2(next_index - 1))) = chap1a::complex_add(partial2(k), chap1a::complex_mul(coefficients.entries(k + 1), powers2(k)))
+                        by thm properties_of_complex_numbers(coefficients.entries(k + 1), powers1(k))
+                        complex_conjugate(chap1a::complex_mul(coefficients.entries(k + 1), powers1(k))) = chap1a::complex_mul(complex_conjugate(coefficients.entries(k + 1)), complex_conjugate(powers1(k)))
+                        by thm properties_of_complex_numbers(partial1(k), chap1a::complex_mul(coefficients.entries(k + 1), powers1(k)))
+                        complex_conjugate(chap1a::complex_add(partial1(k), chap1a::complex_mul(coefficients.entries(k + 1), powers1(k)))) = chap1a::complex_add(complex_conjugate(partial1(k)), complex_conjugate(chap1a::complex_mul(coefficients.entries(k + 1), powers1(k))))
+                        chap1a::complex_mul(complex_conjugate(coefficients.entries(k + 1)), complex_conjugate(powers1(k))) = chap1a::complex_mul(coefficients.entries(k + 1), complex_conjugate(powers1(k)))
+                        chap1a::complex_mul(coefficients.entries(k + 1), complex_conjugate(powers1(k))) = chap1a::complex_mul(coefficients.entries(k + 1), powers2(k))
+                        chap1a::complex_add(complex_conjugate(partial1(k)), chap1a::complex_mul(coefficients.entries(k + 1), powers2(k))) = chap1a::complex_add(partial2(k), chap1a::complex_mul(coefficients.entries(k + 1), powers2(k)))
+                        complex_conjugate(partial1(k + 1)) = complex_conjugate(chap1a::complex_add(partial1(k), chap1a::complex_mul(coefficients.entries(k + 1), powers1(k)))) = chap1a::complex_add(complex_conjugate(partial1(k)), complex_conjugate(chap1a::complex_mul(coefficients.entries(k + 1), powers1(k)))) = chap1a::complex_add(complex_conjugate(partial1(k)), chap1a::complex_mul(complex_conjugate(coefficients.entries(k + 1)), complex_conjugate(powers1(k)))) = chap1a::complex_add(complex_conjugate(partial1(k)), chap1a::complex_mul(coefficients.entries(k + 1), complex_conjugate(powers1(k)))) = chap1a::complex_add(complex_conjugate(partial1(k)), chap1a::complex_mul(coefficients.entries(k + 1), powers2(k))) = chap1a::complex_add(partial2(k), chap1a::complex_mul(coefficients.entries(k + 1), powers2(k))) = partial2(k + 1)
                         conjugated_partial1(k + 1) = extended_partial2(k + 1)
                     case k + 1 > n:
                         conjugated_partial1(k + 1) = chap1a::complex_zero
@@ -512,7 +506,7 @@ thm quadratic_factorization_over_R:
 
 have fn real_quadratic_factor(b, c R) fn(t R) R = fn(x R) R {x^2 + b * x + c}
 
-prop is_complete_real_factorization(p @RealPolynomials, n N_pos, m, M N, leading R, roots fn(i N_pos: i <= m) R, b, c fn(j N_pos: j <= M) R, stages fn(k N_pos: k <= m + M + 1) fn(t R) R):
+prop is_complete_real_factorization(p \chap2a::polynomial_space<R, chap1a::real_scalars>, n N_pos, m, M N, leading R, roots fn(i N_pos: i <= m) R, b, c fn(j N_pos: j <= M) R, stages fn(k N_pos: k <= m + M + 1) fn(t R) R):
     m + 2 * M = n
     leading != 0
     stages(1) = p
@@ -548,10 +542,10 @@ prop real_quadratics_match_under_permutation(M N, b1, c1, b2, c2 fn(i N_pos: i <
 prop same_real_quadratic_factors_up_to_order(M N, b1, c1, b2, c2 fn(i N_pos: i <= M) R):
     exist permutation fn(k N_pos: k <= M) N_pos st {$is_index_permutation(M, permutation), $real_quadratics_match_under_permutation(M, b1, c1, b2, c2, permutation)}
 
-prop has_complete_real_factorization(p @RealPolynomials, n N_pos):
+prop has_complete_real_factorization(p \chap2a::polynomial_space<R, chap1a::real_scalars>, n N_pos):
     exist m, M N, leading R, roots fn(i N_pos: i <= m) R, b, c fn(j N_pos: j <= M) R, stages fn(k N_pos: k <= m + M + 1) fn(t R) R st {$is_complete_real_factorization(p, n, m, M, leading, roots, b, c, stages)}
 
-prop complete_real_factorization_counts_are_unique(p @RealPolynomials, n N_pos):
+prop complete_real_factorization_counts_are_unique(p \chap2a::polynomial_space<R, chap1a::real_scalars>, n N_pos):
     forall m1, M1, m2, M2 N, leading1, leading2 R, roots1 fn(i N_pos: i <= m1) R, roots2 fn(j N_pos: j <= m2) R, b1, c1 fn(k N_pos: k <= M1) R, b2, c2 fn(q N_pos: q <= M2) R, stages1 fn(a N_pos: a <= m1 + M1 + 1) fn(x R) R, stages2 fn(d N_pos: d <= m2 + M2 + 1) fn(y R) R:
         $is_complete_real_factorization(p, n, m1, M1, leading1, roots1, b1, c1, stages1)
         $is_complete_real_factorization(p, n, m2, M2, leading2, roots2, b2, c2, stages2)
@@ -559,7 +553,7 @@ prop complete_real_factorization_counts_are_unique(p @RealPolynomials, n N_pos):
             m1 = m2
             M1 = M2
 
-prop complete_real_factorization_data_are_unique(p @RealPolynomials, n N_pos):
+prop complete_real_factorization_data_are_unique(p \chap2a::polynomial_space<R, chap1a::real_scalars>, n N_pos):
     forall m, M N, leading1, leading2 R, roots1, roots2 fn(i N_pos: i <= m) R, b1, c1, b2, c2 fn(j N_pos: j <= M) R, stages1, stages2 fn(k N_pos: k <= m + M + 1) fn(t R) R:
         $is_complete_real_factorization(p, n, m, M, leading1, roots1, b1, c1, stages1)
         $is_complete_real_factorization(p, n, m, M, leading2, roots2, b2, c2, stages2)
@@ -571,7 +565,7 @@ prop complete_real_factorization_data_are_unique(p @RealPolynomials, n N_pos):
 # Result 4.16. Every nonconstant real polynomial factors into real linear
 # factors and irreducible monic quadratics, uniquely except for factor order.
 axiom real_polynomial_factorization:
-    ? forall p @RealPolynomials, n N_pos:
+    ? forall p \chap2a::polynomial_space<R, chap1a::real_scalars>, n N_pos:
         \chap2a::degree<R, chap1a::real_scalars, p> = chap2a::finite_polynomial_degree(n)
         =>:
             $has_complete_real_factorization(p, n)

@@ -10,26 +10,18 @@ impl Runtime {
         free_param_kind: ParamObjType,
     ) -> Result<ParamGroupWithParamType, RuntimeError> {
         let param = tb.advance()?;
-        let param_def_with_param_type = if tb.current()? != COMMA {
-            let params = vec![param];
-            let param_type = self.parse_param_type(tb)?;
-            let bindings =
-                self.begin_parsing_scope(free_param_kind, &params, tb.line_file.clone())?;
-            ParamGroupWithParamType::new(bindings, param_type)
-        } else {
-            let mut vec_of_params = vec![param];
-
-            while tb.current_token_is_equal_to(COMMA) {
-                tb.skip()?;
-                let p = tb.advance()?;
-                vec_of_params.push(p);
-            }
-            let param_type = self.parse_param_type(tb)?;
-            let bindings =
-                self.begin_parsing_scope(free_param_kind, &vec_of_params, tb.line_file.clone())?;
-
-            ParamGroupWithParamType::new(bindings, param_type)
-        };
+        let mut params = vec![param];
+        while tb.current_token_is_equal_to(COMMA) {
+            tb.skip()?;
+            params.push(tb.advance()?);
+        }
+        let (param_type, default_struct_view) =
+            self.parse_param_type_with_default_struct_view(tb)?;
+        let bindings = self.begin_parsing_scope(free_param_kind, &params, tb.line_file.clone())?;
+        if let Some(struct_obj) = default_struct_view {
+            self.register_default_struct_view(&bindings, &struct_obj);
+        }
+        let param_def_with_param_type = ParamGroupWithParamType::new(bindings, param_type);
         if tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
         }
@@ -43,6 +35,18 @@ impl Runtime {
             SET => self.parse_param_type_set(tb),
             _ => self.parse_param_type_obj(tb),
         }
+    }
+
+    pub(crate) fn parse_obj_with_default_struct_view(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<(Obj, Option<StructObj>), RuntimeError> {
+        let obj = self.parse_obj(tb)?;
+        let default_struct_view = match &obj {
+            Obj::StructObj(struct_obj) => Some(struct_obj.clone()),
+            _ => None,
+        };
+        Ok((obj, default_struct_view))
     }
 
     pub fn parse_param_type_nonempty_set(
@@ -69,5 +73,17 @@ impl Runtime {
     pub fn parse_param_type_obj(&mut self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
         let obj = self.parse_obj(tb)?;
         Ok(ParamType::Obj(obj))
+    }
+
+    fn parse_param_type_with_default_struct_view(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<(ParamType, Option<StructObj>), RuntimeError> {
+        let param_type = self.parse_param_type(tb)?;
+        let default_struct_view = match &param_type {
+            ParamType::Obj(Obj::StructObj(struct_obj)) => Some(struct_obj.clone()),
+            _ => None,
+        };
+        Ok((param_type, default_struct_view))
     }
 }

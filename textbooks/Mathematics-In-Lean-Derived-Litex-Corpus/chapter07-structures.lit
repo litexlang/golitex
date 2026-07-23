@@ -58,12 +58,12 @@ have fn simplex_swap_xy(a &StandardTwoSimplex) &StandardTwoSimplex = (&StandardT
 # obligation explicit and trust-free.
 thm standard_two_simplex_midpoint_closed:
     ? forall a, b &StandardTwoSimplex:
-        ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2) $in &StandardTwoSimplex
-    (&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2 >= 0
-    (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2 >= 0
-    (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2 >= 0
-    (&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2 + (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2 + (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2 = ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{a}.y + &StandardTwoSimplex{a}.z) + (&StandardTwoSimplex{b}.x + &StandardTwoSimplex{b}.y + &StandardTwoSimplex{b}.z)) / 2 = (1 + 1) / 2 = 1
-    ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2) $in &StandardTwoSimplex
+        ((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2) $in &StandardTwoSimplex
+    (a.x + b.x) / 2 >= 0
+    (a.y + b.y) / 2 >= 0
+    (a.z + b.z) / 2 >= 0
+    (a.x + b.x) / 2 + (a.y + b.y) / 2 + (a.z + b.z) / 2 = ((a.x + a.y + a.z) + (b.x + b.y + b.z)) / 2 = (1 + 1) / 2 = 1
+    ((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2) $in &StandardTwoSimplex
 
 have fn standard_two_simplex_midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2)
 
@@ -92,7 +92,9 @@ thm standard_simplex_midpoint_closed:
     finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i) + (1 / 2) * b(i)}) = finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i)}) + finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * b(i)})
     finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i)}) = (1 / 2) * finite_set_sum(range(0, n), a)
     finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * b(i)}) = (1 / 2) * finite_set_sum(range(0, n), b)
-    finite_set_sum(range(0, n), fn(i range(0, n)) R {(a(i) + b(i)) / 2}) = (1 / 2) * 1 + (1 / 2) * 1 = 1
+    finite_set_sum(range(0, n), a) = 1
+    finite_set_sum(range(0, n), b) = 1
+    finite_set_sum(range(0, n), fn(i range(0, n)) R {(a(i) + b(i)) / 2}) = finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i) + (1 / 2) * b(i)}) = finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i)}) + finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * b(i)}) = (1 / 2) * finite_set_sum(range(0, n), a) + (1 / 2) * finite_set_sum(range(0, n), b) = (1 / 2) * 1 + (1 / 2) * 1 = 1
     by def $is_standard_simplex_point(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
 
 # The midpoint remains a callable function-valued construction. Its checked

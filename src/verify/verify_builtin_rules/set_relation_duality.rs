@@ -11,19 +11,19 @@ impl Runtime {
         // Examples: `intersect(A, B) $subset A`, `A $subset union(A, B)`.
         let elementary_set_subset_reason = match (&subset_fact.left, &subset_fact.right) {
             (Obj::Intersect(intersect), right)
-                if intersect.left.to_string() == right.to_string()
-                    || intersect.right.to_string() == right.to_string() =>
+                if objs_equal_with_nested_binder_alpha_equivalence(&intersect.left, right)
+                    || objs_equal_with_nested_binder_alpha_equivalence(&intersect.right, right) =>
             {
                 Some("intersection_subset_operand")
             }
             (left, Obj::Union(union))
-                if union.left.to_string() == left.to_string()
-                    || union.right.to_string() == left.to_string() =>
+                if objs_equal_with_nested_binder_alpha_equivalence(&union.left, left)
+                    || objs_equal_with_nested_binder_alpha_equivalence(&union.right, left) =>
             {
                 Some("operand_subset_union")
             }
             (Obj::SetMinus(set_minus), right)
-                if set_minus.left.to_string() == right.to_string() =>
+                if objs_equal_with_nested_binder_alpha_equivalence(&set_minus.left, right) =>
             {
                 Some("set_minus_subset_left_operand")
             }
@@ -56,7 +56,9 @@ impl Runtime {
             }
         }
 
-        if subset_fact.left.to_string() == subset_fact.right.to_string() {
+        // Every set is a subset of itself, including alpha-equivalent function
+        // sets such as `fn(x X) X $subset fn(y X) X`.
+        if objs_equal_with_nested_binder_alpha_equivalence(&subset_fact.left, &subset_fact.right) {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     subset_fact.clone().into(),
@@ -153,7 +155,12 @@ impl Runtime {
             }
         }
 
-        if superset_fact.left.to_string() == superset_fact.right.to_string() {
+        // Every set is a superset of itself, including alpha-equivalent
+        // function sets such as `fn(x X) X $supset fn(y X) X`.
+        if objs_equal_with_nested_binder_alpha_equivalence(
+            &superset_fact.left,
+            &superset_fact.right,
+        ) {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     superset_fact.clone().into(),

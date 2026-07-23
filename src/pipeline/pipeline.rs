@@ -333,7 +333,7 @@ pub(crate) fn run_source_code_with_failure_kind(
         );
     }
 
-    let mut tokenizer = Tokenizer::new();
+    let tokenizer = Tokenizer::new();
     let current_file_path = runtime.current_file_path_rc();
     let blocks = match tokenizer.parse_blocks(source_code, current_file_path) {
         Ok(b) => b,

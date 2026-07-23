@@ -94,9 +94,10 @@ An expression such as `x + 1` is only an object. It becomes a fact only when a
 relation or predicate makes a claim about it, such as `x + 1 = 3`.
 
 Some Litex code is checked even before truth is considered. A line involving
-`1 / x`, `sqrt(x)`, `f(a)`, or `&Point{p}.x` may fail because the object itself
-is not yet well-defined in the current context. The verifier first needs domain
-facts such as `x != 0`, `0 <= x`, or `a` being in the domain of `f`.
+`1 / x`, `sqrt(x)`, `f(a)`, `&Point{p}.x`, or `p.x` after binding `p &Point`
+may fail because the object itself is not yet well-defined in the current
+context. The verifier first needs domain facts such as `x != 0`, `0 <= x`, or
+`a` being in the domain of `f`.
 
 ### How AI Fits In
 
@@ -134,7 +135,7 @@ For a compact discussion of trust boundaries, comparison with Lean, and project
 positioning, read [FAQ](https://litexlang.com/doc/FAQ) and
 [Litex and Lean](https://litexlang.com/doc/Litex_and_Lean).
 
-> `struct` is a preview feature. A struct view object such as `&Point` is a named view of a Cartesian product, and field access must be explicit, for example `&Point{p}.x`; bare `p.x` and `by struct` are not part of the current surface syntax.
+> `struct` and default-view field notation are preview features. A struct view object such as `&Point` is a named view of a Cartesian product. Write `&Point{p}.x` to select the view at one access, or bind a new name as `p &Point` to select it once in that binding scope and then write `p.x`. A later fact `p $in &Point` does not select a default view. `by struct` is not part of the current surface syntax.
 
 > If you are reading this manual online, it usually helps to run the examples and inspect the output. Some examples are intentionally more explicit than the Litex kernel strictly needs: the checker can often close shorter versions automatically, but the longer form is easier to read while learning.
 
@@ -585,9 +586,14 @@ forall i closed_range(1, n):
     proj(C, i) = f[i]
 ```
 
-#### Struct objects and explicit field access
+#### Struct objects and explicit or default-view field access (preview)
 
-`&Name<args>` is a preview object form for parameterized structs. It names the Cartesian product determined by the struct fields, with any `<=>:` facts treated as membership filters. Field access does not infer a struct from the object; it must say which struct view is being used.
+`&Name<args>` is a preview object form for parameterized structs. It names the
+Cartesian product determined by the struct fields, with any `<=>:` facts
+treated as membership filters. Field access never guesses a struct view from
+the object's known memberships. Select the view explicitly at an access with
+`&Name<args>{p}.field`, or choose a default view by giving a new binding the
+explicit type `p &Name<args>` and then use `p.field`.
 
 ```litex
 struct Point:
@@ -599,7 +605,39 @@ have p &Point = (1, 2)
 &Point{(1, 2)}.y = 2
 ```
 
-The explicit prefix is necessary because the same object may belong to several struct objects, and the same field name may mean different tuple positions in different struct views.
+An explicit struct type in a binding both introduces the struct-membership
+assumption or obligation and records that struct as the default view for the
+new name in the current parse scope. Litex lowers `p.x` to `&Point{p}.x` while
+parsing, before well-definedness or truth verification. The verifier therefore
+checks exactly the same field, membership, and struct obligations as it does
+for the fully explicit form.
+
+```litex
+struct Point:
+    x R
+    y R
+
+have p &Point = (1, 2)
+p.x = &Point{p}.x
+p.x = p[1]
+p.y = 2
+```
+
+A standalone membership fact such as `p $in &Point` does not enable `p.field`.
+Only an explicit struct type at the point where the name is bound selects the
+default. The default follows the binding scope; it is not a global property of
+the object or a new mathematical fact.
+
+The same rule applies to explicit struct types in quantified, function,
+set-builder, template, proposition, and struct-field bindings. An
+`obtain p from exist x &Point st {...}` statement transfers the existential
+binding's selected view to the new `p` binding; parameterized struct arguments
+are substituted onto the newly obtained bindings by their symbol identities.
+
+An explicit view choice is necessary because the same object may belong to
+several struct objects, and the same field name may mean different tuple
+positions in different struct views. A default-view binding makes that choice
+once without claiming that the object has a unique struct type.
 
 ```litex
 struct Point1:
@@ -612,15 +650,36 @@ struct Point2:
 
 (1, 2) $in &Point1
 (1, 2) $in &Point2
-&Point1{(1, 2)}.x = 1
-&Point2{(1, 2)}.x = 2
+have p &Point1 = (1, 2)
+p $in &Point2
+p.x = 1
+&Point2{p}.x = 2
 ```
 
-This is a basic difference from Lean-style field notation. In Litex, an object may be in many sets at once; it does not belong to one unique class or type that determines all later field access. Lean can often support `x.y` because `x` has a unique type, and that type tells Lean which field `y` means. Litex instead asks the user to write the view explicitly, such as `&Point1{x}.x` or `&Point2{x}.x`.
+This is a basic difference from Lean-style field notation. In Litex, an object
+may be in many sets at once; it does not belong to one unique class or type
+that determines all later field access. Lean can often support `x.y` because
+`x` has a unique type, and that type tells Lean which field `y` means. Litex
+instead requires an explicit view choice. That choice may be local to one
+access, such as `&Point2{p}.x`, or local to one binding, such as
+`p &Point1`, after which `p.x` uses `&Point1`.
 
-The well-definedness of `&Point{p}.x` reduces to proving `p $in &Point`. A declaration such as `forall p &Point:` or `have p &Point = ...` provides that membership fact in the local context.
+The well-definedness of `&Point{p}.x` reduces to proving `p $in &Point`. A
+declaration such as `forall p &Point:` or `have p &Point = ...` provides that
+membership fact in the local context and also allows `p.x` in that binding
+scope. By contrast, proving `p $in &Point` after `p` has already been bound
+provides the membership fact without selecting a default view.
 
-After Litex knows `p $in &Point`, it also stores the field facts such as `&Point{p}.x $in R`, `p[1] $in R`, `&Point{p}.y $in R`, and `p[2] $in R`. If the struct has `<=>:` filter facts, Litex instantiates each fact twice: once with each field name replaced by its explicit field access, and once with each field name replaced by its tuple projection. Both instances enter the ordinary fact-and-inference pipeline, so a predicate filter exposes its inferred consequences in either view. When checking that a tuple itself belongs to a struct object, Litex can instantiate the `<=>:` facts directly with the tuple components.
+After Litex knows `p $in &Point`, it also stores the field facts such as
+`&Point{p}.x $in R`, `p[1] $in R`, `&Point{p}.y $in R`, and `p[2] $in R`.
+The shorthand does not add a second kind of field fact: `p.x` has already
+lowered to the explicit `&Point{p}.x` object. If the struct has `<=>:` filter
+facts, Litex instantiates each fact twice: once with each field name replaced
+by its explicit field access, and once with each field name replaced by its
+tuple projection. Both instances enter the ordinary fact-and-inference
+pipeline, so a predicate filter exposes its inferred consequences in either
+view. When checking that a tuple itself belongs to a struct object, Litex can
+instantiate the `<=>:` facts directly with the tuple components.
 
 For example, a group-like struct can state its laws directly in `<=>:`. A tuple
 is a member of `&group<s>` exactly when its operations satisfy those displayed
@@ -982,7 +1041,8 @@ The table below lists the main builtin object well-definedness criteria. Every r
 | `matrix(S, rows, cols)` and matrix literal `[[...], ...]` | For matrix types, `S` must be a set and both dimensions must be in `N_pos`. Matrix literals must have at least one row and one column, must be rectangular, and all entries must be well-defined. |
 | Matrix operators `A '+ B`, `A '- B`, `A '* B`, `c *' A`, `A '^ n` | Formal matrix algebra currently requires entries (and the scalar in `c *' A`) in `R`. Addition and subtraction require equal symbolic dimensions; multiplication requires left columns equal right rows; powers require a square base and exponent in `N_pos`. The result retains its symbolic `matrix(R, rows, cols)` type. |
 | Struct object `&Name<args>` | The struct must be defined. Its arguments must satisfy the struct parameter types and domain facts. Instantiated field types and struct filter facts must be well-defined. |
-| Field access `&Name<args>{p}.field` | The struct object must be well-defined, the field must exist, `p` must be well-defined, and Litex must prove `p $in &Name<args>`. |
+| Explicit field access `&Name<args>{p}.field` | The struct object must be well-defined, the field must exist, `p` must be well-defined, and Litex must prove `p $in &Name<args>`. |
+| Default-view access `p.field` after binding `p &Name<args>` (preview) | The explicit struct type at the binding site selects `&Name<args>` as `p`'s default view. Parsing lowers the access to `&Name<args>{p}.field`, so the same field and membership checks apply. A later fact `p $in &Name<args>` does not select a default. |
 | Template instance such as `\T<R>` | The template instance must materialize from a defined template, and the template arguments must satisfy the template's parameter obligations. |
 
 This table explains the first gate only. After an object is well-defined, a factual statement still has to be proved by builtin rules, known facts, known `forall` facts, theorem calls, or the surrounding proof structure.
@@ -3142,6 +3202,8 @@ reintroduced while an existing binding with that spelling is still active.
 | closed upper-bounded ray | `'(,0]` |
 | struct view object | `&Point`, `&Group<S>` |
 | explicit field access through a struct view | `&Point{p}.x` |
+| select a default struct view at a binding (preview) | `p &Point`, `g &Group<S>` |
+| field access through the binding's selected default view (preview) | `p.x`, `g.mul` |
 | instantiated template object | `\T<R>` |
 
 Function calls can use ordinary names, module names, anonymous functions,

@@ -107,9 +107,9 @@ template<s set>:
 }
 
 #[test]
-fn struct_filter_predicate_unfolds_for_explicit_field_view() {
+fn struct_filter_predicate_unfolds_for_default_field_view() {
     run_with_large_stack(
-        "struct_filter_predicate_unfolds_for_explicit_field_view",
+        "struct_filter_predicate_unfolds_for_default_field_view",
         || {
             let source_code = r#"
 prop is_group(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
@@ -128,17 +128,15 @@ struct Group<s nonempty_set>:
     <=>:
         $is_group(s, inv, op, e)
 
-macro G "&Group<s>{g}"
-
 claim:
     ? forall s nonempty_set, g &Group<s>, x s:
-        @G.op(@G.inv(x), x) = @G.e
-    @G.op(@G.inv(x), x) = @G.e
+        g.op(g.inv(x), x) = g.e
+    g.op(g.inv(x), x) = g.e
 "#;
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "struct_filter_predicate_unfolds_for_explicit_field_view",
+                "struct_filter_predicate_unfolds_for_default_field_view",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -147,6 +145,379 @@ claim:
             assert!(
                 run_succeeded,
                 "struct_filter_predicate_unfolds_for_explicit_field_view failed:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn default_struct_view_keeps_explicit_struct_view_syntax_available() {
+    run_with_large_stack(
+        "default_struct_view_keeps_explicit_struct_view_syntax_available",
+        || {
+            let source_code = r#"
+struct Point:
+    x R
+    y R
+
+struct CoordinatePair:
+    first R
+    second R
+
+have explicit_point &Point = (3, 4)
+&Point{explicit_point}.x = 3
+
+have p &Point = (1, 2)
+p.x = 1
+p.y = 2
+&Point{p}.x = 1
+p $in &CoordinatePair
+&CoordinatePair{p}.first = 1
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "default_struct_view_keeps_explicit_struct_view_syntax_available",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "default struct views should coexist with explicit and alternate struct views:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("\"statement\": \"&Point{p}.y = 2\""),
+                "`p.y` should lower directly to the existing explicit struct-field AST:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn default_struct_view_replays_from_theorem_goal_into_proof() {
+    run_with_large_stack(
+        "default_struct_view_replays_from_theorem_goal_into_proof",
+        || {
+            let source_code = r#"
+struct Point:
+    x R
+    y R
+
+thm point_default_view_is_available_in_proof:
+    ? forall p &Point:
+        p.x = &Point{p}.x
+    p.x = &Point{p}.x
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "default_struct_view_replays_from_theorem_goal_into_proof",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "theorem proof parsing should replay the goal binder's default struct view:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn parameterized_default_struct_view_keeps_dependent_symbol_ids() {
+    run_with_large_stack(
+        "parameterized_default_struct_view_keeps_dependent_symbol_ids",
+        || {
+            let source_code = r#"
+struct Box<s set>:
+    value s
+    tag N
+
+thm box_default_view_keeps_its_carrier:
+    ? forall s nonempty_set, b &Box<s>:
+        b.value = &Box<s>{b}.value
+    b.value = &Box<s>{b}.value
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "parameterized_default_struct_view_keeps_dependent_symbol_ids",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a parameterized default view should retain earlier binder identities:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn struct_membership_fact_does_not_enable_default_field_syntax() {
+    let source_code = r#"
+struct Point:
+    x R
+    y R
+
+have p cart(R, R) = (1, 2)
+p $in &Point
+p.x = &Point{p}.x
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "struct_membership_fact_does_not_enable_default_field_syntax",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "a later `p $in &Point` fact must not opt `p` into `p.x` syntax:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("default struct view"),
+        "missing-default-view syntax should have a focused diagnostic:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn separate_same_name_binders_keep_symbol_specific_default_struct_views() {
+    run_with_large_stack(
+        "separate_same_name_binders_keep_symbol_specific_default_struct_views",
+        || {
+            let source_code = r#"
+struct Point:
+    x R
+    y R
+
+struct TaggedInteger:
+    code Z
+    tag N
+
+thm point_view_for_item:
+    ? forall item &Point:
+        item.x = &Point{item}.x
+    item.x = &Point{item}.x
+
+thm tagged_integer_view_for_item:
+    ? forall item &TaggedInteger:
+        item.code = &TaggedInteger{item}.code
+    item.code = &TaggedInteger{item}.code
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "separate_same_name_binders_keep_symbol_specific_default_struct_views",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "separate `item` binders should replay defaults by SymbolId, not surface name:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn default_struct_view_function_field_remains_callable() {
+    run_with_large_stack(
+        "default_struct_view_function_field_remains_callable",
+        || {
+            let source_code = r#"
+struct Endomorphism:
+    apply fn(x R) R
+    anchor R
+
+have endomorphism &Endomorphism = (fn(x R) R {x + 1}, 0)
+endomorphism.apply(2) = &Endomorphism{endomorphism}.apply(2)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "default_struct_view_function_field_remains_callable",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a callable default field should parse as the existing explicit callable AST:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn default_struct_view_is_available_in_set_builder_body() {
+    run_with_large_stack(
+        "default_struct_view_is_available_in_set_builder_body",
+        || {
+            let source_code = r#"
+struct Point:
+    x R
+    y R
+
+have right_half_plane set = {p &Point: p.x >= 0}
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "default_struct_view_is_available_in_set_builder_body",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a set-builder binding should make its selected struct view available in the body:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn default_struct_view_is_available_for_struct_fields() {
+    run_with_large_stack("default_struct_view_is_available_for_struct_fields", || {
+        let source_code = r#"
+struct Point:
+    x R
+    y R
+
+struct PointHolder:
+    point &Point
+    marker N
+    <=>:
+        point.x = &Point{point}.x
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            "default_struct_view_is_available_for_struct_fields",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "a struct field typed by `&Point` should use that default view in the filter:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn legacy_double_ampersand_struct_binding_is_rejected_with_migration_hint() {
+    let source_code = r#"
+struct Point:
+    x R
+    y R
+
+claim:
+    ? forall p &&Point:
+        p.x = &Point{p}.x
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "legacy_double_ampersand_struct_binding_is_rejected_with_migration_hint",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "legacy `&&Point` binding syntax should be rejected:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("`&&Struct` has been removed")
+            && run_output.contains("write `&Struct` in a binding type"),
+        "legacy syntax should report the direct `&&Point` to `&Point` migration:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn obtain_inherits_default_struct_view() {
+    run_with_large_stack("obtain_inherits_default_struct_view", || {
+        let source_code = r#"
+struct Point:
+    x R
+    y R
+
+have original &Point = (1, 2)
+witness exist p &Point st {p = p} from original
+obtain point from exist p &Point st {p = p}
+point.x = &Point{point}.x
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("obtain_inherits_default_struct_view");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "an obtained object should inherit its existential struct view:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn obtain_instantiates_parameterized_default_struct_view_by_symbol_id() {
+    run_with_large_stack(
+        "obtain_instantiates_parameterized_default_struct_view_by_symbol_id",
+        || {
+            let source_code = r#"
+struct Box<s set>:
+    value s
+    tag N
+
+have real_box &Box<R> = (1, 0)
+witness exist s nonempty_set, b &Box<s> st {b = b} from R, real_box
+obtain carrier, box from exist s nonempty_set, b &Box<s> st {b = b}
+box.value = &Box<carrier>{box}.value
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "obtain_instantiates_parameterized_default_struct_view_by_symbol_id",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "an obtained dependent struct view should substitute the new carrier SymbolId:\n{}",
                 run_output
             );
         },

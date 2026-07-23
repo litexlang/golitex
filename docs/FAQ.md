@@ -58,7 +58,7 @@ Syntax sugar of `xxx set` in `forall xxx set` meaning `$is_set(xxx)` is inspired
 
 Anonymous function syntax like`fn(x R) R {-x}` is essential because they are used as parameters of functions like `sum` and `product` and `\integral`. It's inspired by JavaScript's `(x) => -x` syntax.
 
-The correlation between `tuple` and `cart` and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without any concrete mathematical meaning. By viewing one object as a struct, we can use something like `&Point<R, R>((0,0)).x` to view tuple `(0,0)` as a point in the plane `R x R` and get its first coordinate by `.x`.
+The correlation between `tuple` and `cart` and `struct` is essential, because anything, including `struct`, must correlate to something in set theory. Nothing in Litex should be arbitrary and without any concrete mathematical meaning. By viewing one object as a struct, we can use something like `&Point{(0, 0)}.x` to view tuple `(0, 0)` as a point in the plane and get its first coordinate by `.x`.
 
 ## What does "Litex is built on relationships between objects instead of meanings of them" mean?
 
@@ -483,6 +483,10 @@ struct FirstQuadrant:
     <=>:
         x > 0
         y > 0
+
+have p &FirstQuadrant = (1, 2)
+p.x = 1
+p.y = &FirstQuadrant{p}.y
 ```
 
 Read this as a named set-builder over `cart(R, R)`:
@@ -501,9 +505,23 @@ non-parameterized struct, `&Name` is the struct set. In both cases, the object
 inside braces is the underlying tuple-like element being viewed through that
 struct.
 
-The explicit prefix is intentional. The same tuple may belong to several
-struct sets, and the same field name may refer to different indices in
-different struct views.
+The view choice is intentional. The same tuple may belong to several struct
+sets, and the same field name may refer to different indices in different
+struct views. The fully explicit `&FirstQuadrant{p}.x` form chooses the view at
+that access.
+
+Default-view notation is a preview shorthand that still makes this choice
+explicit. Giving a new binding the explicit struct type `p &FirstQuadrant`
+means that `p` belongs to `&FirstQuadrant` and selects that struct as the
+default view for `p` in the current binding scope. The parser then lowers
+`p.x` to `&FirstQuadrant{p}.x` before verification.
+
+This binding syntax does not give `p` a unique nominal type, and Litex does not
+infer a default from all known memberships. A later fact
+`p $in &FirstQuadrant` does not select a default view. If a bound `p` also
+belongs to another struct, `p.x` continues to use the view selected by its
+explicit binding type, while `&OtherStruct{p}.x` selects the other view for
+that access.
 
 ## Why can an anonymous function be written as `fn(x R) R {-x}`?
 

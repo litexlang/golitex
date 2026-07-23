@@ -1,27 +1,22 @@
 # Linear Algebra Done Right, fourth edition — Section 8B.
 # Generalized Eigenspace Decomposition.
 
-macro ScalarSystem "&chap1a::ScalarSystem<s>"
-macro Scalars "&chap1a::ScalarSystem<s>{scalars}"
-macro Space "&chap1b::VectorSpace<s, scalars, V>{Vspace}"
-macro Operators "\chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>"
-macro Shift "\chap5a::operator_minus_scalar_identity<s, scalars, V, Vspace>"
 
-prop belongs_to_generalized_eigenspace(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s, v V):
-    exist k N_pos st {\chap5a::operator_power<s, scalars, V, Vspace>(@Shift(T, lambda), k)(v) = @Space.zero}
+prop belongs_to_generalized_eigenspace(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s, v V):
+    exist k N_pos st {\chap5a::operator_power<s, scalars, V, Vspace>(\chap5a::operator_minus_scalar_identity<s, scalars, V, Vspace>(T, lambda), k)(v) = Vspace.zero}
 
 # Definition 8.19. The generalized eigenspace is a genuine set-valued
 # function; unlike generalized eigenvectors it also contains zero.
-template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
-    have fn generalized_eigenspace(T @Operators, lambda s) power_set(V) = {v V: $belongs_to_generalized_eigenspace(s, scalars, V, Vspace, T, lambda, v)}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+    have fn generalized_eigenspace(T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s) power_set(V) = {v V: $belongs_to_generalized_eigenspace(s, scalars, V, Vspace, T, lambda, v)}
 
 # Result 8.20. The dimension power is one admissible exponent; conversely
 # Results 8.1 and 8.3 move every admissible exponent to dim V.
 axiom description_of_generalized_eigenspaces:
-    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s:
         $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
         =>:
-            \generalized_eigenspace<s, scalars, V, Vspace>(T, lambda) = \chap8a::power_null_space<s, scalars, V, Vspace>(@Shift(T, lambda), \chap2c::dimension<s, scalars, V, Vspace>)
+            \generalized_eigenspace<s, scalars, V, Vspace>(T, lambda) = \chap8a::power_null_space<s, scalars, V, Vspace>(\chap5a::operator_minus_scalar_identity<s, scalars, V, Vspace>(T, lambda), \chap2c::dimension<s, scalars, V, Vspace>)
             $chap1c::is_subspace(s, scalars, V, Vspace, \generalized_eigenspace<s, scalars, V, Vspace>(T, lambda))
 
 # Example 8.21. The two generalized eigenspaces are the coordinate plane and
@@ -35,29 +30,29 @@ sketch:
     forall z1, z2, z3 R:
         [z1, z2, z3] = [z1, z2, 0] + [0, 0, z3]
 
-template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos>:
-    have fn generalized_eigenspace_family(T @Operators, eigenvalues &chap1a::FiniteList<s, m>) finite_seq(power_set(V), m) = fn(k N_pos: k <= m) power_set(V) {\generalized_eigenspace<s, scalars, V, Vspace>(T, &chap1a::FiniteList<s, m>{eigenvalues}.entries(k))}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos>:
+    have fn generalized_eigenspace_family(T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, eigenvalues &chap1a::FiniteList<s, m>) finite_seq(power_set(V), m) = fn(k N_pos: k <= m) power_set(V) {\generalized_eigenspace<s, scalars, V, Vspace>(T, eigenvalues.entries(k))}
 
-prop shifted_power_vanishes_on_generalized_eigenspace(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s, r N_pos):
+prop shifted_power_vanishes_on_generalized_eigenspace(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s, r N_pos):
     forall v \generalized_eigenspace<s, scalars, V, Vspace>(T, lambda):
-        \chap5a::operator_power<s, scalars, V, Vspace>(@Shift(T, lambda), r)(v) = @Space.zero
+        \chap5a::operator_power<s, scalars, V, Vspace>(\chap5a::operator_minus_scalar_identity<s, scalars, V, Vspace>(T, lambda), r)(v) = Vspace.zero
 
-prop shifted_operator_is_nilpotent_on_generalized_eigenspace(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s):
+prop shifted_operator_is_nilpotent_on_generalized_eigenspace(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s):
     exist r N_pos st {$shifted_power_vanishes_on_generalized_eigenspace(s, scalars, V, Vspace, T, lambda, r)}
 
-prop generalized_eigenspace_decomposition_statement(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N_pos, eigenvalues &chap1a::FiniteList<s, m>):
+prop generalized_eigenspace_decomposition_statement(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, m N_pos, eigenvalues &chap1a::FiniteList<s, m>):
     forall k N_pos:
         k <= m
         =>:
-            $chap5a::is_invariant_subspace(s, scalars, V, Vspace, T, \generalized_eigenspace<s, scalars, V, Vspace>(T, &chap1a::FiniteList<s, m>{eigenvalues}.entries(k)))
-            $shifted_operator_is_nilpotent_on_generalized_eigenspace(s, scalars, V, Vspace, T, &chap1a::FiniteList<s, m>{eigenvalues}.entries(k))
+            $chap5a::is_invariant_subspace(s, scalars, V, Vspace, T, \generalized_eigenspace<s, scalars, V, Vspace>(T, eigenvalues.entries(k)))
+            $shifted_operator_is_nilpotent_on_generalized_eigenspace(s, scalars, V, Vspace, T, eigenvalues.entries(k))
     $chap1c::is_direct_sum(s, scalars, V, Vspace, m, \generalized_eigenspace_family<s, scalars, V, Vspace, m>(T, eigenvalues))
     \chap1c::subspace_sum<s, scalars, V, Vspace, m>(\generalized_eigenspace_family<s, scalars, V, Vspace, m>(T, eigenvalues)) = V
 
 # Result 8.22. Description 8.20 gives invariance and nilpotence; Result 8.12
 # gives directness, and the generalized-eigenvector basis makes the sum all V.
 axiom generalized_eigenspace_decomposition:
-    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, m N_pos, eigenvalues &chap1a::FiniteList<s, m>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, m N_pos, eigenvalues &chap1a::FiniteList<s, m>:
         $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
         $chap5d::lists_all_distinct_eigenvalues(s, scalars, V, Vspace, T, m, eigenvalues)
         =>:
@@ -65,22 +60,22 @@ axiom generalized_eigenspace_decomposition:
 
 # Definition 8.23. Multiplicity is the dimension of the callable generalized
 # eigenspace. Exact unique existence is recorded before the selected N-value.
-prop is_eigenvalue_multiplicity_value(s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s, d N):
+prop is_eigenvalue_multiplicity_value(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s, d N):
     $chap1c::is_subspace(s, scalars, V, Vspace, \generalized_eigenspace<s, scalars, V, Vspace>(T, lambda))
     d = \chap2c::dimension<s, scalars, \generalized_eigenspace<s, scalars, V, Vspace>(T, lambda), \chap1c::subspace_vector_space<s, scalars, V, Vspace, \generalized_eigenspace<s, scalars, V, Vspace>(T, lambda)>>
 
 axiom eigenvalue_multiplicity_exists_unique:
-    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s:
         $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
         =>:
             exist! d N st {$is_eigenvalue_multiplicity_value(s, scalars, V, Vspace, T, lambda, d)}
 
-template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
     # Selection from the exact dimension relation remains explicit proof debt.
-    trust have eigenvalue_multiplicity fn(T @Operators, lambda s) N
+    trust have eigenvalue_multiplicity fn(T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s) N
 
 axiom eigenvalue_multiplicity_spec:
-    ? forall s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T @Operators, lambda s:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s:
         $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
         =>:
             $is_eigenvalue_multiplicity_value(s, scalars, V, Vspace, T, lambda, \eigenvalue_multiplicity<s, scalars, V, Vspace>(T, lambda))
@@ -96,8 +91,8 @@ sketch:
     A(3, 3) = 7
     2 + 1 = 3
 
-template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos>:
-    have fn eigenvalue_multiplicity_sum(T @Operators, eigenvalues &chap1a::FiniteList<s, m>) N = sum(1, m, fn(k N_pos: k <= m) N {\eigenvalue_multiplicity<s, scalars, V, Vspace>(T, &chap1a::FiniteList<s, m>{eigenvalues}.entries(k))})
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos>:
+    have fn eigenvalue_multiplicity_sum(T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, eigenvalues &chap1a::FiniteList<s, m>) N = sum(1, m, fn(k N_pos: k <= m) N {\eigenvalue_multiplicity<s, scalars, V, Vspace>(T, eigenvalues.entries(k))})
 
 # Result 8.25. Take dimensions in the generalized eigenspace direct sum.
 axiom sum_of_multiplicities_equals_dimension:
@@ -107,15 +102,15 @@ axiom sum_of_multiplicities_equals_dimension:
         =>:
             \eigenvalue_multiplicity_sum<&chap1a::Complex, chap1a::complex_scalars, V, Vspace, m>(T, eigenvalues) = \chap2c::dimension<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>
 
-template<s nonempty_set, scalars @ScalarSystem>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>>:
     have fn finite_scalar_power(x s, k N) s by induc k from 0:
-        case k = 0: @Scalars.one
-        case k > 0: @Scalars.mul(finite_scalar_power(x, k - 1), x)
+        case k = 0: scalars.one
+        case k > 0: scalars.mul(finite_scalar_power(x, k - 1), x)
 
-template<s nonempty_set, scalars @ScalarSystem, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos>:
-    have fn characteristic_factor_product(T @Operators, eigenvalues &chap1a::FiniteList<s, m>, k closed_range(0, m), z s) s by induc k from 0:
-        case k = 0: @Scalars.one
-        case k > 0: @Scalars.mul(characteristic_factor_product(T, eigenvalues, k - 1, z), \finite_scalar_power<s, scalars>(@Scalars.add(z, @Scalars.neg(&chap1a::FiniteList<s, m>{eigenvalues}.entries(k))), \eigenvalue_multiplicity<s, scalars, V, Vspace>(T, &chap1a::FiniteList<s, m>{eigenvalues}.entries(k))))
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos>:
+    have fn characteristic_factor_product(T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, eigenvalues &chap1a::FiniteList<s, m>, k closed_range(0, m), z s) s by induc k from 0:
+        case k = 0: scalars.one
+        case k > 0: scalars.mul(characteristic_factor_product(T, eigenvalues, k - 1, z), \finite_scalar_power<s, scalars>(scalars.add(z, scalars.neg(eigenvalues.entries(k))), \eigenvalue_multiplicity<s, scalars, V, Vspace>(T, eigenvalues.entries(k))))
 
 prop has_characteristic_factor_values(V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>, q \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>):
     forall z &chap1a::Complex:
@@ -210,21 +205,21 @@ prop is_block_partition(n, m N_pos, block_of fn(i N_pos: i <= n) N_pos):
         =>:
             exist i N_pos st {i <= n, block_of(i) = k}
 
-prop has_zero_cross_block_entries(s nonempty_set, scalars @ScalarSystem, n N_pos, A matrix(s, n, n), block_of fn(i N_pos: i <= n) N_pos):
+prop has_zero_cross_block_entries(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A matrix(s, n, n), block_of fn(i N_pos: i <= n) N_pos):
     forall row, column N_pos:
         row <= n
         column <= n
         block_of(row) != block_of(column)
         =>:
-            A(row, column) = @Scalars.zero
+            A(row, column) = scalars.zero
 
-prop is_block_diagonal_matrix_with_partition(s nonempty_set, scalars @ScalarSystem, n, m N_pos, A matrix(s, n, n), block_of fn(i N_pos: i <= n) N_pos):
+prop is_block_diagonal_matrix_with_partition(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n, m N_pos, A matrix(s, n, n), block_of fn(i N_pos: i <= n) N_pos):
     $is_block_partition(n, m, block_of)
     $has_zero_cross_block_entries(s, scalars, n, A, block_of)
 
 # Definition 8.35. A matrix is block diagonal when a consecutive partition of
 # its indices makes every entry between different blocks zero.
-prop is_block_diagonal_matrix(s nonempty_set, scalars @ScalarSystem, n, m N_pos, A matrix(s, n, n)):
+prop is_block_diagonal_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n, m N_pos, A matrix(s, n, n)):
     exist block_of fn(i N_pos: i <= n) N_pos st {$is_block_diagonal_matrix_with_partition(s, scalars, n, m, A, block_of)}
 
 # Example 8.36. The displayed 5-by-5 example has consecutive block sizes
@@ -239,19 +234,19 @@ prop block_diagonal_entries_are_eigenvalues(V nonempty_set, Vspace &chap1b::Vect
     forall i N_pos:
         i <= n
         =>:
-            \chap5c::matrix_of_operator<&chap1a::Complex, chap1a::complex_scalars, V, Vspace, n>(basis, T)(i, i) = &chap1a::FiniteList<&chap1a::Complex, m>{eigenvalues}.entries(block_of(i))
+            \chap5c::matrix_of_operator<&chap1a::Complex, chap1a::complex_scalars, V, Vspace, n>(basis, T)(i, i) = eigenvalues.entries(block_of(i))
 
 prop block_labels_match_partition(n N_pos, block_of fn(i N_pos: i <= n) N_pos, labels &chap1a::FiniteList<N_pos, n>):
     forall i N_pos:
         i <= n
         =>:
-            &chap1a::FiniteList<N_pos, n>{labels}.entries(i) = block_of(i)
+            labels.entries(i) = block_of(i)
 
 prop block_sizes_match_eigenvalue_multiplicities(V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>, n, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>, labels &chap1a::FiniteList<N_pos, n>):
     forall k N_pos:
         k <= m
         =>:
-            $chap7e::finite_list_value_has_multiplicity(N_pos, n, labels, k, \eigenvalue_multiplicity<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>(T, &chap1a::FiniteList<&chap1a::Complex, m>{eigenvalues}.entries(k)))
+            $chap7e::finite_list_value_has_multiplicity(N_pos, n, labels, k, \eigenvalue_multiplicity<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>(T, eigenvalues.entries(k)))
 
 prop has_generalized_eigenvalue_block_form(V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>):
     exist n N_pos, basis &chap1a::FiniteList<V, n>, block_of fn(i N_pos: i <= n) N_pos, labels &chap1a::FiniteList<N_pos, n> st {$chap2b::is_basis(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, n, basis), $is_block_diagonal_matrix_with_partition(&chap1a::Complex, chap1a::complex_scalars, n, m, \chap5c::matrix_of_operator<&chap1a::Complex, chap1a::complex_scalars, V, Vspace, n>(basis, T), block_of), $chap5c::is_upper_triangular_matrix(&chap1a::Complex, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<&chap1a::Complex, chap1a::complex_scalars, V, Vspace, n>(basis, T)), $block_diagonal_entries_are_eigenvalues(V, Vspace, T, n, m, basis, eigenvalues, block_of), $block_labels_match_partition(n, block_of, labels), $block_sizes_match_eigenvalue_multiplicities(V, Vspace, T, n, m, eigenvalues, labels)}

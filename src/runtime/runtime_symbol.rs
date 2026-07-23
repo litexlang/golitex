@@ -98,6 +98,22 @@ impl Runtime {
         self.current_parse_context().active_binding(name).cloned()
     }
 
+    pub(crate) fn register_default_struct_view(
+        &mut self,
+        bindings: &[SymbolBinding],
+        struct_obj: &StructObj,
+    ) {
+        for binding in bindings {
+            self.default_struct_views
+                .entry(binding.id())
+                .or_insert_with(|| struct_obj.clone());
+        }
+    }
+
+    pub(crate) fn default_struct_view_for_symbol(&self, symbol: &SymbolRef) -> Option<StructObj> {
+        self.default_struct_views.get(&symbol.id()).cloned()
+    }
+
     pub(crate) fn template_instance_symbol_binding(
         &mut self,
         surface_name: &str,
