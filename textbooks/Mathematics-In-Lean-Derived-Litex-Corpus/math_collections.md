@@ -220,13 +220,12 @@ eigen-data, concrete matrices, and basis relationships. Linear-map composition
 and the span universal property follow their short natural proofs and are
 checked.
 
-The callable product, coproduct, identity, and countable-set templates remain
-the intended interfaces. Strict verification currently cannot unfold some of
-their applications while carrier parameters remain symbolic, so the affected
-C10-C13 pointwise facts are checked in explicitly labeled definition-expanded
-lambda or set-builder form. This is a tracked `kernel_problem`, not a reason to
-replace the callable objects with propositions or to claim named-template
-unfolding evidence.
+The callable product, coproduct, identity, and countable-set templates are the
+implemented interfaces. Strict verification now unfolds their applications
+when carrier parameters remain symbolic; the focused C10 reproduction verifies
+this behavior directly. Some C10-C13 pointwise facts retain an explicit lambda
+or set-builder form because it exposes the coordinate or membership
+calculation, not as a workaround for a live `kernel_problem`.
 
 Dependent direct sums, quotient operations, endomorphism polynomials, basis
 coordinates, finite indexed matrix sums, and dimensions require additional
@@ -255,9 +254,9 @@ it.
 
 This definition-first layer is retained because it gives later theorems the
 right hypotheses. The rejected form is to add a large collection of theorem-
-shaped propositions at the top of the chapter. Filter algebra, the named
-closure interface, the reverse Cauchy bridge, other compactness and completeness
-theorems, Baire, separation results, extensions, and sequential compactness
+shaped propositions at the top of the chapter. Filter algebra, the closure
+characterization theorems, the reverse Cauchy bridge, other compactness and
+completeness theorems, Baire, separation results, extensions, and sequential compactness
 remain in `todo.lit` until their actual proof spines are formalized.
 
 The C11 pressure test exposed a kernel bug in which automatic universal-fact

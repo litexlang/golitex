@@ -63,6 +63,10 @@ impl Runtime {
             )),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
             EVAL => self.parse_eval_stmt(tb),
+            "macro" if tb.token_at_add_index(2) == "\"" => Err(parse_stmt_error(
+                tb,
+                "macro has been removed; write the full Litex expression directly",
+            )),
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
             TEMPLATE => self.parse_def_template_stmt(tb),
@@ -97,7 +101,7 @@ mod parse_stmt_diagnostic_tests {
 
     fn parse_one_stmt_error_message(source_code: &str) -> String {
         let mut runtime = Runtime::new();
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks(source_code, Rc::from("parse_stmt_diagnostic_test.lit"))
             .expect("tokenize statement");
@@ -111,7 +115,7 @@ mod parse_stmt_diagnostic_tests {
 
     fn parse_one_stmt(source_code: &str) -> Result<Stmt, RuntimeError> {
         let mut runtime = Runtime::new();
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks(source_code, Rc::from("parse_stmt_diagnostic_test.lit"))
             .expect("tokenize statement");
@@ -161,7 +165,7 @@ mod parse_stmt_diagnostic_tests {
 
         let mut runtime = Runtime::new();
         runtime.isolated = true;
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks(
                 "import \"../algebra\" as Algebra\nimport std basics",
@@ -177,7 +181,7 @@ mod parse_stmt_diagnostic_tests {
         let message = parse_one_stmt_error_message("by def $P(1):\n    1 = 1");
         assert!(message.contains("single-line"), "{}", message);
 
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let error = tokenizer
             .parse_blocks(
                 "by def $P(1)\n    1 = 1",
@@ -213,6 +217,15 @@ mod parse_stmt_diagnostic_tests {
         assert_eq!(
             parse_one_stmt_error_message("have fn as algo f(x R) R = x"),
             "`have fn as algo` has been replaced by `have fn ...` followed by `have algo for f(...)`"
+        );
+    }
+
+    #[test]
+    fn removed_macro_definition_reports_migration_error() {
+        let message = parse_one_stmt_error_message("macro eq \"a = b\"");
+        assert_eq!(
+            message,
+            "macro has been removed; write the full Litex expression directly"
         );
     }
 }

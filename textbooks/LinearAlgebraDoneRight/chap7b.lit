@@ -1,54 +1,49 @@
 # Linear Algebra Done Right, fourth edition — Section 7B.
 # Spectral Theorem.
 
-macro ScalarSystem "&chap1a::ScalarSystem<s>"
-macro Geometry "&chap6a::InnerProductScalarGeometry<s, scalars>{scalar_geometry}"
-macro InnerSpace "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>"
-macro Inner "&chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}"
-macro Operators "\chap3a::linear_map_space<s, scalars, V, V, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space, &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>{inner_space}.vector_space>"
 
 # A spectral diagonalizing basis is orthonormal as well as diagonalizing. The
 # zero-dimensional branch is explicit because Litex matrices have positive
 # dimensions, whereas the empty list is still an orthonormal basis of {0}.
-prop has_nonzero_orthonormal_diagonalizing_basis(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
-    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, n, basis), $chap5d::is_diagonal_matrix(s, scalars, n, \chap5c::matrix_of_operator<s, scalars, V, @Inner.vector_space, n>(basis, T))}
+prop has_nonzero_orthonormal_diagonalizing_basis(s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, T \chap3a::linear_map_space<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>):
+    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, n, basis), $chap5d::is_diagonal_matrix(s, scalars, n, \chap5c::matrix_of_operator<s, scalars, V, inner_space.vector_space, n>(basis, T))}
 
-prop has_orthonormal_diagonalizing_basis(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
-    \chap2c::dimension<s, scalars, V, @Inner.vector_space> = 0 or $has_nonzero_orthonormal_diagonalizing_basis(s, scalars, scalar_geometry, V, inner_space, T)
+prop has_orthonormal_diagonalizing_basis(s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, T \chap3a::linear_map_space<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>):
+    \chap2c::dimension<s, scalars, V, inner_space.vector_space> = 0 or $has_nonzero_orthonormal_diagonalizing_basis(s, scalars, scalar_geometry, V, inner_space, T)
 
 # The equivalent eigenvector formulation keeps the basis and its eigenvalues
 # as existential data; the spectral theorem does not choose either canonically.
-prop has_orthonormal_eigenvector_basis(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
-    exist n N, basis &chap1a::FiniteList<V, n>, eigenvalues &chap1a::FiniteList<s, n> st {$chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, n, basis), $chap5a::lists_corresponding_eigenpairs(s, scalars, V, @Inner.vector_space, T, n, eigenvalues, basis)}
+prop has_orthonormal_eigenvector_basis(s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, T \chap3a::linear_map_space<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>):
+    exist n N, basis &chap1a::FiniteList<V, n>, eigenvalues &chap1a::FiniteList<s, n> st {$chap6b::is_orthonormal_basis(s, scalars, scalar_geometry, V, inner_space, n, basis), $chap5a::lists_corresponding_eigenpairs(s, scalars, V, inner_space.vector_space, T, n, eigenvalues, basis)}
 
 # Result 7.26. Complete the square in
 # <(T^2+bT+cI)v,v>, use Cauchy-Schwarz to make it positive for v != 0,
 # and conclude injectivity and hence invertibility in finite dimension.
 axiom invertible_quadratic_expression_of_self_adjoint_operator:
-    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators, b, c R:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, T \chap3a::linear_map_space<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>, b, c R:
         $chap7a::is_self_adjoint(s, scalars, scalar_geometry, V, inner_space, T)
         b^2 < 4 * c
         =>:
-            $chap3d::is_invertible_linear_map(s, scalars, V, V, @Inner.vector_space, @Inner.vector_space, \chap3a::linear_map_add<s, scalars, V, V, @Inner.vector_space, @Inner.vector_space>(\chap3a::linear_map_add<s, scalars, V, V, @Inner.vector_space, @Inner.vector_space>(\chap5a::operator_power<s, scalars, V, @Inner.vector_space>(T, 2), \chap3a::linear_map_smul<s, scalars, V, V, @Inner.vector_space, @Inner.vector_space>(@Geometry.real_embed(b), T)), \chap3a::linear_map_smul<s, scalars, V, V, @Inner.vector_space, @Inner.vector_space>(@Geometry.real_embed(c), \chap3a::identity_linear_map<s, scalars, V, @Inner.vector_space>)))
+            $chap3d::is_invertible_linear_map(s, scalars, V, V, inner_space.vector_space, inner_space.vector_space, \chap3a::linear_map_add<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>(\chap3a::linear_map_add<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>(\chap5a::operator_power<s, scalars, V, inner_space.vector_space>(T, 2), \chap3a::linear_map_smul<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>(scalar_geometry.real_embed(b), T)), \chap3a::linear_map_smul<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>(scalar_geometry.real_embed(c), \chap3a::identity_linear_map<s, scalars, V, inner_space.vector_space>)))
 
 # Result 7.27. Over C, zeros of the minimal polynomial are real eigenvalues.
 # Over R, 7.26 excludes every irreducible quadratic factor. Thus only linear
 # factors with real roots remain; the zero-dimensional case is the empty
 # product.
-prop has_real_linear_factorization_of_minimal_polynomial(s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators):
-    exist m N_pos, roots &chap1a::FiniteList<R, m>, stages fn(k N_pos: k <= m + 1) \chap2a::polynomial_space<s, scalars> st {$chap5c::is_monic_linear_factorization(s, scalars, \chap5b::minimal_polynomial<s, scalars, V, @Inner.vector_space>(T), m, (m, fn(j N_pos: j <= m) s {@Geometry.real_embed(&chap1a::FiniteList<R, m>{roots}.entries(j))}), stages)}
+prop has_real_linear_factorization_of_minimal_polynomial(s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, T \chap3a::linear_map_space<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>):
+    exist m N_pos, roots &chap1a::FiniteList<R, m>, stages fn(k N_pos: k <= m + 1) \chap2a::polynomial_space<s, scalars> st {$chap5c::is_monic_linear_factorization(s, scalars, \chap5b::minimal_polynomial<s, scalars, V, inner_space.vector_space>(T), m, (m, fn(j N_pos: j <= m) s {scalar_geometry.real_embed(roots.entries(j))}), stages)}
 
 axiom minimal_polynomial_of_self_adjoint_operator_splits_over_reals:
-    ? forall s nonempty_set, scalars @ScalarSystem, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space @InnerSpace, T @Operators:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, T \chap3a::linear_map_space<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>:
         $chap7a::is_self_adjoint(s, scalars, scalar_geometry, V, inner_space, T)
         =>:
-            \chap2c::dimension<s, scalars, V, @Inner.vector_space> = 0 or $has_real_linear_factorization_of_minimal_polynomial(s, scalars, scalar_geometry, V, inner_space, T)
+            \chap2c::dimension<s, scalars, V, inner_space.vector_space> = 0 or $has_real_linear_factorization_of_minimal_polynomial(s, scalars, scalar_geometry, V, inner_space, T)
 
 # Result 7.29. Real spectral theorem. Result 7.27 and 6.37 give an
 # orthonormal upper-triangular basis; self-adjointness makes its matrix equal
 # to its transpose, hence diagonal. The converse uses the same matrix identity,
 # and a diagonal basis is an eigenvector basis by definition.
-prop real_spectral_theorem_statement(V nonempty_set, inner_space &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<R, chap1a::real_scalars, V, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space>):
+prop real_spectral_theorem_statement(V nonempty_set, inner_space &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<R, chap1a::real_scalars, V, V, inner_space.vector_space, inner_space.vector_space>):
     forall:
         =>:
             $chap7a::is_self_adjoint(R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V, inner_space, T)
@@ -61,8 +56,8 @@ prop real_spectral_theorem_statement(V nonempty_set, inner_space &chap6a::InnerP
             $has_orthonormal_eigenvector_basis(R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V, inner_space, T)
 
 axiom real_spectral_theorem:
-    ? forall V nonempty_set, inner_space &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<R, chap1a::real_scalars, V, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space>:
-        $chap2a::is_finite_dimensional(R, chap1a::real_scalars, V, &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>{inner_space}.vector_space)
+    ? forall V nonempty_set, inner_space &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<R, chap1a::real_scalars, V, V, inner_space.vector_space, inner_space.vector_space>:
+        $chap2a::is_finite_dimensional(R, chap1a::real_scalars, V, inner_space.vector_space)
         =>:
             $real_spectral_theorem_statement(V, inner_space, T)
 
@@ -88,7 +83,7 @@ sketch:
 # upper-triangular basis; 7.20 eliminates each off-diagonal row from the norm
 # equality ||Te_k||=||T*e_k||. Conversely diagonal matrices commute with their
 # conjugate transposes. Diagonal and eigenvector formulations are equivalent.
-prop complex_spectral_theorem_statement(V nonempty_set, inner_space &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{inner_space}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{inner_space}.vector_space>):
+prop complex_spectral_theorem_statement(V nonempty_set, inner_space &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, inner_space.vector_space, inner_space.vector_space>):
     forall:
         =>:
             $chap7a::is_normal(&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V, inner_space, T)
@@ -101,8 +96,8 @@ prop complex_spectral_theorem_statement(V nonempty_set, inner_space &chap6a::Inn
             $has_orthonormal_eigenvector_basis(&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V, inner_space, T)
 
 axiom complex_spectral_theorem:
-    ? forall V nonempty_set, inner_space &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{inner_space}.vector_space, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{inner_space}.vector_space>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>{inner_space}.vector_space)
+    ? forall V nonempty_set, inner_space &chap6a::InnerProductSpace<&chap1a::Complex, chap1a::complex_scalars, chap6a::complex_inner_product_scalar_geometry, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, inner_space.vector_space, inner_space.vector_space>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, inner_space.vector_space)
         =>:
             $complex_spectral_theorem_statement(V, inner_space, T)
 

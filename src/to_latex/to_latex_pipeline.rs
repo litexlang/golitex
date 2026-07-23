@@ -26,7 +26,7 @@ fn latex_fragment(math_blocks: &[String]) -> String {
 // Parse-only path: one blank-separated block per top-level stmt via `Stmt::to_latex_string`.
 // Returns a LaTeX fragment; callers can embed it in their own document wrapper if needed.
 pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
-    let mut tokenizer = Tokenizer::new();
+    let tokenizer = Tokenizer::new();
     let current_file_path = runtime.current_file_path_rc();
     let blocks = tokenizer.parse_blocks(source_code, current_file_path)?;
     let mut math_blocks: Vec<String> = Vec::new();

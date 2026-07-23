@@ -284,15 +284,17 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
-                let param_set = this.parse_obj(tb)?;
+                let (param_set, default_struct_view) =
+                    this.parse_obj_with_default_struct_view(tb)?;
                 let bindings = this.begin_parsing_scope(
                     ParamObjType::FnSet,
                     &current_params,
                     tb.line_file.clone(),
                 )?;
-                let param_group = ParamGroupWithSet::new(bindings, param_set);
-
-                params_def_with_set.push(param_group);
+                if let Some(struct_obj) = default_struct_view {
+                    this.register_default_struct_view(&bindings, &struct_obj);
+                }
+                params_def_with_set.push(ParamGroupWithSet::new(bindings, param_set));
 
                 if tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
@@ -358,15 +360,17 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
-                let param_set = this.parse_obj(tb)?;
+                let (param_set, default_struct_view) =
+                    this.parse_obj_with_default_struct_view(tb)?;
                 let bindings = this.begin_parsing_scope(
                     ParamObjType::FnSet,
                     &current_params,
                     tb.line_file.clone(),
                 )?;
-                let param_group = ParamGroupWithSet::new(bindings, param_set);
-
-                params_def_with_set.push(param_group);
+                if let Some(struct_obj) = default_struct_view {
+                    this.register_default_struct_view(&bindings, &struct_obj);
+                }
+                params_def_with_set.push(ParamGroupWithSet::new(bindings, param_set));
 
                 if tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
@@ -520,7 +524,12 @@ impl Runtime {
         // 2. Parse a primary object; builtin standard-set names are reclassified later.
         let mut result = self.parse_primary_obj(tb)?;
 
-        // 3. If the result is callable, parse all following argument groups.
+        // 3. A named object with a declared default struct view may use `obj.field`.
+        if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
+            result = self.parse_default_struct_field_access(tb, result)?;
+        }
+
+        // 4. If the result is callable, parse all following argument groups.
         let (head, mut body_vectors) = match &result {
             Obj::Atom(AtomObj::Identifier(i)) => (FnObjHead::Identifier(i.clone()), vec![]),
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => {
@@ -1668,8 +1677,11 @@ impl Runtime {
                 tb.line_file.clone(),
             )?;
             let parsed = (|| -> Result<Obj, RuntimeError> {
-                let second = this.parse_obj(tb)?;
+                let (second, default_struct_view) = this.parse_obj_with_default_struct_view(tb)?;
                 if tb.current()? == COLON {
+                    if let Some(struct_obj) = default_struct_view.as_ref() {
+                        this.register_default_struct_view(&bindings, struct_obj);
+                    }
                     tb.skip_token(COLON)?;
 
                     let user_names = vec![a.name.clone()];
@@ -1787,15 +1799,15 @@ impl Runtime {
 
     pub fn parse_struct_view_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         tb.skip_token(STRUCT_VIEW_PREFIX)?;
-        let name = self.parse_module_qualified_reference_name(tb)?;
-        let params = if !tb.exceed_end_of_head() && tb.current()? == LESS {
-            self.parse_angle_bracketed_objs(tb)?
-        } else if !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
-            self.parse_braced_objs(tb)?
-        } else {
-            vec![]
-        };
-        let struct_obj = StructObj::new(name, params);
+        if tb.current_token_is_equal_to(STRUCT_VIEW_PREFIX) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "`&&Struct` has been removed; write `&Struct` in a binding type".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let struct_obj = self.parse_struct_obj_after_prefix(tb)?;
 
         if tb.exceed_end_of_head() || tb.current()? != LEFT_CURLY_BRACE {
             return Ok(struct_obj.into());
@@ -1807,6 +1819,58 @@ impl Runtime {
         tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
         let field_name = parse_synthetically_correct_identifier_string(tb)?;
         Ok(ObjAsStructInstanceWithFieldAccess::new(struct_obj, obj, field_name).into())
+    }
+
+    fn parse_default_struct_field_access(
+        &mut self,
+        tb: &mut TokenBlock,
+        obj: Obj,
+    ) -> Result<Obj, RuntimeError> {
+        let symbol = match &obj {
+            Obj::Atom(atom) => atom.symbol_ref(),
+            _ => None,
+        };
+        let Some(symbol) = symbol else {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "default struct field access requires a bound object declared with `&Struct`"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        };
+        let Some(struct_obj) = self.default_struct_view_for_symbol(symbol) else {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "no default struct view is declared for `{}`; bind it with a struct type such as `{} &Struct` or write an explicit `&Struct{{{}}}.field`",
+                        symbol.display_name(),
+                        symbol.display_name(),
+                        symbol.display_name()
+                    ),
+                    tb.line_file.clone(),
+                ),
+            )));
+        };
+
+        tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
+        let field_name = parse_synthetically_correct_identifier_string(tb)?;
+        Ok(ObjAsStructInstanceWithFieldAccess::new(struct_obj, obj, field_name).into())
+    }
+
+    fn parse_struct_obj_after_prefix(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<StructObj, RuntimeError> {
+        let name = self.parse_module_qualified_reference_name(tb)?;
+        let params = if !tb.exceed_end_of_head() && tb.current()? == LESS {
+            self.parse_angle_bracketed_objs(tb)?
+        } else if !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
+            self.parse_braced_objs(tb)?
+        } else {
+            vec![]
+        };
+        Ok(StructObj::new(name, params))
     }
 
     /// `ident` or `mod::ident` as a predicate/atomic name in parse position.
@@ -2015,7 +2079,7 @@ mod module_qualification_parse_tests {
     use std::rc::Rc;
 
     fn parse_one_obj_line_with_runtime(rt: &mut Runtime, line: &str) -> Obj {
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks(line, Rc::from("test.lit"))
             .expect("tokenize object line");
@@ -2024,7 +2088,7 @@ mod module_qualification_parse_tests {
     }
 
     fn parse_one_fact_line_with_runtime(rt: &mut Runtime, line: &str) -> Fact {
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks(line, Rc::from("test.lit"))
             .expect("tokenize fact line");
@@ -2033,7 +2097,7 @@ mod module_qualification_parse_tests {
     }
 
     fn parse_one_stmt_line_with_runtime(rt: &mut Runtime, line: &str) -> Stmt {
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks(line, Rc::from("test.lit"))
             .expect("tokenize stmt line");
@@ -2145,7 +2209,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn replacement_rejects_non_name_first_argument() {
         let mut rt = Runtime::new();
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks("replacement(1, A)", Rc::from("test.lit"))
             .expect("tokenize object line");
@@ -2209,7 +2273,7 @@ mod module_qualification_parse_tests {
     #[test]
     fn backtick_infix_function_syntax_is_rejected() {
         let mut rt = Runtime::new();
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks("a ` f b = c", Rc::from("test.lit"))
             .expect("tokenize stmt line");
@@ -2360,7 +2424,7 @@ mod module_qualification_parse_tests {
         };
         assert_with_mod(&fact.predicate, "basics::implementation", "P");
 
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks("by thm std(a)", Rc::from("test.lit"))
             .expect("tokenize theorem reference");
@@ -2434,7 +2498,7 @@ mod matrix_operator_parse_tests {
     use std::rc::Rc;
 
     fn parse_obj_line(source: &str) -> Result<Obj, RuntimeError> {
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer.parse_blocks(source, Rc::from("test.lit"))?;
         assert_eq!(blocks.len(), 1, "{source:?}");
         Runtime::new().parse_obj(&mut blocks[0])

@@ -49,6 +49,8 @@ thm vector_smul_comm:
             mulK(x, y) = mulK(y, x)
         =>:
             smul(a, smul(b, v)) = smul(b, smul(a, v))
+    mulK(a, b) = mulK(b, a)
+    smul(mulK(a, b), v) = smul(mulK(b, a), v)
     smul(a, smul(b, v)) = smul(mulK(a, b), v) = smul(mulK(b, a), v) = smul(b, smul(a, v))
 
 prop is_linear_map(K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, phi fn(v V) W):
@@ -135,8 +137,8 @@ template<V, W set>:
 template<U, V, W set>:
     have fn linear_product(phi fn(u U) V, psi fn(u U) W) fn(t U) cart(V, W) = fn(x U) cart(V, W) {(phi(x), psi(x))}
 
-# Strict mode does not yet unfold the nested symbolic template instances here,
-# so the checked pointwise projection theorems expand their defining lambdas.
+# The pointwise projection theorems keep the defining lambda visible so the
+# coordinate calculation is explicit; named symbolic templates also unfold.
 thm linear_product_first_component:
     ? forall U, V, W set, phi fn(u U) V, psi fn(u U) W, x U:
         (fn(z U) cart(V, W) {(phi(z), psi(z))})(x)[1] = phi(x)
@@ -158,8 +160,7 @@ template<V, W set>:
 template<U, V, W set, addU fn(x, y U) U>:
     have fn linear_coproduct(phi fn(v V) U, psi fn(w W) U) fn(q cart(V, W)) U = fn(p cart(V, W)) U {addU(phi(p[1]), psi(p[2]))}
 
-# The pointwise formula is definition-expanded for the same symbolic-template
-# strict-mode limitation as the product projections above.
+# The pointwise formula keeps the defining lambda visible to expose copairing.
 thm linear_coproduct_formula:
     ? forall U, V, W set, addU fn(x, y U) U, phi fn(v V) U, psi fn(w W) U, v V, w W:
         (fn(p cart(V, W)) U {addU(phi(p[1]), psi(p[2]))})((v, w)) = addU(phi(v), psi(w))
@@ -317,17 +318,17 @@ thm eigenvalue_implies_eigenspace_nontrivial:
     ? forall K, V set, zeroV V, smul fn(a K, v V) V, phi fn(v V) V, a K:
         $has_eigenvalue(K, V, zeroV, smul, phi, a)
         =>:
-            $eigenspace_nontrivial(V, zeroV, {v V: phi(v) = smul(a, v)})
+            $eigenspace_nontrivial(V, zeroV, {candidate V: phi(candidate) = smul(a, candidate)})
     obtain v from exist v V st {$has_eigenvector(K, V, zeroV, smul, phi, a, v)}
-    witness exist w V st {w $in {v V: phi(v) = smul(a, v)}, w != zeroV} from v
-    by def $eigenspace_nontrivial(V, zeroV, {v V: phi(v) = smul(a, v)})
+    witness exist w V st {w $in {candidate V: phi(candidate) = smul(a, candidate)}, w != zeroV} from v
+    by def $eigenspace_nontrivial(V, zeroV, {candidate V: phi(candidate) = smul(a, candidate)})
 
 thm eigenspace_nontrivial_implies_eigenvalue:
     ? forall K, V set, zeroV V, smul fn(a K, v V) V, phi fn(v V) V, a K:
-        $eigenspace_nontrivial(V, zeroV, {v V: phi(v) = smul(a, v)})
+        $eigenspace_nontrivial(V, zeroV, {candidate V: phi(candidate) = smul(a, candidate)})
         =>:
             $has_eigenvalue(K, V, zeroV, smul, phi, a)
-    obtain v from exist v V st {v $in {v V: phi(v) = smul(a, v)}, v != zeroV}
+    obtain v from exist v V st {v $in {candidate V: phi(candidate) = smul(a, candidate)}, v != zeroV}
     witness exist w V st {$has_eigenvector(K, V, zeroV, smul, phi, a, w)} from v
     by def $has_eigenvalue(K, V, zeroV, smul, phi, a)
 

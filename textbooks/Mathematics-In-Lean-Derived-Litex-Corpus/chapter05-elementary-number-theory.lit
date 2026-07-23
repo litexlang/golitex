@@ -316,7 +316,7 @@ thm exists_prime_factor:
                     obtain p from exist p N_pos st {$chap4::prime(p), $chap2::divides(p, d)}
                     obtain a from exist a Z st {d = p * a}
                     obtain b from exist b Z st {n + 1 = d * b}
-                    witness exist k Z st {n + 1 = p * k} from a * b:
+                    witness exist factor Z st {n + 1 = p * factor} from a * b:
                         n + 1 = d * b = p * a * b = p * (a * b)
                     by def $chap2::divides(p, n + 1)
                     witness exist q N_pos st {$chap4::prime(q), $chap2::divides(q, n + 1)} from p

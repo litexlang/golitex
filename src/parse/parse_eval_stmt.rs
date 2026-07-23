@@ -30,7 +30,7 @@ mod parse_eval_stmt_tests {
     #[test]
     fn eval_from_syntax_reports_its_removal() {
         let mut runtime = Runtime::new();
-        let mut tokenizer = Tokenizer::new();
+        let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks("eval a from 1 + 2", Rc::from("parse_eval_from_removal.lit"))
             .expect("tokenize eval statement");

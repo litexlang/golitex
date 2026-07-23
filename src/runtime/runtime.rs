@@ -40,6 +40,9 @@ pub struct Runtime {
     pub(crate) active_arg_match_bindings: Vec<(ParamObjType, String)>,
     pub(crate) symbol_id_allocator: Rc<SymbolIdAllocator>,
     pub(crate) template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
+    /// Parser-only notation metadata. A source binder written as `a &Struct`
+    /// records the struct view used to lower later `a.field` expressions.
+    pub(crate) default_struct_views: HashMap<SymbolId, StructObj>,
     pub detail_output: bool,
     pub output_style: OutputStyle,
     pub strict_mode: bool,
@@ -57,6 +60,7 @@ impl Runtime {
             active_arg_match_bindings: vec![],
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
+            default_struct_views: HashMap::new(),
             detail_output: false,
             output_style: OutputStyle::Normal,
             strict_mode: false,

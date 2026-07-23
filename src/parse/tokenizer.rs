@@ -9,12 +9,9 @@ use crate::common::keywords::key_symbols_sorted_by_len_desc;
 use crate::parse::TokenBlock;
 use crate::prelude::*;
 
-use std::collections::HashMap;
 use std::rc::Rc;
 
-pub struct Tokenizer {
-    pub macros_in_block_scopes: Vec<HashMap<String, Vec<String>>>,
-}
+pub struct Tokenizer;
 
 impl Default for Tokenizer {
     fn default() -> Self {
@@ -24,13 +21,11 @@ impl Default for Tokenizer {
 
 impl Tokenizer {
     pub fn new() -> Self {
-        Self {
-            macros_in_block_scopes: vec![],
-        }
+        Self
     }
 
     pub fn parse_blocks(
-        &mut self,
+        &self,
         s: &str,
         current_file_path: Rc<str>,
     ) -> Result<Vec<TokenBlock>, RuntimeError> {
@@ -46,7 +41,7 @@ impl Tokenizer {
         line_file: LineFile,
     ) -> Result<Vec<String>, RuntimeError> {
         let raw_tokens = self.raw_tokenize_line(line);
-        self.expand_macro_tokens(raw_tokens, line_file)
+        self.reject_removed_macro_use(raw_tokens, line_file)
     }
 
     fn raw_tokenize_line(&self, line: &str) -> Vec<String> {
@@ -146,24 +141,26 @@ impl Tokenizer {
         tokens
     }
 
-    fn expand_macro_tokens(
+    fn reject_removed_macro_use(
         &self,
         raw_tokens: Vec<String>,
         line_file: LineFile,
     ) -> Result<Vec<String>, RuntimeError> {
-        let mut expanded = Vec::with_capacity(raw_tokens.len());
+        let mut tokens = Vec::with_capacity(raw_tokens.len());
         for token in raw_tokens {
             if Self::is_macro_use_token(&token) {
-                let macro_name = &token[1..];
-                let macro_tokens = self.find_macro(macro_name).ok_or_else(|| {
-                    Self::parse_error(format!("Unknown macro: {}", token), line_file.clone())
-                })?;
-                expanded.extend(macro_tokens.iter().cloned());
+                return Err(Self::parse_error(
+                    format!(
+                        "{} macro abbreviation has been removed; write the full Litex expression directly",
+                        token
+                    ),
+                    line_file,
+                ));
             } else {
-                expanded.push(token);
+                tokens.push(token);
             }
         }
-        Ok(expanded)
+        Ok(tokens)
     }
 
     pub(crate) fn strip_triple_quote_comment_blocks(&self, source_code: &str) -> String {
@@ -194,20 +191,7 @@ impl Tokenizer {
     }
 
     fn parse_level(
-        &mut self,
-        lines: &[&str],
-        i: &mut usize,
-        base_indent: usize,
-        current_file_path: Rc<str>,
-    ) -> Result<Vec<TokenBlock>, RuntimeError> {
-        self.macros_in_block_scopes.push(HashMap::new());
-        let result = self.parse_level_in_current_scope(lines, i, base_indent, current_file_path);
-        self.macros_in_block_scopes.pop();
-        result
-    }
-
-    fn parse_level_in_current_scope(
-        &mut self,
+        &self,
         lines: &[&str],
         i: &mut usize,
         base_indent: usize,
@@ -258,12 +242,9 @@ impl Tokenizer {
 
             // Tokenize header; if it's empty (e.g. whole line comment),
             // treat it like a blank line for block parsing.
-            if self.register_macro_definition(content, line_file.clone())? {
-                continue;
-            }
-
             let raw_header_tokens = self.raw_tokenize_line(content);
-            let header_tokens = self.expand_macro_tokens(raw_header_tokens, line_file.clone())?;
+            let header_tokens =
+                self.reject_removed_macro_use(raw_header_tokens, line_file.clone())?;
             if header_tokens.is_empty() {
                 continue;
             }
@@ -352,112 +333,6 @@ impl Tokenizer {
         trimmed.ends_with(COLON)
     }
 
-    fn register_macro_definition(
-        &mut self,
-        line: &str,
-        line_file: LineFile,
-    ) -> Result<bool, RuntimeError> {
-        let Some(mut rest) = line.strip_prefix("macro") else {
-            return Ok(false);
-        };
-        if !rest
-            .chars()
-            .next()
-            .map(|ch| ch.is_whitespace())
-            .unwrap_or(false)
-        {
-            return Ok(false);
-        }
-
-        if Self::ends_with_colon(line) {
-            return Err(Self::parse_error(
-                "macro definition cannot have a block body".to_string(),
-                line_file,
-            ));
-        }
-
-        rest = rest.trim_start();
-        let name_end = rest
-            .char_indices()
-            .find(|(_, ch)| ch.is_whitespace())
-            .map(|(index, _)| index)
-            .unwrap_or(rest.len());
-        let name = &rest[..name_end];
-        if !Self::is_macro_name(name) {
-            return Err(Self::parse_error(
-                format!("Invalid macro name: {}", name),
-                line_file,
-            ));
-        }
-
-        rest = rest[name_end..].trim_start();
-        let Some(replacement_and_tail) = rest.strip_prefix('"') else {
-            return Err(Self::parse_error(
-                "macro definition must be: macro name \"replacement\"".to_string(),
-                line_file,
-            ));
-        };
-
-        let mut replacement_end = None;
-        let mut escaped = false;
-        for (index, ch) in replacement_and_tail.char_indices() {
-            if escaped {
-                escaped = false;
-                continue;
-            }
-            if ch == '\\' {
-                escaped = true;
-                continue;
-            }
-            if ch == '"' {
-                replacement_end = Some(index);
-                break;
-            }
-        }
-
-        let Some(replacement_end) = replacement_end else {
-            return Err(Self::parse_error(
-                "macro replacement must end with a double quote".to_string(),
-                line_file,
-            ));
-        };
-        let replacement_source = &replacement_and_tail[..replacement_end];
-        let tail = replacement_and_tail[replacement_end + 1..].trim_start();
-        if !tail.is_empty() && !tail.starts_with('#') {
-            return Err(Self::parse_error(
-                "macro definition must be: macro name \"replacement\"".to_string(),
-                line_file,
-            ));
-        }
-
-        let replacement_tokens = self.raw_tokenize_line(replacement_source);
-        if replacement_tokens
-            .iter()
-            .any(|token| Self::is_macro_use_token(token) || token == "macro")
-        {
-            return Err(Self::parse_error(
-                "macro replacement cannot contain macro use or macro definition".to_string(),
-                line_file,
-            ));
-        }
-
-        let current_scope = self.macros_in_block_scopes.last_mut().ok_or_else(|| {
-            Self::parse_error(
-                "Internal tokenizer macro scope missing".to_string(),
-                line_file,
-            )
-        })?;
-        current_scope.insert(name.to_string(), replacement_tokens);
-        Ok(true)
-    }
-
-    fn find_macro(&self, name: &str) -> Option<&Vec<String>> {
-        self.macros_in_block_scopes
-            .iter()
-            .rev()
-            .find_map(|scope| scope.get(name))
-    }
-
     fn is_macro_use_token(token: &str) -> bool {
         let Some(name) = token.strip_prefix('@') else {
             return false;
@@ -544,6 +419,20 @@ mod tests {
     }
 
     #[test]
+    fn removed_default_struct_view_prefix_is_two_ampersands() {
+        let tokenizer = Tokenizer::new();
+        assert_eq!(
+            tokenizer
+                .tokenize_line("forall p &&Point: p.x = &Point{p}.x", test_line_file())
+                .unwrap(),
+            vec![
+                "forall", "p", "&", "&", "Point", ":", "p", ".", "x", "=", "&", "Point", "{", "p",
+                "}", ".", "x"
+            ]
+        );
+    }
+
+    #[test]
     fn matrix_operator_tokens_preserve_apostrophe_and_interval_prefix() {
         let tokenizer = Tokenizer::new();
         assert_eq!(
@@ -571,68 +460,11 @@ mod tests {
     }
 
     #[test]
-    fn macro_definition_expands_later_line_in_same_block() {
-        let mut tokenizer = Tokenizer::new();
-        let blocks = tokenizer
-            .parse_blocks("macro eq \"a = b\"\nhave @eq", Rc::from("test.lit"))
-            .unwrap();
-        assert_eq!(blocks.len(), 1);
-        assert_eq!(blocks[0].header, vec!["have", "a", "=", "b"]);
-    }
-
-    #[test]
-    fn unicode_macro_name_expands() {
-        let mut tokenizer = Tokenizer::new();
-        let blocks = tokenizer
-            .parse_blocks("macro 等式 \"a = b\"\nhave @等式", Rc::from("test.lit"))
-            .unwrap();
-        assert_eq!(blocks.len(), 1);
-        assert_eq!(blocks[0].header, vec!["have", "a", "=", "b"]);
-    }
-
-    #[test]
-    fn macro_scope_is_visible_in_child_block() {
-        let mut tokenizer = Tokenizer::new();
-        let blocks = tokenizer
-            .parse_blocks(
-                "macro eq \"a = b\"\nclaim:\n    have @eq",
-                Rc::from("test.lit"),
-            )
-            .unwrap();
-        assert_eq!(blocks[0].body[0].header, vec!["have", "a", "=", "b"]);
-    }
-
-    #[test]
-    fn macro_scope_expires_after_block() {
-        let mut tokenizer = Tokenizer::new();
+    fn removed_macro_use_reports_migration_error() {
+        let tokenizer = Tokenizer::new();
         let error = tokenizer
-            .parse_blocks(
-                "claim:\n    macro eq \"a = b\"\n    have @eq\nhave @eq",
-                Rc::from("test.lit"),
-            )
+            .tokenize_line("have @eq", test_line_file())
             .unwrap_err();
-        assert!(format!("{:?}", error).contains("Unknown macro: @eq"));
-    }
-
-    #[test]
-    fn inner_macro_overrides_outer_macro_only_inside_child_block() {
-        let mut tokenizer = Tokenizer::new();
-        let blocks = tokenizer
-            .parse_blocks(
-                "macro x \"outer\"\nclaim:\n    macro x \"inner\"\n    have @x\nhave @x",
-                Rc::from("test.lit"),
-            )
-            .unwrap();
-        assert_eq!(blocks[0].body[0].header, vec!["have", "inner"]);
-        assert_eq!(blocks[1].header, vec!["have", "outer"]);
-    }
-
-    #[test]
-    fn macro_replacement_cannot_use_macro() {
-        let mut tokenizer = Tokenizer::new();
-        let error = tokenizer
-            .parse_blocks("macro x \"@other\"", Rc::from("test.lit"))
-            .unwrap_err();
-        assert!(format!("{:?}", error).contains("macro replacement cannot contain"));
+        assert!(format!("{:?}", error).contains("macro abbreviation has been removed"));
     }
 }

@@ -707,6 +707,28 @@ thm topologically_continuous_composition:
                 z $in pre1
         by extension pre1 = pre2
         pre2 $in T_A
+    claim:
+        ? forall U T_C:
+            {candidate A: fn(argument A) C {g(f(argument))}(candidate) $in U} $in T_A
+        have direct_preimage T_A = {candidate A: g(f(candidate)) $in U}
+        have literal_preimage power_set(A) = {candidate A: fn(argument A) C {g(f(argument))}(candidate) $in U}
+        claim:
+            ? literal_preimage $subset direct_preimage
+            forall z literal_preimage:
+                fn(argument A) C {g(f(argument))}(z) = g(f(z))
+                g(f(z)) $in U
+                z $in {candidate A: g(f(candidate)) $in U}
+                z $in direct_preimage
+        claim:
+            ? direct_preimage $subset literal_preimage
+            forall z direct_preimage:
+                g(f(z)) $in U
+                fn(argument A) C {g(f(argument))}(z) = g(f(z))
+                fn(argument A) C {g(f(argument))}(z) $in U
+                z $in {candidate A: fn(argument A) C {g(f(argument))}(candidate) $in U}
+                z $in literal_preimage
+        by extension literal_preimage = direct_preimage
+        literal_preimage $in T_A
     by def $is_topologically_continuous(A, C, T_A, T_C, fn(x A) C {g(f(x))})
 
 # Source constructions `coinduced` and `induced` are topology-valued functions.

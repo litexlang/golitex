@@ -1,12 +1,10 @@
 # Linear Algebra Done Right, fourth edition, Section 2C: Dimension.
 
-macro ScalarSystem "&chap1a::ScalarSystem<s>"
-macro Dimension "\dimension<s, scalars, v, space>"
 
 # A candidate basis length is a natural number n for which the equipped
 # vector space has a basis represented by &chap1a::FiniteList<v,n>.
 # Its uniqueness is the next source result; Definition 2.35 then selects it.
-prop has_basis_length(s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N):
+prop has_basis_length(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N):
     exist basis_vectors &chap1a::FiniteList<v, n> st {$chap2b::is_basis(s, scalars, v, space, n, basis_vectors)}
 
 # Result 2.34. Any two bases of a finite-dimensional vector space have the
@@ -15,20 +13,20 @@ prop has_basis_length(s nonempty_set, scalars @ScalarSystem, v nonempty_set, spa
 # both directions. The body is not retained without a bounded self-leak-free
 # candidate pass.
 axiom basis_length_unique:
-    ? forall s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, length1, length2 N:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, length1, length2 N:
         $has_basis_length(s, scalars, v, space, length1)
         $has_basis_length(s, scalars, v, space, length2)
         =>:
             length1 = length2
 
-prop admits_basis_length(s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>):
+prop admits_basis_length(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>):
     exist n N st {$has_basis_length(s, scalars, v, space, n)}
 
 # Result 2.31 supplies a basis witness and hence a candidate basis length. The
 # bridge remains explicit, but its former body was not retained without a
 # bounded self-leak-free candidate pass.
 axiom finite_dimensional_admits_basis_length:
-    ? forall s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>:
         $chap2a::is_finite_dimensional(s, scalars, v, space)
         =>:
             $admits_basis_length(s, scalars, v, space)
@@ -36,7 +34,7 @@ axiom finite_dimensional_admits_basis_length:
 # Definition 2.35. dimension is a template-selected natural-number object.
 # The template header supplies existence, and Result 2.34 makes every selected
 # basis length equal; callers use exactly \dimension<s,scalars,v,space>.
-template<s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>: $admits_basis_length(s, scalars, v, space)>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>: $admits_basis_length(s, scalars, v, space)>:
     have dimension N:
         $has_basis_length(s, scalars, v, space, dimension)
 
@@ -50,11 +48,11 @@ template<s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::V
 # The unverified candidate chooses bases of U and V and transports the U-basis
 # to the ambient carrier before applying Result 2.22.
 axiom subspace_dimension_le_ambient_dimension:
-    ? forall s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U power_set(v):
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U power_set(v):
         $chap2a::is_finite_dimensional(s, scalars, v, space)
         $chap1c::is_subspace(s, scalars, v, space, U)
         =>:
-            \dimension<s, scalars, U, \chap1c::subspace_vector_space<s, scalars, v, space, U>> <= @Dimension
+            \dimension<s, scalars, U, \chap1c::subspace_vector_space<s, scalars, v, space, U>> <= \dimension<s, scalars, v, space>
 
 # Field-dependence remark. Dimension belongs to an equipped scalar/vector-space
 # pair: R^2 has real dimension two, whereas C has complex dimension one even
@@ -65,10 +63,10 @@ axiom subspace_dimension_le_ambient_dimension:
 # The candidate route uses equal-length sublist extensionality, but its body is
 # not retained without a bounded self-leak-free candidate pass.
 axiom independent_list_of_dimension_length_is_basis:
-    ? forall s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>:
         $chap2a::is_finite_dimensional(s, scalars, v, space)
         $chap2a::is_linearly_independent(s, scalars, v, space, n, vectors)
-        n = @Dimension
+        n = \dimension<s, scalars, v, space>
         =>:
             $chap2b::is_basis(s, scalars, v, space, n, vectors)
 
@@ -78,10 +76,10 @@ axiom independent_list_of_dimension_length_is_basis:
 # The candidate transports the selected U-basis through the inherited
 # subspace structure, but that body lacks a bounded self-leak-free pass.
 axiom full_dimension_subspace_equals_ambient:
-    ? forall s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U power_set(v):
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U power_set(v):
         $chap2a::is_finite_dimensional(s, scalars, v, space)
         $chap1c::is_subspace(s, scalars, v, space, U)
-        \dimension<s, scalars, U, \chap1c::subspace_vector_space<s, scalars, v, space, U>> = @Dimension
+        \dimension<s, scalars, U, \chap1c::subspace_vector_space<s, scalars, v, space, U>> = \dimension<s, scalars, v, space>
         =>:
             U = v
 
@@ -97,17 +95,17 @@ axiom full_dimension_subspace_equals_ambient:
 # The candidate route identifies an equal-length ordered sublist, but its body
 # is not retained without a bounded self-leak-free candidate pass.
 axiom spanning_list_of_dimension_length_is_basis:
-    ? forall s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>:
         $chap2a::is_finite_dimensional(s, scalars, v, space)
         $chap2a::spans(s, scalars, v, space, n, vectors)
-        n = @Dimension
+        n = \dimension<s, scalars, v, space>
         =>:
             $chap2b::is_basis(s, scalars, v, space, n, vectors)
 
 # Binary infrastructure used by Result 2.43. The direct closure candidates did
 # not receive a bounded self-leak-free pass and remain explicit debt.
 axiom subspace_intersection_is_subspace:
-    ? forall s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U, W power_set(v):
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U, W power_set(v):
         $chap1c::is_subspace(s, scalars, v, space, U)
         $chap1c::is_subspace(s, scalars, v, space, W)
         =>:
@@ -116,7 +114,7 @@ axiom subspace_intersection_is_subspace:
 # For the binary sum, the intended proof uses 0+0, regrouping, and scalar
 # distributivity; its unchecked candidate body is not retained.
 axiom subspace_sum_pair_is_subspace:
-    ? forall s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U, W power_set(v):
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U, W power_set(v):
         $chap1c::is_subspace(s, scalars, v, space, U)
         $chap1c::is_subspace(s, scalars, v, space, W)
         =>:
@@ -130,7 +128,7 @@ axiom subspace_sum_pair_is_subspace:
 # not yet formalized. The displayed equations inside that proof are not
 # independent source results.
 axiom dimension_of_subspace_sum:
-    ? forall s nonempty_set, scalars @ScalarSystem, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U, W power_set(v):
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U, W power_set(v):
         $chap2a::is_finite_dimensional(s, scalars, v, space)
         $chap1c::is_subspace(s, scalars, v, space, U)
         $chap1c::is_subspace(s, scalars, v, space, W)

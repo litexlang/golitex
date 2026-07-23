@@ -32,11 +32,12 @@ concepts and intermediate nodes that determine later interfaces.
 - `template` parameterizes declarations over carriers and structures; it is
   not itself a semantic layer. Source-facing results remain named even when a
   builtin or a more general checked interface supplies their proof.
-- File-local macros abbreviate repeated fully qualified types, structure
-  views, and function families. In particular, `@ScalarSystem` is the bare
-  type `ScalarSystem<s>`, whereas `@Scalars` is the view of the supplied
-  `scalars` instance. These macros do not create concepts or dependencies,
-  and public theorem and definition parameters remain explicit.
+- An explicit structure type on a binding selects its default field view.
+  Thus `scalars &ScalarSystem<s>` supports `scalars.add(a,b)`, and
+  `space &VectorSpace<...>` supports `space.zero` and `space.smul(a,v)`.
+  Source declarations use complete expressions rather than a pre-parser
+  abbreviation layer; public theorem and definition parameters remain
+  explicit.
 - `axiom` and `trust` describe epistemic status, never mathematical kind. They
   remain visible below as dependency boundaries rather than changing the ideal
   interface.
@@ -91,7 +92,7 @@ concepts and intermediate nodes that determine later interfaces.
   relation corresponding to structure membership.
 - **Ideal Litex form:** `struct VectorSpace<s,scalars,V>`.
 - **Interface sketch:** `space &VectorSpace<s,scalars,V>` followed by
-  `&VectorSpace{space}.add(u,v)`.
+  `space.add(u,v)`.
 - **Nearest wrong alternative:** A proposition that hides the three operations
   cannot support ordinary vector expressions or structures inherited by a
   subspace, product, quotient, or function space.
@@ -545,8 +546,8 @@ concepts and intermediate nodes that determine later interfaces.
 - **Ideal Litex form:** `struct InnerProductScalarGeometry<s,scalars>` with
   callable `conjugate`, `absolute_value`, `real_part`, and `real_embed` fields
   plus their field-compatible laws; provide the real and complex instances.
-- **Interface sketch:** `@Geometry.conjugate(lambda)` and
-  `@Geometry.absolute_value(lambda)`.
+- **Interface sketch:** `scalar_geometry.conjugate(lambda)` and
+  `scalar_geometry.absolute_value(lambda)`.
 - **Nearest wrong alternative:** Passing four unrelated functions to every
   Chapter 6 and 7 declaration obscures which scalar identities are available;
   folding them into a vector-space structure assigns scalar data to the wrong
@@ -571,7 +572,7 @@ concepts and intermediate nodes that determine later interfaces.
 - **Ideal Litex form:** `prop is_inner_product`, `struct InnerProductSpace`,
   `have fn norm`, `prop are_orthogonal`, and callable coefficient/remainder
   functions for Result 6.13.
-- **Interface sketch:** `@Inner.inner(u,v)`, `\norm(...)(v)`, and
+- **Interface sketch:** `inner_space.inner(u,v)`, `\norm(...)(v)`, and
   `$are_orthogonal(...,u,v)`.
 - **Nearest wrong alternative:** A predicate-only norm or a relation with a
   proposed decomposition output forces every inequality to carry avoidable

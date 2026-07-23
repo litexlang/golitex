@@ -19,13 +19,12 @@ through `chap9d` (with the unsectioned polynomial chapter exported as
 `chap4`). Cross-section uses are explicit, for example `chap2a::span`,
 `chap8b::characteristic_polynomial`, and `chap9c::operator_determinant`.
 
-Chapter files use file-local macros such as `@ScalarSystem`, `@Scalars`,
-`@Space`, and `@LinearMaps` for repeated fully qualified types, structure
-views, and function families. `@ScalarSystem` denotes the bare scalar-system
-type, while `@Scalars` denotes the view of the supplied `scalars` instance.
-These macros are readability-only textual abbreviations: public declarations
-keep their mathematical parameters explicit, and the canonical cross-file
-namespaces remain `chap1a` through `chap9d`.
+An explicit structure type on a binding also selects that binding's default
+view. Thus `scalars &chap1a::ScalarSystem<s>` permits direct field notation
+such as `scalars.add(a,b)`, and a finite-list binding permits
+`vectors.entries(k)`. All source declarations now use complete expressions;
+there is no pre-parser abbreviation layer. Canonical cross-file namespaces
+remain `chap1a` through `chap9d`.
 
 The ordinary project runner checks that the exported project loads and that
 the public declarations are well formed. Because project exports are trusted

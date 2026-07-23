@@ -3101,11 +3101,12 @@ M(1, 1) = 1
 M(2, 1) = 3
 ```
 
-#### 10. Struct Objects
+#### 10. Struct Objects And Default Views
 
 Mathematical meaning: a `struct` names a record-shaped subset of tuples, with
 typed fields and optional defining conditions.  A value of `&Point` can be read
-either by tuple index or by field projection through `&Point{...}.field`.
+either by tuple index or by an explicit field projection through
+`&Point{...}.field`.
 
 ```litex
 struct Point:
@@ -3118,6 +3119,30 @@ have p &Point = (1, 2)
 &Point{p}.x = 1
 &Point{(1, 2)}.y = 2
 ```
+
+Default-view notation is a preview shorthand for a name whose explicit binding
+type is a struct. Binding `p &Point` selects `&Point` for that binding, so the
+parser lowers `p.x` to `&Point{p}.x`. A later fact `p $in &Point` does not
+select a default view.
+
+```litex
+struct Point:
+    x R
+    y R
+
+have p &Point = (1, 2)
+p.x = &Point{p}.x
+p.x = 1
+p.y = 2
+
+forall q &Point:
+    q.x = q[1]
+```
+
+This notation does not infer a unique struct type. If a value belongs to
+several struct views, the explicit struct type at its binding selects the one
+used by `p.field`; another view remains available through the explicit
+`&OtherStruct{p}.field` form.
 
 ### Statement Examples
 
@@ -3429,7 +3454,8 @@ equivalent facts.
   equivalent facts must be well-defined; the struct name must be unused.
 - Truth verification: does not prove the equivalent facts at declaration time.
 - Environment effects: stores the struct definition and enables membership and
-  field-view facts.
+  field-view facts. A later `name &Struct` binding selects that struct as the
+  name's default view without changing those mathematical facts.
 
 ```litex
 struct Point:
@@ -3623,26 +3649,7 @@ eval 1 + 2
 1 + 2 = 3
 ```
 
-#### 23. Readable Abbreviations With `macro`
-
-Purpose: define a textual abbreviation used before parsing the expanded Litex
-code.
-
-- Well-definedness / structural checks: the macro name and replacement text
-  must be parseable in later expanded positions.
-- Truth verification: none for the macro definition itself.
-- Environment effects: stores the macro expansion rule for following
-  statements in the same file.
-
-```litex
-macro REAL "R"
-macro HAVE_FN "have fn"
-
-@HAVE_FN id_real(x @REAL) @REAL = x
-id_real(1) = 1
-```
-
-#### 24. Empty Proof Steps
+#### 23. Empty Proof Steps
 
 Purpose: make an explicit empty proof step.
 
@@ -3654,7 +3661,7 @@ Purpose: make an explicit empty proof step.
 do_nothing
 ```
 
-#### 25. Module Commands
+#### 24. Module Commands
 
 Purpose: cite configured project sources by canonical name, or clear the
 current environment.

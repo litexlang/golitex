@@ -1132,6 +1132,33 @@ A $in power_set(B)
 }
 
 #[test]
+fn set_builder_over_alpha_equivalent_fn_set_satisfies_power_set_type() {
+    run_with_large_stack(
+        "set_builder_over_alpha_equivalent_fn_set_satisfies_power_set_type",
+        || {
+            let source_code = r#"
+template<X set>:
+    have reflexive_function_family power_set(fn(x X) X) = {f fn(y X) X: f = f}
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "set_builder_over_alpha_equivalent_fn_set_satisfies_power_set_type",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "set builder over an alpha-equivalent function set should satisfy its power-set type:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn set_builder_subset_inference_does_not_rebind_its_filter_domain() {
     run_with_large_stack(
         "set_builder_subset_inference_does_not_rebind_its_filter_domain",

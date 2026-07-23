@@ -2,7 +2,7 @@ use crate::prelude::*;
 use std::collections::HashSet;
 
 pub fn to_lean(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
-    let mut tokenizer = Tokenizer::new();
+    let tokenizer = Tokenizer::new();
     let current_file_path = runtime.current_file_path_rc();
     let blocks = tokenizer.parse_blocks(source_code, current_file_path)?;
 

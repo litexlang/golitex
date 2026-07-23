@@ -102,36 +102,34 @@ struct Group<s nonempty_set>:
         forall x s:
             op(inv(x), x) = e
 
-macro G "&Group<s>{g}"
-
 prop is_subgroup(s nonempty_set, g &Group<s>, h power_set(s)):
-    @G.e $in h
+    g.e $in h
     forall a, b s:
         a $in h
         b $in h
         =>:
-            @G.op(a, b) $in h
+            g.op(a, b) $in h
     forall a s:
         a $in h
         =>:
-            @G.inv(a) $in h
+            g.inv(a) $in h
 
 prop is_normal_subgroup(s nonempty_set, g &Group<s>, h power_set(s)):
     $is_subgroup(s, g, h)
     forall x, a s:
         a $in h
         =>:
-            @G.op(@G.op(x, a), @G.inv(x)) $in h
+            g.op(g.op(x, a), g.inv(x)) $in h
 
 prop is_left_coset_with_representative(s nonempty_set, g &Group<s>, h power_set(s), x s, c power_set(s)):
     forall y s:
         =>:
             y $in c
         <=>:
-            exist a s st {a $in h, y = @G.op(x, a)}
+            exist a s st {a $in h, y = g.op(x, a)}
 
 prop is_in_left_coset_by_representative(s nonempty_set, g &Group<s>, h power_set(s), x, y s):
-    exist a s st {a $in h, y = @G.op(x, a)}
+    exist a s st {a $in h, y = g.op(x, a)}
 
 prop is_left_coset(s nonempty_set, g &Group<s>, h power_set(s), c power_set(s)):
     exist x s st {$is_left_coset_with_representative(s, g, h, x, c)}
@@ -164,7 +162,7 @@ prop is_quotient_product_coset(s nonempty_set, g &Group<s>, h power_set(s), c1 p
         $is_left_coset_with_representative(s, g, h, x, c1)
         $is_left_coset_with_representative(s, g, h, y, c2)
         =>:
-            $is_left_coset_with_representative(s, g, h, @G.op(x, y), c3)
+            $is_left_coset_with_representative(s, g, h, g.op(x, y), c3)
 
 prop quotient_product_representatives_equal(s nonempty_set, g &Group<s>, h power_set(s), q power_set(power_set(s)), c1, c2 q, x1, x2, y1, y2 s, out1, out2 q):
     out1 = out2
@@ -175,8 +173,8 @@ prop quotient_product_well_defined(s nonempty_set, g &Group<s>, h power_set(s), 
         $is_left_coset_with_representative(s, g, h, x2, c1)
         $is_left_coset_with_representative(s, g, h, y1, c2)
         $is_left_coset_with_representative(s, g, h, y2, c2)
-        $is_left_coset_with_representative(s, g, h, @G.op(x1, y1), out1)
-        $is_left_coset_with_representative(s, g, h, @G.op(x2, y2), out2)
+        $is_left_coset_with_representative(s, g, h, g.op(x1, y1), out1)
+        $is_left_coset_with_representative(s, g, h, g.op(x2, y2), out2)
         =>:
             $quotient_product_representatives_equal(s, g, h, q, c1, c2, x1, x2, y1, y2, out1, out2)
 
@@ -186,28 +184,29 @@ prop is_quotient_multiplication(s nonempty_set, g &Group<s>, h power_set(s), q p
 
 thm group_left_cancel:
     ? forall s nonempty_set, g &Group<s>, a, b, c s:
-        @G.op(a, b) = @G.op(a, c)
+        g.op(a, b) = g.op(a, c)
         =>:
             b = c
-    @G.op(@G.inv(a), a) = @G.e
-    @G.op(@G.e, b) = b
-    @G.op(@G.e, c) = c
-    @G.op(@G.op(@G.inv(a), a), b) = @G.op(@G.e, b) = b
-    @G.op(@G.op(@G.inv(a), a), b) = @G.op(@G.inv(a), @G.op(a, b)) = @G.op(@G.inv(a), @G.op(a, c)) = @G.op(@G.op(@G.inv(a), a), c) = @G.op(@G.e, c) = c
+    g.op(g.inv(a), a) = g.e
+    g.op(g.e, b) = b
+    g.op(g.e, c) = c
+    g.op(g.op(g.inv(a), a), b) = g.op(g.e, b) = b
+    g.op(g.op(g.inv(a), a), b) = g.op(g.inv(a), g.op(a, b)) = g.op(g.inv(a), g.op(a, c)) = g.op(g.op(g.inv(a), a), c) = g.op(g.e, c) = c
     b = c
 
 thm group_inv_inv:
     ? forall s nonempty_set, g &Group<s>, a s:
-        @G.inv(@G.inv(a)) = a
-    @G.op(@G.inv(a), @G.inv(@G.inv(a))) = @G.e
-    @G.op(@G.inv(a), a) = @G.e
-    @G.op(@G.inv(a), @G.inv(@G.inv(a))) = @G.op(@G.inv(a), a)
-    by thm group_left_cancel(s, g, @G.inv(a), @G.inv(@G.inv(a)), a)
+        g.inv(g.inv(a)) = a
+    g.op(g.inv(a), g.inv(g.inv(a))) = g.e
+    g.op(g.inv(a), a) = g.e
+    g.op(g.inv(a), g.inv(g.inv(a))) = g.op(g.inv(a), a)
+    by thm group_left_cancel(s, g, g.inv(a), g.inv(g.inv(a)), a)
 ```
 
 There is no inheritance hierarchy hidden here. The carrier set, operations, and
-relations are visible. A group object gives access to `@G.inv`, `@G.op`, and
-`@G.e`; subgroup and normality are stated as relations among the carrier, the
+relations are visible. Binding `g &Group<s>` selects the group view, so the
+object gives direct access to `g.inv`, `g.op`, and `g.e`; subgroup and
+normality are stated as relations among the carrier, the
 group structure, and the subset.
 
 ### A Reusable Algebraic Hierarchy

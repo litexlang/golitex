@@ -108,8 +108,8 @@ thm measurable_complement:
             $is_measurable_set(X, M, set_minus(X, S))
     $is_measurable_set(X, M, set_minus(X, S))
 
-# Strict mode does not yet unfold symbolic countable-union template instances,
-# so the checked closure theorems use the definition-equivalent set builder.
+# The closure theorems keep the membership set builders visible for their
+# elementwise proofs; the named symbolic countable-set templates also unfold.
 thm measurable_countable_union:
     ? forall X set, M power_set(power_set(X)), A fn(n N) power_set(X):
         $is_measurable_space_on(X, M)
