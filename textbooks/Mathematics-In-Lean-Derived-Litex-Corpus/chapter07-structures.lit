@@ -93,9 +93,7 @@ thm standard_simplex_midpoint_closed:
     finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i)}) = (1 / 2) * finite_set_sum(range(0, n), a)
     finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * b(i)}) = (1 / 2) * finite_set_sum(range(0, n), b)
     finite_set_sum(range(0, n), fn(i range(0, n)) R {(a(i) + b(i)) / 2}) = (1 / 2) * 1 + (1 / 2) * 1 = 1
-    # Proof debt: both defining laws are checked above, but the current
-    # predicate-folding rule does not reuse the quantified coordinate law.
-    trust $is_standard_simplex_point(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
+    by def $is_standard_simplex_point(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
 
 # The midpoint remains a callable function-valued construction. Its checked
 # codomain law is the preceding source-facing closure theorem.

@@ -50,6 +50,24 @@ The same chapter proves `chap3::subset_of_finite_set_is_finite`.  It expresses
 a subset as a double set difference inside its finite ambient set, so Chapters
 8 and 11 can reuse the checked result without importing `std`.
 
+## Chapter 4 formal-difference surface
+
+Chapter 4 represents Tao's formal difference `a-b` by the pair `(a,b)` in
+`formal_difference = cart(N,N)`. The predicate
+`$represent_same_integer(p,q)` is the cross-sum relation
+`p[1]+q[2]=q[1]+p[2]`; it does not use Litex's truncated subtraction on `N`.
+The callable constructions `add_formal_differences`,
+`multiply_formal_differences`, and `negate_formal_difference` implement the
+representative formulas. Their preservation of `represent_same_integer` is
+proved by the three corresponding well-definedness theorems before the chapter
+switches to builtin `Z` and `Q` arithmetic.
+
+A representative checked use is:
+
+```litex
+by def $represent_same_integer((3, 1), (4, 2))
+```
+
 ## Chapter 6 concept-first surface
 
 Chapter 6 separates the candidate-limit relation `$has_limit(a,L)` from the

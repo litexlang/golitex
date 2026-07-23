@@ -1,15 +1,196 @@
-prop contains_natural_tail_from(a N, S power_set(N)):
-    forall n N:
-        n >= a
-        =>:
-            n $in S
+have formal_difference set = cart(N, N)
 
-prop eventually_on_N(S power_set(N)):
-    exist a N st {$contains_natural_tail_from(a, S)}
+prop represent_same_integer(p, q cart(N, N)):
+    p[1] + q[2] = q[1] + p[2]
 
-thm eventually_on_N_keeps_captured_set:
-    ? forall S power_set(N):
-        $eventually_on_N(S)
+have fn add_formal_differences(p, q cart(N, N)) cart(N, N) = (p[1] + q[1], p[2] + q[2])
+
+have fn multiply_formal_differences(p, q cart(N, N)) cart(N, N) = (p[1] * q[1] + p[2] * q[2], p[1] * q[2] + p[2] * q[1])
+
+have fn negate_formal_difference(p cart(N, N)) cart(N, N) = (p[2], p[1])
+
+by def $represent_same_integer((3, 1), (4, 2))
+
+thm addition_respects_formal_difference_equivalence:
+    ? forall p, q, r cart(N, N):
+        $represent_same_integer(p, q)
         =>:
-            $eventually_on_N(S)
-    $eventually_on_N(S)
+            $represent_same_integer(add_formal_differences(p, r), add_formal_differences(q, r))
+    p[1] + q[2] = q[1] + p[2]
+    add_formal_differences(p, r) = (p[1] + r[1], p[2] + r[2])
+    add_formal_differences(q, r) = (q[1] + r[1], q[2] + r[2])
+    add_formal_differences(p, r)[1] = p[1] + r[1]
+    add_formal_differences(p, r)[2] = p[2] + r[2]
+    add_formal_differences(q, r)[1] = q[1] + r[1]
+    add_formal_differences(q, r)[2] = q[2] + r[2]
+    (p[1] + r[1]) + (q[2] + r[2]) = (p[1] + q[2]) + (r[1] + r[2])
+    (p[1] + q[2]) + (r[1] + r[2]) = (q[1] + p[2]) + (r[1] + r[2])
+    (q[1] + p[2]) + (r[1] + r[2]) = (q[1] + r[1]) + (p[2] + r[2])
+    add_formal_differences(p, r)[1] + add_formal_differences(q, r)[2] = (p[1] + r[1]) + (q[2] + r[2]) = (p[1] + q[2]) + (r[1] + r[2]) = (q[1] + p[2]) + (r[1] + r[2]) = (q[1] + r[1]) + (p[2] + r[2]) = add_formal_differences(q, r)[1] + add_formal_differences(p, r)[2]
+    by def $represent_same_integer(add_formal_differences(p, r), add_formal_differences(q, r))
+
+thm multiplication_respects_formal_difference_equivalence:
+    ? forall p, q, r cart(N, N):
+        $represent_same_integer(p, q)
+        =>:
+            $represent_same_integer(multiply_formal_differences(p, r), multiply_formal_differences(q, r))
+    p[1] + q[2] = q[1] + p[2]
+    multiply_formal_differences(p, r) = (p[1] * r[1] + p[2] * r[2], p[1] * r[2] + p[2] * r[1])
+    multiply_formal_differences(q, r) = (q[1] * r[1] + q[2] * r[2], q[1] * r[2] + q[2] * r[1])
+    multiply_formal_differences(p, r)[1] = p[1] * r[1] + p[2] * r[2]
+    multiply_formal_differences(p, r)[2] = p[1] * r[2] + p[2] * r[1]
+    multiply_formal_differences(q, r)[1] = q[1] * r[1] + q[2] * r[2]
+    multiply_formal_differences(q, r)[2] = q[1] * r[2] + q[2] * r[1]
+    p[2] + q[1] = q[1] + p[2] = p[1] + q[2] = q[2] + p[1]
+    (p[1] * r[1] + p[2] * r[2]) + (q[1] * r[2] + q[2] * r[1]) = (p[1] + q[2]) * r[1] + (p[2] + q[1]) * r[2]
+    (p[1] + q[2]) * r[1] + (p[2] + q[1]) * r[2] = (q[1] + p[2]) * r[1] + (p[2] + q[1]) * r[2]
+    (q[1] + p[2]) * r[1] + (p[2] + q[1]) * r[2] = (q[1] + p[2]) * r[1] + (q[2] + p[1]) * r[2]
+    (q[1] + p[2]) * r[1] + (q[2] + p[1]) * r[2] = (q[1] * r[1] + q[2] * r[2]) + (p[1] * r[2] + p[2] * r[1])
+    multiply_formal_differences(p, r)[1] + multiply_formal_differences(q, r)[2] = (p[1] * r[1] + p[2] * r[2]) + (q[1] * r[2] + q[2] * r[1]) = (p[1] + q[2]) * r[1] + (p[2] + q[1]) * r[2] = (q[1] + p[2]) * r[1] + (p[2] + q[1]) * r[2] = (q[1] + p[2]) * r[1] + (q[2] + p[1]) * r[2] = (q[1] * r[1] + q[2] * r[2]) + (p[1] * r[2] + p[2] * r[1]) = multiply_formal_differences(q, r)[1] + multiply_formal_differences(p, r)[2]
+    by def $represent_same_integer(multiply_formal_differences(p, r), multiply_formal_differences(q, r))
+
+thm negation_respects_formal_difference_equivalence:
+    ? forall p, q cart(N, N):
+        $represent_same_integer(p, q)
+        =>:
+            $represent_same_integer(negate_formal_difference(p), negate_formal_difference(q))
+    p[1] + q[2] = q[1] + p[2]
+    negate_formal_difference(p) = (p[2], p[1])
+    negate_formal_difference(q) = (q[2], q[1])
+    negate_formal_difference(p)[1] = p[2]
+    negate_formal_difference(p)[2] = p[1]
+    negate_formal_difference(q)[1] = q[2]
+    negate_formal_difference(q)[2] = q[1]
+    negate_formal_difference(p)[1] + negate_formal_difference(q)[2] = p[2] + q[1] = q[1] + p[2] = p[1] + q[2] = q[2] + p[1] = negate_formal_difference(q)[1] + negate_formal_difference(p)[2]
+    by def $represent_same_integer(negate_formal_difference(p), negate_formal_difference(q))
+
+thm integer_multiplication_cancellation:
+    ? forall a, b, c Z:
+        a * c = b * c
+        c != 0
+        =>:
+            a = b
+    (a - b) * c = a * c - b * c = 0
+    (a - b) * c = 0
+    a - b = 0 or c = 0
+    by cases:
+        ? a = b
+        case a - b = 0:
+            a = a - b + b = b
+        case c = 0:
+            c != 0
+            impossible c != 0
+
+thm equal_integers_are_not_strictly_ordered:
+    ? forall a, b Z:
+        a = b
+        =>:
+            not a > b
+            not a < b
+    claim:
+        ? not a > b
+        by contra:
+            ? not a > b
+            a - b > 0
+            a - b = 0
+            impossible a - b = 0
+    claim:
+        ? not a < b
+        by contra:
+            ? not a < b
+            b - a > 0
+            b - a = 0
+            impossible b - a = 0
+
+thm rational_equality_gives_cross_products:
+    ? forall a Z, b Z_nz, c Z, d Z_nz:
+        a / b = c / d
+        =>:
+            a * d = c * b
+    b != 0
+    d != 0
+    a * d = (a / b) * (b * d) = (c / d) * (b * d) = c * b
+
+thm cross_products_give_rational_equality:
+    ? forall a Z, b Z_nz, c Z, d Z_nz:
+        a * d = c * b
+        =>:
+            a / b = c / d
+    b != 0
+    d != 0
+    b * d != 0
+    a / b = (a * d) / (b * d) = (c * b) / (b * d) = c / d
+
+thm rational_strict_order_is_asymmetric:
+    ? forall x, y Q:
+        x < y
+        =>:
+            x != y
+            not x > y
+    x != y
+    x - y < 0
+    claim:
+        ? not x > y
+        by contra:
+            ? not x > y
+            x - y > 0
+            impossible x - y < 0
+
+thm rational_abs_upper_bound_gives_two_sided_bound:
+    ? forall x, y Q:
+        y >= abs(x)
+        =>:
+            -y <= x
+            x <= y
+    x <= abs(x)
+    -x <= abs(x)
+    -y <= -abs(x)
+    -abs(x) <= x
+    -y <= -abs(x) <= x
+    x <= abs(x) <= y
+
+have fn dist_Q(x, y Q) Q = abs(x - y)
+
+thm rational_distance_nonnegative:
+    ? forall x, y Q:
+        dist_Q(x, y) >= 0
+    dist_Q(x, y) = abs(x - y)
+    abs(x - y) >= 0
+    dist_Q(x, y) >= 0
+
+thm equal_rationals_have_zero_distance:
+    ? forall x, y Q:
+        x = y
+        =>:
+            dist_Q(x, y) = 0
+    dist_Q(x, y) = abs(x - y) = abs(0) = 0
+
+thm zero_rational_distance_gives_equality:
+    ? forall x, y Q:
+        dist_Q(x, y) = 0
+        =>:
+            x = y
+    dist_Q(x, y) = abs(x - y)
+    abs(x - y) = 0
+    x - y = 0
+    x = x - y + y = y
+
+thm rational_distance_is_symmetric:
+    ? forall x, y Q:
+        dist_Q(x, y) = dist_Q(y, x)
+    dist_Q(x, y) = abs(x - y)
+    dist_Q(y, x) = abs(y - x)
+    x - y = -(y - x)
+    abs(x - y) = abs(-(y - x)) = abs(y - x)
+    dist_Q(x, y) = abs(x - y) = abs(y - x) = dist_Q(y, x)
+
+thm rational_distance_triangle_inequality:
+    ? forall x, y, z Q:
+        dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z)
+    dist_Q(x, z) = abs(x - z)
+    dist_Q(x, y) = abs(x - y)
+    dist_Q(y, z) = abs(y - z)
+    x - z = (x - y) + (y - z)
+    abs(x - z) = abs((x - y) + (y - z))
+    abs((x - y) + (y - z)) <= abs(x - y) + abs(y - z)
+    dist_Q(x, z) = abs(x - z) <= abs(x - y) + abs(y - z) = dist_Q(x, y) + dist_Q(y, z)

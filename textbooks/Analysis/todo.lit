@@ -84,19 +84,7 @@ It is Proposition 9.9.15, whose proof is Exercise 9.9.5.
 
 Chapter 11 — The Riemann integral (22 direct trust sites)
 
-Formalization gaps (11)
 
-Item 11-06 — Section 11.5; continuous_bounded_interval_has_integrable_closed_trims.
-Current location: chapter11-riemann-integral.lit, line 12316.
-Missing mathematics: choose closed endpoint trims for all four bounded-
-interval forms and prove continuity of the restricted function.
-It supplies the closed-trim step in Proposition 11.5.3.
-
-Item 11-07 — Section 11.5; darbouxs_criterion_from_integrable_closed_trims_and_bounded_tails.
-Current location: chapter11-riemann-integral.lit, line 12329.
-Missing mathematics: adjoin the finitely many endpoint-tail pieces to a
-closed trim and bound their Darboux contribution by the tail length.
-It completes the endpoint gluing calculation in Proposition 11.5.3.
 
 Item 11-09 — Section 11.6; monotone_closed_interval_riemann_integrable.
 Current location: chapter11-riemann-integral.lit, line 12890.

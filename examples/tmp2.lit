@@ -1,25 +1,5 @@
-thm standard_two_simplex_midpoint_closed:
-    ? forall a, b &StandardTwoSimplex:
-        ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2) $in &StandardTwoSimplex
-    (&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2 >= 0
-    (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2 >= 0
-    (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2 >= 0
-    (&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2 + (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2 + (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2 = ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{a}.y + &StandardTwoSimplex{a}.z) + (&StandardTwoSimplex{b}.x + &StandardTwoSimplex{b}.y + &StandardTwoSimplex{b}.z)) / 2 = (1 + 1) / 2 = 1
-    ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2) $in &StandardTwoSimplex
+forall x R:
+    x = x
 
-我觉得，如果每次都写成 &StandardTwoSimplex 的话。太麻烦了。可以这样：
 
-1. environment 里有额外的field，用来存 现在某个 object 被默认视为哪种 struct
-
-2. 在parse的时候，litex会call哪种遍历 name 和 type 的那个 parse 函数。这个函数有个用处就是，能给当前的局部的parse环境（比如还有就是记录那些局部的名字的那个局部编译环境这种）里，加上 一个 这个name被默认视作了什么struct里 的field。如果看到 name &&XXX 的时候，之后 &&name.x就会被自动parse成 &XXX{name}.x 你懂吧。就是这样的。相当于加入一个parse的trick但非常节约书写成本的哪种。而且也不会牺牲严谨性。
-
-3. 被默认视作某种struct后，在编译的时候，如果出现 &&a.x 的时候，编译器会从runtime的env里找到对应的现在的a是被默认看成什么struct了，然后把 &&a.x 给解析成 &StandardSimplex{a}.x。你懂吧，这样的话，代码会容易看懂非常非常多。
-
-thm standard_two_simplex_midpoint_closed:
-    ? forall a, b &&StandardTwoSimplex:
-        ((&&a.x + &&b.x) / 2, (&&a.y + &&b.y) / 2, (&&a.z + &&b.z) / 2) $in &StandardTwoSimplex
-    (&&a.x + &&b.x) / 2 >= 0
-    (&&a.y + &&b.y) / 2 >= 0
-    (&&a.z + &&b.z) / 2 >= 0
-    (&&a.x + &&b.x) / 2 + (&&a.y + &&b.y) / 2 + (&&a.z + &&b.z) / 2 = ((&&a.x + &&a.y + &&a.z) + (&&b.x + &&b.y + &&b.z)) / 2 = (1 + 1) / 2 = 1
-    ((&&a.x + &&b.x) / 2, (&&a.y + &&b.y) / 2, (&&a.z + &&b.z) / 2) $in &StandardTwoSimplex
+have x R = 1
