@@ -102,8 +102,7 @@ impl Runtime {
                 }
             };
 
-            this.parsing_free_param_collection
-                .end_scope(ParamObjType::DefHeader, &template_arg_names);
+            this.end_parsing_scope(ParamObjType::DefHeader, &template_arg_names);
 
             Ok(DefTemplateStmt::new(
                 template_name,
@@ -159,6 +158,7 @@ impl Runtime {
                 }
 
                 let mut fields: Vec<(String, Obj)> = Vec::new();
+                let mut field_bindings: Vec<SymbolBinding> = Vec::new();
                 let mut equivalent_facts: Vec<Fact> = Vec::new();
                 let mut seen_equivalent = false;
 
@@ -173,7 +173,13 @@ impl Runtime {
                             )));
                         }
                         seen_equivalent = true;
-                        equivalent_facts = this.parse_struct_equivalent_facts(block, &fields)?;
+                        let field_names = fields
+                            .iter()
+                            .map(|(field_name, _)| field_name.clone())
+                            .collect::<Vec<_>>();
+                        field_bindings = this.allocate_local_symbol_bindings(&field_names)?;
+                        equivalent_facts =
+                            this.parse_struct_equivalent_facts(block, &field_bindings)?;
                     } else {
                         if seen_equivalent {
                             return Err(RuntimeError::from(ParseRuntimeError(
@@ -204,19 +210,26 @@ impl Runtime {
                         ),
                     )));
                 }
+                if field_bindings.is_empty() {
+                    let field_names = fields
+                        .iter()
+                        .map(|(field_name, _)| field_name.clone())
+                        .collect::<Vec<_>>();
+                    field_bindings = this.allocate_local_symbol_bindings(&field_names)?;
+                }
 
                 Ok(DefStructStmt::new(
                     name.clone(),
                     param_def_with_dom,
                     fields,
+                    field_bindings,
                     equivalent_facts,
                     tb.line_file.clone(),
                 ))
             })();
 
             if !struct_param_names.is_empty() {
-                this.parsing_free_param_collection
-                    .end_scope(ParamObjType::DefHeader, &struct_param_names);
+                this.end_parsing_scope(ParamObjType::DefHeader, &struct_param_names);
             }
             parse_result
         });
@@ -261,7 +274,7 @@ impl Runtime {
     fn parse_struct_equivalent_facts(
         &mut self,
         block: &mut TokenBlock,
-        fields: &Vec<(String, Obj)>,
+        field_bindings: &[SymbolBinding],
     ) -> Result<Vec<Fact>, RuntimeError> {
         block.skip_token(EQUIVALENT_SIGN)?;
         block.skip_token(COLON)?;
@@ -273,18 +286,19 @@ impl Runtime {
                 ),
             )));
         }
-        let field_names = fields
+        let field_names = field_bindings
             .iter()
-            .map(|(name, _)| name.clone())
+            .map(|binding| binding.name().to_string())
             .collect::<Vec<_>>();
-        self.parsing_free_param_collection.begin_scope(
+        self.current_parse_context_mut().free_params.begin_scope(
             ParamObjType::DefStructField,
-            &field_names,
+            field_bindings,
             block.line_file.clone(),
         )?;
+        self.current_parse_context_mut()
+            .push_scope_frame(field_bindings.to_vec());
         let facts_result = self.parse_facts_in_body(block);
-        self.parsing_free_param_collection
-            .end_scope(ParamObjType::DefStructField, &field_names);
+        self.end_parsing_scope(ParamObjType::DefStructField, &field_names);
         facts_result
     }
 
@@ -306,8 +320,7 @@ impl Runtime {
                         ),
                     )));
                 } else {
-                    this.parsing_free_param_collection
-                        .end_scope(ParamObjType::DefHeader, &def_param_names);
+                    this.end_parsing_scope(ParamObjType::DefHeader, &def_param_names);
                     return Ok(DefPropStmt::new(
                         name,
                         param_defs,
@@ -318,8 +331,7 @@ impl Runtime {
             }
 
             let facts_result = this.parse_facts_in_body(tb);
-            this.parsing_free_param_collection
-                .end_scope(ParamObjType::DefHeader, &def_param_names);
+            this.end_parsing_scope(ParamObjType::DefHeader, &def_param_names);
             let facts = facts_result?;
             Ok(DefPropStmt::new(
                 name,
@@ -400,20 +412,21 @@ impl Runtime {
                 )))
             };
             if facts_result.is_err() && !all_param_names.is_empty() {
-                self.parsing_free_param_collection
-                    .end_scope(ParamObjType::Identifier, &all_param_names);
+                self.end_parsing_scope(ParamObjType::Identifier, &all_param_names);
             }
             let facts = facts_result?;
-            self.parsing_free_param_collection
-                .end_scope(ParamObjType::Identifier, &all_param_names);
+            self.end_parsing_scope(ParamObjType::Identifier, &all_param_names);
             facts
         } else {
             if !all_param_names.is_empty() {
-                self.parsing_free_param_collection
-                    .end_scope(ParamObjType::Identifier, &all_param_names);
+                self.end_parsing_scope(ParamObjType::Identifier, &all_param_names);
             }
             vec![]
         };
+        self.register_local_existing_identifier_bindings_for_parse(
+            &param_def.collect_param_bindings(),
+            tb.line_file.clone(),
+        )?;
         Ok(TrustHaveStmt::new(param_def, facts, tb.line_file.clone()).into())
     }
 
@@ -452,16 +465,15 @@ impl Runtime {
                 self.parse_exist_body_facts_in_body(tb)
             })();
             if !have_param_names.is_empty() {
-                self.parsing_free_param_collection
-                    .end_scope(ParamObjType::Exist, &have_param_names);
+                self.end_parsing_scope(ParamObjType::Exist, &have_param_names);
             }
             let facts = facts_result?;
             self.register_collected_param_names_for_def_parse(
                 &have_param_names,
                 tb.line_file.clone(),
             )?;
-            self.register_local_identifier_bindings_for_parse(
-                &have_param_names,
+            self.register_local_existing_identifier_bindings_for_parse(
+                &param_defs.collect_param_bindings(),
                 tb.line_file.clone(),
             )?;
             return Ok(
@@ -472,18 +484,16 @@ impl Runtime {
         let register_result = self
             .register_collected_param_names_for_def_parse(&have_param_names, tb.line_file.clone());
         if register_result.is_err() && !have_param_names.is_empty() {
-            self.parsing_free_param_collection
-                .end_scope(ParamObjType::Identifier, &have_param_names);
+            self.end_parsing_scope(ParamObjType::Identifier, &have_param_names);
         }
         register_result?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
             if !have_param_names.is_empty() {
-                self.parsing_free_param_collection
-                    .end_scope(ParamObjType::Identifier, &have_param_names);
+                self.end_parsing_scope(ParamObjType::Identifier, &have_param_names);
             }
-            self.register_local_identifier_bindings_for_parse(
-                &have_param_names,
+            self.register_local_existing_identifier_bindings_for_parse(
+                &param_defs.collect_param_bindings(),
                 tb.line_file.clone(),
             )?;
             Ok(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file.clone()).into())
@@ -497,11 +507,10 @@ impl Runtime {
                 }
                 Ok(objs_equal_to)
             })();
-            self.parsing_free_param_collection
-                .end_scope(ParamObjType::Identifier, &have_param_names);
+            self.end_parsing_scope(ParamObjType::Identifier, &have_param_names);
             let objs_equal_to = objs_result?;
-            self.register_local_identifier_bindings_for_parse(
-                &have_param_names,
+            self.register_local_existing_identifier_bindings_for_parse(
+                &param_defs.collect_param_bindings(),
                 tb.line_file.clone(),
             )?;
             Ok(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file.clone()).into())
@@ -548,6 +557,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(TUPLE)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
+        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
         skip_have_indexed_definition_keyword(tb, "have tuple")?;
         let index_name = parse_have_tuple_or_cart_name(tb)?;
         tb.skip_token(LESS_EQUAL)?;
@@ -555,7 +565,7 @@ impl Runtime {
         tb.skip_token(COMMA)?;
 
         let index_names = vec![index_name.clone()];
-        let (lhs, value) = self.parse_in_local_free_param_scope(
+        let ((lhs, value), index_bindings) = self.parse_in_local_free_param_scope_with_bindings(
             ParamObjType::TupleIndex,
             &index_names,
             tb.line_file.clone(),
@@ -576,14 +586,27 @@ impl Runtime {
         )?;
         validate_have_tuple_lhs(&lhs, &name, &index_name, tb.line_file.clone())?;
 
-        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
-        Ok(HaveTupleStmt::new(name, index_name, dimension, value, tb.line_file.clone()).into())
+        self.register_local_existing_identifier_bindings_for_parse(
+            std::slice::from_ref(&symbol_binding),
+            tb.line_file.clone(),
+        )?;
+        Ok(HaveTupleStmt::new(
+            name,
+            symbol_binding,
+            index_name,
+            index_bindings[0].clone(),
+            dimension,
+            value,
+            tb.line_file.clone(),
+        )
+        .into())
     }
 
     pub fn parse_have_cart_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(CART)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
+        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
         skip_have_indexed_definition_keyword(tb, "have cart")?;
         let index_name = parse_have_tuple_or_cart_name(tb)?;
         tb.skip_token(LESS_EQUAL)?;
@@ -591,7 +614,7 @@ impl Runtime {
         tb.skip_token(COMMA)?;
 
         let index_names = vec![index_name.clone()];
-        let (lhs, value) = self.parse_in_local_free_param_scope(
+        let ((lhs, value), index_bindings) = self.parse_in_local_free_param_scope_with_bindings(
             ParamObjType::CartIndex,
             &index_names,
             tb.line_file.clone(),
@@ -612,14 +635,27 @@ impl Runtime {
         )?;
         validate_have_cart_lhs(&lhs, &name, &index_name, tb.line_file.clone())?;
 
-        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
-        Ok(HaveCartStmt::new(name, index_name, dimension, value, tb.line_file.clone()).into())
+        self.register_local_existing_identifier_bindings_for_parse(
+            std::slice::from_ref(&symbol_binding),
+            tb.line_file.clone(),
+        )?;
+        Ok(HaveCartStmt::new(
+            name,
+            symbol_binding,
+            index_name,
+            index_bindings[0].clone(),
+            dimension,
+            value,
+            tb.line_file.clone(),
+        )
+        .into())
     }
 
     pub fn parse_have_seq_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(SEQ)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
+        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
         let seq_set = match self.parse_obj(tb)? {
             Obj::SeqSet(seq_set) => seq_set,
             _ => {
@@ -636,7 +672,7 @@ impl Runtime {
         tb.skip_token(COMMA)?;
 
         let index_names = vec![index_name.clone()];
-        let (lhs, value) = self.parse_in_local_free_param_scope(
+        let ((lhs, value), index_bindings) = self.parse_in_local_free_param_scope_with_bindings(
             ParamObjType::FnSet,
             &index_names,
             tb.line_file.clone(),
@@ -657,8 +693,20 @@ impl Runtime {
         )?;
         validate_have_seq_lhs(&lhs, &name, &index_name, tb.line_file.clone())?;
 
-        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
-        Ok(HaveSeqStmt::new(name, seq_set, index_name, value, tb.line_file.clone()).into())
+        self.register_local_existing_identifier_bindings_for_parse(
+            std::slice::from_ref(&symbol_binding),
+            tb.line_file.clone(),
+        )?;
+        Ok(HaveSeqStmt::new(
+            name,
+            symbol_binding,
+            seq_set,
+            index_name,
+            index_bindings[0].clone(),
+            value,
+            tb.line_file.clone(),
+        )
+        .into())
     }
 
     pub fn parse_have_finite_seq_stmt(
@@ -668,6 +716,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(FINITE_SEQ)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
+        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
         let finite_seq_set = match self.parse_obj(tb)? {
             Obj::FiniteSeqSet(finite_seq_set) => finite_seq_set,
             _ => {
@@ -686,7 +735,7 @@ impl Runtime {
         tb.skip_token(COMMA)?;
 
         let index_names = vec![index_name.clone()];
-        let (lhs, value) = self.parse_in_local_free_param_scope(
+        let ((lhs, value), index_bindings) = self.parse_in_local_free_param_scope_with_bindings(
             ParamObjType::FnSet,
             &index_names,
             tb.line_file.clone(),
@@ -707,11 +756,16 @@ impl Runtime {
         )?;
         validate_have_seq_lhs(&lhs, &name, &index_name, tb.line_file.clone())?;
 
-        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
+        self.register_local_existing_identifier_bindings_for_parse(
+            std::slice::from_ref(&symbol_binding),
+            tb.line_file.clone(),
+        )?;
         Ok(HaveFiniteSeqStmt::new(
             name,
+            symbol_binding,
             finite_seq_set,
             index_name,
+            index_bindings[0].clone(),
             bound,
             value,
             tb.line_file.clone(),
@@ -723,6 +777,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(MATRIX)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
+        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
         let matrix_set = match self.parse_obj(tb)? {
             Obj::MatrixSet(matrix_set) => matrix_set,
             _ => {
@@ -745,7 +800,7 @@ impl Runtime {
         tb.skip_token(COMMA)?;
 
         let index_names = vec![row_index_name.clone(), col_index_name.clone()];
-        let (lhs, value) = self.parse_in_local_free_param_scope(
+        let ((lhs, value), index_bindings) = self.parse_in_local_free_param_scope_with_bindings(
             ParamObjType::FnSet,
             &index_names,
             tb.line_file.clone(),
@@ -772,13 +827,19 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
 
-        self.insert_parsed_name_into_top_parsing_time_name_scope(&name, tb.line_file.clone())?;
+        self.register_local_existing_identifier_bindings_for_parse(
+            std::slice::from_ref(&symbol_binding),
+            tb.line_file.clone(),
+        )?;
         Ok(HaveMatrixStmt::new(
             name,
+            symbol_binding,
             matrix_set,
             row_index_name,
+            index_bindings[0].clone(),
             row_bound,
             col_index_name,
+            index_bindings[1].clone(),
             col_bound,
             value,
             tb.line_file.clone(),
@@ -808,6 +869,7 @@ impl Runtime {
             )))
         } else {
             let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
+            let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
             if tb.current_token_is_equal_to(BY) {
                 tb.skip_token(BY)?;
                 if tb.current_token_is_equal_to(EXIST) && tb.token_at_add_index(1) == "!" {
@@ -822,7 +884,7 @@ impl Runtime {
                             ),
                         )));
                     }
-                    return self.parse_have_fn_by_exist_unique_body(tb, name);
+                    return self.parse_have_fn_by_exist_unique_body(tb, name, symbol_binding);
                 }
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -834,17 +896,16 @@ impl Runtime {
             }
 
             let fs = self.parse_fn_set_clause(tb)?;
-            let fn_param_names = fs.collect_all_param_names_including_nested_ret_fn_sets();
-            let top_level_fn_param_names =
-                ParamGroupWithSet::collect_param_names(&fs.params_def_with_set);
+            let fn_param_bindings = fs.collect_all_param_bindings_including_nested_ret_fn_sets();
+            let top_level_fn_param_bindings = fs.params_def_with_set.collect_param_bindings();
 
             if tb.current_token_is_equal_to(EQUAL) {
                 tb.skip_token(EQUAL)?;
 
                 let lf = tb.line_file.clone();
-                let equal_to = self.with_optional_free_param_scope(
+                let equal_to = self.parse_in_existing_free_param_scope(
                     ParamObjType::FnSet,
-                    &fn_param_names,
+                    &fn_param_bindings,
                     lf,
                     |this| this.parse_obj(tb),
                 )?;
@@ -854,19 +915,42 @@ impl Runtime {
                     fs.ret_set.clone(),
                     equal_to,
                 )?;
-                Ok(HaveFnEqualStmt::new(name, equal_to_anonymous_fn, tb.line_file.clone()).into())
+                let stmt = HaveFnEqualStmt::new(
+                    name,
+                    symbol_binding.clone(),
+                    equal_to_anonymous_fn,
+                    tb.line_file.clone(),
+                );
+                self.register_local_existing_identifier_bindings_for_parse(
+                    std::slice::from_ref(&symbol_binding),
+                    tb.line_file.clone(),
+                )?;
+                Ok(stmt.into())
             } else if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;
-                self.parse_have_fn_case_by_case_stmt_after_colon(tb, name, fs, &fn_param_names)
+                self.parse_have_fn_case_by_case_stmt_after_colon(
+                    tb,
+                    name,
+                    symbol_binding,
+                    fs,
+                    &fn_param_bindings,
+                )
             } else if tb.current_token_is_equal_to(BY) {
                 if tb.token_at_add_index(1) == CASES {
-                    self.parse_have_fn_by_cases_stmt_after_signature(tb, name, fs, &fn_param_names)
+                    self.parse_have_fn_by_cases_stmt_after_signature(
+                        tb,
+                        name,
+                        symbol_binding,
+                        fs,
+                        &fn_param_bindings,
+                    )
                 } else if tb.token_at_add_index(1) == INDUC {
                     self.parse_have_fn_by_induc_stmt_after_signature(
                         tb,
                         name,
+                        symbol_binding,
                         fs,
-                        top_level_fn_param_names,
+                        top_level_fn_param_bindings,
                     )
                 } else if tb.token_at_add_index(1) == "decreasing" {
                     Err(RuntimeError::from(ParseRuntimeError(
@@ -901,6 +985,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
         name: String,
+        symbol_binding: SymbolBinding,
     ) -> Result<Stmt, RuntimeError> {
         let lf = tb.line_file.clone();
         if tb.body.is_empty() {
@@ -936,10 +1021,10 @@ impl Runtime {
                 "`have fn <name> by exist!:`",
             )?
         };
-        let names = forall.params_def_with_type.collect_param_names();
-        let prove_process: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+        let bindings = forall.params_def_with_type.collect_param_bindings();
+        let prove_process: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
             ParamObjType::Forall,
-            &names,
+            &bindings,
             lf.clone(),
             |this| {
                 let mut proof = Vec::new();
@@ -956,34 +1041,52 @@ impl Runtime {
                 Ok(proof)
             },
         )?;
-        Ok(HaveFnByForallExistUniqueStmt::new(name, forall, prove_process, lf).into())
+        let stmt = HaveFnByForallExistUniqueStmt::new(
+            name,
+            symbol_binding.clone(),
+            forall,
+            prove_process,
+            lf.clone(),
+        );
+        self.register_local_existing_identifier_bindings_for_parse(
+            std::slice::from_ref(&symbol_binding),
+            lf,
+        )?;
+        Ok(stmt.into())
     }
 
     fn parse_have_fn_case_by_case_stmt_after_colon(
         &mut self,
         tb: &mut TokenBlock,
         name: String,
+        symbol_binding: SymbolBinding,
         fn_set_clause: FnSetClause,
-        fn_param_names: &[String],
+        fn_param_bindings: &[SymbolBinding],
     ) -> Result<Stmt, RuntimeError> {
         let (cases, equal_tos) =
-            self.parse_have_fn_case_by_case_blocks(&mut tb.body, fn_param_names)?;
-        Ok(HaveFnEqualCaseByCaseStmt::new(
+            self.parse_have_fn_case_by_case_blocks(&mut tb.body, fn_param_bindings)?;
+        let stmt = HaveFnEqualCaseByCaseStmt::new(
             name,
+            symbol_binding.clone(),
             fn_set_clause,
             cases,
             equal_tos,
             tb.line_file.clone(),
-        )
-        .into())
+        );
+        self.register_local_existing_identifier_bindings_for_parse(
+            std::slice::from_ref(&symbol_binding),
+            tb.line_file.clone(),
+        )?;
+        Ok(stmt.into())
     }
 
     fn parse_have_fn_by_cases_stmt_after_signature(
         &mut self,
         tb: &mut TokenBlock,
         name: String,
+        symbol_binding: SymbolBinding,
         fn_set_clause: FnSetClause,
-        fn_param_names: &[String],
+        fn_param_bindings: &[SymbolBinding],
     ) -> Result<Stmt, RuntimeError> {
         tb.skip_token(BY)?;
         tb.skip_token(CASES)?;
@@ -996,30 +1099,36 @@ impl Runtime {
                 ),
             )));
         }
-        self.parse_have_fn_case_by_case_stmt_after_colon(tb, name, fn_set_clause, fn_param_names)
+        self.parse_have_fn_case_by_case_stmt_after_colon(
+            tb,
+            name,
+            symbol_binding,
+            fn_set_clause,
+            fn_param_bindings,
+        )
     }
 
     fn parse_have_fn_case_by_case_blocks(
         &mut self,
         blocks: &mut [TokenBlock],
-        fn_param_names: &[String],
+        fn_param_bindings: &[SymbolBinding],
     ) -> Result<(Vec<AndChainAtomicFact>, Vec<Obj>), RuntimeError> {
         let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(blocks.len());
         let mut equal_tos: Vec<Obj> = Vec::with_capacity(blocks.len());
         for block in blocks.iter_mut() {
             block.skip_token(CASE)?;
             let case_lf = block.line_file.clone();
-            cases.push(self.with_optional_free_param_scope(
+            cases.push(self.parse_in_existing_free_param_scope(
                 ParamObjType::FnSet,
-                fn_param_names,
+                fn_param_bindings,
                 case_lf,
                 |this| this.parse_and_chain_atomic_fact_allow_leading_not(block),
             )?);
             block.skip_token(COLON)?;
             let rhs_lf = block.line_file.clone();
-            equal_tos.push(self.with_optional_free_param_scope(
+            equal_tos.push(self.parse_in_existing_free_param_scope(
                 ParamObjType::FnSet,
-                fn_param_names,
+                fn_param_bindings,
                 rhs_lf,
                 |this| this.parse_obj(block),
             )?);
@@ -1031,35 +1140,43 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
         name: String,
+        symbol_binding: SymbolBinding,
         fn_set_clause: FnSetClause,
-        fn_param_names: Vec<String>,
+        fn_param_bindings: Vec<SymbolBinding>,
     ) -> Result<Stmt, RuntimeError> {
-        self.parse_have_fn_by_induc_block(tb, name, fn_set_clause, &fn_param_names)
+        self.parse_have_fn_by_induc_block(
+            tb,
+            name,
+            symbol_binding,
+            fn_set_clause,
+            &fn_param_bindings,
+        )
     }
 
     fn parse_have_fn_by_induc_block(
         &mut self,
         block: &mut TokenBlock,
         name: String,
+        symbol_binding: SymbolBinding,
         fn_set_clause: FnSetClause,
-        fn_param_names: &[String],
+        fn_param_bindings: &[SymbolBinding],
     ) -> Result<Stmt, RuntimeError> {
         block.skip_token(BY)?;
         block.skip_token(INDUC)?;
 
         let measure_lf = block.line_file.clone();
-        let measure = self.with_optional_free_param_scope(
+        let measure = self.parse_in_existing_free_param_scope(
             ParamObjType::FnSet,
-            fn_param_names,
+            fn_param_bindings,
             measure_lf,
             |this| this.parse_obj(block),
         )?;
 
         block.skip_token(FROM)?;
         let lower_lf = block.line_file.clone();
-        let lower_bound = self.with_optional_free_param_scope(
+        let lower_bound = self.parse_in_existing_free_param_scope(
             ParamObjType::FnSet,
-            fn_param_names,
+            fn_param_bindings,
             lower_lf,
             |this| this.parse_obj(block),
         )?;
@@ -1082,26 +1199,41 @@ impl Runtime {
             )));
         }
 
-        let cases = self.parse_have_fn_by_induc_cases(&mut block.body, fn_param_names)?;
-        Ok(HaveFnByInducStmt::new(
+        let function_names = vec![name.clone()];
+        self.current_parse_context_mut().free_params.begin_scope(
+            ParamObjType::Identifier,
+            std::slice::from_ref(&symbol_binding),
+            block.line_file.clone(),
+        )?;
+        self.current_parse_context_mut()
+            .push_scope_frame(vec![symbol_binding.clone()]);
+        let cases_result = self.parse_have_fn_by_induc_cases(&mut block.body, fn_param_bindings);
+        self.end_parsing_scope(ParamObjType::Identifier, &function_names);
+        let cases = cases_result?;
+        let stmt = HaveFnByInducStmt::new(
             name,
+            symbol_binding.clone(),
             fn_set_clause,
             measure,
             lower_bound,
             cases,
             block.line_file.clone(),
-        )
-        .into())
+        );
+        self.register_local_existing_identifier_bindings_for_parse(
+            std::slice::from_ref(&symbol_binding),
+            block.line_file.clone(),
+        )?;
+        Ok(stmt.into())
     }
 
     fn parse_have_fn_by_induc_cases(
         &mut self,
         blocks: &mut [TokenBlock],
-        fn_param_names: &[String],
+        fn_param_bindings: &[SymbolBinding],
     ) -> Result<Vec<HaveFnByInducCase>, RuntimeError> {
         let mut cases = Vec::with_capacity(blocks.len());
         for block in blocks.iter_mut() {
-            cases.push(self.parse_have_fn_by_induc_case(block, fn_param_names)?);
+            cases.push(self.parse_have_fn_by_induc_case(block, fn_param_bindings)?);
         }
         Ok(cases)
     }
@@ -1109,13 +1241,13 @@ impl Runtime {
     fn parse_have_fn_by_induc_case(
         &mut self,
         block: &mut TokenBlock,
-        fn_param_names: &[String],
+        fn_param_bindings: &[SymbolBinding],
     ) -> Result<HaveFnByInducCase, RuntimeError> {
         block.skip_token(CASE)?;
         let case_lf = block.line_file.clone();
-        let case_fact = self.with_optional_free_param_scope(
+        let case_fact = self.parse_in_existing_free_param_scope(
             ParamObjType::FnSet,
-            fn_param_names,
+            fn_param_bindings,
             case_lf,
             |this| this.parse_and_chain_atomic_fact_allow_leading_not(block),
         )?;
@@ -1123,9 +1255,9 @@ impl Runtime {
 
         if !block.exceed_end_of_head() {
             let rhs_lf = block.line_file.clone();
-            let equal_to = self.with_optional_free_param_scope(
+            let equal_to = self.parse_in_existing_free_param_scope(
                 ParamObjType::FnSet,
-                fn_param_names,
+                fn_param_bindings,
                 rhs_lf,
                 |this| this.parse_obj(block),
             )?;
@@ -1161,7 +1293,7 @@ impl Runtime {
             )));
         }
 
-        let nested = self.parse_have_fn_by_induc_cases(&mut block.body, fn_param_names)?;
+        let nested = self.parse_have_fn_by_induc_cases(&mut block.body, fn_param_bindings)?;
         Ok(HaveFnByInducCase::new(
             case_fact,
             HaveFnByInducCaseBody::NestedCases(nested),
@@ -1223,9 +1355,19 @@ impl Runtime {
         }
 
         self.register_collected_param_names_for_def_parse(&equal_tos, tb.line_file.clone())?;
-        self.register_local_identifier_bindings_for_parse(&equal_tos, tb.line_file.clone())?;
+        let equal_to_bindings = self.allocate_local_symbol_bindings(&equal_tos)?;
+        self.register_local_existing_identifier_bindings_for_parse(
+            &equal_to_bindings,
+            tb.line_file.clone(),
+        )?;
 
-        Ok(HaveByExistStmt::new(equal_tos, true_fact, tb.line_file.clone()).into())
+        Ok(HaveByExistStmt::new(
+            equal_tos,
+            equal_to_bindings,
+            true_fact,
+            tb.line_file.clone(),
+        )
+        .into())
     }
 
     pub fn parse_have_preimage(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -1290,9 +1432,19 @@ impl Runtime {
         };
 
         self.register_collected_param_names_for_def_parse(&preimage_names, tb.line_file.clone())?;
-        self.register_local_identifier_bindings_for_parse(&preimage_names, tb.line_file.clone())?;
+        let preimage_bindings = self.allocate_local_symbol_bindings(&preimage_names)?;
+        self.register_local_existing_identifier_bindings_for_parse(
+            &preimage_bindings,
+            tb.line_file.clone(),
+        )?;
 
-        Ok(HaveByPreimageStmt::new(preimage_names, range_membership, tb.line_file.clone()).into())
+        Ok(HaveByPreimageStmt::new(
+            preimage_names,
+            preimage_bindings,
+            range_membership,
+            tb.line_file.clone(),
+        )
+        .into())
     }
 
     /// Parses `have algo for f(a, b):` as an executable implementation of `f`.
@@ -1313,11 +1465,8 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             this.register_collected_param_names_for_def_parse(&params, tb.line_file.clone())?;
             tb.skip_token(COLON)?;
-            this.parsing_free_param_collection.begin_scope(
-                ParamObjType::DefAlgo,
-                &params,
-                tb.line_file.clone(),
-            )?;
+            let param_bindings =
+                this.begin_parsing_scope(ParamObjType::DefAlgo, &params, tb.line_file.clone())?;
             let params_for_end = params.clone();
             let algo_result = (|| -> Result<DefAlgoStmt, RuntimeError> {
                 let mut algo_cases: Vec<AlgoCase> = vec![];
@@ -1338,13 +1487,13 @@ impl Runtime {
                 Ok(DefAlgoStmt::new(
                     name,
                     params,
+                    param_bindings,
                     algo_cases,
                     default_return,
                     tb.line_file.clone(),
                 ))
             })();
-            this.parsing_free_param_collection
-                .end_scope(ParamObjType::DefAlgo, &params_for_end);
+            this.end_parsing_scope(ParamObjType::DefAlgo, &params_for_end);
             Ok(algo_result?.into())
         })
     }

@@ -474,22 +474,20 @@ impl GraphBuilder {
 
     fn add_def_thm_stmt(&mut self, stmt: &DefThmStmt, full_stmt: &Stmt) {
         let fact_kind = if stmt.is_axiom() { "axiom" } else { "thm" };
-        for name in stmt.names.iter() {
-            let node_id = fact_id(fact_kind, name);
-            self.ensure_node(
-                node_id.clone(),
-                "fact",
-                name,
-                true,
-                Some(fact_kind),
-                Some(&stmt.line_file),
-                Some(&full_stmt.to_string()),
-            );
-            let mut collector = DepCollector::new();
-            collector.collect_forall_fact(&stmt.forall_fact);
-            self.add_dependency_edges(&node_id, &collector.deps);
-            self.add_by_thm_edges_to(&node_id, &stmt.prove_process);
-        }
+        let node_id = fact_id(fact_kind, &stmt.name);
+        self.ensure_node(
+            node_id.clone(),
+            "fact",
+            &stmt.name,
+            true,
+            Some(fact_kind),
+            Some(&stmt.line_file),
+            Some(&full_stmt.to_string()),
+        );
+        let mut collector = DepCollector::new();
+        collector.collect_forall_fact(&stmt.forall_fact);
+        self.add_dependency_edges(&node_id, &collector.deps);
+        self.add_by_thm_edges_to(&node_id, &stmt.prove_process);
     }
 
     fn add_claim_stmt(&mut self, stmt: &ClaimStmt, full_stmt: &Stmt) {

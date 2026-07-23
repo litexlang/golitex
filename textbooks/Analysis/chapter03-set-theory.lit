@@ -115,8 +115,8 @@ object x such that x in A.
 claim:
     ? forall A nonempty_set:
         exist x A st {x $in A}
-    have x A
-    witness exist x A st {x $in A} from x
+    have chosen A
+    witness exist x A st {x $in A} from chosen
 
 """
 Remark 3.1.7. Single choice lets us choose one element from one non-empty set;
@@ -1358,12 +1358,12 @@ that unique-preimage rule as a function from the range of f back to X.
 # This is the Section 3.4 inverse-on-the-image statement: no surjectivity onto
 # Y is assumed, so each range value receives its unique preimage as a theorem.
 thm injective_fn_has_unique_preimage_in_range:
-    ? forall X, Y set, f fn(x X) Y, y fn_range(f):
+    ? forall X, Y set, f fn(z X) Y, y fn_range(f):
         $is_injective_fn(X, Y, f)
         =>:
             exist! x X st {y = f(x)}
-    have by preimage x from y $in fn_range(f)
-    witness exist! x X st {y = f(x)} from x:
+    have by preimage chosen_preimage from y $in fn_range(f)
+    witness exist! x X st {y = f(x)} from chosen_preimage:
         forall x1, x2 X:
             y = f(x1)
             y = f(x2)

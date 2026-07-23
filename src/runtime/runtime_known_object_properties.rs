@@ -485,7 +485,7 @@ impl Runtime {
     }
 
     pub fn get_all_obj_representatives_equal_to_given(&self, given: &Obj) -> Vec<Obj> {
-        let given_key = given.to_string();
+        let given_key = obj_equality_key(given);
         let mut result = Vec::new();
         let environments = self.iter_environments_from_top().collect::<Vec<_>>();
         Self::extend_obj_representatives_equal_to_given_in_environments(
@@ -507,7 +507,7 @@ impl Runtime {
             );
         }
 
-        result.retain(|obj| obj.to_string() != given_key);
+        result.retain(|obj| obj_equality_key(obj) != given_key);
         result
     }
 
@@ -526,13 +526,13 @@ impl Runtime {
                     continue;
                 };
                 for object in equivalent_objects.iter() {
-                    let object_key = object.to_string();
+                    let object_key = obj_equality_key(object);
                     if !keys.contains(&object_key) {
                         keys.push(object_key.clone());
                     }
                     if !result
                         .iter()
-                        .any(|known_obj: &Obj| known_obj.to_string() == object_key)
+                        .any(|known_obj: &Obj| obj_equality_key(known_obj) == object_key)
                     {
                         result.push(object.clone());
                     }

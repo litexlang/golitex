@@ -654,11 +654,21 @@ claim:
 # Now we prove that the intersection of two sets of numbers that are congruent to 1 and 2 modulo 5 is the empty set.
 
 claim intersect({n Z: n % 5 = 1}, {n Z: n % 5 = 2}) = {}:
-    by contra not $is_nonempty_set(intersect({n Z: n % 5 = 1}, {n Z: n % 5 = 2})):
-        have x intersect({n Z: n % 5 = 1}, {n Z: n % 5 = 2})
-        x % 5 = 1
-        x % 5 = 2
-        impossible 1 = 2
+    by extension intersect({n Z: n % 5 = 1}, {n Z: n % 5 = 2}) = {}:
+        claim:
+            ? forall x intersect({n Z: n % 5 = 1}, {n Z: n % 5 = 2}):
+                x $in {}
+            by contra:
+                ? x $in {}
+                x % 5 = 1
+                x % 5 = 2
+                impossible 1 = 2
+        claim:
+            ? forall x {}:
+                x $in intersect({n Z: n % 5 = 1}, {n Z: n % 5 = 2})
+            by contra:
+                ? x $in intersect({n Z: n % 5 = 1}, {n Z: n % 5 = 2})
+                impossible x $in {}
 
 # The line
 
@@ -808,8 +818,8 @@ sketch:
     by contra {n N: (n + 1) $in {0}} = {}:
         have x {n N: (n + 1) $in {0}}
         by enumerate finite_set:
-            ? forall x {0}:
-                x = 0
+            ? forall singleton_member {0}:
+                singleton_member = 0
         (x + 1) = 0
         x = -1
         impossible x >= 0
@@ -887,8 +897,8 @@ sketch:
     by contra {n N: (n + 1) $in {0}} = {}:
         have x {n N: (n + 1) $in {0}}
         by enumerate finite_set:
-            ? forall x {0}:
-                x = 0
+            ? forall singleton_member {0}:
+                singleton_member = 0
         (x + 1) = 0
         x = -1
         impossible x >= 0
@@ -1027,19 +1037,15 @@ sketch:
         by contra:
             ? not $surj_to_power(X, f)
             obtain a from exist a X st {f(a) = {x X: not x $in f(x)}}
-            by cases:
-                ? a != a
-                case a $in {x X: not x $in f(x)}:
-                    a $in {x X: not x $in f(x)}
-                    not a $in f(a)
-                    a $in f(a)
-                    impossible a $in f(a)
-                case not a $in {x X: not x $in f(x)}:
-                    not a $in f(a)
-                    a $in {x X: not x $in f(x)}
-                    impossible a $in {x X: not x $in f(x)}
-            a = a
-            impossible a != a
+            by contra:
+                ? not a $in f(a)
+                a $in f(a)
+                a $in {x X: not x $in f(x)}
+                not a $in f(a)
+                impossible a $in f(a)
+            a $in {x X: not x $in f(x)}
+            a $in f(a)
+            impossible a $in f(a)
 
 # Historically, this theorem is one of Cantor's central insights. It shows that
 # there is no largest infinity: every set has a strictly larger power set. The

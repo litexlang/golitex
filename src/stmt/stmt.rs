@@ -6,7 +6,6 @@ pub enum Stmt {
     UnsafeStmt(UnsafeStmt),
     DefObjStmt(DefObjStmt),
     DefPredicateStmt(DefPredicateStmt),
-    DefAliasStmt(DefAliasStmt),
     DefInterfaceStmt(DefInterfaceStmt),
     DefAlgoStmt(DefAlgoStmt),
     DefThmStmt(DefThmStmt),
@@ -45,12 +44,6 @@ pub enum DefObjStmt {
 pub enum DefPredicateStmt {
     DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
-}
-
-#[derive(Clone)]
-pub enum DefAliasStmt {
-    AliasPropStmt(AliasPropStmt),
-    AliasThmStmt(AliasThmStmt),
 }
 
 #[derive(Clone)]

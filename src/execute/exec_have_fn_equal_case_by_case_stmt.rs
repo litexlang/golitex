@@ -32,8 +32,8 @@ impl Runtime {
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set_stored: &FnSet,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_free_param_or_identifier_name(
-            &have_fn_equal_case_by_case_stmt.name,
+        self.store_parameter_binding(
+            &have_fn_equal_case_by_case_stmt.symbol_binding,
             ParamObjType::Identifier,
         )?;
 
@@ -66,18 +66,13 @@ impl Runtime {
                 self,
                 &have_fn_equal_case_by_case_stmt.fn_set_clause,
             )?;
-        let param_names = param_defs_with_type.collect_param_names();
+        let param_bindings = param_defs_with_type.collect_param_bindings();
         let function_head =
             FnObjHead::given_an_atom_return_a_fn_obj_head(function_identifier_obj.clone())
                 .expect("declared function identifier should be an atom");
-        let function_args = param_names
+        let function_args = param_bindings
             .iter()
-            .map(|name| {
-                Box::new(obj_for_bound_param_in_scope(
-                    name.clone(),
-                    ParamObjType::Forall,
-                ))
-            })
+            .map(|binding| Box::new(obj_for_bound_param_in_scope(binding, ParamObjType::Forall)))
             .collect();
         let function_obj: Obj = FnObj::new(function_head, vec![function_args]).into();
 

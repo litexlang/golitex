@@ -9,6 +9,7 @@ pub struct ByInducStmt {
     pub base_proof: Option<Vec<Stmt>>,
     pub step_proof: Option<Vec<Stmt>>,
     pub param: String,
+    pub param_binding: SymbolBinding,
     pub induc_from: Obj,
     /// When true, the induction step uses `forall y` with `m <= y <= n` as the hypothesis band (strong / complete induction).
     pub strong: bool,
@@ -19,6 +20,7 @@ impl ByInducStmt {
     pub fn new(
         fact: Vec<ExistOrAndChainAtomicFact>,
         param: String,
+        param_binding: SymbolBinding,
         induc_from: Obj,
         proof: Vec<Stmt>,
         base_proof: Option<Vec<Stmt>>,
@@ -32,6 +34,7 @@ impl ByInducStmt {
             base_proof,
             step_proof,
             param,
+            param_binding,
             induc_from,
             strong,
             line_file,

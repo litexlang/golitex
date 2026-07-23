@@ -29,19 +29,18 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let x_name = self.generate_random_unused_names(1)[0].clone();
+        let x_group =
+            self.fresh_param_group_with_type(vec![x_name], ParamType::Obj(f.set.clone()))?;
         // Use the same `Obj` shape as `define_params_with_type(..., Forall, ...)` and as parsed
         // `forall` parameters, so `verify_equal` can match `f(x) = g(x)` from stored `forall` facts.
-        let x: Obj = param_binding_element_obj_for_store(x_name.clone(), ParamObjType::Forall);
+        let x: Obj = param_binding_element_obj_for_store(&x_group.params[0], ParamObjType::Forall);
         let Some(left_ap) = fn_obj_apply_one_arg(&f.left, x.clone()) else {
             return Ok(StmtUnknown::new().into());
         };
         let Some(right_ap) = fn_obj_apply_one_arg(&f.right, x) else {
             return Ok(StmtUnknown::new().into());
         };
-        let param_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-            vec![x_name],
-            ParamType::Obj(f.set.clone()),
-        )]);
+        let param_def = ParamDefWithType::new(vec![x_group]);
         let forall_f = ForallFact::new(
             param_def,
             vec![],

@@ -102,6 +102,7 @@ fn add_normal_verification_fields(output: &mut Vec<(String, JsonValue)>, value: 
             | "cite_source"
             | "cited_statement"
             | "prove_goal"
+            | "theorem"
             | "theorems"
             | "parameter_sets"
             | "verify_what"

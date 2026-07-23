@@ -4,7 +4,6 @@ pub use token_block::TokenBlock;
 pub use tokenizer::Tokenizer;
 
 mod by_stmt;
-mod parse_alias_stmt;
 mod parse_claim_stmt;
 mod parse_def_stmt;
 mod parse_eval_stmt;

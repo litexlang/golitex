@@ -95,11 +95,13 @@ impl Runtime {
         fact: &ExistOrAndChainAtomicFact,
     ) -> Result<Fact, RuntimeError> {
         let lf = stmt.line_file.clone();
-        let (inner_names, inner_map) =
-            self.fresh_binder_retag_plan(&[stmt.param.clone()], ParamObjType::Forall);
+        let (inner_names, inner_map) = self.fresh_binder_retag_plan_for_bindings(
+            std::slice::from_ref(&stmt.param_binding),
+            ParamObjType::Forall,
+        );
         let inner = inner_names[0].clone();
         let y_obj = inner_map[&stmt.param].clone();
-        let n_induc = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
+        let n_induc = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
         let p_y = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &inner_map,
@@ -128,10 +130,14 @@ impl Runtime {
         fact: &ExistOrAndChainAtomicFact,
     ) -> Result<Fact, RuntimeError> {
         let lf = stmt.line_file.clone();
-        let (outer_names, outer_map) =
-            self.fresh_binder_retag_plan(&[stmt.param.clone()], ParamObjType::Forall);
-        let (inner_names, inner_map) =
-            self.fresh_binder_retag_plan(&[stmt.param.clone()], ParamObjType::Forall);
+        let (outer_names, outer_map) = self.fresh_binder_retag_plan_for_bindings(
+            std::slice::from_ref(&stmt.param_binding),
+            ParamObjType::Forall,
+        );
+        let (inner_names, inner_map) = self.fresh_binder_retag_plan_for_bindings(
+            std::slice::from_ref(&stmt.param_binding),
+            ParamObjType::Forall,
+        );
         let outer = outer_names[0].clone();
         let inner = inner_names[0].clone();
         let n_forall = outer_map[&stmt.param].clone();
@@ -187,7 +193,7 @@ impl Runtime {
         stmt: &ByInducStmt,
     ) -> Result<(), RuntimeError> {
         let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-            vec![stmt.param.clone()],
+            vec![stmt.param_binding.clone()],
             ParamType::Obj(StandardSet::Z.into()),
         )]);
         self.define_params_with_type(&params_def, false, ParamObjType::Induc)
@@ -201,7 +207,7 @@ impl Runtime {
             })?;
 
         let dom_ge: Fact = GreaterEqualFact::new(
-            obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc),
+            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
             stmt.induc_from.clone(),
             stmt.line_file.clone(),
         )
@@ -241,7 +247,11 @@ impl Runtime {
         let mut infer_result = InferResult::new();
 
         let mut base_case_param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        base_case_param_to_arg_map.insert(stmt.param.clone(), stmt.induc_from.clone());
+        insert_symbol_substitution(
+            &mut base_case_param_to_arg_map,
+            &stmt.param_binding,
+            stmt.induc_from.clone(),
+        );
         let base_case_fact = self
             .inst_exist_or_and_chain_atomic_fact(
                 fact,
@@ -314,7 +324,7 @@ impl Runtime {
         stmt: &ByInducStmt,
     ) -> Result<(), RuntimeError> {
         let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-            vec![stmt.param.clone()],
+            vec![stmt.param_binding.clone()],
             ParamType::Obj(StandardSet::Z.into()),
         )]);
         self.define_params_with_type(&params_def, false, ParamObjType::Induc)
@@ -328,7 +338,7 @@ impl Runtime {
             })?;
 
         let dom_ge: Fact = GreaterEqualFact::new(
-            obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc),
+            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
             stmt.induc_from.clone(),
             stmt.line_file.clone(),
         )
@@ -344,9 +354,10 @@ impl Runtime {
                 )
             })?;
 
-        let induc_param_obj = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
-        let induc_map: HashMap<String, Obj> =
-            HashMap::from([(stmt.param.clone(), induc_param_obj)]);
+        let induc_param_obj =
+            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
+        let mut induc_map = HashMap::new();
+        insert_symbol_substitution(&mut induc_map, &stmt.param_binding, induc_param_obj);
         for fact in stmt.to_prove.iter() {
             let inst = self
                 .inst_exist_or_and_chain_atomic_fact(fact, &induc_map, ParamObjType::Induc, None)?
@@ -365,8 +376,10 @@ impl Runtime {
     }
 
     fn by_induc_stmt_stored_forall_fact(&self, stmt: &ByInducStmt) -> Result<Fact, RuntimeError> {
-        let (forall_names, forall_map) =
-            self.fresh_binder_retag_plan(&[stmt.param.clone()], ParamObjType::Forall);
+        let (forall_names, forall_map) = self.fresh_binder_retag_plan_for_bindings(
+            std::slice::from_ref(&stmt.param_binding),
+            ParamObjType::Forall,
+        );
         let forall_name = forall_names[0].clone();
         let forall_obj = forall_map[&stmt.param].clone();
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
@@ -401,7 +414,7 @@ impl Runtime {
         stmt: &ByInducStmt,
         generated_forall: &Fact,
     ) -> Result<ByInducVerificationResult, RuntimeError> {
-        let param_obj = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
+        let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
         let base_assumptions = vec![
             (
                 InFact::new(
@@ -443,7 +456,8 @@ impl Runtime {
                 "induction domain".to_string(),
             ),
         ];
-        let induc_map: HashMap<String, Obj> = HashMap::from([(stmt.param.clone(), param_obj)]);
+        let mut induc_map = HashMap::new();
+        insert_symbol_substitution(&mut induc_map, &stmt.param_binding, param_obj);
         for fact in stmt.to_prove.iter() {
             let assumption_fact = if stmt.strong {
                 self.strong_induc_ih_forall_fact(stmt, fact)?
@@ -512,7 +526,11 @@ impl Runtime {
         let mut infer_result = InferResult::new();
 
         let mut base_case_param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        base_case_param_to_arg_map.insert(stmt.param.clone(), stmt.induc_from.clone());
+        insert_symbol_substitution(
+            &mut base_case_param_to_arg_map,
+            &stmt.param_binding,
+            stmt.induc_from.clone(),
+        );
         let base_case_fact = self
             .inst_exist_or_and_chain_atomic_fact(
                 fact,
@@ -556,8 +574,10 @@ impl Runtime {
             ));
         }
 
-        let (forall_names, forall_map) =
-            self.fresh_binder_retag_plan(&[stmt.param.clone()], ParamObjType::Forall);
+        let (forall_names, forall_map) = self.fresh_binder_retag_plan_for_bindings(
+            std::slice::from_ref(&stmt.param_binding),
+            ParamObjType::Forall,
+        );
         let forall_bound_param = forall_map[&stmt.param].clone();
         let dom_p_fact = self.inst_exist_or_and_chain_atomic_fact(
             fact,
@@ -571,7 +591,11 @@ impl Runtime {
         )
         .into();
         let mut induction_step_param_to_obj_map = forall_map;
-        induction_step_param_to_obj_map.insert(stmt.param.clone(), param_plus_one_obj);
+        insert_symbol_substitution(
+            &mut induction_step_param_to_obj_map,
+            &stmt.param_binding,
+            param_plus_one_obj,
+        );
         let next_fact_of_induction_step = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &induction_step_param_to_obj_map,
@@ -719,7 +743,7 @@ impl Runtime {
         stmt: &ByInducStmt,
     ) -> Result<(), RuntimeError> {
         let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-            vec![stmt.param.clone()],
+            vec![stmt.param_binding.clone()],
             ParamType::Obj(StandardSet::Z.into()),
         )]);
         self.define_params_with_type(&params_def, false, ParamObjType::Induc)
@@ -735,7 +759,7 @@ impl Runtime {
                 )
             })?;
 
-        let param_obj = obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc);
+        let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
         let base_eq: Fact =
             EqualFact::new(param_obj, stmt.induc_from.clone(), stmt.line_file.clone()).into();
         self.verify_well_defined_and_store_and_infer_with_default_verify_state(base_eq)
@@ -827,7 +851,8 @@ impl Runtime {
         fact: &ExistOrAndChainAtomicFact,
         obj: Obj,
     ) -> Result<Fact, RuntimeError> {
-        let param_to_obj_map: HashMap<String, Obj> = HashMap::from([(stmt.param.clone(), obj)]);
+        let mut param_to_obj_map = HashMap::new();
+        insert_symbol_substitution(&mut param_to_obj_map, &stmt.param_binding, obj);
         Ok(self
             .inst_exist_or_and_chain_atomic_fact(
                 fact,
@@ -840,7 +865,7 @@ impl Runtime {
 
     fn induc_step_next_obj(&self, stmt: &ByInducStmt) -> Obj {
         Add::new(
-            obj_for_bound_param_in_scope(stmt.param.clone(), ParamObjType::Induc),
+            obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc),
             Number::new("1".to_string()).into(),
         )
         .into()

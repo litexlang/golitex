@@ -59,18 +59,35 @@ impl ParamDefWithType {
     pub fn collect_param_names(&self) -> Vec<String> {
         let mut names: Vec<String> = Vec::with_capacity(self.number_of_params());
         for def in self.groups.iter() {
-            for name in def.param_names().iter() {
-                names.push(name.clone());
+            for binding in def.params.iter() {
+                names.push(binding.name().to_string());
             }
         }
         names
     }
 
+    pub fn collect_param_bindings(&self) -> Vec<SymbolBinding> {
+        self.groups
+            .iter()
+            .flat_map(|group| group.params.iter().cloned())
+            .collect()
+    }
+
     pub fn collect_param_names_with_types(&self) -> Vec<(String, ParamType)> {
         let mut out: Vec<(String, ParamType)> = Vec::with_capacity(self.number_of_params());
         for def in self.groups.iter() {
-            for name in def.param_names().iter() {
-                out.push((name.clone(), def.param_type.clone()));
+            for binding in def.params.iter() {
+                out.push((binding.name().to_string(), def.param_type.clone()));
+            }
+        }
+        out
+    }
+
+    pub fn collect_param_bindings_with_types(&self) -> Vec<(SymbolBinding, ParamType)> {
+        let mut out = Vec::with_capacity(self.number_of_params());
+        for def in self.groups.iter() {
+            for binding in def.params.iter() {
+                out.push((binding.clone(), def.param_type.clone()));
             }
         }
         out
@@ -97,32 +114,31 @@ impl ParamDefWithType {
         &self,
         arg_map: &HashMap<String, Obj>,
     ) -> Option<HashMap<String, Obj>> {
-        let param_names = self.collect_param_names();
         let mut result = HashMap::new();
-        for param_name in param_names.iter() {
-            let objs_option = arg_map.get(param_name);
-            let objs = match objs_option {
-                Some(v) => v,
-                None => return None,
-            };
-            result.insert(param_name.clone(), objs.clone());
+        for group in &self.groups {
+            for binding in &group.params {
+                let objs = match arg_map.get(binding.name()) {
+                    Some(v) => v,
+                    None => return None,
+                };
+                insert_symbol_substitution(&mut result, binding, objs.clone());
+            }
         }
         Some(result)
     }
 
     pub fn param_defs_and_args_to_param_to_arg_map(&self, args: &[Obj]) -> HashMap<String, Obj> {
-        let param_names = self.collect_param_names();
-        if param_names.len() != args.len() {
+        if self.number_of_params() != args.len() {
             unreachable!();
         }
 
         let mut result: HashMap<String, Obj> = HashMap::new();
         let mut index = 0;
-        while index < param_names.len() {
-            let param_name = &param_names[index];
-            let arg = &args[index];
-            result.insert(param_name.clone(), arg.clone());
-            index += 1;
+        for group in &self.groups {
+            for binding in &group.params {
+                insert_symbol_substitution(&mut result, binding, args[index].clone());
+                index += 1;
+            }
         }
         result
     }
@@ -131,18 +147,17 @@ impl ParamDefWithType {
         &self,
         args: &[Box<Obj>],
     ) -> HashMap<String, Obj> {
-        let param_names = self.collect_param_names();
-        if param_names.len() != args.len() {
+        if self.number_of_params() != args.len() {
             unreachable!();
         }
 
         let mut result: HashMap<String, Obj> = HashMap::new();
         let mut index = 0;
-        while index < param_names.len() {
-            let param_name = &param_names[index];
-            let arg = &args[index];
-            result.insert(param_name.clone(), (**arg).clone());
-            index += 1;
+        for group in &self.groups {
+            for binding in &group.params {
+                insert_symbol_substitution(&mut result, binding, args[index].as_ref().clone());
+                index += 1;
+            }
         }
         result
     }
@@ -205,6 +220,13 @@ impl ParamDefWithSet {
         ParamGroupWithSet::collect_param_names(&self.groups)
     }
 
+    pub fn collect_param_bindings(&self) -> Vec<SymbolBinding> {
+        self.groups
+            .iter()
+            .flat_map(|group| group.params.iter().cloned())
+            .collect()
+    }
+
     pub fn param_defs_and_args_to_param_to_arg_map(&self, args: &Vec<Obj>) -> HashMap<String, Obj> {
         ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(&self.groups, args)
     }
@@ -227,7 +249,7 @@ impl ParamDefWithSet {
         let mut flat_index = 0;
         for group in self.groups.iter() {
             for param_name in group.params.iter() {
-                param_indices.insert(param_name.clone(), flat_index);
+                param_indices.insert(param_name.name().to_string(), flat_index);
                 flat_index += 1;
             }
         }
@@ -290,13 +312,13 @@ impl From<Vec<ParamGroupWithSet>> for ParamDefWithSet {
 
 #[derive(Clone)]
 pub struct ParamGroupWithSet {
-    pub params: Vec<String>,
+    pub params: Vec<SymbolBinding>,
     pub param_type: Box<Obj>,
 }
 
 #[derive(Clone)]
 pub struct ParamGroupWithParamType {
-    pub params: Vec<String>,
+    pub params: Vec<SymbolBinding>,
     pub param_type: ParamType,
 }
 
@@ -361,7 +383,7 @@ impl fmt::Display for ParamGroupWithSet {
         write!(
             f,
             "{} {}",
-            comma_separated_stored_fn_params_as_user_source(&self.params),
+            vec_to_string_join_by_comma(&self.params),
             self.param_type
         )
     }
@@ -379,17 +401,17 @@ impl fmt::Display for ParamGroupWithParamType {
 }
 
 impl ParamGroupWithParamType {
-    pub fn new(params: Vec<String>, param_type: ParamType) -> Self {
+    pub fn new(params: Vec<SymbolBinding>, param_type: ParamType) -> Self {
         ParamGroupWithParamType { params, param_type }
     }
 
-    pub fn param_names(&self) -> &Vec<String> {
-        &self.params
+    pub fn param_names(&self) -> Vec<&str> {
+        self.params.iter().map(SymbolBinding::name).collect()
     }
 }
 
 impl ParamGroupWithSet {
-    pub fn new(params: Vec<String>, set: Obj) -> Self {
+    pub fn new(params: Vec<SymbolBinding>, set: Obj) -> Self {
         ParamGroupWithSet {
             params,
             param_type: Box::new(set),
@@ -400,12 +422,13 @@ impl ParamGroupWithSet {
         self.param_type.as_ref()
     }
 
-    /// Membership facts for parameters; element tagging must match [`define_params_with_set_in_scope`]'s `binding_scope` (e.g. `FnSet` ~5 for `fn` and `'` anonymous heads).
+    /// Membership facts for parameters; each element must use the same symbol binding
+    /// and scope role as [`define_params_with_set_in_scope`].
     pub fn facts_for_binding_scope(&self, binding_scope: ParamObjType) -> Vec<Fact> {
         let mut facts = Vec::with_capacity(self.params.len());
-        for name in self.params.iter() {
+        for binding in self.params.iter() {
             let fact = InFact::new(
-                obj_for_bound_param_in_scope(name.clone(), binding_scope),
+                obj_for_bound_param_in_scope(binding, binding_scope),
                 self.set_obj().clone(),
                 default_line_file(),
             )
@@ -437,15 +460,15 @@ impl ParamGroupWithSet {
         Ok(facts)
     }
 
-    pub fn param_names(&self) -> &Vec<String> {
-        &self.params
+    pub fn param_names(&self) -> Vec<&str> {
+        self.params.iter().map(SymbolBinding::name).collect()
     }
 
     pub fn collect_param_names(param_defs: &Vec<ParamGroupWithSet>) -> Vec<String> {
         let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
         for def in param_defs.iter() {
-            for name in def.param_names().iter() {
-                names.push(name.clone());
+            for binding in def.params.iter() {
+                names.push(binding.name().to_string());
             }
         }
         names
@@ -463,18 +486,17 @@ impl ParamGroupWithSet {
         param_defs: &Vec<ParamGroupWithSet>,
         args: &Vec<Obj>,
     ) -> HashMap<String, Obj> {
-        let param_names = Self::collect_param_names(param_defs);
-        if param_names.len() != args.len() {
+        if Self::number_of_params(param_defs) != args.len() {
             unreachable!();
         }
 
         let mut result: HashMap<String, Obj> = HashMap::new();
         let mut index = 0;
-        while index < param_names.len() {
-            let param_name = &param_names[index];
-            let arg = &args[index];
-            result.insert(param_name.clone(), arg.clone());
-            index += 1;
+        for group in param_defs {
+            for binding in &group.params {
+                insert_symbol_substitution(&mut result, binding, args[index].clone());
+                index += 1;
+            }
         }
         result
     }
@@ -492,7 +514,7 @@ fn cited_param_indices_for_param_type_groups(
             &previous_param_indices,
         ));
         for param_name in group.params.iter() {
-            previous_param_indices.insert(param_name.clone(), flat_index);
+            previous_param_indices.insert(param_name.name().to_string(), flat_index);
             flat_index += 1;
         }
     }
@@ -509,7 +531,7 @@ fn cited_param_indices_for_param_set_groups(groups: &[ParamGroupWithSet]) -> Vec
             &previous_param_indices,
         ));
         for param_name in group.params.iter() {
-            previous_param_indices.insert(param_name.clone(), flat_index);
+            previous_param_indices.insert(param_name.name().to_string(), flat_index);
             flat_index += 1;
         }
     }
@@ -1247,7 +1269,7 @@ fn collect_cited_param_indices_from_fn_set_body(
             out,
         );
         for param_name in group.params.iter() {
-            shadowed_names.push(param_name.clone());
+            shadowed_names.push(param_name.name().to_string());
         }
     }
     for fact in body.dom_facts.iter() {
@@ -1298,7 +1320,7 @@ fn push_param_names_to_shadow(
     let mut count = 0;
     for group in param_defs.iter() {
         for param_name in group.params.iter() {
-            shadowed_names.push(param_name.clone());
+            shadowed_names.push(param_name.name().to_string());
             count += 1;
         }
     }
@@ -1336,17 +1358,23 @@ mod tests {
 
     #[test]
     fn param_def_with_type_records_flat_cited_param_indices() {
+        let runtime = Runtime::new();
+        let first_group = runtime
+            .fresh_param_group_with_type(
+                vec!["a".to_string(), "b".to_string()],
+                ParamType::Set(Set::new()),
+            )
+            .unwrap();
         let cited_type = Tuple::new(vec![
-            ForallFreeParamObj::new("a".to_string()).into(),
-            ForallFreeParamObj::new("b".to_string()).into(),
+            ForallFreeParamObj::new(&first_group.params[0]).into(),
+            ForallFreeParamObj::new(&first_group.params[1]).into(),
         ])
         .into();
         let param_def = ParamDefWithType::new(vec![
-            ParamGroupWithParamType::new(
-                vec!["a".to_string(), "b".to_string()],
-                ParamType::Set(Set::new()),
-            ),
-            ParamGroupWithParamType::new(vec!["f".to_string()], ParamType::Obj(cited_type)),
+            first_group,
+            runtime
+                .fresh_param_group_with_type(vec!["f".to_string()], ParamType::Obj(cited_type))
+                .unwrap(),
         ]);
 
         assert_eq!(
@@ -1358,14 +1386,20 @@ mod tests {
 
     #[test]
     fn param_def_with_set_records_flat_cited_param_indices() {
+        let runtime = Runtime::new();
+        let first_group = runtime
+            .fresh_param_group_with_set(vec!["n".to_string()], StandardSet::NPos.into())
+            .unwrap();
         let dependent_set = ClosedRange::new(
             Number::new("1".to_string()).into(),
-            FnSetFreeParamObj::new("n".to_string()).into(),
+            FnSetFreeParamObj::new(&first_group.params[0]).into(),
         )
         .into();
         let param_def = ParamDefWithSet::new(vec![
-            ParamGroupWithSet::new(vec!["n".to_string()], StandardSet::NPos.into()),
-            ParamGroupWithSet::new(vec!["x".to_string()], dependent_set),
+            first_group,
+            runtime
+                .fresh_param_group_with_set(vec!["x".to_string()], dependent_set)
+                .unwrap(),
         ]);
 
         assert_eq!(
@@ -1377,21 +1411,25 @@ mod tests {
 
     #[test]
     fn dependent_param_set_instantiates_with_previous_arg() {
+        let runtime = Runtime::new();
+        let first_group = runtime
+            .fresh_param_group_with_set(vec!["n".to_string()], StandardSet::NPos.into())
+            .unwrap();
         let dependent_set = ClosedRange::new(
             Number::new("1".to_string()).into(),
-            FnSetFreeParamObj::new("n".to_string()).into(),
+            FnSetFreeParamObj::new(&first_group.params[0]).into(),
         )
         .into();
         let param_def = ParamDefWithSet::new(vec![
-            ParamGroupWithSet::new(vec!["n".to_string()], StandardSet::NPos.into()),
-            ParamGroupWithSet::new(vec!["x".to_string()], dependent_set),
+            first_group,
+            runtime
+                .fresh_param_group_with_set(vec!["x".to_string()], dependent_set)
+                .unwrap(),
         ]);
         let args = vec![
             Number::new("3".to_string()).into(),
             Number::new("2".to_string()).into(),
         ];
-        let runtime = Runtime::new();
-
         let instantiated = runtime
             .inst_param_def_with_set_one_by_one(&param_def, &args, ParamObjType::FnSet)
             .unwrap();

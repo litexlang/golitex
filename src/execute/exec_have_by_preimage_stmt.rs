@@ -75,9 +75,11 @@ impl Runtime {
         let (function, fn_body) = self.preimage_function_and_body(stmt)?;
         self.store_preimage_names(stmt)?;
         let preimage_objs: Vec<Obj> = stmt
-            .preimage_names
+            .preimage_bindings
             .iter()
-            .map(|name| Identifier::new(name.clone()).into())
+            .map(|binding| {
+                Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()
+            })
             .collect();
 
         let mut infer_result = InferResult::new();
@@ -135,8 +137,8 @@ impl Runtime {
         stmt: &HaveByPreimageStmt,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            for name in stmt.preimage_names.iter() {
-                rt.store_free_param_or_identifier_name(name, ParamObjType::Exist)
+            for binding in &stmt.preimage_bindings {
+                rt.store_parameter_binding(binding, ParamObjType::Identifier)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
             }
             Ok(())
@@ -144,8 +146,8 @@ impl Runtime {
     }
 
     fn store_preimage_names(&mut self, stmt: &HaveByPreimageStmt) -> Result<(), RuntimeError> {
-        for name in stmt.preimage_names.iter() {
-            self.store_free_param_or_identifier_name(name, ParamObjType::Exist)
+        for binding in &stmt.preimage_bindings {
+            self.store_parameter_binding(binding, ParamObjType::Identifier)
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         }
         Ok(())
@@ -156,10 +158,14 @@ impl Runtime {
         stmt: &HaveByPreimageStmt,
         replacement: &Replacement,
     ) -> Result<InferResult, RuntimeError> {
-        let preimage_name = &stmt.preimage_names[0];
-        self.store_free_param_or_identifier_name(preimage_name, ParamObjType::Exist)
+        let preimage_binding = &stmt.preimage_bindings[0];
+        self.store_parameter_binding(preimage_binding, ParamObjType::Identifier)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
-        let preimage_obj: Obj = Identifier::new(preimage_name.clone()).into();
+        let preimage_obj: Obj = Identifier::new_bound(
+            preimage_binding.name().to_string(),
+            preimage_binding.as_ref(),
+        )
+        .into();
 
         let preimage_in_source: Fact = InFact::new(
             preimage_obj.clone(),

@@ -10,6 +10,7 @@ pub struct FreeParamCollection {
 #[derive(Clone, Debug)]
 pub struct FreeParamTypeAndLineFile {
     pub kind: ParamObjType,
+    pub binding: SymbolBinding,
     pub line_file: LineFile,
 }
 
@@ -27,11 +28,12 @@ impl FreeParamCollection {
     pub fn begin_scope(
         &mut self,
         kind: ParamObjType,
-        names: &[String],
+        bindings: &[SymbolBinding],
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
-        let mut names_in_new_scope: Vec<&String> = Vec::with_capacity(names.len());
-        for n in names {
+        let mut names_in_new_scope: Vec<&str> = Vec::with_capacity(bindings.len());
+        for binding in bindings {
+            let n = binding.name();
             let duplicates_new_name = names_in_new_scope.contains(&n);
             let duplicates_active_binding = self
                 .params
@@ -51,12 +53,14 @@ impl FreeParamCollection {
             }
             names_in_new_scope.push(n);
         }
-        for n in names {
+        for binding in bindings {
+            let n = binding.name();
             self.params
-                .entry(n.clone())
+                .entry(n.to_string())
                 .or_default()
                 .push(FreeParamTypeAndLineFile {
                     kind,
+                    binding: binding.clone(),
                     line_file: line_file.clone(),
                 });
         }
@@ -95,19 +99,21 @@ impl FreeParamCollection {
             return Identifier::new(name.to_string()).into();
         };
         match top.kind {
-            ParamObjType::Forall => ForallFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::DefHeader => DefHeaderFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::Exist => ExistFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::FnSet => FnSetFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::Induc => ByInducFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(name.to_string()).into(),
+            ParamObjType::Forall => ForallFreeParamObj::new(top.binding.as_ref()).into(),
+            ParamObjType::DefHeader => DefHeaderFreeParamObj::new(top.binding.as_ref()).into(),
+            ParamObjType::Exist => ExistFreeParamObj::new(top.binding.as_ref()).into(),
+            ParamObjType::SetBuilder => SetBuilderFreeParamObj::new(top.binding.as_ref()).into(),
+            ParamObjType::FnSet => FnSetFreeParamObj::new(top.binding.as_ref()).into(),
+            ParamObjType::Induc => ByInducFreeParamObj::new(top.binding.as_ref()).into(),
+            ParamObjType::DefAlgo => DefAlgoFreeParamObj::new(top.binding.as_ref()).into(),
             ParamObjType::DefStructField => {
-                DefStructFieldFreeParamObj::new(name.to_string()).into()
+                DefStructFieldFreeParamObj::new(top.binding.as_ref()).into()
             }
-            ParamObjType::TupleIndex => TupleIndexFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::CartIndex => CartIndexFreeParamObj::new(name.to_string()).into(),
-            ParamObjType::Identifier => Identifier::new(name.to_string()).into(),
+            ParamObjType::TupleIndex => TupleIndexFreeParamObj::new(top.binding.as_ref()).into(),
+            ParamObjType::CartIndex => CartIndexFreeParamObj::new(top.binding.as_ref()).into(),
+            ParamObjType::Identifier => {
+                Identifier::new_bound(name.to_string(), top.binding.as_ref()).into()
+            }
             ParamObjType::TheoremInstantiation
             | ParamObjType::AlphaRename
             | ParamObjType::BinderRetag(_) => unreachable!(

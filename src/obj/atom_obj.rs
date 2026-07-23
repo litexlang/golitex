@@ -39,6 +39,23 @@ impl fmt::Display for AtomObj {
 }
 
 impl AtomObj {
+    pub(crate) fn symbol_ref(&self) -> Option<&SymbolRef> {
+        match self {
+            AtomObj::Identifier(identifier) => identifier.symbol.as_ref(),
+            AtomObj::IdentifierWithMod(identifier) => identifier.symbol.as_ref(),
+            AtomObj::Forall(param) => Some(&param.symbol),
+            AtomObj::Def(param) => Some(&param.symbol),
+            AtomObj::Exist(param) => Some(&param.symbol),
+            AtomObj::SetBuilder(param) => Some(&param.symbol),
+            AtomObj::FnSet(param) => Some(&param.symbol),
+            AtomObj::Induc(param) => Some(&param.symbol),
+            AtomObj::DefAlgo(param) => Some(&param.symbol),
+            AtomObj::DefStructField(param) => Some(&param.symbol),
+            AtomObj::TupleIndex(param) => Some(&param.symbol),
+            AtomObj::CartIndex(param) => Some(&param.symbol),
+        }
+    }
+
     pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
         if from == to {
             return self;
@@ -46,7 +63,14 @@ impl AtomObj {
         match self {
             AtomObj::Identifier(i) => {
                 if i.name == from {
-                    AtomObj::Identifier(Identifier::new(to.to_string()))
+                    let renamed = match i.symbol {
+                        Some(symbol) => Identifier::new_bound(
+                            to.to_string(),
+                            symbol.with_display_name(to.to_string()),
+                        ),
+                        None => Identifier::new(to.to_string()),
+                    };
+                    AtomObj::Identifier(renamed)
                 } else {
                     AtomObj::Identifier(i)
                 }
@@ -57,87 +81,95 @@ impl AtomObj {
                 } else {
                     m.name
                 };
-                AtomObj::IdentifierWithMod(IdentifierWithMod::new(m.mod_name, name))
+                let renamed = match m.symbol {
+                    Some(symbol) => IdentifierWithMod::new_bound(
+                        m.mod_name,
+                        name.clone(),
+                        symbol.with_display_name(name),
+                    ),
+                    None => IdentifierWithMod::new(m.mod_name, name),
+                };
+                AtomObj::IdentifierWithMod(renamed)
             }
             AtomObj::Forall(p) => {
-                let name = if p.name == from {
-                    to.to_string()
+                let symbol = if p.name == from {
+                    p.symbol.with_display_name(to.to_string())
                 } else {
-                    p.name
+                    p.symbol
                 };
-                AtomObj::Forall(ForallFreeParamObj::new(name))
+                AtomObj::Forall(ForallFreeParamObj::new(symbol))
             }
             AtomObj::Def(p) => {
-                let name = if p.name == from {
-                    to.to_string()
+                let symbol = if p.name == from {
+                    p.symbol.with_display_name(to.to_string())
                 } else {
-                    p.name
+                    p.symbol
                 };
-                AtomObj::Def(DefHeaderFreeParamObj::new(name))
+                AtomObj::Def(DefHeaderFreeParamObj::new(symbol))
             }
             AtomObj::Exist(p) => {
-                let name = if p.name == from {
-                    to.to_string()
+                let symbol = if p.name == from {
+                    p.symbol.with_display_name(to.to_string())
                 } else {
-                    p.name
+                    p.symbol
                 };
-                AtomObj::Exist(ExistFreeParamObj::new(name))
+                AtomObj::Exist(ExistFreeParamObj::new(symbol))
             }
             AtomObj::SetBuilder(p) => {
-                let name = if p.name == from {
-                    to.to_string()
+                let symbol = if p.name == from {
+                    p.symbol.with_display_name(to.to_string())
                 } else {
-                    p.name
+                    p.symbol
                 };
-                AtomObj::SetBuilder(SetBuilderFreeParamObj::new(name))
+                AtomObj::SetBuilder(SetBuilderFreeParamObj::new(symbol))
             }
             AtomObj::FnSet(p) => {
-                let name = if p.name == from {
-                    to.to_string()
+                let symbol = if p.name == from {
+                    p.symbol.with_display_name(to.to_string())
                 } else {
-                    p.name
+                    p.symbol
                 };
-                AtomObj::FnSet(FnSetFreeParamObj::new(name))
+                AtomObj::FnSet(FnSetFreeParamObj::new(symbol))
             }
             AtomObj::Induc(p) => {
-                let name = if p.name == from {
-                    to.to_string()
+                let symbol = if p.name == from {
+                    p.symbol.with_display_name(to.to_string())
                 } else {
-                    p.name
+                    p.symbol
                 };
-                AtomObj::Induc(ByInducFreeParamObj::new(name))
+                AtomObj::Induc(ByInducFreeParamObj::new(symbol))
             }
             AtomObj::DefAlgo(p) => {
-                let name = if p.name == from {
-                    to.to_string()
+                let symbol = if p.name == from {
+                    p.symbol.with_display_name(to.to_string())
                 } else {
-                    p.name
+                    p.symbol
                 };
-                AtomObj::DefAlgo(DefAlgoFreeParamObj::new(name))
+                AtomObj::DefAlgo(DefAlgoFreeParamObj::new(symbol))
             }
             AtomObj::DefStructField(p) => {
-                let name = if p.name == from {
-                    to.to_string()
+                let symbol = if p.name == from {
+                    p.symbol.with_display_name(to.to_string())
                 } else {
-                    p.name
+                    p.symbol
                 };
-                AtomObj::DefStructField(DefStructFieldFreeParamObj::new(name))
+                AtomObj::DefStructField(DefStructFieldFreeParamObj::new(symbol))
             }
             AtomObj::TupleIndex(p) => {
-                let name = if p.name == from {
-                    to.to_string()
+                let symbol = if p.name == from {
+                    p.symbol.with_display_name(to.to_string())
                 } else {
-                    p.name
+                    p.symbol
                 };
-                AtomObj::TupleIndex(TupleIndexFreeParamObj::new(name))
+                AtomObj::TupleIndex(TupleIndexFreeParamObj::new(symbol))
             }
             AtomObj::CartIndex(p) => {
-                let name = if p.name == from {
-                    to.to_string()
+                let symbol = if p.name == from {
+                    p.symbol.with_display_name(to.to_string())
                 } else {
-                    p.name
+                    p.symbol
                 };
-                AtomObj::CartIndex(CartIndexFreeParamObj::new(name))
+                AtomObj::CartIndex(CartIndexFreeParamObj::new(symbol))
             }
         }
     }

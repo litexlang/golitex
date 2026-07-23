@@ -154,6 +154,84 @@ claim:
 }
 
 #[test]
+fn nested_struct_verification_freshens_same_named_field_binders() {
+    run_with_large_stack(
+        "nested_struct_verification_freshens_same_named_field_binders",
+        || {
+            let source_code = r#"
+struct ScalarSystem<s nonempty_set>:
+    zero s
+    one s
+
+have real_scalars &ScalarSystem<R> = (0, 1)
+
+struct VectorSpace<s nonempty_set, scalars &ScalarSystem<s>, v nonempty_set>:
+    zero v
+    smul fn(a s, x v) v
+    <=>:
+        forall x v:
+            smul(&ScalarSystem<s>{scalars}.one, x) = x
+
+prop is_real_vector_space(v nonempty_set, vector_zero v, vector_smul fn(a R, x v) v):
+    (vector_zero, vector_smul) $in &VectorSpace<R, real_scalars, v>
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "nested_struct_verification_freshens_same_named_field_binders",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "nested structs may reuse field names because each struct owns its fields:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn template_proof_uses_the_instantiated_forall_binder_id() {
+    run_with_large_stack(
+        "template_proof_uses_the_instantiated_forall_binder_id",
+        || {
+            let source_code = r#"
+axiom unique_self:
+    ? forall S nonempty_set, x S:
+        exist! y S st {y = x}
+
+template<S nonempty_set>:
+    have fn selected_self by exist!:
+        ? forall x S:
+            exist! y S st {y = x}
+        by thm unique_self(S, x)
+
+axiom selected_self_spec:
+    ? forall S nonempty_set, x S:
+        \selected_self<S>(x) = x
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "template_proof_uses_the_instantiated_forall_binder_id",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a materialized template proof must use the instantiated forall binder:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn set_alias_to_fn_set_is_nonempty_and_registers_function_type() {
     let source_code = r#"
 have T set = fn(i closed_range(1, 3), j closed_range(1, 3), k closed_range(1, 3)) R

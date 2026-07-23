@@ -43,11 +43,11 @@ impl Runtime {
             )));
         }
 
-        let names = forall_fact.params_def_with_type.collect_param_names();
+        let bindings = forall_fact.params_def_with_type.collect_param_bindings();
         let lf = tb.line_file.clone();
-        let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+        let proof: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
             ParamObjType::Forall,
-            &names,
+            &bindings,
             lf,
             |this| {
                 tb.body

@@ -213,6 +213,7 @@ sketch:
                     =>:
                         x + y >= -3
                 (x + y)^2 <= (x + y)^2 + (x - y)^2 = 2 * (x^2 + y^2) <= 2 * 4 = 8 <= 9 = 3^2
+                (x + y)^2 <= 3^2
                 abs(x + y) <= abs(3)
                 -3 <= x + y
 
@@ -221,9 +222,10 @@ sketch:
 # estimate you would write on paper, and let the previously stated rule bridge
 # from the squared inequality to the final inequality.
 
-# The two direct lines use the verifier's even-power and absolute-value order
-# rules. The first records the important bridge from the squared estimate to
-# `abs(x + y) <= abs(3)`; the second turns it into the required lower bound.
+# The three direct lines use the verifier's order-chain, even-power, and
+# absolute-value rules. The first stores the endpoint of the squared estimate,
+# the second records the bridge to `abs(x + y) <= abs(3)`, and the third turns
+# it into the required lower bound.
 # No named source theorem is needed for this kernel-supported move.
 
 # 4.1.7

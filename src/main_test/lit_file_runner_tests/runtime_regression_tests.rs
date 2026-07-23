@@ -33,6 +33,7 @@ pub(super) fn run_runtime_contract_suite_impl() {
     println!("--- runtime contracts: all selected smoke tests OK ---");
 }
 
+#[test]
 fn runtime_contract_builtin_and_clear() {
     let source_code = "1 = 1";
 

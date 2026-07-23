@@ -9,6 +9,15 @@ scripts/*
 !scripts/dataset_review_dashboard.html
 !scripts/legacy_std/
 !scripts/legacy_std/**
+!scripts/Analysis2/
+scripts/Analysis2/*
+!scripts/Analysis2/formalization_plan.md
+!scripts/Analysis2/todo.md
+!scripts/Analysis2/source_manifest.yaml
+!scripts/Analysis2/items/
+!scripts/Analysis2/items/**
+!scripts/Analysis2/unfinished/
+!scripts/Analysis2/unfinished/**
 examples/hidden
 
 # Editor / tooling
@@ -46,6 +55,7 @@ std/*/todo.md
 
 todo.md
 !scripts/legacy_std/todo.md
+!scripts/Analysis2/todo.md
 
 kernel_plan.md
 

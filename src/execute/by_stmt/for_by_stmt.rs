@@ -276,7 +276,14 @@ impl Runtime {
         assignment: &[usize],
     ) -> Result<(Vec<StmtResult>, ByAssignmentVerificationResult), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(param, ParamObjType::Forall)?;
+            let param_binding = stmt
+                .forall_fact
+                .params_def_with_type
+                .collect_param_bindings()
+                .into_iter()
+                .next()
+                .expect("cartesian by-for has one parameter");
+            rt.store_parameter_binding(&param_binding, ParamObjType::Forall)?;
             let elems: Vec<Obj> = factors
                 .iter()
                 .enumerate()
@@ -284,7 +291,7 @@ impl Runtime {
                 .collect();
             let tuple_obj: Obj = Tuple::new(elems).into();
             let parameter_equal_to_tuple: AtomicFact = EqualFact::new(
-                obj_for_bound_param_in_scope(param.to_string(), ParamObjType::Forall),
+                obj_for_bound_param_in_scope(&param_binding, ParamObjType::Forall),
                 tuple_obj.clone(),
                 stmt.line_file.clone(),
             )
@@ -487,15 +494,20 @@ impl Runtime {
     ) -> Result<(Vec<StmtResult>, ByAssignmentVerificationResult), RuntimeError> {
         let mut assignment = Vec::new();
         let mut assumptions = Vec::new();
+        let param_bindings = stmt
+            .forall_fact
+            .params_def_with_type
+            .collect_param_bindings();
         for (parameter_position, parameter_name) in params.iter().enumerate() {
+            let parameter_binding = &param_bindings[parameter_position];
             let assigned_integer_string = param_value_strings_of_each_param[parameter_position]
                 [parameter_index_assignment[parameter_position]]
                 .clone();
             assignment.push((parameter_name.clone(), assigned_integer_string.clone()));
-            self.store_free_param_or_identifier_name(parameter_name, ParamObjType::Forall)?;
+            self.store_parameter_binding(parameter_binding, ParamObjType::Forall)?;
 
             let parameter_in_z_atomic_fact = AtomicFact::InFact(InFact::new(
-                obj_for_bound_param_in_scope(parameter_name.to_string(), ParamObjType::Forall),
+                obj_for_bound_param_in_scope(parameter_binding, ParamObjType::Forall),
                 StandardSet::Z.into(),
                 stmt.line_file.clone(),
             ));
@@ -509,7 +521,7 @@ impl Runtime {
 
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(EqualFact::new(
-                    obj_for_bound_param_in_scope(parameter_name.to_string(), ParamObjType::Forall),
+                    obj_for_bound_param_in_scope(parameter_binding, ParamObjType::Forall),
                     Number::new(assigned_integer_string).into(),
                     stmt.line_file.clone(),
                 ));

@@ -90,25 +90,25 @@ sketch:
         ? $rel(a, a)
 
     claim:
-        ? forall a, b set:
-            $rel(a, b)
+        ? forall u, v set:
+            $rel(u, v)
             =>:
-                $rel(b, a)
+                $rel(v, u)
 
     claim:
-        ? forall a, b, c set:
-            $rel(a, b)
-            $rel(b, c)
+        ? forall u, v, w set:
+            $rel(u, v)
+            $rel(v, w)
             =>:
-                $rel(a, c)
-        a $rel b $rel c
+                $rel(u, w)
+        u $rel v $rel w
 
     claim:
-        ? forall a, b set:
-            $rel(a, b)
-            $rel(b, a)
+        ? forall u, v set:
+            $rel(u, v)
+            $rel(v, u)
             =>:
-                a = b
+                u = v
 
 # After these registrations, later proofs can be shorter: you state the local
 # facts, and Litex uses the registered relation properties as background steps.
@@ -578,7 +578,7 @@ sketch:
                         x1 = x2
                 f(x1) = y = f(x2)
                 x1 = x2
-            exist! x A st {y = f(x)}
+            exist! unique_input A st {y = f(unique_input)}
 
         have fn g by exist!:
             ? forall y B:
@@ -650,7 +650,7 @@ sketch:
         $surjective_fn(T, S, g)
 
         $bijective_fn(T, S, g)
-        witness exist f fn(x T) S st {$bijective_fn(T, S, f)} from g
+        witness exist inverse_bijection fn(x T) S st {$bijective_fn(T, S, inverse_bijection)} from g
         $exist_bijection(T, S)
 
     # Transitive: compose two bijections.
@@ -682,12 +682,12 @@ sketch:
                 exist x S st {z = h(x)}
             obtain y from exist y T st {z = g(y)}
             obtain x from exist x S st {y = f(x)}
-            witness exist x S st {z = h(x)} from x:
+            witness exist source_input S st {z = h(source_input)} from x:
                 z = g(y) = g(f(x)) = h(x)
         $surjective_fn(S, U, h)
 
         $bijective_fn(S, U, h)
-        witness exist f fn(x S) U st {$bijective_fn(S, U, f)} from h
+        witness exist composed_bijection fn(x S) U st {$bijective_fn(S, U, composed_bijection)} from h
         $exist_bijection(S, U)
 
 # Summary

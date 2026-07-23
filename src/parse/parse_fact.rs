@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_fact(&mut self, tb: &mut TokenBlock) -> Result<Fact, RuntimeError> {
+        self.ensure_execution_frame_for_parse();
         if tb.current()? == NOT
             && tb.token_at_add_index(1) == FORALL
             && tb.token_at_add_index(2) == "!"
@@ -111,8 +112,7 @@ impl Runtime {
 
             let (dom_facts, then_facts) = this.parse_inline_forall_after_header(tb, has_colon)?;
 
-            this.parsing_free_param_collection
-                .end_scope(ParamObjType::Forall, &forall_param_names);
+            this.end_parsing_scope(ParamObjType::Forall, &forall_param_names);
 
             if !nested && !tb.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
@@ -347,8 +347,7 @@ impl Runtime {
             } else {
                 this.parse_forall(tb, param_def)
             };
-            this.parsing_free_param_collection
-                .end_scope(ParamObjType::Forall, &forall_param_names);
+            this.end_parsing_scope(ParamObjType::Forall, &forall_param_names);
             fact_result
         })
     }
@@ -536,9 +535,7 @@ impl Runtime {
                         ExistFactEnum::ExistFact(body)
                     })
                 })();
-                inner
-                    .parsing_free_param_collection
-                    .end_scope(ParamObjType::Exist, &exist_param_names);
+                inner.end_parsing_scope(ParamObjType::Exist, &exist_param_names);
                 fact_result
             })
         })

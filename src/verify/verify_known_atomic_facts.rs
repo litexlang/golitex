@@ -187,15 +187,24 @@ impl Runtime {
         arg: &Obj,
         module_names: &[String],
     ) -> Vec<String> {
-        let mut all_objs_equal_to_arg = vec![];
+        let raw_arg = arg.to_string();
+        let normalized_arg = obj_equality_key(arg);
+        let mut all_objs_equal_to_arg = vec![raw_arg.clone(), normalized_arg.clone()];
         self.extend_all_objs_equal_to_given_from_current_and_imported_envs(
             &mut all_objs_equal_to_arg,
-            &arg.to_string(),
+            &normalized_arg,
             module_names,
         );
+        if raw_arg != normalized_arg {
+            self.extend_all_objs_equal_to_given_from_current_and_imported_envs(
+                &mut all_objs_equal_to_arg,
+                &raw_arg,
+                module_names,
+            );
+        }
 
         if let Some(calculated_obj) = self.resolve_obj_to_number(arg) {
-            if calculated_obj.to_string() != arg.to_string() {
+            if calculated_obj.to_string() != raw_arg {
                 self.extend_all_objs_equal_to_given_from_current_and_imported_envs(
                     &mut all_objs_equal_to_arg,
                     &calculated_obj.to_string(),
@@ -204,9 +213,6 @@ impl Runtime {
             }
         }
 
-        if all_objs_equal_to_arg.is_empty() {
-            all_objs_equal_to_arg.push(arg.to_string());
-        }
         dedup_strings(&mut all_objs_equal_to_arg);
         all_objs_equal_to_arg
     }

@@ -1008,12 +1008,15 @@ fn general_cart_global_family_nonempty_fact(
     source_fact: &IsNonemptySetFact,
 ) -> Fact {
     let param_name = runtime.generate_internal_binder_name();
-    let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall);
-    ForallFact::new(
-        ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+    let param_group = runtime
+        .fresh_param_group_with_type(
             vec![param_name],
             ParamType::Obj(general_cart.family_set.as_ref().clone()),
-        )]),
+        )
+        .expect("internal binder identity counter exhausted");
+    let param_obj = obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::Forall);
+    ForallFact::new(
+        ParamDefWithType::new(vec![param_group]),
         vec![],
         vec![IsNonemptySetFact::new(param_obj, source_fact.line_file.clone()).into()],
         source_fact.line_file.clone(),
@@ -1031,14 +1034,15 @@ fn general_cart_pointwise_family_nonempty_fact(
         return Ok(None);
     };
     let param_name = runtime.generate_internal_binder_name();
-    let param_obj = obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Forall);
+    let param_group = runtime.fresh_param_group_with_type(
+        vec![param_name],
+        ParamType::Obj(general_cart.index_set.as_ref().clone()),
+    )?;
+    let param_obj = obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::Forall);
     let factor: Obj = FnObj::new(head, vec![vec![Box::new(param_obj.clone())]]).into();
     Ok(Some(
         ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![param_name],
-                ParamType::Obj(general_cart.index_set.as_ref().clone()),
-            )]),
+            ParamDefWithType::new(vec![param_group]),
             vec![],
             vec![IsNonemptySetFact::new(factor, source_fact.line_file.clone()).into()],
             source_fact.line_file.clone(),

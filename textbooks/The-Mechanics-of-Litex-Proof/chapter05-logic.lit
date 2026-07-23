@@ -599,10 +599,14 @@ sketch:
             ? not $is_square_two(n)
             case n <= 1:
                 n^2 <= 1^2 = 1 < 2
-                not $is_square_two(n)
+                by contra not $is_square_two(n):
+                    n^2 = 2
+                    impossible n^2 < 2
             case n >= 1 + 1:
                 n^2 >= 2^2 = 4 > 2
-                not $is_square_two(n)
+                by contra not $is_square_two(n):
+                    n^2 = 2
+                    impossible n^2 > 2
 
     claim:
         ? not $square_two_exists()

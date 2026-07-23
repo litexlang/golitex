@@ -1,4 +1,4 @@
-use crate::parse::parse_helpers::collect_forall_param_names_from_facts;
+use crate::parse::parse_helpers::collect_forall_param_bindings_from_facts;
 use crate::prelude::*;
 
 impl Runtime {
@@ -21,11 +21,11 @@ impl Runtime {
                     ),
                 )));
             }
-            let names = collect_forall_param_names_from_facts(std::slice::from_ref(&fact));
+            let bindings = collect_forall_param_bindings_from_facts(std::slice::from_ref(&fact));
             let lf = tb.line_file.clone();
-            let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+            let proof: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
                 ParamObjType::Forall,
-                &names,
+                &bindings,
                 lf,
                 |this| {
                     tb.body
@@ -75,11 +75,11 @@ impl Runtime {
             Ok::<(Fact, usize), RuntimeError>((f, inline_proof_start))
         }?;
 
-        let names = collect_forall_param_names_from_facts(std::slice::from_ref(&fact));
+        let bindings = collect_forall_param_bindings_from_facts(std::slice::from_ref(&fact));
         let lf = tb.line_file.clone();
-        let proof: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+        let proof: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
             ParamObjType::Forall,
-            &names,
+            &bindings,
             lf,
             |this| {
                 let mut proof = Vec::new();

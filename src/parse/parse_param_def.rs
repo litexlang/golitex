@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    /// Each parameter group is pushed to [`Runtime::parsing_free_param_collection`] with
+    /// Each parameter group is pushed to the current frame's parse context with
     /// `free_param_kind` after its shared type is parsed, so later groups can resolve earlier
     /// parameters without allowing same-group self references.
     pub fn parse_param_def_with_param_type_and_skip_comma(
@@ -13,12 +13,9 @@ impl Runtime {
         let param_def_with_param_type = if tb.current()? != COMMA {
             let params = vec![param];
             let param_type = self.parse_param_type(tb)?;
-            self.parsing_free_param_collection.begin_scope(
-                free_param_kind,
-                &params,
-                tb.line_file.clone(),
-            )?;
-            ParamGroupWithParamType::new(params, param_type)
+            let bindings =
+                self.begin_parsing_scope(free_param_kind, &params, tb.line_file.clone())?;
+            ParamGroupWithParamType::new(bindings, param_type)
         } else {
             let mut vec_of_params = vec![param];
 
@@ -28,13 +25,10 @@ impl Runtime {
                 vec_of_params.push(p);
             }
             let param_type = self.parse_param_type(tb)?;
-            self.parsing_free_param_collection.begin_scope(
-                free_param_kind,
-                &vec_of_params,
-                tb.line_file.clone(),
-            )?;
+            let bindings =
+                self.begin_parsing_scope(free_param_kind, &vec_of_params, tb.line_file.clone())?;
 
-            ParamGroupWithParamType::new(vec_of_params, param_type)
+            ParamGroupWithParamType::new(bindings, param_type)
         };
         if tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;

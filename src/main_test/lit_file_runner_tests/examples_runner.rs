@@ -101,18 +101,23 @@ fn run_docs_markdown_files() {
 
 #[test]
 fn run_all() {
-    run_with_large_stack("run_all_large_stack", run_all_impl);
+    run_with_large_stack("run_all_large_stack", run_examples_impl);
 }
 
-fn run_all_impl() {
-    run_all_parallel_impl();
+#[test]
+#[ignore = "slow full suite; run explicitly with --ignored"]
+fn run_all_docs_examples_textbooks() {
+    run_with_large_stack(
+        "run_all_docs_examples_textbooks_large_stack",
+        run_all_docs_examples_textbooks_impl,
+    );
 }
 
-fn run_all_parallel_impl() {
+fn run_all_docs_examples_textbooks_impl() {
     if crate::verify::known_forall_profile::enabled() {
         // The profile counters are process-global, so keep profiled aggregate runs sequential.
         println!(
-            "--- run_all: LITEX_PROFILE_KNOWN_FORALL enabled; running datasets sequentially ---"
+            "--- full suite: LITEX_PROFILE_KNOWN_FORALL enabled; running datasets sequentially ---"
         );
         run_examples_impl();
         run_analysis_one_chapters_impl();
@@ -124,87 +129,90 @@ fn run_all_parallel_impl() {
     }
 
     println!(
-        "--- run_all: running examples, docs, and runtime contracts in parallel; then textbook chapter suites ---"
+        "--- full suite: running examples, docs, and runtime contracts in parallel; then textbook chapter suites ---"
     );
     let wall_start = Instant::now();
-    let mut handles = Vec::new();
-    handles.push((
-        "examples",
-        spawn_with_large_stack("run_all_examples_large_stack", run_examples_dataset_impl),
-    ));
-    handles.push((
-        "docs",
-        spawn_with_large_stack("run_all_docs_large_stack", || run_docs_markdown_impl(true)),
-    ));
-    handles.push((
-        "runtime contracts",
-        spawn_with_large_stack(
-            "run_all_runtime_contracts_large_stack",
-            run_runtime_contract_suite_impl,
+    let handles = vec![
+        (
+            "examples",
+            spawn_with_large_stack("full_suite_examples_large_stack", run_examples_dataset_impl),
         ),
-    ));
+        (
+            "docs",
+            spawn_with_large_stack("full_suite_docs_large_stack", || {
+                run_docs_markdown_impl(true)
+            }),
+        ),
+        (
+            "runtime contracts",
+            spawn_with_large_stack(
+                "full_suite_runtime_contracts_large_stack",
+                run_runtime_contract_suite_impl,
+            ),
+        ),
+    ];
 
     let mut failed_dataset_labels: Vec<&str> = Vec::new();
     for (label, handle) in handles {
-        collect_run_all_dataset_result(label, handle, &mut failed_dataset_labels);
+        collect_full_suite_result(label, handle, &mut failed_dataset_labels);
     }
-    collect_run_all_dataset_result(
+    collect_full_suite_result(
         "Analysis I chapters",
         spawn_with_large_stack(
-            "run_all_analysis_one_chapters_large_stack",
+            "full_suite_analysis_one_chapters_large_stack",
             run_analysis_one_chapters_impl,
         ),
         &mut failed_dataset_labels,
     );
-    collect_run_all_dataset_result(
+    collect_full_suite_result(
         "Linear Algebra Done Right chapters",
         spawn_with_large_stack(
-            "run_all_linear_algebra_done_right_large_stack",
+            "full_suite_linear_algebra_done_right_large_stack",
             run_linear_algebra_done_right_impl,
         ),
         &mut failed_dataset_labels,
     );
-    collect_run_all_dataset_result(
+    collect_full_suite_result(
         "Mechanics textbook chapters",
         spawn_with_large_stack(
-            "run_all_mechanics_textbook_chapters_large_stack",
+            "full_suite_mechanics_textbook_chapters_large_stack",
             run_mechanics_textbook_chapters_impl,
         ),
         &mut failed_dataset_labels,
     );
-    collect_run_all_dataset_result(
+    collect_full_suite_result(
         "Number Theory for Beginners chapters",
         spawn_with_large_stack(
-            "run_number_theory_for_beginners_large_stack",
+            "full_suite_number_theory_for_beginners_large_stack",
             run_number_theory_for_beginners_impl,
         ),
         &mut failed_dataset_labels,
     );
 
     println!(
-        "--- run_all: parallel dataset wall time {:.2} ms ---",
+        "--- full suite: wall time {:.2} ms ---",
         wall_start.elapsed().as_secs_f64() * 1000.0
     );
     assert!(
         failed_dataset_labels.is_empty(),
-        "run_all dataset(s) failed: {}",
+        "full suite dataset(s) failed: {}",
         failed_dataset_labels.join(", ")
     );
 }
 
-fn collect_run_all_dataset_result(
+fn collect_full_suite_result(
     label: &'static str,
     handle: std::thread::JoinHandle<()>,
     failed_dataset_labels: &mut Vec<&'static str>,
 ) {
     match handle.join() {
         Ok(()) => {
-            println!("--- run_all: {} dataset OK ---", label);
+            println!("--- full suite: {} dataset OK ---", label);
         }
         Err(panic_payload) => {
             let panic_message = panic_payload_to_string(panic_payload);
             println!(
-                "--- run_all: {} dataset panicked ---\n{}",
+                "--- full suite: {} dataset panicked ---\n{}",
                 label, panic_message
             );
             failed_dataset_labels.push(label);

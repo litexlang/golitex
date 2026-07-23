@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::fmt;
 
-/// Function-application head: plain identifier pieces, tagged free-parameter
+/// Function-application head: plain identifier pieces, symbol-bound parameter
 /// binders, and the few structured objects that are deliberately callable.
 #[derive(Clone)]
 pub enum FnObjHead {

@@ -1144,7 +1144,7 @@ sketch:
         witness exist c Z st {n = p * c} from k:
             n = k * p = p * k
         $dvdN(p, n)
-        witness exist p N_pos st {$prime(p), $dvdN(p, n)} from p
+        witness exist prime_factor N_pos st {$prime(prime_factor), $dvdN(prime_factor, n)} from p
 
 # 6.5 Pascal's Triangle
 

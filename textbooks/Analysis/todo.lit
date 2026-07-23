@@ -4,9 +4,9 @@ Analysis I unchecked mathematical interfaces
 This is a documentation-only ledger.  It is not a chapter, is not exported by
 litex.config, and contains no executable Litex declarations.
 
-Snapshot: 2026-07-22.  The book currently contains 34 direct `trust` sites:
-11 formalization gaps and 23 source-deferred proofs.  They all occur in
-Chapters 8, 9, and 11.  Chapters 1-7 and 10, together with Appendix A,
+Snapshot: 2026-07-23.  The book currently contains 36 direct `trust` sites:
+13 formalization gaps and 23 source-deferred proofs.  They occur in Chapters
+4, 8, 9, and 11.  Chapters 1-3, 5-7, and 10, together with Appendix A,
 contain no direct `trust` statement.
 
 A formalization gap is mathematics supplied or used by the source whose
@@ -14,6 +14,22 @@ Litex proof remains unfinished.  A source-deferred proof is an unchecked
 theorem whose source explicitly says `Exercise`, `why?`, or `How?`; it is a
 visible trust boundary, not an omitted source proof.  Each item states the
 missing mathematics and the source-facing result it supports.
+
+Chapter 4 — Integers and rationals (2 direct trust sites)
+
+Formalization gaps (2)
+
+Item 04-01 — Section 4.3; rational_closeness_of_products.
+Supply the three-term product-error estimate obtained from
+xz-yw=(x-y)z+x(z-w)-(x-y)(z-w), using multiplicativity and the triangle
+inequality for absolute value.  This gives the epsilon-close bound for two
+simultaneously moving rational factors.
+
+Item 04-02 — Section 4.4; rational_has_positive_denominator_representation.
+Construct a positive-denominator representation from an arbitrary nonzero
+integer denominator by replacing the denominator by its absolute value and,
+in the negative case, negating the numerator.  This representation supplies
+the Euclidean-quotient proof of the integer interval containing a rational.
 
 Chapter 8 — Infinite sets (6 direct trust sites)
 

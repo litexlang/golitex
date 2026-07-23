@@ -48,10 +48,13 @@ claim:
                 =>:
                     product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
 
-            product(1, k + 1, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * (k + 1)
-            witness exist t Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = t * (k + 1)} from product(1, k, fn(x N_pos) N_pos {x})
+            witness exist quotient Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = (k + 1) * quotient + 0} from product(1, k, fn(x N_pos) N_pos {x}):
+                product(1, k + 1, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * (k + 1) = (k + 1) * product(1, k, fn(x N_pos) N_pos {x}) = (k + 1) * product(1, k, fn(x N_pos) N_pos {x}) + 0
+            obtain quotient_value from exist quotient Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = (k + 1) * quotient + 0}
+            product(1, k + 1, fn(x N_pos) N_pos {x}) = (k + 1) * quotient_value + 0
             product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0
-            k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
+            product(1, k, fn(x N_pos) N_pos {x}) >= 1
+            k + 1 = (k + 1) * 1 <= (k + 1) * product(1, k, fn(x N_pos) N_pos {x}) = product(1, k + 1, fn(x N_pos) N_pos {x})
 
 claim:
     ? forall a, k N_pos:
@@ -67,13 +70,17 @@ claim:
         case k < a:
             k + 1 <= a
             product(1, a, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * product(k + 1, a, fn(x N_pos) N_pos {x})
-            product(1, k, fn(x N_pos) N_pos {x}) % k = 0
-            witness exist q Z st {product(1, k, fn(x N_pos) N_pos {x}) = k * q + product(1, k, fn(x N_pos) N_pos {x}) % k} from basics::integer_quotient(product(1, k, fn(x N_pos) N_pos {x}), k):
-                product(1, k, fn(x N_pos) N_pos {x}) = k * basics::integer_quotient(product(1, k, fn(x N_pos) N_pos {x}), k) + product(1, k, fn(x N_pos) N_pos {x}) % k
-            obtain r from exist q Z st {product(1, k, fn(x N_pos) N_pos {x}) = k * q + product(1, k, fn(x N_pos) N_pos {x}) % k}
-            product(1, k, fn(x N_pos) N_pos {x}) = k * r + product(1, k, fn(x N_pos) N_pos {x}) % k = k * r = r * k
-            witness exist t Z st {product(1, a, fn(x N_pos) N_pos {x}) = t * k} from r * product(k + 1, a, fn(x N_pos) N_pos {x}):
-                product(1, a, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * product(k + 1, a, fn(x N_pos) N_pos {x}) = (r * k) * product(k + 1, a, fn(x N_pos) N_pos {x}) = (r * product(k + 1, a, fn(x N_pos) N_pos {x})) * k
+            have prefix_product Z = product(1, k, fn(x N_pos) N_pos {x})
+            have suffix_product Z = product(k + 1, a, fn(x N_pos) N_pos {x})
+            prefix_product % k = product(1, k, fn(x N_pos) N_pos {x}) % k = 0
+            witness exist q Z st {prefix_product = k * q + prefix_product % k} from basics::integer_quotient(prefix_product, k):
+                prefix_product = k * basics::integer_quotient(prefix_product, k) + prefix_product % k
+            obtain r from exist q Z st {prefix_product = k * q + prefix_product % k}
+            prefix_product = k * r + prefix_product % k = k * r = r * k
+            witness exist t Z st {product(1, a, fn(x N_pos) N_pos {x}) = t * k} from r * suffix_product:
+                product(1, a, fn(x N_pos) N_pos {x}) = prefix_product * suffix_product = (r * k) * suffix_product = (r * suffix_product) * k
+            obtain whole_quotient from exist t Z st {product(1, a, fn(x N_pos) N_pos {x}) = t * k}
+            product(1, a, fn(x N_pos) N_pos {x}) = whole_quotient * k = k * whole_quotient = k * whole_quotient + 0
             product(1, a, fn(x N_pos) N_pos {x}) % k = 0
 
 claim:
@@ -184,10 +191,11 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}
             1 % k = 1
             (0 + 1) % k = 1 % k = 1
             (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
+            0 = (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 1
+            impossible 0 = 1
         case k > a:
             do_nothing
-    witness exist k N_pos st {k > a, $citation::prime(k)} from k
+    witness exist prime_larger N_pos st {prime_larger > a, $citation::prime(prime_larger)} from k
 
 # For comparison, here is the same proof body next to the Lean version from the
 # original chapter. The Litex side is the complete forward proof body after the
@@ -547,9 +555,9 @@ sketch:
         p^2 = 2 * q^2 + 0
         p^2 % 2 = 0
         p % 2 = 0
-        witness exist q Z st {p = 2 * q + p % 2} from basics::integer_quotient(p, 2):
+        witness exist quotient_p Z st {p = 2 * quotient_p + p % 2} from basics::integer_quotient(p, 2):
             p = 2 * basics::integer_quotient(p, 2) + p % 2
-        obtain c from exist k Z st {p = 2 * k + p % 2}
+        obtain c from exist quotient_p Z st {p = 2 * quotient_p + p % 2}
         p = 2 * c + p % 2 = 2 * c
         q^2 = p^2 / 2 = (2 * c)^2 / 2 = 4 * c^2 / 2 = 2 * c^2
         witness exist k Z st {q^2 = 2 * k} from c^2

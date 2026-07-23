@@ -87,7 +87,8 @@ fn regularity_axiom_exist_fact(
     line_file: LineFile,
 ) -> Result<Fact, RuntimeError> {
     let x_name = runtime.generate_internal_binder_name();
-    let x = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Exist);
+    let x_group = runtime.fresh_param_group_with_type(vec![x_name], ParamType::Obj(set.clone()))?;
+    let x = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Exist);
     let empty_set: Obj = ListSet::new(vec![]).into();
     let disjoint_fact = EqualFact::new(
         Intersect::new(x, set.clone()).into(),
@@ -95,10 +96,7 @@ fn regularity_axiom_exist_fact(
         line_file.clone(),
     );
     let body = ExistFactBody::new(
-        ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-            vec![x_name],
-            ParamType::Obj(set),
-        )]),
+        ParamDefWithType::new(vec![x_group]),
         vec![disjoint_fact.into()],
         line_file,
     )?;

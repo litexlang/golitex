@@ -297,8 +297,8 @@ fn theorem_verification_value(
             JsonValue::JsonString("theorem proof".to_string()),
         ),
         (
-            "theorems".to_string(),
-            JsonValue::Array(string_items(&verification.names)),
+            "theorem".to_string(),
+            JsonValue::JsonString(verification.name.clone()),
         ),
         (
             "parameters".to_string(),
@@ -1518,7 +1518,6 @@ fn statement_environment_effects(stmt: &Stmt, trace: &StatementExecutionTrace) -
             .collect::<Vec<_>>(),
         Stmt::DefObjStmt(_) => vec![statement_environment_effect("declare_object", stmt)],
         Stmt::DefPredicateStmt(_) => vec![statement_environment_effect("define_predicate", stmt)],
-        Stmt::DefAliasStmt(_) => vec![statement_environment_effect("define_alias", stmt)],
         Stmt::DefInterfaceStmt(_) => vec![statement_environment_effect("define_interface", stmt)],
         Stmt::DefAlgoStmt(_) => vec![statement_environment_effect("define_algorithm", stmt)],
         Stmt::DefThmStmt(_) => vec![statement_environment_effect("define_theorem", stmt)],

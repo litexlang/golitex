@@ -102,13 +102,13 @@ impl Runtime {
                 )
             })?;
 
-            let exist_param_names = stmt
+            let exist_param_bindings = stmt
                 .exist_fact_in_witness
                 .params_def_with_type()
-                .collect_param_names();
-            for (param_name, equal_to_obj) in exist_param_names.iter().zip(stmt.equal_tos.iter()) {
+                .collect_param_bindings();
+            for (binding, equal_to_obj) in exist_param_bindings.iter().zip(stmt.equal_tos.iter()) {
                 let equal_fact: AtomicFact = EqualFact::new(
-                    obj_for_bound_param_in_scope(param_name.clone(), ParamObjType::Exist),
+                    obj_for_bound_param_in_scope(binding, ParamObjType::Exist),
                     equal_to_obj.clone(),
                     stmt.line_file.clone(),
                 )

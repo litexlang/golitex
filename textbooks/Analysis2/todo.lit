@@ -1,0 +1,27 @@
+# Analysis II proof-debt ledger.
+#
+# This file is comment-only and is not exported by litex.config.
+#
+# Chapter 1 currently has 48 explicit trust statements. The ordered project
+# runner succeeds, so these are mathematics-completeness boundaries rather
+# than runner failures.
+#
+# 1.1.1: prove the equivalence between real convergence and convergence of
+# distances to zero.
+# 1.1.18: prove the four finite-dimensional l1/l2/linf/coordinate convergence
+# directions. Also replace the trusted unique-maximum construction used for
+# linf_distance after the recursive-template kernel problem is fixed.
+# 1.1.19: prove the discrete convergence/eventual constancy equivalence.
+# 1.1.20: prove uniqueness of metric limits.
+# After 1.1.20: expose the selected metric-limit notation once dependent
+# unique selection propagates its certificate through template instantiation.
+# 1.2.10-1.2.11: prove the adherence, boundary, and sequential closure
+# characterizations and closure decomposition.
+# 1.2.15: prove the source's basic open/closed-set properties.
+# 1.3.4: formalize the source's relative-open union construction and the
+# source-deferred closed-set half.
+# 1.4.3, 1.4.5, 1.4.7, 1.4.9, 1.4.12: prove the subsequence, limit-point,
+# Cauchy, convergence, completeness, and closed-subspace results.
+# 1.5.5-1.5.10: prove compactness consequences, finite-dimensional
+# Heine--Borel, the open-cover theorem, nested compact intersection, and the
+# finite compact-set closure properties.

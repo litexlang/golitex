@@ -17,7 +17,7 @@ pub struct NonFactualStmtSuccess {
 }
 
 pub struct TheoremVerificationResult {
-    pub names: Vec<String>,
+    pub name: String,
     pub forall_fact: ForallFact,
     pub assumption_infers: InferResult,
     pub proof_step_count: usize,
@@ -659,13 +659,13 @@ impl NonFactualStmtSuccess {
 
 impl TheoremVerificationResult {
     pub fn new(
-        names: Vec<String>,
+        name: String,
         forall_fact: ForallFact,
         assumption_infers: InferResult,
         proof_step_count: usize,
     ) -> Self {
         TheoremVerificationResult {
-            names,
+            name,
             forall_fact,
             assumption_infers,
             proof_step_count,
@@ -1018,7 +1018,7 @@ impl fmt::Debug for ClaimVerificationResult {
 impl fmt::Debug for TheoremVerificationResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("TheoremVerificationResult")
-            .field("names", &self.names)
+            .field("name", &self.name)
             .field("forall_fact", &self.forall_fact.to_string())
             .field("assumption_infers", &self.assumption_infers)
             .field("proof_step_count", &self.proof_step_count)

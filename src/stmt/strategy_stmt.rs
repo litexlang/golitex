@@ -15,7 +15,7 @@ pub struct StopStrategyStmt {
 
 #[derive(Clone)]
 pub struct DefStrategyStmt {
-    pub names: Vec<String>,
+    pub name: String,
     pub forall_fact: ForallFact,
     pub prove_process: Vec<Stmt>,
     pub line_file: LineFile,
@@ -47,13 +47,13 @@ impl fmt::Display for StopStrategyStmt {
 
 impl DefStrategyStmt {
     pub fn new(
-        names: Vec<String>,
+        name: String,
         forall_fact: ForallFact,
         prove_process: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {
         DefStrategyStmt {
-            names,
+            name,
             forall_fact,
             prove_process,
             line_file,
@@ -67,7 +67,7 @@ impl fmt::Display for DefStrategyStmt {
             f,
             "{} {}{}\n{}",
             STRATEGY,
-            vec_to_string_with_sep(&self.names, ", ".to_string()),
+            self.name,
             COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(
                 &format!("{} {}", QUESTION_GOAL, self.forall_fact),

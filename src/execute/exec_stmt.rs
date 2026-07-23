@@ -68,8 +68,6 @@ impl Runtime {
             Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(d)) => {
                 self.exec_def_abstract_prop_stmt(d)
             }
-            Stmt::DefAliasStmt(DefAliasStmt::AliasPropStmt(d)) => self.exec_alias_prop_stmt(d),
-            Stmt::DefAliasStmt(DefAliasStmt::AliasThmStmt(d)) => self.exec_alias_thm_stmt(d),
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(d)) => {
                 self.exec_def_template_stmt(d)
             }
@@ -180,8 +178,6 @@ impl Runtime {
             Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(s)) => {
                 self.exec_def_abstract_prop_stmt_affect_environment_only(s)
             }
-            Stmt::DefAliasStmt(DefAliasStmt::AliasPropStmt(s)) => self.exec_alias_prop_stmt(s),
-            Stmt::DefAliasStmt(DefAliasStmt::AliasThmStmt(s)) => self.exec_alias_thm_stmt(s),
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) => {
                 self.store_def_template(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;

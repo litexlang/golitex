@@ -14,7 +14,6 @@ impl fmt::Display for Stmt {
             Stmt::UnsafeStmt(x) => write!(f, "{}", x),
             Stmt::DefObjStmt(x) => write!(f, "{}", x),
             Stmt::DefPredicateStmt(x) => write!(f, "{}", x),
-            Stmt::DefAliasStmt(x) => write!(f, "{}", x),
             Stmt::DefInterfaceStmt(x) => write!(f, "{}", x),
             Stmt::DefAlgoStmt(x) => write!(f, "{}", x),
             Stmt::DefThmStmt(x) => write!(f, "{}", x),
@@ -62,15 +61,6 @@ impl fmt::Display for DefPredicateStmt {
         match self {
             DefPredicateStmt::DefPropStmt(x) => write!(f, "{}", x),
             DefPredicateStmt::DefAbstractPropStmt(x) => write!(f, "{}", x),
-        }
-    }
-}
-
-impl fmt::Display for DefAliasStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        match self {
-            DefAliasStmt::AliasPropStmt(x) => write!(f, "{}", x),
-            DefAliasStmt::AliasThmStmt(x) => write!(f, "{}", x),
         }
     }
 }

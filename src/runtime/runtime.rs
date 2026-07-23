@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::cell::Cell;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -35,15 +35,11 @@ pub struct Runtime {
     pub module_manager: Box<ModuleManager>,
     pub execution_stack: Vec<ExecutionFrame>,
     pub run_mode: RunMode,
-    pub parsing_free_param_collection: FreeParamCollection,
-    pub parsing_local_binding_scope_depth: usize,
     /// Parameters that the active recursive fact matcher may instantiate.
     /// Captured parameters of the same object kind must remain rigid.
     pub(crate) active_arg_match_bindings: Vec<(ParamObjType, String)>,
-    /// Monotonic identity source for kernel-generated binders. The `#` prefix is not user syntax,
-    /// so generated binders cannot collide with a user binder that is active outside the AST
-    /// fragment currently being transformed.
-    pub(crate) next_internal_binder_id: Cell<u64>,
+    pub(crate) symbol_id_allocator: Rc<SymbolIdAllocator>,
+    pub(crate) template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
     pub detail_output: bool,
     pub output_style: OutputStyle,
     pub strict_mode: bool,
@@ -58,10 +54,9 @@ impl Runtime {
             module_manager: Box::new(ModuleManager::new()),
             execution_stack: vec![],
             run_mode: RunMode::File,
-            parsing_free_param_collection: FreeParamCollection::new(),
-            parsing_local_binding_scope_depth: 0,
             active_arg_match_bindings: vec![],
-            next_internal_binder_id: Cell::new(0),
+            symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
+            template_instance_interner: RefCell::new(HashMap::new()),
             detail_output: false,
             output_style: OutputStyle::Normal,
             strict_mode: false,
@@ -103,6 +98,40 @@ impl Runtime {
             .last()
             .map(|frame| frame.source_path.clone())
             .unwrap_or_else(|| Rc::from(""))
+    }
+
+    pub(crate) fn ensure_execution_frame_for_parse(&mut self) {
+        if !self.execution_stack.is_empty() {
+            return;
+        }
+        let source_path = self.module_manager.entry_path_rc.to_string();
+        let module_id = match self.module_manager.entry_module_id {
+            Some(module_id) => module_id,
+            None => self
+                .module_manager
+                .create_entry_module(source_path.as_str()),
+        };
+        self.execution_stack.push(ExecutionFrame::new(
+            module_id,
+            ExecutionLayer::Main,
+            source_path.as_str(),
+        ));
+    }
+
+    pub(crate) fn current_parse_context(&self) -> &ParseContext {
+        &self
+            .execution_stack
+            .last()
+            .expect("an execution frame should exist while parsing")
+            .parse_context
+    }
+
+    pub(crate) fn current_parse_context_mut(&mut self) -> &mut ParseContext {
+        &mut self
+            .execution_stack
+            .last_mut()
+            .expect("an execution frame should exist while parsing")
+            .parse_context
     }
 
     pub fn current_module_id(&self) -> ModuleId {
@@ -358,7 +387,6 @@ impl Runtime {
         let path = self.current_file_path_rc().to_string();
         self.module_manager = Box::new(ModuleManager::new());
         self.execution_stack.clear();
-        self.parsing_free_param_collection.clear();
         self.unverified_imports.clear();
         self.new_file_path_new_env_new_name_scope(path.as_str());
     }
@@ -447,7 +475,7 @@ impl Runtime {
                 }
             }
         }
-        self.parsing_free_param_collection.clear();
+        self.current_parse_context_mut().clear();
     }
 
     /// Runs a closure in a temporary child environment and pops it on normal return.
@@ -469,7 +497,7 @@ impl Runtime {
         F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
     {
         let module_manager_before = self.module_manager.clone();
-        let parsing_free_params_before = self.parsing_free_param_collection.clone();
+        let parse_context_before = self.current_parse_context().clone();
 
         self.push_env();
         let result = f(self);
@@ -479,7 +507,7 @@ impl Runtime {
             .and_then(|frame| frame.local_environment_stack.pop())
             .expect("local environment should exist after push_env");
 
-        self.parsing_free_param_collection = parsing_free_params_before;
+        *self.current_parse_context_mut() = parse_context_before;
         self.module_manager = module_manager_before;
 
         let value = result?;
@@ -487,16 +515,16 @@ impl Runtime {
         Ok(value)
     }
 
-    /// Restores [`Runtime::parsing_free_param_collection`] after `f` so parse-time bindings (e.g.
+    /// Restores the current frame's [`ParseContext`] after `f` so parse-time bindings (e.g.
     /// `have x …` without `=`) do not leak across sibling `?` goal blocks or out of nested parses
     /// that use this wrapper (`forall`, `exist`, goal blocks, `prop` bodies, etc.).
     pub fn run_in_local_parsing_time_name_scope<T, E, F>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
     {
-        let saved_free_params = self.parsing_free_param_collection.clone();
+        let saved_parse_context = self.current_parse_context().clone();
         let result = f(self);
-        self.parsing_free_param_collection = saved_free_params;
+        *self.current_parse_context_mut() = saved_parse_context;
         result
     }
 
@@ -505,9 +533,9 @@ impl Runtime {
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
     {
-        self.parsing_local_binding_scope_depth += 1;
+        self.current_parse_context_mut().local_binding_scope_depth += 1;
         let result = self.run_in_local_parsing_time_name_scope(f);
-        self.parsing_local_binding_scope_depth -= 1;
+        self.current_parse_context_mut().local_binding_scope_depth -= 1;
         result
     }
 
@@ -516,11 +544,41 @@ impl Runtime {
         names: &[String],
         line_file: LineFile,
     ) -> Result<(), RuntimeError> {
-        if self.parsing_local_binding_scope_depth == 0 || names.is_empty() {
+        if self.current_parse_context().local_binding_scope_depth == 0 || names.is_empty() {
             return Ok(());
         }
-        self.parsing_free_param_collection
-            .begin_scope(ParamObjType::Identifier, names, line_file)
+        self.begin_parsing_scope(ParamObjType::Identifier, names, line_file)
+            .map(|_| ())
+    }
+
+    pub fn register_local_existing_identifier_bindings_for_parse(
+        &mut self,
+        bindings: &[SymbolBinding],
+        line_file: LineFile,
+    ) -> Result<(), RuntimeError> {
+        if self.current_parse_context().local_binding_scope_depth == 0 || bindings.is_empty() {
+            return Ok(());
+        }
+        for binding in bindings {
+            let name = binding.name();
+            if self.current_parse_context().active_binding(name).is_some()
+                || self.visible_symbol_definition(name).is_some()
+                || is_builtin_identifier_name(name)
+                || is_builtin_predicate(name)
+            {
+                return Err(crate::runtime::runtime_symbol::active_parse_name_error(
+                    name, &line_file,
+                ));
+            }
+        }
+        self.current_parse_context_mut().free_params.begin_scope(
+            ParamObjType::Identifier,
+            bindings,
+            line_file,
+        )?;
+        self.current_parse_context_mut()
+            .push_scope_frame(bindings.to_vec());
+        Ok(())
     }
 
     /// `begin_scope` → `f` → `end_scope`; runs `end_scope` on both `Ok` and `Err` (not on `begin_scope` failure).
@@ -534,35 +592,77 @@ impl Runtime {
     where
         F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
     {
-        self.parsing_free_param_collection
-            .begin_scope(kind, names, line_file)?;
+        self.begin_parsing_scope(kind, names, line_file)?;
         let result = f(self);
-        self.parsing_free_param_collection.end_scope(kind, names);
+        self.end_parsing_scope(kind, names);
         result
     }
 
-    /// If `names` is empty, runs `f` with no extra scope; otherwise wraps it in `parse_in_local_free_param_scope`.
-    pub fn with_optional_free_param_scope<T, F>(
+    pub fn parse_in_local_free_param_scope_with_bindings<T, F>(
         &mut self,
         kind: ParamObjType,
         names: &[String],
         line_file: LineFile,
         f: F,
+    ) -> Result<(T, Vec<SymbolBinding>), RuntimeError>
+    where
+        F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
+    {
+        let bindings = self.begin_parsing_scope(kind, names, line_file)?;
+        let result = f(self);
+        self.end_parsing_scope(kind, names);
+        result.map(|value| (value, bindings))
+    }
+
+    pub fn parse_in_existing_free_param_scope<T, F>(
+        &mut self,
+        kind: ParamObjType,
+        bindings: &[SymbolBinding],
+        line_file: LineFile,
+        parse_body: F,
     ) -> Result<T, RuntimeError>
     where
         F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
     {
-        if names.is_empty() {
-            f(self)
-        } else {
-            self.parse_in_local_free_param_scope(kind, names, line_file, f)
+        if bindings.is_empty() {
+            return parse_body(self);
         }
+        let names = bindings
+            .iter()
+            .map(|binding| binding.name().to_string())
+            .collect::<Vec<_>>();
+        for binding in bindings {
+            if let Some(active) = self.current_parse_context().active_binding(binding.name()) {
+                if active.id() != binding.id() {
+                    return Err(crate::runtime::runtime_symbol::active_parse_name_error(
+                        binding.name(),
+                        &line_file,
+                    ));
+                }
+            }
+            if let Some(visible) = self.visible_symbol_definition(binding.name()) {
+                if visible.binding().id() != binding.id() {
+                    return Err(crate::runtime::runtime_symbol::active_parse_name_error(
+                        binding.name(),
+                        &line_file,
+                    ));
+                }
+            }
+        }
+        self.current_parse_context_mut()
+            .free_params
+            .begin_scope(kind, bindings, line_file)?;
+        self.current_parse_context_mut()
+            .push_scope_frame(bindings.to_vec());
+        let result = parse_body(self);
+        self.end_parsing_scope(kind, &names);
+        result
     }
 
-    pub fn parse_stmts_with_optional_free_param_scope<F>(
+    pub fn parse_stmts_with_existing_free_param_bindings<F>(
         &mut self,
         kind: ParamObjType,
-        names: &[String],
+        bindings: &[SymbolBinding],
         line_file: LineFile,
         parse_body: F,
     ) -> Result<Vec<Stmt>, RuntimeError>
@@ -570,7 +670,22 @@ impl Runtime {
         F: FnOnce(&mut Self) -> Result<Vec<Stmt>, RuntimeError>,
     {
         self.run_in_local_proof_parsing_scope(|this| {
-            this.with_optional_free_param_scope(kind, names, line_file, parse_body)
+            this.parse_in_existing_free_param_scope(kind, bindings, line_file, parse_body)
+        })
+    }
+
+    pub fn parse_stmts_with_free_param_scope_and_bindings<F>(
+        &mut self,
+        kind: ParamObjType,
+        names: &[String],
+        line_file: LineFile,
+        parse_body: F,
+    ) -> Result<(Vec<Stmt>, Vec<SymbolBinding>), RuntimeError>
+    where
+        F: FnOnce(&mut Self) -> Result<Vec<Stmt>, RuntimeError>,
+    {
+        self.run_in_local_proof_parsing_scope(|this| {
+            this.parse_in_local_free_param_scope_with_bindings(kind, names, line_file, parse_body)
         })
     }
 }
@@ -700,22 +815,23 @@ impl Runtime {
 
     pub fn matrix_set_to_fn_set(&self, ms: &MatrixSet, line_file: LineFile) -> FnSet {
         let pair = self.generate_random_unused_names(2);
-        let p1 = pair[0].clone();
-        let p2 = pair[1].clone();
+        let p1 = self
+            .fresh_param_group_with_set(vec![pair[0].clone()], StandardSet::NPos.into())
+            .expect("internal binder identity counter exhausted");
+        let p2 = self
+            .fresh_param_group_with_set(vec![pair[1].clone()], StandardSet::NPos.into())
+            .expect("internal binder identity counter exhausted");
         FnSet::new(
-            vec![
-                ParamGroupWithSet::new(vec![p1.clone()], StandardSet::NPos.into()),
-                ParamGroupWithSet::new(vec![p2.clone()], StandardSet::NPos.into()),
-            ],
+            vec![p1.clone(), p2.clone()],
             vec![
                 AtomicFact::from(LessEqualFact::new(
-                    obj_for_bound_param_in_scope(p1, ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(&p1.params[0], ParamObjType::FnSet),
                     (*ms.row_len).clone(),
                     line_file.clone(),
                 ))
                 .into(),
                 AtomicFact::from(LessEqualFact::new(
-                    obj_for_bound_param_in_scope(p2, ParamObjType::FnSet),
+                    obj_for_bound_param_in_scope(&p2.params[0], ParamObjType::FnSet),
                     (*ms.col_len).clone(),
                     line_file.clone(),
                 ))
@@ -728,13 +844,13 @@ impl Runtime {
 
     pub fn finite_seq_set_to_fn_set(&self, fs: &FiniteSeqSet, line_file: LineFile) -> FnSet {
         let param = self.generate_random_unused_name();
+        let param_group = self
+            .fresh_param_group_with_set(vec![param], StandardSet::NPos.into())
+            .expect("internal binder identity counter exhausted");
         FnSet::new(
-            vec![ParamGroupWithSet::new(
-                vec![param.clone()],
-                StandardSet::NPos.into(),
-            )],
+            vec![param_group.clone()],
             vec![AtomicFact::from(LessEqualFact::new(
-                obj_for_bound_param_in_scope(param, ParamObjType::FnSet),
+                obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::FnSet),
                 (*fs.n).clone(),
                 line_file,
             ))
@@ -747,10 +863,9 @@ impl Runtime {
     pub fn seq_set_to_fn_set(&self, ss: &SeqSet, _line_file: LineFile) -> FnSet {
         let param = self.generate_random_unused_name();
         FnSet::new(
-            vec![ParamGroupWithSet::new(
-                vec![param.clone()],
-                StandardSet::NPos.into(),
-            )],
+            vec![self
+                .fresh_param_group_with_set(vec![param], StandardSet::NPos.into())
+                .expect("internal binder identity counter exhausted")],
             vec![],
             (*ss.set).clone(),
         )
@@ -763,13 +878,13 @@ impl Runtime {
         line_file: LineFile,
         surface_dom_param: &str,
     ) -> Result<FnSet, RuntimeError> {
-        let params = vec![ParamGroupWithSet::new(
+        let params = vec![self.fresh_param_group_with_set(
             vec![surface_dom_param.to_string()],
             StandardSet::NPos.into(),
-        )];
+        )?];
         let dom_facts: Vec<OrAndChainAtomicFact> = vec![OrAndChainAtomicFact::AtomicFact(
             LessEqualFact::new(
-                Identifier::new(surface_dom_param.to_string()).into(),
+                obj_for_bound_param_in_scope(&params[0].params[0], ParamObjType::FnSet),
                 (*fs.n).clone(),
                 line_file,
             )
@@ -848,12 +963,12 @@ impl Runtime {
         param_defs: &ParamDefWithType,
         args: &[Obj],
     ) -> Result<HashMap<String, Obj>, RuntimeError> {
-        let param_names = param_defs.collect_param_names();
-        if param_names.len() != args.len() {
+        let param_bindings = param_defs.collect_param_bindings();
+        if param_bindings.len() != args.len() {
             return Err(
                 InstantiateRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "params_to_arg_map: expected {} argument(s), got {}",
-                    param_names.len(),
+                    param_bindings.len(),
                     args.len()
                 )))
                 .into(),
@@ -861,8 +976,8 @@ impl Runtime {
         }
 
         let mut result: HashMap<String, Obj> = HashMap::new();
-        for (param_name, arg) in param_names.iter().zip(args.iter()) {
-            result.insert(param_name.clone(), arg.clone());
+        for (binding, arg) in param_bindings.iter().zip(args.iter()) {
+            insert_symbol_substitution(&mut result, binding, arg.clone());
         }
         Ok(result)
     }

@@ -38,8 +38,8 @@ struct VectorSpace<s nonempty_set, scalars @ScalarSystem, v nonempty_set>:
         forall x v:
             smul(@Scalars.one, x) = x
 
-prop is_vector_space(s nonempty_set, scalars @ScalarSystem, v nonempty_set, zero v, add fn(x, y v) v, smul fn(a s, x v) v):
-    (zero, add, smul) $in &VectorSpace<s, scalars, v>
+prop is_vector_space(s nonempty_set, scalars @ScalarSystem, v nonempty_set, vector_zero v, vector_add fn(x, y v) v, vector_smul fn(a s, x v) v):
+    (vector_zero, vector_add, vector_smul) $in &VectorSpace<s, scalars, v>
 
 # Remaining selected-structure boundary: the pointwise tuple is explicit, but
 # template-instantiated function extensionality does not yet expose the full
@@ -54,11 +54,11 @@ template<s nonempty_set, scalars @ScalarSystem, n N_pos>:
 
 # Definition 1.22. A real vector space specializes the scalar carrier to R;
 # a complex vector space specializes it to the Complex carrier from 1A.
-prop is_real_vector_space(v nonempty_set, zero v, add fn(x, y v) v, smul fn(a R, x v) v):
-    (zero, add, smul) $in &VectorSpace<R, chap1a::real_scalars, v>
+prop is_real_vector_space(v nonempty_set, vector_zero v, vector_add fn(x, y v) v, vector_smul fn(a R, x v) v):
+    (vector_zero, vector_add, vector_smul) $in &VectorSpace<R, chap1a::real_scalars, v>
 
-prop is_complex_vector_space(v nonempty_set, zero v, add fn(x, y v) v, smul fn(a &chap1a::Complex, x v) v):
-    (zero, add, smul) $in &VectorSpace<&chap1a::Complex, chap1a::complex_scalars, v>
+prop is_complex_vector_space(v nonempty_set, vector_zero v, vector_add fn(x, y v) v, vector_smul fn(a &chap1a::Complex, x v) v):
+    (vector_zero, vector_add, vector_smul) $in &VectorSpace<&chap1a::Complex, chap1a::complex_scalars, v>
 
 # Example 1.23. F^infinity is the sequence carrier seq(s); evaluation remains
 # callable, and its intended addition and scalar multiplication are pointwise.

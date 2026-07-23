@@ -1300,28 +1300,23 @@ $can_be_divided_by_2(8)
 ### 33. Named Theorems With `thm`
 
 - Category: `stmt`
-- Purpose: Shows theorem declaration, aliases, and theorem application.
+- Purpose: Shows theorem declaration and theorem application.
 
 ```litex
-## Basic named theorem with aliases and no domain facts.
-thm thm_refl_r, thm_refl_r_alias:
+## Basic named theorem with no domain facts.
+thm thm_refl_r:
     ? forall x R:
         x = x
 
 by thm thm_refl_r(0)
 0 = 0
 
-by thm thm_refl_r_alias(0)
-0 = 0
-
-## A theorem alias can use a local-language name while the original theorem
-## keeps an English/source-facing name.
-thm self_eq_en:
+## The theorem name can use the same Unicode identifier syntax as other names.
+thm 自反等式:
     ? forall x R:
         x = x
     x = x
 
-alias thm 自反等式 <=> self_eq_en
 by thm 自反等式(1)
 1 = 1
 
@@ -2686,10 +2681,10 @@ forall a, b, c, d R:
 - Purpose: Shows membership and subset facts for N, Z, Q, and R.
 
 ```litex
-have a, b R, c Z
+have u, v R, c Z
 
-a $in R
-b $in R
+u $in R
+v $in R
 c $in Z
 
 1 $in N
@@ -3472,7 +3467,7 @@ template<S set, z S>:
 Purpose: store a reusable theorem and instantiate it later.
 
 - Well-definedness / structural checks: the theorem statement must be
-  well-defined; theorem names must be unique; theorem-call arguments must
+  well-defined; the theorem name must be unique; theorem-call arguments must
   satisfy parameter types.
 - Truth verification: the theorem proof verifies the target, and `by thm`
   verifies instantiated domain facts.

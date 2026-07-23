@@ -94,7 +94,7 @@ impl ByForStmt {
                         );
                     }
                     return Ok(ByForExpansion::CartOfListSets {
-                        param: groups[0].params[0].clone(),
+                        param: groups[0].params[0].name().to_string(),
                         factors,
                     });
                 }
@@ -114,7 +114,7 @@ impl ByForStmt {
                 }
             };
             for name in g.params.iter() {
-                params.push(name.clone());
+                params.push(name.name().to_string());
                 ranges.push(set.clone());
             }
         }

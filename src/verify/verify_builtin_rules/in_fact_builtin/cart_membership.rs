@@ -81,12 +81,14 @@ impl Runtime {
         }
 
         let index_name = self.generate_random_unused_name();
-        let index_obj = obj_for_bound_param_in_scope(index_name.clone(), ParamObjType::Forall);
         let index_set: Obj = ClosedRange::new(
             Number::new("1".to_string()).into(),
             CartDim::new(in_fact.set.clone()).into(),
         )
         .into();
+        let index_group =
+            self.fresh_param_group_with_type(vec![index_name], ParamType::Obj(index_set))?;
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Forall);
         let coordinate_fact: AtomicFact = InFact::new(
             ObjAtIndex::new(in_fact.element.clone(), index_obj.clone()).into(),
             Proj::new(in_fact.set.clone(), index_obj).into(),
@@ -94,10 +96,7 @@ impl Runtime {
         )
         .into();
         let coordinate_forall: Fact = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![index_name],
-                ParamType::Obj(index_set),
-            )]),
+            ParamDefWithType::new(vec![index_group]),
             vec![],
             vec![coordinate_fact.into()],
             in_fact.line_file.clone(),

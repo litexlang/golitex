@@ -6,6 +6,7 @@ pub struct DefStructStmt {
     pub name: String,
     pub param_def_with_dom: Option<(ParamDefWithType, Vec<OrAndChainAtomicFact>)>,
     pub fields: Vec<(String, Obj)>,
+    pub field_bindings: Vec<SymbolBinding>,
     pub equivalent_facts: Vec<Fact>,
     pub line_file: LineFile,
 }
@@ -15,6 +16,7 @@ impl DefStructStmt {
         name: String,
         param_def_with_dom: Option<(ParamDefWithType, Vec<OrAndChainAtomicFact>)>,
         fields: Vec<(String, Obj)>,
+        field_bindings: Vec<SymbolBinding>,
         equivalent_facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
@@ -22,6 +24,7 @@ impl DefStructStmt {
             name,
             param_def_with_dom,
             fields,
+            field_bindings,
             equivalent_facts,
             line_file,
         }

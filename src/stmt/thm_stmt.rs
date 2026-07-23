@@ -10,7 +10,7 @@ pub enum DefThmKind {
 #[derive(Clone)]
 pub struct DefThmStmt {
     pub kind: DefThmKind,
-    pub names: Vec<String>,
+    pub name: String,
     pub forall_fact: ForallFact,
     pub prove_process: Vec<Stmt>,
     pub line_file: LineFile,
@@ -18,24 +18,24 @@ pub struct DefThmStmt {
 
 impl DefThmStmt {
     pub fn new(
-        names: Vec<String>,
+        name: String,
         forall_fact: ForallFact,
         prove_process: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {
         DefThmStmt {
             kind: DefThmKind::Theorem,
-            names,
+            name,
             forall_fact,
             prove_process,
             line_file,
         }
     }
 
-    pub fn new_axiom(names: Vec<String>, forall_fact: ForallFact, line_file: LineFile) -> Self {
+    pub fn new_axiom(name: String, forall_fact: ForallFact, line_file: LineFile) -> Self {
         DefThmStmt {
             kind: DefThmKind::Axiom,
-            names,
+            name,
             forall_fact,
             prove_process: Vec::new(),
             line_file,
@@ -87,7 +87,7 @@ impl fmt::Display for DefThmStmt {
                 f,
                 "{} {}{}\n{}",
                 self.keyword(),
-                vec_to_string_with_sep(&self.names, ", ".to_string()),
+                self.name,
                 COLON,
                 to_string_and_add_four_spaces_at_beginning_of_each_line(
                     &format!("{} {}", QUESTION_GOAL, self.forall_fact),
@@ -101,7 +101,7 @@ impl fmt::Display for DefThmStmt {
             f,
             "{} {}{}\n{}",
             self.keyword(),
-            vec_to_string_with_sep(&self.names, ", ".to_string()),
+            self.name,
             COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(
                 &format!("{} {}", QUESTION_GOAL, self.forall_fact),

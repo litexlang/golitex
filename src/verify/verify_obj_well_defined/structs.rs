@@ -178,17 +178,47 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(&instantiated_field_type, verify_state)?;
         }
         self.run_in_local_env(|rt| {
-            for (field_name, field_type) in def.fields.iter() {
+            let field_rename_map = rt.visible_binding_conflict_rename_map(
+                &def.field_bindings,
+                ParamObjType::DefStructField,
+            )?;
+            let active_field_bindings = def
+                .field_bindings
+                .iter()
+                .map(|binding| {
+                    match field_rename_map.get(&binding.substitution_key()) {
+                        Some(Obj::Atom(AtomObj::DefStructField(param))) => {
+                            param.symbol.to_local_binding()
+                        }
+                        _ => binding.clone(),
+                    }
+                })
+                .collect::<Vec<_>>();
+
+            for (field_binding, (_, field_type)) in
+                active_field_bindings.iter().zip(def.fields.iter())
+            {
                 let instantiated_field_type =
                     rt.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
+                let instantiated_field_type = rt.inst_obj(
+                    &instantiated_field_type,
+                    &field_rename_map,
+                    ParamObjType::AlphaRename,
+                )?;
                 let param_def =
-                    ParamGroupWithSet::new(vec![field_name.clone()], instantiated_field_type);
+                    ParamGroupWithSet::new(vec![field_binding.clone()], instantiated_field_type);
                 rt.define_params_with_set_in_scope(&param_def, ParamObjType::DefStructField)?;
             }
 
             for fact in def.equivalent_facts.iter() {
                 let instantiated_fact =
                     rt.inst_fact(fact, &param_to_arg_map, ParamObjType::DefHeader, None)?;
+                let instantiated_fact = rt.inst_fact(
+                    &instantiated_fact,
+                    &field_rename_map,
+                    ParamObjType::AlphaRename,
+                    None,
+                )?;
                 rt.verify_fact_well_defined(&instantiated_fact, verify_state)?;
             }
             Ok::<(), RuntimeError>(())

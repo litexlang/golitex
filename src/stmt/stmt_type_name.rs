@@ -226,18 +226,6 @@ impl DefPropStmt {
     }
 }
 
-impl AliasPropStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "AliasPropStmt".to_string()
-    }
-}
-
-impl AliasThmStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "AliasThmStmt".to_string()
-    }
-}
-
 impl TrustHaveStmt {
     pub fn stmt_type_name(&self) -> String {
         "TrustHaveStmt".to_string()
@@ -529,18 +517,6 @@ impl DefAbstractPropStmt {
 impl DefPropStmt {
     pub fn output_type_string() -> String {
         "predicate definition".to_string()
-    }
-}
-
-impl AliasPropStmt {
-    pub fn output_type_string() -> String {
-        "predicate alias".to_string()
-    }
-}
-
-impl AliasThmStmt {
-    pub fn output_type_string() -> String {
-        "theorem alias".to_string()
     }
 }
 

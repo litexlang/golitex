@@ -131,9 +131,7 @@ impl Runtime {
                     ),
                 )));
             }
-            if let Err(e) =
-                rt.store_free_param_or_identifier_name(&x.param, ParamObjType::SetBuilder)
-            {
+            if let Err(e) = rt.store_parameter_binding(&x.param_binding, ParamObjType::SetBuilder) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
                         format!(
@@ -145,7 +143,7 @@ impl Runtime {
                 )));
             }
             let param_in_set: Fact = InFact::new(
-                obj_for_bound_param_in_scope(x.param.clone(), ParamObjType::SetBuilder),
+                obj_for_bound_param_in_scope(&x.param_binding, ParamObjType::SetBuilder),
                 (*x.param_set).clone(),
                 default_line_file(),
             )
@@ -213,6 +211,14 @@ impl Runtime {
         x: &FnSet,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
+        let bindings = x.body.params_def_with_set.collect_param_bindings();
+        let rename_map =
+            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::FnSet)?;
+        if !rename_map.is_empty() {
+            let renamed = self.alpha_rename_fn_set(x, &rename_map)?;
+            return self.verify_fn_set_well_defined(&renamed, verify_state);
+        }
+
         for param_def_with_set in x.body.params_def_with_set.iter() {
             if let Err(e) = self.define_params_with_set(param_def_with_set) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -265,6 +271,14 @@ impl Runtime {
         x: &AnonymousFn,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
+        let bindings = x.body.params_def_with_set.collect_param_bindings();
+        let rename_map =
+            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::FnSet)?;
+        if !rename_map.is_empty() {
+            let renamed = self.alpha_rename_anonymous_fn(x, &rename_map)?;
+            return self.verify_anonymous_fn_well_defined(&renamed, verify_state);
+        }
+
         self.run_in_local_env(|rt| {
             for param_def_with_set in x.body.params_def_with_set.iter() {
                 if let Err(e) =
@@ -670,19 +684,19 @@ impl Runtime {
         let x_name = self.generate_internal_binder_name();
         let y_name = self.generate_internal_binder_name();
         let y2_name = self.generate_internal_binder_name();
-        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
-        let y_obj = obj_for_bound_param_in_scope(y_name.clone(), ParamObjType::Forall);
-        let y2_obj = obj_for_bound_param_in_scope(y2_name.clone(), ParamObjType::Forall);
+        let x_group = self.fresh_param_group_with_type(
+            vec![x_name],
+            ParamType::Obj(x.source_set.as_ref().clone()),
+        )?;
+        let y_group =
+            self.fresh_param_group_with_type(vec![y_name, y2_name], ParamType::Set(Set::new()))?;
+        let x_obj = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Forall);
+        let y_obj = obj_for_bound_param_in_scope(&y_group.params[0], ParamObjType::Forall);
+        let y2_obj = obj_for_bound_param_in_scope(&y_group.params[1], ParamObjType::Forall);
         let line_file = default_line_file();
 
         ForallFact::new(
-            ParamDefWithType::new(vec![
-                ParamGroupWithParamType::new(
-                    vec![x_name],
-                    ParamType::Obj(x.source_set.as_ref().clone()),
-                ),
-                ParamGroupWithParamType::new(vec![y_name, y2_name], ParamType::Set(Set::new())),
-            ]),
+            ParamDefWithType::new(vec![x_group, y_group]),
             vec![
                 NormalAtomicFact::new(
                     x.prop_name.clone(),

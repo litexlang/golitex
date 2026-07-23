@@ -376,13 +376,13 @@ pub(crate) fn run_source_code_with_failure_kind(
     (stmt_results, None, None)
 }
 
-/// When `strip_free_param_tags` is true, run [`strip_free_param_numeric_tags_in_display`] on the full
-/// concatenated output. Use false in `main_test` to print raw `~` tags for debugging.
+/// Render finished user output. Internal symbol identities are always removed;
+/// callers cannot opt into leaking runtime-local IDs.
 pub fn render_run_source_code_output(
     runtime: &Runtime,
     stmt_results: &Vec<StmtResult>,
     runtime_error: &Option<RuntimeError>,
-    strip_free_param_tags: bool,
+    _strip_free_param_tags: bool,
 ) -> (bool, String) {
     let mut output_text = String::new();
     for stmt_result in stmt_results.iter() {
@@ -404,11 +404,7 @@ pub fn render_run_source_code_output(
         output_text.push('\n');
     }
 
-    let output_text = if strip_free_param_tags {
-        strip_free_param_numeric_tags_in_display(&output_text)
-    } else {
-        output_text
-    };
+    let output_text = strip_free_param_numeric_tags_in_display(&output_text);
 
     if ok {
         (true, output_text)

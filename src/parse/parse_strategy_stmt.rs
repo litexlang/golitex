@@ -3,21 +3,12 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_def_strategy_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(STRATEGY)?;
-        let mut strategy_names = Vec::new();
-        loop {
-            let name = tb.advance()?;
-            is_valid_litex_name(&name).map_err(|msg| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-                ))
-            })?;
-            strategy_names.push(name);
-            if tb.current_token_is_equal_to(COMMA) {
-                tb.skip_token(COMMA)?;
-            } else {
-                break;
-            }
-        }
+        let strategy_name = tb.advance()?;
+        is_valid_litex_name(&strategy_name).map_err(|msg| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+            ))
+        })?;
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
@@ -50,11 +41,11 @@ impl Runtime {
         };
         validate_strategy_forall_fact(&forall_fact)?;
 
-        let names = forall_fact.params_def_with_type.collect_param_names();
+        let bindings = forall_fact.params_def_with_type.collect_param_bindings();
         let lf = tb.line_file.clone();
-        let prove_process: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+        let prove_process: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
             ParamObjType::Forall,
-            &names,
+            &bindings,
             lf,
             |this| {
                 let mut proof = Vec::new();
@@ -73,7 +64,7 @@ impl Runtime {
         )?;
 
         Ok(DefStrategyStmt::new(
-            strategy_names,
+            strategy_name,
             forall_fact,
             prove_process,
             tb.line_file.clone(),

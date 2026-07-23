@@ -29,9 +29,13 @@ impl Runtime {
         }
 
         self.run_in_local_env(|rt| {
-            for (field_name, field_type) in def_struct_stmt.fields.iter() {
+            for (field_binding, (_, field_type)) in def_struct_stmt
+                .field_bindings
+                .iter()
+                .zip(def_struct_stmt.fields.iter())
+            {
                 let param_def =
-                    ParamGroupWithSet::new(vec![field_name.clone()], field_type.clone());
+                    ParamGroupWithSet::new(vec![field_binding.clone()], field_type.clone());
                 rt.define_params_with_set_in_scope(&param_def, ParamObjType::DefStructField)?;
             }
 

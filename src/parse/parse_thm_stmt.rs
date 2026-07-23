@@ -4,7 +4,7 @@ impl Runtime {
     pub fn parse_def_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         let keyword = THM;
         tb.skip_token(keyword)?;
-        let thm_names = parse_thm_name_list(tb)?;
+        let thm_name = parse_thm_name(tb)?;
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
@@ -38,11 +38,11 @@ impl Runtime {
             self.parse_goal_forall_fact_block_with_inline_proof(goal_block, keyword)?
         };
 
-        let names = forall_fact.params_def_with_type.collect_param_names();
+        let bindings = forall_fact.params_def_with_type.collect_param_bindings();
         let lf = tb.line_file.clone();
-        let prove_process: Vec<Stmt> = self.parse_stmts_with_optional_free_param_scope(
+        let prove_process: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
             ParamObjType::Forall,
-            &names,
+            &bindings,
             lf,
             |this| {
                 let mut proof = Vec::new();
@@ -60,14 +60,14 @@ impl Runtime {
             },
         )?;
 
-        let stmt = DefThmStmt::new(thm_names, forall_fact, prove_process, tb.line_file.clone());
+        let stmt = DefThmStmt::new(thm_name, forall_fact, prove_process, tb.line_file.clone());
         Ok(stmt.into())
     }
 
     pub fn parse_def_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         let keyword = AXIOM;
         tb.skip_token(keyword)?;
-        let axiom_names = parse_thm_name_list(tb)?;
+        let axiom_name = parse_thm_name(tb)?;
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
@@ -104,26 +104,17 @@ impl Runtime {
         }
         let forall_fact = self.parse_goal_forall_fact_block(goal_block, keyword)?;
 
-        let stmt = DefThmStmt::new_axiom(axiom_names, forall_fact, tb.line_file.clone());
+        let stmt = DefThmStmt::new_axiom(axiom_name, forall_fact, tb.line_file.clone());
         Ok(stmt.into())
     }
 }
 
-fn parse_thm_name_list(tb: &mut TokenBlock) -> Result<Vec<String>, RuntimeError> {
-    let mut names = Vec::new();
-    loop {
-        let name = tb.advance()?;
-        is_valid_litex_name(&name).map_err(|msg| {
-            RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-            ))
-        })?;
-        names.push(name);
-        if tb.current_token_is_equal_to(COMMA) {
-            tb.skip_token(COMMA)?;
-        } else {
-            break;
-        }
-    }
-    Ok(names)
+fn parse_thm_name(tb: &mut TokenBlock) -> Result<String, RuntimeError> {
+    let name = tb.advance()?;
+    is_valid_litex_name(&name).map_err(|msg| {
+        RuntimeError::from(ParseRuntimeError(
+            RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+        ))
+    })?;
+    Ok(name)
 }

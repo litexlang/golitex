@@ -22,6 +22,7 @@ pub enum HaveFnByInducCaseBody {
 #[derive(Clone)]
 pub struct HaveFnByInducStmt {
     pub name: String,
+    pub symbol_binding: SymbolBinding,
     pub fn_set_clause: FnSetClause,
     pub measure: Obj,
     pub lower_bound: Obj,
@@ -69,24 +70,21 @@ impl FnSetClause {
         })
     }
 
-    /// Outer `{...}` binders first, then each nested function return `fn` layer, in order.
-    /// Used when parsing `have fn ... = rhs` so RHS identifiers match nested return fn-set params.
-    pub fn collect_all_param_names_including_nested_ret_fn_sets(&self) -> Vec<String> {
-        let mut names = ParamGroupWithSet::collect_param_names(&self.params_def_with_set);
+    pub fn collect_all_param_bindings_including_nested_ret_fn_sets(&self) -> Vec<SymbolBinding> {
+        let mut bindings = self.params_def_with_set.collect_param_bindings();
         let mut ret_set = self.ret_set.clone();
         while let Obj::FnSet(inner) = ret_set {
-            names.extend(ParamGroupWithSet::collect_param_names(
-                &inner.body.params_def_with_set,
-            ));
+            bindings.extend(inner.body.params_def_with_set.collect_param_bindings());
             ret_set = (*inner.body.ret_set).clone();
         }
-        names
+        bindings
     }
 }
 
 #[derive(Clone)]
 pub struct HaveFnEqualCaseByCaseStmt {
     pub name: String,
+    pub symbol_binding: SymbolBinding,
     pub fn_set_clause: FnSetClause,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
@@ -96,6 +94,7 @@ pub struct HaveFnEqualCaseByCaseStmt {
 #[derive(Clone)]
 pub struct HaveFnEqualStmt {
     pub name: String,
+    pub symbol_binding: SymbolBinding,
     pub equal_to_anonymous_fn: AnonymousFn,
     pub line_file: LineFile,
 }
@@ -103,6 +102,7 @@ pub struct HaveFnEqualStmt {
 #[derive(Clone)]
 pub struct HaveFnByForallExistUniqueStmt {
     pub fn_name: String,
+    pub symbol_binding: SymbolBinding,
     pub forall: ForallFact,
     pub prove_process: Vec<Stmt>,
     pub line_file: LineFile,
@@ -111,7 +111,9 @@ pub struct HaveFnByForallExistUniqueStmt {
 #[derive(Clone)]
 pub struct HaveTupleStmt {
     pub name: String,
+    pub symbol_binding: SymbolBinding,
     pub index_name: String,
+    pub index_binding: SymbolBinding,
     pub dimension: Obj,
     pub value: Obj,
     pub line_file: LineFile,
@@ -120,7 +122,9 @@ pub struct HaveTupleStmt {
 #[derive(Clone)]
 pub struct HaveCartStmt {
     pub name: String,
+    pub symbol_binding: SymbolBinding,
     pub index_name: String,
+    pub index_binding: SymbolBinding,
     pub dimension: Obj,
     pub value: Obj,
     pub line_file: LineFile,
@@ -129,8 +133,10 @@ pub struct HaveCartStmt {
 #[derive(Clone)]
 pub struct HaveSeqStmt {
     pub name: String,
+    pub symbol_binding: SymbolBinding,
     pub seq_set: SeqSet,
     pub index_name: String,
+    pub index_binding: SymbolBinding,
     pub value: Obj,
     pub line_file: LineFile,
 }
@@ -138,8 +144,10 @@ pub struct HaveSeqStmt {
 #[derive(Clone)]
 pub struct HaveFiniteSeqStmt {
     pub name: String,
+    pub symbol_binding: SymbolBinding,
     pub finite_seq_set: FiniteSeqSet,
     pub index_name: String,
+    pub index_binding: SymbolBinding,
     pub bound: Obj,
     pub value: Obj,
     pub line_file: LineFile,
@@ -148,10 +156,13 @@ pub struct HaveFiniteSeqStmt {
 #[derive(Clone)]
 pub struct HaveMatrixStmt {
     pub name: String,
+    pub symbol_binding: SymbolBinding,
     pub matrix_set: MatrixSet,
     pub row_index_name: String,
+    pub row_index_binding: SymbolBinding,
     pub row_bound: Obj,
     pub col_index_name: String,
+    pub col_index_binding: SymbolBinding,
     pub col_bound: Obj,
     pub value: Obj,
     pub line_file: LineFile,
@@ -188,6 +199,7 @@ pub enum TemplateDefEnum {
 #[derive(Clone)]
 pub struct HaveByExistStmt {
     pub equal_tos: Vec<String>,
+    pub equal_to_bindings: Vec<SymbolBinding>,
     pub exist_fact_in_have_obj_st: ExistFactEnum,
     pub line_file: LineFile,
 }
@@ -196,6 +208,7 @@ pub struct HaveByExistStmt {
 #[derive(Clone)]
 pub struct HaveByPreimageStmt {
     pub preimage_names: Vec<String>,
+    pub preimage_bindings: Vec<SymbolBinding>,
     pub range_membership: InFact,
     pub line_file: LineFile,
 }
@@ -403,14 +416,18 @@ impl fmt::Display for HaveObjEqualStmt {
 impl HaveTupleStmt {
     pub fn new(
         name: String,
+        symbol_binding: SymbolBinding,
         index_name: String,
+        index_binding: SymbolBinding,
         dimension: Obj,
         value: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveTupleStmt {
             name,
+            symbol_binding,
             index_name,
+            index_binding,
             dimension,
             value,
             line_file,
@@ -445,14 +462,18 @@ impl fmt::Display for HaveTupleStmt {
 impl HaveCartStmt {
     pub fn new(
         name: String,
+        symbol_binding: SymbolBinding,
         index_name: String,
+        index_binding: SymbolBinding,
         dimension: Obj,
         value: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveCartStmt {
             name,
+            symbol_binding,
             index_name,
+            index_binding,
             dimension,
             value,
             line_file,
@@ -488,15 +509,19 @@ impl fmt::Display for HaveCartStmt {
 impl HaveSeqStmt {
     pub fn new(
         name: String,
+        symbol_binding: SymbolBinding,
         seq_set: SeqSet,
         index_name: String,
+        index_binding: SymbolBinding,
         value: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveSeqStmt {
             name,
+            symbol_binding,
             seq_set,
             index_name,
+            index_binding,
             value,
             line_file,
         }
@@ -529,16 +554,20 @@ impl fmt::Display for HaveSeqStmt {
 impl HaveFiniteSeqStmt {
     pub fn new(
         name: String,
+        symbol_binding: SymbolBinding,
         finite_seq_set: FiniteSeqSet,
         index_name: String,
+        index_binding: SymbolBinding,
         bound: Obj,
         value: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveFiniteSeqStmt {
             name,
+            symbol_binding,
             finite_seq_set,
             index_name,
+            index_binding,
             bound,
             value,
             line_file,
@@ -574,20 +603,26 @@ impl fmt::Display for HaveFiniteSeqStmt {
 impl HaveMatrixStmt {
     pub fn new(
         name: String,
+        symbol_binding: SymbolBinding,
         matrix_set: MatrixSet,
         row_index_name: String,
+        row_index_binding: SymbolBinding,
         row_bound: Obj,
         col_index_name: String,
+        col_index_binding: SymbolBinding,
         col_bound: Obj,
         value: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveMatrixStmt {
             name,
+            symbol_binding,
             matrix_set,
             row_index_name,
+            row_index_binding,
             row_bound,
             col_index_name,
+            col_index_binding,
             col_bound,
             value,
             line_file,
@@ -671,11 +706,13 @@ impl TrustHaveStmt {
 impl HaveByExistStmt {
     pub fn new(
         equal_tos: Vec<String>,
+        equal_to_bindings: Vec<SymbolBinding>,
         exist_fact_in_have_obj_st: ExistFactEnum,
         line_file: LineFile,
     ) -> Self {
         HaveByExistStmt {
             equal_tos,
+            equal_to_bindings,
             exist_fact_in_have_obj_st,
             line_file,
         }
@@ -700,9 +737,15 @@ impl fmt::Display for HaveByExistStmt {
 }
 
 impl HaveByPreimageStmt {
-    pub fn new(preimage_names: Vec<String>, range_membership: InFact, line_file: LineFile) -> Self {
+    pub fn new(
+        preimage_names: Vec<String>,
+        preimage_bindings: Vec<SymbolBinding>,
+        range_membership: InFact,
+        line_file: LineFile,
+    ) -> Self {
         HaveByPreimageStmt {
             preimage_names,
+            preimage_bindings,
             range_membership,
             line_file,
         }
@@ -725,9 +768,15 @@ impl fmt::Display for HaveByPreimageStmt {
 }
 
 impl HaveFnEqualStmt {
-    pub fn new(name: String, equal_to_anonymous_fn: AnonymousFn, line_file: LineFile) -> Self {
+    pub fn new(
+        name: String,
+        symbol_binding: SymbolBinding,
+        equal_to_anonymous_fn: AnonymousFn,
+        line_file: LineFile,
+    ) -> Self {
         HaveFnEqualStmt {
             name,
+            symbol_binding,
             equal_to_anonymous_fn,
             line_file,
         }
@@ -765,12 +814,14 @@ impl fmt::Display for HaveFnEqualStmt {
 impl HaveFnByForallExistUniqueStmt {
     pub fn new(
         fn_name: String,
+        symbol_binding: SymbolBinding,
         forall: ForallFact,
         prove_process: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {
         HaveFnByForallExistUniqueStmt {
             fn_name,
+            symbol_binding,
             forall,
             prove_process,
             line_file,
@@ -950,6 +1001,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 impl HaveFnEqualCaseByCaseStmt {
     pub fn new(
         name: String,
+        symbol_binding: SymbolBinding,
         fn_set_clause: FnSetClause,
         cases: Vec<AndChainAtomicFact>,
         equal_tos: Vec<Obj>,
@@ -957,6 +1009,7 @@ impl HaveFnEqualCaseByCaseStmt {
     ) -> Self {
         HaveFnEqualCaseByCaseStmt {
             name,
+            symbol_binding,
             fn_set_clause,
             cases,
             equal_tos,
@@ -1004,6 +1057,7 @@ impl HaveFnByInducCase {
 impl HaveFnByInducStmt {
     pub fn new(
         name: String,
+        symbol_binding: SymbolBinding,
         fn_set_clause: FnSetClause,
         measure: Obj,
         lower_bound: Obj,
@@ -1012,6 +1066,7 @@ impl HaveFnByInducStmt {
     ) -> Self {
         HaveFnByInducStmt {
             name,
+            symbol_binding,
             fn_set_clause,
             measure,
             lower_bound,
@@ -1032,6 +1087,7 @@ impl HaveFnByInducStmt {
         Self::flatten_case_list(&self.cases, None, &mut cases, &mut equal_tos, &line_file);
         HaveFnEqualCaseByCaseStmt::new(
             self.name.clone(),
+            self.symbol_binding.clone(),
             self.fn_set_clause.clone(),
             cases,
             equal_tos,

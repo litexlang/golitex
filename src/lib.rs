@@ -20,6 +20,7 @@ pub mod result;
 pub mod runner;
 pub mod runtime;
 pub mod stmt;
+pub mod symbol;
 pub mod to_latex;
 pub mod to_lean;
 pub mod to_python;

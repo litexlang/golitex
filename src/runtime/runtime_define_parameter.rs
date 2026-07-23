@@ -4,7 +4,7 @@ impl Runtime {
     /// After `store_identifier_obj`, run param-type-specific work (type facts, storage, and later hooks).
     pub fn define_parameter_by_binding_param_type(
         &mut self,
-        name: &str,
+        binding: &SymbolBinding,
         param_type: &ParamType,
         binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
@@ -13,7 +13,7 @@ impl Runtime {
                 Obj::FiniteSeqSet(fs) => {
                     let fn_set = self.finite_seq_set_to_fn_set(fs, default_line_file());
                     let type_fact = InFact::new(
-                        param_binding_element_obj_for_store(name.to_string(), binding_kind),
+                        param_binding_element_obj_for_store(binding, binding_kind),
                         fn_set.into(),
                         default_line_file(),
                     )
@@ -26,7 +26,7 @@ impl Runtime {
                 Obj::SeqSet(ss) => {
                     let fn_set = self.seq_set_to_fn_set(ss, default_line_file());
                     let type_fact = InFact::new(
-                        param_binding_element_obj_for_store(name.to_string(), binding_kind),
+                        param_binding_element_obj_for_store(binding, binding_kind),
                         fn_set.into(),
                         default_line_file(),
                     )
@@ -38,7 +38,7 @@ impl Runtime {
                 }
                 Obj::MatrixSet(ms) => {
                     let type_fact = InFact::new(
-                        param_binding_element_obj_for_store(name.to_string(), binding_kind),
+                        param_binding_element_obj_for_store(binding, binding_kind),
                         ms.clone().into(),
                         default_line_file(),
                     )
@@ -48,26 +48,26 @@ impl Runtime {
                         InferReason::ParameterDefinition,
                     )
                 }
-                _ => self.define_parameter_by_binding_obj(name, obj, binding_kind),
+                _ => self.define_parameter_by_binding_obj(binding, obj, binding_kind),
             },
-            ParamType::Set(set) => self.define_parameter_by_binding_set(name, set, binding_kind),
+            ParamType::Set(set) => self.define_parameter_by_binding_set(binding, set, binding_kind),
             ParamType::NonemptySet(nonempty_set) => {
-                self.define_parameter_by_binding_nonempty_set(name, nonempty_set, binding_kind)
+                self.define_parameter_by_binding_nonempty_set(binding, nonempty_set, binding_kind)
             }
             ParamType::FiniteSet(finite_set) => {
-                self.define_parameter_by_binding_finite_set(name, finite_set, binding_kind)
+                self.define_parameter_by_binding_finite_set(binding, finite_set, binding_kind)
             }
         }
     }
 
     fn define_parameter_by_binding_obj(
         &mut self,
-        name: &str,
+        binding: &SymbolBinding,
         obj: &Obj,
         binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let type_fact: Fact = InFact::new(
-            param_binding_element_obj_for_store(name.to_string(), binding_kind),
+            param_binding_element_obj_for_store(binding, binding_kind),
             obj.clone(),
             default_line_file(),
         )
@@ -78,7 +78,7 @@ impl Runtime {
                 InferReason::ParameterDefinition,
             )?;
         infer_result.new_infer_result_inside(self.store_param_memberships_in_known_supersets(
-            name,
+            binding,
             binding_kind,
             obj,
             type_fact,
@@ -88,12 +88,12 @@ impl Runtime {
 
     fn define_parameter_by_binding_set(
         &mut self,
-        name: &str,
+        binding: &SymbolBinding,
         _set: &Set,
         binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = IsSetFact::new(
-            param_binding_element_obj_for_store(name.to_string(), binding_kind),
+            param_binding_element_obj_for_store(binding, binding_kind),
             default_line_file(),
         )
         .into();
@@ -105,12 +105,12 @@ impl Runtime {
 
     fn define_parameter_by_binding_nonempty_set(
         &mut self,
-        name: &str,
+        binding: &SymbolBinding,
         _nonempty_set: &NonemptySet,
         binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = IsNonemptySetFact::new(
-            param_binding_element_obj_for_store(name.to_string(), binding_kind),
+            param_binding_element_obj_for_store(binding, binding_kind),
             default_line_file(),
         )
         .into();
@@ -122,12 +122,12 @@ impl Runtime {
 
     fn define_parameter_by_binding_finite_set(
         &mut self,
-        name: &str,
+        binding: &SymbolBinding,
         _finite_set: &FiniteSet,
         binding_kind: ParamObjType,
     ) -> Result<InferResult, RuntimeError> {
         let type_fact = IsFiniteSetFact::new(
-            param_binding_element_obj_for_store(name.to_string(), binding_kind),
+            param_binding_element_obj_for_store(binding, binding_kind),
             default_line_file(),
         )
         .into();
@@ -147,7 +147,7 @@ impl Runtime {
         for param_def in param_defs.groups.iter() {
             self.verify_param_type_well_defined(&param_def.param_type, &VerifyState::new(0, false))
                 .map_err(|well_defined_error| {
-                    let param_names_text = param_def.params.join(", ");
+                    let param_names_text = vec_to_string_join_by_comma(&param_def.params);
                     let error_line_file = well_defined_error.line_file().clone();
                     RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
                 None,
@@ -162,15 +162,16 @@ impl Runtime {
                 })?;
             self.verify_param_type_nonempty_if_required(&param_def.param_type, check_type_nonempty)
                 .map_err(|inner_exec_error| {
-                    let param_names_text = param_def.params.join(", ");
+                    let param_names_text = vec_to_string_join_by_comma(&param_def.params);
                     RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                             "define params with type: nonempty check failed for params [{}] with type {}",
                             param_names_text, param_def.param_type
                         ), inner_exec_error)))
                 })?;
 
-            for name in param_def.params.iter() {
-                self.store_free_param_or_identifier_name(name, binding_kind)
+            for binding in param_def.params.iter() {
+                let name = binding.name();
+                self.store_parameter_binding(binding, binding_kind)
                     .map_err(|runtime_error| {
                         RuntimeError::from(DefineParamsRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_cause(
@@ -184,7 +185,7 @@ impl Runtime {
                     })?;
                 let fact_infer_result = self
                     .define_parameter_by_binding_param_type(
-                        name,
+                        binding,
                         &param_def.param_type,
                         binding_kind,
                     )
@@ -207,9 +208,9 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         for param_def in param_defs.groups.iter() {
-            for name in param_def.params.iter() {
-                self.store_free_param_or_identifier_name(name, binding_kind)?;
-                let param_obj = param_binding_element_obj_for_store(name.to_string(), binding_kind);
+            for binding in param_def.params.iter() {
+                self.store_parameter_binding(binding, binding_kind)?;
+                let param_obj = param_binding_element_obj_for_store(binding, binding_kind);
                 let fact: Fact = match &param_def.param_type {
                     ParamType::Obj(obj) => InFact::new(
                         param_obj,

@@ -587,7 +587,7 @@ impl Runtime {
             return Some(operands);
         }
 
-        let obj_key = obj.to_string();
+        let obj_key = obj_equality_key(obj);
         for env in self.iter_environments_from_top() {
             let Some((_, equal_objs)) = env.known_equality.get(&obj_key) else {
                 continue;

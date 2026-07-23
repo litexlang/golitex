@@ -252,7 +252,7 @@ impl Runtime {
         }
 
         let x_name = self.generate_random_unused_name();
-        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
         let Some(left_inst) =
             self.instantiate_unary_anonymous_summand_at(left_sum.func.as_ref(), &x_obj)?
         else {
@@ -275,7 +275,7 @@ impl Runtime {
             LessEqualFact::new(x_obj, (*left_sum.end).clone(), f.line_file.clone()).into();
         let pointwise_result = self
             .verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-                x_name,
+                x_binding,
                 vec![dom_lo, dom_hi],
                 &pointwise_fact,
                 &verify_state,
@@ -322,7 +322,7 @@ impl Runtime {
         }
 
         let x_name = self.generate_random_unused_name();
-        let x_obj = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Forall);
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
         let Some(left_inst) = self.instantiate_unary_function_at(left_sum.func.as_ref(), &x_obj)?
         else {
             return Ok(None);
@@ -336,7 +336,7 @@ impl Runtime {
             EqualFact::new(right_inst, abs_obj(left_inst), f.line_file.clone()).into();
         let pointwise_result = self.run_in_local_env(|rt| {
             let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![x_name],
+                vec![x_binding],
                 ParamType::Obj(left_sum.set.as_ref().clone()),
             )]);
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;

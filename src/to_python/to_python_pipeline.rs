@@ -474,7 +474,7 @@ impl PythonExtractor {
                 ));
             }
             for param_name in group.params.iter() {
-                validate_python_name(param_name, line_file)?;
+                validate_python_name(param_name.name(), line_file)?;
             }
         }
         if !is_real_set_obj(ret_set) {

@@ -150,8 +150,9 @@ impl Runtime {
         line_file: LineFile,
     ) -> Result<Fact, RuntimeError> {
         let names = self.generate_random_unused_names(2);
-        let x1 = obj_for_bound_param_in_scope(names[0].clone(), ParamObjType::Forall);
-        let x2 = obj_for_bound_param_in_scope(names[1].clone(), ParamObjType::Forall);
+        let params = self.fresh_param_group_with_type(names, ParamType::Obj(domain))?;
+        let x1 = obj_for_bound_param_in_scope(&params.params[0], ParamObjType::Forall);
+        let x2 = obj_for_bound_param_in_scope(&params.params[1], ParamObjType::Forall);
         let Some(fx1) = function_applied_to_one_arg(&function, x1.clone()) else {
             return Err(function_property_application_error(&function, line_file));
         };
@@ -159,10 +160,7 @@ impl Runtime {
             return Err(function_property_application_error(&function, line_file));
         };
         Ok(ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                names,
-                ParamType::Obj(domain),
-            )]),
+            ParamDefWithType::new(vec![params]),
             vec![EqualFact::new(fx1, fx2, line_file.clone()).into()],
             vec![EqualFact::new(x1, x2, line_file.clone()).into()],
             line_file,
@@ -180,24 +178,20 @@ impl Runtime {
         let names = self.generate_random_unused_names(2);
         let y_name = names[0].clone();
         let x_name = names[1].clone();
-        let y = obj_for_bound_param_in_scope(y_name.clone(), ParamObjType::Forall);
-        let x = obj_for_bound_param_in_scope(x_name.clone(), ParamObjType::Exist);
+        let y_group = self.fresh_param_group_with_type(vec![y_name], ParamType::Obj(codomain))?;
+        let x_group = self.fresh_param_group_with_type(vec![x_name], ParamType::Obj(domain))?;
+        let y = obj_for_bound_param_in_scope(&y_group.params[0], ParamObjType::Forall);
+        let x = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Exist);
         let Some(fx) = function_applied_to_one_arg(&function, x) else {
             return Err(function_property_application_error(&function, line_file));
         };
         let exist_body = ExistFactBody::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![x_name],
-                ParamType::Obj(domain),
-            )]),
+            ParamDefWithType::new(vec![x_group]),
             vec![EqualFact::new(y, fx, line_file.clone()).into()],
             line_file.clone(),
         )?;
         Ok(ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![y_name],
-                ParamType::Obj(codomain),
-            )]),
+            ParamDefWithType::new(vec![y_group]),
             vec![],
             vec![ExistFactEnum::ExistFact(exist_body).into()],
             line_file,

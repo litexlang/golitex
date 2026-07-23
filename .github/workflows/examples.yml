@@ -1,16 +1,17 @@
-name: Examples
+name: Litex test suites
 
 on:
   workflow_dispatch:
     inputs:
       suite:
-        description: "Example suite to run"
+        description: "Litex suite to run"
         required: true
         default: run_examples
         type: choice
         options:
           - run_examples
           - run_all
+          - run_all_docs_examples_textbooks
 
 env:
   CARGO_TERM_COLOR: always
@@ -38,6 +39,9 @@ jobs:
           case "${{ inputs.suite }}" in
             run_examples|run_all)
               cargo test "${{ inputs.suite }}" -- --nocapture
+              ;;
+            run_all_docs_examples_textbooks)
+              cargo test "${{ inputs.suite }}" -- --ignored --nocapture
               ;;
             *)
               echo "::error::unknown example suite: ${{ inputs.suite }}"

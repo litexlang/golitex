@@ -10,6 +10,8 @@ impl Runtime {
         if env.defined_abstract_props.contains_key(&name) {
             return Err(name_already_used_error(&name, "abstract_prop"));
         }
+        self.register_declared_symbol(&name, SymbolRole::Predicate)?;
+        let env = self.top_level_env();
         env.defined_def_props.insert(name, def_prop_stmt.clone());
         Ok(())
     }
@@ -26,6 +28,8 @@ impl Runtime {
         if env.defined_def_props.contains_key(&name) {
             return Err(name_already_used_error(&name, "prop"));
         }
+        self.register_declared_symbol(&name, SymbolRole::AbstractPredicate)?;
+        let env = self.top_level_env();
         env.defined_abstract_props
             .insert(name, def_abstract_prop_stmt.clone());
         Ok(())
@@ -50,6 +54,8 @@ impl Runtime {
         if env.defined_structs.contains_key(&name) {
             return Err(name_already_used_error(&name, "struct"));
         }
+        self.register_declared_symbol(&name, SymbolRole::Structure)?;
+        let env = self.top_level_env();
         env.defined_structs.insert(name, def_struct_stmt.clone());
         Ok(())
     }
@@ -63,6 +69,8 @@ impl Runtime {
         if env.defined_templates.contains_key(&name) {
             return Err(name_already_used_error(&name, "template"));
         }
+        self.register_declared_symbol(&name, SymbolRole::Template)?;
+        let env = self.top_level_env();
         env.defined_templates
             .insert(name, def_template_stmt.clone());
         Ok(())
@@ -77,22 +85,24 @@ impl Runtime {
         def_thm_stmt: &DefThmStmt,
         trust_summary: &ProofTrustSummary,
     ) -> Result<(), RuntimeError> {
-        let env = self.top_level_env();
-        for (index, name) in def_thm_stmt.names.iter().enumerate() {
-            if def_thm_stmt.names.iter().skip(index + 1).any(|n| n == name) {
-                return Err(name_already_used_error(name, "thm"));
-            }
-            if env.defined_thm_stmts.contains_key(name) {
-                return Err(name_already_used_error(name, "thm"));
-            }
+        if self
+            .top_level_env()
+            .defined_thm_stmts
+            .contains_key(&def_thm_stmt.name)
+        {
+            return Err(name_already_used_error(&def_thm_stmt.name, "thm"));
         }
-        for name in def_thm_stmt.names.iter() {
-            env.defined_thm_stmts
-                .insert(name.clone(), def_thm_stmt.clone());
-            if !trust_summary.is_empty() {
-                env.defined_thm_trust_summaries
-                    .insert(name.clone(), trust_summary.clone());
-            }
+        let role = match def_thm_stmt.kind {
+            DefThmKind::Theorem => SymbolRole::Theorem,
+            DefThmKind::Axiom => SymbolRole::Axiom,
+        };
+        self.register_declared_symbol(&def_thm_stmt.name, role)?;
+        let env = self.top_level_env();
+        env.defined_thm_stmts
+            .insert(def_thm_stmt.name.clone(), def_thm_stmt.clone());
+        if !trust_summary.is_empty() {
+            env.defined_thm_trust_summaries
+                .insert(def_thm_stmt.name.clone(), trust_summary.clone());
         }
         Ok(())
     }
@@ -101,24 +111,17 @@ impl Runtime {
         &mut self,
         def_strategy_stmt: &DefStrategyStmt,
     ) -> Result<(), RuntimeError> {
+        if self
+            .top_level_env()
+            .defined_strategy_stmts
+            .contains_key(&def_strategy_stmt.name)
+        {
+            return Err(name_already_used_error(&def_strategy_stmt.name, "strategy"));
+        }
+        self.register_declared_symbol(&def_strategy_stmt.name, SymbolRole::Strategy)?;
         let env = self.top_level_env();
-        for (index, name) in def_strategy_stmt.names.iter().enumerate() {
-            if def_strategy_stmt
-                .names
-                .iter()
-                .skip(index + 1)
-                .any(|n| n == name)
-            {
-                return Err(name_already_used_error(name, "strategy"));
-            }
-            if env.defined_strategy_stmts.contains_key(name) {
-                return Err(name_already_used_error(name, "strategy"));
-            }
-        }
-        for name in def_strategy_stmt.names.iter() {
-            env.defined_strategy_stmts
-                .insert(name.clone(), def_strategy_stmt.clone());
-        }
+        env.defined_strategy_stmts
+            .insert(def_strategy_stmt.name.clone(), def_strategy_stmt.clone());
         Ok(())
     }
 
@@ -127,15 +130,45 @@ impl Runtime {
         name: &str,
         kind: ParamObjType,
     ) -> Result<(), RuntimeError> {
-        let env = self.top_level_env();
-        if let Some(existing_kind) = env.defined_identifiers.get(name) {
+        if let Some(existing_kind) = self.top_level_env().defined_identifiers.get(name) {
             return Err(NameAlreadyUsedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
                     "identifier `{}` is already bound in this scope as {:?} (cannot re-bind as {:?})",
                     name, existing_kind, kind
                 )))
             .into());
         }
+        if kind == ParamObjType::Identifier {
+            self.register_declared_symbol(name, SymbolRole::Object)?;
+        }
+        let env = self.top_level_env();
         env.defined_identifiers.insert(name.to_string(), kind);
+        Ok(())
+    }
+
+    pub fn store_parameter_binding(
+        &mut self,
+        binding: &SymbolBinding,
+        kind: ParamObjType,
+    ) -> Result<(), RuntimeError> {
+        let name = binding.name();
+        if let Some(existing_kind) = self.top_level_env().defined_identifiers.get(name) {
+            return Err(
+                NameAlreadyUsedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
+                "identifier `{}` is already bound in this scope as {:?} (cannot re-bind as {:?})",
+                name, existing_kind, kind
+            )))
+                .into(),
+            );
+        }
+        let role = if kind == ParamObjType::Identifier {
+            SymbolRole::Object
+        } else {
+            SymbolRole::Binder
+        };
+        self.register_existing_symbol_binding(binding.clone(), role)?;
+        self.top_level_env()
+            .defined_identifiers
+            .insert(name.to_string(), kind);
         Ok(())
     }
 }

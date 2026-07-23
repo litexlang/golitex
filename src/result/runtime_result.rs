@@ -7,7 +7,6 @@ pub enum StmtResult {
     UnsafeStmt(Box<UnsafeStmtResult>),
     DefObjStmt(Box<DefObjStmtResult>),
     DefPredicateStmt(Box<DefPredicateStmtResult>),
-    DefAliasStmt(Box<DefAliasStmtResult>),
     DefInterfaceStmt(Box<DefInterfaceStmtResult>),
     DefAlgoStmt(NonFactualStmtSuccess),
     DefThmStmt(NonFactualStmtSuccess),
@@ -26,7 +25,6 @@ impl From<NonFactualStmtSuccess> for StmtResult {
             Stmt::DefPredicateStmt(_) => {
                 StmtResult::DefPredicateStmt(Box::new(DefPredicateStmtResult::new(v)))
             }
-            Stmt::DefAliasStmt(_) => StmtResult::DefAliasStmt(Box::new(DefAliasStmtResult::new(v))),
             Stmt::DefInterfaceStmt(_) => {
                 StmtResult::DefInterfaceStmt(Box::new(DefInterfaceStmtResult::new(v)))
             }
@@ -161,7 +159,6 @@ impl StmtResult {
             StmtResult::UnsafeStmt(x) => Some(x.success()),
             StmtResult::DefObjStmt(x) => Some(x.success()),
             StmtResult::DefPredicateStmt(x) => Some(x.success()),
-            StmtResult::DefAliasStmt(x) => Some(x.success()),
             StmtResult::DefInterfaceStmt(x) => Some(x.success()),
             StmtResult::DefAlgoStmt(x)
             | StmtResult::DefThmStmt(x)
@@ -179,7 +176,6 @@ impl StmtResult {
             StmtResult::UnsafeStmt(x) => Some(x.success_mut()),
             StmtResult::DefObjStmt(x) => Some(x.success_mut()),
             StmtResult::DefPredicateStmt(x) => Some(x.success_mut()),
-            StmtResult::DefAliasStmt(x) => Some(x.success_mut()),
             StmtResult::DefInterfaceStmt(x) => Some(x.success_mut()),
             StmtResult::DefAlgoStmt(x)
             | StmtResult::DefThmStmt(x)
@@ -214,7 +210,6 @@ impl StmtResult {
             StmtResult::UnsafeStmt(x) => Some((*x).into_success()),
             StmtResult::DefObjStmt(x) => Some((*x).into_success()),
             StmtResult::DefPredicateStmt(x) => Some((*x).into_success()),
-            StmtResult::DefAliasStmt(x) => Some((*x).into_success()),
             StmtResult::DefInterfaceStmt(x) => Some((*x).into_success()),
             StmtResult::DefAlgoStmt(x)
             | StmtResult::DefThmStmt(x)

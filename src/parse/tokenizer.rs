@@ -526,9 +526,9 @@ mod tests {
         let tokenizer = Tokenizer::new();
         assert_eq!(
             tokenizer
-                .tokenize_line("alias thm 自反等式 <=> self_eq", test_line_file())
+                .tokenize_line("thm 自反等式:", test_line_file())
                 .unwrap(),
-            vec!["alias", "thm", "自反等式", "<=>", "self_eq"]
+            vec!["thm", "自反等式", ":"]
         );
     }
 

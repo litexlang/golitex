@@ -22,11 +22,11 @@ impl Runtime {
         &mut self,
         stmt: &HaveTupleStmt,
     ) -> Result<(), RuntimeError> {
-        self.verify_tuple_or_cart_name_available(stmt.clone().into(), &stmt.name)?;
+        self.verify_tuple_or_cart_name_available(stmt.clone().into(), &stmt.symbol_binding)?;
         self.verify_tuple_or_cart_value_before_defining_name(
             stmt.clone().into(),
             ParamObjType::TupleIndex,
-            &stmt.index_name,
+            &stmt.index_binding,
             &stmt.dimension,
             &stmt.value,
         )
@@ -47,7 +47,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveTupleStmt,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)
+        self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
         let mut infer_result = InferResult::new();
@@ -88,11 +88,11 @@ impl Runtime {
         &mut self,
         stmt: &HaveCartStmt,
     ) -> Result<(), RuntimeError> {
-        self.verify_tuple_or_cart_name_available(stmt.clone().into(), &stmt.name)?;
+        self.verify_tuple_or_cart_name_available(stmt.clone().into(), &stmt.symbol_binding)?;
         self.verify_tuple_or_cart_value_before_defining_name(
             stmt.clone().into(),
             ParamObjType::CartIndex,
-            &stmt.index_name,
+            &stmt.index_binding,
             &stmt.dimension,
             &stmt.value,
         )
@@ -113,7 +113,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveCartStmt,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)
+        self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
         let mut infer_result = InferResult::new();
@@ -157,10 +157,10 @@ impl Runtime {
     fn verify_tuple_or_cart_name_available(
         &mut self,
         stmt: Stmt,
-        name: &str,
+        binding: &SymbolBinding,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(name, ParamObjType::Identifier)
+            rt.store_parameter_binding(binding, ParamObjType::Identifier)
                 .map_err(|e| short_exec_error(stmt, String::new(), Some(e), vec![]))
         })
     }
@@ -212,12 +212,12 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         index_kind: ParamObjType,
-        index_name: &str,
+        index_binding: &SymbolBinding,
         dimension: &Obj,
         value: &Obj,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            let index_params = tuple_or_cart_index_param_def(index_name, dimension.clone());
+            let index_params = tuple_or_cart_index_param_def(index_binding, dimension.clone());
             rt.define_params_with_type(&index_params, true, index_kind)
                 .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
             rt.verify_obj_well_defined_and_store_cache(value, &VerifyState::new(0, false))
@@ -240,8 +240,10 @@ impl Runtime {
         &self,
         stmt: &HaveTupleStmt,
     ) -> Result<ForallFact, RuntimeError> {
-        let (index_names, index_map) =
-            self.fresh_binder_retag_plan(&[stmt.index_name.clone()], ParamObjType::Forall);
+        let (index_names, index_map) = self.fresh_binder_retag_plan_for_bindings(
+            std::slice::from_ref(&stmt.index_binding),
+            ParamObjType::Forall,
+        );
         let index_obj = index_map[&stmt.index_name].clone();
         let value = self.inst_obj(&stmt.value, &index_map, ParamObjType::TupleIndex)?;
         let target = self.declared_identifier_obj(&stmt.name);
@@ -256,8 +258,10 @@ impl Runtime {
     }
 
     fn cart_coordinate_forall_fact(&self, stmt: &HaveCartStmt) -> Result<ForallFact, RuntimeError> {
-        let (index_names, index_map) =
-            self.fresh_binder_retag_plan(&[stmt.index_name.clone()], ParamObjType::Forall);
+        let (index_names, index_map) = self.fresh_binder_retag_plan_for_bindings(
+            std::slice::from_ref(&stmt.index_binding),
+            ParamObjType::Forall,
+        );
         let index_obj = index_map[&stmt.index_name].clone();
         let value = self.inst_obj(&stmt.value, &index_map, ParamObjType::CartIndex)?;
         let target = self.declared_identifier_obj(&stmt.name);
@@ -272,11 +276,14 @@ impl Runtime {
     }
 }
 
-fn tuple_or_cart_index_param_def(index_name: &str, dimension: Obj) -> ParamDefWithType {
+fn tuple_or_cart_index_param_def(
+    index_binding: &SymbolBinding,
+    dimension: Obj,
+) -> ParamDefWithType {
     let one: Obj = Number::new("1".to_string()).into();
     let index_set: Obj = ClosedRange::new(one, dimension).into();
     ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-        vec![index_name.to_string()],
+        vec![index_binding.clone()],
         ParamType::Obj(index_set),
     )])
 }

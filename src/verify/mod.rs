@@ -20,6 +20,7 @@ mod verify_forall_fact;
 mod verify_forall_fact_with_iff;
 mod verify_function_properties_builtin;
 mod verify_helper;
+pub(crate) use verify_helper::nested_obj_binder_normalized_fact_key;
 mod verify_known_atomic_facts;
 mod verify_non_equational_atomic_fact;
 mod verify_not_forall_fact;

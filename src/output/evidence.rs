@@ -195,8 +195,8 @@ fn forall_local_assumption_source(
 
 fn forall_param_type_assumption_facts(param_defs: &ParamDefWithType) -> Vec<Fact> {
     let mut facts = Vec::new();
-    for (name, param_type) in param_defs.collect_param_names_with_types() {
-        let param_obj = param_binding_element_obj_for_store(name, ParamObjType::Forall);
+    for (binding, param_type) in param_defs.collect_param_bindings_with_types() {
+        let param_obj = param_binding_element_obj_for_store(&binding, ParamObjType::Forall);
         let fact = match param_type {
             ParamType::Obj(obj) => InFact::new(param_obj, obj, default_line_file()).into(),
             ParamType::Set(_) => IsSetFact::new(param_obj, default_line_file()).into(),

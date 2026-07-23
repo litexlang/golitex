@@ -22,7 +22,7 @@ pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
 }
 
 /// Extra map keys so `FnObj` well-defined lookup (`Identifier` head) finds entries
-/// registered under tagged free-param display (e.g. `~1a` vs `a`).
+/// registered under exact bound-symbol identity rather than display spelling.
 fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
     match element {
         Obj::Atom(AtomObj::Forall(p)) => vec![p.name.clone()],
@@ -191,7 +191,11 @@ impl Runtime {
         set_builder: &SetBuilder,
     ) -> Result<InferResult, RuntimeError> {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        param_to_arg_map.insert(set_builder.param.clone(), in_fact.element.clone());
+        insert_symbol_substitution(
+            &mut param_to_arg_map,
+            &set_builder.param_binding,
+            in_fact.element.clone(),
+        );
 
         let element_in_param_set_fact = InFact::new(
             in_fact.element.clone(),
@@ -298,12 +302,14 @@ impl Runtime {
         );
 
         let index_name = self.generate_random_unused_name();
-        let index_obj = obj_for_bound_param_in_scope(index_name.clone(), ParamObjType::Forall);
         let index_set: Obj = ClosedRange::new(
             Number::new("1".to_string()).into(),
             CartDim::new(in_fact.set.clone()).into(),
         )
         .into();
+        let index_group =
+            self.fresh_param_group_with_type(vec![index_name], ParamType::Obj(index_set))?;
+        let index_obj = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Forall);
         let coordinate_fact: AtomicFact = InFact::new(
             ObjAtIndex::new(in_fact.element.clone(), index_obj.clone()).into(),
             Proj::new(in_fact.set.clone(), index_obj).into(),
@@ -311,10 +317,7 @@ impl Runtime {
         )
         .into();
         let coordinate_forall_fact: Fact = ForallFact::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![index_name],
-                ParamType::Obj(index_set),
-            )]),
+            ParamDefWithType::new(vec![index_group]),
             vec![],
             vec![coordinate_fact.into()],
             in_fact.line_file.clone(),
@@ -598,21 +601,32 @@ impl Runtime {
                 let field_access_element = match &in_fact.element {
                     Obj::Atom(AtomObj::Identifier(identifier)) => self
                         .current_parse_namespace()
-                        .map(|module_name| {
-                            IdentifierWithMod::new(module_name.to_string(), identifier.name.clone())
-                                .into()
+                        .map(|module_name| match identifier.symbol.clone() {
+                            Some(symbol) => IdentifierWithMod::new_bound(
+                                module_name.to_string(),
+                                identifier.name.clone(),
+                                symbol,
+                            )
+                            .into(),
+                            None => IdentifierWithMod::new(
+                                module_name.to_string(),
+                                identifier.name.clone(),
+                            )
+                            .into(),
                         })
                         .unwrap_or_else(|| in_fact.element.clone()),
                     _ => in_fact.element.clone(),
                 };
-                for (index, (field_name, _)) in def.fields.iter().enumerate() {
+                for (index, (field_binding, (field_name, _))) in
+                    def.field_bindings.iter().zip(def.fields.iter()).enumerate()
+                {
                     let field_access: Obj = ObjAsStructInstanceWithFieldAccess::new(
                         struct_obj.clone(),
                         field_access_element.clone(),
                         field_name.clone(),
                     )
                     .into();
-                    field_map.insert(field_name.clone(), field_access.clone());
+                    insert_symbol_substitution(&mut field_map, field_binding, field_access.clone());
 
                     let field_in_type: Fact = InFact::new(
                         field_access,
@@ -635,7 +649,11 @@ impl Runtime {
                         )
                         .into(),
                     };
-                    projection_field_map.insert(field_name.clone(), projected_field.clone());
+                    insert_symbol_substitution(
+                        &mut projection_field_map,
+                        field_binding,
+                        projected_field.clone(),
+                    );
                     let projected_field_in_type: Fact = InFact::new(
                         projected_field,
                         field_types[index].clone(),
@@ -924,9 +942,14 @@ impl Runtime {
             return Ok(None);
         }
 
-        let preimage_objs: Vec<Obj> = param_names
+        let generated_names = param_names
             .iter()
-            .map(|name| obj_for_bound_param_in_scope(name.clone(), ParamObjType::Exist))
+            .map(|_| self.generate_internal_binder_name())
+            .collect::<Vec<_>>();
+        let preimage_bindings = self.allocate_local_symbol_bindings(&generated_names)?;
+        let preimage_objs: Vec<Obj> = preimage_bindings
+            .iter()
+            .map(|binding| obj_for_bound_param_in_scope(binding, ParamObjType::Exist))
             .collect();
         let instantiated_param_sets = self.inst_param_def_with_set_one_by_one(
             &body.params_def_with_set,
@@ -935,15 +958,18 @@ impl Runtime {
         )?;
 
         let mut param_groups = Vec::with_capacity(body.params_def_with_set.len());
+        let mut binding_offset = 0;
         for (param_def, param_set) in body
             .params_def_with_set
             .iter()
             .zip(instantiated_param_sets.iter())
         {
+            let next_offset = binding_offset + param_def.params.len();
             param_groups.push(ParamGroupWithParamType::new(
-                param_def.params.clone(),
+                preimage_bindings[binding_offset..next_offset].to_vec(),
                 ParamType::Obj(param_set.clone()),
             ));
+            binding_offset = next_offset;
         }
 
         let param_to_obj_map = body
@@ -987,7 +1013,11 @@ impl Runtime {
         big_union: &BigUnion,
     ) -> Result<InferResult, RuntimeError> {
         let member_name = self.generate_internal_binder_name();
-        let member_obj = obj_for_bound_param_in_scope(member_name.clone(), ParamObjType::Exist);
+        let member_group = self.fresh_param_group_with_type(
+            vec![member_name],
+            ParamType::Obj(big_union.left.as_ref().clone()),
+        )?;
+        let member_obj = obj_for_bound_param_in_scope(&member_group.params[0], ParamObjType::Exist);
         let element_in_member: AtomicFact = InFact::new(
             in_fact.element.clone(),
             member_obj,
@@ -995,10 +1025,7 @@ impl Runtime {
         )
         .into();
         let exist_body = ExistFactBody::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![member_name],
-                ParamType::Obj(big_union.left.as_ref().clone()),
-            )]),
+            ParamDefWithType::new(vec![member_group]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
         )?;
@@ -1017,7 +1044,12 @@ impl Runtime {
         replacement: &Replacement,
     ) -> Result<InferResult, RuntimeError> {
         let preimage_name = self.generate_internal_binder_name();
-        let preimage_obj = obj_for_bound_param_in_scope(preimage_name.clone(), ParamObjType::Exist);
+        let preimage_group = self.fresh_param_group_with_type(
+            vec![preimage_name],
+            ParamType::Obj(replacement.source_set.as_ref().clone()),
+        )?;
+        let preimage_obj =
+            obj_for_bound_param_in_scope(&preimage_group.params[0], ParamObjType::Exist);
         let relation_fact: AtomicFact = NormalAtomicFact::new(
             replacement.prop_name.clone(),
             vec![preimage_obj, in_fact.element.clone()],
@@ -1025,10 +1057,7 @@ impl Runtime {
         )
         .into();
         let exist_body = ExistFactBody::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![preimage_name],
-                ParamType::Obj(replacement.source_set.as_ref().clone()),
-            )]),
+            ParamDefWithType::new(vec![preimage_group]),
             vec![relation_fact.into()],
             in_fact.line_file.clone(),
         )?;

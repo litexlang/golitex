@@ -8,6 +8,7 @@ use std::fmt;
 pub struct DefAlgoStmt {
     pub name: String,
     pub params: Vec<String>,
+    pub param_bindings: Vec<SymbolBinding>,
     pub default_return: Option<AlgoReturn>,
     pub cases: Vec<AlgoCase>,
     pub line_file: LineFile,
@@ -35,6 +36,7 @@ impl DefAlgoStmt {
     pub fn new(
         name: String,
         params: Vec<String>,
+        param_bindings: Vec<SymbolBinding>,
         cases: Vec<AlgoCase>,
         default_return: Option<AlgoReturn>,
         line_file: LineFile,
@@ -42,6 +44,7 @@ impl DefAlgoStmt {
         DefAlgoStmt {
             name,
             params,
+            param_bindings,
             default_return,
             cases,
             line_file,

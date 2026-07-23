@@ -701,8 +701,12 @@ trust d = 1 / (2 / 3 * 4)
         run_output
     );
 
+    let a_key = runtime.declared_identifier_obj("a").to_string();
+    let b_key = runtime.declared_identifier_obj("b").to_string();
+    let c_key = runtime.declared_identifier_obj("c").to_string();
+    let d_key = runtime.declared_identifier_obj("d").to_string();
     let env = &runtime.current_module().main_environment;
-    match env.known_obj_values.get("a") {
+    match env.known_obj_values.get(&a_key) {
         Some(KnownObjValue::SimplifiedFraction(div)) => {
             assert_eq!(div.left.to_string(), "1");
             assert_eq!(div.right.to_string(), "6");
@@ -712,7 +716,7 @@ trust d = 1 / (2 / 3 * 4)
             other.map(|_| "other value")
         ),
     }
-    match env.known_obj_values.get("b") {
+    match env.known_obj_values.get(&b_key) {
         Some(KnownObjValue::SimplifiedNumber(number)) => {
             assert_eq!(number.normalized_value, "0.5");
         }
@@ -721,7 +725,7 @@ trust d = 1 / (2 / 3 * 4)
             other.map(|_| "other value")
         ),
     }
-    match env.known_obj_values.get("c") {
+    match env.known_obj_values.get(&c_key) {
         Some(KnownObjValue::SimplifiedFraction(div)) => {
             assert_eq!(div.left.to_string(), "-1");
             assert_eq!(div.right.to_string(), "3");
@@ -731,7 +735,7 @@ trust d = 1 / (2 / 3 * 4)
             other.map(|_| "other value")
         ),
     }
-    match env.known_obj_values.get("d") {
+    match env.known_obj_values.get(&d_key) {
         Some(KnownObjValue::SimplifiedNumber(number)) => {
             assert_eq!(number.normalized_value, "0.375");
         }
@@ -953,6 +957,33 @@ trust S != 0
             !non_real_succeeded,
             "a non-real base must not use strict even-power positivity:\n{}",
             non_real_output
+        );
+    });
+}
+
+#[test]
+fn even_power_order_chain_implies_absolute_value_order() {
+    run_with_large_stack("even_power_order_chain_implies_absolute_value_order", || {
+        let source_code = r#"
+forall x, y R:
+    x^2 + y^2 <= 4
+    =>:
+        (x + y)^2 <= (x + y)^2 + (x - y)^2 = 2 * (x^2 + y^2) <= 2 * 4 = 8 <= 9 = 3^2
+        (x + y)^2 <= 3^2
+        abs(x + y) <= abs(3)
+"#;
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            "even_power_order_chain_implies_absolute_value_order",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "a stored even-power inequality should compare absolute values:\n{}",
+            run_output
         );
     });
 }

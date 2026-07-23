@@ -24,18 +24,6 @@ impl From<DefAbstractPropStmt> for Stmt {
     }
 }
 
-impl From<AliasPropStmt> for Stmt {
-    fn from(v: AliasPropStmt) -> Self {
-        DefAliasStmt::AliasPropStmt(v).into()
-    }
-}
-
-impl From<AliasThmStmt> for Stmt {
-    fn from(v: AliasThmStmt) -> Self {
-        DefAliasStmt::AliasThmStmt(v).into()
-    }
-}
-
 impl From<HaveObjInNonemptySetOrParamTypeStmt> for Stmt {
     fn from(v: HaveObjInNonemptySetOrParamTypeStmt) -> Self {
         DefObjStmt::HaveObjInNonemptySetStmt(v).into()
@@ -339,12 +327,6 @@ impl From<DefObjStmt> for Stmt {
 impl From<DefPredicateStmt> for Stmt {
     fn from(v: DefPredicateStmt) -> Self {
         Stmt::DefPredicateStmt(v)
-    }
-}
-
-impl From<DefAliasStmt> for Stmt {
-    fn from(v: DefAliasStmt) -> Self {
-        Stmt::DefAliasStmt(v)
     }
 }
 

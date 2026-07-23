@@ -134,7 +134,7 @@ fn function_space_membership_freshens_generated_pointwise_binder() {
         || {
             let invalid_source_code = r#"
 claim:
-    ? forall x R, f fn(x R) R:
+    ? forall x R, f fn(t R) R:
         f(x) = 0
         =>:
             f $in fn(x R) {0}
@@ -165,14 +165,14 @@ claim:
 
             let valid_source_code = r#"
 claim:
-    ? forall x R, f fn(x R) R:
+    ? forall x R, f fn(t R) R:
         forall y R:
             f(y) $in {y}
         =>:
-            f $in fn(x R) {x}
+            f $in fn(z R) {z}
     forall y R:
         f(y) $in {y}
-    f $in fn(x R) {x}
+    f $in fn(z R) {z}
 "#;
 
             let mut valid_runtime = Runtime::new();
@@ -338,12 +338,12 @@ have fn piece(x '[1, 3]) R by cases:
 
 claim:
     ? forall x '[1, 2):
-        fn(x '[1, 2)) R {piece(x)}(x) = fn(x '[1, 2)) R {x^2}(x)
+        fn(y '[1, 2)) R {piece(y)}(x) = fn(y '[1, 2)) R {y^2}(x)
     x < 2
     piece(x) = x^2
-    fn(x '[1, 2)) R {piece(x)}(x) = piece(x)
-    fn(x '[1, 2)) R {x^2}(x) = x^2
-    fn(x '[1, 2)) R {piece(x)}(x) = fn(x '[1, 2)) R {x^2}(x)
+    fn(y '[1, 2)) R {piece(y)}(x) = piece(x)
+    fn(y '[1, 2)) R {y^2}(x) = x^2
+    fn(y '[1, 2)) R {piece(y)}(x) = fn(y '[1, 2)) R {y^2}(x)
 "#;
 
             let mut runtime = Runtime::new();
@@ -1120,6 +1120,41 @@ by contra not $injective({1, 2}, {0}, constant):
 }
 
 #[test]
+fn known_forall_matches_alpha_equivalent_set_builder_binders() {
+    run_with_large_stack(
+        "known_forall_matches_alpha_equivalent_set_builder_binders",
+        || {
+            let source_code = r#"
+abstract_prop p(a, b)
+abstract_prop q(a, b)
+
+forall:
+    forall a, b R:
+        $p(a, {x R: $p(x, b)})
+        $q(1, {x R: $q(a + b, x)})
+    =>:
+        $p(1, {y R: $p(y, 2)})
+        $q(1, {z R: $q(1 + 2, z)})
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "known_forall_matches_alpha_equivalent_set_builder_binders",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "set-builder binder spelling and identity should be alpha-equivalent:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn finite_source_function_property_rules() {
     run_with_large_stack("finite_source_function_property_rules", || {
         let source_code = r#"
@@ -1758,7 +1793,7 @@ witness exist S, T set st {$all_p(S), $p(1, T)} from N, {}:
 }
 
 #[test]
-fn known_forall_distinguishes_same_name_forall_and_exist_bindings() {
+fn parser_rejects_same_name_forall_and_exist_bindings_while_both_are_active() {
     let source_code = r#"
 abstract_prop p(x)
 have S set
@@ -1772,15 +1807,20 @@ exist y S st {$p(y)}
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "known_forall_distinguishes_same_name_forall_and_exist_bindings",
+        "parser_rejects_same_name_forall_and_exist_bindings_while_both_are_active",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
-        run_succeeded,
-        "same spelling in different binder kinds must not collide:\n{}",
+        !run_succeeded,
+        "different binder kinds must not reuse an active spelling:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("name `x` is already active in this scope"),
+        "the parser should identify the active-name collision:\n{}",
         run_output
     );
 }

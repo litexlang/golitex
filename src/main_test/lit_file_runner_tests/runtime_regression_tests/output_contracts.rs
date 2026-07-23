@@ -182,10 +182,10 @@ fn run_summary_counts_direct_unproved_interfaces() {
         let source_code = r#"
 1 = 1
 trust 1 = 0
-trust have x R
-abstract_prop summary_prop(x)
-prop summary_concrete_prop(x R):
-    x = x
+trust have assumed_value R
+abstract_prop summary_prop(p)
+prop summary_concrete_prop(q R):
+    q = q
 axiom summary_axiom:
     ? forall y R:
         y = y
@@ -366,7 +366,11 @@ thm theorem_trace_self_eq:
                 run_output
             );
             assert!(run_output.contains("\"type\": \"theorem proof\""));
-            assert!(run_output.contains("\"theorem_trace_self_eq\""));
+            assert!(
+                run_output.contains("\"theorem_trace_self_eq\""),
+                "the theorem proof should expose its public name:\n{}",
+                run_output
+            );
             assert!(run_output.contains("\"parameters\": ["));
             assert!(run_output.contains("\"x\""));
             assert!(run_output.contains("\"assumptions\": ["));
@@ -2114,7 +2118,11 @@ by extension {1} = {1}
             assert!(run_output.contains("\"type\": \"by extension proof\""));
             assert!(run_output.contains("\"statement\": \"n < 3\""));
             assert!(run_output.contains("\"rule\": \"number comparison\""));
-            assert!(!run_output.contains("\"parameter_type_check\": {"));
+            assert!(
+                run_output.contains("\"parameter_type_check\": {"),
+                "normal by-thm output should keep its readable argument check:\n{}",
+                run_output
+            );
             assert!(!run_output.contains("\"assignments\": ["));
             assert!(!run_output.contains("\"subset_checks\": ["));
             assert!(
@@ -2384,7 +2392,7 @@ forall x R:
     assert!(run_output.contains("\"params\": ["));
     assert!(run_output.contains("\"name\": \"x\""));
     assert!(run_output.contains("\"failed_prove\": {"));
-    assert!(run_output.contains("\"statement\": \"~1x = 0\""));
+    assert!(run_output.contains("\"statement\": \"x = 0\""));
     assert!(!run_output.contains("\"index\": 1"));
     assert!(!run_output.contains("\"count\": 1"));
     assert!(
@@ -2416,7 +2424,7 @@ forall x R:
     assert!(run_output.contains("\"failed_prove\": {"));
     assert!(run_output.contains("\"type\": \"chain fact unknown\""));
     assert!(run_output.contains("\"failed_chain_step\": {"));
-    assert!(run_output.contains("\"statement\": \"~1x = 0\""));
+    assert!(run_output.contains("\"statement\": \"x = 0\""));
     assert!(!run_output.contains("\"index\": 1"));
     assert!(!run_output.contains("\"count\": 2"));
     assert!(!run_output.contains("unverified chain step"));

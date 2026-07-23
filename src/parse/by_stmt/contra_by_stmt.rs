@@ -114,22 +114,26 @@ impl Runtime {
 
         let proof_hi = n.saturating_sub(1);
         let proof_lo = if inline_goal { 0 } else { 1 };
-        let mut proof = Vec::new();
-        if proof_lo < proof_hi {
-            for block in tb.body[proof_lo..proof_hi].iter_mut() {
-                proof.push(self.parse_stmt(block)?);
-            }
-        }
-        let mut last_block = tb.body.last_mut().ok_or_else(|| {
-            RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "Expected body".to_string(),
-                    tb.line_file.clone(),
-                ),
-            ))
-        })?;
-        last_block.skip_token(IMPOSSIBLE)?;
-        let impossible_fact = self.parse_atomic_fact(&mut last_block, true)?;
+        let (proof, impossible_fact) =
+            self.run_in_local_proof_parsing_scope(|this| -> Result<_, RuntimeError> {
+                let mut proof = Vec::new();
+                if proof_lo < proof_hi {
+                    for block in tb.body[proof_lo..proof_hi].iter_mut() {
+                        proof.push(this.parse_stmt(block)?);
+                    }
+                }
+                let last_block = tb.body.last_mut().ok_or_else(|| {
+                    RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "Expected body".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    ))
+                })?;
+                last_block.skip_token(IMPOSSIBLE)?;
+                let impossible_fact = this.parse_atomic_fact(last_block, true)?;
+                Ok((proof, impossible_fact))
+            })?;
         Ok(ByContraStmt::new(to_prove, proof, impossible_fact, tb.line_file.clone()).into())
     }
 }

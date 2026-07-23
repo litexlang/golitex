@@ -4,10 +4,9 @@ use super::*;
 fn by_def_strictly_checks_and_stores_a_concrete_prop() {
     run_with_large_stack("by_def_strict_success", || {
         let source_code = r#"
-prop is_unit_pair(x R, y R):
+prop unit_pair(x R, y R):
     x = 1
     y = 1
-alias prop unit_pair <=> is_unit_pair
 
 1 = 1
 by def $unit_pair(1, 1)
@@ -174,6 +173,81 @@ fn by_def_reports_argument_count_and_type_failures() {
 }
 
 #[test]
+fn prop_definition_instantiation_freshens_a_caller_name_collision() {
+    run_with_large_stack("prop_definition_binder_freshening", || {
+        let source_code = r#"
+prop holds_for_all(n N):
+    forall s set:
+        n = n
+
+forall s set, n N:
+    $holds_for_all(n)
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("prop_definition_binder_freshening");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "a stored definition binder should be freshened at the call site:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("$holds_for_all(n)"));
+    });
+}
+
+#[test]
+fn obtain_from_exist_preserves_the_existential_binder_identity() {
+    run_with_large_stack("obtain_existential_binder_identity", || {
+        let source_code = r#"
+by contra:
+    ? not exist x R st {x != x}
+    obtain a from exist x R st {x != x}
+    impossible a = a
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("obtain_existential_binder_identity");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "existential elimination should release the instantiated body fact:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn known_set_equality_transports_across_alpha_equivalent_set_builders() {
+    run_with_large_stack("set_builder_equality_alpha_transport", || {
+        let source_code = r#"
+by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
+    2 $in {b N: b % 2 = 0}
+    2 $in {c N: c % 4 = 0}
+    impossible 2 % 4 = 0
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("set_builder_equality_alpha_transport");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "known equality should transport membership through alpha-equivalent binders:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
 fn positive_real_power_closure_enables_log_inverse() {
     let source_code = r#"
 forall a R_pos, x R:
@@ -233,29 +307,51 @@ forall a, b R_pos, c R:
 }
 
 #[test]
-fn definition_namespaces_allow_same_spelling_across_kinds() {
+fn definition_namespaces_reject_same_spelling_across_kinds() {
     run_with_large_stack(
-        "definition_namespaces_allow_same_spelling_across_kinds",
-        definition_namespaces_allow_same_spelling_across_kinds_impl,
+        "definition_namespaces_reject_same_spelling_across_kinds",
+        definition_namespaces_reject_same_spelling_across_kinds_impl,
     );
 }
 
-fn definition_namespaces_allow_same_spelling_across_kinds_impl() {
+fn definition_namespaces_reject_same_spelling_across_kinds_impl() {
     let source_code = r#"
 have fn SharedName(x R) R = 1
 have algo for SharedName(x):
     1
 prop SharedName(x R)
-struct SharedName:
-    value R
-    other R
-template<s set>:
-    have SharedName set = s
 "#;
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "definition_namespaces_allow_same_spelling_across_kinds",
+        "definition_namespaces_reject_same_spelling_across_kinds",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "same spelling across declaration kinds should fail:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("NameAlreadyUsedError"));
+    assert!(run_output.contains("name `SharedName` is already used"));
+}
+
+#[test]
+fn completed_binder_scope_releases_its_spelling_for_a_global_declaration() {
+    let source_code = r#"
+forall x R:
+    x = x
+
+have x R = 1
+x = 1
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "completed_binder_scope_releases_its_spelling_for_a_global_declaration",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -263,7 +359,76 @@ template<s set>:
 
     assert!(
         run_succeeded,
-        "same spelling across independent definition namespaces failed:\n{}",
+        "a completed binder scope should release its spelling:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn local_binder_cannot_shadow_a_visible_global_symbol() {
+    let source_code = r#"
+have x R = 1
+forall x R:
+    x = x
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime
+        .new_file_path_new_env_new_name_scope("local_binder_cannot_shadow_a_visible_global_symbol");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "a local binder must not shadow a visible global:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("name `x` is already active"));
+}
+
+#[test]
+fn nested_binders_cannot_reuse_a_spelling_across_binder_forms() {
+    let source_code = r#"
+forall x R:
+    exist x R st {x = x}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "nested_binders_cannot_reuse_a_spelling_across_binder_forms",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "nested binders must not reuse a spelling:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("name `x` is already active"));
+}
+
+#[test]
+fn sibling_binder_scopes_can_reuse_a_spelling() {
+    let source_code = r#"
+forall x R:
+    x = x
+
+forall x R:
+    x = x
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("sibling_binder_scopes_can_reuse_a_spelling");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "sibling scopes should be allowed to reuse a spelling:\n{}",
         run_output
     );
 }
@@ -320,8 +485,8 @@ fn duplicate_definition_names_fail_in_their_namespace_impl() {
             label, run_output
         );
         assert!(
-            run_output.contains("NameAlreadyUsedError"),
-            "duplicate {} definition should report NameAlreadyUsedError:\n{}",
+            run_output.contains("already used") || run_output.contains("already active"),
+            "duplicate {} definition should report the unified-name collision:\n{}",
             label,
             run_output
         );
@@ -329,84 +494,64 @@ fn duplicate_definition_names_fail_in_their_namespace_impl() {
 }
 
 #[test]
-fn alias_prop_copies_existing_prop_definition() {
+fn alias_is_available_as_an_identifier_name() {
+    let source_code = r#"
+have alias R = 1
+alias = 1
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("alias_is_available_as_an_identifier_name");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "`alias` should be available as an identifier name:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn removed_alias_statement_is_rejected() {
     let source_code = r#"
 prop is_one(x R):
     x = 1
 alias prop one_prop <=> is_one
-$one_prop(1)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("alias_prop_copies_existing_prop_definition");
+    runtime.new_file_path_new_env_new_name_scope("removed_alias_statement_is_rejected");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
-        run_succeeded,
-        "alias prop should copy and store the target prop definition:\n{}",
+        !run_succeeded,
+        "removed alias syntax should fail:\n{}",
         run_output
     );
-    assert!(runtime.get_prop_definition_by_name("one_prop").is_some());
 }
 
 #[test]
-fn alias_thm_copies_existing_theorem_definition() {
-    let source_code = r#"
-thm one_eq_one:
-    ? forall x R:
-        x = 1
-        =>:
-            x = 1
-alias thm same_one <=> one_eq_one
-1 = 1
-by thm same_one(1)
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("alias_thm_copies_existing_theorem_definition");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        run_succeeded,
-        "alias thm should copy and store the target theorem:\n{}",
-        run_output
-    );
-    assert!(runtime.get_thm_definition_by_name("same_one").is_some());
-}
-
-#[test]
-fn unicode_alias_prop_name_works() {
-    run_with_large_stack("unicode_alias_prop_name_works", || {
+fn unicode_prop_name_works() {
+    run_with_large_stack("unicode_prop_name_works", || {
         let source_code = r#"
-prop is_one(x R):
+prop 是一(x R):
     x = 1
-alias prop 是一 <=> is_one
 $是一(1)
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("unicode_alias_prop_name_works");
+        runtime.new_file_path_new_env_new_name_scope("unicode_prop_name_works");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(
             run_succeeded,
-            "unicode alias prop names should work:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("alias prop 是一 <=> is_one"),
-            "output should include the Chinese prop alias statement:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("$是一(1)"),
-            "output should include use of the Chinese prop alias:\n{}",
+            "unicode prop names should work:\n{}",
             run_output
         );
     });
@@ -435,64 +580,49 @@ have 甲 R = 1
 }
 
 #[test]
-fn unicode_alias_thm_name_works() {
-    run_with_large_stack("unicode_alias_thm_name_works", || {
+fn unicode_thm_name_works() {
+    run_with_large_stack("unicode_thm_name_works", || {
         let source_code = r#"
-thm self_eq_en:
+thm 自反等式:
     ? forall x R:
         x = x
     x = x
-alias thm 自反等式 <=> self_eq_en
 by thm 自反等式(1)
 "#;
 
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("unicode_alias_thm_name_works");
+        runtime.new_file_path_new_env_new_name_scope("unicode_thm_name_works");
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
         assert!(
             run_succeeded,
-            "unicode alias theorem names should work:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("alias thm 自反等式 <=> self_eq_en"),
-            "output should include the Chinese theorem alias statement:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("by thm 自反等式(1)"),
-            "output should include use of the Chinese theorem alias:\n{}",
+            "unicode theorem names should work:\n{}",
             run_output
         );
     });
 }
 
 #[test]
-fn alias_prop_rejects_abstract_prop_target() {
-    let source_code = r#"
-abstract_prop abstract_target(x)
-alias prop concrete_alias <=> abstract_target
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("alias_prop_rejects_abstract_prop_target");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        !run_succeeded,
-        "alias prop should reject abstract_prop targets:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("alias prop only supports concrete prop definitions"),
-        "alias prop abstract target error should explain the restriction:\n{}",
-        run_output
-    );
+fn theorem_axiom_and_strategy_reject_multiple_names() {
+    let cases = [
+        "thm first, second:\n    ? forall x R:\n        x = x\n    x = x",
+        "axiom first, second:\n    ? forall x R:\n        x = x",
+        "strategy first, second:\n    ? forall x R:\n        x = x\n    x = x",
+    ];
+    for source_code in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("multiple_definition_names_rejected");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            !run_succeeded,
+            "multiple declaration names should fail:\n{}",
+            run_output
+        );
+    }
 }
 
 #[test]

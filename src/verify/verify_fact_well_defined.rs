@@ -198,6 +198,14 @@ impl Runtime {
         exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
+        let bindings = exist_fact.params_def_with_type().collect_param_bindings();
+        let rename_map =
+            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::Exist)?;
+        if !rename_map.is_empty() {
+            let renamed = self.alpha_rename_exist_fact(exist_fact, &rename_map)?;
+            return self.verify_exist_fact_well_defined(&renamed, verify_state);
+        }
+
         self.run_in_local_env(|rt| {
             if let Err(e) = rt.define_params_with_type(
                 exist_fact.params_def_with_type(),
@@ -259,6 +267,14 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
+        let bindings = forall_fact.params_def_with_type.collect_param_bindings();
+        let rename_map =
+            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::Forall)?;
+        if !rename_map.is_empty() {
+            let renamed = self.alpha_rename_forall_fact(forall_fact, &rename_map)?;
+            return self.verify_forall_fact_well_defined(&renamed, verify_state);
+        }
+
         self.run_in_local_env(|rt| {
             rt.verify_forall_fact_well_defined_inner(forall_fact, verify_state)
         })

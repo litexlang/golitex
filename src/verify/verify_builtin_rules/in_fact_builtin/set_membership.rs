@@ -235,7 +235,11 @@ impl Runtime {
         big_union: &BigUnion,
     ) -> Result<ExistFactEnum, RuntimeError> {
         let member_name = self.generate_internal_binder_name();
-        let member_obj = obj_for_bound_param_in_scope(member_name.clone(), ParamObjType::Exist);
+        let member_group = self.fresh_param_group_with_type(
+            vec![member_name],
+            ParamType::Obj(big_union.left.as_ref().clone()),
+        )?;
+        let member_obj = obj_for_bound_param_in_scope(&member_group.params[0], ParamObjType::Exist);
         let element_in_member: AtomicFact = InFact::new(
             in_fact.element.clone(),
             member_obj,
@@ -243,10 +247,7 @@ impl Runtime {
         )
         .into();
         let exist_body = ExistFactBody::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![member_name],
-                ParamType::Obj(big_union.left.as_ref().clone()),
-            )]),
+            ParamDefWithType::new(vec![member_group]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
         )?;
@@ -324,7 +325,12 @@ impl Runtime {
         replacement: &Replacement,
     ) -> Result<ExistFactEnum, RuntimeError> {
         let preimage_name = self.generate_internal_binder_name();
-        let preimage_obj = obj_for_bound_param_in_scope(preimage_name.clone(), ParamObjType::Exist);
+        let preimage_group = self.fresh_param_group_with_type(
+            vec![preimage_name],
+            ParamType::Obj(replacement.source_set.as_ref().clone()),
+        )?;
+        let preimage_obj =
+            obj_for_bound_param_in_scope(&preimage_group.params[0], ParamObjType::Exist);
         let relation_fact: AtomicFact = NormalAtomicFact::new(
             replacement.prop_name.clone(),
             vec![preimage_obj, in_fact.element.clone()],
@@ -332,10 +338,7 @@ impl Runtime {
         )
         .into();
         let exist_body = ExistFactBody::new(
-            ParamDefWithType::new(vec![ParamGroupWithParamType::new(
-                vec![preimage_name],
-                ParamType::Obj(replacement.source_set.as_ref().clone()),
-            )]),
+            ParamDefWithType::new(vec![preimage_group]),
             vec![relation_fact.into()],
             in_fact.line_file.clone(),
         )?;
@@ -477,7 +480,7 @@ impl Runtime {
         fn_range: &FnRange,
     ) -> Result<StmtResult, RuntimeError> {
         let head_obj: Obj = fn_obj.head.as_ref().clone().into();
-        if head_obj.to_string() != fn_range.function.to_string() {
+        if !objs_equal_with_nested_binder_alpha_equivalence(&head_obj, &fn_range.function) {
             return Ok((StmtUnknown::new()).into());
         }
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
@@ -640,7 +643,11 @@ impl Runtime {
         step_results.push(element_in_param_set_result);
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
-        param_to_arg_map.insert(set_builder.param.clone(), in_fact.element.clone());
+        insert_symbol_substitution(
+            &mut param_to_arg_map,
+            &set_builder.param_binding,
+            in_fact.element.clone(),
+        );
 
         for fact_in_set_builder in set_builder.facts.iter() {
             let instantiated_fact = self
@@ -745,7 +752,9 @@ impl Runtime {
 
         let mut step_results = vec![cart_result];
         let mut field_map = HashMap::new();
-        for (index, (field_name, _)) in def.fields.iter().enumerate() {
+        for (index, (field_binding, _)) in
+            def.field_bindings.iter().zip(def.fields.iter()).enumerate()
+        {
             let field_obj = match &in_fact.element {
                 Obj::Tuple(tuple) => (*tuple.args[index]).clone(),
                 _ => ObjAtIndex::new(
@@ -754,7 +763,7 @@ impl Runtime {
                 )
                 .into(),
             };
-            field_map.insert(field_name.clone(), field_obj);
+            insert_symbol_substitution(&mut field_map, field_binding, field_obj);
         }
 
         for fact in def.equivalent_facts.iter() {
@@ -825,7 +834,7 @@ impl Runtime {
             _ => return Ok(None),
         };
 
-        if source_set.to_string() == in_fact.set.to_string() {
+        if objs_equal_with_nested_binder_alpha_equivalence(source_set, &in_fact.set) {
             let rule_name = match &in_fact.element {
                 Obj::FiniteSetMax(_) => "finite_set_max: the maximum belongs to its set",
                 Obj::FiniteSetMin(_) => "finite_set_min: the minimum belongs to its set",

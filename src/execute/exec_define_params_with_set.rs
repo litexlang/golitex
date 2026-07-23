@@ -21,7 +21,7 @@ impl Runtime {
         let param_set = param_def.set_obj();
         self.verify_obj_well_defined_and_store_cache(param_set, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                let param_names_text = param_def.params.join(", ");
+                let param_names_text = vec_to_string_join_by_comma(&param_def.params);
                 let error_line_file = well_defined_error.line_file().clone();
                 RuntimeError::from(DefineParamsRuntimeError(RuntimeErrorStruct::new(
                     None,
@@ -36,8 +36,9 @@ impl Runtime {
             })?;
         let mut infer_result = InferResult::new();
         let facts = param_def.facts_for_binding_scope(binding_scope);
-        for (name, fact) in param_def.params.iter().zip(facts.iter()) {
-            self.store_free_param_or_identifier_name(name, binding_scope)
+        for (binding, fact) in param_def.params.iter().zip(facts.iter()) {
+            let name = binding.name();
+            self.store_parameter_binding(binding, binding_scope)
                 .map_err(|runtime_error| {
                     RuntimeError::from(DefineParamsRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -62,7 +63,7 @@ impl Runtime {
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);
             infer_result.new_infer_result_inside(self.store_param_memberships_in_known_supersets(
-                name,
+                binding,
                 binding_scope,
                 param_set,
                 fact.clone(),
@@ -79,8 +80,9 @@ impl Runtime {
         let param_set = param_def.set_obj();
         let mut infer_result = InferResult::new();
         let facts = param_def.facts_for_binding_scope(binding_scope);
-        for (name, fact) in param_def.params.iter().zip(facts.iter()) {
-            self.store_free_param_or_identifier_name(name, binding_scope)
+        for (binding, fact) in param_def.params.iter().zip(facts.iter()) {
+            let name = binding.name();
+            self.store_parameter_binding(binding, binding_scope)
                 .map_err(|runtime_error| {
                     RuntimeError::from(DefineParamsRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -110,7 +112,7 @@ impl Runtime {
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);
             infer_result.new_infer_result_inside(self.store_param_memberships_in_known_supersets(
-                name,
+                binding,
                 binding_scope,
                 param_set,
                 fact.clone(),
@@ -127,7 +129,7 @@ impl Runtime {
     /// facts outside parameter definition.
     pub(crate) fn store_param_memberships_in_known_supersets(
         &mut self,
-        name: &str,
+        binding: &SymbolBinding,
         binding_scope: ParamObjType,
         param_set: &Obj,
         source_fact: Fact,
@@ -197,7 +199,7 @@ impl Runtime {
             }
         }
 
-        let param_obj = param_binding_element_obj_for_store(name.to_string(), binding_scope);
+        let param_obj = param_binding_element_obj_for_store(binding, binding_scope);
         let mut infer_result = InferResult::new();
         for (target_set, target_keys) in target_sets {
             if target_keys

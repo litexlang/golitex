@@ -60,7 +60,7 @@ fn fn_set_clause_latex(clause: &FnSetClause) -> String {
     for g in clause.params_def_with_set.iter() {
         let set = fn_param_group_type_to_latex(g);
         for p in &g.params {
-            slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
+            slots.push(format!(r"{} \in {}", latex_local_ident(p.name()), set));
         }
     }
     let dom = clause
@@ -885,7 +885,7 @@ impl AnonymousFn {
         for g in self.body.params_def_with_set.iter() {
             let set = fn_param_group_type_to_latex(g);
             for p in &g.params {
-                slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
+                slots.push(format!(r"{} \in {}", latex_local_ident(p.name()), set));
             }
         }
         let dom = self
@@ -915,7 +915,7 @@ impl FnSet {
         for g in self.body.params_def_with_set.iter() {
             let set = fn_param_group_type_to_latex(g);
             for p in &g.params {
-                slots.push(format!(r"{} \in {}", latex_local_ident(p), set));
+                slots.push(format!(r"{} \in {}", latex_local_ident(p.name()), set));
             }
         }
         let dom = self
@@ -1666,7 +1666,7 @@ impl ParamGroupWithParamType {
         let names = self
             .params
             .iter()
-            .map(|p| latex_local_ident(p))
+            .map(|p| latex_local_ident(p.name()))
             .collect::<Vec<_>>()
             .join(", ");
         format!(r"{}, {}", names, self.param_type.to_latex_string())
@@ -2119,12 +2119,6 @@ impl Stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveMatrixStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(x)) => x.to_latex_string(),
             Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(x)) => x.to_latex_string(),
-            Stmt::DefAliasStmt(DefAliasStmt::AliasPropStmt(x)) => {
-                latex_texttt_escape(&x.to_string())
-            }
-            Stmt::DefAliasStmt(DefAliasStmt::AliasThmStmt(x)) => {
-                latex_texttt_escape(&x.to_string())
-            }
             Stmt::DefAlgoStmt(x) => x.to_latex_string(),
             Stmt::DefThmStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::DefStrategyStmt(x) => latex_texttt_escape(&x.to_string()),

@@ -76,8 +76,17 @@ impl Runtime {
         let Some(fn_head) = FnObjHead::given_an_atom_return_a_fn_obj_head(element.clone()) else {
             return Ok(None);
         };
-        let (forall_param_names, full_param_to_forall_obj) =
-            self.fresh_binder_retag_plan(&expected_flat_param_names, ParamObjType::Forall);
+        let expected_flat_param_bindings = expected_fn_set
+            .body
+            .params_def_with_set
+            .iter()
+            .flat_map(|group| group.params.iter().cloned())
+            .collect::<Vec<_>>();
+        let (forall_param_names, full_param_to_forall_obj) = self
+            .fresh_binder_retag_plan_for_bindings(
+                &expected_flat_param_bindings,
+                ParamObjType::Forall,
+            );
         let mut active_param_to_forall_obj = HashMap::new();
         let mut forall_param_type_groups = Vec::new();
         let mut name_index = 0;
@@ -93,9 +102,12 @@ impl Runtime {
                 group_forall_names,
                 ParamType::Obj(param_set),
             ));
-            for name in group.params.iter() {
-                active_param_to_forall_obj
-                    .insert(name.clone(), full_param_to_forall_obj[name].clone());
+            for binding in group.params.iter() {
+                insert_symbol_substitution(
+                    &mut active_param_to_forall_obj,
+                    binding,
+                    full_param_to_forall_obj[&binding.substitution_key()].clone(),
+                );
             }
             name_index += group.params.len();
         }
@@ -138,15 +150,23 @@ impl Runtime {
     ) -> Result<bool, RuntimeError> {
         let shared_names =
             self.generate_random_unused_names(Self::collect_fn_param_names(known_fn_body).len());
+        let shared_return_set: Obj = StandardSet::R.into();
         let known_with_expected_return = FnSetBody::new(
             known_fn_body.params_def_with_set.clone(),
             known_fn_body.dom_facts.clone(),
-            (*expected_fn_set.body.ret_set).clone(),
+            shared_return_set.clone(),
+        );
+        let expected_with_shared_return = FnSetBody::new(
+            expected_fn_set.body.params_def_with_set.clone(),
+            expected_fn_set.body.dom_facts.clone(),
+            shared_return_set,
         );
         let known_norm = self
             .fn_set_alpha_renamed_for_display_compare(&known_with_expected_return, &shared_names)?;
-        let expected_norm =
-            self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
+        let expected_norm = self.fn_set_alpha_renamed_for_display_compare(
+            &expected_with_shared_return,
+            &shared_names,
+        )?;
         Ok(known_norm.to_string() == expected_norm.to_string())
     }
 
@@ -170,8 +190,8 @@ impl Runtime {
     fn collect_fn_param_names(body: &FnSetBody) -> Vec<String> {
         let mut out = Vec::new();
         for group in body.params_def_with_set.iter() {
-            for name in group.params.iter() {
-                out.push(name.clone());
+            for binding in group.params.iter() {
+                out.push(binding.name().to_string());
             }
         }
         out
@@ -179,14 +199,14 @@ impl Runtime {
 
     fn build_full_application_arg_groups(
         known_fn_body: &FnSetBody,
-        expected_flat_param_names: &[String],
+        expected_flat_param_names: &[SymbolBinding],
     ) -> Vec<Vec<Box<Obj>>> {
         let mut args = Vec::new();
         let mut index = 0;
         for group in known_fn_body.params_def_with_set.iter() {
             for _ in group.params.iter() {
                 args.push(Box::new(obj_for_bound_param_in_scope(
-                    expected_flat_param_names[index].clone(),
+                    &expected_flat_param_names[index],
                     ParamObjType::Forall,
                 )));
                 index += 1;

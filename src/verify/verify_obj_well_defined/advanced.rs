@@ -44,10 +44,7 @@ impl Runtime {
 
         let family_param_name = self.generate_internal_binder_name();
         let family_fn_set: Obj = FnSet::new(
-            vec![ParamGroupWithSet::new(
-                vec![family_param_name],
-                (*x.index_set).clone(),
-            )],
+            vec![self.fresh_param_group_with_set(vec![family_param_name], (*x.index_set).clone())?],
             vec![],
             (*x.family_set).clone(),
         )?

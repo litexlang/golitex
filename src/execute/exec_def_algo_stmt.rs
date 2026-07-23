@@ -29,8 +29,10 @@ impl Runtime {
                 ));
             }
         };
-        let (_, algo_param_to_forall_obj) =
-            self.fresh_binder_retag_plan(&def_algo_stmt.params, ParamObjType::Forall);
+        let (_, algo_param_to_forall_obj) = self.fresh_binder_retag_plan_for_bindings(
+            &def_algo_stmt.param_bindings,
+            ParamObjType::Forall,
+        );
 
         let (requirement_facts_for_param, algo_param_defs_with_type) = self
             .collect_requirement_facts_and_algo_param_defs(
@@ -123,28 +125,30 @@ impl Runtime {
                 )
             })?;
 
-        let fn_set_param_names = fn_set_with_dom.get_params();
-        if fn_set_param_names.len() != def_algo_stmt.params.len() {
+        let fn_set_param_bindings = fn_set_with_dom.params_def_with_set.collect_param_bindings();
+        if fn_set_param_bindings.len() != def_algo_stmt.param_bindings.len() {
             return Err(
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                     def_algo_stmt,
                     format!(
-                    "algo verify: number of params mismatch (algo params: {}, fn set params: {})",
-                    def_algo_stmt.params.len(),
-                    fn_set_param_names.len()
-                ),
+                        "algo verify: number of params mismatch (algo params: {}, fn set params: {})",
+                        def_algo_stmt.param_bindings.len(),
+                        fn_set_param_bindings.len()
+                    ),
                     None,
                 ),
             );
         }
 
         let mut fn_set_param_name_to_algo_arg_obj: HashMap<String, Obj> = HashMap::new();
-        for (fn_set_param_name, algo_param_name) in
-            fn_set_param_names.iter().zip(def_algo_stmt.params.iter())
+        for (fn_set_param_binding, algo_param_binding) in fn_set_param_bindings
+            .iter()
+            .zip(def_algo_stmt.param_bindings.iter())
         {
-            fn_set_param_name_to_algo_arg_obj.insert(
-                fn_set_param_name.clone(),
-                algo_param_to_forall_obj[algo_param_name].clone(),
+            insert_symbol_substitution(
+                &mut fn_set_param_name_to_algo_arg_obj,
+                fn_set_param_binding,
+                algo_param_to_forall_obj[&algo_param_binding.substitution_key()].clone(),
             );
         }
 
@@ -156,7 +160,8 @@ impl Runtime {
         for param_def_with_set in fn_set_with_dom.params_def_with_set.iter() {
             let mut mapped_param_names: Vec<String> =
                 Vec::with_capacity(param_def_with_set.params.len());
-            for fn_set_param_name in param_def_with_set.params.iter() {
+            for fn_set_param_binding in param_def_with_set.params.iter() {
+                let fn_set_param_name = fn_set_param_binding.name();
                 match fn_set_param_name_to_algo_arg_obj.get(fn_set_param_name) {
                     Some(Obj::Atom(AtomObj::Identifier(identifier))) => {
                         mapped_param_names.push(identifier.name.clone());
@@ -192,13 +197,14 @@ impl Runtime {
                     )
                 })?,
             );
-            algo_param_defs_with_type.push(ParamGroupWithParamType::new(
-                mapped_param_names,
-                instantiated_param_type,
-            ));
-            for fn_set_param_name in &param_def_with_set.params {
-                active_fn_set_param_map.insert(
-                    fn_set_param_name.clone(),
+            algo_param_defs_with_type.push(
+                self.fresh_param_group_with_type(mapped_param_names, instantiated_param_type)?,
+            );
+            for fn_set_param_binding in &param_def_with_set.params {
+                let fn_set_param_name = fn_set_param_binding.name();
+                insert_symbol_substitution(
+                    &mut active_fn_set_param_map,
+                    fn_set_param_binding,
                     fn_set_param_name_to_algo_arg_obj[fn_set_param_name].clone(),
                 );
             }

@@ -129,8 +129,8 @@ impl Runtime {
     }
 
     pub fn objs_have_same_known_equality_rc_in_some_env(&self, left: &Obj, right: &Obj) -> bool {
-        let left_key: ObjString = left.to_string();
-        let right_key: ObjString = right.to_string();
+        let left_key = obj_equality_key(left);
+        let right_key = obj_equality_key(right);
         self.get_all_objs_equal_to_given(&left_key)
             .contains(&right_key)
     }

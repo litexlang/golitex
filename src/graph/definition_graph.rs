@@ -638,7 +638,8 @@ impl DefinitionGraphBuilder {
         let mut functions = environment.known_objs_in_fn_sets.iter().collect::<Vec<_>>();
         functions.sort_by(|left, right| left.0.cmp(right.0));
         for (stored_name, definition) in functions {
-            let name = self.normalized_dependency_name(stored_name);
+            let display_name = strip_free_param_numeric_tags_in_display(stored_name);
+            let name = self.normalized_dependency_name(&display_name);
             let node_id = definition_id("fn", name.as_str());
             let line_file = definition
                 .equal_to
@@ -989,12 +990,9 @@ impl DefinitionGraphBuilder {
                     .cloned();
                 let sources = self.proof_source_ids_from_results(&success.inside_results);
                 let direct_trust = stmt_results_contain_direct_trust(&success.inside_results);
-                for name in statement.names.iter() {
-                    let name = self.normalized_dependency_name(name);
-                    let target_id = definition_id("theorem", name.as_str());
-                    if !self.node_is_defined(&target_id) {
-                        continue;
-                    }
+                let name = self.normalized_dependency_name(&statement.name);
+                let target_id = definition_id("theorem", name.as_str());
+                if self.node_is_defined(&target_id) {
                     for source_id in sources.iter() {
                         self.add_edge(source_id, &target_id, "proof");
                     }
@@ -1174,20 +1172,18 @@ impl DefinitionGraphBuilder {
                 ));
             }
             Stmt::DefThmStmt(statement) if statement.is_axiom() => {
-                for name in statement.names.iter() {
-                    let name = self.normalized_dependency_name(name);
-                    let source_id = definition_id("theorem", name.as_str());
-                    self.ensure_node(
-                        source_id.clone(),
-                        "theorem",
-                        "axiom",
-                        name.as_str(),
-                        false,
-                        Some(&statement.line_file),
-                        Some(&statement.to_string()),
-                    );
-                    source_ids.push(source_id);
-                }
+                let name = self.normalized_dependency_name(&statement.name);
+                let source_id = definition_id("theorem", name.as_str());
+                self.ensure_node(
+                    source_id.clone(),
+                    "theorem",
+                    "axiom",
+                    name.as_str(),
+                    false,
+                    Some(&statement.line_file),
+                    Some(&statement.to_string()),
+                );
+                source_ids.push(source_id);
             }
             _ => {}
         }
@@ -1255,24 +1251,22 @@ impl DefinitionGraphBuilder {
     fn collect_cited_stmt_source_ids(&mut self, statement: &Stmt, source_ids: &mut Vec<String>) {
         match statement {
             Stmt::DefThmStmt(statement) => {
-                for name in statement.names.iter() {
-                    let name = self.normalized_dependency_name(name);
-                    let source_id = definition_id("theorem", name.as_str());
-                    self.ensure_node(
-                        source_id.clone(),
-                        "theorem",
-                        if statement.is_axiom() {
-                            "axiom"
-                        } else {
-                            "theorem"
-                        },
-                        name.as_str(),
-                        false,
-                        Some(&statement.line_file),
-                        Some(&statement.to_string()),
-                    );
-                    source_ids.push(source_id);
-                }
+                let name = self.normalized_dependency_name(&statement.name);
+                let source_id = definition_id("theorem", name.as_str());
+                self.ensure_node(
+                    source_id.clone(),
+                    "theorem",
+                    if statement.is_axiom() {
+                        "axiom"
+                    } else {
+                        "theorem"
+                    },
+                    name.as_str(),
+                    false,
+                    Some(&statement.line_file),
+                    Some(&statement.to_string()),
+                );
+                source_ids.push(source_id);
             }
             Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(statement)) => {
                 let name = self.normalized_dependency_name(&statement.name);
@@ -2169,7 +2163,7 @@ mod tests {
         let target = fixture.path("target.lit");
         write_file(
             &target,
-            "prop local_prop(x R):\n    x = x\n\nprop target_prop(x R):\n    $local_prop(x)\n    $first::first_prop(x)\n\nabstract_prop Choice(x, y)\nhave A set\nhave B set\nhave fn selected by exist!:\n    ? forall x A:\n        exist! y B st {$Choice(x, y)}\n",
+            "prop local_prop(x R):\n    x = x\n\nprop target_prop(x R):\n    $local_prop(x)\n    $first::first_prop(x)\n\nabstract_prop Choice(x, y)\nhave A set\nhave B set\nhave fn selected by exist!:\n    ? forall x A:\n        exist! y B st {$Choice(x, y)}\n    trust exist! y B st {$Choice(x, y)}\n",
         );
         let hidden_root = fixture
             .root

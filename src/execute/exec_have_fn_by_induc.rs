@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::collections::HashMap;
 
 use super::exec_have_fn_equal_shared::case_conditions_are_disjoint;
 
@@ -62,7 +61,7 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)
+            rt.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
             let fn_set = rt
                 .fn_set_from_fn_set_clause(&stmt.fn_set_clause)
@@ -174,18 +173,15 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<(), RuntimeError> {
-        self.store_free_param_or_identifier_name(&stmt.name, ParamObjType::Identifier)
+        self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
-        let param_names = stmt.param_names();
-        let generated_names = self.generate_random_unused_names(param_names.len());
-        let mut param_to_generated_obj: HashMap<String, Obj> = HashMap::new();
-        for (param_name, generated_name) in param_names.iter().zip(generated_names.iter()) {
-            param_to_generated_obj.insert(
-                param_name.clone(),
-                obj_for_bound_param_in_scope(generated_name.clone(), ParamObjType::FnSet),
-            );
-        }
+        let source_bindings = stmt
+            .fn_set_clause
+            .params_def_with_set
+            .collect_param_bindings();
+        let (_, param_to_generated_obj) =
+            self.fresh_binder_retag_plan_for_bindings(&source_bindings, ParamObjType::FnSet);
 
         let generated_body = self
             .alpha_rename_fn_set_body(
@@ -230,7 +226,7 @@ impl Runtime {
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         let function_in_function_set_fact: Fact = InFact::new(
-            Identifier::new(stmt.name.clone()).into(),
+            self.declared_identifier_obj(&stmt.name),
             recursive_fn_set.into(),
             stmt.line_file.clone(),
         )

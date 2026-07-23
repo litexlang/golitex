@@ -88,10 +88,8 @@ strict set inclusion.
 | `struct` | Parameter domains, field types, and equivalent facts must be well-defined; struct name must be unused. | Does not prove equivalent facts. | Stores the struct definition. |
 | `template` | Template parameters and domains must be well-defined; the template body must execute in a local environment. | The body is verified according to ordinary executor behavior. | Stores the template definition. |
 | `have algo for f(...)` | Target function must exist; implementation parameters must match the function set. | Verifies every case implies the expected return; if there is no default return, verifies case coverage. | Stores the checked implementation. |
-| `thm` | The theorem `forall` must be well-defined; theorem names must be unique. | Executes the proof and verifies every then-clause. | Stores the theorem definition and stores the theorem `forall` fact. |
-| `strategy` | The strategy `forall` must be well-defined; strategy names must be unique. | Executes the proof and verifies every then-clause. | Stores the strategy definition, stores the strategy `forall` fact, and activates the strategy. |
-| `alias prop` | Target prop must exist and must be concrete, not abstract; alias name must be storable. | None. | Stores a copied prop definition under the new name. |
-| `alias thm` | Target theorem must exist; alias name must be storable. | None. | Stores a copied theorem definition under the new name. |
+| `thm` | The theorem `forall` must be well-defined; the theorem name must be unique. | Executes the proof and verifies every then-clause. | Stores the theorem definition and stores the theorem `forall` fact. |
+| `strategy` | The strategy `forall` must be well-defined; the strategy name must be unique. | Executes the proof and verifies every then-clause. | Stores the strategy definition, stores the strategy `forall` fact, and activates the strategy. |
 
 ## Proof Blocks
 

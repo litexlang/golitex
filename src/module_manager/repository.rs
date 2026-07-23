@@ -122,6 +122,21 @@ pub fn discover_isolated_module_import(
         &config_path,
         line_file.0,
     )?;
+    if let Some(existing_module_id) = runtime.module_manager.module_id_by_path(&root_string) {
+        let existing_name = runtime
+            .module_manager
+            .module(existing_module_id)
+            .map(|module| module.module_name.as_str())
+            .unwrap_or("<unknown>");
+        return Err(repository_error(
+            format!(
+                "physical module is already registered as `{}`; it cannot also be imported as `{}`",
+                existing_name, alias
+            ),
+            source_path,
+            line_file.0,
+        ));
+    }
     let module_id = runtime
         .module_manager
         .create_discovered_module(
@@ -245,6 +260,12 @@ fn discover_std_module_with_mount_stack(
         &config_path,
         0,
     )?;
+    if let Some(existing_module_id) = runtime
+        .module_manager
+        .module_id_by_path(package_root_string.as_str())
+    {
+        return Ok(existing_module_id);
+    }
     let std_module_id = runtime
         .module_manager
         .create_discovered_standard_module(
@@ -289,6 +310,12 @@ fn discover_std_single_file_module(
         &canonical_source_path,
         0,
     )?;
+    if let Some(existing_module_id) = runtime
+        .module_manager
+        .module_id_by_path(source_path_string.as_str())
+    {
+        return Ok(existing_module_id);
+    }
     let module_id = runtime
         .module_manager
         .create_discovered_standard_module(
@@ -535,6 +562,44 @@ fn discover_config_import(
         config_path,
         import.line,
     )?;
+    if let Some(existing_module_id) = runtime
+        .module_manager
+        .module_id_by_path(child_root_string.as_str())
+    {
+        let duplicate_in_owner =
+            runtime
+                .module_manager
+                .module(owner_module_id)
+                .is_some_and(|owner| {
+                    owner
+                        .config_imports
+                        .iter()
+                        .any(|existing| existing.module_id == existing_module_id)
+                });
+        if duplicate_in_owner {
+            let existing_name = runtime
+                .module_manager
+                .module(existing_module_id)
+                .map(|module| module.module_name.as_str())
+                .unwrap_or("<unknown>");
+            return Err(repository_error(
+                format!(
+                    "physical module is already imported here as `{}`; duplicate alias `{}` is not allowed",
+                    existing_name, import.name
+                ),
+                &config_path.to_string_lossy(),
+                import.line,
+            ));
+        }
+        return Ok(ConfigImport {
+            name: import.name,
+            module_id: existing_module_id,
+            line_file: (
+                import.line,
+                Rc::from(config_path.to_string_lossy().to_string()),
+            ),
+        });
+    }
     let child_module_id = runtime
         .module_manager
         .create_discovered_module(
@@ -2102,9 +2167,9 @@ main = "./main.lit"
     }
 
     #[test]
-    fn two_aliases_of_one_physical_module_are_independent_instances() {
-        run_repository_test_with_large_stack("independent-imports", || {
-            let fixture = Fixture::new("independent-imports");
+    fn two_aliases_of_one_physical_module_are_rejected() {
+        run_repository_test_with_large_stack("duplicate-physical-import", || {
+            let fixture = Fixture::new("duplicate-physical-import");
             let root = fixture.path("root");
             let dependency = fixture.path("dependency");
             write_file(
@@ -2130,37 +2195,24 @@ Second = "../dependency"
 main = "./main.lit"
 "#,
             );
-            write_file(
-                &root.join("main.lit"),
-                "First::implementation::value = 1\nSecond::implementation::value = 1\nhave answer R = 1\n",
-            );
-
-            let mut runtime = Runtime::new();
-            let root_string = path_string_for_test(&root);
-            discover_repository(&mut runtime, root_string.as_str()).expect("discover imports");
-            let root_module = runtime
-                .module_manager
-                .module(runtime.current_module_id())
-                .expect("root module");
-            assert_eq!(root_module.config_imports.len(), 2);
-            assert_ne!(
-                root_module.config_imports[0].module_id,
-                root_module.config_imports[1].module_id
-            );
+            write_file(&root.join("main.lit"), "have answer R = 1\n");
 
             let (ok, output) = run_repository(&root);
-            assert!(ok, "{output}");
+            assert!(!ok, "{output}");
+            assert!(output.contains("duplicate alias `Second`"), "{output}");
         });
     }
 
     #[test]
-    fn physical_path_does_not_make_two_import_aliases_literal_equals() {
-        run_repository_test_with_large_stack("independent-import-identity", || {
-            let fixture = Fixture::new("independent-import-identity");
+    fn diamond_imports_share_one_physical_module() {
+        run_repository_test_with_large_stack("shared-diamond-import", || {
+            let fixture = Fixture::new("shared-diamond-import");
             let root = fixture.path("root");
-            let dependency = fixture.path("dependency");
+            let left = fixture.path("left");
+            let right = fixture.path("right");
+            let shared = fixture.path("shared");
             write_file(
-                &dependency.join("litex.config"),
+                &shared.join("litex.config"),
                 r#"[hierarchy]
 module
 
@@ -2168,15 +2220,36 @@ module
 implementation = "./main.lit"
 "#,
             );
-            write_file(&dependency.join("main.lit"), "have token nonempty_set\n");
+            write_file(&shared.join("main.lit"), "have token R = 1\n");
+            for (module, object_name) in [(&left, "left_value"), (&right, "right_value")] {
+                write_file(
+                    &module.join("litex.config"),
+                    r#"[hierarchy]
+module
+
+[import]
+Shared = "../shared"
+
+[export]
+implementation = "./main.lit"
+"#,
+                );
+                write_file(
+                    &module.join("main.lit"),
+                    &format!(
+                        "Shared::implementation::token = 1\nhave {} R = 1\n",
+                        object_name
+                    ),
+                );
+            }
             write_file(
                 &root.join("litex.config"),
                 r#"[hierarchy]
 module
 
 [import]
-First = "../dependency"
-Second = "../dependency"
+Left = "../left"
+Right = "../right"
 
 [export]
 main = "./main.lit"
@@ -2184,18 +2257,30 @@ main = "./main.lit"
             );
             write_file(
                 &root.join("main.lit"),
-                "First::implementation::token = Second::implementation::token\n",
+                "Left::implementation::left_value = 1\nRight::implementation::right_value = 1\n",
             );
 
             let root_string = path_string_for_test(&root);
-            let (ok, output) = run_repository_with_output(
-                root_string.as_str(),
-                false,
-                true,
-                OutputLanguage::English,
-                false,
-            );
-            assert!(!ok, "distinct import instances must not collapse: {output}");
+            let mut runtime = Runtime::new();
+            discover_repository(&mut runtime, root_string.as_str()).expect("discover diamond");
+            let left_id = runtime.module_manager.module_id_by_name("Left").unwrap();
+            let right_id = runtime.module_manager.module_id_by_name("Right").unwrap();
+            let left_shared = runtime
+                .module_manager
+                .module(left_id)
+                .unwrap()
+                .config_imports[0]
+                .module_id;
+            let right_shared = runtime
+                .module_manager
+                .module(right_id)
+                .unwrap()
+                .config_imports[0]
+                .module_id;
+            assert_eq!(left_shared, right_shared);
+
+            let (ok, output) = run_repository(&root);
+            assert!(ok, "{output}");
         });
     }
 

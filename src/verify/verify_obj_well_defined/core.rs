@@ -402,7 +402,7 @@ impl Runtime {
                         )),
                     )));
                 }
-                param_to_arg_map.insert(param_name.clone(), arg);
+                insert_symbol_substitution(&mut param_to_arg_map, param_name, arg);
                 arg_index += 1;
             }
         }

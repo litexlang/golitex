@@ -318,7 +318,7 @@ forall x R:
 #   "result": "success",
 #   "type": "Fact",
 #   "line": 1,
-#   "stmt": "forall x R:\n    ~1x = 1\n    =>:\n        ~1x = 1\n        ~1x + ~1x = 2",
+#   "stmt": "forall x R:\n    x = 1\n    =>:\n        x = 1\n        x + x = 2",
 #   "verified_by": [
 #     {
 #       "type": "citation",
@@ -326,13 +326,13 @@ forall x R:
 #         "line": 2,
 #         "source": "entry"
 #       },
-#       "cited_stmt": "~1x = 1",
-#       "verify_what": "~1x = 1"
+#       "cited_stmt": "x = 1",
+#       "verify_what": "x = 1"
 #     },
 #     {
 #       "type": "builtin rule",
 #       "rule": "calculation",
-#       "verify_what": "~1x + ~1x = 2"
+#       "verify_what": "x + x = 2"
 #     }
 #   ],
 #   "infer_facts": [],

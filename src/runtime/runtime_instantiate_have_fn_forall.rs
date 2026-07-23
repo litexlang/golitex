@@ -1,6 +1,6 @@
 // Normalize ForallFact from have fn / recursive have fn before storage.
 //
-// The same source name (e.g. x) can appear as different free-param tags: Forall (~1) or FnSet (~5)
+// The same source spelling can refer to different bindings in non-overlapping scopes.
 // from the fn header parse. Stored foralls should use one ForallFreeParamObj per quantified name
 // from the header. The dedicated retagging mode converts only those binder-tagged atoms; concrete
 // identifiers with the same spelling remain rigid.
@@ -13,9 +13,9 @@ impl Runtime {
         &self,
         forall_fact: ForallFact,
     ) -> Result<Fact, RuntimeError> {
-        let source_names = forall_fact.params_def_with_type.collect_param_names();
+        let source_bindings = forall_fact.params_def_with_type.collect_param_bindings();
         let (target_names, full_param_to_arg_map) =
-            self.fresh_binder_retag_plan(&source_names, ParamObjType::Forall);
+            self.fresh_binder_retag_plan_for_bindings(&source_bindings, ParamObjType::Forall);
         let mut active_param_to_arg_map = HashMap::new();
         let mut groups = Vec::with_capacity(forall_fact.params_def_with_type.groups.len());
         let mut name_index = 0;
@@ -33,9 +33,11 @@ impl Runtime {
             let group_target_names =
                 target_names[name_index..name_index + group.params.len()].to_vec();
             groups.push(ParamGroupWithParamType::new(group_target_names, param_type));
-            for source_name in &group.params {
-                active_param_to_arg_map.insert(
-                    source_name.clone(),
+            for source_binding in &group.params {
+                let source_name = source_binding.name();
+                insert_symbol_substitution(
+                    &mut active_param_to_arg_map,
+                    source_binding,
                     full_param_to_arg_map[source_name].clone(),
                 );
             }

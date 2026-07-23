@@ -62,7 +62,11 @@ impl Runtime {
             Obj::Atom(AtomObj::IdentifierWithMod(identifier))
                 if self.is_current_parse_module(&identifier.mod_name) =>
             {
-                let local_obj: Obj = Identifier::new(identifier.name.clone()).into();
+                let local_identifier = match identifier.symbol.clone() {
+                    Some(symbol) => Identifier::new_bound(identifier.name.clone(), symbol),
+                    None => Identifier::new(identifier.name.clone()),
+                };
+                let local_obj: Obj = local_identifier.into();
                 self.resolve_obj(&local_obj)
             }
             Obj::Add(add) => {
@@ -679,17 +683,18 @@ impl Runtime {
             Obj::MatrixMul(value) => {
                 let end = self.matrix_column_dimension(&value.left)?;
                 let index_name = self.generate_random_unused_name();
-                let index = obj_for_bound_param_in_scope(index_name.clone(), ParamObjType::FnSet);
+                let index_group = self
+                    .fresh_param_group_with_set(vec![index_name], StandardSet::NPos.into())
+                    .ok()?;
+                let index =
+                    obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::FnSet);
                 let term: Obj = Mul::new(
                     matrix_entry_application((*value.left).clone(), row, index.clone())?,
                     matrix_entry_application((*value.right).clone(), index.clone(), col)?,
                 )
                 .into();
                 let function = AnonymousFn::new(
-                    vec![ParamGroupWithSet::new(
-                        vec![index_name],
-                        StandardSet::NPos.into(),
-                    )],
+                    vec![index_group],
                     vec![AtomicFact::from(LessEqualFact::new(
                         index,
                         end.clone(),

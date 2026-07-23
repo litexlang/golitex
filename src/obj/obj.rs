@@ -324,6 +324,7 @@ pub struct ObjAsStructInstanceWithFieldAccess {
 pub struct InstantiatedTemplateObj {
     pub template_name: AtomicName,
     pub args: Vec<Obj>,
+    pub symbol: SymbolRef,
 }
 
 impl StructObj {
@@ -343,11 +344,31 @@ impl ObjAsStructInstanceWithFieldAccess {
 }
 
 impl InstantiatedTemplateObj {
-    pub fn new(template_name: AtomicName, args: Vec<Obj>) -> Self {
+    pub fn new(template_name: AtomicName, args: Vec<Obj>, symbol: SymbolRef) -> Self {
         InstantiatedTemplateObj {
             template_name,
             args,
+            symbol,
         }
+    }
+
+    pub fn surface_name(&self) -> String {
+        format!(
+            "{}{}{}{}{}",
+            TEMPLATE_INSTANCE_PREFIX,
+            self.template_name,
+            LESS,
+            vec_to_string_join_by_comma(&self.args),
+            GREATER
+        )
+    }
+
+    pub(crate) fn declaration_binding(&self) -> SymbolBinding {
+        SymbolBinding::new(
+            self.symbol.id(),
+            self.surface_name(),
+            self.symbol.display_name().to_string(),
+        )
     }
 }
 
@@ -609,6 +630,7 @@ pub struct ListSet {
 #[derive(Clone)]
 pub struct SetBuilder {
     pub param: String,
+    pub param_binding: SymbolBinding,
     pub param_set: Box<Obj>,
     pub facts: Vec<ExistBodyFact>,
 }
@@ -788,12 +810,13 @@ impl ListSet {
 
 impl SetBuilder {
     pub fn new(
-        param: String,
+        param_binding: SymbolBinding,
         param_set: Obj,
         facts: Vec<ExistBodyFact>,
     ) -> Result<Self, RuntimeError> {
         let set_builder = SetBuilder {
-            param,
+            param: param_binding.name().to_string(),
+            param_binding,
             param_set: Box::new(param_set),
             facts,
         };
@@ -1438,10 +1461,10 @@ impl Obj {
             )
             .into(),
             Obj::SetBuilder(sb) => {
-                let param = if sb.param == from {
-                    to.to_string()
+                let param_binding = if sb.param == from {
+                    sb.param_binding.with_local_name(to.to_string())
                 } else {
-                    sb.param
+                    sb.param_binding
                 };
                 let param_set = Obj::replace_bound_identifier(*sb.param_set, from, to);
                 let facts = sb
@@ -1450,7 +1473,7 @@ impl Obj {
                     .map(|f| f.replace_bound_identifier(from, to))
                     .collect();
                 Obj::SetBuilder(
-                    SetBuilder::new(param, param_set, facts)
+                    SetBuilder::new(param_binding, param_set, facts)
                         .expect("renaming a valid set builder preserves object scope validity"),
                 )
             }
@@ -1467,7 +1490,13 @@ impl Obj {
                         let params = pg
                             .params
                             .into_iter()
-                            .map(|p| if p == from { to.to_string() } else { p })
+                            .map(|p| {
+                                if p.name() == from {
+                                    p.with_local_name(to.to_string())
+                                } else {
+                                    p
+                                }
+                            })
                             .collect();
                         ParamGroupWithSet::new(
                             params,
@@ -1497,7 +1526,13 @@ impl Obj {
                         let params = pg
                             .params
                             .into_iter()
-                            .map(|p| if p == from { to.to_string() } else { p })
+                            .map(|p| {
+                                if p.name() == from {
+                                    p.with_local_name(to.to_string())
+                                } else {
+                                    p
+                                }
+                            })
                             .collect();
                         ParamGroupWithSet::new(
                             params,
@@ -1678,6 +1713,7 @@ impl Obj {
                     .into_iter()
                     .map(|o| Obj::replace_bound_identifier(o, from, to))
                     .collect(),
+                t.symbol,
             )
             .into(),
             Obj::IntervalObj(x) => match x {
@@ -1779,52 +1815,52 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             .expect("name replace preserves fn head shape")
         }
         FnObjHead::Forall(p) => {
-            let name = if p.name == from {
-                to.to_string()
+            let symbol = if p.name == from {
+                p.symbol.with_display_name(to.to_string())
             } else {
-                p.name
+                p.symbol
             };
-            ForallFreeParamObj::new(name).into()
+            ForallFreeParamObj::new(symbol).into()
         }
         FnObjHead::DefHeader(p) => {
-            let name = if p.name == from {
-                to.to_string()
+            let symbol = if p.name == from {
+                p.symbol.with_display_name(to.to_string())
             } else {
-                p.name
+                p.symbol
             };
-            DefHeaderFreeParamObj::new(name).into()
+            DefHeaderFreeParamObj::new(symbol).into()
         }
         FnObjHead::Exist(p) => {
-            let name = if p.name == from {
-                to.to_string()
+            let symbol = if p.name == from {
+                p.symbol.with_display_name(to.to_string())
             } else {
-                p.name
+                p.symbol
             };
-            ExistFreeParamObj::new(name).into()
+            ExistFreeParamObj::new(symbol).into()
         }
         FnObjHead::SetBuilder(p) => {
-            let name = if p.name == from {
-                to.to_string()
+            let symbol = if p.name == from {
+                p.symbol.with_display_name(to.to_string())
             } else {
-                p.name
+                p.symbol
             };
-            SetBuilderFreeParamObj::new(name).into()
+            SetBuilderFreeParamObj::new(symbol).into()
         }
         FnObjHead::FnSet(p) => {
-            let name = if p.name == from {
-                to.to_string()
+            let symbol = if p.name == from {
+                p.symbol.with_display_name(to.to_string())
             } else {
-                p.name
+                p.symbol
             };
-            FnSetFreeParamObj::new(name).into()
+            FnSetFreeParamObj::new(symbol).into()
         }
         FnObjHead::DefStructField(p) => {
-            let name = if p.name == from {
-                to.to_string()
+            let symbol = if p.name == from {
+                p.symbol.with_display_name(to.to_string())
             } else {
-                p.name
+                p.symbol
             };
-            DefStructFieldFreeParamObj::new(name).into()
+            DefStructFieldFreeParamObj::new(symbol).into()
         }
         FnObjHead::AnonymousFnLiteral(a) => {
             let inner = (*a).clone();
@@ -1857,36 +1893,36 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             FnObjHead::ObjAsStructInstanceWithFieldAccess(new_v)
         }
         FnObjHead::Induc(p) => {
-            let name = if p.name == from {
-                to.to_string()
+            let symbol = if p.name == from {
+                p.symbol.with_display_name(to.to_string())
             } else {
-                p.name
+                p.symbol
             };
-            ByInducFreeParamObj::new(name).into()
+            ByInducFreeParamObj::new(symbol).into()
         }
         FnObjHead::DefAlgo(p) => {
-            let name = if p.name == from {
-                to.to_string()
+            let symbol = if p.name == from {
+                p.symbol.with_display_name(to.to_string())
             } else {
-                p.name
+                p.symbol
             };
-            DefAlgoFreeParamObj::new(name).into()
+            DefAlgoFreeParamObj::new(symbol).into()
         }
         FnObjHead::TupleIndex(p) => {
-            let name = if p.name == from {
-                to.to_string()
+            let symbol = if p.name == from {
+                p.symbol.with_display_name(to.to_string())
             } else {
-                p.name
+                p.symbol
             };
-            TupleIndexFreeParamObj::new(name).into()
+            TupleIndexFreeParamObj::new(symbol).into()
         }
         FnObjHead::CartIndex(p) => {
-            let name = if p.name == from {
-                to.to_string()
+            let symbol = if p.name == from {
+                p.symbol.with_display_name(to.to_string())
             } else {
-                p.name
+                p.symbol
             };
-            CartIndexFreeParamObj::new(name).into()
+            CartIndexFreeParamObj::new(symbol).into()
         }
         FnObjHead::InstantiatedTemplateObj(t) => {
             let replaced = Obj::replace_bound_identifier(t.into(), from, to);
@@ -1930,15 +1966,7 @@ impl fmt::Display for StructObj {
 
 impl fmt::Display for InstantiatedTemplateObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "{}{}{}{}{}",
-            TEMPLATE_INSTANCE_PREFIX,
-            self.template_name,
-            LESS,
-            vec_to_string_join_by_comma(&self.args),
-            GREATER
-        )
+        write!(f, "{}", self.symbol.identity_spine(&self.surface_name()))
     }
 }
 
@@ -2239,7 +2267,10 @@ impl fmt::Display for TupleDim {
 
 impl fmt::Display for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{}", self.name)
+        match self.symbol.as_ref() {
+            Some(symbol) => write!(f, "{}", symbol.identity_spine(symbol.display_name())),
+            None => write!(f, "{}", self.name),
+        }
     }
 }
 
@@ -2419,7 +2450,10 @@ impl fmt::Display for BigIntersect {
 
 impl fmt::Display for IdentifierWithMod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{}{}{}", self.mod_name, MOD_SIGN, self.name)
+        match self.symbol.as_ref() {
+            Some(symbol) => write!(f, "{}", symbol.identity_spine(symbol.display_name())),
+            None => write!(f, "{}{}{}", self.mod_name, MOD_SIGN, self.name),
+        }
     }
 }
 
@@ -2435,7 +2469,7 @@ impl fmt::Display for SetBuilder {
             f,
             "{}{} {}{} {}{}",
             LEFT_CURLY_BRACE,
-            self.param,
+            self.param_binding,
             self.param_set,
             COLON,
             vec_to_string_join_by_comma(&self.facts),

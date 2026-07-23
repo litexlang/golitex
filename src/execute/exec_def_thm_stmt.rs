@@ -45,7 +45,7 @@ impl Runtime {
         if stmt.is_axiom() {
             let trust_summary = ProofTrustSummary::from_dependency(
                 "axiom",
-                stmt.names.first().cloned(),
+                Some(stmt.name.clone()),
                 stmt.line_file.clone(),
             );
             return Ok((
@@ -54,7 +54,7 @@ impl Runtime {
             ));
         }
 
-        let thm_names = stmt.names.join(", ");
+        let thm_name = stmt.name.clone();
         let keyword = stmt.keyword();
         self.run_in_local_env(|rt| {
             let mut assumption_infers = rt
@@ -85,7 +85,7 @@ impl Runtime {
                     return Err(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new_with_output(
                             Some(proof_stmt.clone()),
-                            format!("{} `{}` failed: proof step is unknown", keyword, thm_names),
+                            format!("{} `{}` failed: proof step is unknown", keyword, thm_name),
                             proof_stmt.line_file(),
                             None,
                             vec![],
@@ -115,7 +115,7 @@ impl Runtime {
                             Some(then_goal.clone().into()),
                             format!(
                                 "{} `{}` failed: cannot prove then-clause",
-                                keyword, thm_names
+                                keyword, thm_name
                             ),
                             then_fact.line_file(),
                             None,
@@ -134,7 +134,7 @@ impl Runtime {
 
             let trust_summary = rt.proof_trust_summary_from_stmt_results(&inside_results);
             let theorem_verification = TheoremVerificationResult::new(
-                stmt.names.clone(),
+                stmt.name.clone(),
                 stmt.forall_fact.clone(),
                 assumption_infers,
                 proof_len,
@@ -184,7 +184,7 @@ impl Runtime {
         let trust_summary = if stmt.is_axiom() {
             ProofTrustSummary::from_dependency(
                 "axiom",
-                stmt.names.first().cloned(),
+                Some(stmt.name.clone()),
                 stmt.line_file.clone(),
             )
         } else {

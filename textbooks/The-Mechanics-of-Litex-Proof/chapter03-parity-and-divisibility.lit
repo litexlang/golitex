@@ -298,15 +298,15 @@ claim forall! a, b Z: $dvdZ(a, b) => {$dvdZ(a, b^2 + 2 * b)}:
 # Let a, b and c be natural numbers and suppose that a | b and b^2 | c. Show that a^2 | c.
 
 sketch:
-    prop dvdN(a Z, b Z):
+    prop dvdN_square_chain(a Z, b Z):
         exist t N st {b = a * t}
 
     claim:
         ? forall a, b, c N:
-            $dvdN(a, b)
-            $dvdN(b^2, c)
+            $dvdN_square_chain(a, b)
+            $dvdN_square_chain(b^2, c)
             =>:
-                $dvdN(a^2, c)
+                $dvdN_square_chain(a^2, c)
         obtain k from exist k N st {b = a * k}
         obtain l from exist l N st {c = b^2 * l}
         witness exist t N st {c = a^2 * t} from k * k * l:

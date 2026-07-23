@@ -87,7 +87,7 @@ claim:
     claim:
         ? forall g S:
             g = g
-        g $in {g fn(i closed_range(1, m)) V: $has_values_in_family(m, V, Y, g)}
+        g $in {h fn(i closed_range(1, m)) V: $has_values_in_family(m, V, Y, h)}
         have tuple tuple_from_member for i <= m, tuple_from_member[i] = g(i)
         tuple_dim(tuple_from_member) = m
         g = g
