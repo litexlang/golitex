@@ -10,6 +10,47 @@ its current unique-existence proof is trusted, or a property while every
 theorem about it is checked.  Knowledge state never changes the mathematical
 role of the concept.
 
+## Chapter 4: formal differences
+
+Tao's construction of the integers starts from ordered pairs of natural
+numbers. The pair `(a,b)` denotes the formal difference `a-b`; two pairs
+denote the same integer when their cross sums agree. Because Litex subtraction
+on `N` is truncated, this construction must not be encoded by the ordinary
+expression `a - b`: for example, `0 - 1` and `0 - 2` are both `0`, although
+the corresponding formal differences are not equivalent.
+
+The carrier is `formal_difference = cart(N,N)`, and equality of represented
+integers is the relation
+
+~~~litex
+prop represent_same_integer(p, q cart(N, N)):
+    p[1] + q[2] = q[1] + p[2]
+~~~
+
+This is a `prop`, not a function returning an integer, because quotient
+identification is a relation on two displayed representatives. The nearest
+rejected form is `p[1] - p[2] = q[1] - q[2]` over `N`; truncated subtraction
+collapses distinct negative formal differences.
+
+Addition, multiplication, and negation are representative-level constructions
+and therefore are `have fn` interfaces:
+
+~~~litex
+have fn add_formal_differences(p, q cart(N,N)) cart(N,N) =
+    (p[1] + q[1], p[2] + q[2])
+
+have fn multiply_formal_differences(p, q cart(N,N)) cart(N,N) =
+    (p[1] * q[1] + p[2] * q[2], p[1] * q[2] + p[2] * q[1])
+
+have fn negate_formal_difference(p cart(N,N)) cart(N,N) = (p[2], p[1])
+~~~
+
+The well-definedness theorems prove that each construction preserves
+`represent_same_integer`; these proofs are the dependency boundary needed
+before the formulas can be regarded as operations on equivalence classes.
+The chapter then uses Litex's builtin `Z` for later integer arithmetic. No
+unchecked identification between the quotient and builtin `Z` is introduced.
+
 ## Chapter 6: sequence limits
 
 The sequence-limit API illustrates the intended concept-first order.  First
@@ -773,6 +814,43 @@ prop is_finer_partition_than(I power_set(R), P2, P1 finite_set):
 Both are props: mathematics checks whether a displayed finite family has the
 property. They depend on interval geometry and feed finite additivity,
 piecewise-constant functions, Riemann sums, and all later gluing arguments.
+
+### Equal meshes on a closed interval
+
+The monotone-integrability proof needs the actual equal mesh, not merely a
+predicate saying that some suitable partition exists.  Its points, interval
+pieces, and finite family are explicit constructions.  The first piece is
+closed on the left and every later piece is open there, so the family covers
+the left endpoint without adding a separate singleton piece:
+
+~~~litex
+have fn equal_mesh_point(a, b R, n N_pos, k R) R =
+    a + (b - a) * k / n
+
+have fn equal_mesh_piece(
+    a, b R, n N_pos, k closed_range(1, n)
+) power_set(R) by cases:
+    case k = 1:
+        '[equal_mesh_point(a, b, n, 0), equal_mesh_point(a, b, n, 1)]
+    case k > 1:
+        '(equal_mesh_point(a, b, n, k - 1), equal_mesh_point(a, b, n, k)]
+
+have fn closed_interval_equal_mesh(a, b R, n N_pos)
+    power_set(power_set(R)) =
+    fn_range(fn(k closed_range(1, n)) power_set(R) {
+        equal_mesh_piece(a, b, n, k)
+    })
+~~~
+
+These are `have fn` declarations because later Riemann-sum arguments apply
+the point and piece maps and pass the displayed family to the partition API.
+A prop such as `is_equal_mesh(P)` would hide the finite family and force every
+consumer to recover fresh witnesses.  The partition theorem is separate: it
+uses the least eligible finite index to prove coverage and strict ordering of
+distinct mesh pieces to prove disjointness.  Its immediate consumer is the
+telescoping upper-minus-lower sum estimate for monotone functions.  No
+existence, uniqueness, or well-definedness hole is intended behind these
+formula-defined objects.
 
 ### Removing a partition piece
 
@@ -1571,7 +1649,44 @@ Small oscillation, closed trims, piecewise continuity, and piecewise
 monotonicity are props. Their criteria are thms concluding
 is_riemann_integrable_on; they should not select a preferred partition because
 ordinary proofs need existence for each epsilon and can use different
-partitions.
+partitions. A closed trim is specifically the positive-length branch of the
+bounded-interval argument: empty and singleton intervals are discharged by
+the earlier zero-integral theorem rather than being forced to contain a
+non-degenerate closed subinterval. Continuity on the trim is obtained by
+restricting the original function and applying the Chapter 9 theorem that a
+function limit is preserved on an adherent subset. The nearest rejected form
+is a trim predicate that quantifies over every bounded interval while requiring
+an interior closed interval; that statement is false for empty and singleton
+domains.
+
+The endpoint-tail proof uses a relation for extending a function from a
+displayed subset by one constant value:
+
+~~~litex
+prop is_constant_extension_from_subset(
+    I, J power_set(R), f fn(x J) R, c R, F fn(x I) R
+):
+    J $subset I
+    forall x J:
+        F(x) = f(x)
+    forall x I:
+        not x $in J
+        =>:
+            F(x) = c
+~~~
+
+This is a prop, not a selected function: the extension is easy to construct,
+but callers only need its two value clauses and should not depend on a
+particular case-expression object. A checked partition-replacement theorem
+refines the closed-trim piece by a partition for the core function, while the
+remaining nonempty ambient pieces carry the constant tail value. Finite
+additivity then gives the exact formula
+`s + c * (interval_length(I) - interval_length(J))`. Extending a lower
+Darboux witness by `-M` and an upper witness by `M` therefore adds at most
+`2 * M * eta` to their gap. Reject a trusted endpoint-gluing theorem or a
+second integral notion for trimmed domains: the useful reusable interfaces
+are ordinary partition replacement, constant extension, and the explicit
+rectangle-sum identity.
 
 The complete bridge from supplied small-oscillation partitions to Darboux
 integrability is checked. On each nonempty piece, the upper and lower heights

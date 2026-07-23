@@ -1828,22 +1828,63 @@ Example 3.4.11. The union of {{2,3},{3,4},{4,5}} is {2,3,4,5}.
 # The membership rule is: if `A $in F` and `x $in A`, then `x $in big_union(F)`.
 
 sketch:
+    by contra:
+        ? {2, 3} != {3, 4}
+        {2, 3} = {3, 4}
+        2 $in {2, 3}
+        2 $in {3, 4}
+        impossible not 2 $in {3, 4}
+    by contra:
+        ? {2, 3} != {4, 5}
+        {2, 3} = {4, 5}
+        2 $in {2, 3}
+        2 $in {4, 5}
+        impossible not 2 $in {4, 5}
+    by contra:
+        ? {3, 4} != {4, 5}
+        {3, 4} = {4, 5}
+        3 $in {3, 4}
+        3 $in {4, 5}
+        impossible not 3 $in {4, 5}
+
+    {2, 3} $in {{2, 3}, {3, 4}, {4, 5}}
+    2 $in {2, 3}
     2 $in big_union({{2, 3}, {3, 4}, {4, 5}})
 
+    3 $in {2, 3}
     3 $in big_union({{2, 3}, {3, 4}, {4, 5}})
 
+    {3, 4} $in {{2, 3}, {3, 4}, {4, 5}}
+    4 $in {3, 4}
     4 $in big_union({{2, 3}, {3, 4}, {4, 5}})
 
+    {4, 5} $in {{2, 3}, {3, 4}, {4, 5}}
+    5 $in {4, 5}
     5 $in big_union({{2, 3}, {3, 4}, {4, 5}})
 
+    by enumerate finite_set:
+        ? forall x {2, 3}:
+            x $in {2, 3, 4, 5}
     {2, 3} $subset {2, 3, 4, 5}
+    by enumerate finite_set:
+        ? forall x {3, 4}:
+            x $in {2, 3, 4, 5}
     {3, 4} $subset {2, 3, 4, 5}
+    by enumerate finite_set:
+        ? forall x {4, 5}:
+            x $in {2, 3, 4, 5}
     {4, 5} $subset {2, 3, 4, 5}
+    by enumerate finite_set:
+        ? forall A {{2, 3}, {3, 4}, {4, 5}}:
+            A $subset {2, 3, 4, 5}
 
     by extension big_union({{2, 3}, {3, 4}, {4, 5}}) = {2, 3, 4, 5}:
-        by enumerate finite_set:
+        claim:
             ? forall x big_union({{2, 3}, {3, 4}, {4, 5}}):
                 x $in {2, 3, 4, 5}
+            obtain A from exist A {{2, 3}, {3, 4}, {4, 5}} st {x $in A}
+            A $subset {2, 3, 4, 5}
+            x $in {2, 3, 4, 5}
         by enumerate finite_set:
             ? forall y {2, 3, 4, 5}:
                 y $in big_union({{2, 3}, {3, 4}, {4, 5}})
@@ -1884,11 +1925,23 @@ sketch:
     (3, 5)[2] = 5
     tuple_dim((3, 5)) = 2
 
-    (3, 5) != (5, 3)
+    by contra:
+        ? (3, 5) != (5, 3)
+        (3, 5) = (5, 3)
+        3 = (3, 5)[1] = (5, 3)[1] = 5
+        impossible 3 != 5
 
-    (3, 5) != (3, 3)
+    by contra:
+        ? (3, 5) != (3, 3)
+        (3, 5) = (3, 3)
+        5 = (3, 5)[2] = (3, 3)[2] = 3
+        impossible 5 != 3
 
-    (3, 5) != (2, 5)
+    by contra:
+        ? (3, 5) != (2, 5)
+        (3, 5) = (2, 5)
+        3 = (3, 5)[1] = (2, 5)[1] = 2
+        impossible 3 != 2
 
 """
 Remark 3.5.2 says ordered pairs can be constructed from set axioms.
@@ -1946,7 +1999,13 @@ sketch:
     finite_set_size(cart({1, 2}, {3, 4, 5})) = finite_set_size({1, 2}) * finite_set_size({3, 4, 5}) = 6
     finite_set_size(cart({3, 4, 5}, {1, 2})) = finite_set_size({3, 4, 5}) * finite_set_size({1, 2}) = 6
 
-    cart({1, 2}, {3, 4, 5}) != cart({3, 4, 5}, {1, 2})
+    by contra:
+        ? cart({1, 2}, {3, 4, 5}) != cart({3, 4, 5}, {1, 2})
+        cart({1, 2}, {3, 4, 5}) = cart({3, 4, 5}, {1, 2})
+        (1, 3) $in cart({1, 2}, {3, 4, 5})
+        (1, 3) $in cart({3, 4, 5}, {1, 2})
+        1 $in {3, 4, 5}
+        impossible not 1 $in {3, 4, 5}
 
 """
 After Example 3.5.6, a function on X x Y can be viewed either as a function
@@ -2137,21 +2196,32 @@ sketch:
         case n = 2: 5
 
     by enumerate finite_set:
-        ? forall x1, x2 {0, 1, 2}:
-            shift_0_to_3(x1) = shift_0_to_3(x2)
-            =>:
-                x1 = x2
+        ? forall x {0, 1, 2}:
+            x $in N
+            shift_0_to_3(x) = x + 3
+    forall x1, x2 {0, 1, 2}:
+        shift_0_to_3(x1) = shift_0_to_3(x2)
+        =>:
+            x1 $in N
+            x2 $in N
+            shift_0_to_3(x1) = x1 + 3
+            shift_0_to_3(x2) = x2 + 3
+            x1 + 3 = x2 + 3
+            x1 = x1 + 3 - 3 = x2 + 3 - 3 = x2
     by def $is_injective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
 
     by cases:
         ? forall y {3, 4, 5}:
             exist x {0, 1, 2} st {y = shift_0_to_3(x)}
         case y = 3:
-            witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 0
+            witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 0:
+                y = 3 = shift_0_to_3(0)
         case y = 4:
-            witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 1
+            witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 1:
+                y = 4 = shift_0_to_3(1)
         case y = 5:
-            witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 2
+            witness exist x {0, 1, 2} st {y = shift_0_to_3(x)} from 2:
+                y = 5 = shift_0_to_3(2)
     by def $is_surjective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
 
     $is_bijective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
@@ -2194,20 +2264,31 @@ sketch:
         ? forall n N:
             2 * n $in even_N
         witness exist k N st {2 * n = 2 * k} from n
+        by def $is_even_nat(2 * n)
+        2 * n $in {m N: $is_even_nat(m)}
+        2 * n $in even_N
 
     have fn double_to_even(n N) even_N = 2 * n
+    forall n N:
+        double_to_even(n) = 2 * n
 
     forall x1, x2 N:
         double_to_even(x1) = double_to_even(x2)
         =>:
-            x1 = x2
+            double_to_even(x1) = 2 * x1
+            double_to_even(x2) = 2 * x2
+            2 * x1 = 2 * x2
+            x1 = (2 * x1) / 2 = (2 * x2) / 2 = x2
     by def $is_injective_fn(N, even_N, double_to_even)
 
     claim:
         ? forall y even_N:
             exist x N st {y = double_to_even(x)}
         obtain k from exist k N st {y = 2 * k}
-        witness exist x N st {y = double_to_even(x)} from k
+        witness exist x N st {y = double_to_even(x)} from k:
+            double_to_even(k) = 2 * k
+            y = 2 * k
+            y = double_to_even(k)
     by def $is_surjective_fn(N, even_N, double_to_even)
 
     $is_bijective_fn(N, even_N, double_to_even)
@@ -2232,15 +2313,21 @@ sketch:
         ? forall X set:
             $has_equal_cardinality(X, X)
         have fn id_X(x X) X = x
+        forall x X:
+            id_X(x) = x
         forall x1, x2 X:
             id_X(x1) = id_X(x2)
             =>:
-                x1 = x2
+                id_X(x1) = x1
+                id_X(x2) = x2
+                x1 = id_X(x1) = id_X(x2) = x2
         by def $is_injective_fn(X, X, id_X)
         claim:
             ? forall y X:
                 exist x X st {y = id_X(x)}
-            witness exist x X st {y = id_X(x)} from y
+            witness exist x X st {y = id_X(x)} from y:
+                id_X(y) = y
+                y = id_X(y)
         by def $is_surjective_fn(X, X, id_X)
         $is_bijective_fn(X, X, id_X)
         witness exist f fn(x X) X st {$is_bijective_fn(X, X, f)} from id_X
@@ -2275,23 +2362,35 @@ sketch:
         case i = 3: 4
 
     by enumerate finite_set:
-        ? forall x1, x2 {0, 1, 2, 3}:
-            shift_zero_to_one(x1) = shift_zero_to_one(x2)
-            =>:
-                x1 = x2
+        ? forall x {0, 1, 2, 3}:
+            x $in N
+            shift_zero_to_one(x) = x + 1
+    forall x1, x2 {0, 1, 2, 3}:
+        shift_zero_to_one(x1) = shift_zero_to_one(x2)
+        =>:
+            x1 $in N
+            x2 $in N
+            shift_zero_to_one(x1) = x1 + 1
+            shift_zero_to_one(x2) = x2 + 1
+            x1 + 1 = x2 + 1
+            x1 = x1 + 1 - 1 = x2 + 1 - 1 = x2
     by def $is_injective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
 
     by cases:
         ? forall y {1, 2, 3, 4}:
             exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)}
         case y = 1:
-            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 0
+            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 0:
+                y = 1 = shift_zero_to_one(0)
         case y = 2:
-            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 1
+            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 1:
+                y = 2 = shift_zero_to_one(1)
         case y = 3:
-            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 2
+            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 2:
+                y = 3 = shift_zero_to_one(2)
         case y = 4:
-            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 3
+            witness exist x {0, 1, 2, 3} st {y = shift_zero_to_one(x)} from 3:
+                y = 4 = shift_zero_to_one(3)
     by def $is_surjective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
 
     $is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
@@ -2386,8 +2485,10 @@ sketch:
     finite_set_size(closed_range(1, 4)) = 4
     finite_set_size(range(0, 4)) = finite_set_size(closed_range(1, 4))
 
-    forall X finite_set:
-        exist n N st {finite_set_size(X) = n}
+    claim:
+        ? forall X finite_set:
+            exist n N st {finite_set_size(X) = n}
+        witness exist n N st {finite_set_size(X) = n} from finite_set_size(X)
 
 """
 Theorem 3.6.12. The natural numbers are infinite.  Tao's proof shows that a finite list of all
@@ -2401,7 +2502,11 @@ natural numbers would have a maximum M, so M+1 would be missing.
 sketch:
     by contra:
         ? not $is_finite_set(N)
-        finite_set_size(N) + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
+        finite_set_size(N) $in N
+        finite_set_size(0...finite_set_size(N)) = finite_set_size(N) - 0 + 1 = finite_set_size(N) + 1
+        0...finite_set_size(N) $subset N
+        finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
+        finite_set_size(N) + 1 <= finite_set_size(N)
         impossible finite_set_size(N) + 1 <= finite_set_size(N)
 
 """
@@ -2447,7 +2552,8 @@ sketch:
     forall X, Y finite_set:
         intersect(X, Y) = {}
         =>:
-            finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y)
+            finite_set_size(intersect(X, Y)) = finite_set_size({}) = 0
+            finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size(intersect(X, Y)) = finite_set_size(X) + finite_set_size(Y)
 
     intersect({1, 2}, {3}) = {}
     finite_set_size(union({1, 2}, {3})) = finite_set_size({1, 2}) + finite_set_size({3}) = finite_set_size({1, 2}) + 1 = 3

@@ -6,28 +6,20 @@ Definition 4.1.1 (Integers). An integer is an expression a--b where a and b are
 natural numbers. Two expressions a-b and c-d are equal iff a+d = c+b.
 """
 
-# Definition 4.1.1 says when two formal differences represent the same integer:
-# `a-b` and `c-d` are equal exactly when the cross sums `a+d` and `c+b` agree.
-# The displayed implications prove the two directions of this equality test.
-# We write integers using the ordinary set `Z` and subtraction notation.  The
-# formal-difference construction is kept here to explain the cross-sum equality
-# test from the book.
+# A formal difference is an ordered pair `(a,b)` of natural numbers. It is
+# intentionally not the truncated natural-number value `a-b`.
 
-forall a, b, c, d N:
-    a - b = c - d
-    =>:
-        a + d = c + b
+have formal_difference set = cart(N, N)
 
-forall a, b, c, d N:
-    a + d = c + b
-    =>:
-        a - b = c - d
+# The pair `(a,b)` represents the same integer as `(c,d)` exactly when
+# `a+d=c+b`.
 
-forall a, b, c, d N:
-    =>:
-        a - b = c - d
-    <=>:
-        a + d = c + b
+prop represent_same_integer(p, q cart(N, N)):
+    p[1] + q[2] = q[1] + p[2]
+
+# For example, `(3,1)` and `(4,2)` both represent the integer two.
+
+by def $represent_same_integer((3, 1), (4, 2))
 
 """
 Definition 4.1.2. Addition of formal differences is
@@ -35,58 +27,81 @@ Definition 4.1.2. Addition of formal differences is
 (a-b)(c-d) := (ac+bd)-(ad+bc).
 """
 
-# Definition 4.1.2 gives the arithmetic formulas for formal differences:
-# add numerators with numerators and denominators with denominators; multiply
-# by expanding `(a-b)(c-d)` into positive and negative parts.
+# Definition 4.1.2 gives actual operations on representatives. Multiplication
+# separates the positive terms `ac+bd` from the negative terms `ad+bc`.
 
-forall a, b, c, d N:
-    (a - b) + (c - d) = (a + c) - (b + d)
-    (a - b) * (c - d) = (a * c + b * d) - (a * d + b * c)
+have fn add_formal_differences(p, q cart(N, N)) cart(N, N) = (p[1] + q[1], p[2] + q[2])
+
+have fn multiply_formal_differences(p, q cart(N, N)) cart(N, N) = (p[1] * q[1] + p[2] * q[2], p[1] * q[2] + p[2] * q[1])
 
 """
 Lemma 4.1.3. Addition and multiplication are well-defined.
 """
 
-# Well-definedness means replacing one representative by an equal one does not
-# change the resulting sum or product.  The next chain shows the addition case.
+# Well-definedness means that replacing a representative by an equivalent one
+# leaves the resulting equivalence class unchanged.
 
-forall a, b, a1, b1, c, d N:
-    a + b1 = a1 + b
-    =>:
-        (a + c) + (b1 + d) = (a1 + c) + (b + d)
+thm addition_respects_formal_difference_equivalence:
+    ? forall p, q, r cart(N, N):
+        $represent_same_integer(p, q)
+        =>:
+            $represent_same_integer(add_formal_differences(p, r), add_formal_differences(q, r))
+    p[1] + q[2] = q[1] + p[2]
+    add_formal_differences(p, r) = (p[1] + r[1], p[2] + r[2])
+    add_formal_differences(q, r) = (q[1] + r[1], q[2] + r[2])
+    add_formal_differences(p, r)[1] = p[1] + r[1]
+    add_formal_differences(p, r)[2] = p[2] + r[2]
+    add_formal_differences(q, r)[1] = q[1] + r[1]
+    add_formal_differences(q, r)[2] = q[2] + r[2]
+    add_formal_differences(p, r)[1] + add_formal_differences(q, r)[2] = (p[1] + r[1]) + (q[2] + r[2]) = (p[1] + q[2]) + (r[1] + r[2]) = (q[1] + p[2]) + (r[1] + r[2]) = (q[1] + r[1]) + (p[2] + r[2]) = add_formal_differences(q, r)[1] + add_formal_differences(p, r)[2]
+    by def $represent_same_integer(add_formal_differences(p, r), add_formal_differences(q, r))
 
-# The multiplication case is the corresponding representative-replacement
-# statement for the product formula.
+thm multiplication_respects_formal_difference_equivalence:
+    ? forall p, q, r cart(N, N):
+        $represent_same_integer(p, q)
+        =>:
+            $represent_same_integer(multiply_formal_differences(p, r), multiply_formal_differences(q, r))
+    p[1] + q[2] = q[1] + p[2]
+    multiply_formal_differences(p, r) = (p[1] * r[1] + p[2] * r[2], p[1] * r[2] + p[2] * r[1])
+    multiply_formal_differences(q, r) = (q[1] * r[1] + q[2] * r[2], q[1] * r[2] + q[2] * r[1])
+    multiply_formal_differences(p, r)[1] = p[1] * r[1] + p[2] * r[2]
+    multiply_formal_differences(p, r)[2] = p[1] * r[2] + p[2] * r[1]
+    multiply_formal_differences(q, r)[1] = q[1] * r[1] + q[2] * r[2]
+    multiply_formal_differences(q, r)[2] = q[1] * r[2] + q[2] * r[1]
+    p[2] + q[1] = q[1] + p[2] = p[1] + q[2] = q[2] + p[1]
+    multiply_formal_differences(p, r)[1] + multiply_formal_differences(q, r)[2] = (p[1] * r[1] + p[2] * r[2]) + (q[1] * r[2] + q[2] * r[1]) = (p[1] + q[2]) * r[1] + (p[2] + q[1]) * r[2] = (q[1] + p[2]) * r[1] + (p[2] + q[1]) * r[2] = (q[1] + p[2]) * r[1] + (q[2] + p[1]) * r[2] = (q[1] * r[1] + q[2] * r[2]) + (p[1] * r[2] + p[2] * r[1]) = multiply_formal_differences(q, r)[1] + multiply_formal_differences(p, r)[2]
+    by def $represent_same_integer(multiply_formal_differences(p, r), multiply_formal_differences(q, r))
 
-forall a, b, a1, b1, c, d N:
-    a + b1 = a1 + b
-    =>:
-        (a - b) * (c - d) = (a1 - b1) * (c - d)
-
-# Lemma 4.1.3 also includes replacing the left input when it appears second;
-# addition and multiplication give the same result for equal representatives.
-
-forall a, b, a1, b1, c, d N:
-    a + b1 = a1 + b
-    =>:
-        (a - b) + (c - d) = (a1 - b1) + (c - d)
-        (c - d) + (a - b) = (c - d) + (a1 - b1)
-        (c - d) * (a - b) = (c - d) * (a1 - b1)
-
-# Natural-number arithmetic agrees with its integer embedding.
+# Natural-number arithmetic agrees with the representative embedding `n |->
+# (n,0)`.
 
 forall n, m N:
-    (n + 0) + (m + 0) = (n + m) + 0
-    (n + 0) * (m + 0) = (n * m) + 0
+    add_formal_differences((n, 0), (m, 0)) = (n + m, 0)
+    multiply_formal_differences((n, 0), (m, 0)) = (n * m, 0)
 
 """
 Definition 4.1.4 (Negation of integers). The negation of a-b is b-a.
 """
 
-# Negating a formal difference swaps its two natural-number representatives.
+# Negating a formal difference swaps its two natural-number coordinates. This
+# operation is well-defined on equivalence classes.
 
-forall a, b N:
-    -(a - b) = b - a
+have fn negate_formal_difference(p cart(N, N)) cart(N, N) = (p[2], p[1])
+
+thm negation_respects_formal_difference_equivalence:
+    ? forall p, q cart(N, N):
+        $represent_same_integer(p, q)
+        =>:
+            $represent_same_integer(negate_formal_difference(p), negate_formal_difference(q))
+    p[1] + q[2] = q[1] + p[2]
+    negate_formal_difference(p) = (p[2], p[1])
+    negate_formal_difference(q) = (q[2], q[1])
+    negate_formal_difference(p)[1] = p[2]
+    negate_formal_difference(p)[2] = p[1]
+    negate_formal_difference(q)[1] = q[2]
+    negate_formal_difference(q)[2] = q[1]
+    negate_formal_difference(p)[1] + negate_formal_difference(q)[2] = p[2] + q[1] = q[1] + p[2] = p[1] + q[2] = q[2] + p[1] = negate_formal_difference(q)[1] + negate_formal_difference(p)[2]
+    by def $represent_same_integer(negate_formal_difference(p), negate_formal_difference(q))
 
 # The swapped representative is the additive inverse.
 
@@ -179,11 +194,22 @@ Corollary 4.1.9. Cancellation law for integers.
 # Cancellation says equal products by the same nonzero integer have equal
 # remaining factors.
 
-forall a, b, c Z:
-    a * c = b * c
-    c != 0
-    =>:
-        a = b
+thm integer_multiplication_cancellation:
+    ? forall a, b, c Z:
+        a * c = b * c
+        c != 0
+        =>:
+            a = b
+    (a - b) * c = a * c - b * c = 0
+    (a - b) * c = 0
+    a - b = 0 or c = 0
+    by cases:
+        ? a = b
+        case a - b = 0:
+            a = a - b + b = b
+        case c = 0:
+            c != 0
+            impossible c != 0
 
 """
 Definition 4.1.10. Ordering of integers.
@@ -290,11 +316,26 @@ forall a, b Z:
         a >= b
         not a < b
 
-forall a, b Z:
-    a = b
-    =>:
-        not a > b
-        not a < b
+thm equal_integers_are_not_strictly_ordered:
+    ? forall a, b Z:
+        a = b
+        =>:
+            not a > b
+            not a < b
+    claim:
+        ? not a > b
+        by contra:
+            ? not a > b
+            a - b > 0
+            a - b = 0
+            impossible a - b = 0
+    claim:
+        ? not a < b
+        by contra:
+            ? not a < b
+            b - a > 0
+            b - a = 0
+            impossible b - a = 0
 
 forall a, b Z:
     a < b
@@ -319,15 +360,24 @@ Two quotients a//b and c//d are equal iff ad = cb.
 # while `_pos` and `_neg` mean strictly positive and strictly negative.  Thus
 # `Z_nz` below is the set of nonzero integers.
 
-forall a Z, b Z_nz, c Z, d Z_nz:
-    a / b = c / d
-    =>:
-        a * d = c * b
-
-forall a Z, b Z_nz, c Z, d Z_nz:
-    a * d = c * b
-    =>:
+thm rational_equality_gives_cross_products:
+    ? forall a Z, b Z_nz, c Z, d Z_nz:
         a / b = c / d
+        =>:
+            a * d = c * b
+    b != 0
+    d != 0
+    a * d = (a / b) * (b * d) = (c / d) * (b * d) = c * b
+
+thm cross_products_give_rational_equality:
+    ? forall a Z, b Z_nz, c Z, d Z_nz:
+        a * d = c * b
+        =>:
+            a / b = c / d
+    b != 0
+    d != 0
+    b * d != 0
+    a / b = (a * d) / (b * d) = (c * b) / (b * d) = c / d
 
 forall a Z, b Z_nz, c Z, d Z_nz:
     =>:
@@ -365,18 +415,29 @@ Lemma 4.2.3. These operations are well-defined.
 # representative by an equal quotient leaves sums, products, and negations
 # unchanged.
 
-forall a Z, b Z_nz, a1 Z, b1 Z_nz, c Z, d Z_nz:
-    a * b1 = a1 * b
-    =>:
-        (a / b) + (c / d) = (a1 / b1) + (c / d)
-        (a / b) * (c / d) = (a1 / b1) * (c / d)
-        -(a / b) = -(a1 / b1)
+thm rational_operations_respect_left_representative:
+    ? forall a Z, b Z_nz, a1 Z, b1 Z_nz, c Z, d Z_nz:
+        a * b1 = a1 * b
+        =>:
+            (a / b) + (c / d) = (a1 / b1) + (c / d)
+            (a / b) * (c / d) = (a1 / b1) * (c / d)
+            -(a / b) = -(a1 / b1)
+    by thm cross_products_give_rational_equality(a, b, a1, b1)
+    a / b = a1 / b1
+    (a / b) + (c / d) = (a1 / b1) + (c / d)
+    (a / b) * (c / d) = (a1 / b1) * (c / d)
+    -(a / b) = -(a1 / b1)
 
-forall a Z, b Z_nz, c Z, d Z_nz, c1 Z, d1 Z_nz:
-    c * d1 = c1 * d
-    =>:
-        (a / b) + (c / d) = (a / b) + (c1 / d1)
-        (a / b) * (c / d) = (a / b) * (c1 / d1)
+thm rational_operations_respect_right_representative:
+    ? forall a Z, b Z_nz, c Z, d Z_nz, c1 Z, d1 Z_nz:
+        c * d1 = c1 * d
+        =>:
+            (a / b) + (c / d) = (a / b) + (c1 / d1)
+            (a / b) * (c / d) = (a / b) * (c1 / d1)
+    by thm cross_products_give_rational_equality(c, d, c1, d1)
+    c / d = c1 / d1
+    (a / b) + (c / d) = (a / b) + (c1 / d1)
+    (a / b) * (c / d) = (a / b) * (c1 / d1)
 
 # Integer quotients `a/1` embed integers into rationals and preserve arithmetic.
 
@@ -385,10 +446,14 @@ forall a, b Z:
     (a / 1) * (b / 1) = (a * b) / 1
     -(a / 1) = (-a) / 1
 
-forall a, b Z:
-    a / 1 = b / 1
-    =>:
-        a = b
+thm integer_embedding_into_rationals_is_injective:
+    ? forall a, b Z:
+        a / 1 = b / 1
+        =>:
+            a = b
+    by thm rational_equality_gives_cross_products(a, 1, b, 1)
+    a * 1 = b * 1
+    a = a * 1 = b * 1 = b
 
 forall a, b Z:
     a = b
@@ -404,10 +469,16 @@ forall a, b Z:
 # A quotient is zero exactly when its numerator is zero; hence a quotient with
 # nonzero numerator and denominator is nonzero.
 
-forall a Z, b Z_nz:
-    a / b = 0
-    =>:
-        a = 0
+thm rational_quotient_zero_has_zero_numerator:
+    ? forall a Z, b Z_nz:
+        a / b = 0
+        =>:
+            a = 0
+    0 = 0 / 1
+    a / b = 0 / 1
+    by thm rational_equality_gives_cross_products(a, b, 0, 1)
+    a * 1 = 0 * b
+    a = a * 1 = 0 * b = 0
 
 forall a Z, b Z_nz:
     a = 0
@@ -557,23 +628,55 @@ Proposition 4.2.9. Basic properties of order on the rationals.
 forall x, y Q:
     x > y or x = y or x < y
 
-forall x, y Q:
-    x < y
-    =>:
-        x != y
-        not x > y
+thm rational_less_excludes_equal_and_greater:
+    ? forall x, y Q:
+        x < y
+        =>:
+            x != y
+            not x > y
+    x != y
+    x - y < 0
+    claim:
+        ? not x > y
+        by contra:
+            ? not x > y
+            x - y > 0
+            impossible x - y < 0
 
-forall x, y Q:
-    x = y
-    =>:
-        not x < y
-        not x > y
+thm equal_rationals_are_not_strictly_ordered:
+    ? forall x, y Q:
+        x = y
+        =>:
+            not x < y
+            not x > y
+    x - y = 0
+    claim:
+        ? not x < y
+        by contra:
+            ? not x < y
+            x - y < 0
+            impossible x - y = 0
+    claim:
+        ? not x > y
+        by contra:
+            ? not x > y
+            x - y > 0
+            impossible x - y = 0
 
-forall x, y Q:
-    x > y
-    =>:
-        x != y
-        not x < y
+thm rational_greater_excludes_equal_and_less:
+    ? forall x, y Q:
+        x > y
+        =>:
+            x != y
+            not x < y
+    x != y
+    x - y > 0
+    claim:
+        ? not x < y
+        by contra:
+            ? not x < y
+            x - y < 0
+            impossible x - y > 0
 
 # Proposition 4.2.9(b): reversing the arguments reverses the inequality symbol.
 
@@ -678,11 +781,18 @@ forall x, y Q:
     =>:
         y >= abs(x)
 
-forall x, y Q:
-    y >= abs(x)
-    =>:
-        -y <= x
-        x <= y
+thm rational_abs_upper_bound_gives_two_sided_bound:
+    ? forall x, y Q:
+        y >= abs(x)
+        =>:
+            -y <= x
+            x <= y
+    x <= abs(x)
+    -x <= abs(x)
+    -y <= -abs(x)
+    -abs(x) <= x
+    -y <= -abs(x) <= x
+    x <= abs(x) <= y
 
 forall x, y Q:
     =>:
@@ -715,36 +825,61 @@ forall x, y Q:
 # Proposition 4.3.3(e), non-negativity of distance, unfolded from
 # `dist_Q(x,y)=abs(x-y)`.
 
-forall x, y Q:
+thm rational_distance_nonnegative:
+    ? forall x, y Q:
+        dist_Q(x, y) >= 0
+    dist_Q(x, y) = abs(x - y)
+    abs(x - y) >= 0
     dist_Q(x, y) >= 0
 
 # Proposition 4.3.3(e), one zero-distance direction: equal points have
 # distance zero.
 
-forall x, y Q:
-    x = y
-    =>:
-        dist_Q(x, y) = 0
+thm equal_rationals_have_zero_distance:
+    ? forall x, y Q:
+        x = y
+        =>:
+            dist_Q(x, y) = 0
+    dist_Q(x, y) = abs(x - y) = abs(0) = 0
 
 # Proposition 4.3.3(e), the other zero-distance direction: distance zero
 # forces the difference to be zero, hence the two rationals are equal.
 
-forall x, y Q:
-    dist_Q(x, y) = 0
-    =>:
-        x = y
+thm zero_rational_distance_gives_equality:
+    ? forall x, y Q:
+        dist_Q(x, y) = 0
+        =>:
+            x = y
+    dist_Q(x, y) = abs(x - y)
+    abs(x - y) = 0
+    x - y = 0
+    x = x - y + y = y
 
 # Proposition 4.3.3(f): symmetry follows from
 # `abs(x-y)=abs(-(y-x))=abs(y-x)`.
 
-forall x, y Q:
-    dist_Q(x, y) = dist_Q(y, x)
+thm rational_distance_is_symmetric:
+    ? forall x, y Q:
+        dist_Q(x, y) = dist_Q(y, x)
+    dist_Q(x, y) = abs(x - y)
+    dist_Q(y, x) = abs(y - x)
+    x - y = -(y - x)
+    abs(x - y) = abs(-(y - x)) = abs(y - x)
+    dist_Q(x, y) = abs(x - y) = abs(y - x) = dist_Q(y, x)
 
 # Proposition 4.3.3(g): the triangle inequality follows from
 # `x-z=(x-y)+(y-z)` and the triangle inequality for absolute value.
 
-forall x, y, z Q:
-    dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z)
+thm rational_distance_triangle_inequality:
+    ? forall x, y, z Q:
+        dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z)
+    dist_Q(x, z) = abs(x - z)
+    dist_Q(x, y) = abs(x - y)
+    dist_Q(y, z) = abs(y - z)
+    x - z = (x - y) + (y - z)
+    abs(x - z) = abs((x - y) + (y - z))
+    abs((x - y) + (y - z)) <= abs(x - y) + abs(y - z)
+    dist_Q(x, z) = abs(x - z) <= abs(x - y) + abs(y - z) = dist_Q(x, y) + dist_Q(y, z)
 
 """
 Definition 4.3.4 (epsilon-closeness). Let epsilon be a positive rational
@@ -781,7 +916,9 @@ sketch:
     $is_close_in_Q(0.1, 0.99, 1.01)
     0.02 > 0.01
     forall epsilon Q_pos:
-        $is_close_in_Q(epsilon, 2, 2)
+        dist_Q(2, 2) = abs(2 - 2) = 0
+        0 <= epsilon
+        by def $is_close_in_Q(epsilon, 2, 2)
 
 """
 Proposition 4.3.7. Epsilon-closeness is reflexive, symmetric, and transitive
@@ -792,8 +929,12 @@ corresponding error estimates.
 
 # Proposition 4.3.7(a), reflexive direction: every rational is epsilon-close to itself.
 
-forall epsilon Q_pos, x Q:
-    $is_close_in_Q(epsilon, x, x)
+thm rational_closeness_is_reflexive:
+    ? forall epsilon Q_pos, x Q:
+        $is_close_in_Q(epsilon, x, x)
+    dist_Q(x, x) = abs(x - x) = 0
+    0 <= epsilon
+    by def $is_close_in_Q(epsilon, x, x)
 
 # Relaxing the tolerance preserves closeness: a bound by `epsilon` is also a
 # bound by any larger positive `epsilon_prime`.

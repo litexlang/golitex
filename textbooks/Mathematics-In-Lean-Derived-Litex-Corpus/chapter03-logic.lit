@@ -47,11 +47,8 @@ thm upper_bound_of_fn_add:
     forall x R:
         f(x) <= a
         g(x) <= b
-        =>:
-            f(x) + g(x) <= a + b
-    # Proof debt: the pointwise inequality is checked above, but predicate
-    # folding does not yet transport it through this anonymous function value.
-    trust $is_upper_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
+        f(x) + g(x) <= a + b
+    by def $is_upper_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
 
 # The dual source example shows that pointwise addition also adds lower bounds.
 thm lower_bound_of_fn_add:
@@ -63,11 +60,8 @@ thm lower_bound_of_fn_add:
     forall x R:
         a <= f(x)
         b <= g(x)
-        =>:
-            a + b <= f(x) + g(x)
-    # Proof debt: the checked pointwise inequality does not yet fold through
-    # this anonymous function value when proving the predicate application.
-    trust $is_lower_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
+        a + b <= f(x) + g(x)
+    by def $is_lower_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
 
 # The source also records the useful nonnegative-product instance.
 thm nonnegative_fn_product:
@@ -79,11 +73,8 @@ thm nonnegative_fn_product:
     forall x R:
         0 <= f(x)
         0 <= g(x)
-        =>:
-            0 <= f(x) * g(x)
-    # Proof debt: the pointwise nonnegativity proof is checked above, but its
-    # anonymous product function does not yet fold into the lower-bound prop.
-    trust $is_lower_bound_of_fn(fn(x R) R {f(x) * g(x)}, 0)
+        0 <= f(x) * g(x)
+    by def $is_lower_bound_of_fn(fn(x R) R {f(x) * g(x)}, 0)
 
 # Generic source orders are represented extensionally as sets of ordered
 # pairs. This keeps the carrier explicit while making the relation callable in
@@ -165,11 +156,8 @@ thm upper_bound_of_fn_add_by_relation:
     forall x D:
         $order_holds(A, le_rel, f(x), a)
         $order_holds(A, le_rel, g(x), b)
-        =>:
-            $order_holds(A, le_rel, add(f(x), g(x)), add(a, b))
-    # Proof debt: relation monotonicity is checked pointwise; the remaining
-    # fold is through an anonymous function in the source-facing predicate.
-    trust $is_upper_bound_of_fn_by_relation(D, A, le_rel, fn(x D) A {add(f(x), g(x))}, add(a, b))
+        $order_holds(A, le_rel, add(f(x), g(x)), add(a, b))
+    by def $is_upper_bound_of_fn_by_relation(D, A, le_rel, fn(x D) A {add(f(x), g(x))}, add(a, b))
 
 # Source definitions FnEven and FnOdd describe symmetry under x |-> -x.
 prop is_even_fn(f fn(x R) R):
@@ -191,8 +179,7 @@ thm even_fn_add:
         f(x) = f(-x)
         g(x) = g(-x)
         f(x) + g(x) = f(-x) + g(-x)
-    # Proof debt: the final predicate fold contains an anonymous sum function.
-    trust $is_even_fn(fn(x R) R {f(x) + g(x)})
+    by def $is_even_fn(fn(x R) R {f(x) + g(x)})
 
 # The product of two odd functions is even.
 thm odd_fn_mul_odd_fn:
@@ -206,9 +193,7 @@ thm odd_fn_mul_odd_fn:
         g(x) = -g(-x)
         f(x) * g(x) = (-f(-x)) * (-g(-x)) = f(-x) * g(-x)
         fn(z R) R {f(z) * g(z)}(x) = f(x) * g(x) = f(-x) * g(-x) = fn(z R) R {f(z) * g(z)}(-x)
-    # Proof debt: the pointwise symmetry is checked above; predicate folding
-    # through the anonymous product function remains unavailable.
-    trust $is_even_fn(fn(x R) R {f(x) * g(x)})
+    by def $is_even_fn(fn(x R) R {f(x) * g(x)})
 
 # The product of an even and an odd function is odd.
 thm even_fn_mul_odd_fn:
@@ -222,9 +207,7 @@ thm even_fn_mul_odd_fn:
         g(x) = -g(-x)
         f(x) * g(x) = f(-x) * (-g(-x)) = -(f(-x) * g(-x))
         fn(z R) R {f(z) * g(z)}(x) = f(x) * g(x) = -(f(-x) * g(-x)) = -(fn(z R) R {f(z) * g(z)}(-x))
-    # Proof debt: the pointwise symmetry is checked above; predicate folding
-    # through the anonymous product function remains unavailable.
-    trust $is_odd_fn(fn(x R) R {f(x) * g(x)})
+    by def $is_odd_fn(fn(x R) R {f(x) * g(x)})
 
 # Composing an even function with an odd one gives an even function.
 thm even_fn_comp_odd_fn:
@@ -238,9 +221,7 @@ thm even_fn_comp_odd_fn:
         g(x) = -g(-x)
         f(g(x)) = f(-g(x)) = f(g(-x))
         fn(z R) R {f(g(z))}(x) = f(g(x)) = f(g(-x)) = fn(z R) R {f(g(z))}(-x)
-    # Proof debt: the composition equality is checked pointwise, but the
-    # resulting anonymous function does not fold into the even-function prop.
-    trust $is_even_fn(fn(x R) R {f(g(x))})
+    by def $is_even_fn(fn(x R) R {f(g(x))})
 
 # Source theorems Subset.refl and Subset.trans. Litex has subset as a builtin,
 # so both statements follow directly from membership propagation.
@@ -276,11 +257,8 @@ thm upper_bound_of_set_mono:
     forall x S:
         $order_holds(A, le_rel, x, a)
         $order_holds(A, le_rel, a, b)
-        =>:
-            $order_holds(A, le_rel, x, b)
-    # Proof debt: the checked pointwise proof cannot yet be folded through the
-    # quantified clause of this predicate definition.
-    trust $is_upper_bound_of_set(A, le_rel, S, b)
+        $order_holds(A, le_rel, x, b)
+    by def $is_upper_bound_of_set(A, le_rel, S, b)
 
 # 3.2 The Existential Quantifier
 
@@ -658,9 +636,7 @@ thm converges_to_add:
                     abs(t(n) - b) < epsilon / 2
                     abs((s(n) + t(n)) - (a + b)) = abs((s(n) - a) + (t(n) - b))
                     abs((s(n) - a) + (t(n) - b)) <= abs(s(n) - a) + abs(t(n) - b) < epsilon / 2 + epsilon / 2 = epsilon
-            # Proof debt: the quantified tail estimate above is checked, but
-            # the witness checker cannot fold it into _is_eventually_close.
-            trust $_is_eventually_close(fn(n N) R {s(n) + t(n)}, a + b, epsilon, finite_set_max(union({Ns}, {Nt})))
+            by def $_is_eventually_close(fn(n N) R {s(n) + t(n)}, a + b, epsilon, finite_set_max(union({Ns}, {Nt})))
     $converges_to(fn(n N) R {s(n) + t(n)}, a + b)
 
 # Source theorem convergesTo_mul_const. The always-positive scale |c| + 1

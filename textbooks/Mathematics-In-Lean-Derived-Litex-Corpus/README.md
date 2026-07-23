@@ -54,25 +54,21 @@ Mathlib coverage, or to compare source-line counts between the two systems.
 ## Evidence and limits
 
 The current item ledger was last audited on 2026-07-22. All thirteen chapters
-run in ordered-export mode; the remaining executable debt is localized and
-explicit.
+run in strict ordered-export mode without executable proof debt.
 
 | Status | Count | Meaning |
 | --- | ---: | --- |
-| Checked records | 190 | The retained Litex item has a checked local proof or construction route. |
-| Trusted records | 11 | The mathematical proof spine is checked, but the final quantified-predicate fold is explicitly trusted. |
+| Checked records | 201 | The retained Litex item has a checked local proof or construction route. |
+| Trusted records | 0 | No status record relies on an executable trusted declaration. |
 | Blocked records | 89 | The source mathematics is not claimed in executable code and is recorded in comment-only `todo.lit`. |
 | Total records | 290 | Workflow records for retained definitions/results and grouped construction or proof families. |
-| Executable debt directives | 11 | All are narrow `trust` facts for known predicate-folding failures; there are no `know`, `axiom`, or `abstract_prop` declarations. |
+| Executable debt directives | 0 | Corpus `.lit` files contain no `trust`, `know`, `axiom`, or `abstract_prop` declaration. |
 
-On 2026-07-22 the current no-`std` project completed the ordinary ordered
-runner. The ordinary runner checks each configured export and permits the
-explicit trust boundary above; it does not silently trust whole exported files.
-Focused strict closures for Chapters 1, 2, 4, and 5, together with the exact
-Chapter 7 integer-quotient use probe, also returned `result=success` and
-`ok=true`. The complete strict project runner stops at the first of the eleven
-explicit predicate-folding trusts, so this README does not claim a complete
-strict-project success for the current graph.
+On 2026-07-22 the current no-`std` project completed the full strict ordered
+runner. Every configured export from Chapter 1 through Chapter 13 was verified
+in source order. The former predicate-folding debt was removed by stating the
+required unconditional pointwise facts and closing the concrete definitions
+with `by def`.
 
 At the Litex source-module level, this project has no configured `std` import
 and no cite module. The small shared number-theory layer is ordinary checked
@@ -166,8 +162,7 @@ the final module.
 - When Litex cannot express a source equivalence as one top-level theorem
   result, the corpus records its forward and reverse facts separately.
 - Unfinished source mathematics is omitted from executable code and recorded
-  in the comment-only `todo.lit`; it is never counted as a proof. The eleven
-  explicit `trust` directives are separately counted as trusted records.
+  in the comment-only `todo.lit`; it is never counted as a proof.
 - No standard-library theorem or cite theorem is silently supplying the local
   number-theory proofs; their reusable definitions and lemmas are visible in
   the source chapters. Kernel builtin and verifier behavior remains a separate
