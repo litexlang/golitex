@@ -1,8 +1,95 @@
 # Section IX: polynomials over a field.
 
-# A polynomial is represented by its coefficient function and a finite degree
-# bound.  This keeps the coefficient carrier and the reusable evaluation map
-# visible instead of hiding the polynomial behind a proposition.
+# A polynomial over K is a coefficient function on N whose nonzero support is
+# contained in a finite set.
+prop supports_polynomial(K set, zero K, p fn(n N) K, support finite_set):
+    forall n N:
+        p(n) != zero
+        =>:
+            n $in support
+
+prop polynomial_has_finite_support(K set, zero K, p fn(n N) K):
+    exist support finite_set st {$supports_polynomial(K, zero, p, support)}
+
+template<K set, zero K>:
+    have polynomial_ring power_set(fn(n N) K) = {p fn(n N) K: $polynomial_has_finite_support(K, zero, p)}
+
+prop polynomial_sum(K set, zero K, add fn(x, y K) K, p, q, result_poly \polynomial_ring<K, zero>):
+    forall n N:
+        result_poly(n) = add(p(n), q(n))
+
+# The trace at degree n is the finite convolution
+# p(0)q(n)+p(1)q(n-1)+...+p(n)q(0).
+prop polynomial_convolution_trace(K set, add, mul fn(x, y K) K, p, q fn(n N) K, degree N, partial_sums fn(i N) K):
+    partial_sums(0) = mul(p(0), q(degree))
+    forall i N_pos:
+        i <= degree
+        =>:
+            partial_sums(i) = add(partial_sums(i - 1), mul(p(i), q(degree - i)))
+
+prop polynomial_product(K set, zero K, add, mul fn(x, y K) K, p, q, result_poly \polynomial_ring<K, zero>):
+    forall degree N:
+        exist partial_sums fn(i N) K st {$polynomial_convolution_trace(K, add, mul, p, q, degree, partial_sums), result_poly(degree) = partial_sums(degree)}
+
+prop is_zero_polynomial(K set, zero K, p \polynomial_ring<K, zero>):
+    forall n N:
+        p(n) = zero
+
+prop has_polynomial_degree(K set, zero K, p \polynomial_ring<K, zero>, degree N):
+    p(degree) != zero
+    forall n N:
+        n > degree
+        =>:
+            p(n) = zero
+
+prop has_lower_polynomial_degree(K set, zero K, divisor, r \polynomial_ring<K, zero>):
+    exist divisor_degree, remainder_degree N st {$has_polynomial_degree(K, zero, divisor, divisor_degree), $has_polynomial_degree(K, zero, r, remainder_degree), remainder_degree < divisor_degree}
+
+prop is_polynomial_remainder(K set, zero K, divisor, r \polynomial_ring<K, zero>):
+    $is_zero_polynomial(K, zero, r) or $has_lower_polynomial_degree(K, zero, divisor, r)
+
+# The division relation now exposes its actual polynomial objects and
+# operations. The theorem below retains only the mathematical existence proof
+# as debt.
+prop polynomial_division_statement(K set, zero, one K, add, mul fn(x, y K) K, f, g, q, r \polynomial_ring<K, zero>):
+    $section6::is_field(K, add, mul, zero, one)
+    not $is_zero_polynomial(K, zero, g)
+    exist gq \polynomial_ring<K, zero> st {$polynomial_product(K, zero, add, mul, g, q, gq), $polynomial_sum(K, zero, add, gq, r, f)}
+    $is_polynomial_remainder(K, zero, g, r)
+
+prop polynomial_multiple(K set, zero K, add, mul fn(x, y K) K, factor, value \polynomial_ring<K, zero>):
+    exist multiplier \polynomial_ring<K, zero> st {$polynomial_product(K, zero, add, mul, factor, multiplier, value)}
+
+prop polynomial_gcd_statement(K set, zero K, add, mul fn(x, y K) K, f, g, d \polynomial_ring<K, zero>):
+    $polynomial_multiple(K, zero, add, mul, d, f)
+    $polynomial_multiple(K, zero, add, mul, d, g)
+    forall common_divisor \polynomial_ring<K, zero>:
+        $polynomial_multiple(K, zero, add, mul, common_divisor, f)
+        $polynomial_multiple(K, zero, add, mul, common_divisor, g)
+        =>:
+            $polynomial_multiple(K, zero, add, mul, common_divisor, d)
+
+# An ideal family is nonempty and closed under polynomial addition and
+# multiplication by an arbitrary polynomial.
+prop polynomial_ideal_family(K set, zero K, add, mul fn(x, y K) K, family power_set(\polynomial_ring<K, zero>)):
+    $is_nonempty_set(family)
+    forall f, g family:
+        exist sum_poly family st {$polynomial_sum(K, zero, add, f, g, sum_poly)}
+    forall f family, h \polynomial_ring<K, zero>:
+        exist product_poly family st {$polynomial_product(K, zero, add, mul, h, f, product_poly)}
+
+prop polynomial_multiple_ideal(K set, zero K, add, mul fn(x, y K) K, family power_set(\polynomial_ring<K, zero>), generator \polynomial_ring<K, zero>):
+    generator $in family
+    forall f family:
+        $polynomial_multiple(K, zero, add, mul, generator, f)
+
+prop polynomial_gcd_generator_claim(K set, zero K, add, mul fn(x, y K) K, family power_set(\polynomial_ring<K, zero>)):
+    exist generator \polynomial_ring<K, zero> st {$polynomial_multiple_ideal(K, zero, add, mul, family, generator)}
+
+prop polynomial_division_claim(K set, zero, one K, add, mul fn(x, y K) K, f, g \polynomial_ring<K, zero>):
+    exist q, r \polynomial_ring<K, zero> st {$polynomial_division_statement(K, zero, one, add, mul, f, g, q, r)}
+
+# The integer evaluator is retained for the source corollary about roots.
 prop has_polynomial_degree_Z(coeff fn(k N) Z, n N):
     coeff(n) != 0
     forall k N:
@@ -10,14 +97,6 @@ prop has_polynomial_degree_Z(coeff fn(k N) Z, n N):
         =>:
             coeff(k) = 0
 
-prop polynomial_term_Z(coeff fn(k N) Z, n N, term cart(N, Z)):
-    term[1] <= n
-    term[2] = coeff(term[1])
-
-have fn polynomial_terms_Z(coeff fn(k N) Z, n N) power_set(cart(N, Z)) = {term cart(N, Z): $polynomial_term_Z(coeff, n, term)}
-
-# Definition. Evaluation is the finite sum a_0+a_1*x+...+a_n*x^n.  The
-# recursive object is checked directly by induction on the degree bound.
 have fn polynomial_eval_Z(coeff fn(k N) Z, x Z, n N) Z by induc n from 0:
     case n = 0: coeff(0)
     case n > 0: polynomial_eval_Z(coeff, x, n - 1) + coeff(n) * x ^ n
@@ -27,56 +106,32 @@ prop polynomial_root_Z(coeff fn(k N) Z, x Z, n N):
 
 have fn polynomial_root_set_Z(coeff fn(k N) Z, n N) power_set(Z) = {x Z: $polynomial_root_Z(coeff, x, n)}
 
-# Polynomial division and the gcd construction require a polynomial carrier
-# with addition, multiplication, and degree.  Those operations are not yet a
-# first-class Litex object, so the missing relation is kept as a narrow
-# background interface rather than replacing the polynomial by a tautological
-# `prop`.
-prop polynomial_division_statement(K set, f set, g set, q set, r set):
-    $section9citation::polynomial_division_statement(K, f, g, q, r)
-
-prop polynomial_gcd_statement(K set, f set, g set, d set):
-    $section9citation::polynomial_gcd_statement(K, f, g, d)
-
-# Theorem IX.1. A nonempty addition/multiple-closed family of polynomials is
-# the set of multiples of one normalized gcd.  The carrier-level theorem is
-# explicit; only the Euclidean polynomial operation is deferred.
-prop polynomial_multiple_ideal(K set, family set, generator set):
-    generator $in family
-    forall f family:
-        $section9citation::polynomial_division_statement(K, f, generator, f, generator)
-
-prop polynomial_gcd_generator_claim(K set, family set):
-    exist generator set st {$polynomial_multiple_ideal(K, family, generator)}
-
-# The division algorithm is the polynomial analogue of Euclidean division for
-# integers: A=BQ+R with R=0 or deg(R)<deg(B).  Its exact object form awaits the
-# polynomial carrier, so the source-facing existential remains named.
-prop polynomial_division_claim(K set, f set, g set):
-    exist q, r set st {$polynomial_division_statement(K, f, g, q, r)}
-
-# Corollary. A degree-n polynomial has at most n distinct roots.  Here the
-# integer coefficient/evaluation object provides a directly usable root set;
-# the finite root-count proof is the remaining field-polynomial theorem.
 prop polynomial_root_bound_Z(coeff fn(k N) Z, n N, roots power_set(Z)):
     roots = polynomial_root_set_Z(coeff, n)
     $is_finite_set(roots)
     finite_set_size(roots) <= n
 
-# The gcd-generator, division, and root-count theorems all depend on the same
-# missing typed polynomial carrier and Euclidean operation package.  Keep the
-# three source-facing statements in one explicit trust boundary.
+# Theorem IX.1. Every ideal in a polynomial ring over a field is principal.
 thm theorem_IX_polynomial_gcd_generator:
-    ? forall K set, family set:
-        $polynomial_gcd_generator_claim(K, family)
-    trust $polynomial_gcd_generator_claim(K, family)
+    ? forall K set, zero, one K, add, mul fn(x, y K) K, family power_set(\polynomial_ring<K, zero>):
+        $section6::is_field(K, add, mul, zero, one)
+        $polynomial_ideal_family(K, zero, add, mul, family)
+        =>:
+            $polynomial_gcd_generator_claim(K, zero, add, mul, family)
+    trust $polynomial_gcd_generator_claim(K, zero, add, mul, family)
 
+# Theorem IX.2. Division by a nonzero polynomial has quotient and remainder.
 thm theorem_IX_polynomial_division:
-    ? forall K set, f set, g set:
-        $polynomial_division_claim(K, f, g)
-    trust $polynomial_division_claim(K, f, g)
+    ? forall K set, zero, one K, add, mul fn(x, y K) K, f, g \polynomial_ring<K, zero>:
+        $section6::is_field(K, add, mul, zero, one)
+        not $is_zero_polynomial(K, zero, g)
+        =>:
+            $polynomial_division_claim(K, zero, one, add, mul, f, g)
+    trust $polynomial_division_claim(K, zero, one, add, mul, f, g)
 
 thm theorem_IX_root_bound:
     ? forall coeff fn(k N) Z, n N:
-        $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
+        $has_polynomial_degree_Z(coeff, n)
+        =>:
+            $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
     trust $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))

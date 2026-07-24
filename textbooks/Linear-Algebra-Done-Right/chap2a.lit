@@ -9,46 +9,46 @@
 # Definition 2.2. The value of a linear combination is the finite partial sum
 # a_1 v_1 + ... + a_n v_n. This relation gives the recursive specification;
 # linear_combination_value below is the callable value selected from it.
-prop is_linear_combination_partial_sum_sequence(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>, partial_sums fn(k closed_range(0, n)) v):
+prop is_linear_combination_partial_sum_sequence(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>, partial_sums fn(k closed_range(0, n)) v):
     partial_sums(0) = space.zero
     forall k N_pos:
         k <= n
         =>:
             partial_sums(k) = space.add(partial_sums(k - 1), space.smul(coefficients.entries(k), vectors.entries(k)))
 
-prop has_linear_combination_value(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>, value v):
-    exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, coefficients, vectors, partial_sums), value = partial_sums(n)}
+prop has_linear_combination_value(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>, value v):
+    exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, partial_sums), value = partial_sums(n)}
 
 # The partial-sum function is constructed by recursion on its bounded index.
 # A second induction shows that every sequence satisfying the same recurrence
 # agrees pointwise with it, hence the terminal value is uniquely determined.
 thm linear_combination_value_exists_unique:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
-        exist! value v st {$has_linear_combination_value(s, scalars, v, space, n, coefficients, vectors, value)}
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
+        exist! value v st {$has_linear_combination_value(s, v, space, n, coefficients, vectors, value)}
     have fn canonical_partial_sum(k closed_range(0, n)) v by induc k from 0:
         case k = 0: space.zero
         case k > 0: space.add(canonical_partial_sum(k - 1), space.smul(coefficients.entries(k), vectors.entries(k)))
     claim:
-        ? $is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, coefficients, vectors, canonical_partial_sum)
+        ? $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, canonical_partial_sum)
         canonical_partial_sum(0) = space.zero
         forall k N_pos:
             k <= n
             =>:
                 canonical_partial_sum(k) = space.add(canonical_partial_sum(k - 1), space.smul(coefficients.entries(k), vectors.entries(k)))
-        $is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, coefficients, vectors, canonical_partial_sum)
-    witness exist value v st {$has_linear_combination_value(s, scalars, v, space, n, coefficients, vectors, value)} from canonical_partial_sum(n):
-        witness exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, coefficients, vectors, partial_sums), canonical_partial_sum(n) = partial_sums(n)} from canonical_partial_sum:
+        $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, canonical_partial_sum)
+    witness exist value v st {$has_linear_combination_value(s, v, space, n, coefficients, vectors, value)} from canonical_partial_sum(n):
+        witness exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, partial_sums), canonical_partial_sum(n) = partial_sums(n)} from canonical_partial_sum:
             canonical_partial_sum(n) = canonical_partial_sum(n)
     claim:
         ? forall value1, value2 v:
-            $has_linear_combination_value(s, scalars, v, space, n, coefficients, vectors, value1)
-            $has_linear_combination_value(s, scalars, v, space, n, coefficients, vectors, value2)
+            $has_linear_combination_value(s, v, space, n, coefficients, vectors, value1)
+            $has_linear_combination_value(s, v, space, n, coefficients, vectors, value2)
             =>:
                 value1 = value2
-        obtain partial1 from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, coefficients, vectors, partial_sums), value1 = partial_sums(n)}
-        obtain partial2 from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, coefficients, vectors, partial_sums), value2 = partial_sums(n)}
-        $is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, coefficients, vectors, partial1)
-        $is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, coefficients, vectors, partial2)
+        obtain partial1 from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, partial_sums), value1 = partial_sums(n)}
+        obtain partial2 from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, partial_sums), value2 = partial_sums(n)}
+        $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, partial1)
+        $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, partial2)
         forall j N_pos:
             j <= n
             =>:
@@ -103,13 +103,13 @@ thm linear_combination_value_exists_unique:
         extended1(n) = partial1(n)
         extended2(n) = partial2(n)
         value1 = partial1(n) = partial2(n) = value2
-    exist! value v st {$has_linear_combination_value(s, scalars, v, space, n, coefficients, vectors, value)}
+    exist! value v st {$has_linear_combination_value(s, v, space, n, coefficients, vectors, value)}
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N>:
+template<s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N>:
     have fn linear_combination_value by exist!:
         ? forall coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
-            exist! value v st {$has_linear_combination_value(s, scalars, v, space, n, coefficients, vectors, value)}
-        by thm linear_combination_value_exists_unique(s, scalars, v, space, n, coefficients, vectors)
+            exist! value v st {$has_linear_combination_value(s, v, space, n, coefficients, vectors, value)}
+        by thm linear_combination_value_exists_unique(s, v, space, n, coefficients, vectors)
 
 # Kernel boundary. A `have fn ... by exist!` nested in a template constructs
 # the selected function, but the current verifier does not expose the chosen
@@ -117,8 +117,8 @@ template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space
 # missing definitional projection; all finite-recursion mathematics above is
 # checked by linear_combination_value_exists_unique.
 axiom linear_combination_value_satisfies_spec:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
-        $has_linear_combination_value(s, scalars, v, space, n, coefficients, vectors, \linear_combination_value<s, scalars, v, space, n>(coefficients, vectors))
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
+        $has_linear_combination_value(s, v, space, n, coefficients, vectors, \linear_combination_value<s, v, space, n>(coefficients, vectors))
 
 # Coordinate-list operations used to replay finite-sum algebra without
 # replacing an ordered coefficient list by an unordered set.
@@ -157,15 +157,15 @@ axiom coefficient_list_neg_entry:
             result.entries(i) = scalars.neg(coefficients.entries(i))
 
 thm linear_combination_value_zero_coefficients:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>:
-        \linear_combination_value<s, scalars, v, space, n>(\zero_coefficient_list<s, scalars, n>, vectors) = space.zero
-    by thm linear_combination_value_satisfies_spec(s, scalars, v, space, n, \zero_coefficient_list<s, scalars, n>, vectors)
-    obtain partial_sums from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, \zero_coefficient_list<s, scalars, n>, vectors, partial_sums), \linear_combination_value<s, scalars, v, space, n>(\zero_coefficient_list<s, scalars, n>, vectors) = partial_sums(n)}
-    $is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, \zero_coefficient_list<s, scalars, n>, vectors, partial_sums)
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>:
+        \linear_combination_value<s, v, space, n>(\zero_coefficient_list<s, space.scalars, n>, vectors) = space.zero
+    by thm linear_combination_value_satisfies_spec(s, v, space, n, \zero_coefficient_list<s, space.scalars, n>, vectors)
+    obtain partial_sums from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, \zero_coefficient_list<s, space.scalars, n>, vectors, partial_sums), \linear_combination_value<s, v, space, n>(\zero_coefficient_list<s, space.scalars, n>, vectors) = partial_sums(n)}
+    $is_linear_combination_partial_sum_sequence(s, v, space, n, \zero_coefficient_list<s, space.scalars, n>, vectors, partial_sums)
     forall j N_pos:
         j <= n
         =>:
-            partial_sums(j) = space.add(partial_sums(j - 1), space.smul(&chap1a::FiniteList<s, n>{\zero_coefficient_list<s, scalars, n>}.entries(j), vectors.entries(j)))
+            partial_sums(j) = space.add(partial_sums(j - 1), space.smul(&chap1a::FiniteList<s, n>{\zero_coefficient_list<s, space.scalars, n>}.entries(j), vectors.entries(j)))
     have fn extended(k N) v by cases:
         case k <= n: partial_sums(k)
         case k > n: space.zero
@@ -187,40 +187,40 @@ thm linear_combination_value_zero_coefficients:
                         k <= k + 1 <= n
                         k + 1 > 0
                         have next_index N_pos = k + 1
-                        have zero_coefficients &chap1a::FiniteList<s, n> = \zero_coefficient_list<s, scalars, n>
-                        by thm zero_coefficient_list_entry(s, scalars, n, zero_coefficients, next_index)
+                        have zero_coefficients &chap1a::FiniteList<s, n> = \zero_coefficient_list<s, space.scalars, n>
+                        by thm zero_coefficient_list_entry(s, space.scalars, n, zero_coefficients, next_index)
                         extended(k) = partial_sums(k)
                         partial_sums(k) = space.zero
                         extended(k + 1) = partial_sums(k + 1)
-                        &chap1a::FiniteList<s, n>{\zero_coefficient_list<s, scalars, n>}.entries(next_index) = scalars.zero
-                        by thm chap1b::zero_scalar_times_vector(s, scalars, v, space, vectors.entries(next_index))
-                        partial_sums(next_index) = space.add(partial_sums(next_index - 1), space.smul(&chap1a::FiniteList<s, n>{\zero_coefficient_list<s, scalars, n>}.entries(next_index), vectors.entries(next_index)))
+                        &chap1a::FiniteList<s, n>{\zero_coefficient_list<s, space.scalars, n>}.entries(next_index) = space.scalars.zero
+                        by thm chap1b::zero_scalar_times_vector(s, v, space, vectors.entries(next_index))
+                        partial_sums(next_index) = space.add(partial_sums(next_index - 1), space.smul(&chap1a::FiniteList<s, n>{\zero_coefficient_list<s, space.scalars, n>}.entries(next_index), vectors.entries(next_index)))
                         next_index - 1 = k
                         space.add(partial_sums(k), space.zero) = space.add(space.zero, partial_sums(k)) = partial_sums(k) = space.zero
-                        partial_sums(k + 1) = partial_sums(next_index) = space.add(partial_sums(next_index - 1), space.smul(&chap1a::FiniteList<s, n>{\zero_coefficient_list<s, scalars, n>}.entries(next_index), vectors.entries(next_index))) = space.add(partial_sums(k), space.zero) = space.zero
+                        partial_sums(k + 1) = partial_sums(next_index) = space.add(partial_sums(next_index - 1), space.smul(&chap1a::FiniteList<s, n>{\zero_coefficient_list<s, space.scalars, n>}.entries(next_index), vectors.entries(next_index))) = space.add(partial_sums(k), space.zero) = space.zero
                         extended(k + 1) = space.zero
                     case k + 1 > n:
                         extended(k + 1) = space.zero
     extended(n) = space.zero
     extended(n) = partial_sums(n)
-    \linear_combination_value<s, scalars, v, space, n>(\zero_coefficient_list<s, scalars, n>, vectors) = partial_sums(n) = space.zero
+    \linear_combination_value<s, v, space, n>(\zero_coefficient_list<s, space.scalars, n>, vectors) = partial_sums(n) = space.zero
 
 thm linear_combination_value_add_coefficients:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, left, right &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
-        \linear_combination_value<s, scalars, v, space, n>(\coefficient_list_add<s, scalars, n>(left, right), vectors) = space.add(\linear_combination_value<s, scalars, v, space, n>(left, vectors), \linear_combination_value<s, scalars, v, space, n>(right, vectors))
-    by thm linear_combination_value_satisfies_spec(s, scalars, v, space, n, \coefficient_list_add<s, scalars, n>(left, right), vectors)
-    by thm linear_combination_value_satisfies_spec(s, scalars, v, space, n, left, vectors)
-    by thm linear_combination_value_satisfies_spec(s, scalars, v, space, n, right, vectors)
-    obtain sum_partial from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, \coefficient_list_add<s, scalars, n>(left, right), vectors, partial_sums), \linear_combination_value<s, scalars, v, space, n>(\coefficient_list_add<s, scalars, n>(left, right), vectors) = partial_sums(n)}
-    obtain left_partial from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, left, vectors, partial_sums), \linear_combination_value<s, scalars, v, space, n>(left, vectors) = partial_sums(n)}
-    obtain right_partial from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, right, vectors, partial_sums), \linear_combination_value<s, scalars, v, space, n>(right, vectors) = partial_sums(n)}
-    $is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, \coefficient_list_add<s, scalars, n>(left, right), vectors, sum_partial)
-    $is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, left, vectors, left_partial)
-    $is_linear_combination_partial_sum_sequence(s, scalars, v, space, n, right, vectors, right_partial)
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, left, right &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
+        \linear_combination_value<s, v, space, n>(\coefficient_list_add<s, space.scalars, n>(left, right), vectors) = space.add(\linear_combination_value<s, v, space, n>(left, vectors), \linear_combination_value<s, v, space, n>(right, vectors))
+    by thm linear_combination_value_satisfies_spec(s, v, space, n, \coefficient_list_add<s, space.scalars, n>(left, right), vectors)
+    by thm linear_combination_value_satisfies_spec(s, v, space, n, left, vectors)
+    by thm linear_combination_value_satisfies_spec(s, v, space, n, right, vectors)
+    obtain sum_partial from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, \coefficient_list_add<s, space.scalars, n>(left, right), vectors, partial_sums), \linear_combination_value<s, v, space, n>(\coefficient_list_add<s, space.scalars, n>(left, right), vectors) = partial_sums(n)}
+    obtain left_partial from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, left, vectors, partial_sums), \linear_combination_value<s, v, space, n>(left, vectors) = partial_sums(n)}
+    obtain right_partial from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, right, vectors, partial_sums), \linear_combination_value<s, v, space, n>(right, vectors) = partial_sums(n)}
+    $is_linear_combination_partial_sum_sequence(s, v, space, n, \coefficient_list_add<s, space.scalars, n>(left, right), vectors, sum_partial)
+    $is_linear_combination_partial_sum_sequence(s, v, space, n, left, vectors, left_partial)
+    $is_linear_combination_partial_sum_sequence(s, v, space, n, right, vectors, right_partial)
     forall j N_pos:
         j <= n
         =>:
-            sum_partial(j) = space.add(sum_partial(j - 1), space.smul(&chap1a::FiniteList<s, n>{\coefficient_list_add<s, scalars, n>(left, right)}.entries(j), vectors.entries(j)))
+            sum_partial(j) = space.add(sum_partial(j - 1), space.smul(&chap1a::FiniteList<s, n>{\coefficient_list_add<s, space.scalars, n>(left, right)}.entries(j), vectors.entries(j)))
     forall j N_pos:
         j <= n
         =>:
@@ -261,8 +261,8 @@ thm linear_combination_value_add_coefficients:
                         k <= k + 1 <= n
                         k + 1 > 0
                         have next_index N_pos = k + 1
-                        have added_coefficients &chap1a::FiniteList<s, n> = \coefficient_list_add<s, scalars, n>(left, right)
-                        by thm coefficient_list_add_entry(s, scalars, n, left, right, added_coefficients, next_index)
+                        have added_coefficients &chap1a::FiniteList<s, n> = \coefficient_list_add<s, space.scalars, n>(left, right)
+                        by thm coefficient_list_add_entry(s, space.scalars, n, left, right, added_coefficients, next_index)
                         extended_sum(k) = sum_partial(k)
                         extended_left(k) = left_partial(k)
                         extended_right(k) = right_partial(k)
@@ -270,9 +270,9 @@ thm linear_combination_value_add_coefficients:
                         extended_sum(k + 1) = sum_partial(k + 1)
                         extended_left(k + 1) = left_partial(k + 1)
                         extended_right(k + 1) = right_partial(k + 1)
-                        &chap1a::FiniteList<s, n>{\coefficient_list_add<s, scalars, n>(left, right)}.entries(next_index) = scalars.add(left.entries(next_index), right.entries(next_index))
-                        space.smul(scalars.add(left.entries(next_index), right.entries(next_index)), vectors.entries(next_index)) = space.add(space.smul(left.entries(next_index), vectors.entries(next_index)), space.smul(right.entries(next_index), vectors.entries(next_index)))
-                        sum_partial(next_index) = space.add(sum_partial(next_index - 1), space.smul(&chap1a::FiniteList<s, n>{\coefficient_list_add<s, scalars, n>(left, right)}.entries(next_index), vectors.entries(next_index)))
+                        &chap1a::FiniteList<s, n>{\coefficient_list_add<s, space.scalars, n>(left, right)}.entries(next_index) = space.scalars.add(left.entries(next_index), right.entries(next_index))
+                        space.smul(space.scalars.add(left.entries(next_index), right.entries(next_index)), vectors.entries(next_index)) = space.add(space.smul(left.entries(next_index), vectors.entries(next_index)), space.smul(right.entries(next_index), vectors.entries(next_index)))
+                        sum_partial(next_index) = space.add(sum_partial(next_index - 1), space.smul(&chap1a::FiniteList<s, n>{\coefficient_list_add<s, space.scalars, n>(left, right)}.entries(next_index), vectors.entries(next_index)))
                         left_partial(next_index) = space.add(left_partial(next_index - 1), space.smul(left.entries(next_index), vectors.entries(next_index)))
                         right_partial(next_index) = space.add(right_partial(next_index - 1), space.smul(right.entries(next_index), vectors.entries(next_index)))
                         next_index - 1 = k
@@ -284,7 +284,7 @@ thm linear_combination_value_add_coefficients:
                         left_term $in v
                         right_term $in v
                         have combined_term v = space.add(left_term, right_term)
-                        sum_partial(k + 1) = sum_partial(next_index) = space.add(sum_partial(next_index - 1), space.smul(&chap1a::FiniteList<s, n>{\coefficient_list_add<s, scalars, n>(left, right)}.entries(next_index), vectors.entries(next_index))) = space.add(sum_partial(k), space.smul(scalars.add(left.entries(next_index), right.entries(next_index)), vectors.entries(next_index))) = space.add(sum_partial(k), combined_term) = space.add(space.add(left_partial(k), right_partial(k)), combined_term)
+                        sum_partial(k + 1) = sum_partial(next_index) = space.add(sum_partial(next_index - 1), space.smul(&chap1a::FiniteList<s, n>{\coefficient_list_add<s, space.scalars, n>(left, right)}.entries(next_index), vectors.entries(next_index))) = space.add(sum_partial(k), space.smul(space.scalars.add(left.entries(next_index), right.entries(next_index)), vectors.entries(next_index))) = space.add(sum_partial(k), combined_term) = space.add(space.add(left_partial(k), right_partial(k)), combined_term)
                         sum_partial(k + 1) = space.add(space.add(left_partial(k), right_partial(k)), combined_term) = space.add(left_partial(k), space.add(right_partial(k), combined_term)) = space.add(left_partial(k), space.add(right_partial(k), space.add(left_term, right_term)))
                         space.add(right_partial(k), left_term) = space.add(left_term, right_partial(k))
                         space.add(right_partial(k), space.add(left_term, right_term)) = space.add(space.add(right_partial(k), left_term), right_term) = space.add(space.add(left_term, right_partial(k)), right_term) = space.add(left_term, space.add(right_partial(k), right_term))
@@ -305,63 +305,63 @@ thm linear_combination_value_add_coefficients:
     extended_sum(n) = sum_partial(n)
     extended_left(n) = left_partial(n)
     extended_right(n) = right_partial(n)
-    \linear_combination_value<s, scalars, v, space, n>(\coefficient_list_add<s, scalars, n>(left, right), vectors) = sum_partial(n) = space.add(left_partial(n), right_partial(n)) = space.add(\linear_combination_value<s, scalars, v, space, n>(left, vectors), \linear_combination_value<s, scalars, v, space, n>(right, vectors))
+    \linear_combination_value<s, v, space, n>(\coefficient_list_add<s, space.scalars, n>(left, right), vectors) = sum_partial(n) = space.add(left_partial(n), right_partial(n)) = space.add(\linear_combination_value<s, v, space, n>(left, vectors), \linear_combination_value<s, v, space, n>(right, vectors))
 
 thm linear_combination_value_neg_coefficients:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
-        \linear_combination_value<s, scalars, v, space, n>(\coefficient_list_neg<s, scalars, n>(coefficients), vectors) = \chap1b::vector_neg<s, scalars, v, space>(\linear_combination_value<s, scalars, v, space, n>(coefficients, vectors))
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
+        \linear_combination_value<s, v, space, n>(\coefficient_list_neg<s, space.scalars, n>(coefficients), vectors) = \chap1b::vector_neg<s, v, space>(\linear_combination_value<s, v, space, n>(coefficients, vectors))
     claim:
-        ? \coefficient_list_add<s, scalars, n>(coefficients, \coefficient_list_neg<s, scalars, n>(coefficients)) = \zero_coefficient_list<s, scalars, n>
-        have neg_coefficients &chap1a::FiniteList<s, n> = \coefficient_list_neg<s, scalars, n>(coefficients)
-        have add_coefficients &chap1a::FiniteList<s, n> = \coefficient_list_add<s, scalars, n>(coefficients, neg_coefficients)
-        have zero_coefficients &chap1a::FiniteList<s, n> = \zero_coefficient_list<s, scalars, n>
+        ? \coefficient_list_add<s, space.scalars, n>(coefficients, \coefficient_list_neg<s, space.scalars, n>(coefficients)) = \zero_coefficient_list<s, space.scalars, n>
+        have neg_coefficients &chap1a::FiniteList<s, n> = \coefficient_list_neg<s, space.scalars, n>(coefficients)
+        have add_coefficients &chap1a::FiniteList<s, n> = \coefficient_list_add<s, space.scalars, n>(coefficients, neg_coefficients)
+        have zero_coefficients &chap1a::FiniteList<s, n> = \zero_coefficient_list<s, space.scalars, n>
         claim:
             ? $chap1a::have_same_finite_list_entries(s, n, add_coefficients, zero_coefficients)
             claim:
                 ? forall i N_pos:
                     i <= n
                     =>:
-                        neg_coefficients.entries(i) = scalars.neg(coefficients.entries(i))
-                by thm coefficient_list_neg_entry(s, scalars, n, coefficients, neg_coefficients, i)
+                        neg_coefficients.entries(i) = space.scalars.neg(coefficients.entries(i))
+                by thm coefficient_list_neg_entry(s, space.scalars, n, coefficients, neg_coefficients, i)
             claim:
                 ? forall i N_pos:
                     i <= n
                     =>:
-                        add_coefficients.entries(i) = scalars.add(coefficients.entries(i), neg_coefficients.entries(i))
-                by thm coefficient_list_add_entry(s, scalars, n, coefficients, neg_coefficients, add_coefficients, i)
+                        add_coefficients.entries(i) = space.scalars.add(coefficients.entries(i), neg_coefficients.entries(i))
+                by thm coefficient_list_add_entry(s, space.scalars, n, coefficients, neg_coefficients, add_coefficients, i)
             claim:
                 ? forall i N_pos:
                     i <= n
                     =>:
-                        zero_coefficients.entries(i) = scalars.zero
-                by thm zero_coefficient_list_entry(s, scalars, n, zero_coefficients, i)
+                        zero_coefficients.entries(i) = space.scalars.zero
+                by thm zero_coefficient_list_entry(s, space.scalars, n, zero_coefficients, i)
             claim:
                 ? forall i N_pos:
                     i <= n
                     =>:
-                        scalars.add(coefficients.entries(i), scalars.neg(coefficients.entries(i))) = scalars.zero
+                        space.scalars.add(coefficients.entries(i), space.scalars.neg(coefficients.entries(i))) = space.scalars.zero
             forall i N_pos:
                 i <= n
                 =>:
-                    add_coefficients.entries(i) = scalars.add(coefficients.entries(i), neg_coefficients.entries(i))
-                    neg_coefficients.entries(i) = scalars.neg(coefficients.entries(i))
-                    scalars.add(coefficients.entries(i), neg_coefficients.entries(i)) = scalars.add(coefficients.entries(i), scalars.neg(coefficients.entries(i)))
-                    scalars.add(coefficients.entries(i), scalars.neg(coefficients.entries(i))) = scalars.zero
-                    zero_coefficients.entries(i) = scalars.zero
+                    add_coefficients.entries(i) = space.scalars.add(coefficients.entries(i), neg_coefficients.entries(i))
+                    neg_coefficients.entries(i) = space.scalars.neg(coefficients.entries(i))
+                    space.scalars.add(coefficients.entries(i), neg_coefficients.entries(i)) = space.scalars.add(coefficients.entries(i), space.scalars.neg(coefficients.entries(i)))
+                    space.scalars.add(coefficients.entries(i), space.scalars.neg(coefficients.entries(i))) = space.scalars.zero
+                    zero_coefficients.entries(i) = space.scalars.zero
                     add_coefficients.entries(i) = zero_coefficients.entries(i)
             $chap1a::have_same_finite_list_entries(s, n, add_coefficients, zero_coefficients)
         by thm chap1a::finite_list_extensionality(s, n, add_coefficients, zero_coefficients)
         add_coefficients = zero_coefficients
-        \coefficient_list_add<s, scalars, n>(coefficients, \coefficient_list_neg<s, scalars, n>(coefficients)) = add_coefficients = zero_coefficients = \zero_coefficient_list<s, scalars, n>
-    by thm linear_combination_value_add_coefficients(s, scalars, v, space, n, coefficients, \coefficient_list_neg<s, scalars, n>(coefficients), vectors)
-    by thm linear_combination_value_zero_coefficients(s, scalars, v, space, n, vectors)
-    space.add(\linear_combination_value<s, scalars, v, space, n>(coefficients, vectors), \linear_combination_value<s, scalars, v, space, n>(\coefficient_list_neg<s, scalars, n>(coefficients), vectors)) = space.zero
-    by thm chap1b::vector_neg_spec(s, scalars, v, space, \linear_combination_value<s, scalars, v, space, n>(coefficients, vectors))
-    space.add(\linear_combination_value<s, scalars, v, space, n>(coefficients, vectors), \chap1b::vector_neg<s, scalars, v, space>(\linear_combination_value<s, scalars, v, space, n>(coefficients, vectors))) = space.zero
-    by thm chap1b::add_left_cancel(s, scalars, v, space, \linear_combination_value<s, scalars, v, space, n>(coefficients, vectors), \linear_combination_value<s, scalars, v, space, n>(\coefficient_list_neg<s, scalars, n>(coefficients), vectors), \chap1b::vector_neg<s, scalars, v, space>(\linear_combination_value<s, scalars, v, space, n>(coefficients, vectors)))
+        \coefficient_list_add<s, space.scalars, n>(coefficients, \coefficient_list_neg<s, space.scalars, n>(coefficients)) = add_coefficients = zero_coefficients = \zero_coefficient_list<s, space.scalars, n>
+    by thm linear_combination_value_add_coefficients(s, v, space, n, coefficients, \coefficient_list_neg<s, space.scalars, n>(coefficients), vectors)
+    by thm linear_combination_value_zero_coefficients(s, v, space, n, vectors)
+    space.add(\linear_combination_value<s, v, space, n>(coefficients, vectors), \linear_combination_value<s, v, space, n>(\coefficient_list_neg<s, space.scalars, n>(coefficients), vectors)) = space.zero
+    by thm chap1b::vector_neg_spec(s, v, space, \linear_combination_value<s, v, space, n>(coefficients, vectors))
+    space.add(\linear_combination_value<s, v, space, n>(coefficients, vectors), \chap1b::vector_neg<s, v, space>(\linear_combination_value<s, v, space, n>(coefficients, vectors))) = space.zero
+    by thm chap1b::add_left_cancel(s, v, space, \linear_combination_value<s, v, space, n>(coefficients, vectors), \linear_combination_value<s, v, space, n>(\coefficient_list_neg<s, space.scalars, n>(coefficients), vectors), \chap1b::vector_neg<s, v, space>(\linear_combination_value<s, v, space, n>(coefficients, vectors)))
 
-prop is_linear_combination(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, value v, vectors &chap1a::FiniteList<v, n>):
-    exist coefficients &chap1a::FiniteList<s, n> st {value = \linear_combination_value<s, scalars, v, space, n>(coefficients, vectors)}
+prop is_linear_combination(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, value v, vectors &chap1a::FiniteList<v, n>):
+    exist coefficients &chap1a::FiniteList<s, n> st {value = \linear_combination_value<s, v, space, n>(coefficients, vectors)}
 
 # Example 2.3. In R^3, coefficients 6 and 5 produce (17,-4,2) from the two
 # displayed vectors. The nearby nonexample would require an inconsistent
@@ -369,8 +369,8 @@ prop is_linear_combination(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v n
 
 # Definition 2.4. span is a real set-valued template: instantiating it at a
 # vector list returns the subset of all values represented by that list.
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>>:
-    have span power_set(v) = {value v: $is_linear_combination(s, scalars, v, space, n, value, vectors)}
+template<s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>>:
+    have span power_set(v) = {value v: $is_linear_combination(s, v, space, n, value, vectors)}
 
 # Example 2.5. The two conclusions of Example 2.3 become membership and
 # nonmembership statements in the corresponding span instance.
@@ -385,23 +385,23 @@ prop contains_list_entries(v nonempty_set, n N, vectors &chap1a::FiniteList<v, n
         =>:
             vectors.entries(i) $in U
 
-prop is_smallest_subspace_containing_list(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>):
-    $chap1c::is_subspace(s, scalars, v, space, \span<s, scalars, v, space, n, vectors>)
-    $contains_list_entries(v, n, vectors, \span<s, scalars, v, space, n, vectors>)
+prop is_smallest_subspace_containing_list(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>):
+    $chap1c::is_subspace(s, v, space, \span<s, v, space, n, vectors>)
+    $contains_list_entries(v, n, vectors, \span<s, v, space, n, vectors>)
     forall U power_set(v):
-        $chap1c::is_subspace(s, scalars, v, space, U)
+        $chap1c::is_subspace(s, v, space, U)
         $contains_list_entries(v, n, vectors, U)
         =>:
-            \span<s, scalars, v, space, n, vectors> $subset U
+            \span<s, v, space, n, vectors> $subset U
 
 axiom span_is_smallest_subspace:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>:
-        $is_smallest_subspace_containing_list(s, scalars, v, space, n, vectors)
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>:
+        $is_smallest_subspace_containing_list(s, v, space, n, vectors)
 
 # Definition 2.7. A list spans its ambient vector space precisely when its
 # span carrier is the whole vector carrier.
-prop spans(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>):
-    \span<s, scalars, v, space, n, vectors> = v
+prop spans(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>):
+    \span<s, v, space, n, vectors> = v
 
 # Example 2.8. The standard coordinate vectors span F^n: the kth coefficient
 # of a vector is its kth coordinate. The symbolic standard-list constructor is
@@ -410,8 +410,8 @@ prop spans(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, spa
 
 # Definition 2.9. Finite dimensionality is the existence of one finite list
 # that spans the equipped vector space.
-prop is_finite_dimensional(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>):
-    exist n N, vectors &chap1a::FiniteList<v, n> st {$spans(s, scalars, v, space, n, vectors)}
+prop is_finite_dimensional(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>):
+    exist n N, vectors &chap1a::FiniteList<v, n> st {$spans(s, v, space, n, vectors)}
 
 # Definition 2.10. A polynomial is a scalar-valued function represented by a
 # finite coefficient list. powers and partial_sums make the finite power-sum
@@ -496,8 +496,8 @@ template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m N>:
     have polynomial_space_at_most power_set(\polynomial_space<s, scalars>) = {p \polynomial_space<s, scalars>: $polynomial_degree_at_most(\degree<s, scalars, p>, m)}
 
 # Definition 2.13. Infinite dimensional means exactly not finite dimensional.
-prop is_infinite_dimensional(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>):
-    not $is_finite_dimensional(s, scalars, v, space)
+prop is_infinite_dimensional(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>):
+    not $is_finite_dimensional(s, v, space)
 
 # Example 2.14. P(F) is infinite-dimensional because any finite polynomial
 # list has bounded degree while the next monomial lies outside its span. The
@@ -512,19 +512,19 @@ prop has_only_zero_coefficients(s nonempty_set, scalars &chap1a::ScalarSystem<s>
         =>:
             coefficients.entries(i) = scalars.zero
 
-prop is_linearly_independent(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>):
+prop is_linearly_independent(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>):
     forall coefficients &chap1a::FiniteList<s, n>:
-        \linear_combination_value<s, scalars, v, space, n>(coefficients, vectors) = space.zero
+        \linear_combination_value<s, v, space, n>(coefficients, vectors) = space.zero
         =>:
-            $has_only_zero_coefficients(s, scalars, n, coefficients)
+            $has_only_zero_coefficients(s, space.scalars, n, coefficients)
 
 # Example 2.16. Coordinate comparison proves independence of the displayed
 # standard vectors; coefficient uniqueness proves independence of monomials;
 # one- and two-vector cases reduce to zero and scalar-multiple criteria.
 
 # Definition 2.17. Linear dependence is the logical negation of independence.
-prop is_linearly_dependent(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>):
-    not $is_linearly_independent(s, scalars, v, space, n, vectors)
+prop is_linearly_dependent(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>):
+    not $is_linearly_independent(s, v, space, n, vectors)
 
 # Example 2.18. The source supplies explicit nonzero coefficient witnesses for
 # its dependent lists, including the parameter value c=8 and the zero-entry and
@@ -557,11 +557,11 @@ prop is_list_with_index_removed(v nonempty_set, n N_pos, vectors &chap1a::Finite
 # for the largest nonzero coefficient and substitutes into every combination.
 # Proof debt: largest-index selection and finite-sum substitution are absent.
 axiom linear_dependence_lemma:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, n N, vectors &chap1a::FiniteList<v, n>:
-        $is_linearly_dependent(s, scalars, v, space, n, vectors)
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>:
+        $is_linearly_dependent(s, v, space, n, vectors)
         =>:
             n $in N_pos
-            exist k N_pos, predecessors &chap1a::FiniteList<v, k - 1>, reduced &chap1a::FiniteList<v, n - 1> st {k <= n, $is_prefix_of_length(v, n, k - 1, vectors, predecessors), vectors.entries(k) $in \span<s, scalars, v, space, k - 1, predecessors>, $is_list_with_index_removed(v, n, vectors, k, reduced), \span<s, scalars, v, space, n - 1, reduced> = \span<s, scalars, v, space, n, vectors>}
+            exist k N_pos, predecessors &chap1a::FiniteList<v, k - 1>, reduced &chap1a::FiniteList<v, n - 1> st {k <= n, $is_prefix_of_length(v, n, k - 1, vectors, predecessors), vectors.entries(k) $in \span<s, v, space, k - 1, predecessors>, $is_list_with_index_removed(v, n, vectors, k, reduced), \span<s, v, space, n - 1, reduced> = \span<s, v, space, n, vectors>}
 
 # Boundary remark following Result 2.19. If k=1, the predecessor has length
 # zero and its span contains only the VectorSpace zero selected by the empty
@@ -576,9 +576,9 @@ axiom linear_dependence_lemma:
 # independent vector and removes one old spanning vector using Result 2.19.
 # Proof debt: the bounded iterative replacement process is not formalized.
 axiom independent_length_le_spanning_length:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, independent_length, spanning_length N, independent_vectors &chap1a::FiniteList<v, independent_length>, spanning_vectors &chap1a::FiniteList<v, spanning_length>:
-        $is_linearly_independent(s, scalars, v, space, independent_length, independent_vectors)
-        $spans(s, scalars, v, space, spanning_length, spanning_vectors)
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, independent_length, spanning_length N, independent_vectors &chap1a::FiniteList<v, independent_length>, spanning_vectors &chap1a::FiniteList<v, spanning_length>:
+        $is_linearly_independent(s, v, space, independent_length, independent_vectors)
+        $spans(s, v, space, spanning_length, spanning_vectors)
         =>:
             independent_length <= spanning_length
 
@@ -591,8 +591,8 @@ axiom independent_length_le_spanning_length:
 # forces termination, at which point that list spans U.
 # Proof debt: bounded finite choice for the growth process is not developed.
 axiom subspace_of_finite_dimensional_is_finite_dimensional:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U power_set(v):
-        $is_finite_dimensional(s, scalars, v, space)
-        $chap1c::is_subspace(s, scalars, v, space, U)
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U power_set(v):
+        $is_finite_dimensional(s, v, space)
+        $chap1c::is_subspace(s, v, space, U)
         =>:
-            $is_finite_dimensional(s, scalars, U, \chap1c::subspace_vector_space<s, scalars, v, space, U>)
+            $is_finite_dimensional(s, U, \chap1c::subspace_vector_space<s, v, space, U>)

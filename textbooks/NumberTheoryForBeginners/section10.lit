@@ -4,7 +4,7 @@
 # structure from Section VII.  This is the carrier-level interface used by the
 # cyclicity theorem, rather than a bare assertion that some element exists.
 prop finite_multiplicative_subgroup(G set, mul fn(x, y G) G, one G):
-    $section7citation::is_group(G, mul, one)
+    $section7::is_group(G, mul, one)
     $is_finite_set(G)
 
 # The n-th roots of unity are an actual set-valued construction over Z.
@@ -30,7 +30,7 @@ prop primitive_root_mod(m N_pos, g Z):
 # whole carrier.  The generated-subgroup object is inherited explicitly from
 # Section VII.
 prop finite_subgroup_has_generator(G set, mul fn(x, y G) G, one G):
-    exist g G st {$section7citation::generated_subgroup(G, mul, one, g, G)}
+    exist g G st {$section7::generated_subgroup(G, mul, one, g, G)}
 
 prop cyclic_multiplicative_group_mod(m N_pos, g Z):
     $primitive_root_mod(m, g)

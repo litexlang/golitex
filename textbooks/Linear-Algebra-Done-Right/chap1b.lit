@@ -14,7 +14,8 @@ template<s nonempty_set, v nonempty_set>:
 # and callable scalar multiplication together with exactly the source axioms.
 # The selected ScalarSystem supplies the scalar zero, one, addition, and
 # multiplication used by those axioms.
-struct VectorSpace<s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set>:
+struct VectorSpace<s, v nonempty_set>:
+    scalars &chap1a::ScalarSystem<s>
     zero v
     add fn(x, y v) v
     smul fn(a s, x v) v
@@ -35,14 +36,14 @@ struct VectorSpace<s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_
             smul(scalars.one, x) = x
 
 prop is_vector_space(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, vector_zero v, vector_add fn(x, y v) v, vector_smul fn(a s, x v) v):
-    (vector_zero, vector_add, vector_smul) $in &VectorSpace<s, scalars, v>
+    (scalars, vector_zero, vector_add, vector_smul) $in &VectorSpace<s, v>
 
 # Remaining selected-structure boundary: the pointwise tuple is explicit, but
 # template-instantiated function extensionality does not yet expose the full
 # VectorSpace membership proof.
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    trust have coordinate_space &VectorSpace<s, scalars, finite_seq(s, n)>:
-        coordinate_space = (\chap1a::coordinate_zero<s, scalars, n>, \chap1a::coordinate_add<s, scalars, n>, \chap1a::coordinate_smul<s, scalars, n>)
+    trust have coordinate_space &VectorSpace<s, finite_seq(s, n)>:
+        coordinate_space = (scalars, \chap1a::coordinate_zero<s, scalars, n>, \chap1a::coordinate_add<s, scalars, n>, \chap1a::coordinate_smul<s, scalars, n>)
 
 # Definition 1.21. Elements x of the carrier v are called vectors or points.
 # The real Litex interface is the parameter declaration `x v`; no redundant
@@ -50,11 +51,16 @@ template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
 
 # Definition 1.22. A real vector space specializes the scalar carrier to R;
 # a complex vector space specializes it to the Complex carrier from 1A.
-prop is_real_vector_space(v nonempty_set, vector_zero v, vector_add fn(x, y v) v, vector_smul fn(a R, x v) v):
-    (vector_zero, vector_add, vector_smul) $in &VectorSpace<R, chap1a::real_scalars, v>
+prop is_real_vector_space(v nonempty_set, space &VectorSpace<R, v>):
+    space.scalars = chap1a::real_scalars
 
-prop is_complex_vector_space(v nonempty_set, vector_zero v, vector_add fn(x, y v) v, vector_smul fn(a &chap1a::Complex, x v) v):
-    (vector_zero, vector_add, vector_smul) $in &VectorSpace<&chap1a::Complex, chap1a::complex_scalars, v>
+prop is_complex_vector_space(v nonempty_set, space &VectorSpace<&chap1a::Complex, v>):
+    space.scalars.zero = chap1a::complex_zero
+    space.scalars.one = chap1a::complex_one
+    space.scalars.add = chap1a::complex_add
+    space.scalars.neg = chap1a::complex_neg
+    space.scalars.mul = chap1a::complex_mul
+    space.scalars.inv = chap1a::complex_inv
 
 # Example 1.23. F^infinity is the sequence carrier seq(s); evaluation remains
 # callable, and its intended addition and scalar multiplication are pointwise.
@@ -97,7 +103,7 @@ sketch:
 # unique. The source proof compares a proposed identity e with the zero field
 # of the VectorSpace by evaluating both identities at one another.
 thm additive_identity_unique:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &VectorSpace<s, scalars, v>, e v:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, e v:
         forall x v:
             space.add(e, x) = x
         =>:
@@ -111,7 +117,7 @@ thm additive_identity_unique:
 # Existence is a VectorSpace field.  Uniqueness first commutes the second
 # inverse equation, then uses the source's equality chain through y2+(x+y1).
 thm additive_inverse_exists_unique:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &VectorSpace<s, scalars, v>, x v:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
         exist! y v st {space.add(x, y) = space.zero}
     obtain y from exist y v st {space.add(x, y) = space.zero}
     forall y1, y2 v:
@@ -124,68 +130,68 @@ thm additive_inverse_exists_unique:
 
 # Notation 1.28. vector_neg selects the unique inverse from Result 1.27, and
 # vector_sub is the derived callable subtraction map w-v = w+(-v).
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &VectorSpace<s, scalars, v>>:
+template<s nonempty_set, v nonempty_set, space &VectorSpace<s, v>>:
     have fn vector_neg by exist!:
         ? forall x v:
             exist! y v st {space.add(x, y) = space.zero}
-        by thm additive_inverse_exists_unique(s, scalars, v, space, x)
+        by thm additive_inverse_exists_unique(s, v, space, x)
 
 # `have fn ... by exist!` currently does not expose the selected witness fact
 # when its enclosing template is instantiated.
 axiom vector_neg_spec:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &VectorSpace<s, scalars, v>, x v:
-        space.add(x, \vector_neg<s, scalars, v, space>(x)) = space.zero
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
+        space.add(x, \vector_neg<s, v, space>(x)) = space.zero
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &VectorSpace<s, scalars, v>>:
-    have fn vector_sub(w, x v) v = space.add(w, \vector_neg<s, scalars, v, space>(x))
+template<s nonempty_set, v nonempty_set, space &VectorSpace<s, v>>:
+    have fn vector_sub(w, x v) v = space.add(w, \vector_neg<s, v, space>(x))
 
 # Proof plumbing used repeatedly below: vector addition admits cancellation.
 thm add_left_cancel:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &VectorSpace<s, scalars, v>, x, y, z v:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x, y, z v:
         space.add(x, y) = space.add(x, z)
         =>:
             y = z
-    by thm vector_neg_spec(s, scalars, v, space, x)
-    space.add(\vector_neg<s, scalars, v, space>(x), x) = space.add(x, \vector_neg<s, scalars, v, space>(x)) = space.zero
-    space.add(\vector_neg<s, scalars, v, space>(x), space.add(x, y)) = space.add(space.add(\vector_neg<s, scalars, v, space>(x), x), y)
-    space.add(space.add(\vector_neg<s, scalars, v, space>(x), x), y) = space.add(space.zero, y) = y
-    space.add(\vector_neg<s, scalars, v, space>(x), space.add(x, z)) = space.add(space.add(\vector_neg<s, scalars, v, space>(x), x), z)
-    space.add(space.add(\vector_neg<s, scalars, v, space>(x), x), z) = space.add(space.zero, z) = z
+    by thm vector_neg_spec(s, v, space, x)
+    space.add(\vector_neg<s, v, space>(x), x) = space.add(x, \vector_neg<s, v, space>(x)) = space.zero
+    space.add(\vector_neg<s, v, space>(x), space.add(x, y)) = space.add(space.add(\vector_neg<s, v, space>(x), x), y)
+    space.add(space.add(\vector_neg<s, v, space>(x), x), y) = space.add(space.zero, y) = y
+    space.add(\vector_neg<s, v, space>(x), space.add(x, z)) = space.add(space.add(\vector_neg<s, v, space>(x), x), z)
+    space.add(space.add(\vector_neg<s, v, space>(x), x), z) = space.add(space.zero, z) = z
     y = z
 
 thm add_right_cancel:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &VectorSpace<s, scalars, v>, x, y, z v:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x, y, z v:
         space.add(x, z) = space.add(y, z)
         =>:
             x = y
     space.add(z, x) = space.add(x, z) = space.add(y, z) = space.add(z, y)
-    by thm add_left_cancel(s, scalars, v, space, z, x, y)
+    by thm add_left_cancel(s, v, space, z, x, y)
 
-# Notation 1.29. From this point onward, the formal standing context is always
-# explicit: `s`, `scalars`, `v`, and `space` are the scalar carrier, selected
-# ScalarSystem, vector carrier, and selected VectorSpace structure.
+# Notation 1.29. From this point onward, the formal standing context is `s`,
+# `v`, and `space`; the selected ScalarSystem is available as
+# `space.scalars`.
 
 # Result 1.30. Scalar zero times every vector equals the vector zero.  As in
 # the source, distribute 0+0 and cancel with the unique additive inverse.
 thm zero_scalar_times_vector:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &VectorSpace<s, scalars, v>, x v:
-        space.smul(scalars.zero, x) = space.zero
-    have p v = space.smul(scalars.zero, x)
-    scalars.add(scalars.zero, scalars.zero) = scalars.zero
-    space.smul(scalars.add(scalars.zero, scalars.zero), x) = space.add(space.smul(scalars.zero, x), space.smul(scalars.zero, x))
-    space.smul(scalars.add(scalars.zero, scalars.zero), x) = p
-    space.add(space.smul(scalars.zero, x), space.smul(scalars.zero, x)) = space.add(p, p)
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
+        space.smul(space.scalars.zero, x) = space.zero
+    have p v = space.smul(space.scalars.zero, x)
+    space.scalars.add(space.scalars.zero, space.scalars.zero) = space.scalars.zero
+    space.smul(space.scalars.add(space.scalars.zero, space.scalars.zero), x) = space.add(space.smul(space.scalars.zero, x), space.smul(space.scalars.zero, x))
+    space.smul(space.scalars.add(space.scalars.zero, space.scalars.zero), x) = p
+    space.add(space.smul(space.scalars.zero, x), space.smul(space.scalars.zero, x)) = space.add(p, p)
     p = space.add(p, p)
     space.add(p, space.zero) = space.add(space.zero, p) = p
     space.add(p, p) = space.add(p, space.zero)
-    by thm add_left_cancel(s, scalars, v, space, p, p, space.zero)
+    by thm add_left_cancel(s, v, space, p, p, space.zero)
     p = space.zero
-    space.smul(scalars.zero, x) = space.zero
+    space.smul(space.scalars.zero, x) = space.zero
 
 # Result 1.31. Every scalar times the vector zero equals the vector zero.  The
 # same cancellation calculation now starts from a(0+0)=a0+a0.
 thm scalar_times_zero_vector:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &VectorSpace<s, scalars, v>, a s:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, a s:
         space.smul(a, space.zero) = space.zero
     have q v = space.smul(a, space.zero)
     space.add(space.zero, space.zero) = space.zero
@@ -195,7 +201,7 @@ thm scalar_times_zero_vector:
     q = space.add(q, q)
     space.add(q, space.zero) = space.add(space.zero, q) = q
     space.add(q, q) = space.add(q, space.zero)
-    by thm add_left_cancel(s, scalars, v, space, q, q, space.zero)
+    by thm add_left_cancel(s, v, space, q, q, space.zero)
     q = space.zero
     space.smul(a, space.zero) = space.zero
 
@@ -203,17 +209,17 @@ thm scalar_times_zero_vector:
 # inverse selected in Notation 1.28.  Scalar distributivity makes it an
 # inverse of x, and Result 1.27 supplies uniqueness.
 thm minus_one_times_vector:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &VectorSpace<s, scalars, v>, x v:
-        space.smul(scalars.neg(scalars.one), x) = \vector_neg<s, scalars, v, space>(x)
-    by thm vector_neg_spec(s, scalars, v, space, x)
-    scalars.add(scalars.one, scalars.neg(scalars.one)) = scalars.zero
-    space.smul(scalars.add(scalars.one, scalars.neg(scalars.one)), x) = space.add(space.smul(scalars.one, x), space.smul(scalars.neg(scalars.one), x))
-    space.smul(scalars.zero, x) = space.zero
-    space.smul(scalars.one, x) = x
-    space.smul(scalars.add(scalars.one, scalars.neg(scalars.one)), x) = space.smul(scalars.zero, x) = space.zero
-    space.add(space.smul(scalars.one, x), space.smul(scalars.neg(scalars.one), x)) = space.add(x, space.smul(scalars.neg(scalars.one), x))
-    space.add(x, space.smul(scalars.neg(scalars.one), x)) = space.zero
-    space.add(x, \vector_neg<s, scalars, v, space>(x)) = space.zero
-    space.add(x, space.smul(scalars.neg(scalars.one), x)) = space.add(x, \vector_neg<s, scalars, v, space>(x))
-    by thm add_left_cancel(s, scalars, v, space, x, space.smul(scalars.neg(scalars.one), x), \vector_neg<s, scalars, v, space>(x))
-    space.smul(scalars.neg(scalars.one), x) = \vector_neg<s, scalars, v, space>(x)
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
+        space.smul(space.scalars.neg(space.scalars.one), x) = \vector_neg<s, v, space>(x)
+    by thm vector_neg_spec(s, v, space, x)
+    space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)) = space.scalars.zero
+    space.smul(space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)), x) = space.add(space.smul(space.scalars.one, x), space.smul(space.scalars.neg(space.scalars.one), x))
+    space.smul(space.scalars.zero, x) = space.zero
+    space.smul(space.scalars.one, x) = x
+    space.smul(space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)), x) = space.smul(space.scalars.zero, x) = space.zero
+    space.add(space.smul(space.scalars.one, x), space.smul(space.scalars.neg(space.scalars.one), x)) = space.add(x, space.smul(space.scalars.neg(space.scalars.one), x))
+    space.add(x, space.smul(space.scalars.neg(space.scalars.one), x)) = space.zero
+    space.add(x, \vector_neg<s, v, space>(x)) = space.zero
+    space.add(x, space.smul(space.scalars.neg(space.scalars.one), x)) = space.add(x, \vector_neg<s, v, space>(x))
+    by thm add_left_cancel(s, v, space, x, space.smul(space.scalars.neg(space.scalars.one), x), \vector_neg<s, v, space>(x))
+    space.smul(space.scalars.neg(space.scalars.one), x) = \vector_neg<s, v, space>(x)

@@ -181,6 +181,36 @@ have fn finite_product_from_one(a fn(i N_pos) Z, n N) Z by induc n from 0:
     case n = 0: 1
     case n > 0: finite_product_from_one(a, n - 1) * a(n)
 
+# The successor law is the induction interface used by later sections: adding
+# the last indexed factor multiplies the preceding finite product by that
+# factor.
+thm finite_product_from_one_successor:
+    ? forall a fn(i N_pos) Z, n N:
+        finite_product_from_one(a, n + 1) = finite_product_from_one(a, n) * a(n + 1)
+    finite_product_from_one(a, n + 1) = finite_product_from_one(a, (n + 1) - 1) * a(n + 1) = finite_product_from_one(a, n) * a(n + 1)
+
+# Prepending a head value shifts every old factor one position to the right.
+# This is the product law used when factorization induction adjoins a prime.
+thm finite_product_from_one_prepend:
+    ? forall z Z, f fn(i N_pos) Z, g fn(j N_pos) Z, n N:
+        g(1) = z
+        forall i N_pos:
+            g(i + 1) = f(i)
+        =>:
+            finite_product_from_one(g, n + 1) = z * finite_product_from_one(f, n)
+    by induc n from 0:
+        ? finite_product_from_one(g, n + 1) = z * finite_product_from_one(f, n)
+        ? from n = 0:
+            by thm finite_product_from_one_successor(g, 0)
+            finite_product_from_one(g, 0) = 1
+            finite_product_from_one(f, 0) = 1
+            finite_product_from_one(g, 1) = finite_product_from_one(g, 0) * g(1) = 1 * z = z = z * 1 = z * finite_product_from_one(f, 0)
+        ? induc:
+            by thm finite_product_from_one_successor(g, n + 1)
+            g((n + 1) + 1) = f(n + 1)
+            by thm finite_product_from_one_successor(f, n)
+            finite_product_from_one(g, (n + 1) + 1) = finite_product_from_one(g, n + 1) * g((n + 1) + 1) = (z * finite_product_from_one(f, n)) * f(n + 1) = z * (finite_product_from_one(f, n) * f(n + 1)) = z * finite_product_from_one(f, n + 1)
+
 """
 Corollary 2. If an integer is prime to each of finitely many integers, then it
 is prime to their product.

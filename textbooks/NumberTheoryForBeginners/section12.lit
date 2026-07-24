@@ -1,29 +1,55 @@
 # Section XII: Gauss's lemma, Legendre symbols, and quadratic reciprocity.
 
-# The Legendre symbol is a selected integer-valued object.  Its specification
-# separates the divisible case from the residue/nonresidue cases; the unique
-# selection is the small finite classification interface left trusted here.
+# The Legendre symbol is an integer-valued function defined by its three
+# exhaustive cases: zero on divisible inputs, one on nonzero quadratic
+# residues, and minus one on nonresidues.
 prop legendre_symbol_zero_case(p N_pos, a Z, s Z):
     $section1citation::divides_Z(p, a)
     s = 0
 
 prop legendre_symbol_residue_case(p N_pos, a Z, s Z):
-    $section3::relatively_prime_Z(a, p)
+    not $section1citation::divides_Z(p, a)
     $section11::quadratic_residue_mod(p, a)
     s = 1
 
 prop legendre_symbol_nonresidue_case(p N_pos, a Z, s Z):
-    $section3::relatively_prime_Z(a, p)
+    not $section1citation::divides_Z(p, a)
     $section11::quadratic_nonresidue_mod(p, a)
     s = -1
 
 prop legendre_symbol_spec(p N_pos, a Z, s Z):
     $legendre_symbol_zero_case(p, a, s) or $legendre_symbol_residue_case(p, a, s) or $legendre_symbol_nonresidue_case(p, a, s)
 
-have fn legendre_symbol_Z by exist!:
+have fn legendre_symbol_nonzero_Z(p N_pos, a Z: not $section1citation::divides_Z(p, a)) Z by cases:
+    case $section11::quadratic_residue_mod(p, a): 1
+    case not $section11::quadratic_residue_mod(p, a): -1
+
+have fn legendre_symbol_Z(p N_pos, a Z) Z by cases:
+    case $section1citation::divides_Z(p, a): 0
+    case not $section1citation::divides_Z(p, a): legendre_symbol_nonzero_Z(p, a)
+
+thm legendre_symbol_has_spec:
     ? forall p N_pos, a Z:
-        exist! s Z st {$legendre_symbol_spec(p, a, s)}
-    trust exist! s Z st {$legendre_symbol_spec(p, a, s)}
+        $legendre_symbol_spec(p, a, legendre_symbol_Z(p, a))
+    $section1citation::divides_Z(p, a) or not $section1citation::divides_Z(p, a)
+    by cases:
+        ? $legendre_symbol_spec(p, a, legendre_symbol_Z(p, a))
+        case $section1citation::divides_Z(p, a):
+            legendre_symbol_Z(p, a) = 0
+            $legendre_symbol_zero_case(p, a, legendre_symbol_Z(p, a))
+        case not $section1citation::divides_Z(p, a):
+            $section11::quadratic_residue_mod(p, a) or not $section11::quadratic_residue_mod(p, a)
+            by cases:
+                ? $legendre_symbol_spec(p, a, legendre_symbol_Z(p, a))
+                case $section11::quadratic_residue_mod(p, a):
+                    legendre_symbol_nonzero_Z(p, a) = 1
+                    legendre_symbol_Z(p, a) = legendre_symbol_nonzero_Z(p, a) = 1
+                    $legendre_symbol_residue_case(p, a, legendre_symbol_Z(p, a))
+                case not $section11::quadratic_residue_mod(p, a):
+                    legendre_symbol_nonzero_Z(p, a) = -1
+                    legendre_symbol_Z(p, a) = legendre_symbol_nonzero_Z(p, a) = -1
+                    $section11::quadratic_nonresidue_mod(p, a)
+                    $legendre_symbol_nonresidue_case(p, a, legendre_symbol_Z(p, a))
 
 # Divisibility forces the zero value, while prime-to-p inputs are nonzero by
 # the two quadratic cases in the specification.

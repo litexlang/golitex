@@ -2413,21 +2413,27 @@ thm tail_sup_limit_is_finite_limsup:
         $has_limit(fn(m N_pos) R {tail_sup(a, m)}, L)
         =>:
             $has_finite_limit_superior(a, L)
-    have b seq(R) = fn(m N_pos) R {tail_sup(a, m)}
-    $has_limit(b, L)
+    thm equal_sequence_values:
+        ? forall f, g seq(R), n N_pos:
+            f = g
+            =>:
+                f(n) = g(n)
+        f(n) = g(n)
     claim:
         ? forall x R:
             x > L
             =>:
                 exist n_tail N_pos st {$is_eventually_below_threshold(a, x, n_tail)}
+        have b seq(R) = fn(m N_pos) R {tail_sup(a, m)}
+        $has_limit(b, L)
         $has_eventual_closeness_to(b, L, x - L)
         obtain n0 from exist n0 N_pos st {$is_tail_close_to(b, L, x - L, n0)}
         n0 >= n0
-        abs(b(n0) - L) < x - L
-        b(n0) = tail_sup(a, n0)
+        by thm equal_sequence_values(b, fn(m N_pos) R {tail_sup(a, m)}, n0)
+        abs(tail_sup(a, n0) - L) = abs(b(n0) - L) < x - L
         tail_sup(a, n0) - L <= abs(tail_sup(a, n0) - L) < x - L
-        tail_sup(a, n0) < x
-        $is_tail_supremum(a, n0, tail_sup(a, n0))
+        tail_sup(a, n0) = (tail_sup(a, n0) - L) + L < (x - L) + L = x
+        $has_tail_supremum(a, n0)
         by thm tail_supremum_is_upper_bound(a, n0, tail_sup(a, n0))
         witness exist n_tail N_pos st {$is_eventually_below_threshold(a, x, n_tail)} from n0:
             forall n N_pos:
@@ -2440,25 +2446,29 @@ thm tail_sup_limit_is_finite_limsup:
             x < L
             =>:
                 $exceeds_threshold_arbitrarily_late(a, x)
-        $has_eventual_closeness_to(b, L, L - x)
-        obtain n0 from exist n0 N_pos st {$is_tail_close_to(b, L, L - x, n0)}
         claim:
             ? forall n_tail N_pos:
                 exist n N_pos st {n >= n_tail and x < a(n)}
+            have b seq(R) = fn(m N_pos) R {tail_sup(a, m)}
+            $has_limit(b, L)
+            $has_eventual_closeness_to(b, L, L - x)
+            obtain n0 from exist n0 N_pos st {$is_tail_close_to(b, L, L - x, n0)}
             finite_set_max(union({n_tail}, { n0})) >= n_tail and finite_set_max(union({n_tail}, { n0})) >= n0
             have m0 N_pos = finite_set_max(union({n_tail}, { n0}))
             m0 = finite_set_max(union({n_tail}, { n0})) >= n_tail
             m0 = finite_set_max(union({n_tail}, { n0})) >= n0
-            abs(b(m0) - L) < L - x
-            b(m0) = tail_sup(a, m0)
-            abs(tail_sup(a, m0) - L) < L - x
-            L - tail_sup(a, m0) <= abs(tail_sup(a, m0) - L) < L - x
-            x < tail_sup(a, m0)
+            by thm equal_sequence_values(b, fn(m N_pos) R {tail_sup(a, m)}, m0)
+            abs(tail_sup(a, m0) - L) = abs(b(m0) - L) < L - x
+            -(tail_sup(a, m0) - L) <= abs(tail_sup(a, m0) - L)
+            L - tail_sup(a, m0) = -(tail_sup(a, m0) - L) <= abs(tail_sup(a, m0) - L) < L - x
+            x = L - (L - x) < L - (L - tail_sup(a, m0)) = tail_sup(a, m0)
+            $has_tail_supremum(a, m0)
             by thm tail_supremum_crosses_every_lower_threshold(a, m0, tail_sup(a, m0), x)
             obtain n1 from exist n1 N_pos st {n1 >= m0 and x < a(n1)}
             n1 >= m0 >= n_tail
             witness exist n N_pos st {n >= n_tail and x < a(n)} from n1
     by def $exceeds_every_threshold_below_arbitrarily_late(a, L)
+    by def $has_finite_limit_superior(a, L)
 
 thm bounded_sequence_has_finite_limsup:
     ? forall a seq(R):
@@ -2543,6 +2553,8 @@ thm finite_liminf_le_finite_limsup:
         not Lminus <= Lplus
         Lplus < Lminus
         have mid R = (Lplus + Lminus) / 2
+        mid - Lplus = (Lplus + Lminus) / 2 - Lplus = (Lminus - Lplus) / 2 > 0
+        Lminus - mid = Lminus - (Lplus + Lminus) / 2 = (Lminus - Lplus) / 2 > 0
         Lplus < mid < Lminus
         by thm finite_limsup_eventually_below(a, Lplus, mid)
         obtain n_upper from exist n_upper N_pos st {$is_eventually_below_threshold(a, mid, n_upper)}
@@ -2577,6 +2589,8 @@ thm finite_limsup_bounds_limit_point:
         not c <= Lplus
         Lplus < c
         have x R = (Lplus + c) / 2
+        x - Lplus = (Lplus + c) / 2 - Lplus = (c - Lplus) / 2 > 0
+        c - x = c - (Lplus + c) / 2 = (c - Lplus) / 2 > 0
         Lplus < x < c
         by thm finite_limsup_eventually_below(a, Lplus, x)
         obtain n0 from exist n0 N_pos st {$is_eventually_below_threshold(a, x, n0)}
@@ -2598,6 +2612,8 @@ thm finite_liminf_bounds_limit_point:
         not Lminus <= c
         c < Lminus
         have y R = (c + Lminus) / 2
+        y - c = (c + Lminus) / 2 - c = (Lminus - c) / 2 > 0
+        Lminus - y = Lminus - (c + Lminus) / 2 = (Lminus - c) / 2 > 0
         c < y < Lminus
         by thm finite_liminf_eventually_above(a, Lminus, y)
         obtain n0 from exist n0 N_pos st {$is_eventually_above_threshold(a, y, n0)}
@@ -2635,7 +2651,8 @@ thm finite_limsup_is_limit_point:
         witness exist k N_pos st {k >= n_tail and abs(a(k) - Lplus) < epsilon} from n:
             n_tail <= finite_set_max(union({n_tail}, { n_upper})) <= n
             n_upper <= finite_set_max(union({n_tail}, { n_upper})) <= n
-            a(n) < Lplus + epsilon and Lplus - epsilon < a(n)
+            Lplus - epsilon < a(n) < Lplus + epsilon
+            -epsilon = (Lplus - epsilon) - Lplus < a(n) - Lplus < (Lplus + epsilon) - Lplus = epsilon
             abs(a(n) - Lplus) < epsilon
 
 thm finite_liminf_is_limit_point:
@@ -2655,7 +2672,8 @@ thm finite_liminf_is_limit_point:
         witness exist k N_pos st {k >= n_tail and abs(a(k) - Lminus) < epsilon} from n:
             n_tail <= finite_set_max(union({n_tail}, { n_lower})) <= n
             n_lower <= finite_set_max(union({n_tail}, { n_lower})) <= n
-            Lminus - epsilon < a(n) and a(n) < Lminus + epsilon
+            Lminus - epsilon < a(n) < Lminus + epsilon
+            -epsilon = (Lminus - epsilon) - Lminus < a(n) - Lminus < (Lminus + epsilon) - Lminus = epsilon
             abs(a(n) - Lminus) < epsilon
 
 thm convergent_sequence_has_finite_lims:
@@ -2676,7 +2694,9 @@ thm convergent_sequence_has_finite_lims:
                 n >= n0
                 =>:
                     a(n) - c <= abs(a(n) - c) < x - c
+                    a(n) = (a(n) - c) + c < (x - c) + c = x
                     a(n) < x
+            by def $is_eventually_below_threshold(a, x, n0)
     by def $is_eventually_below_every_threshold_above(a, c)
     claim:
         ? forall x R:
@@ -2691,7 +2711,7 @@ thm convergent_sequence_has_finite_lims:
             finite_set_max(union({n_tail}, { n0})) >= n_tail and finite_set_max(union({n_tail}, { n0})) >= n0
             witness exist n N_pos st {n >= n_tail and x < a(n)} from finite_set_max(union({n_tail}, { n0})):
                 c - a(finite_set_max(union({n_tail}, { n0}))) <= abs(c - a(finite_set_max(union({n_tail}, { n0})))) = abs(a(finite_set_max(union({n_tail}, { n0}))) - c) < c - x
-                x < a(finite_set_max(union({n_tail}, { n0})))
+                x = c - (c - x) < c - (c - a(finite_set_max(union({n_tail}, { n0})))) = a(finite_set_max(union({n_tail}, { n0})))
     by def $exceeds_every_threshold_below_arbitrarily_late(a, c)
     claim:
         ? forall y R:
@@ -2705,7 +2725,9 @@ thm convergent_sequence_has_finite_lims:
                 n >= n0
                 =>:
                     c - a(n) <= abs(c - a(n)) = abs(a(n) - c) < c - y
+                    y = c - (c - y) < c - (c - a(n)) = a(n)
                     y < a(n)
+            by def $is_eventually_above_threshold(a, y, n0)
     by def $is_eventually_above_every_threshold_below(a, c)
     claim:
         ? forall y R:
@@ -2720,7 +2742,7 @@ thm convergent_sequence_has_finite_lims:
             finite_set_max(union({n_tail}, { n0})) >= n_tail and finite_set_max(union({n_tail}, { n0})) >= n0
             witness exist n N_pos st {n >= n_tail and a(n) < y} from finite_set_max(union({n_tail}, { n0})):
                 a(finite_set_max(union({n_tail}, { n0}))) - c <= abs(a(finite_set_max(union({n_tail}, { n0}))) - c) < y - c
-                a(finite_set_max(union({n_tail}, { n0}))) < y
+                a(finite_set_max(union({n_tail}, { n0}))) = (a(finite_set_max(union({n_tail}, { n0}))) - c) + c < (y - c) + c = y
     by def $falls_below_every_threshold_above_arbitrarily_late(a, c)
 
 thm equal_finite_lims_converge:
@@ -2744,7 +2766,8 @@ thm equal_finite_lims_converge:
                 =>:
                     n_upper <= finite_set_max(union({n_upper}, { n_lower})) <= n
                     n_lower <= finite_set_max(union({n_upper}, { n_lower})) <= n
-                    a(n) < c + epsilon and c - epsilon < a(n)
+                    c - epsilon < a(n) < c + epsilon
+                    -epsilon = (c - epsilon) - c < a(n) - c < (c + epsilon) - c = epsilon
                     abs(a(n) - c) < epsilon
 
 """
@@ -2767,6 +2790,8 @@ thm finite_limsup_comparison:
         not La <= Lb
         Lb < La
         have mid R = (La + Lb) / 2
+        mid - Lb = (La + Lb) / 2 - Lb = (La - Lb) / 2 > 0
+        La - mid = La - (La + Lb) / 2 = (La - Lb) / 2 > 0
         Lb < mid < La
         by thm finite_limsup_eventually_below(b, Lb, mid)
         obtain n_tail from exist n_tail N_pos st {$is_eventually_below_threshold(b, mid, n_tail)}
@@ -2787,6 +2812,8 @@ thm finite_liminf_comparison:
         not La <= Lb
         Lb < La
         have mid R = (La + Lb) / 2
+        mid - Lb = (La + Lb) / 2 - Lb = (La - Lb) / 2 > 0
+        La - mid = La - (La + Lb) / 2 = (La - Lb) / 2 > 0
         Lb < mid < La
         by thm finite_liminf_eventually_above(a, La, mid)
         obtain n_tail from exist n_tail N_pos st {$is_eventually_above_threshold(a, mid, n_tail)}
@@ -2826,12 +2853,19 @@ thm squeeze_converges_to:
                 =>:
                     n_lower <= finite_set_max(union({n_lower}, { n_upper})) <= n
                     n_upper <= finite_set_max(union({n_lower}, { n_upper})) <= n
-                    abs(a(n) - L) < epsilon and abs(c(n) - L) < epsilon
+                    abs(a(n) - L) < epsilon
+                    abs(c(n) - L) < epsilon
+                    -epsilon < -abs(a(n) - L) <= a(n) - L
+                    L - epsilon = -epsilon + L < (a(n) - L) + L = a(n)
+                    c(n) - L <= abs(c(n) - L) < epsilon
+                    c(n) = (c(n) - L) + L < epsilon + L = L + epsilon
                     L - epsilon < a(n) <= b(n)
                     b(n) <= c(n) < L + epsilon
-                    b(n) - L < epsilon
-                    L - b(n) < epsilon
+                    L - epsilon < b(n) < L + epsilon
+                    -epsilon = (L - epsilon) - L < b(n) - L < (L + epsilon) - L = epsilon
                     abs(b(n) - L) < epsilon
+            by def $is_tail_close_to(b, L, epsilon, finite_set_max(union({n_lower}, { n_upper})))
+    by def $has_limit(b, L)
 
 """
 Example 6.4.15. Sequences squeezed between -2/n and 2/n converge to 0.

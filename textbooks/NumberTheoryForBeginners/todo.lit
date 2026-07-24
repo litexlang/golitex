@@ -1,19 +1,5 @@
 # Mathematics still to be completed
 #
-# Section I — finite_set_minus_cardinality_background
-# Prove the cardinality formula for removing one finite set from another.
-#
-# Section I — finite_set_zero_empty_background
-# Prove that a finite set of cardinality zero is empty.
-#
-# Section II — gcd_Z_partial_bezout
-# The ordinary gcd Bezout coefficients are constructed. It remains to prove
-# explicitly that the same coefficients satisfy Bezout's identity for the
-# gcd restricted to nonzero input pairs.
-#
-# Section IV — prime_divides_some_factor_background
-# Prove that a prime dividing a finite product divides at least one factor.
-#
 # Section IV — prime_factorization_background
 # Prove the finite prime factorization statement retained from the source.
 #
@@ -21,29 +7,15 @@
 # Prove existence and uniqueness of the largest exponent whose prime power
 # divides a given integer greater than one.
 #
-# Section IV — primes_unbounded_background
-# Complete Euclid's construction proving that primes exceed every bound.
-#
 # Section V — congruence_classes_additive_group_background
 # Construct the finite residue-class quotient and prove its additive group
 # laws.
-#
-# Section VI — euler_phi_exists_background
-# Construct the finite set of reduced residue representatives and prove that
-# its cardinality is uniquely determined.
 #
 # Section VI — residue_unitary_ring_background
 # Construct the residue-class ring with identity and prove its ring laws.
 #
 # Section VI — linear_congruence_solution_background
 # Prove the full solution-family description for a linear congruence.
-#
-# Section VI — euler_phi_spec_value_background
-# Prove that the selected Euler phi value has the stated representative-count
-# characterization.
-#
-# Section VI — euler_phi_prime_background
-# Prove that Euler phi of a prime p is p - 1.
 #
 # Section VI — residue_field_prime_background
 # Prove that residue classes modulo a prime form a field.
@@ -73,13 +45,9 @@
 # Section IX — polynomial_gcd_generator_background
 # Construct a greatest common divisor generator for a polynomial family.
 #
-# Section IX — polynomial_euclidean_data
-# Construct the generic polynomial carrier, finite-support coefficient
-# operations, degree, and Euclidean division data over a coefficient field.
-#
 # Section IX — polynomial_division_background
-# Prove polynomial division with remainder over the retained coefficient
-# setting.
+# Prove polynomial division with remainder for the finite-support coefficient
+# carrier and its convolution multiplication.
 #
 # Section IX — polynomial_root_bound_background
 # Prove that a nonzero polynomial has no more roots than its degree.

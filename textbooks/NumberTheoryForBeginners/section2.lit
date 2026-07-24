@@ -846,7 +846,7 @@ thm gcd_Z_partial_bezout:
     by thm gcd_Z_bezout(a, b)
     obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
     witness exist x1, y1 Z st {gcd_Z_partial(a, b) = a * x1 + b * y1} from x, y:
-        trust gcd_Z_partial(a, b) = a * x + b * y
+        gcd_Z_partial(a, b) = gcd_Z(a, b) = a * x + b * y
 
 """
 Exercise II.1. Prove associativity of gcd for three integers:
