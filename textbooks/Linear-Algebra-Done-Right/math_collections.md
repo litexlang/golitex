@@ -19,9 +19,11 @@ concepts and intermediate nodes that determine later interfaces.
 - A scalar domain is a carrier `s` together with a `ScalarSystem<s>` structure;
   it is not a predicate on untyped values. The two source instances are `R`
   and the concrete pair carrier `Complex`.
-- A vector space is a carrier `V` together with a `VectorSpace<s,scalars,V>`
-  structure. Candidate operations and laws may be tested by a relation, but
-  later mathematics receives callable operations through the structure.
+- A vector space is a carrier `V` together with a `VectorSpace<s,V>`
+  structure. The structure owns its `scalars &ScalarSystem<s>` field, so later
+  mathematics receives scalar and vector operations from one coherent bundle.
+  Candidate operations and laws may still be tested by a relation before the
+  structure is constructed.
 - Collections use their narrowest existing carrier. Finite coordinate vectors
   use `finite_seq`; variable-length lists use `FiniteList`; matrices use the
   builtin `matrix` carrier.
@@ -33,11 +35,11 @@ concepts and intermediate nodes that determine later interfaces.
   not itself a semantic layer. Source-facing results remain named even when a
   builtin or a more general checked interface supplies their proof.
 - An explicit structure type on a binding selects its default field view.
-  Thus `scalars &ScalarSystem<s>` supports `scalars.add(a,b)`, and
-  `space &VectorSpace<...>` supports `space.zero` and `space.smul(a,v)`.
-  Source declarations use complete expressions rather than a pre-parser
-  abbreviation layer; public theorem and definition parameters remain
-  explicit.
+  Thus `space &VectorSpace<s,V>` supports `space.zero`,
+  `space.smul(a,v)`, and the nested access `space.scalars.mul(a,b)`. Source
+  declarations use complete expressions rather than a pre-parser abbreviation
+  layer; public theorem and definition parameters remain explicit only when
+  the mathematical object is not already owned by a supplied structure.
 - `axiom` and `trust` describe epistemic status, never mathematical kind. They
   remain visible below as dependency boundaries rather than changing the ideal
   interface.
@@ -90,13 +92,14 @@ concepts and intermediate nodes that determine later interfaces.
   multiplication, and Axler's vector-space laws.
 - **Semantic role:** Bundled structure; `is_vector_space` is the candidate-law
   relation corresponding to structure membership.
-- **Ideal Litex form:** `struct VectorSpace<s,scalars,V>`.
-- **Interface sketch:** `space &VectorSpace<s,scalars,V>` followed by
-  `space.add(u,v)`.
+- **Ideal Litex form:** `struct VectorSpace<s,V>` with a directly declared
+  `scalars &ScalarSystem<s>` field.
+- **Interface sketch:** `space &VectorSpace<s,V>` followed by
+  `space.add(u,v)` or `space.scalars.mul(a,b)`.
 - **Nearest wrong alternative:** A proposition that hides the three operations
   cannot support ordinary vector expressions or structures inherited by a
   subspace, product, quotient, or function space.
-- **Dependencies:** Scalar system by `signature` and `law`; carrier and
+- **Dependencies:** Scalar system by nested `field` and `law`; carrier and
   operations by `signature`.
 - **Downstream uses:** Every concept from subspaces onward. Probe: apply vector
   addition and scalar multiplication, then cite the structure laws.

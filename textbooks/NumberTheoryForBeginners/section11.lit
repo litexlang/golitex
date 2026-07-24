@@ -39,6 +39,13 @@ prop power_congruence_prime_solution(p N_pos, k N_pos, a Z, d N_pos, e N):
     $power_congruence_prime_condition(p, k, a, d)
     exist x Z st {$solves_power_congruence_mod(p, k, a, x)}
 
+prop power_congruence_prime_criterion(p N_pos, k N_pos, a Z, d N_pos, e N):
+    forall:
+        =>:
+            $power_congruence_prime_solution(p, k, a, d, e)
+        <=>:
+            $power_congruence_prime_reduced_condition(p, k, a, d, e)
+
 # Euler's criterion is the quadratic (k=2) specialization.  The conclusion
 # is stated as an exact residue equation, with the two cases kept separate so
 # no false assertion is made for numbers divisible by p.
@@ -67,10 +74,8 @@ prop euler_criterion_split(p N_pos, a Z, h N):
 # inside one trust boundary.
 thm theorem_XI_power_congruence_criterion:
     ? forall p N_pos, k N_pos, a Z, d N_pos, e N:
-        $power_congruence_prime_reduced_condition(p, k, a, d, e)
-        =>:
-            $power_congruence_prime_solution(p, k, a, d, e)
-    trust $power_congruence_prime_solution(p, k, a, d, e)
+        $power_congruence_prime_criterion(p, k, a, d, e)
+    trust $power_congruence_prime_criterion(p, k, a, d, e)
 
 thm theorem_XI_quadratic_residue_split:
     ? forall p N_pos, a Z, h N:

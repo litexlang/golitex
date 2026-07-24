@@ -65,12 +65,23 @@ thm finite_set_has_bijective_index:
             =>:
                 exist idx fn(i range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$bijective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx)}
         by extension intersect({a}, T) = {}:
-            forall z intersect({a}, T):
+            claim:
+                ? forall z intersect({a}, T):
+                    z $in {}
                 z $in {a}
                 z = a
                 z $in T
                 a $in T
-                not a $in T
+                by contra:
+                    ? z $in {}
+                    impossible not a $in T
+            claim:
+                ? forall z {}:
+                    z $in intersect({a}, T)
+                by contra:
+                    ? z $in intersect({a}, T)
+                    z $in {}
+                    impossible z $in {}
         intersect({a}, T) = {}
         finite_set_size({a}) = 1
         finite_set_size(intersect({a}, T)) = finite_set_size({}) = 0

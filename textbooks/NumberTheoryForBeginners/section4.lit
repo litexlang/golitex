@@ -130,6 +130,39 @@ thm prime_divisor_exists:
             exist p Z st {$is_prime_Z(p), $section1citation::divides_Z(p, a)}
     exist p Z st {$is_prime_Z(p), $section1citation::divides_Z(p, a)}
 
+claim:
+    ? $is_prime_Z(2)
+    2 > 1
+    claim:
+        ? forall d Z:
+            d > 0
+            $section1citation::divides_Z(d, 2)
+            =>:
+                d = 1 or d = 2
+        obtain k from exist k Z st {2 = d * k}
+        claim:
+            ? k > 0
+            by contra:
+                ? k > 0
+                k <= 0
+                d * k <= 0
+                2 <= 0
+                impossible 2 <= 0
+        d >= 1
+        k >= 1
+        d = d * 1
+        d * 1 <= d * k
+        d <= d * 1 <= d * k = 2
+        d = 1 or d > 1
+        by cases:
+            ? d = 1 or d = 2
+            case d = 1:
+                d = 1
+            case d > 1:
+                d >= 2
+                d = 2
+    by def $is_prime_Z(2)
+
 """
 Theorem IV.1. If a prime divides a product of integers, then it divides at
 least one factor.
@@ -153,6 +186,77 @@ thm theorem_IV_1_prime_divides_binary_product:
 prop prime_divides_some_factor(p Z, n N_pos, f fn(i N_pos) Z):
     exist i N_pos st {i <= n, $section1citation::divides_Z(p, f(i))}
 
+thm theorem_IV_1_prime_divides_finite_product:
+    ? forall p Z, f fn(i N_pos) Z, n N_pos:
+        $is_prime_Z(p)
+        $section1citation::divides_Z(p, section3::finite_product_from_one(f, n))
+        =>:
+            $prime_divides_some_factor(p, n, f)
+    prop theorem_IV_1_at(k N_pos):
+        forall:
+            $section1citation::divides_Z(p, section3::finite_product_from_one(f, k))
+            =>:
+                $prime_divides_some_factor(p, k, f)
+    claim:
+        ? forall k N_pos:
+            $theorem_IV_1_at(k)
+        by induc k from 1:
+            ? $theorem_IV_1_at(k)
+            ? from k = 1:
+                claim:
+                    ? forall:
+                        $section1citation::divides_Z(p, section3::finite_product_from_one(f, 1))
+                        =>:
+                            $prime_divides_some_factor(p, 1, f)
+                    by thm section3::finite_product_from_one_successor(f, 0)
+                    obtain q from exist q Z st {section3::finite_product_from_one(f, 1) = p * q}
+                    witness exist r Z st {section3::finite_product_from_one(f, 0) * f(1) = p * r} from q:
+                        section3::finite_product_from_one(f, 0) * f(1) = section3::finite_product_from_one(f, 1) = p * q
+                    $section1citation::divides_Z(p, section3::finite_product_from_one(f, 0) * f(1))
+                    by thm theorem_IV_1_prime_divides_binary_product(p, section3::finite_product_from_one(f, 0), f(1))
+                    by cases:
+                        ? $prime_divides_some_factor(p, 1, f)
+                        case $section1citation::divides_Z(p, section3::finite_product_from_one(f, 0)):
+                            section3::finite_product_from_one(f, 0) = 1
+                            by thm section1citation::positive_divisor_of_one_is_one(p)
+                            p = 1
+                            impossible p > 1
+                        case $section1citation::divides_Z(p, f(1)):
+                            witness exist i N_pos st {i <= 1, $section1citation::divides_Z(p, f(i))} from 1:
+                                1 <= 1
+                                $section1citation::divides_Z(p, f(1))
+                            by def $prime_divides_some_factor(p, 1, f)
+                by def $theorem_IV_1_at(1)
+            ? induc:
+                claim:
+                    ? forall:
+                        $section1citation::divides_Z(p, section3::finite_product_from_one(f, k + 1))
+                        =>:
+                            $prime_divides_some_factor(p, k + 1, f)
+                    by thm section3::finite_product_from_one_successor(f, k)
+                    obtain q from exist q Z st {section3::finite_product_from_one(f, k + 1) = p * q}
+                    witness exist r Z st {section3::finite_product_from_one(f, k) * f(k + 1) = p * r} from q:
+                        section3::finite_product_from_one(f, k) * f(k + 1) = section3::finite_product_from_one(f, k + 1) = p * q
+                    $section1citation::divides_Z(p, section3::finite_product_from_one(f, k) * f(k + 1))
+                    by thm theorem_IV_1_prime_divides_binary_product(p, section3::finite_product_from_one(f, k), f(k + 1))
+                    by cases:
+                        ? $prime_divides_some_factor(p, k + 1, f)
+                        case $section1citation::divides_Z(p, section3::finite_product_from_one(f, k)):
+                            $prime_divides_some_factor(p, k, f)
+                            obtain i from exist i N_pos st {i <= k, $section1citation::divides_Z(p, f(i))}
+                            witness exist j N_pos st {j <= k + 1, $section1citation::divides_Z(p, f(j))} from i:
+                                i <= k <= k + 1
+                                $section1citation::divides_Z(p, f(i))
+                            by def $prime_divides_some_factor(p, k + 1, f)
+                        case $section1citation::divides_Z(p, f(k + 1)):
+                            witness exist i N_pos st {i <= k + 1, $section1citation::divides_Z(p, f(i))} from k + 1:
+                                k + 1 <= k + 1
+                                $section1citation::divides_Z(p, f(k + 1))
+                            by def $prime_divides_some_factor(p, k + 1, f)
+                by def $theorem_IV_1_at(k + 1)
+    $theorem_IV_1_at(n)
+    $prime_divides_some_factor(p, n, f)
+
 """
 Theorem IV.2. Every integer >1 is a product of primes, uniquely up to order.
 """
@@ -164,6 +268,128 @@ prop prime_factorization_Z(a Z, n N_pos, f fn(i N_pos) Z):
         =>:
             $is_prime_Z(f(i))
     a = section3::finite_product_from_one(fn(i N_pos) Z {f(i)}, n)
+
+thm prime_factorization_exists:
+    ? forall a Z:
+        a > 1
+        =>:
+            exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(a, n, f)}
+    a $in N_pos
+    claim:
+        ? forall x N_pos:
+            2 <= x
+            =>:
+                exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(x, n, f)}
+        by strong_induc x from 2:
+            ? exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(x, n, f)}
+            have f2 fn(i N_pos) Z = fn(i N_pos) Z {2}
+            claim:
+                ? $prime_factorization_Z(2, 1, f2)
+                2 > 1
+                claim:
+                    ? forall i N_pos:
+                        i <= 1
+                        =>:
+                            $is_prime_Z(f2(i))
+                    i = 1
+                    f2(i) = 2
+                    $is_prime_Z(2)
+                by thm section3::finite_product_from_one_successor(f2, 0)
+                section3::finite_product_from_one(f2, 0) = 1
+                f2(1) = 2
+                section3::finite_product_from_one(f2, 1) = section3::finite_product_from_one(f2, 0) * f2(1) = 1 * 2 = 2
+                by def $prime_factorization_Z(2, 1, f2)
+            witness exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(2, n, f)} from 1, f2:
+                $prime_factorization_Z(2, 1, f2)
+            claim:
+                ? forall b Z:
+                    b >= 2
+                    forall m Z:
+                        2 <= m
+                        m <= b
+                        =>:
+                            exist r N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(m, r, f)}
+                    =>:
+                        exist r N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(b + 1, r, f)}
+                by thm prime_divisor_exists(b + 1)
+                obtain p from exist p Z st {$is_prime_Z(p), $section1citation::divides_Z(p, b + 1)}
+                obtain q from exist q Z st {b + 1 = p * q}
+                claim:
+                    ? q > 0
+                    by contra:
+                        ? q > 0
+                        q <= 0
+                        p > 1
+                        p > 0
+                        p * q <= 0
+                        b + 1 <= 0
+                        impossible b >= 2
+                q = 1 or q > 1
+                by cases:
+                    ? exist r N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(b + 1, r, f)}
+                    case q = 1:
+                        have fp fn(i N_pos) Z = fn(i N_pos) Z {p}
+                        claim:
+                            ? $prime_factorization_Z(b + 1, 1, fp)
+                            b + 1 = p * q = p
+                            b + 1 > 1
+                            claim:
+                                ? forall i N_pos:
+                                    i <= 1
+                                    =>:
+                                        $is_prime_Z(fp(i))
+                                i = 1
+                                fp(i) = p
+                                $is_prime_Z(p)
+                            by thm section3::finite_product_from_one_successor(fp, 0)
+                            section3::finite_product_from_one(fp, 0) = 1
+                            fp(1) = p
+                            section3::finite_product_from_one(fp, 1) = section3::finite_product_from_one(fp, 0) * fp(1) = 1 * p = p = b + 1
+                            by def $prime_factorization_Z(b + 1, 1, fp)
+                        witness exist r N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(b + 1, r, f)} from 1, fp:
+                            $prime_factorization_Z(b + 1, 1, fp)
+                    case q > 1:
+                        p >= 2
+                        q >= 2
+                        p * q >= 2 * q
+                        q < 2 * q <= p * q = b + 1
+                        q <= b
+                        exist r N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(q, r, f)}
+                        obtain r, f from exist r N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(q, r, f)}
+                        have g fn(i N_pos) Z by cases:
+                            case i = 1: p
+                            case i > 1: f(i - 1)
+                        g(1) = p
+                        claim:
+                            ? forall i N_pos:
+                                g(i + 1) = f(i)
+                            i + 1 > 1
+                            g(i + 1) = f((i + 1) - 1) = f(i)
+                        claim:
+                            ? $prime_factorization_Z(b + 1, r + 1, g)
+                            b + 1 > 1
+                            claim:
+                                ? forall i N_pos:
+                                    i <= r + 1
+                                    =>:
+                                        $is_prime_Z(g(i))
+                                i = 1 or i > 1
+                                by cases:
+                                    ? $is_prime_Z(g(i))
+                                    case i = 1:
+                                        g(i) = p
+                                        $is_prime_Z(p)
+                                    case i > 1:
+                                        i - 1 $in N_pos
+                                        i - 1 <= r
+                                        $is_prime_Z(f(i - 1))
+                                        g(i) = f(i - 1)
+                            by thm section3::finite_product_from_one_prepend(p, f, g, r)
+                            b + 1 = p * q = p * section3::finite_product_from_one(f, r) = section3::finite_product_from_one(g, r + 1)
+                            by def $prime_factorization_Z(b + 1, r + 1, g)
+                        witness exist s N_pos, h fn(i N_pos) Z st {$prime_factorization_Z(b + 1, s, h)} from r + 1, g:
+                            $prime_factorization_Z(b + 1, r + 1, g)
+    exist n N_pos, f fn(i N_pos) Z st {$prime_factorization_Z(a, n, f)}
 
 prop is_factor_permutation_map(n, m N_pos, f fn(i N_pos) Z, g fn(j N_pos) Z, phi fn(i N_pos) N_pos):
     n = m
@@ -238,14 +464,113 @@ prop primes_are_unbounded():
     forall n N_pos:
         exist p Z st {p > n, $is_prime_Z(p)}
 
-# Source handling: Euclid's proof takes a prime divisor of pqr...+1.
-# trust: The checked proof needs the finite product interface and the
-# prime-divisor theorem above.
+have fn factorial_Z(n N) N by induc n from 0:
+    case n = 0: 1
+    case n > 0: n * factorial_Z(n - 1)
+
+thm factorial_Z_positive:
+    ? forall n N:
+        factorial_Z(n) > 0
+    by induc n from 0:
+        ? factorial_Z(n) > 0
+        ? from n = 0:
+            factorial_Z(0) = 1 > 0
+        ? induc:
+            factorial_Z(n) > 0
+            factorial_Z(n + 1) = (n + 1) * factorial_Z((n + 1) - 1) = (n + 1) * factorial_Z(n) > 0
+
+thm positive_index_divides_factorial_Z:
+    ? forall i, n N:
+        i > 0
+        i <= n
+        =>:
+            $section1citation::divides_Z(i, factorial_Z(n))
+    prop all_positive_indices_divide_factorial_Z(k N):
+        forall j N:
+            j > 0
+            j <= k
+            =>:
+                $section1citation::divides_Z(j, factorial_Z(k))
+    claim:
+        ? forall k N:
+            $all_positive_indices_divide_factorial_Z(k)
+        by induc k from 0:
+            ? $all_positive_indices_divide_factorial_Z(k)
+            ? from k = 0:
+                claim:
+                    ? forall j N:
+                        j > 0
+                        j <= k
+                        =>:
+                            $section1citation::divides_Z(j, factorial_Z(k))
+                    by contra:
+                        ? $section1citation::divides_Z(j, factorial_Z(k))
+                        j <= 0
+                        j = 0
+                        j != 0
+                        impossible j != 0
+                $all_positive_indices_divide_factorial_Z(k)
+            ? induc:
+                $all_positive_indices_divide_factorial_Z(k)
+                claim:
+                    ? forall j N:
+                        j > 0
+                        j <= k + 1
+                        =>:
+                            $section1citation::divides_Z(j, factorial_Z(k + 1))
+                    j <= k or j > k
+                    by cases:
+                        ? $section1citation::divides_Z(j, factorial_Z(k + 1))
+                        case j <= k:
+                            $section1citation::divides_Z(j, factorial_Z(k))
+                            obtain q from exist q Z st {factorial_Z(k) = j * q}
+                            factorial_Z(k) = j * q
+                            (k + 1) * factorial_Z(k) = (k + 1) * (j * q)
+                            factorial_Z(k + 1) = (k + 1) * factorial_Z((k + 1) - 1) = (k + 1) * factorial_Z(k)
+                            (k + 1) * (j * q) = j * ((k + 1) * q)
+                            factorial_Z(k + 1) = j * ((k + 1) * q)
+                            witness exist q1 Z st {factorial_Z(k + 1) = j * q1} from (k + 1) * q:
+                                factorial_Z(k + 1) = j * ((k + 1) * q)
+                            $section1citation::divides_Z(j, factorial_Z(k + 1))
+                        case j > k:
+                            j = k + 1
+                            factorial_Z(k + 1) = (k + 1) * factorial_Z((k + 1) - 1) = (k + 1) * factorial_Z(k)
+                            factorial_Z(k + 1) = j * factorial_Z(k)
+                            witness exist q1 Z st {factorial_Z(k + 1) = j * q1} from factorial_Z(k):
+                                factorial_Z(k + 1) = j * factorial_Z(k)
+                            $section1citation::divides_Z(j, factorial_Z(k + 1))
+                $all_positive_indices_divide_factorial_Z(k + 1)
+    $all_positive_indices_divide_factorial_Z(n)
+    $section1citation::divides_Z(i, factorial_Z(n))
+
+# Source handling: Euclid's proof takes a prime divisor of n!+1.
 thm theorem_IV_3_infinitely_many_primes:
     ? forall n N_pos:
         exist p Z st {p > n, $is_prime_Z(p)}
-    trust $primes_are_unbounded()
-    exist p Z st {p > n, $is_prime_Z(p)}
+    by thm factorial_Z_positive(n)
+    factorial_Z(n) >= 1
+    factorial_Z(n) + 1 > 1
+    by thm prime_divisor_exists(factorial_Z(n) + 1)
+    obtain p from exist p Z st {$is_prime_Z(p), $section1citation::divides_Z(p, factorial_Z(n) + 1)}
+    claim:
+        ? p > n
+        by contra:
+            ? p > n
+            p <= n
+            p > 1
+            p $in N
+            by thm positive_index_divides_factorial_Z(p, n)
+            obtain a from exist a Z st {factorial_Z(n) = p * a}
+            obtain b from exist b Z st {factorial_Z(n) + 1 = p * b}
+            witness exist q Z st {1 = p * q} from b - a:
+                1 = (factorial_Z(n) + 1) - factorial_Z(n) = p * b - p * a = p * (b - a)
+            $section1citation::divides_Z(p, 1)
+            by thm section1citation::positive_divisor_of_one_is_one(p)
+            p = 1
+            impossible p > 1
+    witness exist q Z st {q > n, $is_prime_Z(q)} from p:
+        p > n
+        $is_prime_Z(p)
 
 """
 Exercise IV.1. Legendre's formula gives the exponent of p in n!.

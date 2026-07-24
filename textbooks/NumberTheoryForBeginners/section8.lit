@@ -33,7 +33,7 @@ prop coset_partition_claim(G set, mul fn(x, y G) G, H power_set(G)):
         exist C power_set(G) st {$is_left_coset(G, mul, H, x, C), x $in C}
 
 prop subgroup_order_divides_group_order(G set, mul fn(x, y G) G, one G, H power_set(G)):
-    $section7citation::is_subgroup(G, mul, one, H)
+    $section7::is_subgroup(G, mul, one, H)
     $is_finite_set(G)
     $is_finite_set(H)
     $section1citation::divides_Z(finite_set_size(H), finite_set_size(G))
@@ -42,15 +42,18 @@ prop subgroup_order_divides_group_order(G set, mul fn(x, y G) G, one G, H power_
 # unit.  The relation is concrete; selecting a generic value for an arbitrary
 # carrier is a separate function-family gap in the current Litex surface.
 prop has_element_order(G set, mul fn(x, y G) G, one G, x G, n N_pos):
-    $section7citation::has_group_power(G, mul, one, x, n, one)
+    $section7::has_group_power(G, mul, one, x, n, one)
     forall k N_pos:
-        $section7citation::has_group_power(G, mul, one, x, k, one)
+        $section7::has_group_power(G, mul, one, x, k, one)
         =>:
             n <= k
 
 thm theorem_VIII_element_order_exists:
     ? forall G set, mul fn(x, y G) G, one G, x G:
-        exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
+        $section7::is_group(G, mul, one)
+        $is_finite_set(G)
+        =>:
+            exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
     trust exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
 
 prop euler_theorem_conclusion(m N_pos, a Z):
@@ -61,7 +64,7 @@ prop euler_theorem_conclusion(m N_pos, a Z):
 # package, so their two source-facing clauses live in one trust boundary.
 thm theorem_VIII_Lagrange:
     ? forall G set, mul fn(x, y G) G, one G, H power_set(G):
-        $section7citation::is_subgroup(G, mul, one, H)
+        $section7::is_subgroup(G, mul, one, H)
         $is_finite_set(G)
         $is_finite_set(H)
         =>:

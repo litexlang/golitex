@@ -34,8 +34,14 @@ prop gaussian_prime(x, y Z):
         =>:
             $gaussian_unit(dx, dy) or $gaussian_associate(dx, dy, x, y)
 
-prop norm_multiplicative(x1, y1, x2, y2 Z):
-    gaussian_norm(x1 * x2 - y1 * y2, x1 * y2 + y1 * x2) = gaussian_norm(x1, y1) * gaussian_norm(x2, y2)
+# The Gaussian norm is multiplicative. In coordinates this is the
+# sum-of-two-squares identity obtained by expanding the product.
+thm gaussian_norm_is_multiplicative:
+    ? forall x1, y1, x2, y2 Z:
+        gaussian_norm(x1 * x2 - y1 * y2, x1 * y2 + y1 * x2) = gaussian_norm(x1, y1) * gaussian_norm(x2, y2)
+    gaussian_norm(x1 * x2 - y1 * y2, x1 * y2 + y1 * x2) = (x1 * x2 - y1 * y2)^2 + (x1 * y2 + y1 * x2)^2
+    gaussian_norm(x1, y1) * gaussian_norm(x2, y2) = (x1^2 + y1^2) * (x2^2 + y2^2)
+    (x1 * x2 - y1 * y2)^2 + (x1 * y2 + y1 * x2)^2 = (x1^2 + y1^2) * (x2^2 + y2^2)
 
 # Gaussian division chooses q and r with a strictly smaller remainder norm.
 prop gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry Z):
