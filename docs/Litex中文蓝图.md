@@ -1,8 +1,8 @@
-# Litex Blueprint：让可验证数学接近日常数学的书写流程
+# Litex：让可验证数学接近日常数学的书写流程
 
 Jiachen Shen and The Litex Team, 2026-07-24. Email: litexlang@outlook.com
 
-官网页面: https://litexlang.com/doc/Litex_Blueprint_zh
+官网页面: https://litexlang.com/doc/Litex中文蓝图
 
 ## 背景
 

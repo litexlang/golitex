@@ -78,6 +78,7 @@ impl Tokenizer {
                     && line.is_char_boundary(i)
                     && line.is_char_boundary(i + sym_length_bytes)
                     && &line[i..i + sym_length_bytes] == sym
+                    && Self::compact_set_suffix_has_right_boundary(sym, line, i + sym_length_bytes)
                 {
                     tokens.push(sym.to_string());
                     i += sym_length_bytes;
@@ -357,6 +358,34 @@ impl Tokenizer {
         ch == '_' || ch.is_alphanumeric()
     }
 
+    fn compact_set_suffix_has_right_boundary(token: &str, line: &str, end: usize) -> bool {
+        // Keep adjacent arithmetic such as `N+1` split while recognizing a
+        // compact set only where its suffix ends the current lexical item.
+        if !matches!(
+            token,
+            COMPACT_NONEMPTY_SET
+                | COMPACT_N_POS
+                | COMPACT_Z_POS
+                | COMPACT_Q_POS
+                | COMPACT_R_POS
+                | COMPACT_Z_NEG
+                | COMPACT_Q_NEG
+                | COMPACT_R_NEG
+        ) {
+            return true;
+        }
+        if end == line.len() {
+            return true;
+        }
+
+        let next = line[end..].chars().next().unwrap_or('\0');
+        next.is_whitespace()
+            || matches!(
+                next,
+                ',' | ':' | ')' | ']' | '}' | '>' | '=' | '!' | '<' | '$' | '{' | '#'
+            )
+    }
+
     fn parse_error(message: String, line_file: LineFile) -> RuntimeError {
         RuntimeError::from(ParseRuntimeError(
             RuntimeErrorStruct::new_with_msg_and_line_file(message, line_file),
@@ -456,6 +485,29 @@ mod tests {
                 .tokenize_line("A ++ B -- C ** D *. E ^^ 2", test_line_file())
                 .unwrap(),
             vec!["A", "++", "B", "--", "C", "**", "D", "*.", "E", "^^", "2"]
+        );
+    }
+
+    #[test]
+    fn compact_standard_set_suffixes_require_adjacency() {
+        let tokenizer = Tokenizer::new();
+        assert_eq!(
+            tokenizer
+                .tokenize_line("set+ N+ Z+ Q+ R+ Z- Q- R-", test_line_file())
+                .unwrap(),
+            vec!["set+", "N+", "Z+", "Q+", "R+", "Z-", "Q-", "R-"]
+        );
+        assert_eq!(
+            tokenizer
+                .tokenize_line("set + N + Z -", test_line_file())
+                .unwrap(),
+            vec!["set", "+", "N", "+", "Z", "-"]
+        );
+        assert_eq!(
+            tokenizer
+                .tokenize_line("N+1 R-x Q-(a)", test_line_file())
+                .unwrap(),
+            vec!["N", "+", "1", "R", "-", "x", "Q", "-", "(", "a", ")"]
         );
     }
 

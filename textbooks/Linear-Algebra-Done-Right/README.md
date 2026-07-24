@@ -11,7 +11,7 @@ explanatory prose are retained in the order in which the book introduces them.
 Run the current project with:
 
 ```sh
-target/debug/litex -compact -runner -r textbooks/LinearAlgebraDoneRight
+target/debug/litex -compact -runner -r textbooks/Linear-Algebra-Done-Right
 ```
 
 `litex.config` exports one namespace per source section, from `chap1a`

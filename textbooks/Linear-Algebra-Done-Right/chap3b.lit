@@ -8,9 +8,26 @@ template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vs
     have fn null_space(T fn(v V) W) power_set(V) = {v V: T(v) = Wspace.zero}
 
 # Result 3.13. The null space of a linear map is a subspace of its domain.
-axiom null_space_is_subspace:
+thm null_space_is_subspace:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T \chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
         $chap1c::is_subspace(s, scalars, V, Vspace, \null_space<s, scalars, V, W, Vspace, Wspace>(T))
+    by thm chap3a::linear_maps_take_zero_to_zero(s, scalars, V, W, Vspace, Wspace, T)
+    Vspace.zero $in \null_space<s, scalars, V, W, Vspace, Wspace>(T)
+    witness $is_nonempty_set(\null_space<s, scalars, V, W, Vspace, Wspace>(T)) from Vspace.zero
+    forall x, y \null_space<s, scalars, V, W, Vspace, Wspace>(T):
+        T(x) = Wspace.zero
+        T(y) = Wspace.zero
+        T(Vspace.add(x, y)) = Wspace.add(T(x), T(y))
+        Wspace.add(Wspace.zero, Wspace.zero) = Wspace.zero
+        T(Vspace.add(x, y)) = Wspace.zero
+        Vspace.add(x, y) $in \null_space<s, scalars, V, W, Vspace, Wspace>(T)
+    forall a s, x \null_space<s, scalars, V, W, Vspace, Wspace>(T):
+        T(x) = Wspace.zero
+        T(Vspace.smul(a, x)) = Wspace.smul(a, T(x))
+        Wspace.smul(a, Wspace.zero) = Wspace.zero
+        T(Vspace.smul(a, x)) = Wspace.zero
+        Vspace.smul(a, x) $in \null_space<s, scalars, V, W, Vspace, Wspace>(T)
+    by def $chap1c::is_subspace(s, scalars, V, Vspace, \null_space<s, scalars, V, W, Vspace, Wspace>(T))
 
 # Definition 3.14. A map is injective when equal outputs force equal inputs.
 prop is_injective(V, W set, T fn(v V) W):
@@ -28,9 +45,54 @@ prop injective_iff_null_space_is_zero_statement(s nonempty_set, scalars &chap1a:
         <=>:
             \null_space<s, scalars, V, W, Vspace, Wspace>(T) = {Vspace.zero}
 
-axiom injective_iff_null_space_is_zero:
+thm injective_iff_null_space_is_zero:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T \chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
         $injective_iff_null_space_is_zero_statement(s, scalars, V, W, Vspace, Wspace, T)
+    by thm chap3a::linear_maps_take_zero_to_zero(s, scalars, V, W, Vspace, Wspace, T)
+    Vspace.zero $in \null_space<s, scalars, V, W, Vspace, Wspace>(T)
+    claim:
+        ? forall:
+            $is_injective(V, W, T)
+            =>:
+                \null_space<s, scalars, V, W, Vspace, Wspace>(T) = {Vspace.zero}
+        by extension \null_space<s, scalars, V, W, Vspace, Wspace>(T) = {Vspace.zero}:
+            forall x \null_space<s, scalars, V, W, Vspace, Wspace>(T):
+                T(x) = Wspace.zero = T(Vspace.zero)
+                x = Vspace.zero
+                x $in {Vspace.zero}
+            forall x {Vspace.zero}:
+                x = Vspace.zero
+                x $in \null_space<s, scalars, V, W, Vspace, Wspace>(T)
+    claim:
+        ? forall:
+            \null_space<s, scalars, V, W, Vspace, Wspace>(T) = {Vspace.zero}
+            =>:
+                $is_injective(V, W, T)
+        claim:
+            ? forall u, v V:
+                T(u) = T(v)
+                =>:
+                    u = v
+            by thm chap1b::minus_one_times_vector(s, scalars, V, Vspace, v)
+            by thm chap1b::minus_one_times_vector(s, scalars, W, Wspace, T(v))
+            T(\chap1b::vector_neg<s, scalars, V, Vspace>(v)) = T(Vspace.smul(scalars.neg(scalars.one), v)) = Wspace.smul(scalars.neg(scalars.one), T(v)) = \chap1b::vector_neg<s, scalars, W, Wspace>(T(v))
+            T(Vspace.add(u, \chap1b::vector_neg<s, scalars, V, Vspace>(v))) = Wspace.add(T(u), T(\chap1b::vector_neg<s, scalars, V, Vspace>(v)))
+            Wspace.add(T(u), T(\chap1b::vector_neg<s, scalars, V, Vspace>(v))) = Wspace.add(T(v), \chap1b::vector_neg<s, scalars, W, Wspace>(T(v)))
+            by thm chap1b::vector_neg_spec(s, scalars, W, Wspace, T(v))
+            T(Vspace.add(u, \chap1b::vector_neg<s, scalars, V, Vspace>(v))) = Wspace.zero
+            Vspace.add(u, \chap1b::vector_neg<s, scalars, V, Vspace>(v)) $in \null_space<s, scalars, V, W, Vspace, Wspace>(T)
+            Vspace.add(u, \chap1b::vector_neg<s, scalars, V, Vspace>(v)) $in {Vspace.zero}
+            Vspace.add(u, \chap1b::vector_neg<s, scalars, V, Vspace>(v)) = Vspace.zero
+            by thm chap1b::vector_neg_spec(s, scalars, V, Vspace, v)
+            Vspace.add(u, \chap1b::vector_neg<s, scalars, V, Vspace>(v)) = Vspace.add(v, \chap1b::vector_neg<s, scalars, V, Vspace>(v))
+            by thm chap1b::add_right_cancel(s, scalars, V, Vspace, u, v, \chap1b::vector_neg<s, scalars, V, Vspace>(v))
+        by def $is_injective(V, W, T)
+    forall:
+        =>:
+            $is_injective(V, W, T)
+        <=>:
+            \null_space<s, scalars, V, W, Vspace, Wspace>(T) = {Vspace.zero}
+    by def $injective_iff_null_space_is_zero_statement(s, scalars, V, W, Vspace, Wspace, T)
 
 # Definition 3.16. The range of T is the set of all values T(v). The helper
 # relation keeps the existential out of the set-builder parser while the
@@ -42,9 +104,37 @@ template<V, W set>:
     have fn range_of(T fn(v V) W) power_set(W) = {w W: $has_preimage(V, W, T, w)}
 
 # Result 3.18. The range of a linear map is a subspace of its codomain.
-axiom range_is_subspace:
+thm range_is_subspace:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T \chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
         $chap1c::is_subspace(s, scalars, W, Wspace, \range_of<V, W>(T))
+    by thm chap3a::linear_maps_take_zero_to_zero(s, scalars, V, W, Vspace, Wspace, T)
+    witness exist v V st {Wspace.zero = T(v)} from Vspace.zero
+    by def $has_preimage(V, W, T, Wspace.zero)
+    Wspace.zero $in \range_of<V, W>(T)
+    witness $is_nonempty_set(\range_of<V, W>(T)) from Wspace.zero
+    claim:
+        ? forall x, y W:
+            x $in \range_of<V, W>(T)
+            y $in \range_of<V, W>(T)
+            =>:
+                Wspace.add(x, y) $in \range_of<V, W>(T)
+        obtain u from exist v V st {x = T(v)}
+        obtain v from exist z V st {y = T(z)}
+        Wspace.add(x, y) = Wspace.add(T(u), T(v)) = T(Vspace.add(u, v))
+        witness exist z V st {Wspace.add(x, y) = T(z)} from Vspace.add(u, v)
+        by def $has_preimage(V, W, T, Wspace.add(x, y))
+        Wspace.add(x, y) $in \range_of<V, W>(T)
+    claim:
+        ? forall a s, x W:
+            x $in \range_of<V, W>(T)
+            =>:
+                Wspace.smul(a, x) $in \range_of<V, W>(T)
+        obtain u from exist v V st {x = T(v)}
+        Wspace.smul(a, x) = Wspace.smul(a, T(u)) = T(Vspace.smul(a, u))
+        witness exist z V st {Wspace.smul(a, x) = T(z)} from Vspace.smul(a, u)
+        by def $has_preimage(V, W, T, Wspace.smul(a, x))
+        Wspace.smul(a, x) $in \range_of<V, W>(T)
+    by def $chap1c::is_subspace(s, scalars, W, Wspace, \range_of<V, W>(T))
 
 # Definition 3.19. A map is surjective when every codomain vector is attained.
 prop is_surjective(V, W set, T fn(v V) W):

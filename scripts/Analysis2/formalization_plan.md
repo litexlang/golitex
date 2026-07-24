@@ -68,7 +68,7 @@ This is not a blank-slate formalization:
   compactness, completeness, and topology interfaces.
 - `textbooks/Mathematics-In-Lean-Derived-Litex-Corpus/chapter13-integration-and-measure-theory.lit`
   contains corpus-local measurable-space and measure interfaces.
-- `textbooks/LinearAlgebraDoneRight/` contains reusable implementation
+- `textbooks/Linear-Algebra-Done-Right/` contains reusable implementation
   experience for linear maps, finite-dimensional spaces, matrices, and norms.
 
 These files are design evidence and sources of checked proof patterns, not

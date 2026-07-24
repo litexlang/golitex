@@ -24,12 +24,28 @@
 # Chapter 2, Sections 2A-2C — bases and finite dimension
 # Linear combinations, span, independence, bases, and dimension are callable
 # interfaces. The finite-list deletion and exchange arguments needed for basis
-# extraction, extension, and equality of basis lengths remain to be proved.
+# extraction and extension remain to be proved. Equality of basis lengths and
+# its basis-length existence wrapper are checked relative to those upstream
+# results. Results 2.38 and 2.42 follow the source routes, but each retains one
+# trusted equality because equal natural indices do not yet transport a
+# FiniteList value between its dependent length types. Results 2.37 and 2.39
+# now check their dimension comparison and span-minimality routes; transporting
+# a subspace basis to the ambient linear-combination structure, and exposing
+# the entries of the named lifted list, remain trusted.
+#
+# Chapter 2C, binary subspace-sum closure used by Result 2.43
+# The zero and scalar-closure arguments and all decomposition witnesses are
+# checked. Regrouping (u+w)+(p+q) as (u+p)+(w+q) remains one trusted equality.
 #
 # Chapter 3A, Definitions 3.2, 3.5, and 3.7 — linear-map operations
 # The carriers L(V,W), identity and zero maps, pointwise addition and scalar
 # multiplication, composition, and their selected vector-space structure are
 # stated. Their closure and callable construction proofs remain incomplete.
+#
+# Chapter 3B, Results 3.13-3.24 — null spaces, ranges, and rank-nullity
+# Null spaces and ranges are now checked subspaces, and the injectivity/kernel
+# characterization is checked by set extension and vector subtraction.
+# Rank-nullity and its finite-dimensional consequences remain incomplete.
 #
 # Chapter 3B, Definition 3.25 — finite scalar sums
 # The linear-system notation uses a typed finite scalar-sum value. Its
