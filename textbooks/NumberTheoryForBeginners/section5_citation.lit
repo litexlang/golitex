@@ -92,7 +92,7 @@ thm theorem_V_subgroup_of_Z_is_cyclic:
         $section2::is_integer_multiple_set(H, m2)
         =>:
             m1 = m2
-    exist! m N st {$section2::is_integer_multiple_set(H, m)}
+    exist! g N st {$section2::is_integer_multiple_set(H, g)}
 
 """
 Definition. For m>0, integers x and y are congruent modulo m when x-y is a
@@ -100,7 +100,7 @@ multiple of m.
 """
 
 prop congruent_mod(m N_pos, x, y Z):
-    $section1::divides_Z(m, x - y)
+    $section1citation::divides_Z(m, x - y)
 
 """
 The division lemma from Section II says every integer is congruent modulo m to
@@ -454,7 +454,7 @@ prop congruence_classes_form_additive_group_mod(m N_pos):
 thm congruence_classes_additive_group_background:
     ? forall m N_pos:
         $congruence_classes_form_additive_group_mod(m)
-    trust: quotient residue-class group background
+    trust $congruence_classes_form_additive_group_mod(m)
 
 thm theorem_V_1_residue_classes_additive_group:
     ? forall m N_pos:
@@ -528,6 +528,3 @@ same odd divisors.
 sketch:
     # Exercise retained as source text; exercises are outside this theorem-only
     # translation scope.
-
-
-

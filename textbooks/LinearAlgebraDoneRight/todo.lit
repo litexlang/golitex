@@ -1,11 +1,60 @@
 # Mathematics still to be completed
 #
-# Chapters 1-3 — foundational linear algebra
-# The remaining gaps are the selected complex and vector-space structures,
-# finite-list exchange and basis theorems, matrix/rank constructions, quotient
-# well-definedness, inverse selection, and dual-space constructions. The
-# source-facing definitions and results are present, but these constructions
-# and proofs have not all been supplied.
+# Chapter 1A, Definitions 1.3, 1.6, and 1.8 — scalar and finite-list objects
+# The real scalar system is checked. The remaining constructions are the
+# Complex scalar system from coordinate arithmetic and the length-zero finite
+# list, including the required inverse and empty-coordinate-map facts.
+#
+# Chapter 1B, Definition 1.20 — coordinate vector-space structure
+# Pointwise coordinate operations are callable. The proof that they satisfy
+# all vector-space laws, and hence the selected VectorSpace structure on F^n,
+# has not yet been supplied.
+#
+# Chapter 1C, Definition 1.33 and Results 1.40-1.46 — inherited subspaces and sums
+# Subspace closure, finite subspace sums, and the two-summand direct-sum
+# relations are present. The inherited VectorSpace structure on a subspace,
+# the finite-family construction proofs, and the general direct-sum criteria
+# remain incomplete.
+#
+# Chapter 1C, Result 1.46 — zero intersection implies direct sum
+# The checked setup reduces two equal decompositions u1+w1=u2+w2 to the
+# cancellation identity u1-u2=w2-w1. The corresponding equality of vectors
+# is currently trusted; all subsequent use of the zero intersection is checked.
+#
+# Chapter 2, Sections 2A-2C — bases and finite dimension
+# Linear combinations, span, independence, bases, and dimension are callable
+# interfaces. The finite-list deletion and exchange arguments needed for basis
+# extraction, extension, and equality of basis lengths remain to be proved.
+#
+# Chapter 3A, Definitions 3.2, 3.5, and 3.7 — linear-map operations
+# The carriers L(V,W), identity and zero maps, pointwise addition and scalar
+# multiplication, composition, and their selected vector-space structure are
+# stated. Their closure and callable construction proofs remain incomplete.
+#
+# Chapter 3B, Definition 3.25 — finite scalar sums
+# The linear-system notation uses a typed finite scalar-sum value. Its
+# recursive construction and the resulting matrix-system identities remain
+# incomplete.
+#
+# Chapter 3C, Definitions 3.49 and 3.52 — matrices and rank
+# Matrices of linear maps, matrix products, and row and column ranks have the
+# intended types. Basis-coordinate construction, finite product sums, and the
+# proof that rank is the dimension of the corresponding span remain absent.
+#
+# Chapter 3D, Definitions 3.59-3.61 and 3.73-3.80 — inverses and coordinates
+# Invertibility and inverse uniqueness are expressed, but the canonical inverse
+# map, coordinate-column map, identity matrix, and inverse matrix remain
+# selected objects with unfinished construction or uniqueness bridges.
+#
+# Chapter 3E, Definitions 3.91-3.104 — products and quotients
+# Product-space and quotient-space operations are callable. Their inherited
+# VectorSpace structures, representative independence, quotient map, and
+# induced map still need well-definedness and linearity proofs.
+#
+# Chapter 3F, Definitions 3.108-3.124 — dual spaces
+# Scalar, dual, dual-basis, and dual-map interfaces are present. The vector
+# space structures, dual-basis construction, and contravariant map proof have
+# not yet been supplied.
 #
 # Chapter 4 — polynomial factorization
 # The coordinate complex-number laws, polynomial representation and division,

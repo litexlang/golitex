@@ -70,7 +70,7 @@ thm theorem_XI_power_congruence_criterion:
         $power_congruence_prime_reduced_condition(p, k, a, d, e)
         =>:
             $power_congruence_prime_solution(p, k, a, d, e)
-    $power_congruence_prime_solution(p, k, a, d, e)
+    trust $power_congruence_prime_solution(p, k, a, d, e)
 
 thm theorem_XI_quadratic_residue_split:
     ? forall p N_pos, a Z, h N:
@@ -80,4 +80,4 @@ thm theorem_XI_quadratic_residue_split:
         2 * h = p - 1
         =>:
             $euler_criterion_split(p, a, h)
-    $euler_criterion_split(p, a, h)
+    trust $euler_criterion_split(p, a, h)

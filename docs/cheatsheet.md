@@ -5,6 +5,10 @@ If you are new to Litex, read
 That note explains the mathematical meaning of objects, facts, statements, and
 context growth.  This cheat sheet is a dense executor/reference map.
 
+For the complete language-level glossary -- 72 core object forms, 52 fact
+forms, 63 statement forms, definitions, and the atomic verification loop -- read
+[Litex System Map](Litex_System_Map.md).
+
 This note summarizes the current executor behavior by separating each statement
 into three parts:
 

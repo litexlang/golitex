@@ -102,14 +102,30 @@ axiom spanning_list_of_dimension_length_is_basis:
         =>:
             $chap2b::is_basis(s, scalars, v, space, n, vectors)
 
-# Binary infrastructure used by Result 2.43. The direct closure candidates did
-# not receive a bounded self-leak-free pass and remain explicit debt.
-axiom subspace_intersection_is_subspace:
+# Binary infrastructure used by Result 2.43. The intersection contains the
+# common zero vector, and addition and scalar multiplication remain in both
+# subspaces, hence remain in their intersection.
+thm subspace_intersection_is_subspace:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, space &chap1b::VectorSpace<s, scalars, v>, U, W power_set(v):
         $chap1c::is_subspace(s, scalars, v, space, U)
         $chap1c::is_subspace(s, scalars, v, space, W)
         =>:
             $chap1c::is_subspace(s, scalars, v, space, intersect(U, W))
+    witness $is_nonempty_set(intersect(U, W)) from space.zero:
+        space.zero $in intersect(U, W)
+    forall x, y intersect(U, W):
+        space.add(x, y) $in U
+        space.add(x, y) $in W
+        space.add(x, y) $in intersect(U, W)
+    forall a s, x intersect(U, W):
+        space.smul(a, x) $in U
+        space.smul(a, x) $in W
+        space.smul(a, x) $in intersect(U, W)
+    forall z intersect(U, W):
+        z $in v
+    intersect(U, W) $subset v
+    intersect(U, W) $in power_set(v)
+    by def $chap1c::is_subspace(s, scalars, v, space, intersect(U, W))
 
 # For the binary sum, the intended proof uses 0+0, regrouping, and scalar
 # distributivity; its unchecked candidate body is not retained.

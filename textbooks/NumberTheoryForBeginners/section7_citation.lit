@@ -114,14 +114,14 @@ thm generated_elements_power_background:
         $generated_subgroup(G, mul, one, x, H)
         =>:
             $every_generated_element_is_power(G, mul, one, x, H)
-    trust: generic group-power background
+    trust $every_generated_element_is_power(G, mul, one, x, H)
 
 thm finite_cyclic_power_classes_background:
     ? forall G set, mul fn(x, y G) G, one G, generator G, m N_pos:
         $finite_cyclic_group(G, mul, one, generator, m)
         =>:
             $finite_cyclic_power_class_claim(G, mul, one, generator, m)
-    trust: finite cyclic counting background
+    trust $finite_cyclic_power_class_claim(G, mul, one, generator, m)
 
 thm theorem_VII_generated_powers:
     ? forall G set, mul fn(x, y G) G, one G, x G, H power_set(G):
@@ -136,6 +136,5 @@ thm theorem_VII_finite_cyclic_power_classes:
         =>:
             $finite_cyclic_power_class_claim(G, mul, one, generator, m)
     $finite_cyclic_power_class_claim(G, mul, one, generator, m)
-
 
 

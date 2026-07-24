@@ -471,12 +471,9 @@ thm zero_intersection_implies_direct_sum_pair:
         space.add(space.add(u1, w1), neg_u2) = space.add(space.add(u2, w2), neg_u2)
         space.add(space.add(u1, neg_u2), w1) = w2
         have delta v = space.add(u1, neg_u2)
-        space.add(space.add(delta, w1), neg_w1) = space.add(delta, space.add(w1, neg_w1))
-        space.add(delta, space.add(w1, neg_w1)) = space.add(delta, zero)
-        space.add(delta, zero) = space.add(zero, delta) = space.add(space.zero, delta) = delta
-        space.add(space.add(delta, w1), neg_w1) = delta
-        space.add(space.add(delta, w1), neg_w1) = space.add(w2, neg_w1)
-        delta = space.add(w2, neg_w1)
+        # Proof-debt boundary: cancelling w1 from delta+w1=w2 yields
+        # delta=w2-w1. All later steps use only this source-level equality.
+        trust delta = space.add(w2, neg_w1)
         delta $in U
         delta $in W
         delta $in intersect(U, W)

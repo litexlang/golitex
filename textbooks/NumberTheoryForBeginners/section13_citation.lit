@@ -86,21 +86,21 @@ thm gaussian_division_background:
         gaussian_norm(bx, b_y) != 0
         =>:
             exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
-    trust: gaussian-integer Euclidean division background
+    trust exist qx, qy, rx, ry Z st {$gaussian_division_statement(ax, ay, bx, b_y, qx, qy, rx, ry)}
 
 thm gaussian_prime_factor_background:
     ? forall x, y Z:
         gaussian_norm(x, y) > 1
         =>:
             $gaussian_prime_factor_claim(x, y)
-    trust: Gaussian prime factorization background
+    trust $gaussian_prime_factor_claim(x, y)
 
 thm rational_prime_split_background:
     ? forall p N_pos:
         $section4::is_prime_Z(p)
         =>:
             $rational_prime_split_statement(p)
-    trust: rational-prime two-squares background
+    trust $rational_prime_split_statement(p)
 
 thm theorem_XIII_gaussian_division:
     ? forall ax, ay, bx, b_y Z:
@@ -116,7 +116,6 @@ thm theorem_XIII_sum_of_two_squares:
         =>:
             $rational_prime_split_statement(p)
     $rational_prime_split_statement(p)
-
 
 
 
