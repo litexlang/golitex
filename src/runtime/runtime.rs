@@ -43,6 +43,9 @@ pub struct Runtime {
     /// Parser-only notation metadata. A source binder written as `a &Struct`
     /// records the struct view used to lower later `a.field` expressions.
     pub(crate) default_struct_views: HashMap<SymbolId, StructObj>,
+    /// Struct declarations retained by parse-only consumers such as LaTeX output.
+    /// These declarations never enter the verified environment.
+    pub(crate) parsed_struct_definitions: HashMap<String, DefStructStmt>,
     pub detail_output: bool,
     pub output_style: OutputStyle,
     pub strict_mode: bool,
@@ -61,6 +64,7 @@ impl Runtime {
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
             default_struct_views: HashMap::new(),
+            parsed_struct_definitions: HashMap::new(),
             detail_output: false,
             output_style: OutputStyle::Normal,
             strict_mode: false,
@@ -392,6 +396,7 @@ impl Runtime {
         self.module_manager = Box::new(ModuleManager::new());
         self.execution_stack.clear();
         self.unverified_imports.clear();
+        self.parsed_struct_definitions.clear();
         self.new_file_path_new_env_new_name_scope(path.as_str());
     }
 }
@@ -480,6 +485,7 @@ impl Runtime {
             }
         }
         self.current_parse_context_mut().clear();
+        self.parsed_struct_definitions.clear();
     }
 
     /// Runs a closure in a temporary child environment and pops it on normal return.

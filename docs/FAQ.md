@@ -516,6 +516,19 @@ means that `p` belongs to `&FirstQuadrant` and selects that struct as the
 default view for `p` in the current binding scope. The parser then lowers
 `p.x` to `&FirstQuadrant{p}.x` before verification.
 
+The same declaration-driven rule supports consecutive field chains. If
+`outer &Outer` and `Outer.inner` is declared directly as `&Inner`, then
+`outer.inner.value` lowers to
+`&Inner{&Outer{outer}.inner}.value`. The intermediate view comes from the
+field declaration, not from proof search. A set alias or a later fact saying
+that `outer.inner` belongs to `&Inner` does not enable the shorthand.
+
+This is a field-chain feature rather than general postfix type inference. A
+final field may be callable, so `space.scalars.mul(a, b)` is supported when
+`scalars` is a struct-valued field and `mul` is callable. Forms such as
+`a.b(x).c`, `a.b[1].c`, and `(a.b).c` require an explicit next view such as
+`&C{a.b(x)}.c`.
+
 This binding syntax does not give `p` a unique nominal type, and Litex does not
 infer a default from all known memberships. A later fact
 `p $in &FirstQuadrant` does not select a default view. If a bound `p` also

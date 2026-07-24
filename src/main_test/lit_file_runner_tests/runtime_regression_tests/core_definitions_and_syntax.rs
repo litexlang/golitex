@@ -1255,6 +1255,93 @@ builder_like(X) = X
 }
 
 #[test]
+fn compact_standard_set_suffixes_use_existing_set_semantics() {
+    run_with_large_stack(
+        "compact_standard_set_suffixes_use_existing_set_semantics",
+        || {
+            let source_code = r#"
+struct CompactCarrier<C set+>:
+    point C
+    other C
+
+have S set+
+$is_nonempty_set(S)
+
+have n N+
+n $in N_pos
+have zp Z+
+zp $in N_pos
+have qp Q+
+qp $in Q_pos
+have rp R+
+rp $in R_pos
+have zn Z-
+zn $in Z_neg
+have qn Q-
+qn $in Q_neg
+have rn R-
+rn $in R_neg
+
+forall T set+:
+    $is_nonempty_set(T)
+forall x R+:
+    x $in R_pos
+
+fn(x N+) R+ = fn(x N_pos) R_pos
+fn(x Z-) R- = fn(x Z_neg) R_neg
+
+1 $in N+
+1 $in Z+
+1 $in Q+
+1 $in R+
+-1 $in Z-
+-1 $in Q-
+-1 $in R-
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "compact_standard_set_suffixes_use_existing_set_semantics",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "compact standard-set suffixes should reuse existing semantics:\n{}",
+                run_output
+            );
+            assert!(run_output.contains("have S nonempty_set"), "{run_output}");
+            assert!(run_output.contains("have n N_pos"), "{run_output}");
+            assert!(run_output.contains("have zp N_pos"), "{run_output}");
+            assert!(run_output.contains("have qn Q_neg"), "{run_output}");
+        },
+    );
+}
+
+#[test]
+fn unsupported_compact_standard_set_suffixes_still_fail() {
+    for (name, source_code) in [
+        ("compact_n_negative", "have n N-"),
+        ("compact_set_negative", "have S set-"),
+        ("compact_r_nonzero", "have x R*"),
+        ("spaced_compact_n_positive", "have n N +"),
+    ] {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(name);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "unsupported compact spelling `{source_code}` should fail:\n{run_output}"
+        );
+    }
+}
+
+#[test]
 fn general_cart_builtin_definition_choice_and_membership_inference() {
     run_with_large_stack(
         "general_cart_builtin_definition_choice_and_membership_inference",
@@ -1340,6 +1427,97 @@ pub(super) fn latex_output_is_fragment_without_default_packages() {
     assert!(!output.contains(r"\paragraph{Stmt 1}"));
     assert!(!output.contains(r"\usepackage{amsmath}"));
     assert!(!output.contains(r"\usepackage{amssymb}"));
+}
+
+#[test]
+fn latex_chained_field_access_uses_earlier_struct_declarations() {
+    let source_code = r#"
+struct Leaf:
+    value R
+    marker N
+
+struct Node:
+    leaf &Leaf
+    marker N
+
+forall node &Node:
+    node.leaf.value $in R
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "latex_chained_field_access_uses_earlier_struct_declarations",
+    );
+    let output = crate::to_latex::to_latex(source_code, &mut runtime)
+        .expect("LaTeX conversion should retain parsed struct metadata for field chains");
+
+    assert!(output.contains("Leaf"));
+    assert!(output.contains("Node"));
+    assert!(output.contains("value"));
+    assert!(
+        runtime.get_struct_definition_by_name("Leaf").is_none(),
+        "parse-only struct metadata must not enter the verified environment"
+    );
+}
+
+#[test]
+fn chained_field_access_works_across_flattened_module_and_latex() {
+    run_with_large_stack(
+        "chained_field_access_works_across_flattened_module_and_latex",
+        || {
+            let project_root = std::env::temp_dir()
+                .join(format!("litex-latex-chained-fields-{}", std::process::id()));
+            let app_root = project_root.join("app");
+            let flat_root = project_root.join("flat");
+            let _ = std::fs::remove_dir_all(&project_root);
+            std::fs::create_dir_all(&app_root).expect("create importing project fixture");
+            std::fs::create_dir_all(&flat_root).expect("create flattened module fixture");
+            std::fs::write(
+                flat_root.join("litex.config"),
+                "[hierarchy]\nmodule\n\n[module]\nflatten = true\n\n[export]\nmain = \"./main.lit\"\n",
+            )
+            .expect("write flattened module config");
+            std::fs::write(
+                flat_root.join("main.lit"),
+                "struct Leaf:\n    value R\n    marker N\n\nstruct Outer:\n    inner &Leaf\n    marker N\n",
+            )
+            .expect("write flattened struct fixture");
+            std::fs::write(
+                app_root.join("litex.config"),
+                "[hierarchy]\nmodule\n\n[import]\nflat = \"../flat\"\n\n[export]\nmain = \"./main.lit\"\n",
+            )
+            .expect("write importing project config");
+            std::fs::write(
+                app_root.join("main.lit"),
+                "forall outer &flat::Outer:\n    outer.inner.value $in R\n",
+            )
+            .expect("write chained field fixture");
+
+            let repository_path = app_root.to_str().expect("temporary path must be UTF-8");
+            let (run_succeeded, run_output) = run_repository_with_output(
+                repository_path,
+                false,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            let result = crate::to_latex::to_latex_from_repository(repository_path);
+            let _ = std::fs::remove_dir_all(&project_root);
+            assert!(
+                run_succeeded,
+                "runtime field chains should resolve structs from a flattened module:\n{}",
+                run_output
+            );
+            let output =
+                result.expect("LaTeX conversion should retain flattened-module struct metadata");
+
+            assert!(output.contains("flat"));
+            assert!(output.contains("value"));
+            assert!(
+                !output.contains("marker"),
+                "an imported module should provide parser metadata without entering root LaTeX output"
+            );
+        },
+    );
 }
 
 #[test]

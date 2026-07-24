@@ -370,6 +370,262 @@ endomorphism.apply(2) = &Endomorphism{endomorphism}.apply(2)
 }
 
 #[test]
+fn chained_default_struct_views_support_bundled_vector_space_operations() {
+    run_with_large_stack(
+        "chained_default_struct_views_support_bundled_vector_space_operations",
+        || {
+            let source_code = r#"
+struct ScalarSystem<s nonempty_set>:
+    one s
+    add fn(x, y s) s
+    mul fn(x, y s) s
+
+struct VectorSpace<s, v nonempty_set>:
+    scalars &ScalarSystem<s>
+    zero v
+    add fn(x, y v) v
+    smul fn(a s, x v) v
+    <=>:
+        forall a, b s, x v:
+            smul(scalars.mul(a, b), x) = smul(a, smul(b, x))
+
+claim:
+    ? forall s, v nonempty_set, space &VectorSpace<s, v>, a, b s, x v:
+        space.smul(space.scalars.mul(a, b), x) = space.smul(a, space.smul(b, x))
+    space.smul(space.scalars.mul(a, b), x) = space.smul(a, space.smul(b, x))
+
+prop share_scalar_system(s, v, w nonempty_set, Vspace &VectorSpace<s, v>, Wspace &VectorSpace<s, w>):
+    Vspace.scalars = Wspace.scalars
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "chained_default_struct_views_support_bundled_vector_space_operations",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a directly declared struct-valued field should supply the next view:\n{}",
+                run_output
+            );
+            assert!(
+                run_output
+                    .contains("&ScalarSystem<s>{&VectorSpace<s, v>{space}.scalars}.mul(a, b)"),
+                "the chained shorthand should lower to nested explicit views:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn chained_field_access_continues_after_an_explicit_struct_view() {
+    run_with_large_stack(
+        "chained_field_access_continues_after_an_explicit_struct_view",
+        || {
+            let source_code = r#"
+struct Leaf:
+    value R
+    marker N
+
+struct Node:
+    leaf &Leaf
+    marker N
+
+have node &Node = ((1, 0), 0)
+&Node{node}.leaf.value $in R
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "chained_field_access_continues_after_an_explicit_struct_view",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "an explicit field access should carry its declared result view into the next hop:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("&Leaf{&Node{node}.leaf}.value $in R"),
+                "the explicit-base chain should use the existing nested field-access AST:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn chained_default_struct_views_support_module_qualified_field_types() {
+    run_with_large_stack(
+        "chained_default_struct_views_support_module_qualified_field_types",
+        || {
+            let source_code = r#"
+struct ScalarSystem<s nonempty_set>:
+    one s
+    mul fn(x, y s) s
+
+struct Bundle<s nonempty_set>:
+    scalars &Current::ScalarSystem<s>
+    marker N
+
+claim:
+    ? forall s nonempty_set, bundle &Bundle<s>:
+        bundle.scalars.one $in s
+    bundle.scalars.one $in s
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "chained_default_struct_views_support_module_qualified_field_types",
+            );
+            runtime.current_module_mut().module_name = "Current".to_string();
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a module-qualified declared field type should supply the next view:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains(
+                    "&Current::ScalarSystem<s>{&Current::Bundle<s>{bundle}.scalars}.one $in s"
+                ),
+                "the nested access should preserve the module-qualified struct view:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn chained_field_access_rejects_non_struct_intermediate_fields() {
+    run_with_large_stack(
+        "chained_field_access_rejects_non_struct_intermediate_fields",
+        || {
+            let source_code = r#"
+struct Point:
+    x R
+    y R
+
+have point &Point = (1, 2)
+point.x.value = 1
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "chained_field_access_rejects_non_struct_intermediate_fields",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "a scalar field must not silently acquire an inferred struct view:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("Point.x")
+                    && run_output.contains("is not declared with a struct type")
+                    && run_output.contains("&Struct{"),
+                "a non-struct intermediate field should report the explicit-view fallback:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn chained_field_access_does_not_follow_aliases_or_known_memberships() {
+    run_with_large_stack(
+        "chained_field_access_does_not_follow_aliases_or_known_memberships",
+        || {
+            let source_code = r#"
+struct Point:
+    x R
+    y R
+
+have PointView set = &Point
+
+struct Holder:
+    point PointView
+    marker N
+
+trust have holder &Holder
+trust &Holder{holder}.point $in &Point
+holder.point.x = 1
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "chained_field_access_does_not_follow_aliases_or_known_memberships",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "an alias and known membership must not choose an implicit intermediate view:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("Holder.point")
+                    && run_output.contains("is not declared with a struct type"),
+                "only a direct struct field declaration should continue the chain:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn chained_field_access_rejects_access_after_a_function_call() {
+    run_with_large_stack(
+        "chained_field_access_rejects_access_after_a_function_call",
+        || {
+            let source_code = r#"
+struct Endomorphism:
+    apply fn(x R) R
+    anchor R
+
+have endomorphism &Endomorphism = (fn(x R) R {x + 1}, 0)
+endomorphism.apply(1).value = 2
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "chained_field_access_rejects_access_after_a_function_call",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "field access after a function call is intentionally outside the chained-field feature:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("field access after this expression form is not supported")
+                    && run_output.contains("&Struct{expr}.field"),
+                "the unsupported mixed postfix should have a focused diagnostic:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn default_struct_view_is_available_in_set_builder_body() {
     run_with_large_stack(
         "default_struct_view_is_available_in_set_builder_body",

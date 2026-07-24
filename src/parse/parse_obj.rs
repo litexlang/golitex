@@ -130,6 +130,15 @@ impl Runtime {
             }
             left = FnObj::new(head, body_vectors).into();
         }
+        if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "field access after this expression form is not supported; select the next struct view explicitly with `&Struct{expr}.field`"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
         Ok(left)
     }
 
@@ -524,9 +533,13 @@ impl Runtime {
         // 2. Parse a primary object; builtin standard-set names are reclassified later.
         let mut result = self.parse_primary_obj(tb)?;
 
-        // 3. A named object with a declared default struct view may use `obj.field`.
-        if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
-            result = self.parse_default_struct_field_access(tb, result)?;
+        // 3. A bound object or struct-valued field may use chained field access.
+        while !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
+            let struct_obj =
+                self.struct_view_for_field_access_receiver(&result, tb.line_file.clone())?;
+            tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
+            let field_name = parse_struct_field_name(tb)?;
+            result = ObjAsStructInstanceWithFieldAccess::new(struct_obj, result, field_name).into();
         }
 
         // 4. If the result is callable, parse all following argument groups.
@@ -1817,45 +1830,124 @@ impl Runtime {
         let obj = self.parse_obj(tb)?;
         tb.skip_token(RIGHT_CURLY_BRACE)?;
         tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
-        let field_name = parse_synthetically_correct_identifier_string(tb)?;
+        let field_name = parse_struct_field_name(tb)?;
         Ok(ObjAsStructInstanceWithFieldAccess::new(struct_obj, obj, field_name).into())
     }
 
-    fn parse_default_struct_field_access(
+    fn struct_view_for_field_access_receiver(
         &mut self,
-        tb: &mut TokenBlock,
-        obj: Obj,
-    ) -> Result<Obj, RuntimeError> {
-        let symbol = match &obj {
+        obj: &Obj,
+        line_file: LineFile,
+    ) -> Result<StructObj, RuntimeError> {
+        let symbol = match obj {
             Obj::Atom(atom) => atom.symbol_ref(),
             _ => None,
         };
-        let Some(symbol) = symbol else {
+        if let Some(symbol) = symbol {
+            return self.default_struct_view_for_symbol(symbol).ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "no default struct view is declared for `{}`; bind it with a struct type such as `{} &Struct` or write an explicit `&Struct{{{}}}.field`",
+                            symbol.display_name(),
+                            symbol.display_name(),
+                            symbol.display_name()
+                        ),
+                        line_file,
+                    ),
+                ))
+            });
+        }
+
+        let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = obj else {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "default struct field access requires a bound object declared with `&Struct`"
                         .to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        };
-        let Some(struct_obj) = self.default_struct_view_for_symbol(symbol) else {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!(
-                        "no default struct view is declared for `{}`; bind it with a struct type such as `{} &Struct` or write an explicit `&Struct{{{}}}.field`",
-                        symbol.display_name(),
-                        symbol.display_name(),
-                        symbol.display_name()
-                    ),
-                    tb.line_file.clone(),
+                    line_file,
                 ),
             )));
         };
 
-        tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
-        let field_name = parse_synthetically_correct_identifier_string(tb)?;
-        Ok(ObjAsStructInstanceWithFieldAccess::new(struct_obj, obj, field_name).into())
+        let struct_name = field_access.struct_obj.name.to_string();
+        let Some(def) = self
+            .get_struct_definition_by_name(&struct_name)
+            .or_else(|| self.parsed_struct_definition_by_name(&struct_name))
+        else {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "cannot continue field access after `{}` because struct `{}` is not defined",
+                        field_access, struct_name
+                    ),
+                    line_file,
+                ),
+            )));
+        };
+
+        let expected_count = def
+            .param_def_with_dom
+            .as_ref()
+            .map(|(param_def, _)| param_def.number_of_params())
+            .unwrap_or(0);
+        if field_access.struct_obj.params.len() != expected_count {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "cannot continue field access after `{}` because struct `{}` expects {} parameter(s), got {}",
+                        field_access,
+                        struct_name,
+                        expected_count,
+                        field_access.struct_obj.params.len()
+                    ),
+                    line_file,
+                ),
+            )));
+        }
+
+        let Some((_, field_type)) = def
+            .fields
+            .iter()
+            .find(|(field_name, _)| field_name == &field_access.field_name)
+        else {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "cannot continue field access: struct `{}` has no field `{}`",
+                        struct_name, field_access.field_name
+                    ),
+                    line_file,
+                ),
+            )));
+        };
+        if !matches!(field_type, Obj::StructObj(_)) {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "cannot continue field access after `{}` because `{}.{}` is not declared with a struct type; select the next view explicitly with `&Struct{{{}}}.field`",
+                        field_access,
+                        struct_name,
+                        field_access.field_name,
+                        field_access
+                    ),
+                    line_file,
+                ),
+            )));
+        }
+
+        let instantiated_field_type = if let Some((param_def, _)) = &def.param_def_with_dom {
+            let param_to_arg_map =
+                param_def.param_defs_and_args_to_param_to_arg_map(&field_access.struct_obj.params);
+            self.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?
+        } else {
+            field_type.clone()
+        };
+        let Obj::StructObj(struct_obj) = instantiated_field_type else {
+            unreachable!(
+                "a directly declared struct field must remain a struct after instantiation"
+            )
+        };
+        Ok(struct_obj)
     }
 
     fn parse_struct_obj_after_prefix(
@@ -2017,6 +2109,12 @@ fn parse_synthetically_correct_identifier_string(
     Ok(cur)
 }
 
+fn parse_struct_field_name(tb: &mut TokenBlock) -> Result<String, RuntimeError> {
+    let field_name = parse_synthetically_correct_identifier_string(tb)?;
+    validate_litex_name_for_parse(&field_name, tb.line_file.clone())?;
+    Ok(field_name)
+}
+
 fn validate_litex_name_for_parse(name: &str, line_file: LineFile) -> Result<(), RuntimeError> {
     is_valid_litex_name(name).map_err(|msg| {
         RuntimeError::from(ParseRuntimeError(
@@ -2039,16 +2137,16 @@ fn validate_module_path_segment_for_parse(
 // Maps a built-in one-token standard-set symbol to Obj::StandardSet; see reclassify_atom_as_free_param_obj.
 fn standard_set_from_bare_identifier_name(name: &str) -> Option<Obj> {
     match name {
-        N_POS => Some(StandardSet::NPos.into()),
+        N_POS | COMPACT_N_POS | COMPACT_Z_POS => Some(StandardSet::NPos.into()),
         N => Some(StandardSet::N.into()),
         Q => Some(StandardSet::Q.into()),
         Z => Some(StandardSet::Z.into()),
         R => Some(StandardSet::R.into()),
-        Q_POS => Some(StandardSet::QPos.into()),
-        R_POS => Some(StandardSet::RPos.into()),
-        Q_NEG => Some(StandardSet::QNeg.into()),
-        Z_NEG => Some(StandardSet::ZNeg.into()),
-        R_NEG => Some(StandardSet::RNeg.into()),
+        Q_POS | COMPACT_Q_POS => Some(StandardSet::QPos.into()),
+        R_POS | COMPACT_R_POS => Some(StandardSet::RPos.into()),
+        Q_NEG | COMPACT_Q_NEG => Some(StandardSet::QNeg.into()),
+        Z_NEG | COMPACT_Z_NEG => Some(StandardSet::ZNeg.into()),
+        R_NEG | COMPACT_R_NEG => Some(StandardSet::RNeg.into()),
         Q_NZ => Some(StandardSet::QNz.into()),
         Z_NZ => Some(StandardSet::ZNz.into()),
         R_NZ => Some(StandardSet::RNz.into()),

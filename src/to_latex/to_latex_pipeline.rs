@@ -32,6 +32,11 @@ pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, Runt
     let mut math_blocks: Vec<String> = Vec::new();
     for mut block in blocks {
         let stmt = runtime.parse_stmt(&mut block)?;
+        // Chained field parsing needs earlier declarations, but LaTeX output
+        // must not place unverified structs in the checked environment.
+        if let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(def)) = &stmt {
+            runtime.register_parsed_struct_definition(def);
+        }
         math_blocks.push(stmt.to_latex_string());
     }
     Ok(latex_fragment(&math_blocks))
@@ -88,12 +93,16 @@ fn to_latex_project_prefix(
     module_id: ModuleId,
     selected_target: RepositoryFileTarget,
 ) -> Result<String, RuntimeError> {
-    let (module_path, run_targets) = {
+    let (module_path, config_imports, run_targets) = {
         let module = runtime
             .module_manager
             .module(module_id)
             .expect("discovered module should exist");
-        (module.main_file_path.clone(), module.run_targets.clone())
+        (
+            module.main_file_path.clone(),
+            module.config_imports.clone(),
+            module.run_targets.clone(),
+        )
     };
     let pushed_frame = runtime.current_module_id() != module_id;
     if pushed_frame {
@@ -101,6 +110,12 @@ fn to_latex_project_prefix(
     }
     let output = (|| {
         let mut fragments = vec![];
+        for config_import in config_imports {
+            to_latex_project_target(
+                runtime,
+                RepositoryFileTarget::Module(config_import.module_id),
+            )?;
+        }
         for run_target in run_targets {
             let target_matches = repository_target_matches(selected_target, run_target);
             let target_contains = matches!(
@@ -140,12 +155,16 @@ fn to_latex_project_target(
 ) -> Result<String, RuntimeError> {
     match target {
         RepositoryFileTarget::Module(module_id) => {
-            let (module_path, run_targets) = {
+            let (module_path, config_imports, run_targets) = {
                 let module = runtime
                     .module_manager
                     .module(module_id)
                     .expect("discovered module should exist");
-                (module.main_file_path.clone(), module.run_targets.clone())
+                (
+                    module.main_file_path.clone(),
+                    module.config_imports.clone(),
+                    module.run_targets.clone(),
+                )
             };
             let pushed_frame = runtime.current_module_id() != module_id;
             if pushed_frame {
@@ -153,6 +172,12 @@ fn to_latex_project_target(
             }
             let output = (|| {
                 let mut fragments = vec![];
+                for config_import in config_imports {
+                    to_latex_project_target(
+                        runtime,
+                        RepositoryFileTarget::Module(config_import.module_id),
+                    )?;
+                }
                 for run_target in run_targets {
                     let fragment = match run_target {
                         ImportTarget::File { module_id, file_id } => to_latex_project_target(
