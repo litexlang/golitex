@@ -7,7 +7,7 @@
 # separates the divisible case from the residue/nonresidue cases; the unique
 # selection is the small finite classification interface left trusted here.
 prop legendre_symbol_zero_case(p N_pos, a Z, s Z):
-    $section1::divides_Z(p, a)
+    $section1citation::divides_Z(p, a)
     s = 0
 
 prop legendre_symbol_residue_case(p N_pos, a Z, s Z):
@@ -26,7 +26,7 @@ prop legendre_symbol_spec(p N_pos, a Z, s Z):
 thm legendre_symbol_exists_background:
     ? forall p N_pos, a Z:
         exist! s Z st {$legendre_symbol_spec(p, a, s)}
-    trust: finite Legendre classification background
+    trust exist! s Z st {$legendre_symbol_spec(p, a, s)}
 
 have fn legendre_symbol_Z by exist!:
     ? forall p N_pos, a Z:
@@ -35,7 +35,7 @@ have fn legendre_symbol_Z by exist!:
 # Divisibility forces the zero value, while prime-to-p inputs are nonzero by
 # the two quadratic cases in the specification.
 prop legendre_symbol_zero(p N_pos, a Z):
-    $section1::divides_Z(p, a)
+    $section1citation::divides_Z(p, a)
     legendre_symbol_Z(p, a) = 0
 
 prop gauss_representative(p N_pos, a Z, x Z, r Z):
@@ -102,12 +102,12 @@ thm gauss_lemma_background:
         $section3::relatively_prime_Z(a, p)
         =>:
             $gauss_lemma_conclusion(p, a)
-    trust: Gauss excess-count background
+    trust $gauss_lemma_conclusion(p, a)
 
 thm quadratic_reciprocity_background:
     ? forall p, q N_pos, h1, h2 N:
         $quadratic_reciprocity_conclusion(p, q, h1, h2)
-    trust: quadratic reciprocity background
+    trust $quadratic_reciprocity_conclusion(p, q, h1, h2)
 
 thm theorem_XII_Gauss_lemma:
     ? forall p N_pos, a Z:
@@ -128,6 +128,4 @@ thm theorem_XII_quadratic_reciprocity:
         =>:
             $quadratic_reciprocity_conclusion(p, q, h1, h2)
     $quadratic_reciprocity_conclusion(p, q, h1, h2)
-
-
 

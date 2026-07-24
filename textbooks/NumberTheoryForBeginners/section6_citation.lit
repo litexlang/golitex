@@ -122,21 +122,21 @@ thm theorem_VI_2_solvable_implies_gcd_divides:
     ? forall m N_pos, a, b Z:
         $linear_congruence_solvable_mod(m, a, b)
         =>:
-            $section1::divides_Z(section2::gcd_Z(a, m), b)
+            $section1citation::divides_Z(section2::gcd_Z(a, m), b)
     obtain x from exist x Z st {$solves_linear_congruence_mod(m, a, b, x)}
     $solves_linear_congruence_mod(m, a, b, x)
     obtain k from exist k Z st {a * x - b = m * k}
     by thm section2::gcd_Z_dvd_left(a, m)
     by thm section2::gcd_Z_dvd_right(a, m)
-    by thm section1::divides_Z_linear_combination(section2::gcd_Z(a, m), a, m, x, -k)
-    $section1::divides_Z(section2::gcd_Z(a, m), x * a + -k * m)
+    by thm section1citation::divides_Z_linear_combination(section2::gcd_Z(a, m), a, m, x, -k)
+    $section1citation::divides_Z(section2::gcd_Z(a, m), x * a + -k * m)
     a * x - m * k = a * x - (a * x - b) = b
     x * a + -k * m = a * x - m * k = b
-    $section1::divides_Z(section2::gcd_Z(a, m), b)
+    $section1citation::divides_Z(section2::gcd_Z(a, m), b)
 
 thm theorem_VI_2_gcd_divides_implies_solvable:
     ? forall m N_pos, a, b Z:
-        $section1::divides_Z(section2::gcd_Z(a, m), b)
+        $section1citation::divides_Z(section2::gcd_Z(a, m), b)
         =>:
             $linear_congruence_solvable_mod(m, a, b)
     obtain t from exist t Z st {b = section2::gcd_Z(a, m) * t}
@@ -198,7 +198,7 @@ prop euler_phi_spec(m N_pos, n N):
 thm euler_phi_exists_background:
     ? forall m N_pos:
         exist! n N st {$euler_phi_spec(m, n)}
-    trust: finite representative-count background
+    trust exist! n N st {$euler_phi_spec(m, n)}
 
 have fn euler_phi by exist!:
     ? forall m N_pos:
@@ -229,43 +229,43 @@ prop residue_field_iff_prime(m N_pos):
 thm residue_unitary_ring_background:
     ? forall m N_pos:
         $residue_classes_form_unitary_ring_mod(m)
-    trust: finite residue-ring background
+    trust $residue_classes_form_unitary_ring_mod(m)
 
 thm linear_congruence_solution_background:
     ? forall m N_pos, a, b, x Z:
         $linear_congruence_solution_family_mod(m, a, b, x)
-    trust: linear-congruence solution background
+    trust $linear_congruence_solution_family_mod(m, a, b, x)
 
 thm euler_phi_spec_value_background:
     ? forall m N_pos:
         $euler_phi_spec(m, euler_phi(m))
-    trust: Euler-phi cardinality background
+    trust $euler_phi_spec(m, euler_phi(m))
 
 thm euler_phi_prime_background:
     ? forall p Z:
         $section4::is_prime_Z(p)
         =>:
             euler_phi(p) = p - 1
-    trust: prime Euler-phi background
+    trust euler_phi(p) = p - 1
 
 thm residue_field_prime_background:
     ? forall m N_pos:
         $section4::is_prime_Z(m)
         =>:
             $residue_classes_form_field_mod(m)
-    trust: prime residue-field background
+    trust $residue_classes_form_field_mod(m)
 
 thm residue_field_only_prime_background:
     ? forall m N_pos:
         $residue_classes_form_field_mod(m)
         =>:
             $section4::is_prime_Z(m)
-    trust: residue-field converse background
+    trust $section4::is_prime_Z(m)
 
 thm residue_field_iff_prime_background:
     ? forall m N_pos:
         $residue_field_iff_prime(m)
-    trust: residue-field equivalence background
+    trust $residue_field_iff_prime(m)
 
 thm euler_phi_prime_value:
     ? forall p Z:
@@ -278,6 +278,4 @@ thm theorem_VI_3_residue_field_iff_prime:
     ? forall m N_pos:
         $residue_field_iff_prime(m)
     $residue_field_iff_prime(m)
-
-
 

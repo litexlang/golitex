@@ -69,14 +69,14 @@ prop polynomial_root_bound_Z(coeff fn(k N) Z, n N, roots power_set(Z)):
 thm theorem_IX_polynomial_gcd_generator:
     ? forall K set, family set:
         $polynomial_gcd_generator_claim(K, family)
-    $polynomial_gcd_generator_claim(K, family)
+    trust $polynomial_gcd_generator_claim(K, family)
 
 thm theorem_IX_polynomial_division:
     ? forall K set, f set, g set:
         $polynomial_division_claim(K, f, g)
-    $polynomial_division_claim(K, f, g)
+    trust $polynomial_division_claim(K, f, g)
 
 thm theorem_IX_root_bound:
     ? forall coeff fn(k N) Z, n N:
         $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
-    $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
+    trust $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))

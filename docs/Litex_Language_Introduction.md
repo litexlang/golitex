@@ -267,6 +267,8 @@ Read this note before using the implementation cheat sheet. Then use:
 
 - `docs/Examples.md` for the newcomer route through runnable examples.
 - `docs/Examples.md#start-here` for the first 10-minute checked experience.
+- `docs/Litex_System_Map.md` for the Object -> Fact -> Statement model,
+  definition forms, and the atomic verification loop.
 - `docs/Manual.md` for the durable language reference after the example path.
 - `docs/Examples.md#proof-patterns` for proof patterns.
 - `docs/Examples.md#builtin-math` for built-in arithmetic, set, function, and

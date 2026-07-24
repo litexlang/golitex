@@ -1,0 +1,125 @@
+# Mathematics still to be completed
+#
+# Section I — finite_set_minus_cardinality_background
+# Prove the cardinality formula for removing one finite set from another.
+#
+# Section I — finite_set_zero_empty_background
+# Prove that a finite set of cardinality zero is empty.
+#
+# Section II — gcd_Z_partial_bezout
+# The ordinary gcd Bezout coefficients are constructed. It remains to prove
+# explicitly that the same coefficients satisfy Bezout's identity for the
+# gcd restricted to nonzero input pairs.
+#
+# Section IV — prime_divides_some_factor_background
+# Prove that a prime dividing a finite product divides at least one factor.
+#
+# Section IV — prime_factorization_background
+# Prove the finite prime factorization statement retained from the source.
+#
+# Section IV — exact_prime_power_background
+# Prove existence and uniqueness of the largest exponent whose prime power
+# divides a given integer greater than one.
+#
+# Section IV — primes_unbounded_background
+# Complete Euclid's construction proving that primes exceed every bound.
+#
+# Section V — congruence_classes_additive_group_background
+# Construct the finite residue-class quotient and prove its additive group
+# laws.
+#
+# Section VI — euler_phi_exists_background
+# Construct the finite set of reduced residue representatives and prove that
+# its cardinality is uniquely determined.
+#
+# Section VI — residue_unitary_ring_background
+# Construct the residue-class ring with identity and prove its ring laws.
+#
+# Section VI — linear_congruence_solution_background
+# Prove the full solution-family description for a linear congruence.
+#
+# Section VI — euler_phi_spec_value_background
+# Prove that the selected Euler phi value has the stated representative-count
+# characterization.
+#
+# Section VI — euler_phi_prime_background
+# Prove that Euler phi of a prime p is p - 1.
+#
+# Section VI — residue_field_prime_background
+# Prove that residue classes modulo a prime form a field.
+#
+# Section VI — residue_field_only_prime_background
+# Prove conversely that a residue-class field has prime modulus.
+#
+# Section VI — residue_field_iff_prime_background
+# Combine the two directions into the field-if-and-only-if-prime statement.
+#
+# Section VII — generated_elements_power_background
+# Prove that every element of a singly generated subgroup is a power of its
+# generator.
+#
+# Section VII — finite_cyclic_power_classes_background
+# Prove the finite cyclic power-class description and its counting statement.
+#
+# Section VIII — element_order_exists_background
+# Prove existence and uniqueness of the order of an element in a finite group.
+#
+# Section VIII — subgroup_order_divides_group_order
+# Prove the subgroup-order divisibility theorem by finite coset counting.
+#
+# Section VIII — euler_theorem_background
+# Derive Euler's theorem from the finite group of reduced residue classes.
+#
+# Section IX — polynomial_gcd_generator_background
+# Construct a greatest common divisor generator for a polynomial family.
+#
+# Section IX — polynomial_euclidean_data
+# Construct the generic polynomial carrier, finite-support coefficient
+# operations, degree, and Euclidean division data over a coefficient field.
+#
+# Section IX — polynomial_division_background
+# Prove polynomial division with remainder over the retained coefficient
+# setting.
+#
+# Section IX — polynomial_root_bound_background
+# Prove that a nonzero polynomial has no more roots than its degree.
+#
+# Section X — index_mod_exists_background
+# Prove existence and uniqueness of the index of a reduced residue with
+# respect to a primitive root.
+#
+# Section X — finite_subgroup_generator_background
+# Prove that the retained finite multiplicative subgroup is cyclic.
+#
+# Section X — prime_primitive_root_background
+# Prove existence of a primitive root modulo a prime.
+#
+# Section XI — power_congruence_solution_background
+# Prove the forward finite-field criterion for a prime-modulus power
+# congruence.
+#
+# Section XI — power_congruence_reduced_background
+# Prove the converse finite-field criterion for that power congruence.
+#
+# Section XI — euler_criterion_background
+# Prove Euler's criterion for quadratic residues modulo an odd prime.
+#
+# Section XII — legendre_symbol_exists_background
+# Prove that the zero, residue, and nonresidue cases select a unique Legendre
+# symbol value.
+#
+# Section XII — gauss_lemma_background
+# Prove Gauss's lemma by counting the excess representatives.
+#
+# Section XII — quadratic_reciprocity_background
+# Prove the quadratic reciprocity law.
+#
+# Section XIII — gaussian_division_background
+# Prove Euclidean division with norm-decreasing remainder for Gaussian
+# integers.
+#
+# Section XIII — gaussian_prime_factor_background
+# Prove the Gaussian-prime factorization statement.
+#
+# Section XIII — rational_prime_split_background
+# Prove the rational-prime splitting and two-squares statement.

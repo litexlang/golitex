@@ -1,5 +1,18 @@
-forall x R:
-    x = x
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
 
-
-have x R = 1
+forall s nonempty_set, G &Group<s>, e s:
+    forall a s:
+        G.mul(e, a) = a
+        G.mul(a, e) = a
+    =>:
+        e = G.mul(G.one, e) = G.one

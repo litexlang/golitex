@@ -73,14 +73,14 @@ thm power_congruence_solution_background:
         $power_congruence_prime_reduced_condition(p, k, a, d, e)
         =>:
             $power_congruence_prime_solution(p, k, a, d, e)
-    trust: finite-field power-map background
+    trust $power_congruence_prime_solution(p, k, a, d, e)
 
 thm power_congruence_reduced_background:
     ? forall p N_pos, k N_pos, a Z, d N_pos, e N:
         $power_congruence_prime_solution(p, k, a, d, e)
         =>:
             $power_congruence_prime_reduced_condition(p, k, a, d, e)
-    trust: finite-field power-map converse background
+    trust $power_congruence_prime_reduced_condition(p, k, a, d, e)
 
 thm euler_criterion_split_background:
     ? forall p N_pos, a Z, h N:
@@ -90,7 +90,7 @@ thm euler_criterion_split_background:
         2 * h = p - 1
         =>:
             $euler_criterion_split(p, a, h)
-    trust: Euler criterion background
+    trust $euler_criterion_split(p, a, h)
 
 thm theorem_XI_power_congruence_criterion:
     ? forall p N_pos, k N_pos, a Z, d N_pos, e N:
@@ -108,5 +108,4 @@ thm theorem_XI_quadratic_residue_split:
         =>:
             $euler_criterion_split(p, a, h)
     $euler_criterion_split(p, a, h)
-
 

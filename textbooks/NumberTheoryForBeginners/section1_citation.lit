@@ -105,7 +105,7 @@ prop every_N_finite_subset_of_n_elements_has_least(n Z):
 thm finite_set_minus_cardinality_background:
     ? forall A, B finite_set:
         finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
-    trust: finite-set cardinality background
+    trust finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
 
 thm finite_set_zero_empty_background:
     ? forall A finite_set:
@@ -113,7 +113,8 @@ thm finite_set_zero_empty_background:
         =>:
             not $is_nonempty_set(A)
             A = {}
-    trust: finite-set zero-cardinality background
+    trust not $is_nonempty_set(A)
+    trust A = {}
 
 thm subset_finite_background:
     ? forall A set, B finite_set:
@@ -401,4 +402,3 @@ thm section_I_strong_induction:
                 m $in N_pos
                 m $in S
         impossible not m $in S
-

@@ -764,24 +764,11 @@ forall! a R: a > 0 => {a + 1 > 1 and a + 2 > 2}
 ### 21. Basic Logic Patterns
 
 - Category: `proof pattern`
-- Purpose: Shows propositional reasoning, implication, cases, and negation.
+- Purpose: Shows a disjunction proof by cases.
 
 ```litex
 abstract_prop p()
 abstract_prop q()
-abstract_prop r()
-
-## 5.1.1
-## 由 P∨Q 与 ¬Q 得 P：析取分情形，第二支与 ¬Q 矛盾。
-"""
-If P ∨ Q and ¬ Q, then P.
-"""
-```
-
-```litex
-abstract_prop p()
-abstract_prop q()
-abstract_prop r()
 
 claim:
     ? forall:
@@ -795,87 +782,6 @@ claim:
             impossible not $p()
         case $q():
             do_nothing
-
-"""
-## P → P ∨ ¬Q：由 P 可左注入得 P∨(¬Q)（书本 left）。
-"""
-"""
-P implies P ∨ (not Q).
-"""
-
-forall:
-    $p()
-    =>:
-        $p() or not $q()
-
-## 5.1.4
-## 两公式逻辑等价：指其 ↔ 在 Lean 可证（尚有一处 tactic 在 5.2 才齐全，故有些等价暂时无法演示）。
-## P∨P ↔ P：左到右析取消去；右到左重复左注入。
-"""
-(P ∨ P) is logically equivalent to P.
-"""
-claim:
-    ? forall:
-        $p() or $p()
-        =>:
-            $p()
-    by cases:
-        ? $p()
-        case $p():
-            do_nothing
-        case $p():
-            do_nothing
-
-forall:
-    =>:
-        $p() or $p()
-    <=>:
-        $p()
-
-## 5.1.5
-"""
-P ∧ (Q ∨ R) is logically equivalent to (P ∧ Q) ∨ (P ∧ R).
-"""
-claim:
-    ? forall:
-        $p()
-        $q() or $r()
-        =>:
-            $p() and $q() or $p() and $r()
-
-    by cases:
-        ? $p() and $q() or $p() and $r()
-        case $q():
-            $p() and $q()
-        case $r():
-            $p() and $r()
-
-## 5.1.6
-## 谓词 P(x)、Q(x)：由 ∀x Px 与 ∀x Qx 得 ∀x (Px∧Qx)。
-
-abstract_prop P(x)
-abstract_prop P2(x)
-
-forall x set:
-    $P(x)
-    $P2(x)
-    =>:
-        $P(x) and $P2(x)
-
-###标准库中应有quick prime check--能够check一个数是否为素数--函数应该要能够调用
-
-#### 答：用 by for 从 2 到 n-1做迭代，证明 d % i != 0就能证明了
-
-## 5.2.6
-## 命题逻辑：¬¬P ⇒ P（「负负得正」）需排中律：对 P 本身作 by_cases。
-"""
-From ¬¬P deduce P (using excluded middle).
-"""
-
-forall:
-    not not $p()
-    =>:
-        $p()
 ```
 
 ### 22. Matching A Free Parameter In A Universal Fact
@@ -3781,14 +3687,7 @@ forall P Point, L Line:
         $lies_on(P, L)
 ```
 
-### 2. The Real Numbers Are Infinite
-
-- Category: `case study`
-- Purpose: This former proof depended on finite-cardinality background
-  interfaces. Keep that development with its explicit source-local citation
-  rather than presenting it as a kernel-only case study.
-
-### 3. A High-Level Cantor-Schroeder-Bernstein Sketch
+### 2. A High-Level Cantor-Schroeder-Bernstein Sketch
 
 - Category: `case study`
 - Purpose: Shows a high-level CSB construction with abstract partition facts.
@@ -3807,32 +3706,7 @@ forall A, B set:
         $same_size(A, B)
 ```
 
-### 4. Euclid's Theorem On Arbitrarily Large Primes
-
-- Category: `case study`
-- Purpose: A source-level `integer_quotient(a, d)` can be selected from the
-  checked Euclidean unique-existence fact. This historical case study remains
-  withheld until its own source proof is translated and checked.
-
-### 5. The Euclidean Algorithm And Bezout Coefficients
-
-- Category: `case study`
-- Purpose: This historical development will use an explicitly imported or
-  source-local `integer_quotient(a, d)` when its proof is translated.
-
-### 6. A Bijection From `N^2` To `N`
-
-- Category: `case study`
-- Purpose: The triangular-number construction only needs a divisibility
-  witness, so it can obtain that witness directly instead of naming a quotient.
-
-### 7. Every Integer Is Odd Or Even
-
-- Category: `case study`
-- Purpose: This parity proof can obtain the Euclidean witness directly; code
-  that needs the selected quotient uses an explicit source-level function.
-
-### 8. Nonnegative Integers Modulo 2
+### 3. Nonnegative Integers Modulo 2
 
 - Category: `case study`
 - Purpose: Shows residue cases modulo 2.
@@ -3864,7 +3738,7 @@ claim:
                     (y + 1) % 2 = (y % 2 + 1 % 2) % 2 = (1 + 1) % 2 = 0
 ```
 
-### 9. Induction For A Summation Formula
+### 4. Induction For A Summation Formula
 
 - Category: `case study`
 - Purpose: Shows induction for a finite summation identity.

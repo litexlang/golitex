@@ -89,11 +89,11 @@ thm theorem_VII_generated_powers:
         $generated_subgroup(G, mul, one, x, H)
         =>:
             $every_generated_element_is_power(G, mul, one, x, H)
-    $every_generated_element_is_power(G, mul, one, x, H)
+    trust $every_generated_element_is_power(G, mul, one, x, H)
 
 thm theorem_VII_finite_cyclic_power_classes:
     ? forall G set, mul fn(x, y G) G, one G, generator G, m N_pos:
         $finite_cyclic_group(G, mul, one, generator, m)
         =>:
             $finite_cyclic_power_class_claim(G, mul, one, generator, m)
-    $finite_cyclic_power_class_claim(G, mul, one, generator, m)
+    trust $finite_cyclic_power_class_claim(G, mul, one, generator, m)

@@ -3081,6 +3081,11 @@ The sections above explain the common use cases. This table is a quick map of th
 This section is a compact map of the Litex forms used in the examples above.
 It is organized by what the syntax means, not by implementation details.
 
+For the overall model -- Object -> Fact -> Statement -> growing proof context --
+read [Litex System Map](Litex_System_Map.md). The core glossary below contains
+72 object forms, 52 fact forms, and 63 statement forms. These are public
+reader-facing entries, not internal AST counts.
+
 Some examples are fragments and need surrounding declarations or known facts in
 a complete proof.
 
@@ -3202,12 +3207,14 @@ reintroduced while an existing binding with that spelling is still active.
 | closed upper-bounded ray | `'(,0]` |
 | struct view object | `&Point`, `&Group<S>` |
 | explicit field access through a struct view | `&Point{p}.x` |
-| select a default struct view at a binding (preview) | `p &Point`, `g &Group<S>` |
-| field access through the binding's selected default view (preview) | `p.x`, `g.mul` |
 | instantiated template object | `\T<R>` |
 
 Function calls can use ordinary names, module names, anonymous functions,
 indexed objects, struct-field access, or instantiated templates.
+
+The preview default-view spellings `p &Point` and `p.x` are documented in
+[Struct Objects And Explicit Or Default-View Field Access](#struct-objects-and-explicit-or-default-view-field-access-preview).
+They are intentionally kept outside this compact core count.
 
 ### Facts
 
@@ -3296,6 +3303,7 @@ code, evaluate an expression, or register a reusable proof pattern.
 |---------|---------|
 | verify and store a fact | `1 + 1 = 2` |
 | define a predicate by equivalent facts | `prop is_one(x R):`<br>`x = 1` |
+| copy a concrete prop definition under a new name | `alias prop one_prop <=> is_one` |
 | declare an uninterpreted predicate symbol | `abstract_prop prime(n)` |
 | introduce object parameters by type/set | `have x R` |
 | introduce object parameters equal to expressions | `have x R = 1` |
