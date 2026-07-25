@@ -317,20 +317,12 @@ impl Runtime {
                     .params_def_with_type
                     .collect_param_bindings()
                     .iter()
-                    .zip(
-                        forall
-                            .params_def_with_type
-                            .collect_param_bindings()
-                            .iter(),
-                    )
+                    .zip(forall.params_def_with_type.collect_param_bindings().iter())
                 {
                     insert_symbol_substitution(
                         &mut proof_param_to_arg_map,
                         source_binding,
-                        obj_for_bound_param_in_scope(
-                            instantiated_binding,
-                            ParamObjType::Forall,
-                        ),
+                        obj_for_bound_param_in_scope(instantiated_binding, ParamObjType::Forall),
                     );
                 }
                 let prove_process = self.inst_template_proof_process(

@@ -2,7 +2,7 @@
 #
 # This file is comment-only and is not exported by litex.config.
 #
-# Chapter 1 currently has 48 explicit trust statements. The ordered project
+# Chapter 1 currently has 46 explicit trust statements. The ordered project
 # runner succeeds, so these are mathematics-completeness boundaries rather
 # than runner failures.
 #
@@ -11,7 +11,6 @@
 # 1.1.18: prove the four finite-dimensional l1/l2/linf/coordinate convergence
 # directions. Also replace the trusted unique-maximum construction used for
 # linf_distance after the recursive-template kernel problem is fixed.
-# 1.1.19: prove the discrete convergence/eventual constancy equivalence.
 # 1.1.20: prove uniqueness of metric limits.
 # After 1.1.20: expose the selected metric-limit notation once dependent
 # unique selection propagates its certificate through template instantiation.

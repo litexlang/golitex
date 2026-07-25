@@ -18,6 +18,10 @@ scripts/Analysis2/*
 !scripts/Analysis2/items/**
 !scripts/Analysis2/unfinished/
 !scripts/Analysis2/unfinished/**
+!scripts/Analysis2/finished/
+!scripts/Analysis2/finished/**
+!scripts/Analysis2/experience/
+!scripts/Analysis2/experience/**
 examples/hidden
 
 # Editor / tooling

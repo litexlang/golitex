@@ -46,8 +46,11 @@ concepts and intermediate nodes that determine later interfaces.
   type-index convention. `is_linear_map` anchors on its domain and records
   `Vspace.scalars = Wspace.scalars`; bilinear, tensor, and other multi-space
   relations record the analogous equality once at their construction boundary.
-  Scalar-only interfaces such as polynomial operations retain an explicit
-  `ScalarSystem` parameter.
+  A declaration that already receives an `InnerProductScalarGeometry` likewise
+  reads `scalar_geometry.scalars` rather than duplicating a scalar-system
+  parameter. Scalar-only interfaces such as polynomial operations and raw
+  matrix operations that do not receive a scalar-owning structure retain an
+  explicit `ScalarSystem` parameter.
 - `axiom` and `trust` describe epistemic status, never mathematical kind. They
   remain visible below as dependency boundaries rather than changing the ideal
   interface.
@@ -99,7 +102,10 @@ concepts and intermediate nodes that determine later interfaces.
 - **Ordinary meaning:** A carrier with vector zero, addition, scalar
   multiplication, and Axler's vector-space laws.
 - **Semantic role:** Bundled structure; `is_vector_space` is the candidate-law
-  relation corresponding to structure membership.
+  relation corresponding to structure membership. The real and complex
+  source-facing specializations are candidate-law relations: the real one
+  identifies the bundled scalar system, while the complex one takes candidate
+  vector operations and states the axioms with the callable complex operations.
 - **Ideal Litex form:**
   `struct VectorSpace<s nonempty_set,V nonempty_set>` with directly declared
   `scalars &ScalarSystem<s>`, `zero`, `add`, and `smul` fields.
@@ -572,7 +578,9 @@ concepts and intermediate nodes that determine later interfaces.
 - **Dependencies:** `ScalarSystem` by nested `field`; the concrete Chapter 4
   complex conjugate and absolute value by `definition`; their laws by `law`.
 - **Downstream uses:** Inner-product positivity and conjugate symmetry, norms,
-  Cauchy-Schwarz, orthonormality, adjoints, and normal operators.
+  Cauchy-Schwarz, orthonormality, adjoints, normal operators, and the
+  coordinate inner products used by unitary, QR, Cholesky, and matrix-SVD
+  relations. Probe: `scalar_geometry.scalars.mul(a,b)` has type `s`.
 - **Allowable hole:** The two concrete instances may remain selected trust
   boundaries until the real and complex scalar laws are packaged from Chapter
   4 without projection friction.

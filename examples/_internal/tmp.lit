@@ -1,29 +1,16 @@
-struct VectorSpace<s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set>:
+# Isolated bundled-structure fixture. The scalar operations belong to the
+# vector-space value rather than appearing as a separate VectorSpace index.
+struct ScalarSystem<s nonempty_set>:
+    zero s
+    one s
+    add fn(x, y s) s
+    mul fn(x, y s) s
+
+struct VectorSpace<s nonempty_set, v nonempty_set>:
+    scalars &ScalarSystem<s>
     zero v
     add fn(x, y v) v
     smul fn(a s, x v) v
     <=>:
-        forall x, y, z v:
-            add(add(x, y), z) = add(x, add(y, z))
-        forall x, y v:
-            add(x, y) = add(y, x)
-        forall x v:
-            add(zero, x) = x
-            exist y v st {add(x, y) = zero}
         forall a, b s, x v:
             smul(scalars.mul(a, b), x) = smul(a, smul(b, x))
-            smul(scalars.add(a, b), x) = add(smul(a, x), smul(b, x))
-        forall a s, x, y v:
-            smul(a, add(x, y)) = add(smul(a, x), smul(a, y))
-        forall x v:
-            smul(scalars.one, x) = x
-
-# 新版之后
-
-struct VectorSpace<s, v noempty_set>:
-    scalars chap1a::ScalarSystem<s>
-    zero v
-    add fn(x, y v)v
-    smul fn(a s, x v)v
-
-这样就不用总是把scalars放在外面到处乱晃了

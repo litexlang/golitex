@@ -11,8 +11,9 @@ RUST_MIN_STACK=8388608 target/debug/litex -compact -runner -r textbooks/NumberTh
 The project exports Sections I–XIII directly, with no citation package. Its
 checked public surface includes
 integer divisibility and Euclidean division, gcd and Bézout interfaces,
-relative primality, finite-product prime divisibility and prime-factorization
-existence, congruences and residue classes, elementary group
+the canonical multiple set `mZ(m)` together with its membership
+characterization, relative primality, finite-product prime divisibility and
+prime-factorization existence, congruences and residue classes, elementary group
 interfaces, the finite residue-class carrier with its exact cardinality, a
 finite-support polynomial carrier with sum, convolution, degree,
 division, gcd, and ideal interfaces, power congruences, the Legendre-symbol

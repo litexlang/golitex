@@ -1611,29 +1611,38 @@ its inherited scalar operations together. The final operation below is a real
 three-level field call, not a convention or a wrapper.
 
 ```litex
-struct ScalarSystem<s nonempty_set>:
-    zero s
-    add fn(x, y s) s
-    mul fn(x, y s) s
+struct ScalarSystem:
+    zero R
+    mul fn(x, y R) R
 
-struct VectorSpace<s nonempty_set, V nonempty_set>:
-    scalars &ScalarSystem<s>
-    zero V
-    add fn(x, y V) V
-    smul fn(a s, x V) V
+struct VectorSpace:
+    scalars &ScalarSystem
+    zero R
+    smul fn(a, x R) R
 
-struct InnerProductSpace<s nonempty_set, V nonempty_set>:
-    vector_space &VectorSpace<s, V>
-    inner fn(u, v V) s
+struct InnerProductScalarGeometry:
+    scalars &ScalarSystem
+    conjugate fn(x R) R
 
-claim:
-    ? forall s nonempty_set, V nonempty_set,
-             space &InnerProductSpace<s, V>, a, b s, v V:
-        space.vector_space.scalars.mul(a, b) $in s
-        space.vector_space.smul(a, v) $in V
-    space.vector_space.scalars.mul(a, b) $in s
-    space.vector_space.smul(a, v) $in V
+struct InnerProductAccessProbe:
+    scalar_geometry &InnerProductScalarGeometry
+    marker N
+
+have fn real_mul(x, y R) R = x * y
+have fn real_neg(x R) R = -x
+have scalar_system &ScalarSystem = (0, real_mul)
+have vector_space &VectorSpace = (scalar_system, 0, real_mul)
+have scalar_geometry &InnerProductScalarGeometry = (scalar_system, real_neg)
+have inner_space &InnerProductAccessProbe = (scalar_geometry, 0)
+
+inner_space.scalar_geometry.scalars.mul(2, 3) $in R
 ```
+
+The generic LADR `InnerProductSpace<s,V>` owns both `scalar_geometry` and
+`vector_space`, has an `inner` operation, and records the law
+`scalar_geometry.scalars = vector_space.scalars`. The concrete probe isolates
+the scalar-geometry chain so this reusable example remains a quick verifier
+check.
 
 For more than one space, make scalar compatibility part of the relation that
 joins them. Individual callers then pass spaces, not a duplicate scalar system.
@@ -1641,23 +1650,13 @@ joins them. Individual callers then pass spaces, not a duplicate scalar system.
 ```litex
 struct ScalarSystem<s nonempty_set>:
     zero s
+    one s
 
 struct VectorSpace<s nonempty_set, V nonempty_set>:
     scalars &ScalarSystem<s>
     zero V
 
-prop is_linear_map(s nonempty_set, V, W nonempty_set,
-                   Vspace &VectorSpace<s, V>, Wspace &VectorSpace<s, W>,
-                   T fn(v V) W):
-    Vspace.scalars = Wspace.scalars
-
-claim:
-    ? forall s nonempty_set, V, W nonempty_set,
-             Vspace &VectorSpace<s, V>, Wspace &VectorSpace<s, W>,
-             T fn(v V) W:
-        $is_linear_map(s, V, W, Vspace, Wspace, T)
-        =>:
-            Vspace.scalars = Wspace.scalars
+prop is_linear_map(s nonempty_set, V, W nonempty_set, Vspace &VectorSpace<s, V>, Wspace &VectorSpace<s, W>, T fn(v V) W):
     Vspace.scalars = Wspace.scalars
 ```
 

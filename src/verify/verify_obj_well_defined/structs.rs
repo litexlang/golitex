@@ -185,14 +185,14 @@ impl Runtime {
             let active_field_bindings = def
                 .field_bindings
                 .iter()
-                .map(|binding| {
-                    match field_rename_map.get(&binding.substitution_key()) {
+                .map(
+                    |binding| match field_rename_map.get(&binding.substitution_key()) {
                         Some(Obj::Atom(AtomObj::DefStructField(param))) => {
                             param.symbol.to_local_binding()
                         }
                         _ => binding.clone(),
-                    }
-                })
+                    },
+                )
                 .collect::<Vec<_>>();
 
             for (field_binding, (_, field_type)) in

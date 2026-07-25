@@ -54,13 +54,23 @@ template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
 prop is_real_vector_space(v nonempty_set, space &VectorSpace<R, v>):
     space.scalars = chap1a::real_scalars
 
-prop is_complex_vector_space(v nonempty_set, space &VectorSpace<&chap1a::Complex, v>):
-    space.scalars.zero = chap1a::complex_zero
-    space.scalars.one = chap1a::complex_one
-    space.scalars.add = chap1a::complex_add
-    space.scalars.neg = chap1a::complex_neg
-    space.scalars.mul = chap1a::complex_mul
-    space.scalars.inv = chap1a::complex_inv
+# The complex specialization presents the same vector-space axioms directly
+# with the complex operations from 1A, so its candidate data stays explicit.
+prop is_complex_vector_space(v nonempty_set, vector_zero v, vector_add fn(x, y v) v, vector_smul fn(a &chap1a::Complex, x v) v):
+    forall x, y, z v:
+        vector_add(vector_add(x, y), z) = vector_add(x, vector_add(y, z))
+    forall x, y v:
+        vector_add(x, y) = vector_add(y, x)
+    forall x v:
+        vector_add(vector_zero, x) = x
+        exist y v st {vector_add(x, y) = vector_zero}
+    forall a, b &chap1a::Complex, x v:
+        vector_smul(chap1a::complex_mul(a, b), x) = vector_smul(a, vector_smul(b, x))
+        vector_smul(chap1a::complex_add(a, b), x) = vector_add(vector_smul(a, x), vector_smul(b, x))
+    forall a &chap1a::Complex, x, y v:
+        vector_smul(a, vector_add(x, y)) = vector_add(vector_smul(a, x), vector_smul(a, y))
+    forall x v:
+        vector_smul(chap1a::complex_one, x) = x
 
 # Example 1.23. F^infinity is the sequence carrier seq(s); evaluation remains
 # callable, and its intended addition and scalar multiplication are pointwise.

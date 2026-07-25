@@ -166,8 +166,32 @@ thm discrete_metric_convergence_iff_eventually_constant_forward:
         $has_metric_limit(X, dist, u, a)
         =>:
             $is_eventually_equal_to(X, u, a)
-    # proof_debt: source Exercise 1.1.13; apply convergence with epsilon=1/2.
-    trust $is_eventually_equal_to(X, u, a)
+    # Proof idea: a tail within 1/2 of a has zero discrete distance, since
+    # the only other distance is 1; hence every term on that tail equals a.
+    1 / 2 $in R_pos
+    $has_eventual_metric_closeness(X, dist, u, a, 1 / 2)
+    obtain N0 from exist N0 N_pos st {$is_metric_tail_close_to(X, dist, u, a, 1 / 2, N0)}
+    claim:
+        ? forall n N_pos:
+            n >= N0
+            =>:
+                u(n) = a
+        u(n) = a or u(n) != a
+        by cases:
+            ? u(n) = a
+            case u(n) = a:
+                u(n) = a
+            case u(n) != a:
+                by def $is_discrete_metric(X, dist)
+                dist(u(n), a) = 1
+                dist(u(n), a) <= 1 / 2
+                impossible 1 <= 1 / 2
+    witness exist M N_pos st {$is_eventually_equal_after(X, u, a, M)} from N0:
+        forall n N_pos:
+            n >= N0
+            =>:
+                u(n) = a
+    by def $is_eventually_equal_to(X, u, a)
 
 thm discrete_metric_convergence_iff_eventually_constant_reverse:
     ? forall X set, dist fn(x, y X) R, u fn(n N_pos) X, a X:
@@ -175,8 +199,28 @@ thm discrete_metric_convergence_iff_eventually_constant_reverse:
         $is_eventually_equal_to(X, u, a)
         =>:
             $has_metric_limit(X, dist, u, a)
-    # proof_debt: source Exercise 1.1.13; the tail distances are zero.
-    trust $has_metric_limit(X, dist, u, a)
+    # Proof idea: on the eventually constant tail, every distance to a is
+    # zero, which is at most every positive epsilon.
+    obtain N0 from exist N0 N_pos st {$is_eventually_equal_after(X, u, a, N0)}
+    claim:
+        ? forall n N_pos:
+            n >= N0
+            =>:
+                dist(u(n), a) = 0
+        by def $is_eventually_equal_after(X, u, a, N0)
+        u(n) = a
+        by def $is_discrete_metric(X, dist)
+        dist(a, a) = 0
+        dist(u(n), a) = dist(a, a) = 0
+    claim:
+        ? forall epsilon R_pos:
+            $has_eventual_metric_closeness(X, dist, u, a, epsilon)
+        witness exist M N_pos st {$is_metric_tail_close_to(X, dist, u, a, epsilon, M)} from N0:
+            forall n N_pos:
+                n >= N0
+                =>:
+                    dist(u(n), a) = 0 <= epsilon
+    by def $has_metric_limit(X, dist, u, a)
 
 # Proposition 1.1.20 (Uniqueness of limits). Tao assigns the proof to
 # Exercise 1.1.14.
