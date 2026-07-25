@@ -297,16 +297,20 @@ pub fn run_cli() {
             }
             "-session" => {
                 index += 1;
-                if index != args.len() {
-                    eprintln!("-session does not accept positional arguments");
-                    print_help_message();
-                    process::exit(2);
-                }
+                let preload_file = match read_session_preload_file(&args, &mut index) {
+                    Ok(value) => value,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        print_help_message();
+                        process::exit(2);
+                    }
+                };
                 run_session_with_output_style_and_strict_and_language(
                     output_style,
                     strict_mode,
                     output_language,
                     force_isolated,
+                    preload_file.as_deref(),
                 );
                 return;
             }
@@ -562,6 +566,21 @@ fn read_any_value_after_flag(
     };
     *index += 1;
     Ok(value)
+}
+
+fn read_session_preload_file(args: &[String], index: &mut usize) -> Result<Option<String>, String> {
+    if *index == args.len() {
+        return Ok(None);
+    }
+    if args.get(*index).map(String::as_str) != Some("-f") {
+        return Err("-session accepts only an optional -f <file> target".to_string());
+    }
+    *index += 1;
+    let file = read_non_flag_value_after_flag(args, index, "-f")?;
+    if *index != args.len() {
+        return Err("-session -f <file> does not accept additional arguments".to_string());
+    }
+    Ok(Some(file))
 }
 
 fn print_help_message() {
@@ -1129,6 +1148,7 @@ litex -runner -f <file> : run a file and return one wrapper JSON object
 litex -runner -e <code> : run source code and return one wrapper JSON object
 litex -runner -r <project> : run a project and return one wrapper JSON object
 litex -session : run a machine-readable project REPL for framed code blocks
+litex -session -f <file> : load the project prefix through a registered file, then keep the same Runtime in session mode
 litex -graph -f <file> <json> : run a file and save a prop/function/fact relation graph JSON object
 litex -graph -e <code> <json> : run source code and save a prop/function/fact relation graph JSON object
 litex -graph -r <project> <json> : run a project and save a prop/function/fact relation graph JSON object
@@ -1166,7 +1186,7 @@ litex -tutorial : run the tutorial
 
 #[cfg(test)]
 mod tests {
-    use super::{help_message, upgrade_message};
+    use super::{help_message, read_session_preload_file, upgrade_message};
 
     #[test]
     fn help_lists_upgrade_command() {
@@ -1196,6 +1216,34 @@ mod tests {
     fn help_lists_session_command() {
         let message = help_message();
         assert!(message.contains("litex -session"));
+        assert!(message.contains("litex -session -f <file>"));
+    }
+
+    #[test]
+    fn session_accepts_an_optional_file_preload() {
+        let args = vec![
+            "-session".to_string(),
+            "-f".to_string(),
+            "chap4.lit".to_string(),
+        ];
+        let mut index = 1;
+
+        let preload = read_session_preload_file(args.as_slice(), &mut index)
+            .expect("session file target should parse");
+
+        assert_eq!(preload.as_deref(), Some("chap4.lit"));
+        assert_eq!(index, args.len());
+    }
+
+    #[test]
+    fn session_rejects_non_file_targets() {
+        let args = vec!["-session".to_string(), "-r".to_string(), "Demo".to_string()];
+        let mut index = 1;
+
+        let error = read_session_preload_file(args.as_slice(), &mut index)
+            .expect_err("session repository target should be rejected");
+
+        assert!(error.contains("optional -f <file>"));
     }
 
     #[test]

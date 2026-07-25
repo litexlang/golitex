@@ -10,6 +10,72 @@ its current unique-existence proof is trusted, or a property while every
 theorem about it is checked.  Knowledge state never changes the mathematical
 role of the concept.
 
+## Book-wide struct boundary
+
+A `struct` is appropriate when the mathematics carries several named data
+fields together and later arguments repeatedly project those fields.  Nested
+structs are therefore a natural interface for genuine structure extension,
+such as a vector space containing its scalar system.  They are not a blanket
+replacement for Analysis I's relations, witnesses, functions, or selected
+values.  Candidate limits, convergence, derivative relations, continuity,
+partitions, and integrability remain `prop` interfaces; `lim`, `derivative`,
+Riemann sums, and integrals remain callable selected values.
+
+The closest Analysis I pilot is the recursive bisection state in Chapter 5.
+Its ordinary meaning is a lower and upper real endpoint satisfying the shared
+bracketing laws.  The ideal packaged interface is:
+
+~~~litex
+struct BisectionState<E set>:
+    lower R
+    upper R
+    <=>:
+        not $is_upper_bound(E, lower)
+        $is_upper_bound(E, upper)
+        lower <= upper
+~~~
+
+This is a structure rather than a replacement predicate: a caller should be
+able to bind `state &BisectionState<E>` and read `state.lower` and
+`state.upper`, while a candidate-state relation may still be useful before
+packaging.  A verified nested use can place such a value in another struct and
+read `process.initial.lower`.  The current source nevertheless keeps its
+checked pair-valued recursive sequence.  Field shorthand does not continue
+after a function call, so a state sequence requires the longer expression
+`&BisectionState<E>{states(n)}.lower`; migrating the existing `pair(n)[1]`
+proofs now would increase, rather than reduce, the public proof surface.
+
+Chapter 4 formal differences are a smaller named-field possibility, but the
+mathematical identity of that section is the equivalence relation on displayed
+representatives.  Named fields must never replace `represent_same_integer` or
+hide quotient well-definedness.  Chapter 8 order notions primarily add laws to
+one displayed relation and have no repeated nested field consumers in this
+book, so their current `prop` interfaces remain the right surface.  Chapter 11
+partitions likewise remain a property of an ambient interval and a displayed
+finite family; packaging hundreds of existing consumers would add a parallel
+API without changing their downstream mathematical use.
+
+The resulting dependency and migration order is:
+
+~~~text
+new struct/object-system semantics
+  --compatibility--> ordered Chapters 1--11 and Appendix A
+  --use probe--> BisectionState<E>
+  --nested field probe--> a process containing BisectionState<E>
+  --language boundary--> explicit view after states(n)
+
+formal differences --possible named data--> representative operations
+                  --required relation--> represent_same_integer
+
+partition relation -> common refinement -> selected Riemann sums -> integrals
+~~~
+
+Compatibility comes first.  A future struct migration should begin with one
+owner chapter only after its field projections make the checked proofs shorter
+in real caller context.  Do not preserve both tuple and struct surfaces through
+aliases or trusted wrappers, and update this design before changing a core
+interface.
+
 ## Chapter 4: formal differences
 
 Tao's construction of the integers starts from ordered pairs of natural

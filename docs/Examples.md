@@ -1604,6 +1604,63 @@ forall A, B set:
 
 ---
 
+## Bundled Algebra Layers
+
+Use a parent structure when downstream mathematics needs its operations and
+its inherited scalar operations together. The final operation below is a real
+three-level field call, not a convention or a wrapper.
+
+```litex
+struct ScalarSystem<s nonempty_set>:
+    zero s
+    add fn(x, y s) s
+    mul fn(x, y s) s
+
+struct VectorSpace<s nonempty_set, V nonempty_set>:
+    scalars &ScalarSystem<s>
+    zero V
+    add fn(x, y V) V
+    smul fn(a s, x V) V
+
+struct InnerProductSpace<s nonempty_set, V nonempty_set>:
+    vector_space &VectorSpace<s, V>
+    inner fn(u, v V) s
+
+claim:
+    ? forall s nonempty_set, V nonempty_set,
+             space &InnerProductSpace<s, V>, a, b s, v V:
+        space.vector_space.scalars.mul(a, b) $in s
+        space.vector_space.smul(a, v) $in V
+    space.vector_space.scalars.mul(a, b) $in s
+    space.vector_space.smul(a, v) $in V
+```
+
+For more than one space, make scalar compatibility part of the relation that
+joins them. Individual callers then pass spaces, not a duplicate scalar system.
+
+```litex
+struct ScalarSystem<s nonempty_set>:
+    zero s
+
+struct VectorSpace<s nonempty_set, V nonempty_set>:
+    scalars &ScalarSystem<s>
+    zero V
+
+prop is_linear_map(s nonempty_set, V, W nonempty_set,
+                   Vspace &VectorSpace<s, V>, Wspace &VectorSpace<s, W>,
+                   T fn(v V) W):
+    Vspace.scalars = Wspace.scalars
+
+claim:
+    ? forall s nonempty_set, V, W nonempty_set,
+             Vspace &VectorSpace<s, V>, Wspace &VectorSpace<s, W>,
+             T fn(v V) W:
+        $is_linear_map(s, V, W, Vspace, Wspace, T)
+        =>:
+            Vspace.scalars = Wspace.scalars
+    Vspace.scalars = Wspace.scalars
+```
+
 ## Builtin Math
 
 This is a map of mathematical rules Litex already knows, not a proof-writing

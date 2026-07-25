@@ -338,6 +338,13 @@ called, as in `space.scalars.mul(a, b)`, but field access after a call, index,
 or parenthesized expression is not currently supported; select that next view
 explicitly with `&Struct{expr}.field`.
 
+A vector-space structure can own its scalar system rather than asking each
+single-space theorem to carry scalar operations separately. With
+`space &VectorSpace<s,V>`, ordinary code can write
+`space.smul(space.scalars.mul(a,b),v)`. A relation that joins two spaces, such
+as linearity of a map, records one compatibility fact
+`Vspace.scalars = Wspace.scalars`; callers then pass the spaces themselves.
+
 A later membership fact does not choose a default view retroactively:
 
 ```text
@@ -1167,6 +1174,7 @@ Execution commands:
 | `litex -f path/to/file.lit` | Run the project prefix ending at an exported file. |
 | `litex -isolated -f path/to/file.lit` | Run one file outside project discovery, then keep an isolated session. |
 | `litex -session` | Use the persistent session protocol. |
+| `litex -session -f path/to/file.lit` | Load the project prefix through one file, then continue in the same persistent session Runtime. |
 | `litex -strict ...` | Verify imports and trusted project prefix sources; reject user trust forms. |
 | `litex -compact`, `litex -detail` | Select compact or detailed output. |
 | `litex -lang <code>` | Select a supported output language. |

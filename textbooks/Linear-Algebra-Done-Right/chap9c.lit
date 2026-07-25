@@ -3,38 +3,38 @@
 
 
 # Definition 9.40. Apply T simultaneously in every slot of alpha.
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos>:
-    have fn alternating_form_transformed_by_operator(alpha \chap9b::alternating_multilinear_form_space<s, scalars, V, Vspace, m>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>) fn(input finite_seq(V, m)) s = fn(arguments finite_seq(V, m)) s {alpha(fn(k N_pos: k <= m) V {T(arguments(k))})}
+template<s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, m N_pos>:
+    have fn alternating_form_transformed_by_operator(alpha \chap9b::alternating_multilinear_form_space<s, V, Vspace, m>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>) fn(input finite_seq(V, m)) s = fn(arguments finite_seq(V, m)) s {alpha(fn(k N_pos: k <= m) V {T(arguments(k))})}
 
 axiom transformed_alternating_form_is_alternating:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, m N_pos, alpha \chap9b::alternating_multilinear_form_space<s, scalars, V, Vspace, m>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>:
-        \alternating_form_transformed_by_operator<s, scalars, V, Vspace, m>(alpha, T) $in \chap9b::alternating_multilinear_form_space<s, scalars, V, Vspace, m>
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, m N_pos, alpha \chap9b::alternating_multilinear_form_space<s, V, Vspace, m>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>:
+        \alternating_form_transformed_by_operator<s, V, Vspace, m>(alpha, T) $in \chap9b::alternating_multilinear_form_space<s, V, Vspace, m>
 
-prop scales_full_alternating_forms(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, n N_pos, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, value s):
-    forall alpha \chap9b::alternating_multilinear_form_space<s, scalars, V, Vspace, n>:
-        \alternating_form_transformed_by_operator<s, scalars, V, Vspace, n>(alpha, T) = \chap9b::multilinear_form_smul<s, scalars, V, Vspace, n>(value, alpha)
+prop scales_full_alternating_forms(s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, n N_pos, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>, value s):
+    forall alpha \chap9b::alternating_multilinear_form_space<s, V, Vspace, n>:
+        \alternating_form_transformed_by_operator<s, V, Vspace, n>(alpha, T) = \chap9b::multilinear_form_smul<s, V, Vspace, n>(value, alpha)
 
-prop is_operator_determinant_value(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, value s):
-    exist n N_pos st {\chap2c::dimension<s, scalars, V, Vspace> = n, $scales_full_alternating_forms(s, scalars, V, Vspace, n, T, value)}
+prop is_operator_determinant_value(s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>, value s):
+    exist n N_pos st {\chap2c::dimension<s, V, Vspace> = n, $scales_full_alternating_forms(s, V, Vspace, n, T, value)}
 
 # Definition 9.41. One-dimensionality of the full alternating-form space gives
 # the unique scalar by which alpha -> alpha_T acts.
 axiom operator_determinant_exists_unique:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> > 0
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> > 0
         =>:
-            exist! value s st {$is_operator_determinant_value(s, scalars, V, Vspace, T, value)}
+            exist! value s st {$is_operator_determinant_value(s, V, Vspace, T, value)}
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
-    trust have operator_determinant fn(T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>) s
+template<s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>>:
+    trust have operator_determinant fn(T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>) s
 
 axiom operator_determinant_spec:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> > 0
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> > 0
         =>:
-            $is_operator_determinant_value(s, scalars, V, Vspace, T, \operator_determinant<s, scalars, V, Vspace>(T))
+            $is_operator_determinant_value(s, V, Vspace, T, \operator_determinant<s, V, Vspace>(T))
 
 # Example 9.42. Identity and scalar identity expose the normalization and
 # degree-n homogeneity expected from the definition.
@@ -44,7 +44,7 @@ sketch:
         lambda^2 * 1 = lambda^2
 
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    trust have coordinate_operator_from_matrix fn(A matrix(s, n, n)) \chap3a::linear_map_space<s, scalars, finite_seq(s, n), finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \chap1b::coordinate_space<s, scalars, n>>:
+    trust have coordinate_operator_from_matrix fn(A matrix(s, n, n)) \chap3a::linear_map_space<s, finite_seq(s, n), finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \chap1b::coordinate_space<s, scalars, n>>:
         forall x finite_seq(s, n):
             coordinate_operator_from_matrix(A)(x) = \chap7d::matrix_vector_product<s, scalars, n>(A, x)
 
@@ -100,88 +100,88 @@ axiom determinant_of_upper_triangular_matrix:
 
 # Result 9.49. Transforming by ST is transforming first by T and then by S.
 axiom determinant_is_multiplicative:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, S, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, n N_pos:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> = n
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, S, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>, n N_pos:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> = n
         =>:
-            \operator_determinant<s, scalars, V, Vspace>(\chap3a::linear_map_compose<s, scalars, V, V, V, Vspace, Vspace, Vspace>(S, T)) = scalars.mul(\operator_determinant<s, scalars, V, Vspace>(S), \operator_determinant<s, scalars, V, Vspace>(T))
+            \operator_determinant<s, V, Vspace>(\chap3a::linear_map_compose<s, V, V, V, Vspace, Vspace, Vspace>(S, T)) = Vspace.scalars.mul(\operator_determinant<s, V, Vspace>(S), \operator_determinant<s, V, Vspace>(T))
 
 axiom matrix_determinant_is_multiplicative:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A, B matrix(s, n, n):
         \matrix_determinant<s, scalars, n>(\chap3c::matrix_mul<s, scalars, n, n, n>(A, B)) = scalars.mul(\matrix_determinant<s, scalars, n>(A), \matrix_determinant<s, scalars, n>(B))
 
-prop determinant_detects_invertibility_statement(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>):
+prop determinant_detects_invertibility_statement(s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>):
     forall:
         =>:
-            $chap3d::is_invertible_linear_map(s, scalars, V, V, Vspace, Vspace, T)
+            $chap3d::is_invertible_linear_map(s, V, V, Vspace, Vspace, T)
         <=>:
-            \operator_determinant<s, scalars, V, Vspace>(T) != scalars.zero
+            \operator_determinant<s, V, Vspace>(T) != Vspace.scalars.zero
 
 # Result 9.50. Multiplicativity proves the forward direction and inverse
 # formula; a nonzero determinant makes T injective via Result 9.39.
 axiom invertible_iff_nonzero_determinant:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, n N_pos:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> = n
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>, n N_pos:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> = n
         =>:
-            $determinant_detects_invertibility_statement(s, scalars, V, Vspace, T)
+            $determinant_detects_invertibility_statement(s, V, Vspace, T)
 
 axiom determinant_of_inverse:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>:
-        $chap3d::is_invertible_linear_map(s, scalars, V, V, Vspace, Vspace, T)
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>:
+        $chap3d::is_invertible_linear_map(s, V, V, Vspace, Vspace, T)
         =>:
-            \operator_determinant<s, scalars, V, Vspace>(\chap3d::inverse_linear_map<s, scalars, V, V, Vspace, Vspace>(T)) = scalars.inv(\operator_determinant<s, scalars, V, Vspace>(T))
+            \operator_determinant<s, V, Vspace>(\chap3d::inverse_linear_map<s, V, V, Vspace, Vspace>(T)) = Vspace.scalars.inv(\operator_determinant<s, V, Vspace>(T))
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
-    have fn scalar_identity_minus_operator(lambda s, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>) \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace> = \chap3a::linear_map_add<s, scalars, V, V, Vspace, Vspace>(\chap3a::linear_map_smul<s, scalars, V, V, Vspace, Vspace>(lambda, \chap3a::identity_linear_map<s, scalars, V, Vspace>), \chap3a::linear_map_smul<s, scalars, V, V, Vspace, Vspace>(scalars.neg(scalars.one), T))
+template<s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>>:
+    have fn scalar_identity_minus_operator(lambda s, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>) \chap3a::linear_map_space<s, V, V, Vspace, Vspace> = \chap3a::linear_map_add<s, V, V, Vspace, Vspace>(\chap3a::linear_map_smul<s, V, V, Vspace, Vspace>(lambda, \chap3a::identity_linear_map<s, V, Vspace>), \chap3a::linear_map_smul<s, V, V, Vspace, Vspace>(Vspace.scalars.neg(Vspace.scalars.one), T))
 
-prop determinant_eigenvalue_characterization_statement(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s):
+prop determinant_eigenvalue_characterization_statement(s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>, lambda s):
     forall:
         =>:
-            $chap5a::is_eigenvalue(s, scalars, V, Vspace, T, lambda)
+            $chap5a::is_eigenvalue(s, V, Vspace, T, lambda)
         <=>:
-            \operator_determinant<s, scalars, V, Vspace>(\scalar_identity_minus_operator<s, scalars, V, Vspace>(lambda, T)) = scalars.zero
+            \operator_determinant<s, V, Vspace>(\scalar_identity_minus_operator<s, V, Vspace>(lambda, T)) = Vspace.scalars.zero
 
 # Result 9.51. lambda is an eigenvalue exactly when lambda I-T is not
 # invertible; Result 9.50 converts this to a zero determinant.
 axiom eigenvalues_are_zeros_of_determinant:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, lambda s:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> > 0
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>, lambda s:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> > 0
         =>:
-            $determinant_eigenvalue_characterization_statement(s, scalars, V, Vspace, T, lambda)
+            $determinant_eigenvalue_characterization_statement(s, V, Vspace, T, lambda)
 
 # Result 9.52. Transport an alternating form through S^{-1}; this handles
 # similarity between genuinely different vector-space carriers.
 axiom determinant_is_similarity_invariant:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, S \chap3a::linear_map_space<s, scalars, W, V, Wspace, Vspace>:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> > 0
-        $chap3d::is_invertible_linear_map(s, scalars, W, V, Wspace, Vspace, S)
+    ? forall s nonempty_set, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, V>, Wspace &chap1b::VectorSpace<s, W>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>, S \chap3a::linear_map_space<s, W, V, Wspace, Vspace>:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> > 0
+        $chap3d::is_invertible_linear_map(s, W, V, Wspace, Vspace, S)
         =>:
-            \operator_determinant<s, scalars, W, Wspace>(\chap3a::linear_map_compose<s, scalars, W, V, W, Wspace, Vspace, Wspace>(\chap3d::inverse_linear_map<s, scalars, W, V, Wspace, Vspace>(S), \chap3a::linear_map_compose<s, scalars, W, V, V, Wspace, Vspace, Vspace>(T, S))) = \operator_determinant<s, scalars, V, Vspace>(T)
+            \operator_determinant<s, W, Wspace>(\chap3a::linear_map_compose<s, W, V, W, Wspace, Vspace, Wspace>(\chap3d::inverse_linear_map<s, W, V, Wspace, Vspace>(S), \chap3a::linear_map_compose<s, W, V, V, Wspace, Vspace, Vspace>(T, S))) = \operator_determinant<s, V, Vspace>(T)
 
 # Result 9.53. Coordinate identification is a similarity, so every operator
 # matrix has the same determinant as the operator.
 axiom operator_determinant_equals_matrix_determinant:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, n N_pos, basis &chap1a::FiniteList<V, n>:
-        $chap2b::is_basis(s, scalars, V, Vspace, n, basis)
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>, n N_pos, basis &chap1a::FiniteList<V, n>:
+        $chap2b::is_basis(s, V, Vspace, n, basis)
         =>:
-            \operator_determinant<s, scalars, V, Vspace>(T) = \matrix_determinant<s, scalars, n>(\chap5c::matrix_of_operator<s, scalars, V, Vspace, n>(basis, T))
+            \operator_determinant<s, V, Vspace>(T) = \matrix_determinant<s, Vspace.scalars, n>(\chap5c::matrix_of_operator<s, V, Vspace, n>(basis, T))
 
-template<V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, m N_pos>:
-    have fn complex_eigenvalue_product_with_multiplicity(T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>, k closed_range(0, m)) &chap1a::Complex by induc k from 0:
+template<V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, V>, m N_pos>:
+    have fn complex_eigenvalue_product_with_multiplicity(T \chap3a::linear_map_space<&chap1a::Complex, V, V, Vspace, Vspace>, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>, k closed_range(0, m)) &chap1a::Complex by induc k from 0:
         case k = 0: &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.one
-        case k > 0: &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(complex_eigenvalue_product_with_multiplicity(T, eigenvalues, k - 1), \chap8b::finite_scalar_power<&chap1a::Complex, chap1a::complex_scalars>(eigenvalues.entries(k), \chap8b::eigenvalue_multiplicity<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>(T, eigenvalues.entries(k))))
+        case k > 0: &chap1a::ScalarSystem<&chap1a::Complex>{chap1a::complex_scalars}.mul(complex_eigenvalue_product_with_multiplicity(T, eigenvalues, k - 1), \chap8b::finite_scalar_power<&chap1a::Complex, chap1a::complex_scalars>(eigenvalues.entries(k), \chap8b::eigenvalue_multiplicity<&chap1a::Complex, V, Vspace>(T, eigenvalues.entries(k))))
 
 # Result 9.55. In an upper-triangular basis the diagonal contains every
 # eigenvalue according to its generalized-eigenspace multiplicity.
 axiom complex_determinant_equals_eigenvalue_product:
-    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
-        $chap5d::lists_all_distinct_eigenvalues(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T, m, eigenvalues)
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, V>, T \chap3a::linear_map_space<&chap1a::Complex, V, V, Vspace, Vspace>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, V, Vspace)
+        $chap5d::lists_all_distinct_eigenvalues(&chap1a::Complex, V, Vspace, T, m, eigenvalues)
         =>:
-            \operator_determinant<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>(T) = \complex_eigenvalue_product_with_multiplicity<V, Vspace, m>(T, eigenvalues, m)
+            \operator_determinant<&chap1a::Complex, V, Vspace>(T) = \complex_eigenvalue_product_with_multiplicity<V, Vspace, m>(T, eigenvalues, m)
 
 # Result 9.56. Transpose preserves the permutation formula; dual matrices are
 # transposes, and adjoint matrices are conjugate transposes.
@@ -190,18 +190,18 @@ axiom determinant_of_transpose:
         \matrix_determinant<s, scalars, n>(\chap3c::transpose<s, n, n>(A)) = \matrix_determinant<s, scalars, n>(A)
 
 axiom determinant_of_dual_operator:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> > 0
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> > 0
         =>:
-            \operator_determinant<s, scalars, \chap3f::dual_space<s, scalars, V, Vspace>, \chap3f::dual_vector_space<s, scalars, V, Vspace>>(\chap3f::dual_map<s, scalars, V, V, Vspace, Vspace>(T)) = \operator_determinant<s, scalars, V, Vspace>(T)
+            \operator_determinant<s, \chap3f::dual_space<s, V, Vspace>, \chap3f::dual_vector_space<s, V, Vspace>>(\chap3f::dual_map<s, V, V, Vspace, Vspace>(T)) = \operator_determinant<s, V, Vspace>(T)
 
 axiom determinant_of_adjoint:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, T \chap3a::linear_map_space<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>:
-        $chap2a::is_finite_dimensional(s, scalars, V, inner_space.vector_space)
-        \chap2c::dimension<s, scalars, V, inner_space.vector_space> > 0
+    ? forall s nonempty_set, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, V>, T \chap3a::linear_map_space<s, V, V, inner_space.vector_space, inner_space.vector_space>:
+        $chap2a::is_finite_dimensional(s, V, inner_space.vector_space)
+        \chap2c::dimension<s, V, inner_space.vector_space> > 0
         =>:
-            \operator_determinant<s, scalars, V, inner_space.vector_space>(\chap7a::adjoint<s, scalars, scalar_geometry, V, V, inner_space, inner_space>(T)) = scalar_geometry.conjugate(\operator_determinant<s, scalars, V, inner_space.vector_space>(T))
+            \operator_determinant<s, V, inner_space.vector_space>(\chap7a::adjoint<s, V, V, inner_space, inner_space>(T)) = inner_space.scalar_geometry.conjugate(\operator_determinant<s, V, inner_space.vector_space>(T))
 
 prop have_equal_matrix_columns(s set, n N_pos, A matrix(s, n, n), j, k N_pos):
     j <= n
@@ -296,111 +296,111 @@ axiom helpful_determinant_evaluation_rules:
 # Result 9.58. S* S=I, multiplicativity, and the adjoint determinant formula
 # give |det S|^2=1.
 axiom unitary_operator_has_unit_absolute_determinant:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, S \chap3a::linear_map_space<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>:
-        $chap2a::is_finite_dimensional(s, scalars, V, inner_space.vector_space)
-        \chap2c::dimension<s, scalars, V, inner_space.vector_space> > 0
-        $chap7d::is_unitary_operator(s, scalars, scalar_geometry, V, inner_space, S)
+    ? forall s nonempty_set, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, V>, S \chap3a::linear_map_space<s, V, V, inner_space.vector_space, inner_space.vector_space>:
+        $chap2a::is_finite_dimensional(s, V, inner_space.vector_space)
+        \chap2c::dimension<s, V, inner_space.vector_space> > 0
+        $chap7d::is_unitary_operator(s, V, inner_space, S)
         =>:
-            scalar_geometry.absolute_value(\operator_determinant<s, scalars, V, inner_space.vector_space>(S)) = 1
+            inner_space.scalar_geometry.absolute_value(\operator_determinant<s, V, inner_space.vector_space>(S)) = 1
 
 # Result 9.59. A spectral basis makes the determinant a product of
 # nonnegative real eigenvalues.
 axiom positive_operator_has_nonnegative_determinant:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, T \chap3a::linear_map_space<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>:
-        $chap2a::is_finite_dimensional(s, scalars, V, inner_space.vector_space)
-        \chap2c::dimension<s, scalars, V, inner_space.vector_space> > 0
-        $chap7c::is_positive_operator(s, scalars, scalar_geometry, V, inner_space, T)
+    ? forall s nonempty_set, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, V>, T \chap3a::linear_map_space<s, V, V, inner_space.vector_space, inner_space.vector_space>:
+        $chap2a::is_finite_dimensional(s, V, inner_space.vector_space)
+        \chap2c::dimension<s, V, inner_space.vector_space> > 0
+        $chap7c::is_positive_operator(s, V, inner_space, T)
         =>:
-            \operator_determinant<s, scalars, V, inner_space.vector_space>(T) = scalar_geometry.real_embed(scalar_geometry.real_part(\operator_determinant<s, scalars, V, inner_space.vector_space>(T)))
-            scalar_geometry.real_part(\operator_determinant<s, scalars, V, inner_space.vector_space>(T)) >= 0
+            \operator_determinant<s, V, inner_space.vector_space>(T) = inner_space.scalar_geometry.real_embed(inner_space.scalar_geometry.real_part(\operator_determinant<s, V, inner_space.vector_space>(T)))
+            inner_space.scalar_geometry.real_part(\operator_determinant<s, V, inner_space.vector_space>(T)) >= 0
 
 # Result 9.60. Apply multiplicativity to T* T, then use its spectral basis.
 axiom absolute_determinant_is_product_of_singular_values:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, scalars, scalar_geometry, V>, T \chap3a::linear_map_space<s, scalars, V, V, inner_space.vector_space, inner_space.vector_space>, n N_pos, values &chap1a::FiniteList<R, n>:
-        $chap2a::is_finite_dimensional(s, scalars, V, inner_space.vector_space)
-        \chap2c::dimension<s, scalars, V, inner_space.vector_space> = n
-        $chap7e::is_singular_value_list(s, scalars, scalar_geometry, V, V, inner_space, inner_space, T, n, values)
+    ? forall s nonempty_set, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, V>, T \chap3a::linear_map_space<s, V, V, inner_space.vector_space, inner_space.vector_space>, n N_pos, values &chap1a::FiniteList<R, n>:
+        $chap2a::is_finite_dimensional(s, V, inner_space.vector_space)
+        \chap2c::dimension<s, V, inner_space.vector_space> = n
+        $chap7e::is_singular_value_list(s, V, V, inner_space, inner_space, T, n, values)
         =>:
-            scalar_geometry.absolute_value(\operator_determinant<s, scalars, V, inner_space.vector_space>(T)) = \chap7f::finite_real_product<n>(values, n)
+            inner_space.scalar_geometry.absolute_value(\operator_determinant<s, V, inner_space.vector_space>(T)) = \chap7f::finite_real_product<n>(values, n)
 
 template<n N_pos>:
-    trust have real_coordinate_inner_product_space &chap6a::InnerProductSpace<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, finite_seq(R, n)>:
+    trust have real_coordinate_inner_product_space &chap6a::InnerProductSpace<R, finite_seq(R, n)>:
         real_coordinate_inner_product_space.vector_space = \chap1b::coordinate_space<R, chap1a::real_scalars, n>
         forall x, y finite_seq(R, n):
-            real_coordinate_inner_product_space.inner(x, y) = \chap7d::coordinate_inner_product<R, chap1a::real_scalars, chap6a::real_inner_product_scalar_geometry, n>(x, y)
+            real_coordinate_inner_product_space.inner(x, y) = \chap7d::coordinate_inner_product<R, chap6a::real_inner_product_scalar_geometry, n>(x, y)
 
 # Result 9.61. Combine Result 7.111 with Result 9.60.
 axiom determinant_is_volume_scaling_factor:
-    ? forall n N_pos, T \chap3a::linear_map_space<R, chap1a::real_scalars, finite_seq(R, n), finite_seq(R, n), \chap1b::coordinate_space<R, chap1a::real_scalars, n>, \chap1b::coordinate_space<R, chap1a::real_scalars, n>>, Omega power_set(finite_seq(R, n)):
+    ? forall n N_pos, T \chap3a::linear_map_space<R, finite_seq(R, n), finite_seq(R, n), \chap1b::coordinate_space<R, chap1a::real_scalars, n>, \chap1b::coordinate_space<R, chap1a::real_scalars, n>>, Omega power_set(finite_seq(R, n)):
         \chap7f::volume<finite_seq(R, n), \real_coordinate_inner_product_space<n>>(\chap7f::image_of_set<finite_seq(R, n), finite_seq(R, n)>(T, Omega)) = abs(\operator_determinant<R, chap1a::real_scalars, finite_seq(R, n), \chap1b::coordinate_space<R, chap1a::real_scalars, n>>(T)) * \chap7f::volume<finite_seq(R, n), \real_coordinate_inner_product_space<n>>(Omega)
 
 # Result 9.62. The 8B eigenvalue-factor definition and det(zI-T) agree.
 axiom complex_characteristic_polynomial_is_determinant_polynomial:
-    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>, z &chap1a::Complex:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
-        $chap5d::lists_all_distinct_eigenvalues(&chap1a::Complex, chap1a::complex_scalars, V, Vspace, T, m, eigenvalues)
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, V>, T \chap3a::linear_map_space<&chap1a::Complex, V, V, Vspace, Vspace>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>, z &chap1a::Complex:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, V, Vspace)
+        $chap5d::lists_all_distinct_eigenvalues(&chap1a::Complex, V, Vspace, T, m, eigenvalues)
         =>:
-            \operator_determinant<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>(\scalar_identity_minus_operator<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>(z, T)) = \chap8b::characteristic_factor_product<&chap1a::Complex, chap1a::complex_scalars, V, Vspace, m>(T, eigenvalues, m, z)
+            \operator_determinant<&chap1a::Complex, V, Vspace>(\scalar_identity_minus_operator<&chap1a::Complex, V, Vspace>(z, T)) = \chap8b::characteristic_factor_product<&chap1a::Complex, V, Vspace, m>(T, eigenvalues, m, z)
 
 # Definition 9.63. This relation preserves polynomial typing while fixing all
 # values to det(zI-T).
-prop is_determinant_characteristic_polynomial(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, q \chap2a::polynomial_space<s, scalars>):
+prop is_determinant_characteristic_polynomial(s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>, q \chap2a::polynomial_space<s, Vspace.scalars>):
     forall z s:
-        q(z) = \operator_determinant<s, scalars, V, Vspace>(\scalar_identity_minus_operator<s, scalars, V, Vspace>(z, T))
+        q(z) = \operator_determinant<s, V, Vspace>(\scalar_identity_minus_operator<s, V, Vspace>(z, T))
 
 axiom determinant_characteristic_polynomial_exists_unique:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> > 0
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> > 0
         =>:
-            exist! q \chap2a::polynomial_space<s, scalars> st {$is_determinant_characteristic_polynomial(s, scalars, V, Vspace, T, q)}
+            exist! q \chap2a::polynomial_space<s, Vspace.scalars> st {$is_determinant_characteristic_polynomial(s, V, Vspace, T, q)}
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>>:
-    trust have determinant_characteristic_polynomial fn(T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>) \chap2a::polynomial_space<s, scalars>
+template<s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>>:
+    trust have determinant_characteristic_polynomial fn(T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>) \chap2a::polynomial_space<s, Vspace.scalars>
 
 axiom determinant_characteristic_polynomial_spec:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> > 0
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> > 0
         =>:
-            $is_determinant_characteristic_polynomial(s, scalars, V, Vspace, T, \determinant_characteristic_polynomial<s, scalars, V, Vspace>(T))
+            $is_determinant_characteristic_polynomial(s, V, Vspace, T, \determinant_characteristic_polynomial<s, V, Vspace>(T))
 
 axiom complex_characteristic_polynomial_definitions_agree:
-    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, chap1a::complex_scalars, V>, T \chap3a::linear_map_space<&chap1a::Complex, chap1a::complex_scalars, V, V, Vspace, Vspace>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, chap1a::complex_scalars, V, Vspace)
-        \chap2c::dimension<&chap1a::Complex, chap1a::complex_scalars, V, Vspace> > 0
+    ? forall V nonempty_set, Vspace &chap1b::VectorSpace<&chap1a::Complex, V>, T \chap3a::linear_map_space<&chap1a::Complex, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, V, Vspace)
+        \chap2c::dimension<&chap1a::Complex, V, Vspace> > 0
         =>:
-            \determinant_characteristic_polynomial<&chap1a::Complex, chap1a::complex_scalars, V, Vspace>(T) = \chap8b::characteristic_polynomial<V, Vspace>(T)
+            \determinant_characteristic_polynomial<&chap1a::Complex, V, Vspace>(T) = \chap8b::characteristic_polynomial<V, Vspace>(T)
 
 # Result 9.64. The complex case is Result 8.29; the real case uses the same
 # matrix over C and transports the polynomial identity back.
 axiom cayley_hamilton_theorem_for_real_and_complex_spaces:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> > 0
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> > 0
         =>:
-            \chap5a::polynomial_at_operator<s, scalars, V, Vspace>(\determinant_characteristic_polynomial<s, scalars, V, Vspace>(T), T) = \chap3a::zero_linear_map<s, scalars, V, V, Vspace, Vspace>
+            \chap5a::polynomial_at_operator<s, V, Vspace>(\determinant_characteristic_polynomial<s, V, Vspace>(T), T) = \chap3a::zero_linear_map<s, V, V, Vspace, Vspace>
 
 # Result 9.65. The identity permutation supplies the two leading terms; z=0
 # supplies the signed determinant constant term.
 axiom characteristic_polynomial_trace_and_determinant_coefficients:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, T \chap3a::linear_map_space<s, scalars, V, V, Vspace, Vspace>, n N_pos, coefficients &chap1a::FiniteList<s, n + 1>:
-        $chap2a::is_finite_dimensional(s, scalars, V, Vspace)
-        \chap2c::dimension<s, scalars, V, Vspace> = n
-        $chap2a::represents_polynomial(s, scalars, n + 1, coefficients, \determinant_characteristic_polynomial<s, scalars, V, Vspace>(T))
+    ? forall s nonempty_set, V nonempty_set, Vspace &chap1b::VectorSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vspace, Vspace>, n N_pos, coefficients &chap1a::FiniteList<s, n + 1>:
+        $chap2a::is_finite_dimensional(s, V, Vspace)
+        \chap2c::dimension<s, V, Vspace> = n
+        $chap2a::represents_polynomial(s, Vspace.scalars, n + 1, coefficients, \determinant_characteristic_polynomial<s, V, Vspace>(T))
         =>:
-            coefficients.entries(n + 1) = scalars.one
-            coefficients.entries(n) = scalars.neg(\chap8d::operator_trace<s, scalars, V, Vspace>(T))
-            coefficients.entries(1) = scalars.mul(\chap8b::finite_scalar_power<s, scalars>(scalars.neg(scalars.one), n), \operator_determinant<s, scalars, V, Vspace>(T))
+            coefficients.entries(n + 1) = Vspace.scalars.one
+            coefficients.entries(n) = Vspace.scalars.neg(\chap8d::operator_trace<s, V, Vspace>(T))
+            coefficients.entries(1) = Vspace.scalars.mul(\chap8b::finite_scalar_power<s, Vspace.scalars>(Vspace.scalars.neg(Vspace.scalars.one), n), \operator_determinant<s, V, Vspace>(T))
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, n N_pos>:
-    have fn matrix_column_norms(A matrix(s, n, n)) &chap1a::FiniteList<R, n> = (n, fn(k N_pos: k <= n) R {\chap7d::coordinate_norm<s, scalars, scalar_geometry, n>(\chap3c::matrix_column<s, n, n>(A, k))})
+template<s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos>:
+    have fn matrix_column_norms(A matrix(s, n, n)) &chap1a::FiniteList<R, n> = (n, fn(k N_pos: k <= n) R {\chap7d::coordinate_norm<s, scalar_geometry, n>(\chap3c::matrix_column<s, n, n>(A, k))})
 
 # Result 9.66. QR factorization reduces the determinant to the diagonal of R;
 # every diagonal entry is bounded by its column norm.
 axiom hadamard_inequality:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, scalar_geometry &chap6a::InnerProductScalarGeometry<s, scalars>, n N_pos, A matrix(s, n, n):
-        scalar_geometry.absolute_value(\matrix_determinant<s, scalars, n>(A)) <= \chap7f::finite_real_product<n>(\matrix_column_norms<s, scalars, scalar_geometry, n>(A), n)
+    ? forall s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, A matrix(s, n, n):
+        scalar_geometry.absolute_value(\matrix_determinant<s, scalar_geometry.scalars, n>(A)) <= \chap7f::finite_real_product<n>(\matrix_column_norms<s, scalar_geometry, n>(A), n)
 
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
     have fn vandermonde_matrix(beta finite_seq(s, n)) matrix(s, n, n) = fn(j N_pos, k N_pos: j <= n, k <= n) s {\chap8b::finite_scalar_power<s, scalars>(beta(j), k - 1)}

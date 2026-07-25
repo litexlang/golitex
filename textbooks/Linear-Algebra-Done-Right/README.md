@@ -26,11 +26,31 @@ such as `scalars.add(a,b)`, and a finite-list binding permits
 there is no pre-parser abbreviation layer. Canonical cross-file namespaces
 remain `chap1a` through `chap9d`.
 
+The Chapter 1-3 vector-space interface is `VectorSpace<s,V>`. It owns its
+`space.scalars` field alongside `zero`, `add`, and `smul`, so a theorem that
+already receives `space` does not repeat a scalar-system parameter. A relation
+that joins two spaces—most importantly `is_linear_map`—records the one needed
+fact `Vspace.scalars = Wspace.scalars` itself.
+
+The Chapter 6-9 inner-product interfaces are likewise fully nested:
+`InnerProductScalarGeometry<s>` owns its scalar system, and
+`InnerProductSpace<s,V>` owns its scalar geometry and vector space. Its
+structure law records that those two nested scalar systems agree. Bilinear,
+tensor, adjoint, isometry, and finite-family relations carry their own
+cross-space compatibility at the relation or construction boundary; scalar-only
+objects such as polynomials retain explicit `ScalarSystem` parameters.
+
 The ordinary project runner checks that the exported project loads and that
 the public declarations are well formed. Because project exports are trusted
 for speed, the routine body gate also runs every exported section directly
 with `-runner -f`; the optional flattened isolated gate is documented in
 `scripts/linear_algebra_done_right/source_manifest.yaml`.
+
+`FiniteVectorSpaceFamily<s,U,m>` owns its common `scalars` field while keeping
+parallel carrier, zero, addition, and scalar-multiplication arrays. Litex does
+not support field chaining after `spaces(k)`, so this intentionally does not
+pretend to expose a dependent `spaces(k).field` view. Exact verification
+commands and the current result are recorded in the paired source manifest.
 
 ## Implemented mathematical surface
 

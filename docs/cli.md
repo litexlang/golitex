@@ -99,6 +99,7 @@ those flags. `-lang` also consumes the next token globally.
 | `litex -f <file>` | Require `litex.config` in the direct parent, trace to the module root, and run the recursive `[export]` prefix through this file. It fails if that direct configuration is absent. |
 | `litex -isolated -f <file>` | Run one Litex file as an isolated script, without project discovery; a successful ordinary CLI run then continues in an isolated REPL. |
 | `litex -r <project>` | Run a module's complete recursive `[export]` tree, or trace to the module and run the prefix through a selected submodule's complete subtree. |
+| `litex -session -f <file>` | Run the registered project prefix through one file, then keep that same Runtime alive as a framed persistent session. |
 
 Declare local project files and child submodules in recursive ordered
 `[export]` entries. Only a `[hierarchy] module` declares non-standard packages
@@ -175,10 +176,20 @@ Runner exit behavior:
 
 ## Session Command
 
-`litex -session` starts a persistent, machine-readable verifier process. It
-uses the current directory's `litex.config` with the same no-plan project
-startup as the ordinary REPL; `litex -isolated -session` disables that project
-context. It writes one JSON object per event and accepts these stdin frames:
+`litex -session` starts a persistent, machine-readable verifier process. With
+no target, it uses the current directory's `litex.config` with the same
+no-plan project startup as the ordinary REPL; `litex -isolated -session`
+disables that project context.
+
+`litex -session -f <file>` first runs the same ordered project prefix as an
+ordinary registered-file `-f` command. If the prefix verifies, the process
+emits `ready` and accepts later blocks in the same Runtime, so definitions and
+facts from the prefix are already available. If the prefix fails, the process
+emits `startup_error` with the verifier trace and does not enter the session
+loop. `litex -isolated -session -f <file>` provides the analogous behavior for
+an intentionally standalone file.
+
+The session writes one JSON object per event and accepts these stdin frames:
 
 ```text
 run <id> <utf8-byte-count>\n<source bytes>
@@ -188,10 +199,10 @@ close
 
 `run` executes exactly one arbitrary, including multiline, source block in the
 same persistent Runtime. `artifacts` returns the accumulated summary, relation
-graph, and fact graph after successful blocks. The event values are `ready`,
-`block`, `artifacts`,
-`skipped`, and `protocol_error`; textual verifier output is returned in the
-JSON-string `trace` field so a client never has to parse terminal prompts.
+graph, and fact graph, including a successful preloaded prefix. The event
+values are `ready`, `startup_error`, `block`, `artifacts`, `skipped`, and
+`protocol_error`; textual verifier output is returned in the JSON-string
+`trace` field so a client never has to parse terminal prompts.
 
 A failed top-level `try:` block returns a `block` event with `ok: false`, but
 does not stop the session because `try:` has already discarded its temporary
@@ -200,6 +211,39 @@ available. Any other failed Litex statement stops execution of later frames:
 subsequent `run` requests return `skipped`, and `artifacts` returns
 `artifacts_unavailable`. A `try:` nested inside another top-level statement does
 not make that outer statement recoverable.
+
+### Repairing the next project file
+
+Suppose `chap5.lit` follows `chap4.lit` in the module's ordered `[export]`
+table and `chap5.lit` currently fails.
+
+1. Run `target/release/litex -compact -f chap5.lit` once to obtain the first
+   failing source line in the real project context.
+2. Start `target/release/litex -compact -session -f chap4.lit`. Do not preload
+   the failing `chap5.lit`: a failed preload correctly produces
+   `startup_error` instead of an unusable partial session.
+3. After the `ready` event, send the top-level statements from `chap5.lit` in
+   source order. Wrap every candidate frame in a literal outermost `try:`.
+4. A successful `try:` commits its declarations and facts to the persistent
+   Runtime. A failed `try:` discards only that candidate, so the chap1--chap4
+   prefix and all earlier successful chap5 frames remain available.
+5. Correct and resend only the failed fragment. When all fragments succeed,
+   put the final code in `chap5.lit` and run release `-f chap5.lit` as the file
+   checkpoint.
+
+For example, a client can send a frame shaped like:
+
+```text
+run chap5-001 <utf8-byte-count>
+try:
+    <one or more chap5 top-level statements>
+```
+
+The byte count covers only the source bytes after the frame header; clients
+should compute it from the UTF-8 payload. Prefix execution is the cold part of
+the run. `-session -f` pays that cost once and keeps the populated Runtime;
+later frames parse and verify only their submitted source. `-compact` reduces
+rendered output but does not replace release optimization or Runtime reuse.
 
 ## Graph Commands
 

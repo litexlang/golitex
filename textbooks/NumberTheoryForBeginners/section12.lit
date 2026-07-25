@@ -4,40 +4,40 @@
 # exhaustive cases: zero on divisible inputs, one on nonzero quadratic
 # residues, and minus one on nonresidues.
 prop legendre_symbol_zero_case(p N_pos, a Z, s Z):
-    $section1citation::divides_Z(p, a)
+    $section1::divides_Z(p, a)
     s = 0
 
 prop legendre_symbol_residue_case(p N_pos, a Z, s Z):
-    not $section1citation::divides_Z(p, a)
+    not $section1::divides_Z(p, a)
     $section11::quadratic_residue_mod(p, a)
     s = 1
 
 prop legendre_symbol_nonresidue_case(p N_pos, a Z, s Z):
-    not $section1citation::divides_Z(p, a)
+    not $section1::divides_Z(p, a)
     $section11::quadratic_nonresidue_mod(p, a)
     s = -1
 
 prop legendre_symbol_spec(p N_pos, a Z, s Z):
     $legendre_symbol_zero_case(p, a, s) or $legendre_symbol_residue_case(p, a, s) or $legendre_symbol_nonresidue_case(p, a, s)
 
-have fn legendre_symbol_nonzero_Z(p N_pos, a Z: not $section1citation::divides_Z(p, a)) Z by cases:
+have fn legendre_symbol_nonzero_Z(p N_pos, a Z: not $section1::divides_Z(p, a)) Z by cases:
     case $section11::quadratic_residue_mod(p, a): 1
     case not $section11::quadratic_residue_mod(p, a): -1
 
 have fn legendre_symbol_Z(p N_pos, a Z) Z by cases:
-    case $section1citation::divides_Z(p, a): 0
-    case not $section1citation::divides_Z(p, a): legendre_symbol_nonzero_Z(p, a)
+    case $section1::divides_Z(p, a): 0
+    case not $section1::divides_Z(p, a): legendre_symbol_nonzero_Z(p, a)
 
 thm legendre_symbol_has_spec:
     ? forall p N_pos, a Z:
         $legendre_symbol_spec(p, a, legendre_symbol_Z(p, a))
-    $section1citation::divides_Z(p, a) or not $section1citation::divides_Z(p, a)
+    $section1::divides_Z(p, a) or not $section1::divides_Z(p, a)
     by cases:
         ? $legendre_symbol_spec(p, a, legendre_symbol_Z(p, a))
-        case $section1citation::divides_Z(p, a):
+        case $section1::divides_Z(p, a):
             legendre_symbol_Z(p, a) = 0
             $legendre_symbol_zero_case(p, a, legendre_symbol_Z(p, a))
-        case not $section1citation::divides_Z(p, a):
+        case not $section1::divides_Z(p, a):
             $section11::quadratic_residue_mod(p, a) or not $section11::quadratic_residue_mod(p, a)
             by cases:
                 ? $legendre_symbol_spec(p, a, legendre_symbol_Z(p, a))
@@ -54,7 +54,7 @@ thm legendre_symbol_has_spec:
 # Divisibility forces the zero value, while prime-to-p inputs are nonzero by
 # the two quadratic cases in the specification.
 prop legendre_symbol_zero(p N_pos, a Z):
-    $section1citation::divides_Z(p, a)
+    $section1::divides_Z(p, a)
     legendre_symbol_Z(p, a) = 0
 
 prop gauss_representative(p N_pos, a Z, x Z, r Z):
@@ -80,6 +80,26 @@ prop gauss_excess_member(p N_pos, a Z, x Z):
     2 * ((a * x) % p) > p
 
 have fn gauss_excess_set(p N_pos, a Z) power_set(Z) = {x Z: $gauss_excess_member(p, a, x)}
+
+# The excess set is finite because every one of its positive indices is at
+# most p, so it is a subset of the finite interval 1...p.
+thm gauss_excess_set_is_finite:
+    ? forall p N_pos, a Z:
+        $is_finite_set(gauss_excess_set(p, a))
+    claim:
+        ? gauss_excess_set(p, a) $subset 1...p
+        forall x gauss_excess_set(p, a):
+            $gauss_excess_member(p, a, x)
+            x > 0
+            2 * x < p
+            x >= 1
+            2 * x > x
+            x < 2 * x < p
+            x < p
+            x <= p
+            x $in 1...p
+    $is_finite_set(1...p)
+    by thm section1::subset_finite_background(gauss_excess_set(p, a), 1...p)
 
 # Gauss's lemma identifies the Legendre value with the parity of the excess
 # representatives.  The count is exposed as an actual finite set rather than
@@ -121,7 +141,12 @@ thm theorem_XII_Gauss_lemma:
         $section3::relatively_prime_Z(a, p)
         =>:
             $gauss_lemma_conclusion(p, a)
-    trust $gauss_lemma_conclusion(p, a)
+    by thm gauss_excess_set_is_finite(p, a)
+    # Source handling: the book multiplies the signed permutation of a
+    # Gaussian half-system and cancels its nonzero representatives.
+    # proof_debt: the finite signed-product permutation interface is absent.
+    trust legendre_symbol_Z(p, a) = (-1) ^ finite_set_size(gauss_excess_set(p, a))
+    by def $gauss_lemma_conclusion(p, a)
 
 thm theorem_XII_quadratic_reciprocity:
     ? forall p, q N_pos, h1, h2 N:
@@ -132,4 +157,8 @@ thm theorem_XII_quadratic_reciprocity:
         2 * h2 = q - 1
         =>:
             $quadratic_reciprocity_conclusion(p, q, h1, h2)
+    # Source handling: the book partitions a finite h1-by-h2 lattice rectangle
+    # into four regions and pairs the two exterior regions by reflection.
+    # proof_debt: the finite region cardinalities and reflection bijection have
+    # not yet been formalized.
     trust $quadratic_reciprocity_conclusion(p, q, h1, h2)

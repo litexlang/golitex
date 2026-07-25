@@ -2,14 +2,14 @@
 #
 # source: Weil and Rosenlicht, Number Theory for Beginners, Section III.
 # problem: Formalize relative primality, Bezout's criterion, Euclid's lemma,
-# the product corollaries, and the Section III exercises.
+# and the product corollaries; standalone exercises are omitted.
 # proof_idea: Reuse Section II's gcd and Bezout interface.  Relative primality
 # for a pair is expressed as `gcd_Z(a,b)=1`; finite mutual relative primality is
 # stated through common divisors.  The forward Bezout direction and Euclid's
 # lemma are written in the same algebraic shape as the source proof.
 # litex_code: This file runs Sections I-II first and then adds Section III.
-# comments: Hard exercise statements remain local checked sketches with
-# explicit proof debt.
+# comments: Main-text statements are checked locally; standalone exercises are
+# omitted.
 
 """
 Definition. Integers a,b,...,c are mutually relatively prime if their gcd is 1.
@@ -25,7 +25,7 @@ prop mutually_relatively_prime_integer_set(A finite_set):
         d > 0
         forall a A:
             a $in Z
-            $section1citation::divides_Z(d, a)
+            $section1::divides_Z(d, a)
         =>:
             d = 1
 
@@ -59,22 +59,22 @@ thm bezout_pair_has_gcd_one:
             $section2::is_gcd_Z(a, b, 1)
     witness exist u Z st {a = 1 * u} from a:
         a = 1 * a
-    $section1citation::divides_Z(1, a)
+    $section1::divides_Z(1, a)
     witness exist v Z st {b = 1 * v} from b:
         b = 1 * b
-    $section1citation::divides_Z(1, b)
+    $section1::divides_Z(1, b)
     claim:
         ? forall e Z:
             e > 0
-            $section1citation::divides_Z(e, a)
-            $section1citation::divides_Z(e, b)
+            $section1::divides_Z(e, a)
+            $section1::divides_Z(e, b)
             =>:
-                $section1citation::divides_Z(e, 1)
+                $section1::divides_Z(e, 1)
         obtain p from exist p Z st {a = e * p}
         obtain q from exist q Z st {b = e * q}
         witness exist t Z st {1 = e * t} from p * x + q * y:
             1 = a * x + b * y = (e * p) * x + (e * q) * y = e * (p * x + q * y)
-        $section1citation::divides_Z(e, 1)
+        $section1::divides_Z(e, 1)
     witness exist u, v Z st {1 = a * u + b * v} from x, y:
         1 = a * x + b * y
     $section2::is_gcd_Z(a, b, 1)
@@ -85,15 +85,15 @@ thm bezout_pair_has_gcd_one:
 thm positive_common_divisor_of_bezout_pair_is_one:
     ? forall a, b, x, y, e Z:
         e > 0
-        $section1citation::divides_Z(e, a)
-        $section1citation::divides_Z(e, b)
+        $section1::divides_Z(e, a)
+        $section1::divides_Z(e, b)
         a * x + b * y = 1
         =>:
             e = 1
-    by thm section1citation::divides_Z_linear_combination(e, a, b, x, y)
+    by thm section1::divides_Z_linear_combination(e, a, b, x, y)
     x * a + y * b = a * x + b * y = 1
-    $section1citation::divides_Z(e, 1)
-    by thm section1citation::positive_divisor_of_one_is_one(e)
+    $section1::divides_Z(e, 1)
+    by thm section1::positive_divisor_of_one_is_one(e)
     e = 1
 
 thm theorem_III_1_bezout_implies_relprime_pair:
@@ -139,9 +139,9 @@ Theorem III.2. If a is prime to b and a divides bc, then a divides c.
 thm theorem_III_2_euclid_lemma:
     ? forall a, b, c Z:
         $relatively_prime_Z(a, b)
-        $section1citation::divides_Z(a, b * c)
+        $section1::divides_Z(a, b * c)
         =>:
-            $section1citation::divides_Z(a, c)
+            $section1::divides_Z(a, c)
     by thm theorem_III_1_relprime_implies_bezout_pair(a, b)
     obtain x, y from exist x, y Z st {a * x + b * y = 1}
     obtain u from exist u Z st {b * c = a * u}
@@ -152,7 +152,7 @@ thm theorem_III_2_euclid_lemma:
     c = a * (c * x + u * y)
     witness exist t Z st {c = a * t} from c * x + u * y:
         c = a * (c * x + u * y)
-    $section1citation::divides_Z(a, c)
+    $section1::divides_Z(a, c)
 
 """
 Corollary 1. If a is prime to b and to c, then a is prime to bc.
@@ -256,56 +256,3 @@ thm theorem_III_2_corollary_2:
     $relatively_prime_Z(a, finite_set_product(A, fn(x A) Z {x}))
     p = finite_set_product(A, fn(x A) Z {x})
     $relatively_prime_Z(a, p)
-
-"""
-Exercise III.1. If (a,b)=1 and both a and b divide c, then ab divides c.
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.
-
-"""
-Exercise III.2. Multiplication by a residue prime to m permutes the nonzero
-remainders modulo m.
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.
-
-"""
-Exercise III.3. A positive integer is either a perfect square or has irrational
-square root.
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.
-
-"""
-Exercise III.4. Every integer >1 that is not a power of 2 is a sum of two or
-more consecutive integers.
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.
-
-"""
-Exercise III.5. If a,b are positive and coprime, every integer >= ab is
-ax+by with positive x,y.
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.
-
-"""
-Exercise III.6. For finitely many positive integers with gcd d, every
-sufficiently large multiple of d is a positive linear combination.
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.

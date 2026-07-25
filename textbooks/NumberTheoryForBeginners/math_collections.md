@@ -30,20 +30,44 @@ with uniqueness up to permutation.
 The nearest rejected form is an opaque proposition saying merely that
 factorization “exists”; the factor sequence and permutation relation matter to
 later exponent and divisor arguments. The successor law and prime-divisor
-induction over finite products are checked. Remaining holes concern
-factorization, permutation uniqueness, and maximum prime-power exponents.
+induction over finite products are checked, as is factorization existence by
+strong induction. Remaining holes concern permutation uniqueness and maximum
+prime-power exponents.
 
 ## Congruences and residue-class quotients
 
 `congruent_mod(m,x,y)` is integer divisibility of `x-y` by `m`.
 `residue_class_mod(m,x)` is the set of congruent representatives. The ideal
-finite quotient interface consists of the finite carrier of all classes,
-well-defined class addition and multiplication, and its cardinality.
+finite quotient carrier is the range of the class map on the standard
+representatives `0,...,m-1`. Its Litex form is a set-valued `have fn` whose
+defining range is finite. The current grammar does not admit `finite_set` as a
+function codomain, so finiteness and cardinality are exposed as theorem-level
+laws alongside class addition and multiplication.
 
-These must be real set-valued functions and operation specifications, not an
-`abstract_prop`. They feed Euler's phi function, linear congruences, residue
-rings, finite fields, and Euler's theorem. The open work is the finite quotient
-construction and counting, not the elementary congruence algebra.
+The rejected form is an unrestricted set-builder over every subset of `Z`
+with no finite presentation. The class and carrier remain real set-valued
+functions, not an `abstract_prop`; the carrier's range formula supplies the
+finite presentation. They feed
+Euler's phi function, linear congruences, residue rings, finite fields, and
+Euler's theorem. The open work is the induced operations and their laws, not
+the elementary congruence algebra.
+
+## Rings, zero divisors, and fields
+
+A commutative ring is an additive abelian group with associative,
+commutative, distributive multiplication; a unitary ring additionally selects
+a multiplicative identity. These are distinct `prop` interfaces:
+`is_commutative_ring(carrier,add,mul,zero)` and
+`is_commutative_unitary_ring(carrier,add,mul,zero,one)`. Requiring a unit in
+the basic ring predicate is rejected because the source introduces unitary
+rings as a proper refinement. A zero divisor is a nonzero element that
+annihilates another nonzero element, also represented by a `prop`.
+
+Fields refine unitary rings by requiring every nonzero element to have a
+unique multiplicative inverse. These nodes support the residue-class ring,
+the prime-modulus field criterion, and polynomial theory over a field. The
+ordinary integer and rational operations are representative use probes; they
+need no wrapper objects around the builtin carriers.
 
 ## Finite groups, powers, orders, and cyclicity
 
@@ -51,12 +75,35 @@ Groups and subgroups are genuine structural predicates. A group-power relation
 must describe finite multiplication for nonnegative exponents and inverse
 powers for negative exponents. Element order is the least positive exponent
 returning the identity; cyclicity says one element generates the carrier.
+The finite cyclic classification must expose the actual power map from
+integers (or residue classes) onto the group, with its homomorphism and
+bijection laws. A residue-class map that does not mention the group,
+operation, or generator is not a translation of that classification.
 
 The nearest rejected form is a circular `generated_subgroup`/power pair that
 asserts the desired theorem by definition. These nodes support Lagrange,
 Euler, primitive roots, discrete logarithm indices, and finite-field power
-congruences. Their remaining holes are finite coset counting and finite
-subgroup cyclicity.
+congruences. Lagrange's theorem must assume the ambient group laws in addition
+to subgroup closure. Euler's theorem is a congruence statement
+`congruent_mod(m, a^euler_phi(m), 1)`; raw remainder equality to `1` is not
+valid for modulus `1`. Their remaining holes are finite coset counting and
+finite subgroup cyclicity.
+
+## Power congruences over prime residue fields
+
+`power_congruence_solvable_mod(p,k,a)` is the existence of an integer solution
+to `x^k = a (mod p)`. In Theorem XI.1, `d = gcd(k,p-1)` and
+`e*d = p-1` are shared hypotheses for the equivalence between solvability and
+`a^e = 1 (mod p)`. The criterion is therefore a `prop` containing an
+implication to an iff; it must not put the exponent equation on only one side
+or quantify an otherwise unused `e`.
+
+The nearest rejected form is a pair of wrapper predicates in which the
+solution side ignores `e` while the reduced-power side requires
+`e*d = p-1`. That shape states a false equivalence for arbitrary `e`.
+The checked bridge from witness equations to congruence classes feeds Euler's
+quadratic-residue criterion and the Legendre symbol. The remaining hole is the
+finite cyclic power-map argument.
 
 ## Polynomial Euclidean theory
 

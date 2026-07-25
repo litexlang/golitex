@@ -23,7 +23,9 @@ concepts and intermediate nodes that determine later interfaces.
   structure. The structure owns its `scalars &ScalarSystem<s>` field, so later
   mathematics receives scalar and vector operations from one coherent bundle.
   Candidate operations and laws may still be tested by a relation before the
-  structure is constructed.
+  structure is constructed. A theorem, `prop`, or template that already owns
+  `space` reads scalar operations through `space.scalars`; it does not repeat
+  a separate scalar-system parameter.
 - Collections use their narrowest existing carrier. Finite coordinate vectors
   use `finite_seq`; variable-length lists use `FiniteList`; matrices use the
   builtin `matrix` carrier.
@@ -40,6 +42,12 @@ concepts and intermediate nodes that determine later interfaces.
   declarations use complete expressions rather than a pre-parser abbreviation
   layer; public theorem and definition parameters remain explicit only when
   the mathematical object is not already owned by a supplied structure.
+- Compatibility between distinct spaces is a mathematical relation, not a
+  type-index convention. `is_linear_map` anchors on its domain and records
+  `Vspace.scalars = Wspace.scalars`; bilinear, tensor, and other multi-space
+  relations record the analogous equality once at their construction boundary.
+  Scalar-only interfaces such as polynomial operations retain an explicit
+  `ScalarSystem` parameter.
 - `axiom` and `trust` describe epistemic status, never mathematical kind. They
   remain visible below as dependency boundaries rather than changing the ideal
   interface.
@@ -92,15 +100,16 @@ concepts and intermediate nodes that determine later interfaces.
   multiplication, and Axler's vector-space laws.
 - **Semantic role:** Bundled structure; `is_vector_space` is the candidate-law
   relation corresponding to structure membership.
-- **Ideal Litex form:** `struct VectorSpace<s,V>` with a directly declared
-  `scalars &ScalarSystem<s>` field.
+- **Ideal Litex form:**
+  `struct VectorSpace<s nonempty_set,V nonempty_set>` with directly declared
+  `scalars &ScalarSystem<s>`, `zero`, `add`, and `smul` fields.
 - **Interface sketch:** `space &VectorSpace<s,V>` followed by
   `space.add(u,v)` or `space.scalars.mul(a,b)`.
 - **Nearest wrong alternative:** A proposition that hides the three operations
   cannot support ordinary vector expressions or structures inherited by a
   subspace, product, quotient, or function space.
-- **Dependencies:** Scalar system by nested `field` and `law`; carrier and
-  operations by `signature`.
+- **Dependencies:** Scalar system by nested `field`; carrier and operations by
+  `signature`.
 - **Downstream uses:** Every concept from subspaces onward. Probe: apply vector
   addition and scalar multiplication, then cite the structure laws.
 - **Allowable hole:** The structure form is fixed, and laws now project
@@ -196,14 +205,16 @@ concepts and intermediate nodes that determine later interfaces.
   and compose associatively.
 - **Semantic role:** Relation on typed functions, set-valued function space,
   callable operations, and bundled selected structure.
-- **Ideal Litex form:** `prop is_linear_map`, `have fn linear_map_space`,
-  pointwise `have fn` operations, and a checked `VectorSpace` instance.
+- **Ideal Litex form:** `prop is_linear_map(s,V,W,Vspace,Wspace,T)` with the
+  compatibility law `Vspace.scalars = Wspace.scalars`; a nonempty set-valued
+  `linear_map_space<s,V,W,Vspace,Wspace>`; pointwise operations selected in a
+  `VectorSpace<s,linear_map_space>` whose scalar field is `Vspace.scalars`.
 - **Interface sketch:**
-  `T \linear_map_space<s,scalars,V,W,Vspace,Wspace>` and `T(v)`.
+  `T \linear_map_space<s,V,W,Vspace,Wspace>` and `T(v)`.
 - **Nearest wrong alternative:** A predicate about an untyped map or an opaque
   linear-map object would obstruct ordinary application and composition.
-- **Dependencies:** Domain and codomain vector spaces by `signature` and `law`;
-  function extensionality by `well_definedness`.
+- **Dependencies:** Domain and codomain vector spaces by `signature`, their
+  scalar equality by `law`, and function extensionality by `well_definedness`.
 - **Downstream uses:** Null space, range, matrices, inverses, quotient-induced
   maps, and dual maps.
 - **Allowable hole:** Pointwise operation closure, the selected vector-space
@@ -546,16 +557,19 @@ concepts and intermediate nodes that determine later interfaces.
   into the scalar field.
 - **Semantic role:** A bundled scalar-side structure attached to an existing
   `ScalarSystem`; it is not an inner product and does not mention vectors.
-- **Ideal Litex form:** `struct InnerProductScalarGeometry<s,scalars>` with
-  callable `conjugate`, `absolute_value`, `real_part`, and `real_embed` fields
-  plus their field-compatible laws; provide the real and complex instances.
-- **Interface sketch:** `scalar_geometry.conjugate(lambda)` and
+- **Ideal Litex form:**
+  `struct InnerProductScalarGeometry<s nonempty_set>` with an owned
+  `scalars &ScalarSystem<s>` field and callable `conjugate`,
+  `absolute_value`, `real_part`, and `real_embed` fields plus their
+  field-compatible laws; provide the real and complex instances.
+- **Interface sketch:** `scalar_geometry.scalars.mul(a,b)`,
+  `scalar_geometry.conjugate(lambda)`, and
   `scalar_geometry.absolute_value(lambda)`.
 - **Nearest wrong alternative:** Passing four unrelated functions to every
   Chapter 6 and 7 declaration obscures which scalar identities are available;
   folding them into a vector-space structure assigns scalar data to the wrong
   object.
-- **Dependencies:** `ScalarSystem` by `signature`; the concrete Chapter 4
+- **Dependencies:** `ScalarSystem` by nested `field`; the concrete Chapter 4
   complex conjugate and absolute value by `definition`; their laws by `law`.
 - **Downstream uses:** Inner-product positivity and conjugate symmetry, norms,
   Cauchy-Schwarz, orthonormality, adjoints, and normal operators.
@@ -572,11 +586,15 @@ concepts and intermediate nodes that determine later interfaces.
 - **Semantic role:** Relation on a candidate binary scalar-valued function;
   bundled equipped structure; callable norm and orthogonal-decomposition
   constructions; orthogonality relation.
-- **Ideal Litex form:** `prop is_inner_product`, `struct InnerProductSpace`,
-  `have fn norm`, `prop are_orthogonal`, and callable coefficient/remainder
-  functions for Result 6.13.
-- **Interface sketch:** `inner_space.inner(u,v)`, `\norm(...)(v)`, and
-  `$are_orthogonal(...,u,v)`.
+- **Ideal Litex form:** `prop is_inner_product`; then
+  `struct InnerProductSpace<s nonempty_set,V nonempty_set>` with owned
+  `scalar_geometry`, owned `vector_space`, `inner`, and the law
+  `scalar_geometry.scalars = vector_space.scalars`; plus `have fn norm`,
+  `prop are_orthogonal`, and callable coefficient/remainder functions for
+  Result 6.13.
+- **Interface sketch:** `inner_space.scalar_geometry.conjugate(a)`,
+  `inner_space.vector_space.smul(a,v)`, `inner_space.inner(u,v)`,
+  `\norm(...)(v)`, and `$are_orthogonal(...,u,v)`.
 - **Nearest wrong alternative:** A predicate-only norm or a relation with a
   proposed decomposition output forces every inequality to carry avoidable
   witnesses; selecting a canonical inner product on an arbitrary vector space
@@ -948,6 +966,27 @@ concepts and intermediate nodes that determine later interfaces.
   product inner products, and higher-order linearization.
 - **Allowable hole:** Dimension counts, basis independence of the inner
   product, and the universal mapping theorems may remain named proof debt.
+
+### Finite vector-space families
+
+- **Ordinary meaning:** A finite family has one tagged ambient carrier, a
+  carrier and operation triple for each slot, and one common scalar system.
+- **Semantic role:** Bundled heterogeneous family; slotwise vector-space laws
+  remain a relation because the current field-chain feature deliberately does
+  not continue after `spaces(k)`.
+- **Ideal Litex form:** `struct FiniteVectorSpaceFamily<s nonempty_set,U
+  nonempty_set,m N_pos>` owns `scalars`, `carriers`, `zeros`, `adds`, and
+  `smuls`; `is_vector_space_family(s,U,m,family)` uses
+  `family.scalars`. It does not expose a dependent `spaces(k).field` view.
+- **Nearest wrong alternative:** A head `scalars` parameter repeats owned data;
+  a `spaces(k)` field would promise unsupported `a.b(x).c` access.
+- **Dependencies:** `ScalarSystem` by nested `field`, finite sequences by
+  signature, and slotwise vector-space laws by `law`.
+- **Downstream uses:** Family multilinear forms, multi-space tensor products,
+  component dimensions, and universal multilinear maps.
+- **Allowable hole:** Selecting a dependent component `VectorSpace` remains a
+  visible structure-packaging trust; it stores `family.scalars` explicitly in
+  its tuple without pretending that indexed field chaining is available.
 
 ## Dependency map
 

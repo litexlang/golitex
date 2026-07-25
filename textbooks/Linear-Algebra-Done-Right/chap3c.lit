@@ -14,23 +14,23 @@ template<s set, m, n N_pos>:
 
 # Definition 3.31. The matrix of a linear map is basis-dependent. Its kth
 # column contains the coefficients of T(v_k) in the chosen codomain basis.
-prop is_matrix_of_linear_map(s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, n, m N_pos, domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>, T fn(v V) W, A matrix(s, m, n)):
-    $chap2b::is_basis(s, scalars, V, Vspace, n, domain_basis)
-    $chap2b::is_basis(s, scalars, W, Wspace, m, codomain_basis)
+prop is_matrix_of_linear_map(s nonempty_set, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, V>, Wspace &chap1b::VectorSpace<s, W>, n, m N_pos, domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>, T fn(v V) W, A matrix(s, m, n)):
+    $chap2b::is_basis(s, V, Vspace, n, domain_basis)
+    $chap2b::is_basis(s, W, Wspace, m, codomain_basis)
     forall k N_pos:
         k <= n
         =>:
-            T(domain_basis.entries(k)) = \chap2a::linear_combination_value<s, scalars, W, Wspace, m>(\matrix_column_coefficients<s, m, n>(A, k), codomain_basis)
+            T(domain_basis.entries(k)) = \chap2a::linear_combination_value<s, W, Wspace, m>(\matrix_column_coefficients<s, m, n>(A, k), codomain_basis)
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, n, m N_pos>:
-    trust have matrix_of_linear_map fn(domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>, T \chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>) matrix(s, m, n)
+template<s nonempty_set, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, V>, Wspace &chap1b::VectorSpace<s, W>, n, m N_pos>:
+    trust have matrix_of_linear_map fn(domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>, T \chap3a::linear_map_space<s, V, W, Vspace, Wspace>) matrix(s, m, n)
 
 axiom matrix_of_linear_map_spec:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, n, m N_pos, domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>, T \chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
-        $chap2b::is_basis(s, scalars, V, Vspace, n, domain_basis)
-        $chap2b::is_basis(s, scalars, W, Wspace, m, codomain_basis)
+    ? forall s nonempty_set, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, V>, Wspace &chap1b::VectorSpace<s, W>, n, m N_pos, domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>, T \chap3a::linear_map_space<s, V, W, Vspace, Wspace>:
+        $chap2b::is_basis(s, V, Vspace, n, domain_basis)
+        $chap2b::is_basis(s, W, Wspace, m, codomain_basis)
         =>:
-            $is_matrix_of_linear_map(s, scalars, V, W, Vspace, Wspace, n, m, domain_basis, codomain_basis, T, \matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(domain_basis, codomain_basis, T))
+            $is_matrix_of_linear_map(s, V, W, Vspace, Wspace, n, m, domain_basis, codomain_basis, T, \matrix_of_linear_map<s, V, W, Vspace, Wspace, n, m>(domain_basis, codomain_basis, T))
 
 # Definition 3.34. Matrix addition is entrywise. The builtin matrix carrier is
 # reused; the scalar operation comes from the explicit scalar structure.
@@ -39,11 +39,11 @@ template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos>:
 
 # Result 3.35. Taking matrices commutes with addition of linear maps.
 axiom matrix_of_sum:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, n, m N_pos, v &chap1a::FiniteList<V, n>, w &chap1a::FiniteList<W, m>, S, T \chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
-        $chap2b::is_basis(s, scalars, V, Vspace, n, v)
-        $chap2b::is_basis(s, scalars, W, Wspace, m, w)
+    ? forall s nonempty_set, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, V>, Wspace &chap1b::VectorSpace<s, W>, n, m N_pos, v &chap1a::FiniteList<V, n>, w &chap1a::FiniteList<W, m>, S, T \chap3a::linear_map_space<s, V, W, Vspace, Wspace>:
+        $chap2b::is_basis(s, V, Vspace, n, v)
+        $chap2b::is_basis(s, W, Wspace, m, w)
         =>:
-            \matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, \chap3a::linear_map_add<s, scalars, V, W, Vspace, Wspace>(S, T)) = \matrix_add<s, scalars, m, n>(\matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, S), \matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, T))
+            \matrix_of_linear_map<s, V, W, Vspace, Wspace, n, m>(v, w, \chap3a::linear_map_add<s, V, W, Vspace, Wspace>(S, T)) = \matrix_add<s, Vspace.scalars, m, n>(\matrix_of_linear_map<s, V, W, Vspace, Wspace, n, m>(v, w, S), \matrix_of_linear_map<s, V, W, Vspace, Wspace, n, m>(v, w, T))
 
 # Definition 3.36. Scalar multiplication of matrices is entrywise.
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos>:
@@ -52,18 +52,18 @@ template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos>:
 # Result 3.38. The matrix of a scalar multiple is the corresponding scalar
 # multiple of the matrix.
 axiom matrix_of_scalar_multiple:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, n, m N_pos, v &chap1a::FiniteList<V, n>, w &chap1a::FiniteList<W, m>, a s, T \chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
-        $chap2b::is_basis(s, scalars, V, Vspace, n, v)
-        $chap2b::is_basis(s, scalars, W, Wspace, m, w)
+    ? forall s nonempty_set, V, W nonempty_set, Vspace &chap1b::VectorSpace<s, V>, Wspace &chap1b::VectorSpace<s, W>, n, m N_pos, v &chap1a::FiniteList<V, n>, w &chap1a::FiniteList<W, m>, a s, T \chap3a::linear_map_space<s, V, W, Vspace, Wspace>:
+        $chap2b::is_basis(s, V, Vspace, n, v)
+        $chap2b::is_basis(s, W, Wspace, m, w)
         =>:
-            \matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, \chap3a::linear_map_smul<s, scalars, V, W, Vspace, Wspace>(a, T)) = \matrix_smul<s, scalars, m, n>(a, \matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, T))
+            \matrix_of_linear_map<s, V, W, Vspace, Wspace, n, m>(v, w, \chap3a::linear_map_smul<s, V, W, Vspace, Wspace>(a, T)) = \matrix_smul<s, Vspace.scalars, m, n>(a, \matrix_of_linear_map<s, V, W, Vspace, Wspace, n, m>(v, w, T))
 
 # Notation 3.39. F^(m,n) is precisely matrix(F,m,n) in the builtin surface.
 
 # Result 3.40. The matrix space has dimension mn.
 axiom dimension_of_matrix_space:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos, matrix_space &chap1b::VectorSpace<s, scalars, matrix(s, m, n)>:
-        \chap2c::dimension<s, scalars, matrix(s, m, n), matrix_space> = m * n
+    ? forall s nonempty_set, m, n N_pos, matrix_space &chap1b::VectorSpace<s, matrix(s, m, n)>:
+        \chap2c::dimension<s, matrix(s, m, n), matrix_space> = m * n
 
 # Definition 3.41. Matrix multiplication contracts the shared index. The
 # scalar finite sum is the explicit generic-field analogue of the builtin
@@ -79,12 +79,12 @@ template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n, p N_pos>:
 # Result 3.43. Matrix formation converts composition of linear maps into matrix
 # multiplication, with all three bases shown explicitly.
 axiom matrix_of_product:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, U, V, W nonempty_set, Uspace &chap1b::VectorSpace<s, scalars, U>, Vspace &chap1b::VectorSpace<s, scalars, V>, Wspace &chap1b::VectorSpace<s, scalars, W>, p, n, m N_pos, u &chap1a::FiniteList<U, p>, v &chap1a::FiniteList<V, n>, w &chap1a::FiniteList<W, m>, T \chap3a::linear_map_space<s, scalars, U, V, Uspace, Vspace>, S \chap3a::linear_map_space<s, scalars, V, W, Vspace, Wspace>:
-        $chap2b::is_basis(s, scalars, U, Uspace, p, u)
-        $chap2b::is_basis(s, scalars, V, Vspace, n, v)
-        $chap2b::is_basis(s, scalars, W, Wspace, m, w)
+    ? forall s nonempty_set, U, V, W nonempty_set, Uspace &chap1b::VectorSpace<s, U>, Vspace &chap1b::VectorSpace<s, V>, Wspace &chap1b::VectorSpace<s, W>, p, n, m N_pos, u &chap1a::FiniteList<U, p>, v &chap1a::FiniteList<V, n>, w &chap1a::FiniteList<W, m>, T \chap3a::linear_map_space<s, U, V, Uspace, Vspace>, S \chap3a::linear_map_space<s, V, W, Vspace, Wspace>:
+        $chap2b::is_basis(s, U, Uspace, p, u)
+        $chap2b::is_basis(s, V, Vspace, n, v)
+        $chap2b::is_basis(s, W, Wspace, m, w)
         =>:
-            \matrix_of_linear_map<s, scalars, U, W, Uspace, Wspace, p, m>(u, w, \chap3a::linear_map_compose<s, scalars, U, V, W, Uspace, Vspace, Wspace>(S, T)) = \matrix_mul<s, scalars, m, n, p>(\matrix_of_linear_map<s, scalars, V, W, Vspace, Wspace, n, m>(v, w, S), \matrix_of_linear_map<s, scalars, U, V, Uspace, Vspace, p, n>(u, v, T))
+            \matrix_of_linear_map<s, U, W, Uspace, Wspace, p, m>(u, w, \chap3a::linear_map_compose<s, U, V, W, Uspace, Vspace, Wspace>(S, T)) = \matrix_mul<s, Vspace.scalars, m, n, p>(\matrix_of_linear_map<s, V, W, Vspace, Wspace, n, m>(v, w, S), \matrix_of_linear_map<s, U, V, Uspace, Vspace, p, n>(u, v, T))
 
 # Notation 3.44. A(j,·) and A(·,k) are the jth row and kth column.
 template<s set, m, n N_pos>:

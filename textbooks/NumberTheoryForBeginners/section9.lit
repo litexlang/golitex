@@ -87,27 +87,31 @@ prop polynomial_gcd_generator_claim(K set, zero K, add, mul fn(x, y K) K, family
     exist generator \polynomial_ring<K, zero> st {$polynomial_multiple_ideal(K, zero, add, mul, family, generator)}
 
 prop polynomial_division_claim(K set, zero, one K, add, mul fn(x, y K) K, f, g \polynomial_ring<K, zero>):
-    exist q, r \polynomial_ring<K, zero> st {$polynomial_division_statement(K, zero, one, add, mul, f, g, q, r)}
+    exist! q, r \polynomial_ring<K, zero> st {$polynomial_division_statement(K, zero, one, add, mul, f, g, q, r)}
 
-# The integer evaluator is retained for the source corollary about roots.
-prop has_polynomial_degree_Z(coeff fn(k N) Z, n N):
-    coeff(n) != 0
-    forall k N:
-        k > n
+# Evaluation at x is represented by the finite power and partial-sum traces
+# 1,x,...,x^n and a_0,a_0+a_1*x,...,A(x).  This keeps the source definition
+# over its arbitrary ground field rather than incorrectly specializing it to Z.
+prop polynomial_evaluation_trace(K set, zero, one K, add, mul fn(x, y K) K, p \polynomial_ring<K, zero>, x K, n N, powers, values fn(i N) K):
+    powers(0) = one
+    values(0) = p(0)
+    forall i N_pos:
+        i <= n
         =>:
-            coeff(k) = 0
+            powers(i) = mul(powers(i - 1), x)
+            values(i) = add(values(i - 1), mul(p(i), powers(i)))
 
-have fn polynomial_eval_Z(coeff fn(k N) Z, x Z, n N) Z by induc n from 0:
-    case n = 0: coeff(0)
-    case n > 0: polynomial_eval_Z(coeff, x, n - 1) + coeff(n) * x ^ n
+prop polynomial_evaluates_to(K set, zero, one K, add, mul fn(x, y K) K, p \polynomial_ring<K, zero>, x K, n N, value K):
+    exist powers, values fn(i N) K st {$polynomial_evaluation_trace(K, zero, one, add, mul, p, x, n, powers, values), value = values(n)}
 
-prop polynomial_root_Z(coeff fn(k N) Z, x Z, n N):
-    polynomial_eval_Z(coeff, x, n) = 0
+prop polynomial_root(K set, zero, one K, add, mul fn(x, y K) K, p \polynomial_ring<K, zero>, n N, x K):
+    $polynomial_evaluates_to(K, zero, one, add, mul, p, x, n, zero)
 
-have fn polynomial_root_set_Z(coeff fn(k N) Z, n N) power_set(Z) = {x Z: $polynomial_root_Z(coeff, x, n)}
+template<K set, zero, one K, add, mul fn(u, v K) K>:
+    have fn polynomial_root_set(p \polynomial_ring<K, zero>, n N) power_set(K) = {x K: $polynomial_root(K, zero, one, add, mul, p, n, x)}
 
-prop polynomial_root_bound_Z(coeff fn(k N) Z, n N, roots power_set(Z)):
-    roots = polynomial_root_set_Z(coeff, n)
+prop polynomial_root_bound(K set, zero, one K, add, mul fn(x, y K) K, p \polynomial_ring<K, zero>, n N, roots power_set(K)):
+    roots = \polynomial_root_set<K, zero, one, add, mul>(p, n)
     $is_finite_set(roots)
     finite_set_size(roots) <= n
 
@@ -120,8 +124,8 @@ thm theorem_IX_polynomial_gcd_generator:
             $polynomial_gcd_generator_claim(K, zero, add, mul, family)
     trust $polynomial_gcd_generator_claim(K, zero, add, mul, family)
 
-# Theorem IX.2. Division by a nonzero polynomial has quotient and remainder.
-thm theorem_IX_polynomial_division:
+# Lemma. Division by a nonzero polynomial has a unique quotient and remainder.
+thm lemma_IX_polynomial_division:
     ? forall K set, zero, one K, add, mul fn(x, y K) K, f, g \polynomial_ring<K, zero>:
         $section6::is_field(K, add, mul, zero, one)
         not $is_zero_polynomial(K, zero, g)
@@ -130,8 +134,9 @@ thm theorem_IX_polynomial_division:
     trust $polynomial_division_claim(K, zero, one, add, mul, f, g)
 
 thm theorem_IX_root_bound:
-    ? forall coeff fn(k N) Z, n N:
-        $has_polynomial_degree_Z(coeff, n)
+    ? forall K set, zero, one K, add, mul fn(x, y K) K, p \polynomial_ring<K, zero>, n N:
+        $section6::is_field(K, add, mul, zero, one)
+        $has_polynomial_degree(K, zero, p, n)
         =>:
-            $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
-    trust $polynomial_root_bound_Z(coeff, n, polynomial_root_set_Z(coeff, n))
+            $polynomial_root_bound(K, zero, one, add, mul, p, n, \polynomial_root_set<K, zero, one, add, mul>(p, n))
+    trust $polynomial_root_bound(K, zero, one, add, mul, p, n, \polynomial_root_set<K, zero, one, add, mul>(p, n))

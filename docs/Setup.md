@@ -328,7 +328,7 @@ Basic behavior:
 | `-isolated -f <file>` | Run a standalone file without project discovery, then continue in an isolated REPL after success. |
 | `-r <project>` | Run a module's complete recursive `[export]` tree, or the root prefix through a selected submodule. |
 | `-runner -e/-f/-r ...` | Run the verifier and return one wrapper JSON object with a meaningful process exit code. |
-| `-session` | Start a framed, machine-readable persistent verifier session. |
+| `-session` | Start a framed, machine-readable persistent verifier session; add `-f <file>` to preload that registered project prefix into the same Runtime. |
 | `-graph -e/-f/-r ... [json]` | Produce a prop/function/fact relation graph. |
 | `-factgraph -e/-f/-r ... [json]` | Produce a fact-only verification dependency graph. |
 | `-defgraph -e/-f/-r ... [json]` | Produce an environment-backed definition dependency graph. |
@@ -447,21 +447,4 @@ Unlike the basic `-e`, `-f`, and `-r` commands, the runner exits with a nonzero 
 
 ---
 
-## Reserved helper commands
-
-Formatting, module management, and tutorial mode are currently reserved CLI
-spellings rather than functional kernel features:
-
-```text
-litex -fmt <code>
-litex -install <module>
-litex -uninstall <module>
-litex -list
-litex -update <module>
-litex -tutorial
-```
-
-These commands print placeholder output. Use source files, configured modules,
-and `-f` or `-r` for current workflows. LaTeX and the supported Litex-to-Python
-subset are implemented commands; their precise boundaries are documented in
-[`docs/cli.md`](cli.md) and [`docs/Litex_To_Python.md`](Litex_To_Python.md).
+Visit https://litexlang.com/doc/cli to learn command line commands of Litex.
