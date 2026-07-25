@@ -1,37 +1,24 @@
 # Mathematics still to be completed
 #
 # Section IV — prime_factorization_background
-# Prove the finite prime factorization statement retained from the source.
+# Prove uniqueness of the checked finite prime factorization up to permutation.
 #
 # Section IV — exact_prime_power_background
 # Prove existence and uniqueness of the largest exponent whose prime power
 # divides a given integer greater than one.
 #
-# Section V — congruence_classes_additive_group_background
-# Construct the finite residue-class quotient and prove its additive group
-# laws.
+# Section VI — linear_congruence_right_hand_side_count
+# The solution criterion, complete solution family, and exact number of
+# solution classes are checked. Prove that exactly m/d right-hand-side classes
+# modulo m are divisible by d=gcd(a,m).
 #
-# Section VI — residue_unitary_ring_background
-# Construct the residue-class ring with identity and prove its ring laws.
-#
-# Section VI — linear_congruence_solution_background
-# Prove the full solution-family description for a linear congruence.
-#
-# Section VI — residue_field_prime_background
-# Prove that residue classes modulo a prime form a field.
-#
-# Section VI — residue_field_only_prime_background
-# Prove conversely that a residue-class field has prime modulus.
-#
-# Section VI — residue_field_iff_prime_background
-# Combine the two directions into the field-if-and-only-if-prime statement.
+# Section VI — reduced_residue_multiplicative_group
+# Construct the finite group of residue classes prime to m under
+# multiplication from the checked solution and residue-ring theorems.
 #
 # Section VII — generated_elements_power_background
 # Prove that every element of a singly generated subgroup is a power of its
 # generator.
-#
-# Section VII — finite_cyclic_power_classes_background
-# Prove the finite cyclic power-class description and its counting statement.
 #
 # Section VIII — element_order_exists_background
 # Prove existence and uniqueness of the order of an element in a finite group.
@@ -51,10 +38,6 @@
 #
 # Section IX — polynomial_root_bound_background
 # Prove that a nonzero polynomial has no more roots than its degree.
-#
-# Section X — index_mod_exists_background
-# Prove existence and uniqueness of the index of a reduced residue with
-# respect to a primitive root.
 #
 # Section X — finite_subgroup_generator_background
 # Prove that the retained finite multiplicative subgroup is cyclic.
@@ -81,10 +64,6 @@
 #
 # Section XII — quadratic_reciprocity_background
 # Prove the quadratic reciprocity law.
-#
-# Section XIII — gaussian_division_background
-# Prove Euclidean division with norm-decreasing remainder for Gaussian
-# integers.
 #
 # Section XIII — gaussian_prime_factor_background
 # Prove the Gaussian-prime factorization statement.

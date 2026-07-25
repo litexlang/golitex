@@ -376,8 +376,8 @@ impl Runtime {
         }
     }
 
-    /// Make the discovered repository's root module the persistent environment for an
-    /// interactive REPL without executing its ordered `[export]` plan.
+    /// Make the discovered repository's root module the persistent environment for
+    /// interactive input. This method does not itself execute the ordered `[export]` plan.
     pub fn prepare_current_repository_for_repl(&mut self, source_label: &str) {
         let module_id = self.current_module_id();
         self.module_manager

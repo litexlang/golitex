@@ -8,10 +8,13 @@ order. Run it from the repository root with:
 RUST_MIN_STACK=8388608 target/debug/litex -compact -runner -r textbooks/NumberTheoryForBeginners
 ```
 
-The project exports Sections I–XIII. Its checked public surface includes
+The project exports Sections I–XIII directly, with no citation package. Its
+checked public surface includes
 integer divisibility and Euclidean division, gcd and Bézout interfaces,
-relative primality, congruences and residue classes, elementary group
-interfaces, a finite-support polynomial carrier with sum, convolution, degree,
+relative primality, finite-product prime divisibility and prime-factorization
+existence, congruences and residue classes, elementary group
+interfaces, the finite residue-class carrier with its exact cardinality, a
+finite-support polynomial carrier with sum, convolution, degree,
 division, gcd, and ideal interfaces, power congruences, the Legendre-symbol
 specification, and concrete Gaussian-integer coordinate operations.
 

@@ -33,10 +33,11 @@ prop coset_partition_claim(G set, mul fn(x, y G) G, H power_set(G)):
         exist C power_set(G) st {$is_left_coset(G, mul, H, x, C), x $in C}
 
 prop subgroup_order_divides_group_order(G set, mul fn(x, y G) G, one G, H power_set(G)):
+    $section7::is_group(G, mul, one)
     $section7::is_subgroup(G, mul, one, H)
     $is_finite_set(G)
     $is_finite_set(H)
-    $section1citation::divides_Z(finite_set_size(H), finite_set_size(G))
+    $section1::divides_Z(finite_set_size(H), finite_set_size(G))
 
 # Definition.  The order of x is the least positive exponent returning to the
 # unit.  The relation is concrete; selecting a generic value for an arbitrary
@@ -48,22 +49,15 @@ prop has_element_order(G set, mul fn(x, y G) G, one G, x G, n N_pos):
         =>:
             n <= k
 
-thm theorem_VIII_element_order_exists:
-    ? forall G set, mul fn(x, y G) G, one G, x G:
-        $section7::is_group(G, mul, one)
-        $is_finite_set(G)
-        =>:
-            exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
-    trust exist! n N_pos st {$has_element_order(G, mul, one, x, n)}
-
 prop euler_theorem_conclusion(m N_pos, a Z):
     $section3::relatively_prime_Z(a, m)
-    a ^ section6::euler_phi(m) % m = 1
+    $section5::congruent_mod(m, a ^ section6::euler_phi(m), 1)
 
 # Theorem VIII.2 and Euler's corollary share the finite coset partition/counting
 # package, so their two source-facing clauses live in one trust boundary.
 thm theorem_VIII_Lagrange:
     ? forall G set, mul fn(x, y G) G, one G, H power_set(G):
+        $section7::is_group(G, mul, one)
         $section7::is_subgroup(G, mul, one, H)
         $is_finite_set(G)
         $is_finite_set(H)

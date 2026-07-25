@@ -15,6 +15,7 @@ pub fn run_session_with_output_style_and_strict_and_language(
     strict_mode: bool,
     output_language: OutputLanguage,
     force_isolated: bool,
+    preload_file: Option<&str>,
 ) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
@@ -33,7 +34,7 @@ pub fn run_session_with_output_style_and_strict_and_language(
         }
     };
 
-    if let Err(error) = run_session_loop_with_readers(
+    if let Err(error) = run_session_loop_with_readers_and_preload(
         &mut stdin_locked,
         &mut stdout_locked,
         &directory,
@@ -41,11 +42,13 @@ pub fn run_session_with_output_style_and_strict_and_language(
         strict_mode,
         output_language,
         force_isolated,
+        preload_file,
     ) {
         eprintln!("session output error: {}", error);
     }
 }
 
+#[cfg(test)]
 fn run_session_loop_with_readers(
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
@@ -55,23 +58,50 @@ fn run_session_loop_with_readers(
     output_language: OutputLanguage,
     force_isolated: bool,
 ) -> io::Result<()> {
+    run_session_loop_with_readers_and_preload(
+        stdin_reader,
+        stdout_writer,
+        directory,
+        output_style,
+        strict_mode,
+        output_language,
+        force_isolated,
+        None,
+    )
+}
+
+fn run_session_loop_with_readers_and_preload(
+    stdin_reader: &mut dyn BufRead,
+    stdout_writer: &mut dyn Write,
+    directory: &Path,
+    output_style: OutputStyle,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    force_isolated: bool,
+    preload_file: Option<&str>,
+) -> io::Result<()> {
     let mut runtime = Runtime::new();
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
 
-    let startup_mode = match initialize_session_runtime(&mut runtime, directory, force_isolated) {
-        Ok(mode) => mode,
-        Err(error) => {
-            write_session_event(
-                stdout_writer,
-                "startup_error",
-                None,
-                &[('e', display_runtime_error_json(&runtime, &error, true))],
-            )?;
-            return Ok(());
-        }
-    };
+    let (startup_mode, mut all_results) =
+        match initialize_session_runtime(&mut runtime, directory, force_isolated, preload_file) {
+            Ok(startup) => startup,
+            Err((stmt_results, error)) => {
+                let error_json = display_runtime_error_json(&runtime, &error, true);
+                let runtime_error = Some(error);
+                let (_, trace) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
+                write_session_event(
+                    stdout_writer,
+                    "startup_error",
+                    None,
+                    &[('e', error_json), ('t', trace.trim().to_string())],
+                )?;
+                return Ok(());
+            }
+        };
     write_session_event(
         stdout_writer,
         "ready",
@@ -79,7 +109,6 @@ fn run_session_loop_with_readers(
         &[('m', startup_mode.to_string())],
     )?;
 
-    let mut all_results: Vec<StmtResult> = Vec::new();
     let mut has_failed = false;
     let mut header = String::new();
 
@@ -255,18 +284,42 @@ fn initialize_session_runtime(
     runtime: &mut Runtime,
     directory: &Path,
     force_isolated: bool,
-) -> Result<&'static str, RuntimeError> {
+    preload_file: Option<&str>,
+) -> Result<(&'static str, Vec<StmtResult>), (Vec<StmtResult>, RuntimeError)> {
+    if let Some(preload_file) = preload_file {
+        let clean_path = preload_file.replace('\r', "");
+        let path = Path::new(clean_path.as_str());
+        let path = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            directory.join(path)
+        };
+        let path_string = path.to_string_lossy().into_owned();
+        let (stmt_results, runtime_error) =
+            run_file_with_project_context(path_string.as_str(), runtime, force_isolated);
+        if let Some(error) = runtime_error {
+            return Err((stmt_results, error));
+        }
+        if runtime.isolated {
+            return Ok(("isolated", stmt_results));
+        }
+        runtime.prepare_current_repository_for_repl(format!("{}::<session>", path_string).as_str());
+        return Ok(("project", stmt_results));
+    }
+
     if force_isolated || !directory.join("litex.config").is_file() {
         runtime.isolated = true;
         runtime.new_file_path_new_env_new_name_scope("session");
-        return Ok("isolated");
+        return Ok(("isolated", vec![]));
     }
 
     let root = directory.to_string_lossy().into_owned();
     runtime.isolated = false;
-    discover_repository(runtime, root.as_str())?;
+    if let Err(error) = discover_repository(runtime, root.as_str()) {
+        return Err((vec![], error));
+    }
     runtime.prepare_current_repository_for_repl(format!("{}/<session>", root).as_str());
-    Ok("project")
+    Ok(("project", vec![]))
 }
 
 fn write_session_event(
@@ -305,7 +358,7 @@ fn json_string(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::run_session_loop_with_readers;
+    use super::{run_session_loop_with_readers, run_session_loop_with_readers_and_preload};
     use crate::prelude::OutputLanguage;
     use crate::runtime::OutputStyle;
     use std::fs;
@@ -382,6 +435,87 @@ mod tests {
         assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
         assert!(output.contains("litex-fact-graph"));
         assert!(output.contains("litex-definition-graph"));
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn project_file_session_preloads_registered_prefix() {
+        let root = session_test_dir("project-file-preload");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).expect("create project fixture");
+        fs::write(
+            root.join("litex.config"),
+            "[hierarchy]\nmodule\n\n[export]\nbefore = \"./before.lit\"\nafter = \"./after.lit\"\n",
+        )
+        .expect("write config");
+        fs::write(root.join("before.lit"), "have planned_value R = 9\n")
+            .expect("write prefix file");
+        fs::write(root.join("after.lit"), "1 = 0\n").expect("write later file");
+
+        let input = format!(
+            "{}artifacts final\nclose\n",
+            run_frame("use_prefix", "before::planned_value = 9\n"),
+        );
+        let mut stdin_reader = Cursor::new(input.into_bytes());
+        let mut stdout_writer = Vec::new();
+        let preload = root.join("before.lit");
+
+        run_session_loop_with_readers_and_preload(
+            &mut stdin_reader,
+            &mut stdout_writer,
+            &root,
+            OutputStyle::Normal,
+            false,
+            OutputLanguage::English,
+            false,
+            preload.to_str(),
+        )
+        .expect("session must run");
+
+        let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
+        assert!(output.contains("\"event\":\"ready\",\"mode\":\"project\""));
+        assert!(output.contains("\"id\":\"use_prefix\",\"ok\":true"));
+        assert!(output.contains("before::planned_value = 9"));
+        assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
+        assert!(!output.contains("1 = 0"));
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn project_file_session_reports_a_failing_prefix_before_ready() {
+        let root = session_test_dir("project-file-preload-failure");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).expect("create project fixture");
+        fs::write(
+            root.join("litex.config"),
+            "[hierarchy]\nmodule\n\n[export]\nbroken = \"./broken.lit\"\n",
+        )
+        .expect("write config");
+        fs::write(root.join("broken.lit"), "1 = 0\n").expect("write broken prefix file");
+
+        let mut stdin_reader = Cursor::new(b"close\n".to_vec());
+        let mut stdout_writer = Vec::new();
+        let preload = root.join("broken.lit");
+
+        run_session_loop_with_readers_and_preload(
+            &mut stdin_reader,
+            &mut stdout_writer,
+            &root,
+            OutputStyle::Normal,
+            false,
+            OutputLanguage::English,
+            false,
+            preload.to_str(),
+        )
+        .expect("session must report startup failure");
+
+        let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
+        assert!(output.contains("\"event\":\"startup_error\""));
+        assert!(output.contains("\"trace\""));
+        assert!(output.contains("1 = 0"));
+        assert!(!output.contains("\"event\":\"ready\""));
 
         let _ = fs::remove_dir_all(&root);
     }

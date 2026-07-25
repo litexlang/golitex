@@ -536,6 +536,21 @@ belongs to another struct, `p.x` continues to use the view selected by its
 explicit binding type, while `&OtherStruct{p}.x` selects the other view for
 that access.
 
+## Why would a vector space own its scalar system?
+
+It makes the ordinary single-space interface smaller and more faithful to the
+mathematics. A `VectorSpace<s,V>` exposes `space.zero`, `space.smul(a,v)`, and
+`space.scalars.mul(a,b)` from one selected structure. The same pattern lets an
+inner-product space own both its scalar geometry and its vector-space
+operations.
+
+This does not silently make arbitrary spaces compatible. A relation that joins
+two spaces—such as `is_linear_map(Vspace,Wspace,T)`—records
+`Vspace.scalars = Wspace.scalars` once. Bilinear, tensor, and other
+multi-space relations use the same boundary. Scalar-only constructions, such
+as polynomial arithmetic, still receive an explicit `ScalarSystem` because no
+vector-space owner exists there.
+
 ## Why can an anonymous function be written as `fn(x R) R {-x}`?
 
 This is intentional shorthand, not a typo. The fully explicit anonymous

@@ -416,15 +416,41 @@ The current `forall ... <=>:` syntax is an exception: if there are no shared hyp
 
 ## Testing And Verification
 
+### Litex execution routing
+
+For all Litex work in this repository, distinguish mathematical artifact
+verification from Rust unit testing and use the smallest release-mode
+execution surface that proves the current claim:
+
+1. Use `target/release/litex -compact -f <registered-file.lit>` for a
+   one-file baseline, checkpoint, or final file gate. A registered `-f` target
+   executes the ordered project prefix only through that file. For example,
+   an Analysis chapter target checks the book through that chapter.
+2. Use `target/release/litex -compact -r <module>` only for an explicit
+   whole-module, whole-book, or repository-wide checkpoint or final gate. Do
+   not use `-r` while iterating on one file or chapter.
+3. Use one `target/release/litex -compact -session -f
+   <last-known-good-file.lit>` plus literal outermost `try:` blocks for the
+   proof-debug loop. To repair a failing file, preload its registered
+   predecessor once, then submit the failing file's statements in source order.
+4. Do not use default-profile `cargo test` as a Litex verifier. It is an
+   unoptimized Rust test process. Directly invoke the release Litex CLI. If
+   Rust kernel code changed and Rust tests are genuinely required, run the
+   smallest relevant test with `cargo test --release` and then the broader
+   release test required by the kernel change.
+5. `try:` provides transactional context reuse; it does not accelerate a cold
+   process. `-compact` reduces output, while release optimization and session
+   reuse provide the important speedups.
+
 1. After changing Rust kernel logic, parser logic, verifier behavior, builtin rules, infer rules, syntax, examples, or documentation snippets, run the smallest relevant test first, then the broader relevant test.
 
-2. Run `cargo test run_examples` after changing `examples/*.lit`, README/docs snippets, or Litex syntax used by examples.
+2. Run `cargo test --release run_examples -- --nocapture` after changing `examples/*.lit`, README/docs snippets, or Litex syntax used by examples and the Rust harness is needed in addition to direct release-CLI verification.
 
-3. Run `cargo test run_mechanics_textbook_chapters` after changing `textbooks/The-Mechanics-of-Litex-Proof` chapters or their project runner.
+3. Run `cargo test --release run_mechanics_textbook_chapters -- --nocapture` after changing `textbooks/The-Mechanics-of-Litex-Proof` chapters or their project runner.
 
-4. Run `cargo test run_all` when a change can affect examples and Mechanics snippets together.
+4. Run `cargo test --release run_all -- --nocapture` when a change can affect examples and Mechanics snippets together.
 
-5. After changing Litex kernel behavior, including parser, runtime, verifier, builtin rules, infer rules, well-definedness, or output explanation logic, make sure `cargo test run_all` passes before treating the change as complete.
+5. After changing Litex kernel behavior, including parser, runtime, verifier, builtin rules, infer rules, well-definedness, or output explanation logic, make sure `cargo test --release run_all -- --nocapture` passes before treating the change as complete.
 
 6. If a verifier failure occurs, report the exact file, snippet label, or line shown by the test output before changing code.
 

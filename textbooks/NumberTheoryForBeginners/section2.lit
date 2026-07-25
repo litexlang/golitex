@@ -2,7 +2,7 @@
 #
 # source: Weil and Rosenlicht, Number Theory for Beginners, Section II.
 # problem: Formalize Euclidean division, the subgroup theorem for Z, gcd via
-# linear combinations, and the Section II exercises.
+# linear combinations, with standalone exercises omitted.
 # proof_idea: Reuse Section I's divisibility and least-element theorems.  Prove
 # Euclidean division and the mZ classification of subtraction-closed sets,
 # then define binary gcd through divisibility plus Bezout.  Elementary
@@ -204,7 +204,7 @@ prop closed_under_subtraction(M power_set(Z)):
 
 # The notation mZ is a set-valued construction, not a relation between a set
 # and an integer. Its members are exactly the integer multiples of m.
-have fn mZ(m N) power_set(Z) = {x Z: $section1citation::divides_Z(m, x)}
+have fn mZ(m N) power_set(Z) = {x Z: $section1::divides_Z(m, x)}
 
 # Keep the historical relation exported for later sections, but make it only
 # the equality to the actual mZ value instead of restating its membership law.
@@ -342,7 +342,7 @@ thm zero_subtraction_closed_set:
                         case z = 0:
                             witness exist k Z st {x = 0 * k} from 0:
                                 x = z = 0 = 0 * 0
-                            $section1citation::divides_Z(0, x)
+                            $section1::divides_Z(0, x)
                             x $in mZ(0)
                         case z < 0:
                             by thm neg_in_subtraction_closed_set(M, z)
@@ -370,7 +370,7 @@ thm positive_mZ_generator_unique:
             m = n
     witness exist k Z st {m = m * k} from 1:
         m = m * 1
-    $section1citation::divides_Z(m, m)
+    $section1::divides_Z(m, m)
     m $in mZ(m)
     m $in mZ(n)
     obtain a from exist a Z st {m = n * a}
@@ -384,7 +384,7 @@ thm positive_mZ_generator_unique:
         case n > 0:
             witness exist k Z st {n = n * k} from 1:
                 n = n * 1
-            $section1citation::divides_Z(n, n)
+            $section1::divides_Z(n, n)
             n $in mZ(n)
             n $in mZ(m)
             obtain b from exist b Z st {n = m * b}
@@ -414,7 +414,7 @@ thm zero_mZ_generator_unique:
             n = 0
     witness exist k Z st {n = n * k} from 1:
         n = n * 1
-    $section1citation::divides_Z(n, n)
+    $section1::divides_Z(n, n)
     n $in mZ(n)
     n $in mZ(0)
     obtain k from exist k Z st {n = 0 * k}
@@ -428,15 +428,15 @@ thm positive_subtraction_closed_set_has_mZ:
         =>:
             exist m N_pos st {M = mZ(m)}
     claim:
-        ? $section1citation::is_positive_integer_set(positive_elements(M))
+        ? $section1::is_positive_integer_set(positive_elements(M))
         positive_elements(M) $subset Z
         forall x positive_elements(M):
             x $in Z
             x > 0
-        $section1citation::is_positive_integer_set(positive_elements(M))
-    by thm section1citation::positive_integer_set_has_least_element(positive_elements(M))
-    exist m Z st {$section1citation::is_least_element_of_integer_set(positive_elements(M), m)}
-    obtain m from exist m Z st {$section1citation::is_least_element_of_integer_set(positive_elements(M), m)}
+        $section1::is_positive_integer_set(positive_elements(M))
+    by thm section1::positive_integer_set_has_least_element(positive_elements(M))
+    exist m Z st {$section1::is_least_element_of_integer_set(positive_elements(M), m)}
+    obtain m from exist m Z st {$section1::is_least_element_of_integer_set(positive_elements(M), m)}
     m $in positive_elements(M)
     m $in M
     m > 0
@@ -468,7 +468,7 @@ thm positive_subtraction_closed_set_has_mZ:
                     case r = 0:
                         witness exist k Z st {x = mN * k} from q:
                             x = z = mN * q
-                        $section1citation::divides_Z(mN, x)
+                        $section1::divides_Z(mN, x)
                         x $in mZ(mN)
                     case r > 0:
                         r $in positive_elements(M)
@@ -687,14 +687,14 @@ given integers, every common divisor divides d, and d is called their gcd.
 # divisor characterization and Bezout representation used in Sections III-IV.
 
 prop is_gcd_Z(a, b Z, d N):
-    $section1citation::divides_Z(d, a)
-    $section1citation::divides_Z(d, b)
+    $section1::divides_Z(d, a)
+    $section1::divides_Z(d, b)
     forall e Z:
         e > 0
-        $section1citation::divides_Z(e, a)
-        $section1citation::divides_Z(e, b)
+        $section1::divides_Z(e, a)
+        $section1::divides_Z(e, b)
         =>:
-            $section1citation::divides_Z(e, d)
+            $section1::divides_Z(e, d)
     exist x, y Z st {d = a * x + b * y}
 
 thm binary_span_eq_mZ_of_gcd:
@@ -711,7 +711,7 @@ thm binary_span_eq_mZ_of_gcd:
             obtain q from exist q Z st {b = d * q}
             witness exist k Z st {x = d * k} from u * p + v * q:
                 x = a * u + b * v = d * p * u + d * q * v = d * (u * p + v * q)
-            $section1citation::divides_Z(d, x)
+            $section1::divides_Z(d, x)
             x $in mZ(d)
         forall x binary_integer_span(a, b):
             x $in mZ(d)
@@ -748,22 +748,22 @@ thm theorem_II_2_binary_gcd_exists:
         obtain q from exist q Z st {b = d * q}
         witness exist k Z st {d = d * k} from 1:
             d = d * 1
-        $section1citation::divides_Z(d, d)
+        $section1::divides_Z(d, d)
         d $in mZ(d)
         d $in binary_integer_span(a, b)
         obtain x, y from exist x, y Z st {d = a * x + b * y}
         claim:
             ? forall e Z:
                 e > 0
-                $section1citation::divides_Z(e, a)
-                $section1citation::divides_Z(e, b)
+                $section1::divides_Z(e, a)
+                $section1::divides_Z(e, b)
                 =>:
-                    $section1citation::divides_Z(e, d)
+                    $section1::divides_Z(e, d)
             obtain r from exist r Z st {a = e * r}
             obtain s from exist s Z st {b = e * s}
             witness exist t Z st {d = e * t} from r * x + s * y:
                 d = a * x + b * y = e * r * x + e * s * y = e * (r * x + s * y)
-            $section1citation::divides_Z(e, d)
+            $section1::divides_Z(e, d)
         $is_gcd_Z(a, b, d)
     witness exist d1 N st {$is_gcd_Z(a, b, d1)} from d:
         $is_gcd_Z(a, b, d)
@@ -799,15 +799,15 @@ have fn gcd_Z by exist!:
 
 thm gcd_Z_dvd_left:
     ? forall a, b Z:
-        $section1citation::divides_Z(gcd_Z(a, b), a)
+        $section1::divides_Z(gcd_Z(a, b), a)
     $is_gcd_Z(a, b, gcd_Z(a, b))
-    $section1citation::divides_Z(gcd_Z(a, b), a)
+    $section1::divides_Z(gcd_Z(a, b), a)
 
 thm gcd_Z_dvd_right:
     ? forall a, b Z:
-        $section1citation::divides_Z(gcd_Z(a, b), b)
+        $section1::divides_Z(gcd_Z(a, b), b)
     $is_gcd_Z(a, b, gcd_Z(a, b))
-    $section1citation::divides_Z(gcd_Z(a, b), b)
+    $section1::divides_Z(gcd_Z(a, b), b)
 
 thm gcd_Z_bezout:
     ? forall a, b Z:
@@ -825,7 +825,7 @@ thm gcd_Z_partial_dvd_left:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
-            $section1citation::divides_Z(gcd_Z_partial(a, b), a)
+            $section1::divides_Z(gcd_Z_partial(a, b), a)
     gcd_Z_partial(a, b) = gcd_Z(a, b)
     by thm gcd_Z_dvd_left(a, b)
 
@@ -833,7 +833,7 @@ thm gcd_Z_partial_dvd_right:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
-            $section1citation::divides_Z(gcd_Z_partial(a, b), b)
+            $section1::divides_Z(gcd_Z_partial(a, b), b)
     gcd_Z_partial(a, b) = gcd_Z(a, b)
     by thm gcd_Z_dvd_right(a, b)
 
@@ -848,27 +848,6 @@ thm gcd_Z_partial_bezout:
     witness exist x1, y1 Z st {gcd_Z_partial(a, b) = a * x1 + b * y1} from x, y:
         gcd_Z_partial(a, b) = gcd_Z(a, b) = a * x + b * y
 
-"""
-Exercise II.1. Prove associativity of gcd for three integers:
-(a,b,c)=((a,b),c)=(a,(b,c)).
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.
-
-"""
-Exercise II.2. Consecutive Fibonacci numbers are relatively prime.
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.
-
-"""
-Exercise II.3. A unimodular linear change of two integers preserves gcd.
-"""
-
 # The source's inverse-matrix argument gives mutual integer linear
 # combinations between the old and new pairs.  Such changes preserve the two
 # divisibility clauses and the Bezout clause of `is_gcd_Z`.
@@ -882,205 +861,33 @@ thm is_gcd_Z_preserved_by_mutual_integer_linear_changes:
         =>:
             $is_gcd_Z(a1, b1, d)
     $is_gcd_Z(a, b, d)
-    $section1citation::divides_Z(d, a)
-    $section1citation::divides_Z(d, b)
+    $section1::divides_Z(d, a)
+    $section1::divides_Z(d, b)
     obtain da from exist da Z st {a = d * da}
     obtain db from exist db Z st {b = d * db}
     witness exist da1 Z st {a1 = d * da1} from p * da + q * db:
         a1 = p * a + q * b = p * (d * da) + q * (d * db) = d * (p * da + q * db)
-    $section1citation::divides_Z(d, a1)
+    $section1::divides_Z(d, a1)
     witness exist db1 Z st {b1 = d * db1} from r * da + s * db:
         b1 = r * a + s * b = r * (d * da) + s * (d * db) = d * (r * da + s * db)
-    $section1citation::divides_Z(d, b1)
+    $section1::divides_Z(d, b1)
     claim:
         ? forall e Z:
             e > 0
-            $section1citation::divides_Z(e, a1)
-            $section1citation::divides_Z(e, b1)
+            $section1::divides_Z(e, a1)
+            $section1::divides_Z(e, b1)
             =>:
-                $section1citation::divides_Z(e, d)
+                $section1::divides_Z(e, d)
         obtain ea1 from exist ea1 Z st {a1 = e * ea1}
         obtain eb1 from exist eb1 Z st {b1 = e * eb1}
         witness exist ea Z st {a = e * ea} from u * ea1 + v * eb1:
             a = u * a1 + v * b1 = u * (e * ea1) + v * (e * eb1) = e * (u * ea1 + v * eb1)
-        $section1citation::divides_Z(e, a)
+        $section1::divides_Z(e, a)
         witness exist eb Z st {b = e * eb} from w * ea1 + z * eb1:
             b = w * a1 + z * b1 = w * (e * ea1) + z * (e * eb1) = e * (w * ea1 + z * eb1)
-        $section1citation::divides_Z(e, b)
-        $section1citation::divides_Z(e, d)
+        $section1::divides_Z(e, b)
+        $section1::divides_Z(e, d)
     obtain x, y from exist x, y Z st {d = a * x + b * y}
     witness exist x1, y1 Z st {d = a1 * x1 + b1 * y1} from u * x + w * y, v * x + z * y:
         d = a * x + b * y = (u * a1 + v * b1) * x + (w * a1 + z * b1) * y = a1 * (u * x + w * y) + b1 * (v * x + z * y)
     $is_gcd_Z(a1, b1, d)
-
-thm exercise_II_3_unimodular_change_preserves_gcd:
-    ? forall p, q, r, s, a, b, a1, b1 Z:
-        p * s - q * r = 1 or p * s - q * r = -1
-        a1 = p * a + q * b
-        b1 = r * a + s * b
-        =>:
-            gcd_Z(a, b) = gcd_Z(a1, b1)
-    $is_gcd_Z(a, b, gcd_Z(a, b))
-    by cases:
-        ? gcd_Z(a, b) = gcd_Z(a1, b1)
-        case p * s - q * r = 1:
-            s * a1 - q * b1 = s * (p * a + q * b) - q * (r * a + s * b) = (p * s - q * r) * a = 1 * a = a
-            a = s * a1 - q * b1
-            (-r) * a1 + p * b1 = (-r) * (p * a + q * b) + p * (r * a + s * b) = (p * s - q * r) * b = 1 * b = b
-            b = (-r) * a1 + p * b1
-            by thm is_gcd_Z_preserved_by_mutual_integer_linear_changes(a, b, a1, b1, gcd_Z(a, b), p, q, r, s, s, -q, -r, p)
-            $is_gcd_Z(a1, b1, gcd_Z(a, b))
-            gcd_Z(a1, b1) = gcd_Z(a, b)
-            gcd_Z(a, b) = gcd_Z(a1, b1)
-        case p * s - q * r = -1:
-            (-s) * a1 + q * b1 = (-s) * (p * a + q * b) + q * (r * a + s * b) = -(p * s - q * r) * a = -(-1) * a = a
-            a = (-s) * a1 + q * b1
-            r * a1 - p * b1 = r * (p * a + q * b) - p * (r * a + s * b) = -(p * s - q * r) * b = -(-1) * b = b
-            b = r * a1 - p * b1
-            by thm is_gcd_Z_preserved_by_mutual_integer_linear_changes(a, b, a1, b1, gcd_Z(a, b), p, q, r, s, -s, q, r, -p)
-            $is_gcd_Z(a1, b1, gcd_Z(a, b))
-            gcd_Z(a1, b1) = gcd_Z(a, b)
-            gcd_Z(a, b) = gcd_Z(a1, b1)
-
-"""
-Exercise II.4. The Euclidean algorithm terminates and its last nonzero
-remainder is gcd(a,b).
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.
-
-"""
-Exercise II.5. Every Euclidean-algorithm remainder is an integral linear
-combination ax+by.
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.
-
-"""
-Exercise II.6. Compute gcds and Bezout coefficients for (56,35), (309,186),
-and (1024,729).
-"""
-
-# Euclidean back-substitution gives 7=2*56-3*35, 3=-3*309+5*186, and
-# 1=-257*1024+361*729.  The same identities show that every common positive
-# divisor divides the displayed result.
-thm common_divisor_of_fifty_six_and_thirty_five_divides_seven:
-    ? forall e Z:
-        e > 0
-        $section1citation::divides_Z(e, 56)
-        $section1citation::divides_Z(e, 35)
-        =>:
-            $section1citation::divides_Z(e, 7)
-    by thm section1citation::divides_Z_linear_combination(e, 56, 35, 2, -3)
-    2 * 56 + (-3) * 35 = 7
-    $section1citation::divides_Z(e, 7)
-
-claim:
-    ? $is_gcd_Z(56, 35, 7)
-    witness exist x Z st {56 = 7 * x} from 8
-    $section1citation::divides_Z(7, 56)
-    witness exist x Z st {35 = 7 * x} from 5
-    $section1citation::divides_Z(7, 35)
-    witness exist x, y Z st {7 = 56 * x + 35 * y} from 2, -3
-    $is_gcd_Z(56, 35, 7)
-
-thm common_divisor_of_three_hundred_nine_and_one_hundred_eighty_six_divides_three:
-    ? forall e Z:
-        e > 0
-        $section1citation::divides_Z(e, 309)
-        $section1citation::divides_Z(e, 186)
-        =>:
-            $section1citation::divides_Z(e, 3)
-    by thm section1citation::divides_Z_linear_combination(e, 309, 186, -3, 5)
-    (-3) * 309 + 5 * 186 = 3
-    $section1citation::divides_Z(e, 3)
-
-claim:
-    ? $is_gcd_Z(309, 186, 3)
-    witness exist x Z st {309 = 3 * x} from 103
-    $section1citation::divides_Z(3, 309)
-    witness exist x Z st {186 = 3 * x} from 62
-    $section1citation::divides_Z(3, 186)
-    witness exist x, y Z st {3 = 309 * x + 186 * y} from -3, 5
-    $is_gcd_Z(309, 186, 3)
-
-thm common_divisor_of_one_thousand_twenty_four_and_seven_hundred_twenty_nine_divides_one:
-    ? forall e Z:
-        e > 0
-        $section1citation::divides_Z(e, 1024)
-        $section1citation::divides_Z(e, 729)
-        =>:
-            $section1citation::divides_Z(e, 1)
-    by thm section1citation::divides_Z_linear_combination(e, 1024, 729, -257, 361)
-    (-257) * 1024 + 361 * 729 = 1
-    $section1citation::divides_Z(e, 1)
-
-claim:
-    ? $is_gcd_Z(1024, 729, 1)
-    witness exist x Z st {1024 = 1 * x} from 1024
-    $section1citation::divides_Z(1, 1024)
-    witness exist x Z st {729 = 1 * x} from 729
-    $section1citation::divides_Z(1, 729)
-    witness exist x, y Z st {1 = 1024 * x + 729 * y} from -257, 361
-    $is_gcd_Z(1024, 729, 1)
-
-gcd_Z(56, 35) = 7
-witness exist x, y Z st {7 = 56 * x + 35 * y} from 2, -3
-gcd_Z(309, 186) = 3
-witness exist x, y Z st {3 = 309 * x + 186 * y} from -3, 5
-gcd_Z(1024, 729) = 1
-witness exist x, y Z st {1 = 1024 * x + 729 * y} from -257, 361
-
-"""
-Exercise II.7. Scaling all inputs by m scales the gcd by m.
-"""
-
-# Scale the two divisor witnesses and the Bezout identity.  Conversely, a
-# common divisor of `m*a` and `m*b` divides the scaled Bezout combination.
-thm exercise_II_7_scaling_gcd:
-    ? forall a, b Z, m N_pos:
-        gcd_Z(m * a, m * b) = m * gcd_Z(a, b)
-    $is_gcd_Z(a, b, gcd_Z(a, b))
-    by thm gcd_Z_dvd_left(a, b)
-    obtain u from exist u Z st {a = gcd_Z(a, b) * u}
-    by thm gcd_Z_dvd_right(a, b)
-    obtain v from exist v Z st {b = gcd_Z(a, b) * v}
-    witness exist u1 Z st {m * a = (m * gcd_Z(a, b)) * u1} from u:
-        m * a = m * (gcd_Z(a, b) * u) = (m * gcd_Z(a, b)) * u
-    $section1citation::divides_Z(m * gcd_Z(a, b), m * a)
-    witness exist v1 Z st {m * b = (m * gcd_Z(a, b)) * v1} from v:
-        m * b = m * (gcd_Z(a, b) * v) = (m * gcd_Z(a, b)) * v
-    $section1citation::divides_Z(m * gcd_Z(a, b), m * b)
-    claim:
-        ? forall e Z:
-            e > 0
-            $section1citation::divides_Z(e, m * a)
-            $section1citation::divides_Z(e, m * b)
-            =>:
-                $section1citation::divides_Z(e, m * gcd_Z(a, b))
-        obtain r from exist r Z st {m * a = e * r}
-        obtain s from exist s Z st {m * b = e * s}
-        by thm gcd_Z_bezout(a, b)
-        obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
-        witness exist t Z st {m * gcd_Z(a, b) = e * t} from r * x + s * y:
-            m * gcd_Z(a, b) = m * (a * x + b * y) = (m * a) * x + (m * b) * y = (e * r) * x + (e * s) * y = e * (r * x + s * y)
-        $section1citation::divides_Z(e, m * gcd_Z(a, b))
-    by thm gcd_Z_bezout(a, b)
-    obtain x, y from exist x, y Z st {gcd_Z(a, b) = a * x + b * y}
-    witness exist u1, v1 Z st {m * gcd_Z(a, b) = (m * a) * u1 + (m * b) * v1} from x, y:
-        m * gcd_Z(a, b) = m * (a * x + b * y) = (m * a) * x + (m * b) * y
-    $is_gcd_Z(m * a, m * b, m * gcd_Z(a, b))
-    gcd_Z(m * a, m * b) = m * gcd_Z(a, b)
-
-"""
-Exercise II.8. Every rational number has a unique reduced integer numerator
-and positive denominator.
-"""
-
-sketch:
-    # Exercise retained as source text; exercises are outside this theorem-only
-    # translation scope.
