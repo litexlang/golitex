@@ -181,7 +181,10 @@ downstream consumer that needs the package as a single value.
   type.
 - **Dependencies:** Metric laws by `law`; set builders by `definition`.
 - **Downstream uses:** Open/closed sets, relative topology, open covers, and
-  Chapter 2 continuity. Probe:
+  Chapter 2 continuity. The checked `metric_ball_contains_center` and
+  `metric_ball_subset_contains_center` lemmas expose the center-membership
+  bridge needed by the point-set proofs. Corollary 1.2.11 is checked as the
+  two pointwise closure decompositions. Probe:
   `center $in \metric_ball<X, dist>(center, radius)`.
 - **Allowable hole:** Sequential characterization of closure may depend on
   explicit countable choice and can remain a theorem-level proof boundary.
@@ -212,6 +215,8 @@ downstream consumer that needs the package as a single value.
   `proof`.
 - **Downstream uses:** Proposition 1.2.15, Proposition 1.3.4, open covers,
   continuity, and connectedness.
+- **Current implementation:** The two open/interior and closed/closure
+  equivalence directions in Proposition 1.2.15 are checked directly.
 - **Allowable hole:** Arbitrary-union and arbitrary-intersection proofs may
   require a family-union construction, choice, or set-extensionality bridge.
 
@@ -265,6 +270,8 @@ downstream consumer that needs the package as a single value.
 - **Dependencies:** Metric convergence and Cauchy relation by `definition`.
 - **Downstream uses:** Closed-subspace completeness, compactness, and the
   contraction mapping theorem in Chapter 6.
+- **Current implementation:** `metric_convergent_implies_cauchy` is checked
+  by using one epsilon/3 tail and the metric triangle inequality.
 - **Allowable hole:** Completeness of `R` is Analysis I background; the two
   closed-subspace transfer directions may remain source-deferred proof debt.
 

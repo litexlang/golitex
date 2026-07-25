@@ -89,6 +89,30 @@ integers (or residue classes) onto the group, with its homomorphism and
 bijection laws. A residue-class map that does not mention the group,
 operation, or generator is not a translation of that classification.
 
+The checked lemma `nonnegative_group_power_is_unique` says that a finite
+multiplication sequence is uniquely determined by its generator and exponent.
+It is a theorem rather than a new selected power function: the useful result is
+equality of any two existing sequence values, while the recursive normal form
+remains local to the proof that needs it. A parameterized recursive template
+would be the wrong current implementation boundary because its materialization
+is presently blocked; the local recursive function is checked and avoids
+introducing a second, incompatible power interface.
+
+The checked theorem `group_power_add` makes the intended signed-power product
+law explicit: values represented by exponents `a` and `b` multiply to a value
+represented by `a + b`. Its local proof selects the inverse, normalizes all
+finite sequences, and uses the group laws to commute inverse powers. It is the
+direct reusable bridge toward the remaining exponent-difference kernel law.
+
+The checked theorem `zero_group_power_is_one` establishes the other basic
+normal-form boundary: any signed-power witness at exponent zero has value
+`one`. It is a source-facing theorem, not a global power construction. Its
+private recursive normal form is used only to reduce the equal positive and
+inverse exponents to a checked cancellation identity. Together with
+`group_power_add`, it narrows the remaining kernel-law debt to constructing
+the inverse value for an arbitrary signed exponent and relating it to
+subtraction.
+
 The nearest rejected form is a circular `generated_subgroup`/power pair that
 asserts the desired theorem by definition. These nodes support Lagrange,
 Euler, primitive roots, discrete logarithm indices, and finite-field power

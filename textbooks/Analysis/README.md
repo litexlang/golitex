@@ -8,13 +8,13 @@ mathematical facts.
 Run the project entrance with:
 
 ```text
-target/debug/litex -r textbooks/Analysis
+target/release/litex -r textbooks/Analysis
 ```
 
 Run an individual registered chapter from the project directory with:
 
 ```text
-(cd textbooks/Analysis && ../../target/debug/litex -f chapter10-differentiation.lit)
+(cd textbooks/Analysis && ../../target/release/litex -f chapter10-differentiation.lit)
 ```
 
 Earlier exports are loaded by the ordered manifest.  Later chapters refer to

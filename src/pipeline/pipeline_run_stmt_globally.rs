@@ -2,6 +2,7 @@ use crate::pipeline::run_source_code;
 use crate::prelude::*;
 use std::fs;
 use std::rc::Rc;
+use std::time::Instant;
 
 pub fn run_stmt_at_global_env(
     stmt: &Stmt,
@@ -575,7 +576,10 @@ fn run_repository_exported_file_target_with_mode(
         );
     }
 
+    let profile_repository_run = std::env::var_os("LITEX_PROFILE_REPOSITORY").is_some();
+    let snapshot_start = profile_repository_run.then(Instant::now);
     let module_manager_before = runtime.module_manager.clone();
+    let snapshot_duration = snapshot_start.map(|start| start.elapsed());
     runtime
         .module_manager
         .module_mut(module_id)
@@ -594,8 +598,21 @@ fn run_repository_exported_file_target_with_mode(
         source_path.as_str(),
         execution_mode,
     );
+    let execution_start = profile_repository_run.then(Instant::now);
     let result = run_repository_source_file(runtime, source_path.as_str());
+    let execution_duration = execution_start.map(|start| start.elapsed());
     runtime.pop_execution_frame();
+    if let (Some(snapshot_duration), Some(execution_duration)) =
+        (snapshot_duration, execution_duration)
+    {
+        eprintln!(
+            "repository file {}: snapshot {:.2} ms, execute {:.2} ms{}",
+            source_path,
+            snapshot_duration.as_secs_f64() * 1000.0,
+            execution_duration.as_secs_f64() * 1000.0,
+            if result.1.is_some() { ", failed" } else { "" },
+        );
+    }
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
         return result;

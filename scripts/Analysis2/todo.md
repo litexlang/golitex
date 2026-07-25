@@ -21,7 +21,7 @@ label `trust` or `kernel_problem`.
   command:
   `target/release/litex -compact -f
   textbooks/Analysis2/chapter01-metric-spaces.lit`.
-  Result: verifier `"result": "success"`, with 46 explicit `trust`
+  Result: verifier `"result": "success"`, with 36 explicit `trust`
   statements. Desired state: replace each source-local theorem trust with a
   checked proof while preserving the current declaration shapes. Root cause:
   omitted exercise proofs, finite choice constructions, finite-dimensional
@@ -76,3 +76,16 @@ label `trust` or `kernel_problem`.
   public, and do not expose a selected metric limit yet. Root-cause class:
   dependent unique selection/template certificate propagation. Primary label:
   `kernel_problem`.
+
+- **Template-membership unfolding depends on prior `by extension` execution.**
+  Attempt: in the `chap1` source context, a checked `by extension` for the
+  first equality of Corollary 1.2.11 was followed by a local claim beginning
+  `forall z \metric_closure<X, dist>(E)`. Its first fact,
+  `$is_metric_adherent_point(X, dist, E, z)`, failed with
+  `VerifyError: verification failed` (`type: prop fact`, Chapter 1 line 491).
+  The same claim succeeds before the `by extension` block and in a release
+  session at the project root. Desired behavior: an extension proof must not
+  change the later template-membership unfolding context. Current workaround:
+  establish both pairs of inclusion claims before either extension proof.
+  Root-cause class: chapter-namespace proof-context restoration. Primary
+  label: `kernel_problem`.

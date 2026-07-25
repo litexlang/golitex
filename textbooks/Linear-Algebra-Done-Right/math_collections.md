@@ -153,16 +153,21 @@ concepts and intermediate nodes that determine later interfaces.
 - **Ideal Litex form:** A locally constructive finite-fold `have fn` or a
   unique-existence selection for the value; `have fn span`; `prop
   is_linearly_independent`.
-- **Interface sketch:** `\span<s,scalars,V,space,n>(vectors)`.
+- **Interface sketch:** `\span<s,V,space,n>(vectors)` and, only for structural
+  conclusions, `\span_carrier<s,V,space,n,vectors>` with a named equality to
+  the concrete span.
 - **Nearest wrong alternative:** A relation-only span or a trusted arbitrary
   value hides the object later chapters must use.
 - **Dependencies:** Finite lists and vector-space operations by `definition`;
   finite recursion by `existence` and `uniqueness`.
 - **Downstream uses:** Bases, dimension, ranges, row/column rank, polynomial
   coefficient representations.
-- **Allowable hole:** The linear-combination selector now has a checked
-  unique-existence spine, but some entry laws and all exchange/deletion results
-  remain explicit debt.
+- **Allowable hole:** The linear-combination recursion, its three finite-sum
+  laws, and all exchange/deletion results remain explicit debt. Current
+  verifier performance requires the typed selected `span_carrier` plus its
+  equality bridge when a structural predicate would otherwise expand the
+  recursive selector; this is a temporary kernel boundary, not a replacement
+  for the concrete `span` construction.
 
 ### Bases and dimension
 

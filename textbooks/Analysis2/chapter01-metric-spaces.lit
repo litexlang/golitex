@@ -231,8 +231,46 @@ thm metric_limit_unique:
         $has_metric_limit(X, dist, u, b)
         =>:
             a = b
-    # proof_debt: use epsilon=dist(a,b)/3 and the triangle inequality.
-    trust a = b
+    # Proof idea: if a and b differ, their distance is positive. Both limit
+    # tails eventually lie within one third of that distance, while the
+    # triangle inequality then makes the distance from a to b strictly smaller
+    # than itself.
+    by contra:
+        ? a = b
+        claim:
+            ? dist(a, b) > 0
+            dist(a, b) > 0 or dist(a, b) = 0 or dist(a, b) < 0
+            by cases:
+                ? dist(a, b) > 0
+                case dist(a, b) > 0:
+                    dist(a, b) > 0
+                case dist(a, b) = 0:
+                    by def $is_metric_space(X, dist)
+                    a = b
+                    impossible a != b
+                case dist(a, b) < 0:
+                    by def $is_metric_space(X, dist)
+                    dist(a, b) >= 0
+                    impossible dist(a, b) < 0
+        dist(a, b) / 3 $in R_pos
+        $has_eventual_metric_closeness(X, dist, u, a, dist(a, b) / 3)
+        $has_eventual_metric_closeness(X, dist, u, b, dist(a, b) / 3)
+        obtain N1 from exist N1 N_pos st {$is_metric_tail_close_to(X, dist, u, a, dist(a, b) / 3, N1)}
+        obtain N2 from exist N2 N_pos st {$is_metric_tail_close_to(X, dist, u, b, dist(a, b) / 3, N2)}
+        finite_set_max(union({N1}, {N2})) >= N1
+        finite_set_max(union({N1}, {N2})) >= N2
+        have N0 N_pos = finite_set_max(union({N1}, {N2}))
+        N0 >= N1
+        N0 >= N2
+        dist(u(N0), a) <= dist(a, b) / 3
+        dist(u(N0), b) <= dist(a, b) / 3
+        by def $is_metric_space(X, dist)
+        dist(a, u(N0)) = dist(u(N0), a)
+        2 * dist(a, b) < 3 * dist(a, b)
+        dist(a, b) / 3 + dist(a, b) / 3 = 2 * dist(a, b) / 3 < 3 * dist(a, b) / 3 = dist(a, b)
+        dist(a, u(N0)) + dist(u(N0), b) = dist(u(N0), a) + dist(u(N0), b) <= dist(a, b) / 3 + dist(a, b) / 3 < dist(a, b)
+        dist(a, b) <= dist(a, u(N0)) + dist(u(N0), b) < dist(a, b)
+        impossible dist(a, b) = dist(a, b)
 
 # Definition 1.2.1 (Balls).
 template<X set, dist fn(x, y X) R>:
@@ -248,6 +286,24 @@ thm metric_ball_contains_center:
             center $in \metric_ball<X, dist>(center, radius)
     dist(center, center) = 0 < radius
     center $in {x X: dist(x, center) < radius}
+
+# A set containing a ball about its center contains the center itself. This
+# local bridge makes the ball's set-valued template result explicit in proofs.
+thm metric_ball_subset_contains_center:
+    ? forall X set, dist fn(x, y X) R, E power_set(X), center X, radius R_pos:
+        $is_metric_space(X, dist)
+        \metric_ball<X, dist>(center, radius) $subset E
+        =>:
+            center $in E
+    by thm metric_ball_contains_center(X, dist, center, radius)
+    claim:
+        ? forall A, B power_set(X), y X:
+            A $subset B
+            y $in A
+            =>:
+                y $in B
+        y $in B
+    center $in E
 
 # Definition 1.2.5 (Interior, exterior, and boundary).
 prop is_metric_interior_point(X set, dist fn(x, y X) R, E power_set(X), x X):
@@ -288,8 +344,23 @@ thm adherent_implies_interior_or_boundary:
         $is_metric_adherent_point(X, dist, E, x)
         =>:
             $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
-    # proof_debt: source Exercise 1.2.2; split on interior and use adherence.
-    trust $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
+    # Proof idea: split on interior membership. If x is not interior, any
+    # exterior-radius witness would contradict adherence, so x is boundary.
+    $is_metric_interior_point(X, dist, E, x) or not $is_metric_interior_point(X, dist, E, x)
+    by cases:
+        ? $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
+        case $is_metric_interior_point(X, dist, E, x):
+            $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
+        case not $is_metric_interior_point(X, dist, E, x):
+            claim:
+                ? not $is_metric_exterior_point(X, dist, E, x)
+                by contra:
+                    ? not $is_metric_exterior_point(X, dist, E, x)
+                    $is_metric_exterior_point(X, dist, E, x)
+                    obtain radius from exist radius R_pos st {intersect(\metric_ball<X, dist>(x, radius), E) = {}}
+                    by def $is_metric_adherent_point(X, dist, E, x)
+                    impossible intersect(\metric_ball<X, dist>(x, radius), E) = {}
+            by def $is_metric_boundary_point(X, dist, E, x)
 
 thm interior_or_boundary_implies_adherent:
     ? forall X set, dist fn(x, y X) R, E power_set(X), x X:
@@ -297,8 +368,37 @@ thm interior_or_boundary_implies_adherent:
         $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
         =>:
             $is_metric_adherent_point(X, dist, E, x)
-    # proof_debt: source Exercise 1.2.2; every ball meets E in either case.
-    trust $is_metric_adherent_point(X, dist, E, x)
+    # Proof idea: an interior point lies in E, so it belongs to every ball
+    # around itself; a boundary point has no exterior ball, so no ball is
+    # disjoint from E.
+    by cases:
+        ? $is_metric_adherent_point(X, dist, E, x)
+        case $is_metric_interior_point(X, dist, E, x):
+            obtain interior_radius from exist interior_radius R_pos st {\metric_ball<X, dist>(x, interior_radius) $subset E}
+            by thm metric_ball_subset_contains_center(X, dist, E, x, interior_radius)
+            claim:
+                ? forall radius R_pos:
+                    not intersect(\metric_ball<X, dist>(x, radius), E) = {}
+                by contra:
+                    ? not intersect(\metric_ball<X, dist>(x, radius), E) = {}
+                    intersect(\metric_ball<X, dist>(x, radius), E) = {}
+                    by thm metric_ball_contains_center(X, dist, x, radius)
+                    x $in intersect(\metric_ball<X, dist>(x, radius), E)
+                    impossible intersect(\metric_ball<X, dist>(x, radius), E) = {}
+            by def $is_metric_adherent_point(X, dist, E, x)
+        case $is_metric_boundary_point(X, dist, E, x):
+            claim:
+                ? forall radius R_pos:
+                    not intersect(\metric_ball<X, dist>(x, radius), E) = {}
+                by contra:
+                    ? not intersect(\metric_ball<X, dist>(x, radius), E) = {}
+                    intersect(\metric_ball<X, dist>(x, radius), E) = {}
+                    witness exist exterior_radius R_pos st {intersect(\metric_ball<X, dist>(x, exterior_radius), E) = {}} from radius:
+                        intersect(\metric_ball<X, dist>(x, radius), E) = {}
+                    by def $is_metric_exterior_point(X, dist, E, x)
+                    by def $is_metric_boundary_point(X, dist, E, x)
+                    impossible $is_metric_exterior_point(X, dist, E, x)
+            by def $is_metric_adherent_point(X, dist, E, x)
 
 thm adherent_iff_sequence_from_set_forward:
     ? forall X set, dist fn(x, y X) R, E power_set(X), x X:
@@ -315,8 +415,29 @@ thm adherent_iff_sequence_from_set_reverse:
         $has_convergent_sequence_from_set(X, dist, E, x)
         =>:
             $is_metric_adherent_point(X, dist, E, x)
-    # proof_debt: source Exercise 1.2.2; take a sufficiently late sequence term.
-    trust $is_metric_adherent_point(X, dist, E, x)
+    # Proof idea: for a radius r, choose a sequence term within r/2 of x.
+    # That term lies both in E and in the radius-r ball, so the intersection
+    # cannot be empty.
+    obtain u from exist u fn(n N_pos) E st {$has_metric_limit(X, dist, fn(n N_pos) X {u(n)}, x)}
+    claim:
+        ? forall radius R_pos:
+            not intersect(\metric_ball<X, dist>(x, radius), E) = {}
+        radius / 2 $in R_pos
+        $has_eventual_metric_closeness(X, dist, fn(n N_pos) X {u(n)}, x, radius / 2)
+        obtain N0 from exist N0 N_pos st {$is_metric_tail_close_to(X, dist, fn(n N_pos) X {u(n)}, x, radius / 2, N0)}
+        by def $is_metric_tail_close_to(X, dist, fn(n N_pos) X {u(n)}, x, radius / 2, N0)
+        N0 >= N0
+        dist(fn(n N_pos) X {u(n)}(N0), x) <= radius / 2
+        fn(n N_pos) X {u(n)}(N0) = u(N0)
+        dist(u(N0), x) <= radius / 2 < radius
+        u(N0) $in E
+        u(N0) $in \metric_ball<X, dist>(x, radius)
+        u(N0) $in intersect(\metric_ball<X, dist>(x, radius), E)
+        by contra:
+            ? not intersect(\metric_ball<X, dist>(x, radius), E) = {}
+            intersect(\metric_ball<X, dist>(x, radius), E) = {}
+            impossible intersect(\metric_ball<X, dist>(x, radius), E) = {}
+    by def $is_metric_adherent_point(X, dist, E, x)
 
 # Corollary 1.2.11. Closure is interior union boundary and the complement of
 # the exterior.
@@ -326,10 +447,79 @@ thm metric_closure_decomposition:
         =>:
             \metric_closure<X, dist>(E) = union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
             \metric_closure<X, dist>(E) = set_minus(X, \metric_exterior<X, dist>(E))
-    # proof_debt: extensionality plus Proposition 1.2.10.
-    trust:
-        \metric_closure<X, dist>(E) = union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
-        \metric_closure<X, dist>(E) = set_minus(X, \metric_exterior<X, dist>(E))
+    # Proof idea: use Proposition 1.2.10 pointwise for the first equality.
+    # For the second, a point fails to be adherent exactly when one ball is
+    # disjoint from E, which is precisely exterior membership.
+    claim:
+        ? forall x \metric_closure<X, dist>(E):
+            x $in union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
+        $is_metric_adherent_point(X, dist, E, x)
+        by thm adherent_implies_interior_or_boundary(X, dist, E, x)
+        by cases:
+            ? x $in union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
+            case $is_metric_interior_point(X, dist, E, x):
+                x $in \metric_interior<X, dist>(E)
+                x $in union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
+            case $is_metric_boundary_point(X, dist, E, x):
+                x $in \metric_boundary<X, dist>(E)
+                x $in union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
+    claim:
+        ? forall x union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E)):
+            x $in \metric_closure<X, dist>(E)
+        x $in \metric_interior<X, dist>(E) or x $in \metric_boundary<X, dist>(E)
+        by cases:
+            ? x $in \metric_closure<X, dist>(E)
+            case x $in \metric_interior<X, dist>(E):
+                $is_metric_interior_point(X, dist, E, x)
+                $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
+                by thm interior_or_boundary_implies_adherent(X, dist, E, x)
+                x $in \metric_closure<X, dist>(E)
+            case x $in \metric_boundary<X, dist>(E):
+                $is_metric_boundary_point(X, dist, E, x)
+                $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
+                by thm interior_or_boundary_implies_adherent(X, dist, E, x)
+                x $in \metric_closure<X, dist>(E)
+    claim:
+        ? forall z \metric_closure<X, dist>(E):
+            z $in set_minus(X, \metric_exterior<X, dist>(E))
+        $is_metric_adherent_point(X, dist, E, z)
+        by contra:
+            ? not z $in \metric_exterior<X, dist>(E)
+            z $in \metric_exterior<X, dist>(E)
+            $is_metric_exterior_point(X, dist, E, z)
+            obtain radius from exist radius R_pos st {intersect(\metric_ball<X, dist>(z, radius), E) = {}}
+            by def $is_metric_adherent_point(X, dist, E, z)
+            impossible intersect(\metric_ball<X, dist>(z, radius), E) = {}
+        z $in set_minus(X, \metric_exterior<X, dist>(E))
+    claim:
+        ? forall z set_minus(X, \metric_exterior<X, dist>(E)):
+            z $in \metric_closure<X, dist>(E)
+        not z $in \metric_exterior<X, dist>(E)
+        claim:
+            ? forall radius R_pos:
+                not intersect(\metric_ball<X, dist>(z, radius), E) = {}
+            by contra:
+                ? not intersect(\metric_ball<X, dist>(z, radius), E) = {}
+                intersect(\metric_ball<X, dist>(z, radius), E) = {}
+                witness exist exterior_radius R_pos st {intersect(\metric_ball<X, dist>(z, exterior_radius), E) = {}} from radius:
+                    intersect(\metric_ball<X, dist>(z, radius), E) = {}
+                by def $is_metric_exterior_point(X, dist, E, z)
+                z $in \metric_exterior<X, dist>(E)
+                impossible not z $in \metric_exterior<X, dist>(E)
+        $is_metric_adherent_point(X, dist, E, z)
+        z $in \metric_closure<X, dist>(E)
+    by extension:
+        ? \metric_closure<X, dist>(E) = union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
+        forall x \metric_closure<X, dist>(E):
+            x $in union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
+        forall x union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E)):
+            x $in \metric_closure<X, dist>(E)
+    by extension:
+        ? \metric_closure<X, dist>(E) = set_minus(X, \metric_exterior<X, dist>(E))
+        forall z \metric_closure<X, dist>(E):
+            z $in set_minus(X, \metric_exterior<X, dist>(E))
+        forall z set_minus(X, \metric_exterior<X, dist>(E)):
+            z $in \metric_closure<X, dist>(E)
 
 # Definition 1.2.12 (Open and closed sets). These definitions follow Tao's
 # boundary formulation; Proposition 1.2.15 supplies the usual equivalents.
@@ -360,7 +550,44 @@ thm metric_open_iff_equals_interior_forward:
         $is_metric_open(X, dist, E)
         =>:
             E = \metric_interior<X, dist>(E)
-    trust E = \metric_interior<X, dist>(E)
+    # Proof idea: every interior point is in E because its ball contains its
+    # center. Conversely, a point of E that is not interior cannot be
+    # exterior, hence is boundary, contradicting openness.
+    claim:
+        ? forall x \metric_interior<X, dist>(E):
+            x $in E
+        $is_metric_interior_point(X, dist, E, x)
+        obtain radius from exist radius R_pos st {\metric_ball<X, dist>(x, radius) $subset E}
+        by thm metric_ball_subset_contains_center(X, dist, E, x, radius)
+        x $in E
+    claim:
+        ? forall x E:
+            x $in \metric_interior<X, dist>(E)
+        claim:
+            ? $is_metric_interior_point(X, dist, E, x)
+            by contra:
+                ? $is_metric_interior_point(X, dist, E, x)
+                claim:
+                    ? not $is_metric_exterior_point(X, dist, E, x)
+                    by contra:
+                        ? not $is_metric_exterior_point(X, dist, E, x)
+                        $is_metric_exterior_point(X, dist, E, x)
+                        obtain radius from exist radius R_pos st {intersect(\metric_ball<X, dist>(x, radius), E) = {}}
+                        by thm metric_ball_contains_center(X, dist, x, radius)
+                        x $in intersect(\metric_ball<X, dist>(x, radius), E)
+                        impossible intersect(\metric_ball<X, dist>(x, radius), E) = {}
+                by def $is_metric_boundary_point(X, dist, E, x)
+                x $in \metric_boundary<X, dist>(E)
+                x $in intersect(\metric_boundary<X, dist>(E), E)
+                by def $is_metric_open(X, dist, E)
+                impossible intersect(\metric_boundary<X, dist>(E), E) = {}
+        x $in \metric_interior<X, dist>(E)
+    by extension:
+        ? E = \metric_interior<X, dist>(E)
+        forall x E:
+            x $in \metric_interior<X, dist>(E)
+        forall x \metric_interior<X, dist>(E):
+            x $in E
 
 thm metric_open_iff_equals_interior_reverse:
     ? forall X set, dist fn(x, y X) R, E power_set(X):
@@ -368,7 +595,29 @@ thm metric_open_iff_equals_interior_reverse:
         E = \metric_interior<X, dist>(E)
         =>:
             $is_metric_open(X, dist, E)
-    trust $is_metric_open(X, dist, E)
+    # Proof idea: if E equals its interior, no point of E can be a boundary
+    # point, since boundary points are not interior points.
+    claim:
+        ? intersect(\metric_boundary<X, dist>(E), E) = {}
+        by extension intersect(\metric_boundary<X, dist>(E), E) = {}:
+            claim:
+                ? forall x intersect(\metric_boundary<X, dist>(E), E):
+                    x $in {}
+                x $in \metric_boundary<X, dist>(E)
+                x $in E
+                x $in \metric_interior<X, dist>(E)
+                not $is_metric_interior_point(X, dist, E, x)
+                $is_metric_interior_point(X, dist, E, x)
+                by contra:
+                    ? x $in {}
+                    impossible not $is_metric_interior_point(X, dist, E, x)
+            claim:
+                ? forall x {}:
+                    x $in intersect(\metric_boundary<X, dist>(E), E)
+                by contra:
+                    ? x $in intersect(\metric_boundary<X, dist>(E), E)
+                    impossible x $in {}
+    by def $is_metric_open(X, dist, E)
 
 thm metric_closed_iff_contains_closure_forward:
     ? forall X set, dist fn(x, y X) R, E power_set(X):
@@ -376,7 +625,31 @@ thm metric_closed_iff_contains_closure_forward:
         $is_metric_closed(X, dist, E)
         =>:
             \metric_closure<X, dist>(E) $subset E
-    trust \metric_closure<X, dist>(E) $subset E
+    # Proof idea: an adherent point is interior or boundary. An interior point
+    # lies in E because its ball contains its center, while a boundary point
+    # lies in E by closedness.
+    claim:
+        ? forall A, B power_set(X), y X:
+            A $subset B
+            y $in A
+            =>:
+                y $in B
+        y $in B
+    claim:
+        ? forall x \metric_closure<X, dist>(E):
+            x $in E
+        $is_metric_adherent_point(X, dist, E, x)
+        by thm adherent_implies_interior_or_boundary(X, dist, E, x)
+        by cases:
+            ? x $in E
+            case $is_metric_interior_point(X, dist, E, x):
+                obtain radius from exist radius R_pos st {\metric_ball<X, dist>(x, radius) $subset E}
+                by thm metric_ball_subset_contains_center(X, dist, E, x, radius)
+                x $in E
+            case $is_metric_boundary_point(X, dist, E, x):
+                x $in \metric_boundary<X, dist>(E)
+                x $in E
+    \metric_closure<X, dist>(E) $subset E
 
 thm metric_closed_iff_contains_closure_reverse:
     ? forall X set, dist fn(x, y X) R, E power_set(X):
@@ -384,7 +657,24 @@ thm metric_closed_iff_contains_closure_reverse:
         \metric_closure<X, dist>(E) $subset E
         =>:
             $is_metric_closed(X, dist, E)
-    trust $is_metric_closed(X, dist, E)
+    # Proof idea: every boundary point is adherent, so it is in the closure
+    # and therefore in E by the assumed closure inclusion.
+    claim:
+        ? forall A, B power_set(X), y X:
+            A $subset B
+            y $in A
+            =>:
+                y $in B
+        y $in B
+    claim:
+        ? forall x \metric_boundary<X, dist>(E):
+            x $in E
+        $is_metric_boundary_point(X, dist, E, x)
+        $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
+        by thm interior_or_boundary_implies_adherent(X, dist, E, x)
+        x $in \metric_closure<X, dist>(E)
+        x $in E
+    by def $is_metric_closed(X, dist, E)
 
 thm metric_open_and_closed_ball_properties:
     ? forall X set, dist fn(x, y X) R, center X, radius R_pos:
@@ -574,8 +864,32 @@ thm metric_convergent_implies_cauchy:
         $has_metric_limit(X, dist, u, a)
         =>:
             $is_metric_cauchy(X, dist, u)
-    # proof_debt: use epsilon/3 twice and the triangle inequality.
-    trust $is_metric_cauchy(X, dist, u)
+    # Proof idea: for each epsilon, take a common tail within epsilon/3 of
+    # the limit. The triangle inequality puts any two terms of that tail
+    # within 2*epsilon/3, hence within epsilon.
+    claim:
+        ? forall epsilon R_pos:
+            exist N0 N_pos st {$is_metric_cauchy_after(X, dist, u, epsilon, N0)}
+        epsilon / 3 $in R_pos
+        $has_eventual_metric_closeness(X, dist, u, a, epsilon / 3)
+        obtain N0 from exist N0 N_pos st {$is_metric_tail_close_to(X, dist, u, a, epsilon / 3, N0)}
+        witness exist M N_pos st {$is_metric_cauchy_after(X, dist, u, epsilon, M)} from N0:
+            claim:
+                ? forall j, k N_pos:
+                    j >= N0
+                    k >= N0
+                    =>:
+                        dist(u(j), u(k)) < epsilon
+                dist(u(j), a) <= epsilon / 3
+                dist(u(k), a) <= epsilon / 3
+                by def $is_metric_space(X, dist)
+                dist(a, u(k)) = dist(u(k), a)
+                2 * epsilon < 3 * epsilon
+                epsilon / 3 + epsilon / 3 = 2 * epsilon / 3 < 3 * epsilon / 3 = epsilon
+                dist(u(j), a) + dist(a, u(k)) = dist(u(j), a) + dist(u(k), a) <= epsilon / 3 + epsilon / 3 < epsilon
+                dist(u(j), u(k)) <= dist(u(j), a) + dist(a, u(k)) < epsilon
+            by def $is_metric_cauchy_after(X, dist, u, epsilon, N0)
+    by def $is_metric_cauchy(X, dist, u)
 
 # Lemma 1.4.9. A Cauchy sequence with a convergent subsequence converges.
 thm cauchy_with_convergent_subsequence_converges:

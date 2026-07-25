@@ -6,6 +6,7 @@ use crate::prelude::*;
 use std::fs;
 use std::path::Path;
 use std::rc::Rc;
+use std::time::Instant;
 
 pub use crate::result::StmtResult;
 
@@ -342,8 +343,10 @@ pub(crate) fn run_source_code_with_failure_kind(
         }
     };
 
+    let profile_repository_run = std::env::var_os("LITEX_PROFILE_REPOSITORY").is_some();
     let mut stmt_results: Vec<StmtResult> = Vec::new();
     for mut block in blocks {
+        let statement_start = profile_repository_run.then(Instant::now);
         let parsing_try_stmt = block.current_token_is_equal_to(TRY);
         let stmt: Stmt = {
             match runtime.parse_stmt(&mut block) {
@@ -370,6 +373,15 @@ pub(crate) fn run_source_code_with_failure_kind(
                 return (stmt_results, Some(e), Some(failure_kind));
             }
         };
+        if let Some(statement_start) = statement_start {
+            let line_file = stmt.line_file();
+            eprintln!(
+                "repository statement {}:{}: {:.2} ms",
+                line_file.1,
+                line_file.0,
+                statement_start.elapsed().as_secs_f64() * 1000.0,
+            );
+        }
         stmt_results.push(result);
     }
 
