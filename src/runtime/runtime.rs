@@ -501,12 +501,12 @@ impl Runtime {
     }
 
     /// Runs a closure in a temporary child environment. On success, commits the child environment
-    /// into the parent with environment merge semantics; on failure, discards it.
+    /// into the parent with environment merge semantics; on failure, discards it. The closure must
+    /// not mutate module discovery or loading state.
     pub fn run_in_local_env_and_commit<T, F>(&mut self, f: F) -> Result<T, RuntimeError>
     where
         F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
     {
-        let module_manager_before = self.module_manager.clone();
         let parse_context_before = self.current_parse_context().clone();
 
         self.push_env();
@@ -518,7 +518,6 @@ impl Runtime {
             .expect("local environment should exist after push_env");
 
         *self.current_parse_context_mut() = parse_context_before;
-        self.module_manager = module_manager_before;
 
         let value = result?;
         self.top_level_env().merge_committed_child(*child)?;

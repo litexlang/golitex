@@ -4,10 +4,8 @@ use std::rc::Rc;
 
 impl Environment {
     pub fn merge_committed_child(&mut self, child: Environment) -> Result<(), RuntimeError> {
-        let mut merged = self.clone();
-        merged.merge_committed_child_in_place(child)?;
-        *self = merged;
-        Ok(())
+        self.validate_committed_child(&child)?;
+        self.merge_committed_child_in_place(child)
     }
 
     fn merge_committed_child_in_place(&mut self, child: Environment) -> Result<(), RuntimeError> {
@@ -369,6 +367,92 @@ impl Environment {
         for (key, strategy_name) in stopped_strategy_stmts {
             self.stopped_strategy_stmts.insert(key, strategy_name);
         }
+        Ok(())
+    }
+
+    fn validate_committed_child(&self, child: &Environment) -> Result<(), RuntimeError> {
+        for (name, _) in child.symbols.iter() {
+            if let Some(existing) = self.symbols.get(name) {
+                return Err(merge_name_conflict_error(
+                    name,
+                    existing.role().description(),
+                ));
+            }
+        }
+
+        for name in child.defined_identifiers.keys() {
+            if self.defined_identifiers.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "identifier"));
+            }
+        }
+        for name in child.defined_def_props.keys() {
+            if self.defined_def_props.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "prop"));
+            }
+            if self.defined_abstract_props.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "abstract_prop"));
+            }
+        }
+        for name in child.defined_abstract_props.keys() {
+            if self.defined_abstract_props.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "abstract_prop"));
+            }
+            if self.defined_def_props.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "prop"));
+            }
+        }
+        for name in child.defined_algorithms.keys() {
+            if self.defined_algorithms.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "algo"));
+            }
+        }
+        for name in child.defined_structs.keys() {
+            if self.defined_structs.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "struct"));
+            }
+        }
+        for name in child.defined_templates.keys() {
+            if self.defined_templates.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "template"));
+            }
+        }
+        for name in child.defined_thm_stmts.keys() {
+            if self.defined_thm_stmts.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "thm"));
+            }
+        }
+        for name in child.defined_strategy_stmts.keys() {
+            if self.defined_strategy_stmts.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "strategy"));
+            }
+        }
+
+        for (name, child_permutations) in child.known_symmetric_props.iter() {
+            let Some(child_arity) = child_permutations.first().map(Vec::len) else {
+                continue;
+            };
+            let Some(parent_arity) = self
+                .known_symmetric_props
+                .get(name)
+                .and_then(|permutations| permutations.first())
+                .map(Vec::len)
+            else {
+                continue;
+            };
+            if parent_arity != child_arity {
+                return Err(
+                    StoreFactRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "store_symmetric_prop_permutation: `{}` already has arity {}, got {}",
+                            name, parent_arity, child_arity
+                        ),
+                        default_line_file(),
+                    ))
+                    .into(),
+                );
+            }
+        }
+
         Ok(())
     }
 }

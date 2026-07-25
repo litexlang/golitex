@@ -600,17 +600,19 @@ thm exponent_kernel_is_mZ:
     by thm section2::theorem_II_1_subgroups_of_Z(\exponent_kernel<G, mul, one>(x))
 
 thm zero_exponent_kernel_gives_distinct_powers:
-    ? forall G set, mul fn(x, y G) G, one G, x G, a, b Z, ya, yb G:
+    ? forall G set, mul fn(x, y G) G, one G, base G, a, b Z, ya, yb G:
         $is_group(G, mul, one)
-        \exponent_kernel<G, mul, one>(x) = section2::mZ(0)
-        $has_group_power(G, mul, one, x, a, ya)
-        $has_group_power(G, mul, one, x, b, yb)
+        \exponent_kernel<G, mul, one>(base) = section2::mZ(0)
+        $has_group_power(G, mul, one, base, a, ya)
+        $has_group_power(G, mul, one, base, b, yb)
         ya = yb
         =>:
             a = b
-    by thm group_power_equality_iff_exponent_difference_in_kernel(G, mul, one, x)
-    a - b $in \exponent_kernel<G, mul, one>(x)
+    by thm group_power_equality_iff_exponent_difference_in_kernel(G, mul, one, base)
+    a - b $in \exponent_kernel<G, mul, one>(base)
     a - b $in section2::mZ(0)
+    by thm section2::mZ_membership_characterization(0)
+    a - b $in {x Z: $section1::divides_Z(0, x)}
     $section1::divides_Z(0, a - b)
     obtain k from exist k Z st {a - b = 0 * k}
     a - b = 0 * k = 0
@@ -626,35 +628,39 @@ prop powers_are_equal_iff_exponents_congruent(G set, mul fn(x, y G) G, one G, x 
             $section5::congruent_mod(m, a, b)
 
 thm positive_exponent_kernel_gives_congruent_powers:
-    ? forall G set, mul fn(x, y G) G, one G, x G, m N_pos:
+    ? forall G set, mul fn(x, y G) G, one G, base G, m N_pos:
         $is_group(G, mul, one)
-        \exponent_kernel<G, mul, one>(x) = section2::mZ(m)
+        \exponent_kernel<G, mul, one>(base) = section2::mZ(m)
         =>:
-            $powers_are_equal_iff_exponents_congruent(G, mul, one, x, m)
-    by thm group_power_equality_iff_exponent_difference_in_kernel(G, mul, one, x)
+            $powers_are_equal_iff_exponents_congruent(G, mul, one, base, m)
+    by thm group_power_equality_iff_exponent_difference_in_kernel(G, mul, one, base)
     claim:
         ? forall a, b Z, ya, yb G:
-            $has_group_power(G, mul, one, x, a, ya)
-            $has_group_power(G, mul, one, x, b, yb)
+            $has_group_power(G, mul, one, base, a, ya)
+            $has_group_power(G, mul, one, base, b, yb)
             ya = yb
             =>:
                 $section5::congruent_mod(m, a, b)
-        a - b $in \exponent_kernel<G, mul, one>(x)
+        a - b $in \exponent_kernel<G, mul, one>(base)
         a - b $in section2::mZ(m)
+        by thm section2::mZ_membership_characterization(m)
+        a - b $in {x Z: $section1::divides_Z(m, x)}
         $section1::divides_Z(m, a - b)
         by def $section5::congruent_mod(m, a, b)
     claim:
         ? forall a, b Z, ya, yb G:
-            $has_group_power(G, mul, one, x, a, ya)
-            $has_group_power(G, mul, one, x, b, yb)
+            $has_group_power(G, mul, one, base, a, ya)
+            $has_group_power(G, mul, one, base, b, yb)
             $section5::congruent_mod(m, a, b)
             =>:
                 ya = yb
         $section1::divides_Z(m, a - b)
+        by thm section2::mZ_membership_characterization(m)
+        a - b $in {x Z: $section1::divides_Z(m, x)}
         a - b $in section2::mZ(m)
-        a - b $in \exponent_kernel<G, mul, one>(x)
+        a - b $in \exponent_kernel<G, mul, one>(base)
         ya = yb
-    by def $powers_are_equal_iff_exponents_congruent(G, mul, one, x, m)
+    by def $powers_are_equal_iff_exponents_congruent(G, mul, one, base, m)
 
 """
 An isomorphism is a bijection that transports one group operation to the

@@ -963,8 +963,10 @@ trust S != 0
 
 #[test]
 fn even_power_order_chain_implies_absolute_value_order() {
-    run_with_large_stack("even_power_order_chain_implies_absolute_value_order", || {
-        let source_code = r#"
+    run_with_large_stack(
+        "even_power_order_chain_implies_absolute_value_order",
+        || {
+            let source_code = r#"
 forall x, y R:
     x^2 + y^2 <= 4
     =>:
@@ -972,20 +974,21 @@ forall x, y R:
         (x + y)^2 <= 3^2
         abs(x + y) <= abs(3)
 "#;
-        let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(
-            "even_power_order_chain_implies_absolute_value_order",
-        );
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "even_power_order_chain_implies_absolute_value_order",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-        assert!(
-            run_succeeded,
-            "a stored even-power inequality should compare absolute values:\n{}",
-            run_output
-        );
-    });
+            assert!(
+                run_succeeded,
+                "a stored even-power inequality should compare absolute values:\n{}",
+                run_output
+            );
+        },
+    );
 }
 
 #[test]

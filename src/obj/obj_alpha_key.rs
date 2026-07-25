@@ -56,9 +56,7 @@ fn collect_obj_binder_bindings(
         Obj::MatrixSub(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::MatrixMul(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::Pow(x) => collect_two(&x.base, &x.exponent, bindings, seen, depth),
-        Obj::MatrixScalarMul(x) => {
-            collect_two(&x.scalar, &x.matrix, bindings, seen, depth)
-        }
+        Obj::MatrixScalarMul(x) => collect_two(&x.scalar, &x.matrix, bindings, seen, depth),
         Obj::MatrixPow(x) => collect_two(&x.base, &x.exponent, bindings, seen, depth),
         Obj::Abs(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
         Obj::Sqrt(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
@@ -258,9 +256,7 @@ fn collect_fn_obj_head_binder_bindings(
                 collect_obj_binder_bindings(arg, bindings, seen, depth);
             }
         }
-        FnObjHead::MatrixOperator(x) => {
-            collect_obj_binder_bindings(x, bindings, seen, depth)
-        }
+        FnObjHead::MatrixOperator(x) => collect_obj_binder_bindings(x, bindings, seen, depth),
         FnObjHead::Identifier(_)
         | FnObjHead::IdentifierWithMod(_)
         | FnObjHead::Forall(_)

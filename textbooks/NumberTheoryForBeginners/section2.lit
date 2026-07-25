@@ -206,6 +206,13 @@ prop closed_under_subtraction(M power_set(Z)):
 # and an integer. Its members are exactly the integer multiples of m.
 have fn mZ(m N) power_set(Z) = {x Z: $section1::divides_Z(m, x)}
 
+# This named equation exposes the membership characterization to later modules,
+# whose proofs do not unfold a function body across a module boundary.
+thm mZ_membership_characterization:
+    ? forall m N:
+        mZ(m) = {x Z: $section1::divides_Z(m, x)}
+    mZ(m) = {x Z: $section1::divides_Z(m, x)}
+
 # Keep the historical relation exported for later sections, but make it only
 # the equality to the actual mZ value instead of restating its membership law.
 prop is_integer_multiple_set(M power_set(Z), m N):

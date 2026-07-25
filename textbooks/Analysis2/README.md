@@ -7,7 +7,7 @@ Terence Tao's *Analysis II*, fourth edition. The ordered project entrypoint is
 Run the implemented project with:
 
 ```text
-target/debug/litex -runner -r textbooks/Analysis2
+target/release/litex -compact -r textbooks/Analysis2
 ```
 
 The current project exports Chapter 1 as `chap1`. Its public metric-space
@@ -32,7 +32,7 @@ from `$chap1::is_metric_space(X,dist)` and `radius $in R_pos`.
 
 All 32 numbered non-exercise Chapter 1 items have source-facing definitions
 or theorem interfaces. The ordered project run succeeds, but the chapter is
-not proof-complete: it currently contains 48 explicit `trust` statements.
+not proof-complete: it currently contains 46 explicit `trust` statements.
 Most correspond to proofs Tao assigns to exercises; others mark substantial
 source proofs or finite-choice arguments not yet formalized. The `linf`
 distance uses a trusted unique-maximum selection because instantiating the

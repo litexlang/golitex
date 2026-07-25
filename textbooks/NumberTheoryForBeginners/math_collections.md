@@ -13,6 +13,15 @@ the unique nonnegative common divisor divisible by every common divisor.
 These are foundational because congruences, prime factorization, and linear
 congruences all consume them.
 
+`mZ(m)` is the canonical set of integer multiples of a natural number `m`.
+It is a real set-valued `have fn`, and the public theorem
+`mZ_membership_characterization` exposes its defining equality to later
+modules. This matters because a later module cannot unfold the body of a
+function declared in an earlier module; kernel and power arguments can instead
+rewrite a membership in `mZ(m)` to `divides_Z(m, x)` explicitly. A wrapper
+predicate for membership is rejected because the source construction is the
+set itself, and ordinary set membership remains the consumer-facing form.
+
 The intended forms are a real `prop` for divisibility, real `prop` relations
 for quotient/remainder and gcd specifications, and `have fn ... by exist!` for
 the selected quotient and gcd. Encoding either selected value only as a

@@ -19,8 +19,9 @@ label `trust` or `kernel_problem`.
   `textbooks/Analysis2/chapter01-metric-spaces.lit`, and the definitions plus
   representative use probes were run in the real caller context. Exact
   command:
-  `target/debug/litex -runner -r textbooks/Analysis2`.
-  Result: wrapper JSON `"result": "success"`, with 48 explicit `trust`
+  `target/release/litex -compact -f
+  textbooks/Analysis2/chapter01-metric-spaces.lit`.
+  Result: verifier `"result": "success"`, with 46 explicit `trust`
   statements. Desired state: replace each source-local theorem trust with a
   checked proof while preserving the current declaration shapes. Root cause:
   omitted exercise proofs, finite choice constructions, finite-dimensional

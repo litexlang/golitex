@@ -1,21 +1,20 @@
 # Section VIII: cyclic subgroups, cosets, Lagrange's theorem, and Euler's theorem.
 
-# Definition. A left coset xH is the image of H under left multiplication by
-# x.  C is a carrier-valued argument so later statements can compare cosets as
-# actual sets rather than merely asserting a property of a hidden set.
+# Definition VIII.1. A left coset xH is the image of H under left
+# multiplication by x.  It is a genuine set-valued function because later
+# arguments compare its carrier, take its cardinality, and range over its
+# members; a predicate alone would not support those uses.
+prop left_coset_member(G set, mul fn(x, y G) G, H power_set(G), x, y G):
+    exist h G st {h $in H, y = mul(x, h)}
+
+template<G set, mul fn(x, y G) G>:
+    have fn left_coset(H power_set(G), x G) power_set(G) = {y G: $left_coset_member(G, mul, H, x, y)}
+
+# A named coset carrier has exactly the membership condition in the source
+# definition.  This relation keeps the representative explicit for the
+# equal-or-disjoint lemma below.
 prop is_left_coset(G set, mul fn(x, y G) G, H power_set(G), x G, C power_set(G)):
-    forall y G:
-        =>:
-            y $in C
-        <=>:
-            exist h G st {h $in H, y = mul(x, h)}
-
-# Concrete additive object probe.  For an integer subgroup H this is the set
-# x+H, and callers can apply it directly as `left_coset_Z(H, x)`.
-prop left_coset_Z_member(H power_set(Z), x, y Z):
-    exist h Z st {h $in H, y = x + h}
-
-have fn left_coset_Z(H power_set(Z), x Z) power_set(Z) = {y Z: $left_coset_Z_member(H, x, y)}
+    C = \left_coset<G, mul>(H, x)
 
 # Two cosets are compared through their carriers.  The disjointness relation is
 # the exact residual condition in the source lemma.
@@ -31,6 +30,55 @@ prop cosets_disjoint(G set, C1, C2 power_set(G)):
 prop coset_partition_claim(G set, mul fn(x, y G) G, H power_set(G)):
     forall x G:
         exist C power_set(G) st {$is_left_coset(G, mul, H, x, C), x $in C}
+
+# Lemma VIII.1. Left multiplication is injective, so a finite subgroup and
+# each of its left cosets have the same cardinality.  The proof maps h to xh,
+# cancels x using its inverse, and identifies the map's range with xH.
+thm left_coset_has_subgroup_cardinality:
+    ? forall G set, mul fn(x, y G) G, one, x G, H power_set(G):
+        $section7::is_group(G, mul, one)
+        $is_finite_set(H)
+        =>:
+            $is_finite_set(\left_coset<G, mul>(H, x))
+            finite_set_size(\left_coset<G, mul>(H, x)) = finite_set_size(H)
+    have f fn(h H) G = fn(h H) G {mul(x, h)}
+    obtain x_inv from exist z G st {mul(x, z) = one, mul(z, x) = one}
+    forall h1, h2 H:
+        f(h1) = f(h2)
+        =>:
+            f(h1) = mul(x, h1)
+            f(h2) = mul(x, h2)
+            mul(x_inv, mul(x, h1)) = mul(x_inv, mul(x, h2))
+            mul(x_inv, mul(x, h1)) = mul(mul(x_inv, x), h1) = mul(one, h1) = h1
+            mul(x_inv, mul(x, h2)) = mul(mul(x_inv, x), h2) = mul(one, h2) = h2
+            h1 = h2
+    $injective(H, G, f)
+    $is_finite_set(fn_range(f))
+    finite_set_size(fn_range(f)) = finite_set_size(H)
+    by extension fn_range(f) = \left_coset<G, mul>(H, x):
+        claim:
+            ? forall y fn_range(f):
+                y $in \left_coset<G, mul>(H, x)
+            have by preimage h from y $in fn_range(f)
+            f(h) = mul(x, h)
+            y = f(h) = mul(x, h)
+            witness exist h0 G st {h0 $in H, y = mul(x, h0)} from h:
+                h $in H
+                y = mul(x, h)
+            by def $left_coset_member(G, mul, H, x, y)
+            y $in \left_coset<G, mul>(H, x)
+        claim:
+            ? forall y \left_coset<G, mul>(H, x):
+                y $in fn_range(f)
+            $left_coset_member(G, mul, H, x, y)
+            obtain h from exist h G st {h $in H, y = mul(x, h)}
+            have h_in_H H = h
+            f(h_in_H) = mul(x, h_in_H) = mul(x, h) = y
+            f(h_in_H) $in fn_range(f)
+            y $in fn_range(f)
+    fn_range(f) = \left_coset<G, mul>(H, x)
+    $is_finite_set(\left_coset<G, mul>(H, x))
+    finite_set_size(\left_coset<G, mul>(H, x)) = finite_set_size(H)
 
 prop subgroup_order_divides_group_order(G set, mul fn(x, y G) G, one G, H power_set(G)):
     $section7::is_group(G, mul, one)

@@ -7,15 +7,6 @@
 # Prove existence and uniqueness of the largest exponent whose prime power
 # divides a given integer greater than one.
 #
-# Section VI — linear_congruence_right_hand_side_count
-# The solution criterion, complete solution family, and exact number of
-# solution classes are checked. Prove that exactly m/d right-hand-side classes
-# modulo m are divisible by d=gcd(a,m).
-#
-# Section VI — reduced_residue_multiplicative_group
-# Construct the finite group of residue classes prime to m under
-# multiplication from the checked solution and residue-ring theorems.
-#
 # Section VII — generated_elements_power_background
 # Prove that every element of a singly generated subgroup is a power of its
 # generator.

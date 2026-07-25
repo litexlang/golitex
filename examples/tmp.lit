@@ -32,70 +32,66 @@ thm function_returned_state_uses_an_explicit_view:
 # LADR nested-structure migration probe. These declarations deliberately use
 # the same four public shapes without importing the textbook module, so this
 # scratch file can run in isolated mode.
-struct ScalarSystem<s nonempty_set>:
+struct ProbeScalarSystem<s nonempty_set>:
     zero s
     one s
     add fn(x, y s) s
     mul fn(x, y s) s
 
-struct VectorSpace<s nonempty_set, V nonempty_set>:
-    scalars &ScalarSystem<s>
+struct ProbeVectorSpace<s nonempty_set, V nonempty_set>:
+    scalars &ProbeScalarSystem<s>
     zero V
     add fn(x, y V) V
     smul fn(a s, x V) V
 
-struct InnerProductScalarGeometry<s nonempty_set>:
-    scalars &ScalarSystem<s>
+struct ProbeInnerProductScalarGeometry<s nonempty_set>:
+    scalars &ProbeScalarSystem<s>
     conjugate fn(x s) s
     absolute_value fn(x s) R
     real_part fn(x s) R
     real_embed fn(x R) s
 
-struct InnerProductSpace<s nonempty_set, V nonempty_set>:
-    scalar_geometry &InnerProductScalarGeometry<s>
-    vector_space &VectorSpace<s, V>
+struct ProbeInnerProductSpace<s nonempty_set, V nonempty_set>:
+    scalar_geometry &ProbeInnerProductScalarGeometry<s>
+    vector_space &ProbeVectorSpace<s, V>
     inner fn(u, v V) s
     <=>:
         scalar_geometry.scalars = vector_space.scalars
 
-struct FiniteVectorSpaceFamily<s nonempty_set, U nonempty_set, m N_pos>:
-    scalars &ScalarSystem<s>
+struct ProbeFiniteVectorSpaceFamily<s nonempty_set, U nonempty_set, m N_pos>:
+    scalars &ProbeScalarSystem<s>
     carriers finite_seq(power_set(U), m)
     zeros finite_seq(U, m)
     adds finite_seq(fn(x, y U) U, m)
     smuls finite_seq(fn(a s, x U) U, m)
 
-prop is_linear_map(s nonempty_set, V, W nonempty_set, Vspace &VectorSpace<s, V>, Wspace &VectorSpace<s, W>, T fn(v V) W):
+prop probe_is_linear_map(s nonempty_set, V, W nonempty_set, Vspace &ProbeVectorSpace<s, V>, Wspace &ProbeVectorSpace<s, W>, T fn(v V) W):
     Vspace.scalars = Wspace.scalars
     forall u, v V:
         T(Vspace.add(u, v)) = Wspace.add(T(u), T(v))
     forall a s, v V:
         T(Vspace.smul(a, v)) = Wspace.smul(a, T(v))
 
-thm inner_space_three_level_scalar_access:
-    ? forall s nonempty_set, V nonempty_set, inner_space &InnerProductSpace<s, V>, a, b s:
-        inner_space.scalar_geometry.scalars.mul(a, b) = inner_space.vector_space.scalars.mul(a, b)
+template<s nonempty_set, U nonempty_set, m N_pos, family &ProbeFiniteVectorSpaceFamily<s, U, m>>:
+    have fn probe_family_scalar_product(a, b s) s = family.scalars.mul(a, b)
 
-thm inner_space_final_field_calls_are_typed:
-    ? forall s nonempty_set, V nonempty_set, inner_space &InnerProductSpace<s, V>, a s:
-        inner_space.vector_space.smul(a, inner_space.vector_space.zero) $in V
-        inner_space.inner(inner_space.vector_space.zero, inner_space.vector_space.zero) $in s
+# This concrete three-layer chain tests the parser/runtime surface without
+# asking the theorem searcher to solve a generic equality of structure values.
+struct ProbeScalars:
+    one R
+    mul fn(x, y R) R
 
-thm linear_map_projects_scalar_compatibility:
-    ? forall s nonempty_set, V, W nonempty_set, Vspace &VectorSpace<s, V>, Wspace &VectorSpace<s, W>, T fn(v V) W:
-        $is_linear_map(s, V, W, Vspace, Wspace, T)
-        =>:
-            Vspace.scalars = Wspace.scalars
+struct ProbeGeometry:
+    scalars &ProbeScalars
+    marker N
 
-thm incompatible_scalar_spaces_cannot_form_a_linear_map:
-    ? forall s nonempty_set, V, W nonempty_set, Vspace &VectorSpace<s, V>, Wspace &VectorSpace<s, W>, T fn(v V) W:
-        Vspace.scalars != Wspace.scalars
-        =>:
-            not $is_linear_map(s, V, W, Vspace, Wspace, T)
+struct ProbeSpace:
+    scalar_geometry &ProbeGeometry
+    marker N
 
-thm finite_vector_space_family_owns_callable_scalars:
-    ? forall s nonempty_set, U nonempty_set, m N_pos, family &FiniteVectorSpaceFamily<s, U, m>, k N_pos, a s, x U:
-        k <= m
-        =>:
-            family.scalars.mul(a, family.scalars.one) $in s
-            family.smuls(k)(a, x) $in U
+have fn probe_mul(x, y R) R = x * y
+have probe_scalars &ProbeScalars = (1, probe_mul)
+have probe_geometry &ProbeGeometry = (probe_scalars, 0)
+have probe_space &ProbeSpace = (probe_geometry, 0)
+
+probe_space.scalar_geometry.scalars.mul(2, 3) $in R

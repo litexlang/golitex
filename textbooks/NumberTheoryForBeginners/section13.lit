@@ -231,6 +231,52 @@ prop gaussian_prime(x, y Z):
         =>:
             $gaussian_unit(dx, dy) or $gaussian_associate(dx, dy, x, y)
 
+thm gaussian_prime_norm_is_rational_prime:
+    ? forall x, y Z:
+        $section4::is_prime_Z(gaussian_norm(x, y))
+        =>:
+            $gaussian_prime(x, y)
+    claim:
+        ? forall dx, dy Z:
+            $gaussian_divides(dx, dy, x, y)
+            =>:
+                $gaussian_unit(dx, dy) or $gaussian_associate(dx, dy, x, y)
+        obtain qx, qy from exist qx, qy Z st {gaussian_mul(dx, dy, qx, qy) = (x, y)}
+        gaussian_mul(dx, dy, qx, qy) = (dx * qx - dy * qy, dx * qy + dy * qx)
+        x = (x, y)[1] = gaussian_mul(dx, dy, qx, qy)[1] = dx * qx - dy * qy
+        y = (x, y)[2] = gaussian_mul(dx, dy, qx, qy)[2] = dx * qy + dy * qx
+        by thm gaussian_norm_is_multiplicative(dx, dy, qx, qy)
+        gaussian_norm(x, y) = gaussian_norm(dx, dy) * gaussian_norm(qx, qy)
+        dx ^ 2 >= 0
+        dy ^ 2 >= 0
+        gaussian_norm(dx, dy) = dx ^ 2 + dy ^ 2 >= 0
+        claim:
+            ? gaussian_norm(dx, dy) > 0
+            by contra:
+                ? gaussian_norm(dx, dy) > 0
+                gaussian_norm(dx, dy) <= 0
+                gaussian_norm(dx, dy) = 0
+                gaussian_norm(x, y) = gaussian_norm(dx, dy) * gaussian_norm(qx, qy) = 0
+                impossible gaussian_norm(x, y) > 1
+        by thm gaussian_divisibility_implies_norm_divisibility(dx, dy, x, y)
+        $section1::divides_Z(gaussian_norm(dx, dy), gaussian_norm(x, y))
+        gaussian_norm(dx, dy) = 1 or gaussian_norm(dx, dy) = gaussian_norm(x, y)
+        by cases:
+            ? $gaussian_unit(dx, dy) or $gaussian_associate(dx, dy, x, y)
+            case gaussian_norm(dx, dy) = 1:
+                by thm gaussian_norm_one_is_unit(dx, dy)
+            case gaussian_norm(dx, dy) = gaussian_norm(x, y):
+                gaussian_norm(x, y) = gaussian_norm(x, y) * gaussian_norm(qx, qy)
+                gaussian_norm(x, y) != 0
+                gaussian_norm(qx, qy) = (gaussian_norm(x, y) * gaussian_norm(qx, qy)) / gaussian_norm(x, y) = gaussian_norm(x, y) / gaussian_norm(x, y) = 1
+                witness exist ux, uy Z st {gaussian_mul(x, y, ux, uy) = (dx, dy)} from qx, -qy:
+                    gaussian_mul(x, y, qx, -qy) = (x * qx - y * (-qy), x * (-qy) + y * qx)
+                    (x * qx - y * (-qy), x * (-qy) + y * qx) = ((dx * qx - dy * qy) * qx - (dx * qy + dy * qx) * (-qy), (dx * qx - dy * qy) * (-qy) + (dx * qy + dy * qx) * qx)
+                    ((dx * qx - dy * qy) * qx - (dx * qy + dy * qx) * (-qy), (dx * qx - dy * qy) * (-qy) + (dx * qy + dy * qx) * qx) = (dx * (qx ^ 2 + qy ^ 2), dy * (qx ^ 2 + qy ^ 2))
+                    (dx * (qx ^ 2 + qy ^ 2), dy * (qx ^ 2 + qy ^ 2)) = (dx * gaussian_norm(qx, qy), dy * gaussian_norm(qx, qy)) = (dx, dy)
+                by def $gaussian_associate(dx, dy, x, y)
+    by def $gaussian_prime(x, y)
+
 # The source observes that prime norm implies Gaussian primality, associates
 # and conjugates preserve primality, and a least-norm nonunit divisor is prime.
 # These facts provide the local descent used by Theorem XIII.2 below.
@@ -524,6 +570,13 @@ thm gaussian_ideal_has_generator:
                         ? gaussian_norm(rx, ry) = 0
                         gaussian_norm(rx, ry) != 0
                         gaussian_norm(rx, ry) > 0
+                        witness exist z cart(Z, Z) st {z $in M, gaussian_norm(z[1], z[2]) = gaussian_norm(rx, ry)} from remainder:
+                            remainder $in M
+                            remainder = (rx, ry)
+                            gaussian_norm(remainder[1], remainder[2]) = gaussian_norm(rx, ry)
+                        by def $is_positive_norm_of_ideal_member(gaussian_norm(rx, ry))
+                        gaussian_norm(rx, ry) $in {n Z: $is_positive_norm_of_ideal_member(n)}
+                        Norms = {n Z: $is_positive_norm_of_ideal_member(n)}
                         gaussian_norm(rx, ry) $in Norms
                         d <= gaussian_norm(rx, ry)
                         impossible gaussian_norm(rx, ry) < d

@@ -166,6 +166,7 @@ fn first_disallowed_control_stmt_in_template_def(
 fn disallowed_control_stmt_name(stmt: &Stmt) -> Option<&'static str> {
     match stmt {
         Stmt::Command(CommandStmt::ClearStmt(_)) => Some("clear"),
+        Stmt::Command(CommandStmt::ImportStmt(_)) => Some("import"),
         _ => None,
     }
 }

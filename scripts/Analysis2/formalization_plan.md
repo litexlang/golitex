@@ -374,17 +374,17 @@ inner loop. A full chapter or project run is a checkpoint.
 For a noninteractive changed-file checkpoint:
 
 ```bash
-target/debug/litex -runner -isolated -f textbooks/Analysis2/chapter01-metric-spaces.lit
+target/release/litex -compact -f textbooks/Analysis2/chapter01-metric-spaces.lit
 ```
 
 For the ordered project checkpoint:
 
 ```bash
-target/debug/litex -runner -r textbooks/Analysis2
+target/release/litex -compact -r textbooks/Analysis2
 ```
 
-Inspect the JSON body for `"result":"error"`; shell exit status alone is not a
-verification result. At chapter milestones, generate definition and fact
+Inspect the verifier result for `"result": "error"`; shell exit status alone
+is not a verification result. At chapter milestones, generate definition and fact
 graphs in `/private/tmp` and compare actual public dependencies with
 `math_collections.md`. Use strict verification as the zero-trust gate, not as a
 reason to hide first-pass proof debt.

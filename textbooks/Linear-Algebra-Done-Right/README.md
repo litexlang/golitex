@@ -11,7 +11,7 @@ explanatory prose are retained in the order in which the book introduces them.
 Run the current project with:
 
 ```sh
-target/debug/litex -compact -runner -r textbooks/Linear-Algebra-Done-Right
+target/release/litex -compact -r textbooks/Linear-Algebra-Done-Right
 ```
 
 `litex.config` exports one namespace per source section, from `chap1a`
@@ -43,8 +43,13 @@ objects such as polynomials retain explicit `ScalarSystem` parameters.
 The ordinary project runner checks that the exported project loads and that
 the public declarations are well formed. Because project exports are trusted
 for speed, the routine body gate also runs every exported section directly
-with `-runner -f`; the optional flattened isolated gate is documented in
+with `-f`; the optional flattened isolated gate is documented in
 `scripts/linear_algebra_done_right/source_manifest.yaml`.
+
+For an iterative repair, preload the last verified section once with
+`target/release/litex -compact -session -f <section.lit>`. Send each candidate
+as an outermost `try:` source frame to that same Runtime; this retains the
+ordered context without repeatedly replaying its prefix.
 
 `FiniteVectorSpaceFamily<s,U,m>` owns its common `scalars` field while keeping
 parallel carrier, zero, addition, and scalar-multiplication arrays. Litex does
@@ -58,7 +63,8 @@ The current public surface includes:
 
 - the concrete `Complex` carrier and callable complex operations;
 - `ScalarSystem` and `VectorSpace` structures with callable operations and
-  their mathematical laws, including a checked concrete real scalar instance;
+  their mathematical laws, including checked real and source-facing complex
+  vector-space candidate relations;
 - finite coordinate lists, coordinate spaces, function spaces, subspaces,
   finite subspace sums, and direct sums;
 - linear combinations, span, linear independence, bases, and dimension;

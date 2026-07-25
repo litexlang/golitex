@@ -26,7 +26,7 @@
   problem: "Discrete-metric convergence is equivalent to eventual equality with the limit."
   proof_idea: "Use epsilon = 1/2 forward; use zero distance on an eventually constant tail backward."
   litex_code: "discrete_metric_convergence_iff_eventually_constant_forward; discrete_metric_convergence_iff_eventually_constant_reverse"
-  comments: {status: translated, blocker: trust, source_proof: "Exercise 1.1.13"}
+  comments: {status: checkable, verifier: "outermost-try release session and target/release/litex -compact -f textbooks/Analysis2/chapter01-metric-spaces.lit on 2026-07-25", source_proof: "Exercise 1.1.13"}
 
 - source: "Tao, Analysis II, 4e, Proposition 1.1.20"
   problem: "A sequence in a metric space has at most one limit."
@@ -190,6 +190,6 @@
   litex_code: "closed_subset_of_compact_metric_subset_is_compact; compact_subset_of_compact_metric_subset_is_closed; finite_union_of_compact_metric_subsets_is_compact; finite_metric_subset_is_compact"
   comments: {status: translated, blocker: trust, source_proof: "Exercise 1.5.7"}
 
-# Verification: `target/debug/litex -runner -r textbooks/Analysis2` returned
-# wrapper JSON result `success`. A successful runner result includes explicit
-# trust; see textbooks/Analysis2/todo.lit.
+# Verification: `target/release/litex -compact -f
+# textbooks/Analysis2/chapter01-metric-spaces.lit` returned success. A
+# successful file gate includes explicit trust; see textbooks/Analysis2/todo.lit.

@@ -42,9 +42,9 @@ chapter_tracking:
   1:
     status: "translated"
     records: "scripts/Analysis2/items/chapter01.yaml"
-    runner: "target/debug/litex -runner -r textbooks/Analysis2"
-    runner_result: "success"
-    proof_boundary: "48 explicit trust statements; see textbooks/Analysis2/todo.lit and scripts/Analysis2/todo.md"
+    runner: "target/release/litex -compact -f textbooks/Analysis2/chapter01-metric-spaces.lit"
+    runner_result: "success (2026-07-25)"
+    proof_boundary: "46 explicit trust statements; see textbooks/Analysis2/todo.lit and scripts/Analysis2/todo.md"
     definition_graph: "167 nodes, 365 edges, DAG, 0 cycle nodes"
   2: {status: "planned"}
   3: {status: "planned"}

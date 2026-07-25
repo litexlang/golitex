@@ -192,6 +192,34 @@ try:
 }
 
 #[test]
+fn try_stmt_rejects_import_control_statement() {
+    run_with_large_stack("try_stmt_rejects_import_control_statement", || {
+        let source_code = r#"
+try:
+    import std basics
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.isolated = true;
+        runtime.new_file_path_new_env_new_name_scope("try_stmt_rejects_import_control_statement");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "try with import should be rejected:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("try cannot contain control statement `import`"),
+            "try with import should explain that control statements are disallowed:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
 fn try_stmt_rejects_nested_control_statement() {
     run_with_large_stack("try_stmt_rejects_nested_control_statement", || {
         let source_code = r#"

@@ -3906,14 +3906,7 @@ thm rational_power_approx_seq_has_limit:
         =>:
             $has_limit(rational_power_approx_seq(x, q), x^alpha)
     by thm positive_base_power_preserves_sequence_limit(x, q, alpha)
-
-thm rational_approximation_powers_converge:
-    ? forall x R_pos, alpha R, q seq(R):
-        $is_rational_approximation_sequence(q, alpha)
-        =>:
-            $is_convergent_sequence(rational_power_approx_seq(x, q))
-    by thm rational_power_approx_seq_has_limit(x, alpha, q)
-    by def $is_convergent_sequence(rational_power_approx_seq(x, q))
+    rational_power_approx_seq(x, q) = fn(n N_pos) R {x^(q(n))}
 
 thm rational_approximation_power_limits_agree:
     ? forall x R_pos, alpha R, q, r seq(R), Lq, Lr R:
