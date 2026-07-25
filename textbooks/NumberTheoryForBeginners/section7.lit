@@ -70,8 +70,405 @@ prop is_group_power_sequence(G set, mul fn(x, y G) G, one G, x G, n N, a fn(i N)
 prop has_nonnegative_group_power(G set, mul fn(x, y G) G, one G, x G, n N, y G):
     exist a fn(i N) G st {$is_group_power_sequence(G, mul, one, x, n, a), a(n) = y}
 
+# Lemma VII.1. A finite multiplication sequence is determined by its initial
+# value and successor rule. Thus two nonnegative powers with the same base and
+# exponent have the same value. This is the normalization bridge used below
+# when combining signed powers.
+thm nonnegative_group_power_is_unique:
+    ? forall G set, mul fn(x, y G) G, one G, x G, n N, y, z G:
+        $has_nonnegative_group_power(G, mul, one, x, n, y)
+        $has_nonnegative_group_power(G, mul, one, x, n, z)
+        =>:
+            y = z
+    have fn pow(base G, k N) G by induc k from 0:
+        case k = 0: one
+        case k > 0: mul(pow(base, k - 1), base)
+
+    claim:
+        ? forall base G, k N:
+            pow(base, k + 1) = mul(pow(base, k), base)
+        pow(base, k + 1) = mul(pow(base, (k + 1) - 1), base) = mul(pow(base, k), base)
+
+    thm nonnegative_power_is_pow:
+        ? forall base, value G, k N:
+            $has_nonnegative_group_power(G, mul, one, base, k, value)
+            =>:
+                value = pow(base, k)
+        obtain sequence from exist a fn(i N) G st {$is_group_power_sequence(G, mul, one, base, k, a), a(k) = value}
+        prop sequence_matches(i N):
+            forall:
+                i <= k
+                =>:
+                    sequence(i) = pow(base, i)
+        claim:
+            ? forall i N:
+                $sequence_matches(i)
+            by induc i from 0:
+                ? $sequence_matches(i)
+                ? from i = 0:
+                    claim:
+                        ? forall:
+                            0 <= k
+                            =>:
+                                sequence(0) = pow(base, 0)
+                        sequence(0) = one
+                        pow(base, 0) = one
+                        sequence(0) = pow(base, 0)
+                    by def $sequence_matches(0)
+                ? induc:
+                    claim:
+                        ? forall:
+                            i + 1 <= k
+                            =>:
+                                sequence(i + 1) = pow(base, i + 1)
+                        i < i + 1 <= k
+                        i <= k
+                        sequence(i) = pow(base, i)
+                        sequence(i + 1) = mul(sequence(i), base) = mul(pow(base, i), base) = pow(base, i + 1)
+                    by def $sequence_matches(i + 1)
+        $sequence_matches(k)
+        k <= k
+        sequence(k) = pow(base, k)
+        value = sequence(k) = pow(base, k)
+
+    by thm nonnegative_power_is_pow(x, y, n)
+    by thm nonnegative_power_is_pow(x, z, n)
+    y = pow(x, n)
+    z = pow(x, n)
+    y = z
+
 prop has_group_power(G set, mul fn(x, y G) G, one G, x G, n Z, y G):
     exist inv, positive_part, negative_part G, p, q N st {mul(x, inv) = one, mul(inv, x) = one, $has_nonnegative_group_power(G, mul, one, x, p, positive_part), $has_nonnegative_group_power(G, mul, one, inv, q, negative_part), n + q = p, y = mul(positive_part, negative_part)}
+
+# Integral powers respect addition of exponents, including the inverse-power
+# component of the signed representation.
+thm group_power_add:
+    ? forall G set, mul fn(x, y G) G, one G, x, y, z G, a, b Z:
+        $is_group(G, mul, one)
+        $has_group_power(G, mul, one, x, a, y)
+        $has_group_power(G, mul, one, x, b, z)
+        =>:
+            $has_group_power(G, mul, one, x, a + b, mul(y, z))
+    have fn inverse by exist!:
+        ? forall base G:
+            exist! w G st {mul(base, w) = one, mul(w, base) = one}
+        obtain w from exist w G st {mul(base, w) = one, mul(w, base) = one}
+        witness exist! w0 G st {mul(base, w0) = one, mul(w0, base) = one} from w:
+            mul(base, w) = one
+            mul(w, base) = one
+            forall w1, w2 G:
+                mul(base, w1) = one
+                mul(w1, base) = one
+                mul(base, w2) = one
+                mul(w2, base) = one
+                =>:
+                    w1 = mul(w1, one) = mul(w1, mul(base, w2)) = mul(mul(w1, base), w2) = mul(one, w2) = w2
+
+    have fn pow(base G, n N) G by induc n from 0:
+        case n = 0: one
+        case n > 0: mul(pow(base, n - 1), base)
+
+    claim:
+        ? forall base G, n N:
+            pow(base, n + 1) = mul(pow(base, n), base)
+        pow(base, n + 1) = mul(pow(base, (n + 1) - 1), base) = mul(pow(base, n), base)
+
+    thm pow_represents_nonnegative_power:
+        ? forall base G, n N:
+            $has_nonnegative_group_power(G, mul, one, base, n, pow(base, n))
+        have fn sequence(i N) G = pow(base, i)
+        sequence(n) = pow(base, n)
+        witness exist sequence0 fn(i N) G st {$is_group_power_sequence(G, mul, one, base, n, sequence0), sequence0(n) = pow(base, n)} from sequence:
+            claim:
+                ? $is_group_power_sequence(G, mul, one, base, n, sequence)
+                sequence(0) = pow(base, 0) = one
+                claim:
+                    ? forall i N:
+                        i < n
+                        =>:
+                            sequence(i + 1) = mul(sequence(i), base)
+                    sequence(i + 1) = pow(base, i + 1) = mul(pow(base, i), base) = mul(sequence(i), base)
+                by def $is_group_power_sequence(G, mul, one, base, n, sequence)
+        by def $has_nonnegative_group_power(G, mul, one, base, n, pow(base, n))
+
+    claim:
+        ? forall base G, r, s N:
+            mul(pow(base, r), pow(base, s)) = pow(base, r + s)
+        by induc s from 0:
+            ? mul(pow(base, r), pow(base, s)) = pow(base, r + s)
+            ? from s = 0:
+                pow(base, 0) = one
+                r + 0 = r
+                mul(pow(base, r), pow(base, 0)) = mul(pow(base, r), one) = pow(base, r) = pow(base, r + 0)
+            ? induc:
+                pow(base, s + 1) = mul(pow(base, s), base)
+                pow(base, r + (s + 1)) = pow(base, (r + s) + 1) = mul(pow(base, r + s), base)
+                mul(pow(base, r), pow(base, s + 1)) = mul(pow(base, r), mul(pow(base, s), base)) = mul(mul(pow(base, r), pow(base, s)), base) = mul(pow(base, r + s), base) = pow(base, r + (s + 1))
+
+    prop cross_commutation(n N):
+        mul(x, pow(inverse(x), n)) = mul(pow(inverse(x), n), x)
+        mul(inverse(x), pow(x, n)) = mul(pow(x, n), inverse(x))
+
+    claim:
+        ? forall n N:
+            $cross_commutation(n)
+        by induc n from 0:
+            ? $cross_commutation(n)
+            ? from n = 0:
+                pow(x, 0) = one
+                pow(inverse(x), 0) = one
+                mul(x, pow(inverse(x), 0)) = mul(x, one) = x = mul(one, x) = mul(pow(inverse(x), 0), x)
+                mul(inverse(x), pow(x, 0)) = mul(inverse(x), one) = inverse(x) = mul(one, inverse(x)) = mul(pow(x, 0), inverse(x))
+                by def $cross_commutation(0)
+            ? induc:
+                pow(x, n + 1) = mul(pow(x, n), x)
+                pow(inverse(x), n + 1) = mul(pow(inverse(x), n), inverse(x))
+                mul(x, inverse(x)) = one
+                mul(inverse(x), x) = one
+                mul(x, pow(inverse(x), n + 1)) = mul(x, mul(pow(inverse(x), n), inverse(x))) = mul(mul(x, pow(inverse(x), n)), inverse(x)) = mul(mul(pow(inverse(x), n), x), inverse(x)) = mul(pow(inverse(x), n), mul(x, inverse(x))) = mul(pow(inverse(x), n), one) = pow(inverse(x), n)
+                mul(pow(inverse(x), n + 1), x) = mul(mul(pow(inverse(x), n), inverse(x)), x) = mul(pow(inverse(x), n), mul(inverse(x), x)) = mul(pow(inverse(x), n), one) = pow(inverse(x), n)
+                mul(inverse(x), pow(x, n + 1)) = mul(inverse(x), mul(pow(x, n), x)) = mul(mul(inverse(x), pow(x, n)), x) = mul(mul(pow(x, n), inverse(x)), x) = mul(pow(x, n), mul(inverse(x), x)) = mul(pow(x, n), one) = pow(x, n)
+                mul(pow(x, n + 1), inverse(x)) = mul(mul(pow(x, n), x), inverse(x)) = mul(pow(x, n), mul(x, inverse(x))) = mul(pow(x, n), one) = pow(x, n)
+                by def $cross_commutation(n + 1)
+
+    claim:
+        ? forall r, s N:
+            mul(pow(x, r), pow(inverse(x), s)) = mul(pow(inverse(x), s), pow(x, r))
+        by induc r from 0:
+            ? mul(pow(x, r), pow(inverse(x), s)) = mul(pow(inverse(x), s), pow(x, r))
+            ? from r = 0:
+                pow(x, 0) = one
+                mul(pow(x, 0), pow(inverse(x), s)) = mul(one, pow(inverse(x), s)) = pow(inverse(x), s) = mul(pow(inverse(x), s), one) = mul(pow(inverse(x), s), pow(x, 0))
+            ? induc:
+                pow(x, r + 1) = mul(pow(x, r), x)
+                $cross_commutation(s)
+                mul(x, pow(inverse(x), s)) = mul(pow(inverse(x), s), x)
+                mul(pow(x, r + 1), pow(inverse(x), s)) = mul(mul(pow(x, r), x), pow(inverse(x), s)) = mul(pow(x, r), mul(x, pow(inverse(x), s))) = mul(pow(x, r), mul(pow(inverse(x), s), x)) = mul(mul(pow(x, r), pow(inverse(x), s)), x) = mul(mul(pow(inverse(x), s), pow(x, r)), x) = mul(pow(inverse(x), s), mul(pow(x, r), x)) = mul(pow(inverse(x), s), pow(x, r + 1))
+
+    obtain inv1, yp, yn, p, q from exist inv, positive_part, negative_part G, p, q N st {mul(x, inv) = one, mul(inv, x) = one, $has_nonnegative_group_power(G, mul, one, x, p, positive_part), $has_nonnegative_group_power(G, mul, one, inv, q, negative_part), a + q = p, y = mul(positive_part, negative_part)}
+    obtain inv2, zp, zn, r, s from exist inv, positive_part, negative_part G, p2, q2 N st {mul(x, inv) = one, mul(inv, x) = one, $has_nonnegative_group_power(G, mul, one, x, p2, positive_part), $has_nonnegative_group_power(G, mul, one, inv, q2, negative_part), b + q2 = p2, z = mul(positive_part, negative_part)}
+    inv1 = inverse(x)
+    inv2 = inverse(x)
+    by thm pow_represents_nonnegative_power(x, p)
+    by thm pow_represents_nonnegative_power(inv1, q)
+    by thm pow_represents_nonnegative_power(x, r)
+    by thm pow_represents_nonnegative_power(inv2, s)
+    by thm nonnegative_group_power_is_unique(G, mul, one, x, p, yp, pow(x, p))
+    by thm nonnegative_group_power_is_unique(G, mul, one, inv1, q, yn, pow(inv1, q))
+    by thm nonnegative_group_power_is_unique(G, mul, one, x, r, zp, pow(x, r))
+    by thm nonnegative_group_power_is_unique(G, mul, one, inv2, s, zn, pow(inv2, s))
+    yp = pow(x, p)
+    yn = pow(inv1, q) = pow(inverse(x), q)
+    zp = pow(x, r)
+    zn = pow(inv2, s) = pow(inverse(x), s)
+    y = mul(yp, yn) = mul(pow(x, p), pow(inverse(x), q))
+    z = mul(zp, zn) = mul(pow(x, r), pow(inverse(x), s))
+    have positive_part G = pow(x, p + r)
+    have negative_part G = pow(inverse(x), q + s)
+    positive_part = pow(x, p + r)
+    negative_part = pow(inverse(x), q + s)
+    by thm pow_represents_nonnegative_power(x, p + r)
+    by thm pow_represents_nonnegative_power(inverse(x), q + s)
+    mul(pow(inverse(x), q), mul(pow(x, r), pow(inverse(x), s))) = mul(mul(pow(inverse(x), q), pow(x, r)), pow(inverse(x), s))
+    mul(mul(pow(x, p), pow(inverse(x), q)), mul(pow(x, r), pow(inverse(x), s))) = mul(pow(x, p), mul(pow(inverse(x), q), mul(pow(x, r), pow(inverse(x), s))))
+    mul(pow(x, p), mul(pow(inverse(x), q), mul(pow(x, r), pow(inverse(x), s)))) = mul(pow(x, p), mul(mul(pow(inverse(x), q), pow(x, r)), pow(inverse(x), s)))
+    mul(pow(inverse(x), q), pow(x, r)) = mul(pow(x, r), pow(inverse(x), q))
+    mul(pow(x, p), mul(pow(inverse(x), q), pow(x, r))) = mul(pow(x, p), mul(pow(x, r), pow(inverse(x), q)))
+    mul(mul(pow(x, p), mul(pow(inverse(x), q), pow(x, r))), pow(inverse(x), s)) = mul(mul(pow(x, p), mul(pow(x, r), pow(inverse(x), q))), pow(inverse(x), s))
+    mul(pow(x, p), mul(pow(x, r), pow(inverse(x), q))) = mul(mul(pow(x, p), pow(x, r)), pow(inverse(x), q))
+    mul(pow(x, p), pow(x, r)) = pow(x, p + r)
+    mul(mul(pow(x, p), pow(x, r)), pow(inverse(x), q)) = mul(pow(x, p + r), pow(inverse(x), q))
+    mul(pow(inverse(x), q), pow(inverse(x), s)) = pow(inverse(x), q + s)
+    mul(mul(pow(x, p + r), pow(inverse(x), q)), pow(inverse(x), s)) = mul(pow(x, p + r), mul(pow(inverse(x), q), pow(inverse(x), s)))
+    mul(pow(x, p + r), mul(pow(inverse(x), q), pow(inverse(x), s))) = mul(pow(x, p + r), pow(inverse(x), q + s))
+    mul(y, z) = mul(mul(pow(x, p), pow(inverse(x), q)), mul(pow(x, r), pow(inverse(x), s))) = mul(pow(x, p), mul(pow(inverse(x), q), mul(pow(x, r), pow(inverse(x), s)))) = mul(pow(x, p), mul(mul(pow(inverse(x), q), pow(x, r)), pow(inverse(x), s))) = mul(mul(pow(x, p), mul(pow(inverse(x), q), pow(x, r))), pow(inverse(x), s)) = mul(mul(pow(x, p), mul(pow(x, r), pow(inverse(x), q))), pow(inverse(x), s)) = mul(mul(mul(pow(x, p), pow(x, r)), pow(inverse(x), q)), pow(inverse(x), s)) = mul(mul(pow(x, p), pow(x, r)), mul(pow(inverse(x), q), pow(inverse(x), s))) = mul(pow(x, p + r), mul(pow(inverse(x), q), pow(inverse(x), s))) = mul(pow(x, p + r), pow(inverse(x), q + s)) = mul(positive_part, negative_part)
+    mul(y, z) = mul(positive_part, negative_part)
+    (a + b) + (q + s) = (a + q) + (b + s) = p + r
+    witness exist inv, pp, nn G, i, j N st {mul(x, inv) = one, mul(inv, x) = one, $has_nonnegative_group_power(G, mul, one, x, i, pp), $has_nonnegative_group_power(G, mul, one, inv, j, nn), (a + b) + j = i, mul(y, z) = mul(pp, nn)} from inverse(x), positive_part, negative_part, p + r, q + s
+    by def $has_group_power(G, mul, one, x, a + b, mul(y, z))
+
+# Lemma VII.2. A signed power with exponent zero is the group unit.
+# The witness equality p = q reduces its positive and inverse-power
+# components to a cancelling pair; the local normal form makes that
+# cancellation explicit without introducing a global power function.
+thm zero_group_power_is_one:
+    ? forall G set, mul fn(x, y G) G, one G, x, y G:
+        $is_group(G, mul, one)
+        $has_group_power(G, mul, one, x, 0, y)
+        =>:
+            y = one
+    have fn inverse by exist!:
+        ? forall base G:
+            exist! w G st {mul(base, w) = one, mul(w, base) = one}
+        obtain w from exist w G st {mul(base, w) = one, mul(w, base) = one}
+        witness exist! w0 G st {mul(base, w0) = one, mul(w0, base) = one} from w:
+            mul(base, w) = one
+            mul(w, base) = one
+            forall w1, w2 G:
+                mul(base, w1) = one
+                mul(w1, base) = one
+                mul(base, w2) = one
+                mul(w2, base) = one
+                =>:
+                    w1 = mul(w1, one) = mul(w1, mul(base, w2)) = mul(mul(w1, base), w2) = mul(one, w2) = w2
+
+    have fn pow(base G, n N) G by induc n from 0:
+        case n = 0: one
+        case n > 0: mul(pow(base, n - 1), base)
+
+    claim:
+        ? forall base G, n N:
+            pow(base, n + 1) = mul(pow(base, n), base)
+        pow(base, n + 1) = mul(pow(base, (n + 1) - 1), base) = mul(pow(base, n), base)
+
+    thm pow_represents_nonnegative_power:
+        ? forall base G, n N:
+            $has_nonnegative_group_power(G, mul, one, base, n, pow(base, n))
+        have fn sequence(i N) G = pow(base, i)
+        sequence(n) = pow(base, n)
+        witness exist sequence0 fn(i N) G st {$is_group_power_sequence(G, mul, one, base, n, sequence0), sequence0(n) = pow(base, n)} from sequence:
+            claim:
+                ? $is_group_power_sequence(G, mul, one, base, n, sequence)
+                sequence(0) = pow(base, 0) = one
+                claim:
+                    ? forall i N:
+                        i < n
+                        =>:
+                            sequence(i + 1) = mul(sequence(i), base)
+                    sequence(i + 1) = pow(base, i + 1) = mul(pow(base, i), base) = mul(sequence(i), base)
+                by def $is_group_power_sequence(G, mul, one, base, n, sequence)
+        by def $has_nonnegative_group_power(G, mul, one, base, n, pow(base, n))
+
+    prop cross_commutation(n N):
+        mul(x, pow(inverse(x), n)) = mul(pow(inverse(x), n), x)
+        mul(inverse(x), pow(x, n)) = mul(pow(x, n), inverse(x))
+
+    claim:
+        ? forall n N:
+            $cross_commutation(n)
+        by induc n from 0:
+            ? $cross_commutation(n)
+            ? from n = 0:
+                pow(x, 0) = one
+                pow(inverse(x), 0) = one
+                mul(x, pow(inverse(x), 0)) = mul(x, one) = x = mul(one, x) = mul(pow(inverse(x), 0), x)
+                mul(inverse(x), pow(x, 0)) = mul(inverse(x), one) = inverse(x) = mul(one, inverse(x)) = mul(pow(x, 0), inverse(x))
+                by def $cross_commutation(0)
+            ? induc:
+                pow(x, n + 1) = mul(pow(x, n), x)
+                pow(inverse(x), n + 1) = mul(pow(inverse(x), n), inverse(x))
+                mul(x, inverse(x)) = one
+                mul(inverse(x), x) = one
+                mul(x, pow(inverse(x), n + 1)) = mul(x, mul(pow(inverse(x), n), inverse(x))) = mul(mul(x, pow(inverse(x), n)), inverse(x)) = mul(mul(pow(inverse(x), n), x), inverse(x)) = mul(pow(inverse(x), n), mul(x, inverse(x))) = mul(pow(inverse(x), n), one) = pow(inverse(x), n)
+                mul(pow(inverse(x), n + 1), x) = mul(mul(pow(inverse(x), n), inverse(x)), x) = mul(pow(inverse(x), n), mul(inverse(x), x)) = mul(pow(inverse(x), n), one) = pow(inverse(x), n)
+                mul(inverse(x), pow(x, n + 1)) = mul(inverse(x), mul(pow(x, n), x)) = mul(mul(inverse(x), pow(x, n)), x) = mul(mul(pow(x, n), inverse(x)), x) = mul(pow(x, n), mul(inverse(x), x)) = mul(pow(x, n), one) = pow(x, n)
+                mul(pow(x, n + 1), inverse(x)) = mul(mul(pow(x, n), x), inverse(x)) = mul(pow(x, n), mul(x, inverse(x))) = mul(pow(x, n), one) = pow(x, n)
+                by def $cross_commutation(n + 1)
+
+    prop inverse_power_cancellation(n N):
+        mul(pow(x, n), pow(inverse(x), n)) = one
+        mul(pow(inverse(x), n), pow(x, n)) = one
+
+    claim:
+        ? forall n N:
+            $inverse_power_cancellation(n)
+        by induc n from 0:
+            ? $inverse_power_cancellation(n)
+            ? from n = 0:
+                pow(x, 0) = one
+                pow(inverse(x), 0) = one
+                mul(pow(x, 0), pow(inverse(x), 0)) = mul(one, one) = one
+                mul(pow(inverse(x), 0), pow(x, 0)) = mul(one, one) = one
+                by def $inverse_power_cancellation(0)
+            ? induc:
+                pow(x, n + 1) = mul(pow(x, n), x)
+                pow(inverse(x), n + 1) = mul(pow(inverse(x), n), inverse(x))
+                mul(x, inverse(x)) = one
+                mul(inverse(x), x) = one
+                $cross_commutation(n)
+                mul(x, pow(inverse(x), n)) = mul(pow(inverse(x), n), x)
+                mul(inverse(x), pow(x, n)) = mul(pow(x, n), inverse(x))
+                mul(x, mul(pow(inverse(x), n), inverse(x))) = mul(mul(x, pow(inverse(x), n)), inverse(x))
+                mul(inverse(x), mul(pow(x, n), x)) = mul(mul(inverse(x), pow(x, n)), x)
+                mul(pow(x, n), mul(x, pow(inverse(x), n))) = mul(pow(x, n), mul(pow(inverse(x), n), x))
+                mul(pow(inverse(x), n), mul(inverse(x), pow(x, n))) = mul(pow(inverse(x), n), mul(pow(x, n), inverse(x)))
+                mul(pow(x, n), mul(pow(inverse(x), n), x)) = mul(mul(pow(x, n), pow(inverse(x), n)), x)
+                mul(pow(inverse(x), n), mul(pow(x, n), inverse(x))) = mul(mul(pow(inverse(x), n), pow(x, n)), inverse(x))
+                mul(mul(pow(x, n), mul(pow(inverse(x), n), x)), inverse(x)) = mul(mul(mul(pow(x, n), pow(inverse(x), n)), x), inverse(x))
+                mul(mul(pow(inverse(x), n), mul(pow(x, n), inverse(x))), x) = mul(mul(mul(pow(inverse(x), n), pow(x, n)), inverse(x)), x)
+                mul(pow(x, n + 1), pow(inverse(x), n + 1)) = mul(mul(pow(x, n), x), mul(pow(inverse(x), n), inverse(x))) = mul(pow(x, n), mul(x, mul(pow(inverse(x), n), inverse(x)))) = mul(pow(x, n), mul(mul(x, pow(inverse(x), n)), inverse(x))) = mul(mul(pow(x, n), mul(x, pow(inverse(x), n))), inverse(x)) = mul(mul(pow(x, n), mul(pow(inverse(x), n), x)), inverse(x)) = mul(mul(mul(pow(x, n), pow(inverse(x), n)), x), inverse(x)) = mul(mul(pow(x, n), pow(inverse(x), n)), mul(x, inverse(x))) = mul(one, one) = one
+                mul(pow(inverse(x), n + 1), pow(x, n + 1)) = mul(mul(pow(inverse(x), n), inverse(x)), mul(pow(x, n), x)) = mul(pow(inverse(x), n), mul(inverse(x), mul(pow(x, n), x))) = mul(pow(inverse(x), n), mul(mul(inverse(x), pow(x, n)), x)) = mul(mul(pow(inverse(x), n), mul(inverse(x), pow(x, n))), x) = mul(mul(pow(inverse(x), n), mul(pow(x, n), inverse(x))), x) = mul(mul(mul(pow(inverse(x), n), pow(x, n)), inverse(x)), x) = mul(mul(pow(inverse(x), n), pow(x, n)), mul(inverse(x), x)) = mul(one, one) = one
+                by def $inverse_power_cancellation(n + 1)
+
+    obtain inv, positive_part, negative_part, p, q from exist inv0, pp, nn G, i, j N st {mul(x, inv0) = one, mul(inv0, x) = one, $has_nonnegative_group_power(G, mul, one, x, i, pp), $has_nonnegative_group_power(G, mul, one, inv0, j, nn), 0 + j = i, y = mul(pp, nn)}
+    inv = inverse(x)
+    p = q
+    by thm pow_represents_nonnegative_power(x, p)
+    by thm pow_represents_nonnegative_power(inv, q)
+    by thm nonnegative_group_power_is_unique(G, mul, one, x, p, positive_part, pow(x, p))
+    by thm nonnegative_group_power_is_unique(G, mul, one, inv, q, negative_part, pow(inv, q))
+    positive_part = pow(x, p)
+    negative_part = pow(inv, q) = pow(inverse(x), q)
+    y = mul(positive_part, negative_part)
+    mul(positive_part, negative_part) = mul(pow(x, p), pow(inverse(x), q))
+    pow(x, p) = pow(x, q)
+    $inverse_power_cancellation(q)
+    mul(pow(x, q), pow(inverse(x), q)) = one
+    y = one
+
+# Lemma VII.3. The negative exponent represents the two-sided inverse of a
+# signed power. The proof swaps the positive and inverse-power indices, then
+# uses the checked addition and zero-exponent laws to show both products are
+# the group unit.
+thm group_power_neg:
+    ? forall G set, mul fn(x, y G) G, one G, x, y G, a Z:
+        $is_group(G, mul, one)
+        $has_group_power(G, mul, one, x, a, y)
+        =>:
+            exist z G st {$has_group_power(G, mul, one, x, -a, z), mul(y, z) = one, mul(z, y) = one}
+    have fn pow(base G, n N) G by induc n from 0:
+        case n = 0: one
+        case n > 0: mul(pow(base, n - 1), base)
+
+    claim:
+        ? forall base G, n N:
+            pow(base, n + 1) = mul(pow(base, n), base)
+        pow(base, n + 1) = mul(pow(base, (n + 1) - 1), base) = mul(pow(base, n), base)
+
+    thm pow_represents_nonnegative_power:
+        ? forall base G, n N:
+            $has_nonnegative_group_power(G, mul, one, base, n, pow(base, n))
+        have fn sequence(i N) G = pow(base, i)
+        sequence(n) = pow(base, n)
+        witness exist sequence0 fn(i N) G st {$is_group_power_sequence(G, mul, one, base, n, sequence0), sequence0(n) = pow(base, n)} from sequence:
+            claim:
+                ? $is_group_power_sequence(G, mul, one, base, n, sequence)
+                sequence(0) = pow(base, 0) = one
+                claim:
+                    ? forall i N:
+                        i < n
+                        =>:
+                            sequence(i + 1) = mul(sequence(i), base)
+                    sequence(i + 1) = pow(base, i + 1) = mul(pow(base, i), base) = mul(sequence(i), base)
+                by def $is_group_power_sequence(G, mul, one, base, n, sequence)
+        by def $has_nonnegative_group_power(G, mul, one, base, n, pow(base, n))
+
+    obtain inv, positive_part, negative_part, p, q from exist inv0, pp, nn G, i, j N st {mul(x, inv0) = one, mul(inv0, x) = one, $has_nonnegative_group_power(G, mul, one, x, i, pp), $has_nonnegative_group_power(G, mul, one, inv0, j, nn), a + j = i, y = mul(pp, nn)}
+    have z G = mul(pow(x, q), pow(inv, p))
+    by thm pow_represents_nonnegative_power(x, q)
+    by thm pow_represents_nonnegative_power(inv, p)
+    q = (a + q) - a = p - a = -a + p
+    claim:
+        ? $has_group_power(G, mul, one, x, -a, z)
+        witness exist inv0, pp, nn G, i, j N st {mul(x, inv0) = one, mul(inv0, x) = one, $has_nonnegative_group_power(G, mul, one, x, i, pp), $has_nonnegative_group_power(G, mul, one, inv0, j, nn), -a + j = i, z = mul(pp, nn)} from inv, pow(x, q), pow(inv, p), q, p
+        by def $has_group_power(G, mul, one, x, -a, z)
+    witness exist z0 G st {$has_group_power(G, mul, one, x, -a, z0), mul(y, z0) = one, mul(z0, y) = one} from z:
+        by thm group_power_add(G, mul, one, x, y, z, a, -a)
+        a + (-a) = 0
+        by thm zero_group_power_is_one(G, mul, one, x, mul(y, z))
+        by thm group_power_add(G, mul, one, x, z, y, -a, a)
+        (-a) + a = 0
+        by thm zero_group_power_is_one(G, mul, one, x, mul(z, y))
 
 prop is_integral_power_of(G set, mul fn(x, y G) G, one G, x, y G):
     exist n Z st {$has_group_power(G, mul, one, x, n, y)}

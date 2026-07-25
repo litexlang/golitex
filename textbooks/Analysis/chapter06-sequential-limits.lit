@@ -1524,6 +1524,11 @@ have fn geom_seq(x R) fn(k N_pos) R = fn(n N_pos) R {x^n}
 forall x R, n N_pos:
     geom_seq(x)(n) = x^n
 
+thm geom_seq_value:
+    ? forall x R, n N_pos:
+        geom_seq(x)(n) = x^n
+    geom_seq(x)(n) = x^n
+
 # The proof follows the monotone convergence idea from the preceding result and
 # uses the Chapter 5 least-upper-bound theorem collected at the top of this
 # file.
@@ -1722,6 +1727,11 @@ thm bounded_decreasing_sequence_converges:
 have fn seq_shift(a seq(R)) fn(k N_pos) R = fn(n N_pos) R {a(n + 1)}
 
 forall a seq(R), n N_pos:
+    seq_shift(a)(n) = a(n + 1)
+
+thm seq_shift_value:
+    ? forall a seq(R), n N_pos:
+        seq_shift(a)(n) = a(n + 1)
     seq_shift(a)(n) = a(n + 1)
 
 thm seq_shift_has_limit:
@@ -3941,6 +3951,7 @@ thm rational_approximation_sequence_exists:
     obtain a from exist a seq(Q) st {$chap5::is_cauchy_sequence_in_Q(a), $chap5::has_formal_limit_in_Q(a, alpha)}
     have fn q(n N_pos) R = a(n)
     forall n N_pos:
+        q(n) = a(n)
         q(n) $in Q
     claim:
         ? forall epsilon R_pos:
@@ -3951,7 +3962,8 @@ thm rational_approximation_sequence_exists:
             forall n N_pos:
                 n >= n0
                 =>:
-                    abs(q(n) - alpha) < epsilon
+                    q(n) = a(n)
+                    abs(q(n) - alpha) = abs(a(n) - alpha) < epsilon
     by def $has_limit(q, alpha)
     witness exist q0 seq(R) st {$is_rational_approximation_sequence(q0, alpha)} from q
 
@@ -3995,6 +4007,7 @@ thm real_power_power_law:
 thm real_power_neg_law:
     ? forall x R_pos, q R:
         x^(-q) = 1 / x^q
+    x^q * x^(-q) = x^(q + (-q)) = x^0 = 1
 
 thm real_power_base_strict_mono:
     ? forall x, y R_pos, q R:
@@ -4010,6 +4023,7 @@ thm real_positive_base_power_above_one:
         =>:
             x^s > 1
     by thm real_power_base_strict_mono(x, 1, s)
+    1^s = 1
 
 thm real_positive_base_power_below_one:
     ? forall x R_pos, s R:
@@ -4018,6 +4032,7 @@ thm real_positive_base_power_below_one:
         =>:
             x^s < 1
     by thm real_power_base_strict_mono(1, x, s)
+    1^s = 1
 
 thm real_power_exponent_strict_mono_above_one:
     ? forall x R_pos, q, r R:
@@ -4026,7 +4041,10 @@ thm real_power_exponent_strict_mono_above_one:
         =>:
             x^q > x^r
     by thm real_positive_base_power_above_one(x, q - r)
-    x^q = x^r * x^(q - r) > x^r
+    by thm real_power_positive(x, r)
+    x^r * x^(q - r) > x^r * 1 = x^r
+    q = r + (q - r)
+    x^q = x^(r + (q - r)) = x^r * x^(q - r) > x^r
 
 thm real_power_exponent_strict_antimono_below_one:
     ? forall x R_pos, q, r R:
@@ -4035,4 +4053,7 @@ thm real_power_exponent_strict_antimono_below_one:
         =>:
             x^q < x^r
     by thm real_positive_base_power_below_one(x, q - r)
-    x^q = x^r * x^(q - r) < x^r
+    by thm real_power_positive(x, r)
+    x^r * x^(q - r) < x^r * 1 = x^r
+    q = r + (q - r)
+    x^q = x^(r + (q - r)) = x^r * x^(q - r) < x^r

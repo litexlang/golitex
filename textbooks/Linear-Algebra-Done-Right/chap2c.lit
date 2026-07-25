@@ -129,7 +129,9 @@ thm full_dimension_subspace_equals_ambient:
     # The verifier also does not project the defining entry function through
     # the named lifted-list equality.
     trust $chap2a::contains_list_entries(v, dimU, ambient_basis_U, U)
-    by thm chap2a::span_is_smallest_subspace(s, v, space, dimU, ambient_basis_U)
+    by thm chap2a::span_is_smallest_subspace(s, v, space, dimU, ambient_basis_U, U)
+    \chap2a::span_carrier<s, v, space, dimU, ambient_basis_U> $subset U
+    by thm chap2a::span_carrier_spec(s, v, space, dimU, ambient_basis_U)
     \chap2a::span<s, v, space, dimU, ambient_basis_U> $subset U
     \chap2a::span<s, v, space, dimU, ambient_basis_U> = v
     v $subset U

@@ -67,7 +67,9 @@ The current public surface includes:
   vector-space candidate relations;
 - finite coordinate lists, coordinate spaces, function spaces, subspaces,
   finite subspace sums, and direct sums;
-- linear combinations, span, linear independence, bases, and dimension;
+- linear combinations, concrete spans, linear independence, bases, and
+  dimension; structural span conclusions use one explicitly equal selected
+  carrier while the recursive finite-sum proof remains deferred;
 - linear maps, null spaces, ranges, matrices of linear maps, rank,
   invertibility, products, quotient spaces, and dual spaces; and
 - function-based polynomials, degree, zeros, complex factorization, conjugate

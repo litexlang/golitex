@@ -5,16 +5,18 @@ André Weil and Maxwell Rosenlicht's *Number Theory for Beginners* in source
 order. Run it from the repository root with:
 
 ```sh
-RUST_MIN_STACK=8388608 target/debug/litex -compact -runner -r textbooks/NumberTheoryForBeginners
+RUST_MIN_STACK=8388608 target/release/litex -compact -runner -r textbooks/NumberTheoryForBeginners
 ```
 
 The project exports Sections I–XIII directly, with no citation package. Its
 checked public surface includes
 integer divisibility and Euclidean division, gcd and Bézout interfaces,
 the canonical multiple set `mZ(m)` together with its membership
-characterization, relative primality, finite-product prime divisibility and
-prime-factorization existence, congruences and residue classes, elementary group
-interfaces, the finite residue-class carrier with its exact cardinality, a
+characterization, relative primality, the checked uniqueness of finite
+nonnegative group-power sequences, signed-power product law, and zero-exponent
+law, finite-product prime divisibility and prime-factorization existence,
+congruences and residue classes, elementary group interfaces, the finite
+residue-class carrier with its exact cardinality, a
 finite-support polynomial carrier with sum, convolution, degree,
 division, gcd, and ideal interfaces, power congruences, the Legendre-symbol
 specification, and concrete Gaussian-integer coordinate operations.

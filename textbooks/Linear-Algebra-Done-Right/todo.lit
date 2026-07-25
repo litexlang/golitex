@@ -23,15 +23,19 @@
 #
 # Chapter 2, Sections 2A-2C — bases and finite dimension
 # Linear combinations, span, independence, bases, and dimension are callable
-# interfaces. The finite-list deletion and exchange arguments needed for basis
-# extraction and extension remain to be proved. Equality of basis lengths and
-# its basis-length existence wrapper are checked relative to those upstream
-# results. Results 2.38 and 2.42 follow the source routes, but each retains one
-# trusted equality because equal natural indices do not yet transport a
-# FiniteList value between its dependent length types. Results 2.37 and 2.39
-# now check their dimension comparison and span-minimality routes; transporting
-# a subspace basis to the ambient linear-combination structure, and exposing
-# the entries of the named lifted list, remain trusted.
+# interfaces. The recursive construction and uniqueness of a finite linear
+# combination, its zero/additive/negative identities, and the finite-sum proof
+# that span is the smallest containing subspace remain to be supplied. The
+# structural span statements currently use a selected carrier stated equal to
+# the displayed span. The finite-list deletion and exchange arguments needed
+# for basis extraction and extension remain to be proved. Equality of basis
+# lengths and its basis-length existence wrapper are checked relative to those
+# upstream results. Results 2.38 and 2.42 follow the source routes, but each
+# retains one trusted equality because equal natural indices do not yet
+# transport a FiniteList value between its dependent length types. Results 2.37
+# and 2.39 now check their dimension comparison and span-minimality routes;
+# transporting a subspace basis to the ambient linear-combination structure,
+# and exposing the entries of the named lifted list, remain trusted.
 #
 # Chapter 2C, binary subspace-sum closure used by Result 2.43
 # The zero and scalar-closure arguments and all decomposition witnesses are
