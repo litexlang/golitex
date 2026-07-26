@@ -25,6 +25,11 @@ pub use pipeline_repl::{
     run_repl_with_output_style_and_strict_and_language,
     run_repl_with_output_style_and_strict_and_language_and_isolation,
 };
-pub use pipeline_run_stmt_globally::{run_repository_file_target, run_stmt_at_global_env};
-pub use pipeline_session::run_session_with_output_style_and_strict_and_language;
+pub use pipeline_run_stmt_globally::{
+    run_repository_before_file_target, run_repository_file_target, run_stmt_at_global_env,
+};
+pub use pipeline_session::{
+    run_session_with_output_style_and_strict_and_language,
+    run_session_with_output_style_and_strict_and_language_and_preload, SessionPreload,
+};
 pub use summary::{display_run_summary_json, display_run_summary_json_with_runtime, RunSummary};

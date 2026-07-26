@@ -920,15 +920,61 @@ prop group_power_equality_kernel_law(G set, mul fn(x, y G) G, one G, x G):
         <=>:
             a - b $in \exponent_kernel<G, mul, one>(x)
 
-# Source handling: the source proves this from the two integral-power formulas
-# above.  The checked VII.1 construction currently keeps that algebra local;
-# exposing the general subtraction identity is the remaining reusable bridge.
+# The source rewrites x^(a-b) as x^a times the inverse of x^b.  The forward
+# implication makes that inverse explicit; the reverse implication adds x^b
+# back and uses uniqueness of the resulting signed-power value.
 thm group_power_equality_iff_exponent_difference_in_kernel:
     ? forall G set, mul fn(x, y G) G, one G, x G:
         $is_group(G, mul, one)
         =>:
             $group_power_equality_kernel_law(G, mul, one, x)
-    trust $group_power_equality_kernel_law(G, mul, one, x)
+    thm group_power_is_unique:
+        ? forall a Z, ya, yb G:
+            $has_group_power(G, mul, one, x, a, ya)
+            $has_group_power(G, mul, one, x, a, yb)
+            =>:
+                ya = yb
+        by thm group_power_neg(G, mul, one, x, yb, a)
+        obtain invb from exist z G st {$has_group_power(G, mul, one, x, -a, z), mul(yb, z) = one, mul(z, yb) = one}
+        by thm group_power_add(G, mul, one, x, ya, invb, a, -a)
+        a + (-a) = 0
+        by thm zero_group_power_is_one(G, mul, one, x, mul(ya, invb))
+        by thm group_power_neg(G, mul, one, x, invb, -a)
+        obtain z from exist z0 G st {$has_group_power(G, mul, one, x, -(-a), z0), mul(invb, z0) = one, mul(z0, invb) = one}
+        -(-a) = a
+        ya = mul(ya, one) = mul(ya, mul(invb, z)) = mul(mul(ya, invb), z) = mul(one, z) = z
+        yb = mul(yb, one) = mul(yb, mul(invb, z)) = mul(mul(yb, invb), z) = mul(one, z) = z
+
+    claim:
+        ? forall a, b Z, ya, yb G:
+            $has_group_power(G, mul, one, x, a, ya)
+            $has_group_power(G, mul, one, x, b, yb)
+            ya = yb
+            =>:
+                a - b $in \exponent_kernel<G, mul, one>(x)
+        by thm group_power_neg(G, mul, one, x, yb, b)
+        obtain invb from exist z G st {$has_group_power(G, mul, one, x, -b, z), mul(yb, z) = one, mul(z, yb) = one}
+        by thm group_power_add(G, mul, one, x, ya, invb, a, -b)
+        a + (-b) = a - b
+        mul(ya, invb) = mul(yb, invb) = one
+        $has_group_power(G, mul, one, x, a - b, one)
+        a - b $in \exponent_kernel<G, mul, one>(x)
+
+    claim:
+        ? forall a, b Z, ya, yb G:
+            $has_group_power(G, mul, one, x, a, ya)
+            $has_group_power(G, mul, one, x, b, yb)
+            a - b $in \exponent_kernel<G, mul, one>(x)
+            =>:
+                ya = yb
+        $has_group_power(G, mul, one, x, a - b, one)
+        by thm group_power_add(G, mul, one, x, yb, one, b, a - b)
+        b + (a - b) = a
+        mul(yb, one) = yb
+        $has_group_power(G, mul, one, x, a, yb)
+        by thm group_power_is_unique(a, ya, yb)
+
+    by def $group_power_equality_kernel_law(G, mul, one, x)
 
 thm zero_belongs_to_exponent_kernel:
     ? forall G set, mul fn(x, y G) G, one G, x G:

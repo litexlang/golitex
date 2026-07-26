@@ -21,12 +21,52 @@ label `trust` or `kernel_problem`.
   command:
   `target/release/litex -compact -f
   textbooks/Analysis2/chapter01-metric-spaces.lit`.
-  Result: verifier `"result": "success"`, with 36 explicit `trust`
+  Result: verifier `"result": "success"`, with 28 explicit `trust`
   statements. Desired state: replace each source-local theorem trust with a
   checked proof while preserving the current declaration shapes. Root cause:
   omitted exercise proofs, finite choice constructions, finite-dimensional
   norm estimates, and the source's compact open-cover argument have not yet
   been formalized. Primary label: `trust`.
+
+- **Arbitrary-union openness stops at the source-local subset bridge.**
+  Attempt: a persistent release `try:` session verified both directions of the
+  template-membership bridge for `set_family_union`: first write
+  `\\set_family_union<X,A,family> = {x X:
+  $is_in_set_family_union(X,A,family,x)}`, then unfold the predicate and
+  introduce or eliminate its existential index witness. The full direct proof
+  of `arbitrary_union_of_metric_open_sets_is_open` then repeatedly ended with
+  an unlocated `ExecStmtError` when a locally proved
+  `forall x family(alpha): x $in \\set_family_union<X,A,family>` was lifted to
+  `family(alpha) $subset \\set_family_union<X,A,family>`, or when that bridge
+  was embedded in the final `by extension` proof. Desired interface: a
+  diagnosable way to discharge subset introduction from a local pointwise
+  proof, or an existing named subset-introduction theorem usable in this
+  context. Root cause is not yet isolated beyond this proof/diagnostic gap.
+  Primary label: `trust`.
+
+- **Arbitrary closed intersections stop at the adherence-transfer bridge.**
+  Attempt: a persistent release `try:` session checked the elementary fact
+  that a ball disjoint from `family(alpha)` is disjoint from the family
+  intersection. In the real source theorem, however, the next step—using
+  that empty intersection against adherence of the family intersection—ends
+  at `by contra: failed to execute proof`, even after spelling out the family
+  intersection as its set-builder form. Desired interface: stable unfolding
+  and instantiation of an adherence predicate whose set argument is a
+  template result, or a diagnosable bridge for that direct pointwise step.
+  This is recorded as a formulation/diagnostic gap, not yet a confirmed
+  kernel defect. Primary label: `trust`.
+
+- **Metric-ball nesting also stops at the pointwise-to-subset bridge.**
+  Attempt: an outermost release `try:` verified the triangle estimate
+  `d(z,c) < r` from `d(z,y) < s` and `s + d(y,c) = r`, and the new named
+  ball membership bridges verify both conversions between this inequality and
+  ball membership. The intended final statement
+  `metric_ball(y,s) $subset metric_ball(c,r)` still ends in an unlocated
+  `ExecStmtError` when lifting the checked pointwise implication to `$subset`.
+  Desired interface: a diagnosable, stable subset-introduction rule for a
+  proved universal membership fact. Root cause overlaps the arbitrary-union
+  subset bridge gap but is not yet isolated as a verifier defect. Primary
+  label: `trust`.
 
 - **Analysis I reuse is not yet a stable cross-book dependency.**
   Attempt: Chapter 1 was modeled as its own project and the real convergence

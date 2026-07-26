@@ -923,14 +923,21 @@ fn reject_unauthorized_project_references(runtime: &Runtime) -> Result<(), Runti
             )
         })?;
         let tokenizer = Tokenizer::new();
-        let blocks = tokenizer.parse_blocks(&source, Rc::from(source_path.as_str()))?;
         let mut references = vec![];
-        collect_project_reference_targets(
-            runtime,
-            owner_module_id,
-            blocks.as_slice(),
-            &mut references,
-        );
+        // Authorization discovery is lexical: unexecuted later drafts must not
+        // need valid block indentation before an earlier prefix can run.
+        let source = tokenizer.strip_triple_quote_comment_blocks(&source);
+        for (line_index, line) in source.lines().enumerate() {
+            let line_file = (line_index + 1, Rc::from(source_path.as_str()));
+            let tokens = tokenizer.tokenize_line(line, line_file.clone())?;
+            collect_project_reference_targets(
+                runtime,
+                owner_module_id,
+                tokens.as_slice(),
+                line_file,
+                &mut references,
+            );
+        }
         for (target, line_file) in references {
             if project_target_is_authorized_for_module(runtime, owner_module_id, target) {
                 continue;
@@ -955,54 +962,47 @@ fn reject_unauthorized_project_references(runtime: &Runtime) -> Result<(), Runti
 fn collect_project_reference_targets(
     runtime: &Runtime,
     owner_module_id: ModuleId,
-    blocks: &[TokenBlock],
+    tokens: &[String],
+    line_file: LineFile,
     references: &mut Vec<(ImportTarget, LineFile)>,
 ) {
-    for block in blocks {
-        for start in 0..block.header.len() {
-            if start > 0 && block.header[start - 1] == MOD_SIGN {
-                continue;
-            }
-            let mut candidate = block.header[start].clone();
-            let mut index = start;
-            let mut longest_match = runtime
+    for start in 0..tokens.len() {
+        if start > 0 && tokens[start - 1] == MOD_SIGN {
+            continue;
+        }
+        let mut candidate = tokens[start].clone();
+        let mut index = start;
+        let mut longest_match = runtime
+            .module_manager
+            .canonical_name_for_reference(owner_module_id, candidate.as_str())
+            .and_then(|name| {
+                runtime
+                    .module_manager
+                    .import_target_by_canonical_name(name.as_str())
+            });
+        while tokens.get(index + 1).map(String::as_str) == Some(MOD_SIGN) {
+            let Some(next) = tokens.get(index + 2) else {
+                break;
+            };
+            candidate = format!("{}{}{}", candidate, MOD_SIGN, next);
+            index += 2;
+            if let Some(target) = runtime
                 .module_manager
                 .canonical_name_for_reference(owner_module_id, candidate.as_str())
                 .and_then(|name| {
                     runtime
                         .module_manager
                         .import_target_by_canonical_name(name.as_str())
-                });
-            while block.header.get(index + 1).map(String::as_str) == Some(MOD_SIGN) {
-                let Some(next) = block.header.get(index + 2) else {
-                    break;
-                };
-                candidate = format!("{}{}{}", candidate, MOD_SIGN, next);
-                index += 2;
-                if let Some(target) = runtime
-                    .module_manager
-                    .canonical_name_for_reference(owner_module_id, candidate.as_str())
-                    .and_then(|name| {
-                        runtime
-                            .module_manager
-                            .import_target_by_canonical_name(name.as_str())
-                    })
-                {
-                    longest_match = Some(target);
-                }
-            }
-            if let Some(target) = longest_match {
-                if !references.iter().any(|(known, _)| *known == target) {
-                    references.push((target, block.line_file.clone()));
-                }
+                })
+            {
+                longest_match = Some(target);
             }
         }
-        collect_project_reference_targets(
-            runtime,
-            owner_module_id,
-            block.body.as_slice(),
-            references,
-        );
+        if let Some(target) = longest_match {
+            if !references.iter().any(|(known, _)| *known == target) {
+                references.push((target, line_file.clone()));
+            }
+        }
     }
 }
 

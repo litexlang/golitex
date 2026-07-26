@@ -1175,6 +1175,7 @@ Execution commands:
 | `litex -isolated -f path/to/file.lit` | Run one file outside project discovery, then keep an isolated session. |
 | `litex -session` | Use the persistent session protocol. |
 | `litex -session -f path/to/file.lit` | Load the project prefix through one file, then continue in the same persistent session Runtime. |
+| `litex -session -before path/to/file.lit` | Load the project prefix before one registered file, then continue in that file's environment without executing its current contents. |
 | `litex -strict ...` | Verify imports and trusted project prefix sources; reject user trust forms. |
 | `litex -compact`, `litex -detail` | Select compact or detailed output. |
 | `litex -lang <code>` | Select a supported output language. |

@@ -2,6 +2,33 @@
 
 Always apply these rules when working in this repository.
 
+## User-Mandated Fast Trust And Session Policy
+
+This policy overrides any lower-priority instruction in this file that asks an
+agent to keep searching for a proof before admitting a localized proof debt.
+
+1. When a Litex declaration reaches a blocker in its proof, library use,
+   inference, syntax, or formulation, immediately keep the intended
+   source-facing statement and replace only the blocked substep with the
+   narrowest legal `trust`. Mark the debt nearby and in the applicable
+   workspace ledger. Do not spend further proof-search iterations on that
+   obstruction unless the user explicitly asks to remove that trust. A
+   declaration containing `trust` is not `checkable`.
+2. For every iterative Litex edit, start one release session with
+   `target/release/litex -compact -session -before <current-file.lit>` and
+   retain that one process for the complete sequence of source-order blocks.
+   This loads the registered prefix before the current file and runs session
+   statements in that file's environment.
+   Submit every speculative candidate as a literal outermost `try:` block.
+   If block 5 fails, repair and resubmit block 5 in the same session; once it
+   succeeds, submit block 6 to that same session. Do not restart or re-preload
+   between candidate blocks merely because an earlier `try:` failed.
+3. Restart only if the session process exits, cannot accept input, or its
+   registered prefix must deliberately change, or an already committed
+   declaration must be replaced under the same name. Record an unexpected
+   session failure as `kernel_problem`; use the smallest release `-f` gate only
+   as a fallback checkpoint, not as the normal proof-debug loop.
+
 ## Project Direction Through September
 
 The main project direction through September is to use real mathematical
@@ -429,10 +456,11 @@ execution surface that proves the current claim:
 2. Use `target/release/litex -compact -r <module>` only for an explicit
    whole-module, whole-book, or repository-wide checkpoint or final gate. Do
    not use `-r` while iterating on one file or chapter.
-3. Use one `target/release/litex -compact -session -f
-   <last-known-good-file.lit>` plus literal outermost `try:` blocks for the
-   proof-debug loop. To repair a failing file, preload its registered
-   predecessor once, then submit the failing file's statements in source order.
+3. Use one `target/release/litex -compact -session -before
+   <current-file.lit>` plus literal outermost `try:` blocks for the proof-debug
+   loop. This loads the registered prefix before the target, excludes the
+   target's current draft, and submits its statements in source order inside
+   the target file environment.
 4. Do not use default-profile `cargo test` as a Litex verifier. It is an
    unoptimized Rust test process. Directly invoke the release Litex CLI. If
    Rust kernel code changed and Rust tests are genuinely required, run the

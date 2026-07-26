@@ -25,8 +25,50 @@ pub fn run_repository_file_target(
     runtime.isolated = false;
     let result = match target {
         RepositoryFileTarget::Module(module_id) => run_repository_module_prefix(runtime, module_id),
-        RepositoryFileTarget::File { .. } => run_repository_prefix(runtime, target),
+        RepositoryFileTarget::File { .. } => run_repository_prefix(runtime, target, true),
     };
+    runtime.isolated = isolated_before;
+    result
+}
+
+pub fn run_repository_before_file_target(
+    runtime: &mut Runtime,
+    target: RepositoryFileTarget,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let RepositoryFileTarget::File { module_id, file_id } = target else {
+        return (
+            vec![],
+            Some(repository_target_error(
+                "a session -before target must be a registered project file",
+            )),
+        );
+    };
+    let Some(source_path) = runtime
+        .module_manager
+        .module(module_id)
+        .and_then(|module| module.file(file_id))
+        .map(|file| file.source_path.clone())
+    else {
+        return (
+            vec![],
+            Some(repository_target_error(
+                "registered project file is missing",
+            )),
+        );
+    };
+
+    let isolated_before = runtime.isolated;
+    runtime.isolated = false;
+    let execution_mode = runtime.current_execution_mode();
+    let result = run_repository_prefix(runtime, target, false);
+    if result.1.is_none() {
+        runtime.push_file_execution_frame_with_mode(
+            module_id,
+            file_id,
+            source_path.as_str(),
+            execution_mode,
+        );
+    }
     runtime.isolated = isolated_before;
     result
 }
@@ -115,12 +157,17 @@ fn run_repository_module_prefix(
     if root_module_id == target_module_id {
         return run_repository_module_target(runtime, root_module_id);
     }
-    run_repository_prefix(runtime, RepositoryFileTarget::Module(target_module_id))
+    run_repository_prefix(
+        runtime,
+        RepositoryFileTarget::Module(target_module_id),
+        true,
+    )
 }
 
 fn run_repository_prefix(
     runtime: &mut Runtime,
     target: RepositoryFileTarget,
+    include_selected_target: bool,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let execution_mode = runtime.current_execution_mode();
     let target_module_id = match target {
@@ -139,7 +186,13 @@ fn run_repository_prefix(
             )),
         );
     }
-    run_repository_module_plan_to_target(runtime, root_module_id, execution_mode, target)
+    run_repository_module_plan_to_target(
+        runtime,
+        root_module_id,
+        execution_mode,
+        target,
+        include_selected_target,
+    )
 }
 
 fn run_repository_module_target(
@@ -227,6 +280,7 @@ fn run_repository_module_prefix_with_mode(
     module_id: ModuleId,
     execution_mode: ExecutionMode,
     target: RepositoryFileTarget,
+    include_selected_target: bool,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(module) = runtime.module_manager.module(module_id) else {
         return (
@@ -237,7 +291,13 @@ fn run_repository_module_prefix_with_mode(
         );
     };
     if runtime.current_module_id() == module_id {
-        return run_repository_module_plan_to_target(runtime, module_id, execution_mode, target);
+        return run_repository_module_plan_to_target(
+            runtime,
+            module_id,
+            execution_mode,
+            target,
+            include_selected_target,
+        );
     }
     if module.status == ModuleStatus::Loaded {
         return (vec![], None);
@@ -269,7 +329,13 @@ fn run_repository_module_prefix_with_mode(
         .expect("registered project module should exist")
         .execution_mode = execution_mode;
     runtime.push_module_execution_frame_with_mode(module_id, module_path.as_str(), execution_mode);
-    let result = run_repository_module_plan_to_target(runtime, module_id, execution_mode, target);
+    let result = run_repository_module_plan_to_target(
+        runtime,
+        module_id,
+        execution_mode,
+        target,
+        include_selected_target,
+    );
     runtime.pop_execution_frame();
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
@@ -289,6 +355,7 @@ fn run_repository_module_plan_to_target(
     module_id: ModuleId,
     execution_mode: ExecutionMode,
     selected_target: RepositoryFileTarget,
+    include_selected_target: bool,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let (mut results, import_error) = run_config_imports(runtime, module_id);
     if let Some(error) = import_error {
@@ -312,6 +379,9 @@ fn run_repository_module_plan_to_target(
     let run_targets = module.run_targets.clone();
     for target in run_targets {
         let target_matches = repository_target_matches_import_target(selected_target, target);
+        if target_matches && !include_selected_target {
+            return (results, None);
+        }
         let target_contains = match target {
             ImportTarget::Module(child_module_id) => {
                 repository_target_is_inside_module(runtime, selected_target, child_module_id)
@@ -332,6 +402,7 @@ fn run_repository_module_plan_to_target(
                 child_module_id,
                 target_execution_mode,
                 selected_target,
+                include_selected_target,
             )
         } else {
             run_repository_import_target(runtime, target, target_execution_mode)

@@ -95,3 +95,60 @@ have probe_geometry &ProbeGeometry = (probe_scalars, 0)
 have probe_space &ProbeSpace = (probe_geometry, 0)
 
 probe_space.scalar_geometry.scalars.mul(2, 3) $in R
+
+# Set-valued definitions retain their concrete source shape; this named bridge
+# is the cross-file pattern used by reduced residue representatives in Section
+# VIII of Number Theory for Beginners.
+prop tmp_reduced_remainder(m N_pos, a Z):
+    0 <= a < m
+
+have fn tmp_reduced_remainders(m N_pos) power_set(Z) = {a Z: $tmp_reduced_remainder(m, a)}
+
+thm tmp_reduced_remainder_is_member:
+    ? forall m N_pos, a Z:
+        $tmp_reduced_remainder(m, a)
+        =>:
+            a $in tmp_reduced_remainders(m)
+    a $in tmp_reduced_remainders(m)
+
+# MIL C02 structure probe: a ring stores its additive parent, so a caller can
+# reuse additive constructions through one object instead of a loose operation list.
+struct C02ExampleAdditiveGroup<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+    <=>:
+        forall x, y, z s:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x s:
+            add(zero, x) = x
+            add(neg(x), x) = zero
+        forall x, y s:
+            add(x, y) = add(y, x)
+
+struct C02ExampleRing<s nonempty_set>:
+    additive &C02ExampleAdditiveGroup<s>
+    mul fn(x, y s) s
+    one s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+            mul(x, additive.add(y, z)) = additive.add(mul(x, y), mul(x, z))
+            mul(additive.add(x, y), z) = additive.add(mul(x, z), mul(y, z))
+        forall x s:
+            mul(one, x) = x
+            mul(x, one) = x
+
+template<s nonempty_set, group &C02ExampleAdditiveGroup<s>>:
+    have fn c02_example_sub(x, y s) s = group.add(x, group.neg(y))
+
+thm c02_example_self_sub:
+    ? forall s nonempty_set, group &C02ExampleAdditiveGroup<s>, a s:
+        \c02_example_sub<s, group>(a, a) = group.zero
+    \c02_example_sub<s, group>(a, a) = group.add(a, group.neg(a))
+    group.add(a, group.neg(a)) = group.add(group.neg(a), a) = group.zero
+    \c02_example_sub<s, group>(a, a) = group.zero
+
+thm c02_example_ring_identity:
+    ? forall s nonempty_set, ring &C02ExampleRing<s>, a s:
+        ring.mul(ring.one, a) = a

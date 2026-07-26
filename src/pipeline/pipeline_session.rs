@@ -2,6 +2,14 @@ use crate::prelude::*;
 use std::env;
 use std::io::{self, BufRead, Write};
 use std::path::Path;
+use std::rc::Rc;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SessionPreload {
+    None,
+    ThroughFile(String),
+    BeforeFile(String),
+}
 
 /// Run a machine-readable, one-process Litex session.
 ///
@@ -16,6 +24,26 @@ pub fn run_session_with_output_style_and_strict_and_language(
     output_language: OutputLanguage,
     force_isolated: bool,
     preload_file: Option<&str>,
+) {
+    let preload = match preload_file {
+        Some(file) => SessionPreload::ThroughFile(file.to_string()),
+        None => SessionPreload::None,
+    };
+    run_session_with_output_style_and_strict_and_language_and_preload(
+        output_style,
+        strict_mode,
+        output_language,
+        force_isolated,
+        preload,
+    );
+}
+
+pub fn run_session_with_output_style_and_strict_and_language_and_preload(
+    output_style: OutputStyle,
+    strict_mode: bool,
+    output_language: OutputLanguage,
+    force_isolated: bool,
+    preload: SessionPreload,
 ) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
@@ -42,7 +70,7 @@ pub fn run_session_with_output_style_and_strict_and_language(
         strict_mode,
         output_language,
         force_isolated,
-        preload_file,
+        preload,
     ) {
         eprintln!("session output error: {}", error);
     }
@@ -66,7 +94,7 @@ fn run_session_loop_with_readers(
         strict_mode,
         output_language,
         force_isolated,
-        None,
+        SessionPreload::None,
     )
 }
 
@@ -78,7 +106,7 @@ fn run_session_loop_with_readers_and_preload(
     strict_mode: bool,
     output_language: OutputLanguage,
     force_isolated: bool,
-    preload_file: Option<&str>,
+    preload: SessionPreload,
 ) -> io::Result<()> {
     let mut runtime = Runtime::new();
     runtime.set_output_style(output_style);
@@ -86,7 +114,7 @@ fn run_session_loop_with_readers_and_preload(
     runtime.output_language = output_language;
 
     let (startup_mode, mut all_results) =
-        match initialize_session_runtime(&mut runtime, directory, force_isolated, preload_file) {
+        match initialize_session_runtime(&mut runtime, directory, force_isolated, preload) {
             Ok(startup) => startup,
             Err((stmt_results, error)) => {
                 let error_json = display_runtime_error_json(&runtime, &error, true);
@@ -284,9 +312,9 @@ fn initialize_session_runtime(
     runtime: &mut Runtime,
     directory: &Path,
     force_isolated: bool,
-    preload_file: Option<&str>,
+    preload: SessionPreload,
 ) -> Result<(&'static str, Vec<StmtResult>), (Vec<StmtResult>, RuntimeError)> {
-    if let Some(preload_file) = preload_file {
+    if let SessionPreload::ThroughFile(preload_file) = &preload {
         let clean_path = preload_file.replace('\r', "");
         let path = Path::new(clean_path.as_str());
         let path = if path.is_absolute() {
@@ -304,6 +332,44 @@ fn initialize_session_runtime(
             return Ok(("isolated", stmt_results));
         }
         runtime.prepare_current_repository_for_repl(format!("{}::<session>", path_string).as_str());
+        return Ok(("project", stmt_results));
+    }
+
+    if let SessionPreload::BeforeFile(preload_file) = &preload {
+        let clean_path = preload_file.replace('\r', "");
+        let path = Path::new(clean_path.as_str());
+        let path = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            directory.join(path)
+        };
+        let path_string = path.to_string_lossy().into_owned();
+        if force_isolated {
+            let error = ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                "`-session -before` requires a registered project file and cannot be isolated"
+                    .to_string(),
+                (0, Rc::from(path_string.as_str())),
+            ))
+            .into();
+            return Err((vec![], error));
+        }
+        let target = match discover_repository_for_file(runtime, path_string.as_str()) {
+            Ok(Some(target)) => target,
+            Ok(None) => {
+                let error = ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "`-session -before` requires a litex.config in the target file's folder"
+                        .to_string(),
+                    (0, Rc::from(path_string.as_str())),
+                ))
+                .into();
+                return Err((vec![], error));
+            }
+            Err(error) => return Err((vec![], error)),
+        };
+        let (stmt_results, runtime_error) = run_repository_before_file_target(runtime, target);
+        if let Some(error) = runtime_error {
+            return Err((stmt_results, error));
+        }
         return Ok(("project", stmt_results));
     }
 
@@ -358,7 +424,9 @@ fn json_string(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{run_session_loop_with_readers, run_session_loop_with_readers_and_preload};
+    use super::{
+        run_session_loop_with_readers, run_session_loop_with_readers_and_preload, SessionPreload,
+    };
     use crate::prelude::OutputLanguage;
     use crate::runtime::OutputStyle;
     use std::fs;
@@ -469,7 +537,7 @@ mod tests {
             false,
             OutputLanguage::English,
             false,
-            preload.to_str(),
+            SessionPreload::ThroughFile(preload.to_string_lossy().into_owned()),
         )
         .expect("session must run");
 
@@ -507,7 +575,7 @@ mod tests {
             false,
             OutputLanguage::English,
             false,
-            preload.to_str(),
+            SessionPreload::ThroughFile(preload.to_string_lossy().into_owned()),
         )
         .expect("session must report startup failure");
 
@@ -516,6 +584,213 @@ mod tests {
         assert!(output.contains("\"trace\""));
         assert!(output.contains("1 = 0"));
         assert!(!output.contains("\"event\":\"ready\""));
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn project_before_file_session_skips_the_target_and_uses_its_environment() {
+        let root = session_test_dir("project-before-file");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).expect("create project fixture");
+        fs::write(
+            root.join("litex.config"),
+            "[hierarchy]\nmodule\n\n[export]\nbefore = \"./before.lit\"\ntarget = \"./target.lit\"\nafter = \"./after.lit\"\n",
+        )
+        .expect("write config");
+        fs::write(root.join("before.lit"), "have planned_value R = 9\n")
+            .expect("write prefix file");
+        fs::write(root.join("target.lit"), "    have broken_draft R = 1\n")
+            .expect("write invalid draft target");
+        fs::write(root.join("after.lit"), "1 = 0\n").expect("write later file");
+
+        let input = format!(
+            "{}{}{}artifacts final\nclose\n",
+            run_frame("use_prefix", "before::planned_value = 9\n"),
+            run_frame(
+                "draft",
+                "try:\n    have draft_value R = before::planned_value + 1\n",
+            ),
+            run_frame("use_draft", "try:\n    target::draft_value = 10\n"),
+        );
+        let mut stdin_reader = Cursor::new(input.into_bytes());
+        let mut stdout_writer = Vec::new();
+        let target = root.join("target.lit");
+
+        run_session_loop_with_readers_and_preload(
+            &mut stdin_reader,
+            &mut stdout_writer,
+            &root,
+            OutputStyle::Normal,
+            false,
+            OutputLanguage::English,
+            false,
+            SessionPreload::BeforeFile(target.to_string_lossy().into_owned()),
+        )
+        .expect("session must run");
+
+        let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
+        assert!(output.contains("\"event\":\"ready\",\"mode\":\"project\""));
+        assert!(output.contains("\"id\":\"use_prefix\",\"ok\":true"));
+        assert!(output.contains("\"id\":\"draft\",\"ok\":true"), "{output}");
+        assert!(
+            output.contains("\"id\":\"use_draft\",\"ok\":true"),
+            "{output}"
+        );
+        assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
+        assert!(!output.contains("unexpected indent"), "{output}");
+        assert!(!output.contains("1 = 0"), "{output}");
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn project_before_file_session_reports_a_failing_predecessor() {
+        let root = session_test_dir("project-before-failing-prefix");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).expect("create project fixture");
+        fs::write(
+            root.join("litex.config"),
+            "[hierarchy]\nmodule\n\n[export]\nbefore = \"./before.lit\"\ntarget = \"./target.lit\"\n",
+        )
+        .expect("write config");
+        fs::write(root.join("before.lit"), "    have broken_prefix R = 1\n")
+            .expect("write invalid prefix file");
+        fs::write(root.join("target.lit"), "").expect("write target file");
+
+        let mut stdin_reader = Cursor::new(b"close\n".to_vec());
+        let mut stdout_writer = Vec::new();
+        let target = root.join("target.lit");
+
+        run_session_loop_with_readers_and_preload(
+            &mut stdin_reader,
+            &mut stdout_writer,
+            &root,
+            OutputStyle::Normal,
+            false,
+            OutputLanguage::English,
+            false,
+            SessionPreload::BeforeFile(target.to_string_lossy().into_owned()),
+        )
+        .expect("session must report startup failure");
+
+        let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
+        assert!(output.contains("\"event\":\"startup_error\""), "{output}");
+        assert!(output.contains("unexpected indent"), "{output}");
+        assert!(!output.contains("\"event\":\"ready\""), "{output}");
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn project_before_first_export_starts_with_an_empty_prefix() {
+        let root = session_test_dir("project-before-first-export");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).expect("create project fixture");
+        fs::write(
+            root.join("litex.config"),
+            "[hierarchy]\nmodule\n\n[export]\ntarget = \"./target.lit\"\nafter = \"./after.lit\"\n",
+        )
+        .expect("write config");
+        fs::write(root.join("target.lit"), "    have broken_draft R = 1\n")
+            .expect("write invalid draft target");
+        fs::write(root.join("after.lit"), "1 = 0\n").expect("write later file");
+
+        let input = format!(
+            "{}{}close\n",
+            run_frame("draft", "try:\n    have draft_value R = 4\n"),
+            run_frame("use_draft", "try:\n    target::draft_value = 4\n"),
+        );
+        let mut stdin_reader = Cursor::new(input.into_bytes());
+        let mut stdout_writer = Vec::new();
+        let target = root.join("target.lit");
+
+        run_session_loop_with_readers_and_preload(
+            &mut stdin_reader,
+            &mut stdout_writer,
+            &root,
+            OutputStyle::Normal,
+            false,
+            OutputLanguage::English,
+            false,
+            SessionPreload::BeforeFile(target.to_string_lossy().into_owned()),
+        )
+        .expect("first-export session must run");
+
+        let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
+        assert!(output.contains("\"event\":\"ready\",\"mode\":\"project\""));
+        assert!(output.contains("\"id\":\"draft\",\"ok\":true"), "{output}");
+        assert!(
+            output.contains("\"id\":\"use_draft\",\"ok\":true"),
+            "{output}"
+        );
+        assert!(!output.contains("unexpected indent"), "{output}");
+        assert!(!output.contains("1 = 0"), "{output}");
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn project_before_file_session_follows_nested_export_order() {
+        let root = session_test_dir("project-before-nested");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("B")).expect("create nested project fixture");
+        fs::write(
+            root.join("litex.config"),
+            "[hierarchy]\nmodule\n\n[export]\nroot_before = \"./root_before.lit\"\nB = \"./B\"\nroot_after = \"./root_after.lit\"\n",
+        )
+        .expect("write root config");
+        fs::write(root.join("root_before.lit"), "have root_value R = 2\n")
+            .expect("write root prefix file");
+        fs::write(root.join("root_after.lit"), "1 = 0\n").expect("write root later file");
+        fs::write(
+            root.join("B/litex.config"),
+            "[hierarchy]\nsubmodule\n\n[export]\nbefore = \"./before.lit\"\ntarget = \"./target.lit\"\nafter = \"./after.lit\"\n",
+        )
+        .expect("write nested config");
+        fs::write(
+            root.join("B/before.lit"),
+            "root_before::root_value = 2\nhave nested_value R = 3\n",
+        )
+        .expect("write nested prefix file");
+        fs::write(root.join("B/target.lit"), "    have broken_draft R = 1\n")
+            .expect("write invalid nested target");
+        fs::write(root.join("B/after.lit"), "1 = 0\n").expect("write nested later file");
+
+        let input = format!(
+            "{}{}artifacts final\nclose\n",
+            run_frame(
+                "draft",
+                "try:\n    root_before::root_value = 2\n    B::before::nested_value = 3\n    have draft_value R = 4\n",
+            ),
+            run_frame("use_draft", "try:\n    B::target::draft_value = 4\n"),
+        );
+        let mut stdin_reader = Cursor::new(input.into_bytes());
+        let mut stdout_writer = Vec::new();
+        let target = root.join("B/target.lit");
+
+        run_session_loop_with_readers_and_preload(
+            &mut stdin_reader,
+            &mut stdout_writer,
+            &root,
+            OutputStyle::Normal,
+            false,
+            OutputLanguage::English,
+            false,
+            SessionPreload::BeforeFile(target.to_string_lossy().into_owned()),
+        )
+        .expect("nested session must run");
+
+        let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
+        assert!(output.contains("\"event\":\"ready\",\"mode\":\"project\""));
+        assert!(output.contains("\"id\":\"draft\",\"ok\":true"), "{output}");
+        assert!(
+            output.contains("\"id\":\"use_draft\",\"ok\":true"),
+            "{output}"
+        );
+        assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
+        assert!(!output.contains("unexpected indent"), "{output}");
+        assert!(!output.contains("1 = 0"), "{output}");
 
         let _ = fs::remove_dir_all(&root);
     }

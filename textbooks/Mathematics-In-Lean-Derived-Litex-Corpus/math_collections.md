@@ -42,37 +42,56 @@ Chapter 1. Its exact mathematical obligation is recorded in `todo.lit`.
 
 ## Carrier-first algebra
 
-Groups, rings, fields, modules, and vector spaces are modeled by an explicit
-carrier plus explicit operations:
+Chapter 2's canonical reusable interfaces are operation-bearing structures:
 
 ```litex
-prop is_monoid(G set, mul fn(x, y G) G, one G)
-prop is_commutative_ring(Ring set, add fn(x, y Ring) Ring, zero Ring,
-    neg fn(x Ring) Ring, mul fn(x, y Ring) Ring, one Ring)
+struct AdditiveCommutativeGroup<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+
+struct Ring<s nonempty_set>:
+    additive &AdditiveCommutativeGroup<s>
+    mul fn(x, y s) s
+    one s
 ```
 
-The rejected form is to specialize a generic source theorem to ordinary real
-or integer arithmetic merely because the verifier can normalize it. These
-interfaces feed homomorphisms, subobjects, actions, ideals, and linear algebra.
-Elementary projections and short closure arguments are checked. Group
-normalization, finite-group theory, selected inverses, and larger structure
-assemblies remain deferred where their supporting proof chain is absent.
+`Ring` owns its `AdditiveCommutativeGroup` rather than copying `add`, `zero`,
+and `neg` as independent fields. Consequently a ring theorem can apply an
+additive theorem through `ring.additive` without rebuilding or re-proving the
+additive laws. `additive_sub` and `ring_two` are templates derived from those
+fields, not additional primitives. The nonempty carrier records the existence
+of the stored identity element.
 
-Chapter 2 deliberately presents the same additive-commutative-group content in
-two forms. `is_additive_commutative_group(A, add, zero, neg)` is a predicate on
-operations supplied by the caller, matching the source-facing proof lesson.
-`AdditiveCommutativeGroup<s>` is the bundled alternative: one value contains
-the operations and their law block, and
-`additive_commutative_group_add_neg_cancel` accesses them through projections.
-The nearest rejected design is replacing every Chapter 2 theorem with the
-struct form; that would hide the explicit parameters which the chapter is
-teaching. The struct requires a nonempty carrier because it stores `zero`.
+The old `is_additive_commutative_group`, `is_group`, and `is_ring` propositions
+are checked transitional candidate relations. They remain only while the
+Chapter 3 and Chapter 9 callers migrate; no new reusable Chapter 2 interface
+should depend on a loose carrier-plus-operations bundle. A trial flat `Ring`
+structure could construct an additive-group view, but its projected operations
+did not reduce transparently at additive-theorem call sites. The nested field is
+therefore the current natural Litex interface, not a kernel-bug claim. The
+remaining migration boundary is tracked in the paired scripts workspace.
 
-Chapter 8's ordinary integer ring is a checked `Ring<Z>` object whose fields
-are integer addition, zero, negation, multiplication, and one. This preserves
-the source instance as usable callable data; the rejected form is a proposition
-merely asserting that the integers form a ring. The separate generic theorem
-deriving additive commutativity from the weaker ring axioms remains deferred.
+The rejected forms are (1) specializing generic source theorems to ordinary
+real or integer arithmetic merely because the verifier can normalize them, and
+(2) treating the temporary `is_*` candidate propositions as the permanent
+public API. These interfaces feed later homomorphisms, subobjects, actions,
+ideals, and linear algebra. Elementary projections and short closure arguments
+are checked; group normalization, finite-group theory, selected inverses, and
+larger structure assemblies remain deferred where their proof chain is absent.
+
+Chapter 8 currently has a separate source-local integer `Ring<Z>` experiment
+whose fields are integer addition, zero, negation, multiplication, and one. It
+is a checked object, but it is not yet a consumer of Chapter 2's exported
+interface; that duplication is part of the later package-extraction migration.
+The rejected form is a proposition merely asserting that the integers form a
+ring. The separate generic theorem deriving additive commutativity from the
+weaker ring axioms remains deferred.
 
 The integer natural-scalar instance is likewise an actual
 `AdditiveMonoidWithNSmul<Z>` object. Its action is `(n,x) |-> n*x`, so the zero

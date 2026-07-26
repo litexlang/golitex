@@ -12,8 +12,10 @@ forall a, b R:
 
 # 2.2 Proving Identities in Algebraic Structures
 
-# The source states its results for abstract rings and groups. We make the
-# carrier and every operation explicit before proving anything about them.
+# The source states its results under one `[Ring R]` or `[Group G]` ambient
+# structure. The canonical Litex interface below likewise bundles the
+# operations and laws in a struct value. The older `is_*` predicates remain
+# only as candidate relations for later chapters that have not migrated yet.
 
 # An additive commutative group has associative addition, a left identity, a
 # left inverse, and commutativity. Right-facing laws are derived below.
@@ -66,10 +68,9 @@ thm add_neg_cancel:
             add(a, neg(a)) = zero
     add(a, neg(a)) = add(neg(a), a) = zero
 
-# Litex can instead package the carrier, operations, and the same primitive
-# laws in one struct value. The nonempty carrier records the existence of zero.
-# This is a bundled alternative for users who want the structure passed as data;
-# the preceding prop remains the source-facing, explicit-parameter interface.
+# A canonical additive commutative group is one operation-bearing object. The
+# nonempty carrier records the existence of its zero; downstream theorems pass
+# `group` rather than a loose list of addition operations.
 struct AdditiveCommutativeGroup<s nonempty_set>:
     add fn(x, y s) s
     zero s
@@ -83,12 +84,120 @@ struct AdditiveCommutativeGroup<s nonempty_set>:
         forall x, y s:
             add(x, y) = add(y, x)
 
-# The same theorem can use the operations and laws projected from the bundled
-# object. Litex fills in the struct fields and its law block from `group`.
-thm additive_commutative_group_add_neg_cancel:
+# A group likewise bundles multiplication, one, inverse, and the primitive
+# left-facing group laws used in the source proof.
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(one, x) = x
+            mul(inv(x), x) = one
+
+# A ring owns its additive commutative group and supplies multiplication and
+# one. This nesting gives ring theorems direct access to the same checked
+# additive structure instead of reconstructing it from loose parameters.
+struct Ring<s nonempty_set>:
+    additive &AdditiveCommutativeGroup<s>
+    mul fn(x, y s) s
+    one s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+            mul(x, additive.add(y, z)) = additive.add(mul(x, y), mul(x, z))
+            mul(additive.add(x, y), z) = additive.add(mul(x, z), mul(y, z))
+        forall x s:
+            mul(one, x) = x
+            mul(x, one) = x
+
+# Subtraction and the ring numeral two are derived constructions, not extra
+# primitive fields. They retain the source-facing expressions for later use.
+template<s nonempty_set, group &AdditiveCommutativeGroup<s>>:
+    have fn additive_sub(x, y s) s = group.add(x, group.neg(y))
+
+template<s nonempty_set, ring &Ring<s>>:
+    have ring_two s = ring.additive.add(ring.one, ring.one)
+
+# The bundled object gives the same derived right inverse as the source-facing
+# candidate relation above. This is the first canonical-structure use probe.
+thm add_neg_cancel_in_additive_commutative_group:
     ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a s:
-        &AdditiveCommutativeGroup<s>{group}.add(a, &AdditiveCommutativeGroup<s>{group}.neg(a)) = &AdditiveCommutativeGroup<s>{group}.zero
-    &AdditiveCommutativeGroup<s>{group}.add(a, &AdditiveCommutativeGroup<s>{group}.neg(a)) = &AdditiveCommutativeGroup<s>{group}.add(&AdditiveCommutativeGroup<s>{group}.neg(a), a) = &AdditiveCommutativeGroup<s>{group}.zero
+        group.add(a, group.neg(a)) = group.zero
+    group.add(a, group.neg(a)) = group.add(group.neg(a), a) = group.zero
+
+# Result (source label: add_zero). Commutativity turns the stored left identity
+# into a right identity without passing a separate list of operations around.
+thm add_zero_in_additive_commutative_group:
+    ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a s:
+        group.add(a, group.zero) = a
+    group.add(a, group.zero) = group.add(group.zero, a) = a
+
+# Result (source label: add_left_cancel). Apply the stored inverse on the left
+# of both equal sums, reassociate, and reduce both sides to their remaining term.
+thm add_left_cancel_in_additive_commutative_group:
+    ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a, b, c s:
+        group.add(a, b) = group.add(a, c)
+        =>:
+            b = c
+    group.add(group.neg(a), group.add(a, b)) = group.add(group.neg(a), group.add(a, c))
+    group.add(group.neg(a), a) = group.zero
+    group.add(group.zero, b) = b
+    group.add(group.zero, c) = c
+    group.add(group.neg(a), group.add(a, b)) = group.add(group.add(group.neg(a), a), b) = group.add(group.zero, b) = b
+    group.add(group.neg(a), group.add(a, c)) = group.add(group.add(group.neg(a), a), c) = group.add(group.zero, c) = c
+    b = c
+
+# Result (source label: self_sub). The derived subtraction operation is addition
+# of the stored inverse, so self-subtraction is the checked inverse law.
+thm self_sub_in_additive_commutative_group:
+    ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a s:
+        \additive_sub<s, group>(a, a) = group.zero
+    \additive_sub<s, group>(a, a) = group.add(a, group.neg(a))
+    by thm add_neg_cancel_in_additive_commutative_group(s, group, a)
+    \additive_sub<s, group>(a, a) = group.zero
+
+# Result (source label: one_add_one_eq_two). `ring_two` is the derived numeral
+# one plus one; it is deliberately a construction rather than a Ring field.
+thm one_add_one_eq_ring_two:
+    ? forall s nonempty_set, ring &Ring<s>:
+        ring.additive.add(ring.one, ring.one) = \ring_two<s, ring>
+    ring.additive.add(ring.one, ring.one) = \ring_two<s, ring>
+
+# Result (source label: two_mul). Distributivity expands `ring_two`; the stored
+# additive group and multiplicative left identity simplify the two summands.
+thm two_mul_in_ring:
+    ? forall s nonempty_set, ring &Ring<s>, a s:
+        ring.mul(\ring_two<s, ring>, a) = ring.additive.add(a, a)
+    ring.mul(ring.one, a) = a
+    ring.additive.add(ring.mul(ring.one, a), ring.mul(ring.one, a)) = ring.additive.add(a, a)
+    ring.mul(\ring_two<s, ring>, a) = ring.mul(ring.additive.add(ring.one, ring.one), a) = ring.additive.add(ring.mul(ring.one, a), ring.mul(ring.one, a)) = ring.additive.add(a, a)
+
+# Result (source label: mul_zero). Distributivity duplicates `a * 0`; additive
+# cancellation removes the common summand and yields the multiplicative zero law.
+thm mul_zero_in_ring:
+    ? forall s nonempty_set, ring &Ring<s>, a s:
+        ring.mul(a, ring.additive.zero) = ring.additive.zero
+    ring.additive.add(ring.additive.zero, ring.additive.zero) = ring.additive.zero
+    ring.mul(a, ring.additive.zero) = ring.mul(a, ring.additive.add(ring.additive.zero, ring.additive.zero)) = ring.additive.add(ring.mul(a, ring.additive.zero), ring.mul(a, ring.additive.zero))
+    by thm add_zero_in_additive_commutative_group(s, ring.additive, ring.mul(a, ring.additive.zero))
+    ring.additive.add(ring.mul(a, ring.additive.zero), ring.mul(a, ring.additive.zero)) = ring.mul(a, ring.additive.zero) = ring.additive.add(ring.mul(a, ring.additive.zero), ring.additive.zero)
+    by thm add_left_cancel_in_additive_commutative_group(s, ring.additive, ring.mul(a, ring.additive.zero), ring.mul(a, ring.additive.zero), ring.additive.zero)
+    ring.mul(a, ring.additive.zero) = ring.additive.zero
+
+# Result (source label: zero_mul). The companion proof uses the other
+# distributive law, so it does not assume multiplication is commutative.
+thm zero_mul_in_ring:
+    ? forall s nonempty_set, ring &Ring<s>, a s:
+        ring.mul(ring.additive.zero, a) = ring.additive.zero
+    ring.additive.add(ring.additive.zero, ring.additive.zero) = ring.additive.zero
+    ring.mul(ring.additive.zero, a) = ring.mul(ring.additive.add(ring.additive.zero, ring.additive.zero), a) = ring.additive.add(ring.mul(ring.additive.zero, a), ring.mul(ring.additive.zero, a))
+    by thm add_zero_in_additive_commutative_group(s, ring.additive, ring.mul(ring.additive.zero, a))
+    ring.additive.add(ring.mul(ring.additive.zero, a), ring.mul(ring.additive.zero, a)) = ring.mul(ring.additive.zero, a) = ring.additive.add(ring.mul(ring.additive.zero, a), ring.additive.zero)
+    by thm add_left_cancel_in_additive_commutative_group(s, ring.additive, ring.mul(ring.additive.zero, a), ring.mul(ring.additive.zero, a), ring.additive.zero)
+    ring.mul(ring.additive.zero, a) = ring.additive.zero
 
 # Result (source label: neg_add_cancel_left). Reassociate, cancel a on the
 # left, and use the identity law.

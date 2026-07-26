@@ -698,8 +698,14 @@ prop rational_prime_gaussian_split(p N_pos, qx, qy Z):
         =>:
             $gaussian_associate(dx, dy, qx, qy) or $gaussian_associate(dx, dy, qx, -qy)
 
+# This existential is a named source-level relation because Litex disjunctions
+# join atomic facts, not a bare existential clause.  The named form preserves
+# the theorem's genuine either-or conclusion without an opaque wrapper.
+prop rational_prime_has_gaussian_split(p N_pos):
+    exist qx, qy Z st {$rational_prime_gaussian_split(p, qx, qy)}
+
 prop theorem_XIII_3_conclusion(p N_pos):
-    $gaussian_prime(p, 0) or exist qx, qy Z st {$rational_prime_gaussian_split(p, qx, qy)}
+    $gaussian_prime(p, 0) or $rational_prime_has_gaussian_split(p)
 
 thm theorem_XIII_3_rational_prime_factorization:
     ? forall p N_pos:
@@ -723,20 +729,23 @@ thm gaussian_two_decomposition:
 
 # Theorem XIII.4 gives both directions of the mod-4 classification.
 prop theorem_XIII_4_conclusion(p N_pos):
-    $gaussian_prime(p, 0)
-    =>:
-        p % 4 = 3
-    p % 4 = 3
-    =>:
+    forall:
         $gaussian_prime(p, 0)
+        =>:
+            p % 4 = 3
+    forall:
+        p % 4 = 3
+        =>:
+            $gaussian_prime(p, 0)
     forall qx, qy Z:
         $gaussian_prime(qx, qy)
         gaussian_norm(qx, qy) = p
         =>:
             p % 4 = 1
-    p % 4 = 1
-    =>:
-        exist qx, qy Z st {$gaussian_prime(qx, qy), gaussian_norm(qx, qy) = p}
+    forall:
+        p % 4 = 1
+        =>:
+            exist qx, qy Z st {$gaussian_prime(qx, qy), gaussian_norm(qx, qy) = p}
 
 thm theorem_XIII_4_rational_prime_mod_four:
     ? forall p N_pos:
@@ -749,9 +758,12 @@ thm theorem_XIII_4_rational_prime_mod_four:
 # Corollary 1. A Gaussian prime is, up to associates, 1+i, a rational prime
 # congruent to 3 modulo 4, or a prime whose norm is rational prime and
 # congruent to 1 modulo 4.
+prop gaussian_prime_associate_of_rational_prime_three_mod_four(qx, qy Z):
+    exist p N_pos st {$section4::is_prime_Z(p), p % 4 = 3, $gaussian_associate(qx, qy, p, 0)}
+
 prop gaussian_prime_classification(qx, qy Z):
     $gaussian_associate(qx, qy, 1, 1)
-    or exist p N_pos st {$section4::is_prime_Z(p), p % 4 = 3, $gaussian_associate(qx, qy, p, 0)}
+    or $gaussian_prime_associate_of_rational_prime_three_mod_four(qx, qy)
     or $section4::is_prime_Z(gaussian_norm(qx, qy)) and gaussian_norm(qx, qy) % 4 = 1
 
 thm corollary_XIII_1_gaussian_prime_classification:
@@ -840,9 +852,10 @@ prop rational_prime_sum_two_squares_criterion(p N_pos):
         gaussian_norm(x, y) = p
         =>:
             p = 2 or p % 4 = 1
-    p = 2 or p % 4 = 1
-    =>:
-        $sum_two_squares_representation(p)
+    forall:
+        p = 2 or p % 4 = 1
+        =>:
+            $sum_two_squares_representation(p)
 
 thm corollary_XIII_2_rational_prime_sum_two_squares:
     ? forall p N_pos:
@@ -856,9 +869,10 @@ thm corollary_XIII_2_rational_prime_sum_two_squares:
                 p = 2 or p % 4 = 1
         by thm sum_two_squares_prime_congruence_necessary(p, x, y)
     claim:
-        ? p = 2 or p % 4 = 1
-        =>:
-            $sum_two_squares_representation(p)
+        ? forall:
+            p = 2 or p % 4 = 1
+            =>:
+                $sum_two_squares_representation(p)
         by cases:
             ? $sum_two_squares_representation(p)
             case p = 2:

@@ -28,10 +28,13 @@ tested: write the mathematical fact directly and let the checker account for
 routine consequences. It does not, by itself, establish a comparison with
 Lean or a Lean-kernel certificate.
 
-Chapter 2 also places its explicit additive-group predicate beside a bundled
-`AdditiveCommutativeGroup<s>` struct and the same right-inverse theorem written
-through field projections. This is a small, checked example of Litex's `struct`
-feature; the chapter keeps the explicit form as its primary source-facing API.
+Chapter 2's reusable algebra core is now carried by checked
+`AdditiveCommutativeGroup<s>`, `Group<s>`, and `Ring<s>` values. A `Ring` stores
+its additive group, so derived theorems such as `mul_zero_in_ring` can reuse
+additive cancellation directly through `ring.additive`. Its older explicit
+`is_*` predicates remain as temporary checked compatibility relations for
+unmigrated Chapter 3 and Chapter 9 callers; they are not the intended public
+interface for new code.
 
 ## What this corpus is for
 
@@ -117,7 +120,7 @@ implementation boundary.
 From the `golitex` repository root:
 
 ~~~sh
-RUST_MIN_STACK=8388608 target/debug/litex -runner -r textbooks/Mathematics-In-Lean-Derived-Litex-Corpus -compact
+RUST_MIN_STACK=8388608 target/release/litex -runner -r textbooks/Mathematics-In-Lean-Derived-Litex-Corpus -compact
 ~~~
 
 The full project acceptance gate is:

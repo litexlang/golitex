@@ -13,14 +13,18 @@ target/release/litex -compact -r textbooks/Analysis2
 The current project exports Chapter 1 as `chap1`. Its public metric-space
 surface includes:
 
-- `$chap1::is_metric_space(X,dist)` and the concrete real, restricted,
-  finite-dimensional `l1`/`l2`/`linf`, and discrete distance functions;
+- `$chap1::is_metric_space(X,dist)`, the concrete real, restricted,
+  finite-dimensional `l1`/`l2`/`linf`, and discrete distance functions, and
+  the checked defining-formula bridge `real_distance_eq_abs`;
 - `$chap1::has_metric_limit`, `$chap1::is_metric_convergent`, metric balls
-  with checked center-containment lemmas, interior, exterior, boundary,
-  closure, and open/closed predicates;
-- relative openness/closedness, subsequences, sequence limit points, Cauchy
-  sequences, the checked theorem `metric_convergent_implies_cauchy`, and
-  complete metric spaces;
+  with checked center-containment and membership/inequality lemmas, interior,
+  exterior, boundary, closure, open/closed predicates, and the checked
+  `metric_boundary_of_complement_is_boundary` bridge;
+- the checked real-distance convergence equivalence, relative
+  openness/closedness, subsequences, sequence limit points, Cauchy sequences,
+  the checked theorems `convergent_subsequence_has_same_limit`,
+  `metric_convergent_implies_cauchy`, and
+  `cauchy_with_convergent_subsequence_converges`, and complete metric spaces;
 - sequential compactness, boundedness, open covers, finite subcovers, and
   nested compact intersections.
 
@@ -34,7 +38,7 @@ from `$chap1::is_metric_space(X,dist)` and `radius $in R_pos`.
 
 All 32 numbered non-exercise Chapter 1 items have source-facing definitions
 or theorem interfaces. The ordered project run succeeds, but the chapter is
-not proof-complete: it currently contains 36 explicit `trust` statements.
+not proof-complete: it currently contains 28 explicit `trust` statements.
 Most correspond to proofs Tao assigns to exercises; others mark substantial
 source proofs or finite-choice arguments not yet formalized. The `linf`
 distance uses a trusted unique-maximum selection because instantiating the

@@ -61,6 +61,16 @@ Euler's phi function, linear congruences, residue rings, finite fields, and
 Euler's theorem. The open work is the induced operations and their laws, not
 the elementary congruence algebra.
 
+`coprime_remainders_mod(m)` is the finite set of standard representatives
+prime to `m`. It remains a real set-valued `have fn`; its two checked
+membership directions, `coprime_remainder_is_member_of_coprime_remainders_mod`
+and `member_of_coprime_remainders_mod_is_coprime_remainder`, are the public
+cross-file interface. This follows the earlier `mZ` pattern: a later chapter
+must use the named membership theorem instead of depending on an earlier
+file's function body unfolding. The Euler map is a source-facing theorem,
+not a new global function: `multiplication_by_coprime_preserves_coprime_remainders`
+proves that `(a*r) % m` remains in this carrier when `a` is coprime to `m`.
+
 ## Rings, zero divisors, and fields
 
 A commutative ring is an additive abelian group with associative,
@@ -101,17 +111,23 @@ introducing a second, incompatible power interface.
 The checked theorem `group_power_add` makes the intended signed-power product
 law explicit: values represented by exponents `a` and `b` multiply to a value
 represented by `a + b`. Its local proof selects the inverse, normalizes all
-finite sequences, and uses the group laws to commute inverse powers. It is the
-direct reusable bridge toward the remaining exponent-difference kernel law.
+finite sequences, and uses the group laws to commute inverse powers.
 
 The checked theorem `zero_group_power_is_one` establishes the other basic
 normal-form boundary: any signed-power witness at exponent zero has value
 `one`. It is a source-facing theorem, not a global power construction. Its
 private recursive normal form is used only to reduce the equal positive and
-inverse exponents to a checked cancellation identity. Together with
-`group_power_add`, it narrows the remaining kernel-law debt to constructing
-the inverse value for an arbitrary signed exponent and relating it to
-subtraction.
+inverse exponents to a checked cancellation identity.
+
+`group_power_neg` constructs the inverse value at exponent `-a` for every
+signed-power witness at exponent `a`. The source-facing theorem
+`group_power_equality_iff_exponent_difference_in_kernel` then proves
+`x^a = x^b` exactly when `a-b` belongs to the exponent kernel: multiply by the
+negative power for the forward implication, and add the `b`-power back for the
+reverse implication. Its uniqueness helper remains inside that proof because
+no other chapter consumes it. This supplies the kernel law needed by the
+finite/infinite cyclic classification; constructing the actual index maps and
+transporting cardinality remain open.
 
 The nearest rejected form is a circular `generated_subgroup`/power pair that
 asserts the desired theorem by definition. These nodes support Lagrange,
@@ -119,8 +135,44 @@ Euler, primitive roots, discrete logarithm indices, and finite-field power
 congruences. Lagrange's theorem must assume the ambient group laws in addition
 to subgroup closure. Euler's theorem is a congruence statement
 `congruent_mod(m, a^euler_phi(m), 1)`; raw remainder equality to `1` is not
-valid for modulus `1`. Their remaining holes are finite coset counting and
-finite subgroup cyclicity.
+valid for modulus `1`. Finite coset counting is now checked through
+`finite_set_size_over_fixed_unique_cover` and `theorem_VIII_2_lagrange`; the
+remaining nearby holes are finite subgroup cyclicity and the finite-group-power
+/ residue-power bridge needed by Euler's theorem.
+
+## Cosets and Lagrange counting
+
+For a subgroup `H` of a group `G`, `left_coset(H, x)` is a genuine
+set-valued function, represented by the member predicate
+`left_coset_member(G, mul, H, x, y)`. The function form is necessary because
+later arguments compare carriers, range over their members, and take their
+finite cardinalities. The nearest rejected form is a bare predicate for
+“being a coset”: it loses the carrier needed by the counting argument.
+
+The three propositions
+`cosets_overlap(G, C1, C2)`, `cosets_equal(G, C1, C2)`, and
+`cosets_disjoint(G, C1, C2)` separate the logical roles in the source lemma.
+The checked theorem
+`left_cosets_overlap_implies_equal(G, mul, one, x, y, H)` consumes a common
+element written as both `xh` and `yk`, then uses subgroup inverse closure to
+transfer every `xu` to `yH` and conversely. Its downstream theorem
+`left_cosets_equal_or_disjoint` is the exact qualitative partition interface.
+
+The quantitative node is implemented as the fixed-domain interface
+`fixed_unique_cover_of(U, D, S, T, F)`: the ambient index domain `D` remains
+fixed while induction removes active elements of `T`. Its checked theorem
+`finite_set_size_over_fixed_unique_cover` proves the carrier cardinality is
+the finite sum of fiber cardinalities. This fixed-domain form avoids changing
+the type of `F` when an index is deleted; the nearest rejected form restricted
+`F` to a changing subtype and made function equality unusable inside atomic
+cover predicates. Instantiating the identity family on the range of
+`x -> left_coset(H, x)` yields checked Lagrange divisibility. Section VI
+already supplies the finite reduced-residue group and its `euler_phi`
+cardinality. Its multiplication-by-a-remainder map is now checked pointwise.
+The remaining downstream hole is finite-product reindexing plus congruence
+cancellation (equivalently, a finite-group power-at-cardinality theorem and
+its bridge to integer powers of residue classes), not coset counting or
+unit-group construction.
 
 ## Power congruences over prime residue fields
 
@@ -175,3 +227,10 @@ has smaller norm. Factorization and the two-squares theorem follow.
 The nearest rejected form is an opaque Gaussian object with no coordinate
 operations. The current concrete carrier is suitable; the remaining holes are
 rounding-based Euclidean division, descent, and factorization.
+
+The two alternative Gaussian-prime classifications use named existential
+relations, such as `rational_prime_has_gaussian_split(p)`, before they enter a
+disjunction. This is the appropriate `prop` form: it retains the existential
+witnesses while giving the source-facing either-or statements atomic
+disjuncts. A rejected form would place `exist ...` directly after `or`, which
+the current fact grammar cannot parse.
