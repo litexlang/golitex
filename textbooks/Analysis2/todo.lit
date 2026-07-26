@@ -25,3 +25,18 @@
 # 1.5.5-1.5.10: prove compactness consequences, finite-dimensional
 # Heine--Borel, the open-cover theorem, nested compact intersection, and the
 # finite compact-set closure properties.
+#
+# Chapter 2, Section 2.1 — Theorem 2.1.4
+# The three continuity characterizations are stated through four reusable
+# directions. Their proofs from epsilon--delta tails, shrinking-ball
+# countersequences, and open neighborhoods remain to be supplied.
+#
+# Chapter 2, Section 2.1 — Theorem 2.1.5
+# The sequential characterization is established from Theorem 2.1.4. The
+# remaining gap is proving the four directions relating continuity to open
+# and closed inverse images.
+#
+# Chapter 2, Section 2.2 — Lemmas 2.2.1 and 2.2.2
+# The paired function and all seven arithmetic maps are concrete. The missing
+# mathematics is the coordinatewise convergence proof for pairing and the
+# real limit-law proofs of continuity for the arithmetic maps.

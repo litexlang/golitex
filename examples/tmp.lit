@@ -152,3 +152,12 @@ thm c02_example_self_sub:
 thm c02_example_ring_identity:
     ? forall s nonempty_set, ring &C02ExampleRing<s>, a s:
         ring.mul(ring.one, a) = a
+
+# Regression: absolute value preserves nonzeroness.
+# The builtin uses x != 0 to prove abs(x) != 0.
+thm abs_nonzero_from_argument_nonzero:
+    ? forall x R:
+        x != 0
+        =>:
+            abs(x) != 0
+    abs(x) != 0

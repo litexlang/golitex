@@ -10,9 +10,9 @@ measure, and Lebesgue integration.
 
 Standalone exercises are excluded. A named non-exercise result whose proof is
 delegated to an exercise remains a source-facing theorem with an explicit
-proof-debt boundary until the proof is supplied. The immediate implementation
-scope is Chapter 1; later chapters appear below only where their dependency
-direction constrains the foundational interfaces.
+proof-debt boundary until the proof is supplied. Chapter 1 is implemented and
+Chapter 2 is the active implementation scope; later chapters appear below only
+where their dependency direction constrains the foundational interfaces.
 
 The intended readers are Litex users learning analysis and contributors using
 the translation to discover genuine language, library, inference, kernel, and
@@ -354,6 +354,101 @@ downstream consumer that needs the package as a single value.
 - **Allowable hole:** Theorem 1.5.8's radius infimum and recursive separated
   sequence construction may remain a visible substantial proof boundary.
 
+### Metric continuity at a point and on a space
+
+- **Ordinary meaning:** A map is continuous at `a` when every positive output
+  tolerance admits a positive input tolerance that controls every nearby
+  point. It is continuous on its domain when this holds at every point.
+- **Semantic role:** Properties of a supplied typed function. The
+  epsilon--delta residual for one chosen pair of tolerances is a reusable
+  supporting relation, not a new mathematical object.
+- **Ideal Litex form:** `prop is_metric_delta_controlled_at`,
+  `prop is_metric_continuous_at`, and `prop is_metric_continuous`, with the
+  map retained as an ordinary callable parameter. The source's inverse image
+  is a canonical set-valued construction, so it is a template-contained
+  `have function_preimage power_set(X)` rather than a relation describing a
+  candidate set.
+- **Interface sketch:**
+
+  ```litex
+  prop is_metric_delta_controlled_at(
+      X, Y set,
+      dist_X fn(x, y X) R, dist_Y fn(x, y Y) R,
+      f fn(x X) Y, a X, epsilon R_pos, delta R_pos
+  ):
+      forall x X:
+          dist_X(x, a) < delta
+          =>:
+              dist_Y(f(x), f(a)) < epsilon
+
+  prop is_metric_continuous_at(
+      X, Y set,
+      dist_X fn(x, y X) R, dist_Y fn(x, y Y) R,
+      f fn(x X) Y, a X
+  ):
+      forall epsilon R_pos:
+          exist delta R_pos st {
+              $is_metric_delta_controlled_at(
+                  X, Y, dist_X, dist_Y, f, a, epsilon, delta
+              )
+          }
+  ```
+
+- **Nearest wrong alternative:** A `have fn` called continuity would pretend
+  that continuity returns a value; a bundled continuity object would hide the
+  function that later composition, image, and arithmetic theorems must apply.
+- **Dependencies:** Typed carriers and callable maps by `signature`; both
+  metric functions by `signature`; Chapter 1 metric laws, limits, open sets,
+  and closed sets by later `proof`.
+- **Downstream uses:** Sequential and open-set characterizations, composition,
+  product-space continuity, compact images, uniform continuity, connected
+  images, and every later preservation theorem. Immediate probes are
+  unfolding domain continuity at a chosen point, checking inverse-image
+  membership directly from its set builder, and composing two epsilon--delta
+  witnesses.
+- **Allowable hole:** The source assigns the sequential and open/closed
+  characterization proofs to exercises, so those theorem bodies may initially
+  carry narrow `trust` boundaries. The predicates themselves must be concrete,
+  and composition remains an explicit proof target.
+
+### Pairing and real arithmetic maps
+
+- **Ordinary meaning:** Two real-valued functions on the same domain combine
+  pointwise into an `R^2`-valued function. Addition, subtraction,
+  multiplication, maximum, minimum, division away from zero, and scalar
+  multiplication are ordinary callable maps used by composition.
+- **Semantic role:** Formula-defined functions, followed by continuity
+  theorems about those functions.
+- **Ideal Litex form:** A template-contained `have fn real_function_pair`
+  returning `\chap1::finite_real_vector<2>`, plus ordinary `have fn`
+  declarations for the arithmetic maps. Continuity remains expressed with the
+  existing metric continuity predicates.
+- **Interface sketch:**
+
+  ```litex
+  have fn real_pair_coordinate(a, b R, j closed_range(1, 2)) R by cases:
+      case j = 1: a
+      case j != 1: b
+
+  template<X set, f, g fn(x X) R>:
+      have fn real_function_pair(x X) \chap1::finite_real_vector<2> =
+          fn(j N_pos: j <= 2) R {
+              real_pair_coordinate(f(x), g(x), j)
+          }
+  ```
+
+- **Nearest wrong alternative:** A proposition asserting that some vector is
+  the pair would hide the callable function needed by composition. A new
+  product-space carrier would duplicate Chapter 1's finite real vectors.
+- **Dependencies:** `finite_real_vector<2>` and `l2_distance<2>` by
+  `signature`; Proposition 1.1.18 and Theorem 2.1.4 by `proof`; real
+  arithmetic and finite maximum/minimum formulas by `definition`.
+- **Downstream uses:** Lemmas 2.2.1--2.2.2, Corollary 2.2.3, polynomial
+  examples, and later multivariable functions.
+- **Allowable hole:** Tao assigns both lemmas to exercises. Their theorem
+  bodies may initially be trusted, but the paired and arithmetic functions
+  must remain concrete and immediately evaluable.
+
 ### Later-book spines
 
 Continuous maps consume metric balls and metric limits. Uniform convergence
@@ -411,6 +506,17 @@ compactness + relative closedness --proof--> compact subsets are closed
 compactness + open cover
   --proof--> finite subcover
 finite subcover --proof--> nested compact intersection
+
+typed map + two metric functions
+  --definition--> epsilon-delta control at a point
+epsilon-delta control
+  --definition--> continuity at a point
+continuity at every point
+  --definition--> continuity on a space
+metric limits + metric open/closed sets
+  --proof/trust-source--> continuity characterizations
+pointwise continuity
+  --proof--> composition continuity
 ```
 
 There is no intended cycle. The selected metric limit follows the uniqueness
@@ -428,8 +534,9 @@ downstream.
 6. Cauchy sequences, completeness, and closed-subspace transfer.
 7. Compactness, boundedness, Euclidean Heine--Borel, open covers, nested
    intersections, and finite compact unions.
-8. Chapter 2 continuity only after the Chapter 1 interfaces and use probes
-   verify in the ordered project.
+8. Chapter 2 continuity: define epsilon--delta control, pointwise continuity,
+   and domain continuity before the sequential, open-set, composition,
+   product, compactness, and connectedness results.
 
 ## Interface decisions and permissible gaps
 
