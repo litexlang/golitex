@@ -297,7 +297,7 @@ pub fn run_cli() {
             }
             "-session" => {
                 index += 1;
-                let preload_file = match read_session_preload_file(&args, &mut index) {
+                let preload = match read_session_preload(&args, &mut index) {
                     Ok(value) => value,
                     Err(message) => {
                         eprintln!("{}", message);
@@ -305,12 +305,17 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                run_session_with_output_style_and_strict_and_language(
+                if let Err(message) = validate_session_preload(force_isolated, &preload) {
+                    eprintln!("{}", message);
+                    print_help_message();
+                    process::exit(2);
+                }
+                run_session_with_output_style_and_strict_and_language_and_preload(
                     output_style,
                     strict_mode,
                     output_language,
                     force_isolated,
-                    preload_file.as_deref(),
+                    preload,
                 );
                 return;
             }
@@ -568,19 +573,42 @@ fn read_any_value_after_flag(
     Ok(value)
 }
 
-fn read_session_preload_file(args: &[String], index: &mut usize) -> Result<Option<String>, String> {
+fn read_session_preload(args: &[String], index: &mut usize) -> Result<SessionPreload, String> {
     if *index == args.len() {
-        return Ok(None);
+        return Ok(SessionPreload::None);
     }
-    if args.get(*index).map(String::as_str) != Some("-f") {
-        return Err("-session accepts only an optional -f <file> target".to_string());
-    }
+    let flag = args.get(*index).map(String::as_str).unwrap_or_default();
     *index += 1;
-    let file = read_non_flag_value_after_flag(args, index, "-f")?;
+    let file = match flag {
+        "-f" => read_non_flag_value_after_flag(args, index, "-f")?,
+        "-before" => read_non_flag_value_after_flag(args, index, "-before")?,
+        _ => {
+            return Err(
+                "-session accepts only an optional -f <file> or -before <file> target".to_string(),
+            )
+        }
+    };
     if *index != args.len() {
-        return Err("-session -f <file> does not accept additional arguments".to_string());
+        return Err(format!(
+            "-session {} <file> does not accept additional arguments",
+            flag
+        ));
     }
-    Ok(Some(file))
+    match flag {
+        "-f" => Ok(SessionPreload::ThroughFile(file)),
+        "-before" => Ok(SessionPreload::BeforeFile(file)),
+        _ => unreachable!("session preload flag was already validated"),
+    }
+}
+
+fn validate_session_preload(force_isolated: bool, preload: &SessionPreload) -> Result<(), String> {
+    if force_isolated && matches!(preload, SessionPreload::BeforeFile(_)) {
+        return Err(
+            "-isolated cannot be used with -session -before; the target must be a registered project file"
+                .to_string(),
+        );
+    }
+    Ok(())
 }
 
 fn print_help_message() {
@@ -1149,6 +1177,7 @@ litex -runner -e <code> : run source code and return one wrapper JSON object
 litex -runner -r <project> : run a project and return one wrapper JSON object
 litex -session : run a machine-readable project REPL for framed code blocks
 litex -session -f <file> : load the project prefix through a registered file, then keep the same Runtime in session mode
+litex -session -before <file> : load the registered project prefix before a file, then edit in that file's Runtime context
 litex -graph -f <file> <json> : run a file and save a prop/function/fact relation graph JSON object
 litex -graph -e <code> <json> : run source code and save a prop/function/fact relation graph JSON object
 litex -graph -r <project> <json> : run a project and save a prop/function/fact relation graph JSON object
@@ -1186,7 +1215,8 @@ litex -tutorial : run the tutorial
 
 #[cfg(test)]
 mod tests {
-    use super::{help_message, read_session_preload_file, upgrade_message};
+    use super::{help_message, read_session_preload, upgrade_message, validate_session_preload};
+    use crate::prelude::SessionPreload;
 
     #[test]
     fn help_lists_upgrade_command() {
@@ -1217,6 +1247,7 @@ mod tests {
         let message = help_message();
         assert!(message.contains("litex -session"));
         assert!(message.contains("litex -session -f <file>"));
+        assert!(message.contains("litex -session -before <file>"));
     }
 
     #[test]
@@ -1228,10 +1259,29 @@ mod tests {
         ];
         let mut index = 1;
 
-        let preload = read_session_preload_file(args.as_slice(), &mut index)
+        let preload = read_session_preload(args.as_slice(), &mut index)
             .expect("session file target should parse");
 
-        assert_eq!(preload.as_deref(), Some("chap4.lit"));
+        assert_eq!(
+            preload,
+            SessionPreload::ThroughFile("chap4.lit".to_string())
+        );
+        assert_eq!(index, args.len());
+    }
+
+    #[test]
+    fn session_accepts_a_before_file_preload() {
+        let args = vec![
+            "-session".to_string(),
+            "-before".to_string(),
+            "chap5.lit".to_string(),
+        ];
+        let mut index = 1;
+
+        let preload = read_session_preload(args.as_slice(), &mut index)
+            .expect("session before target should parse");
+
+        assert_eq!(preload, SessionPreload::BeforeFile("chap5.lit".to_string()));
         assert_eq!(index, args.len());
     }
 
@@ -1240,10 +1290,49 @@ mod tests {
         let args = vec!["-session".to_string(), "-r".to_string(), "Demo".to_string()];
         let mut index = 1;
 
-        let error = read_session_preload_file(args.as_slice(), &mut index)
+        let error = read_session_preload(args.as_slice(), &mut index)
             .expect_err("session repository target should be rejected");
 
-        assert!(error.contains("optional -f <file>"));
+        assert!(error.contains("-f <file> or -before <file>"));
+    }
+
+    #[test]
+    fn session_rejects_combined_preload_targets() {
+        let args = vec![
+            "-session".to_string(),
+            "-before".to_string(),
+            "chap5.lit".to_string(),
+            "-f".to_string(),
+            "chap4.lit".to_string(),
+        ];
+        let mut index = 1;
+
+        let error = read_session_preload(args.as_slice(), &mut index)
+            .expect_err("session preload targets must be mutually exclusive");
+
+        assert!(error.contains("does not accept additional arguments"));
+    }
+
+    #[test]
+    fn session_rejects_a_missing_before_file() {
+        let args = vec!["-session".to_string(), "-before".to_string()];
+        let mut index = 1;
+
+        let error = read_session_preload(args.as_slice(), &mut index)
+            .expect_err("a before target requires a file");
+
+        assert!(error.contains("-before requires a value"));
+    }
+
+    #[test]
+    fn session_rejects_isolated_before_target() {
+        let preload = SessionPreload::BeforeFile("chap5.lit".to_string());
+
+        let error = validate_session_preload(true, &preload)
+            .expect_err("a before target requires project discovery");
+
+        assert!(error.contains("-isolated cannot be used with -session -before"));
+        assert!(validate_session_preload(false, &preload).is_ok());
     }
 
     #[test]

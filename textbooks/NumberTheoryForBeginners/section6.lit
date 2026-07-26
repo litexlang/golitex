@@ -720,6 +720,24 @@ prop coprime_remainder_mod(m N_pos, a Z):
 
 have fn coprime_remainders_mod(m N_pos) power_set(Z) = {a Z: $coprime_remainder_mod(m, a)}
 
+# This explicit two-way interface exposes membership in the set-valued
+# definition across later chapter files.  Each direction is definitionally
+# immediate in its local module, but the named facts avoid relying on a
+# cross-file unfolding of `have fn` bodies.
+thm coprime_remainder_is_member_of_coprime_remainders_mod:
+    ? forall m N_pos, a Z:
+        $coprime_remainder_mod(m, a)
+        =>:
+            a $in coprime_remainders_mod(m)
+    a $in coprime_remainders_mod(m)
+
+thm member_of_coprime_remainders_mod_is_coprime_remainder:
+    ? forall m N_pos, a Z:
+        a $in coprime_remainders_mod(m)
+        =>:
+            $coprime_remainder_mod(m, a)
+    $coprime_remainder_mod(m, a)
+
 thm coprime_remainders_mod_is_finite:
     ? forall m N_pos:
         $is_finite_set(coprime_remainders_mod(m))

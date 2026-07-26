@@ -148,6 +148,10 @@ downstream consumer that needs the package as a single value.
 - **Downstream uses:** Subsequences, limit points, Cauchy sequences,
   completeness, compactness, and continuity in Chapter 2. Probe:
   `$has_metric_limit(X,dist,u,metric_limit(X,dist,u))`.
+- **Current implementation:** Lemma 1.1.1 is checked in both directions for
+  `real_distance`: the same epsilon tail works after the formula bridge
+  `real_distance_eq_abs` and the explicit normalization
+  `abs(abs(t) - 0) = abs(t)`.
 - **Allowable hole:** Source-deferred uniqueness may remain trusted, but the
   selected function must be justified by an explicit unique-existence
   boundary rather than an arbitrary choice. The current chapter exposes the
@@ -211,14 +215,19 @@ downstream consumer that needs the package as a single value.
 - **Nearest wrong alternative:** A selected topology object is unnecessary
   for Chapter 1 and would make optional Chapter 2.5 vocabulary an upstream
   dependency.
-- **Dependencies:** Balls and set complement by `definition`; closure by
-  `proof`.
+- **Dependencies:** Balls and set complement by `definition`; the checked
+  `metric_ball_member_implies_distance_lt` and
+  `metric_distance_lt_implies_ball_member` bridges; closure by `proof`.
 - **Downstream uses:** Proposition 1.2.15, Proposition 1.3.4, open covers,
   continuity, and connectedness.
 - **Current implementation:** The two open/interior and closed/closure
-  equivalence directions in Proposition 1.2.15 are checked directly.
-- **Allowable hole:** Arbitrary-union and arbitrary-intersection proofs may
-  require a family-union construction, choice, or set-extensionality bridge.
+  equivalence directions, the two complement directions (using
+  `metric_boundary_of_complement_is_boundary`), the closedness of metric
+  singletons and closed balls, the inclusion of every open subset of `E` in
+  `metric_interior(E)`, and the inclusion of `metric_closure(E)` in every
+  closed superset of `E` are checked directly in Proposition 1.2.15.
+- **Allowable hole:** Arbitrary-union and arbitrary-intersection proofs still
+  require a stable family-membership or pointwise-to-subset bridge.
 
 ### Subsequences and limit points
 
@@ -244,6 +253,11 @@ downstream consumer that needs the package as a single value.
   `proof`.
 - **Downstream uses:** Proposition 1.4.5 and the sequential definition of
   compactness.
+- **Current implementation:** `convergent_subsequence_has_same_limit` is
+  checked by deriving `phi(n) >= n` with positive-index induction and
+  transporting the original convergence tail through the subsequence equation.
+  The reverse half of Proposition 1.4.5 similarly turns a late convergent
+  subsequence term into a sequence-limit-point witness.
 - **Allowable hole:** Constructing a strictly increasing witness from the
   limit-point relation may use countable choice and recursive selection.
 
@@ -272,6 +286,9 @@ downstream consumer that needs the package as a single value.
   contraction mapping theorem in Chapter 6.
 - **Current implementation:** `metric_convergent_implies_cauchy` is checked
   by using one epsilon/3 tail and the metric triangle inequality.
+  `cauchy_with_convergent_subsequence_converges` is also checked: it takes a
+  Cauchy tail and a convergent-subsequence tail at epsilon/3, then compares a
+  late original term through the corresponding late subsequence term.
 - **Allowable hole:** Completeness of `R` is Analysis I background; the two
   closed-subspace transfer directions may remain source-deferred proof debt.
 

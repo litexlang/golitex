@@ -17,9 +17,9 @@
 # remain incomplete.
 #
 # Chapter 1C, Result 1.46 — zero intersection implies direct sum
-# The checked setup reduces two equal decompositions u1+w1=u2+w2 to the
-# cancellation identity u1-u2=w2-w1. The corresponding equality of vectors
-# is currently trusted; all subsequent use of the zero intersection is checked.
+# The result is a named boundary while the full source cancellation proof has
+# an unbounded equality-congruence performance path. Its exact source
+# statement and the two direct-sum directions remain visible.
 #
 # Chapter 2, Sections 2A-2C — bases and finite dimension
 # Linear combinations, span, independence, bases, and dimension are callable
@@ -28,14 +28,16 @@
 # that span is the smallest containing subspace remain to be supplied. The
 # structural span statements currently use a selected carrier stated equal to
 # the displayed span. The finite-list deletion and exchange arguments needed
-# for basis extraction and extension remain to be proved. Equality of basis
-# lengths and its basis-length existence wrapper are checked relative to those
-# upstream results. Results 2.38 and 2.42 follow the source routes, but each
-# retains one trusted equality because equal natural indices do not yet
-# transport a FiniteList value between its dependent length types. Results 2.37
-# and 2.39 now check their dimension comparison and span-minimality routes;
-# transporting a subspace basis to the ambient linear-combination structure,
-# and exposing the entries of the named lifted list, remain trusted.
+# for basis extraction and extension remain to be proved. The source proof that
+# two bases have the same length applies the two resulting length inequalities
+# in opposite directions; its full release replay remains a named boundary.
+# Its basis-length existence wrapper is likewise a named boundary after its
+# direct witness repackaging exceeded the release profile window. Results 2.38 and 2.42 follow the source
+# routes, but each retains one trusted equality because equal natural indices do
+# not yet transport a FiniteList value between its dependent length types.
+# Results 2.37 and 2.39 now check their dimension comparison and span-minimality
+# routes; transporting a subspace basis to the ambient linear-combination
+# structure, and exposing the entries of the named lifted list, remain trusted.
 #
 # Chapter 2C, binary subspace-sum closure used by Result 2.43
 # The zero and scalar-closure arguments and all decomposition witnesses are

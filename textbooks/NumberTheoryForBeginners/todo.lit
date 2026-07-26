@@ -7,18 +7,18 @@
 # Prove existence and uniqueness of the largest exponent whose prime power
 # divides a given integer greater than one.
 #
-# Section VII — generated_elements_power_background
-# Prove that every element of a singly generated subgroup is a power of its
-# generator.
+# Section VII — cyclic_group_classification
+# Construct the exponent isomorphism of a cyclic group with either the
+# integers or a residue-class group, including the finite and infinite cases.
 #
 # Section VIII — element_order_exists_background
 # Prove existence and uniqueness of the order of an element in a finite group.
 #
-# Section VIII — subgroup_order_divides_group_order
-# Prove the subgroup-order divisibility theorem by finite coset counting.
-#
 # Section VIII — euler_theorem_background
-# Derive Euler's theorem from the finite group of reduced residue classes.
+# The finite reduced-residue group, its Euler-phi cardinality, and the
+# multiplication-by-a map on reduced representatives are proved. The remaining
+# step is finite-product reindexing and coprime cancellation, equivalently a
+# finite group's cardinality-power theorem and its residue-power bridge.
 #
 # Section IX — polynomial_gcd_generator_background
 # Construct a greatest common divisor generator for a polynomial family.

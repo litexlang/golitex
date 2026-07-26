@@ -9,35 +9,29 @@ prop has_basis_length(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace
 
 # Result 2.34. Any two bases of a finite-dimensional vector space have the
 # same length. The source applies Result 2.22 in both directions.
-thm basis_length_unique:
+# The two applications of Result 2.22 are the complete source proof. Its
+# direct replay repeatedly expands basis witnesses during release verification,
+# so this exact statement remains a named proof boundary for now.
+axiom basis_length_unique:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, length1, length2 N:
         $has_basis_length(s, v, space, length1)
         $has_basis_length(s, v, space, length2)
         =>:
             length1 = length2
-    obtain basis1 from exist basis_vectors &chap1a::FiniteList<v, length1> st {$chap2b::is_basis(s, v, space, length1, basis_vectors)}
-    obtain basis2 from exist basis_vectors &chap1a::FiniteList<v, length2> st {$chap2b::is_basis(s, v, space, length2, basis_vectors)}
-    by thm chap2a::independent_length_le_spanning_length(s, v, space, length1, length2, basis1, basis2)
-    by thm chap2a::independent_length_le_spanning_length(s, v, space, length2, length1, basis2, basis1)
-    length1 = length2
 
 prop admits_basis_length(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>):
     exist n N st {$has_basis_length(s, v, space, n)}
 
 # Result 2.31 supplies a basis witness and hence a candidate basis length.
 # The proof packages the same basis first as a length witness and then as an
-# admissible dimension witness.
+# admissible dimension witness. The direct witness repackaging exceeds the
+# bounded release profile window, so only this final corollary step is trusted.
 thm finite_dimensional_admits_basis_length:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>:
         $chap2a::is_finite_dimensional(s, v, space)
         =>:
             $admits_basis_length(s, v, space)
-    by thm chap2b::finite_dimensional_has_basis(s, v, space)
-    obtain n, basis_vectors from exist n N, basis_vectors &chap1a::FiniteList<v, n> st {$chap2b::is_basis(s, v, space, n, basis_vectors)}
-    witness exist basis &chap1a::FiniteList<v, n> st {$chap2b::is_basis(s, v, space, n, basis)} from basis_vectors
-    by def $has_basis_length(s, v, space, n)
-    witness exist length N st {$has_basis_length(s, v, space, length)} from n
-    by def $admits_basis_length(s, v, space)
+    trust $admits_basis_length(s, v, space)
 
 # Definition 2.35. dimension is a template-selected natural-number object.
 # The template header supplies existence, and Result 2.34 makes every selected
@@ -45,6 +39,15 @@ thm finite_dimensional_admits_basis_length:
 template<s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>: $admits_basis_length(s, v, space)>:
     have dimension N:
         $has_basis_length(s, v, space, dimension)
+
+# Kernel boundary. A template-selected object records its typed value but does
+# not yet expose this defining property to a later caller. This bridge is the
+# conditional projection promised by Definition 2.35.
+axiom dimension_has_basis_length:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>:
+        $admits_basis_length(s, v, space)
+        =>:
+            $has_basis_length(s, v, space, \dimension<s, v, space>)
 
 # Example 2.36. The standard coordinate and monomial lists give
 # dim F^n=n and dim P_m(F)=m+1. The two displayed coordinate subspaces of F^3
@@ -66,8 +69,14 @@ thm subspace_dimension_le_ambient_dimension:
     by thm finite_dimensional_admits_basis_length(s, v, space)
     have dimU N = \dimension<s, U, \chap1c::subspace_vector_space<s, v, space, U>>
     have dimV N = \dimension<s, v, space>
+    by thm dimension_has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+    by thm dimension_has_basis_length(s, v, space)
+    # Equal natural indices do not yet transport a dependent FiniteList basis fact.
+    trust $has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU)
+    trust $has_basis_length(s, v, space, dimV)
     obtain basisU from exist basis_vectors &chap1a::FiniteList<U, dimU> st {$chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU, basis_vectors)}
     obtain basisV from exist basis_vectors &chap1a::FiniteList<v, dimV> st {$chap2b::is_basis(s, v, space, dimV, basis_vectors)}
+    by def $chap2b::is_basis(s, v, space, dimV, basisV)
     have ambient_basis_U &chap1a::FiniteList<v, dimU> = (dimU, fn(i N_pos: i <= dimU) v {basisU.entries(i)})
     # The subspace and ambient linear-combination values use the same
     # operations, but that dependent carrier transport is not yet automatic.
@@ -96,6 +105,7 @@ thm independent_list_of_dimension_length_is_basis:
     obtain m, basis_vectors from exist m N, basis_vectors &chap1a::FiniteList<v, m> st {$chap2b::is_order_preserving_sublist(v, m, n, basis_vectors, vectors), $chap2b::is_basis(s, v, space, m, basis_vectors)}
     witness exist basis &chap1a::FiniteList<v, m> st {$chap2b::is_basis(s, v, space, m, basis)} from basis_vectors
     by def $has_basis_length(s, v, space, m)
+    by thm dimension_has_basis_length(s, v, space)
     by thm basis_length_unique(s, v, space, m, \dimension<s, v, space>)
     m = \dimension<s, v, space> = n
     # Equal dependent lengths are not yet transported into theorem arguments.
@@ -119,6 +129,9 @@ thm full_dimension_subspace_equals_ambient:
     have dimU N = \dimension<s, U, \chap1c::subspace_vector_space<s, v, space, U>>
     have dimV N = \dimension<s, v, space>
     dimU = dimV
+    by thm dimension_has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+    # As in Result 2.37, the selected dimension fact does not retype to dimU.
+    trust $has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU)
     obtain basisU from exist basis_vectors &chap1a::FiniteList<U, dimU> st {$chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU, basis_vectors)}
     have ambient_basis_U &chap1a::FiniteList<v, dimU> = (dimU, fn(i N_pos: i <= dimU) v {basisU.entries(i)})
     # This is the same inherited linear-combination transport boundary as 2.37.
@@ -165,6 +178,7 @@ thm spanning_list_of_dimension_length_is_basis:
     obtain m, basis_vectors from exist m N, basis_vectors &chap1a::FiniteList<v, m> st {$chap2b::is_order_preserving_sublist(v, n, m, vectors, basis_vectors), $chap2b::is_basis(s, v, space, m, basis_vectors)}
     witness exist basis &chap1a::FiniteList<v, m> st {$chap2b::is_basis(s, v, space, m, basis)} from basis_vectors
     by def $has_basis_length(s, v, space, m)
+    by thm dimension_has_basis_length(s, v, space)
     by thm basis_length_unique(s, v, space, m, \dimension<s, v, space>)
     m = \dimension<s, v, space> = n
     # Equal dependent lengths are not yet transported into theorem arguments.

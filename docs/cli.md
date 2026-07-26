@@ -100,6 +100,7 @@ those flags. `-lang` also consumes the next token globally.
 | `litex -isolated -f <file>` | Run one Litex file as an isolated script, without project discovery; a successful ordinary CLI run then continues in an isolated REPL. |
 | `litex -r <project>` | Run a module's complete recursive `[export]` tree, or trace to the module and run the prefix through a selected submodule's complete subtree. |
 | `litex -session -f <file>` | Run the registered project prefix through one file, then keep that same Runtime alive as a framed persistent session. |
+| `litex -session -before <file>` | Run the registered project prefix before one file, exclude that file, and start the persistent session in its file environment. |
 
 Declare local project files and child submodules in recursive ordered
 `[export]` entries. Only a `[hierarchy] module` declares non-standard packages
@@ -189,6 +190,15 @@ emits `startup_error` with the verifier trace and does not enter the session
 loop. `litex -isolated -session -f <file>` provides the analogous behavior for
 an intentionally standalone file.
 
+`litex -session -before <file>` discovers the file in its direct-parent
+`litex.config`, loads imports and recursive ordered exports strictly before the
+target, and does not execute the target or anything after it. The session then
+executes submitted blocks in the target's own file environment, so names and
+module references match the eventual source file. This mode is intended for a
+new, incomplete, or currently failing file. It cannot be combined with
+`-isolated` because its ordering and file environment come from the project
+configuration.
+
 The session writes one JSON object per event and accepts these stdin frames:
 
 ```text
@@ -215,21 +225,27 @@ not make that outer statement recoverable.
 ### Repairing the next project file
 
 Suppose `chap5.lit` follows `chap4.lit` in the module's ordered `[export]`
-table and `chap5.lit` currently fails.
+table. The same loop applies whether chap5 is empty, incomplete, or currently
+failing.
 
-1. Run `target/release/litex -compact -f chap5.lit` once to obtain the first
-   failing source line in the real project context.
-2. Start `target/release/litex -compact -session -f chap4.lit`. Do not preload
-   the failing `chap5.lit`: a failed preload correctly produces
-   `startup_error` instead of an unusable partial session.
-3. After the `ready` event, send the top-level statements from `chap5.lit` in
+1. Start
+   `target/release/litex -compact -session -before chap5.lit`. This loads the
+   configured prefix through chap4, excludes chap5, and enters chap5's file
+   environment.
+2. After the `ready` event, send the top-level statements from `chap5.lit` in
    source order. Wrap every candidate frame in a literal outermost `try:`.
-4. A successful `try:` commits its declarations and facts to the persistent
+3. A successful `try:` commits its declarations and facts to the persistent
    Runtime. A failed `try:` discards only that candidate, so the chap1--chap4
    prefix and all earlier successful chap5 frames remain available.
-5. Correct and resend only the failed fragment. When all fragments succeed,
-   put the final code in `chap5.lit` and run release `-f chap5.lit` as the file
-   checkpoint.
+4. Correct and resend only the failed fragment. If a proof remains blocked,
+   keep its intended statement and use the narrowest explicit `trust` before
+   continuing with the next statement.
+5. Write each accepted statement back to `chap5.lit`. When all fragments have
+   been replayed, run release `-f chap5.lit` once as the clean file checkpoint.
+
+A failed `try:` never requires a restart. Restart from `-before chap5.lit` only
+if the process exits, a loaded predecessor changes, or an already committed
+declaration must be replaced under the same name.
 
 For example, a client can send a frame shaped like:
 
@@ -241,9 +257,10 @@ try:
 
 The byte count covers only the source bytes after the frame header; clients
 should compute it from the UTF-8 payload. Prefix execution is the cold part of
-the run. `-session -f` pays that cost once and keeps the populated Runtime;
-later frames parse and verify only their submitted source. `-compact` reduces
-rendered output but does not replace release optimization or Runtime reuse.
+the run. `-session -before` pays that cost once and keeps the populated target
+file Runtime; later frames parse and verify only their submitted source.
+`-compact` reduces rendered output but does not replace release optimization or
+Runtime reuse.
 
 ## Graph Commands
 

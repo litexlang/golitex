@@ -328,7 +328,7 @@ Basic behavior:
 | `-isolated -f <file>` | Run a standalone file without project discovery, then continue in an isolated REPL after success. |
 | `-r <project>` | Run a module's complete recursive `[export]` tree, or the root prefix through a selected submodule. |
 | `-runner -e/-f/-r ...` | Run the verifier and return one wrapper JSON object with a meaningful process exit code. |
-| `-session` | Start a framed, machine-readable persistent verifier session; add `-f <file>` to preload that registered project prefix into the same Runtime. |
+| `-session` | Start a framed, machine-readable persistent verifier session; use `-f <file>` to include a registered target or `-before <file>` to load only its predecessors and work in the target file environment. |
 | `-graph -e/-f/-r ... [json]` | Produce a prop/function/fact relation graph. |
 | `-factgraph -e/-f/-r ... [json]` | Produce a fact-only verification dependency graph. |
 | `-defgraph -e/-f/-r ... [json]` | Produce an environment-backed definition dependency graph. |
