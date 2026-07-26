@@ -449,6 +449,228 @@ downstream consumer that needs the package as a single value.
   bodies may initially be trusted, but the paired and arithmetic functions
   must remain concrete and immediately evaluable.
 
+### Images, extrema, and uniform continuity
+
+- **Ordinary meaning:** The image of a subset contains exactly the values
+  attained there. A real function is bounded when one absolute bound controls
+  every value, and it attains an extremum at a displayed domain point.
+  Uniform continuity chooses one input tolerance that works simultaneously
+  for every pair of domain points.
+- **Semantic role:** The image is a canonical set-valued construction.
+  Boundedness, attainment, and uniform continuity are properties of supplied
+  functions; a chosen epsilon--delta pair is a residual relation.
+- **Ideal Litex form:** `function_image` as a template-contained `have`,
+  `is_bounded_real_function`, `attains_real_maximum_at`,
+  `attains_real_minimum_at`, `is_uniform_delta_controlled`, and
+  `is_metric_uniformly_continuous` as concrete `prop`s.
+- **Nearest wrong alternative:** Encoding the image only as an existential
+  relation would prevent it from being passed to Chapter 1 compactness.
+  Selecting maximum or minimum values before the nonempty compact theorem
+  would introduce unnecessary choice.
+- **Dependencies:** Function application and subsets by `signature`; Chapter
+  1 sequential compactness by `proof`; real distance and order by `proof`;
+  ordinary metric continuity by `proof`.
+- **Downstream uses:** Theorem 2.3.1, Proposition 2.3.2, Theorem 2.3.5, later
+  uniform convergence results, and the contraction mapping theorem.
+- **Allowable hole:** The compact-image and maximum-principle proofs are
+  exercise-deferred. The compact-to-uniform direction may retain the explicit
+  finite-open-cover proof boundary, but uniform-to-pointwise continuity
+  should be checked directly from the definitions.
+
+### Connected metric spaces and subsets
+
+- **Ordinary meaning:** A disconnected nonempty metric space splits into two
+  disjoint nonempty open subsets that cover the carrier. A connected space is
+  nonempty and has no such separation; connected subsets use the restricted
+  metric.
+- **Semantic role:** Properties of supplied metric data and candidate
+  subsets. A displayed pair of separating open sets is a residual witness
+  relation.
+- **Ideal Litex form:** `is_metric_separation_witness`,
+  `is_metric_disconnected`, `is_metric_connected`, and restricted-metric
+  subset versions as concrete `prop`s.
+- **Nearest wrong alternative:** A selected connected component or topology
+  object is not part of the source definition. Omitting nonemptiness would
+  incorrectly make the empty set connected, contrary to Tao's convention.
+- **Dependencies:** Chapter 1 metric openness and restricted distances by
+  `definition`; interval order and supremum reasoning by `proof`; function
+  images and open inverse images by `proof`.
+- **Downstream uses:** The real-line interval characterization, preservation
+  under continuous maps, the intermediate value theorem, and later
+  path-connected and component exercises.
+- **Allowable hole:** The real-line theorem contains a substantial supremum
+  argument, and the preservation/IVT proofs are exercise-deferred. Their
+  source-facing conclusions may remain explicit theorem-level debt.
+
+### Optional topological layer
+
+- **Ordinary meaning:** A topology is a collection of subsets containing the
+  empty set and carrier and closed under finite intersections and arbitrary
+  unions. Neighborhoods, convergence, interior, exterior, boundary, closure,
+  relative topology, continuity, compactness, and connectedness are then
+  defined from that supplied collection of open sets.
+- **Semantic role:** A topology and relative topology are set-valued data.
+  Neighborhood, point, continuity, cover, compactness, and connectedness
+  notions are concrete properties. Closure is the canonical set of adherent
+  points.
+- **Ideal Litex form:** `is_topology_on` and the derived notions as `prop`s;
+  `topological_closure` and `relative_topology` as template-contained `have`
+  functions. Finite and arbitrary open families use Chapter 1's existing
+  set-family intersection and union constructions.
+- **Nearest wrong alternative:** Treating a topology as a proposition without
+  retaining its open-set collection would make neighborhoods and relative
+  topology unusable. Importing a second topology interface from the derived
+  corpus would also obscure this textbook's source-local dependency surface.
+- **Dependencies:** Chapter 1 set-family union/intersection by `definition`;
+  finite sets and function families by `signature`; metric-free set
+  membership, intersection, complement, and image reasoning by `definition`.
+- **Downstream uses:** The optional reformulation of convergence and
+  continuity, topological compactness, connectedness, and later general
+  topological examples.
+- **Allowable hole:** These are definitions, so their public shapes must be
+  concrete and checked. The source leaves proofs that relative collections
+  satisfy the topology laws and equivalences with metric notions as exercises;
+  those exercises are outside the Chapter 2 named-item inventory.
+
+### Function limits and modes of convergence
+
+- **Ordinary meaning:** A function on a subset has limiting value `L` at an
+  adherent ambient point when all sufficiently close domain values map
+  epsilon-close to `L`. A sequence of functions converges pointwise when the
+  tail index may depend on the argument, and uniformly when one tail index
+  works for every argument.
+- **Semantic role:** Candidate limiting values, pointwise convergence, and
+  uniform convergence are relations on supplied functions. The epsilon-tail
+  conditions are residual witness relations.
+- **Ideal Litex form:** `has_function_limit`,
+  `is_pointwise_convergent_to`, and `is_uniformly_convergent_to` as concrete
+  `prop`s over `N_pos`-indexed function families.
+- **Nearest wrong alternative:** A selected function-limit value would require
+  existence and uniqueness not present in the definition. Encoding a function
+  family as an untyped set would lose callable applications `family(n)(x)`.
+- **Dependencies:** Chapter 1 metric limits/adherence by `definition`; Chapter
+  2 metric continuity by `proof`; positive-index sequences and typed functions
+  by `signature`.
+- **Downstream uses:** Sequential and neighborhood characterizations,
+  preservation of continuity and boundedness, uniform metrics, function
+  series, and interchange theorems.
+- **Allowable hole:** Exercise-deferred characterization and preservation
+  theorems may retain theorem-level trust, but all convergence relations must
+  be concrete and useable.
+
+### Bounded-function spaces and the uniform metric
+
+- **Ordinary meaning:** `B(X -> Y)` contains exactly the bounded maps from `X`
+  to `Y`; the uniform distance is the supremum of pointwise distances, with
+  value zero on an empty domain. `C(X -> Y)` is its bounded continuous
+  subspace.
+- **Semantic role:** Function spaces are canonical set-valued constructions.
+  Uniform distance is a function on pairs of bounded maps selected from a
+  supremum; boundedness and continuity are properties.
+- **Ideal Litex form:** `bounded_function_space` and
+  `bounded_continuous_function_space` as template-contained `have` sets;
+  ultimately `uniform_distance` should be a callable selection. The current
+  verified interface is the concrete `is_uniform_distance_value` relation,
+  a trusted unique-existence theorem on nonempty domains, and the explicit
+  empty-domain value, because generic `have fn ... by exist!` inferred the
+  wrong result sort in the real caller context.
+- **Nearest wrong alternative:** A predicate alone would not provide the
+  carrier needed by Chapter 1 metric completeness. An arbitrary bound is not
+  the uniform distance because later convergence needs the least upper bound.
+- **Dependencies:** Chapter 2 bounded-function and continuity predicates by
+  `definition`; real completeness/supremum by `existence`, `uniqueness`, and
+  `selection`; Chapter 1 metric-space/completeness interfaces by `proof`.
+- **Downstream uses:** Proposition 3.4.4, Theorem 3.4.5, the sup norm,
+  Weierstrass M-test, and all later uniform estimates.
+- **Allowable hole:** Selection of the pointwise-distance supremum may remain a
+  narrowly trusted construction until a reusable real-supremum interface is
+  available. Metric laws and completeness are exercise-deferred theorem debt.
+
+### Function series and the sup norm
+
+- **Ordinary meaning:** The `N`th partial sum is the pointwise finite sum of
+  the first `N` functions. A function series converges pointwise or uniformly
+  when its partial-sum sequence does. The sup norm is the uniform distance to
+  zero.
+- **Semantic role:** Partial sum is callable and series convergence is a
+  relation. Sup norm is currently a concrete candidate-value relation plus
+  the empty-domain value; a callable selection remains downstream of the
+  uniform-distance selection gap.
+- **Ideal Litex form:** `function_partial_sum` as a template-contained
+  `have fn`, pointwise/uniform series convergence as `prop`s, and eventually
+  `sup_norm` as a function defined through `uniform_distance`. Chapter 3
+  presently publishes `is_sup_norm_value` without pretending the blocked
+  selector exists.
+- **Nearest wrong alternative:** Merely asserting that a proposed function is
+  a partial sum would prevent later code from forming the sequence of partial
+  sums. Keeping the norm only as a bound relation would hide the real number
+  used by the M-test.
+- **Dependencies:** Builtin finite `sum` by `definition`; pointwise and uniform
+  convergence by `definition`; bounded-function uniform distance by
+  `definition`.
+- **Downstream uses:** Definition 3.5.2, Theorem 3.5.7, termwise integration,
+  and termwise differentiation.
+- **Allowable hole:** The M-test proof is exercise-deferred and depends on the
+  trusted completeness theorem for continuous bounded function space.
+
+### Integration and differentiation consumers
+
+- **Ordinary meaning:** Uniform limits commute with Riemann integration on a
+  compact interval. Uniform convergence of continuous derivatives, together
+  with convergence at one point, produces a differentiable uniform limit.
+- **Semantic role:** Riemann-integrability, candidate integral values, and
+  derivative-function relations are background properties of supplied
+  functions. Chapter 3 results quantify their values/functions explicitly
+  rather than inventing an unsupported global selection.
+- **Ideal Litex form:** Concrete chapter-local relations
+  `has_riemann_integral_on` and `is_derivative_function_on`; theorem statements
+  carry integral-value sequences or derivative functions as typed parameters.
+- **Nearest wrong alternative:** A trusted global `integral(f)` or
+  `derivative(f)` function would conceal existence, uniqueness, and domain
+  restrictions. Weakening the source theorem to omit the resulting integral
+  or derivative identity would lose its mathematical content.
+- **Dependencies:** Closed real intervals by `signature`; Analysis I Riemann
+  integration and differentiation theory by `trust/source`; uniform
+  convergence and continuity preservation by `proof`.
+- **Downstream uses:** Theorems 3.6.1 and 3.7.1 and their series corollaries.
+- **Allowable hole:** The background relations are explicit, while the
+  substantial source proofs and future-book fundamental-theorem facts may
+  remain narrow trusted conclusions.
+
+### Polynomials, support, convolution, and approximation
+
+- **Ordinary meaning:** A polynomial function on an interval has a finite
+  coefficient formula. Compact support means vanishing outside some bounded
+  interval. Convolution integrates `f(y)g(x-y)`, and approximations to the
+  identity are normalized nonnegative compactly supported kernels small away
+  from zero.
+- **Semantic role:** Polynomialhood, support, and approximation-to-identity
+  are properties. Extension by zero and convolution are mathematically
+  callable constructions, but the verified current surface keeps both as
+  concrete graph relations because dependent piecewise construction and
+  integral-value selection are not yet stable.
+- **Ideal Litex form:** `is_polynomial_on`, `is_supported_on`,
+  `is_compactly_supported`, and `is_approximation_to_identity` as concrete
+  `prop`s. The implemented `is_zero_extension` and
+  `is_convolution_function` relations are the honest current interfaces;
+  callable `zero_extension` and `convolution` should replace them only after
+  their construction and uniqueness certificates verify.
+- **Nearest wrong alternative:** An opaque `abstract_prop` for convolution or
+  a trusted callable function without a construction certificate would hide
+  its defining integral. The current graph relation remains usable in the
+  algebraic and approximation statements while keeping the gap visible.
+  Treating polynomial coefficients as one fixed-length vector would exclude
+  arbitrary finite degrees.
+- **Dependencies:** Finite sums and real powers by `definition`; Chapter 3
+  integration relation by `definition`; compactness/uniform continuity by
+  `proof`; integral uniqueness by `uniqueness` and convolution selection.
+- **Downstream uses:** Lemmas 3.8.5, 3.8.8, 3.8.13--3.8.16, Corollaries
+  3.8.15/18/19, and the full Weierstrass approximation theorem.
+- **Allowable hole:** Integral existence/uniqueness for convolution and the
+  exercise-deferred approximation lemmas may remain visible trust boundaries.
+  The polynomial/support predicates and zero-extension graph must remain
+  concrete.
+
 ### Later-book spines
 
 Continuous maps consume metric balls and metric limits. Uniform convergence
@@ -517,6 +739,36 @@ metric limits + metric open/closed sets
   --proof/trust-source--> continuity characterizations
 pointwise continuity
   --proof--> composition continuity
+
+function limit relation --definition--> sequential/neighborhood forms
+pointwise convergence --definition--> function-family limits
+uniform convergence --proof--> pointwise convergence
+uniform convergence + continuity --proof/trust-source--> continuous limit
+
+bounded functions + real supremum
+  --existence/uniqueness/selection--> uniform distance
+uniform distance --definition--> sup norm
+uniform convergence --proof--> convergence in uniform distance
+continuous bounded functions + complete codomain
+  --proof/trust-source--> complete function space
+
+finite sum --definition--> function partial sums
+function partial sums + uniform convergence
+  --definition--> uniformly convergent function series
+sup norm + complete function space
+  --proof/trust-source--> Weierstrass M-test
+
+Riemann integral background + uniform convergence
+  --proof/trust-source--> interchange limit and integral
+derivative background + uniform derivative convergence
+  --proof/trust-source--> differentiable uniform limit
+
+polynomial + support + Riemann integral
+  --existence/uniqueness/selection--> convolution
+approximation kernels + convolution
+  --proof/trust-source--> polynomial approximation on [0,1]
+zero extension + affine rescaling
+  --proof--> Weierstrass approximation on [a,b]
 ```
 
 There is no intended cycle. The selected metric limit follows the uniqueness
@@ -537,6 +789,12 @@ downstream.
 8. Chapter 2 continuity: define epsilon--delta control, pointwise continuity,
    and domain continuity before the sequential, open-set, composition,
    product, compactness, and connectedness results.
+9. Chapter 3 function limits, pointwise convergence, and uniform convergence.
+10. Bounded-function spaces, uniform distance, completeness, partial sums, and
+    the sup norm.
+11. Uniform-limit interchange with integration and differentiation.
+12. Polynomial/support vocabulary, convolution, approximation kernels, and
+    the staged Weierstrass approximation theorem.
 
 ## Interface decisions and permissible gaps
 

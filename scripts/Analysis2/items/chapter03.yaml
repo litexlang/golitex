@@ -1,0 +1,299 @@
+- source: "Tao, Analysis II, fourth edition, Definition 3.1.1"
+  problem: "Define the limiting value of a function on a subset as its argument approaches an adherent ambient point."
+  proof_idea: "Expose the epsilon-delta control condition as a residual relation, require the approach point to be adherent to the domain subset, and quantify a positive radius for every positive output tolerance."
+  litex_code: |
+    prop has_function_limit(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y):
+        $chap1::is_metric_adherent_point(X, dist_X, E, x0)
+        forall epsilon R_pos:
+            exist delta R_pos st {$is_function_limit_delta_controlled(X, Y, dist_X, dist_Y, E, f, x0, L, epsilon, delta)}
+  comments: "Status: checkable. The definition and its residual relation verified in the Chapter 3 release session on 2026-07-26. The relation deliberately retains Tao's convention that x0 itself is not removed from E."
+
+- source: "Tao, Analysis II, fourth edition, Proposition 3.1.5"
+  problem: "Characterize a function limit equivalently by sequences, open neighborhoods, and continuity of the extension assigning the limiting value at the approach point."
+  proof_idea: "Translate epsilon-delta control to eventual control along every convergent domain sequence; translate balls to open neighborhoods; and compare with the piecewise extension at the approach point."
+  litex_code: |
+    thm function_limit_implies_sequential_form:
+        # Full statement is in the chapter file.
+        trust $preserves_sequences_at_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+  comments: "Status: translated; blocker label: trust. Tao defers the proof to Exercise 3.1.2. Six reusable equivalence directions and the value-at-domain-point consequence are explicit. The extension is represented by an ambient map constrained exactly on E union {x0}, because direct dependent-union function construction failed during the session."
+
+- source: "Tao, Analysis II, fourth edition, Definition 3.2.1"
+  problem: "Define pointwise convergence of a sequence of functions."
+  proof_idea: "At each fixed domain point, apply the Chapter 1 metric-limit relation to the resulting sequence of codomain values."
+  litex_code: |
+    prop is_pointwise_convergent_to(X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y):
+        forall x X:
+            $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {family(n)(x)}, f(x))
+  comments: "Status: checkable. The function family is a typed sequence of callable maps."
+
+- source: "Tao, Analysis II, fourth edition, Definition 3.2.7"
+  problem: "Define uniform convergence of a sequence of functions."
+  proof_idea: "For every positive tolerance choose one positive tail index controlling all later family members at every domain point."
+  litex_code: |
+    prop is_uniformly_convergent_to(X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y):
+        forall epsilon R_pos:
+            exist N0 N_pos st {$is_uniform_function_tail_controlled(X, Y, dist_Y, family, f, epsilon, N0)}
+  comments: "Status: checkable. The residual tail-control relation makes the quantifier-order distinction from pointwise convergence explicit."
+
+- source: "Tao, Analysis II, fourth edition, Theorem 3.3.1"
+  problem: "Show that a uniform limit is continuous at a point when every approximating function is continuous there."
+  proof_idea: "Choose one uniformly close family member and split epsilon into three pieces: two uniform-error terms and the middle continuity term."
+  litex_code: |
+    thm uniform_limit_preserves_continuity_at:
+        # Full statement is in the chapter file.
+        trust $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, f, x0)
+  comments: "Status: translated; blocker label: trust. Tao assigns the epsilon/3 proof to Exercise 3.3.1."
+
+- source: "Tao, Analysis II, fourth edition, Corollary 3.3.2"
+  problem: "Show that a uniform limit of globally continuous functions is globally continuous."
+  proof_idea: "Fix an arbitrary domain point, project continuity of every family member to that point, and apply Theorem 3.3.1."
+  litex_code: |
+    thm uniform_limit_preserves_continuity:
+        # Full statement is in the chapter file.
+        trust $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)
+  comments: "Status: translated; blocker label: trust. Two direct folding attempts stopped at the quantified family-continuity bridge; the exact theorem conclusion remains trusted."
+
+- source: "Tao, Analysis II, fourth edition, Proposition 3.3.3"
+  problem: "Interchange an outer limit over uniformly convergent functions with their limiting values at an adherent point."
+  proof_idea: "Use uniform closeness and the individual function limits to show their limiting values are Cauchy; completeness supplies the outer limit, and a second epsilon/3 estimate gives the limit of the uniform limit function."
+  litex_code: |
+    thm interchange_function_limits_and_uniform_limit:
+        # The theorem concludes with a common value L for both iterated limits.
+        trust exist L Y st {$chap1::has_metric_limit(Y, dist_Y, limits, L), $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)}
+  comments: "Status: translated; blocker label: trust. Tao defers the proof to Exercise 3.3.2."
+
+- source: "Tao, Analysis II, fourth edition, Proposition 3.3.4"
+  problem: "Show that f_n(x_n) converges to f(x) when f_n converges uniformly to f and x_n converges to x."
+  proof_idea: "Use uniform closeness of f_n to f and continuity of the uniform limit, itself obtained from Theorem 3.3.1, to control the two error terms."
+  litex_code: |
+    thm uniform_limit_along_convergent_argument_sequence:
+        # Full statement is in the chapter file.
+        trust $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {family(n)(points(n))}, f(x))
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 3.3.4."
+
+- source: "Tao, Analysis II, fourth edition, Definition 3.3.5"
+  problem: "Define a bounded function between metric spaces."
+  proof_idea: "Require one codomain center and positive radius whose ball contains every function value."
+  litex_code: |
+    prop is_metric_bounded_function(X, Y set, dist_Y fn(x, y Y) R, f fn(x X) Y):
+        exist y0 Y, radius R_pos st {$is_metric_function_bound(X, Y, dist_Y, f, y0, radius)}
+  comments: "Status: checkable. The definition and its residual bound relation verified directly."
+
+- source: "Tao, Analysis II, fourth edition, Proposition 3.3.6"
+  problem: "Show that a uniform limit of bounded functions is bounded."
+  proof_idea: "Choose a uniformly close family member and enlarge its bounding ball using the codomain triangle inequality."
+  litex_code: |
+    thm uniform_limit_preserves_boundedness:
+        # Full statement is in the chapter file.
+        trust $is_metric_bounded_function(X, Y, dist_Y, f)
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 3.3.6."
+
+- source: "Tao, Analysis II, fourth edition, Definition 3.4.2"
+  problem: "Define the bounded-function space and its uniform metric."
+  proof_idea: "Use a set-builder for bounded maps and characterize the supremum distance by upper-bound and arbitrary-approximation conditions; handle the empty domain separately."
+  litex_code: |
+    prop is_uniform_distance_value(X, Y set, dist_Y fn(x, y Y) R, f, g fn(x X) Y, D R):
+        forall x X: dist_Y(f(x), g(x)) <= D
+        forall epsilon R_pos: exist x X st {D - epsilon < dist_Y(f(x), g(x))}
+  comments: "Status: translated; blocker label: trust. Unique existence of the supremum is trusted because a reusable real-supremum selector is unavailable."
+
+- source: "Tao, Analysis II, fourth edition, Proposition 3.4.4"
+  problem: "Equate convergence in the uniform metric with uniform convergence."
+  proof_idea: "Express metric convergence through relational uniform-distance values and compare its tail condition pointwise with the uniform tail condition."
+  litex_code: |
+    thm uniform_metric_limit_implies_uniform_convergence:
+        # Full statement is in the chapter file.
+        trust $is_uniformly_convergent_to(X, Y, dist_Y, family, f)
+  comments: "Status: translated; blocker label: trust. Both implications are explicit and verified as declarations."
+
+- source: "Tao, Analysis II, fourth edition, Theorem 3.4.5"
+  problem: "Show bounded continuous functions into a complete metric space form a complete uniform-metric space."
+  proof_idea: "A uniformly Cauchy family is pointwise Cauchy; choose pointwise limits using completeness, prove uniform convergence, then preserve continuity and boundedness."
+  litex_code: |
+    thm bounded_continuous_function_space_is_complete:
+        # Full statement is in the chapter file.
+        trust exist f \bounded_continuous_function_space<X, Y, dist_X, dist_Y> st {$is_uniformly_convergent_to(X, Y, dist_Y, family, f)}
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 3.4.3."
+
+- source: "Tao, Analysis II, fourth edition, Definition 3.5.2"
+  problem: "Define pointwise and uniform convergence of an infinite series of real-valued functions."
+  proof_idea: "Build the finite partial-sum function and apply scalar metric convergence pointwise or one common tail bound uniformly."
+  litex_code: |
+    template<X set>:
+        have fn function_partial_sum(family fn(n N_pos) fn(y X) R, k N_pos, x X) R = sum(1, k, fn(j N_pos) R {family(j)(x)})
+  comments: "Status: checkable. Partial sums and both convergence relations pass the release verifier."
+
+- source: "Tao, Analysis II, fourth edition, Definition 3.5.5"
+  problem: "Define the sup norm of a bounded real-valued function."
+  proof_idea: "Characterize the supremum of absolute values by an upper bound approached within every positive tolerance, with value zero on the empty domain."
+  litex_code: |
+    prop is_sup_norm_value(X set, f fn(x X) R, M R):
+        forall x X: abs(f(x)) <= M
+        forall epsilon R_pos: exist x X st {M - epsilon < abs(f(x))}
+  comments: "Status: checkable as a candidate relation; the source's empty-domain convention is represented separately."
+
+- source: "Tao, Analysis II, fourth edition, Theorem 3.5.7"
+  problem: "State the Weierstrass M-test."
+  proof_idea: "Convergence of the series of sup norms makes the partial sums uniformly Cauchy; completeness of bounded continuous functions supplies a continuous uniform limit."
+  litex_code: |
+    thm weierstrass_m_test:
+        # Full statement is in the chapter file.
+        trust exist f fn(x X) R st {$has_uniform_function_series_sum(X, family, f), $chap2::is_metric_continuous(X, R, dist_X, chap1::real_distance, f)}
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 3.5.2."
+
+- source: "Tao, Analysis II, fourth edition, Theorem 3.6.1"
+  problem: "Interchange a uniform limit with Riemann integration on a compact interval."
+  proof_idea: "Uniform error bounds squeeze upper and lower integrals together and bound the difference of integral values."
+  litex_code: |
+    thm uniform_convergence_interchanges_integrals:
+        # Full statement is in the chapter file.
+        trust exist A R st {$has_riemann_integral_value(I, f, A), $chap1::has_metric_limit(R, chap1::real_distance, integrals, A)}
+  comments: "Status: translated; blocker label: trust. Riemann integration is an explicit abstract cross-book interface pending a supported Analysis I import."
+
+- source: "Tao, Analysis II, fourth edition, Corollary 3.6.2"
+  problem: "Interchange a uniformly convergent function series with integration."
+  proof_idea: "Apply Theorem 3.6.1 to the sequence of finite partial sums and identify each finite-sum integral."
+  litex_code: |
+    thm uniformly_convergent_function_series_interchanges_integrals:
+        # Full statement is in the chapter file.
+        trust exist A R st {$has_riemann_integral_value(I, f, A), $has_real_series_sum(integrals, A)}
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 3.6.1."
+
+- source: "Tao, Analysis II, fourth edition, Theorem 3.7.1"
+  problem: "Recover uniform convergence and differentiability from uniformly convergent derivatives and convergence at one point."
+  proof_idea: "Integrate each derivative from the anchor point, pass the uniform limit through the integral, and differentiate the resulting integral."
+  litex_code: |
+    thm uniform_derivative_limit_theorem:
+        # Full statement is in the chapter file.
+        trust exist f fn(x I) R st {$is_uniformly_convergent_to(I, R, chap1::real_distance, family, f), $has_continuous_derivative_on(I, f, g)}
+  comments: "Status: translated; blocker label: trust. The derivative API is an explicit cross-book boundary and Tao leaves the proof completion to Exercise 3.7.1."
+
+- source: "Tao, Analysis II, fourth edition, Corollary 3.7.3"
+  problem: "Differentiate a function series term by term under summable derivative sup norms and convergence at one point."
+  proof_idea: "Use the M-test on derivatives, scalar convergence at the anchor point, and then Theorem 3.7.1 on partial sums."
+  litex_code: |
+    thm derivative_series_termwise_differentiation:
+        # Full statement is in the chapter file.
+        trust exist f, g fn(x I) R st {$has_uniform_function_series_sum(I, family, f), $has_uniform_function_series_sum(I, derivatives, g), $has_continuous_derivative_on(I, f, g)}
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 3.7.3."
+
+- source: "Tao, Analysis II, fourth edition, Definition 3.8.1"
+  problem: "Define a polynomial function on a real interval."
+  proof_idea: "Package a natural degree and a finite coefficient function whose finite power sum agrees pointwise with the function."
+  litex_code: |
+    prop is_polynomial_on(I power_set(R), f fn(x I) R):
+        exist n N, coefficients fn(j closed_range(0, n)) R st {$is_polynomial_presentation(I, f, n, coefficients)}
+  comments: "Status: checkable. The presentation relation and existential wrapper pass the release verifier."
+
+- source: "Tao, Analysis II, fourth edition, Theorem 3.8.3"
+  problem: "Uniformly approximate every continuous function on a compact interval by a polynomial."
+  proof_idea: "Prove the unit-interval result through convolution and approximations to the identity, then transport it by an affine change of variables."
+  litex_code: |
+    thm weierstrass_approximation_theorem:
+        # Full statement is in the chapter file.
+        trust exist P fn(x '[a, b]) R st {$is_polynomial_on('[a, b], P), $is_uniform_epsilon_approximation('[a, b], P, f, epsilon)}
+  comments: "Status: translated; blocker label: trust. The staged source proof remains explicit in the later Chapter 3 declarations."
+
+- source: "Tao, Analysis II, fourth edition, Definition 3.8.4"
+  problem: "Define support on an interval, compact support, and the improper integral of a continuous compactly supported function."
+  proof_idea: "Require vanishing outside an interval and represent the improper integral by a Riemann integral over any supporting interval."
+  litex_code: |
+    prop is_compactly_supported(f fn(x R) R):
+        exist a, b R st {a <= b, $is_supported_on_interval(f, a, b)}
+  comments: "Status: checkable apart from the explicitly abstract Riemann-integral boundary."
+
+- source: "Tao, Analysis II, fourth edition, Lemma 3.8.5"
+  problem: "Show the compact-support improper integral is independent of the chosen supporting interval."
+  proof_idea: "Enlarge both intervals to a common interval and use that the integrand vanishes on the added pieces."
+  litex_code: |
+    thm compact_support_improper_integral_well_defined:
+        # Full statement is in the chapter file.
+        trust A = B
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 3.8.1."
+
+- source: "Tao, Analysis II, fourth edition, Definition 3.8.6"
+  problem: "Define an epsilon-delta approximation to the identity."
+  proof_idea: "Combine support and nonnegativity, continuity and unit integral, and small values away from the origin."
+  litex_code: |
+    prop is_approximation_to_identity(f fn(x R) R, epsilon R_pos, delta R_pos):
+        # Full three-clause definition is in the chapter file.
+  comments: "Status: checkable relative to the explicit improper-integral interface."
+
+- source: "Tao, Analysis II, fourth edition, Lemma 3.8.8"
+  problem: "Construct polynomial approximations to the identity."
+  proof_idea: "Normalize a sufficiently high power of 1-x^2 on [-1,1], using decay away from zero."
+  litex_code: |
+    thm polynomial_approximation_to_identity_exists:
+        # Full statement is in the chapter file.
+        trust exist p fn(x R) R st {$is_approximation_to_identity(p, epsilon, delta), $is_polynomial_on('[-1, 1], fn(x '[-1, 1]) R {p(x)})}
+  comments: "Status: translated; blocker label: trust. Tao assigns the construction to Exercise 3.8.2."
+
+- source: "Tao, Analysis II, fourth edition, Definition 3.8.9"
+  problem: "Define convolution of continuous compactly supported real functions."
+  proof_idea: "For each output point, take the improper integral of y ↦ f(y)g(x-y), represented by a pointwise candidate relation."
+  litex_code: |
+    prop is_convolution_function(f, g, h fn(x R) R):
+        forall x R:
+            $is_convolution_value(f, g, x, h(x))
+  comments: "Status: checkable relative to the improper-integral interface. A relation is used rather than an unjustified global selector."
+
+- source: "Tao, Analysis II, fourth edition, Proposition 3.8.11"
+  problem: "Establish continuity, compact support, commutativity, and linearity of convolution."
+  proof_idea: "Use support bounds for compactness, translation continuity under the integral, change of variables for commutativity, and integral linearity."
+  litex_code: |
+    thm basic_convolution_properties:
+        # Continuity, compact support, and commutativity.
+    thm convolution_linearity:
+        # Additivity is stated separately in the same source item.
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 3.8.4."
+
+- source: "Tao, Analysis II, fourth edition, Lemma 3.8.13"
+  problem: "Show convolution with a locally polynomial compactly supported kernel is polynomial on [0,1]."
+  proof_idea: "Expand g(x-y) by the binomial theorem and interchange the finite sums with the integral, leaving polynomial coefficients independent of x."
+  litex_code: |
+    thm convolution_with_local_polynomial_is_polynomial:
+        # Full statement is in the chapter file.
+        trust $is_polynomial_on('[0, 1], fn(x '[0, 1]) R {h(x)})
+  comments: "Status: translated; blocker label: trust. The source proof requires the Analysis I finite-sum and Riemann-integral algebra API."
+
+- source: "Tao, Analysis II, fourth edition, Lemma 3.8.14"
+  problem: "Bound convolution error for a uniformly continuous supported function and an approximation to the identity."
+  proof_idea: "Split the convolution integral into |y|<delta and its complement; use uniform continuity near zero and kernel smallness away from zero."
+  litex_code: |
+    thm convolution_approximation_error:
+        # Full statement is in the chapter file.
+        trust $has_convolution_approximation_error(f, h, M, epsilon)
+  comments: "Status: translated; blocker label: trust. Tao assigns the estimate to Exercise 3.8.6."
+
+- source: "Tao, Analysis II, fourth edition, Corollary 3.8.15"
+  problem: "Approximate a continuous function supported on [0,1] by a function polynomial on [0,1]."
+  proof_idea: "Choose a polynomial approximation to the identity and convolve; Lemmas 3.8.13 and 3.8.14 give polynomiality and uniform error."
+  litex_code: |
+    thm supported_continuous_function_polynomial_approximation:
+        # Full statement is in the chapter file.
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 3.8.7."
+
+- source: "Tao, Analysis II, fourth edition, Lemma 3.8.16"
+  problem: "Show that extending a continuous [0,1]-function vanishing at both endpoints by zero gives a continuous real function."
+  proof_idea: "Use the endpoint values to bridge continuity from inside the interval to the constant-zero exterior."
+  litex_code: |
+    thm zero_extension_is_continuous:
+        # Full statement is in the chapter file.
+        trust $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, F)
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 3.8.9; the extension is relational because dependent piecewise construction failed."
+
+- source: "Tao, Analysis II, fourth edition, Corollary 3.8.18"
+  problem: "Approximate a continuous endpoint-zero function on [0,1] by a polynomial."
+  proof_idea: "Extend by zero using Lemma 3.8.16 and apply Corollary 3.8.15."
+  litex_code: |
+    thm endpoint_zero_polynomial_approximation:
+        # Full statement is in the chapter file.
+  comments: "Status: translated; blocker label: trust. The source inference is preserved."
+
+- source: "Tao, Analysis II, fourth edition, Corollary 3.8.19"
+  problem: "Approximate an arbitrary continuous function on [0,1] by a polynomial."
+  proof_idea: "Subtract the affine interpolant of the endpoint values, approximate the endpoint-zero remainder, then add the affine polynomial back."
+  litex_code: |
+    thm unit_interval_polynomial_approximation:
+        # Full statement is in the chapter file.
+  comments: "Status: translated; blocker label: trust. The source proof route is recorded and the final existence statement verifies with a narrow trust."

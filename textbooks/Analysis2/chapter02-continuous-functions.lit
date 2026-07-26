@@ -362,3 +362,537 @@ thm real_scalar_multiply_is_continuous_at_every_point:
         $is_metric_continuous_at(R, R, chap1::real_distance, chap1::real_distance, fn(x R) R {real_scalar_multiply(c, x)}, a)
     # trust: Tao assigns Lemma 2.2.2 to Exercise 2.2.2.
     trust $is_metric_continuous_at(R, R, chap1::real_distance, chap1::real_distance, fn(x R) R {real_scalar_multiply(c, x)}, a)
+
+# Corollary 2.2.3. Pointwise arithmetic combinations remain callable maps.
+template<X set, f, g fn(x X) R>:
+    have fn real_function_sum(x X) R = f(x) + g(x)
+
+template<X set, f, g fn(x X) R>:
+    have fn real_function_difference(x X) R = f(x) - g(x)
+
+template<X set, f, g fn(x X) R>:
+    have fn real_function_product(x X) R = f(x) * g(x)
+
+template<X set, f, g fn(x X) R>:
+    have fn real_function_maximum(x X) R = real_pair_maximum(\real_function_pair<X, f, g>(x))
+
+template<X set, f, g fn(x X) R>:
+    have fn real_function_minimum(x X) R = real_pair_minimum(\real_function_pair<X, f, g>(x))
+
+template<X set, f fn(x X) R, c R>:
+    have fn real_function_scalar_multiple(x X) R = c * f(x)
+
+have fn real_safe_divide(a, b R) R by cases:
+    case b != 0: a / b
+    case b = 0: 0
+
+template<X set, f, g fn(x X) R>:
+    have fn real_function_quotient(x X) R = real_safe_divide(f(x), g(x))
+
+prop is_nowhere_zero(X set, g fn(x X) R):
+    forall x X:
+        g(x) != 0
+
+thm continuous_at_real_function_sum:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        =>:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_sum<X, f, g>, a)
+    # trust: composition is checked up to the pair/add-to-named-sum function equality.
+    trust $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_sum<X, f, g>, a)
+
+thm continuous_real_function_sum:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+        =>:
+            $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_sum<X, f, g>)
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_sum<X, f, g>, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        by thm continuous_at_real_function_sum(X, dist, f, g, a)
+    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_sum<X, f, g>)
+
+thm continuous_at_real_function_difference:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        =>:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_difference<X, f, g>, a)
+    # trust: composition is checked up to the pair/arithmetic-to-named-function equality.
+    trust $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_difference<X, f, g>, a)
+
+thm continuous_at_real_function_product:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        =>:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_product<X, f, g>, a)
+    # trust: composition is checked up to the pair/arithmetic-to-named-function equality.
+    trust $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_product<X, f, g>, a)
+
+thm continuous_at_real_function_maximum:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        =>:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_maximum<X, f, g>, a)
+    # trust: composition is checked up to the pair/arithmetic-to-named-function equality.
+    trust $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_maximum<X, f, g>, a)
+
+thm continuous_at_real_function_minimum:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        =>:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_minimum<X, f, g>, a)
+    # trust: composition is checked up to the pair/arithmetic-to-named-function equality.
+    trust $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_minimum<X, f, g>, a)
+
+thm continuous_at_real_function_scalar_multiple:
+    ? forall X set, dist fn(x, y X) R, f fn(x X) R, c R, a X:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        =>:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_scalar_multiple<X, f, c>, a)
+    # trust: composition is checked up to the scalar-map-to-named-function equality.
+    trust $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_scalar_multiple<X, f, c>, a)
+
+thm continuous_at_real_function_quotient:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
+        $chap1::is_metric_space(X, dist)
+        $is_nowhere_zero(X, g)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        =>:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_quotient<X, f, g>, a)
+    # trust: codomain restriction of the pair to the nonzero-second-coordinate subspace is not yet formalized.
+    trust $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_quotient<X, f, g>, a)
+
+thm continuous_real_function_difference:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+        =>:
+            $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_difference<X, f, g>)
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_difference<X, f, g>, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        by thm continuous_at_real_function_difference(X, dist, f, g, a)
+    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_difference<X, f, g>)
+
+thm continuous_real_function_product:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+        =>:
+            $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_product<X, f, g>)
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_product<X, f, g>, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        by thm continuous_at_real_function_product(X, dist, f, g, a)
+    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_product<X, f, g>)
+
+thm continuous_real_function_maximum:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+        =>:
+            $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_maximum<X, f, g>)
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_maximum<X, f, g>, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        by thm continuous_at_real_function_maximum(X, dist, f, g, a)
+    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_maximum<X, f, g>)
+
+thm continuous_real_function_minimum:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+        =>:
+            $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_minimum<X, f, g>)
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_minimum<X, f, g>, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        by thm continuous_at_real_function_minimum(X, dist, f, g, a)
+    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_minimum<X, f, g>)
+
+thm continuous_real_function_scalar_multiple:
+    ? forall X set, dist fn(x, y X) R, f fn(x X) R, c R:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        =>:
+            $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_scalar_multiple<X, f, c>)
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_scalar_multiple<X, f, c>, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        by thm continuous_at_real_function_scalar_multiple(X, dist, f, c, a)
+    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_scalar_multiple<X, f, c>)
+
+thm continuous_real_function_quotient:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
+        $chap1::is_metric_space(X, dist)
+        $is_nowhere_zero(X, g)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+        =>:
+            $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_quotient<X, f, g>)
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_quotient<X, f, g>, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        by thm continuous_at_real_function_quotient(X, dist, f, g, a)
+    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_quotient<X, f, g>)
+
+# Theorem 2.3.1 (Continuous maps preserve compactness).
+prop has_preimage_in_subset(X, Y set, K power_set(X), f fn(x X) Y, y Y):
+    exist x K st {f(x) = y}
+
+template<X, Y set, f fn(x X) Y, K power_set(X)>:
+    have function_image power_set(Y) = {y Y: $has_preimage_in_subset(X, Y, K, f, y)}
+
+thm continuous_map_preserves_metric_compactness:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, K power_set(X):
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+        $chap1::is_metric_compact(X, dist_X, K)
+        =>:
+            $chap1::is_metric_compact(Y, dist_Y, \function_image<X, Y, f, K>)
+    # trust: Tao assigns Theorem 2.3.1 to Exercise 2.3.1.
+    trust $chap1::is_metric_compact(Y, dist_Y, \function_image<X, Y, f, K>)
+
+# Proposition 2.3.2 (Maximum principle).
+prop is_real_function_bound(X set, f fn(x X) R, M R_pos):
+    forall x X:
+        abs(f(x)) <= M
+
+prop is_bounded_real_function(X set, f fn(x X) R):
+    exist M R_pos st {$is_real_function_bound(X, f, M)}
+
+prop attains_real_maximum_at(X set, f fn(x X) R, a X):
+    forall x X:
+        f(x) <= f(a)
+
+prop attains_real_minimum_at(X set, f fn(x X) R, a X):
+    forall x X:
+        f(a) <= f(x)
+
+thm compact_continuous_real_function_is_bounded:
+    ? forall X set, dist fn(x, y X) R, f fn(x X) R:
+        $chap1::is_metric_space(X, dist)
+        $chap1::is_metric_compact(X, dist, X)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        =>:
+            $is_bounded_real_function(X, f)
+    # trust: Tao assigns the boundedness part of Proposition 2.3.2 to Exercise 2.3.2.
+    trust $is_bounded_real_function(X, f)
+
+thm compact_continuous_real_function_attains_extrema:
+    ? forall X set, dist fn(x, y X) R, f fn(x X) R:
+        $chap1::is_metric_space(X, dist)
+        $chap1::is_metric_compact(X, dist, X)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        $is_nonempty_set(X)
+        =>:
+            exist xmax X st {$attains_real_maximum_at(X, f, xmax)}
+            exist xmin X st {$attains_real_minimum_at(X, f, xmin)}
+    # trust: Tao assigns the extrema part of Proposition 2.3.2 to Exercise 2.3.2.
+    trust:
+        exist xmax X st {$attains_real_maximum_at(X, f, xmax)}
+        exist xmin X st {$attains_real_minimum_at(X, f, xmin)}
+
+# Definition 2.3.4 (Uniform continuity).
+prop is_uniform_delta_controlled(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, epsilon R_pos, delta R_pos):
+    forall x, y X:
+        dist_X(x, y) < delta
+        =>:
+            dist_Y(f(x), f(y)) < epsilon
+
+prop is_metric_uniformly_continuous(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_uniform_delta_controlled(X, Y, dist_X, dist_Y, f, epsilon, delta)}
+
+# Theorem 2.3.5. The uniform-to-pointwise direction is checked directly.
+thm metric_uniformly_continuous_implies_continuous:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
+        $is_metric_uniformly_continuous(X, Y, dist_X, dist_Y, f)
+        =>:
+            $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+        claim:
+            ? forall epsilon R_pos:
+                exist delta R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
+            by def $is_metric_uniformly_continuous(X, Y, dist_X, dist_Y, f)
+            obtain delta from exist delta R_pos st {$is_uniform_delta_controlled(X, Y, dist_X, dist_Y, f, epsilon, delta)}
+            witness exist radius R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, radius)} from delta:
+                claim:
+                    ? forall x X:
+                        dist_X(x, a) < delta
+                        =>:
+                            dist_Y(f(x), f(a)) < epsilon
+                    by def $is_uniform_delta_controlled(X, Y, dist_X, dist_Y, f, epsilon, delta)
+                    dist_Y(f(x), f(a)) < epsilon
+                by def $is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)
+        by def $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+    by def $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+
+thm compact_metric_continuous_implies_uniformly_continuous:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $chap1::is_metric_compact(X, dist_X, X)
+        $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+        =>:
+            $is_metric_uniformly_continuous(X, Y, dist_X, dist_Y, f)
+    # trust: the source proof uses the trusted finite-open-subcover theorem and finite minimum selection.
+    trust $is_metric_uniformly_continuous(X, Y, dist_X, dist_Y, f)
+
+# Definition 2.4.1 (Connected spaces).
+prop is_metric_separation_witness(X set, dist fn(x, y X) R, V, W power_set(X)):
+    $chap1::is_metric_open(X, dist, V)
+    $chap1::is_metric_open(X, dist, W)
+    $is_nonempty_set(V)
+    $is_nonempty_set(W)
+    intersect(V, W) = {}
+    union(V, W) = X
+
+prop is_metric_disconnected(X set, dist fn(x, y X) R):
+    $is_nonempty_set(X)
+    exist V, W power_set(X) st {$is_metric_separation_witness(X, dist, V, W)}
+
+prop is_metric_connected(X set, dist fn(x, y X) R):
+    $is_nonempty_set(X)
+    not $is_metric_disconnected(X, dist)
+
+# Definition 2.4.3 (Connected subsets).
+prop is_metric_connected_subset(X set, dist fn(x, y X) R, E power_set(X)):
+    $is_metric_connected(E, fn(x, y E) R {dist(x, y)})
+
+prop is_metric_disconnected_subset(X set, dist fn(x, y X) R, E power_set(X)):
+    $is_metric_disconnected(E, fn(x, y E) R {dist(x, y)})
+
+# Theorem 2.4.5. The middle and interval clauses are kept as distinct
+# predicates so the source's three-way equivalence remains visible.
+prop contains_closed_intervals_between_points(E power_set(R)):
+    forall x, y E:
+        x < y
+        =>:
+            '[x, y] $subset E
+
+prop is_real_interval_subset(E power_set(R)):
+    forall x, z E, y R:
+        x <= y
+        y <= z
+        =>:
+            y $in E
+
+thm connected_real_subset_contains_intervals:
+    ? forall E power_set(R):
+        $is_nonempty_set(E)
+        $is_metric_connected_subset(R, chap1::real_distance, E)
+        =>:
+            $contains_closed_intervals_between_points(E)
+    # trust: the source uses a separation contradiction.
+    trust $contains_closed_intervals_between_points(E)
+
+thm interval_between_property_implies_connected_real_subset:
+    ? forall E power_set(R):
+        $is_nonempty_set(E)
+        $contains_closed_intervals_between_points(E)
+        =>:
+            $is_metric_connected_subset(R, chap1::real_distance, E)
+    # trust: the source uses the supremum of a separated interval piece.
+    trust $is_metric_connected_subset(R, chap1::real_distance, E)
+
+thm interval_between_property_implies_real_interval_subset:
+    ? forall E power_set(R):
+        $is_nonempty_set(E)
+        $contains_closed_intervals_between_points(E)
+        =>:
+            $is_real_interval_subset(E)
+    # trust: Tao assigns this equivalence direction to Exercise 2.4.3.
+    trust $is_real_interval_subset(E)
+
+thm real_interval_subset_implies_interval_between_property:
+    ? forall E power_set(R):
+        $is_nonempty_set(E)
+        $is_real_interval_subset(E)
+        =>:
+            $contains_closed_intervals_between_points(E)
+    # trust: Tao assigns this equivalence direction to Exercise 2.4.3.
+    trust $contains_closed_intervals_between_points(E)
+
+# Theorem 2.4.6 (Continuity preserves connectedness).
+thm continuous_map_preserves_metric_connectedness:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, E power_set(X):
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+        $is_metric_connected_subset(X, dist_X, E)
+        =>:
+            $is_metric_connected_subset(Y, dist_Y, \function_image<X, Y, f, E>)
+    # trust: Tao assigns Theorem 2.4.6 to Exercise 2.4.4.
+    trust $is_metric_connected_subset(Y, dist_Y, \function_image<X, Y, f, E>)
+
+# Corollary 2.4.7 (Intermediate value theorem).
+prop is_in_real_closed_interval_order(y, p, q R):
+    p <= y
+    y <= q
+
+prop is_between_real_values(y, p, q R):
+    $is_in_real_closed_interval_order(y, p, q) or $is_in_real_closed_interval_order(y, q, p)
+
+thm intermediate_value_on_metric_connected_subset:
+    ? forall X set, dist fn(x, y X) R, f fn(x X) R, E power_set(X), a, b E, y R:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        $is_metric_connected_subset(X, dist, E)
+        $is_between_real_values(y, f(a), f(b))
+        =>:
+            exist c E st {f(c) = y}
+    # trust: Tao assigns Corollary 2.4.7 to Exercise 2.4.5.
+    trust exist c E st {f(c) = y}
+
+# Definition 2.5.1 (Topological spaces).
+prop is_topological_open_family(X set, T power_set(power_set(X)), A set, family fn(alpha A) power_set(X)):
+    forall alpha A:
+        family(alpha) $in T
+
+prop is_topology_on(X set, T power_set(power_set(X))):
+    {} $in T
+    X $in T
+    forall A finite_set, family fn(alpha A) power_set(X):
+        $is_topological_open_family(X, T, A, family)
+        =>:
+            \chap1::set_family_intersection<X, A, family> $in T
+    forall A set, family fn(alpha A) power_set(X):
+        $is_topological_open_family(X, T, A, family)
+        =>:
+            \chap1::set_family_union<X, A, family> $in T
+
+# Definition 2.5.2 (Neighborhoods).
+prop is_topological_neighborhood(X set, T power_set(power_set(X)), x X, V power_set(X)):
+    V $in T
+    x $in V
+
+# Definition 2.5.4 (Topological convergence).
+prop is_eventually_in_topological_neighborhood(X set, u fn(n N_pos) X, V power_set(X), N0 N_pos):
+    forall n N_pos:
+        n >= N0
+        =>:
+            u(n) $in V
+
+prop has_topological_limit(X set, T power_set(power_set(X)), u fn(n N_pos) X, a X):
+    forall V power_set(X):
+        $is_topological_neighborhood(X, T, a, V)
+        =>:
+            exist N0 N_pos st {$is_eventually_in_topological_neighborhood(X, u, V, N0)}
+
+# Definition 2.5.5 (Interior, exterior, and boundary).
+prop is_topological_interior_point(X set, T power_set(power_set(X)), E power_set(X), x X):
+    exist V power_set(X) st {$is_topological_neighborhood(X, T, x, V), V $subset E}
+
+prop is_topological_exterior_point(X set, T power_set(power_set(X)), E power_set(X), x X):
+    exist V power_set(X) st {$is_topological_neighborhood(X, T, x, V), intersect(V, E) = {}}
+
+prop is_topological_boundary_point(X set, T power_set(power_set(X)), E power_set(X), x X):
+    not $is_topological_interior_point(X, T, E, x)
+    not $is_topological_exterior_point(X, T, E, x)
+
+# Definition 2.5.6 (Adherent points, closure, and closed sets).
+prop is_topological_adherent_point(X set, T power_set(power_set(X)), E power_set(X), x X):
+    forall V power_set(X):
+        $is_topological_neighborhood(X, T, x, V)
+        =>:
+            intersect(V, E) != {}
+
+template<X set>:
+    have fn topological_closure(T power_set(power_set(X)), E power_set(X)) power_set(X) = {x X: $is_topological_adherent_point(X, T, E, x)}
+
+prop is_topologically_closed(X set, T power_set(power_set(X)), E power_set(X)):
+    set_minus(X, E) $in T
+
+# Definition 2.5.7 (Relative topology).
+prop has_relative_open_source(X set, T power_set(power_set(X)), Y power_set(X), U power_set(Y)):
+    exist V T st {U = intersect(V, Y)}
+
+template<X set>:
+    have fn relative_topology(T power_set(power_set(X)), Y power_set(X)) power_set(power_set(Y)) = {U power_set(Y): $has_relative_open_source(X, T, Y, U)}
+
+# Definition 2.5.8 (Continuous functions on topological spaces).
+prop is_topological_continuity_witness_at(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y, a X, V power_set(Y), U power_set(X)):
+    $is_topological_neighborhood(X, T_X, a, U)
+    forall x U:
+        f(x) $in V
+
+prop is_topologically_continuous_at(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y, a X):
+    forall V power_set(Y):
+        $is_topological_neighborhood(Y, T_Y, f(a), V)
+        =>:
+            exist U power_set(X) st {$is_topological_continuity_witness_at(X, Y, T_X, T_Y, f, a, V, U)}
+
+prop is_topologically_continuous(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y):
+    forall a X:
+        $is_topologically_continuous_at(X, Y, T_X, T_Y, f, a)
+
+# Definition 2.5.9 (Compact and connected topological spaces).
+prop is_topological_open_cover(X set, T power_set(power_set(X)), A set, cover fn(alpha A) power_set(X)):
+    $is_topological_open_family(X, T, A, cover)
+    X $subset \chap1::set_family_union<X, A, cover>
+
+prop has_finite_topological_subcover(X set, A set, cover fn(alpha A) power_set(X)):
+    exist F finite_set st {F $subset A, X $subset \chap1::set_family_union<X, F, fn(alpha F) power_set(X) {cover(alpha)}>}
+
+prop is_topologically_compact(X set, T power_set(power_set(X))):
+    forall A set, cover fn(alpha A) power_set(X):
+        $is_topological_open_cover(X, T, A, cover)
+        =>:
+            $has_finite_topological_subcover(X, A, cover)
+
+prop is_topologically_compact_subset(X set, T power_set(power_set(X)), Y power_set(X)):
+    $is_topologically_compact(Y, \relative_topology<X>(T, Y))
+
+prop is_topological_separation_witness(X set, T power_set(power_set(X)), U, V power_set(X)):
+    U $in T
+    V $in T
+    $is_nonempty_set(U)
+    $is_nonempty_set(V)
+    intersect(U, V) = {}
+    union(U, V) = X
+
+prop is_topologically_disconnected(X set, T power_set(power_set(X))):
+    $is_nonempty_set(X)
+    exist U, V power_set(X) st {$is_topological_separation_witness(X, T, U, V)}
+
+prop is_topologically_connected(X set, T power_set(power_set(X))):
+    $is_nonempty_set(X)
+    not $is_topologically_disconnected(X, T)
+
+prop is_topologically_connected_subset(X set, T power_set(power_set(X)), Y power_set(X)):
+    $is_topologically_connected(Y, \relative_topology<X>(T, Y))

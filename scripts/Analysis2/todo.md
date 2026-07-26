@@ -14,6 +14,36 @@ label `trust` or `kernel_problem`.
 
 ## do_not_know_how_to_formalize
 
+- **Chapter 3 source proofs and cross-book analysis interfaces remain explicit
+  proof debt.** Attempt: all 34 named items were submitted through the release
+  `-session -before` workflow, and the final registered file passes
+  `target/release/litex -compact -f
+  textbooks/Analysis2/chapter03-uniform-convergence.lit`. Result: 32 explicit
+  `trust` statements. The gaps are chiefly exercise-deferred epsilon
+  arguments, real-supremum selection, and unavailable project imports for the
+  Analysis I Riemann-integral and derivative APIs. Desired state: concrete
+  cross-book interfaces and checked proofs preserving the current statements.
+  Primary label: `trust`.
+
+- **Dependent piecewise functions over subset domains do not execute in the
+  Chapter 3 caller context.** Attempts: the direct extension on `E union
+  {x0}` for Proposition 3.1.5 and a callable zero extension from `[0,1]` to
+  `R` both ended in `ExecStmtError`. Desired interface: stable coercion from
+  an ambient point known to lie in a subset into a dependent function domain
+  inside `by cases`. Current workaround: ambient functions constrained by
+  `is_function_limit_extension` and `is_zero_extension`. Root-cause class:
+  dependent-subtype piecewise construction. Primary label: `trust`.
+
+- **Generic uniform-distance selection does not infer a usable real-valued
+  function.** Attempt: `have fn uniform_distance by exist!` over generic
+  metric spaces and bounded maps was inferred as returning `set` and ended in
+  `ExecStmtError`, although the witness was declared in `R`. Desired
+  interface: a selected real supremum whose certificate is available under
+  the boundedness hypotheses. Current workaround:
+  `is_uniform_distance_value` plus trusted unique existence. Root-cause class:
+  dependent unique selection/result inference. Primary label:
+  `kernel_problem`.
+
 - **Chapter 1 source proofs remain explicit proof debt.**
   Attempt: all 32 named items were translated in
   `scripts/textbooks_drafts/Analysis2/chapter01-metric-spaces.lit`, and the definitions plus

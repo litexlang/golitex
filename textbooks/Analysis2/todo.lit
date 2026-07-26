@@ -40,3 +40,37 @@
 # The paired function and all seven arithmetic maps are concrete. The missing
 # mathematics is the coordinatewise convergence proof for pairing and the
 # real limit-law proofs of continuity for the arithmetic maps.
+#
+# Chapter 2, Section 2.2 — Corollary 2.2.3
+# All global arithmetic-combination conclusions are established from their
+# pointwise forms. The remaining gaps are the seven pointwise composition
+# identifications, including the restricted-codomain argument for division.
+#
+# Chapter 2, Section 2.3 — Theorem 2.3.1 and Proposition 2.3.2
+# Prove compactness of continuous images and then the boundedness and attained
+# extrema of continuous real functions on compact spaces.
+#
+# Chapter 2, Section 2.3 — Theorem 2.3.5
+# Uniform continuity is proved to imply continuity. The remaining direction
+# is the finite-open-cover and finite-minimum argument on a compact domain.
+#
+# Chapter 2, Section 2.4 — Theorems 2.4.5-2.4.7
+# Supply the supremum proof characterizing connected real subsets, the
+# pullback-of-separation proof for continuous images, and the resulting
+# intermediate value argument.
+#
+# Chapter 2, Section 2.5
+# All eight named topological definitions are concrete and checked. The
+# source-deferred exercises proving induced-topology laws and equivalence with
+# the metric notions are excluded by the inventory policy and add no trust.
+#
+# Chapter 3
+# 3.1.5: prove the sequential, neighborhood, and extension equivalences.
+# 3.3.1-3.3.6: formalize the epsilon/3 uniform-limit arguments and boundedness.
+# 3.4.2-3.4.5: expose a reusable supremum selector, prove the metric
+# convergence equivalence, and complete the bounded-continuous-space proof.
+# 3.5.7: prove the M-test through uniform Cauchy completeness.
+# 3.6.1-3.7.3: connect concrete Analysis I integral and derivative APIs and
+# prove the interchange theorems and their series corollaries.
+# 3.8.3-3.8.19: discharge the support, convolution, zero-extension, and
+# polynomial approximation proof chain.

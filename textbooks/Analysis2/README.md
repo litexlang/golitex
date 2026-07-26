@@ -10,8 +10,8 @@ Run the implemented project with:
 target/release/litex -compact -r textbooks/Analysis2
 ```
 
-The current project exports Chapter 1 as `chap1` and the in-progress Chapter 2
-as `chap2`. The Chapter 1 public metric-space surface includes:
+The current project exports Chapters 1--3 as `chap1`, `chap2`, and `chap3`.
+The Chapter 1 public metric-space surface includes:
 
 - `$chap1::is_metric_space(X,dist)`, the concrete real, restricted,
   finite-dimensional `l1`/`l2`/`linf`, and discrete distance functions, and
@@ -51,10 +51,37 @@ Section 2.2 currently adds a concrete real-function pairing into
 `\chap1::finite_real_vector<2>` and concrete addition, subtraction,
 multiplication, maximum, minimum, restricted division, and scalar maps. The
 continuity statements in Lemmas 2.2.1--2.2.2 remain exercise-deferred trusts.
+Corollary 2.2.3 exposes named pointwise arithmetic combinations. Its seven
+global preservation theorems are checked; the pointwise composition
+identifications remain explicit trusts.
+Section 2.3 adds concrete function images, real-function boundedness and
+extremum attainment, and uniform continuity. Uniform continuity implying
+continuity is checked; compact images, the maximum principle, and the
+compact-to-uniform direction retain explicit proof boundaries.
+Section 2.4 concretely models separations, connected spaces and subsets,
+real order intervals, and values lying between two real values. Its real-line
+characterization, connected-image theorem, and intermediate value theorem
+remain explicit source-facing proof boundaries.
+Section 2.5 adds the optional topology layer: topology laws, neighborhoods,
+topological sequence limits, interior/exterior/boundary, closure and closed
+sets, relative topology, topological continuity, open covers, compactness,
+and connectedness. These interfaces are all concrete and checkable.
 
-All 32 numbered non-exercise Chapter 1 items have source-facing definitions
-or theorem interfaces. The ordered project run succeeds, but the chapter is
-not proof-complete: it currently contains 28 explicit `trust` statements.
+Chapter 3 exposes function limits, pointwise and uniform convergence,
+bounded-function spaces, relational uniform distances, uniformly Cauchy
+families, function-series partial sums, sup norms, and the Weierstrass
+M-test. It then gives source-facing interfaces for exchanging uniform limits
+with integration and differentiation, followed by polynomial presentations,
+compact support, approximations to the identity, convolution, and the staged
+Weierstrass approximation theorem. Riemann integrals and continuous
+derivatives are explicit abstract cross-book boundaries until the Analysis I
+APIs can be imported.
+
+All 32 numbered non-exercise Chapter 1 items, all 24 Chapter 2 items, and all
+34 Chapter 3 items have source-facing definitions or theorem interfaces. The
+registered Chapter 3 file gate succeeds. The chapters are not proof-complete:
+Chapter 1 contains 28 explicit `trust` statements, Chapter 2 contains 36, and
+Chapter 3 contains 32.
 Most correspond to proofs Tao assigns to exercises; others mark substantial
 source proofs or finite-choice arguments not yet formalized. The `linf`
 distance uses a trusted unique-maximum selection because instantiating the
