@@ -27,7 +27,9 @@ struct Monoid<s nonempty_set>:
             mul(one, x) = x
             mul(x, one) = x
 
-struct Group<s nonempty_set>:
+# This source hierarchy assumes both identity directions as primitive laws,
+# unlike Chapter 2's left-facing canonical Group interface.
+struct TwoSidedGroup<s nonempty_set>:
     mul fn(x, y s) s
     one s
     inv fn(x s) s
@@ -49,21 +51,21 @@ thm monoid_left_inverse_unique:
 
 # Source lemma inv_eq_of_dia.
 thm group_inverse_eq_of_right_inverse:
-    ? forall s nonempty_set, group &Group<s>, a, b s:
-        &Group<s>{group}.mul(a, b) = &Group<s>{group}.one
+    ? forall s nonempty_set, group &TwoSidedGroup<s>, a, b s:
+        &TwoSidedGroup<s>{group}.mul(a, b) = &TwoSidedGroup<s>{group}.one
         =>:
-            &Group<s>{group}.inv(a) = b
-    &Group<s>{group}.mul(&Group<s>{group}.inv(a), a) = &Group<s>{group}.one
-    &Group<s>{group}.inv(a) = &Group<s>{group}.mul(&Group<s>{group}.inv(a), &Group<s>{group}.one) = &Group<s>{group}.mul(&Group<s>{group}.inv(a), &Group<s>{group}.mul(a, b)) = &Group<s>{group}.mul(&Group<s>{group}.mul(&Group<s>{group}.inv(a), a), b) = &Group<s>{group}.mul(&Group<s>{group}.one, b) = b
+            &TwoSidedGroup<s>{group}.inv(a) = b
+    &TwoSidedGroup<s>{group}.mul(&TwoSidedGroup<s>{group}.inv(a), a) = &TwoSidedGroup<s>{group}.one
+    &TwoSidedGroup<s>{group}.inv(a) = &TwoSidedGroup<s>{group}.mul(&TwoSidedGroup<s>{group}.inv(a), &TwoSidedGroup<s>{group}.one) = &TwoSidedGroup<s>{group}.mul(&TwoSidedGroup<s>{group}.inv(a), &TwoSidedGroup<s>{group}.mul(a, b)) = &TwoSidedGroup<s>{group}.mul(&TwoSidedGroup<s>{group}.mul(&TwoSidedGroup<s>{group}.inv(a), a), b) = &TwoSidedGroup<s>{group}.mul(&TwoSidedGroup<s>{group}.one, b) = b
 
 # Source lemma dia_inv. It is a fact about every Group object, not a new prop.
 thm group_right_inverse:
-    ? forall s nonempty_set, group &Group<s>, a s:
-        &Group<s>{group}.mul(a, &Group<s>{group}.inv(a)) = &Group<s>{group}.one
-    by thm group_inverse_eq_of_right_inverse(s, group, &Group<s>{group}.inv(a), a)
-    &Group<s>{group}.inv(&Group<s>{group}.inv(a)) = a
-    &Group<s>{group}.mul(&Group<s>{group}.inv(&Group<s>{group}.inv(a)), &Group<s>{group}.inv(a)) = &Group<s>{group}.one
-    &Group<s>{group}.mul(a, &Group<s>{group}.inv(a)) = &Group<s>{group}.mul(&Group<s>{group}.inv(&Group<s>{group}.inv(a)), &Group<s>{group}.inv(a)) = &Group<s>{group}.one
+    ? forall s nonempty_set, group &TwoSidedGroup<s>, a s:
+        &TwoSidedGroup<s>{group}.mul(a, &TwoSidedGroup<s>{group}.inv(a)) = &TwoSidedGroup<s>{group}.one
+    by thm group_inverse_eq_of_right_inverse(s, group, &TwoSidedGroup<s>{group}.inv(a), a)
+    &TwoSidedGroup<s>{group}.inv(&TwoSidedGroup<s>{group}.inv(a)) = a
+    &TwoSidedGroup<s>{group}.mul(&TwoSidedGroup<s>{group}.inv(&TwoSidedGroup<s>{group}.inv(a)), &TwoSidedGroup<s>{group}.inv(a)) = &TwoSidedGroup<s>{group}.one
+    &TwoSidedGroup<s>{group}.mul(a, &TwoSidedGroup<s>{group}.inv(a)) = &TwoSidedGroup<s>{group}.mul(&TwoSidedGroup<s>{group}.inv(&TwoSidedGroup<s>{group}.inv(a)), &TwoSidedGroup<s>{group}.inv(a)) = &TwoSidedGroup<s>{group}.one
 
 # AddSemigroup3 through AddCommGroup3 are the additive branch of the hierarchy.
 struct AdditiveMonoid<s nonempty_set>:
@@ -88,64 +90,54 @@ struct AdditiveGroup<s nonempty_set>:
             add(x, zero) = x
             add(neg(x), x) = zero
 
+prop is_additive_commutative_group(s nonempty_set, add fn(x, y s) s, zero s, neg fn(x s) s):
+    forall x, y, z s:
+        add(add(x, y), z) = add(x, add(y, z))
+    forall x, y s:
+        add(x, y) = add(y, x)
+    forall x s:
+        add(zero, x) = x
+        add(x, zero) = x
+        add(neg(x), x) = zero
+
 struct AdditiveCommutativeGroup<s nonempty_set>:
     add fn(x, y s) s
     zero s
     neg fn(x s) s
     <=>:
-        forall x, y, z s:
-            add(add(x, y), z) = add(x, add(y, z))
-        forall x, y s:
-            add(x, y) = add(y, x)
-        forall x s:
-            add(zero, x) = x
-            add(x, zero) = x
-            add(neg(x), x) = zero
+        $is_additive_commutative_group(s, add, zero, neg)
 
-# Ring3 deliberately assumes only an additive group, not additive
-# commutativity. The source derives the latter later; that generic proof
-# remains deferred here.
-struct Ring<s nonempty_set>:
-    add fn(x, y s) s
-    zero s
-    neg fn(x s) s
-    mul fn(x, y s) s
-    one s
-    <=>:
-        forall x, y, z s:
-            add(add(x, y), z) = add(x, add(y, z))
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
-            mul(add(x, y), z) = add(mul(x, z), mul(y, z))
-        forall x s:
-            add(zero, x) = x
-            add(x, zero) = x
-            add(neg(x), x) = zero
-            mul(one, x) = x
-            mul(x, one) = x
-            mul(zero, x) = zero
-            mul(x, zero) = zero
-
-# Source instance Ring₃ ℤ. Ordinary integer operations satisfy all five-field
-# Ring laws directly, so the instance is an actual checked structure object.
-have integer_ring &Ring<Z> = (fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
+# Source instance Ring₃ ℤ. Chapter 2 owns the canonical flat Ring interface,
+# so this hierarchy example constructs that record instead of redeclaring it.
+have integer_ring &chap2::Ring<Z> = (fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
 
 # The source's LE1/Preorder1/PartialOrder1/OrderedCommMonoid1 block is an
 # alternate hierarchy presentation and is outside this core slice.
 
+prop is_module(Scalar, M nonempty_set, scalar_add fn(x, y Scalar) Scalar, scalar_zero Scalar, scalar_neg fn(x Scalar) Scalar, scalar_mul fn(x, y Scalar) Scalar, scalar_one Scalar, add fn(x, y M) M, zero M, neg fn(x M) M, smul fn(r Scalar, m M) M):
+    $chap2::is_ring(Scalar, scalar_add, scalar_zero, scalar_neg, scalar_mul, scalar_one)
+    $is_additive_commutative_group(M, add, zero, neg)
+    forall m M:
+        smul(scalar_zero, m) = zero
+        smul(scalar_one, m) = m
+    forall a, b Scalar, m M:
+        smul(scalar_mul(a, b), m) = smul(a, smul(b, m))
+        smul(scalar_add(a, b), m) = add(smul(a, m), smul(b, m))
+    forall a Scalar, m, n M:
+        smul(a, add(m, n)) = add(smul(a, m), smul(a, n))
+
 struct Module<Scalar, M nonempty_set>:
-    ring &Ring<Scalar>
-    additive_group &AdditiveCommutativeGroup<M>
+    scalar_add fn(x, y Scalar) Scalar
+    scalar_zero Scalar
+    scalar_neg fn(x Scalar) Scalar
+    scalar_mul fn(x, y Scalar) Scalar
+    scalar_one Scalar
+    add fn(x, y M) M
+    zero M
+    neg fn(x M) M
     smul fn(r Scalar, m M) M
     <=>:
-        forall m M:
-            smul(&Ring<Scalar>{ring}.zero, m) = &AdditiveCommutativeGroup<M>{additive_group}.zero
-            smul(&Ring<Scalar>{ring}.one, m) = m
-        forall a, b Scalar, m M:
-            smul(&Ring<Scalar>{ring}.mul(a, b), m) = smul(a, smul(b, m))
-            smul(&Ring<Scalar>{ring}.add(a, b), m) = &AdditiveCommutativeGroup<M>{additive_group}.add(smul(a, m), smul(b, m))
-        forall a Scalar, m, n M:
-            smul(a, &AdditiveCommutativeGroup<M>{additive_group}.add(m, n)) = &AdditiveCommutativeGroup<M>{additive_group}.add(smul(a, m), smul(a, n))
+        $is_module(Scalar, M, scalar_add, scalar_zero, scalar_neg, scalar_mul, scalar_one, add, zero, neg, smul)
 
 # AddMonoid4 makes the natural scalar function a customizable data field.
 struct AdditiveMonoidWithNSmul<s nonempty_set>:
@@ -186,14 +178,14 @@ prop is_additive_monoid_hom(G, H nonempty_set, source &AdditiveMonoid<G>, target
 template<G, H nonempty_set, source &AdditiveMonoid<G>, target &AdditiveMonoid<H>>:
     have AdditiveMonoidHom set = {f fn(x G) H: $is_additive_monoid_hom(G, H, source, target, f)}
 
-prop is_ring_hom(A, B nonempty_set, source &Ring<A>, target &Ring<B>, f fn(x A) B):
-    f(&Ring<A>{source}.zero) = &Ring<B>{target}.zero
-    f(&Ring<A>{source}.one) = &Ring<B>{target}.one
+prop is_ring_hom(A, B nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<B>, f fn(x A) B):
+    f(&chap2::Ring<A>{source}.zero) = &chap2::Ring<B>{target}.zero
+    f(&chap2::Ring<A>{source}.one) = &chap2::Ring<B>{target}.one
     forall x, y A:
-        f(&Ring<A>{source}.add(x, y)) = &Ring<B>{target}.add(f(x), f(y))
-        f(&Ring<A>{source}.mul(x, y)) = &Ring<B>{target}.mul(f(x), f(y))
+        f(&chap2::Ring<A>{source}.add(x, y)) = &chap2::Ring<B>{target}.add(f(x), f(y))
+        f(&chap2::Ring<A>{source}.mul(x, y)) = &chap2::Ring<B>{target}.mul(f(x), f(y))
 
-template<A, B nonempty_set, source &Ring<A>, target &Ring<B>>:
+template<A, B nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<B>>:
     have RingHom set = {f fn(x A) B: $is_ring_hom(A, B, source, target, f)}
 
 # Source lemma map_inv_of_inv. It is direct once the hom laws are explicit.

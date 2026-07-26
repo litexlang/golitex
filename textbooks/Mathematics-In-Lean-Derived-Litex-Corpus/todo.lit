@@ -219,8 +219,9 @@
 # first-countable closure/sequence equivalence, convergent-subsequence result,
 # and finite-open-subcover theorem. The topology, open/closed, neighborhood,
 # separation, density, first-countability, and compactness relationships remain
-# implemented; the open-preimage continuity equivalence and continuous-map
-# composition are checked. Ordinary continuous-map composition does not
+# implemented. The two directions relating pointwise neighborhood continuity
+# to the open-preimage criterion still need their topological proofs.
+# Ordinary continuous-map composition is checked from those named directions.
 # discharge the topology-changing source iff.
 
 # Chapter 12 — Differential Calculus; source selected derivative and elementary

@@ -10,90 +10,119 @@
 # 10.1 Vector spaces and linear maps
 # ---------------------------------------------------------------------------
 
-prop is_field(K set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K):
-    $chap9::is_commutative_ring(K, addK, zeroK, negK, mulK, oneK)
+prop is_field(K nonempty_set, add fn(x, y K) K, zero K, neg fn(x K) K, mul fn(x, y K) K, one K, inv fn(x K) K):
+    $chap7::is_commutative_ring(K, add, zero, neg, mul, one)
     forall a K:
-        a != zeroK
+        a != zero
         =>:
-            mulK(a, invK(a)) = oneK
+            mul(a, inv(a)) = one
 
-prop is_vector_space(K, V set, addK fn(x, y K) K, zeroK K, mulK fn(x, y K) K, oneK K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smul fn(a K, v V) V):
-    $chap2::is_additive_commutative_group(V, addV, zeroV, negV)
+struct Field<K nonempty_set>:
+    add fn(x, y K) K
+    zero K
+    neg fn(x K) K
+    mul fn(x, y K) K
+    one K
+    inv fn(x K) K
+    <=>:
+        $is_field(K, add, zero, neg, mul, one, inv)
+
+prop is_vector_space(K, V nonempty_set, scalar_add fn(x, y K) K, scalar_zero K, scalar_neg fn(x K) K, scalar_mul fn(x, y K) K, scalar_one K, scalar_inv fn(x K) K, add fn(x, y V) V, zero V, neg fn(x V) V, smul fn(a K, v V) V):
+    $is_field(K, scalar_add, scalar_zero, scalar_neg, scalar_mul, scalar_one, scalar_inv)
+    $chap2::is_additive_commutative_group(V, add, zero, neg)
     forall a K, u, v V:
-        smul(a, addV(u, v)) = addV(smul(a, u), smul(a, v))
+        smul(a, add(u, v)) = add(smul(a, u), smul(a, v))
     forall a, b K, v V:
-        smul(addK(a, b), v) = addV(smul(a, v), smul(b, v))
-        smul(mulK(a, b), v) = smul(a, smul(b, v))
+        smul(scalar_add(a, b), v) = add(smul(a, v), smul(b, v))
+        smul(scalar_mul(a, b), v) = smul(a, smul(b, v))
     forall v V:
-        smul(oneK, v) = v
-        smul(zeroK, v) = zeroV
+        smul(scalar_one, v) = v
+        smul(scalar_zero, v) = zero
+
+struct VectorSpace<K, V nonempty_set>:
+    scalar_add fn(x, y K) K
+    scalar_zero K
+    scalar_neg fn(x K) K
+    scalar_mul fn(x, y K) K
+    scalar_one K
+    scalar_inv fn(x K) K
+    add fn(x, y V) V
+    zero V
+    neg fn(x V) V
+    smul fn(a K, v V) V
+    <=>:
+        $is_vector_space(K, V, scalar_add, scalar_zero, scalar_neg, scalar_mul, scalar_one, scalar_inv, add, zero, neg, smul)
 
 thm vector_smul_add:
-    ? forall K, V set, addK fn(x, y K) K, zeroK K, mulK fn(x, y K) K, oneK K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smul fn(a K, v V) V, a K, u, v V:
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smul)
-        =>:
-            smul(a, addV(u, v)) = addV(smul(a, u), smul(a, v))
-    smul(a, addV(u, v)) = addV(smul(a, u), smul(a, v))
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, a K, u, v V:
+        space.smul(a, space.add(u, v)) = space.add(space.smul(a, u), space.smul(a, v))
+    space.smul(a, space.add(u, v)) = space.add(space.smul(a, u), space.smul(a, v))
 
 thm vector_add_smul:
-    ? forall K, V set, addK fn(x, y K) K, zeroK K, mulK fn(x, y K) K, oneK K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smul fn(a K, v V) V, a, b K, v V:
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smul)
-        =>:
-            smul(addK(a, b), v) = addV(smul(a, v), smul(b, v))
-    smul(addK(a, b), v) = addV(smul(a, v), smul(b, v))
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, a, b K, v V:
+        space.smul(space.scalar_add(a, b), v) = space.add(space.smul(a, v), space.smul(b, v))
+    space.smul(space.scalar_add(a, b), v) = space.add(space.smul(a, v), space.smul(b, v))
 
 thm vector_smul_comm:
-    ? forall K, V set, addK fn(x, y K) K, zeroK K, mulK fn(x, y K) K, oneK K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smul fn(a K, v V) V, a, b K, v V:
-        $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smul)
-        forall x, y K:
-            mulK(x, y) = mulK(y, x)
-        =>:
-            smul(a, smul(b, v)) = smul(b, smul(a, v))
-    mulK(a, b) = mulK(b, a)
-    smul(mulK(a, b), v) = smul(mulK(b, a), v)
-    smul(a, smul(b, v)) = smul(mulK(a, b), v) = smul(mulK(b, a), v) = smul(b, smul(a, v))
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, a, b K, v V:
+        space.smul(a, space.smul(b, v)) = space.smul(b, space.smul(a, v))
+    space.scalar_mul(a, b) = space.scalar_mul(b, a)
+    space.smul(space.scalar_mul(a, b), v) = space.smul(space.scalar_mul(b, a), v)
+    space.smul(a, space.smul(b, v)) = space.smul(space.scalar_mul(a, b), v) = space.smul(space.scalar_mul(b, a), v) = space.smul(b, space.smul(a, v))
 
-prop is_linear_map(K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, phi fn(v V) W):
+prop is_linear_map(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W):
+    source.scalar_add = target.scalar_add
+    source.scalar_zero = target.scalar_zero
+    source.scalar_neg = target.scalar_neg
+    source.scalar_mul = target.scalar_mul
+    source.scalar_one = target.scalar_one
+    source.scalar_inv = target.scalar_inv
     forall u, v V:
-        phi(addV(u, v)) = addW(phi(u), phi(v))
+        phi(source.add(u, v)) = target.add(phi(u), phi(v))
     forall a K, v V:
-        phi(smulV(a, v)) = smulW(a, phi(v))
+        phi(source.smul(a, v)) = target.smul(a, phi(v))
 
-template<K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W>:
-    have linear_map_space power_set(fn(v V) W) = {phi fn(v V) W: $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)}
+template<K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>>:
+    have linear_map_space power_set(fn(v V) W) = {phi fn(v V) W: $is_linear_map(K, V, W, source, target, phi)}
 
 thm linear_map_map_smul:
-    ? forall K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, phi fn(v V) W, a K, v V:
-        $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, a K, v V:
+        $is_linear_map(K, V, W, source, target, phi)
         =>:
-            phi(smulV(a, v)) = smulW(a, phi(v))
-    phi(smulV(a, v)) = smulW(a, phi(v))
+            phi(source.smul(a, v)) = target.smul(a, phi(v))
+    phi(source.smul(a, v)) = target.smul(a, phi(v))
 
 thm linear_map_map_add:
-    ? forall K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, phi fn(v V) W, u, v V:
-        $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, u, v V:
+        $is_linear_map(K, V, W, source, target, phi)
         =>:
-            phi(addV(u, v)) = addW(phi(u), phi(v))
-    phi(addV(u, v)) = addW(phi(u), phi(v))
+            phi(source.add(u, v)) = target.add(phi(u), phi(v))
+    phi(source.add(u, v)) = target.add(phi(u), phi(v))
 
-template<K, V, W set, addW fn(x, y W) W>:
-    have fn linear_map_add_raw(phi, psi fn(v V) W) fn(t V) W = fn(z V) W {addW(phi(z), psi(z))}
+template<K, V, W nonempty_set, target &VectorSpace<K, W>>:
+    have fn linear_map_add_raw(phi, psi fn(v V) W) fn(t V) W = fn(z V) W {target.add(phi(z), psi(z))}
 
-template<K, V, W set, smulW fn(a K, w W) W>:
-    have fn linear_map_smul_raw(a K, phi fn(v V) W) fn(t V) W = fn(z V) W {smulW(a, phi(z))}
+template<K, V, W nonempty_set, target &VectorSpace<K, W>>:
+    have fn linear_map_smul_raw(a K, phi fn(v V) W) fn(t V) W = fn(z V) W {target.smul(a, phi(z))}
 
-template<K, U, V, W set>:
+template<K, U, V, W nonempty_set>:
     have fn linear_map_compose_raw(phi fn(v V) W, psi fn(u U) V) fn(t U) W = fn(z U) W {phi(psi(z))}
 
-template<K, V set, smul fn(a K, v V) V>:
-    have fn scalar_endomorphism(a K) fn(t V) V = fn(v V) V {smul(a, v)}
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn scalar_endomorphism(a K) fn(t V) V = fn(v V) V {space.smul(a, v)}
 
 thm linear_map_composition_closed:
-    ? forall K, U, V, W set, addU fn(x, y U) U, smulU fn(a K, u U) U, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, phi fn(v V) W, psi fn(u U) V:
-        $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
-        $is_linear_map(K, U, V, addU, smulU, addV, smulV, psi)
+    ? forall K, U, V, W nonempty_set, source &VectorSpace<K, U>, middle &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, psi fn(u U) V:
+        $is_linear_map(K, V, W, middle, target, phi)
+        $is_linear_map(K, U, V, source, middle, psi)
         =>:
-            $is_linear_map(K, U, W, addU, smulU, addW, smulW, fn(x U) W {phi(psi(x))})
+            $is_linear_map(K, U, W, source, target, fn(x U) W {phi(psi(x))})
+    source.scalar_add = middle.scalar_add = target.scalar_add
+    source.scalar_zero = middle.scalar_zero = target.scalar_zero
+    source.scalar_neg = middle.scalar_neg = target.scalar_neg
+    source.scalar_mul = middle.scalar_mul = target.scalar_mul
+    source.scalar_one = middle.scalar_one = target.scalar_one
+    source.scalar_inv = middle.scalar_inv = target.scalar_inv
     thm function_substitution:
         ? forall A, B set, f fn(x A) B, x, y A:
             x = y
@@ -102,27 +131,27 @@ thm linear_map_composition_closed:
         f(x) = f(y)
     claim:
         ? forall x, y U:
-            (fn(q U) W {phi(psi(q))})(addU(x, y)) = addW((fn(q U) W {phi(psi(q))})(x), (fn(q U) W {phi(psi(q))})(y))
-        by thm function_substitution(V, W, phi, psi(addU(x, y)), addV(psi(x), psi(y)))
-        (fn(q U) W {phi(psi(q))})(addU(x, y)) = phi(psi(addU(x, y))) = phi(addV(psi(x), psi(y))) = addW(phi(psi(x)), phi(psi(y))) = addW((fn(q U) W {phi(psi(q))})(x), (fn(q U) W {phi(psi(q))})(y))
+            (fn(q U) W {phi(psi(q))})(source.add(x, y)) = target.add((fn(q U) W {phi(psi(q))})(x), (fn(q U) W {phi(psi(q))})(y))
+        by thm function_substitution(V, W, phi, psi(source.add(x, y)), middle.add(psi(x), psi(y)))
+        (fn(q U) W {phi(psi(q))})(source.add(x, y)) = phi(psi(source.add(x, y))) = phi(middle.add(psi(x), psi(y))) = target.add(phi(psi(x)), phi(psi(y))) = target.add((fn(q U) W {phi(psi(q))})(x), (fn(q U) W {phi(psi(q))})(y))
     claim:
         ? forall a K, x U:
-            (fn(q U) W {phi(psi(q))})(smulU(a, x)) = smulW(a, (fn(q U) W {phi(psi(q))})(x))
-        by thm function_substitution(V, W, phi, psi(smulU(a, x)), smulV(a, psi(x)))
-        (fn(q U) W {phi(psi(q))})(smulU(a, x)) = phi(psi(smulU(a, x))) = phi(smulV(a, psi(x))) = smulW(a, phi(psi(x))) = smulW(a, (fn(q U) W {phi(psi(q))})(x))
-    $is_linear_map(K, U, W, addU, smulU, addW, smulW, fn(x U) W {phi(psi(x))})
+            (fn(q U) W {phi(psi(q))})(source.smul(a, x)) = target.smul(a, (fn(q U) W {phi(psi(q))})(x))
+        by thm function_substitution(V, W, phi, psi(source.smul(a, x)), middle.smul(a, psi(x)))
+        (fn(q U) W {phi(psi(q))})(source.smul(a, x)) = phi(psi(source.smul(a, x))) = phi(middle.smul(a, psi(x))) = target.smul(a, phi(psi(x))) = target.smul(a, (fn(q U) W {phi(psi(q))})(x))
+    $is_linear_map(K, U, W, source, target, fn(x U) W {phi(psi(x))})
 
-prop is_linear_equivalence(K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, phi fn(v V) W):
-    $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
+prop is_bijective_linear_map(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W):
+    $is_linear_map(K, V, W, source, target, phi)
     $chap4::bijective_fn(V, W, phi)
 
 thm bijective_linear_map_is_equivalence:
-    ? forall K, V, W set, addV fn(x, y V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, smulW fn(a K, w W) W, phi fn(v V) W:
-        $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W:
+        $is_linear_map(K, V, W, source, target, phi)
         $chap4::bijective_fn(V, W, phi)
         =>:
-            $is_linear_equivalence(K, V, W, addV, smulV, addW, smulW, phi)
-    $is_linear_equivalence(K, V, W, addV, smulV, addW, smulW, phi)
+            $is_bijective_linear_map(K, V, W, source, target, phi)
+    $is_bijective_linear_map(K, V, W, source, target, phi)
 
 # ---------------------------------------------------------------------------
 # 10.1.3 Binary products and coproducts
@@ -170,34 +199,34 @@ thm linear_coproduct_formula:
 # 10.2 Subspaces
 # ---------------------------------------------------------------------------
 
-prop is_subspace(K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U power_set(V)):
-    zeroV $in U
+prop is_subspace(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V)):
+    space.zero $in U
     forall x, y V:
         x $in U
         y $in U
         =>:
-            addV(x, y) $in U
+            space.add(x, y) $in U
     forall a K, x V:
         x $in U
         =>:
-            smul(a, x) $in U
+            space.smul(a, x) $in U
 
 thm subspace_add_mem:
-    ? forall K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U power_set(V), x, y V:
-        $is_subspace(K, V, addV, zeroV, smul, U)
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), x, y V:
+        $is_subspace(K, V, space, U)
         x $in U
         y $in U
         =>:
-            addV(x, y) $in U
-    addV(x, y) $in U
+            space.add(x, y) $in U
+    space.add(x, y) $in U
 
 thm subspace_smul_mem:
-    ? forall K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U power_set(V), a K, x V:
-        $is_subspace(K, V, addV, zeroV, smul, U)
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), a K, x V:
+        $is_subspace(K, V, space, U)
         x $in U
         =>:
-            smul(a, x) $in U
-    smul(a, x) $in U
+            space.smul(a, x) $in U
+    space.smul(a, x) $in U
 
 template<V set>:
     have fn subspace_intersection(U, W power_set(V)) power_set(V) = {x V: x $in U and x $in W}
@@ -208,46 +237,46 @@ template<V set>:
 template<V set, zeroV V>:
     have subspace_bottom power_set(V) = {zeroV}
 
-prop span_member(K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, S power_set(V), x V):
+prop span_member(K, V nonempty_set, space &VectorSpace<K, V>, S power_set(V), x V):
     forall U power_set(V):
-        $is_subspace(K, V, addV, zeroV, smul, U)
+        $is_subspace(K, V, space, U)
         S $subset U
         =>:
             x $in U
 
-template<K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V>:
-    have fn span(S power_set(V)) power_set(V) = {x V: $span_member(K, V, addV, zeroV, smul, S, x)}
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn span(S power_set(V)) power_set(V) = {x V: $span_member(K, V, space, S, x)}
 
-template<K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V>:
-    have fn subspace_join(U, W power_set(V)) power_set(V) = \span<K, V, addV, zeroV, smul>({x V: x $in U or x $in W})
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn subspace_join(U, W power_set(V)) power_set(V) = \span<K, V, space>({x V: x $in U or x $in W})
 
-prop is_complementary_subspaces(K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U, W power_set(V)):
-    \subspace_join<K, V, addV, zeroV, smul>(U, W) = V
-    intersect(U, W) = {zeroV}
+prop is_complementary_subspaces(K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V)):
+    \subspace_join<K, V, space>(U, W) = V
+    intersect(U, W) = {space.zero}
 
 thm complementary_subspaces_span_top:
-    ? forall K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U, W power_set(V):
-        $is_complementary_subspaces(K, V, addV, zeroV, smul, U, W)
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V):
+        $is_complementary_subspaces(K, V, space, U, W)
         =>:
-            \subspace_join<K, V, addV, zeroV, smul>(U, W) = V
-    \subspace_join<K, V, addV, zeroV, smul>(U, W) = V
+            \subspace_join<K, V, space>(U, W) = V
+    \subspace_join<K, V, space>(U, W) = V
 
 thm complementary_subspaces_intersect_bottom:
-    ? forall K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U, W power_set(V):
-        $is_complementary_subspaces(K, V, addV, zeroV, smul, U, W)
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V):
+        $is_complementary_subspaces(K, V, space, U, W)
         =>:
-            intersect(U, W) = {zeroV}
-    intersect(U, W) = {zeroV}
+            intersect(U, W) = {space.zero}
+    intersect(U, W) = {space.zero}
 
 thm span_universal_property:
-    ? forall K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, S, U power_set(V):
-        $is_subspace(K, V, addV, zeroV, smul, U)
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, S, U power_set(V):
+        $is_subspace(K, V, space, U)
         S $subset U
         =>:
-            {x V: $span_member(K, V, addV, zeroV, smul, S, x)} $subset U
-    forall x {q V: $span_member(K, V, addV, zeroV, smul, S, q)}:
+            {x V: $span_member(K, V, space, S, x)} $subset U
+    forall x {q V: $span_member(K, V, space, S, q)}:
         x $in U
-    {x V: $span_member(K, V, addV, zeroV, smul, S, x)} $subset U
+    {x V: $span_member(K, V, space, S, x)} $subset U
 
 prop has_linear_map_preimage(V, W set, phi fn(v V) W, U power_set(V), y W):
     exist x V st {x $in U, phi(x) = y}
@@ -268,72 +297,69 @@ template<V, W set, phi fn(v V) W>:
 # 10.2.5 Quotient spaces
 # ---------------------------------------------------------------------------
 
-prop subspace_translate_member(V set, addV fn(x, y V) V, U power_set(V), v, x V):
-    exist u V st {u $in U, x = addV(v, u)}
+prop subspace_translate_member(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), v, x V):
+    exist u V st {u $in U, x = space.add(v, u)}
 
-template<V set, addV fn(x, y V) V>:
-    have fn subspace_translate(U power_set(V), v V) power_set(V) = {x V: $subspace_translate_member(V, addV, U, v, x)}
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn subspace_translate(U power_set(V), v V) power_set(V) = {x V: $subspace_translate_member(K, V, space, U, v, x)}
 
-prop is_subspace_translate(V set, addV fn(x, y V) V, U power_set(V), C power_set(V)):
-    exist v V st {C = \subspace_translate<V, addV>(U, v)}
+prop is_subspace_translate(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), C power_set(V)):
+    exist v V st {C = \subspace_translate<K, V, space>(U, v)}
 
-template<V set, addV fn(x, y V) V>:
-    have fn quotient_space(U power_set(V)) power_set(power_set(V)) = {C power_set(V): $is_subspace_translate(V, addV, U, C)}
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn quotient_space(U power_set(V)) power_set(power_set(V)) = {C power_set(V): $is_subspace_translate(K, V, space, U, C)}
 
-prop is_quotient_space_lift_compatible(K, V, W set, addK fn(x, y K) K, zeroK K, negK fn(x K) K, mulK fn(x, y K) K, oneK K, invK fn(x K) K, addV fn(x, y V) V, zeroV V, negV fn(x V) V, smulV fn(a K, v V) V, addW fn(x, y W) W, zeroW W, negW fn(x W) W, smulW fn(a K, w W) W, U power_set(V), phi fn(v V) W):
-    $is_field(K, addK, zeroK, negK, mulK, oneK, invK)
-    $is_vector_space(K, V, addK, zeroK, mulK, oneK, addV, zeroV, negV, smulV)
-    $is_vector_space(K, W, addK, zeroK, mulK, oneK, addW, zeroW, negW, smulW)
-    $is_linear_map(K, V, W, addV, smulV, addW, smulW, phi)
-    $is_subspace(K, V, addV, zeroV, smulV, U)
-    U $subset \linear_kernel<V, W, zeroW, phi>
+prop is_quotient_space_lift_compatible(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, U power_set(V), phi fn(v V) W):
+    $is_linear_map(K, V, W, source, target, phi)
+    $is_subspace(K, V, source, U)
+    U $subset \linear_kernel<V, W, target.zero, phi>
 
 # ---------------------------------------------------------------------------
 # 10.3 Endomorphisms and eigenvalues
 # ---------------------------------------------------------------------------
 
-template<K, V set, addV fn(x, y V) V, smul fn(a K, v V) V>:
-    have endomorphism_space power_set(fn(v V) V) = \linear_map_space<K, V, V, addV, smul, addV, smul>
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have endomorphism_space power_set(fn(v V) V) = \linear_map_space<K, V, V, space, space>
 
 template<K, V set>:
     have fn endomorphism_comp(phi, psi fn(v V) V) fn(t V) V = fn(x V) V {phi(psi(x))}
 
-prop has_eigenvector(K, V set, zeroV V, smul fn(a K, v V) V, phi fn(v V) V, a K, v V):
-    v != zeroV
-    phi(v) = smul(a, v)
+prop has_eigenvector(K, V nonempty_set, space &VectorSpace<K, V>, phi fn(v V) V, a K, v V):
+    v != space.zero
+    phi(v) = space.smul(a, v)
 
-prop has_eigenvalue(K, V set, zeroV V, smul fn(a K, v V) V, phi fn(v V) V, a K):
-    exist v V st {$has_eigenvector(K, V, zeroV, smul, phi, a, v)}
+prop has_eigenvalue(K, V nonempty_set, space &VectorSpace<K, V>, phi fn(v V) V, a K):
+    exist v V st {$has_eigenvector(K, V, space, phi, a, v)}
 
-template<K, V set, smul fn(a K, v V) V>:
-    have fn eigenspace(phi fn(v V) V, a K) power_set(V) = {v V: phi(v) = smul(a, v)}
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn eigenspace(phi fn(v V) V, a K) power_set(V) = {v V: phi(v) = space.smul(a, v)}
 
-template<K, V set, zeroV V, smul fn(a K, v V) V>:
-    have fn eigenvalues(phi fn(v V) V) power_set(K) = {a K: $has_eigenvalue(K, V, zeroV, smul, phi, a)}
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn eigenvalues(phi fn(v V) V) power_set(K) = {a K: $has_eigenvalue(K, V, space, phi, a)}
 
 prop eigenspace_nontrivial(V set, zeroV V, E power_set(V)):
     exist v V st {v $in E, v != zeroV}
 
 thm eigenvalue_implies_eigenspace_nontrivial:
-    ? forall K, V set, zeroV V, smul fn(a K, v V) V, phi fn(v V) V, a K:
-        $has_eigenvalue(K, V, zeroV, smul, phi, a)
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi fn(v V) V, a K:
+        $has_eigenvalue(K, V, space, phi, a)
         =>:
-            $eigenspace_nontrivial(V, zeroV, {candidate V: phi(candidate) = smul(a, candidate)})
-    obtain v from exist v V st {$has_eigenvector(K, V, zeroV, smul, phi, a, v)}
-    witness exist w V st {w $in {candidate V: phi(candidate) = smul(a, candidate)}, w != zeroV} from v
-    by def $eigenspace_nontrivial(V, zeroV, {candidate V: phi(candidate) = smul(a, candidate)})
+            $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
+    obtain v from exist v V st {$has_eigenvector(K, V, space, phi, a, v)}
+    witness exist w V st {w $in {candidate V: phi(candidate) = space.smul(a, candidate)}, w != space.zero} from v
+    by def $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
 
 thm eigenspace_nontrivial_implies_eigenvalue:
-    ? forall K, V set, zeroV V, smul fn(a K, v V) V, phi fn(v V) V, a K:
-        $eigenspace_nontrivial(V, zeroV, {candidate V: phi(candidate) = smul(a, candidate)})
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi fn(v V) V, a K:
+        $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
         =>:
-            $has_eigenvalue(K, V, zeroV, smul, phi, a)
-    obtain v from exist v V st {v $in {candidate V: phi(candidate) = smul(a, candidate)}, v != zeroV}
-    witness exist w V st {$has_eigenvector(K, V, zeroV, smul, phi, a, w)} from v
-    by def $has_eigenvalue(K, V, zeroV, smul, phi, a)
+            $has_eigenvalue(K, V, space, phi, a)
+    obtain v from exist v V st {v $in {candidate V: phi(candidate) = space.smul(a, candidate)}, v != space.zero}
+    witness exist w V st {$has_eigenvector(K, V, space, phi, a, w)} from v
+    by def $has_eigenvalue(K, V, space, phi, a)
 
-template<V set, zeroV V>:
-    have zero_endomorphism fn(v V) V = fn(v V) V {zeroV}
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have zero_endomorphism fn(v V) V = fn(v V) V {space.zero}
 
 # ---------------------------------------------------------------------------
 # 10.4.1 Matrices
@@ -382,19 +408,19 @@ prop has_other_basis_value_preimage(I, V set, b fn(i I) V, excluded I, x V):
 template<I, V set, b fn(i I) V>:
     have fn basis_values_except(excluded I) power_set(V) = {x V: $has_other_basis_value_preimage(I, V, b, excluded, x)}
 
-prop is_linearly_independent(K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, b fn(i I) V):
+prop is_linearly_independent(K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(i I) V):
     forall i I:
-        not b(i) $in \span<K, V, addV, zeroV, smul>(\basis_values_except<I, V, b>(i))
+        not b(i) $in \span<K, V, space>(\basis_values_except<I, V, b>(i))
 
-prop is_spanning_family(K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, b fn(i I) V):
-    \span<K, V, addV, zeroV, smul>(\basis_values<I, V, b>) = V
+prop is_spanning_family(K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(i I) V):
+    \span<K, V, space>(\basis_values<I, V, b>) = V
 
-prop is_basis(K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, b fn(i I) V):
-    $is_linearly_independent(K, I, V, addV, zeroV, smul, b)
-    $is_spanning_family(K, I, V, addV, zeroV, smul, b)
+prop is_basis(K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(i I) V):
+    $is_linearly_independent(K, V, space, I, b)
+    $is_spanning_family(K, V, space, I, b)
 
-template<K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V>:
-    have basis_space power_set(fn(i I) V) = {b fn(i I) V: $is_basis(K, I, V, addV, zeroV, smul, b)}
+template<K, V nonempty_set, space &VectorSpace<K, V>, I set>:
+    have basis_space power_set(fn(i I) V) = {b fn(i I) V: $is_basis(K, V, space, I, b)}
 
 prop coefficient_support_contains_nonzero(K, I set, zeroK K, coefficients fn(i I) K, support finite_set):
     forall i I:
@@ -412,18 +438,18 @@ template<K, I set, zeroK K>:
 # 10.4.3 Dimension
 # ---------------------------------------------------------------------------
 
-prop has_dimension(K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, n N):
-    exist I finite_set, b fn(i I) V st {$is_basis(K, I, V, addV, zeroV, smul, b), finite_set_size(I) = n}
+prop has_dimension(K, V nonempty_set, space &VectorSpace<K, V>, n N):
+    exist I finite_set, b fn(i I) V st {$is_basis(K, V, space, I, b), finite_set_size(I) = n}
 
-prop is_finite_dimensional(K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V):
-    exist n N st {$has_dimension(K, V, addV, zeroV, smul, n)}
+prop is_finite_dimensional(K, V nonempty_set, space &VectorSpace<K, V>):
+    exist n N st {$has_dimension(K, V, space, n)}
 
-prop is_subspace_basis(K, I, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U power_set(V), b fn(i I) V):
-    $is_linearly_independent(K, I, V, addV, zeroV, smul, b)
-    \span<K, V, addV, zeroV, smul>(\basis_values<I, V, b>) = U
+prop is_subspace_basis(K, V nonempty_set, space &VectorSpace<K, V>, I set, U power_set(V), b fn(i I) V):
+    $is_linearly_independent(K, V, space, I, b)
+    \span<K, V, space>(\basis_values<I, V, b>) = U
 
-prop has_subspace_dimension(K, V set, addV fn(x, y V) V, zeroV V, smul fn(a K, v V) V, U power_set(V), n N):
-    exist I finite_set, b fn(i I) V st {$is_subspace_basis(K, I, V, addV, zeroV, smul, U, b), finite_set_size(I) = n}
+prop has_subspace_dimension(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), n N):
+    exist I finite_set, b fn(i I) V st {$is_subspace_basis(K, V, space, I, U, b), finite_set_size(I) = n}
 
 prop is_nontrivial_space(V set):
     exist u, v V st {u != v}

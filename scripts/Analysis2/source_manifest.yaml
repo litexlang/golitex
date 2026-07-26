@@ -58,7 +58,12 @@ chapter_tracking:
     runner: "target/release/litex -compact -f textbooks/Analysis2/chapter03-uniform-convergence.lit"
     runner_result: "success for all 34 named items (2026-07-26)"
     proof_boundary: "32 explicit trusts across source-deferred proofs, supremum selection, external Analysis I interfaces, and the staged Weierstrass argument."
-  4: {status: "planned"}
+  4:
+    status: "translated"
+    records: "scripts/Analysis2/items/chapter04.yaml"
+    runner: "target/release/litex -compact -f textbooks/Analysis2/chapter04-power-series.lit"
+    runner_result: "success for all 38 named items (2026-07-26)"
+    proof_boundary: "100 explicit trusts and 10 abstract_prop boundaries across source-deferred analysis, cross-book interfaces, complex algebra, and trigonometry."
   5: {status: "planned"}
   6: {status: "planned"}
   7: {status: "planned"}

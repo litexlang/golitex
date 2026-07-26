@@ -1358,6 +1358,13 @@ A concrete `prop` can normally fold and unfold through ordinary verification.
 `by def $P(args)` explicitly checks every instantiated clause when the
 dependency should be visible.
 
+Automatic positive-predicate inference exposes the direct clauses of `P`.
+When a direct clause is another concrete predicate, Litex stores that clause
+but does not recursively unfold it in the same inference step. Use another
+`by def` when the nested predicate's own clauses are needed. This keeps
+existential definitions such as basis, span, and linear combination from
+recursively generating fresh witnesses.
+
 ```litex
 prop is_unit_pair(x, y R):
     x = 1
@@ -1380,6 +1387,10 @@ This is an `error` because an abstract predicate has no definition to unfold.
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
 name witnesses from an already known existential. Use `have by preimage` to
 name a preimage from known range or replacement membership.
+
+`obtain` exposes each direct fact in the existential body. If one of those
+facts is a user-defined predicate, Litex does not recursively unfold it; use
+`by def` when that predicate's own clauses are needed.
 
 ```litex
 witness exist u R st {0 < u, u < 1} from 1 / 2:

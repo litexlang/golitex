@@ -14,6 +14,36 @@ label `trust` or `kernel_problem`.
 
 ## do_not_know_how_to_formalize
 
+- **Chapter 4 analysis and complex/trigonometric proofs remain explicit proof
+  debt.** Attempt: all 38 named items were submitted in source order through
+  the release `-session -before` workflow, and the persisted file passes
+  `target/release/litex -compact -f
+  textbooks/Analysis2/chapter04-power-series.lit`. Result: 100 explicit
+  `trust` statements and 10 `abstract_prop` boundaries. Desired state: prove
+  the convergence, differentiation, Abel, convolution, exponential,
+  logarithm, complex algebra/limit, and trigonometric interfaces while
+  preserving the current source-facing declarations. Primary label: `trust`.
+
+- **Chapter 4 cannot directly reuse Analysis I real exponentiation.** Attempt:
+  the natural Proposition 4.5.4 statement
+  `exp_real(x) = euler_number^x` ended in `ExecStmtError`; even deriving
+  `euler_number > 0` inside the proof is too late for goal
+  well-definedness. Desired interface: a configured cross-book import or
+  standard-library positive-base real-power API. Current workaround:
+  `has_real_power_value(base, exponent, value)`. Root-cause class:
+  library/project dependency. Primary label: `trust`.
+
+- **Selected structured values do not retain a sufficiently strong result
+  type for later field projection.** Attempt: `exp_complex` was selected by
+  `have fn ... by exist!` from a unique witness in `&ComplexNumber`, but the
+  verifier trace reports `have fn exp_complex as set`; defining
+  `real_cos(x) = &ComplexNumber{complex_cos(complex_of_real(x))}.re` then
+  ended in `ExecStmtError`. Desired interface: unique selection should retain
+  the declared witness carrier, including struct carriers, so downstream
+  field access is well-defined. Current workaround: real sine and cosine use
+  explicit unique-value relations. Root-cause class: unique-selection result
+  inference. Primary label: `kernel_problem`.
+
 - **Chapter 3 source proofs and cross-book analysis interfaces remain explicit
   proof debt.** Attempt: all 34 named items were submitted through the release
   `-session -before` workflow, and the final registered file passes

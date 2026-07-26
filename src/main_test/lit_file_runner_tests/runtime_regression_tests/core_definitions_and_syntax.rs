@@ -976,6 +976,71 @@ have fn coordinate_add(x, y finite_seq(R, 2)) finite_seq(R, 2) = fn(i N_pos: i <
 }
 
 #[test]
+fn instantiated_template_function_unfolds_before_curried_entry_application() {
+    run_with_large_stack(
+        "instantiated_template_function_unfolds_before_curried_entry_application",
+        || {
+            let source_code = r#"
+template<n N_pos>:
+    have fn pairwise_sum(x, y finite_seq(R, n)) finite_seq(R, n) = fn(i N_pos: i <= n) R {x(i) + y(i)}
+
+have x, y finite_seq(R, 2)
+\pairwise_sum<2>(x, y)(1) = x(1) + y(1)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "instantiated_template_function_unfolds_before_curried_entry_application",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a materialized template function should unfold before applying its returned finite sequence:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn callable_struct_field_of_selected_template_object_unfolds() {
+    run_with_large_stack(
+        "callable_struct_field_of_selected_template_object_unfolds",
+        || {
+            let source_code = r#"
+struct FunctionBox<n N_pos>:
+    length N
+    entries fn(i N_pos: i <= n) R
+    <=>:
+        length = n
+
+template<n N_pos>:
+    have zero_box &FunctionBox<n> = (n, fn(i N_pos: i <= n) R {0})
+
+&FunctionBox<2>{\zero_box<2>}.entries(1) = 0
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "callable_struct_field_of_selected_template_object_unfolds",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a callable field of a selected template object should project and beta-reduce:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn template_can_define_symbolic_tuple_and_cart() {
     run_with_large_stack("template_can_define_symbolic_tuple_and_cart", || {
         let source_code = r#"
@@ -1698,5 +1763,148 @@ forall a set:
         run_succeeded,
         "list_set_membership_implies_equality_or failed:\n{}",
         run_output
+    );
+}
+
+#[test]
+fn user_prop_inference_exposes_its_direct_definition_clause() {
+    run_with_large_stack(
+        "user_prop_inference_exposes_its_direct_definition_clause",
+        || {
+            let source_code = r#"
+prop leaf(x R):
+    x = 0
+
+prop middle(x R):
+    $leaf(x)
+
+prop outer(x R):
+    $middle(x)
+
+trust $outer(1)
+
+$middle(1)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "user_prop_inference_exposes_its_direct_definition_clause",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "direct user-prop definition projection failed:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn user_prop_inference_does_not_recursively_expand_direct_prop_clause() {
+    run_with_large_stack(
+        "user_prop_inference_does_not_recursively_expand_direct_prop_clause",
+        || {
+            let source_code = r#"
+prop leaf(x R):
+    x = 0
+
+prop middle(x R):
+    $leaf(x)
+
+prop outer(x R):
+    $middle(x)
+
+trust $outer(1)
+
+$leaf(1)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "user_prop_inference_does_not_recursively_expand_direct_prop_clause",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "a nested user-prop clause should require another explicit projection:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("$leaf(1)"),
+                "the rejected nested clause should be reported:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn obtain_exposes_direct_predicate_body_without_recursive_expansion() {
+    run_with_large_stack(
+        "obtain_exposes_direct_predicate_body_without_recursive_expansion",
+        || {
+            let source_code = r#"
+prop leaf(x R):
+    x = 0
+
+prop middle(x R):
+    $leaf(x)
+
+trust exist x R st {$middle(x)}
+obtain y from exist x R st {$middle(x)}
+$leaf(y)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "obtain_exposes_direct_predicate_body_without_recursive_expansion",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(run_succeeded, "obtain should expose its direct predicate body:\n{}", run_output);
+        },
+    );
+}
+
+#[test]
+fn obtain_does_not_recursively_expand_direct_predicate_body() {
+    run_with_large_stack(
+        "obtain_does_not_recursively_expand_direct_predicate_body",
+        || {
+            let source_code = r#"
+prop leaf(x R):
+    x = 0
+
+prop middle(x R):
+    $leaf(x)
+
+prop outer(x R):
+    $middle(x)
+
+trust exist x R st {$outer(x)}
+obtain y from exist x R st {$outer(x)}
+$leaf(y)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "obtain_does_not_recursively_expand_direct_predicate_body",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(!run_succeeded, "nested predicate bodies should require `by def`:\n{}", run_output);
+            assert!(run_output.contains("$leaf(y)"), "the rejected nested predicate should be reported:\n{}", run_output);
+        },
     );
 }

@@ -92,72 +92,70 @@ thm additive_hom_comp:
         (fn(q A) C {g(f(q))})(addA(x, y)) = g(f(addA(x, y))) = g(addB(f(x), f(y))) = addC(g(f(x)), g(f(y))) = addC((fn(q A) C {g(f(q))})(x), (fn(q A) C {g(f(q))})(y))
     $is_additive_monoid_hom(A, C, addA, zeroA, addC, zeroC, fn(x A) C {g(f(x))})
 
-# A group homomorphism is a monoid homomorphism between the explicit group
-# carriers from Chapter 2.
-prop is_group_hom(G, H set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulH fn(x, y H) H, oneH H, invH fn(x H) H, f fn(x G) H):
-    $chap2::is_group(G, mulG, oneG, invG)
-    $chap2::is_group(H, mulH, oneH, invH)
-    $is_monoid_hom(G, H, mulG, oneG, mulH, oneH, f)
+# A group homomorphism is a property of a candidate function between two
+# operation-bearing Chapter 2 group values.
+prop is_group_hom(G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H):
+    $is_monoid_hom(G, H, source.mul, source.one, target.mul, target.one, f)
 
-prop is_group_equivalence(G, H set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulH fn(x, y H) H, oneH H, invH fn(x H) H, f fn(x G) H):
-    $is_group_hom(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
+# Bijectivity is still a property of one displayed homomorphism. A genuine
+# GroupEquiv would additionally store mutually inverse forward and inverse maps.
+prop is_bijective_group_hom(G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H):
+    $is_group_hom(G, H, source, target, f)
     $chap4::bijective_fn(G, H, f)
 
 thm group_mul_inv_cancel:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G, x G:
-        $chap2::is_group(G, mul, one, inv)
-        =>:
-            mul(x, inv(x)) = one
-    by thm chap2::mul_inv_cancel(G, mul, one, inv, x)
-    mul(x, inv(x)) = one
+    ? forall G nonempty_set, group &chap2::Group<G>, x G:
+        group.mul(x, group.inv(x)) = group.one
+    by thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, x)
+    group.mul(x, group.inv(x)) = group.one
 
 thm group_hom_map_mul:
-    ? forall G, H set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulH fn(x, y H) H, oneH H, invH fn(x H) H, f fn(x G) H, x, y G:
-        $is_group_hom(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
+    ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H, x, y G:
+        $is_group_hom(G, H, source, target, f)
         =>:
-            f(mulG(x, y)) = mulH(f(x), f(y))
-    f(mulG(x, y)) = mulH(f(x), f(y))
+            f(source.mul(x, y)) = target.mul(f(x), f(y))
+    f(source.mul(x, y)) = target.mul(f(x), f(y))
 
 thm bijective_group_hom_is_equivalence:
-    ? forall G, H set, mulG fn(x, y G) G, oneG G, invG fn(x G) G, mulH fn(x, y H) H, oneH H, invH fn(x H) H, f fn(x G) H:
-        $is_group_hom(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
+    ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H:
+        $is_group_hom(G, H, source, target, f)
         $chap4::bijective_fn(G, H, f)
         =>:
-            $is_group_equivalence(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
-    $is_group_equivalence(G, H, mulG, oneG, invG, mulH, oneH, invH, f)
+            $is_bijective_group_hom(G, H, source, target, f)
+    $is_bijective_group_hom(G, H, source, target, f)
 
 # ---------------------------------------------------------------------------
 # 9.1.3 Subgroups
 # ---------------------------------------------------------------------------
 
-prop is_subgroup(G set, mul fn(x, y G) G, one G, inv fn(x G) G, H power_set(G)):
-    one $in H
+prop is_subgroup(G nonempty_set, group &chap2::Group<G>, H power_set(G)):
+    group.one $in H
     forall x, y G:
         x $in H
         y $in H
         =>:
-            mul(x, y) $in H
+            group.mul(x, y) $in H
     forall x G:
         x $in H
         =>:
-            inv(x) $in H
+            group.inv(x) $in H
 
 thm subgroup_mul_mem:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G, H power_set(G), x, y G:
-        $is_subgroup(G, mul, one, inv, H)
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), x, y G:
+        $is_subgroup(G, group, H)
         x $in H
         y $in H
         =>:
-            mul(x, y) $in H
-    mul(x, y) $in H
+            group.mul(x, y) $in H
+    group.mul(x, y) $in H
 
 thm subgroup_inv_mem:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G, H power_set(G), x G:
-        $is_subgroup(G, mul, one, inv, H)
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), x G:
+        $is_subgroup(G, group, H)
         x $in H
         =>:
-            inv(x) $in H
-    inv(x) $in H
+            group.inv(x) $in H
+    group.inv(x) $in H
 
 template<G set>:
     have fn subgroup_intersection(H, K power_set(G)) power_set(G) = {x G: x $in H and x $in K}
@@ -169,19 +167,19 @@ template<G set, one G>:
     have subgroup_bottom power_set(G) = {one}
 
 thm subgroup_intersection_closed:
-    ? forall G set, mul fn(x, y G) G, one G, inv fn(x G) G, H, K power_set(G):
-        $is_subgroup(G, mul, one, inv, H)
-        $is_subgroup(G, mul, one, inv, K)
+    ? forall G nonempty_set, group &chap2::Group<G>, H, K power_set(G):
+        $is_subgroup(G, group, H)
+        $is_subgroup(G, group, K)
         =>:
-            $is_subgroup(G, mul, one, inv, {x G: x $in H and x $in K})
-    one $in H
-    one $in K
-    one $in {x G: x $in H and x $in K}
+            $is_subgroup(G, group, {x G: x $in H and x $in K})
+    group.one $in H
+    group.one $in K
+    group.one $in {x G: x $in H and x $in K}
     forall x, y {q G: q $in H and q $in K}:
-        mul(x, y) $in {q G: q $in H and q $in K}
+        group.mul(x, y) $in {q G: q $in H and q $in K}
     forall x {q G: q $in H and q $in K}:
-        inv(x) $in {q G: q $in H and q $in K}
-    $is_subgroup(G, mul, one, inv, {x G: x $in H and x $in K})
+        group.inv(x) $in {q G: q $in H and q $in K}
+    $is_subgroup(G, group, {x G: x $in H and x $in K})
 
 prop has_subgroup_map_preimage(G, H set, f fn(x G) H, S power_set(G), y H):
     exist x G st {x $in S, f(x) = y}
@@ -206,11 +204,11 @@ prop group_order_coprime(m, n N):
 # Source definition `conjugate` and its action law.  The set-level action is
 # defined directly; its preservation of subgroup structure remains implicit in
 # the source's `Subgroup G` carrier.
-prop conjugate_subgroup_member(G set, mul fn(x, y G) G, inv fn(x G) G, H power_set(G), g, x G):
-    exist h G st {h $in H, x = mul(mul(g, h), inv(g))}
+prop conjugate_subgroup_member(G nonempty_set, group &chap2::Group<G>, H power_set(G), g, x G):
+    exist h G st {h $in H, x = group.mul(group.mul(g, h), group.inv(g))}
 
-template<G set, mul fn(x, y G) G, inv fn(x G) G>:
-    have fn conjugate_subgroup(g G, H power_set(G)) power_set(G) = {x G: $conjugate_subgroup_member(G, mul, inv, H, g, x)}
+template<G nonempty_set, group &chap2::Group<G>>:
+    have fn conjugate_subgroup(g G, H power_set(G)) power_set(G) = {x G: $conjugate_subgroup_member(G, group, H, g, x)}
 
 # ---------------------------------------------------------------------------
 # 9.1.4 Permutations, free groups, and presented groups
@@ -220,7 +218,7 @@ prop is_permutation(X set, sigma fn(x X) X):
     $chap4::bijective_fn(X, X, sigma)
 
 template<X set>:
-    have permutation_group power_set(fn(x X) X) = {sigma fn(x X) X: $is_permutation(X, sigma)}
+    have permutation_carrier power_set(fn(x X) X) = {sigma fn(x X) X: $is_permutation(X, sigma)}
 
 template<X set>:
     have fn permutation_compose(sigma, tau fn(x X) X) fn(y X) X = fn(z X) X {sigma(tau(z))}
@@ -232,24 +230,24 @@ template<X set>:
 # 9.1.5 Group actions and orbits
 # ---------------------------------------------------------------------------
 
-prop is_group_action(G, X set, mul fn(x, y G) G, one G, act fn(g G, x X) X):
+prop is_group_action(G nonempty_set, X set, group &chap2::Group<G>, act fn(g G, x X) X):
     forall x X:
-        act(one, x) = x
+        act(group.one, x) = x
     forall g, h G, x X:
-        act(g, act(h, x)) = act(mul(g, h), x)
+        act(g, act(h, x)) = act(group.mul(g, h), x)
 
 thm group_action_associativity:
-    ? forall G, X set, mul fn(x, y G) G, one G, act fn(g G, x X) X, g, h G, x X:
-        $is_group_action(G, X, mul, one, act)
+    ? forall G nonempty_set, X set, group &chap2::Group<G>, act fn(g G, x X) X, g, h G, x X:
+        $is_group_action(G, X, group, act)
         =>:
-            act(g, act(h, x)) = act(mul(g, h), x)
-    act(g, act(h, x)) = act(mul(g, h), x)
+            act(g, act(h, x)) = act(group.mul(g, h), x)
+    act(g, act(h, x)) = act(group.mul(g, h), x)
 
 template<G, X set, act fn(g G, x X) X>:
     have fn toPermHom(g G) fn(x X) X = fn(y X) X {act(g, y)}
 
-template<G set, mul fn(x, y G) G>:
-    have fn CayleyIsoMorphism(g G) fn(x G) G = fn(y G) G {mul(g, y)}
+template<G nonempty_set, group &chap2::Group<G>>:
+    have fn CayleyIsoMorphism(g G) fn(x G) G = fn(y G) G {group.mul(g, y)}
 
 prop orbit_member(G, X set, act fn(g G, x X) X, x, y X):
     exist g G st {y = act(g, x)}
@@ -273,24 +271,24 @@ template<G, X set, act fn(g G, x X) X>:
 # 9.1.6 Quotient groups
 # ---------------------------------------------------------------------------
 
-prop left_coset_member(G set, mul fn(x, y G) G, H power_set(G), g, x G):
-    exist h G st {h $in H, x = mul(g, h)}
+prop left_coset_member(G nonempty_set, group &chap2::Group<G>, H power_set(G), g, x G):
+    exist h G st {h $in H, x = group.mul(g, h)}
 
-template<G set, mul fn(x, y G) G>:
-    have fn left_coset(H power_set(G), g G) power_set(G) = {x G: $left_coset_member(G, mul, H, g, x)}
+template<G nonempty_set, group &chap2::Group<G>>:
+    have fn left_coset(H power_set(G), g G) power_set(G) = {x G: $left_coset_member(G, group, H, g, x)}
 
-prop is_normal_subgroup(G set, mul fn(x, y G) G, one G, inv fn(x G) G, H power_set(G)):
-    $is_subgroup(G, mul, one, inv, H)
+prop is_normal_subgroup(G nonempty_set, group &chap2::Group<G>, H power_set(G)):
+    $is_subgroup(G, group, H)
     forall g, h G:
         h $in H
         =>:
-            mul(mul(g, h), inv(g)) $in H
+            group.mul(group.mul(g, h), group.inv(g)) $in H
 
-prop is_left_coset_of(G set, mul fn(x, y G) G, H power_set(G), C power_set(G)):
-    exist g G st {C = \left_coset<G, mul>(H, g)}
+prop is_left_coset_of(G nonempty_set, group &chap2::Group<G>, H power_set(G), C power_set(G)):
+    exist g G st {C = \left_coset<G, group>(H, g)}
 
-template<G set, mul fn(x, y G) G>:
-    have fn quotient_group(H power_set(G)) power_set(power_set(G)) = {C power_set(G): $is_left_coset_of(G, mul, H, C)}
+template<G nonempty_set, group &chap2::Group<G>>:
+    have fn quotient_group_carrier(H power_set(G)) power_set(power_set(G)) = {C power_set(G): $is_left_coset_of(G, group, H, C)}
 
 # ---------------------------------------------------------------------------
 # 9.2 Rings
@@ -319,17 +317,15 @@ prop has_no_zero_divisors(A set, zero A, mul fn(x, y A) A):
 # Source example: expand a square in a generic commutative ring. Distribute
 # twice, commute the mixed product, and reorder the four additive terms.
 thm commutative_ring_square_sum:
-    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, x, y A:
-        $is_commutative_ring(A, add, zero, neg, mul, one)
-        =>:
-            mul(add(x, y), add(x, y)) = add(add(mul(x, x), mul(y, y)), add(mul(x, y), mul(x, y)))
-    mul(add(x, y), add(x, y)) = add(mul(x, add(x, y)), mul(y, add(x, y)))
-    mul(x, add(x, y)) = add(mul(x, x), mul(x, y))
-    mul(y, add(x, y)) = add(mul(y, x), mul(y, y))
-    mul(y, x) = mul(x, y)
-    add(mul(y, x), mul(y, y)) = add(mul(y, y), mul(y, x)) = add(mul(y, y), mul(x, y))
-    mul(add(x, y), add(x, y)) = add(add(mul(x, x), mul(x, y)), add(mul(y, y), mul(x, y)))
-    by thm chap2::add_reorder_four(A, add, zero, neg, mul(x, x), mul(x, y), mul(y, y), mul(x, y))
+    ? forall A nonempty_set, ring &chap7::CommutativeRing<A>, x, y A:
+        ring.mul(ring.add(x, y), ring.add(x, y)) = ring.add(ring.add(ring.mul(x, x), ring.mul(y, y)), ring.add(ring.mul(x, y), ring.mul(x, y)))
+    ring.mul(ring.add(x, y), ring.add(x, y)) = ring.add(ring.mul(x, ring.add(x, y)), ring.mul(y, ring.add(x, y)))
+    ring.mul(x, ring.add(x, y)) = ring.add(ring.mul(x, x), ring.mul(x, y))
+    ring.mul(y, ring.add(x, y)) = ring.add(ring.mul(y, x), ring.mul(y, y))
+    ring.mul(y, x) = ring.mul(x, y)
+    ring.add(ring.mul(y, x), ring.mul(y, y)) = ring.add(ring.mul(y, y), ring.mul(y, x)) = ring.add(ring.mul(y, y), ring.mul(x, y))
+    ring.mul(ring.add(x, y), ring.add(x, y)) = ring.add(ring.add(ring.mul(x, x), ring.mul(x, y)), ring.add(ring.mul(y, y), ring.mul(x, y)))
+    by thm chap2::add_reorder_four(A, ring.add, ring.zero, ring.neg, ring.mul(x, x), ring.mul(x, y), ring.mul(y, y), ring.mul(x, y))
 
 thm natural_square_sum:
     ? forall x, y N:
@@ -408,73 +404,71 @@ thm integer_units_reverse:
             witness exist y Z st {fn(a, b Z) Z {a * b}(x, y) = 1, fn(a, b Z) Z {a * b}(y, x) = 1} from -1
             by def $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
 
-prop is_ring_hom(A, S set, addR fn(x, y A) A, zeroR A, negR fn(x A) A, mulR fn(x, y A) A, oneR A, addS fn(x, y S) S, zeroS S, negS fn(x S) S, mulS fn(x, y S) S, oneS S, f fn(x A) S):
-    $chap2::is_ring(A, addR, zeroR, negR, mulR, oneR)
-    $chap2::is_ring(S, addS, zeroS, negS, mulS, oneS)
-    f(zeroR) = zeroS
-    f(oneR) = oneS
+prop is_ring_hom(A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S):
+    f(source.zero) = target.zero
+    f(source.one) = target.one
     forall x, y A:
-        f(addR(x, y)) = addS(f(x), f(y))
-        f(mulR(x, y)) = mulS(f(x), f(y))
+        f(source.add(x, y)) = target.add(f(x), f(y))
+        f(source.mul(x, y)) = target.mul(f(x), f(y))
 
 thm ring_hom_map_add:
-    ? forall A, S set, addR fn(x, y A) A, zeroR A, negR fn(x A) A, mulR fn(x, y A) A, oneR A, addS fn(x, y S) S, zeroS S, negS fn(x S) S, mulS fn(x, y S) S, oneS S, f fn(x A) S, x, y A:
-        $is_ring_hom(A, S, addR, zeroR, negR, mulR, oneR, addS, zeroS, negS, mulS, oneS, f)
+    ? forall A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S, x, y A:
+        $is_ring_hom(A, S, source, target, f)
         =>:
-            f(addR(x, y)) = addS(f(x), f(y))
-    f(addR(x, y)) = addS(f(x), f(y))
+            f(source.add(x, y)) = target.add(f(x), f(y))
+    f(source.add(x, y)) = target.add(f(x), f(y))
 
-prop is_subring(A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, S power_set(A)):
-    zero $in S
-    one $in S
+prop is_subring(A nonempty_set, ring &chap2::Ring<A>, S power_set(A)):
+    ring.zero $in S
+    ring.one $in S
     forall x, y A:
         x $in S
         y $in S
         =>:
-            add(x, y) $in S
-            mul(x, y) $in S
+            ring.add(x, y) $in S
+            ring.mul(x, y) $in S
     forall x A:
         x $in S
         =>:
-            neg(x) $in S
+            ring.neg(x) $in S
 
 # ---------------------------------------------------------------------------
 # 9.2.2 Ideals, quotient rings, and the Chinese remainder theorem
 # ---------------------------------------------------------------------------
 
-prop is_ideal(A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, I power_set(A)):
-    zero $in I
+prop is_ideal(A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A)):
+    ring.zero $in I
     forall x, y A:
         x $in I
         y $in I
         =>:
-            add(x, y) $in I
+            ring.add(x, y) $in I
     forall x A:
         x $in I
         =>:
-            neg(x) $in I
+            ring.neg(x) $in I
     forall r, x A:
         x $in I
         =>:
-            mul(r, x) $in I
+            ring.mul(r, x) $in I
 
-prop ideal_coset_member(A set, add fn(x, y A) A, I power_set(A), r, x A):
-    exist i A st {i $in I, x = add(r, i)}
+prop ideal_coset_member(A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A), r, x A):
+    exist i A st {i $in I, x = ring.add(r, i)}
 
-template<A set, add fn(x, y A) A>:
-    have fn ideal_coset(I power_set(A), r A) power_set(A) = {x A: $ideal_coset_member(A, add, I, r, x)}
+template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
+    have fn ideal_coset(I power_set(A), r A) power_set(A) = {x A: $ideal_coset_member(A, ring, I, r, x)}
 
-prop is_ideal_coset(A set, add fn(x, y A) A, I power_set(A), C power_set(A)):
-    exist r A st {C = \ideal_coset<A, add>(I, r)}
+prop is_ideal_coset(A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A), C power_set(A)):
+    exist r A st {C = \ideal_coset<A, ring>(I, r)}
 
-template<A set, add fn(x, y A) A>:
-    have fn quotient_ring(I power_set(A)) power_set(power_set(A)) = {C power_set(A): $is_ideal_coset(A, add, I, C)}
+template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
+    have fn quotient_ring_carrier(I power_set(A)) power_set(power_set(A)) = {C power_set(A): $is_ideal_coset(A, ring, I, C)}
 
-prop ideal_sum_member(A set, add fn(x, y A) A, I, J power_set(A), x A):
-    exist a, b A st {a $in I, b $in J, x = add(a, b)}
+prop ideal_sum_member(A nonempty_set, ring &chap7::CommutativeRing<A>, I, J power_set(A), x A):
+    exist a, b A st {a $in I, b $in J, x = ring.add(a, b)}
 
-template<A set, add fn(x, y A) A>:
-    have fn ideal_sum(I, J power_set(A)) power_set(A) = {x A: $ideal_sum_member(A, add, I, J, x)}
+template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
+    have fn ideal_sum(I, J power_set(A)) power_set(A) = {x A: $ideal_sum_member(A, ring, I, J, x)}
 
 template<A set>:
     have fn ideal_infimum_pair(I, J power_set(A)) power_set(A) = {x A: x $in I and x $in J}
@@ -494,23 +488,21 @@ template<A, S set, zeroS S, f fn(x A) S>:
 template<A, S set, f fn(x A) S>:
     have ring_range power_set(S) = \ideal_map<A, S, f>(A)
 
-prop is_commutative_ring_ideal_family(Index, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I fn(i Index) power_set(A)):
-    $is_commutative_ring(A, add, zero, neg, mul, one)
+prop is_commutative_ring_ideal_family(Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(i Index) power_set(A)):
     forall i Index:
-        $is_ideal(A, add, zero, neg, mul, I(i))
+        $is_ideal(A, ring, I(i))
 
-prop ideals_coprime(A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I, J power_set(A)):
-    $is_commutative_ring(A, add, zero, neg, mul, one)
-    $is_ideal(A, add, zero, neg, mul, I)
-    $is_ideal(A, add, zero, neg, mul, J)
-    \ideal_sum<A, add>(I, J) = A
+prop ideals_coprime(A nonempty_set, ring &chap7::CommutativeRing<A>, I, J power_set(A)):
+    $is_ideal(A, ring, I)
+    $is_ideal(A, ring, J)
+    \ideal_sum<A, ring>(I, J) = A
 
-prop ideals_pairwise_coprime(Index, A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, I fn(i Index) power_set(A)):
-    $is_commutative_ring_ideal_family(Index, A, add, zero, neg, mul, one, I)
+prop ideals_pairwise_coprime(Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(i Index) power_set(A)):
+    $is_commutative_ring_ideal_family(Index, A, ring, I)
     forall i, j Index:
         i != j
         =>:
-            $ideals_coprime(A, add, zero, neg, mul, one, I(i), I(j))
+            $ideals_coprime(A, ring, I(i), I(j))
 
 prop belongs_to_every_ideal(Index, A set, I fn(i Index) power_set(A), x A):
     forall i Index:
@@ -519,12 +511,12 @@ prop belongs_to_every_ideal(Index, A set, I fn(i Index) power_set(A), x A):
 template<Index, A set, I fn(i Index) power_set(A)>:
     have ideal_infimum power_set(A) = {x A: $belongs_to_every_ideal(Index, A, I, x)}
 
-prop is_quotient_tuple(Index, A set, add fn(x, y A) A, I fn(i Index) power_set(A), q fn(i Index) power_set(A)):
+prop is_quotient_tuple(Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(i Index) power_set(A), q fn(i Index) power_set(A)):
     forall i Index:
-        q(i) $in \quotient_ring<A, add>(I(i))
+        q(i) $in \quotient_ring_carrier<A, ring>(I(i))
 
-template<Index, A set, add fn(x, y A) A, I fn(i Index) power_set(A)>:
-    have quotient_product power_set(fn(i Index) power_set(A)) = {q fn(i Index) power_set(A): $is_quotient_tuple(Index, A, add, I, q)}
+template<Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(i Index) power_set(A)>:
+    have quotient_product power_set(fn(i Index) power_set(A)) = {q fn(i Index) power_set(A): $is_quotient_tuple(Index, A, ring, I, q)}
 
 # ---------------------------------------------------------------------------
 # 9.2.3 Algebras and polynomials
@@ -552,7 +544,7 @@ prop polynomial_has_finite_support(A set, zero A, p fn(n N) A):
     exist support finite_set st {$supports_polynomial(A, zero, p, support)}
 
 template<A set, zero A>:
-    have polynomial_ring power_set(fn(n N) A) = {p fn(n N) A: $polynomial_has_finite_support(A, zero, p)}
+    have polynomial_carrier power_set(fn(n N) A) = {p fn(n N) A: $polynomial_has_finite_support(A, zero, p)}
 
 template<A set, zero A>:
-    have fn polynomial_coeff(p \polynomial_ring<A, zero>, n N) A = p(n)
+    have fn polynomial_coeff(p \polynomial_carrier<A, zero>, n N) A = p(n)

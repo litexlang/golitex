@@ -21,9 +21,13 @@ prop is_filter_on(X set, F power_set(power_set(X))):
         =>:
             V $in F
 
-# Source definition `principal`.  The result is a callable filter construction.
 template<X set>:
-    have fn principal_filter(s power_set(X)) power_set(power_set(X)) = {U power_set(X): s $subset U}
+    have Filter set = {F power_set(power_set(X)): $is_filter_on(X, F)}
+
+# Source definition `principal`. The current checked result is its family of
+# large sets; promoting it to `Filter<X>` requires the separate closure proof.
+template<X set>:
+    have fn principal_filter_sets(s power_set(X)) power_set(power_set(X)) = {U power_set(X): s $subset U}
 
 # The source's concrete atTop filter on the naturals consists of sets which
 # contain a tail.  Both helpers are direct, fixed-carrier definitions.
@@ -36,18 +40,18 @@ prop contains_natural_tail_from(a N, S power_set(N)):
 prop contains_natural_tail(S power_set(N)):
     exist a N st {$contains_natural_tail_from(a, S)}
 
-have at_top_N power_set(power_set(N)) = {S power_set(N): $contains_natural_tail(S)}
+have at_top_N_sets power_set(power_set(N)) = {S power_set(N): $contains_natural_tail(S)}
 
 # Source construction `Filter.map`.
 template<X, Y set>:
-    have fn map_filter(f fn(x X) Y, F power_set(power_set(X))) power_set(power_set(Y)) = {V power_set(Y): {x X: f(x) $in V} $in F}
+    have fn map_filter_sets(f fn(x X) Y, F power_set(power_set(X))) power_set(power_set(Y)) = {V power_set(Y): {x X: f(x) $in V} $in F}
 
 # `comap` contains every set which contains the preimage of a large target set.
 prop _contains_filter_preimage(X, Y set, f fn(x X) Y, G power_set(power_set(Y)), U power_set(X)):
     exist V G st {{x X: f(x) $in V} $subset U}
 
 template<X, Y set>:
-    have fn comap_filter(f fn(x X) Y, G power_set(power_set(Y))) power_set(power_set(X)) = {U power_set(X): $_contains_filter_preimage(X, Y, f, G, U)}
+    have fn comap_filter_sets(f fn(x X) Y, G power_set(power_set(Y))) power_set(power_set(X)) = {U power_set(X): $_contains_filter_preimage(X, Y, f, G, U)}
 
 # Lean's filter order is reverse inclusion of the collections of large sets.
 prop filter_le(X set, F, G power_set(power_set(X))):
@@ -59,7 +63,7 @@ prop tends_to_by_preimage(X, Y set, f fn(x X) Y, F power_set(power_set(X)), G po
         {x X: f(x) $in V} $in F
 
 prop tends_to_by_map(X, Y set, f fn(x X) Y, F power_set(power_set(X)), G power_set(power_set(Y))):
-    $filter_le(Y, \map_filter<X, Y>(f, F), G)
+    $filter_le(Y, \map_filter_sets<X, Y>(f, F), G)
 
 thm tends_to_by_preimage_member:
     ? forall X, Y set, f fn(x X) Y, F power_set(power_set(X)), G power_set(power_set(Y)), V power_set(Y):
@@ -358,6 +362,9 @@ prop is_metric_space(X set, dist fn(x, y X) R):
     forall x, y, z X:
         dist(x, z) <= dist(x, y) + dist(y, z)
 
+template<X set>:
+    have Metric set = {dist fn(x, y X) R: $is_metric_space(X, dist)}
+
 # The real metric is directly callable.
 have fn real_distance(x, y R) R = abs(x - y)
 
@@ -617,6 +624,9 @@ prop is_topology_on(X set, T power_set(power_set(X))):
         =>:
             \family_union<X>(family) $in T
 
+template<X set>:
+    have Topology set = {T power_set(power_set(X)): $is_topology_on(X, T)}
+
 prop is_topologically_open(X set, T power_set(power_set(X)), U power_set(X)):
     U $in T
 
@@ -640,10 +650,6 @@ thm topology_closed_under_arbitrary_unions:
             \family_union<X>(family) $in T
     \family_union<X>(family) $in T
 
-prop is_topologically_continuous(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y):
-    forall V T_Y:
-        {x X: f(x) $in V} $in T_X
-
 prop has_open_preimages(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y):
     forall V T_Y:
         {x X: f(x) $in V} $in T_X
@@ -652,24 +658,30 @@ prop _is_topological_neighborhood(X set, T power_set(power_set(X)), x X, S power
     exist U T st {x $in U, U $subset S}
 
 template<X set>:
-    have fn topological_neighborhood_filter(T power_set(power_set(X)), x X) power_set(power_set(X)) = {S power_set(X): $_is_topological_neighborhood(X, T, x, S)}
+    have fn topological_neighborhood_filter_sets(T power_set(power_set(X)), x X) power_set(power_set(X)) = {S power_set(X): $_is_topological_neighborhood(X, T, x, S)}
 
 prop is_topologically_continuous_at(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y, x X):
-    $tends_to_by_preimage(X, Y, f, \topological_neighborhood_filter<X>(T_X, x), \topological_neighborhood_filter<Y>(T_Y, f(x)))
+    $tends_to_by_preimage(X, Y, f, \topological_neighborhood_filter_sets<X>(T_X, x), \topological_neighborhood_filter_sets<Y>(T_Y, f(x)))
+
+prop is_topologically_continuous(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y):
+    forall x X:
+        $is_topologically_continuous_at(X, Y, T_X, T_Y, f, x)
 
 thm continuous_iff_open_preimages_forward:
     ? forall X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y:
         $is_topologically_continuous(X, Y, T_X, T_Y, f)
         =>:
             $has_open_preimages(X, Y, T_X, T_Y, f)
-    $has_open_preimages(X, Y, T_X, T_Y, f)
+    # Proof debt: derive open preimages from pointwise neighborhood continuity.
+    trust $has_open_preimages(X, Y, T_X, T_Y, f)
 
 thm continuous_iff_open_preimages_reverse:
     ? forall X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y:
         $has_open_preimages(X, Y, T_X, T_Y, f)
         =>:
             $is_topologically_continuous(X, Y, T_X, T_Y, f)
-    $is_topologically_continuous(X, Y, T_X, T_Y, f)
+    # Proof debt: assemble source neighborhoods from pulled-back target opens.
+    trust $is_topologically_continuous(X, Y, T_X, T_Y, f)
 
 # Supplementary ordinary continuity-composition lemma. The retained source
 # item changes the middle topology to a coinduced topology and remains in
@@ -729,17 +741,17 @@ thm topologically_continuous_composition:
                 z $in literal_preimage
         by extension literal_preimage = direct_preimage
         literal_preimage $in T_A
-    by def $is_topologically_continuous(A, C, T_A, T_C, fn(x A) C {g(f(x))})
+    by thm continuous_iff_open_preimages_reverse(A, C, T_A, T_C, fn(x A) C {g(f(x))})
 
 # Source constructions `coinduced` and `induced` are topology-valued functions.
 template<X, Y set>:
-    have fn coinduced_topology(f fn(x X) Y, T_X power_set(power_set(X))) power_set(power_set(Y)) = {V power_set(Y): {x X: f(x) $in V} $in T_X}
+    have fn coinduced_open_family(f fn(x X) Y, T_X power_set(power_set(X))) power_set(power_set(Y)) = {V power_set(Y): {x X: f(x) $in V} $in T_X}
 
 prop _is_induced_open(X, Y set, f fn(x X) Y, T_Y power_set(power_set(Y)), U power_set(X)):
     exist V T_Y st {{x X: f(x) $in V} = U}
 
 template<X, Y set>:
-    have fn induced_topology(f fn(x X) Y, T_Y power_set(power_set(Y))) power_set(power_set(X)) = {U power_set(X): $_is_induced_open(X, Y, f, T_Y, U)}
+    have fn induced_open_family(f fn(x X) Y, T_Y power_set(power_set(Y))) power_set(power_set(X)) = {U power_set(X): $_is_induced_open(X, Y, f, T_Y, U)}
 
 prop is_hausdorff_topology(X set, T power_set(power_set(X))):
     forall x, y X:
@@ -762,7 +774,7 @@ prop is_topologically_dense(X set, T power_set(power_set(X)), A power_set(X)):
 # Closure remains a selected set-valued object.  A point belongs when every
 # neighborhood meets the original set.
 prop is_topological_adherent_point(X set, T power_set(power_set(X)), A power_set(X), x X):
-    forall U \topological_neighborhood_filter<X>(T, x):
+    forall U \topological_neighborhood_filter_sets<X>(T, x):
         intersect(U, A) != {}
 
 template<X set>:
@@ -770,8 +782,8 @@ template<X set>:
 
 prop is_countable_neighborhood_basis(X set, T power_set(power_set(X)), x X, basis fn(n N) power_set(X)):
     forall n N:
-        basis(n) $in \topological_neighborhood_filter<X>(T, x)
-    forall U \topological_neighborhood_filter<X>(T, x):
+        basis(n) $in \topological_neighborhood_filter_sets<X>(T, x)
+    forall U \topological_neighborhood_filter_sets<X>(T, x):
         exist n N st {basis(n) $subset U}
 
 prop is_first_countable_topology(X set, T power_set(power_set(X))):
@@ -780,7 +792,7 @@ prop is_first_countable_topology(X set, T power_set(power_set(X))):
 
 prop has_dense_subset_limit_at_every_point(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), A power_set(X), f fn(a A) Y):
     forall x X:
-        exist c Y st {$tends_to_by_preimage(A, Y, f, \comap_filter<A, X>(fn(a A) X {a}, \topological_neighborhood_filter<X>(T_X, x)), \topological_neighborhood_filter<Y>(T_Y, c))}
+        exist c Y st {$tends_to_by_preimage(A, Y, f, \comap_filter_sets<A, X>(fn(a A) X {a}, \topological_neighborhood_filter_sets<X>(T_X, x)), \topological_neighborhood_filter_sets<Y>(T_Y, c))}
 
 prop is_continuous_extension(X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), A power_set(X), f fn(a A) Y, phi fn(x X) Y):
     $is_topologically_continuous(X, Y, T_X, T_Y, phi)
@@ -789,7 +801,7 @@ prop is_continuous_extension(X, Y set, T_X power_set(power_set(X)), T_Y power_se
 
 prop is_sequence_from_set_converging_to(X set, T power_set(power_set(X)), S power_set(X), a X, u fn(n N) X):
     $is_sequence_in_set(X, S, u)
-    $tends_to_by_preimage(N, X, u, at_top_N, \topological_neighborhood_filter<X>(T, a))
+    $tends_to_by_preimage(N, X, u, at_top_N_sets, \topological_neighborhood_filter_sets<X>(T, a))
 
 prop is_sequential_closure_point(X set, T power_set(power_set(X)), S power_set(X), a X):
     exist u fn(n N) X st {$is_sequence_from_set_converging_to(X, T, S, a, u)}
@@ -799,13 +811,13 @@ prop is_proper_filter_on(X set, F power_set(power_set(X))):
     not {} $in F
 
 prop is_cluster_point(X set, T power_set(power_set(X)), F power_set(power_set(X)), x X):
-    forall U \topological_neighborhood_filter<X>(T, x), V F:
+    forall U \topological_neighborhood_filter_sets<X>(T, x), V F:
         intersect(U, V) != {}
 
 prop is_topologically_compact(X set, T power_set(power_set(X)), S power_set(X)):
     forall F power_set(power_set(X)):
         $is_proper_filter_on(X, F)
-        $filter_le(X, F, \principal_filter<X>(S))
+        $filter_le(X, F, \principal_filter_sets<X>(S))
         =>:
             exist a S st {$is_cluster_point(X, T, F, a)}
 
