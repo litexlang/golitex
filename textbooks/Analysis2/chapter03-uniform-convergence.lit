@@ -1,0 +1,604 @@
+# Chapter 3. Uniform convergence.
+#
+# This chapter uses N_pos for sequence indices, consistently with Chapters 1
+# and 2. Standalone source exercises are omitted.
+
+# Definition 3.1.1 (Limiting value of a function). On a subset E of a metric
+# space, L is the limiting value at an adherent point x0 when every positive
+# output tolerance is controlled by some positive input radius.
+prop is_function_limit_delta_controlled(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y, epsilon R_pos, delta R_pos):
+    forall x E:
+        dist_X(x, x0) < delta
+        =>:
+            dist_Y(f(x), L) < epsilon
+
+prop has_function_limit(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y):
+    $chap1::is_metric_adherent_point(X, dist_X, E, x0)
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_function_limit_delta_controlled(X, Y, dist_X, dist_Y, E, f, x0, L, epsilon, delta)}
+
+# Proposition 3.1.5. A function limit is equivalent to sequential,
+# neighborhood, and continuous-extension formulations. The source defers the
+# proof to Exercise 3.1.2, so the six directions below retain that exact debt.
+prop is_function_limit_neighborhood_witness(X, Y set, dist_X fn(x, y X) R, E power_set(X), f fn(x E) Y, x0 X, V power_set(Y), U power_set(X)):
+    $chap1::is_metric_open(X, dist_X, U)
+    x0 $in U
+    forall x E:
+        x $in U
+        =>:
+            f(x) $in V
+
+prop preserves_sequences_at_function_limit(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y):
+    forall u fn(n N_pos) E:
+        $chap1::has_metric_limit(X, dist_X, fn(n N_pos) X {u(n)}, x0)
+        =>:
+            $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, L)
+
+prop has_function_limit_neighborhood_form(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y):
+    forall V power_set(Y):
+        $chap1::is_metric_open(Y, dist_Y, V)
+        L $in V
+        =>:
+            exist U power_set(X) st {$is_function_limit_neighborhood_witness(X, Y, dist_X, E, f, x0, V, U)}
+
+# The source's piecewise map on E union {x0} is represented by an ambient map
+# constrained exactly on that subspace. This avoids dependent-subtype coercion
+# while keeping the source values and local continuity condition unchanged.
+prop is_function_limit_extension(X, Y set, E power_set(X), f fn(x E) Y, x0 X, L Y, g fn(x X) Y):
+    g(x0) = L
+    forall x E:
+        x != x0
+        =>:
+            g(x) = f(x)
+
+prop is_continuous_function_limit_extension_delta_controlled(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), x0 X, g fn(x X) Y, epsilon R_pos, delta R_pos):
+    forall x E:
+        dist_X(x, x0) < delta
+        =>:
+            dist_Y(g(x), g(x0)) < epsilon
+
+prop is_continuous_function_limit_extension(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y, g fn(x X) Y):
+    $is_function_limit_extension(X, Y, E, f, x0, L, g)
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_continuous_function_limit_extension_delta_controlled(X, Y, dist_X, dist_Y, E, x0, g, epsilon, delta)}
+
+prop has_function_limit_continuous_extension_form(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y):
+    exist g fn(x X) Y st {$is_continuous_function_limit_extension(X, Y, dist_X, dist_Y, E, f, x0, L, g)}
+
+thm function_limit_implies_sequential_form:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+        =>:
+            $preserves_sequences_at_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+    trust $preserves_sequences_at_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+
+thm sequential_form_implies_function_limit:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $chap1::is_metric_adherent_point(X, dist_X, E, x0)
+        $preserves_sequences_at_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+        =>:
+            $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+    trust $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+
+thm function_limit_implies_neighborhood_form:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+        =>:
+            $has_function_limit_neighborhood_form(X, Y, dist_X, dist_Y, E, f, x0, L)
+    trust $has_function_limit_neighborhood_form(X, Y, dist_X, dist_Y, E, f, x0, L)
+
+thm neighborhood_form_implies_function_limit:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $chap1::is_metric_adherent_point(X, dist_X, E, x0)
+        $has_function_limit_neighborhood_form(X, Y, dist_X, dist_Y, E, f, x0, L)
+        =>:
+            $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+    trust $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+
+thm function_limit_implies_continuous_extension_form:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+        =>:
+            $has_function_limit_continuous_extension_form(X, Y, dist_X, dist_Y, E, f, x0, L)
+    trust $has_function_limit_continuous_extension_form(X, Y, dist_X, dist_Y, E, f, x0, L)
+
+thm continuous_extension_form_implies_function_limit:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 X, L Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $chap1::is_metric_adherent_point(X, dist_X, E, x0)
+        $has_function_limit_continuous_extension_form(X, Y, dist_X, dist_Y, E, f, x0, L)
+        =>:
+            $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+    trust $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+
+thm function_limit_at_domain_point_equals_value:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), f fn(x E) Y, x0 E, L Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+        =>:
+            f(x0) = L
+    trust f(x0) = L
+
+# Definition 3.2.1 (Pointwise convergence). For every fixed domain point, the
+# resulting sequence of values converges in the codomain metric.
+prop is_pointwise_convergent_to(X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y):
+    forall x X:
+        $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {family(n)(x)}, f(x))
+
+# Definition 3.2.7 (Uniform convergence). One tail index must control every
+# domain point simultaneously, unlike pointwise convergence.
+prop is_uniform_function_tail_controlled(X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y, epsilon R_pos, N0 N_pos):
+    forall n N_pos, x X:
+        n >= N0
+        =>:
+            dist_Y(family(n)(x), f(x)) < epsilon
+
+prop is_uniformly_convergent_to(X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y):
+    forall epsilon R_pos:
+        exist N0 N_pos st {$is_uniform_function_tail_controlled(X, Y, dist_Y, family, f, epsilon, N0)}
+
+# Theorem 3.3.1 (Uniform limits preserve continuity I). The epsilon/3 proof
+# combines uniform control at x and x0 with continuity of one family member.
+# Tao leaves this proof to Exercise 3.3.1.
+thm uniform_limit_preserves_continuity_at:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y, x0 X:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_uniformly_convergent_to(X, Y, dist_Y, family, f)
+        forall n N_pos:
+            $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, family(n), x0)
+        =>:
+            $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, f, x0)
+    trust $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, f, x0)
+
+# Corollary 3.3.2 (Uniform limits preserve continuity II). Pointwise
+# application of Theorem 3.3.1 should establish global continuity. The direct
+# folding attempt currently stops at the quantified family-continuity bridge.
+thm uniform_limit_preserves_continuity:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_uniformly_convergent_to(X, Y, dist_Y, family, f)
+        forall n N_pos:
+            $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, family(n))
+        =>:
+            $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)
+    trust $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)
+
+# Proposition 3.3.3 (Interchange of limits and uniform limits). The individual
+# limiting values form a convergent sequence in the complete codomain, and its
+# limit is also the limiting value of the uniform limit function. Tao defers
+# the epsilon/3 proof to Exercise 3.3.2.
+thm interchange_function_limits_and_uniform_limit:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, E power_set(X), family fn(n N_pos) fn(x E) Y, f fn(x E) Y, x0 X, limits fn(n N_pos) Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $chap1::is_complete_metric_space(Y, dist_Y)
+        $chap1::is_metric_adherent_point(X, dist_X, E, x0)
+        $is_uniformly_convergent_to(E, Y, dist_Y, family, f)
+        forall n N_pos:
+            $has_function_limit(X, Y, dist_X, dist_Y, E, family(n), x0, limits(n))
+        =>:
+            exist L Y st {$chap1::has_metric_limit(Y, dist_Y, limits, L), $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)}
+    trust exist L Y st {$chap1::has_metric_limit(Y, dist_Y, limits, L), $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)}
+
+# Proposition 3.3.4. If the arguments x_n converge to x while f_n converges
+# uniformly to f, continuity of every f_n forces f_n(x_n) to converge to f(x).
+# Tao leaves the proof to Exercise 3.3.4.
+thm uniform_limit_along_convergent_argument_sequence:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y, points fn(n N_pos) X, x X:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        forall n N_pos:
+            $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, family(n))
+        $is_uniformly_convergent_to(X, Y, dist_Y, family, f)
+        $chap1::has_metric_limit(X, dist_X, points, x)
+        =>:
+            $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {family(n)(points(n))}, f(x))
+    trust $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {family(n)(points(n))}, f(x))
+
+# Definition 3.3.5 (Bounded functions). The image of f lies in one metric
+# ball, represented by its center and positive radius.
+prop is_metric_function_bound(X, Y set, dist_Y fn(x, y Y) R, f fn(x X) Y, y0 Y, radius R_pos):
+    forall x X:
+        dist_Y(f(x), y0) < radius
+
+prop is_metric_bounded_function(X, Y set, dist_Y fn(x, y Y) R, f fn(x X) Y):
+    exist y0 Y, radius R_pos st {$is_metric_function_bound(X, Y, dist_Y, f, y0, radius)}
+
+# Proposition 3.3.6 (Uniform limits preserve boundedness). A sufficiently
+# close bounded family member supplies a ball for the limit function. Tao
+# leaves the proof to Exercise 3.3.6.
+thm uniform_limit_preserves_boundedness:
+    ? forall X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y:
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_uniformly_convergent_to(X, Y, dist_Y, family, f)
+        forall n N_pos:
+            $is_metric_bounded_function(X, Y, dist_Y, family(n))
+        =>:
+            $is_metric_bounded_function(X, Y, dist_Y, f)
+    trust $is_metric_bounded_function(X, Y, dist_Y, f)
+
+# Definition 3.4.2 (Metric space of bounded functions). The nonempty-domain
+# uniform distance is characterized as the least upper bound by its upper-bound
+# and arbitrary-approximation properties. The empty-domain value is zero.
+template<X, Y set, dist_Y fn(x, y Y) R>:
+    have bounded_function_space set = {f fn(x X) Y: $is_metric_bounded_function(X, Y, dist_Y, f)}
+
+prop is_uniform_distance_value(X, Y set, dist_Y fn(x, y Y) R, f, g fn(x X) Y, D R):
+    forall x X:
+        dist_Y(f(x), g(x)) <= D
+    forall epsilon R_pos:
+        exist x X st {D - epsilon < dist_Y(f(x), g(x))}
+
+thm nonempty_bounded_functions_have_unique_uniform_distance:
+    ? forall X, Y set, dist_Y fn(x, y Y) R, f, g fn(x X) Y:
+        X != {}
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_metric_bounded_function(X, Y, dist_Y, f)
+        $is_metric_bounded_function(X, Y, dist_Y, g)
+        =>:
+            exist! D R st {$is_uniform_distance_value(X, Y, dist_Y, f, g, D)}
+    # trust: the real least-upper-bound construction is not yet exposed as a
+    # reusable selector for this set of pointwise distances.
+    trust exist! D R st {$is_uniform_distance_value(X, Y, dist_Y, f, g, D)}
+
+prop is_empty_domain_uniform_distance(X set, D R):
+    X = {}
+    D = 0
+
+# Proposition 3.4.4. The relational uniform-distance interface avoids hiding
+# the least-upper-bound proof while still stating convergence in that metric.
+prop is_uniform_metric_limit_tail(X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y, epsilon R_pos, N0 N_pos):
+    forall n N_pos:
+        n >= N0
+        =>:
+            exist D R st {$is_uniform_distance_value(X, Y, dist_Y, family(n), f, D), D < epsilon}
+
+prop has_uniform_metric_limit_via_values(X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y):
+    forall epsilon R_pos:
+        exist N0 N_pos st {$is_uniform_metric_limit_tail(X, Y, dist_Y, family, f, epsilon, N0)}
+
+thm uniform_metric_limit_implies_uniform_convergence:
+    ? forall X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y:
+        X != {}
+        $chap1::is_metric_space(Y, dist_Y)
+        $has_uniform_metric_limit_via_values(X, Y, dist_Y, family, f)
+        =>:
+            $is_uniformly_convergent_to(X, Y, dist_Y, family, f)
+    trust $is_uniformly_convergent_to(X, Y, dist_Y, family, f)
+
+thm uniform_convergence_implies_uniform_metric_limit:
+    ? forall X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y:
+        X != {}
+        $chap1::is_metric_space(Y, dist_Y)
+        forall n N_pos:
+            $is_metric_bounded_function(X, Y, dist_Y, family(n))
+        $is_metric_bounded_function(X, Y, dist_Y, f)
+        $is_uniformly_convergent_to(X, Y, dist_Y, family, f)
+        =>:
+            $has_uniform_metric_limit_via_values(X, Y, dist_Y, family, f)
+    trust $has_uniform_metric_limit_via_values(X, Y, dist_Y, family, f)
+
+# Theorem 3.4.5 (Completeness of bounded continuous functions).
+template<X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R>:
+    have bounded_continuous_function_space set = {f fn(x X) Y: $is_metric_bounded_function(X, Y, dist_Y, f), $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)}
+
+prop is_uniform_cauchy_tail(X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, epsilon R_pos, N0 N_pos):
+    forall m, n N_pos, x X:
+        m >= N0
+        n >= N0
+        =>:
+            dist_Y(family(m)(x), family(n)(x)) < epsilon
+
+prop is_uniform_cauchy_family(X, Y set, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y):
+    forall epsilon R_pos:
+        exist N0 N_pos st {$is_uniform_cauchy_tail(X, Y, dist_Y, family, epsilon, N0)}
+
+thm bounded_continuous_function_space_is_complete:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $chap1::is_complete_metric_space(Y, dist_Y)
+        forall n N_pos:
+            family(n) $in \bounded_continuous_function_space<X, Y, dist_X, dist_Y>
+        $is_uniform_cauchy_family(X, Y, dist_Y, family)
+        =>:
+            exist f \bounded_continuous_function_space<X, Y, dist_X, dist_Y> st {$is_uniformly_convergent_to(X, Y, dist_Y, family, f)}
+    trust exist f \bounded_continuous_function_space<X, Y, dist_X, dist_Y> st {$is_uniformly_convergent_to(X, Y, dist_Y, family, f)}
+
+# Definition 3.5.2 (Infinite series of functions).
+template<X set>:
+    have fn function_partial_sum(family fn(n N_pos) fn(y X) R, k N_pos, x X) R = sum(1, k, fn(j N_pos) R {family(j)(x)})
+
+prop has_pointwise_function_series_sum(X set, family fn(n N_pos) fn(y X) R, f fn(x X) R):
+    forall x X:
+        $chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {\function_partial_sum<X>(family, k, x)}, f(x))
+
+prop is_uniform_function_series_tail(X set, family fn(n N_pos) fn(y X) R, f fn(x X) R, epsilon R_pos, N0 N_pos):
+    forall k N_pos, x X:
+        k >= N0
+        =>:
+            abs(\function_partial_sum<X>(family, k, x) - f(x)) < epsilon
+
+prop has_uniform_function_series_sum(X set, family fn(n N_pos) fn(y X) R, f fn(x X) R):
+    forall epsilon R_pos:
+        exist N0 N_pos st {$is_uniform_function_series_tail(X, family, f, epsilon, N0)}
+
+# Definition 3.5.5 (Sup norm).
+prop is_sup_norm_value(X set, f fn(x X) R, M R):
+    forall x X:
+        abs(f(x)) <= M
+    forall epsilon R_pos:
+        exist x X st {M - epsilon < abs(f(x))}
+
+prop is_empty_domain_sup_norm(X set, M R):
+    X = {}
+    M = 0
+
+prop has_real_series_sum(u fn(n N_pos) R, L R):
+    $chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(1, k, fn(j N_pos) R {u(j)})}, L)
+
+# Theorem 3.5.7 (Weierstrass M-test).
+thm weierstrass_m_test:
+    ? forall X set, dist_X fn(x, y X) R, family fn(n N_pos) fn(z X) R, norms fn(n N_pos) R:
+        $chap1::is_metric_space(X, dist_X)
+        forall n N_pos:
+            $is_metric_bounded_function(X, R, chap1::real_distance, family(n))
+            $chap2::is_metric_continuous(X, R, dist_X, chap1::real_distance, family(n))
+            $is_sup_norm_value(X, family(n), norms(n))
+        exist L R st {$has_real_series_sum(norms, L)}
+        =>:
+            exist f fn(x X) R st {$has_uniform_function_series_sum(X, family, f), $chap2::is_metric_continuous(X, R, dist_X, chap1::real_distance, f)}
+    trust exist f fn(x X) R st {$has_uniform_function_series_sum(X, family, f), $chap2::is_metric_continuous(X, R, dist_X, chap1::real_distance, f)}
+
+# Riemann integration belongs to the Analysis I development and is kept as an
+# explicit external interface here.
+abstract_prop has_riemann_integral_value(I, f, A)
+
+# Theorem 3.6.1 (Uniform convergence and integration).
+thm uniform_convergence_interchanges_integrals:
+    ? forall I power_set(R), family fn(n N_pos) fn(x I) R, f fn(x I) R, integrals fn(n N_pos) R:
+        forall n N_pos:
+            $has_riemann_integral_value(I, family(n), integrals(n))
+        $is_uniformly_convergent_to(I, R, chap1::real_distance, family, f)
+        =>:
+            exist A R st {$has_riemann_integral_value(I, f, A), $chap1::has_metric_limit(R, chap1::real_distance, integrals, A)}
+    trust exist A R st {$has_riemann_integral_value(I, f, A), $chap1::has_metric_limit(R, chap1::real_distance, integrals, A)}
+
+# Corollary 3.6.2 (Termwise integration of a uniformly convergent series).
+thm uniformly_convergent_function_series_interchanges_integrals:
+    ? forall I power_set(R), family fn(n N_pos) fn(x I) R, f fn(x I) R, integrals fn(n N_pos) R:
+        forall n N_pos:
+            $has_riemann_integral_value(I, family(n), integrals(n))
+        $has_uniform_function_series_sum(I, family, f)
+        =>:
+            exist A R st {$has_riemann_integral_value(I, f, A), $has_real_series_sum(integrals, A)}
+    trust exist A R st {$has_riemann_integral_value(I, f, A), $has_real_series_sum(integrals, A)}
+
+# The derivative relation is likewise an explicit cross-book boundary until
+# the Analysis I API is imported.
+abstract_prop has_continuous_derivative_on(I, f, derivative)
+
+# Theorem 3.7.1 (Uniform convergence of derivatives).
+thm uniform_derivative_limit_theorem:
+    ? forall I power_set(R), family, derivatives fn(n N_pos) fn(x I) R, g fn(x I) R, x0 I, values fn(n N_pos) R:
+        forall n N_pos:
+            $has_continuous_derivative_on(I, family(n), derivatives(n))
+            values(n) = family(n)(x0)
+        $is_uniformly_convergent_to(I, R, chap1::real_distance, derivatives, g)
+        exist L R st {$chap1::has_metric_limit(R, chap1::real_distance, values, L)}
+        =>:
+            exist f fn(x I) R st {$is_uniformly_convergent_to(I, R, chap1::real_distance, family, f), $has_continuous_derivative_on(I, f, g)}
+    trust exist f fn(x I) R st {$is_uniformly_convergent_to(I, R, chap1::real_distance, family, f), $has_continuous_derivative_on(I, f, g)}
+
+# Corollary 3.7.3 (Termwise differentiation of a function series).
+thm derivative_series_termwise_differentiation:
+    ? forall I power_set(R), family, derivatives fn(n N_pos) fn(x I) R, derivative_norms fn(n N_pos) R, x0 I, values fn(n N_pos) R:
+        forall n N_pos:
+            $has_continuous_derivative_on(I, family(n), derivatives(n))
+            $is_sup_norm_value(I, derivatives(n), derivative_norms(n))
+            values(n) = family(n)(x0)
+        exist A R st {$has_real_series_sum(derivative_norms, A)}
+        exist B R st {$has_real_series_sum(values, B)}
+        =>:
+            exist f, g fn(x I) R st {$has_uniform_function_series_sum(I, family, f), $has_uniform_function_series_sum(I, derivatives, g), $has_continuous_derivative_on(I, f, g)}
+    trust exist f, g fn(x I) R st {$has_uniform_function_series_sum(I, family, f), $has_uniform_function_series_sum(I, derivatives, g), $has_continuous_derivative_on(I, f, g)}
+
+# Definition 3.8.1 (Polynomials on an interval).
+prop is_polynomial_presentation(I power_set(R), f fn(x I) R, n N, coefficients fn(j closed_range(0, n)) R):
+    forall x I:
+        f(x) = sum(0, n, fn(j closed_range(0, n)) R {coefficients(j) * x^j})
+
+prop is_polynomial_on(I power_set(R), f fn(x I) R):
+    exist n N, coefficients fn(j closed_range(0, n)) R st {$is_polynomial_presentation(I, f, n, coefficients)}
+
+prop is_uniform_epsilon_approximation(I power_set(R), P, f fn(x I) R, epsilon R_pos):
+    forall x I:
+        abs(P(x) - f(x)) <= epsilon
+
+# Theorem 3.8.3 (Weierstrass approximation theorem).
+thm weierstrass_approximation_theorem:
+    ? forall a, b R, f fn(x '[a, b]) R, epsilon R_pos:
+        a < b
+        $chap2::is_metric_continuous('[a, b], R, chap1::real_distance, chap1::real_distance, f)
+        =>:
+            exist P fn(x '[a, b]) R st {$is_polynomial_on('[a, b], P), $is_uniform_epsilon_approximation('[a, b], P, f, epsilon)}
+    trust exist P fn(x '[a, b]) R st {$is_polynomial_on('[a, b], P), $is_uniform_epsilon_approximation('[a, b], P, f, epsilon)}
+
+# Definition 3.8.4 (Compact support and improper integral).
+prop is_supported_on_interval(f fn(x R) R, a, b R):
+    forall x R:
+        x < a or x > b
+        =>:
+            f(x) = 0
+
+prop is_compactly_supported(f fn(x R) R):
+    exist a, b R st {a <= b, $is_supported_on_interval(f, a, b)}
+
+prop is_improper_integral_value(f fn(x R) R, A R):
+    exist a, b R st {a <= b, $is_supported_on_interval(f, a, b), $has_riemann_integral_value('[a, b], fn(x '[a, b]) R {f(x)}, A)}
+
+# Lemma 3.8.5 (independence of the supporting interval).
+thm compact_support_improper_integral_well_defined:
+    ? forall f fn(x R) R, a, b, c, d, A, B R:
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, f)
+        $is_supported_on_interval(f, a, b)
+        $is_supported_on_interval(f, c, d)
+        $has_riemann_integral_value('[a, b], fn(x '[a, b]) R {f(x)}, A)
+        $has_riemann_integral_value('[c, d], fn(x '[c, d]) R {f(x)}, B)
+        =>:
+            A = B
+    trust A = B
+
+# Definition 3.8.6 (Approximation to the identity).
+prop is_approximation_to_identity(f fn(x R) R, epsilon R_pos, delta R_pos):
+    delta < 1
+    $is_supported_on_interval(f, -1, 1)
+    forall x '[-1, 1]:
+        f(x) >= 0
+    $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, f)
+    $is_improper_integral_value(f, 1)
+    forall x '[-1, 1]:
+        abs(x) >= delta
+        =>:
+            abs(f(x)) <= epsilon
+
+# Lemma 3.8.8.
+thm polynomial_approximation_to_identity_exists:
+    ? forall epsilon, delta R_pos:
+        delta < 1
+        =>:
+            exist p fn(x R) R st {$is_approximation_to_identity(p, epsilon, delta), $is_polynomial_on('[-1, 1], fn(x '[-1, 1]) R {p(x)})}
+    trust exist p fn(x R) R st {$is_approximation_to_identity(p, epsilon, delta), $is_polynomial_on('[-1, 1], fn(x '[-1, 1]) R {p(x)})}
+
+# Definition 3.8.9 (Convolution), kept as its defining integral relation.
+prop is_convolution_value(f, g fn(x R) R, x, A R):
+    $is_improper_integral_value(fn(y R) R {f(y) * g(x - y)}, A)
+
+prop is_convolution_function(f, g, h fn(x R) R):
+    forall x R:
+        $is_convolution_value(f, g, x, h(x))
+
+# Proposition 3.8.11 (continuity, compact support, and commutativity).
+thm basic_convolution_properties:
+    ? forall f, g fn(x R) R:
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, f)
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, g)
+        $is_compactly_supported(f)
+        $is_compactly_supported(g)
+        =>:
+            exist h fn(x R) R st {$is_convolution_function(f, g, h), $is_convolution_function(g, f, h), $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, h), $is_compactly_supported(h)}
+    trust exist h fn(x R) R st {$is_convolution_function(f, g, h), $is_convolution_function(g, f, h), $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, h), $is_compactly_supported(h)}
+
+prop is_pointwise_sum(h, h_g, h_k fn(x R) R):
+    forall x R:
+        h(x) = h_g(x) + h_k(x)
+
+thm convolution_linearity:
+    ? forall f, g, k, h_g, h_k fn(x R) R:
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, f)
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, g)
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, k)
+        $is_compactly_supported(f)
+        $is_compactly_supported(g)
+        $is_compactly_supported(k)
+        $is_convolution_function(f, g, h_g)
+        $is_convolution_function(f, k, h_k)
+        =>:
+            exist h fn(x R) R st {$is_convolution_function(f, fn(x R) R {g(x) + k(x)}, h), $is_pointwise_sum(h, h_g, h_k)}
+    trust exist h fn(x R) R st {$is_convolution_function(f, fn(x R) R {g(x) + k(x)}, h), $is_pointwise_sum(h, h_g, h_k)}
+
+# Lemma 3.8.13.
+thm convolution_with_local_polynomial_is_polynomial:
+    ? forall f, g, h fn(x R) R:
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, f)
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, g)
+        $is_supported_on_interval(f, 0, 1)
+        $is_supported_on_interval(g, -1, 1)
+        $is_polynomial_on('[-1, 1], fn(x '[-1, 1]) R {g(x)})
+        $is_convolution_function(f, g, h)
+        =>:
+            $is_polynomial_on('[0, 1], fn(x '[0, 1]) R {h(x)})
+    trust $is_polynomial_on('[0, 1], fn(x '[0, 1]) R {h(x)})
+
+prop has_convolution_approximation_error(f, h fn(x R) R, M, epsilon R_pos):
+    forall x '[0, 1]:
+        abs(h(x) - f(x)) <= (1 + 4 * M) * epsilon
+
+# Lemma 3.8.14.
+thm convolution_approximation_error:
+    ? forall f, g, h fn(x R) R, M, epsilon, delta R_pos:
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, f)
+        $is_supported_on_interval(f, 0, 1)
+        forall x R:
+            abs(f(x)) <= M
+        forall x, y R:
+            abs(x - y) < delta
+            =>:
+                abs(f(x) - f(y)) < epsilon
+        $is_approximation_to_identity(g, epsilon, delta)
+        $is_convolution_function(f, g, h)
+        =>:
+            $has_convolution_approximation_error(f, h, M, epsilon)
+    trust $has_convolution_approximation_error(f, h, M, epsilon)
+
+# Corollary 3.8.15.
+thm supported_continuous_function_polynomial_approximation:
+    ? forall f fn(x R) R, epsilon R_pos:
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, f)
+        $is_supported_on_interval(f, 0, 1)
+        =>:
+            exist P fn(x R) R st {$is_polynomial_on('[0, 1], fn(x '[0, 1]) R {P(x)}), $is_uniform_epsilon_approximation('[0, 1], fn(x '[0, 1]) R {P(x)}, fn(x '[0, 1]) R {f(x)}, epsilon)}
+    trust exist P fn(x R) R st {$is_polynomial_on('[0, 1], fn(x '[0, 1]) R {P(x)}), $is_uniform_epsilon_approximation('[0, 1], fn(x '[0, 1]) R {P(x)}, fn(x '[0, 1]) R {f(x)}, epsilon)}
+
+# Definition used in Lemma 3.8.16: an ambient function agreeing with f on the
+# interval and vanishing off it.
+prop is_zero_extension(I power_set(R), f fn(x I) R, F fn(x R) R):
+    forall x I:
+        F(x) = f(x)
+    forall x R:
+        not x $in I
+        =>:
+            F(x) = 0
+
+# Lemma 3.8.16.
+thm zero_extension_is_continuous:
+    ? forall f fn(x '[0, 1]) R, F fn(x R) R:
+        $chap2::is_metric_continuous('[0, 1], R, chap1::real_distance, chap1::real_distance, f)
+        f(0) = 0
+        f(1) = 0
+        $is_zero_extension('[0, 1], f, F)
+        =>:
+            $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, F)
+    trust $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, F)
+
+# Corollary 3.8.18.
+thm endpoint_zero_polynomial_approximation:
+    ? forall f fn(x '[0, 1]) R, epsilon R_pos:
+        $chap2::is_metric_continuous('[0, 1], R, chap1::real_distance, chap1::real_distance, f)
+        f(0) = 0
+        f(1) = 0
+        =>:
+            exist P fn(x '[0, 1]) R st {$is_polynomial_on('[0, 1], P), $is_uniform_epsilon_approximation('[0, 1], P, f, epsilon)}
+    trust exist P fn(x '[0, 1]) R st {$is_polynomial_on('[0, 1], P), $is_uniform_epsilon_approximation('[0, 1], P, f, epsilon)}
+
+# Corollary 3.8.19.
+thm unit_interval_polynomial_approximation:
+    ? forall f fn(x '[0, 1]) R, epsilon R_pos:
+        $chap2::is_metric_continuous('[0, 1], R, chap1::real_distance, chap1::real_distance, f)
+        =>:
+            exist P fn(x '[0, 1]) R st {$is_polynomial_on('[0, 1], P), $is_uniform_epsilon_approximation('[0, 1], P, f, epsilon)}
+    trust exist P fn(x '[0, 1]) R st {$is_polynomial_on('[0, 1], P), $is_uniform_epsilon_approximation('[0, 1], P, f, epsilon)}
