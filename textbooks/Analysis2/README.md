@@ -10,8 +10,8 @@ Run the implemented project with:
 target/release/litex -compact -r textbooks/Analysis2
 ```
 
-The current project exports Chapter 1 as `chap1`. Its public metric-space
-surface includes:
+The current project exports Chapter 1 as `chap1` and the in-progress Chapter 2
+as `chap2`. The Chapter 1 public metric-space surface includes:
 
 - `$chap1::is_metric_space(X,dist)`, the concrete real, restricted,
   finite-dimensional `l1`/`l2`/`linf`, and discrete distance functions, and
@@ -35,6 +35,22 @@ center $in \chap1::metric_ball<X, dist>(center, radius)
 ```
 
 from `$chap1::is_metric_space(X,dist)` and `radius $in R_pos`.
+
+Chapter 2 currently exposes the concrete predicates
+`$chap2::is_metric_delta_controlled_at`,
+`$chap2::is_metric_continuous_at`, and
+`$chap2::is_metric_continuous`. Its checked
+`metric_continuous_implies_continuous_at` theorem projects domain continuity
+to a chosen point. Theorem 2.1.4 is represented by concrete sequential and
+open-neighborhood characterization predicates plus four trusted directions,
+matching Tao's exercise-deferred proof boundary.
+Theorem 2.1.5 has a checked sequential equivalence and concrete inverse-image
+sets, while its open/closed inverse-image directions remain trusted.
+Corollary 2.1.7 is checked in both its pointwise and global composition forms.
+Section 2.2 currently adds a concrete real-function pairing into
+`\chap1::finite_real_vector<2>` and concrete addition, subtraction,
+multiplication, maximum, minimum, restricted division, and scalar maps. The
+continuity statements in Lemmas 2.2.1--2.2.2 remain exercise-deferred trusts.
 
 All 32 numbered non-exercise Chapter 1 items have source-facing definitions
 or theorem interfaces. The ordered project run succeeds, but the chapter is

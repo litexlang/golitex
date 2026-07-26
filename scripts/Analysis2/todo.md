@@ -3,8 +3,8 @@
 ## Task context
 
 - Task: Plan and implement Tao's *Analysis II* as a Litex textbook project.
-- Scope: The source in `scripts/Analysis2/Analysis II.txt`, the working
-  translation records, and the proposed `textbooks/Analysis2/` project.
+- Scope: The source in `scripts/Analysis2/Analysis II.txt`, structured
+  translation records, and the final textbook module.
 - Related workspace: `scripts/Analysis2/` and `textbooks/Analysis2/`.
 
 Add an item here only after a direct Litex attempt. Every item must include the
@@ -16,11 +16,11 @@ label `trust` or `kernel_problem`.
 
 - **Chapter 1 source proofs remain explicit proof debt.**
   Attempt: all 32 named items were translated in
-  `textbooks/Analysis2/chapter01-metric-spaces.lit`, and the definitions plus
+  `scripts/textbooks_drafts/Analysis2/chapter01-metric-spaces.lit`, and the definitions plus
   representative use probes were run in the real caller context. Exact
   command:
   `target/release/litex -compact -f
-  textbooks/Analysis2/chapter01-metric-spaces.lit`.
+  scripts/textbooks_drafts/Analysis2/chapter01-metric-spaces.lit`.
   Result: verifier `"result": "success"`, with 28 explicit `trust`
   statements. Desired state: replace each source-local theorem trust with a
   checked proof while preserving the current declaration shapes. Root cause:
@@ -79,6 +79,33 @@ label `trust` or `kernel_problem`.
   Primary label: `trust`.
 
 ## strange_behavior_of_litex
+
+- **A parse failure inside outermost `try:` stops a `-session -before`
+  session.** Minimal attempted frame:
+
+  ```litex
+  try:
+      prop has_metric_open_neighborhood_form_at(...):
+          forall V power_set(Y):
+              ...
+              =>:
+                  exist U power_set(X) st {
+                      ...,
+                      forall x U:
+                          f(x) $in V
+                  }
+  ```
+
+  Exact behavior: frame `def214b` returned
+  `ParseError: unexpected indent at line 8`; the next valid outermost-`try:`
+  frame returned `{"event":"skipped","error":"an earlier block failed"}`.
+  Expected behavior: a failure whose submitted source begins with a literal
+  outermost `try:` should roll back only that frame and leave the session
+  usable, including when parsing fails inside the protected block. Current
+  workaround: restart `target/release/litex -compact -session -before
+  textbooks/Analysis2/chapter02-continuous-functions.lit` and replay accepted
+  Chapter 2 statements. Root-cause class: `litex_blocker`. Primary label:
+  `kernel_problem`.
 
 - **Recursive function inside a parameterized template fails when used.**
   Minimal attempted shape:

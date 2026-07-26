@@ -6,8 +6,9 @@
 - Scope: The eight source chapters in `scripts/Analysis2/Analysis II.txt`,
   their mathematical interfaces, translation records, final textbook project,
   and verifier checkpoints.
-- Related workspace: `scripts/Analysis2/` and the proposed
-  `textbooks/Analysis2/` project.
+- Related workspace: `scripts/Analysis2/`, the working module in
+  `scripts/textbooks_drafts/Analysis2/`, and the manually published snapshot
+  in `textbooks/Analysis2/`.
 
 Status: Phase 0 and the 32-item Chapter 1 vertical slice are implemented. The
 ordered project runner succeeds. Chapter 1 remains proof-incomplete with 48
@@ -61,14 +62,14 @@ formal item or a concise comment-only representation as appropriate.
 
 This is not a blank-slate formalization:
 
-- `textbooks/Analysis/` contains the current Analysis I development, including
+- `scripts/textbooks_drafts/Analysis/` contains the current Analysis I development, including
   real sequences, limits, continuity, differentiation, and Riemann integration.
-- `textbooks/Mathematics-In-Lean-Derived-Litex-Corpus/chapter11-topology.lit`
+- `scripts/textbooks_drafts/Mathematics-In-Lean-Derived-Litex-Corpus/chapter11-topology.lit`
   already contains corpus-local metric-space, ball, convergence, continuity,
   compactness, completeness, and topology interfaces.
-- `textbooks/Mathematics-In-Lean-Derived-Litex-Corpus/chapter13-integration-and-measure-theory.lit`
+- `scripts/textbooks_drafts/Mathematics-In-Lean-Derived-Litex-Corpus/chapter13-integration-and-measure-theory.lit`
   contains corpus-local measurable-space and measure interfaces.
-- `textbooks/Linear-Algebra-Done-Right/` contains reusable implementation
+- `scripts/textbooks_drafts/Linear-Algebra-Done-Right/` contains reusable implementation
   experience for linear maps, finite-dimensional spaces, matrices, and norms.
 
 These files are design evidence and sources of checked proof patterns, not
@@ -87,10 +88,10 @@ use with the Analysis II concept model first.
 
 ## 3. Artifact boundary and project shape
 
-Final reader-facing artifacts belong in one top-level module:
+The publish-candidate artifacts are developed in one top-level draft module:
 
 ```text
-textbooks/Analysis2/
+scripts/textbooks_drafts/Analysis2/
   README.md
   math_collections.md
   litex.config
@@ -264,7 +265,7 @@ in the book's chapter order.
    named items, source order, item kinds, and proof-deferred-to-exercise cases.
 2. Add mathematically substantive examples and remarks without importing any
    standalone exercise.
-3. Create `textbooks/Analysis2/litex.config`, `README.md`, and
+3. Create `scripts/textbooks_drafts/Analysis2/litex.config`, `README.md`, and
    `math_collections.md`. Keep `README.md` minimal until code verifies.
 4. Probe the real dependency mechanism for Analysis I. Do not copy Analysis I
    declarations or invent aliases if a canonical import or stable interface
@@ -374,13 +375,13 @@ inner loop. A full chapter or project run is a checkpoint.
 For a noninteractive changed-file checkpoint:
 
 ```bash
-target/release/litex -compact -f textbooks/Analysis2/chapter01-metric-spaces.lit
+target/release/litex -compact -f scripts/textbooks_drafts/Analysis2/chapter01-metric-spaces.lit
 ```
 
 For the ordered project checkpoint:
 
 ```bash
-target/release/litex -compact -r textbooks/Analysis2
+target/release/litex -compact -r scripts/textbooks_drafts/Analysis2
 ```
 
 Inspect the verifier result for `"result": "error"`; shell exit status alone
@@ -409,9 +410,11 @@ The book is complete only when:
 - project output contains no JSON `result:error`;
 - `README.md` describes only verified public behavior and
   `math_collections.md` matches the final interface DAG; and
-- `textbooks/Analysis2/` contains only publishable `.lit` files,
-  `litex.config`, `README.md`, and `math_collections.md`, while working records
-  remain under `scripts/Analysis2/`.
+- `scripts/textbooks_drafts/Analysis2/` contains only publishable `.lit`
+  files, `litex.config`, `README.md`, and `math_collections.md`, while working
+  records remain under `scripts/Analysis2/`; and
+- `textbooks/Analysis2/` stays unchanged until the user manually publishes the
+  verified draft.
 
 ## 10. Next bounded handoff
 

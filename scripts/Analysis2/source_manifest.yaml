@@ -46,7 +46,12 @@ chapter_tracking:
     runner_result: "success (2026-07-26)"
     proof_boundary: "28 explicit trust statements; see textbooks/Analysis2/todo.lit and scripts/Analysis2/todo.md"
     definition_graph: "167 nodes, 365 edges, DAG, 0 cycle nodes"
-  2: {status: "planned"}
+  2:
+    status: "in_progress"
+    records: "scripts/Analysis2/items/chapter02.yaml"
+    runner: "target/release/litex -compact -f textbooks/Analysis2/chapter02-continuous-functions.lit"
+    runner_result: "success through Lemma 2.2.2 (2026-07-26)"
+    proof_boundary: "Nineteen explicit trusts: eight characterization directions in Section 2.1, four pairing directions in Lemma 2.2.1, and seven arithmetic-map continuity statements in Lemma 2.2.2."
   3: {status: "planned"}
   4: {status: "planned"}
   5: {status: "planned"}

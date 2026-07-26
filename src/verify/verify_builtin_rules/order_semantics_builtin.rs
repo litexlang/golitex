@@ -98,6 +98,11 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) =
+            self.try_verify_positive_even_integer_greater_than_one(atomic_fact, verify_state)?
+        {
+            return Ok(Some(result));
+        }
         if let Some(result) = self.try_verify_order_transitivity_builtin_rule(atomic_fact)? {
             return Ok(Some(result));
         }
@@ -107,6 +112,56 @@ impl Runtime {
             return Ok(Some(result));
         }
         self.try_verify_integer_successor_predecessor_builtin_rule(atomic_fact, verify_state)
+    }
+
+    // A positive even integer is at least two and therefore greater than one.
+    // Example: `i $in N_pos`, `i % 2 = 0` => `i > 1`, so `i - 1 $in N_pos`.
+    fn try_verify_positive_even_integer_greater_than_one(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some((left, integer, true)) = direct_positive_order_shape(atomic_fact) else {
+            return Ok(None);
+        };
+        if !obj_is_literal_one(&left) {
+            return Ok(None);
+        }
+
+        let line_file = atomic_fact.line_file();
+        let in_n_pos: AtomicFact = InFact::new(
+            integer.clone(),
+            StandardSet::NPos.into(),
+            line_file.clone(),
+        )
+        .into();
+        let membership_result =
+            self.verify_non_equational_known_then_builtin_rules_only(&in_n_pos, verify_state)?;
+        if !membership_result.is_true() {
+            return Ok(None);
+        }
+
+        let two: Obj = Number::new("2".to_string()).into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let remainder: Obj = Mod::new(integer, two).into();
+        let even_result = self.verify_objs_are_equal_in_equality_builtin(
+            &remainder,
+            &zero,
+            line_file,
+            verify_state,
+        )?;
+        if !even_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "positive even integer is greater than one".to_string(),
+                vec![membership_result, even_result],
+            )
+            .into(),
+        ))
     }
 
     // Combines two stored real-order facts through a shared middle term.

@@ -190,16 +190,19 @@ impl Runtime {
         }
         steps.push(n_pos_result);
         let two: Obj = Number::new("2".to_string()).into();
-        if self.known_mod_equals_zero(exp, &two) {
+        let zero = Self::literal_zero_obj();
+        let mod_obj: Obj = Mod::new(exp.clone(), two).into();
+        let even_result = self.verify_objs_are_equal_in_equality_builtin(
+            &mod_obj,
+            &zero,
+            lf.clone(),
+            &VerifyState::new(0, true),
+        )?;
+        if even_result.is_true() {
+            steps.push(even_result);
             return Ok(Some(steps));
         }
         Ok(None)
-    }
-
-    fn known_mod_equals_zero(&self, dividend: &Obj, divisor: &Obj) -> bool {
-        let zero = Self::literal_zero_obj();
-        let mod_obj: Obj = Mod::new(dividend.clone(), divisor.clone()).into();
-        self.objs_have_same_known_equality_rc_in_some_env(&mod_obj, &zero)
     }
 
     // k in N_pos and k % 2 = 1, or k is a positive odd literal.

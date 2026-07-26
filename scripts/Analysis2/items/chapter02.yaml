@@ -1,0 +1,84 @@
+- source: "Tao, Analysis II, fourth edition, Definition 2.1.1"
+  problem: "Define continuity of a typed map between metric spaces at a point and on its whole domain."
+  proof_idea: "Expose one epsilon-delta control condition as a residual relation; quantify over positive epsilon and select a positive delta for pointwise continuity; quantify pointwise continuity over the domain for global continuity."
+  litex_code: |
+    prop is_metric_continuous_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X):
+        forall epsilon R_pos:
+            exist delta R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
+
+    prop is_metric_continuous(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
+        forall a X:
+            $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+  comments: "Status: checkable. Each declaration and the projection use probe verified in one release `-session -before` workflow on 2026-07-26. Final file gate remains pending while Chapter 2 is under construction. This is a concise mathematical reformulation of the copyrighted source."
+
+- source: "Tao, Analysis II, fourth edition, Theorem 2.1.4"
+  problem: "Characterize continuity at a point equivalently by preservation of convergent sequences and by the open-neighborhood condition."
+  proof_idea: "For epsilon-delta continuity, transport an eventual delta-tail to an epsilon-tail. Conversely, a failure of continuity supplies points at distances tending to zero whose images stay epsilon-separated. For the neighborhood form, use an output ball and its input delta-ball; conversely apply the neighborhood condition to an epsilon-ball."
+  litex_code: |
+    thm metric_continuous_at_implies_preserves_limits:
+        ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X:
+            $chap1::is_metric_space(X, dist_X)
+            $chap1::is_metric_space(Y, dist_Y)
+            $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+            =>:
+                $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+        trust $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+  comments: "Status: translated; blocker label: trust. The source assigns the proof to Exercise 2.1.1. The three clauses are represented by concrete props and four directional source-facing theorems so each direction is reusable. All interfaces with their narrow trusts verified in the persistent release session on 2026-07-26."
+
+- source: "Tao, Analysis II, fourth edition, Theorem 2.1.5"
+  problem: "Characterize global metric continuity by preservation of convergent sequences and by open- or closed-set inverse images."
+  proof_idea: "Quantify the pointwise sequential characterization over every possible limit. For open inverse images, apply the local neighborhood characterization at each preimage point; obtain the closed version through complements."
+  litex_code: |
+    template<X, Y set, f fn(x X) Y, E power_set(Y)>:
+        have function_preimage power_set(X) = {x X: f(x) $in E}
+
+    prop pulls_back_metric_open_sets(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
+        forall V power_set(Y):
+            $chap1::is_metric_open(Y, dist_Y, V)
+            =>:
+                $chap1::is_metric_open(X, dist_X, \function_preimage<X, Y, f, V>)
+  comments: "Status: translated; blocker label: trust. The sequential equivalence is checkable via Theorem 2.1.4. Four open/closed inverse-image directions retain narrow trusts because Tao assigns the proof to Exercise 2.1.2 and the direct route reaches the Chapter 1 pointwise-to-subset bridge debt. Verified in the release session on 2026-07-26."
+
+- source: "Tao, Analysis II, fourth edition, Corollary 2.1.7"
+  problem: "Show that the composition of maps continuous at the relevant points is continuous, and deduce the global composition result."
+  proof_idea: "Given an output epsilon, take a positive input tolerance for the outer map and then a positive input tolerance for the inner map. The same delta controls the composition. Quantify the pointwise result over the domain for global continuity."
+  litex_code: |
+    thm metric_continuous_at_composition:
+        ? forall X, Y, W set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, dist_W fn(x, y W) R, f fn(x X) Y, g fn(y Y) W, a X:
+            $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+            $is_metric_continuous_at(Y, W, dist_Y, dist_W, g, f(a))
+            =>:
+                $is_metric_continuous_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a)
+        # Full epsilon-delta proof is in the chapter file.
+  comments: "Status: checkable. Both pointwise and global composition theorems verified without trust in the persistent release session on 2026-07-26."
+
+- source: "Tao, Analysis II, fourth edition, Lemma 2.2.1"
+  problem: "Relate continuity of two real-valued component functions to continuity of their paired map into Euclidean R^2, both at a point and globally."
+  proof_idea: "Represent the pair as a two-coordinate finite real vector. Use equivalence of Euclidean convergence and coordinatewise convergence together with the sequential continuity characterization."
+  litex_code: |
+    template<X set, f, g fn(x X) R>:
+        have fn real_function_pair(x X) \chap1::finite_real_vector<2> = fn(j N_pos: j <= 2) R {real_pair_coordinate(f(x), g(x), j)}
+
+    thm real_components_continuous_at_imply_pair:
+        ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
+            $chap1::is_metric_space(X, dist)
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+            =>:
+                $is_metric_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
+        trust $is_metric_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 2.2.1. The paired function is concrete and verified; four reusable equivalence directions retain narrow trusts."
+
+- source: "Tao, Analysis II, fourth edition, Lemma 2.2.2"
+  problem: "State continuity of addition, subtraction, multiplication, maximum, minimum, division away from zero, and scalar multiplication on real Euclidean spaces."
+  proof_idea: "Use real limit laws with the sequential characterization. Maximum and minimum can be treated by their two order cases, and division is restricted to pairs with nonzero second coordinate."
+  litex_code: |
+    have fn real_pair_add(v \chap1::finite_real_vector<2>) R = v(1) + v(2)
+    have fn real_pair_subtract(v \chap1::finite_real_vector<2>) R = v(1) - v(2)
+    have fn real_pair_multiply(v \chap1::finite_real_vector<2>) R = v(1) * v(2)
+
+    thm real_pair_add_is_continuous_at_every_point:
+        ? forall a \chap1::finite_real_vector<2>:
+            $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_add, a)
+        trust $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_add, a)
+  comments: "Status: translated; blocker label: trust. Tao assigns the proof to Exercise 2.2.2. All seven maps are concrete, and their universal pointwise-continuity statements verified with explicit trust boundaries."

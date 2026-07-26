@@ -1,0 +1,364 @@
+# Chapter 2: Continuous Functions on Metric Spaces
+#
+# This chapter follows Tao's source order. Standalone exercises are omitted.
+# Named results whose proofs are assigned to exercises retain source-facing
+# statements with explicit, narrow proof-debt boundaries.
+
+# Definition 2.1.1 (Continuity). The residual predicate isolates one selected
+# epsilon--delta pair used by the quantified pointwise definition.
+prop is_metric_delta_controlled_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X, epsilon R_pos, delta R_pos):
+    forall x X:
+        dist_X(x, a) < delta
+        =>:
+            dist_Y(f(x), f(a)) < epsilon
+
+prop is_metric_continuous_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X):
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
+
+prop is_metric_continuous(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
+    forall a X:
+        $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+
+# This checked projection is the representative use probe for Definition
+# 2.1.1 and is reused by later domain-level theorems.
+thm metric_continuous_implies_continuous_at:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X:
+        $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+        =>:
+            $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+    by def $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+    $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+
+# The two residual relations below expose statements (b) and (c) of Theorem
+# 2.1.4 without conflating either characterization with the definition.
+prop preserves_metric_limits_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X):
+    forall u fn(n N_pos) X:
+        $chap1::has_metric_limit(X, dist_X, u, a)
+        =>:
+            $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+
+prop is_metric_open_neighborhood_witness_at(X, Y set, dist_X fn(x, y X) R, f fn(x X) Y, a X, V power_set(Y), U power_set(X)):
+    $chap1::is_metric_open(X, dist_X, U)
+    a $in U
+    forall x U:
+        f(x) $in V
+
+prop has_metric_open_neighborhood_form_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X):
+    forall V power_set(Y):
+        $chap1::is_metric_open(Y, dist_Y, V)
+        f(a) $in V
+        =>:
+            exist U power_set(X) st {$is_metric_open_neighborhood_witness_at(X, Y, dist_X, f, a, V, U)}
+
+# Theorem 2.1.4 (Continuity preserves convergence). Tao states a three-way
+# equivalence and assigns its proof to Exercise 2.1.1. The four directions
+# below keep all three source clauses independently reusable.
+thm metric_continuous_at_implies_preserves_limits:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+        =>:
+            $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+    # trust: Tao assigns this direction to Exercise 2.1.1.
+    trust $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+
+thm preserves_limits_implies_metric_continuous_at:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+        =>:
+            $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+    # trust: Tao assigns this direction to Exercise 2.1.1.
+    trust $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+
+thm metric_continuous_at_implies_open_neighborhood_form:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+        =>:
+            $has_metric_open_neighborhood_form_at(X, Y, dist_X, dist_Y, f, a)
+    # trust: Tao assigns this direction to Exercise 2.1.1.
+    trust $has_metric_open_neighborhood_form_at(X, Y, dist_X, dist_Y, f, a)
+
+thm open_neighborhood_form_implies_metric_continuous_at:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $has_metric_open_neighborhood_form_at(X, Y, dist_X, dist_Y, f, a)
+        =>:
+            $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+    # trust: Tao assigns this direction to Exercise 2.1.1.
+    trust $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+
+# Theorem 2.1.5 uses the canonical inverse image of a subset.
+template<X, Y set, f fn(x X) Y, E power_set(Y)>:
+    have function_preimage power_set(X) = {x X: f(x) $in E}
+
+prop preserves_metric_limits(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
+    forall a X, u fn(n N_pos) X:
+        $chap1::has_metric_limit(X, dist_X, u, a)
+        =>:
+            $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+
+prop pulls_back_metric_open_sets(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
+    forall V power_set(Y):
+        $chap1::is_metric_open(Y, dist_Y, V)
+        =>:
+            $chap1::is_metric_open(X, dist_X, \function_preimage<X, Y, f, V>)
+
+prop pulls_back_metric_closed_sets(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
+    forall F power_set(Y):
+        $chap1::is_metric_closed(Y, dist_Y, F)
+        =>:
+            $chap1::is_metric_closed(X, dist_X, \function_preimage<X, Y, f, F>)
+
+# Theorem 2.1.5. The sequential equivalence is checked from Theorem 2.1.4.
+thm metric_continuous_implies_preserves_all_limits:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+        =>:
+            $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
+    claim:
+        ? forall a X, u fn(n N_pos) X:
+            $chap1::has_metric_limit(X, dist_X, u, a)
+            =>:
+                $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+        by thm metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, f, a)
+        by thm metric_continuous_at_implies_preserves_limits(X, Y, dist_X, dist_Y, f, a)
+        by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+        $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+    by def $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
+
+thm preserves_all_limits_implies_metric_continuous:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
+        =>:
+            $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+        claim:
+            ? $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+            claim:
+                ? forall u fn(n N_pos) X:
+                    $chap1::has_metric_limit(X, dist_X, u, a)
+                    =>:
+                        $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+                by def $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
+                $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+            by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+        by thm preserves_limits_implies_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+    by def $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+
+thm metric_continuous_implies_pulls_back_open_sets:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+        =>:
+            $pulls_back_metric_open_sets(X, Y, dist_X, dist_Y, f)
+    # trust: Tao assigns this characterization to Exercise 2.1.2.
+    trust $pulls_back_metric_open_sets(X, Y, dist_X, dist_Y, f)
+
+thm pulls_back_open_sets_implies_metric_continuous:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $pulls_back_metric_open_sets(X, Y, dist_X, dist_Y, f)
+        =>:
+            $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+    # trust: Tao assigns this characterization to Exercise 2.1.2.
+    trust $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+
+thm metric_continuous_implies_pulls_back_closed_sets:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+        =>:
+            $pulls_back_metric_closed_sets(X, Y, dist_X, dist_Y, f)
+    # trust: Tao assigns this characterization to Exercise 2.1.2.
+    trust $pulls_back_metric_closed_sets(X, Y, dist_X, dist_Y, f)
+
+thm pulls_back_closed_sets_implies_metric_continuous:
+    ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $pulls_back_metric_closed_sets(X, Y, dist_X, dist_Y, f)
+        =>:
+            $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+    # trust: Tao assigns this characterization to Exercise 2.1.2.
+    trust $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+
+# Corollary 2.1.7 (Continuity is preserved by composition). Both the
+# pointwise and global statements are checked directly.
+thm metric_continuous_at_composition:
+    ? forall X, Y, W set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, dist_W fn(x, y W) R, f fn(x X) Y, g fn(y Y) W, a X:
+        $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+        $is_metric_continuous_at(Y, W, dist_Y, dist_W, g, f(a))
+        =>:
+            $is_metric_continuous_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a)
+    claim:
+        ? forall epsilon R_pos:
+            exist delta R_pos st {$is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, delta)}
+        by def $is_metric_continuous_at(Y, W, dist_Y, dist_W, g, f(a))
+        obtain eta from exist eta R_pos st {$is_metric_delta_controlled_at(Y, W, dist_Y, dist_W, g, f(a), epsilon, eta)}
+        by def $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+        obtain delta from exist delta R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, eta, delta)}
+        witness exist radius R_pos st {$is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, radius)} from delta:
+            claim:
+                ? forall x X:
+                    dist_X(x, a) < delta
+                    =>:
+                        dist_W(fn(t X) W {g(f(t))}(x), fn(t X) W {g(f(t))}(a)) < epsilon
+                by def $is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, eta, delta)
+                dist_Y(f(x), f(a)) < eta
+                by def $is_metric_delta_controlled_at(Y, W, dist_Y, dist_W, g, f(a), epsilon, eta)
+                dist_W(g(f(x)), g(f(a))) < epsilon
+                fn(t X) W {g(f(t))}(x) = g(f(x))
+                fn(t X) W {g(f(t))}(a) = g(f(a))
+                dist_W(fn(t X) W {g(f(t))}(x), fn(t X) W {g(f(t))}(a)) = dist_W(g(f(x)), g(f(a))) < epsilon
+            by def $is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, delta)
+    by def $is_metric_continuous_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a)
+
+thm metric_continuous_composition:
+    ? forall X, Y, W set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, dist_W fn(x, y W) R, f fn(x X) Y, g fn(y Y) W:
+        $chap1::is_metric_space(X, dist_X)
+        $chap1::is_metric_space(Y, dist_Y)
+        $chap1::is_metric_space(W, dist_W)
+        $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+        $is_metric_continuous(Y, W, dist_Y, dist_W, g)
+        =>:
+            $is_metric_continuous(X, W, dist_X, dist_W, fn(x X) W {g(f(x))})
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a)
+        by thm metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, f, a)
+        by thm metric_continuous_implies_continuous_at(Y, W, dist_Y, dist_W, g, f(a))
+        by thm metric_continuous_at_composition(X, Y, W, dist_X, dist_Y, dist_W, f, g, a)
+    by def $is_metric_continuous(X, W, dist_X, dist_W, fn(x X) W {g(f(x))})
+
+# Lemma 2.2.1. A real-valued function pair is represented in the existing
+# two-dimensional finite-vector carrier.
+have fn real_pair_coordinate(a, b R, j closed_range(1, 2)) R by cases:
+    case j = 1: a
+    case j != 1: b
+
+template<X set, f, g fn(x X) R>:
+    have fn real_function_pair(x X) \chap1::finite_real_vector<2> = fn(j N_pos: j <= 2) R {real_pair_coordinate(f(x), g(x), j)}
+
+thm real_function_pair_continuous_at_implies_components:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
+        =>:
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+            $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+    # trust: Tao assigns Lemma 2.2.1 to Exercise 2.2.1.
+    trust:
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+
+thm real_components_continuous_at_imply_pair:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        =>:
+            $is_metric_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
+    # trust: Tao assigns Lemma 2.2.1 to Exercise 2.2.1.
+    trust $is_metric_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
+
+thm real_function_pair_continuous_implies_components:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>)
+        =>:
+            $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+            $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+    # trust: Tao assigns Lemma 2.2.1 to Exercise 2.2.1.
+    trust:
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+
+thm real_components_continuous_imply_pair:
+    ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
+        $chap1::is_metric_space(X, dist)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+        =>:
+            $is_metric_continuous(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>)
+    # trust: Tao assigns Lemma 2.2.1 to Exercise 2.2.1.
+    trust $is_metric_continuous(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>)
+
+# Lemma 2.2.2. These are the concrete arithmetic maps whose continuity the
+# source assigns to Exercise 2.2.2.
+have fn real_pair_add(v \chap1::finite_real_vector<2>) R = v(1) + v(2)
+
+have fn real_pair_subtract(v \chap1::finite_real_vector<2>) R = v(1) - v(2)
+
+have fn real_pair_multiply(v \chap1::finite_real_vector<2>) R = v(1) * v(2)
+
+have fn real_pair_maximum(v \chap1::finite_real_vector<2>) R by cases:
+    case v(1) >= v(2): v(1)
+    case v(1) < v(2): v(2)
+
+have fn real_pair_minimum(v \chap1::finite_real_vector<2>) R by cases:
+    case v(1) <= v(2): v(1)
+    case v(1) > v(2): v(2)
+
+have nonzero_second_real_pairs set = {v \chap1::finite_real_vector<2>: v(2) != 0}
+
+have fn real_pair_divide(v nonzero_second_real_pairs) R = v(1) / v(2)
+
+have fn real_scalar_multiply(c, x R) R = c * x
+
+thm real_pair_add_is_continuous_at_every_point:
+    ? forall a \chap1::finite_real_vector<2>:
+        $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_add, a)
+    # trust: Tao assigns Lemma 2.2.2 to Exercise 2.2.2.
+    trust $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_add, a)
+
+thm real_pair_subtract_is_continuous_at_every_point:
+    ? forall a \chap1::finite_real_vector<2>:
+        $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_subtract, a)
+    # trust: Tao assigns Lemma 2.2.2 to Exercise 2.2.2.
+    trust $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_subtract, a)
+
+thm real_pair_multiply_is_continuous_at_every_point:
+    ? forall a \chap1::finite_real_vector<2>:
+        $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_multiply, a)
+    # trust: Tao assigns Lemma 2.2.2 to Exercise 2.2.2.
+    trust $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_multiply, a)
+
+thm real_pair_maximum_is_continuous_at_every_point:
+    ? forall a \chap1::finite_real_vector<2>:
+        $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_maximum, a)
+    # trust: Tao assigns Lemma 2.2.2 to Exercise 2.2.2.
+    trust $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_maximum, a)
+
+thm real_pair_minimum_is_continuous_at_every_point:
+    ? forall a \chap1::finite_real_vector<2>:
+        $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_minimum, a)
+    # trust: Tao assigns Lemma 2.2.2 to Exercise 2.2.2.
+    trust $is_metric_continuous_at(\chap1::finite_real_vector<2>, R, \chap1::l2_distance<2>, chap1::real_distance, real_pair_minimum, a)
+
+thm real_pair_divide_is_continuous_at_every_point:
+    ? forall a nonzero_second_real_pairs:
+        $is_metric_continuous_at(nonzero_second_real_pairs, R, fn(x, y nonzero_second_real_pairs) R {\chap1::l2_distance<2>(x, y)}, chap1::real_distance, real_pair_divide, a)
+    # trust: Tao assigns Lemma 2.2.2 to Exercise 2.2.2.
+    trust $is_metric_continuous_at(nonzero_second_real_pairs, R, fn(x, y nonzero_second_real_pairs) R {\chap1::l2_distance<2>(x, y)}, chap1::real_distance, real_pair_divide, a)
+
+thm real_scalar_multiply_is_continuous_at_every_point:
+    ? forall c, a R:
+        $is_metric_continuous_at(R, R, chap1::real_distance, chap1::real_distance, fn(x R) R {real_scalar_multiply(c, x)}, a)
+    # trust: Tao assigns Lemma 2.2.2 to Exercise 2.2.2.
+    trust $is_metric_continuous_at(R, R, chap1::real_distance, chap1::real_distance, fn(x R) R {real_scalar_multiply(c, x)}, a)

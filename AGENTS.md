@@ -166,21 +166,41 @@ completed item.
 
 ## Textbook Artifact Boundaries
 
-Treat `textbooks/<Book>/` as the final-product surface. For Analysis I,
-`textbooks/Analysis/` contains the final chapter `.lit` files and
-`litex.config`, together with the module-owned `README.md` and
-`math_collections.md`. These two sidecar documents are explicit exceptions:
-do not export, import, or render them as textbook chapters, and do not pass
-them to the Litex kernel. Do not create other Markdown todos, audits,
-experience notes, generated Markdown, verifier captures, or working artifacts
-there.
+Treat `scripts/textbooks_drafts/<Book>/` as the canonical development surface
+for every textbook. It is a complete private mirror of the publishable module:
+chapter `.lit` files, `litex.config`, the module-owned `README.md` and
+`math_collections.md`, and any other file intended to ship with that book.
+All ordinary textbook edits, proof iteration, chapter checkpoints, whole-book
+checks, and module-documentation updates happen in this draft tree.
 
-Put all Analysis I working artifacts under `scripts/Analysis/`. Chapter
-tracking belongs in `scripts/Analysis/todo/`, and generated or temporary
-artifacts belong in an appropriate subfolder of `scripts/Analysis/` (or
-`/private/tmp` when they are disposable). Move a file into
-`textbooks/Analysis/` only when it is a final textbook artifact or one of the
-two module-owned sidecar documents above.
+This repository rule overrides any installed Litex skill or older local note
+that still names `textbooks/<Book>/` as the ordinary editing target. Interpret
+such a path as `scripts/textbooks_drafts/<Book>/` unless the task is explicitly
+to inspect or publish the public snapshot.
+
+Treat `textbooks/<Book>/` as the last manually published public snapshot.
+During ordinary writing or proof repair it is read-only. Do not edit, refresh,
+or synchronize it as a side effect of textbook work. Copy a draft into
+`textbooks/` only when the user explicitly requests publication or
+synchronization; by default, publication is a manual user action.
+
+Initialize a missing draft once with
+`scripts/textbooks_drafts/init_draft.sh <Book>`. The initializer may copy the
+published snapshot only when no draft exists. Never automatically merge or
+copy `textbooks/<Book>/` back over an existing draft, because the draft may
+contain unpublished work.
+
+Keep source material, translation-item records, todos, audits, experience
+notes, generated Markdown, verifier captures, and temporary artifacts in the
+book's existing workspace such as `scripts/Analysis/`, not in either module
+tree. For Analysis I, chapter tracking remains in `scripts/Analysis/todo/`;
+disposable artifacts belong in an appropriate `scripts/Analysis/` subfolder
+or `/private/tmp`.
+
+The module-owned `README.md` and `math_collections.md` live in the draft beside
+`litex.config` while being developed and are copied to the public snapshot only
+during publication. Do not export, import, render, or pass them to the Litex
+kernel.
 
 ## Litex Module Documentation
 
@@ -195,9 +215,11 @@ for every chapter or submodule.
 
 - Put the pair in the root of a reusable directory module such as
   `std/basics/`.
-- For a textbook or translation project, put the pair directly in
-  `textbooks/<Book>/` beside `litex.config`. Do not put the module-owned pair
-  in the paired `scripts/<Book>/` workspace.
+- For a textbook or translation project, put the pair in
+  `scripts/textbooks_drafts/<Book>/` beside `litex.config`. They are part of
+  the draft module, not the paired tracking workspace such as
+  `scripts/Analysis/`. Publish them to `textbooks/<Book>/` only with the rest
+  of an explicitly requested release.
 - Write both files in English.
 
 The textbook pair is repository documentation, not chapter content. Do not
@@ -474,7 +496,7 @@ execution surface that proves the current claim:
 
 2. Run `cargo test --release run_examples -- --nocapture` after changing `examples/*.lit`, README/docs snippets, or Litex syntax used by examples and the Rust harness is needed in addition to direct release-CLI verification.
 
-3. Run `cargo test --release run_mechanics_textbook_chapters -- --nocapture` after changing `textbooks/The-Mechanics-of-Litex-Proof` chapters or their project runner.
+3. Run `cargo test --release run_mechanics_textbook_chapters -- --nocapture` after changing `scripts/textbooks_drafts/The-Mechanics-of-Litex-Proof` chapters or their project runner. Run the same gate against `textbooks/The-Mechanics-of-Litex-Proof` only when validating an explicitly published snapshot.
 
 4. Run `cargo test --release run_all -- --nocapture` when a change can affect examples and Mechanics snippets together.
 
