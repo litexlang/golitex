@@ -116,18 +116,6 @@ prop is_linear_real(f fn(x R) R):
 
 # 7.2 Algebraic Structures
 
-struct Group<s nonempty_set>:
-    mul fn(x, y s) s
-    one s
-    inv fn(x s) s
-    <=>:
-        forall x, y, z s:
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-        forall x s:
-            mul(x, one) = x
-            mul(one, x) = x
-            mul(inv(x), x) = one
-
 # Equiv is a genuine two-function record. It is usable even for empty carriers,
 # so its carrier parameters are sets rather than nonempty sets.
 struct Equiv<s, t set>:
@@ -191,8 +179,8 @@ template<s set>:
 
 # Source definition mySquare, kept as a callable construction. Group2 is only a
 # typeclass presentation of the same Group interface and is collapsed here.
-template<s nonempty_set, group &Group<s>>:
-    have fn group_square(x s) s = &Group<s>{group}.mul(x, x)
+template<s nonempty_set, group &chap2::Group<s>>:
+    have fn group_square(x s) s = &chap2::Group<s>{group}.mul(x, x)
 
 # The source's bundled Grp record stores a type universe as a field. Litex uses
 # the explicit carrier parameter s instead; no false prop wrapper is introduced.
@@ -249,26 +237,19 @@ thm gauss_mul_im:
     gauss_mul(x, y) = (&GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re)
     &GaussInt{gauss_mul(x, y)}.im = gauss_mul(x, y)[2] = &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re
 
+prop is_commutative_ring(s nonempty_set, add fn(x, y s) s, zero s, neg fn(x s) s, mul fn(x, y s) s, one s):
+    $chap2::is_ring(s, add, zero, neg, mul, one)
+    forall x, y s:
+        mul(x, y) = mul(y, x)
+
 struct CommutativeRing<s nonempty_set>:
     add fn(x, y s) s
     zero s
     neg fn(x s) s
     mul fn(x, y s) s
     one s
-    sub fn(x, y s) s
     <=>:
-        forall x, y, z s:
-            add(add(x, y), z) = add(x, add(y, z))
-            add(x, y) = add(y, x)
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-            mul(x, y) = mul(y, x)
-            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
-        forall x s:
-            add(zero, x) = x
-            add(neg(x), x) = zero
-            mul(one, x) = x
-        forall x, y s:
-            sub(x, y) = add(x, neg(y))
+        $is_commutative_ring(s, add, zero, neg, mul, one)
 
 have fn gauss_sub(x, y &GaussInt) &GaussInt = gauss_add(x, gauss_neg(y))
 
@@ -400,19 +381,27 @@ thm gauss_mul_left_not_rank_lt:
     gauss_norm(x) * gauss_norm(y) >= gauss_norm(x)
     gauss_rank(gauss_mul(x, y)) >= gauss_norm(x) = gauss_rank(x)
 
+prop is_euclidean_domain(s nonempty_set, add fn(x, y s) s, zero s, neg fn(x s) s, mul fn(x, y s) s, one s, quotient fn(x, y s) s, remainder fn(x, y s) s, rank fn(x s) N):
+    $is_commutative_ring(s, add, zero, neg, mul, one)
+    forall x, y s:
+        add(mul(y, quotient(x, y)), remainder(x, y)) = x
+    forall x, y s:
+        y != zero
+        =>:
+            rank(remainder(x, y)) < rank(y)
+            rank(mul(x, y)) >= rank(x)
+
 struct EuclideanDomain<s nonempty_set>:
-    ring &CommutativeRing<s>
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+    mul fn(x, y s) s
+    one s
     quotient fn(x, y s) s
     remainder fn(x, y s) s
     rank fn(x s) N
     <=>:
-        forall x, y s:
-            &CommutativeRing<s>{ring}.add(&CommutativeRing<s>{ring}.mul(y, quotient(x, y)), remainder(x, y)) = x
-        forall x, y s:
-            y != &CommutativeRing<s>{ring}.zero
-            =>:
-                rank(remainder(x, y)) < rank(y)
-                rank(&CommutativeRing<s>{ring}.mul(x, y)) >= rank(x)
+        $is_euclidean_domain(s, add, zero, neg, mul, one, quotient, remainder, rank)
 
 # The final irreducible_iff_prime line is an unnamed API demonstration rather
 # than a new source definition or theorem, so it is outside this core slice.

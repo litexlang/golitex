@@ -253,6 +253,21 @@ impl Runtime {
                 Obj::AnonymousFn(anonymous_fn) => {
                     return Ok(FnSetSpace::Anon(anonymous_fn.clone()));
                 }
+                Obj::FiniteSeqSet(finite_seq) => {
+                    return Ok(FnSetSpace::Set(
+                        self.finite_seq_set_to_fn_set(finite_seq, default_line_file()),
+                    ));
+                }
+                Obj::SeqSet(seq) => {
+                    return Ok(FnSetSpace::Set(
+                        self.seq_set_to_fn_set(seq, default_line_file()),
+                    ));
+                }
+                Obj::MatrixSet(matrix) => {
+                    return Ok(FnSetSpace::Set(
+                        self.matrix_set_to_fn_set(matrix, default_line_file()),
+                    ));
+                }
                 Obj::SetBuilder(set_builder) => candidates.push(*set_builder.param_set.clone()),
                 _ => {}
             }

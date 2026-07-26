@@ -10,9 +10,10 @@ Source snapshot: *Mathematics in Lean* at
 
 “Checked” means checked by the current Litex verifier in this project. It does
 not mean Lean-certified, and it does not imply that omitted source results have
-been proved. All executable corpus files are free of `trust`, `know`, `axiom`,
-and `abstract_prop`. Source mathematics that is not yet implemented is listed in
-the comment-only `todo.lit`. The project imports no Litex standard-library
+been proved. The two directions between neighborhood continuity and the
+open-preimage property currently contain narrow `trust`; no executable
+`know`, `axiom`, or `abstract_prop` is present. Other absent source mathematics
+is listed in the comment-only `todo.lit`. The project imports no Litex standard-library
 module and has no cite module. Its kernel builtin rules remain part of the
 verifier boundary, so this source-level independence is not a claim that the
 development is independent of the Litex implementation.
@@ -56,26 +57,28 @@ struct Group<s nonempty_set>:
     inv fn(x s) s
 
 struct Ring<s nonempty_set>:
-    additive &AdditiveCommutativeGroup<s>
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
     mul fn(x, y s) s
     one s
 ```
 
-`Ring` owns its `AdditiveCommutativeGroup` rather than copying `add`, `zero`,
-and `neg` as independent fields. Consequently a ring theorem can apply an
-additive theorem through `ring.additive` without rebuilding or re-proving the
-additive laws. `additive_sub` and `ring_two` are templates derived from those
-fields, not additional primitives. The nonempty carrier records the existence
-of the stored identity element.
+Structures expose their mathematical operations directly. Their `<=>:` bodies
+compose reusable law predicates such as
+`is_additive_commutative_group(s,add,zero,neg)` and
+`is_ring(s,add,zero,neg,mul,one)`. Thus a caller writes `ring.add`,
+`ring.zero`, and `ring.mul`; the user-facing path does not grow with the
+inheritance depth. `additive_sub` and `ring_two` are templates derived from
+those fields, not additional primitives. The nonempty carrier records the
+existence of the stored identity element.
 
-The old `is_additive_commutative_group`, `is_group`, and `is_ring` propositions
-are checked transitional candidate relations. They remain only while the
-Chapter 3 and Chapter 9 callers migrate; no new reusable Chapter 2 interface
-should depend on a loose carrier-plus-operations bundle. A trial flat `Ring`
-structure could construct an additive-group view, but its projected operations
-did not reduce transparently at additive-theorem call sites. The nested field is
-therefore the current natural Litex interface, not a kernel-bug claim. The
-remaining migration boundary is tracked in the paired scripts workspace.
+The `is_additive_commutative_group`, `is_group`, and `is_ring` propositions are
+candidate-data law relations and the composition layer for structs. They are
+not parent objects stored inside larger structures. Theorems may receive a
+flat structure when callers need a packaged value, or receive operations plus
+the corresponding law prop when this is the reusable lower-level theorem
+interface. A temporary view object is not part of the public API.
 
 The rejected forms are (1) specializing generic source theorems to ordinary
 real or integer arithmetic merely because the verifier can normalize them, and
@@ -85,19 +88,38 @@ ideals, and linear algebra. Elementary projections and short closure arguments
 are checked; group normalization, finite-group theory, selected inverses, and
 larger structure assemblies remain deferred where their proof chain is absent.
 
-Chapter 8 currently has a separate source-local integer `Ring<Z>` experiment
-whose fields are integer addition, zero, negation, multiplication, and one. It
-is a checked object, but it is not yet a consumer of Chapter 2's exported
-interface; that duplication is part of the later package-extraction migration.
-The rejected form is a proposition merely asserting that the integers form a
-ring. The separate generic theorem deriving additive commutativity from the
-weaker ring axioms remains deferred.
+Chapter 8's source-local integer ring experiment now constructs Chapter 2's
+canonical `Ring<Z>` directly. Its fields are integer addition, zero, negation,
+multiplication, and one. The rejected forms are a duplicate canonical `Ring`
+declaration and a proposition merely asserting that the integers form a ring.
+Chapter 8 retains `TwoSidedGroup` under a distinct name because that source
+hierarchy assumes right identity as a primitive law, unlike Chapter 2's
+left-facing `Group`.
 
 The integer natural-scalar instance is likewise an actual
 `AdditiveMonoidWithNSmul<Z>` object. Its action is `(n,x) |-> n*x`, so the zero
 and successor laws normalize directly. The generic recursive natural-scalar
 selection and the componentwise product instance remain separate deferred
 interfaces; they are not prerequisites for this concrete object.
+
+Chapter 8's `Module<Scalar,M>` follows the same flat-data rule. It exposes the
+five scalar-ring operations, the three additive operations on `M`, and scalar
+multiplication directly. Its body composes `chap2::is_ring`,
+`is_additive_commutative_group`, and `is_module`. A nested `module.ring` or
+`module.additive_group` field was rejected because it would make later vector
+and normed-space access paths reflect implementation hierarchy rather than
+ordinary mathematical usage.
+
+Chapter 7's `CommutativeRing<s>` and `EuclideanDomain<s>` use the same
+boundary. `CommutativeRing` exposes only the five primitive ring operations;
+subtraction is the separate callable construction `gauss_sub`, not stored data.
+`EuclideanDomain` exposes those five operations together with quotient,
+remainder, and rank, while `is_euclidean_domain` composes
+`is_commutative_ring`. The nearest rejected forms are a primitive `sub` field
+constrained to equal addition with negation and a nested
+`domain.ring.add/domain.ring.mul` parent path. The direct-field probe is the
+Euclidean equation `domain.add(domain.mul(y,domain.quotient(x,y)),
+domain.remainder(x,y)) = x`.
 
 ## Source-local elementary number theory
 
@@ -122,9 +144,9 @@ imported theorem whose simple local proof is hidden from the corpus reader.
 
 Chapters 3 and 4 distinguish functions from their graphs and properties.
 Bounds and convergence are parameterized relationships; images and inverse
-images are set-valued constructions with explicit witnesses. Generic order is
-represented by a binary relation carrier rather than a proposition-valued
-return type.
+represented by a binary relation refined through the `Preorder`,
+`PartialOrder`, and `LinearOrder` carrier templates rather than a
+proposition-valued return type or a repeated raw relation-plus-laws signature.
 
 The sequence carrier is `N`, including zero. Replacing it by `N_pos` was
 rejected because it changes the source domain. Epsilon-N and epsilon-delta
@@ -239,6 +261,17 @@ eigen-data, concrete matrices, and basis relationships. Linear-map composition
 and the span universal property follow their short natural proofs and are
 checked.
 
+`Field<K>` and `VectorSpace<K,V>` are operation-bearing flat structures.
+`Field` exposes `add`, `zero`, `neg`, `mul`, `one`, and `inv`, with
+`is_field` composing the Chapter 7 commutative-ring law predicate.
+`VectorSpace` exposes the six scalar operations, the three vector-additive
+operations, and `smul`; `is_vector_space` composes `is_field`, the Chapter 2
+additive-commutative-group laws, and the scalar-action laws. The nearest
+rejected forms are `field.ring.*`, `space.scalars.*`, or
+`space.additive.*` parent paths. Linear maps remain candidate callable
+functions satisfying `is_linear_map` between two displayed spaces; they are
+not one-field records.
+
 The callable product, coproduct, identity, and countable-set templates are the
 implemented interfaces. Strict verification now unfolds their applications
 when carrier parameters remain symbolic; the focused C10 reproduction verifies
@@ -255,7 +288,10 @@ basis, which supports later hypotheses without claiming a selected dimension.
 
 ## Filters, metrics, and topologies
 
-Filters and topologies are families of subsets with closure laws. Metric and
+Filters and topologies are families of subsets with closure laws. `Filter`,
+`Metric`, and `Topology` are refined carriers for those candidates. A
+construction whose closure proof is not yet checked retains an honest raw name
+such as `principal_filter_sets` or `induced_open_family`. Metric and
 topological convergence, continuity, compactness, completeness, density, and
 separation are relationships on explicit carriers. Real-distance laws, ball
 center membership, topology axioms, limit and continuous-map composition,
@@ -302,11 +338,23 @@ A total `deriv`, `fderiv`, or local inverse should be exposed only after the
 needed uniqueness or existence theorem. The rejected form is an arbitrary
 callable selector whose characteristic laws are themselves deferred.
 
-Normed-space, Cauchy/completeness, continuous-linear-map, asymptotic, Frechet,
-strict-Frechet, and continuous-linear-equivalence relationships remain
-implemented. The identity map has the direct bound-one proof. Derivative
-selection, Rolle/MVT, finite-dimensional completeness, operator norms, higher
-derivatives, and the inverse function theorem remain in `todo.lit`.
+`RealNormedSpace<E>` is the checked flat ambient structure for this
+source-local real differential-calculus slice. It exposes `add`, `zero`,
+`neg`, `smul`, and `norm` directly, while `is_real_normed_space` composes the
+additive-group, real scalar-action, and norm laws. Continuous linear maps and
+Fréchet derivative relations receive source and target spaces plus candidate
+functions; they do not repeat both operation bags. A
+`ContinuousRealLinearEquiv` stores only its forward and inverse maps, with the
+ambient spaces as parameters and the linear/bounded/inverse laws composed in
+its body. The rejected forms are nested `space.vector_space.*` projections and
+a proposition misleadingly called an equivalence while containing no inverse
+data.
+
+Normed-space Cauchy/completeness, continuous-linear-map, asymptotic, Fréchet,
+and strict-Fréchet relationships remain implemented. The identity map has the
+direct bound-one proof. Derivative selection, Rolle/MVT, finite-dimensional
+completeness, operator norms, higher derivatives, and the inverse function
+theorem remain in `todo.lit`.
 
 ## Measurable spaces and measure candidates
 
@@ -319,11 +367,12 @@ of inventing a false carrier, the checked measure interface exposes the value
 carrier, zero, and infinite-sum operation as parameters:
 
 ```litex
-prop is_measure_on(X, V set, M power_set(power_set(X)), zero V,
+prop is_countably_additive_set_function_on(X, V set, M \MeasurableSpace<X>, zero V,
     infinite_sum fn(a fn(n N) V) V, mu fn(S power_set(X)) V)
 ```
 
-This is a genuine countable-additivity interface and supports a direct
+`MeasurableSpace<X>` is the refined sigma-algebra carrier. The displayed
+relation is a genuine generalized countable-additivity interface and supports a direct
 disjoint-union theorem. It is not claimed to be Mathlib's ENNReal-valued
 measure. The rejected form was a collection of trusted ENNReal, integral,
 product-measure, and Jacobian selectors. ENNReal specialization, interval and
@@ -331,8 +380,9 @@ Bochner integration, dominated convergence, Fubini, convolution, and change of
 variables remain in `todo.lit`.
 
 Almost-everywhere truth is parameterized by the value carrier and its zero and
-uses a measurable zero-valued exceptional set. This preserves the semantic
-role without depending on an unimplemented integral.
+uses a measurable zero-valued exceptional set. The resulting raw family is
+named `ae_large_sets`; it is not called a filter until the filter laws are
+proved.
 
 ## Checked/deferred ownership
 

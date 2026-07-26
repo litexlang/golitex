@@ -10,7 +10,8 @@ Run the implemented project with:
 target/release/litex -compact -r textbooks/Analysis2
 ```
 
-The current project exports Chapters 1--3 as `chap1`, `chap2`, and `chap3`.
+The current project exports Chapters 1--4 as `chap1`, `chap2`, `chap3`, and
+`chap4`.
 The Chapter 1 public metric-space surface includes:
 
 - `$chap1::is_metric_space(X,dist)`, the concrete real, restricted,
@@ -77,11 +78,33 @@ Weierstrass approximation theorem. Riemann integrals and continuous
 derivatives are explicit abstract cross-book boundaries until the Analysis I
 APIs can be imported.
 
-All 32 numbered non-exercise Chapter 1 items, all 24 Chapter 2 items, and all
-34 Chapter 3 items have source-facing definitions or theorem interfaces. The
-registered Chapter 3 file gate succeeds. The chapters are not proof-complete:
+Chapter 4 exposes formal power-series terms and partial sums, convergence
+radii, real analyticity, derivative towers and Taylor coefficients, Abel's
+endpoint theorem, summation by parts, and power-series convolution. It
+constructs real exponential and logarithm selections, a coordinate-based
+`ComplexNumber` carrier with arithmetic, conjugation, absolute value,
+reciprocal, metric, and exponential interfaces, and real and complex
+trigonometric functions together with a least-positive-zero definition of
+`pi_real`. For example:
+
+```text
+forall x, y R:
+    power_series_term(coefficients, center, 0, x) = coefficients(0)
+    complex_add((x, 0), (y, 0)) = (x + y, 0)
+```
+
+The source-assigned algebra and analysis proofs remain explicit trust
+boundaries. Real exponentiation is represented by the cross-book
+`has_real_power_value` graph because Analysis I is not a configured dependency
+of this project.
+
+All 32 numbered non-exercise Chapter 1 items, all 24 Chapter 2 items, all 34
+Chapter 3 items, and all 38 Chapter 4 items have source-facing definitions or
+theorem interfaces. The registered Chapter 4 file gate succeeds. The chapters
+are not proof-complete:
 Chapter 1 contains 28 explicit `trust` statements, Chapter 2 contains 36, and
-Chapter 3 contains 32.
+Chapter 3 contains 32. Chapter 4 contains 100 explicit `trust` statements and
+10 `abstract_prop` boundaries.
 Most correspond to proofs Tao assigns to exercises; others mark substantial
 source proofs or finite-choice arguments not yet formalized. The `linf`
 distance uses a trusted unique-maximum selection because instantiating the

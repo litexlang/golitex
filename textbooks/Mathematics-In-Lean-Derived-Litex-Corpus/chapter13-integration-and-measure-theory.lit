@@ -71,6 +71,9 @@ prop is_measurable_space_on(X set, M power_set(power_set(X))):
         =>:
             {x X: $_member_of_countable_union(X, A, x)} $in M
 
+template<X set>:
+    have MeasurableSpace set = {M power_set(power_set(X)): $is_measurable_space_on(X, M)}
+
 prop is_measurable_set(X set, M power_set(power_set(X)), S power_set(X)):
     S $in M
 
@@ -205,7 +208,7 @@ template<X, V set, mu fn(Tset power_set(X)) V, A fn(n N) power_set(X)>:
 # The value carrier and its infinite-sum operation are explicit parameters.
 # This keeps the measure law usable without pretending that ENNReal has already
 # been constructed in Litex.
-prop is_measure_on(X, V set, M power_set(power_set(X)), zero V, infinite_sum fn(a fn(n N) V) V, mu fn(Tset power_set(X)) V):
+prop is_countably_additive_set_function_on(X, V set, M \MeasurableSpace<X>, zero V, infinite_sum fn(a fn(n N) V) V, mu fn(Tset power_set(X)) V):
     mu({}) = zero
     forall A fn(n N) power_set(X):
         $is_measurable_sequence(X, M, A)
@@ -213,9 +216,9 @@ prop is_measure_on(X, V set, M power_set(power_set(X)), zero V, infinite_sum fn(
         =>:
             mu({x X: $_member_of_countable_union(X, A, x)}) = infinite_sum(\measured_sequence<X, V, mu, A>)
 
-thm measure_disjoint_countable_union:
-    ? forall X, V set, M power_set(power_set(X)), zero V, infinite_sum fn(a fn(n N) V) V, mu fn(Tset power_set(X)) V, A fn(n N) power_set(X):
-        $is_measure_on(X, V, M, zero, infinite_sum, mu)
+thm countably_additive_set_function_disjoint_union:
+    ? forall X, V set, M \MeasurableSpace<X>, zero V, infinite_sum fn(a fn(n N) V) V, mu fn(Tset power_set(X)) V, A fn(n N) power_set(X):
+        $is_countably_additive_set_function_on(X, V, M, zero, infinite_sum, mu)
         $is_measurable_sequence(X, M, A)
         $pairwise_disjoint_sequence(X, A)
         =>:
@@ -224,11 +227,11 @@ thm measure_disjoint_countable_union:
 
 # Almost-everywhere truth is represented by a measurable zero-valued
 # exceptional set.
-prop holds_almost_everywhere(X, V set, M power_set(power_set(X)), zero V, mu fn(Tset power_set(X)) V, P power_set(X)):
+prop holds_almost_everywhere(X, V set, M \MeasurableSpace<X>, zero V, mu fn(Tset power_set(X)) V, P power_set(X)):
     exist Nset power_set(X) st {Nset $in M, mu(Nset) = zero, set_minus(X, Nset) $subset P}
 
-template<X, V set, M power_set(power_set(X)), zero V, mu fn(Tset power_set(X)) V>:
-    have ae_filter power_set(power_set(X)) = {P power_set(X): $holds_almost_everywhere(X, V, M, zero, mu, P)}
+template<X, V set, M \MeasurableSpace<X>, zero V, mu fn(Tset power_set(X)) V>:
+    have ae_large_sets power_set(power_set(X)) = {P power_set(X): $holds_almost_everywhere(X, V, M, zero, mu, P)}
 
 prop eventually_in_filter(X set, F power_set(power_set(X)), P power_set(X)):
     P $in F

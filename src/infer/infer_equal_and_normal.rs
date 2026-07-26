@@ -576,11 +576,20 @@ impl Runtime {
                 Some(predicate_name.clone()),
                 &fact_to_store,
             );
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
-                fact_to_store,
-                by_definition_reason.clone(),
-            )
-            .map_err(|previous_error| {
+            let store_result = match &fact_to_store {
+                Fact::AtomicFact(AtomicFact::NormalAtomicFact(_)) => {
+                    self.verify_well_defined_and_store_without_infer(
+                        fact_to_store,
+                        by_definition_reason.clone(),
+                    )
+                }
+                _ => self
+                    .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                        fact_to_store,
+                        by_definition_reason.clone(),
+                    ),
+            };
+            store_result.map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
                     format!(

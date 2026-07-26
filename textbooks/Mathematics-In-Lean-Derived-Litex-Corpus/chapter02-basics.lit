@@ -52,7 +52,7 @@ prop is_group(A set, mul fn(x, y A) A, one A, inv fn(x A) A):
 
 # Result (source label: add_zero). Commutativity turns the primitive left zero
 # law into the right zero law.
-thm add_zero:
+thm add_zero_from_laws:
     ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
         $is_additive_commutative_group(A, add, zero, neg)
         =>:
@@ -61,7 +61,7 @@ thm add_zero:
 
 # Result (source label: add_neg_cancel). The same symmetry turns the primitive
 # left inverse law into a right inverse law.
-thm add_neg_cancel:
+thm add_neg_cancel_from_laws:
     ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
         $is_additive_commutative_group(A, add, zero, neg)
         =>:
@@ -97,18 +97,20 @@ struct Group<s nonempty_set>:
             mul(one, x) = x
             mul(inv(x), x) = one
 
-# A ring owns its additive commutative group and supplies multiplication and
-# one. This nesting gives ring theorems direct access to the same checked
-# additive structure instead of reconstructing it from loose parameters.
+# A ring exposes its five primitive operations directly. Its laws compose the
+# additive-group relation rather than storing a nested parent object.
 struct Ring<s nonempty_set>:
-    additive &AdditiveCommutativeGroup<s>
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
     mul fn(x, y s) s
     one s
     <=>:
+        $is_additive_commutative_group(s, add, zero, neg)
         forall x, y, z s:
             mul(mul(x, y), z) = mul(x, mul(y, z))
-            mul(x, additive.add(y, z)) = additive.add(mul(x, y), mul(x, z))
-            mul(additive.add(x, y), z) = additive.add(mul(x, z), mul(y, z))
+            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+            mul(add(x, y), z) = add(mul(x, z), mul(y, z))
         forall x s:
             mul(one, x) = x
             mul(x, one) = x
@@ -119,18 +121,18 @@ template<s nonempty_set, group &AdditiveCommutativeGroup<s>>:
     have fn additive_sub(x, y s) s = group.add(x, group.neg(y))
 
 template<s nonempty_set, ring &Ring<s>>:
-    have ring_two s = ring.additive.add(ring.one, ring.one)
+    have ring_two s = ring.add(ring.one, ring.one)
 
 # The bundled object gives the same derived right inverse as the source-facing
 # candidate relation above. This is the first canonical-structure use probe.
-thm add_neg_cancel_in_additive_commutative_group:
+thm add_neg_cancel:
     ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a s:
         group.add(a, group.neg(a)) = group.zero
     group.add(a, group.neg(a)) = group.add(group.neg(a), a) = group.zero
 
 # Result (source label: add_zero). Commutativity turns the stored left identity
 # into a right identity without passing a separate list of operations around.
-thm add_zero_in_additive_commutative_group:
+thm add_zero:
     ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a s:
         group.add(a, group.zero) = a
     group.add(a, group.zero) = group.add(group.zero, a) = a
@@ -152,52 +154,62 @@ thm add_left_cancel_in_additive_commutative_group:
 
 # Result (source label: self_sub). The derived subtraction operation is addition
 # of the stored inverse, so self-subtraction is the checked inverse law.
-thm self_sub_in_additive_commutative_group:
+thm self_sub:
     ? forall s nonempty_set, group &AdditiveCommutativeGroup<s>, a s:
         \additive_sub<s, group>(a, a) = group.zero
     \additive_sub<s, group>(a, a) = group.add(a, group.neg(a))
-    by thm add_neg_cancel_in_additive_commutative_group(s, group, a)
+    by thm add_neg_cancel(s, group, a)
     \additive_sub<s, group>(a, a) = group.zero
 
 # Result (source label: one_add_one_eq_two). `ring_two` is the derived numeral
 # one plus one; it is deliberately a construction rather than a Ring field.
-thm one_add_one_eq_ring_two:
+thm one_add_one_eq_two:
     ? forall s nonempty_set, ring &Ring<s>:
-        ring.additive.add(ring.one, ring.one) = \ring_two<s, ring>
-    ring.additive.add(ring.one, ring.one) = \ring_two<s, ring>
+        ring.add(ring.one, ring.one) = \ring_two<s, ring>
+    ring.add(ring.one, ring.one) = \ring_two<s, ring>
 
 # Result (source label: two_mul). Distributivity expands `ring_two`; the stored
 # additive group and multiplicative left identity simplify the two summands.
-thm two_mul_in_ring:
+thm two_mul:
     ? forall s nonempty_set, ring &Ring<s>, a s:
-        ring.mul(\ring_two<s, ring>, a) = ring.additive.add(a, a)
+        ring.mul(\ring_two<s, ring>, a) = ring.add(a, a)
     ring.mul(ring.one, a) = a
-    ring.additive.add(ring.mul(ring.one, a), ring.mul(ring.one, a)) = ring.additive.add(a, a)
-    ring.mul(\ring_two<s, ring>, a) = ring.mul(ring.additive.add(ring.one, ring.one), a) = ring.additive.add(ring.mul(ring.one, a), ring.mul(ring.one, a)) = ring.additive.add(a, a)
+    ring.add(ring.mul(ring.one, a), ring.mul(ring.one, a)) = ring.add(a, a)
+    ring.mul(\ring_two<s, ring>, a) = ring.mul(ring.add(ring.one, ring.one), a) = ring.add(ring.mul(ring.one, a), ring.mul(ring.one, a)) = ring.add(a, a)
 
 # Result (source label: mul_zero). Distributivity duplicates `a * 0`; additive
 # cancellation removes the common summand and yields the multiplicative zero law.
-thm mul_zero_in_ring:
+thm mul_zero:
     ? forall s nonempty_set, ring &Ring<s>, a s:
-        ring.mul(a, ring.additive.zero) = ring.additive.zero
-    ring.additive.add(ring.additive.zero, ring.additive.zero) = ring.additive.zero
-    ring.mul(a, ring.additive.zero) = ring.mul(a, ring.additive.add(ring.additive.zero, ring.additive.zero)) = ring.additive.add(ring.mul(a, ring.additive.zero), ring.mul(a, ring.additive.zero))
-    by thm add_zero_in_additive_commutative_group(s, ring.additive, ring.mul(a, ring.additive.zero))
-    ring.additive.add(ring.mul(a, ring.additive.zero), ring.mul(a, ring.additive.zero)) = ring.mul(a, ring.additive.zero) = ring.additive.add(ring.mul(a, ring.additive.zero), ring.additive.zero)
-    by thm add_left_cancel_in_additive_commutative_group(s, ring.additive, ring.mul(a, ring.additive.zero), ring.mul(a, ring.additive.zero), ring.additive.zero)
-    ring.mul(a, ring.additive.zero) = ring.additive.zero
+        ring.mul(a, ring.zero) = ring.zero
+    ring.add(ring.zero, ring.zero) = ring.zero
+    ring.mul(a, ring.zero) = ring.mul(a, ring.add(ring.zero, ring.zero)) = ring.add(ring.mul(a, ring.zero), ring.mul(a, ring.zero))
+    by thm add_zero_from_laws(s, ring.add, ring.zero, ring.neg, ring.mul(a, ring.zero))
+    ring.add(ring.mul(a, ring.zero), ring.mul(a, ring.zero)) = ring.mul(a, ring.zero) = ring.add(ring.mul(a, ring.zero), ring.zero)
+    ring.add(ring.neg(ring.mul(a, ring.zero)), ring.add(ring.mul(a, ring.zero), ring.mul(a, ring.zero))) = ring.add(ring.neg(ring.mul(a, ring.zero)), ring.add(ring.mul(a, ring.zero), ring.zero))
+    ring.add(ring.neg(ring.mul(a, ring.zero)), ring.mul(a, ring.zero)) = ring.zero
+    ring.add(ring.zero, ring.mul(a, ring.zero)) = ring.mul(a, ring.zero)
+    ring.add(ring.zero, ring.zero) = ring.zero
+    ring.add(ring.neg(ring.mul(a, ring.zero)), ring.add(ring.mul(a, ring.zero), ring.mul(a, ring.zero))) = ring.add(ring.add(ring.neg(ring.mul(a, ring.zero)), ring.mul(a, ring.zero)), ring.mul(a, ring.zero)) = ring.add(ring.zero, ring.mul(a, ring.zero)) = ring.mul(a, ring.zero)
+    ring.add(ring.neg(ring.mul(a, ring.zero)), ring.add(ring.mul(a, ring.zero), ring.zero)) = ring.add(ring.add(ring.neg(ring.mul(a, ring.zero)), ring.mul(a, ring.zero)), ring.zero) = ring.add(ring.zero, ring.zero) = ring.zero
+    ring.mul(a, ring.zero) = ring.zero
 
 # Result (source label: zero_mul). The companion proof uses the other
 # distributive law, so it does not assume multiplication is commutative.
-thm zero_mul_in_ring:
+thm zero_mul:
     ? forall s nonempty_set, ring &Ring<s>, a s:
-        ring.mul(ring.additive.zero, a) = ring.additive.zero
-    ring.additive.add(ring.additive.zero, ring.additive.zero) = ring.additive.zero
-    ring.mul(ring.additive.zero, a) = ring.mul(ring.additive.add(ring.additive.zero, ring.additive.zero), a) = ring.additive.add(ring.mul(ring.additive.zero, a), ring.mul(ring.additive.zero, a))
-    by thm add_zero_in_additive_commutative_group(s, ring.additive, ring.mul(ring.additive.zero, a))
-    ring.additive.add(ring.mul(ring.additive.zero, a), ring.mul(ring.additive.zero, a)) = ring.mul(ring.additive.zero, a) = ring.additive.add(ring.mul(ring.additive.zero, a), ring.additive.zero)
-    by thm add_left_cancel_in_additive_commutative_group(s, ring.additive, ring.mul(ring.additive.zero, a), ring.mul(ring.additive.zero, a), ring.additive.zero)
-    ring.mul(ring.additive.zero, a) = ring.additive.zero
+        ring.mul(ring.zero, a) = ring.zero
+    ring.add(ring.zero, ring.zero) = ring.zero
+    ring.mul(ring.zero, a) = ring.mul(ring.add(ring.zero, ring.zero), a) = ring.add(ring.mul(ring.zero, a), ring.mul(ring.zero, a))
+    by thm add_zero_from_laws(s, ring.add, ring.zero, ring.neg, ring.mul(ring.zero, a))
+    ring.add(ring.mul(ring.zero, a), ring.mul(ring.zero, a)) = ring.mul(ring.zero, a) = ring.add(ring.mul(ring.zero, a), ring.zero)
+    ring.add(ring.neg(ring.mul(ring.zero, a)), ring.add(ring.mul(ring.zero, a), ring.mul(ring.zero, a))) = ring.add(ring.neg(ring.mul(ring.zero, a)), ring.add(ring.mul(ring.zero, a), ring.zero))
+    ring.add(ring.neg(ring.mul(ring.zero, a)), ring.mul(ring.zero, a)) = ring.zero
+    ring.add(ring.zero, ring.mul(ring.zero, a)) = ring.mul(ring.zero, a)
+    ring.add(ring.zero, ring.zero) = ring.zero
+    ring.add(ring.neg(ring.mul(ring.zero, a)), ring.add(ring.mul(ring.zero, a), ring.mul(ring.zero, a))) = ring.add(ring.add(ring.neg(ring.mul(ring.zero, a)), ring.mul(ring.zero, a)), ring.mul(ring.zero, a)) = ring.add(ring.zero, ring.mul(ring.zero, a)) = ring.mul(ring.zero, a)
+    ring.add(ring.neg(ring.mul(ring.zero, a)), ring.add(ring.mul(ring.zero, a), ring.zero)) = ring.add(ring.add(ring.neg(ring.mul(ring.zero, a)), ring.mul(ring.zero, a)), ring.zero) = ring.add(ring.zero, ring.zero) = ring.zero
+    ring.mul(ring.zero, a) = ring.zero
 
 # Result (source label: neg_add_cancel_left). Reassociate, cancel a on the
 # left, and use the identity law.
@@ -218,8 +230,8 @@ thm add_neg_cancel_right:
         $is_additive_commutative_group(A, add, zero, neg)
         =>:
             add(add(a, b), neg(b)) = a
-    by thm add_neg_cancel(A, add, zero, neg, b)
-    by thm add_zero(A, add, zero, neg, a)
+    by thm add_neg_cancel_from_laws(A, add, zero, neg, b)
+    by thm add_zero_from_laws(A, add, zero, neg, a)
     add(add(a, b), neg(b)) = add(a, add(b, neg(b))) = add(a, zero) = a
 
 # Result (source label: add_left_cancel). Apply the same left inverse to both
@@ -249,45 +261,45 @@ thm add_right_cancel:
 
 # Result (source label: mul_zero). Distributivity gives a duplicated summand;
 # additive cancellation then removes it, exactly as in the source proof.
-thm mul_zero:
+thm mul_zero_from_laws:
     ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
         $is_ring(A, add, zero, neg, mul, one)
         =>:
             mul(a, zero) = zero
     add(zero, zero) = zero
     mul(a, zero) = mul(a, add(zero, zero)) = add(mul(a, zero), mul(a, zero))
-    by thm add_zero(A, add, zero, neg, mul(a, zero))
+    by thm add_zero_from_laws(A, add, zero, neg, mul(a, zero))
     add(mul(a, zero), mul(a, zero)) = mul(a, zero) = add(mul(a, zero), zero)
     by thm add_left_cancel(A, add, zero, neg, mul(a, zero), mul(a, zero), zero)
     mul(a, zero) = zero
 
 # Result (source label: zero_mul). Multiplication is not commutative, so the
 # companion proof uses the other distributive law before the same cancellation.
-thm zero_mul:
+thm zero_mul_from_laws:
     ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
         $is_ring(A, add, zero, neg, mul, one)
         =>:
             mul(zero, a) = zero
     add(zero, zero) = zero
     mul(zero, a) = mul(add(zero, zero), a) = add(mul(zero, a), mul(zero, a))
-    by thm add_zero(A, add, zero, neg, mul(zero, a))
+    by thm add_zero_from_laws(A, add, zero, neg, mul(zero, a))
     add(mul(zero, a), mul(zero, a)) = mul(zero, a) = add(mul(zero, a), zero)
     by thm add_left_cancel(A, add, zero, neg, mul(zero, a), mul(zero, a), zero)
     mul(zero, a) = zero
 
 # Result (source label: self_sub). Subtraction is addition of the explicit
 # inverse, so this is exactly add_neg_cancel.
-thm self_sub:
+thm self_add_neg_from_laws:
     ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, a A:
         $is_additive_commutative_group(A, add, zero, neg)
         =>:
             add(a, neg(a)) = zero
-    by thm add_neg_cancel(A, add, zero, neg, a)
+    by thm add_neg_cancel_from_laws(A, add, zero, neg, a)
     add(a, neg(a)) = zero
 
 # Result (source label: one_add_one_eq_two). With operations explicit, the ring
 # numeral two is represented by add(one, one), so the identity is definitional.
-thm one_add_one_eq_two:
+thm ring_two_reflexive_from_laws:
     ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A:
         $is_ring(A, add, zero, neg, mul, one)
         =>:
@@ -296,7 +308,7 @@ thm one_add_one_eq_two:
 
 # Result (source label: two_mul). Right distributivity expands the explicit
 # numeral two and the left identity removes both copies of one.
-thm two_mul:
+thm two_mul_from_laws:
     ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, a A:
         $is_ring(A, add, zero, neg, mul, one)
         =>:
@@ -327,7 +339,7 @@ thm eq_neg_of_add_eq_zero:
         add(x, y) = zero
         =>:
             y = neg(x)
-    by thm add_neg_cancel(A, add, zero, neg, x)
+    by thm add_neg_cancel_from_laws(A, add, zero, neg, x)
     add(x, y) = zero = add(x, neg(x))
     by thm add_left_cancel(A, add, zero, neg, x, y, neg(x))
     y = neg(x)
@@ -349,8 +361,8 @@ thm mul_neg_right:
         $is_ring(A, add, zero, neg, mul, one)
         =>:
             mul(x, neg(y)) = neg(mul(x, y))
-    by thm mul_zero(A, add, zero, neg, mul, one, x)
-    by thm add_neg_cancel(A, add, zero, neg, y)
+    by thm mul_zero_from_laws(A, add, zero, neg, mul, one, x)
+    by thm add_neg_cancel_from_laws(A, add, zero, neg, y)
     add(mul(x, y), mul(x, neg(y))) = mul(x, add(y, neg(y))) = mul(x, zero) = zero
     by thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(x, y), mul(x, neg(y)))
     mul(x, neg(y)) = neg(mul(x, y))
@@ -360,8 +372,8 @@ thm neg_mul_left:
         $is_ring(A, add, zero, neg, mul, one)
         =>:
             mul(neg(x), y) = neg(mul(x, y))
-    by thm zero_mul(A, add, zero, neg, mul, one, y)
-    by thm add_neg_cancel(A, add, zero, neg, x)
+    by thm zero_mul_from_laws(A, add, zero, neg, mul, one, y)
+    by thm add_neg_cancel_from_laws(A, add, zero, neg, x)
     add(mul(x, y), mul(neg(x), y)) = mul(add(x, neg(x)), y) = mul(zero, y) = zero
     by thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(x, y), mul(neg(x), y))
     mul(neg(x), y) = neg(mul(x, y))

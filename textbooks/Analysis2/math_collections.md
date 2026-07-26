@@ -671,6 +671,129 @@ downstream consumer that needs the package as a single value.
   The polynomial/support predicates and zero-extension graph must remain
   concrete.
 
+### Formal power series, radius, and analyticity
+
+- **Ordinary meaning:** A formal power series is determined by a center and a
+  sequence of coefficients. Its partial sums are callable polynomial
+  functions. The radius of convergence may be zero, a finite nonnegative real,
+  or positive infinity. A function is analytic at a point when one such series
+  agrees with it on a neighborhood.
+- **Semantic role:** Coefficients and centers are supplied data;
+  `power_series_term` and `power_series_partial_sum` are callable functions;
+  convergence, radius, and analyticity are relations. A selected sum function
+  is justified only after pointwise unique existence.
+- **Ideal Litex form:** `power_series_term` and
+  `power_series_partial_sum` as `have fn`; a tagged
+  `power_series_radius_value` carrier separating finite radii from infinity;
+  `is_radius_of_convergence` as the Cauchy--Hadamard candidate relation; and
+  `is_real_analytic_at`/`is_real_analytic_on` as concrete `prop`s.
+- **Nearest wrong alternative:** Encoding every radius as a real silently
+  discards infinite radius. Treating a formal power series as a proposition
+  prevents later chapters from evaluating terms or partial sums. Making
+  analyticity an opaque assumption hides its neighborhood and coefficient
+  witnesses.
+- **Dependencies:** Natural-index finite sums and real powers by
+  `definition`; extended limsup and the infinity convention by
+  `trust/source`; Chapter 3 pointwise/uniform series convergence by
+  `definition`; differentiation and integration by `trust/source`.
+- **Downstream uses:** The radius theorem, analytic derivatives, Taylor
+  coefficients, Abel boundary continuity, multiplication, exponential,
+  logarithm, and trigonometric series.
+- **Allowable hole:** The source's extended-real limsup interface and the
+  major exercise-deferred convergence/differentiation proofs may remain
+  explicit trust boundaries. The partial sums and analytic witnesses must be
+  concrete.
+- **Current implementation:** `formal_power_series_data`,
+  `power_series_term`, `power_series_partial_sum`, the tagged
+  `power_series_radius`, convergence relations, and analyticity predicates are
+  concrete. The radius relation and Theorem 4.1.6 proof conclusions remain
+  explicit boundaries.
+
+### Iterated derivatives and Taylor data
+
+- **Ordinary meaning:** The zeroth derivative is the original function and the
+  `(k+1)`st derivative is the derivative of the `k`th. Analyticity supplies
+  every derivative and identifies each coefficient with the derivative value
+  divided by a factorial.
+- **Semantic role:** A derivative tower is callable family data with a law
+  relation; `is_k_times_differentiable` and `is_smooth` are properties.
+- **Ideal Litex form:** quantify a supplied derivative tower
+  `derivatives fn(k N) fn(x E) R`, constrain its zeroth member and successive
+  derivative steps, and state Taylor identities against that tower. Do not
+  introduce a global derivative selector before the Analysis I derivative API
+  is available.
+- **Nearest wrong alternative:** A recursive proposition that cannot expose
+  `f^(k)(x)` is unusable in Taylor's formula. A trusted global derivative
+  function would conceal existence and domain conditions.
+- **Dependencies:** Chapter 3's explicit derivative relation by
+  `trust/source`; factorial and finite products by `definition`; analytic
+  power-series witnesses by `definition`.
+- **Downstream uses:** Propositions 4.2.6, Corollaries 4.2.7/10/12, and the
+  exponential and trigonometric derivative identities.
+- **Allowable hole:** Successive differentiation laws remain trusted until
+  the concrete Analysis I API is connected.
+- **Current implementation:** `is_derivative_tower`,
+  `is_k_times_differentiable`, recursive `factorial_real`, and the
+  multiplication-based derivative-coefficient relation are concrete. The
+  derivative and Taylor theorem conclusions remain trusted.
+
+### Exponential, logarithm, and complex arithmetic
+
+- **Ordinary meaning:** The real exponential is the sum of its everywhere
+  convergent power series; logarithm is its inverse. Complex numbers are real
+  coordinate pairs with coordinatewise addition, the standard complex
+  product, conjugation, modulus, reciprocal, and Euclidean metric.
+- **Semantic role:** Every operation is callable data. Algebraic, metric, and
+  limit laws are propositions or named theorems. Exponential/logarithm values
+  require selected unique sums/inverses.
+- **Ideal Litex form:** use a two-real-coordinate `ComplexNumber` structure
+  (semantically `cart(R,R)`) as the concrete complex carrier; define
+  coordinate projections, addition, negation, multiplication,
+  conjugation, modulus, reciprocal, and distance by `have fn`. Define real
+  exponential and logarithm through explicit candidate relations plus unique
+  selection where the verifier supports it.
+- **Nearest wrong alternative:** An `abstract_prop` standing for a complex
+  number or operation destroys the field-like API. Reusing real arithmetic
+  notation without coordinate definitions makes the identification invisible.
+- **Dependencies:** Pair projections and real arithmetic by `definition`;
+  square root and metric results by `definition/proof`; power-series
+  convergence and inverse existence by `trust/source`.
+- **Downstream uses:** Sections 4.5--4.7, Euler's formula, sine/cosine, and
+  periodicity.
+- **Allowable hole:** Unique infinite-series selection and inverse existence
+  may remain visible trusted constructions; coordinate operations and their
+  source-facing laws must remain explicit.
+- **Current implementation:** `exp_real`, `log_real`, and their candidate
+  relations are selected interfaces. `ComplexNumber` has concrete `re` and
+  `im` fields and concrete addition, negation, multiplication, conjugation,
+  modulus, reciprocal/quotient, distance, powers, and exponential
+  constructions. Algebraic, metric, and limit laws remain trusted.
+
+### Trigonometric functions and pi
+
+- **Ordinary meaning:** Sine and cosine are defined from the complex
+  exponential, while pi is the least positive zero of sine.
+- **Semantic role:** Sine, cosine, and pi are callable/ordinary values;
+  identities, existence of a positive zero, and periodicity are theorems.
+- **Ideal Litex form:** `complex_sin` and `complex_cos` as functions once
+  complex exponential selection is available; real sine/cosine as their real
+  restrictions; `is_least_positive_sine_zero` as a concrete relation followed
+  by a selected `pi` only after unique existence.
+- **Nearest wrong alternative:** Treating pi as an arbitrary positive zero
+  loses the source definition and makes periodicity too weak. A proposition
+  for sine/cosine is unusable in identities.
+- **Dependencies:** Complex exponential and arithmetic by `definition`;
+  completeness/infimum, continuity, derivatives, and the intermediate value
+  theorem by `proof/trust-source`.
+- **Downstream uses:** Theorems 4.7.2/5 and all later Fourier analysis.
+- **Allowable hole:** Positive-zero existence and least-zero selection may be
+  trusted, but the least-positive-zero specification stays explicit.
+- **Current implementation:** `complex_sin` and `complex_cos` are concrete
+  exponential combinations. Because structured unique selection currently
+  loses its result carrier, `real_sin` and `real_cos` are selected through
+  explicit real-value relations. `is_least_positive_sine_zero` is concrete
+  and `pi_real` is the selected least zero.
+
 ### Later-book spines
 
 Continuous maps consume metric balls and metric limits. Uniform convergence
@@ -769,6 +892,29 @@ approximation kernels + convolution
   --proof/trust-source--> polynomial approximation on [0,1]
 zero extension + affine rescaling
   --proof--> Weierstrass approximation on [a,b]
+
+coefficient sequence + center + finite sum
+  --definition--> power-series partial sums
+coefficient root limsup + infinity tag
+  --definition/trust-source--> radius of convergence
+power-series convergence on a neighborhood
+  --definition--> real analyticity
+analyticity + derivative tower
+  --proof/trust-source--> Taylor coefficients and uniqueness
+boundary series + summation by parts
+  --proof/trust-source--> Abel continuity
+two analytic coefficient sequences
+  --definition/proof--> Cauchy-product coefficients
+factorial + selected power-series sum
+  --existence/selection--> real exponential
+real exponential bijection
+  --existence/uniqueness/selection--> logarithm
+cart(R,R) + real arithmetic
+  --definition--> complex operations, conjugation, modulus, distance
+complex exponential
+  --definition--> sine and cosine
+sine positive-zero set + infimum
+  --existence/uniqueness/selection--> pi
 ```
 
 There is no intended cycle. The selected metric limit follows the uniqueness
@@ -795,6 +941,12 @@ downstream.
 11. Uniform-limit interchange with integration and differentiation.
 12. Polynomial/support vocabulary, convolution, approximation kernels, and
     the staged Weierstrass approximation theorem.
+13. Formal power-series terms, partial sums, tagged radii, and analyticity.
+14. Derivative towers, Taylor coefficients, Abel boundary limits, and
+    Cauchy-product multiplication.
+15. Real exponential and logarithm.
+16. Concrete complex coordinate arithmetic, metric laws, and exponential.
+17. Sine, cosine, least positive zero, pi, and periodicity.
 
 ## Interface decisions and permissible gaps
 

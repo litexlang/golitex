@@ -36,9 +36,12 @@ impl Runtime {
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(def_prop_stmt.clone().into(), e))?;
 
         for fact in def_prop_stmt.iff_facts.iter() {
-            self.verify_fact_well_defined_and_store_and_infer(
+            self.verify_well_defined_and_store_without_infer(
                 fact.clone(),
-                &VerifyState::new(0, false),
+                InferReason::ByDefinition(ByDefinitionReason::new(
+                    None,
+                    Some(def_prop_stmt.name.clone()),
+                )),
             )
             .map_err(|inner_exec_error| {
                 exec_stmt_error_with_stmt_and_cause(def_prop_stmt.clone().into(), inner_exec_error)

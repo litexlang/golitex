@@ -108,6 +108,15 @@ prop is_linear_order_relation(A set, le_rel power_set(cart(A, A))):
     forall x, y A:
         $order_holds(A, le_rel, x, y) or $order_holds(A, le_rel, y, x)
 
+template<A set>:
+    have Preorder set = {le_rel power_set(cart(A, A)): $is_preorder_relation(A, le_rel)}
+
+template<A set>:
+    have PartialOrder set = {le_rel power_set(cart(A, A)): $is_partial_order_relation(A, le_rel)}
+
+template<A set>:
+    have LinearOrder set = {le_rel power_set(cart(A, A)): $is_linear_order_relation(A, le_rel)}
+
 # The generic source theorem fnUb_add uses an additive commutative monoid with
 # IsOrderedCancelAddMonoid. Besides monotonicity in both inputs, the latter
 # reflects the order after cancelling an equal left or right addend.
@@ -120,8 +129,7 @@ prop is_add_comm_monoid(A set, add fn(x, y A) A, zero A):
     forall x, y A:
         add(x, y) = add(y, x)
 
-prop is_ordered_cancel_add_monoid_relation(A set, le_rel power_set(cart(A, A)), add fn(x, y A) A):
-    $is_partial_order_relation(A, le_rel)
+prop is_ordered_cancel_add_monoid_relation(A set, le_rel \PartialOrder<A>, add fn(x, y A) A):
     forall x1, x2, y1, y2 A:
         $order_holds(A, le_rel, x1, x2)
         $order_holds(A, le_rel, y1, y2)
@@ -138,15 +146,14 @@ prop is_ordered_cancel_add_monoid_relation(A set, le_rel power_set(cart(A, A)), 
 
 # Source definition FnUb'. Its arbitrary domain and partially ordered codomain
 # remain carrier-first and relation-explicit.
-prop is_upper_bound_of_fn_by_relation(D, A set, le_rel power_set(cart(A, A)), f fn(x D) A, a A):
-    $is_partial_order_relation(A, le_rel)
+prop is_upper_bound_of_fn_by_relation(D, A set, le_rel \PartialOrder<A>, f fn(x D) A, a A):
     forall x D:
         $order_holds(A, le_rel, f(x), a)
 
 # Source theorem fnUb_add. The pointwise relation follows directly from the two
 # input bounds and compatibility of addition with the explicit order.
 thm upper_bound_of_fn_add_by_relation:
-    ? forall D, A set, le_rel power_set(cart(A, A)), add fn(x, y A) A, zero A, f, g fn(x D) A, a, b A:
+    ? forall D, A set, le_rel \PartialOrder<A>, add fn(x, y A) A, zero A, f, g fn(x D) A, a, b A:
         $is_add_comm_monoid(A, add, zero)
         $is_ordered_cancel_add_monoid_relation(A, le_rel, add)
         $is_upper_bound_of_fn_by_relation(D, A, le_rel, f, a)
@@ -243,13 +250,12 @@ thm subset_trans:
 
 # Source definition SetUb. The source carrier is an arbitrary partial order, so
 # both the carrier and its order relation remain explicit here.
-prop is_upper_bound_of_set(A set, le_rel power_set(cart(A, A)), S power_set(A), a A):
-    $is_partial_order_relation(A, le_rel)
+prop is_upper_bound_of_set(A set, le_rel \PartialOrder<A>, S power_set(A), a A):
     forall x S:
         $order_holds(A, le_rel, x, a)
 
 thm upper_bound_of_set_mono:
-    ? forall A set, le_rel power_set(cart(A, A)), S power_set(A), a, b A:
+    ? forall A set, le_rel \PartialOrder<A>, S power_set(A), a, b A:
         $is_upper_bound_of_set(A, le_rel, S, a)
         $order_holds(A, le_rel, a, b)
         =>:
@@ -383,7 +389,7 @@ thm sum_of_two_squares_mul:
     by thm chap2::add_reorder_four(A, add, zero, neg, add(x1, x2), add(neg(r), neg(r)), add(x3, x4), add(r, r))
     add(mul(p, p), mul(q, q)) = add(add(add(x1, x2), add(x3, x4)), add(add(neg(r), neg(r)), add(r, r)))
     add(mul(p, p), mul(q, q)) = add(add(add(x1, x2), add(x3, x4)), zero)
-    by thm chap2::add_zero(A, add, zero, neg, add(add(x1, x2), add(x3, x4)))
+    by thm chap2::add_zero_from_laws(A, add, zero, neg, add(add(x1, x2), add(x3, x4)))
     add(mul(p, p), mul(q, q)) = add(add(x1, x2), add(x3, x4))
     by thm chap2::add_reorder_four(A, add, zero, neg, x1, x2, x3, x4)
     add(mul(p, p), mul(q, q)) = add(add(x1, x3), add(x2, x4))
@@ -747,7 +753,6 @@ prop _is_eventually_close_by_relation(I set, le_rel power_set(cart(I, I)), s fn(
         =>:
             abs(s(i) - a) < epsilon
 
-prop converges_to_by_relation(I set, le_rel power_set(cart(I, I)), s fn(i I) R, a R):
-    $is_linear_order_relation(I, le_rel)
+prop converges_to_by_relation(I set, le_rel \LinearOrder<I>, s fn(i I) R, a R):
     forall epsilon R_pos:
         exist i0 I st {$_is_eventually_close_by_relation(I, le_rel, s, a, epsilon, i0)}

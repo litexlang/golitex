@@ -1,0 +1,766 @@
+# Chapter 4. Power series.
+#
+# Natural-number indices include the constant coefficient at index zero.
+
+# Definition 4.1.1 (Formal power series).
+have formal_power_series_data set = cart(R, fn(n N) R)
+
+have fn power_series_term(coefficients fn(m N) R, center R, n N, x R) R = coefficients(n) * (x - center)^n
+
+have fn power_series_partial_sum(coefficients fn(m N) R, center R, k N, x R) R = sum(0, k, fn(j closed_range(0, k)) R {coefficients(j) * (x - center)^j})
+
+# Definition 4.1.3 (Radius of convergence). A tagged pair `(0,r)` denotes a
+# finite nonnegative radius and `(1,0)` denotes positive infinity. The
+# Cauchy--Hadamard extended-limsup relation is external Analysis I background.
+have nonnegative_reals set = {r R: r >= 0}
+have power_series_radius set = union(cart({0}, nonnegative_reals), {(1, 0)})
+abstract_prop is_radius_of_convergence(coefficients, radius)
+
+# Theorem 4.1.6 (convergence, uniform convergence, differentiation, and
+# integration within the radius).
+prop has_power_series_sum(coefficients fn(m N) R, center, x, L R):
+    $chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {power_series_partial_sum(coefficients, center, k, x)}, L)
+
+prop is_power_series_absolutely_convergent_at(coefficients fn(m N) R, center, x R):
+    exist L R st {$chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(0, k, fn(j closed_range(0, k)) R {abs(coefficients(j) * (x - center)^j)})}, L)}
+
+prop is_power_series_divergent_at(coefficients fn(m N) R, center, x R):
+    not exist L R st {$has_power_series_sum(coefficients, center, x, L)}
+
+prop is_power_series_uniform_tail(coefficients fn(m N) R, center R, I power_set(R), f fn(x I) R, epsilon R_pos, N0 N_pos):
+    forall k N_pos, x I:
+        k >= N0
+        =>:
+            abs(power_series_partial_sum(coefficients, center, k, x) - f(x)) < epsilon
+
+prop is_power_series_uniformly_convergent_on(coefficients fn(m N) R, center R, I power_set(R), f fn(x I) R):
+    forall epsilon R_pos:
+        exist N0 N_pos st {$is_power_series_uniform_tail(coefficients, center, I, f, epsilon, N0)}
+
+thm power_series_diverges_outside_finite_radius:
+    ? forall coefficients fn(m N) R, center, radius, x R:
+        radius >= 0
+        $is_radius_of_convergence(coefficients, (0, radius))
+        abs(x - center) > radius
+        =>:
+            $is_power_series_divergent_at(coefficients, center, x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $is_power_series_divergent_at(coefficients, center, x)
+
+thm power_series_converges_absolutely_inside_finite_radius:
+    ? forall coefficients fn(m N) R, center, radius, x R:
+        radius >= 0
+        $is_radius_of_convergence(coefficients, (0, radius))
+        abs(x - center) < radius
+        =>:
+            $is_power_series_absolutely_convergent_at(coefficients, center, x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $is_power_series_absolutely_convergent_at(coefficients, center, x)
+
+thm power_series_uniformly_converges_on_compact_subinterval:
+    ? forall coefficients fn(m N) R, center, radius, r R_pos, f fn(x '[center - r, center + r]) R:
+        radius > r
+        $is_radius_of_convergence(coefficients, (0, radius))
+        forall x '[center - r, center + r]:
+            $has_power_series_sum(coefficients, center, x, f(x))
+        =>:
+            $is_power_series_uniformly_convergent_on(coefficients, center, '[center - r, center + r], f)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $is_power_series_uniformly_convergent_on(coefficients, center, '[center - r, center + r], f)
+
+prop has_termwise_derivative_power_series(coefficients fn(m N) R, center, radius R_pos, derivative fn(x '(center - radius, center + radius)) R):
+    forall x '(center - radius, center + radius):
+        $has_power_series_sum(fn(n N) R {(n + 1) * coefficients(n + 1)}, center, x, derivative(x))
+
+thm power_series_may_be_differentiated_termwise:
+    ? forall coefficients fn(m N) R, center, radius R_pos, f, derivative fn(x '(center - radius, center + radius)) R:
+        forall x '(center - radius, center + radius):
+            $has_power_series_sum(coefficients, center, x, f(x))
+        $chap3::has_continuous_derivative_on('(center - radius, center + radius), f, derivative)
+        =>:
+            $has_termwise_derivative_power_series(coefficients, center, radius, derivative)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_termwise_derivative_power_series(coefficients, center, radius, derivative)
+
+thm power_series_may_be_integrated_termwise:
+    ? forall coefficients, integrated_coefficients fn(m N) R, center R, y, z R, f fn(x '[y, z]) R, A R:
+        forall x '[y, z]:
+            $has_power_series_sum(coefficients, center, x, f(x))
+        $chap3::has_riemann_integral_value('[y, z], f, A)
+        forall n N:
+            (n + 1) * integrated_coefficients(n) = coefficients(n) * ((z - center)^(n + 1) - (y - center)^(n + 1))
+        =>:
+            $has_power_series_sum(integrated_coefficients, 0, 1, A)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_power_series_sum(integrated_coefficients, 0, 1, A)
+
+# Definition 4.2.1 (Real analytic functions).
+prop is_power_series_expansion_on(E power_set(R), f fn(x E) R, center R, r R_pos, coefficients fn(n N) R):
+    '(center - r, center + r) $subset E
+    forall x '(center - r, center + r):
+        $has_power_series_sum(coefficients, center, x, f(x))
+
+prop is_real_analytic_at(E power_set(R), f fn(x E) R, center E):
+    $chap1::is_metric_interior_point(R, chap1::real_distance, E, center)
+    exist r R_pos, coefficients fn(n N) R st {$is_power_series_expansion_on(E, f, center, r, coefficients)}
+
+prop is_real_analytic_on(E power_set(R), f fn(x E) R):
+    $chap1::is_metric_open(R, chap1::real_distance, E)
+    forall center E:
+        $is_real_analytic_at(E, f, center)
+
+# Definition 4.2.4 (k-times differentiability).
+abstract_prop has_derivative_on(E, f, derivative)
+
+prop is_derivative_tower(E power_set(R), f fn(x E) R, derivatives fn(k N) fn(x E) R, order N):
+    forall x E:
+        derivatives(0)(x) = f(x)
+    forall k N:
+        k < order
+        =>:
+            $has_derivative_on(E, derivatives(k), derivatives(k + 1))
+
+prop is_k_times_differentiable(E power_set(R), f fn(x E) R, order N):
+    exist derivatives fn(k N) fn(x E) R st {$is_derivative_tower(E, f, derivatives, order)}
+
+prop is_infinitely_differentiable(E power_set(R), f fn(x E) R):
+    forall order N:
+        $is_k_times_differentiable(E, f, order)
+
+# Proposition 4.2.6 (Real analytic functions are k-times differentiable).
+have fn factorial_real(n N) R by induc n from 0:
+    case n = 0: 1
+    case n > 0: n * factorial_real(n - 1)
+
+prop has_analytic_derivative_coefficients(coefficients fn(m N) R, derivative_coefficients fn(p cart(N, N)) R):
+    forall order, n N:
+        factorial_real(n) * derivative_coefficients((order, n)) = coefficients(n + order) * factorial_real(n + order)
+
+prop has_analytic_derivative_expansions(center R, radius R_pos, derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R):
+    forall order N, x '(center - radius, center + radius):
+        $has_power_series_sum(fn(n N) R {derivative_coefficients((order, n))}, center, x, derivatives(order)(x))
+
+thm real_analytic_functions_are_k_times_differentiable:
+    ? forall center R, radius R_pos, order N, f fn(x '(center - radius, center + radius)) R, coefficients fn(n N) R, derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R:
+        forall x '(center - radius, center + radius):
+            $has_power_series_sum(coefficients, center, x, f(x))
+        $has_analytic_derivative_coefficients(coefficients, derivative_coefficients)
+        =>:
+            $is_derivative_tower('(center - radius, center + radius), f, derivatives, order)
+            $has_analytic_derivative_expansions(center, radius, derivatives, derivative_coefficients)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $is_derivative_tower('(center - radius, center + radius), f, derivatives, order)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_analytic_derivative_expansions(center, radius, derivatives, derivative_coefficients)
+
+# Corollary 4.2.7 (Real analytic functions are infinitely differentiable).
+prop has_analytic_derivative_family(E power_set(R), derivatives fn(k N) fn(x E) R):
+    forall order N:
+        $is_real_analytic_on(E, derivatives(order))
+
+thm real_analytic_functions_are_infinitely_differentiable:
+    ? forall E power_set(R), f fn(x E) R, derivatives fn(k N) fn(x E) R:
+        $is_real_analytic_on(E, f)
+        forall x E:
+            derivatives(0)(x) = f(x)
+        =>:
+            $is_infinitely_differentiable(E, f)
+            $has_analytic_derivative_family(E, derivatives)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $is_infinitely_differentiable(E, f)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_analytic_derivative_family(E, derivatives)
+
+# Corollary 4.2.10 (Taylor's formula).
+prop has_taylor_coefficients(coefficients fn(n N) R, center R, derivatives fn(k N) fn(x R) R):
+    forall k N:
+        derivatives(k)(center) = factorial_real(k) * coefficients(k)
+
+thm analytic_power_series_has_taylor_coefficients:
+    ? forall coefficients fn(n N) R, center R, radius R_pos, f fn(x R) R, derivatives fn(k N) fn(x R) R:
+        forall x '(center - radius, center + radius):
+            $has_power_series_sum(coefficients, center, x, f(x))
+        =>:
+            $has_taylor_coefficients(coefficients, center, derivatives)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_taylor_coefficients(coefficients, center, derivatives)
+
+# Corollary 4.2.12 (Uniqueness of power series).
+thm analytic_power_series_coefficients_are_unique:
+    ? forall coefficients1, coefficients2 fn(k N) R, center R, radius1, radius2 R_pos, f fn(x R) R, n N:
+        forall x '(center - radius1, center + radius1):
+            $has_power_series_sum(coefficients1, center, x, f(x))
+        forall x '(center - radius2, center + radius2):
+            $has_power_series_sum(coefficients2, center, x, f(x))
+        =>:
+            coefficients1(n) = coefficients2(n)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust coefficients1(n) = coefficients2(n)
+
+# Theorem 4.3.1 (Abel's theorem). One-sided function limits are retained as
+# external interfaces until the later differentiation chapters are translated.
+abstract_prop has_left_limit_at(f, endpoint, L)
+abstract_prop has_right_limit_at(f, endpoint, L)
+
+thm abel_theorem_at_right_endpoint:
+    ? forall coefficients fn(n N) R, center R, radius R_pos, f fn(x '(center - radius, center + radius)) R, endpoint_sum R:
+        forall x '(center - radius, center + radius):
+            $has_power_series_sum(coefficients, center, x, f(x))
+        $has_power_series_sum(coefficients, center, center + radius, endpoint_sum)
+        =>:
+            $has_left_limit_at(f, center + radius, endpoint_sum)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_left_limit_at(f, center + radius, endpoint_sum)
+
+thm abel_theorem_at_left_endpoint:
+    ? forall coefficients fn(n N) R, center R, radius R_pos, f fn(x '(center - radius, center + radius)) R, endpoint_sum R:
+        forall x '(center - radius, center + radius):
+            $has_power_series_sum(coefficients, center, x, f(x))
+        $has_power_series_sum(coefficients, center, center - radius, endpoint_sum)
+        =>:
+            $has_right_limit_at(f, center - radius, endpoint_sum)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_right_limit_at(f, center - radius, endpoint_sum)
+
+# Lemma 4.3.2 (Summation by parts).
+prop has_nonnegative_series_sum(sequence fn(n N) R, L R):
+    $chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(0, k, fn(j closed_range(0, k)) R {sequence(j)})}, L)
+
+thm summation_by_parts:
+    ? forall a, b fn(n N) R, A, B, left_sum R:
+        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {a(n)}, A)
+        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {b(n)}, B)
+        $has_nonnegative_series_sum(fn(n N) R {(a(n + 1) - a(n)) * b(n)}, left_sum)
+        =>:
+            $has_nonnegative_series_sum(fn(n N) R {a(n + 1) * (b(n + 1) - b(n))}, A * B - a(0) * b(0) - left_sum)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_nonnegative_series_sum(fn(n N) R {a(n + 1) * (b(n + 1) - b(n))}, A * B - a(0) * b(0) - left_sum)
+
+# Theorem 4.4.1 (Products of analytic power series).
+have fn power_series_convolution(c, d fn(k N) R, n N) R = sum(0, n, fn(m closed_range(0, n)) R {c(m) * d(n - m)})
+
+thm product_of_analytic_power_series:
+    ? forall center R, radius R_pos, c, d fn(n N) R, f, g fn(x '(center - radius, center + radius)) R, x '(center - radius, center + radius):
+        $has_power_series_sum(c, center, x, f(x))
+        $has_power_series_sum(d, center, x, g(x))
+        =>:
+            $has_power_series_sum(fn(n N) R {power_series_convolution(c, d, n)}, center, x, f(x) * g(x))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_power_series_sum(fn(n N) R {power_series_convolution(c, d, n)}, center, x, f(x) * g(x))
+
+# Definition 4.5.1 (Exponential function).
+prop is_exponential_coefficient(n N, c R):
+    factorial_real(n) * c = 1
+
+have fn exponential_coefficient by exist!:
+    ? forall n N:
+        exist! c R st {$is_exponential_coefficient(n, c)}
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exist! c R st {$is_exponential_coefficient(n, c)}
+
+have fn exp_real by exist!:
+    ? forall x R:
+        exist! L R st {$has_power_series_sum(fn(n N) R {exponential_coefficient(n)}, 0, x, L)}
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exist! L R st {$has_power_series_sum(fn(n N) R {exponential_coefficient(n)}, 0, x, L)}
+
+# Theorem 4.5.2 (Basic properties of exponential).
+thm exponential_basic_properties:
+    ? forall x, y R:
+        $is_real_analytic_on(R, fn(t R) R {exp_real(t)})
+        $has_derivative_on(R, fn(t R) R {exp_real(t)}, fn(t R) R {exp_real(t)})
+        exp_real(x + y) = exp_real(x) * exp_real(y)
+        exp_real(0) = 1
+        exp_real(x) > 0
+        exp_real(-x) * exp_real(x) = 1
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $is_real_analytic_on(R, fn(t R) R {exp_real(t)})
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_derivative_on(R, fn(t R) R {exp_real(t)}, fn(t R) R {exp_real(t)})
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exp_real(x + y) = exp_real(x) * exp_real(y)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exp_real(0) = 1
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exp_real(x) > 0
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exp_real(-x) * exp_real(x) = 1
+
+thm exponential_order_forward:
+    ? forall x, y R:
+        y > x
+        =>:
+            exp_real(y) > exp_real(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exp_real(y) > exp_real(x)
+
+thm exponential_order_reverse:
+    ? forall x, y R:
+        exp_real(y) > exp_real(x)
+        =>:
+            y > x
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust y > x
+
+thm exponential_integral:
+    ? forall a, b R:
+        a <= b
+        =>:
+            $chap3::has_riemann_integral_value('[a, b], fn(x '[a, b]) R {exp_real(x)}, exp_real(b) - exp_real(a))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $chap3::has_riemann_integral_value('[a, b], fn(x '[a, b]) R {exp_real(x)}, exp_real(b) - exp_real(a))
+
+# Definition 4.5.3 (Euler's number).
+have euler_number R = exp_real(1)
+
+# Proposition 4.5.4. Real exponentiation is retained as its cross-book graph
+# relation because the Analysis I module is not an import of this project.
+abstract_prop has_real_power_value(base, exponent, value)
+
+thm exponential_as_euler_power:
+    ? forall x, value R:
+        $has_real_power_value(euler_number, x, value)
+        =>:
+            exp_real(x) = value
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exp_real(x) = value
+
+# Definition 4.5.5 (Natural logarithm).
+prop is_logarithm_value(x R_pos, y R):
+    exp_real(y) = x
+
+have fn log_real by exist!:
+    ? forall x R_pos:
+        exist! y R st {$is_logarithm_value(x, y)}
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exist! y R st {$is_logarithm_value(x, y)}
+
+thm exponential_of_logarithm:
+    ? forall x R_pos:
+        exp_real(log_real(x)) = x
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exp_real(log_real(x)) = x
+
+thm logarithm_of_exponential:
+    ? forall y R:
+        exp_real(y) > 0
+        =>:
+            log_real(exp_real(y)) = y
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust log_real(exp_real(y)) = y
+
+# Theorem 4.5.6 (Logarithm properties).
+thm logarithm_derivative_and_integral:
+    ? forall a, b R_pos:
+        a <= b
+        =>:
+            $has_derivative_on(R_pos, fn(x R_pos) R {log_real(x)}, fn(x R_pos) R {1 / x})
+            $chap3::has_riemann_integral_value('[a, b], fn(x '[a, b]) R {1 / x}, log_real(b) - log_real(a))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_derivative_on(R_pos, fn(x R_pos) R {log_real(x)}, fn(x R_pos) R {1 / x})
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $chap3::has_riemann_integral_value('[a, b], fn(x '[a, b]) R {1 / x}, log_real(b) - log_real(a))
+
+thm logarithm_product_and_reciprocal_laws:
+    ? forall x, y R_pos:
+        log_real(x * y) = log_real(x) + log_real(y)
+        log_real(1) = 0
+        log_real(1 / x) = -log_real(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust log_real(x * y) = log_real(x) + log_real(y)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust log_real(1) = 0
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust log_real(1 / x) = -log_real(x)
+
+thm logarithm_real_power_law:
+    ? forall x R_pos, y, value R:
+        $has_real_power_value(x, y, value)
+        value > 0
+        =>:
+            log_real(value) = y * log_real(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust log_real(value) = y * log_real(x)
+
+thm logarithm_power_series:
+    ? forall x '(-1, 1):
+        $chap3::has_real_series_sum(fn(n N_pos) R {-x^n / n}, log_real(1 - x))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $chap3::has_real_series_sum(fn(n N_pos) R {-x^n / n}, log_real(1 - x))
+
+# Definition 4.6.1 (Informal complex-number carrier).
+have informal_complex_coordinates set = cart(R, R)
+
+# Definition 4.6.2 (Formal complex numbers).
+struct ComplexNumber:
+    re R
+    im R
+
+# Definition 4.6.3 (Complex addition, negation, and zero).
+have complex_zero &ComplexNumber = (0, 0)
+have fn complex_add(z, w &ComplexNumber) &ComplexNumber = (z.re + w.re, z.im + w.im)
+have fn complex_neg(z &ComplexNumber) &ComplexNumber = (-z.re, -z.im)
+
+# Lemma 4.6.4 (The complex numbers are an additive group).
+thm complex_additive_group_laws:
+    ? forall z1, z2, z3 &ComplexNumber:
+        complex_add(z1, z2) = complex_add(z2, z1)
+        complex_add(complex_add(z1, z2), z3) = complex_add(z1, complex_add(z2, z3))
+        complex_add(z1, complex_zero) = z1
+        complex_add(complex_zero, z1) = z1
+        complex_add(z1, complex_neg(z1)) = complex_zero
+        complex_add(complex_neg(z1), z1) = complex_zero
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_add(z1, z2) = complex_add(z2, z1)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_add(complex_add(z1, z2), z3) = complex_add(z1, complex_add(z2, z3))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_add(z1, complex_zero) = z1
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_add(complex_zero, z1) = z1
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_add(z1, complex_neg(z1)) = complex_zero
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_add(complex_neg(z1), z1) = complex_zero
+
+# Definition 4.6.5 (Complex multiplication).
+have complex_one &ComplexNumber = (1, 0)
+have fn complex_mul(z, w &ComplexNumber) &ComplexNumber = (z.re * w.re - z.im * w.im, z.re * w.im + z.im * w.re)
+
+# Lemma 4.6.6 (Complex multiplication laws).
+thm complex_multiplication_laws:
+    ? forall z1, z2, z3 &ComplexNumber:
+        complex_mul(z1, z2) = complex_mul(z2, z1)
+        complex_mul(complex_mul(z1, z2), z3) = complex_mul(z1, complex_mul(z2, z3))
+        complex_mul(z1, complex_one) = z1
+        complex_mul(complex_one, z1) = z1
+        complex_mul(z1, complex_add(z2, z3)) = complex_add(complex_mul(z1, z2), complex_mul(z1, z3))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_mul(z1, z2) = complex_mul(z2, z1)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_mul(complex_mul(z1, z2), z3) = complex_mul(z1, complex_mul(z2, z3))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_mul(z1, complex_one) = z1
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_mul(complex_one, z1) = z1
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_mul(z1, complex_add(z2, z3)) = complex_add(complex_mul(z1, z2), complex_mul(z1, z3))
+
+# Lemma 4.6.7 (Real-imaginary representation).
+have imaginary_unit &ComplexNumber = (0, 1)
+have fn complex_of_real(x R) &ComplexNumber = (x, 0)
+
+thm complex_cartesian_representation:
+    ? forall z &ComplexNumber:
+        z = complex_add(complex_of_real(z.re), complex_mul(complex_of_real(z.im), imaginary_unit))
+        complex_mul(imaginary_unit, imaginary_unit) = complex_neg(complex_one)
+        complex_neg(z) = complex_mul(complex_of_real(-1), z)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust z = complex_add(complex_of_real(z.re), complex_mul(complex_of_real(z.im), imaginary_unit))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_mul(imaginary_unit, imaginary_unit) = complex_neg(complex_one)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_neg(z) = complex_mul(complex_of_real(-1), z)
+
+# Definition 4.6.8 (Real part, imaginary part, and conjugate).
+have fn complex_real_part(z &ComplexNumber) R = z.re
+have fn complex_imaginary_part(z &ComplexNumber) R = z.im
+have fn complex_conjugate(z &ComplexNumber) &ComplexNumber = (z.re, -z.im)
+
+prop is_real_complex(z &ComplexNumber):
+    z.im = 0
+
+prop is_imaginary_complex(z &ComplexNumber):
+    z.re = 0
+
+# Lemma 4.6.9 (Complex conjugation is an involution).
+thm complex_conjugation_laws:
+    ? forall z, w &ComplexNumber:
+        complex_conjugate(complex_add(z, w)) = complex_add(complex_conjugate(z), complex_conjugate(w))
+        complex_conjugate(complex_neg(z)) = complex_neg(complex_conjugate(z))
+        complex_conjugate(complex_mul(z, w)) = complex_mul(complex_conjugate(z), complex_conjugate(w))
+        complex_conjugate(complex_conjugate(z)) = z
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_conjugate(complex_add(z, w)) = complex_add(complex_conjugate(z), complex_conjugate(w))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_conjugate(complex_neg(z)) = complex_neg(complex_conjugate(z))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_conjugate(complex_mul(z, w)) = complex_mul(complex_conjugate(z), complex_conjugate(w))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_conjugate(complex_conjugate(z)) = z
+
+# Definition 4.6.10 (Complex absolute value).
+have fn complex_abs(z &ComplexNumber) R = sqrt(z.re^2 + z.im^2)
+
+# Lemma 4.6.11 (Properties of complex absolute value).
+thm complex_absolute_value_laws:
+    ? forall z, w &ComplexNumber:
+        complex_abs(z) >= 0
+        complex_mul(z, complex_conjugate(z)) = complex_of_real(complex_abs(z)^2)
+        complex_abs(complex_mul(z, w)) = complex_abs(z) * complex_abs(w)
+        complex_abs(complex_conjugate(z)) = complex_abs(z)
+        -complex_abs(z) <= z.re
+        z.re <= complex_abs(z)
+        -complex_abs(z) <= z.im
+        z.im <= complex_abs(z)
+        complex_abs(z) <= abs(z.re) + abs(z.im)
+        complex_abs(complex_add(z, w)) <= complex_abs(z) + complex_abs(w)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_abs(z) >= 0
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_mul(z, complex_conjugate(z)) = complex_of_real(complex_abs(z)^2)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_abs(complex_mul(z, w)) = complex_abs(z) * complex_abs(w)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_abs(complex_conjugate(z)) = complex_abs(z)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust -complex_abs(z) <= z.re
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust z.re <= complex_abs(z)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust -complex_abs(z) <= z.im
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust z.im <= complex_abs(z)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_abs(z) <= abs(z.re) + abs(z.im)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust complex_abs(complex_add(z, w)) <= complex_abs(z) + complex_abs(w)
+
+thm complex_absolute_value_zero:
+    ? forall z &ComplexNumber:
+        complex_abs(z) = 0
+        =>:
+            z = complex_zero
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust z = complex_zero
+
+# Definition 4.6.12 (Complex reciprocal and quotient).
+prop is_complex_reciprocal(z, w &ComplexNumber):
+    complex_mul(z, w) = complex_one
+
+have fn complex_reciprocal by exist!:
+    ? forall z &ComplexNumber:
+        z != complex_zero
+        =>:
+            exist! w &ComplexNumber st {$is_complex_reciprocal(z, w)}
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exist! w &ComplexNumber st {$is_complex_reciprocal(z, w)}
+
+have fn complex_divide(z, w &ComplexNumber: w != complex_zero) &ComplexNumber = complex_mul(z, complex_reciprocal(w))
+
+# Lemma 4.6.13 (Complex metric and coordinatewise convergence).
+have fn complex_distance(z, w &ComplexNumber) R = complex_abs(complex_add(z, complex_neg(w)))
+
+thm complex_distance_is_metric:
+    ? forall z &ComplexNumber:
+        $chap1::is_metric_space(&ComplexNumber, complex_distance)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $chap1::is_metric_space(&ComplexNumber, complex_distance)
+
+thm complex_convergence_implies_coordinatewise:
+    ? forall sequence fn(n N_pos) &ComplexNumber, z &ComplexNumber:
+        $chap1::has_metric_limit(&ComplexNumber, complex_distance, sequence, z)
+        =>:
+            $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.re}, z.re)
+            $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.im}, z.im)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.re}, z.re)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.im}, z.im)
+
+thm coordinatewise_convergence_implies_complex:
+    ? forall sequence fn(n N_pos) &ComplexNumber, z &ComplexNumber:
+        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.re}, z.re)
+        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.im}, z.im)
+        =>:
+            $chap1::has_metric_limit(&ComplexNumber, complex_distance, sequence, z)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $chap1::has_metric_limit(&ComplexNumber, complex_distance, sequence, z)
+
+# Lemma 4.6.14 (Complex limit laws).
+abstract_prop has_basic_complex_limit_laws(z, w, c, limit_z, limit_w)
+abstract_prop has_complex_quotient_limit(z, w, limit_z, limit_w)
+
+thm complex_limit_laws:
+    ? forall z, w fn(n N_pos) &ComplexNumber, c, limit_z, limit_w &ComplexNumber:
+        $chap1::has_metric_limit(&ComplexNumber, complex_distance, z, limit_z)
+        $chap1::has_metric_limit(&ComplexNumber, complex_distance, w, limit_w)
+        =>:
+            $has_basic_complex_limit_laws(z, w, c, limit_z, limit_w)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_basic_complex_limit_laws(z, w, c, limit_z, limit_w)
+
+thm complex_quotient_limit_law:
+    ? forall z, w fn(n N_pos) &ComplexNumber, limit_z, limit_w &ComplexNumber:
+        $chap1::has_metric_limit(&ComplexNumber, complex_distance, z, limit_z)
+        $chap1::has_metric_limit(&ComplexNumber, complex_distance, w, limit_w)
+        forall n N_pos:
+            w(n) != complex_zero
+        limit_w != complex_zero
+        =>:
+            $has_complex_quotient_limit(z, w, limit_z, limit_w)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_complex_quotient_limit(z, w, limit_z, limit_w)
+
+# Definition 4.6.15 (Complex exponential).
+have fn complex_power(z &ComplexNumber, n N) &ComplexNumber by induc n from 0:
+    case n = 0: complex_one
+    case n > 0: complex_mul(z, complex_power(z, n - 1))
+
+abstract_prop has_complex_exponential_series_sum(z, L)
+
+have fn exp_complex by exist!:
+    ? forall z &ComplexNumber:
+        exist! L &ComplexNumber st {$has_complex_exponential_series_sum(z, L)}
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exist! L &ComplexNumber st {$has_complex_exponential_series_sum(z, L)}
+
+# Definition 4.7.1 (Trigonometric functions).
+have fn complex_scale(a R, z &ComplexNumber) &ComplexNumber = (a * z.re, a * z.im)
+have fn complex_cos(z &ComplexNumber) &ComplexNumber = complex_scale(1 / 2, complex_add(exp_complex(complex_mul(imaginary_unit, z)), exp_complex(complex_neg(complex_mul(imaginary_unit, z)))))
+have fn complex_sin(z &ComplexNumber) &ComplexNumber = complex_mul((0, -1 / 2), complex_add(exp_complex(complex_mul(imaginary_unit, z)), complex_neg(exp_complex(complex_neg(complex_mul(imaginary_unit, z))))))
+
+abstract_prop is_real_cosine_value(x, y)
+abstract_prop is_real_sine_value(x, y)
+
+have fn real_cos by exist!:
+    ? forall x R:
+        exist! y R st {$is_real_cosine_value(x, y)}
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exist! y R st {$is_real_cosine_value(x, y)}
+
+have fn real_sin by exist!:
+    ? forall x R:
+        exist! y R st {$is_real_sine_value(x, y)}
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exist! y R st {$is_real_sine_value(x, y)}
+
+# Theorem 4.7.2 (Trigonometric identities).
+thm trigonometric_identities:
+    ? forall x, y R:
+        real_sin(x)^2 + real_cos(x)^2 = 1
+        -1 <= real_sin(x)
+        real_sin(x) <= 1
+        -1 <= real_cos(x)
+        real_cos(x) <= 1
+        real_sin(-x) = -real_sin(x)
+        real_cos(-x) = real_cos(x)
+        real_cos(x + y) = real_cos(x) * real_cos(y) - real_sin(x) * real_sin(y)
+        real_sin(x + y) = real_sin(x) * real_cos(y) + real_cos(x) * real_sin(y)
+        real_sin(0) = 0
+        real_cos(0) = 1
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_sin(x)^2 + real_cos(x)^2 = 1
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust -1 <= real_sin(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_sin(x) <= 1
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust -1 <= real_cos(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_cos(x) <= 1
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_sin(-x) = -real_sin(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_cos(-x) = real_cos(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_cos(x + y) = real_cos(x) * real_cos(y) - real_sin(x) * real_sin(y)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_sin(x + y) = real_sin(x) * real_cos(y) + real_cos(x) * real_sin(y)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_sin(0) = 0
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_cos(0) = 1
+
+thm trigonometric_derivatives:
+    ? forall x R:
+        $has_derivative_on(R, fn(t R) R {real_sin(t)}, fn(t R) R {real_cos(t)})
+        $has_derivative_on(R, fn(t R) R {real_cos(t)}, fn(t R) R {-real_sin(t)})
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_derivative_on(R, fn(t R) R {real_sin(t)}, fn(t R) R {real_cos(t)})
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $has_derivative_on(R, fn(t R) R {real_cos(t)}, fn(t R) R {-real_sin(t)})
+
+thm euler_formula:
+    ? forall x R:
+        exp_complex(complex_mul(imaginary_unit, complex_of_real(x))) = (real_cos(x), real_sin(x))
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exp_complex(complex_mul(imaginary_unit, complex_of_real(x))) = (real_cos(x), real_sin(x))
+
+# Lemma 4.7.3 (A positive zero of sine exists).
+thm positive_sine_zero_exists:
+    ? forall anchor R:
+        exist x R_pos st {real_sin(x) = 0}
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exist x R_pos st {real_sin(x) = 0}
+
+# Definition 4.7.4 (Pi).
+prop is_least_positive_sine_zero(p R):
+    p > 0
+    real_sin(p) = 0
+    forall x R_pos:
+        real_sin(x) = 0
+        =>:
+            p <= x
+
+have fn pi_selector by exist!:
+    ? forall anchor R:
+        exist! p R st {$is_least_positive_sine_zero(p)}
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust exist! p R st {$is_least_positive_sine_zero(p)}
+
+have pi_real R = pi_selector(0)
+
+# Theorem 4.7.5 (Periodicity and zero sets).
+prop is_integer_multiple_of_pi(x R):
+    exist k Z st {x = k * pi_real}
+
+prop is_half_integer_multiple_of_pi(x R):
+    exist k Z st {2 * x = (2 * k + 1) * pi_real}
+
+thm trigonometric_periodicity:
+    ? forall x R:
+        real_cos(x + pi_real) = -real_cos(x)
+        real_sin(x + pi_real) = -real_sin(x)
+        real_cos(x + 2 * pi_real) = real_cos(x)
+        real_sin(x + 2 * pi_real) = real_sin(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_cos(x + pi_real) = -real_cos(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_sin(x + pi_real) = -real_sin(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_cos(x + 2 * pi_real) = real_cos(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_sin(x + 2 * pi_real) = real_sin(x)
+
+thm sine_zero_characterization_forward:
+    ? forall x R:
+        real_sin(x) = 0
+        =>:
+            $is_integer_multiple_of_pi(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $is_integer_multiple_of_pi(x)
+
+thm sine_zero_characterization_reverse:
+    ? forall x R:
+        $is_integer_multiple_of_pi(x)
+        =>:
+            real_sin(x) = 0
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_sin(x) = 0
+
+thm cosine_zero_characterization_forward:
+    ? forall x R:
+        real_cos(x) = 0
+        =>:
+            $is_half_integer_multiple_of_pi(x)
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust $is_half_integer_multiple_of_pi(x)
+
+thm cosine_zero_characterization_reverse:
+    ? forall x R:
+        $is_half_integer_multiple_of_pi(x)
+        =>:
+            real_cos(x) = 0
+    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    trust real_cos(x) = 0

@@ -115,6 +115,57 @@ impl Runtime {
         if fn_obj.body.is_empty() {
             return Ok(None);
         }
+        // A callable tuple projection unfolds through a known tuple value.
+        // Example: `&Pair{\selected<a>}.second(x)` reduces when
+        // `\selected<a> = (first_value, fn(t T) U {...})` is known.
+        let callable_projection = match fn_obj.head.as_ref() {
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => Some((
+                field_access.obj.as_ref().clone(),
+                self.struct_field_index(&field_access.struct_obj, &field_access.field_name)?,
+            )),
+            FnObjHead::ObjAtIndex(obj_at_index) => {
+                let index = self
+                    .resolve_obj_to_number(obj_at_index.index.as_ref())
+                    .and_then(|number| number.normalized_value.parse::<usize>().ok());
+                index.map(|index| (obj_at_index.obj.as_ref().clone(), index))
+            }
+            _ => None,
+        };
+        if let Some((struct_value_obj, index)) = callable_projection {
+            if let Obj::InstantiatedTemplateObj(template_obj) = &struct_value_obj {
+                self.materialize_instantiated_template_obj(template_obj, verify_state)?;
+            }
+            let mut struct_values = vec![struct_value_obj.clone()];
+            if let Some(unfolded_struct_value) =
+                self.unfold_known_fn_application_once(&struct_value_obj, verify_state)?
+            {
+                struct_values.push(unfolded_struct_value);
+            }
+            let key = obj_equality_key(&struct_value_obj);
+            for env in self.iter_environments_from_top() {
+                if let Some((_, equal_objs)) = env.known_equality.get(&key) {
+                    struct_values.extend(equal_objs.iter().cloned());
+                }
+            }
+            for struct_value in struct_values {
+                let Obj::Tuple(tuple) = struct_value else {
+                    continue;
+                };
+                let Some(field_value) = tuple.args.get(index - 1) else {
+                    continue;
+                };
+                if let Some(applied) = apply_extra_curried_layers_for_unfolding(
+                    field_value.as_ref().clone(),
+                    fn_obj.body.clone(),
+                ) {
+                    return Ok(Some(applied));
+                }
+            }
+            return Ok(None);
+        }
+        if let FnObjHead::InstantiatedTemplateObj(template_obj) = fn_obj.head.as_ref() {
+            self.materialize_instantiated_template_obj(template_obj, verify_state)?;
+        }
         let key = match fn_obj.head.as_ref() {
             FnObjHead::Identifier(i) => i.to_string(),
             FnObjHead::IdentifierWithMod(i) => i.to_string(),
@@ -681,15 +732,21 @@ fn split_fn_body_at_complete_layer_for_unfolding(
             continue;
         }
 
-        let next_consumed = consumed + layer.len();
-        if next_consumed > n_params {
-            return None;
+        let remaining = n_params - consumed;
+        if layer.len() > remaining {
+            for arg in layer.iter().take(remaining) {
+                args.push((**arg).clone());
+            }
+            extra_layers.push(layer[remaining..].to_vec());
+            consumed = n_params;
+            outer_application_done = true;
+            continue;
         }
 
         for arg in layer.iter() {
             args.push((**arg).clone());
         }
-        consumed = next_consumed;
+        consumed += layer.len();
 
         if consumed == n_params {
             outer_application_done = true;

@@ -537,6 +537,30 @@ impl Runtime {
         Ok(())
     }
 
+    pub(crate) fn verify_well_defined_and_store_without_infer(
+        &mut self,
+        fact: Fact,
+        reason: InferReason,
+    ) -> Result<InferResult, RuntimeError> {
+        let verify_state = match &fact {
+            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => VerifyState::new(0, false),
+            _ => VerifyState::new_with_final_round(false),
+        };
+        if !self.current_execution_is_trusted_file() {
+            self.verify_fact_well_defined(&fact, &verify_state)?;
+        }
+
+        let reason_text = reason.store_reason();
+        let trust_summary =
+            ProofTrustSummary::from_store_reason(&reason_text, fact.line_file());
+        self.top_level_env().store_fact(fact.clone())?;
+        self.store_fact_cache_keys_with_nested_obj_binders(&fact, trust_summary)?;
+
+        let mut infer_result = InferResult::new();
+        infer_result.add_store_fact_output(&fact, reason_text, vec![]);
+        Ok(infer_result)
+    }
+
     fn transitive_prop_chain_closure_facts(
         &self,
         chain_fact: &ChainFact,

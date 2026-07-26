@@ -29,12 +29,16 @@ routine consequences. It does not, by itself, establish a comparison with
 Lean or a Lean-kernel certificate.
 
 Chapter 2's reusable algebra core is now carried by checked
-`AdditiveCommutativeGroup<s>`, `Group<s>`, and `Ring<s>` values. A `Ring` stores
-its additive group, so derived theorems such as `mul_zero_in_ring` can reuse
-additive cancellation directly through `ring.additive`. Its older explicit
-`is_*` predicates remain as temporary checked compatibility relations for
-unmigrated Chapter 3 and Chapter 9 callers; they are not the intended public
-interface for new code.
+`AdditiveCommutativeGroup<s>`, `Group<s>`, and flat `Ring<s>` values. A ring
+exposes `add`, `zero`, `neg`, `mul`, and `one` directly, while its structure
+body composes the reusable additive-group law predicate. Chapter 8 reuses that
+canonical `Ring`, keeps its stronger two-sided group experiment under the
+distinct name `TwoSidedGroup`, and gives `Module` direct scalar and vector
+operations. Chapters 7, 9, 10, and 12 continue the same flat-data rule for
+commutative rings, Euclidean domains, fields, vector spaces, and real normed
+spaces. Chapter 3 uses refined order-relation carriers; Chapters 11 and 13 use
+refined filter, metric, topology, and measurable-space carriers. Lower-level
+operation-plus-law signatures are explicitly named `*_from_laws`.
 
 ## What this corpus is for
 
@@ -56,22 +60,22 @@ Mathlib coverage, or to compare source-line counts between the two systems.
 
 ## Evidence and limits
 
-The current item ledger was last audited on 2026-07-23. All thirteen chapters
-run in strict ordered-export mode without executable proof debt.
+The declaration-level source registry was regenerated on 2026-07-26 from the
+pinned non-solution Lean files. It replaces the older grouped workflow counts
+as the source-coverage surface.
 
 | Status | Count | Meaning |
 | --- | ---: | --- |
-| Checked records | 202 | The retained Litex item has a checked local proof or construction route. |
-| Trusted records | 0 | No status record relies on an executable trusted declaration. |
-| Blocked records | 89 | The source mathematics is not claimed in executable code and is recorded in comment-only `todo.lit`. |
-| Total records | 291 | Workflow records for retained definitions/results and grouped construction or proof families. |
-| Executable debt directives | 0 | Corpus `.lit` files contain no `trust`, `know`, `axiom`, or `abstract_prop` declaration. |
+| Source declarations | 1096 | Individually enumerated non-solution Lean declarations. |
+| Checkable correspondences | 143 | A matching checked Litex route is recorded. |
+| Translated/excluded rows | 4 | Standalone exercises excluded by the corpus policy. |
+| Blocked or unaligned rows | 949 | No declaration-level checked correspondence is currently established. |
+| Executable trust directives | 2 | The two C11 continuity-equivalence directions contain narrow proof debt. |
 
-On 2026-07-23 the current no-`std` project completed the full strict ordered
-runner. Every configured export from Chapter 1 through Chapter 13 was verified
-in source order. Earlier definition-folding compatibility failures were
-repaired by stating the required unconditional pointwise facts and closing the
-concrete definitions with `by def`.
+The former 291/202/89 table remains historical workflow bookkeeping and is not
+reported as source coverage. Current counts are generated in
+`scripts/mathematics_in_litex/source_item_coverage.md` from
+`source_registry.jsonl`.
 
 At the Litex source-module level, this project has no configured `std` import
 and no cite module. The small shared number-theory layer is ordinary checked
@@ -82,15 +86,14 @@ module dependencies, not a claim that the corpus needs no verifier support.
 Arithmetic normalization, finite-set operations and extrema, and the narrow
 Euclidean-quotient existence rule remain kernel builtin boundaries.
 
-The detailed chapter counts and blocker labels are in
-[`scripts/mathematics_in_litex/coverage.md`](../../scripts/mathematics_in_litex/coverage.md)
+The declaration-level counts and blocker labels are in
+[`scripts/mathematics_in_litex/source_item_coverage.md`](../../scripts/mathematics_in_litex/source_item_coverage.md)
 and [`blocker_taxonomy.md`](../../scripts/mathematics_in_litex/blocker_taxonomy.md).
 
-The full strict project success establishes that the configured no-`std` graph
-loads and verifies every exported chapter in order. It does not mean that every
-source result has been formalized. Unimplemented source mathematics is absent
-from executable code and listed honestly in the comment-only, unexported
-`todo.lit`.
+Strict project success would establish that the configured no-`std` graph
+loads and verifies every exported chapter in order. The current draft does not
+pass that gate because strict mode correctly rejects its two localized Chapter
+11 continuity-equivalence `trust` statements.
 
 The same pressure test found a verifier issue in automatic universal-fact
 matching across unrelated free set parameters. It was fixed on 2026-07-22:
@@ -120,18 +123,21 @@ implementation boundary.
 From the `golitex` repository root:
 
 ~~~sh
-RUST_MIN_STACK=8388608 target/release/litex -runner -r textbooks/Mathematics-In-Lean-Derived-Litex-Corpus -compact
+RUST_MIN_STACK=8388608 target/release/litex -compact -r scripts/textbooks_drafts/Mathematics-In-Lean-Derived-Litex-Corpus
 ~~~
 
 The full project acceptance gate is:
 
 ~~~sh
-RUST_MIN_STACK=8388608 target/release/litex -runner -r textbooks/Mathematics-In-Lean-Derived-Litex-Corpus -compact -strict
+RUST_MIN_STACK=8388608 target/release/litex -compact -strict -r scripts/textbooks_drafts/Mathematics-In-Lean-Derived-Litex-Corpus
 ~~~
 
-At the current checkpoint this command returns outer runner fields
-`result: "success"` and `ok: true`. This is the complete strict-project result,
-not a focused `-f` check with preceding exports loaded as trusted.
+At the current checkpoint this command fails at
+`chapter11-topology.lit:676`: strict mode rejects the first user `trust` in
+`continuous_iff_open_preimages_forward`. A second localized `trust` remains in
+the reverse direction at line 684. The ordinary release module gate and the
+registered Chapter 13 `-f` prefix checkpoint succeed, but the draft must not be
+called strict-checkable until both debts are removed.
 
 The project exports only `chap1` through `chap13` in source order. It has no
 `[import std]` section and no cite export. Cross-chapter objects, functions,
