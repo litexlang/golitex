@@ -314,6 +314,7 @@ thm sum_of_two_squares_mul:
         $is_sum_of_two_squares(A, add, mul, w)
         =>:
             $is_sum_of_two_squares(A, add, mul, mul(z, w))
+    $chap2::is_additive_commutative_group(A, add, zero, neg)
     obtain a, b from exist a, b A st {z = add(mul(a, a), mul(b, b))}
     obtain c, d from exist c, d A st {w = add(mul(c, c), mul(d, d))}
     have p A = add(mul(a, c), neg(mul(b, d)))

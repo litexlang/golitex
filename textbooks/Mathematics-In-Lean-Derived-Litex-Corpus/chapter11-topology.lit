@@ -191,6 +191,8 @@ thm eventually_conjunction_on_N:
             $eventually_on_N(intersect(P, Qset))
     intersect(P, Qset) $subset P $subset N
     intersect(P, Qset) $in power_set(N)
+    $contains_natural_tail(P)
+    $contains_natural_tail(Qset)
     obtain a from exist a0 N st {$contains_natural_tail_from(a0, P)}
     obtain b from exist b0 N st {$contains_natural_tail_from(b0, Qset)}
     have c N = a + b
@@ -313,6 +315,9 @@ thm eventually_implication_on_N:
         $eventually_on_N({n N: $intersection_membership_implies(P, Qset, R0, n)})
         =>:
             $eventually_on_N(R0)
+    $contains_natural_tail(P)
+    $contains_natural_tail(Qset)
+    $contains_natural_tail({n N: $intersection_membership_implies(P, Qset, R0, n)})
     obtain a from exist a0 N st {$contains_natural_tail_from(a0, P)}
     obtain b from exist b0 N st {$contains_natural_tail_from(b0, Qset)}
     obtain d from exist d0 N st {$contains_natural_tail_from(d0, {n N: $intersection_membership_implies(P, Qset, R0, n)})}
@@ -440,6 +445,7 @@ thm metric_ball_contains_center:
         r > 0
         =>:
             a $in {x X: dist(x, a) < r}
+    $metric_separates_points(X, dist)
     dist(a, a) = 0
     dist(a, a) < r
     a $in {x X: dist(x, a) < r}
@@ -450,6 +456,7 @@ thm metric_closed_ball_contains_center:
         r >= 0
         =>:
             a $in {x X: dist(x, a) <= r}
+    $metric_separates_points(X, dist)
     dist(a, a) = 0
     dist(a, a) <= r
     a $in {x X: dist(x, a) <= r}

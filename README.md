@@ -208,6 +208,10 @@ assistants. It tests a different hypothesis: whether a smaller, readable,
 fact-oriented interface can make some checked mathematical data cheaper to
 produce, inspect, repair, and teach.
 
+*Maybe the foothold of Litex should be a no-tactic, no-type-dependent, set-theory-based frontend language of Lean just for math (not functional programming), and be more accessible for human (especially non-experts because no matter how AI develops, most people still can not understand type-theory-based math) and AI (especially fields Mathlib hasn't cover yet)? It may be a math language that teaches you how math works.*
+
+*Litex welcomes formal language experts, math professionals and AI developers to share ideas with us.*
+
 ## Real mathematics is the pressure test
 
 Litex is developed against real mathematical translation work, not only
