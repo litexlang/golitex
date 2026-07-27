@@ -66,6 +66,9 @@ thm vector_add_smul:
 thm vector_smul_comm:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>, a, b K, v V:
         space.smul(a, space.smul(b, v)) = space.smul(b, space.smul(a, v))
+    $is_vector_space(K, V, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, space.add, space.zero, space.neg, space.smul)
+    $is_field(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv)
+    $chap7::is_commutative_ring(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
     space.scalar_mul(a, b) = space.scalar_mul(b, a)
     space.smul(space.scalar_mul(a, b), v) = space.smul(space.scalar_mul(b, a), v)
     space.smul(a, space.smul(b, v)) = space.smul(space.scalar_mul(a, b), v) = space.smul(space.scalar_mul(b, a), v) = space.smul(b, space.smul(a, v))

@@ -662,6 +662,10 @@ sketch:
                 $exist_bijection(S, U)
         obtain f from exist f fn(x S) T st {$bijective_fn(S, T, f)}
         obtain g from exist g fn(x T) U st {$bijective_fn(T, U, g)}
+        $injective_fn(S, T, f)
+        $surjective_fn(S, T, f)
+        $injective_fn(T, U, g)
+        $surjective_fn(T, U, g)
         have fn h(x S) U = g(f(x))
 
         forall x S:

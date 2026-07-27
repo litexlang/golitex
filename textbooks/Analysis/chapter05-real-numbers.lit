@@ -3235,6 +3235,7 @@ have fn sup by exist!:
     ? forall E real_supremum_domain:
         exist! M R st {$is_least_upper_bound(E, M)}
     $is_nonempty_bounded_above_subset_of_reals(E)
+    $is_nonempty_subset_of_reals(E)
     $is_nonempty_set(E)
     by thm least_upper_bound_existence(E)
 
