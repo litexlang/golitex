@@ -174,6 +174,8 @@ thm congruent_mod_has_same_remainder:
         $congruent_mod(m, x, y)
         =>:
             $same_remainder_mod(m, x, y)
+    $section1::divides_Z(m, x - y)
+    by def $section1::divides_Z(m, x - y)
     obtain k from exist k Z st {x - y = m * k}
     y = m * section2::integer_quotient(y, m) + y % m
     x = (x - y) + y = m * k + y = y + m * k
@@ -216,6 +218,10 @@ thm congruent_mod_transitive:
         $congruent_mod(m, y, z)
         =>:
             $congruent_mod(m, x, z)
+    $section1::divides_Z(m, x - y)
+    $section1::divides_Z(m, y - z)
+    by def $section1::divides_Z(m, x - y)
+    by def $section1::divides_Z(m, y - z)
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {y - z = m * b}
     x - z = (x - y) + (y - z) = m * a + m * b = m * (a + b)
@@ -228,6 +234,8 @@ thm congruent_mod_symmetric:
         $congruent_mod(m, x, y)
         =>:
             $congruent_mod(m, y, x)
+    $section1::divides_Z(m, x - y)
+    by def $section1::divides_Z(m, x - y)
     obtain a from exist a Z st {x - y = m * a}
     y - x = -1 * (x - y) = -1 * (m * a) = m * (-1 * a)
     witness exist k Z st {y - x = m * k} from -1 * a:
@@ -244,6 +252,10 @@ thm congruent_mod_add:
         $congruent_mod(m, u, v)
         =>:
             $congruent_mod(m, x + u, y + v)
+    $section1::divides_Z(m, x - y)
+    $section1::divides_Z(m, u - v)
+    by def $section1::divides_Z(m, x - y)
+    by def $section1::divides_Z(m, u - v)
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {u - v = m * b}
     (x + u) - (y + v) = (x - y) + (u - v) = m * a + m * b = m * (a + b)
@@ -257,6 +269,10 @@ thm congruent_mod_subtract:
         $congruent_mod(m, u, v)
         =>:
             $congruent_mod(m, x - u, y - v)
+    $section1::divides_Z(m, x - y)
+    $section1::divides_Z(m, u - v)
+    by def $section1::divides_Z(m, x - y)
+    by def $section1::divides_Z(m, u - v)
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {u - v = m * b}
     (x - u) - (y - v) = (x - y) - (u - v) = m * a - m * b = m * (a - b)
@@ -275,6 +291,10 @@ thm congruent_mod_multiply:
         $congruent_mod(m, u, v)
         =>:
             $congruent_mod(m, x * u, y * v)
+    $section1::divides_Z(m, x - y)
+    $section1::divides_Z(m, u - v)
+    by def $section1::divides_Z(m, x - y)
+    by def $section1::divides_Z(m, u - v)
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {u - v = m * b}
     x * u - y * v = x * (u - v) + (x - y) * v
@@ -299,6 +319,8 @@ thm congruent_mod_cancel_common_factor:
         $congruent_mod(m, x, y)
         =>:
             $congruent_mod(M, X, Y)
+    $section1::divides_Z(m, x - y)
+    by def $section1::divides_Z(m, x - y)
     obtain q from exist q Z st {x - y = m * q}
     d * (X - Y) = d * X - d * Y = x - y = m * q = d * M * q = d * (M * q)
     X - Y = d * (X - Y) / d = d * (M * q) / d = M * q
@@ -314,6 +336,8 @@ thm congruent_mod_restore_common_factor:
         $congruent_mod(M, X, Y)
         =>:
             $congruent_mod(m, x, y)
+    $section1::divides_Z(M, X - Y)
+    by def $section1::divides_Z(M, X - Y)
     obtain q from exist q Z st {X - Y = M * q}
     m * q = (d * M) * q = d * M * q
     d * M * q = m * q
@@ -442,6 +466,12 @@ thm theorem_V_residue_classes_disjoint:
             z $in residue_class_mod(m, y)
             =>:
                 $congruent_mod(m, x, y)
+        $congruent_mod(m, z, x)
+        $congruent_mod(m, z, y)
+        $section1::divides_Z(m, z - x)
+        $section1::divides_Z(m, z - y)
+        by def $section1::divides_Z(m, z - x)
+        by def $section1::divides_Z(m, z - y)
         obtain a from exist a Z st {z - x = m * a}
         obtain b from exist b Z st {z - y = m * b}
         x - z = -1 * (z - x) = -1 * (m * a) = m * (-a)

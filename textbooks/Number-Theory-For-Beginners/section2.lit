@@ -709,6 +709,10 @@ thm binary_span_eq_mZ_of_gcd:
         $is_gcd_Z(a, b, d)
         =>:
             binary_integer_span(a, b) = mZ(d)
+    $section1::divides_Z(d, a)
+    $section1::divides_Z(d, b)
+    by def $section1::divides_Z(d, a)
+    by def $section1::divides_Z(d, b)
     by extension binary_integer_span(a, b) = mZ(d):
         claim:
             ? forall x binary_integer_span(a, b):

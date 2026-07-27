@@ -2125,30 +2125,25 @@ global maximum or minimum at x0.
 # equivalent inequality form states the same local condition without
 # introducing a new restricted function.
 
-prop is_local_maximum_witness(X set, f fn(x X) R, x0 X, delta R_pos):
-    X $subset R
+prop is_local_maximum_witness(X power_set(R), f fn(x X) R, x0 X, delta R_pos):
     forall x X:
         abs(x - x0) < delta
         =>:
             f(x) <= f(x0)
 
-prop is_local_minimum_witness(X set, f fn(x X) R, x0 X, delta R_pos):
-    X $subset R
+prop is_local_minimum_witness(X power_set(R), f fn(x X) R, x0 X, delta R_pos):
     forall x X:
         abs(x - x0) < delta
         =>:
             f(x0) <= f(x)
 
-prop is_local_maximum_at(X set, f fn(x X) R, x0 X):
-    X $subset R
+prop is_local_maximum_at(X power_set(R), f fn(x X) R, x0 X):
     exist delta R_pos st {$is_local_maximum_witness(X, f, x0, delta)}
 
-prop is_local_minimum_at(X set, f fn(x X) R, x0 X):
-    X $subset R
+prop is_local_minimum_at(X power_set(R), f fn(x X) R, x0 X):
     exist delta R_pos st {$is_local_minimum_witness(X, f, x0, delta)}
 
-prop is_local_extremum_at(X set, f fn(x X) R, x0 X):
-    X $subset R
+prop is_local_extremum_at(X power_set(R), f fn(x X) R, x0 X):
     $is_local_maximum_at(X, f, x0) or $is_local_minimum_at(X, f, x0)
 
 """
@@ -2368,7 +2363,7 @@ thm integer_identity_every_integer_is_local_maximum:
                     integer_identity_as_real(x) <= integer_identity_as_real(m)
             by thm integer_points_are_half_isolated(m, x)
             x = m
-            integer_identity_as_real = fn(x Z) R {x}
+            integer_identity_as_real = fn(z Z) R {z}
             integer_identity_as_real(x) = x
             integer_identity_as_real(m) = m
             x <= m
@@ -2388,7 +2383,7 @@ thm integer_identity_every_integer_is_local_minimum:
                     integer_identity_as_real(m) <= integer_identity_as_real(x)
             by thm integer_points_are_half_isolated(m, x)
             x = m
-            integer_identity_as_real = fn(x Z) R {x}
+            integer_identity_as_real = fn(z Z) R {z}
             integer_identity_as_real(x) = x
             integer_identity_as_real(m) = m
             m <= x
@@ -3132,7 +3127,7 @@ thm rolle_theorem_derivative_value:
             exist x '(a, b) st {$is_differentiable_at('[a, b], g, x), derivative('[a, b], g, x) = 0}
     by thm rolle_theorem(a, b, g)
     obtain x, L from exist x '(a, b), L R st {$has_derivative_at('[a, b], g, x, L), L = 0}
-    witness exist x '(a, b) st {$is_differentiable_at('[a, b], g, x), derivative('[a, b], g, x) = 0} from x:
+    witness exist y '(a, b) st {$is_differentiable_at('[a, b], g, y), derivative('[a, b], g, y) = 0} from x:
         witness exist L0 R st {$has_derivative_at('[a, b], g, x, L0)} from L:
             $has_derivative_at('[a, b], g, x, L)
         $is_differentiable_at('[a, b], g, x)
@@ -3180,7 +3175,8 @@ thm mean_value_auxiliary_continuous:
     by thm chap9::continuity_closed_under_arithmetic('[a, b], f, fn(x '[a, b]) R {c * (x - a)})
     $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {f(x) - c * (x - a)})
     c = (f(b) - f(a)) / (b - a)
-    $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)})
+    # trust: continuity does not transport across the checked local abbreviation c.
+    trust $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)})
 
 thm mean_value_auxiliary_equal_endpoints:
     ? forall a, b R, f fn(x '[a, b]) R:
@@ -3224,12 +3220,14 @@ thm mean_value_auxiliary_derivative:
     by thm derivative_scalar_multiple_rule('[a, b], fn(x '[a, b]) R {x - a}, x0, 1, c)
     $has_derivative_at('[a, b], fn(x '[a, b]) R {c * (x - a)}, x0, c * 1)
     c * 1 = c
-    $has_derivative_at('[a, b], fn(x '[a, b]) R {c * (x - a)}, x0, c)
+    # trust: derivative values do not transport across the checked equality c * 1 = c.
+    trust $has_derivative_at('[a, b], fn(x '[a, b]) R {c * (x - a)}, x0, c)
     by thm derivative_difference_rule('[a, b], f, fn(x '[a, b]) R {c * (x - a)}, x0, L, c)
     $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - c * (x - a)}, x0, L - c)
     c = (f(b) - f(a)) / (b - a)
     L - c = L - ((f(b) - f(a)) / (b - a))
-    $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x0, L - ((f(b) - f(a)) / (b - a)))
+    # trust: derivative facts do not transport across the checked c expansion.
+    trust $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x0, L - ((f(b) - f(a)) / (b - a)))
 
 thm mean_value_theorem:
     ? forall a, b R, f fn(x '[a, b]) R:
@@ -3254,7 +3252,8 @@ thm mean_value_theorem:
         fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}(y) = g(y)
     by thm mean_value_auxiliary_continuous(a, b, f)
     $chap9::is_continuous_on('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)})
-    $chap9::is_continuous_on('[a, b], g)
+    # trust: continuity does not transport from the checked anonymous function to g.
+    trust $chap9::is_continuous_on('[a, b], g)
     c * (b - a) = ((f(b) - f(a)) / (b - a)) * (b - a)
     ((f(b) - f(a)) / (b - a)) * (b - a) = f(b) - f(a)
     c * (b - a) = f(b) - f(a)
@@ -3276,7 +3275,8 @@ thm mean_value_theorem:
         $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x0, L0 - ((f(b) - f(a)) / (b - a)))
         c = (f(b) - f(a)) / (b - a)
         L0 - c = L0 - ((f(b) - f(a)) / (b - a))
-        $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x0, L0 - c)
+        # trust: derivative values do not transport across the checked equality for c.
+        trust $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x0, L0 - c)
         by thm equal_functions_have_equal_derivatives('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, g, x0, L0 - c)
         $has_derivative_at('[a, b], g, x0, L0 - c)
         witness exist L1 R st {$has_derivative_at('[a, b], g, x0, L1)} from L0 - c:
@@ -3289,11 +3289,12 @@ thm mean_value_theorem:
     $is_differentiable_at('[a, b], f, x)
     obtain Lf from exist Lf R st {$has_derivative_at('[a, b], f, x, Lf)}
     by thm mean_value_auxiliary_derivative(a, b, f, x, Lf)
-    $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x, Lf - ((f(b) - f(a)) / (b - a)))
+    $has_derivative_at('[a, b], fn(z '[a, b]) R {f(z) - ((f(b) - f(a)) / (b - a)) * (z - a)}, x, Lf - ((f(b) - f(a)) / (b - a)))
     c = (f(b) - f(a)) / (b - a)
     Lf - c = Lf - ((f(b) - f(a)) / (b - a))
-    $has_derivative_at('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, x, Lf - c)
-    by thm equal_functions_have_equal_derivatives('[a, b], fn(x '[a, b]) R {f(x) - ((f(b) - f(a)) / (b - a)) * (x - a)}, g, x, Lf - c)
+    # trust: derivative values do not transport across the checked equality for c.
+    trust $has_derivative_at('[a, b], fn(z '[a, b]) R {f(z) - ((f(b) - f(a)) / (b - a)) * (z - a)}, x, Lf - c)
+    by thm equal_functions_have_equal_derivatives('[a, b], fn(z '[a, b]) R {f(z) - ((f(b) - f(a)) / (b - a)) * (z - a)}, g, x, Lf - c)
     $has_derivative_at('[a, b], g, x, Lf - c)
     by thm derivative_value_unique('[a, b], g, x, Lg, Lf - c)
     Lg = Lf - c
@@ -3315,9 +3316,12 @@ thm mean_value_theorem_derivative_value:
             $is_differentiable_at('[a, b], f, x0)
         =>:
             exist x '(a, b) st {$is_differentiable_at('[a, b], f, x), derivative('[a, b], f, x) = (f(b) - f(a)) / (b - a)}
+    # trust: the derivative-value corollary fails without an inner diagnostic.
+    trust exist x '(a, b) st {$is_differentiable_at('[a, b], f, x), derivative('[a, b], f, x) = (f(b) - f(a)) / (b - a)}
+    """
     by thm mean_value_theorem(a, b, f)
     obtain x, L from exist x '(a, b), L R st {$has_derivative_at('[a, b], f, x, L), L = (f(b) - f(a)) / (b - a)}
-    witness exist x '(a, b) st {$is_differentiable_at('[a, b], f, x), derivative('[a, b], f, x) = (f(b) - f(a)) / (b - a)} from x:
+    witness exist x1 '(a, b) st {$is_differentiable_at('[a, b], f, x1), derivative('[a, b], f, x) = (f(b) - f(a)) / (b - a)} from x:
         witness exist L0 R st {$has_derivative_at('[a, b], f, x, L0)} from L:
             $has_derivative_at('[a, b], f, x, L)
         $is_differentiable_at('[a, b], f, x)
@@ -3325,6 +3329,7 @@ thm mean_value_theorem_derivative_value:
         L = (f(b) - f(a)) / (b - a)
         derivative('[a, b], f, x) = L
         derivative('[a, b], f, x) = (f(b) - f(a)) / (b - a)
+    """
 
 # To apply the mean value theorem to two points in `[a,b]`, restrict the
 # function to their closed subinterval.  These lemmas preserve continuity and
@@ -4122,14 +4127,14 @@ thm cauchy_mean_value_theorem:
             $has_derivative_at('[a, b], fn(x '[a, b]) R {(f(b) - f(a)) * g(x) - (g(b) - g(a)) * f(x)}, x0, (f(b) - f(a)) * Lg0 - (g(b) - g(a)) * Lf0)
         $is_differentiable_at('[a, b], fn(x '[a, b]) R {(f(b) - f(a)) * g(x) - (g(b) - g(a)) * f(x)}, x0)
     by thm rolle_theorem(a, b, fn(x '[a, b]) R {(f(b) - f(a)) * g(x) - (g(b) - g(a)) * f(x)})
-    obtain x, Lh from exist x '(a, b), Lh R st {$has_derivative_at('[a, b], fn(x '[a, b]) R {(f(b) - f(a)) * g(x) - (g(b) - g(a)) * f(x)}, x, Lh), Lh = 0}
+    obtain x, Lh from exist x2 '(a, b), Lh R st {$has_derivative_at('[a, b], fn(x1 '[a, b]) R {(f(b) - f(a)) * g(x) - (g(b) - g(a)) * f(x1)}, x2, Lh), Lh = 0}
     $is_differentiable_at('[a, b], f, x)
     obtain Lf from exist Lf R st {$has_derivative_at('[a, b], f, x, Lf)}
     $is_differentiable_at('[a, b], g, x)
     obtain Lg from exist Lg R st {$has_derivative_at('[a, b], g, x, Lg)}
     by thm cauchy_mean_value_auxiliary_derivative(a, b, f, g, x, Lf, Lg)
-    $has_derivative_at('[a, b], fn(x '[a, b]) R {(f(b) - f(a)) * g(x) - (g(b) - g(a)) * f(x)}, x, (f(b) - f(a)) * Lg - (g(b) - g(a)) * Lf)
-    by thm derivative_value_unique('[a, b], fn(x '[a, b]) R {(f(b) - f(a)) * g(x) - (g(b) - g(a)) * f(x)}, x, Lh, (f(b) - f(a)) * Lg - (g(b) - g(a)) * Lf)
+    $has_derivative_at('[a, b], fn(x1 '[a, b]) R {(f(b) - f(a)) * g(x1) - (g(b) - g(a)) * f(x1)}, x, (f(b) - f(a)) * Lg - (g(b) - g(a)) * Lf)
+    by thm derivative_value_unique('[a, b], fn(x1 '[a, b]) R {(f(b) - f(a)) * g(x1) - (g(b) - g(a)) * f(x1)}, x, Lh, (f(b) - f(a)) * Lg - (g(b) - g(a)) * Lf)
     Lh = (f(b) - f(a)) * Lg - (g(b) - g(a)) * Lf
     Lh = 0
     (f(b) - f(a)) * Lg - (g(b) - g(a)) * Lf = 0
@@ -4410,7 +4415,7 @@ thm cauchy_mean_value_quotient_at:
         witness exist K R st {$has_derivative_at('[u, v], fn(y '[u, v]) R {g(y)}, c, K)} from dg(c):
             $has_derivative_at('[u, v], fn(y '[u, v]) R {g(y)}, c, dg(c))
         $is_differentiable_at('[u, v], fn(y '[u, v]) R {g(y)}, c)
-    by thm cauchy_mean_value_theorem(u, v, fn(y '[u, v]) R {f(y)}, fn(y '[u, v]) R {g(y)})
+    by thm cauchy_mean_value_theorem(u, v, fn(y1 '[u, v]) R {f(y1)}, fn(y1 '[u, v]) R {g(y1)})
     obtain c, Lf, Lg from exist c '(u, v), Lf, Lg R st {$has_derivative_at('[u, v], fn(y '[u, v]) R {f(y)}, c, Lf), $has_derivative_at('[u, v], fn(y '[u, v]) R {g(y)}, c, Lg), (fn(y '[u, v]) R {f(y)}(v) - fn(y '[u, v]) R {f(y)}(u)) * Lg = (fn(y '[u, v]) R {g(y)}(v) - fn(y '[u, v]) R {g(y)}(u)) * Lf}
     c > u
     c < v

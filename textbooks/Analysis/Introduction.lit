@@ -1,0 +1,25 @@
+# About This Project
+#
+# This project is an ongoing Litex formalization inspired by Terence Tao's
+# Analysis I. It follows the mathematical development of the book in source
+# order while expressing its definitions, constructions, and theorems through
+# Litex's fact-oriented proof interface. It is an independent translation
+# project, not an official edition of or substitute for the original book.
+#
+# Most declarations included here are accepted by the Litex verifier. The
+# remaining unchecked steps are kept visible as explicit trust boundaries using keyword `trust`.
+# Some correspond to arguments that a textbook naturally leaves to the reader;
+# others expose missing library support, automation, or proof work in the
+# current project. We try to fill in implicit reasoning when it clarifies the
+# formal dependencies, but occasionally retain a marked omission to respect
+# the book's mathematical pace and keep the formal text readable.
+#
+# Later chapters offer especially useful case studies: the construction of the
+# natural, integer, rational, and real number systems; sequences and series;
+# cardinality; continuity; and differentiation. Together they show how Litex
+# can grow a substantial mathematical context from readable definitions and
+# reusable facts while keeping its assumptions and proof debt inspectable.
+#
+# We hope readers gain both a clearer view of analysis and a practical sense of
+# how ordinary textbook mathematics can become checked formal mathematics,
+# including an honest understanding of what Litex can and cannot yet verify.

@@ -1,0 +1,27 @@
+# About This Project
+#
+# This project is an ongoing Litex formalization inspired by Terence Tao's
+# Analysis II. It follows the book's development from metric spaces and
+# continuity through Fourier analysis, multivariable calculus, measure, and
+# integration. It is an independent translation project, not an official
+# edition of or substitute for the original book.
+#
+# Most declarations included here are accepted by the Litex verifier, but the
+# project is not a complete formalization of every argument in the source. All
+# known unchecked steps remain visible as explicit trust boundaries. Some
+# reflect proof steps that the original exposition leaves to exercises or
+# compresses; others expose current gaps in Litex's library, automation, or the
+# translation itself. We fill in implicit reasoning where it illuminates the
+# mathematics, while occasionally retaining a clearly marked omission to
+# preserve the source's pace and avoid obscuring the main ideas with routine
+# infrastructure.
+#
+# The chapters on metric-space convergence, uniform convergence, power and
+# Fourier series, several-variable calculus, Lebesgue measure, and Lebesgue
+# integration provide particularly interesting examples of Litex handling
+# layered definitions and long dependency chains. They also make the remaining
+# boundaries of the system concrete rather than hiding them.
+#
+# We hope readers learn useful analysis from the formal development and see how
+# Litex turns mathematical statements into readable, reusable, and checkable
+# facts while reporting unfinished proof obligations honestly.
