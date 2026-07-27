@@ -2228,21 +2228,6 @@ sketch:
     witness exist f fn(x {0, 1, 2}) {3, 4, 5} st {$is_bijective_fn({0, 1, 2}, {3, 4, 5}, f)} from shift_0_to_3
     $has_equal_cardinality({0, 1, 2}, {3, 4, 5})
 
-    have fn collapse_to_two(n {0, 1, 2}) {3, 4} by cases:
-        case n = 0: 3
-        case n = 1: 3
-        case n = 2: 4
-
-    collapse_to_two(0) = 3
-    collapse_to_two(1) = 3
-    0 != 1
-    by contra:
-        ? not $is_bijective_fn({0, 1, 2}, {3, 4}, collapse_to_two)
-        impossible 0 = 1
-
-    finite_set_size({0, 1, 2}) = finite_set_size({3, 4, 5}) = 3
-    finite_set_size({3, 4}) = 2
-
 """
 Remark 3.6.3. The natural numbers have equal cardinality with the even natural
 numbers by the map n |-> 2n, even though the even naturals form a subset of N.

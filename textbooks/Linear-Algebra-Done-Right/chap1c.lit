@@ -69,6 +69,128 @@ prop is_partial_sum_sequence(s nonempty_set, v nonempty_set, space &chap1b::Vect
 prop is_finite_vector_sum(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, terms finite_seq(v, m), x v):
     exist partial finite_seq(v, m) st {$is_partial_sum_sequence(s, v, space, m, terms, partial), partial(m) = x}
 
+prop is_pointwise_vector_sum(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, terms1, terms2, terms3 finite_seq(v, m)):
+    forall k N_pos:
+        k <= m
+        =>:
+            terms3(k) = space.add(terms1(k), terms2(k))
+
+prop is_pointwise_vector_smul(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, a s, terms1, terms2 finite_seq(v, m)):
+    forall k N_pos:
+        k <= m
+        =>:
+            terms2(k) = space.smul(a, terms1(k))
+
+# A zero term sequence has the constant-zero partial-sum trace. This is the
+# zero-vector construction needed for the subspace-sum closure proof.
+thm finite_vector_sum_of_zero_terms:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, terms finite_seq(v, m):
+        forall k N_pos:
+            k <= m
+            =>:
+                terms(k) = space.zero
+        =>:
+            $is_finite_vector_sum(s, v, space, m, terms, space.zero)
+    have fn partial(k N_pos: k <= m) v = space.zero
+    claim:
+        ? $is_partial_sum_sequence(s, v, space, m, terms, partial)
+        partial(1) = space.zero = terms(1)
+        claim:
+            ? forall k N_pos:
+                2 <= k
+                k <= m
+                =>:
+                    partial(k) = space.add(partial(k - 1), terms(k))
+            partial(k) = space.zero
+            partial(k - 1) = space.zero
+            terms(k) = space.zero
+            space.add(partial(k - 1), terms(k)) = space.add(space.zero, space.zero) = space.zero
+        by def $is_partial_sum_sequence(s, v, space, m, terms, partial)
+    partial(m) = space.zero
+    witness exist accumulated finite_seq(v, m) st {$is_partial_sum_sequence(s, v, space, m, terms, accumulated), accumulated(m) = space.zero} from partial
+
+# Regroup two pointwise sums so their partial traces and current terms align.
+thm vector_add_regroup_for_direct_sum:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, u, w, p, q v:
+        space.add(space.add(u, w), space.add(p, q)) = space.add(space.add(u, p), space.add(w, q))
+    space.add(space.add(u, w), space.add(p, q)) = space.add(u, space.add(w, space.add(p, q)))
+    space.add(w, space.add(p, q)) = space.add(space.add(w, p), q)
+    space.add(w, p) = space.add(p, w)
+    space.add(space.add(w, p), q) = space.add(space.add(p, w), q)
+    space.add(space.add(p, w), q) = space.add(p, space.add(w, q))
+    space.add(w, space.add(p, q)) = space.add(p, space.add(w, q))
+    space.add(u, space.add(w, space.add(p, q))) = space.add(u, space.add(p, space.add(w, q)))
+    space.add(u, space.add(p, space.add(w, q))) = space.add(space.add(u, p), space.add(w, q))
+    space.add(space.add(u, w), space.add(p, q)) = space.add(space.add(u, p), space.add(w, q))
+
+thm finite_vector_sum_add:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, terms1, terms2 finite_seq(v, m), x, y v:
+        $is_finite_vector_sum(s, v, space, m, terms1, x)
+        $is_finite_vector_sum(s, v, space, m, terms2, y)
+        =>:
+            exist terms3 finite_seq(v, m) st {$is_pointwise_vector_sum(s, v, space, m, terms1, terms2, terms3), $is_finite_vector_sum(s, v, space, m, terms3, space.add(x, y))}
+    obtain partial1 from exist partial finite_seq(v, m) st {$is_partial_sum_sequence(s, v, space, m, terms1, partial), partial(m) = x}
+    obtain partial2 from exist partial finite_seq(v, m) st {$is_partial_sum_sequence(s, v, space, m, terms2, partial), partial(m) = y}
+    have fn terms3(k N_pos: k <= m) v = space.add(terms1(k), terms2(k))
+    have fn partial3(k N_pos: k <= m) v = space.add(partial1(k), partial2(k))
+    claim:
+        ? $is_pointwise_vector_sum(s, v, space, m, terms1, terms2, terms3)
+        by def $is_pointwise_vector_sum(s, v, space, m, terms1, terms2, terms3)
+    claim:
+        ? $is_partial_sum_sequence(s, v, space, m, terms3, partial3)
+        partial3(1) = space.add(partial1(1), partial2(1)) = space.add(terms1(1), terms2(1)) = terms3(1)
+        claim:
+            ? forall k N_pos:
+                2 <= k
+                k <= m
+                =>:
+                    partial3(k) = space.add(partial3(k - 1), terms3(k))
+            partial1(k) = space.add(partial1(k - 1), terms1(k))
+            partial2(k) = space.add(partial2(k - 1), terms2(k))
+            partial3(k) = space.add(space.add(partial1(k - 1), terms1(k)), space.add(partial2(k - 1), terms2(k)))
+            by thm vector_add_regroup_for_direct_sum(s, v, space, partial1(k - 1), terms1(k), partial2(k - 1), terms2(k))
+            partial3(k) = space.add(space.add(partial1(k - 1), partial2(k - 1)), space.add(terms1(k), terms2(k))) = space.add(partial3(k - 1), terms3(k))
+        by def $is_partial_sum_sequence(s, v, space, m, terms3, partial3)
+    partial3(m) = space.add(partial1(m), partial2(m)) = space.add(x, y)
+    witness exist summed_terms finite_seq(v, m) st {$is_pointwise_vector_sum(s, v, space, m, terms1, terms2, summed_terms), $is_finite_vector_sum(s, v, space, m, summed_terms, space.add(x, y))} from terms3:
+        witness exist accumulated finite_seq(v, m) st {$is_partial_sum_sequence(s, v, space, m, terms3, accumulated), accumulated(m) = space.add(x, y)} from partial3
+
+thm scalar_partial_trace_step:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, a s, current, previous, term v:
+        current = space.add(previous, term)
+        =>:
+            space.smul(a, current) = space.add(space.smul(a, previous), space.smul(a, term))
+    space.smul(a, current) = space.smul(a, space.add(previous, term))
+    space.smul(a, space.add(previous, term)) = space.add(space.smul(a, previous), space.smul(a, term))
+
+thm finite_vector_sum_smul:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, a s, terms1 finite_seq(v, m), x v:
+        $is_finite_vector_sum(s, v, space, m, terms1, x)
+        =>:
+            exist terms2 finite_seq(v, m) st {$is_pointwise_vector_smul(s, v, space, m, a, terms1, terms2), $is_finite_vector_sum(s, v, space, m, terms2, space.smul(a, x))}
+    obtain partial1 from exist partial finite_seq(v, m) st {$is_partial_sum_sequence(s, v, space, m, terms1, partial), partial(m) = x}
+    have fn terms2(k N_pos: k <= m) v = space.smul(a, terms1(k))
+    have fn partial2(k N_pos: k <= m) v = space.smul(a, partial1(k))
+    claim:
+        ? $is_pointwise_vector_smul(s, v, space, m, a, terms1, terms2)
+        by def $is_pointwise_vector_smul(s, v, space, m, a, terms1, terms2)
+    claim:
+        ? $is_partial_sum_sequence(s, v, space, m, terms2, partial2)
+        partial2(1) = space.smul(a, partial1(1)) = space.smul(a, terms1(1)) = terms2(1)
+        claim:
+            ? forall k N_pos:
+                2 <= k
+                k <= m
+                =>:
+                    partial2(k) = space.add(partial2(k - 1), terms2(k))
+            partial1(k) = space.add(partial1(k - 1), terms1(k))
+            by thm scalar_partial_trace_step(s, v, space, a, partial1(k), partial1(k - 1), terms1(k))
+            partial2(k) = space.smul(a, partial1(k)) = space.add(space.smul(a, partial1(k - 1)), space.smul(a, terms1(k))) = space.add(partial2(k - 1), terms2(k))
+        by def $is_partial_sum_sequence(s, v, space, m, terms2, partial2)
+    partial2(m) = space.smul(a, partial1(m)) = space.smul(a, x)
+    witness exist scaled_terms finite_seq(v, m) st {$is_pointwise_vector_smul(s, v, space, m, a, terms1, scaled_terms), $is_finite_vector_sum(s, v, space, m, scaled_terms, space.smul(a, x))} from terms2:
+        witness exist accumulated finite_seq(v, m) st {$is_partial_sum_sequence(s, v, space, m, terms2, accumulated), accumulated(m) = space.smul(a, x)} from partial2
+
 prop is_summand_sequence(v nonempty_set, m N_pos, parts finite_seq(power_set(v), m), terms finite_seq(v, m)):
     forall k N_pos:
         k <= m
@@ -81,13 +203,14 @@ prop is_subspace_sum_member(s nonempty_set, v nonempty_set, space &chap1b::Vecto
 template<s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos>:
     have fn subspace_sum(parts finite_seq(power_set(v), m)) power_set(v) = {x v: $is_subspace_sum_member(s, v, space, m, parts, x)}
 
-# Definitional projection bridge: the verifier currently does not unfold the
-# set-builder equality of a parameterized template instance at call sites.
-axiom subspace_sum_member_spec:
+# Membership in the instantiated set builder exposes its defining predicate.
+thm subspace_sum_member_spec:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, parts finite_seq(power_set(v), m), x v:
         x $in \subspace_sum<s, v, space, m>(parts)
         =>:
             $is_subspace_sum_member(s, v, space, m, parts, x)
+
+    $is_subspace_sum_member(s, v, space, m, parts, x)
 
 # The canonical two-summand specialization is kept separate because later
 # kernel/range and dimension arguments need a compact callable interface.
@@ -122,14 +245,74 @@ prop contains_subspace_family(v nonempty_set, m N_pos, parts finite_seq(power_se
         =>:
             parts(k) $subset W
 
-# The least-containing direction is proved below by induction over an existing
-# partial-sum trace. Closure and the canonical single-summand embedding still
-# need explicit construction and combination of such traces.
-axiom subspace_sum_is_subspace:
+# Zero, addition, and scalar closure follow by constructing and combining the
+# corresponding finite partial-sum traces.
+thm subspace_sum_is_subspace:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, parts finite_seq(power_set(v), m):
         $is_subspace_family(s, v, space, m, parts)
         =>:
             $is_subspace(s, v, space, \subspace_sum<s, v, space, m>(parts))
+    have fn zero_terms(k N_pos: k <= m) v = space.zero
+    claim:
+        ? $is_summand_sequence(v, m, parts, zero_terms)
+        claim:
+            ? forall k N_pos:
+                k <= m
+                =>:
+                    zero_terms(k) $in parts(k)
+            $is_subspace(s, v, space, parts(k))
+            space.zero $in parts(k)
+            zero_terms(k) = space.zero
+            zero_terms(k) $in parts(k)
+        by def $is_summand_sequence(v, m, parts, zero_terms)
+    by thm finite_vector_sum_of_zero_terms(s, v, space, m, zero_terms)
+    witness exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, space.zero)} from zero_terms
+    space.zero $in \subspace_sum<s, v, space, m>(parts)
+    witness $is_nonempty_set(\subspace_sum<s, v, space, m>(parts)) from space.zero
+    claim:
+        ? forall x, y \subspace_sum<s, v, space, m>(parts):
+            space.add(x, y) $in \subspace_sum<s, v, space, m>(parts)
+        by thm subspace_sum_member_spec(s, v, space, m, parts, x)
+        by thm subspace_sum_member_spec(s, v, space, m, parts, y)
+        obtain terms1 from exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, x)}
+        obtain terms2 from exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, y)}
+        obtain terms3 from exist summed_terms finite_seq(v, m) st {$is_pointwise_vector_sum(s, v, space, m, terms1, terms2, summed_terms), $is_finite_vector_sum(s, v, space, m, summed_terms, space.add(x, y))}
+        claim:
+            ? $is_summand_sequence(v, m, parts, terms3)
+            claim:
+                ? forall k N_pos:
+                    k <= m
+                    =>:
+                        terms3(k) $in parts(k)
+                terms1(k) $in parts(k)
+                terms2(k) $in parts(k)
+                $is_subspace(s, v, space, parts(k))
+                space.add(terms1(k), terms2(k)) $in parts(k)
+                terms3(k) = space.add(terms1(k), terms2(k))
+                terms3(k) $in parts(k)
+            by def $is_summand_sequence(v, m, parts, terms3)
+        witness exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, space.add(x, y))} from terms3
+    claim:
+        ? forall a s, x \subspace_sum<s, v, space, m>(parts):
+            space.smul(a, x) $in \subspace_sum<s, v, space, m>(parts)
+        by thm subspace_sum_member_spec(s, v, space, m, parts, x)
+        obtain terms1 from exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, x)}
+        obtain terms2 from exist scaled_terms finite_seq(v, m) st {$is_pointwise_vector_smul(s, v, space, m, a, terms1, scaled_terms), $is_finite_vector_sum(s, v, space, m, scaled_terms, space.smul(a, x))}
+        claim:
+            ? $is_summand_sequence(v, m, parts, terms2)
+            claim:
+                ? forall k N_pos:
+                    k <= m
+                    =>:
+                        terms2(k) $in parts(k)
+                terms1(k) $in parts(k)
+                $is_subspace(s, v, space, parts(k))
+                space.smul(a, terms1(k)) $in parts(k)
+                terms2(k) = space.smul(a, terms1(k))
+                terms2(k) $in parts(k)
+            by def $is_summand_sequence(v, m, parts, terms2)
+        witness exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, space.smul(a, x))} from terms2
+    by def $is_subspace(s, v, space, \subspace_sum<s, v, space, m>(parts))
 
 thm each_subspace_is_contained_in_sum:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, parts finite_seq(power_set(v), m), k N_pos:
@@ -366,22 +549,123 @@ prop has_only_trivial_zero_decomposition(s nonempty_set, v nonempty_set, space &
         =>:
             $is_zero_vector_sequence(s, v, space, m, terms)
 
-# Remaining modeling blocker: the source context assumes every `parts(k)` is a
-# subspace, but these two formal statements currently omit that premise. In
-# particular, the all-zero comparison sequence need not be a summand sequence
-# for arbitrary subsets. Keep the boundary visible until the statements are
-# repaired and the finite-fold subtraction lemma is proved.
-axiom direct_sum_implies_trivial_zero_decomposition:
+# The source's standing subspace-family hypothesis makes the all-zero
+# comparison sequence available.
+thm direct_sum_implies_trivial_zero_decomposition:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, parts finite_seq(power_set(v), m):
+        $is_subspace_family(s, v, space, m, parts)
         $is_direct_sum(s, v, space, m, parts)
         =>:
             $has_only_trivial_zero_decomposition(s, v, space, m, parts)
+    claim:
+        ? forall terms finite_seq(v, m):
+            $is_summand_sequence(v, m, parts, terms)
+            $is_finite_vector_sum(s, v, space, m, terms, space.zero)
+            =>:
+                $is_zero_vector_sequence(s, v, space, m, terms)
+        have fn zero_terms(k N_pos: k <= m) v = space.zero
+        claim:
+            ? $is_summand_sequence(v, m, parts, zero_terms)
+            claim:
+                ? forall k N_pos:
+                    k <= m
+                    =>:
+                        zero_terms(k) $in parts(k)
+                $is_subspace(s, v, space, parts(k))
+                zero_terms(k) = space.zero
+                space.zero $in parts(k)
+                zero_terms(k) $in parts(k)
+            by def $is_summand_sequence(v, m, parts, zero_terms)
+        by thm finite_vector_sum_of_zero_terms(s, v, space, m, zero_terms)
+        forall x v, terms1, terms2 finite_seq(v, m):
+            $is_summand_sequence(v, m, parts, terms1)
+            $is_summand_sequence(v, m, parts, terms2)
+            $is_finite_vector_sum(s, v, space, m, terms1, x)
+            $is_finite_vector_sum(s, v, space, m, terms2, x)
+            =>:
+                terms1 = terms2
+        terms = zero_terms
+        claim:
+            ? forall k N_pos:
+                k <= m
+                =>:
+                    terms(k) = space.zero
+            terms(k) = zero_terms(k) = space.zero
+        by def $is_zero_vector_sequence(s, v, space, m, terms)
+    by def $has_only_trivial_zero_decomposition(s, v, space, m, parts)
 
-axiom trivial_zero_decomposition_implies_direct_sum:
+thm trivial_zero_decomposition_implies_direct_sum:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, parts finite_seq(power_set(v), m):
+        $is_subspace_family(s, v, space, m, parts)
         $has_only_trivial_zero_decomposition(s, v, space, m, parts)
         =>:
             $is_direct_sum(s, v, space, m, parts)
+    claim:
+        ? forall x v, terms1, terms2 finite_seq(v, m):
+            $is_summand_sequence(v, m, parts, terms1)
+            $is_summand_sequence(v, m, parts, terms2)
+            $is_finite_vector_sum(s, v, space, m, terms1, x)
+            $is_finite_vector_sum(s, v, space, m, terms2, x)
+            =>:
+                terms1 = terms2
+        have minus_one s = space.scalars.neg(space.scalars.one)
+        obtain neg_terms2 from exist scaled_terms finite_seq(v, m) st {$is_pointwise_vector_smul(s, v, space, m, minus_one, terms2, scaled_terms), $is_finite_vector_sum(s, v, space, m, scaled_terms, space.smul(minus_one, x))}
+        obtain differences from exist summed_terms finite_seq(v, m) st {$is_pointwise_vector_sum(s, v, space, m, terms1, neg_terms2, summed_terms), $is_finite_vector_sum(s, v, space, m, summed_terms, space.add(x, space.smul(minus_one, x)))}
+        by thm chap1b::minus_one_times_vector(s, v, space, x)
+        by thm chap1b::vector_neg_spec(s, v, space, x)
+        space.smul(minus_one, x) = \chap1b::vector_neg<s, v, space>(x)
+        space.add(x, space.smul(minus_one, x)) = space.add(x, \chap1b::vector_neg<s, v, space>(x)) = space.zero
+        $is_finite_vector_sum(s, v, space, m, differences, space.zero)
+        claim:
+            ? $is_summand_sequence(v, m, parts, neg_terms2)
+            claim:
+                ? forall k N_pos:
+                    k <= m
+                    =>:
+                        neg_terms2(k) $in parts(k)
+                terms2(k) $in parts(k)
+                $is_subspace(s, v, space, parts(k))
+                space.smul(minus_one, terms2(k)) $in parts(k)
+                neg_terms2(k) = space.smul(minus_one, terms2(k))
+                neg_terms2(k) $in parts(k)
+            by def $is_summand_sequence(v, m, parts, neg_terms2)
+        claim:
+            ? $is_summand_sequence(v, m, parts, differences)
+            claim:
+                ? forall k N_pos:
+                    k <= m
+                    =>:
+                        differences(k) $in parts(k)
+                terms1(k) $in parts(k)
+                neg_terms2(k) $in parts(k)
+                $is_subspace(s, v, space, parts(k))
+                space.add(terms1(k), neg_terms2(k)) $in parts(k)
+                differences(k) = space.add(terms1(k), neg_terms2(k))
+                differences(k) $in parts(k)
+            by def $is_summand_sequence(v, m, parts, differences)
+        forall terms finite_seq(v, m):
+            $is_summand_sequence(v, m, parts, terms)
+            $is_finite_vector_sum(s, v, space, m, terms, space.zero)
+            =>:
+                $is_zero_vector_sequence(s, v, space, m, terms)
+        $is_zero_vector_sequence(s, v, space, m, differences)
+        claim:
+            ? forall k N_pos:
+                k <= m
+                =>:
+                    terms1(k) = terms2(k)
+            differences(k) = space.zero
+            differences(k) = space.add(terms1(k), neg_terms2(k))
+            neg_terms2(k) = space.smul(minus_one, terms2(k))
+            by thm chap1b::minus_one_times_vector(s, v, space, terms2(k))
+            neg_terms2(k) = \chap1b::vector_neg<s, v, space>(terms2(k))
+            by thm chap1b::vector_neg_spec(s, v, space, terms2(k))
+            space.add(terms1(k), \chap1b::vector_neg<s, v, space>(terms2(k))) = space.zero = space.add(terms2(k), \chap1b::vector_neg<s, v, space>(terms2(k)))
+            by thm chap1b::add_right_cancel(s, v, space, terms1(k), terms2(k), \chap1b::vector_neg<s, v, space>(terms2(k)))
+            terms1(k) = terms2(k)
+        $fn_eq(terms1, terms2)
+        terms1 = terms2
+    by def $is_direct_sum(s, v, space, m, parts)
 
 # Result 1.46. For two subspaces, the sum is direct iff their intersection is
 # the singleton containing vector zero.  For the forward implication, compare
@@ -422,18 +706,117 @@ thm direct_sum_pair_implies_zero_intersection:
         forall x {space.zero}:
             x $in intersect(U, W)
 
-# Source handling: the displayed cancellation proof below previously reduced
-# this result to one trusted equality. In a full release project run it now
-# spends over five minutes expanding that proof without a verifier result, so
-# keep the exact source statement as a named boundary while equality-congruence
-# and its performance path are repaired.
-axiom zero_intersection_implies_direct_sum_pair:
+thm right_difference_recombines:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, u2, w1, w2 v:
+        space.add(space.add(w2, \chap1b::vector_neg<s, v, space>(w1)), space.add(u2, w1)) = space.add(u2, w2)
+    by thm chap1b::vector_neg_spec(s, v, space, w1)
+    by thm vector_add_regroup_for_direct_sum(s, v, space, w2, \chap1b::vector_neg<s, v, space>(w1), u2, w1)
+    space.add(space.add(w2, \chap1b::vector_neg<s, v, space>(w1)), space.add(u2, w1)) = space.add(space.add(w2, u2), space.add(\chap1b::vector_neg<s, v, space>(w1), w1))
+    space.add(\chap1b::vector_neg<s, v, space>(w1), w1) = space.add(w1, \chap1b::vector_neg<s, v, space>(w1)) = space.zero
+    space.add(w2, u2) = space.add(u2, w2)
+    space.add(space.add(w2, \chap1b::vector_neg<s, v, space>(w1)), space.add(u2, w1)) = space.add(space.add(u2, w2), space.zero) = space.add(space.zero, space.add(u2, w2)) = space.add(u2, w2)
+
+thm left_difference_recombines_for_direct_sum:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, u1, u2, w1 v:
+        space.add(space.add(u1, \chap1b::vector_neg<s, v, space>(u2)), space.add(w1, u2)) = space.add(u1, w1)
+    by thm right_difference_recombines(s, v, space, w1, u2, u1)
+    space.add(space.add(u1, \chap1b::vector_neg<s, v, space>(u2)), space.add(w1, u2)) = space.add(w1, u1) = space.add(u1, w1)
+
+thm reversed_right_difference_recombines:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, u2, w1, w2 v:
+        space.add(space.add(\chap1b::vector_neg<s, v, space>(w1), w2), space.add(w1, u2)) = space.add(u2, w2)
+    by thm chap1b::vector_neg_spec(s, v, space, w1)
+    by thm vector_add_regroup_for_direct_sum(s, v, space, \chap1b::vector_neg<s, v, space>(w1), w2, w1, u2)
+    space.add(space.add(\chap1b::vector_neg<s, v, space>(w1), w2), space.add(w1, u2)) = space.add(space.add(\chap1b::vector_neg<s, v, space>(w1), w1), space.add(w2, u2))
+    space.add(\chap1b::vector_neg<s, v, space>(w1), w1) = space.add(w1, \chap1b::vector_neg<s, v, space>(w1)) = space.zero
+    space.add(w2, u2) = space.add(u2, w2)
+    space.add(space.add(\chap1b::vector_neg<s, v, space>(w1), w2), space.add(w1, u2)) = space.add(space.zero, space.add(u2, w2)) = space.add(u2, w2)
+
+thm equal_pair_sums_give_equal_differences:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, u1, u2, w1, w2 v:
+        space.add(u1, w1) = space.add(u2, w2)
+        =>:
+            space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) = space.add(w2, \chap1b::vector_neg<s, v, space>(w1))
+    have left v = space.add(u1, \chap1b::vector_neg<s, v, space>(u2))
+    have right_reversed v = space.add(\chap1b::vector_neg<s, v, space>(w1), w2)
+    have common v = space.add(w1, u2)
+    by thm left_difference_recombines_for_direct_sum(s, v, space, u1, u2, w1)
+    by thm reversed_right_difference_recombines(s, v, space, u2, w1, w2)
+    space.add(left, common) = space.add(u1, w1) = space.add(u2, w2) = space.add(right_reversed, common)
+    by thm chap1b::add_right_cancel(s, v, space, left, right_reversed, common)
+    space.add(\chap1b::vector_neg<s, v, space>(w1), w2) = space.add(w2, \chap1b::vector_neg<s, v, space>(w1))
+    space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) = space.add(w2, \chap1b::vector_neg<s, v, space>(w1))
+
+thm subspace_contains_vector_neg:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U power_set(v), x U:
+        $is_subspace(s, v, space, U)
+        =>:
+            \chap1b::vector_neg<s, v, space>(x) $in U
+    by thm chap1b::minus_one_times_vector(s, v, space, x)
+    \chap1b::vector_neg<s, v, space>(x) = space.smul(space.scalars.neg(space.scalars.one), x)
+    space.smul(space.scalars.neg(space.scalars.one), x) $in U
+    \chap1b::vector_neg<s, v, space>(x) $in U
+
+thm equal_pair_sum_difference_lies_in_intersection:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W power_set(v), u1, u2 U, w1, w2 W:
+        $is_subspace(s, v, space, U)
+        $is_subspace(s, v, space, W)
+        space.add(u1, w1) = space.add(u2, w2)
+        =>:
+            space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) $in intersect(U, W)
+    by thm subspace_contains_vector_neg(s, v, space, U, u2)
+    by thm subspace_contains_vector_neg(s, v, space, W, w1)
+    space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) $in U
+    space.add(w2, \chap1b::vector_neg<s, v, space>(w1)) $in W
+    by thm equal_pair_sums_give_equal_differences(s, v, space, u1, u2, w1, w2)
+    space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) $in W
+    space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) $in intersect(U, W)
+
+thm zero_intersection_difference_is_zero:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W power_set(v), u1, u2 U, w1, w2 W:
+        $is_subspace(s, v, space, U)
+        $is_subspace(s, v, space, W)
+        intersect(U, W) = {space.zero}
+        space.add(u1, w1) = space.add(u2, w2)
+        =>:
+            space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) = space.zero
+    by thm equal_pair_sum_difference_lies_in_intersection(s, v, space, U, W, u1, u2, w1, w2)
+    space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) $in {space.zero}
+    space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) = space.zero
+
+thm zero_intersection_unique_components:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W power_set(v), u1, u2 U, w1, w2 W:
+        $is_subspace(s, v, space, U)
+        $is_subspace(s, v, space, W)
+        intersect(U, W) = {space.zero}
+        space.add(u1, w1) = space.add(u2, w2)
+        =>:
+            u1 = u2
+            w1 = w2
+    by thm zero_intersection_difference_is_zero(s, v, space, U, W, u1, u2, w1, w2)
+    by thm chap1b::vector_neg_spec(s, v, space, u2)
+    space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) = space.add(u2, \chap1b::vector_neg<s, v, space>(u2))
+    by thm chap1b::add_right_cancel(s, v, space, u1, u2, \chap1b::vector_neg<s, v, space>(u2))
+    u1 = u2
+    space.add(u1, w1) = space.add(u1, w2)
+    by thm chap1b::add_left_cancel(s, v, space, u1, w1, w2)
+    w1 = w2
+
+thm zero_intersection_implies_direct_sum_pair:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W power_set(v):
         $is_subspace(s, v, space, U)
         $is_subspace(s, v, space, W)
         intersect(U, W) = {space.zero}
         =>:
             $is_direct_sum_pair(s, v, space, U, W)
+    claim:
+        ? forall u1, u2 U, w1, w2 W:
+            space.add(u1, w1) = space.add(u2, w2)
+            =>:
+                u1 = u2
+                w1 = w2
+        by thm zero_intersection_unique_components(s, v, space, U, W, u1, u2, w1, w2)
+    by def $is_direct_sum_pair(s, v, space, U, W)
 
 # Remark on the direct-sum analogy. Direct sums play the role of disjoint
 # unions, but Example 1.44 shows that pairwise intersections equal to {0} do

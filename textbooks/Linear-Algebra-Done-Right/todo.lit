@@ -1,5 +1,9 @@
 # Mathematics still to be completed
 #
+# Chapter 1A, Result 1.8 — nonzero complex inverse
+# The coordinate inverse formula is explicit. The remaining gap is the
+# sum-of-squares argument proving its denominator is nonzero.
+#
 # Chapter 1A, Definitions 1.3, 1.6, and 1.8 — scalar and finite-list objects
 # The real scalar system is checked. The remaining constructions are the
 # Complex scalar system from coordinate arithmetic and the length-zero finite
@@ -12,22 +16,17 @@
 #
 # Chapter 1C, Definition 1.33 and Results 1.40-1.46 — inherited subspaces and sums
 # Subspace closure, finite subspace sums, and the two-summand direct-sum
-# relations are present. The inherited VectorSpace structure on a subspace,
-# the finite-family construction proofs, and the general direct-sum criteria
-# remain incomplete.
-#
-# Chapter 1C, Result 1.46 — zero intersection implies direct sum
-# The result is a named boundary while the full source cancellation proof has
-# an unbounded equality-congruence performance path. Its exact source
-# statement and the two direct-sum directions remain visible.
+# relations and finite-family direct-sum criteria are checked. The inherited
+# VectorSpace structure on a subspace remains incomplete.
 #
 # Chapter 2, Sections 2A-2C — bases and finite dimension
 # Linear combinations, span, independence, bases, and dimension are callable
-# interfaces. The recursive construction and uniqueness of a finite linear
-# combination, its zero/additive/negative identities, and the finite-sum proof
-# that span is the smallest containing subspace remain to be supplied. The
-# structural span statements currently use a selected carrier stated equal to
-# the displayed span. The finite-list deletion and exchange arguments needed
+# interfaces. The recursive construction and existence of a finite linear
+# combination and its zero-coefficient, additive, and negative identities are
+# checked. Span is now a checked subspace, and its containment and minimality
+# proofs are explicit except for two narrow holes: the Kronecker coefficient
+# trace for one displayed vector and bounded induction over a dependent
+# closed-range partial trace. The finite-list deletion and exchange arguments needed
 # for basis extraction and extension remain to be proved. The source proof that
 # two bases have the same length applies the two resulting length inequalities
 # in opposite directions; its full release replay remains a named boundary.

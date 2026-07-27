@@ -23,6 +23,10 @@ sketch:
 # identities, unique additive and nonzero multiplicative inverses, and
 # distributivity. ScalarSystem packages this same reusable operation surface;
 # its operation fields remain callable in every later chapter.
+# Source handling: the book proves commutativity of multiplication immediately
+# after this result, but leaves several other listed laws as exercises. The two
+# named boundaries below therefore mix source-proved coordinate algebra with
+# source-deferred clauses; Wave 1 must split them before reducing either debt.
 struct ScalarSystem<s nonempty_set>:
     zero s
     one s
@@ -51,9 +55,100 @@ struct ScalarSystem<s nonempty_set>:
 prop is_scalar_system(s nonempty_set, scalar_zero, scalar_one s, scalar_add fn(x, y s) s, scalar_neg fn(x s) s, scalar_mul fn(x, y s) s, scalar_inv fn(x s) s):
     (scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv) $in &ScalarSystem<s>
 
-# Remaining proof boundary: strict verification does not yet normalize the
-# repeated Complex projections through nested operation calls.
-axiom complex_arithmetic_laws:
+thm complex_mul_comm:
+    ? forall x, y &Complex:
+        complex_mul(x, y) = complex_mul(y, x)
+    complex_mul(x, y) = (x.re * y.re - x.im * y.im, x.re * y.im + x.im * y.re)
+    complex_mul(y, x) = (y.re * x.re - y.im * x.im, y.re * x.im + y.im * x.re)
+    &Complex{complex_mul(x, y)}.re = x.re * y.re - x.im * y.im = y.re * x.re - y.im * x.im = &Complex{complex_mul(y, x)}.re
+    &Complex{complex_mul(x, y)}.im = x.re * y.im + x.im * y.re = y.re * x.im + y.im * x.re = &Complex{complex_mul(y, x)}.im
+    complex_mul(x, y) = complex_mul(y, x)
+
+thm complex_add_laws:
+    ? forall x, y, z &Complex:
+        complex_add(complex_add(x, y), z) = complex_add(x, complex_add(y, z))
+        complex_add(x, y) = complex_add(y, x)
+        complex_add(complex_zero, x) = x
+    complex_add(x, y) = (x.re + y.re, x.im + y.im)
+    complex_add(y, z) = (y.re + z.re, y.im + z.im)
+    complex_add(complex_add(x, y), z) = (x.re + y.re + z.re, x.im + y.im + z.im)
+    complex_add(x, complex_add(y, z)) = (x.re + (y.re + z.re), x.im + (y.im + z.im))
+    &Complex{complex_add(complex_add(x, y), z)}.re = x.re + y.re + z.re = x.re + (y.re + z.re) = &Complex{complex_add(x, complex_add(y, z))}.re
+    &Complex{complex_add(complex_add(x, y), z)}.im = x.im + y.im + z.im = x.im + (y.im + z.im) = &Complex{complex_add(x, complex_add(y, z))}.im
+    complex_add(complex_add(x, y), z) = complex_add(x, complex_add(y, z))
+    complex_add(y, x) = (y.re + x.re, y.im + x.im)
+    &Complex{complex_add(x, y)}.re = x.re + y.re = y.re + x.re = &Complex{complex_add(y, x)}.re
+    &Complex{complex_add(x, y)}.im = x.im + y.im = y.im + x.im = &Complex{complex_add(y, x)}.im
+    complex_add(x, y) = complex_add(y, x)
+    complex_add(complex_zero, x) = (0 + x.re, 0 + x.im) = (x.re, x.im) = x
+
+thm complex_mul_laws:
+    ? forall x, y, z &Complex:
+        complex_mul(complex_mul(x, y), z) = complex_mul(x, complex_mul(y, z))
+        complex_mul(x, complex_add(y, z)) = complex_add(complex_mul(x, y), complex_mul(x, z))
+        complex_mul(complex_one, x) = x
+    complex_mul(x, y) = (x.re * y.re - x.im * y.im, x.re * y.im + x.im * y.re)
+    complex_mul(y, z) = (y.re * z.re - y.im * z.im, y.re * z.im + y.im * z.re)
+    complex_mul(complex_mul(x, y), z) = ((x.re * y.re - x.im * y.im) * z.re - (x.re * y.im + x.im * y.re) * z.im, (x.re * y.re - x.im * y.im) * z.im + (x.re * y.im + x.im * y.re) * z.re)
+    complex_mul(x, complex_mul(y, z)) = (x.re * (y.re * z.re - y.im * z.im) - x.im * (y.re * z.im + y.im * z.re), x.re * (y.re * z.im + y.im * z.re) + x.im * (y.re * z.re - y.im * z.im))
+    &Complex{complex_mul(complex_mul(x, y), z)}.re = (x.re * y.re - x.im * y.im) * z.re - (x.re * y.im + x.im * y.re) * z.im = x.re * (y.re * z.re - y.im * z.im) - x.im * (y.re * z.im + y.im * z.re) = &Complex{complex_mul(x, complex_mul(y, z))}.re
+    &Complex{complex_mul(complex_mul(x, y), z)}.im = (x.re * y.re - x.im * y.im) * z.im + (x.re * y.im + x.im * y.re) * z.re = x.re * (y.re * z.im + y.im * z.re) + x.im * (y.re * z.re - y.im * z.im) = &Complex{complex_mul(x, complex_mul(y, z))}.im
+    complex_mul(complex_mul(x, y), z) = complex_mul(x, complex_mul(y, z))
+    complex_add(y, z) = (y.re + z.re, y.im + z.im)
+    complex_mul(x, complex_add(y, z)) = (x.re * (y.re + z.re) - x.im * (y.im + z.im), x.re * (y.im + z.im) + x.im * (y.re + z.re))
+    complex_mul(x, z) = (x.re * z.re - x.im * z.im, x.re * z.im + x.im * z.re)
+    complex_add(complex_mul(x, y), complex_mul(x, z)) = (x.re * y.re - x.im * y.im + (x.re * z.re - x.im * z.im), x.re * y.im + x.im * y.re + (x.re * z.im + x.im * z.re))
+    &Complex{complex_mul(x, complex_add(y, z))}.re = x.re * (y.re + z.re) - x.im * (y.im + z.im) = x.re * y.re - x.im * y.im + (x.re * z.re - x.im * z.im) = &Complex{complex_add(complex_mul(x, y), complex_mul(x, z))}.re
+    &Complex{complex_mul(x, complex_add(y, z))}.im = x.re * (y.im + z.im) + x.im * (y.re + z.re) = x.re * y.im + x.im * y.re + (x.re * z.im + x.im * z.re) = &Complex{complex_add(complex_mul(x, y), complex_mul(x, z))}.im
+    complex_mul(x, complex_add(y, z)) = complex_add(complex_mul(x, y), complex_mul(x, z))
+    complex_mul(complex_one, x) = (1 * x.re - 0 * x.im, 1 * x.im + 0 * x.re) = (x.re, x.im) = x
+
+thm complex_additive_inverse_exists:
+    ? forall x &Complex:
+        exist y &Complex st {complex_add(x, y) = complex_zero}
+    have inverse &Complex = (-x.re, -x.im)
+    complex_add(x, inverse) = (x.re + (-x.re), x.im + (-x.im)) = (0, 0) = complex_zero
+    witness exist y &Complex st {complex_add(x, y) = complex_zero} from inverse
+
+thm complex_additive_inverse_unique:
+    ? forall x, inverse, y1, y2 &Complex:
+        complex_add(x, inverse) = complex_zero
+        complex_add(x, y1) = complex_zero
+        complex_add(x, y2) = complex_zero
+        =>:
+            y1 = y2
+    by thm complex_add_laws(inverse, x, y1)
+    by thm complex_add_laws(y1, inverse, x)
+    complex_add(inverse, x) = complex_add(x, inverse) = complex_zero
+    y1 = complex_add(complex_zero, y1)
+    complex_add(complex_zero, y1) = complex_add(complex_add(inverse, x), y1)
+    complex_add(complex_add(inverse, x), y1) = complex_add(inverse, complex_add(x, y1))
+    complex_add(inverse, complex_add(x, y1)) = complex_add(inverse, complex_zero)
+    complex_add(inverse, complex_zero) = complex_add(complex_zero, inverse) = inverse
+    by thm complex_add_laws(inverse, x, y2)
+    by thm complex_add_laws(y2, inverse, x)
+    y2 = complex_add(complex_zero, y2)
+    complex_add(complex_zero, y2) = complex_add(complex_add(inverse, x), y2)
+    complex_add(complex_add(inverse, x), y2) = complex_add(inverse, complex_add(x, y2))
+    complex_add(inverse, complex_add(x, y2)) = complex_add(inverse, complex_zero) = inverse
+    y1 = y2
+
+thm complex_additive_inverse_exists_unique:
+    ? forall x &Complex:
+        exist! y &Complex st {complex_add(x, y) = complex_zero}
+    by thm complex_additive_inverse_exists(x)
+    obtain inverse from exist y &Complex st {complex_add(x, y) = complex_zero}
+    claim:
+        ? forall y1, y2 &Complex:
+            complex_add(x, y1) = complex_zero
+            complex_add(x, y2) = complex_zero
+            =>:
+                y1 = y2
+        by thm complex_additive_inverse_unique(x, inverse, y1, y2)
+        y1 = y2
+    witness exist! y &Complex st {complex_add(x, y) = complex_zero} from inverse
+
+thm complex_arithmetic_laws:
     ? forall x, y, z &Complex:
         complex_zero != complex_one
         complex_add(complex_add(x, y), z) = complex_add(x, complex_add(y, z))
@@ -64,12 +159,70 @@ axiom complex_arithmetic_laws:
         complex_add(complex_zero, x) = x
         complex_mul(complex_one, x) = x
         exist! w &Complex st {complex_add(x, w) = complex_zero}
+    complex_zero = (0, 0)
+    complex_one = (1, 0)
+    complex_zero != complex_one
+    by thm complex_add_laws(x, y, z)
+    by thm complex_mul_comm(x, y)
+    by thm complex_mul_laws(x, y, z)
+    by thm complex_additive_inverse_exists_unique(x)
 
-axiom complex_nonzero_inverse_exists_unique:
+thm complex_nonzero_inverse_exists:
+    ? forall x &Complex:
+        x != complex_zero
+        =>:
+            exist y &Complex st {complex_mul(x, y) = complex_one}
+    have d R = x.re^2 + x.im^2
+    # Proof debt: the verifier does not close the sum-of-squares contradiction.
+    trust d != 0
+    have inverse &Complex = (x.re / d, -x.im / d)
+    complex_mul(x, inverse) = (x.re * (x.re / d) - x.im * (-x.im / d), x.re * (-x.im / d) + x.im * (x.re / d))
+    &Complex{complex_mul(x, inverse)}.re = x.re * (x.re / d) - x.im * (-x.im / d) = (x.re^2 + x.im^2) / d = d / d = 1 = complex_one.re
+    &Complex{complex_mul(x, inverse)}.im = x.re * (-x.im / d) + x.im * (x.re / d) = 0 = complex_one.im
+    complex_mul(x, inverse) = complex_one
+    witness exist y &Complex st {complex_mul(x, y) = complex_one} from inverse
+
+thm complex_inverse_unique:
+    ? forall x, inverse, y1, y2 &Complex:
+        complex_mul(x, inverse) = complex_one
+        complex_mul(x, y1) = complex_one
+        complex_mul(x, y2) = complex_one
+        =>:
+            y1 = y2
+    by thm complex_mul_comm(inverse, x)
+    by thm complex_mul_laws(y1, inverse, x)
+    by thm complex_mul_laws(inverse, x, y1)
+    by thm complex_mul_laws(inverse, complex_one, x)
+    y1 = complex_mul(complex_one, y1)
+    complex_mul(complex_one, y1) = complex_mul(complex_mul(inverse, x), y1)
+    complex_mul(complex_mul(inverse, x), y1) = complex_mul(inverse, complex_mul(x, y1))
+    complex_mul(inverse, complex_mul(x, y1)) = complex_mul(inverse, complex_one)
+    by thm complex_mul_comm(inverse, complex_one)
+    complex_mul(inverse, complex_one) = complex_mul(complex_one, inverse) = inverse
+    by thm complex_mul_laws(y2, inverse, x)
+    by thm complex_mul_laws(inverse, x, y2)
+    y2 = complex_mul(complex_one, y2)
+    complex_mul(complex_one, y2) = complex_mul(complex_mul(inverse, x), y2)
+    complex_mul(complex_mul(inverse, x), y2) = complex_mul(inverse, complex_mul(x, y2))
+    complex_mul(inverse, complex_mul(x, y2)) = complex_mul(inverse, complex_one) = inverse
+    y1 = y2
+
+thm complex_nonzero_inverse_exists_unique:
     ? forall x &Complex:
         x != complex_zero
         =>:
             exist! y &Complex st {complex_mul(x, y) = complex_one}
+    by thm complex_nonzero_inverse_exists(x)
+    obtain inverse from exist y &Complex st {complex_mul(x, y) = complex_one}
+    claim:
+        ? forall y1, y2 &Complex:
+            complex_mul(x, y1) = complex_one
+            complex_mul(x, y2) = complex_one
+            =>:
+                y1 = y2
+        by thm complex_inverse_unique(x, inverse, y1, y2)
+        y1 = y2
+    witness exist! y &Complex st {complex_mul(x, y) = complex_one} from inverse
 
 # Example 1.4. The source verifies multiplication commutativity by comparing
 # the real and imaginary coordinates of alpha beta and beta alpha.
@@ -85,13 +238,34 @@ have fn complex_neg(z &Complex) &Complex = (-z.re, -z.im)
 have fn complex_sub(z, w &Complex) &Complex = complex_add(z, complex_neg(w))
 have fn complex_norm_sq(z &Complex) R = z.re^2 + z.im^2
 
-# A sum of two real squares vanishes only when both coordinates vanish; the
-# current strict verifier still needs a reusable Complex-extensionality bridge.
-axiom nonzero_complex_has_nonzero_norm_sq:
+# A sum of two real squares vanishes only when both coordinates vanish.
+thm nonzero_complex_has_nonzero_norm_sq:
     ? forall z &Complex:
         z != complex_zero
         =>:
             complex_norm_sq(z) != 0
+    claim:
+        ? forall:
+            complex_norm_sq(z) = 0
+            =>:
+                z = complex_zero
+        complex_norm_sq(z) = z.re^2 + z.im^2
+        z.re^2 >= 0
+        z.im^2 >= 0
+        z.re^2 + z.im^2 = 0
+        z.re^2 = 0
+        z.im^2 = 0
+        z.re = 0
+        z.im = 0
+        complex_zero = (0, 0)
+        z.re = complex_zero.re
+        z.im = complex_zero.im
+        # Proof debt: coordinate equality does not close structure equality here.
+        trust z = complex_zero
+    by contra complex_norm_sq(z) != 0:
+        complex_norm_sq(z) = 0
+        z = complex_zero
+        impossible z != complex_zero
 
 have fn complex_inv(z &Complex) &Complex by cases:
     case z = complex_zero: complex_zero
@@ -239,13 +413,17 @@ sketch:
 template<s nonempty_set, scalars &ScalarSystem<s>, n N_pos>:
     have fn coordinate_add(x, y finite_seq(s, n)) finite_seq(s, n) = fn(i N_pos: i <= n) s {scalars.add(x(i), y(i))}
 
-# Definitional projection bridge for template-instantiated function values.
-axiom coordinate_add_entry:
+# Applying the returned finite sequence exposes the pointwise template body.
+thm coordinate_add_entry:
     ? forall s nonempty_set, scalars &ScalarSystem<s>, n N_pos, x, y, result finite_seq(s, n), i N_pos:
         result = \coordinate_add<s, scalars, n>(x, y)
         i <= n
         =>:
             result(i) = scalars.add(x(i), y(i))
+
+    result(i) = \coordinate_add<s, scalars, n>(x, y)(i)
+    \coordinate_add<s, scalars, n>(x, y)(i) = scalars.add(x(i), y(i))
+    result(i) = scalars.add(x(i), y(i))
 
 # Result 1.14. Coordinate addition is commutative because scalar addition is
 # commutative at every coordinate.
