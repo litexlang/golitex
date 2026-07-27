@@ -61,8 +61,38 @@ thm metric_continuous_at_implies_preserves_limits:
         $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
         =>:
             $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
-    # trust: Tao assigns this direction to Exercise 2.1.1.
-    trust $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+    claim:
+        ? forall u fn(n N_pos) X:
+            $chap1::has_metric_limit(X, dist_X, u, a)
+            =>:
+                $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+        claim:
+            ? forall epsilon R_pos:
+                $chap1::has_eventual_metric_closeness(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a), epsilon)
+            by def $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+            obtain delta from exist delta R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
+            delta / 2 $in R_pos
+            by def $chap1::has_metric_limit(X, dist_X, u, a)
+            $chap1::has_eventual_metric_closeness(X, dist_X, u, a, delta / 2)
+            obtain N0 from exist N0 N_pos st {$chap1::is_metric_tail_close_to(X, dist_X, u, a, delta / 2, N0)}
+            claim:
+                ? exist M N_pos st {$chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a), epsilon, M)}
+                witness exist M N_pos st {$chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a), epsilon, M)} from N0:
+                    claim:
+                        ? forall n N_pos:
+                            n >= N0
+                            =>:
+                                dist_Y(fn(k N_pos) Y {f(u(k))}(n), f(a)) <= epsilon
+                        by def $chap1::is_metric_tail_close_to(X, dist_X, u, a, delta / 2, N0)
+                        dist_X(u(n), a) <= delta / 2 < delta
+                        by def $is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)
+                        dist_Y(f(u(n)), f(a)) < epsilon
+                        fn(k N_pos) Y {f(u(k))}(n) = f(u(n))
+                        dist_Y(fn(k N_pos) Y {f(u(k))}(n), f(a)) = dist_Y(f(u(n)), f(a)) < epsilon
+                    by def $chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a), epsilon, N0)
+            by def $chap1::has_eventual_metric_closeness(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a), epsilon)
+        by def $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+    by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
 
 thm preserves_limits_implies_metric_continuous_at:
     ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X:

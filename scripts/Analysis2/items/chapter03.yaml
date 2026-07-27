@@ -15,7 +15,7 @@
     thm function_limit_implies_sequential_form:
         # Full statement is in the chapter file.
         trust $preserves_sequences_at_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
-  comments: "Status: translated; blocker label: trust. Tao defers the proof to Exercise 3.1.2. Six reusable equivalence directions and the value-at-domain-point consequence are explicit. The extension is represented by an ambient map constrained exactly on E union {x0}, because direct dependent-union function construction failed during the session."
+  comments: "Status: translated; blocker label: trust. Tao defers the proof to Exercise 3.1.2. Six reusable equivalence directions remain trusted. The value-at-domain-point consequence is checkable by applying the delta condition at x0. The extension is represented by an ambient map constrained exactly on E union {x0}, because direct dependent-union function construction failed during the session."
 
 - source: "Tao, Analysis II, fourth edition, Definition 3.2.1"
   problem: "Define pointwise convergence of a sequence of functions."
@@ -42,7 +42,7 @@
     thm uniform_limit_preserves_continuity_at:
         # Full statement is in the chapter file.
         trust $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, f, x0)
-  comments: "Status: translated; blocker label: trust. Tao assigns the epsilon/3 proof to Exercise 3.3.1."
+  comments: "Status: translated; blocker label: trust. A full outermost try and a reduced delta-bridge try both ended in an unlocated ExecStmtError after spelling out the triangle estimates."
 
 - source: "Tao, Analysis II, fourth edition, Corollary 3.3.2"
   problem: "Show that a uniform limit of globally continuous functions is globally continuous."
@@ -50,8 +50,8 @@
   litex_code: |
     thm uniform_limit_preserves_continuity:
         # Full statement is in the chapter file.
-        trust $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)
-  comments: "Status: translated; blocker label: trust. Two direct folding attempts stopped at the quantified family-continuity bridge; the exact theorem conclusion remains trusted."
+        # Full checked proof is in the chapter file.
+  comments: "Status: checkable. The working proof applies chap2::metric_continuous_implies_continuous_at directly for each family index and point, then applies Theorem 3.3.1 and folds global continuity. Verified with the registered Chapter 3 file gate."
 
 - source: "Tao, Analysis II, fourth edition, Proposition 3.3.3"
   problem: "Interchange an outer limit over uniformly convergent functions with their limiting values at an adherent point."

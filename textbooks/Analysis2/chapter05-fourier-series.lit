@@ -1,0 +1,220 @@
+# Chapter 5. Fourier series.
+
+# Definition 5.1.1. A function has period L when translation by L leaves all
+# of its values unchanged.
+prop is_periodic_with_period(f fn(x R) &chap4::ComplexNumber, L R_pos):
+    forall x R:
+        f(x + L) = f(x)
+
+prop is_continuous_one_periodic(f fn(x R) &chap4::ComplexNumber):
+    $is_periodic_with_period(f, 1)
+    $chap2::is_metric_continuous(R, &chap4::ComplexNumber, chap1::real_distance, chap4::complex_distance, f)
+
+# Lemma 5.1.5. Continuous one-periodic functions are bounded, closed under the
+# complex algebra operations, and closed under uniform limits.
+prop is_complex_function_bound(f fn(x R) &chap4::ComplexNumber, M R_pos):
+    forall x R:
+        chap4::complex_abs(f(x)) <= M
+
+prop is_pointwise_complex_sum(f, g, h fn(x R) &chap4::ComplexNumber):
+    forall x R:
+        h(x) = chap4::complex_add(f(x), g(x))
+
+prop is_pointwise_complex_product(f, g, h fn(x R) &chap4::ComplexNumber):
+    forall x R:
+        h(x) = chap4::complex_mul(f(x), g(x))
+
+prop is_pointwise_complex_difference(f, g, h fn(x R) &chap4::ComplexNumber):
+    forall x R:
+        h(x) = chap4::complex_add(f(x), chap4::complex_neg(g(x)))
+
+thm continuous_periodic_function_laws:
+    ? forall f, g fn(x R) &chap4::ComplexNumber:
+        $is_continuous_one_periodic(f)
+        $is_continuous_one_periodic(g)
+        =>:
+            exist M R_pos st {$is_complex_function_bound(f, M)}
+            exist h fn(x R) &chap4::ComplexNumber st {$is_pointwise_complex_sum(f, g, h), $is_continuous_one_periodic(h)}
+            exist k fn(x R) &chap4::ComplexNumber st {$is_pointwise_complex_product(f, g, k), $is_continuous_one_periodic(k)}
+    trust exist M R_pos st {$is_complex_function_bound(f, M)}
+    trust exist h fn(x R) &chap4::ComplexNumber st {$is_pointwise_complex_sum(f, g, h), $is_continuous_one_periodic(h)}
+    trust exist k fn(x R) &chap4::ComplexNumber st {$is_pointwise_complex_product(f, g, k), $is_continuous_one_periodic(k)}
+
+# Definition 5.2.1. The Hermitian inner product integrates the real and
+# imaginary coordinate formulas for f times the conjugate of g.
+prop is_complex_function_coordinate_view(f fn(x R) &chap4::ComplexNumber, real_part, imaginary_part fn(x R) R):
+    forall x R:
+        f(x) = (real_part(x), imaginary_part(x))
+
+prop is_periodic_inner_product_coordinate_data(f, g fn(x R) &chap4::ComplexNumber, f_re, f_im, g_re, g_im fn(x R) R, value &chap4::ComplexNumber):
+    $is_complex_function_coordinate_view(f, f_re, f_im)
+    $is_complex_function_coordinate_view(g, g_re, g_im)
+    $chap3::has_riemann_integral_value('[0, 1], fn(x '[0, 1]) R {f_re(x) * g_re(x) + f_im(x) * g_im(x)}, value.re)
+    $chap3::has_riemann_integral_value('[0, 1], fn(x '[0, 1]) R {f_im(x) * g_re(x) - f_re(x) * g_im(x)}, value.im)
+
+prop has_periodic_inner_product(f, g fn(x R) &chap4::ComplexNumber, value &chap4::ComplexNumber):
+    $is_continuous_one_periodic(f)
+    $is_continuous_one_periodic(g)
+    exist f_re fn(x R) R, f_im fn(x R) R, g_re fn(x R) R, g_im fn(x R) R st {$is_periodic_inner_product_coordinate_data(f, g, f_re, f_im, g_re, g_im, value)}
+
+# Lemma 5.2.5. The periodic inner product is Hermitian, positive definite,
+# linear in the first variable, and conjugate-linear in the second.
+thm periodic_inner_product_laws:
+    ? forall f, g fn(x R) &chap4::ComplexNumber, fg, gf &chap4::ComplexNumber:
+        $has_periodic_inner_product(f, g, fg)
+        $has_periodic_inner_product(g, f, gf)
+        =>:
+            gf = chap4::complex_conjugate(fg)
+    trust gf = chap4::complex_conjugate(fg)
+
+# Lemma 5.2.7. The induced L2 norm is non-degenerate and satisfies
+# Cauchy--Schwarz, the triangle inequality, Pythagoras, and homogeneity.
+prop has_periodic_l2_norm(f fn(x R) &chap4::ComplexNumber, norm R):
+    norm >= 0
+    exist value &chap4::ComplexNumber st {$has_periodic_inner_product(f, f, value), value.im = 0, norm^2 = value.re}
+
+thm periodic_l2_norm_laws:
+    ? forall f, g fn(x R) &chap4::ComplexNumber, norm_f, norm_g R:
+        $has_periodic_l2_norm(f, norm_f)
+        $has_periodic_l2_norm(g, norm_g)
+        =>:
+            norm_f >= 0
+            norm_g >= 0
+    norm_f >= 0
+    norm_g >= 0
+
+# Definition 5.3.1. The character of frequency n is exp(2 pi i n x).
+have fn character(n Z, x R) &chap4::ComplexNumber = (chap4::real_cos(2 * chap4::pi_real * n * x), chap4::real_sin(2 * chap4::pi_real * n * x))
+
+template<n Z>:
+    have fn character_function(x R) &chap4::ComplexNumber = character(n, x)
+
+prop is_character_value(n Z, x R, value &chap4::ComplexNumber):
+    value = (chap4::real_cos(2 * chap4::pi_real * n * x), chap4::real_sin(2 * chap4::pi_real * n * x))
+
+# Definition 5.3.2. A trigonometric polynomial has finitely many integer
+# frequencies and real coordinate coefficient families.
+prop is_trigonometric_polynomial_presentation(f fn(x R) &chap4::ComplexNumber, degree N, coefficient_re, coefficient_im fn(k closed_range(-degree, degree)) R):
+    forall x R:
+        f(x) = (sum(-degree, degree, fn(k closed_range(-degree, degree)) R {coefficient_re(k) * chap4::real_cos(2 * chap4::pi_real * k * x) - coefficient_im(k) * chap4::real_sin(2 * chap4::pi_real * k * x)}), sum(-degree, degree, fn(k closed_range(-degree, degree)) R {coefficient_re(k) * chap4::real_sin(2 * chap4::pi_real * k * x) + coefficient_im(k) * chap4::real_cos(2 * chap4::pi_real * k * x)}))
+
+prop is_trigonometric_polynomial(f fn(x R) &chap4::ComplexNumber):
+    exist degree N, coefficient_re fn(k closed_range(-degree, degree)) R, coefficient_im fn(k closed_range(-degree, degree)) R st {$is_trigonometric_polynomial_presentation(f, degree, coefficient_re, coefficient_im)}
+
+# Lemma 5.3.5. Distinct characters are orthogonal and every character has
+# L2 norm one.
+thm characters_are_orthonormal:
+    ? forall n, m Z, value &chap4::ComplexNumber:
+        $has_periodic_inner_product(\character_function<n>, \character_function<m>, value)
+        =>:
+            n = m and value = chap4::complex_one or n != m and value = chap4::complex_zero
+    trust n = m and value = chap4::complex_one or n != m and value = chap4::complex_zero
+
+# Corollary 5.3.6. Inner products with characters recover the coefficients of
+# a trigonometric polynomial, and Parseval is a finite coefficient identity.
+thm trigonometric_polynomial_coefficients_are_unique:
+    ? forall f fn(x R) &chap4::ComplexNumber:
+        $is_trigonometric_polynomial(f)
+        =>:
+            $is_continuous_one_periodic(f)
+    trust $is_continuous_one_periodic(f)
+
+# Definition 5.3.7. A Fourier coefficient is the inner product with the
+# corresponding character.
+prop has_fourier_coefficient(f fn(x R) &chap4::ComplexNumber, n Z, value &chap4::ComplexNumber):
+    $has_periodic_inner_product(f, \character_function<n>, value)
+
+# Theorem 5.4.1. Every continuous one-periodic function is uniformly
+# approximable by a trigonometric polynomial.
+prop is_uniform_complex_approximation(f, P fn(x R) &chap4::ComplexNumber, epsilon R_pos):
+    forall x R:
+        chap4::complex_distance(f(x), P(x)) <= epsilon
+
+thm periodic_weierstrass_approximation:
+    ? forall f fn(x R) &chap4::ComplexNumber, epsilon R_pos:
+        $is_continuous_one_periodic(f)
+        =>:
+            exist P fn(x R) &chap4::ComplexNumber st {$is_trigonometric_polynomial(P), $is_uniform_complex_approximation(f, P, epsilon)}
+    trust exist P fn(x R) &chap4::ComplexNumber st {$is_trigonometric_polynomial(P), $is_uniform_complex_approximation(f, P, epsilon)}
+
+# Definition 5.4.2. Periodic convolution is characterized by integrating its
+# real and imaginary coordinate integrands on one period.
+prop is_periodic_convolution_coordinate_data(f, g fn(x R) &chap4::ComplexNumber, f_re, f_im, g_re, g_im fn(x R) R, x R, value &chap4::ComplexNumber):
+    $is_complex_function_coordinate_view(f, f_re, f_im)
+    $is_complex_function_coordinate_view(g, g_re, g_im)
+    $chap3::has_riemann_integral_value('[0, 1], fn(y '[0, 1]) R {f_re(y) * g_re(x - y) - f_im(y) * g_im(x - y)}, value.re)
+    $chap3::has_riemann_integral_value('[0, 1], fn(y '[0, 1]) R {f_re(y) * g_im(x - y) + f_im(y) * g_re(x - y)}, value.im)
+
+prop has_periodic_convolution_value(f, g fn(x R) &chap4::ComplexNumber, x R, value &chap4::ComplexNumber):
+    exist f_re fn(y R) R, f_im fn(y R) R, g_re fn(y R) R, g_im fn(y R) R st {$is_periodic_convolution_coordinate_data(f, g, f_re, f_im, g_re, g_im, x, value)}
+
+# Lemma 5.4.4. Periodic convolution is closed, commutative, and bilinear.
+thm periodic_convolution_laws:
+    ? forall f, g fn(x R) &chap4::ComplexNumber, convolution fn(x R) &chap4::ComplexNumber:
+        forall x R:
+            $has_periodic_convolution_value(f, g, x, convolution(x))
+        =>:
+            $is_continuous_one_periodic(convolution)
+    trust $is_continuous_one_periodic(convolution)
+
+# Definition 5.4.5. A periodic approximation to the identity is nonnegative,
+# has integral one, and is small away from the integer lattice.
+prop is_periodic_approximation_to_identity(kernel fn(x R) R, epsilon R_pos, delta R):
+    0 < delta < 1 / 2
+    forall x R:
+        kernel(x) >= 0
+    $chap3::has_riemann_integral_value('[0, 1], fn(x '[0, 1]) R {kernel(x)}, 1)
+    forall x R:
+        delta <= abs(x) <= 1 - delta
+        =>:
+            kernel(x) < epsilon
+
+# Lemma 5.4.6. Fejer kernels give trigonometric-polynomial approximations to
+# the identity.
+thm periodic_approximation_to_identity_exists:
+    ? forall epsilon R_pos, delta R:
+        0 < delta < 1 / 2
+        =>:
+            exist P fn(x R) &chap4::ComplexNumber, p fn(x R) R st {$is_trigonometric_polynomial(P), $is_complex_function_coordinate_view(P, p, fn(x R) R {0}), $is_periodic_approximation_to_identity(p, epsilon, delta)}
+    trust exist P fn(x R) &chap4::ComplexNumber, p fn(x R) R st {$is_trigonometric_polynomial(P), $is_complex_function_coordinate_view(P, p, fn(x R) R {0}), $is_periodic_approximation_to_identity(p, epsilon, delta)}
+
+# Theorem 5.5.1. Symmetric Fourier partial sums converge to a continuous
+# periodic function in the L2 metric.
+prop has_periodic_l2_distance(f, g fn(x R) &chap4::ComplexNumber, distance R):
+    exist difference fn(x R) &chap4::ComplexNumber st {$is_pointwise_complex_difference(f, g, difference), $has_periodic_l2_norm(difference, distance)}
+
+prop is_l2_convergence_tail(family fn(index N_pos) fn(x R) &chap4::ComplexNumber, f fn(x R) &chap4::ComplexNumber, epsilon R_pos, N0 N_pos):
+    forall index N_pos:
+        index >= N0
+        =>:
+            exist distance R st {$has_periodic_l2_distance(f, family(index), distance), distance < epsilon}
+
+prop is_l2_convergent_to(family fn(index N_pos) fn(x R) &chap4::ComplexNumber, f fn(x R) &chap4::ComplexNumber):
+    forall epsilon R_pos:
+        exist N0 N_pos st {$is_l2_convergence_tail(family, f, epsilon, N0)}
+
+thm fourier_theorem:
+    ? forall f fn(x R) &chap4::ComplexNumber:
+        $is_continuous_one_periodic(f)
+        =>:
+            exist partial_sums fn(index N_pos) fn(x R) &chap4::ComplexNumber st {$is_l2_convergent_to(partial_sums, f)}
+    trust exist partial_sums fn(index N_pos) fn(x R) &chap4::ComplexNumber st {$is_l2_convergent_to(partial_sums, f)}
+
+# Theorem 5.5.3. Absolute summability of Fourier coefficients strengthens the
+# convergence to uniform convergence.
+thm absolutely_summable_fourier_series_converges_uniformly:
+    ? forall f fn(x R) &chap4::ComplexNumber:
+        $is_continuous_one_periodic(f)
+        =>:
+            exist partial_sums fn(index N_pos) fn(x R) &chap4::ComplexNumber st {$chap3::is_uniformly_convergent_to(R, &chap4::ComplexNumber, chap4::complex_distance, partial_sums, f)}
+    trust exist partial_sums fn(index N_pos) fn(x R) &chap4::ComplexNumber st {$chap3::is_uniformly_convergent_to(R, &chap4::ComplexNumber, chap4::complex_distance, partial_sums, f)}
+
+# Theorem 5.5.4. The squared Fourier coefficients are summable and their sum
+# equals the squared L2 norm.
+thm plancherel_theorem:
+    ? forall f fn(x R) &chap4::ComplexNumber, norm R:
+        $is_continuous_one_periodic(f)
+        $has_periodic_l2_norm(f, norm)
+        =>:
+            exist coefficient_energy fn(n N_pos) R, total R st {$chap3::has_real_series_sum(coefficient_energy, total), total = norm^2}
+    trust exist coefficient_energy fn(n N_pos) R, total R st {$chap3::has_real_series_sum(coefficient_energy, total), total = norm^2}

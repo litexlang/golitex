@@ -10,11 +10,11 @@
   `scripts/textbooks_drafts/Analysis2/`, and the manually published snapshot
   in `textbooks/Analysis2/`.
 
-Status: Phase 0 and the 32-item Chapter 1 vertical slice are implemented. The
-ordered project runner succeeds. Chapter 1 remains proof-incomplete with 48
-visible `trust` statements and two recorded selection/template
-`kernel_problem`s; the next bounded milestone is proof-debt reduction before
-starting the Chapter 2 slice.
+Status (2026-07-26): the full 224-item, eight-chapter translation is
+implemented in `textbooks/Analysis2/`, and each registered chapter file gate
+succeeds. All source-facing declarations are concrete: the project contains
+no `abstract_prop`. The module remains proof-incomplete, with every surviving
+`trust` and verifier limitation tracked in `todo.lit` and `todo.md`.
 
 ## 1. Scope and source lock
 
@@ -88,16 +88,16 @@ use with the Analysis II concept model first.
 
 ## 3. Artifact boundary and project shape
 
-The publish-candidate artifacts are developed in one top-level draft module:
+The final artifacts are maintained in one top-level textbook module:
 
 ```text
-scripts/textbooks_drafts/Analysis2/
+textbooks/Analysis2/
   README.md
   math_collections.md
   litex.config
   todo.lit                         # create only when visible mathematical holes exist
   chapter01-metric-spaces.lit
-  chapter02-continuous-metric-maps.lit
+  chapter02-continuous-functions.lit
   chapter03-uniform-convergence.lit
   chapter04-power-series.lit
   chapter05-fourier-series.lit
@@ -106,8 +106,8 @@ scripts/textbooks_drafts/Analysis2/
   chapter08-lebesgue-integration.lit
 ```
 
-Use one final `.lit` file per source chapter and export the chapters in source
-order. `README.md` and `math_collections.md` are module documentation: do not
+The implementation uses one final `.lit` file per source chapter and exports
+the chapters in source order. `README.md` and `math_collections.md` are module documentation: do not
 export, import, render, or pass them to the kernel. `README.md` may describe
 only implemented and verified interfaces. Create `math_collections.md` from
 the concept-modeler template before bulk formalization and keep the ideal
@@ -418,7 +418,7 @@ The book is complete only when:
 
 ## 10. Next bounded handoff
 
-Begin only Phase 0 and the Chapter 1 slice:
+The original first milestone was Phase 0 and the Chapter 1 slice:
 
 1. validate the 32 Chapter 1 labels and source-deferred proofs;
 2. create the project configuration and the two module documents;

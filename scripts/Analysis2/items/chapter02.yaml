@@ -22,8 +22,8 @@
             $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
             =>:
                 $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
-        trust $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
-  comments: "Status: translated; blocker label: trust. The source assigns the proof to Exercise 2.1.1. The three clauses are represented by concrete props and four directional source-facing theorems so each direction is reusable. All interfaces with their narrow trusts verified in the persistent release session on 2026-07-26."
+        # The checked chapter proof transports the delta / 2 convergence tail.
+  comments: "Status: translated; blocker label: trust. The forward sequential direction is checkable. Three directions remain trusted: the reverse sequential direction needs shrinking-radius choice, and the neighborhood directions depend on pointwise-to-subset bridges. Verified in a persistent release session and with the registered Chapter 2 file gate on 2026-07-26."
 
 - source: "Tao, Analysis II, fourth edition, Theorem 2.1.5"
   problem: "Characterize global metric continuity by preservation of convergent sequences and by open- or closed-set inverse images."

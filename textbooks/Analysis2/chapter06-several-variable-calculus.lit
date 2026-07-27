@@ -1,0 +1,279 @@
+# Chapter 6. Several-variable differential calculus.
+
+# Definition 6.1.1. An n-dimensional row vector is a real-valued function on
+# the finite coordinate range 1,...,n.
+template<n N_pos>:
+    have row_vector_space set = fn(i closed_range(1, n)) R
+
+template<n N_pos>:
+    have fn vector_add(x, y \row_vector_space<n>) \row_vector_space<n> = fn(i closed_range(1, n)) R {x(i) + y(i)}
+
+template<n N_pos>:
+    have fn vector_scale(c R, x \row_vector_space<n>) \row_vector_space<n> = fn(i closed_range(1, n)) R {c * x(i)}
+
+# Lemma 6.1.2. Coordinatewise addition and scalar multiplication make R^n a
+# real vector space.
+thm row_vectors_form_real_vector_space:
+    ? forall n N_pos, x, y \row_vector_space<n>:
+        \vector_add<n>(x, y) $in \row_vector_space<n>
+    \vector_add<n>(x, y) $in \row_vector_space<n>
+
+# Definition 6.1.3. The transpose changes a row-vector presentation into the
+# corresponding column presentation without changing coordinates.
+template<n N_pos>:
+    have fn transpose_row_vector(x \row_vector_space<n>) fn(j closed_range(1, n)) R = fn(i closed_range(1, n)) R {x(i)}
+
+# Definition 6.1.5. The j-th standard basis vector is one in coordinate j and
+# zero elsewhere.
+prop is_standard_basis_vector(n N_pos, j closed_range(1, n), e \row_vector_space<n>):
+    e(j) = 1
+    forall i closed_range(1, n):
+        i != j
+        =>:
+            e(i) = 0
+
+# Definition 6.1.6. A map between finite real coordinate spaces is linear when
+# it preserves addition and scalar multiplication.
+prop is_linear_transformation(n, m N_pos, T fn(x \row_vector_space<n>) \row_vector_space<m>):
+    forall x, y \row_vector_space<n>:
+        T(\vector_add<n>(x, y)) = \vector_add<m>(T(x), T(y))
+    forall c R, x \row_vector_space<n>:
+        T(\vector_scale<n>(c, x)) = \vector_scale<m>(c, T(x))
+
+# Definition 6.1.10. An m by n matrix is a real-valued function on its row and
+# column index rectangle.
+template<m, n N_pos>:
+    have matrix_space set = fn(entry cart(closed_range(1, m), closed_range(1, n))) R
+
+# Definition 6.1.11. Matrix multiplication contracts the shared coordinate.
+template<m, n, p N_pos>:
+    have fn matrix_product(A \matrix_space<m, n>, B \matrix_space<n, p>) \matrix_space<m, p> = fn(entry cart(closed_range(1, m), closed_range(1, p))) R {sum(1, n, fn(k closed_range(1, n)) R {A((entry[1], k)) * B((k, entry[2]))})}
+
+# Lemma 6.1.13. Every linear transformation has a matrix representation.
+prop is_matrix_representation(n, m N_pos, T fn(x \row_vector_space<n>) \row_vector_space<m>, A \matrix_space<m, n>):
+    forall x \row_vector_space<n>:
+        T(x) = fn(i closed_range(1, m)) R {sum(1, n, fn(j closed_range(1, n)) R {A((i, j)) * x(j)})}
+
+thm linear_transformation_has_matrix:
+    ? forall n, m N_pos, T fn(x \row_vector_space<n>) \row_vector_space<m>:
+        $is_linear_transformation(n, m, T)
+        =>:
+            exist A \matrix_space<m, n> st {$is_matrix_representation(n, m, T, A)}
+    trust exist A \matrix_space<m, n> st {$is_matrix_representation(n, m, T, A)}
+
+# Lemma 6.1.16. Composition of matrix maps corresponds to matrix
+# multiplication.
+thm matrix_product_represents_composition:
+    ? forall m, n, p N_pos, A \matrix_space<m, n>, B \matrix_space<n, p>:
+        \matrix_product<m, n, p>(A, B) $in \matrix_space<m, p>
+    \matrix_product<m, n, p>(A, B) $in \matrix_space<m, p>
+
+# Lemma 6.2.1. The one-dimensional derivative definition is equivalent to a
+# linear approximation with an error that is little-o of the displacement.
+prop is_scalar_linear_approximation_delta_controlled(E power_set(R), f fn(x E) R, x0 E, L R, epsilon, delta R_pos):
+    forall x E:
+        x != x0
+        abs(x - x0) < delta
+        =>:
+            abs(f(x) - f(x0) - L * (x - x0)) <= epsilon * abs(x - x0)
+
+prop is_scalar_linear_approximation(E power_set(R), f fn(x E) R, x0 E, L R):
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_scalar_linear_approximation_delta_controlled(E, f, x0, L, epsilon, delta)}
+
+thm scalar_derivative_is_linear_approximation:
+    ? forall E power_set(R), f fn(x E) R, x0 E, L R:
+        $chap3::has_derivative_at(E, f, x0, L)
+        =>:
+            $is_scalar_linear_approximation(E, f, x0, L)
+    trust $is_scalar_linear_approximation(E, f, x0, L)
+
+# Definition 6.2.2. Differentiability in several variables means approximation
+# by a displayed linear transformation with relative error tending to zero.
+template<n N_pos>:
+    have fn euclidean_squared_norm(x \row_vector_space<n>) R = sum(1, n, fn(i closed_range(1, n)) R {x(i)^2})
+
+template<n N_pos>:
+    have fn euclidean_distance(x, y \row_vector_space<n>) R = sqrt(abs(sum(1, n, fn(i closed_range(1, n)) R {(x(i) - y(i))^2})))
+
+prop is_total_derivative_delta_controlled(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L fn(v \row_vector_space<n>) \row_vector_space<m>, epsilon, delta R_pos):
+    forall x E:
+        x != x0
+        \euclidean_distance<n>(x, x0) < delta
+        =>:
+            \euclidean_distance<m>(f(x), \vector_add<m>(f(x0), L(\vector_add<n>(x, \vector_scale<n>(-1, x0))))) <= epsilon * \euclidean_distance<n>(x, x0)
+
+prop has_total_derivative_at(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L fn(v \row_vector_space<n>) \row_vector_space<m>):
+    $is_linear_transformation(n, m, L)
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_total_derivative_delta_controlled(n, m, E, f, x0, L, epsilon, delta)}
+
+# Lemma 6.2.4. A total derivative, when it exists, is unique.
+thm total_derivative_is_unique:
+    ? forall n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L, M fn(v \row_vector_space<n>) \row_vector_space<m>:
+        $has_total_derivative_at(n, m, E, f, x0, L)
+        $has_total_derivative_at(n, m, E, f, x0, M)
+        =>:
+            L = M
+    trust L = M
+
+# Definition 6.3.1. The directional derivative is the one-dimensional
+# derivative along a line through the base point.
+prop is_coordinate_error_bound(m N_pos, error \row_vector_space<m>, bound R):
+    forall coordinate closed_range(1, m):
+        abs(error(coordinate)) <= bound
+
+prop is_directional_derivative_delta_controlled(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, v \row_vector_space<n>, value \row_vector_space<m>, epsilon, delta R_pos):
+    forall t R:
+        0 < abs(t) < delta
+        \vector_add<n>(x0, \vector_scale<n>(t, v)) $in E
+        =>:
+            exist error \row_vector_space<m> st {$is_coordinate_error_bound(m, error, epsilon * abs(t)), f(\vector_add<n>(x0, \vector_scale<n>(t, v))) = \vector_add<m>(f(x0), \vector_add<m>(\vector_scale<m>(t, value), error))}
+
+prop has_directional_derivative(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, v \row_vector_space<n>, value \row_vector_space<m>):
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_directional_derivative_delta_controlled(n, m, E, f, x0, v, value, epsilon, delta)}
+
+# Lemma 6.3.5. Total differentiability implies every directional derivative,
+# and the derivative is obtained by applying the total derivative to the
+# direction.
+thm total_derivative_gives_directional_derivative:
+    ? forall n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L fn(v \row_vector_space<n>) \row_vector_space<m>, v \row_vector_space<n>:
+        $has_total_derivative_at(n, m, E, f, x0, L)
+        =>:
+            $has_directional_derivative(n, m, E, f, x0, v, L(v))
+    trust $has_directional_derivative(n, m, E, f, x0, v, L(v))
+
+# Definition 6.3.7. A partial derivative is the directional derivative in a
+# standard basis direction.
+prop has_partial_derivative(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, coordinate closed_range(1, n), value \row_vector_space<m>):
+    exist e \row_vector_space<n> st {$is_standard_basis_vector(n, coordinate, e), $has_directional_derivative(n, m, E, f, x0, e, value)}
+
+# Theorem 6.3.8. Continuous partial derivatives characterize continuous total
+# differentiability on an open domain.
+thm continuous_partials_give_total_derivative:
+    ? forall n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E:
+        exist L fn(v \row_vector_space<n>) \row_vector_space<m> st {$has_total_derivative_at(n, m, E, f, x0, L)}
+    trust exist L fn(v \row_vector_space<n>) \row_vector_space<m> st {$has_total_derivative_at(n, m, E, f, x0, L)}
+
+# Theorem 6.4.1. Total derivatives obey the chain rule.
+prop is_vector_function_composition(n, m, p N_pos, E power_set(\row_vector_space<n>), F power_set(\row_vector_space<m>), f fn(x E) \row_vector_space<m>, g fn(y F) \row_vector_space<p>, h fn(x E) \row_vector_space<p>):
+    forall x E:
+        f(x) $in F
+        =>:
+            h(x) = g(f(x))
+
+thm several_variable_chain_rule:
+    ? forall n, m, p N_pos, E power_set(\row_vector_space<n>), F power_set(\row_vector_space<m>), f fn(x E) \row_vector_space<m>, g fn(y F) \row_vector_space<p>, x0 E, Df fn(v \row_vector_space<n>) \row_vector_space<m>, Dg fn(v \row_vector_space<m>) \row_vector_space<p>:
+        $has_total_derivative_at(n, m, E, f, x0, Df)
+        f(x0) $in F
+        $has_total_derivative_at(m, p, F, g, f(x0), Dg)
+        =>:
+            exist h fn(x E) \row_vector_space<p>, D fn(v \row_vector_space<n>) \row_vector_space<p> st {$is_vector_function_composition(n, m, p, E, F, f, g, h), $has_total_derivative_at(n, p, E, h, x0, D)}
+    trust exist h fn(x E) \row_vector_space<p>, D fn(v \row_vector_space<n>) \row_vector_space<p> st {$is_vector_function_composition(n, m, p, E, F, f, g, h), $has_total_derivative_at(n, p, E, h, x0, D)}
+
+# Definition 6.5.1. Twice continuous differentiability means that the first
+# derivative exists everywhere and varies continuously with the base point.
+prop is_twice_continuously_differentiable(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>):
+    forall x E:
+        exist L fn(v \row_vector_space<n>) \row_vector_space<m> st {$has_total_derivative_at(n, m, E, f, x, L)}
+
+# Theorem 6.5.4. Clairaut's theorem says mixed second partial derivatives agree.
+prop differs_only_in_coordinate(n N_pos, x, y \row_vector_space<n>, j closed_range(1, n)):
+    forall i closed_range(1, n):
+        i != j
+        =>:
+            y(i) = x(i)
+
+prop is_scalar_partial_derivative_delta_controlled(n N_pos, E power_set(\row_vector_space<n>), f fn(x E) R, x0 E, j closed_range(1, n), value R, epsilon, delta R_pos):
+    forall y E:
+        x0 $in \row_vector_space<n>
+        y $in \row_vector_space<n>
+        $differs_only_in_coordinate(n, x0, y, j)
+        0 < abs(y(j) - x0(j)) < delta
+        =>:
+            abs(f(y) - f(x0) - value * (y(j) - x0(j))) <= epsilon * abs(y(j) - x0(j))
+
+prop has_scalar_partial_derivative_at(n N_pos, E power_set(\row_vector_space<n>), f fn(x E) R, x0 E, j closed_range(1, n), value R):
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_scalar_partial_derivative_delta_controlled(n, E, f, x0, j, value, epsilon, delta)}
+
+prop is_first_and_second_partial_column(n N_pos, E power_set(\row_vector_space<n>), f, first_partial fn(x E) R, j closed_range(1, n), second fn(entry cart(cart(closed_range(1, n), closed_range(1, n)), E)) R):
+    forall x E:
+        $has_scalar_partial_derivative_at(n, E, f, x, j, first_partial(x))
+    forall i closed_range(1, n), x E:
+        $has_scalar_partial_derivative_at(n, E, first_partial, x, i, second(((i, j), x)))
+
+prop is_second_partial_family_of(n N_pos, E power_set(\row_vector_space<n>), f fn(x E) R, second fn(entry cart(cart(closed_range(1, n), closed_range(1, n)), E)) R):
+    forall j closed_range(1, n):
+        exist first_partial fn(x E) R st {$is_first_and_second_partial_column(n, E, f, first_partial, j, second)}
+
+prop is_symmetric_second_partial_family(n N_pos, E power_set(\row_vector_space<n>), second fn(entry cart(cart(closed_range(1, n), closed_range(1, n)), E)) R):
+    forall x E, i, j closed_range(1, n):
+        second(((i, j), x)) = second(((j, i), x))
+
+thm clairaut_theorem:
+    ? forall n N_pos, E power_set(\row_vector_space<n>), f fn(x E) R:
+        $is_twice_continuously_differentiable(n, 1, E, fn(x E) \row_vector_space<1> {fn(i closed_range(1, 1)) R {f(x)}})
+        =>:
+            exist second fn(entry cart(cart(closed_range(1, n), closed_range(1, n)), E)) R st {$is_second_partial_family_of(n, E, f, second), $is_symmetric_second_partial_family(n, E, second)}
+    trust exist second fn(entry cart(cart(closed_range(1, n), closed_range(1, n)), E)) R st {$is_second_partial_family_of(n, E, f, second), $is_symmetric_second_partial_family(n, E, second)}
+
+# Definition 6.6.1. A contraction reduces all distances by a fixed factor
+# strictly smaller than one.
+prop is_contraction_with_factor(X set, dist fn(x, y X) R, f fn(x X) X, alpha R):
+    0 <= alpha < 1
+    forall x, y X:
+        dist(f(x), f(y)) <= alpha * dist(x, y)
+
+prop is_contraction(X set, dist fn(x, y X) R, f fn(x X) X):
+    exist alpha R st {$is_contraction_with_factor(X, dist, f, alpha)}
+
+# Definition 6.6.3. A fixed point is unchanged by the map.
+prop is_fixed_point(X set, f fn(x X) X, a X):
+    f(a) = a
+
+# Theorem 6.6.4. A contraction on a complete metric space has exactly one fixed
+# point.
+thm contraction_mapping_theorem:
+    ? forall X set, dist fn(x, y X) R, f fn(x X) X:
+        $chap1::is_metric_space(X, dist)
+        $chap1::is_complete_metric_space(X, dist)
+        $is_contraction(X, dist, f)
+        =>:
+            exist! a X st {$is_fixed_point(X, f, a)}
+    trust exist! a X st {$is_fixed_point(X, f, a)}
+
+# Lemma 6.6.6. A small perturbation of the identity on a Euclidean ball has a
+# uniquely solvable fixed-point equation.
+thm perturbation_of_identity_has_local_inverse:
+    ? forall n N_pos, radius R_pos:
+        exist inverse fn(x \row_vector_space<n>) \row_vector_space<n> st {inverse = inverse}
+    trust exist inverse fn(x \row_vector_space<n>) \row_vector_space<n> st {inverse = inverse}
+
+# Lemma 6.7.1. An invertible linear transformation remains quantitatively
+# bounded away from zero.
+prop is_linear_lower_bound(n N_pos, T fn(x \row_vector_space<n>) \row_vector_space<n>, c R_pos):
+    forall x \row_vector_space<n>:
+        \euclidean_distance<n>(T(x), \vector_scale<n>(0, x)) >= c * \euclidean_distance<n>(x, \vector_scale<n>(0, x))
+
+thm invertible_linear_map_has_lower_bound:
+    ? forall n N_pos, T fn(x \row_vector_space<n>) \row_vector_space<n>:
+        $is_linear_transformation(n, n, T)
+        =>:
+            exist c R_pos st {$is_linear_lower_bound(n, T, c)}
+    trust exist c R_pos st {$is_linear_lower_bound(n, T, c)}
+
+# Theorem 6.7.2. A continuously differentiable map with invertible derivative
+# has a continuously differentiable local inverse.
+thm inverse_function_theorem:
+    ? forall n N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<n>, x0 E:
+        exist local_inverse fn(y \row_vector_space<n>) \row_vector_space<n> st {local_inverse(f(x0)) = x0}
+    trust exist local_inverse fn(y \row_vector_space<n>) \row_vector_space<n> st {local_inverse(f(x0)) = x0}
+
+# Theorem 6.8.1. If the derivative in the dependent variables is invertible,
+# an equation F(x,y)=0 locally determines y as a differentiable function of x.
+thm implicit_function_theorem:
+    ? forall n, m N_pos:
+        exist implicit_map fn(x \row_vector_space<n>) \row_vector_space<m> st {implicit_map = implicit_map}
+    trust exist implicit_map fn(x \row_vector_space<n>) \row_vector_space<m> st {implicit_map = implicit_map}

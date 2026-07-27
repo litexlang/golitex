@@ -947,6 +947,14 @@ downstream.
 15. Real exponential and logarithm.
 16. Concrete complex coordinate arithmetic, metric laws, and exponential.
 17. Sine, cosine, least positive zero, pi, and periodicity.
+18. Periodic complex functions, Hermitian integration, characters,
+    trigonometric polynomials, convolution, and Fourier convergence.
+19. Finite real coordinate spaces, linear maps, total derivatives,
+    contractions, and local inverse/implicit maps.
+20. Open boxes, countable covers, outer measure, Caratheodory measurable sets,
+    and measurable functions.
+21. Simple functions, nonnegative integration, signed integration,
+    convergence theorems, Riemann compatibility, and Fubini.
 
 ## Interface decisions and permissible gaps
 
@@ -960,3 +968,22 @@ downstream.
 - Source-deferred proofs may be trusted only at the exact result or substep
   the source omits. Full source proofs that remain blocked require an exact
   working note and smallest identified missing interface.
+- `ComplexNumber` is a concrete two-field `struct`. This is the ideal reusable form because
+  later complex analysis consumes `.re` and `.im` directly. The nearest wrong
+  form is an opaque equality predicate or an abstract complex-number carrier:
+  either would hide coordinate computation. Addition and multiplication
+  commutativity are checked from their formulas. Nested function returns do
+  not always retain enough struct/alias type information for later projection
+  or application; Chapters 4--6 therefore use explicit coordinate relations
+  and record the verifier behavior rather than changing the kernel.
+- Riemann integration and differentiation use concrete local
+  tagged-partition and epsilon--delta definitions. A future stable cross-book
+  dependency may replace these definitions only after the Analysis I project
+  itself is a clean import.
+- One-sided real limits now wrap the Chapter 3 metric function-limit
+  relation, and the restricted interval records the direction of approach.
+  Complex limit laws use named pointwise sequence operations and concrete
+  metric-limit conclusions. Real sine and cosine are selected from concrete
+  coordinate graphs of the complex exponential. This is the intended
+  downstream-facing design. Complex-exponential convergence is now the
+  concrete limit of coordinate recurrences for powers and partial sums.

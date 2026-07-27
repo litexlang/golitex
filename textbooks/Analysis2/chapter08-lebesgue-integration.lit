@@ -1,0 +1,272 @@
+# Chapter 8. Lebesgue integration.
+
+# Definition 8.1.1. A simple function has a finite measurable partition on
+# which it is constant.
+prop is_simple_function_presentation(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, pieces finite_set, sets fn(piece pieces) power_set(\chap7::euclidean_space<n>), values fn(piece pieces) R):
+    forall piece pieces:
+        $chap7::is_lebesgue_measurable(n, sets(piece))
+    forall x domain:
+        exist piece pieces st {x $in sets(piece), f(x) = values(piece)}
+
+prop is_simple_function(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R):
+    exist pieces finite_set, sets fn(piece pieces) power_set(\chap7::euclidean_space<n>), values fn(piece pieces) R st {$is_simple_function_presentation(n, domain, f, pieces, sets, values)}
+
+# Lemma 8.1.3. Simple functions are closed under the real algebra operations.
+thm simple_function_algebra:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), f, g fn(x domain) R:
+        $is_simple_function(n, domain, f)
+        $is_simple_function(n, domain, g)
+        =>:
+            exist h fn(x domain) R st {$chap7::is_pointwise_real_sum(domain, f, g, h), $is_simple_function(n, domain, h)}
+    trust exist h fn(x domain) R st {$chap7::is_pointwise_real_sum(domain, f, g, h), $is_simple_function(n, domain, h)}
+
+# Lemma 8.1.4. Every simple function is measurable.
+thm simple_function_is_measurable:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R:
+        $is_simple_function(n, domain, f)
+        =>:
+            $chap7::is_extended_real_measurable(n, domain, f)
+    trust $chap7::is_extended_real_measurable(n, domain, f)
+
+# Lemma 8.1.5. A nonnegative measurable function is the pointwise increasing
+# limit of nonnegative simple functions.
+prop is_pointwise_nondecreasing_approximation(domain set, family fn(k N_pos) fn(x domain) R, f fn(x domain) R):
+    forall x domain, k N_pos:
+        0 <= family(k)(x) <= family(k + 1)(x) <= f(x)
+    forall x domain, epsilon R_pos:
+        exist k N_pos st {f(x) - family(k)(x) < epsilon}
+
+thm measurable_function_has_simple_approximation:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R:
+        $chap7::is_extended_real_measurable(n, domain, f)
+        forall x domain:
+            f(x) >= 0
+        =>:
+            exist family fn(k N_pos) fn(x domain) R st {$is_pointwise_nondecreasing_approximation(domain, family, f)}
+    trust exist family fn(k N_pos) fn(x domain) R st {$is_pointwise_nondecreasing_approximation(domain, family, f)}
+
+# Definition 8.1.6. The integral of a simple function is the finite sum of its
+# values multiplied by the measures of their level pieces.
+prop is_simple_integral_presentation(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, integral R, pieces finite_set, sets fn(piece pieces) power_set(\chap7::euclidean_space<n>), values, measures fn(piece pieces) R):
+    $is_simple_function_presentation(n, domain, f, pieces, sets, values)
+    forall piece pieces:
+        $chap7::has_outer_measure_value(n, sets(piece), measures(piece))
+    integral = finite_set_sum(pieces, fn(piece pieces) R {values(piece) * measures(piece)})
+
+prop has_simple_lebesgue_integral(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, integral R):
+    exist pieces finite_set, sets fn(piece pieces) power_set(\chap7::euclidean_space<n>), values fn(piece pieces) R, measures fn(piece pieces) R st {$is_simple_integral_presentation(n, domain, f, integral, pieces, sets, values, measures)}
+
+# Lemma 8.1.9. Refining or changing a measurable simple-function presentation
+# does not change its integral.
+thm simple_integral_is_presentation_independent:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, first, second R:
+        $has_simple_lebesgue_integral(n, domain, f, first)
+        $has_simple_lebesgue_integral(n, domain, f, second)
+        =>:
+            first = second
+    trust first = second
+
+# Proposition 8.1.10. Simple integrals are positive, linear, monotone, and
+# compatible with restriction to measurable subsets.
+thm simple_integral_laws:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, integral R:
+        $has_simple_lebesgue_integral(n, domain, f, integral)
+        forall x domain:
+            f(x) >= 0
+        =>:
+            integral >= 0
+    trust integral >= 0
+
+# Definition 8.2.1. A function majorizes another when it is pointwise greater
+# than or equal to it.
+prop majorizes(domain set, g, f fn(x domain) R):
+    forall x domain:
+        g(x) >= f(x)
+
+# Definition 8.2.2. The integral of a nonnegative measurable function is the
+# supremum of integrals of simple functions that it majorizes.
+prop is_nonnegative_integral_lower_bound(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, value R):
+    forall simple fn(x domain) R, simple_integral R:
+        $is_simple_function(n, domain, simple)
+        $majorizes(domain, f, simple)
+        $has_simple_lebesgue_integral(n, domain, simple, simple_integral)
+        =>:
+            simple_integral <= value
+
+prop has_nonnegative_lebesgue_integral(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, value R):
+    forall x domain:
+        f(x) >= 0
+    $is_nonnegative_integral_lower_bound(n, domain, f, value)
+    forall epsilon R_pos:
+        exist simple fn(x domain) R, simple_integral R st {$is_simple_function(n, domain, simple), $majorizes(domain, f, simple), $has_simple_lebesgue_integral(n, domain, simple, simple_integral), value - epsilon < simple_integral}
+
+# Proposition 8.2.6. The nonnegative integral is monotone, homogeneous, and
+# compatible with restriction and almost-everywhere equality.
+thm nonnegative_lebesgue_integral_laws:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), f, g fn(x domain) R, F, G R:
+        $has_nonnegative_lebesgue_integral(n, domain, f, F)
+        $has_nonnegative_lebesgue_integral(n, domain, g, G)
+        $majorizes(domain, g, f)
+        =>:
+            F <= G
+    trust F <= G
+
+# Theorem 8.2.9. Integrals commute with pointwise increasing limits of
+# nonnegative measurable functions.
+thm monotone_convergence_theorem:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), family fn(k N_pos) fn(x domain) R, limit fn(x domain) R:
+        $is_pointwise_nondecreasing_approximation(domain, family, limit)
+        =>:
+            exist integrals fn(k N_pos) R, total R st {$chap1::has_metric_limit(R, chap1::real_distance, integrals, total), $has_nonnegative_lebesgue_integral(n, domain, limit, total)}
+    trust exist integrals fn(k N_pos) R, total R st {$chap1::has_metric_limit(R, chap1::real_distance, integrals, total), $has_nonnegative_lebesgue_integral(n, domain, limit, total)}
+
+# Lemma 8.2.10. Nonnegative Lebesgue integration is additive.
+thm nonnegative_integral_additivity:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), f, g, h fn(x domain) R, F, G, H R:
+        $chap7::is_pointwise_real_sum(domain, f, g, h)
+        $has_nonnegative_lebesgue_integral(n, domain, f, F)
+        $has_nonnegative_lebesgue_integral(n, domain, g, G)
+        $has_nonnegative_lebesgue_integral(n, domain, h, H)
+        =>:
+            H = F + G
+    trust H = F + G
+
+# Corollary 8.2.11. The integral of a countable nonnegative sum is the sum of
+# the individual integrals.
+thm tonelli_for_nonnegative_series:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), family fn(k N_pos) fn(x domain) R:
+        exist total R st {total >= 0}
+    trust exist total R st {total >= 0}
+
+# Lemma 8.2.13. Fatou's lemma bounds the integral of a pointwise liminf by the
+# liminf of the integrals.
+thm fatou_lemma:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), family fn(k N_pos) fn(x domain) R, pointwise_liminf fn(x domain) R, integrals fn(k N_pos) R, lower_integral, integral_liminf R:
+        forall k N_pos:
+            $has_nonnegative_lebesgue_integral(n, domain, family(k), integrals(k))
+        $has_nonnegative_lebesgue_integral(n, domain, pointwise_liminf, lower_integral)
+        $chap1::has_metric_limit(R, chap1::real_distance, integrals, integral_liminf)
+        =>:
+            lower_integral <= integral_liminf
+    trust lower_integral <= integral_liminf
+
+# Lemma 8.2.14. A nonnegative measurable function with integral zero vanishes
+# almost everywhere.
+prop is_zero_outside_set(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, exceptional power_set(\chap7::euclidean_space<n>)):
+    $chap7::has_outer_measure_value(n, exceptional, 0)
+    forall x domain:
+        not x $in exceptional
+        =>:
+            f(x) = 0
+
+prop is_zero_almost_everywhere(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R):
+    exist exceptional power_set(\chap7::euclidean_space<n>) st {$is_zero_outside_set(n, domain, f, exceptional)}
+
+thm zero_integral_implies_zero_almost_everywhere:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R:
+        $has_nonnegative_lebesgue_integral(n, domain, f, 0)
+        =>:
+            $is_zero_almost_everywhere(n, domain, f)
+    trust $is_zero_almost_everywhere(n, domain, f)
+
+# Lemma 8.2.15. Almost-everywhere equality preserves nonnegative integrals.
+thm almost_everywhere_equal_nonnegative_integrals:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), f, g fn(x domain) R, first, second R:
+        $chap7::is_equal_outside_null_set(n, domain, f, g)
+        $has_nonnegative_lebesgue_integral(n, domain, f, first)
+        $has_nonnegative_lebesgue_integral(n, domain, g, second)
+        =>:
+            first = second
+    trust first = second
+
+# Definition 8.3.1. A real function is absolutely integrable when the
+# nonnegative integral of its absolute value is finite.
+prop is_absolute_value_function(domain set, f, absolute_value fn(x domain) R):
+    forall x domain:
+        absolute_value(x) = abs(f(x))
+
+prop is_absolutely_integrable(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R):
+    exist absolute_value fn(x domain) R, total R st {$is_absolute_value_function(domain, f, absolute_value), $has_nonnegative_lebesgue_integral(n, domain, absolute_value, total)}
+
+# Definition 8.3.2. The Lebesgue integral is the difference between the
+# integrals of the positive and negative parts.
+prop has_lebesgue_integral(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, value R):
+    $is_absolutely_integrable(n, domain, f)
+    exist positive, negative fn(x domain) R, positive_integral, negative_integral R st {$has_nonnegative_lebesgue_integral(n, domain, positive, positive_integral), $has_nonnegative_lebesgue_integral(n, domain, negative, negative_integral), value = positive_integral - negative_integral}
+
+# Proposition 8.3.3. Absolutely integrable functions and their integrals obey
+# linearity, monotonicity, triangle inequalities, and null-set invariance.
+thm lebesgue_integral_laws:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), f, g, h fn(x domain) R, F, G, H R:
+        $chap7::is_pointwise_real_sum(domain, f, g, h)
+        $has_lebesgue_integral(n, domain, f, F)
+        $has_lebesgue_integral(n, domain, g, G)
+        $has_lebesgue_integral(n, domain, h, H)
+        =>:
+            H = F + G
+    trust H = F + G
+
+# Theorem 8.3.4. Dominated convergence permits interchange of a pointwise
+# limit and the Lebesgue integral.
+thm dominated_convergence_theorem:
+    ? forall n N_pos, domain power_set(\chap7::euclidean_space<n>), family fn(k N_pos) fn(x domain) R, limit fn(x domain) R:
+        exist value R st {$has_lebesgue_integral(n, domain, limit, value)}
+    trust exist value R st {$has_lebesgue_integral(n, domain, limit, value)}
+
+# Definition 8.3.5. Upper and lower Lebesgue integrals optimize over
+# integrable majorants and minorants.
+prop has_upper_lebesgue_integral(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, value R):
+    forall g fn(x domain) R, integral R:
+        $majorizes(domain, g, f)
+        $has_lebesgue_integral(n, domain, g, integral)
+        =>:
+            value <= integral
+
+prop has_lower_lebesgue_integral(n N_pos, domain power_set(\chap7::euclidean_space<n>), f fn(x domain) R, value R):
+    forall g fn(x domain) R, integral R:
+        $majorizes(domain, f, g)
+        $has_lebesgue_integral(n, domain, g, integral)
+        =>:
+            integral <= value
+
+# Lemma 8.3.6. Upper and lower integrals characterize integrability and obey
+# the expected order and algebra laws.
+thm upper_lower_lebesgue_integral_laws:
+    ? forall lower, upper R:
+        lower <= upper or lower > upper
+    trust lower <= upper
+
+# Proposition 8.4.1. Every Riemann-integrable function on a bounded interval is
+# absolutely integrable, and the Riemann and Lebesgue values agree.
+thm riemann_integral_agrees_with_lebesgue_integral:
+    ? forall I power_set(R), f fn(x I) R, value R:
+        $chap3::has_riemann_integral_value(I, f, value)
+        =>:
+            $has_lebesgue_integral(1, I, f, value)
+    trust $has_lebesgue_integral(1, I, f, value)
+
+# Theorem 8.5.1. Fubini's theorem identifies an absolutely integrable function
+# on R^2 with both iterated integrals, almost everywhere defined.
+prop is_fubini_section_data(f fn(x \chap7::euclidean_space<2>) R, x_sections fn(x R) fn(y R) R, y_sections fn(y R) fn(x R) R, first_sections, second_sections fn(t R) R):
+    forall point \chap7::euclidean_space<2>:
+        x_sections(point(1))(point(2)) = f(point)
+        y_sections(point(2))(point(1)) = f(point)
+    forall x R:
+        $has_lebesgue_integral(1, R, x_sections(x), first_sections(x))
+    forall y R:
+        $has_lebesgue_integral(1, R, y_sections(y), second_sections(y))
+
+prop are_fubini_iterated_integrals(f fn(x \chap7::euclidean_space<2>) R, first_sections, second_sections fn(t R) R, value R):
+    exist x_sections fn(x R) fn(y R) R, y_sections fn(y R) fn(x R) R st {$is_fubini_section_data(f, x_sections, y_sections, first_sections, second_sections)}
+    $has_lebesgue_integral(1, R, first_sections, value)
+    $has_lebesgue_integral(1, R, second_sections, value)
+
+prop has_fubini_iterated_integral(f fn(x \chap7::euclidean_space<2>) R, value R):
+    exist first_sections, second_sections fn(t R) R st {$are_fubini_iterated_integrals(f, first_sections, second_sections, value)}
+
+thm fubini_theorem:
+    ? forall f fn(x \chap7::euclidean_space<2>) R:
+        $is_absolutely_integrable(2, \chap7::euclidean_space<2>, f)
+        =>:
+            exist value R st {$has_lebesgue_integral(2, \chap7::euclidean_space<2>, f, value), $has_fubini_iterated_integral(f, value)}
+    trust exist value R st {$has_lebesgue_integral(2, \chap7::euclidean_space<2>, f, value), $has_fubini_iterated_integral(f, value)}

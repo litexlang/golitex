@@ -2,10 +2,15 @@
 
 ## Task context
 
-- Task: Plan and implement Tao's *Analysis II* as a Litex textbook project.
+- Task: Implement all eight chapters of Tao's *Analysis II* as a Litex
+  textbook project and remove every `abstract_prop` from Chapters 1--4.
 - Scope: The source in `scripts/Analysis2/Analysis II.txt`, structured
   translation records, and the final textbook module.
 - Related workspace: `scripts/Analysis2/` and `textbooks/Analysis2/`.
+- Current result: all 224 numbered non-exercise items have a source-facing
+  declaration, all eight registered chapter gates succeed, and the project
+  contains no `abstract_prop`. Remaining items below are proof debt or
+  technical limitations, not missing chapter inventory.
 
 Add an item here only after a direct Litex attempt. Every item must include the
 attempted statement or minimal Litex example, the exact verifier behavior when
@@ -18,11 +23,22 @@ label `trust` or `kernel_problem`.
   debt.** Attempt: all 38 named items were submitted in source order through
   the release `-session -before` workflow, and the persisted file passes
   `target/release/litex -compact -f
-  textbooks/Analysis2/chapter04-power-series.lit`. Result: 100 explicit
-  `trust` statements and 10 `abstract_prop` boundaries. Desired state: prove
+  textbooks/Analysis2/chapter04-power-series.lit`. Current result: 98 explicit
+  `trust` statements and no `abstract_prop`. The
+  derivative, one-sided-limit, complex-limit-law, and real trigonometric value
+  placeholders are now typed or concrete. Desired state: prove
   the convergence, differentiation, Abel, convolution, exponential,
   logarithm, complex algebra/limit, and trigonometric interfaces while
   preserving the current source-facing declarations. Primary label: `trust`.
+
+- **Chapters 5--8 are translated but remain proof-incomplete.** Attempt: all
+  96 numbered non-exercise items were represented in source order and checked
+  through their registered release file gates. The concrete interfaces cover
+  Fourier series, several-variable calculus, Lebesgue measure, and Lebesgue
+  integration, including source-facing Clairaut, measurable-level-set,
+  Fatou, linearity, and Fubini statements. Desired state: replace the visible
+  theorem-level `trust` boundaries with checked proofs without weakening
+  their current mathematical statements. Primary label: `trust`.
 
 - **Chapter 4 cannot directly reuse Analysis I real exponentiation.** Attempt:
   the natural Proposition 4.5.4 statement
@@ -41,14 +57,17 @@ label `trust` or `kernel_problem`.
   ended in `ExecStmtError`. Desired interface: unique selection should retain
   the declared witness carrier, including struct carriers, so downstream
   field access is well-defined. Current workaround: real sine and cosine use
-  explicit unique-value relations. Root-cause class: unique-selection result
+  concrete coordinate graph relations, but their selected `exp_complex`
+  coordinates still need narrow existence trusts; the direct attempt reports
+  that `&ComplexNumber{exp_complex(...)}.re` is not known to be in `R`.
+  Root-cause class: unique-selection result
   inference. Primary label: `kernel_problem`.
 
 - **Chapter 3 source proofs and cross-book analysis interfaces remain explicit
   proof debt.** Attempt: all 34 named items were submitted through the release
   `-session -before` workflow, and the final registered file passes
   `target/release/litex -compact -f
-  textbooks/Analysis2/chapter03-uniform-convergence.lit`. Result: 32 explicit
+  textbooks/Analysis2/chapter03-uniform-convergence.lit`. Current result: 30 explicit
   `trust` statements. The gaps are chiefly exercise-deferred epsilon
   arguments, real-supremum selection, and unavailable project imports for the
   Analysis I Riemann-integral and derivative APIs. Desired state: concrete
@@ -138,7 +157,41 @@ label `trust` or `kernel_problem`.
   dependency. Root cause: library organization rather than a verifier defect.
   Primary label: `trust`.
 
+- **Importing the current Analysis I module fails before Analysis II can reuse
+  it.** Attempt: load the registered Analysis I project as a dependency in the
+  real caller context. Exact verifier failure:
+  `Analysis::chap7`, line 2343, `name n is already active in this scope and
+  cannot be rebound`. Desired interface: a passing Analysis I module export
+  that Analysis II can import for derivatives and Riemann integration.
+  Current workaround: Chapters 3--4 use concrete local source-facing
+  relations. Root-cause class: upstream project/module compatibility. Primary
+  label: `trust`.
+
 ## strange_behavior_of_litex
+
+- **Declared structured and nested function return types are not always
+  propagated to callers.** Direct attempts typed complex partial sums as
+  `fn(n N) &ComplexNumber`, but
+  `&ComplexNumber{partial_sums(n)}.re` was reported not to be in `R`.
+  Nested structured results passed directly to another typed function also
+  failed well-definedness. Chapter 6 exposed the analogous limitation for
+  nested function-space aliases. Desired interface: preserve declared return
+  carriers through application, projection, and nested calls. Current
+  workaround: Chapters 4 and 6 expose real coordinate data plus explicit
+  reconstruction equations. Root-cause class: return-type propagation.
+  Primary label: `kernel_problem`.
+
+- **Nested struct-valued function applications do not unfold for elementary
+  coordinate equalities.** Direct release attempts now verify
+  `complex_add(z,w) = complex_add(w,z)` and the analogous multiplication law.
+  Associativity, identities, distributivity, Cartesian representation, and
+  conjugation still fail when one side contains a nested struct-valued
+  function application or must be compared with a named struct value.
+  Bound-variable struct extensionality has a builtin rule and focused release
+  regression, so the remaining missing behavior is recursive function-value
+  unfolding/projection. Desired interface: normalize a well-typed
+  struct-valued function application to its defining tuple deeply enough for
+  coordinate arithmetic and extensionality. Primary label: `kernel_problem`.
 
 - **A parse failure inside outermost `try:` stops a `-session -before`
   session.** Minimal attempted frame:

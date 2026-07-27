@@ -51,20 +51,40 @@ chapter_tracking:
     records: "scripts/Analysis2/items/chapter02.yaml"
     runner: "target/release/litex -compact -f textbooks/Analysis2/chapter02-continuous-functions.lit"
     runner_result: "success for all 24 named items (2026-07-26)"
-    proof_boundary: "36 explicit trusts. Section 2.5's eight named definitions and adjacent topological connectedness interfaces are concrete and checkable; earlier exercise-deferred and source-proof boundaries remain tracked."
+    proof_boundary: "35 explicit trusts. Section 2.5's eight named definitions and adjacent topological connectedness interfaces are concrete and checkable; earlier exercise-deferred and source-proof boundaries remain tracked."
   3:
     status: "translated"
     records: "scripts/Analysis2/items/chapter03.yaml"
     runner: "target/release/litex -compact -f textbooks/Analysis2/chapter03-uniform-convergence.lit"
     runner_result: "success for all 34 named items (2026-07-26)"
-    proof_boundary: "32 explicit trusts across source-deferred proofs, supremum selection, external Analysis I interfaces, and the staged Weierstrass argument."
+    proof_boundary: "30 explicit trusts and no abstract_prop; Riemann integration and differentiation have concrete local definitions."
   4:
     status: "translated"
     records: "scripts/Analysis2/items/chapter04.yaml"
     runner: "target/release/litex -compact -f textbooks/Analysis2/chapter04-power-series.lit"
     runner_result: "success for all 38 named items (2026-07-26)"
-    proof_boundary: "100 explicit trusts and 10 abstract_prop boundaries across source-deferred analysis, cross-book interfaces, complex algebra, and trigonometry."
-  5: {status: "planned"}
-  6: {status: "planned"}
-  7: {status: "planned"}
-  8: {status: "planned"}
+    proof_boundary: "98 explicit trusts and no abstract_prop; radius, real power, and complex exponential convergence are concrete."
+  5:
+    status: "translated"
+    records: "scripts/Analysis2/items/chapter05.yaml"
+    runner: "target/release/litex -compact -f textbooks/Analysis2/chapter05-fourier-series.lit"
+    runner_result: "success for all 18 named items (2026-07-26)"
+    proof_boundary: "12 explicit trusts and no abstract_prop."
+  6:
+    status: "translated"
+    records: "scripts/Analysis2/items/chapter06.yaml"
+    runner: "target/release/litex -compact -f textbooks/Analysis2/chapter06-several-variable-calculus.lit"
+    runner_result: "success for all 26 named items (2026-07-26)"
+    proof_boundary: "12 explicit trusts and no abstract_prop."
+  7:
+    status: "translated"
+    records: "scripts/Analysis2/items/chapter07.yaml"
+    runner: "target/release/litex -compact -f textbooks/Analysis2/chapter07-lebesgue-measure.lit"
+    runner_result: "success for all 28 named items (2026-07-26)"
+    proof_boundary: "21 explicit trusts and no abstract_prop."
+  8:
+    status: "translated"
+    records: "scripts/Analysis2/items/chapter08.yaml"
+    runner: "target/release/litex -compact -f textbooks/Analysis2/chapter08-lebesgue-integration.lit"
+    runner_result: "success for all 24 named items (2026-07-26)"
+    proof_boundary: "17 explicit trusts and no abstract_prop."

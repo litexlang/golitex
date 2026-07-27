@@ -1020,6 +1020,8 @@ struct FunctionBox<n N_pos>:
 template<n N_pos>:
     have zero_box &FunctionBox<n> = (n, fn(i N_pos: i <= n) R {0})
 
+trust have result &FunctionBox<2>
+trust result = \zero_box<2>
 &FunctionBox<2>{\zero_box<2>}.entries(1) = 0
 "#;
 
