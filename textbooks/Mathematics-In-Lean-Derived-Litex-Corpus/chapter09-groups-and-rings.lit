@@ -319,6 +319,9 @@ prop has_no_zero_divisors(A set, zero A, mul fn(x, y A) A):
 thm commutative_ring_square_sum:
     ? forall A nonempty_set, ring &chap7::CommutativeRing<A>, x, y A:
         ring.mul(ring.add(x, y), ring.add(x, y)) = ring.add(ring.add(ring.mul(x, x), ring.mul(y, y)), ring.add(ring.mul(x, y), ring.mul(x, y)))
+    $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::is_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::is_additive_commutative_group(A, ring.add, ring.zero, ring.neg)
     ring.mul(ring.add(x, y), ring.add(x, y)) = ring.add(ring.mul(x, ring.add(x, y)), ring.mul(y, ring.add(x, y)))
     ring.mul(x, ring.add(x, y)) = ring.add(ring.mul(x, x), ring.mul(x, y))
     ring.mul(y, ring.add(x, y)) = ring.add(ring.mul(y, x), ring.mul(y, y))

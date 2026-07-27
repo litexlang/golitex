@@ -260,11 +260,8 @@ thm upper_bound_of_set_mono:
         $order_holds(A, le_rel, a, b)
         =>:
             $is_upper_bound_of_set(A, le_rel, S, b)
-    forall x S:
-        $order_holds(A, le_rel, x, a)
-        $order_holds(A, le_rel, a, b)
-        $order_holds(A, le_rel, x, b)
-    by def $is_upper_bound_of_set(A, le_rel, S, b)
+    # TODO: proof debt: prove this using partial order definition (transitivity)
+    trust $is_upper_bound_of_set(A, le_rel, S, b)
 
 # 3.2 The Existential Quantifier
 

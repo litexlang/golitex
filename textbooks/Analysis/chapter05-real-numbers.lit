@@ -1344,6 +1344,7 @@ thm finite_prefix_replacement_preserves_cauchy_and_formal_limit_in_Q:
     claim:
         ? forall epsilon R_pos:
             exist n2 N_pos st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n2)}
+        $has_rational_sequence_limit_in_R(a, x)
         obtain n1 from exist n1 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, epsilon, n1)}
         witness exist n2 N_pos st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n2)} from finite_set_max(union({n0}, { n1})):
             forall n N_pos:
@@ -1371,6 +1372,7 @@ thm nonzero_real_has_bounded_away_rational_representative:
     2 * c < 4 * c < abs(x)
     by thm cauchy_sequence_representative_in_Q_exists(x)
     obtain a from exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x)}
+    $has_rational_sequence_limit_in_R(a, x)
     obtain n0 from exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, c, n0)}
     have fn b(n N_pos) Q by cases:
         case n < n0: c
@@ -2038,6 +2040,7 @@ thm positive_builtin_real_has_positive_rational_representative:
     have c Q_pos = 1 / m
     c < x / 2 < x
     x - c $in R_pos
+    $has_rational_sequence_limit_in_R(a, x)
     obtain n0 from exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, x - c, n0)}
     have fn b(n N_pos) Q by cases:
         case n < n0: c
@@ -3231,6 +3234,8 @@ thm real_supremum_domain_intro:
 have fn sup by exist!:
     ? forall E real_supremum_domain:
         exist! M R st {$is_least_upper_bound(E, M)}
+    $is_nonempty_bounded_above_subset_of_reals(E)
+    $is_nonempty_set(E)
     by thm least_upper_bound_existence(E)
 
 """
