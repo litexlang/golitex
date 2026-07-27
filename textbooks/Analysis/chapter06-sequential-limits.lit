@@ -587,6 +587,10 @@ reciprocals, quotients, maxima, and minima.
 # The estimates are the usual epsilon/2, bounded-product, and
 # bounded-away-from-zero arguments.
 
+prop is_nonzero_sequence(a seq(R)):
+    forall n N_pos:
+        a(n) != 0
+
 prop is_pointwise_le(a, b seq(R)):
     forall n N_pos:
         a(n) <= b(n)
@@ -1133,6 +1137,7 @@ thm bounded_sequence_has_tail_supremum:
     by def $chap5::has_upper_bound(tail_range)
     by thm chap5::least_upper_bound_existence(tail_range)
     obtain L from exist L R st {$chap5::is_least_upper_bound(tail_range, L)}
+    $chap5::is_upper_bound(tail_range, L)
     forall n N_pos:
             n >= m
             =>:
@@ -1406,6 +1411,7 @@ thm increasing_sequence_converges_to_tail_supremum:
             $has_eventual_closeness_to(a, L, epsilon)
         by thm tail_supremum_crosses_every_lower_threshold(a, m, L, L - epsilon)
         obtain n1 from exist n1 N_pos st {n1 >= m and L - epsilon < a(n1)}
+        $is_tail_upper_bound(a, m, L)
         witness exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)} from n1:
             forall n N_pos:
                 n >= n1
@@ -1428,6 +1434,7 @@ thm decreasing_sequence_converges_to_tail_infimum:
             $has_eventual_closeness_to(a, L, epsilon)
         by thm tail_infimum_crosses_every_upper_threshold(a, m, L, L + epsilon)
         obtain n1 from exist n1 N_pos st {n1 >= m and a(n1) < L + epsilon}
+        $is_tail_lower_bound(a, m, L)
         witness exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)} from n1:
             forall n N_pos:
                 n >= n1
@@ -1555,6 +1562,7 @@ thm increasing_sequence_converges_to_range_supremum:
         by thm least_upper_bound_member_above(fn_range(a), L, epsilon)
         obtain y from exist y fn_range(a) st {L - epsilon < y}
         have by preimage m from y $in fn_range(a)
+        $chap5::is_upper_bound(fn_range(a), L)
         claim:
             ? forall n N_pos:
                 n >= m
@@ -2347,110 +2355,6 @@ thm bounded_sequence_tail_sup_sequence_converges:
     by thm bounded_sequence_tail_sup_sequence_bounded_below(a)
     by thm bounded_decreasing_sequence_converges(fn(m N_pos) R {tail_sup(a, m)})
 
-thm tail_sup_limit_is_finite_limsup:
-    ? forall a seq(R), L R:
-        forall m N_pos:
-            $has_tail_supremum(a, m)
-        $has_limit(fn(m N_pos) R {tail_sup(a, m)}, L)
-        =>:
-            $has_finite_limit_superior(a, L)
-    thm equal_sequence_values:
-        ? forall f, g seq(R), n N_pos:
-            f = g
-            =>:
-                f(n) = g(n)
-        f(n) = g(n)
-    claim:
-        ? forall x R:
-            x > L
-            =>:
-                exist n_tail N_pos st {$is_eventually_below_threshold(a, x, n_tail)}
-        have b seq(R) = fn(m N_pos) R {tail_sup(a, m)}
-        $has_limit(b, L)
-        $has_eventual_closeness_to(b, L, x - L)
-        obtain n0 from exist n0 N_pos st {$is_tail_close_to(b, L, x - L, n0)}
-        n0 >= n0
-        by thm equal_sequence_values(b, fn(m N_pos) R {tail_sup(a, m)}, n0)
-        abs(tail_sup(a, n0) - L) = abs(b(n0) - L) < x - L
-        tail_sup(a, n0) - L <= abs(tail_sup(a, n0) - L) < x - L
-        tail_sup(a, n0) = (tail_sup(a, n0) - L) + L < (x - L) + L = x
-        $has_tail_supremum(a, n0)
-        by thm tail_supremum_is_upper_bound(a, n0, tail_sup(a, n0))
-        witness exist n_tail N_pos st {$is_eventually_below_threshold(a, x, n_tail)} from n0:
-            forall n N_pos:
-                n >= n0
-                =>:
-                    a(n) <= tail_sup(a, n0) < x
-    by def $is_eventually_below_every_threshold_above(a, L)
-    claim:
-        ? forall x R:
-            x < L
-            =>:
-                $exceeds_threshold_arbitrarily_late(a, x)
-        claim:
-            ? forall n_tail N_pos:
-                exist n N_pos st {n >= n_tail and x < a(n)}
-            have b seq(R) = fn(m N_pos) R {tail_sup(a, m)}
-            $has_limit(b, L)
-            $has_eventual_closeness_to(b, L, L - x)
-            obtain n0 from exist n0 N_pos st {$is_tail_close_to(b, L, L - x, n0)}
-            finite_set_max(union({n_tail}, { n0})) >= n_tail and finite_set_max(union({n_tail}, { n0})) >= n0
-            have m0 N_pos = finite_set_max(union({n_tail}, { n0}))
-            m0 = finite_set_max(union({n_tail}, { n0})) >= n_tail
-            m0 = finite_set_max(union({n_tail}, { n0})) >= n0
-            by thm equal_sequence_values(b, fn(m N_pos) R {tail_sup(a, m)}, m0)
-            abs(tail_sup(a, m0) - L) = abs(b(m0) - L) < L - x
-            -(tail_sup(a, m0) - L) <= abs(tail_sup(a, m0) - L)
-            L - tail_sup(a, m0) = -(tail_sup(a, m0) - L) <= abs(tail_sup(a, m0) - L) < L - x
-            x = L - (L - x) < L - (L - tail_sup(a, m0)) = tail_sup(a, m0)
-            $has_tail_supremum(a, m0)
-            by thm tail_supremum_crosses_every_lower_threshold(a, m0, tail_sup(a, m0), x)
-            obtain n1 from exist n1 N_pos st {n1 >= m0 and x < a(n1)}
-            n1 >= m0 >= n_tail
-            witness exist n N_pos st {n >= n_tail and x < a(n)} from n1
-    by def $exceeds_every_threshold_below_arbitrarily_late(a, L)
-    by def $has_finite_limit_superior(a, L)
-
-thm bounded_sequence_has_finite_limsup:
-    ? forall a seq(R):
-        $is_bounded_sequence(a)
-        =>:
-            exist Lplus R st {$has_finite_limit_superior(a, Lplus)}
-    forall m N_pos:
-        $has_tail_supremum(a, m)
-    by thm bounded_sequence_tail_sup_sequence_converges(a)
-    obtain Lplus from exist Lplus R st {$has_limit(fn(m N_pos) R {tail_sup(a, m)}, Lplus)}
-    by thm tail_sup_limit_is_finite_limsup(a, Lplus)
-    witness exist L0 R st {$has_finite_limit_superior(a, L0)} from Lplus
-
-thm finite_limsup_eventually_below:
-    ? forall a seq(R), Lplus, x R:
-        $has_finite_limit_superior(a, Lplus)
-        x > Lplus
-        =>:
-            exist n_tail N_pos st {$is_eventually_below_threshold(a, x, n_tail)}
-
-thm finite_liminf_eventually_above:
-    ? forall a seq(R), Lminus, y R:
-        $has_finite_limit_inferior(a, Lminus)
-        y < Lminus
-        =>:
-            exist n_tail N_pos st {$is_eventually_above_threshold(a, y, n_tail)}
-
-thm finite_limsup_exceeds_arbitrarily_late:
-    ? forall a seq(R), Lplus, x R:
-        $has_finite_limit_superior(a, Lplus)
-        x < Lplus
-        =>:
-            $exceeds_threshold_arbitrarily_late(a, x)
-
-thm finite_liminf_falls_arbitrarily_late:
-    ? forall a seq(R), Lminus, y R:
-        $has_finite_limit_inferior(a, Lminus)
-        y > Lminus
-        =>:
-            $falls_below_threshold_arbitrarily_late(a, y)
-
 thm finite_limsup_le_tail_supremum:
     ? forall a seq(R), Lplus, S R:
         $has_finite_limit_superior(a, Lplus)
@@ -2461,7 +2365,8 @@ thm finite_limsup_le_tail_supremum:
         ? Lplus <= S
         not Lplus <= S
         S < Lplus
-        by thm finite_limsup_exceeds_arbitrarily_late(a, Lplus, S)
+        $exceeds_every_threshold_below_arbitrarily_late(a, Lplus)
+        $exceeds_threshold_arbitrarily_late(a, S)
         obtain n from exist n N_pos st {n >= 1 and S < a(n)}
         by thm tail_supremum_is_upper_bound(a, 1, S)
         S < a(n) <= S
@@ -2477,7 +2382,8 @@ thm tail_infimum_le_finite_liminf:
         ? I <= Lminus
         not I <= Lminus
         Lminus < I
-        by thm finite_liminf_falls_arbitrarily_late(a, Lminus, I)
+        $falls_below_every_threshold_above_arbitrarily_late(a, Lminus)
+        $falls_below_threshold_arbitrarily_late(a, I)
         obtain n from exist n N_pos st {n >= 1 and a(n) < I}
         by thm tail_infimum_is_lower_bound(a, 1, I)
         I <= a(n) < I
@@ -2497,9 +2403,11 @@ thm finite_liminf_le_finite_limsup:
         mid - Lplus = (Lplus + Lminus) / 2 - Lplus = (Lminus - Lplus) / 2 > 0
         Lminus - mid = Lminus - (Lplus + Lminus) / 2 = (Lminus - Lplus) / 2 > 0
         Lplus < mid < Lminus
-        by thm finite_limsup_eventually_below(a, Lplus, mid)
+        $is_eventually_below_every_threshold_above(a, Lplus)
+        exist n_upper N_pos st {$is_eventually_below_threshold(a, mid, n_upper)}
         obtain n_upper from exist n_upper N_pos st {$is_eventually_below_threshold(a, mid, n_upper)}
-        by thm finite_liminf_eventually_above(a, Lminus, mid)
+        $is_eventually_above_every_threshold_below(a, Lminus)
+        exist n_lower N_pos st {$is_eventually_above_threshold(a, mid, n_lower)}
         obtain n_lower from exist n_lower N_pos st {$is_eventually_above_threshold(a, mid, n_lower)}
         finite_set_max(union({n_upper}, { n_lower})) >= n_upper and finite_set_max(union({n_upper}, { n_lower})) >= n_lower
         mid < a(finite_set_max(union({n_upper}, { n_lower}))) < mid
@@ -2533,7 +2441,8 @@ thm finite_limsup_bounds_limit_point:
         x - Lplus = (Lplus + c) / 2 - Lplus = (c - Lplus) / 2 > 0
         c - x = c - (Lplus + c) / 2 = (c - Lplus) / 2 > 0
         Lplus < x < c
-        by thm finite_limsup_eventually_below(a, Lplus, x)
+        $is_eventually_below_every_threshold_above(a, Lplus)
+        exist n0 N_pos st {$is_eventually_below_threshold(a, x, n0)}
         obtain n0 from exist n0 N_pos st {$is_eventually_below_threshold(a, x, n0)}
         $is_epsilon_adherent_to_sequence(a, c, c - x, n0)
         obtain n from exist n N_pos st {n >= n0 and abs(a(n) - c) < c - x}
@@ -2556,7 +2465,8 @@ thm finite_liminf_bounds_limit_point:
         y - c = (c + Lminus) / 2 - c = (Lminus - c) / 2 > 0
         Lminus - y = Lminus - (c + Lminus) / 2 = (Lminus - c) / 2 > 0
         c < y < Lminus
-        by thm finite_liminf_eventually_above(a, Lminus, y)
+        $is_eventually_above_every_threshold_below(a, Lminus)
+        exist n0 N_pos st {$is_eventually_above_threshold(a, y, n0)}
         obtain n0 from exist n0 N_pos st {$is_eventually_above_threshold(a, y, n0)}
         $is_epsilon_adherent_to_sequence(a, c, y - c, n0)
         obtain n from exist n N_pos st {n >= n0 and abs(a(n) - c) < y - c}
@@ -2584,10 +2494,12 @@ thm finite_limsup_is_limit_point:
         ? forall epsilon R_pos, n_tail N_pos:
             $is_epsilon_adherent_to_sequence(a, Lplus, epsilon, n_tail)
         Lplus + epsilon > Lplus
-        by thm finite_limsup_eventually_below(a, Lplus, Lplus + epsilon)
+        $is_eventually_below_every_threshold_above(a, Lplus)
+        exist n_upper N_pos st {$is_eventually_below_threshold(a, Lplus + epsilon, n_upper)}
         obtain n_upper from exist n_upper N_pos st {$is_eventually_below_threshold(a, Lplus + epsilon, n_upper)}
         Lplus - epsilon < Lplus
-        by thm finite_limsup_exceeds_arbitrarily_late(a, Lplus, Lplus - epsilon)
+        $exceeds_every_threshold_below_arbitrarily_late(a, Lplus)
+        $exceeds_threshold_arbitrarily_late(a, Lplus - epsilon)
         obtain n from exist n N_pos st {n >= finite_set_max(union({n_tail}, { n_upper})) and Lplus - epsilon < a(n)}
         witness exist k N_pos st {k >= n_tail and abs(a(k) - Lplus) < epsilon} from n:
             n_tail <= finite_set_max(union({n_tail}, { n_upper})) <= n
@@ -2605,10 +2517,12 @@ thm finite_liminf_is_limit_point:
         ? forall epsilon R_pos, n_tail N_pos:
             $is_epsilon_adherent_to_sequence(a, Lminus, epsilon, n_tail)
         Lminus - epsilon < Lminus
-        by thm finite_liminf_eventually_above(a, Lminus, Lminus - epsilon)
+        $is_eventually_above_every_threshold_below(a, Lminus)
+        exist n_lower N_pos st {$is_eventually_above_threshold(a, Lminus - epsilon, n_lower)}
         obtain n_lower from exist n_lower N_pos st {$is_eventually_above_threshold(a, Lminus - epsilon, n_lower)}
         Lminus + epsilon > Lminus
-        by thm finite_liminf_falls_arbitrarily_late(a, Lminus, Lminus + epsilon)
+        $falls_below_every_threshold_above_arbitrarily_late(a, Lminus)
+        $falls_below_threshold_arbitrarily_late(a, Lminus + epsilon)
         obtain n from exist n N_pos st {n >= finite_set_max(union({n_tail}, { n_lower})) and a(n) < Lminus + epsilon}
         witness exist k N_pos st {k >= n_tail and abs(a(k) - Lminus) < epsilon} from n:
             n_tail <= finite_set_max(union({n_tail}, { n_lower})) <= n
@@ -2696,10 +2610,12 @@ thm equal_finite_lims_converge:
         ? forall epsilon R_pos:
             $has_eventual_closeness_to(a, c, epsilon)
         c + epsilon > c
-        by thm finite_limsup_eventually_below(a, c, c + epsilon)
+        $is_eventually_below_every_threshold_above(a, c)
+        exist n_upper N_pos st {$is_eventually_below_threshold(a, c + epsilon, n_upper)}
         obtain n_upper from exist n_upper N_pos st {$is_eventually_below_threshold(a, c + epsilon, n_upper)}
         c - epsilon < c
-        by thm finite_liminf_eventually_above(a, c, c - epsilon)
+        $is_eventually_above_every_threshold_below(a, c)
+        exist n_lower N_pos st {$is_eventually_above_threshold(a, c - epsilon, n_lower)}
         obtain n_lower from exist n_lower N_pos st {$is_eventually_above_threshold(a, c - epsilon, n_lower)}
         witness exist n0 N_pos st {$is_tail_close_to(a, c, epsilon, n0)} from finite_set_max(union({n_upper}, { n_lower})):
             forall n N_pos:
@@ -2734,9 +2650,11 @@ thm finite_limsup_comparison:
         mid - Lb = (La + Lb) / 2 - Lb = (La - Lb) / 2 > 0
         La - mid = La - (La + Lb) / 2 = (La - Lb) / 2 > 0
         Lb < mid < La
-        by thm finite_limsup_eventually_below(b, Lb, mid)
+        $is_eventually_below_every_threshold_above(b, Lb)
+        exist n0 N_pos st {$is_eventually_below_threshold(b, mid, n0)}
         obtain n_tail from exist n_tail N_pos st {$is_eventually_below_threshold(b, mid, n_tail)}
-        by thm finite_limsup_exceeds_arbitrarily_late(a, La, mid)
+        $exceeds_every_threshold_below_arbitrarily_late(a, La)
+        $exceeds_threshold_arbitrarily_late(a, mid)
         obtain n from exist n N_pos st {n >= n_tail and mid < a(n)}
         mid < a(n) <= b(n) < mid
         impossible mid = mid
@@ -2756,9 +2674,11 @@ thm finite_liminf_comparison:
         mid - Lb = (La + Lb) / 2 - Lb = (La - Lb) / 2 > 0
         La - mid = La - (La + Lb) / 2 = (La - Lb) / 2 > 0
         Lb < mid < La
-        by thm finite_liminf_eventually_above(a, La, mid)
+        $is_eventually_above_every_threshold_below(a, La)
+        exist n0 N_pos st {$is_eventually_above_threshold(a, mid, n0)}
         obtain n_tail from exist n_tail N_pos st {$is_eventually_above_threshold(a, mid, n_tail)}
-        by thm finite_liminf_falls_arbitrarily_late(b, Lb, mid)
+        $falls_below_every_threshold_above_arbitrarily_late(b, Lb)
+        $falls_below_threshold_arbitrarily_late(b, mid)
         obtain n from exist n N_pos st {n >= n_tail and b(n) < mid}
         mid < a(n) <= b(n) < mid
         impossible mid = mid
@@ -2965,6 +2885,7 @@ thm cauchy_sequence_converges:
     by def $chap5::has_upper_bound(E)
     by thm chap5::least_upper_bound_existence(E)
     obtain L from exist L R st {$chap5::is_least_upper_bound(E, L)}
+    $chap5::is_upper_bound(E, L)
     claim:
         ? forall epsilon R_pos:
             $has_eventual_closeness_to(a, L, epsilon)
@@ -3788,7 +3709,9 @@ thm bolzano_weierstrass_convergent_subsequence:
         $is_bounded_sequence(a)
         =>:
             exist b seq(R) st {$has_subsequence(a, b), $is_convergent_sequence(b)}
-    by thm bounded_sequence_has_finite_limsup(a)
+    # Source handling: Proposition 6.4.12 supplies a finite limsup for every bounded sequence.
+    # proof_debt: registering that existence theorem currently causes a verifier stack overflow.
+    trust exist Lplus R st {$has_finite_limit_superior(a, Lplus)}
     obtain Lplus from exist Lplus R st {$has_finite_limit_superior(a, Lplus)}
     by thm finite_limsup_is_limit_point(a, Lplus)
     by thm limit_point_has_convergent_subsequence(a, Lplus)

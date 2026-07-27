@@ -5,7 +5,7 @@ André Weil and Maxwell Rosenlicht's *Number Theory for Beginners* in source
 order. Run it from the repository root with:
 
 ```sh
-RUST_MIN_STACK=8388608 target/release/litex -compact -runner -r textbooks/NumberTheoryForBeginners
+RUST_MIN_STACK=8388608 target/release/litex -compact -runner -r textbooks/Number-Theory-For-Beginners
 ```
 
 The project exports Sections I–XIII directly, with no citation package. Its

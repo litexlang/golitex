@@ -16,7 +16,7 @@ use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 const ANALYSIS_ONE_CHAPTERS_SUBDIR: &str = "textbooks/Analysis";
 const LINEAR_ALGEBRA_DONE_RIGHT_SUBDIR: &str = "textbooks/Linear-Algebra-Done-Right";
 const MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR: &str = "textbooks/The-Mechanics-of-Litex-Proof";
-const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/NumberTheoryForBeginners";
+const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/Number-Theory-For-Beginners";
 
 #[derive(Clone)]
 struct LitexRunItem {
