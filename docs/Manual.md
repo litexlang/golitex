@@ -338,6 +338,11 @@ called, as in `space.scalars.mul(a, b)`, but field access after a call, index,
 or parenthesized expression is not currently supported; select that next view
 explicitly with `&Struct{expr}.field`.
 
+When `expr` is a materialized template-selected struct object, a callable
+field projects through the selected tuple value before application. Thus an
+entries field defined by an anonymous function can be evaluated directly once
+the selected object's struct membership is known.
+
 A vector-space structure can own its scalar system rather than asking each
 single-space theorem to carry scalar operations separately. With
 `space &VectorSpace<s,V>`, ordinary code can write

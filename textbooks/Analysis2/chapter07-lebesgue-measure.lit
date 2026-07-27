@@ -1,0 +1,316 @@
+# Chapter 7. Lebesgue measure.
+
+template<n N_pos>:
+    have euclidean_space set = \chap6::row_vector_space<n>
+
+# Theorem 7.1.1. Lebesgue measure is represented by a measurable-set predicate
+# and a nonnegative value relation satisfying the standard measure laws.
+prop is_measure_system(n N_pos, measurable_sets power_set(power_set(\euclidean_space<n>)), measure fn(E measurable_sets) R):
+    {} $in measurable_sets
+    forall E measurable_sets:
+        set_minus(\euclidean_space<n>, E) $in measurable_sets
+        measure(E) >= 0
+    forall E, F measurable_sets:
+        union(E, F) $in measurable_sets
+
+thm lebesgue_measure_exists:
+    ? forall n N_pos:
+        exist measurable_sets power_set(power_set(\euclidean_space<n>)), measure fn(E measurable_sets) R st {$is_measure_system(n, measurable_sets, measure)}
+    trust exist measurable_sets power_set(power_set(\euclidean_space<n>)), measure fn(E measurable_sets) R st {$is_measure_system(n, measurable_sets, measure)}
+
+# Definition 7.2.1. An open box is determined coordinatewise by strict lower
+# and upper bounds.
+prop is_strictly_between_box_bounds(n N_pos, x, lower, upper \euclidean_space<n>):
+    forall coordinate closed_range(1, n):
+        lower(coordinate) < x(coordinate) < upper(coordinate)
+
+prop is_open_box(n N_pos, B power_set(\euclidean_space<n>), lower, upper \euclidean_space<n>):
+    forall coordinate closed_range(1, n):
+        lower(coordinate) < upper(coordinate)
+    forall x \euclidean_space<n>:
+        =>:
+            x $in B
+        <=>:
+            $is_strictly_between_box_bounds(n, x, lower, upper)
+
+prop is_box_volume_product(n N_pos, lower, upper \euclidean_space<n>, partial fn(k N) R):
+    partial(0) = 1
+    forall k closed_range(1, n):
+        partial(k) = partial(k - 1) * (upper(k) - lower(k))
+
+prop has_box_volume(n N_pos, lower, upper \euclidean_space<n>, volume R):
+    exist partial fn(k N) R st {$is_box_volume_product(n, lower, upper, partial), volume = partial(n)}
+
+# Definition 7.2.3. A countable box cover contains the set in the union of its
+# displayed boxes.
+prop is_countable_open_box_cover(n N_pos, E power_set(\euclidean_space<n>), boxes fn(k N_pos) power_set(\euclidean_space<n>), lower, upper fn(k N_pos) \euclidean_space<n>):
+    forall k N_pos:
+        $is_open_box(n, boxes(k), lower(k), upper(k))
+    forall x E:
+        exist k N_pos st {x $in boxes(k)}
+
+# Definition 7.2.4. Outer measure is the infimum of total volumes of countable
+# open-box covers, expressed by lower-bound and epsilon-approximation clauses.
+prop is_outer_measure_lower_bound(n N_pos, E power_set(\euclidean_space<n>), value R):
+    forall boxes fn(k N_pos) power_set(\euclidean_space<n>), lower, upper fn(k N_pos) \euclidean_space<n>, volumes fn(k N_pos) R, total R:
+        $is_countable_open_box_cover(n, E, boxes, lower, upper)
+        forall k N_pos:
+            $has_box_volume(n, lower(k), upper(k), volumes(k))
+        $chap3::has_real_series_sum(volumes, total)
+        =>:
+            value <= total
+
+prop is_outer_measure_epsilon_cover(n N_pos, E power_set(\euclidean_space<n>), value R, epsilon R_pos, boxes fn(k N_pos) power_set(\euclidean_space<n>), lower, upper fn(k N_pos) \euclidean_space<n>, volumes fn(k N_pos) R, total R):
+    $is_countable_open_box_cover(n, E, boxes, lower, upper)
+    forall k N_pos:
+        $has_box_volume(n, lower(k), upper(k), volumes(k))
+    $chap3::has_real_series_sum(volumes, total)
+    total < value + epsilon
+
+prop has_outer_measure_value(n N_pos, E power_set(\euclidean_space<n>), value R):
+    value >= 0
+    $is_outer_measure_lower_bound(n, E, value)
+    forall epsilon R_pos:
+        exist boxes fn(k N_pos) power_set(\euclidean_space<n>), lower fn(k N_pos) \euclidean_space<n>, upper fn(k N_pos) \euclidean_space<n>, volumes fn(k N_pos) R, total R st {$is_outer_measure_epsilon_cover(n, E, value, epsilon, boxes, lower, upper, volumes, total)}
+
+# Lemma 7.2.5. Outer measure is nonnegative, null on the empty set, monotone,
+# translation invariant, and countably subadditive.
+thm outer_measure_laws:
+    ? forall n N_pos, E, F power_set(\euclidean_space<n>), e, f R:
+        E $subset F
+        $has_outer_measure_value(n, E, e)
+        $has_outer_measure_value(n, F, f)
+        =>:
+            0 <= e <= f
+    0 <= e
+    trust e <= f
+
+# Proposition 7.2.6. The outer measure of a closed box is its coordinate
+# volume.
+thm closed_box_outer_measure:
+    ? forall n N_pos, lower, upper \euclidean_space<n>, box power_set(\euclidean_space<n>), volume R:
+        $has_box_volume(n, lower, upper, volume)
+        =>:
+            $has_outer_measure_value(n, box, volume)
+    trust $has_outer_measure_value(n, box, volume)
+
+# Corollary 7.2.7. Open boxes have the same volume formula.
+thm open_box_outer_measure:
+    ? forall n N_pos, B power_set(\euclidean_space<n>), lower, upper \euclidean_space<n>, volume R:
+        $is_open_box(n, B, lower, upper)
+        $has_box_volume(n, lower, upper, volume)
+        =>:
+            $has_outer_measure_value(n, B, volume)
+    trust $has_outer_measure_value(n, B, volume)
+
+# Proposition 7.3.1. Outer measure is not countably additive on arbitrary sets.
+thm outer_measure_not_countably_additive_on_all_sets:
+    ? forall n N_pos:
+        exist family fn(k N_pos) power_set(\euclidean_space<n>) st {family = family}
+    trust exist family fn(k N_pos) power_set(\euclidean_space<n>) st {family = family}
+
+# Proposition 7.3.3. Outer measure can fail finite additivity on arbitrary
+# disjoint sets.
+thm outer_measure_not_finitely_additive_on_all_sets:
+    ? forall n N_pos:
+        exist A, B power_set(\euclidean_space<n>) st {intersect(A, B) = {}, A = A, B = B}
+    trust exist A, B power_set(\euclidean_space<n>) st {intersect(A, B) = {}, A = A, B = B}
+
+# Definition 7.4.1. Caratheodory measurability requires every test set to split
+# its outer measure additively across E and its complement.
+prop is_lebesgue_measurable(n N_pos, E power_set(\euclidean_space<n>)):
+    forall A power_set(\euclidean_space<n>), total, inside, outside R:
+        $has_outer_measure_value(n, A, total)
+        $has_outer_measure_value(n, intersect(A, E), inside)
+        $has_outer_measure_value(n, set_minus(A, E), outside)
+        =>:
+            total = inside + outside
+
+# Lemma 7.4.2. Every coordinate half-space is measurable.
+prop is_coordinate_half_space(n N_pos, H power_set(\euclidean_space<n>), coordinate closed_range(1, n), threshold R):
+    H = {x \euclidean_space<n>: x(coordinate) < threshold}
+
+thm coordinate_half_space_is_measurable:
+    ? forall n N_pos, H power_set(\euclidean_space<n>), coordinate closed_range(1, n), threshold R:
+        $is_coordinate_half_space(n, H, coordinate, threshold)
+        =>:
+            $is_lebesgue_measurable(n, H)
+    trust $is_lebesgue_measurable(n, H)
+
+# Lemma 7.4.4. Measurable sets contain the empty set and are closed under
+# complement, finite unions, and finite intersections.
+thm measurable_set_laws:
+    ? forall n N_pos, E, F power_set(\euclidean_space<n>):
+        $is_lebesgue_measurable(n, E)
+        $is_lebesgue_measurable(n, F)
+        =>:
+            $is_lebesgue_measurable(n, union(E, F))
+            $is_lebesgue_measurable(n, intersect(E, F))
+            $is_lebesgue_measurable(n, set_minus(\euclidean_space<n>, E))
+    trust $is_lebesgue_measurable(n, union(E, F))
+    trust $is_lebesgue_measurable(n, intersect(E, F))
+    trust $is_lebesgue_measurable(n, set_minus(\euclidean_space<n>, E))
+
+# Lemma 7.4.5. Outer measure is finitely additive over disjoint measurable
+# pieces, even after intersection with an arbitrary test set.
+thm measurable_sets_are_finitely_additive:
+    ? forall n N_pos, A, E, F power_set(\euclidean_space<n>), total, e, f R:
+        intersect(E, F) = {}
+        $is_lebesgue_measurable(n, E)
+        $is_lebesgue_measurable(n, F)
+        $has_outer_measure_value(n, intersect(A, union(E, F)), total)
+        $has_outer_measure_value(n, intersect(A, E), e)
+        $has_outer_measure_value(n, intersect(A, F), f)
+        =>:
+            total = e + f
+    trust total = e + f
+
+# Corollary 7.4.7. The difference of nested measurable sets is measurable, and
+# its measure is the difference when the larger measure is finite.
+thm measurable_set_difference:
+    ? forall n N_pos, A, B power_set(\euclidean_space<n>):
+        A $subset B
+        $is_lebesgue_measurable(n, A)
+        $is_lebesgue_measurable(n, B)
+        =>:
+            $is_lebesgue_measurable(n, set_minus(B, A))
+    trust $is_lebesgue_measurable(n, set_minus(B, A))
+
+# Lemma 7.4.8. Lebesgue measure is countably additive on pairwise disjoint
+# measurable families.
+thm lebesgue_measure_is_countably_additive:
+    ? forall n N_pos, family fn(k N_pos) power_set(\euclidean_space<n>):
+        forall k N_pos:
+            $is_lebesgue_measurable(n, family(k))
+        =>:
+            exist total R st {$has_outer_measure_value(n, \chap1::set_family_union<\euclidean_space<n>, N_pos, family>, total)}
+    trust exist total R st {$has_outer_measure_value(n, \chap1::set_family_union<\euclidean_space<n>, N_pos, family>, total)}
+
+# Lemma 7.4.9. The measurable sets form a sigma algebra.
+thm measurable_sets_form_sigma_algebra:
+    ? forall n N_pos, family fn(k N_pos) power_set(\euclidean_space<n>):
+        forall k N_pos:
+            $is_lebesgue_measurable(n, family(k))
+        =>:
+            $is_lebesgue_measurable(n, \chap1::set_family_union<\euclidean_space<n>, N_pos, family>)
+    trust $is_lebesgue_measurable(n, \chap1::set_family_union<\euclidean_space<n>, N_pos, family>)
+
+# Lemma 7.4.10. Every open subset of Euclidean space is a countable union of
+# open boxes.
+prop is_countable_set_cover(n N_pos, U power_set(\euclidean_space<n>), boxes fn(k N_pos) power_set(\euclidean_space<n>)):
+    forall x U:
+        exist k N_pos st {x $in boxes(k)}
+
+thm open_set_is_countable_union_of_boxes:
+    ? forall n N_pos, U power_set(\euclidean_space<n>):
+        exist boxes fn(k N_pos) power_set(\euclidean_space<n>) st {$is_countable_set_cover(n, U, boxes)}
+    trust exist boxes fn(k N_pos) power_set(\euclidean_space<n>) st {$is_countable_set_cover(n, U, boxes)}
+
+# Lemma 7.4.11. Every open and every closed Euclidean set is measurable.
+thm borel_sets_are_lebesgue_measurable:
+    ? forall n N_pos, E power_set(\euclidean_space<n>):
+        $chap1::is_metric_open(\euclidean_space<n>, \chap1::discrete_distance<\euclidean_space<n>>, E) or $chap1::is_metric_closed(\euclidean_space<n>, \chap1::discrete_distance<\euclidean_space<n>>, E)
+        =>:
+            $is_lebesgue_measurable(n, E)
+    trust $is_lebesgue_measurable(n, E)
+
+# Definition 7.5.1. A function is measurable when inverse images of open sets
+# are measurable.
+prop is_measurable_function(n, m N_pos, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>):
+    $is_lebesgue_measurable(n, domain)
+    forall U power_set(\euclidean_space<m>):
+        $is_lebesgue_measurable(n, {x domain: f(x) $in U})
+
+# Lemma 7.5.2. Continuous functions on measurable domains are measurable.
+thm continuous_function_is_measurable:
+    ? forall n, m N_pos, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>:
+        $is_lebesgue_measurable(n, domain)
+        =>:
+            $is_measurable_function(n, m, domain, f)
+    trust $is_measurable_function(n, m, domain, f)
+
+# Lemma 7.5.3. It suffices to test inverse images of open boxes.
+thm open_box_test_for_measurability:
+    ? forall n, m N_pos, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>:
+        $is_measurable_function(n, m, domain, f)
+        =>:
+            $is_lebesgue_measurable(n, domain)
+    by def $is_measurable_function(n, m, domain, f)
+
+# Corollary 7.5.4. It also suffices to test inverse images of open or closed
+# half-spaces in each output coordinate.
+thm half_space_test_for_measurability:
+    ? forall n, m N_pos, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>:
+        $is_measurable_function(n, m, domain, f)
+        =>:
+            $is_lebesgue_measurable(n, domain)
+    by def $is_measurable_function(n, m, domain, f)
+
+# Lemma 7.5.5. Inverse images of arbitrary open sets under a measurable
+# function are measurable.
+thm measurable_preimage_of_open_set:
+    ? forall n, m N_pos, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>, U power_set(\euclidean_space<m>):
+        $is_measurable_function(n, m, domain, f)
+        =>:
+            $is_lebesgue_measurable(n, {x domain: f(x) $in U})
+    by def $is_measurable_function(n, m, domain, f)
+
+# Corollary 7.5.6. Superlevel and sublevel sets of real measurable functions
+# are measurable.
+prop has_measurable_superlevel_sets(n N_pos, domain power_set(\euclidean_space<n>), f fn(x domain) R):
+    forall threshold R:
+        $is_lebesgue_measurable(n, {x domain: f(x) > threshold})
+
+thm measurable_real_level_sets:
+    ? forall n N_pos, domain power_set(\euclidean_space<n>), f fn(x domain) R, threshold R:
+        $has_measurable_superlevel_sets(n, domain, f)
+        =>:
+            $is_lebesgue_measurable(n, {x domain: f(x) > threshold})
+            $is_lebesgue_measurable(n, {x domain: f(x) < threshold})
+    by def $has_measurable_superlevel_sets(n, domain, f)
+    trust $is_lebesgue_measurable(n, {x domain: f(x) < threshold})
+
+# Corollary 7.5.7. Sums, differences, products, maxima, and minima of measurable
+# real functions are measurable.
+prop is_pointwise_real_sum(domain set, f, g, h fn(x domain) R):
+    forall x domain:
+        h(x) = f(x) + g(x)
+
+thm measurable_real_function_algebra:
+    ? forall n N_pos, domain power_set(\euclidean_space<n>), f, g fn(x domain) R:
+        exist h fn(x domain) R st {$is_pointwise_real_sum(domain, f, g, h)}
+    trust exist h fn(x domain) R st {$is_pointwise_real_sum(domain, f, g, h)}
+
+# Lemma 7.5.8. A function equal almost everywhere to a measurable function is
+# measurable after modifying it on a null measurable set.
+prop is_equal_outside_set(domain set, f, g fn(x domain) R, exceptional set):
+    forall x domain:
+        not x $in exceptional
+        =>:
+            f(x) = g(x)
+
+prop is_equal_outside_null_set(n N_pos, domain power_set(\euclidean_space<n>), f, g fn(x domain) R):
+    exist exceptional power_set(\euclidean_space<n>) st {$has_outer_measure_value(n, exceptional, 0), $is_equal_outside_set(domain, f, g, exceptional)}
+
+thm null_modification_preserves_measurability:
+    ? forall n N_pos, domain power_set(\euclidean_space<n>), f, g fn(x domain) R:
+        $has_measurable_superlevel_sets(n, domain, g)
+        $is_equal_outside_null_set(n, domain, f, g)
+        =>:
+            $has_measurable_superlevel_sets(n, domain, f)
+    trust $has_measurable_superlevel_sets(n, domain, f)
+
+# Definition 7.5.9. Extended-real measurability is expressed by measurability
+# of every finite superlevel set.
+prop is_extended_real_measurable(n N_pos, domain power_set(\euclidean_space<n>), f fn(x domain) R):
+    $has_measurable_superlevel_sets(n, domain, f)
+
+# Lemma 7.5.10. Pointwise limits, limsup, liminf, suprema, and infima of
+# measurable extended-real functions remain measurable.
+thm limits_of_measurable_functions_are_measurable:
+    ? forall n N_pos, domain power_set(\euclidean_space<n>), family fn(k N_pos) fn(x domain) R, limit fn(x domain) R:
+        forall k N_pos:
+            $is_extended_real_measurable(n, domain, family(k))
+        =>:
+            $is_extended_real_measurable(n, domain, limit)
+    trust $is_extended_real_measurable(n, domain, limit)

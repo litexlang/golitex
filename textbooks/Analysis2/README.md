@@ -10,8 +10,8 @@ Run the implemented project with:
 target/release/litex -compact -r textbooks/Analysis2
 ```
 
-The current project exports Chapters 1--4 as `chap1`, `chap2`, `chap3`, and
-`chap4`.
+The project exports all eight chapters in source order as `chap1` through
+`chap8`.
 The Chapter 1 public metric-space surface includes:
 
 - `$chap1::is_metric_space(X,dist)`, the concrete real, restricted,
@@ -75,8 +75,11 @@ M-test. It then gives source-facing interfaces for exchanging uniform limits
 with integration and differentiation, followed by polynomial presentations,
 compact support, approximations to the identity, convolution, and the staged
 Weierstrass approximation theorem. Riemann integrals and continuous
-derivatives are explicit abstract cross-book boundaries until the Analysis I
-APIs can be imported.
+derivatives use concrete local
+epsilon--delta/tagged-partition definitions rather than abstract interfaces.
+The value of a function limit at a point of its domain
+is checked directly, and global continuity of a uniform limit is checked from
+the pointwise theorem.
 
 Chapter 4 exposes formal power-series terms and partial sums, convergence
 radii, real analyticity, derivative towers and Taylor coefficients, Abel's
@@ -94,17 +97,33 @@ forall x, y R:
 ```
 
 The source-assigned algebra and analysis proofs remain explicit trust
-boundaries. Real exponentiation is represented by the cross-book
-`has_real_power_value` graph because Analysis I is not a configured dependency
-of this project.
+boundaries. Radius of convergence, positive-base real power, and complex
+exponential-series convergence now have concrete definitions. Chapter 4's
+derivative and one-sided-limit vocabulary reuses Chapter 3's typed interfaces.
+Complex limit laws and the real sine/cosine value relations are concrete.
 
-All 32 numbered non-exercise Chapter 1 items, all 24 Chapter 2 items, all 34
-Chapter 3 items, and all 38 Chapter 4 items have source-facing definitions or
-theorem interfaces. The registered Chapter 4 file gate succeeds. The chapters
-are not proof-complete:
-Chapter 1 contains 28 explicit `trust` statements, Chapter 2 contains 36, and
-Chapter 3 contains 32. Chapter 4 contains 100 explicit `trust` statements and
-10 `abstract_prop` boundaries.
+Chapter 5 adds continuous periodic complex functions, their inner product and
+L2 norm, characters, trigonometric polynomials, Fourier coefficients,
+periodic convolution, approximation kernels, Fourier convergence, and
+Plancherel. Chapter 6 adds finite real coordinate spaces, linear maps,
+matrices, total/directional/partial derivatives, the chain and Clairaut
+interfaces, contractions, and inverse/implicit function theorems. Chapter 7
+adds open boxes, box covers, outer measure, Caratheodory measurability,
+countable additivity, and measurable functions. Chapter 8 adds simple
+functions, nonnegative and signed Lebesgue integrals, monotone/dominated
+convergence, Fatou, Riemann compatibility, and Fubini.
+
+All 224 numbered non-exercise items have source-facing definitions or theorem
+interfaces: 32, 24, 34, 38, 18, 26, 28, and 24 items in Chapters 1--8.
+Every registered chapter file gate succeeds. The chapters are not
+proof-complete:
+Chapter 1 contains 28 explicit `trust` statements, Chapter 2 contains 35, and
+Chapter 3 contains 30. Chapters 4--8 contain 98, 12, 12, 21, and 17,
+respectively. The entire project contains no `abstract_prop`.
+The Section 4.6 coordinate implementation checks addition and multiplication
+commutativity directly. Remaining structured-value projection limitations are
+recorded as verifier blockers and are worked around with explicit coordinate
+relations; this project does not modify the kernel.
 Most correspond to proofs Tao assigns to exercises; others mark substantial
 source proofs or finite-choice arguments not yet formalized. The `linf`
 distance uses a trusted unique-maximum selection because instantiating the

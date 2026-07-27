@@ -11,10 +11,34 @@ have fn power_series_partial_sum(coefficients fn(m N) R, center R, k N, x R) R =
 
 # Definition 4.1.3 (Radius of convergence). A tagged pair `(0,r)` denotes a
 # finite nonnegative radius and `(1,0)` denotes positive infinity. The
-# Cauchy--Hadamard extended-limsup relation is external Analysis I background.
+# The definition below characterizes the radius by absolute convergence
+# strictly inside it and divergence strictly outside it.
 have nonnegative_reals set = {r R: r >= 0}
 have power_series_radius set = union(cart({0}, nonnegative_reals), {(1, 0)})
-abstract_prop is_radius_of_convergence(coefficients, radius)
+
+prop is_finite_radius_behavior(coefficients fn(n N) R, r nonnegative_reals):
+    forall x R:
+        abs(x) < r
+        =>:
+            exist L R st {$chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(0, k, fn(j closed_range(0, k)) R {abs(coefficients(j) * x^j)})}, L)}
+    forall x R:
+        abs(x) > r
+        =>:
+            not exist L R st {$chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(0, k, fn(j closed_range(0, k)) R {coefficients(j) * x^j})}, L)}
+
+prop is_infinite_radius_behavior(coefficients fn(n N) R):
+    forall x R:
+        exist L R st {$chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(0, k, fn(j closed_range(0, k)) R {abs(coefficients(j) * x^j)})}, L)}
+
+prop is_radius_of_convergence(coefficients fn(n N) R, radius power_series_radius):
+    forall r nonnegative_reals:
+        radius = (0, r)
+        =>:
+            $is_finite_radius_behavior(coefficients, r)
+    forall infinite_tag {(1, 0)}:
+        radius = infinite_tag
+        =>:
+            $is_infinite_radius_behavior(coefficients)
 
 # Theorem 4.1.6 (convergence, uniform convergence, differentiation, and
 # integration within the radius).
@@ -109,8 +133,11 @@ prop is_real_analytic_on(E power_set(R), f fn(x E) R):
     forall center E:
         $is_real_analytic_at(E, f, center)
 
-# Definition 4.2.4 (k-times differentiability).
-abstract_prop has_derivative_on(E, f, derivative)
+# Definition 4.2.4 (k-times differentiability). Analysis II uses the
+# canonical typed calculus boundary introduced in Chapter 3 rather than a
+# second untyped derivative placeholder.
+prop has_derivative_on(E power_set(R), f, derivative fn(x E) R):
+    $chap3::has_continuous_derivative_on(E, f, derivative)
 
 prop is_derivative_tower(E power_set(R), f fn(x E) R, derivatives fn(k N) fn(x E) R, order N):
     forall x E:
@@ -197,10 +224,14 @@ thm analytic_power_series_coefficients_are_unique:
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust coefficients1(n) = coefficients2(n)
 
-# Theorem 4.3.1 (Abel's theorem). One-sided function limits are retained as
-# external interfaces until the later differentiation chapters are translated.
-abstract_prop has_left_limit_at(f, endpoint, L)
-abstract_prop has_right_limit_at(f, endpoint, L)
+# Theorem 4.3.1 (Abel's theorem). The interval domain determines the side
+# from which the endpoint is approached; the limiting relation itself reuses
+# Chapter 3's concrete metric function-limit interface.
+prop has_left_limit_at(E power_set(R), f fn(x E) R, endpoint, L R):
+    $chap3::has_function_limit(R, R, chap1::real_distance, chap1::real_distance, E, f, endpoint, L)
+
+prop has_right_limit_at(E power_set(R), f fn(x E) R, endpoint, L R):
+    $chap3::has_function_limit(R, R, chap1::real_distance, chap1::real_distance, E, f, endpoint, L)
 
 thm abel_theorem_at_right_endpoint:
     ? forall coefficients fn(n N) R, center R, radius R_pos, f fn(x '(center - radius, center + radius)) R, endpoint_sum R:
@@ -208,9 +239,9 @@ thm abel_theorem_at_right_endpoint:
             $has_power_series_sum(coefficients, center, x, f(x))
         $has_power_series_sum(coefficients, center, center + radius, endpoint_sum)
         =>:
-            $has_left_limit_at(f, center + radius, endpoint_sum)
+            $has_left_limit_at('(center - radius, center + radius), f, center + radius, endpoint_sum)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $has_left_limit_at(f, center + radius, endpoint_sum)
+    trust $has_left_limit_at('(center - radius, center + radius), f, center + radius, endpoint_sum)
 
 thm abel_theorem_at_left_endpoint:
     ? forall coefficients fn(n N) R, center R, radius R_pos, f fn(x '(center - radius, center + radius)) R, endpoint_sum R:
@@ -218,9 +249,9 @@ thm abel_theorem_at_left_endpoint:
             $has_power_series_sum(coefficients, center, x, f(x))
         $has_power_series_sum(coefficients, center, center - radius, endpoint_sum)
         =>:
-            $has_right_limit_at(f, center - radius, endpoint_sum)
+            $has_right_limit_at('(center - radius, center + radius), f, center - radius, endpoint_sum)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $has_right_limit_at(f, center - radius, endpoint_sum)
+    trust $has_right_limit_at('(center - radius, center + radius), f, center - radius, endpoint_sum)
 
 # Lemma 4.3.2 (Summation by parts).
 prop has_nonnegative_series_sum(sequence fn(n N) R, L R):
@@ -313,9 +344,11 @@ thm exponential_integral:
 # Definition 4.5.3 (Euler's number).
 have euler_number R = exp_real(1)
 
-# Proposition 4.5.4. Real exponentiation is retained as its cross-book graph
-# relation because the Analysis I module is not an import of this project.
-abstract_prop has_real_power_value(base, exponent, value)
+# Proposition 4.5.4. Positive-base real exponentiation uses Analysis I's
+# concrete real-power operation.
+prop has_real_power_value(base, exponent, value R):
+    base > 0
+    value = base^exponent
 
 thm exponential_as_euler_power:
     ? forall x, value R:
@@ -410,17 +443,16 @@ thm complex_additive_group_laws:
         complex_add(complex_zero, z1) = z1
         complex_add(z1, complex_neg(z1)) = complex_zero
         complex_add(complex_neg(z1), z1) = complex_zero
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust complex_add(z1, z2) = complex_add(z2, z1)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    complex_add(z1, z2) = complex_add(z2, z1)
+    # proof_debt: nested struct-valued function unfolding does not yet expose the coordinate associativity calculation.
     trust complex_add(complex_add(z1, z2), z3) = complex_add(z1, complex_add(z2, z3))
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: struct-valued function unfolding does not yet bridge the computed tuple to the named operand.
     trust complex_add(z1, complex_zero) = z1
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: struct-valued function unfolding does not yet bridge the computed tuple to the named operand.
     trust complex_add(complex_zero, z1) = z1
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: struct-valued function unfolding does not yet bridge the computed tuple to complex_zero.
     trust complex_add(z1, complex_neg(z1)) = complex_zero
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: struct-valued function unfolding does not yet bridge the computed tuple to complex_zero.
     trust complex_add(complex_neg(z1), z1) = complex_zero
 
 # Definition 4.6.5 (Complex multiplication).
@@ -435,15 +467,14 @@ thm complex_multiplication_laws:
         complex_mul(z1, complex_one) = z1
         complex_mul(complex_one, z1) = z1
         complex_mul(z1, complex_add(z2, z3)) = complex_add(complex_mul(z1, z2), complex_mul(z1, z3))
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust complex_mul(z1, z2) = complex_mul(z2, z1)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    complex_mul(z1, z2) = complex_mul(z2, z1)
+    # proof_debt: nested struct-valued function unfolding does not yet expose the coordinate associativity calculation.
     trust complex_mul(complex_mul(z1, z2), z3) = complex_mul(z1, complex_mul(z2, z3))
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: struct-valued function unfolding does not yet bridge the computed tuple to the named operand.
     trust complex_mul(z1, complex_one) = z1
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: struct-valued function unfolding does not yet bridge the computed tuple to the named operand.
     trust complex_mul(complex_one, z1) = z1
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: nested struct-valued function unfolding does not yet expose the coordinate distributivity calculation.
     trust complex_mul(z1, complex_add(z2, z3)) = complex_add(complex_mul(z1, z2), complex_mul(z1, z3))
 
 # Lemma 4.6.7 (Real-imaginary representation).
@@ -455,11 +486,11 @@ thm complex_cartesian_representation:
         z = complex_add(complex_of_real(z.re), complex_mul(complex_of_real(z.im), imaginary_unit))
         complex_mul(imaginary_unit, imaginary_unit) = complex_neg(complex_one)
         complex_neg(z) = complex_mul(complex_of_real(-1), z)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: nested struct-valued function unfolding does not yet bridge the coordinate computation back to z.
     trust z = complex_add(complex_of_real(z.re), complex_mul(complex_of_real(z.im), imaginary_unit))
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: struct-valued function unfolding does not yet normalize both computed constants to the same tuple.
     trust complex_mul(imaginary_unit, imaginary_unit) = complex_neg(complex_one)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: struct-valued function unfolding does not yet normalize the two coordinate expressions.
     trust complex_neg(z) = complex_mul(complex_of_real(-1), z)
 
 # Definition 4.6.8 (Real part, imaginary part, and conjugate).
@@ -480,13 +511,13 @@ thm complex_conjugation_laws:
         complex_conjugate(complex_neg(z)) = complex_neg(complex_conjugate(z))
         complex_conjugate(complex_mul(z, w)) = complex_mul(complex_conjugate(z), complex_conjugate(w))
         complex_conjugate(complex_conjugate(z)) = z
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: nested struct-valued function unfolding does not yet expose the coordinate computation.
     trust complex_conjugate(complex_add(z, w)) = complex_add(complex_conjugate(z), complex_conjugate(w))
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: nested struct-valued function unfolding does not yet expose the coordinate computation.
     trust complex_conjugate(complex_neg(z)) = complex_neg(complex_conjugate(z))
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: nested struct-valued function unfolding does not yet expose the coordinate computation.
     trust complex_conjugate(complex_mul(z, w)) = complex_mul(complex_conjugate(z), complex_conjugate(w))
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: nested struct-valued function unfolding does not yet bridge the computed tuple to z.
     trust complex_conjugate(complex_conjugate(z)) = z
 
 # Definition 4.6.10 (Complex absolute value).
@@ -577,9 +608,34 @@ thm coordinatewise_convergence_implies_complex:
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust $chap1::has_metric_limit(&ComplexNumber, complex_distance, sequence, z)
 
-# Lemma 4.6.14 (Complex limit laws).
-abstract_prop has_basic_complex_limit_laws(z, w, c, limit_z, limit_w)
-abstract_prop has_complex_quotient_limit(z, w, limit_z, limit_w)
+# Lemma 4.6.14 (Complex limit laws). These are concrete convergence
+# conclusions over the Chapter 1 metric-limit relation, not opaque flags.
+template<z, w fn(n N_pos) &ComplexNumber>:
+    have fn complex_sum_sequence(n N_pos) &ComplexNumber = complex_add(z(n), w(n))
+
+template<z, w fn(n N_pos) &ComplexNumber>:
+    have fn complex_product_sequence(n N_pos) &ComplexNumber = complex_mul(z(n), w(n))
+
+template<z fn(n N_pos) &ComplexNumber, c &ComplexNumber>:
+    have fn complex_constant_product_sequence(n N_pos) &ComplexNumber = complex_mul(c, z(n))
+
+prop has_basic_complex_limit_laws(z, w fn(n N_pos) &ComplexNumber, c, limit_z, limit_w &ComplexNumber):
+    $chap1::has_metric_limit(&ComplexNumber, complex_distance, \complex_sum_sequence<z, w>, complex_add(limit_z, limit_w))
+    $chap1::has_metric_limit(&ComplexNumber, complex_distance, \complex_product_sequence<z, w>, complex_mul(limit_z, limit_w))
+    $chap1::has_metric_limit(&ComplexNumber, complex_distance, \complex_constant_product_sequence<z, c>, complex_mul(c, limit_z))
+
+have fn complex_safe_divide(z, w &ComplexNumber) &ComplexNumber by cases:
+    case w != complex_zero: complex_divide(z, w)
+    case w = complex_zero: complex_zero
+
+template<z, w fn(n N_pos) &ComplexNumber>:
+    have fn complex_quotient_sequence(n N_pos) &ComplexNumber = complex_safe_divide(z(n), w(n))
+
+prop has_complex_quotient_limit(z, w fn(n N_pos) &ComplexNumber, limit_z, limit_w &ComplexNumber):
+    forall n N_pos:
+        w(n) != complex_zero
+    limit_w != complex_zero
+    $chap1::has_metric_limit(&ComplexNumber, complex_distance, \complex_quotient_sequence<z, w>, complex_divide(limit_z, limit_w))
 
 thm complex_limit_laws:
     ? forall z, w fn(n N_pos) &ComplexNumber, c, limit_z, limit_w &ComplexNumber:
@@ -607,7 +663,23 @@ have fn complex_power(z &ComplexNumber, n N) &ComplexNumber by induc n from 0:
     case n = 0: complex_one
     case n > 0: complex_mul(z, complex_power(z, n - 1))
 
-abstract_prop has_complex_exponential_series_sum(z, L)
+prop is_complex_exponential_coordinate_data(z &ComplexNumber, data fn(entry cart(N, closed_range(0, 3))) R):
+    data((0, 0)) = 1
+    data((0, 1)) = 0
+    data((0, 2)) = 1
+    data((0, 3)) = 0
+    forall n N_pos:
+        data((n, 0)) = z.re * data((n - 1, 0)) - z.im * data((n - 1, 1))
+        data((n, 1)) = z.re * data((n - 1, 1)) + z.im * data((n - 1, 0))
+        factorial_real(n) * (data((n, 2)) - data((n - 1, 2))) = data((n, 0))
+        factorial_real(n) * (data((n, 3)) - data((n - 1, 3))) = data((n, 1))
+
+prop is_complex_exponential_partial_sum_view(data fn(entry cart(N, closed_range(0, 3))) R, partial_sums fn(n N_pos) &ComplexNumber):
+    forall n N_pos:
+        partial_sums(n) = (data((n, 2)), data((n, 3)))
+
+prop has_complex_exponential_series_sum(z, L &ComplexNumber):
+    exist data fn(entry cart(N, closed_range(0, 3))) R, partial_sums fn(n N_pos) &ComplexNumber st {$is_complex_exponential_coordinate_data(z, data), $is_complex_exponential_partial_sum_view(data, partial_sums), $chap1::has_metric_limit(&ComplexNumber, complex_distance, partial_sums, L)}
 
 have fn exp_complex by exist!:
     ? forall z &ComplexNumber:
@@ -620,19 +692,24 @@ have fn complex_scale(a R, z &ComplexNumber) &ComplexNumber = (a * z.re, a * z.i
 have fn complex_cos(z &ComplexNumber) &ComplexNumber = complex_scale(1 / 2, complex_add(exp_complex(complex_mul(imaginary_unit, z)), exp_complex(complex_neg(complex_mul(imaginary_unit, z)))))
 have fn complex_sin(z &ComplexNumber) &ComplexNumber = complex_mul((0, -1 / 2), complex_add(exp_complex(complex_mul(imaginary_unit, z)), complex_neg(exp_complex(complex_neg(complex_mul(imaginary_unit, z))))))
 
-abstract_prop is_real_cosine_value(x, y)
-abstract_prop is_real_sine_value(x, y)
+prop is_real_cosine_value(x, y R):
+    y = &ComplexNumber{exp_complex(complex_mul(imaginary_unit, complex_of_real(x)))}.re
+
+prop is_real_sine_value(x, y R):
+    y = &ComplexNumber{exp_complex(complex_mul(imaginary_unit, complex_of_real(x)))}.im
 
 have fn real_cos by exist!:
     ? forall x R:
         exist! y R st {$is_real_cosine_value(x, y)}
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: the concrete coordinate graph is defined, but the verifier
+    # does not propagate the R-valued field type through exp_complex.
     trust exist! y R st {$is_real_cosine_value(x, y)}
 
 have fn real_sin by exist!:
     ? forall x R:
         exist! y R st {$is_real_sine_value(x, y)}
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
+    # proof_debt: the concrete coordinate graph is defined, but the verifier
+    # does not propagate the R-valued field type through exp_complex.
     trust exist! y R st {$is_real_sine_value(x, y)}
 
 # Theorem 4.7.2 (Trigonometric identities).

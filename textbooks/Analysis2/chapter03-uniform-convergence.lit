@@ -129,7 +129,31 @@ thm function_limit_at_domain_point_equals_value:
         $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
         =>:
             f(x0) = L
-    trust f(x0) = L
+    by contra:
+        ? f(x0) = L
+        claim:
+            ? dist_Y(f(x0), L) > 0
+            dist_Y(f(x0), L) > 0 or dist_Y(f(x0), L) = 0 or dist_Y(f(x0), L) < 0
+            by cases:
+                ? dist_Y(f(x0), L) > 0
+                case dist_Y(f(x0), L) > 0:
+                    dist_Y(f(x0), L) > 0
+                case dist_Y(f(x0), L) = 0:
+                    by def $chap1::is_metric_space(Y, dist_Y)
+                    f(x0) = L
+                    impossible f(x0) != L
+                case dist_Y(f(x0), L) < 0:
+                    by def $chap1::is_metric_space(Y, dist_Y)
+                    dist_Y(f(x0), L) >= 0
+                    impossible dist_Y(f(x0), L) < 0
+        dist_Y(f(x0), L) / 2 $in R_pos
+        by def $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+        obtain delta from exist delta R_pos st {$is_function_limit_delta_controlled(X, Y, dist_X, dist_Y, E, f, x0, L, dist_Y(f(x0), L) / 2, delta)}
+        by def $chap1::is_metric_space(X, dist_X)
+        dist_X(x0, x0) = 0 < delta
+        by def $is_function_limit_delta_controlled(X, Y, dist_X, dist_Y, E, f, x0, L, dist_Y(f(x0), L) / 2, delta)
+        dist_Y(f(x0), L) < dist_Y(f(x0), L) / 2 < dist_Y(f(x0), L)
+        impossible dist_Y(f(x0), L) = dist_Y(f(x0), L)
 
 # Definition 3.2.1 (Pointwise convergence). For every fixed domain point, the
 # resulting sequence of values converges in the codomain metric.
@@ -163,9 +187,7 @@ thm uniform_limit_preserves_continuity_at:
             $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, f, x0)
     trust $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, f, x0)
 
-# Corollary 3.3.2 (Uniform limits preserve continuity II). Pointwise
-# application of Theorem 3.3.1 should establish global continuity. The direct
-# folding attempt currently stops at the quantified family-continuity bridge.
+# Corollary 3.3.2 (Uniform limits preserve continuity II).
 thm uniform_limit_preserves_continuity:
     ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, family fn(n N_pos) fn(x X) Y, f fn(x X) Y:
         $chap1::is_metric_space(X, dist_X)
@@ -175,7 +197,15 @@ thm uniform_limit_preserves_continuity:
             $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, family(n))
         =>:
             $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)
-    trust $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)
+    claim:
+        ? forall x0 X:
+            $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, f, x0)
+        claim:
+            ? forall n N_pos:
+                $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, family(n), x0)
+            by thm chap2::metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, family(n), x0)
+        by thm uniform_limit_preserves_continuity_at(X, Y, dist_X, dist_Y, family, f, x0)
+    by def $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)
 
 # Proposition 3.3.3 (Interchange of limits and uniform limits). The individual
 # limiting values form a convergent sequence in the complete codomain, and its
@@ -364,9 +394,40 @@ thm weierstrass_m_test:
             exist f fn(x X) R st {$has_uniform_function_series_sum(X, family, f), $chap2::is_metric_continuous(X, R, dist_X, chap1::real_distance, f)}
     trust exist f fn(x X) R st {$has_uniform_function_series_sum(X, family, f), $chap2::is_metric_continuous(X, R, dist_X, chap1::real_distance, f)}
 
-# Riemann integration belongs to the Analysis I development and is kept as an
-# explicit external interface here.
-abstract_prop has_riemann_integral_value(I, f, A)
+# A tagged partition displays its interval endpoints, increasing division
+# points, and one sample point in every subinterval.
+prop is_tagged_partition(a, b R, n N_pos, partition, tags fn(j closed_range(0, n)) R):
+    partition(0) = a
+    partition(n) = b
+    forall j closed_range(1, n):
+        partition(j - 1) < partition(j)
+        partition(j - 1) <= tags(j) <= partition(j)
+
+prop is_fine_tagged_partition(a, b R, n N_pos, partition, tags fn(j closed_range(0, n)) R, delta R_pos):
+    $is_tagged_partition(a, b, n, partition, tags)
+    forall j closed_range(1, n):
+        partition(j) - partition(j - 1) < delta
+
+# The Riemann integral is the common limit of all sufficiently fine tagged
+# partition sums.  This local definition avoids an opaque cross-book boundary.
+prop is_riemann_sum_delta_controlled(I power_set(R), f fn(x I) R, A, a, b R, epsilon, delta R_pos):
+    a <= b
+    I = '[a, b]
+    forall n N_pos, partition, tags fn(j closed_range(0, n)) R:
+        $is_fine_tagged_partition(a, b, n, partition, tags, delta)
+        forall j closed_range(1, n):
+            tags(j) $in I
+        =>:
+            abs(sum(1, n, fn(j closed_range(1, n)) R {f(tags(j)) * (partition(j) - partition(j - 1))}) - A) < epsilon
+
+prop is_riemann_integral_on_closed_interval(I power_set(R), f fn(x I) R, A, a, b R):
+    a <= b
+    I = '[a, b]
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_riemann_sum_delta_controlled(I, f, A, a, b, epsilon, delta)}
+
+prop has_riemann_integral_value(I power_set(R), f fn(x I) R, A R):
+    exist a, b R st {$is_riemann_integral_on_closed_interval(I, f, A, a, b)}
 
 # Theorem 3.6.1 (Uniform convergence and integration).
 thm uniform_convergence_interchanges_integrals:
@@ -388,9 +449,25 @@ thm uniformly_convergent_function_series_interchanges_integrals:
             exist A R st {$has_riemann_integral_value(I, f, A), $has_real_series_sum(integrals, A)}
     trust exist A R st {$has_riemann_integral_value(I, f, A), $has_real_series_sum(integrals, A)}
 
-# The derivative relation is likewise an explicit cross-book boundary until
-# the Analysis I API is imported.
-abstract_prop has_continuous_derivative_on(I, f, derivative)
+# A continuous derivative on I is a displayed derivative value at every point
+# together with continuity of the displayed derivative function.
+prop is_derivative_delta_controlled_at(I power_set(R), f fn(z I) R, x I, L R, epsilon, delta R_pos):
+    forall y I:
+        y != x
+        abs(y - x) < delta
+        =>:
+            abs((f(y) - f(x)) / (y - x) - L) <= epsilon
+
+prop has_derivative_at(I power_set(R), f fn(z I) R, x I, L R):
+    forall radius R_pos:
+        exist y I st {y != x, abs(y - x) < radius}
+    forall epsilon R_pos:
+        exist delta R_pos st {$is_derivative_delta_controlled_at(I, f, x, L, epsilon, delta)}
+
+prop has_continuous_derivative_on(I power_set(R), f, derivative fn(x I) R):
+    forall x I:
+        $has_derivative_at(I, f, x, derivative(x))
+    $chap2::is_metric_continuous(I, R, fn(x, y I) R {abs(x - y)}, chap1::real_distance, derivative)
 
 # Theorem 3.7.1 (Uniform convergence of derivatives).
 thm uniform_derivative_limit_theorem:
