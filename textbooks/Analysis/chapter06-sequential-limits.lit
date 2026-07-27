@@ -908,65 +908,6 @@ thm reciprocal_abs_diff_bound:
     c^2 > 0
     abs(1 / x - 1 / y) <= (c^2 * epsilon) / c^2 = epsilon
 
-thm seq_recip_converges_to:
-    ? forall b seq(R), y R:
-        forall j N_pos:
-            b(j) != 0
-        $has_limit(b, y)
-        y != 0
-        =>:
-            $has_limit(fn(j N_pos) R {1 / b(j)}, 1 / y)
-    have reciprocal_b seq(R) = fn(j N_pos) R {1 / b(j)}
-    abs(y) > 0
-    abs(y) / 2 < abs(y)
-    abs(y) / 2 $in R_pos
-    claim:
-        ? forall epsilon R_pos:
-            $has_eventual_closeness_to(reciprocal_b, 1 / y, epsilon)
-        (abs(y) / 2)^2 * (epsilon / 2) $in R_pos
-        $has_eventual_closeness_to(b, y, abs(y) / 2)
-        $has_eventual_closeness_to(b, y, (abs(y) / 2)^2 * (epsilon / 2))
-        obtain n_lower from exist n_lower N_pos st {$is_tail_close_to(b, y, abs(y) / 2, n_lower)}
-        obtain n_close from exist n_close N_pos st {$is_tail_close_to(b, y, (abs(y) / 2)^2 * (epsilon / 2), n_close)}
-        claim:
-            ? forall n N_pos:
-                n >= finite_set_max(union({n_lower}, { n_close}))
-                =>:
-                    abs(reciprocal_b(n) - 1 / y) < epsilon
-            n_lower <= finite_set_max(union({n_lower}, { n_close})) <= n
-            n_close <= finite_set_max(union({n_lower}, { n_close})) <= n
-            abs(b(n) - y) < abs(y) / 2
-            abs(b(n) - y) <= abs(y) / 2
-            by thm near_nonzero_abs_lower(b(n), y)
-            abs(b(n) - y) < (abs(y) / 2)^2 * (epsilon / 2)
-            abs(b(n) - y) <= (abs(y) / 2)^2 * (epsilon / 2)
-            by thm reciprocal_abs_diff_bound(b(n), y, abs(y) / 2, epsilon / 2)
-            abs(reciprocal_b(n) - 1 / y) = abs(1 / b(n) - 1 / y) <= epsilon / 2 < epsilon
-        by def $is_tail_close_to(reciprocal_b, 1 / y, epsilon, finite_set_max(union({n_lower}, { n_close})))
-        witness exist n0 N_pos st {$is_tail_close_to(reciprocal_b, 1 / y, epsilon, n0)} from finite_set_max(union({n_lower}, { n_close}))
-    by def $has_limit(reciprocal_b, 1 / y)
-    $has_limit(reciprocal_b, 1 / y)
-
-thm seq_div_converges_to:
-    ? forall a, b seq(R), x, y R:
-        forall j N_pos:
-            b(j) != 0
-        $has_limit(a, x)
-        $has_limit(b, y)
-        y != 0
-        =>:
-            $has_limit(fn(i N_pos) R {a(i) / b(i)}, x / y)
-    have reciprocal_b seq(R) = fn(j N_pos) R {1 / b(j)}
-    by thm seq_recip_converges_to(b, y)
-    $has_limit(reciprocal_b, 1 / y)
-    by thm seq_mul_converges_to(a, reciprocal_b, x, 1 / y)
-    claim:
-        ? forall i N_pos:
-            a(i) / b(i) = a(i) * reciprocal_b(i)
-        a(i) / b(i) = a(i) * (1 / b(i)) = a(i) * reciprocal_b(i)
-    fn(i N_pos) R {a(i) / b(i)} = fn(i N_pos) R {a(i) * reciprocal_b(i)}
-    x / y = x * (1 / y)
-
 # 6.2 The extended real number system
 
 """
@@ -1192,12 +1133,12 @@ thm bounded_sequence_has_tail_supremum:
     by def $chap5::has_upper_bound(tail_range)
     by thm chap5::least_upper_bound_existence(tail_range)
     obtain L from exist L R st {$chap5::is_least_upper_bound(tail_range, L)}
-    # Source handling: the least upper bound bounds every member of the tail range.
-    # proof_debt: Litex does not unfold the local tail range at this upper-bound step.
-    trust forall n N_pos:
-        n >= m
-        =>:
-            a(n) <= L
+    forall n N_pos:
+            n >= m
+            =>:
+                $is_tail_value(a, m, a(n))
+                a(n) $in {x R: $is_tail_value(a, m, x)}
+                a(n) <= L
     claim:
         ? forall M R:
             $is_tail_upper_bound(a, m, M)
@@ -1465,10 +1406,16 @@ thm increasing_sequence_converges_to_tail_supremum:
             $has_eventual_closeness_to(a, L, epsilon)
         by thm tail_supremum_crosses_every_lower_threshold(a, m, L, L - epsilon)
         obtain n1 from exist n1 N_pos st {n1 >= m and L - epsilon < a(n1)}
-        # Source handling: monotonicity and the tail upper bound make every later term epsilon-close to L.
-        # proof_debt: Litex does not close the final absolute-value tail estimate.
-        trust $is_tail_close_to(a, L, epsilon, n1)
-        witness exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)} from n1
+        witness exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)} from n1:
+            forall n N_pos:
+                n >= n1
+                =>:
+                    L - epsilon < a(n1) <= a(n) <= L
+                    L - epsilon - L < a(n) - L
+                    -epsilon = L - epsilon - L < a(n) - L
+                    a(n) - L <= 0 < epsilon
+                    -epsilon < a(n) - L < epsilon
+                    abs(a(n) - L) < epsilon
 
 thm decreasing_sequence_converges_to_tail_infimum:
     ? forall a seq(R), m N_pos, L R:
@@ -1481,10 +1428,15 @@ thm decreasing_sequence_converges_to_tail_infimum:
             $has_eventual_closeness_to(a, L, epsilon)
         by thm tail_infimum_crosses_every_upper_threshold(a, m, L, L + epsilon)
         obtain n1 from exist n1 N_pos st {n1 >= m and a(n1) < L + epsilon}
-        # Source handling: monotonicity and the tail lower bound make every later term epsilon-close to L.
-        # proof_debt: Litex does not close the final absolute-value tail estimate.
-        trust $is_tail_close_to(a, L, epsilon, n1)
-        witness exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)} from n1
+        witness exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)} from n1:
+            forall n N_pos:
+                n >= n1
+                =>:
+                    L <= a(n) <= a(n1) < L + epsilon
+                    0 <= a(n) - L
+                    a(n) - L < L + epsilon - L = epsilon
+                    -epsilon < 0 <= a(n) - L < epsilon
+                    abs(a(n) - L) < epsilon
 
 """
 Example 6.3.9. The decimal approximations 3, 3.1, 3.14, ... are increasing and
@@ -1609,10 +1561,15 @@ thm increasing_sequence_converges_to_range_supremum:
                 =>:
                     a(m) <= a(n)
             by thm increasing_seq_le_of_le(a, m, n)
-        # Source handling: every later increasing term lies between y and the range supremum.
-        # proof_debt: Litex does not close the resulting absolute-value tail estimate.
-        trust $is_tail_close_to(a, L, epsilon, m)
-        witness exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)} from m
+        witness exist n0 N_pos st {$is_tail_close_to(a, L, epsilon, n0)} from m:
+            forall n N_pos:
+                n >= m
+                =>:
+                    L - epsilon < y = a(m) <= a(n) <= L
+                    -epsilon = L - epsilon - L < a(n) - L
+                    a(n) - L <= 0 < epsilon
+                    -epsilon < a(n) - L < epsilon
+                    abs(a(n) - L) < epsilon
     by def $has_limit(a, L)
 
 thm bounded_increasing_sequence_converges:
@@ -2390,6 +2347,70 @@ thm bounded_sequence_tail_sup_sequence_converges:
     by thm bounded_sequence_tail_sup_sequence_bounded_below(a)
     by thm bounded_decreasing_sequence_converges(fn(m N_pos) R {tail_sup(a, m)})
 
+thm tail_sup_limit_is_finite_limsup:
+    ? forall a seq(R), L R:
+        forall m N_pos:
+            $has_tail_supremum(a, m)
+        $has_limit(fn(m N_pos) R {tail_sup(a, m)}, L)
+        =>:
+            $has_finite_limit_superior(a, L)
+    thm equal_sequence_values:
+        ? forall f, g seq(R), n N_pos:
+            f = g
+            =>:
+                f(n) = g(n)
+        f(n) = g(n)
+    claim:
+        ? forall x R:
+            x > L
+            =>:
+                exist n_tail N_pos st {$is_eventually_below_threshold(a, x, n_tail)}
+        have b seq(R) = fn(m N_pos) R {tail_sup(a, m)}
+        $has_limit(b, L)
+        $has_eventual_closeness_to(b, L, x - L)
+        obtain n0 from exist n0 N_pos st {$is_tail_close_to(b, L, x - L, n0)}
+        n0 >= n0
+        by thm equal_sequence_values(b, fn(m N_pos) R {tail_sup(a, m)}, n0)
+        abs(tail_sup(a, n0) - L) = abs(b(n0) - L) < x - L
+        tail_sup(a, n0) - L <= abs(tail_sup(a, n0) - L) < x - L
+        tail_sup(a, n0) = (tail_sup(a, n0) - L) + L < (x - L) + L = x
+        $has_tail_supremum(a, n0)
+        by thm tail_supremum_is_upper_bound(a, n0, tail_sup(a, n0))
+        witness exist n_tail N_pos st {$is_eventually_below_threshold(a, x, n_tail)} from n0:
+            forall n N_pos:
+                n >= n0
+                =>:
+                    a(n) <= tail_sup(a, n0) < x
+    by def $is_eventually_below_every_threshold_above(a, L)
+    claim:
+        ? forall x R:
+            x < L
+            =>:
+                $exceeds_threshold_arbitrarily_late(a, x)
+        claim:
+            ? forall n_tail N_pos:
+                exist n N_pos st {n >= n_tail and x < a(n)}
+            have b seq(R) = fn(m N_pos) R {tail_sup(a, m)}
+            $has_limit(b, L)
+            $has_eventual_closeness_to(b, L, L - x)
+            obtain n0 from exist n0 N_pos st {$is_tail_close_to(b, L, L - x, n0)}
+            finite_set_max(union({n_tail}, { n0})) >= n_tail and finite_set_max(union({n_tail}, { n0})) >= n0
+            have m0 N_pos = finite_set_max(union({n_tail}, { n0}))
+            m0 = finite_set_max(union({n_tail}, { n0})) >= n_tail
+            m0 = finite_set_max(union({n_tail}, { n0})) >= n0
+            by thm equal_sequence_values(b, fn(m N_pos) R {tail_sup(a, m)}, m0)
+            abs(tail_sup(a, m0) - L) = abs(b(m0) - L) < L - x
+            -(tail_sup(a, m0) - L) <= abs(tail_sup(a, m0) - L)
+            L - tail_sup(a, m0) = -(tail_sup(a, m0) - L) <= abs(tail_sup(a, m0) - L) < L - x
+            x = L - (L - x) < L - (L - tail_sup(a, m0)) = tail_sup(a, m0)
+            $has_tail_supremum(a, m0)
+            by thm tail_supremum_crosses_every_lower_threshold(a, m0, tail_sup(a, m0), x)
+            obtain n1 from exist n1 N_pos st {n1 >= m0 and x < a(n1)}
+            n1 >= m0 >= n_tail
+            witness exist n N_pos st {n >= n_tail and x < a(n)} from n1
+    by def $exceeds_every_threshold_below_arbitrarily_late(a, L)
+    by def $has_finite_limit_superior(a, L)
+
 thm bounded_sequence_has_finite_limsup:
     ? forall a seq(R):
         $is_bounded_sequence(a)
@@ -2397,12 +2418,9 @@ thm bounded_sequence_has_finite_limsup:
             exist Lplus R st {$has_finite_limit_superior(a, Lplus)}
     forall m N_pos:
         $has_tail_supremum(a, m)
-    have b seq(R) = fn(m N_pos) R {tail_sup(a, m)}
     by thm bounded_sequence_tail_sup_sequence_converges(a)
-    obtain Lplus from exist Lplus R st {$has_limit(b, Lplus)}
-    # Source handling: the limit of the decreasing tail-supremum sequence is the finite limsup.
-    # proof_debt: a reusable bridge triggers recursive theorem inference in Litex.
-    trust $has_finite_limit_superior(a, Lplus)
+    obtain Lplus from exist Lplus R st {$has_limit(fn(m N_pos) R {tail_sup(a, m)}, Lplus)}
+    by thm tail_sup_limit_is_finite_limsup(a, Lplus)
     witness exist L0 R st {$has_finite_limit_superior(a, L0)} from Lplus
 
 thm finite_limsup_eventually_below:
