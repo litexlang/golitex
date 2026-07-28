@@ -1,6 +1,7 @@
 // Built-in verification for non-equational atomic facts, split by topic.
 
 mod abs_order_builtin;
+mod complex_builtin;
 mod equality_dispatch;
 mod equality_function;
 mod equality_numeric;

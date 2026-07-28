@@ -1,24 +1,35 @@
 use super::*;
 
 impl Runtime {
-    // Finite `sum` / `product` over a closed integer range: if the object is well-defined, its value
-    // is a real (used e.g. for `+` on real-valued operands).
-    pub(super) fn verify_in_fact_sum_or_product_in_r(
+    // A nonempty integer-range sum/product inherits the narrowest standard scalar carrier
+    // declared by its iterand. The anonymous-function checker separately verifies the body
+    // against that declaration.
+    // Example: `sum(1, 2, fn(k Z) C {i}) $in C`, but not in R.
+    pub(super) fn verify_in_fact_sum_or_product_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
+        func: &Obj,
+        target_set: StandardSet,
         verify_state: &VerifyState,
-        reason: &str,
+        op: &str,
     ) -> Result<StmtResult, RuntimeError> {
         if self
             .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
-            .is_ok()
+            .is_err()
         {
-            Ok(number_in_set_verified_by_builtin_rules_result(
-                in_fact, reason,
-            ))
-        } else {
-            Ok((StmtUnknown::new()).into())
+            return Ok(StmtUnknown::new().into());
         }
+        let Some(Obj::StandardSet(ret_set)) = self.iterated_op_func_ret_set(func) else {
+            return Ok(StmtUnknown::new().into());
+        };
+        if !Self::standard_set_is_subset_eq(&ret_set, &target_set) {
+            return Ok(StmtUnknown::new().into());
+        }
+        let reason = format!("{op}: iterand return set {ret_set} is contained in {target_set}");
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            reason.as_str(),
+        ))
     }
 
     pub(super) fn iterated_op_func_ret_set(&self, func: &Obj) -> Option<Obj> {
@@ -127,70 +138,6 @@ impl Runtime {
             "finite_set_product: factor return set {} is contained in {}",
             ret_standard_set, target_set
         );
-        Ok(number_in_set_verified_by_builtin_rules_result(
-            in_fact,
-            reason.as_str(),
-        ))
-    }
-
-    // `sum(start, end, f)` / `product(start, end, f)` in `Z` when the iterand's declared return
-    // set is `Z` or `N_pos` (positive naturals are integers) and the whole iterated object is
-    // well-defined on the integer interval.
-    // Example: `sum(1, n, fn(x Z) Z {x}) $in Z`, `product(1, a, fn(x N_pos) N_pos {x}) $in Z`.
-    pub(super) fn verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
-        &mut self,
-        in_fact: &InFact,
-        func: &Obj,
-        verify_state: &VerifyState,
-        op: &str,
-    ) -> Result<StmtResult, RuntimeError> {
-        if self
-            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
-            .is_err()
-        {
-            return Ok((StmtUnknown::new()).into());
-        }
-        let Some(ret_set) = self.iterated_op_func_ret_set(func) else {
-            return Ok((StmtUnknown::new()).into());
-        };
-        let z_obj: Obj = StandardSet::Z.into();
-        let n_pos_obj: Obj = StandardSet::NPos.into();
-        let reason = if verify_equality_by_they_are_the_same(&ret_set, &z_obj) {
-            format!("{op}: iterand return set is Z")
-        } else if verify_equality_by_they_are_the_same(&ret_set, &n_pos_obj) {
-            format!("{op}: iterand return set is N_pos (subset of Z)")
-        } else {
-            return Ok((StmtUnknown::new()).into());
-        };
-        Ok(number_in_set_verified_by_builtin_rules_result(
-            in_fact,
-            reason.as_str(),
-        ))
-    }
-
-    // `sum(start, end, f)` / `product(start, end, f)` in `Q` when the iterand's declared return
-    // set is `Q` and the whole iterated object is well-defined on the integer interval.
-    pub(super) fn verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
-        &mut self,
-        in_fact: &InFact,
-        func: &Obj,
-        verify_state: &VerifyState,
-        op: &str,
-    ) -> Result<StmtResult, RuntimeError> {
-        if self
-            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
-            .is_err()
-        {
-            return Ok((StmtUnknown::new()).into());
-        }
-        let Some(ret_set) = self.iterated_op_func_ret_set(func) else {
-            return Ok((StmtUnknown::new()).into());
-        };
-        let q_obj: Obj = StandardSet::Q.into();
-        if !verify_equality_by_they_are_the_same(&ret_set, &q_obj) {
-            return Ok((StmtUnknown::new()).into());
-        }
-        let reason = format!("{op}: iterand return set is Q");
         Ok(number_in_set_verified_by_builtin_rules_result(
             in_fact,
             reason.as_str(),
@@ -1088,6 +1035,75 @@ impl Runtime {
             &strict,
             verify_state,
         )
+    }
+
+    // Complex scalar closure. Well-definedness already establishes the complex operand domains,
+    // the nonzero divisor/base obligations, and the allowed exponent set.
+    // Example: `z C, n N` implies `z^n $in C`.
+    pub(super) fn verify_in_fact_arithmetic_expression_in_c(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok(StmtUnknown::new().into());
+        }
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            "complex scalar arithmetic is closed in C",
+        ))
+    }
+
+    // Real closure requires real operands. This deliberately does not infer that every
+    // well-defined arithmetic expression is real: a complex square remains complex.
+    // Example: `a, b R` implies `a+b $in R`, while `i+1 $in R` remains unknown.
+    pub(super) fn verify_in_fact_arithmetic_expression_in_r(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self
+            .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+            .is_err()
+        {
+            return Ok(StmtUnknown::new().into());
+        }
+        let real: Obj = StandardSet::R.into();
+        let lf = in_fact.line_file.clone();
+        let is_real = |runtime: &mut Self, obj: &Obj| -> Result<bool, RuntimeError> {
+            let fact: AtomicFact = InFact::new(obj.clone(), real.clone(), lf.clone()).into();
+            runtime.non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
+                &fact,
+                verify_state,
+            )
+        };
+        let verified = match &in_fact.element {
+            Obj::Add(add) => {
+                is_real(self, add.left.as_ref())? && is_real(self, add.right.as_ref())?
+            }
+            Obj::Sub(sub) => {
+                is_real(self, sub.left.as_ref())? && is_real(self, sub.right.as_ref())?
+            }
+            Obj::Mul(mul) => {
+                is_real(self, mul.left.as_ref())? && is_real(self, mul.right.as_ref())?
+            }
+            Obj::Div(div) => {
+                is_real(self, div.left.as_ref())? && is_real(self, div.right.as_ref())?
+            }
+            Obj::Pow(pow) => is_real(self, pow.base.as_ref())?,
+            Obj::Mod(_) | Obj::Abs(_) | Obj::Sqrt(_) | Obj::Log(_) => true,
+            _ => false,
+        };
+        if !verified {
+            return Ok(StmtUnknown::new().into());
+        }
+        Ok(number_in_set_verified_by_builtin_rules_result(
+            in_fact,
+            "real arithmetic has real operands and result",
+        ))
     }
 
     // Builtin closure of `Z` under `+`, `-`, `*`, `mod`, Euclidean quotient, and natural-number powers.

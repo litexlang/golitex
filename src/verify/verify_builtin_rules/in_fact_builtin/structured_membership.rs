@@ -262,6 +262,21 @@ impl Runtime {
                 StandardSet::RNeg.into(),
                 StandardSet::RNz.into(),
             ]),
+            Obj::StandardSet(StandardSet::C) => Some(vec![
+                StandardSet::NPos.into(),
+                StandardSet::N.into(),
+                StandardSet::ZNeg.into(),
+                StandardSet::ZNz.into(),
+                StandardSet::Z.into(),
+                StandardSet::QPos.into(),
+                StandardSet::QNeg.into(),
+                StandardSet::QNz.into(),
+                StandardSet::Q.into(),
+                StandardSet::RPos.into(),
+                StandardSet::RNeg.into(),
+                StandardSet::RNz.into(),
+                StandardSet::R.into(),
+            ]),
             _ => None,
         }
     }
@@ -551,6 +566,74 @@ impl Runtime {
                         ),
                         Vec::new(),
                     ))
+                    .into(),
+                );
+            }
+        }
+        Ok((StmtUnknown::new()).into())
+    }
+
+    /// A member of a numeric list set inherits a standard numeric carrier
+    /// shared by every listed value. Example: `x {1, 2}` implies `x $in R`.
+    pub(super) fn verify_in_fact_by_known_list_set_carrier(
+        &mut self,
+        in_fact: &InFact,
+        _verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let Obj::StandardSet(target_set) = &in_fact.set else {
+            return Ok((StmtUnknown::new()).into());
+        };
+        for source_set in self.known_sets_containing_obj(&in_fact.element) {
+            let Obj::ListSet(list_set) = &source_set else {
+                continue;
+            };
+            let source_membership: AtomicFact = InFact::new(
+                in_fact.element.clone(),
+                source_set.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let source_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
+            if !source_result.is_true() {
+                continue;
+            }
+
+            let mut steps = vec![source_result];
+            let mut all_elements_match = true;
+            for element in &list_set.list {
+                let element_membership: AtomicFact = InFact::new(
+                    element.as_ref().clone(),
+                    in_fact.set.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
+                let Some(evaluated_number) = element.evaluate_to_normalized_decimal_number() else {
+                    all_elements_match = false;
+                    break;
+                };
+                let AtomicFact::InFact(element_in_fact) = &element_membership else {
+                    unreachable!("constructed an in-fact")
+                };
+                let result = builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                    element_in_fact,
+                    &evaluated_number,
+                    target_set,
+                );
+                if !result.is_true() {
+                    all_elements_match = false;
+                    break;
+                }
+                steps.push(result);
+            }
+            if all_elements_match {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "listed-set member inherits a carrier shared by every listed element"
+                            .to_string(),
+                        steps,
+                    )
                     .into(),
                 );
             }

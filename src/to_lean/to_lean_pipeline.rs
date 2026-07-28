@@ -71,6 +71,15 @@ impl LeanEmitter {
             ));
         }
 
+        if let Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(stmt)) = &verified_stmt.stmt {
+            if stmt.equal_to_anonymous_fn.contains_native_complex_builtin() {
+                return Err(lean_extract_error(
+                    &stmt.line_file,
+                    "Lean extractor MVP does not support native complex function signatures or bodies",
+                ));
+            }
+        }
+
         match &verified_stmt.stmt {
             Stmt::Fact(fact) => self.emit_named_fact(fact, &verified_stmt.result),
             Stmt::DefThmStmt(stmt) => self.emit_theorem(stmt, &verified_stmt.result),
@@ -191,6 +200,12 @@ impl LeanEmitter {
     }
 
     fn fact(&self, fact: &Fact) -> Result<String, RuntimeError> {
+        if fact.contains_native_complex_builtin() {
+            return Err(lean_extract_error(
+                &fact.line_file(),
+                "Lean extractor MVP does not support native complex expressions in facts",
+            ));
+        }
         match fact {
             Fact::AtomicFact(fact) => self.atomic_fact(fact),
             Fact::AndFact(fact) => self.and_fact(fact),
@@ -356,6 +371,12 @@ impl LeanEmitter {
     }
 
     fn real_expr(&self, obj: &Obj) -> Result<String, RuntimeError> {
+        if obj.contains_native_complex_builtin() {
+            return Err(lean_extract_error(
+                &default_line_file(),
+                "Lean extractor MVP does not support native complex expressions",
+            ));
+        }
         match obj {
             Obj::Number(number) => Ok(format!("({} : ℝ)", number.normalized_value)),
             Obj::Atom(atom) => self.real_atom(atom),
@@ -760,6 +781,17 @@ mod tests {
             let result = to_lean_from_source(source, "to-lean-test");
 
             assert!(result.is_err());
+        });
+    }
+
+    #[test]
+    fn rejects_native_complex_expressions_explicitly() {
+        run_with_large_stack("rejects_native_complex_expressions_explicitly", || {
+            let error = to_lean_from_source("i * i = -1", "to-lean-complex-test")
+                .expect_err("Lean extraction must reject native complex expressions")
+                .trace_message();
+
+            assert!(error.contains("does not support native complex"), "{error}");
         });
     }
 

@@ -122,6 +122,40 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
+        if matches!(
+            atomic_fact,
+            AtomicFact::LessFact(_)
+                | AtomicFact::GreaterFact(_)
+                | AtomicFact::LessEqualFact(_)
+                | AtomicFact::GreaterEqualFact(_)
+                | AtomicFact::NotLessFact(_)
+                | AtomicFact::NotGreaterFact(_)
+                | AtomicFact::NotLessEqualFact(_)
+                | AtomicFact::NotGreaterEqualFact(_)
+        ) {
+            let args = atomic_fact.args_ref();
+            let real_args: Vec<&Obj> = args.iter().copied().collect();
+            if self
+                .verify_objects_are_known_reals(
+                    real_args.as_slice(),
+                    &atomic_fact.line_file(),
+                    verify_state,
+                )?
+                .is_none()
+            {
+                return Err(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "ordered comparison requires both operands to belong to R: {}",
+                            atomic_fact
+                        ),
+                        atomic_fact.line_file(),
+                    ),
+                )
+                .into());
+            }
+        }
+
         if let Some(type_result) =
             self.verify_builtin_function_property_arg_types(atomic_fact, verify_state)?
         {

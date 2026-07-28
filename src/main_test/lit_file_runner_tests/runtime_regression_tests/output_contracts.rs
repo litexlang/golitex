@@ -2194,11 +2194,11 @@ by zorn_lemma: set local_ordered_set, prop local_leq:
             $local_leq(y, x)
             =>:
                 x = y
-        forall C power_set(local_ordered_set):
-            forall x, y C:
+        forall c power_set(local_ordered_set):
+            forall x, y c:
                 $local_leq(x, y) or $local_leq(y, x)
             =>:
-                exist u local_ordered_set st {forall! x C => {$local_leq(x, u)}}
+                exist u local_ordered_set st {forall! x c => {$local_leq(x, u)}}
 "#;
 
             let mut runtime = Runtime::new();

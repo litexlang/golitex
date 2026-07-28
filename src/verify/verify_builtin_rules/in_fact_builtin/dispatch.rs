@@ -102,6 +102,16 @@ impl Runtime {
         if let Some(result) = self.maybe_verify_in_fact_builtin_operator_signature(in_fact) {
             return Ok(result);
         }
+        if let (Obj::Atom(AtomObj::Identifier(identifier)), Obj::StandardSet(StandardSet::C)) =
+            (&in_fact.element, &in_fact.set)
+        {
+            if identifier.is_builtin(I) {
+                return Ok(number_in_set_verified_by_builtin_rules_result(
+                    in_fact,
+                    "native imaginary unit is in C",
+                ));
+            }
+        }
         if let Some(result) =
             self.maybe_verify_in_fact_in_unfolded_user_defined_set(in_fact, verify_state)?
         {
@@ -224,10 +234,27 @@ impl Runtime {
                     StandardSet::N,
                     verify_state,
                 ),
+            (Obj::Sum(sum), Obj::StandardSet(StandardSet::N)) => self
+                .verify_in_fact_sum_or_product_by_iterand_ret_set(
+                    in_fact,
+                    sum.func.as_ref(),
+                    StandardSet::N,
+                    verify_state,
+                    "sum",
+                ),
+            (Obj::Product(product), Obj::StandardSet(StandardSet::N)) => self
+                .verify_in_fact_sum_or_product_by_iterand_ret_set(
+                    in_fact,
+                    product.func.as_ref(),
+                    StandardSet::N,
+                    verify_state,
+                    "product",
+                ),
             (Obj::FiniteSetSize(finite_set_size), Obj::StandardSet(StandardSet::N))
             | (Obj::FiniteSetSize(finite_set_size), Obj::StandardSet(StandardSet::Z))
             | (Obj::FiniteSetSize(finite_set_size), Obj::StandardSet(StandardSet::Q))
-            | (Obj::FiniteSetSize(finite_set_size), Obj::StandardSet(StandardSet::R)) => self
+            | (Obj::FiniteSetSize(finite_set_size), Obj::StandardSet(StandardSet::R))
+            | (Obj::FiniteSetSize(finite_set_size), Obj::StandardSet(StandardSet::C)) => self
                 .verify_finite_set_size_in_standard_number_set(
                     in_fact,
                     finite_set_size,
@@ -333,20 +360,40 @@ impl Runtime {
                 | Obj::Sqrt(_)
                 | Obj::Log(_),
                 Obj::StandardSet(StandardSet::R),
-            ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
-                in_fact,
-            )),
+            ) => self.verify_in_fact_arithmetic_expression_in_r(in_fact, verify_state),
+            (
+                Obj::Add(_)
+                | Obj::Sub(_)
+                | Obj::Mul(_)
+                | Obj::Div(_)
+                | Obj::Mod(_)
+                | Obj::Pow(_)
+                | Obj::Abs(_)
+                | Obj::Sqrt(_)
+                | Obj::Log(_),
+                Obj::StandardSet(StandardSet::C),
+            ) => self.verify_in_fact_arithmetic_expression_in_c(in_fact, verify_state),
             (Obj::Sum(_), Obj::StandardSet(StandardSet::R)) => self
-                .verify_in_fact_sum_or_product_in_r(
+                .verify_in_fact_sum_or_product_by_iterand_ret_set(
                     in_fact,
+                    match &in_fact.element {
+                        Obj::Sum(sum) => sum.func.as_ref(),
+                        _ => unreachable!(),
+                    },
+                    StandardSet::R,
                     verify_state,
-                    "sum: well-defined on an integer range, in R",
+                    "sum",
                 ),
             (Obj::Product(_), Obj::StandardSet(StandardSet::R)) => self
-                .verify_in_fact_sum_or_product_in_r(
+                .verify_in_fact_sum_or_product_by_iterand_ret_set(
                     in_fact,
+                    match &in_fact.element {
+                        Obj::Product(product) => product.func.as_ref(),
+                        _ => unreachable!(),
+                    },
+                    StandardSet::R,
                     verify_state,
-                    "product: well-defined on an integer range, in R",
+                    "product",
                 ),
             (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::R)) => self
                 .verify_in_fact_finite_set_sum_by_iterand_ret_set(
@@ -363,9 +410,10 @@ impl Runtime {
                     verify_state,
                 ),
             (Obj::Sum(sum), Obj::StandardSet(StandardSet::Z)) => self
-                .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
+                .verify_in_fact_sum_or_product_by_iterand_ret_set(
                     in_fact,
                     sum.func.as_ref(),
+                    StandardSet::Z,
                     verify_state,
                     "sum",
                 ),
@@ -384,16 +432,18 @@ impl Runtime {
                     verify_state,
                 ),
             (Obj::Product(product), Obj::StandardSet(StandardSet::Z)) => self
-                .verify_in_fact_sum_or_product_in_z_by_iterand_ret_set(
+                .verify_in_fact_sum_or_product_by_iterand_ret_set(
                     in_fact,
                     product.func.as_ref(),
+                    StandardSet::Z,
                     verify_state,
                     "product",
                 ),
             (Obj::Sum(sum), Obj::StandardSet(StandardSet::Q)) => self
-                .verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
+                .verify_in_fact_sum_or_product_by_iterand_ret_set(
                     in_fact,
                     sum.func.as_ref(),
+                    StandardSet::Q,
                     verify_state,
                     "sum",
                 ),
@@ -412,11 +462,42 @@ impl Runtime {
                     verify_state,
                 ),
             (Obj::Product(product), Obj::StandardSet(StandardSet::Q)) => self
-                .verify_in_fact_sum_or_product_in_q_by_iterand_ret_set(
+                .verify_in_fact_sum_or_product_by_iterand_ret_set(
                     in_fact,
                     product.func.as_ref(),
+                    StandardSet::Q,
                     verify_state,
                     "product",
+                ),
+            (Obj::Sum(sum), Obj::StandardSet(StandardSet::C)) => self
+                .verify_in_fact_sum_or_product_by_iterand_ret_set(
+                    in_fact,
+                    sum.func.as_ref(),
+                    StandardSet::C,
+                    verify_state,
+                    "sum",
+                ),
+            (Obj::Product(product), Obj::StandardSet(StandardSet::C)) => self
+                .verify_in_fact_sum_or_product_by_iterand_ret_set(
+                    in_fact,
+                    product.func.as_ref(),
+                    StandardSet::C,
+                    verify_state,
+                    "product",
+                ),
+            (Obj::SumOfFiniteSet(sum), Obj::StandardSet(StandardSet::C)) => self
+                .verify_in_fact_finite_set_sum_by_iterand_ret_set(
+                    in_fact,
+                    sum,
+                    StandardSet::C,
+                    verify_state,
+                ),
+            (Obj::ProductOfFiniteSet(product), Obj::StandardSet(StandardSet::C)) => self
+                .verify_in_fact_finite_set_product_by_iterand_ret_set(
+                    in_fact,
+                    product,
+                    StandardSet::C,
+                    verify_state,
                 ),
             (Obj::ListSet(list_set), Obj::PowerSet(power_set)) => self
                 .verify_in_fact_list_set_in_power_set_defines_membership(
@@ -655,6 +736,11 @@ impl Runtime {
                     if fn_try.is_true() {
                         return Ok(fn_try);
                     }
+                }
+                let list_set_carrier_result =
+                    self.verify_in_fact_by_known_list_set_carrier(in_fact, verify_state)?;
+                if list_set_carrier_result.is_true() {
+                    return Ok(list_set_carrier_result);
                 }
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }

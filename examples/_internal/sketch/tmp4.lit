@@ -136,8 +136,8 @@ by zorn_lemma: set tmp_ordered_set, prop tmp_leq:
             $tmp_leq(y, x)
             =>:
                 x = y
-        forall C power_set(tmp_ordered_set):
-            forall x, y C:
+        forall c power_set(tmp_ordered_set):
+            forall x, y c:
                 $tmp_leq(x, y) or $tmp_leq(y, x)
             =>:
-                exist u tmp_ordered_set st {forall! x C => {$tmp_leq(x, u)}}
+                exist u tmp_ordered_set st {forall! x c => {$tmp_leq(x, u)}}

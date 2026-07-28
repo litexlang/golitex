@@ -282,9 +282,9 @@ and other ordinary set objects. The annotation gives Litex well-definedness
 information and a fact that later proof steps can match.
 
 Some annotations are parameter kinds rather than ordinary set domains. For
-example, `have A set`, `have B nonempty_set`, and `have C finite_set` introduce
+example, `have A set`, `have B nonempty_set`, and `have c finite_set` introduce
 names and record facts such as `$is_set(A)`, `$is_nonempty_set(B)`, and
-`$is_finite_set(C)`. These are not meant to say that `set` is one giant set
+`$is_finite_set(c)`. These are not meant to say that `set` is one giant set
 containing all sets. They are surface forms for introducing mathematical
 objects with the corresponding set-theoretic properties.
 
@@ -388,6 +388,28 @@ quotient of pairs of integers.
 Litex can formalize a particular construction when that construction is the
 mathematical subject. Its default builtin interface simply does not force all
 later users to inherit one privileged construction history.
+
+## Does the native `C` scalar system turn every number into a complex value?
+
+No. In the 0.9.110 beta preview, `C` is the largest default scalar carrier and
+the standard sets satisfy `N ⊆ Z ⊆ Q ⊆ R ⊆ C`. The verifier still preserves
+the narrow conclusion it can establish. Integer arithmetic remains integer
+arithmetic, and real arithmetic remains real arithmetic; an expression falls
+back to `C` only when no narrower supported carrier applies.
+
+This is also why complex equality does not add a complex order. The relations
+`<`, `<=`, `>`, and `>=`, sign reasoning, real intervals, `abs`, `sqrt`, and
+`log` still require real operands. `C_abs` is the separate complex modulus,
+with a nonnegative real result.
+
+The native complex layer is symbolic in this release. Verification supports
+the builtin imaginary unit, coordinates, modulus interface, legal integer
+powers, and finite aggregation, but `eval`, Python extraction, and the current
+Lean bridge do not acquire a complex runtime representation. Those backends
+report unsupported complex expressions rather than silently treating them as
+real values. Existing sources that used `C`, `i`, `re`, `img`, or `C_abs` as
+ordinary identifiers must migrate; see
+[Complex Scalar Migration](Complex_Scalar_Migration.md).
 
 ## Why not just import a big library and cite the theorem?
 
@@ -527,7 +549,7 @@ This is a field-chain feature rather than general postfix type inference. A
 final field may be callable, so `space.scalars.mul(a, b)` is supported when
 `scalars` is a struct-valued field and `mul` is callable. Forms such as
 `a.b(x).c`, `a.b[1].c`, and `(a.b).c` require an explicit next view such as
-`&C{a.b(x)}.c`.
+`&Inner{a.b(x)}.c`.
 
 This binding syntax does not give `p` a unique nominal type, and Litex does not
 infer a default from all known memberships. A later fact

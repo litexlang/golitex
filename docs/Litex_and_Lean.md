@@ -11,6 +11,7 @@ Related docs:
 - [Manual](https://litexlang.com/doc/Manual)
 - [FAQ](https://litexlang.com/doc/FAQ)
 - [Litex To Python](https://litexlang.com/doc/Litex_To_Python)
+- [Complex Scalar Migration](Complex_Scalar_Migration.md)
 
 Litex source code stays the same across languages, but CLI output supports
 localized JSON keys and explanatory labels with `litex -lang <code> ...`.
@@ -874,21 +875,21 @@ example : ({1, 2} : Set ℕ) ∈ ({∅, {1, 2}} : Set (Set ℕ)) := by
 
 <!-- litex:skip-test -->
 ```litex
-forall i {1, 2}:
-    i = 1 or i = 2
+forall i1 {1, 2}:
+    i1 = 1 or i1 = 2
 ```
 
 ```lean
 import Mathlib
-example {i : ℕ} (hi : i ∈ ({1, 2} : Finset ℕ)) : i = 1 ∨ i = 2 := by
+example {i1 : ℕ} (hi : i1 ∈ ({1, 2} : Finset ℕ)) : i1 = 1 ∨ i1 = 2 := by
   simpa using hi
 ```
 
 **What differs.** Litex unfolds the finite display as possible values. Lean uses `Finset ℕ` and simplification.
 
 ```litex
-forall i {1, 2}:
-    i = 1 or i = 2
+forall i1 {1, 2}:
+    i1 = 1 or i1 = 2
 ```
 
 ### Power Set Membership
@@ -1112,6 +1113,12 @@ Litex source
 
 The following pairs show the current mapping. The examples omit the generated
 `import Mathlib` and namespace wrapper.
+
+The 0.9.110 beta verifier also has a native symbolic complex interface:
+`C`, `i`, `re`, `img`, and `C_abs`. The current Lean bridge does not lower
+genuinely complex-valued expressions. It reports them as unsupported instead
+of emitting an expression over `ℝ`; complex extraction and its proof replay
+contract remain future work.
 
 ### Closed Fact
 

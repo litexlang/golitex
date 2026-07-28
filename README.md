@@ -67,6 +67,29 @@ Common LaTeX-style notation, set theory, and basic logic stay close to ordinary
 mathematical writing. Routine consequences can be written directly as facts;
 explicit proof routes remain available when an argument needs them.
 
+## Native complex scalars in 0.9.110 beta
+
+`C` is now the largest builtin scalar carrier, extending
+`N ⊆ Z ⊆ Q ⊆ R ⊆ C` while preserving narrower arithmetic conclusions.
+The first symbolic interface includes `i`, real and imaginary coordinates,
+complex modulus, legal integer powers, and complex-valued finite aggregation:
+
+```litex
+i^2 = -1
+
+forall z C:
+    z = re(z) + img(z) * i
+    C_abs(z) = sqrt(re(z)^2 + img(z)^2)
+
+sum(1, 3, fn(k Z) C {k + i}) $in C
+```
+
+Order, `abs`, `sqrt`, and `log` remain real-domain operations. The evaluator
+and current Python and Lean extractors report native complex expressions as
+unsupported instead of lowering them as real values. Existing uses of the now
+reserved names `C`, `i`, `re`, `img`, and `C_abs` should follow the
+[migration guide](docs/Complex_Scalar_Migration.md).
+
 ## Let facts build a checked context
 
 Facts are not comments or hints. They are checked resources for the next

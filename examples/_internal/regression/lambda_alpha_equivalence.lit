@@ -4,7 +4,7 @@ abstract_prop alpha_assumption(f)
 abstract_prop alpha_conclusion(f)
 
 trust $alpha_assumption(fn(k R) R {k})
-$alpha_assumption(fn(i R) R {i})
+$alpha_assumption(fn(i1 R) R {i1})
 
 thm alpha_theorem:
     ? forall a R:
@@ -13,7 +13,7 @@ thm alpha_theorem:
             $alpha_conclusion(fn(k R) R {k + a})
     trust $alpha_conclusion(fn(k R) R {k + a})
 
-# This stored `forall` must instantiate `k` as the differently named `i`.
+# This stored `forall` must instantiate `k` as the differently named `i1`.
 claim:
     ? forall a R:
         $alpha_assumption(fn(k R) R {k + a})
@@ -21,7 +21,7 @@ claim:
             $alpha_conclusion(fn(k R) R {k + a})
     trust $alpha_conclusion(fn(k R) R {k + a})
 
-trust $alpha_assumption(fn(i R) R {i + 1})
-$alpha_conclusion(fn(i R) R {i + 1})
+trust $alpha_assumption(fn(i1 R) R {i1 + 1})
+$alpha_conclusion(fn(i1 R) R {i1 + 1})
 by thm alpha_theorem(1)
 $alpha_conclusion(fn(j R) R {j + 1})

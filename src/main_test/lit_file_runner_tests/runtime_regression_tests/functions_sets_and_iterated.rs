@@ -6,19 +6,19 @@ fn anonymous_function_application_in_unfolded_forall_uses_pointwise_fact() {
         "anonymous_function_application_in_unfolded_forall_uses_pointwise_fact",
         || {
             let source_code = r#"
-prop simplex_shape(n N, v fn(i range(0, n)) R):
-    forall i range(0, n):
-        v(i) >= 0
+prop simplex_shape(n N, v fn(i1 range(0, n)) R):
+    forall i1 range(0, n):
+        v(i1) >= 0
     finite_set_sum(range(0, n), v) = 1
 
 claim:
-    ? forall n N, a, b fn(i range(0, n)) R:
-        forall i range(0, n):
-            (a(i) + b(i)) / 2 >= 0
-        finite_set_sum(range(0, n), fn(i range(0, n)) R {(a(i) + b(i)) / 2}) = 1
+    ? forall n N, a, b fn(i1 range(0, n)) R:
+        forall i1 range(0, n):
+            (a(i1) + b(i1)) / 2 >= 0
+        finite_set_sum(range(0, n), fn(i1 range(0, n)) R {(a(i1) + b(i1)) / 2}) = 1
         =>:
-            $simplex_shape(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
-    by def $simplex_shape(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
+            $simplex_shape(n, fn(i1 range(0, n)) R {(a(i1) + b(i1)) / 2})
+    by def $simplex_shape(n, fn(i1 range(0, n)) R {(a(i1) + b(i1)) / 2})
 "#;
 
             let mut runtime = Runtime::new();
@@ -236,18 +236,18 @@ trust U0 $subset T0
 have x0 S0
 x0 $in T0
 
-forall A, B, C set:
+forall A, B, c set:
     A $subset B
-    B $subset C
+    B $subset c
     =>:
-        A $subset C
+        A $subset c
 
-forall A, B, C set:
+forall A, B, c set:
     A $subset B
     B $subset A
-    B $subset C
+    B $subset c
     =>:
-        A $subset C
+        A $subset c
 "#;
 
             let mut runtime = Runtime::new();
@@ -890,44 +890,44 @@ fn finite_sum_order_uses_pointwise_bounds() {
     run_with_large_stack("finite_sum_order_uses_pointwise_bounds_large_stack", || {
         let source_code = r#"
 thm finite_series_comparison_test:
-    ? forall a, b fn(i Z) R, m, n Z:
+    ? forall a, b fn(i1 Z) R, m, n Z:
         m <= n
-        forall i Z:
-            m <= i <= n
+        forall i1 Z:
+            m <= i1 <= n
             =>:
-                a(i) <= b(i)
+                a(i1) <= b(i1)
         =>:
-            sum(m, n, fn(i Z) R {a(i)}) <= sum(m, n, fn(i Z) R {b(i)})
+            sum(m, n, fn(i1 Z) R {a(i1)}) <= sum(m, n, fn(i1 Z) R {b(i1)})
 
-    sum(m, n, fn(i Z) R {a(i)}) <= sum(m, n, fn(i Z) R {b(i)})
+    sum(m, n, fn(i1 Z) R {a(i1)}) <= sum(m, n, fn(i1 Z) R {b(i1)})
 
 thm finite_series_comparison_n_pos_index_test:
-    ? forall a, b fn(i N_pos) R, m, n N_pos:
+    ? forall a, b fn(i1 N_pos) R, m, n N_pos:
         m <= n
-        forall i N_pos:
-            m <= i <= n
+        forall i1 N_pos:
+            m <= i1 <= n
             =>:
-                a(i) <= b(i)
+                a(i1) <= b(i1)
         =>:
-            sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {b(i)})
+            sum(m, n, fn(i1 N_pos) R {a(i1)}) <= sum(m, n, fn(i1 N_pos) R {b(i1)})
 
-    sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {b(i)})
+    sum(m, n, fn(i1 N_pos) R {a(i1)}) <= sum(m, n, fn(i1 N_pos) R {b(i1)})
 
 thm finite_series_triangle_test:
-    ? forall a fn(i Z) R, m, n Z:
+    ? forall a fn(i1 Z) R, m, n Z:
         m <= n
         =>:
-            abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})
+            abs(sum(m, n, fn(i1 Z) R {a(i1)})) <= sum(m, n, fn(i1 Z) R {abs(a(i1))})
 
-    abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})
+    abs(sum(m, n, fn(i1 Z) R {a(i1)})) <= sum(m, n, fn(i1 Z) R {abs(a(i1))})
 
 thm finite_series_scalar_mul_test:
-    ? forall a fn(i Z) R, c R, m, n Z:
+    ? forall a fn(i1 Z) R, c R, m, n Z:
         m <= n
         =>:
-            sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
+            sum(m, n, fn(i1 Z) R {c * a(i1)}) = c * sum(m, n, fn(i1 Z) R {a(i1)})
 
-    sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
+    sum(m, n, fn(i1 Z) R {c * a(i1)}) = c * sum(m, n, fn(i1 Z) R {a(i1)})
 "#;
 
         let mut runtime = Runtime::new();
@@ -954,11 +954,11 @@ fn iterated_operator_range_order_is_required_for_symbolic_bounds() {
                     "sum_symbolic_empty_range",
                     r#"
 thm bad_symbolic_empty_sum:
-    ? forall a fn(i Z) R, m Z:
-        sum(m, m - 1, fn(i Z) R {a(i)}) = 0
+    ? forall a fn(i1 Z) R, m Z:
+        sum(m, m - 1, fn(i1 Z) R {a(i1)}) = 0
 
     trust:
-        sum(m, m - 1, fn(i Z) R {a(i)}) = 0
+        sum(m, m - 1, fn(i1 Z) R {a(i1)}) = 0
 "#,
                     "sum: cannot verify start <= end for the summation range",
                 ),
@@ -966,11 +966,11 @@ thm bad_symbolic_empty_sum:
                     "product_symbolic_empty_range",
                     r#"
 thm bad_symbolic_empty_product:
-    ? forall a fn(i Z) R, m Z:
-        product(m, m - 1, fn(i Z) R {a(i)}) = 1
+    ? forall a fn(i1 Z) R, m Z:
+        product(m, m - 1, fn(i1 Z) R {a(i1)}) = 1
 
     trust:
-        product(m, m - 1, fn(i Z) R {a(i)}) = 1
+        product(m, m - 1, fn(i1 Z) R {a(i1)}) = 1
 "#,
                     "product: cannot verify start <= end for the product range",
                 ),
@@ -1350,11 +1350,11 @@ thm finite_set_sum_substitution_tmp:
     finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
 
 thm finite_set_sum_range_matches_series_tmp:
-    ? forall a fn(i Z) R, m, n Z:
+    ? forall a fn(i1 Z) R, m, n Z:
         m <= n
         =>:
-            sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
-    sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
+            sum(m, n, fn(i1 Z) R {a(i1)}) = finite_set_sum(m...n, fn(i1 m...n) R {a(i1)})
+    sum(m, n, fn(i1 Z) R {a(i1)}) = finite_set_sum(m...n, fn(i1 m...n) R {a(i1)})
 
 thm finite_set_sum_disjoint_union_tmp:
     ? forall X, Y finite_set, f fn(z union(X, Y)) R:
@@ -1480,20 +1480,20 @@ fn finite_set_sum_bijective_enumerations_are_well_defined() {
         "finite_set_sum_bijective_enumerations_are_well_defined",
         || {
             let source_code = r#"
-template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $bijective(closed_range(1, finite_set_size(X)), X, g)>:
-    have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
+template<X finite_set, f fn(x X) R, g fn(i1 closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $bijective(closed_range(1, finite_set_size(X)), X, g)>:
+    have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))})
 
 thm finite_set_sum_raw_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
+    ? forall X finite_set, f fn(x X) R, g fn(i1 closed_range(1, finite_set_size(X))) X, h fn(i1 closed_range(1, finite_set_size(X))) X:
         finite_set_size(X) >= 1
         $bijective(closed_range(1, finite_set_size(X)), X, g)
         $bijective(closed_range(1, finite_set_size(X)), X, h)
         =>:
-            sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(h(i))})
-    sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(h(i))})
+            sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}) = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))})
+    sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}) = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))})
 
 thm finite_set_sum_template_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
+    ? forall X finite_set, f fn(x X) R, g fn(i1 closed_range(1, finite_set_size(X))) X, h fn(i1 closed_range(1, finite_set_size(X))) X:
         finite_set_size(X) >= 1
         $bijective(closed_range(1, finite_set_size(X)), X, g)
         $bijective(closed_range(1, finite_set_size(X)), X, h)

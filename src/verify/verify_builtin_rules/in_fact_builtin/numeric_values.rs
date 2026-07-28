@@ -26,22 +26,13 @@ pub(super) fn not_in_fact_verified_by_builtin_rules_result(
     )
 }
 
-pub(super) fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> StmtResult {
-    StmtResult::from(
-        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-            in_fact.clone().into(),
-            "arithmetic expression is in R".to_string(),
-            Vec::new(),
-        ),
-    )
-}
-
 pub(super) fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
     in_fact: &InFact,
     evaluated_number: &Number,
     standard_set: &StandardSet,
 ) -> StmtResult {
     match standard_set {
+        StandardSet::C => number_in_set_verified_by_builtin_rules_result(in_fact, "number in C"),
         StandardSet::R => number_in_set_verified_by_builtin_rules_result(in_fact, "number in R"),
         StandardSet::RPos => {
             if number_is_in_r_pos(evaluated_number) {
@@ -130,7 +121,7 @@ pub(super) fn builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
     standard_set: &StandardSet,
 ) -> StmtResult {
     match standard_set {
-        StandardSet::R | StandardSet::Q => StmtResult::Unknown(StmtUnknown::new()),
+        StandardSet::C | StandardSet::R | StandardSet::Q => StmtResult::Unknown(StmtUnknown::new()),
         StandardSet::RPos => {
             if !number_is_in_r_pos(evaluated_number) {
                 not_in_fact_verified_by_builtin_rules_result(not_in_fact, "number not in R_pos")

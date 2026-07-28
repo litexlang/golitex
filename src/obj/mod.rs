@@ -4,6 +4,7 @@ mod atomic_name;
 mod fn_obj_head;
 mod fn_set;
 mod free_param_obj;
+mod helper;
 mod obj;
 mod obj_alpha_key;
 mod obj_contrain_free_params;

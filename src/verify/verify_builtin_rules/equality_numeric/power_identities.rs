@@ -39,7 +39,7 @@ impl Runtime {
 
     // Zeroth power identity under the natural-exponent convention: `a^0 = 1`,
     // including `0^0 = 1`.
-    // Example: `forall a R: a^0 = 1`.
+    // Example: `forall a C: a^0 = 1`.
     pub(crate) fn try_verify_pow_zero_identity(
         &mut self,
         left: &Obj,

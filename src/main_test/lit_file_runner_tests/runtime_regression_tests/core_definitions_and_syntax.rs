@@ -94,14 +94,14 @@ closed_range(3, 2) = {}
 finite_set_size(range(3, 2)) = 0
 finite_set_size(closed_range(3, 2)) = 0
 
-forall i range(3, 2):
+forall i1 range(3, 2):
     1 = 0
 
-forall i closed_range(3, 2):
+forall i1 closed_range(3, 2):
     1 = 0
 
-by for forall! i range(3, 2) => {1 = 0}
-by for forall! i closed_range(3, 2) => {1 = 0}
+by for forall! i1 range(3, 2) => {1 = 0}
+by for forall! i1 closed_range(3, 2) => {1 = 0}
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
@@ -175,18 +175,18 @@ fn have_tuple_and_have_cart_define_symbolic_coordinates() {
         || {
             let source_code = r#"
 have n N_pos = 3
-have tuple f for i <= n, f[i] = i
+have tuple f for i1 <= n, f[i1] = i1
 $is_tuple(f)
 tuple_dim(f) = n
-forall i closed_range(1, n):
-    f[i] = i
+forall i1 closed_range(1, n):
+    f[i1] = i1
 
-have cart c for i <= n, proj(c, i) = f[i]
+have cart c for i1 <= n, proj(c, i1) = f[i1]
 $is_set(c)
 $is_cart(c)
 cart_dim(c) = n
-forall i closed_range(1, n):
-    proj(c, i) = f[i]
+forall i1 closed_range(1, n):
+    proj(c, i1) = f[i1]
 "#;
 
             let mut runtime = Runtime::new();
@@ -215,18 +215,18 @@ fn have_seq_finite_seq_and_matrix_define_indexed_entries() {
         "have_seq_finite_seq_and_matrix_define_indexed_entries",
         || {
             let source_code = r#"
-have seq s seq(N_pos) for i, s(i) = i
+have seq s seq(N_pos) for i1, s(i1) = i1
 s $in seq(N_pos)
 s(3) = 3
 
 have n N_pos = 3
-have finite_seq f finite_seq(N_pos, n) for i <= n, f(i) = i
+have finite_seq f finite_seq(N_pos, n) for i1 <= n, f(i1) = i1
 f $in finite_seq(N_pos, n)
 f(2) = 2
 
 have r N_pos = 2
 have c N_pos = 3
-have matrix M matrix(N_pos, r, c) for i <= r, j <= c, M(i, j) = j
+have matrix M matrix(N_pos, r, c) for i1 <= r, j <= c, M(i1, j) = j
 M $in matrix(N_pos, r, c)
 M(2, 3) = 3
 "#;
@@ -260,7 +260,7 @@ fn finite_seq_is_its_bounded_positive_index_function_space() {
 have n N_pos = 3
 finite_seq(R, 3) = fn(x N_pos: x <= 3) R
 fn(y N_pos: y <= 3) R = finite_seq(R, 3)
-finite_seq(R, n) = fn(i N_pos: i <= n) R
+finite_seq(R, n) = fn(i1 N_pos: i1 <= n) R
 "#;
 
             let mut runtime = Runtime::new();
@@ -313,12 +313,12 @@ finite_seq(R, n) = fn(i N_pos: i <= n) R
 fn seq_and_matrix_are_their_function_spaces() {
     run_with_large_stack("seq_and_matrix_are_their_function_spaces", || {
         let positive_source = r#"
-seq(R) = fn(i N_pos) R
+seq(R) = fn(i1 N_pos) R
 fn(j N_pos) R = seq(R)
 
 have rows N_pos = 2
 have cols N_pos = 3
-matrix(R, rows, cols) = fn(i, j N_pos: i <= rows, j <= cols) R
+matrix(R, rows, cols) = fn(i1, j N_pos: i1 <= rows, j <= cols) R
 fn(row, col N_pos: row <= rows, col <= cols) R = matrix(R, rows, cols)
 "#;
 
@@ -344,19 +344,19 @@ fn(row, col N_pos: row <= rows, col <= cols) R = matrix(R, rows, cols)
         );
 
         let negative_cases = [
-            ("seq_index_set_mismatch", "seq(R) = fn(i Z) R"),
-            ("seq_codomain_mismatch", "seq(R) = fn(i N_pos) N"),
+            ("seq_index_set_mismatch", "seq(R) = fn(i1 Z) R"),
+            ("seq_codomain_mismatch", "seq(R) = fn(i1 N_pos) N"),
             (
                 "matrix_column_bound_mismatch",
-                "matrix(R, 2, 3) = fn(i, j N_pos: i <= 2, j <= 2) R",
+                "matrix(R, 2, 3) = fn(i1, j N_pos: i1 <= 2, j <= 2) R",
             ),
             (
                 "matrix_index_set_mismatch",
-                "matrix(R, 2, 3) = fn(i, j Z: i <= 2, j <= 3) R",
+                "matrix(R, 2, 3) = fn(i1, j Z: i1 <= 2, j <= 3) R",
             ),
             (
                 "matrix_codomain_mismatch",
-                "matrix(R, 2, 3) = fn(i, j N_pos: i <= 2, j <= 3) N",
+                "matrix(R, 2, 3) = fn(i1, j N_pos: i1 <= 2, j <= 3) N",
             ),
         ];
         for (label, source_code) in negative_cases {
@@ -395,8 +395,8 @@ fn failed_have_process_checks_do_not_bind_names() {
             ),
             (
                 "failed_have_finite_seq_bound",
-                "have n N_pos = 3\nhave m N_pos = 2\nhave finite_seq f finite_seq(N_pos, n) for i <= m, f(i) = i",
-                "have finite_seq f finite_seq(N_pos, n) for i <= n, f(i) = i\nf(1) = 1",
+                "have n N_pos = 3\nhave m N_pos = 2\nhave finite_seq f finite_seq(N_pos, n) for i1 <= m, f(i1) = i1",
+                "have finite_seq f finite_seq(N_pos, n) for i1 <= n, f(i1) = i1\nf(1) = 1",
             ),
         ];
 
@@ -430,10 +430,10 @@ fn have_indexed_definitions_require_for_keyword() {
     run_with_large_stack("have_indexed_definitions_require_for_keyword", || {
         let source_code = r#"
 have n N_pos = 3
-have tuple t for i <= n, t[i] = i
+have tuple t for i1 <= n, t[i1] = i1
 t[2] = 2
 
-have seq s seq(N_pos) for i, s(i) = i
+have seq s seq(N_pos) for i1, s(i1) = i1
 s(3) = 3
 "#;
 
@@ -450,12 +450,12 @@ s(3) = 3
             run_output
         );
         assert!(
-            run_output.contains("have tuple t for i <= n,"),
+            run_output.contains("have tuple t for i1 <= n,"),
             "tuple definition should render with `for`:\n{}",
             run_output
         );
         assert!(
-            run_output.contains("have seq s seq(N_pos) for i,"),
+            run_output.contains("have seq s seq(N_pos) for i1,"),
             "sequence definition should render with `for`:\n{}",
             run_output
         );
@@ -463,7 +463,7 @@ s(3) = 3
         let mut legacy_runtime = Runtime::new();
         legacy_runtime.new_file_path_new_env_new_name_scope("indexed_definition_old_form");
         let (stmt_results, runtime_error) = run_source_code(
-            "have tuple old_form by i N, old_form[i] = i",
+            "have tuple old_form by i1 N, old_form[i1] = i1",
             &mut legacy_runtime,
         );
         let (old_form_succeeded, old_form_output) =
@@ -485,7 +485,7 @@ fn have_seq_finite_seq_and_matrix_reject_bad_for_forms() {
                 (
                     "bad seq lhs",
                     r#"
-have seq s seq(N_pos) for i, t(i) = i
+have seq s seq(N_pos) for i1, t(i1) = i1
 "#,
                     "have seq left side must apply the sequence being defined",
                 ),
@@ -494,7 +494,7 @@ have seq s seq(N_pos) for i, t(i) = i
                     r#"
 have r N_pos = 2
 have c N_pos = 3
-have matrix M matrix(N_pos, r, c) for i <= r, j <= c, M(i) = i
+have matrix M matrix(N_pos, r, c) for i1 <= r, j <= c, M(i1) = i1
 "#,
                     "have matrix left side must use exactly two indices",
                 ),
@@ -503,7 +503,7 @@ have matrix M matrix(N_pos, r, c) for i <= r, j <= c, M(i) = i
                     r#"
 have n N_pos = 3
 have m N_pos = 4
-have finite_seq f finite_seq(N_pos, n) for i <= m, f(i) = i
+have finite_seq f finite_seq(N_pos, n) for i1 <= m, f(i1) = i1
 "#,
                     "have finite_seq for-bound must match finite_seq length",
                 ),
@@ -537,10 +537,10 @@ fn have_cart_can_equal_literal_cart_by_dimension_and_projections() {
             let source_code = r#"
 have n N_pos = 3
 
-have cart real_cart for i <= n, proj(real_cart, i) = R
+have cart real_cart for i1 <= n, proj(real_cart, i1) = R
 real_cart = cart(R, R, R)
 
-have cart rational_cart for i <= n, proj(rational_cart, i) = Q
+have cart rational_cart for i1 <= n, proj(rational_cart, i1) = Q
 cart(Q, Q, Q) = rational_cart
 "#;
 
@@ -574,10 +574,10 @@ fn have_tuple_can_equal_literal_tuple_by_dimension_and_projections() {
             let source_code = r#"
 have n N_pos = 3
 
-have tuple index_tuple for i <= n, index_tuple[i] = i
+have tuple index_tuple for i1 <= n, index_tuple[i1] = i1
 index_tuple = (1, 2, 3)
 
-have tuple real_tuple for i <= n, real_tuple[i] = R
+have tuple real_tuple for i1 <= n, real_tuple[i1] = R
 (R, R, R) = real_tuple
 "#;
 
@@ -611,14 +611,14 @@ fn have_tuple_and_have_cart_reject_bad_symbolic_definitions() {
             let cases = [
                 (
                     "undefined dimension",
-                    "have tuple f for i <= n, f[i] = i",
+                    "have tuple f for i1 <= n, f[i1] = i1",
                     "identifier `n` not defined",
                 ),
                 (
                     "small dimension",
                     r#"
 have n N_pos = 1
-have tuple f for i <= n, f[i] = i
+have tuple f for i1 <= n, f[i1] = i1
 "#,
                     "have tuple/cart needs 2 <= n",
                 ),
@@ -626,7 +626,7 @@ have tuple f for i <= n, f[i] = i
                     "self reference",
                     r#"
 have n N_pos = 3
-have tuple f for i <= n, f[i] = f[i]
+have tuple f for i1 <= n, f[i1] = f[i1]
 "#,
                     "identifier `f` not defined",
                 ),
@@ -634,7 +634,7 @@ have tuple f for i <= n, f[i] = f[i]
                     "wrong tuple lhs",
                     r#"
 have n N_pos = 3
-have tuple f for i <= n, g[i] = i
+have tuple f for i1 <= n, g[i1] = i1
 "#,
                     "have tuple left side must index the tuple being defined",
                 ),
@@ -642,7 +642,7 @@ have tuple f for i <= n, g[i] = i
                     "wrong cart lhs",
                     r#"
 have n N_pos = 3
-have cart c for i <= n, proj(d, i) = i
+have cart c for i1 <= n, proj(d, i1) = i1
 "#,
                     "have cart left side must project the cart being defined",
                 ),
@@ -675,11 +675,11 @@ fn tuple_and_cart_coordinate_binders_reject_active_names_and_keep_outer_bounds()
         || {
             let invalid_source_code = r#"
 claim:
-    ? forall i N_pos:
-        i = 2
+    ? forall i1 N_pos:
+        i1 = 2
         =>:
             0 = 0
-    have tuple t for i <= i, t[i] = 0
+    have tuple t for i1 <= i1, t[i1] = 0
     0 = 0
 "#;
 
@@ -700,21 +700,21 @@ claim:
                 invalid_output
             );
             assert!(
-                invalid_output.contains("name `i` is already active in this scope"),
+                invalid_output.contains("name `i1` is already active in this scope"),
                 "the parser should identify the active coordinate-name collision:\n{}",
                 invalid_output
             );
 
             let valid_source_code = r#"
 claim:
-    ? forall i N_pos:
-        i = 2
+    ? forall i1 N_pos:
+        i1 = 2
         =>:
             0 = 0
-    have tuple t for j <= i, t[j] = 0
+    have tuple t for j <= i1, t[j] = 0
     t[1] = 0
-    have cart C for j <= i, proj(C, j) = R
-    proj(C, 1) = R
+    have cart c for j <= i1, proj(c, j) = R
+    proj(c, 1) = R
     0 = 0
 "#;
 
@@ -875,18 +875,18 @@ claim:
         =>:
             0 = 0
     claim:
-        ? forall x parts(k), i N_pos:
+        ? forall x parts(k), i1 N_pos:
             x $in R
-            i <= m
-            i = k
+            i1 <= m
+            i1 = k
             =>:
                 x = x
         have zero R = 0
         have fn terms(j N_pos: j <= m) R by cases:
             case j = k: x
             case j != k: zero
-        terms(i) = x
-        terms(i) $in parts(i)
+        terms(i1) = x
+        terms(i1) $in parts(i1)
         x = x
     0 = 0
 "#;
@@ -954,7 +954,7 @@ struct ScalarSystem<s nonempty_set>:
 have fn real_add(x, y R) R = x + y
 have real_scalars &ScalarSystem<R> = (0, real_add)
 
-have fn coordinate_add(x, y finite_seq(R, 2)) finite_seq(R, 2) = fn(i N_pos: i <= 2) R {&Current::ScalarSystem<R>{Current::real_scalars}.add(x(i), y(i))}
+have fn coordinate_add(x, y finite_seq(R, 2)) finite_seq(R, 2) = fn(i1 N_pos: i1 <= 2) R {&Current::ScalarSystem<R>{Current::real_scalars}.add(x(i1), y(i1))}
 "#;
 
             let mut runtime = Runtime::new();
@@ -982,7 +982,7 @@ fn instantiated_template_function_unfolds_before_curried_entry_application() {
         || {
             let source_code = r#"
 template<n N_pos>:
-    have fn pairwise_sum(x, y finite_seq(R, n)) finite_seq(R, n) = fn(i N_pos: i <= n) R {x(i) + y(i)}
+    have fn pairwise_sum(x, y finite_seq(R, n)) finite_seq(R, n) = fn(i1 N_pos: i1 <= n) R {x(i1) + y(i1)}
 
 have x, y finite_seq(R, 2)
 \pairwise_sum<2>(x, y)(1) = x(1) + y(1)
@@ -1013,12 +1013,12 @@ fn callable_struct_field_of_selected_template_object_unfolds() {
             let source_code = r#"
 struct FunctionBox<n N_pos>:
     length N
-    entries fn(i N_pos: i <= n) R
+    entries fn(i1 N_pos: i1 <= n) R
     <=>:
         length = n
 
 template<n N_pos>:
-    have zero_box &FunctionBox<n> = (n, fn(i N_pos: i <= n) R {0})
+    have zero_box &FunctionBox<n> = (n, fn(i1 N_pos: i1 <= n) R {0})
 
 trust have result &FunctionBox<2>
 trust result = \zero_box<2>
@@ -1047,20 +1047,20 @@ fn template_can_define_symbolic_tuple_and_cart() {
     run_with_large_stack("template_can_define_symbolic_tuple_and_cart", || {
         let source_code = r#"
 template<n N_pos: 2 <= n>:
-    have tuple tuple_by_dim for i <= n, tuple_by_dim[i] = i
+    have tuple tuple_by_dim for i1 <= n, tuple_by_dim[i1] = i1
 
 $is_tuple(\tuple_by_dim<3>)
 tuple_dim(\tuple_by_dim<3>) = 3
-forall i closed_range(1, 3):
-    \tuple_by_dim<3>[i] = i
+forall i1 closed_range(1, 3):
+    \tuple_by_dim<3>[i1] = i1
 
 template<n N_pos: 2 <= n>:
-    have cart cart_by_dim for i <= n, proj(cart_by_dim, i) = R
+    have cart cart_by_dim for i1 <= n, proj(cart_by_dim, i1) = R
 
 $is_cart(\cart_by_dim<3>)
 cart_dim(\cart_by_dim<3>) = 3
-forall i closed_range(1, 3):
-    proj(\cart_by_dim<3>, i) = R
+forall i1 closed_range(1, 3):
+    proj(\cart_by_dim<3>, i1) = R
 "#;
 
         let mut runtime = Runtime::new();
@@ -1327,9 +1327,9 @@ fn compact_standard_set_suffixes_use_existing_set_semantics() {
         "compact_standard_set_suffixes_use_existing_set_semantics",
         || {
             let source_code = r#"
-struct CompactCarrier<C set+>:
-    point C
-    other C
+struct CompactCarrier<c set+>:
+    point c
+    other c
 
 have S set+
 $is_nonempty_set(S)
@@ -1872,7 +1872,11 @@ $leaf(y)
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-            assert!(run_succeeded, "obtain should expose its direct predicate body:\n{}", run_output);
+            assert!(
+                run_succeeded,
+                "obtain should expose its direct predicate body:\n{}",
+                run_output
+            );
         },
     );
 }
@@ -1905,8 +1909,16 @@ $leaf(y)
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
-            assert!(!run_succeeded, "nested predicate bodies should require `by def`:\n{}", run_output);
-            assert!(run_output.contains("$leaf(y)"), "the rejected nested predicate should be reported:\n{}", run_output);
+            assert!(
+                !run_succeeded,
+                "nested predicate bodies should require `by def`:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("$leaf(y)"),
+                "the rejected nested predicate should be reported:\n{}",
+                run_output
+            );
         },
     );
 }

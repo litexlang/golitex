@@ -1490,11 +1490,11 @@ trust:
 
 $is_nonempty_set(union(A, B))
 
-have C, D set
+have c, D set
 trust:
     $is_nonempty_set(D)
 
-$is_nonempty_set(union(C, D))
+$is_nonempty_set(union(c, D))
 "#;
 
     let mut runtime = Runtime::new();
@@ -1525,12 +1525,12 @@ forall x set, A set, B set:
     =>:
         x $in set_minus(A, B)
 
-have x, A, B, C, D, E, F, G, H, U, V set
+have x, A, B, c, D, E, F, G, H, U, V set
 
 trust:
     x $in A
     x $in B
-    x $in C
+    x $in c
     not x $in D
     x $in intersect(E, F)
     x $in set_minus(G, H)
@@ -1538,7 +1538,7 @@ trust:
 
 x $in union(A, H)
 x $in intersect(A, B)
-x $in set_minus(C, D)
+x $in set_minus(c, D)
 
 x $in E
 x $in F
@@ -1711,18 +1711,18 @@ fn union_set_equalities_are_builtin() {
 forall A, B set:
     union(A, B) = union(B, A)
 
-forall A, B, C set:
-    union(union(A, B), C) = union(A, union(B, C))
+forall A, B, c set:
+    union(union(A, B), c) = union(A, union(B, c))
 
 forall A set:
     union(A, A) = A
     union(A, {}) = A
     union({}, A) = A
 
-have A, B, C set
+have A, B, c set
 union(A, B) = union(B, A)
-union(union(A, B), C) = union(A, union(B, C))
-union(A, union(B, C)) = union(union(A, B), C)
+union(union(A, B), c) = union(A, union(B, c))
+union(A, union(B, c)) = union(union(A, B), c)
 union(A, A) = A
 union(A, {}) = A
 union({}, A) = A
@@ -1750,17 +1750,17 @@ fn common_set_algebra_equalities_are_builtin() {
 forall A, B set:
     intersect(A, B) = intersect(B, A)
 
-forall A, B, C set:
-    intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
+forall A, B, c set:
+    intersect(intersect(A, B), c) = intersect(A, intersect(B, c))
 
-forall A, B, C set:
-    intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
+forall A, B, c set:
+    intersect(A, union(B, c)) = union(intersect(A, B), intersect(A, c))
 
-forall A, B, C set:
-    set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))
+forall A, B, c set:
+    set_minus(A, union(B, c)) = intersect(set_minus(A, B), set_minus(A, c))
 
-forall A, B, C set:
-    set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
+forall A, B, c set:
+    set_minus(A, intersect(B, c)) = union(set_minus(A, B), set_minus(A, c))
 
 forall A, B set:
     B $subset A
@@ -1768,16 +1768,16 @@ forall A, B set:
         B = set_minus(A, set_minus(A, B))
         set_minus(A, set_minus(A, B)) = B
 
-have A, B, C set
+have A, B, c set
 intersect(A, B) = intersect(B, A)
-intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
-intersect(A, intersect(B, C)) = intersect(intersect(A, B), C)
-intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
-union(intersect(A, B), intersect(A, C)) = intersect(A, union(B, C))
-set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))
-intersect(set_minus(A, B), set_minus(A, C)) = set_minus(A, union(B, C))
-set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
-union(set_minus(A, B), set_minus(A, C)) = set_minus(A, intersect(B, C))
+intersect(intersect(A, B), c) = intersect(A, intersect(B, c))
+intersect(A, intersect(B, c)) = intersect(intersect(A, B), c)
+intersect(A, union(B, c)) = union(intersect(A, B), intersect(A, c))
+union(intersect(A, B), intersect(A, c)) = intersect(A, union(B, c))
+set_minus(A, union(B, c)) = intersect(set_minus(A, B), set_minus(A, c))
+intersect(set_minus(A, B), set_minus(A, c)) = set_minus(A, union(B, c))
+set_minus(A, intersect(B, c)) = union(set_minus(A, B), set_minus(A, c))
+union(set_minus(A, B), set_minus(A, c)) = set_minus(A, intersect(B, c))
 "#;
 
     let mut runtime = Runtime::new();
@@ -2236,12 +2236,12 @@ axiom subset_of_finite_set_is_finite:
             $is_finite_set(A)
 
 thm finite_subset_chain:
-    ? forall A, B set, C finite_set:
+    ? forall A, B set, c finite_set:
         A $subset B
-        B $subset C
+        B $subset c
         =>:
             $is_finite_set(A)
-    by thm subset_of_finite_set_is_finite(B, C)
+    by thm subset_of_finite_set_is_finite(B, c)
     $is_finite_set(B)
     by thm subset_of_finite_set_is_finite(A, B)
     $is_finite_set(A)

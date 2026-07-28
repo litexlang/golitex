@@ -166,15 +166,15 @@ trust forall G set, r, f G:
         $presentation_reflection_swap_rule(G, r, f)
 
 # Repeatedly applying the swap rule and then f^2 = 1 reduces every word to
-# either r^i or r^i f.
+# either r^i1 or r^i1 f.
 trust forall G set, r, f G:
     $presentation_r8_f2_rfrf(G, r, f)
     $presentation_reflection_swap_rule(G, r, f)
     =>:
         $presentation_normal_form_cover(G, r, f)
 
-# Since r^8 = 1, the exponent i may be chosen from {0,...,7}. There are eight
-# rotation forms r^i and eight reflection forms r^i f.
+# Since r^8 = 1, the exponent i1 may be chosen from {0,...,7}. There are eight
+# rotation forms r^i1 and eight reflection forms r^i1 f.
 trust forall G set, r, f G:
     $presentation_r8_f2_rfrf(G, r, f)
     =>:

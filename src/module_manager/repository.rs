@@ -1569,7 +1569,7 @@ submodule
 
 [export]
 b_first = "./b_first.lit"
-C = "./C"
+c = "./c"
 b_last = "./b_last.lit"
 "#,
             );
@@ -1579,10 +1579,10 @@ b_last = "./b_last.lit"
             );
             write_file(
                 &root.join("B/b_last.lit"),
-                "B::C::tail::tail_value = 1\nhave b_last_value R = 1\n",
+                "B::c::tail::tail_value = 1\nhave b_last_value R = 1\n",
             );
             write_file(
-                &root.join("B/C/litex.config"),
+                &root.join("B/c/litex.config"),
                 r#"[hierarchy]
 submodule
 
@@ -1592,12 +1592,12 @@ tail = "./tail.lit"
 "#,
             );
             write_file(
-                &root.join("B/C/target.lit"),
+                &root.join("B/c/target.lit"),
                 "B::b_first::b_value = 1\nhave c_value R = 1\n",
             );
             write_file(
-                &root.join("B/C/tail.lit"),
-                "B::C::target::c_value = 1\nhave tail_value R = 1\n",
+                &root.join("B/c/tail.lit"),
+                "B::c::target::c_value = 1\nhave tail_value R = 1\n",
             );
 
             let (ok, output) = run_repository(&root);
@@ -1631,7 +1631,7 @@ submodule
 
 [export]
 b_first = "./b_first.lit"
-C = "./C"
+c = "./c"
 b_after = "./b_after.lit"
 "#,
             );
@@ -1641,7 +1641,7 @@ b_after = "./b_after.lit"
             );
             write_file(&root.join("B/b_after.lit"), "1 = 0\n");
             write_file(
-                &root.join("B/C/litex.config"),
+                &root.join("B/c/litex.config"),
                 r#"[hierarchy]
 submodule
 
@@ -1651,12 +1651,12 @@ tail = "./tail.lit"
 "#,
             );
             write_file(
-                &root.join("B/C/target.lit"),
+                &root.join("B/c/target.lit"),
                 "B::b_first::b_value = 1\nhave c_value R = 1\n",
             );
-            write_file(&root.join("B/C/tail.lit"), "1 = 0\n");
+            write_file(&root.join("B/c/tail.lit"), "1 = 0\n");
 
-            let target_path = path_string_for_test(&root.join("B/C"));
+            let target_path = path_string_for_test(&root.join("B/c"));
             let (tail_ok, _) = run_repository_with_output(
                 target_path.as_str(),
                 false,
@@ -1670,8 +1670,8 @@ tail = "./tail.lit"
             );
 
             write_file(
-                &root.join("B/C/tail.lit"),
-                "B::C::target::c_value = 1\nhave tail_value R = 1\n",
+                &root.join("B/c/tail.lit"),
+                "B::c::target::c_value = 1\nhave tail_value R = 1\n",
             );
             let (ok, output) = run_repository_with_output(
                 target_path.as_str(),

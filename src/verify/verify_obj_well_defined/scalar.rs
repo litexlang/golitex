@@ -1,6 +1,22 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub(in crate::verify) fn require_obj_in_c(
+        &mut self,
+        obj: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let c_obj = StandardSet::C.into();
+        let in_fact = InFact::new(obj.clone(), c_obj, default_line_file());
+        let result = self.verify_atomic_fact(&in_fact.into(), verify_state)?;
+        if result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!("obj {} is not in C", obj)),
+            )));
+        }
+        Ok(())
+    }
+
     pub(in crate::verify) fn require_obj_in_r(
         &mut self,
         obj: &Obj,
@@ -79,8 +95,8 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&add.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&add.right, verify_state)?;
-        self.require_obj_in_r(&add.left, verify_state)?;
-        self.require_obj_in_r(&add.right, verify_state)?;
+        self.require_obj_in_c(&add.left, verify_state)?;
+        self.require_obj_in_c(&add.right, verify_state)?;
         Ok(())
     }
 
@@ -91,8 +107,8 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&sub.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&sub.right, verify_state)?;
-        self.require_obj_in_r(&sub.left, verify_state)?;
-        self.require_obj_in_r(&sub.right, verify_state)?;
+        self.require_obj_in_c(&sub.left, verify_state)?;
+        self.require_obj_in_c(&sub.right, verify_state)?;
         Ok(())
     }
 
@@ -103,8 +119,8 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&mul.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&mul.right, verify_state)?;
-        self.require_obj_in_r(&mul.left, verify_state)?;
-        self.require_obj_in_r(&mul.right, verify_state)?;
+        self.require_obj_in_c(&mul.left, verify_state)?;
+        self.require_obj_in_c(&mul.right, verify_state)?;
         Ok(())
     }
 
@@ -129,8 +145,8 @@ impl Runtime {
             )));
         }
 
-        self.require_obj_in_r(&div.left, verify_state)?;
-        self.require_obj_in_r(&div.right, verify_state)?;
+        self.require_obj_in_c(&div.left, verify_state)?;
+        self.require_obj_in_c(&div.right, verify_state)?;
         Ok(())
     }
 
@@ -227,7 +243,10 @@ impl Runtime {
         Ok(())
     }
 
-    // Real pow domain (well-defined check): base>=0 and exp in R with exp>0
+    // Complex and real pow domain (well-defined check): every complex base has natural powers;
+    // a nonzero complex base has integer powers. Existing real-power branches stay available.
+    // Example: `i^2` and `z^(-3)` for `z C, z != 0` are defined, while `0^(-1)` is not.
+    // Real pow domain: base>=0 and exp in R with exp>0
     // (e.g. x^(1/2) under x>=0); base>0 and exp in R; or base=0, exp in R and exp>0
     // (so 0^(non-positive real non-integers) is out); or exp in Z and base != 0
     // (integer powers for nonzero bases); or base in R and exp in N, including 0^0 = 1.
@@ -240,11 +259,67 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&pow.base, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;
-        // Every real-power domain branch is a statement about a real base.
-        // Example: `a R` permits `a^n`, while a set-valued base does not.
-        self.require_obj_in_r(&pow.base, verify_state)?;
-
         let zero_obj: Obj = Number::new("0".to_string()).into();
+
+        let complex_base_and_natural_exponent = AndChainAtomicFact::AndFact(AndFact::new(
+            vec![
+                InFact::new(
+                    (*pow.base).clone(),
+                    StandardSet::C.into(),
+                    default_line_file(),
+                )
+                .into(),
+                InFact::new(
+                    (*pow.exponent).clone(),
+                    StandardSet::N.into(),
+                    default_line_file(),
+                )
+                .into(),
+            ],
+            default_line_file(),
+        ));
+        if self
+            .verify_and_chain_atomic_fact(&complex_base_and_natural_exponent, verify_state)?
+            .is_true()
+        {
+            return Ok(());
+        }
+
+        let nonzero_complex_base_and_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
+            vec![
+                InFact::new(
+                    (*pow.base).clone(),
+                    StandardSet::C.into(),
+                    default_line_file(),
+                )
+                .into(),
+                InFact::new(
+                    (*pow.exponent).clone(),
+                    StandardSet::Z.into(),
+                    default_line_file(),
+                )
+                .into(),
+                NotEqualFact::new((*pow.base).clone(), zero_obj.clone(), default_line_file())
+                    .into(),
+            ],
+            default_line_file(),
+        ));
+        if self
+            .verify_and_chain_atomic_fact(&nonzero_complex_base_and_integer_exponent, verify_state)?
+            .is_true()
+        {
+            return Ok(());
+        }
+
+        if self.require_obj_in_r(&pow.base, verify_state).is_err() {
+            let pow_display = Obj::Pow(pow.clone()).to_string();
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "base and exponent do not satisfy the pow domain: {}",
+                    pow_display
+                )),
+            )));
+        }
 
         let nonnegative_base_and_positive_real_exponent =
             AndChainAtomicFact::AndFact(AndFact::new(
@@ -320,45 +395,11 @@ impl Runtime {
             return Ok(());
         }
 
-        let nonzero_base_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
-            vec![
-                InFact::new(
-                    (*pow.exponent).clone(),
-                    StandardSet::Z.into(),
-                    default_line_file(),
-                )
-                .into(),
-                NotEqualFact::new((*pow.base).clone(), zero_obj.clone(), default_line_file())
-                    .into(),
-            ],
-            default_line_file(),
-        ));
-
-        let real_base_and_natural_exponent = AndChainAtomicFact::AndFact(AndFact::new(
-            vec![
-                InFact::new(
-                    (*pow.base).clone(),
-                    StandardSet::R.into(),
-                    default_line_file(),
-                )
-                .into(),
-                InFact::new(
-                    (*pow.exponent).clone(),
-                    StandardSet::N.into(),
-                    default_line_file(),
-                )
-                .into(),
-            ],
-            default_line_file(),
-        ));
-
         let pow_domain_or_fact = OrFact::new(
             vec![
                 nonnegative_base_and_positive_real_exponent,
                 positive_base_and_real_exponent,
                 zero_base_and_positive_real_exponent,
-                nonzero_base_integer_exponent,
-                real_base_and_natural_exponent,
             ],
             default_line_file(),
         );

@@ -135,6 +135,10 @@ impl Runtime {
                 Obj::StandardSet(StandardSet::R) => true,
                 _ => false,
             },
+            Obj::StandardSet(StandardSet::C) => match right {
+                Obj::StandardSet(StandardSet::C) => true,
+                _ => false,
+            },
             Obj::Cart(a) => match right {
                 Obj::Cart(b) => a.to_string() == b.to_string(),
                 _ => false,

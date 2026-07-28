@@ -9,6 +9,7 @@ mod exist_fact;
 mod fact_inside_forall;
 mod forall_fact;
 mod forall_fact_with_iff;
+mod helper;
 mod mark_forall_param_coverage;
 mod matchable_fact_with_atomic_fact_inside;
 mod or_and_chain_atomic_fact;

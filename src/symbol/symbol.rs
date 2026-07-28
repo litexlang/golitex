@@ -165,6 +165,11 @@ pub fn builtin_symbol_ref(name: &str) -> Option<SymbolRef> {
         INJECTIVE => 45,
         SURJECTIVE => 46,
         BIJECTIVE => 47,
+        C => 48,
+        I => 49,
+        RE => 50,
+        IMG => 51,
+        C_ABS => 52,
         _ => return None,
     };
     Some(SymbolRef::new(
@@ -202,6 +207,10 @@ impl SymbolRef {
 
     pub fn display_name(&self) -> &str {
         self.display_name.as_str()
+    }
+
+    pub fn is_builtin(&self, name: &str) -> bool {
+        builtin_symbol_ref(name).is_some_and(|builtin| builtin.id == self.id)
     }
 
     pub(crate) fn substitution_key(&self) -> String {

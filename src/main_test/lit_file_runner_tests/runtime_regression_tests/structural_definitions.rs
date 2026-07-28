@@ -861,7 +861,7 @@ axiom selected_self_spec:
 #[test]
 fn set_alias_to_fn_set_is_nonempty_and_registers_function_type() {
     let source_code = r#"
-have T set = fn(i closed_range(1, 3), j closed_range(1, 3), k closed_range(1, 3)) R
+have T set = fn(i1 closed_range(1, 3), j closed_range(1, 3), k closed_range(1, 3)) R
 have A T
 A(1, 2, 3) $in R
 "#;
@@ -885,7 +885,7 @@ A(1, 2, 3) $in R
 fn template_set_alias_to_fn_set_is_nonempty_and_registers_function_type() {
     let source_code = r#"
 template<S set, n N_pos>:
-    have tensor3 set = fn(i closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
+    have tensor3 set = fn(i1 closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
 
 have A \tensor3<R, 3>
 A(1, 2, 3) $in R
@@ -1943,12 +1943,12 @@ trust B $subset A
 B = set_minus(A, set_minus(A, B))
 set_minus(A, set_minus(A, B)) = B
 
-forall F finite_set, C set:
-    C $subset F
+forall F finite_set, c set:
+    c $subset F
     =>:
-        C = set_minus(F, set_minus(F, C))
-        $is_finite_set(set_minus(F, set_minus(F, C)))
-        $is_finite_set(C)
+        c = set_minus(F, set_minus(F, c))
+        $is_finite_set(set_minus(F, set_minus(F, c)))
+        $is_finite_set(c)
 "#;
 
     let mut runtime = Runtime::new();

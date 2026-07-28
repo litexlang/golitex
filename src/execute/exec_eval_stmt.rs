@@ -1434,6 +1434,15 @@ impl Runtime {
             &stmt.obj_to_eval,
             &VerifyState::new(0, false),
         )?;
+        if stmt.obj_to_eval.contains_native_complex_builtin() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                "eval: native complex values are symbolic and are not supported by the evaluator"
+                    .to_string(),
+                None,
+                vec![],
+            ));
+        }
 
         let resolved_obj = self.resolve_obj(&stmt.obj_to_eval);
         let executable_obj = self

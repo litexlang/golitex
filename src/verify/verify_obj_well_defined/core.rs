@@ -6,7 +6,13 @@ impl Runtime {
         &self,
         identifier: &Identifier,
     ) -> Result<(), RuntimeError> {
-        if self.is_name_used_for_identifier(&identifier.name) {
+        if identifier.is_builtin(I)
+            || identifier.is_builtin(RE)
+            || identifier.is_builtin(IMG)
+            || identifier.is_builtin(C_ABS)
+        {
+            Ok(())
+        } else if self.is_name_used_for_identifier(&identifier.name) {
             Ok(())
         } else if self
             .get_struct_definition_by_name(&identifier.name)

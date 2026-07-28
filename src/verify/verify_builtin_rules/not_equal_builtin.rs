@@ -10,6 +10,10 @@ impl Runtime {
         let left_obj = &not_equal_fact.left;
         let right_obj = &not_equal_fact.right;
 
+        if let Some(result) = self.try_verify_native_i_nonzero(not_equal_fact) {
+            return Ok(result);
+        }
+
         match (
             self.resolve_obj_to_number_for_not_equal_builtin_rule(left_obj),
             self.resolve_obj_to_number_for_not_equal_builtin_rule(right_obj),
@@ -846,6 +850,14 @@ impl Runtime {
         else {
             return Ok(None);
         };
+        let Some(mut steps) = self.verify_objects_are_known_reals(
+            &[&left_base, &right_base],
+            &line_file,
+            verify_state,
+        )?
+        else {
+            return Ok(None);
+        };
 
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let left_nonzero: AtomicFact =
@@ -860,7 +872,6 @@ impl Runtime {
             line_file.clone(),
         );
 
-        let mut steps = Vec::new();
         let known_or_result =
             self.verify_or_fact_known_then_builtin_rules_only(&known_or, verify_state)?;
         if known_or_result.is_true() {
