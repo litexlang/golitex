@@ -107,8 +107,13 @@ test before treating an example or regression as simplified.
 - Litex example/docs harness: run
   `cargo test --release run_examples -- --nocapture` only when the harness is
   needed in addition to direct `.lit` verification.
-- Mechanics draft chapters and their project runner: run
-  `cargo test --release run_mechanics_textbook_chapters -- --nocapture`.
+- Mechanics draft chapters: run the live-policy command
+  `cargo test --release run_mechanics_textbook_chapters -- --nocapture`, then
+  inspect its target. While the harness still points at
+  `textbooks/The-Mechanics-of-Litex-Proof`, also use the release CLI against
+  `scripts/textbooks_drafts/The-Mechanics-of-Litex-Proof`; the harness alone
+  validates only the published snapshot, not the draft. Record that runner
+  drift as `kernel_problem`.
 - Start with the smallest relevant release test. For whole-project, textbook,
   or performance-sensitive verification, build and run the release profile:
   `cargo build --release`, `cargo test --release <target> -- --nocapture`, or

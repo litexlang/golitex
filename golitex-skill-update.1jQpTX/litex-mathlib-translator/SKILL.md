@@ -194,26 +194,14 @@ basic functions.
 
 ## Gap Classification
 
-For each skipped or blocked mathlib/MIL item, decide which kind of work it
-really is before assigning the primary `trust` label:
-
-- `direct_definition`: introduce a natural `is_xxx` or `has_xxx` predicate.
-- `general_theorem_interface`: add a reusable theorem/API interface rather than
-  a one-off local proof.
-- `skipped_by_previous_pass`: rerun one direct Litex attempt before treating the
-  item as blocked.
-- `true_proof_debt`: the interface is right, but the proof is long.
-- `litex_blocker`: parser/verifier/kernel/syntax/diagnostics is the obstacle.
-- `naming_or_structure`: namespace, file placement, chapter ordering, or source
-  traceability is the real issue.
-- `background_axiom`: keep as `trust` because it is a trusted main interface or
-  standard mathematical backbone for the slice.
-- `repeated_local_interface`: factor repeated local assumptions/workarounds into
-  a common lemma or predicate.
-
-When factoring repeated interfaces, name whether the abstraction is mathematical
-(common structure of objects/theorems) or Litex-expressive (a statement/object
-shape that makes many formulas easier to write).
+For every skipped or blocked mathlib/MIL item, use exactly one primary blocker
+label: `trust` or `kernel_problem`. Explain the concrete cause in prose—such as
+a missing definition, reusable theorem interface, long proof, namespace/file
+placement issue, syntax/diagnostic gap, or suspected verifier behavior—without
+inventing another coded taxonomy. Try one direct real-context formulation
+before declaring the gap; once a non-kernel blocker is identified, keep the
+intended interface, add the narrowest legal `trust`, record the debt, and
+continue.
 
 ## Blockers And Notes
 

@@ -45,3 +45,7 @@ Litex skill.
   `cli_trusted_prefix` / `indirect_trust`, and the run is never `checkable`.
 - Finish a file with a clean release `-f` run without the cutoff. Reserve
   release `-r` for an explicit whole-module or whole-book gate.
+- When a mandated Rust harness currently targets a different tree from the
+  artifact named by the live policy, still run the mandated command, but do not
+  misreport its coverage. Add the smallest release CLI gate against the
+  intended artifact and report the harness drift as `kernel_problem`.

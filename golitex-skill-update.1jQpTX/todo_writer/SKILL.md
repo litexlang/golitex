@@ -1,6 +1,6 @@
 ---
 name: todo_writer
-description: Write or update Litex todo artifacts, including comment-only textbook todo.lit ledgers of mathematics not yet implemented and technical todo.md blocker lists for translation or proof work. Use when Codex records textbook trust, axiom, or abstract_prop holes; unfinished mathematics; failed formalization attempts; strange verifier/parser behavior; missing examples; or local translation workspace todo items.
+description: Write or update Litex todo artifacts in the applicable source or translation workspace, including todo.md blocker lists, unfinished notes, and solved-experience records. Use when Codex records textbook trust or abstract_prop holes; unfinished mathematics; failed formalization attempts; strange verifier/parser behavior; missing examples; or local translation workspace todo items.
 ---
 
 # Todo Writer
@@ -48,75 +48,36 @@ When a todo diagnosis executes Litex rather than only editing comments:
 Use this skill when writing or updating todo/blocker notes for Litex work.
 The output is for the project owner to act on, not a generic status summary.
 
-## Textbook Mathematical-Hole Ledger
+## Textbook Todo Boundaries
 
-For every textbook being written, maintain exactly one `todo.lit` in the
-top-level book folder, beside its `litex.config` when one exists:
+Keep textbook todos, audits, translation-item records, unfinished notes,
+experience notes, verifier captures, and generated Markdown in the book's
+paired source workspace, such as `scripts/Analysis/`. For Analysis I, keep
+chapter tracking under `scripts/Analysis/todo/`.
 
-```text
-scripts/textbooks_drafts/<Book>/todo.lit
-```
+Do not create todo artifacts inside either textbook module tree:
 
-Use this file as a temporary inventory of mathematics that the book has not yet
-implemented. A theorem, construction, existence proof, uniqueness proof, or
-background theory represented for now by `trust`, `axiom`, or `abstract_prop`
-belongs here. Add an item when introducing or discovering such a mathematical
-hole. Remove it, or narrow its wording, when later work fills all or part of the
-hole.
+- `scripts/textbooks_drafts/<Book>/` is the canonical editable module and
+  contains only artifacts intended to ship with the book, including its one
+  `README.md` and `math_collections.md`.
+- `textbooks/<Book>/` is the read-only published snapshot unless the user
+  explicitly requests publication.
 
-Write `todo.lit` entirely as Litex comments. Do not put declarations, imports,
-executable Litex, Markdown headings, checkboxes, or fenced code blocks in it.
-Do not export, import, render, or send it through the Litex kernel.
-
-Describe the missing mathematics in the language of the textbook reader:
-
-- Locate it by chapter, section, and named definition, proposition, theorem,
-  corollary, or exercise whenever those identifiers exist.
-- State the exact mathematical content still absent: for example, a proof of
-  existence, a uniqueness argument, a convergence estimate, an endpoint case,
-  or the construction of an object.
-- Say what portion is already established when that distinction prevents the
-  hole from sounding broader than it is.
-- Follow source order within each chapter.
-
-Do not discuss parser behavior, verifier output, kernel classifications,
-commands, source-code architecture, desired APIs, or implementation plans in
-this file. Do not make file paths, line numbers, or Litex syntax the primary
-locator. Put those engineering details in the paired scripts workspace's
-`todo.md` instead.
-
-Use a compact comment-only shape such as:
-
-```litex
-# Mathematics still to be completed
-#
-# Chapter 7, Section 7.3 — Proposition 7.3.4
-# The existence of the limiting value is stated, but the proof that every
-# Cauchy sequence of real numbers converges has not yet been supplied here.
-#
-# Chapter 11, Section 11.5 — Theorem 11.5.1
-# Integrability on each closed subinterval is established. The remaining gap
-# is the endpoint estimate needed to pass from the truncated intervals to the
-# full improper integral.
-```
-
-This mathematical ledger is intentionally different from a development
-blocker list. It does not require task provenance, a code example, exact error
-output, a root-cause label, or an experience note before removing a completed
-item. Keep technical and workflow debt outside the draft module in the paired
-source workspace. Treat `textbooks/<Book>/` as the read-only published snapshot
-unless the user explicitly requests publication.
+Record mathematical holes and technical blockers in the nearby workspace
+`todo.md` or unfinished-note convention. Locate a mathematical hole by chapter,
+section, and named source item; state the exact missing mathematics and what is
+already established. Include engineering evidence in the same workspace item
+when it affects the diagnosis.
 
 ## Core Rule
 
-Except for the textbook `todo.lit` ledger above, every todo item must include a
-concrete example. No example means no item.
+Every todo item must include a concrete example. No example means no item.
 Do not write a broad library wish unless you show the code, source item, or
 verifier behavior that forced that conclusion.
 
 Every file written under `todo/` or another todo-like folder must also record
-its task provenance near the top. The comment-only textbook `todo.lit` is the
-sole exception. A development todo without an associated task is incomplete.
+its task provenance near the top. A development todo without an associated
+task is incomplete.
 Use a compact block such as:
 
 ```markdown
@@ -138,10 +99,8 @@ A good item answers:
 2. What was attempted? Include the relevant Litex snippet or statement shape.
 3. What failed or was unclear? Include exact verifier output if available.
 4. What would unblock it? Give the desired theorem/interface/syntax/diagnostic.
-5. What root-cause class is it? Use one of:
-   `direct_definition`, `general_theorem_interface`,
-   `skipped_by_previous_pass`, `true_proof_debt`, `litex_blocker`,
-   `naming_or_structure`, `background_axiom`, or `repeated_local_interface`.
+5. Which primary blocker label applies? Use exactly `trust` or
+   `kernel_problem`.
 
 ## Completed Items
 
@@ -157,10 +116,6 @@ do both steps before calling the work complete:
 The finished note should include the original blocker, the concrete Litex or
 code pattern that solved it, any verifier command used, and the reusable lesson.
 Do not only delete the todo item; preserve the solution path first.
-
-For textbook `todo.lit`, simply remove a fully completed mathematical hole or
-narrow a partially completed one. If the repository also wants a development
-war story, write it in the scripts workspace rather than in the book folder.
 
 ## Cross-Turn Project Ledgers
 
@@ -199,31 +154,25 @@ experience or finished notes created under a todo-related folder, retain the
 task title and scope in a short front-matter or opening section so the solution
 can be traced back to the original task.
 
-## Categories
+## Blocker Labels
 
-Use these as the primary human-facing categories. Do not make low-level labels
-such as `trust` or `kernel_problem` the headline category in todo files.
-Group first by category; put the source file or source id in the item title.
+Every blocked item has exactly one primary label:
 
-- `do_not_know_how_to_formalize`: The mathematical intent is known, but the
-  current agent/user could not find a natural checked Litex formulation or proof
-  route. This includes missing theorem packages, unclear definition interfaces,
-  and proof patterns that currently require `trust`.
-- `strange_behavior_of_litex`: Litex behaved surprisingly: confusing verifier
-  output, parser friction, inference that should be obvious but does not fire,
-  apparent kernel/runtime inconsistency, or a proof that only works in an
-  unnatural shape.
+- `trust`: the proof or formulation is incomplete, including missing
+  definitions, lemmas, theorem organization, automation, syntax, diagnostics,
+  or other non-kernel work.
+- `kernel_problem`: evidence points to verifier, runtime, well-definedness,
+  proof-model, or other kernel-level behavior.
 
-If a local contract requires a low-level label, use only `trust` or
-`kernel_problem` as secondary metadata, for example `Litex label: trust`.
-Do not let those labels replace the two categories above.
+Describe the likely cause and next action in ordinary prose. Do not introduce
+additional coded blocker categories.
 
 ## Item Format
 
 Prefer this compact structure:
 
 ````markdown
-## do_not_know_how_to_formalize
+## trust
 
 ### path/or/source-id: short problem title
 - Example attempted:
@@ -238,10 +187,9 @@ Prefer this compact structure:
   output if available.
 - Why this matters: needed for the AM-GM item in `required-1.lit`.
 - Desired interface: a checked theorem such as `Real::am_gm_two_nonnegative`.
-- Root-cause class: `general_theorem_interface`.
-- Litex label: `trust`.
+- Primary blocker: `trust`.
 
-## strange_behavior_of_litex
+## kernel_problem
 
 ### path/or/source-id: short surprising behavior
 - Example attempted:
@@ -251,7 +199,7 @@ Prefer this compact structure:
 - What happened: exact parser/verifier/CLI behavior.
 - Expected behavior: what a reasonable Litex proof writer expected.
 - Follow-up: likely syntax, diagnostics, infer-rule, kernel, or docs work.
-- Root-cause class: `litex_blocker`.
+- Primary blocker: `kernel_problem`.
 ````
 
 ## Writing Standards
@@ -268,14 +216,10 @@ Prefer this compact structure:
   natural-language statement that still needs a Litex formulation.
 - If exact verifier output is unavailable, say `Exact output not captured` and
   include the command or file that should be rerun.
-- Do not write `trust` before deciding the root-cause class. If it is
-  `skipped_by_previous_pass`, first try one direct Litex formulation and record
-  that attempt.
-- For `repeated_local_interface`, say whether the abstraction is mathematical
-  or Litex-expressive:
-  - mathematical: common structure of objects/theorems;
-  - Litex-expressive: notation, object shape, statement form, or helper
-    interface that makes many propositions easy to write.
+- Before recording `trust`, try one direct formulation in the real caller
+  context and capture the exact result. Once that result identifies a real
+  blocker, use the narrowest legal source `trust` immediately and record it;
+  do not continue proof search unless the user asks to remove the trust.
 - Remove completed items only after recording the solution in the matching
   finished/experience file.
 
@@ -304,5 +248,5 @@ Good:
 - Why this matters: optional sequence item needs closed forms for geometric sums.
 - Desired interface: a checked finite geometric-series theorem with domain facts
   for `r != 1` and natural upper bounds.
-- Litex label: `trust`.
+- Primary blocker: `trust`.
 ````

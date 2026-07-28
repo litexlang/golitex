@@ -449,10 +449,10 @@ book's paired `scripts/` workspace.
 For long chapters, build current source with `cargo build --release`, start one
 release `-session -before <current-chapter.lit>`, and submit statements from
 the chapter's first one in source order as literal outermost `try:` blocks.
-Use an older binary only when current source cannot produce the release binary;
-never use the debug binary for performance-sensitive verification. Treat clean
-`-f` and whole-book `-r` runs as checkpoints or final gates, not the
-proof-debug inner loop.
+If current source cannot produce the release binary, report that build failure
+and stop verification; do not substitute an older or debug binary. Treat clean
+`-f` and whole-book `-r` runs as checkpoints or final gates, not the proof-debug
+inner loop.
 
 ## Mandatory Proof-Liveness Gate
 
@@ -504,7 +504,7 @@ comment-only prose: include a compact `sketch:` block or checked theorem.
    `math_collections.md`; repair the code or update the design note before
    continuing, then keep `README.md` aligned with the verified public API.
 9. Classify each touched item as `translated`, `checkable`, or `blocked`.
-10. If blocked, use the source workspace's declared primary blocker labels.
+10. If blocked, use exactly one primary label: `trust` or `kernel_problem`.
 11. Update nearby bookkeeping: `todo.md`, unfinished notes, solved-experience
    notes, and any local JSONL/status records required by the source folder.
 12. Before calling the edit complete, verify the touched fragment in the
