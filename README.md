@@ -186,12 +186,12 @@ struct Group<s nonempty_set>:
             mul(one, x) = x
             mul(inv(x), x) = one
 
-forall s nonempty_set, G &Group<s>, e s:
+forall s nonempty_set, G &Group<s>, identity s:
     forall a s:
-        G.mul(e, a) = a
-        G.mul(a, e) = a
+        G.mul(identity, a) = a
+        G.mul(a, identity) = a
     =>:
-        e = G.mul(G.one, e) = G.one
+        identity = G.mul(G.one, identity) = G.one
 ```
 
 This comparison motivates five questions that guide Litex:
