@@ -1,5 +1,5 @@
 use crate::common::json_value::{json_one_level_indent, render_json_value, JsonValue};
-use crate::prelude::{LineFile, Runtime, RuntimeError, RuntimeErrorOutput, Stmt};
+use crate::prelude::{LineFile, OutputStyle, Runtime, RuntimeError, RuntimeErrorOutput, Stmt};
 
 use super::fields::{
     user_visible_stmt_or_msg_text, JSON_KEY_ERROR_TYPE, JSON_KEY_FAILED_GOAL, JSON_KEY_FAILED_STEP,
@@ -13,7 +13,7 @@ use super::normalize::{
 };
 use super::phases::error_execution_phases_value;
 use super::source::{source_ref_json_fields, stmt_json_field_lines, stmt_json_value};
-use super::success::display_stmt_exec_result_json;
+use super::success::display_stmt_exec_result_json_with_style;
 use super::unknown_result_json_value;
 
 pub fn display_runtime_error_json(
@@ -21,42 +21,7 @@ pub fn display_runtime_error_json(
     error: &RuntimeError,
     strip_free_param_tags: bool,
 ) -> String {
-    if runtime.is_compact_output() {
-        return display_compact_runtime_error_json(runtime, error, strip_free_param_tags);
-    }
-    let raw = build_display_error_json_object(runtime, error, 0, true, None);
-    finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
-}
-
-fn display_compact_runtime_error_json(
-    runtime: &Runtime,
-    error: &RuntimeError,
-    strip_free_param_tags: bool,
-) -> String {
-    let mut fields = vec![
-        (
-            JSON_KEY_ERROR_TYPE.to_string(),
-            JsonValue::JsonString(error.display_label().to_string()),
-        ),
-        (
-            JSON_KEY_RESULT.to_string(),
-            JsonValue::JsonString(JSON_VALUE_ERROR.to_string()),
-        ),
-    ];
-    fields.extend(source_ref_json_fields(runtime, &error.line_file(), None));
-    fields.push((
-        JSON_KEY_MESSAGE.to_string(),
-        JsonValue::JsonString(user_visible_stmt_or_msg_text(
-            error.trace_message().as_str(),
-        )),
-    ));
-    if let Some(statement) = error_own_statement(error) {
-        if let JsonValue::Object(statement_fields) = stmt_json_value(runtime, statement) {
-            fields.extend(statement_fields);
-        }
-    }
-    let value = localize_json_value(runtime, JsonValue::Object(fields));
-    let raw = render_json_value(&value, 0);
+    let raw = build_display_error_json_object(runtime, error, 0, true, None, OutputStyle::Detailed);
     finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
 }
 
@@ -153,8 +118,11 @@ fn push_source_ref_field_lines(
     indent_inner: &str,
     source_line_file: &LineFile,
     current_line_file: Option<&LineFile>,
+    output_style: OutputStyle,
 ) {
-    for (key, value) in source_ref_json_fields(runtime, source_line_file, current_line_file) {
+    for (key, value) in
+        source_ref_json_fields(runtime, source_line_file, current_line_file, output_style)
+    {
         push_json_value_field_line(runtime, field_lines, indent_inner, key.as_str(), value);
     }
 }
@@ -181,6 +149,7 @@ fn push_runtime_error_output_field_lines(
     field_lines: &mut Vec<String>,
     indent_inner: &str,
     output: &RuntimeErrorOutput,
+    output_style: OutputStyle,
 ) {
     if let Some(failed_step) = &output.failed_step {
         push_json_value_field_line(
@@ -200,7 +169,7 @@ fn push_runtime_error_output_field_lines(
             &failed_goal.to_string(),
         );
     }
-    if runtime.detail_output {
+    if output_style.is_detailed() {
         if let Some(index) = output.proof_step_index {
             push_json_value_field_line(
                 runtime,
@@ -244,7 +213,7 @@ fn push_runtime_error_output_field_lines(
             field_lines,
             indent_inner,
             JSON_KEY_UNKNOWN_RESULT,
-            unknown_result_json_value(runtime, unknown_result),
+            unknown_result_json_value(runtime, unknown_result, output_style),
         );
     }
 }
@@ -289,6 +258,7 @@ fn build_display_error_json_object(
     depth: usize,
     include_previous_error: bool,
     statement_context: Option<&Stmt>,
+    output_style: OutputStyle,
 ) -> String {
     let indent_outer = json_one_level_indent(depth);
     let indent_inner = json_one_level_indent(depth + 1);
@@ -316,6 +286,7 @@ fn build_display_error_json_object(
         indent_inner.as_str(),
         &line_file,
         None,
+        output_style,
     );
 
     match error {
@@ -407,9 +378,10 @@ fn build_display_error_json_object(
 
             let mut inside_result_elements: Vec<String> = Vec::new();
             for inside_result in e.inside_results.iter() {
-                inside_result_elements.push(display_stmt_exec_result_json(
+                inside_result_elements.push(display_stmt_exec_result_json_with_style(
                     runtime,
                     inside_result,
+                    output_style,
                     false,
                 ));
             }
@@ -499,9 +471,10 @@ fn build_display_error_json_object(
         &mut field_lines,
         indent_inner.as_str(),
         error_output(error),
+        output_style,
     );
 
-    if runtime.detail_output {
+    if output_style.is_detailed() {
         if let Some(trace) = error.execution_trace() {
             push_json_value_field_line(
                 runtime,
@@ -521,6 +494,7 @@ fn build_display_error_json_object(
         depth + 1,
         include_previous_error,
         context_for_child,
+        output_style,
     );
     if let Some(previous_error_line) = previous_error_line {
         field_lines.push(previous_error_line);
@@ -541,6 +515,7 @@ fn build_previous_error_field_line(
     previous_error_depth: usize,
     include_previous_error: bool,
     context_for_child: Option<&Stmt>,
+    output_style: OutputStyle,
 ) -> Option<String> {
     if !include_previous_error {
         return None;
@@ -555,6 +530,7 @@ fn build_previous_error_field_line(
                 previous_error_depth,
                 true,
                 context_for_child,
+                output_style,
             );
             let previous_error_key =
                 localize_json_key(runtime.output_language, JSON_KEY_PREVIOUS_ERROR);

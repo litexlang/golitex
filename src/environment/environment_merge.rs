@@ -203,6 +203,8 @@ impl Environment {
             known_atomic_facts_with_0_or_more_than_2_args,
             known_atomic_facts_with_1_arg,
             known_atomic_facts_with_2_args,
+            known_owner_sets,
+            known_direct_supersets,
             known_exist_facts,
             known_or_facts,
             known_atomic_facts_in_forall_facts,
@@ -232,6 +234,18 @@ impl Environment {
         self.merge_known_atomic_facts(known_atomic_facts_with_0_or_more_than_2_args);
         self.merge_known_atomic_facts_with_1_arg(known_atomic_facts_with_1_arg);
         self.merge_known_atomic_facts_with_2_args(known_atomic_facts_with_2_args);
+        for (element_key, child_owner_sets) in known_owner_sets {
+            let parent_owner_sets = self.known_owner_sets.entry(element_key).or_default();
+            for (set_key, evidence) in child_owner_sets {
+                parent_owner_sets.entry(set_key).or_insert(evidence);
+            }
+        }
+        for (subset_key, child_supersets) in known_direct_supersets {
+            let parent_supersets = self.known_direct_supersets.entry(subset_key).or_default();
+            for (superset_key, evidence) in child_supersets {
+                parent_supersets.entry(superset_key).or_insert(evidence);
+            }
+        }
         self.merge_known_exist_facts(known_exist_facts);
         self.merge_known_or_facts(known_or_facts);
 

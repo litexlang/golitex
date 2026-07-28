@@ -1,5 +1,8 @@
 # About This Corpus
 #
+# Litex source:
+# https://github.com/litexlang/golitex/tree/main/textbooks/Mathematics-In-Lean-Derived-Litex-Corpus
+#
 # This ongoing corpus draws selected mathematical interfaces and results from
 # Mathematics in Lean and rewrites them as independent Litex pressure tests. It
 # is not a port of the book's Lean pedagogy, a replacement for the official

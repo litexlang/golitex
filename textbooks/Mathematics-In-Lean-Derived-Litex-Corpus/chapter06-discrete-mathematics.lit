@@ -124,10 +124,10 @@ thm list_append_nil:
 # Source theorem: map_map. Structural induction compares the three map
 # specifications; the cons case composes g(f(a)) and reuses the tail result.
 thm list_map_map:
-    ? forall A, B, C set, L_A, L_B, L_C nonempty_set, core_A &ListCore<A, L_A>, core_B &ListCore<B, L_B>, core_C &ListCore<C, L_C>, f fn(x A) B, g fn(y B) C, map_f fn(xs L_A) L_B, map_g fn(ys L_B) L_C, map_gf fn(xs L_A) L_C, target L_A:
+    ? forall A, B, CarrierC set, L_A, L_B, L_C nonempty_set, core_A &ListCore<A, L_A>, core_B &ListCore<B, L_B>, core_C &ListCore<CarrierC, L_C>, f fn(x A) B, g fn(y B) CarrierC, map_f fn(xs L_A) L_B, map_g fn(ys L_B) L_C, map_gf fn(xs L_A) L_C, target L_A:
         $is_list_map(A, B, L_A, L_B, core_A, core_B, f, map_f)
-        $is_list_map(B, C, L_B, L_C, core_B, core_C, g, map_g)
-        $is_list_map(A, C, L_A, L_C, core_A, core_C, fn(x A) C {g(f(x))}, map_gf)
+        $is_list_map(B, CarrierC, L_B, L_C, core_B, core_C, g, map_g)
+        $is_list_map(A, CarrierC, L_A, L_C, core_A, core_C, fn(x A) CarrierC {g(f(x))}, map_gf)
         =>:
             map_g(map_f(target)) = map_gf(target)
     have P power_set(L_A) = {z L_A: map_g(map_f(z)) = map_gf(z)}
@@ -140,11 +140,11 @@ thm list_map_map:
                 &ListCore<A, L_A>{core_A}.cons(a, xs) $in P
         map_f(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<B, L_B>{core_B}.cons(f(a), map_f(xs))
         map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = map_g(&ListCore<B, L_B>{core_B}.cons(f(a), map_f(xs)))
-        map_g(&ListCore<B, L_B>{core_B}.cons(f(a), map_f(xs))) = &ListCore<C, L_C>{core_C}.cons(g(f(a)), map_g(map_f(xs)))
-        map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = &ListCore<C, L_C>{core_C}.cons(g(f(a)), map_g(map_f(xs)))
-        map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<C, L_C>{core_C}.cons((fn(x A) C {g(f(x))})(a), map_gf(xs))
-        (fn(x A) C {g(f(x))})(a) = g(f(a))
-        map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<C, L_C>{core_C}.cons(g(f(a)), map_gf(xs))
+        map_g(&ListCore<B, L_B>{core_B}.cons(f(a), map_f(xs))) = &ListCore<CarrierC, L_C>{core_C}.cons(g(f(a)), map_g(map_f(xs)))
+        map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = &ListCore<CarrierC, L_C>{core_C}.cons(g(f(a)), map_g(map_f(xs)))
+        map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<CarrierC, L_C>{core_C}.cons((fn(x A) CarrierC {g(f(x))})(a), map_gf(xs))
+        (fn(x A) CarrierC {g(f(x))})(a) = g(f(a))
+        map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs)) = &ListCore<CarrierC, L_C>{core_C}.cons(g(f(a)), map_gf(xs))
         map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs))
         &ListCore<A, L_A>{core_A}.cons(a, xs) $in {z L_A: map_g(map_f(z)) = map_gf(z)}
         &ListCore<A, L_A>{core_A}.cons(a, xs) $in P
@@ -177,7 +177,7 @@ have fn boolean_or(left, right {0, 1}) {0, 1} by cases:
 # The source's substitution proof updates one input of a Boolean valuation.
 # Keep that construction callable while the surrounding formula syntax and
 # evaluator remain tracked separately.
-template<valuation fn(i N) {0, 1}, idx N, bit {0, 1}>:
+template<valuation fn(idx N) {0, 1}, idx N, bit {0, 1}>:
     have fn updated_boolean_valuation(m N) {0, 1} by cases:
         case m = idx: bit
         case m != idx: valuation(m)

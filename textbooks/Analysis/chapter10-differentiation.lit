@@ -1314,14 +1314,14 @@ thm product_difference_quotient_algebra:
     (Fz * Gz - F0 * G0) / dx - (Lf * G0 + F0 * Lg) = ((Fz - F0) / dx - Lf) * Gz + Lf * (Gz - G0) + F0 * ((Gz - G0) / dx - Lg)
 
 thm abs_three_term_triangle:
-    ? forall A, B, C R:
-        abs(A + B + C) <= abs(A) + abs(B) + abs(C)
-    abs(A + B + C) = abs((A + B) + C)
-    abs((A + B) + C) <= abs(A + B) + abs(C)
+    ? forall A, B, set_C R:
+        abs(A + B + set_C) <= abs(A) + abs(B) + abs(set_C)
+    abs(A + B + set_C) = abs((A + B) + set_C)
+    abs((A + B) + set_C) <= abs(A + B) + abs(set_C)
     abs(A + B) <= abs(A) + abs(B)
-    abs(A + B) + abs(C) <= abs(A) + abs(B) + abs(C)
-    abs(A + B + C) <= abs(A + B) + abs(C) <= abs(A) + abs(B) + abs(C)
-    abs(A + B + C) <= abs(A) + abs(B) + abs(C)
+    abs(A + B) + abs(set_C) <= abs(A) + abs(B) + abs(set_C)
+    abs(A + B + set_C) <= abs(A + B) + abs(set_C) <= abs(A) + abs(B) + abs(set_C)
+    abs(A + B + set_C) <= abs(A) + abs(B) + abs(set_C)
 
 thm derivative_product_rule_estimate:
     ? forall X power_set(R), f, g fn(x X) R, x0 X, Lf, Lg R, epsilon R_pos:
@@ -1399,17 +1399,17 @@ thm derivative_product_rule_estimate:
             abs(g(z)) <= abs(g(x0)) + 1
             have A R = (((f(z) - f(x0)) / (z - x0)) - Lf) * g(z)
             have B R = Lf * (g(z) - g(x0))
-            have C R = f(x0) * (((g(z) - g(x0)) / (z - x0)) - Lg)
+            have set_C R = f(x0) * (((g(z) - g(x0)) / (z - x0)) - Lg)
             fn(x X) R {f(x) * g(x)}(z) = f(z) * g(z)
             fn(x X) R {f(x) * g(x)}(x0) = f(x0) * g(x0)
             ((fn(x X) R {f(x) * g(x)}(z) - fn(x X) R {f(x) * g(x)}(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg) = ((f(z) * g(z) - f(x0) * g(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg)
             by thm product_difference_quotient_algebra(f(z), f(x0), g(z), g(x0), Lf, Lg, z - x0)
             ((f(z) * g(z) - f(x0) * g(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg) = (((f(z) - f(x0)) / (z - x0)) - Lf) * g(z) + Lf * (g(z) - g(x0)) + f(x0) * (((g(z) - g(x0)) / (z - x0)) - Lg)
-            (((f(z) - f(x0)) / (z - x0)) - Lf) * g(z) + Lf * (g(z) - g(x0)) + f(x0) * (((g(z) - g(x0)) / (z - x0)) - Lg) = A + B + C
-            ((fn(x X) R {f(x) * g(x)}(z) - fn(x X) R {f(x) * g(x)}(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg) = A + B + C
-            abs(((fn(x X) R {f(x) * g(x)}(z) - fn(x X) R {f(x) * g(x)}(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg)) = abs(A + B + C)
-            by thm abs_three_term_triangle(A, B, C)
-            abs(A + B + C) <= abs(A) + abs(B) + abs(C)
+            (((f(z) - f(x0)) / (z - x0)) - Lf) * g(z) + Lf * (g(z) - g(x0)) + f(x0) * (((g(z) - g(x0)) / (z - x0)) - Lg) = A + B + set_C
+            ((fn(x X) R {f(x) * g(x)}(z) - fn(x X) R {f(x) * g(x)}(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg) = A + B + set_C
+            abs(((fn(x X) R {f(x) * g(x)}(z) - fn(x X) R {f(x) * g(x)}(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg)) = abs(A + B + set_C)
+            by thm abs_three_term_triangle(A, B, set_C)
+            abs(A + B + set_C) <= abs(A) + abs(B) + abs(set_C)
             abs(A) = abs((((f(z) - f(x0)) / (z - x0)) - Lf) * g(z))
             abs((((f(z) - f(x0)) / (z - x0)) - Lf) * g(z)) = abs(((f(z) - f(x0)) / (z - x0) - Lf)) * abs(g(z))
             abs(A) = abs(((f(z) - f(x0)) / (z - x0) - Lf)) * abs(g(z))
@@ -1421,17 +1421,17 @@ thm derivative_product_rule_estimate:
             abs(Lf) <= abs(Lf) + 1
             abs(Lf) * abs(g(z) - g(x0)) <= (abs(Lf) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1))
             abs(B) <= (abs(Lf) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1))
-            abs(C) = abs(f(x0) * (((g(z) - g(x0)) / (z - x0)) - Lg))
+            abs(set_C) = abs(f(x0) * (((g(z) - g(x0)) / (z - x0)) - Lg))
             abs(f(x0) * (((g(z) - g(x0)) / (z - x0)) - Lg)) = abs(f(x0)) * abs(((g(z) - g(x0)) / (z - x0) - Lg))
-            abs(C) = abs(f(x0)) * abs(((g(z) - g(x0)) / (z - x0) - Lg))
+            abs(set_C) = abs(f(x0)) * abs(((g(z) - g(x0)) / (z - x0) - Lg))
             abs(f(x0)) <= abs(f(x0)) + 1
             abs(f(x0)) * abs(((g(z) - g(x0)) / (z - x0) - Lg)) <= (abs(f(x0)) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1))
-            abs(C) <= (abs(f(x0)) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1))
-            abs(A) + abs(B) + abs(C) <= (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1)) * (abs(g(x0)) + 1) + (abs(Lf) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1)) + (abs(f(x0)) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1))
+            abs(set_C) <= (abs(f(x0)) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1))
+            abs(A) + abs(B) + abs(set_C) <= (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1)) * (abs(g(x0)) + 1) + (abs(Lf) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1)) + (abs(f(x0)) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1))
             (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1)) * (abs(g(x0)) + 1) + (abs(Lf) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1)) + (abs(f(x0)) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1)) = (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1))
             (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1) * (epsilon / (abs(g(x0)) + 1 + abs(Lf) + 1 + abs(f(x0)) + 1)) = epsilon
-            abs(A) + abs(B) + abs(C) <= epsilon
-            abs(((fn(x X) R {f(x) * g(x)}(z) - fn(x X) R {f(x) * g(x)}(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg)) <= abs(A) + abs(B) + abs(C) <= epsilon
+            abs(A) + abs(B) + abs(set_C) <= epsilon
+            abs(((fn(x X) R {f(x) * g(x)}(z) - fn(x X) R {f(x) * g(x)}(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg)) <= abs(A) + abs(B) + abs(set_C) <= epsilon
             abs(((fn(x X) R {f(x) * g(x)}(z) - fn(x X) R {f(x) * g(x)}(x0)) / (z - x0)) - (Lf * g(x0) + f(x0) * Lg)) <= epsilon
         $is_difference_quotient_close_to(X, fn(x X) R {f(x) * g(x)}, x0, Lf * g(x0) + f(x0) * Lg, epsilon, delta)
 

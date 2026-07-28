@@ -420,15 +420,15 @@ tail.
 
 prop is_finite_prefix_bounded(a seq(R), n N_pos, M R):
     M >= 0
-    forall i N_pos:
-        i <= n
+    forall i_index N_pos:
+        i_index <= n
         =>:
-            abs(a(i)) <= M
+            abs(a(i_index)) <= M
 
 prop is_bounded_by(a seq(R), M R):
     M >= 0
-    forall i N_pos:
-        abs(a(i)) <= M
+    forall i_index N_pos:
+        abs(a(i_index)) <= M
 
 prop is_bounded_sequence(a seq(R)):
     exist M R st {$is_bounded_by(a, M)}
@@ -454,13 +454,13 @@ claim:
         ? from n = 1:
             prefix_bound(a, 1) = abs(a(1))
             abs(a(1)) >= 0
-            forall i N_pos:
-                i <= 1
+            forall i_index N_pos:
+                i_index <= 1
                 =>:
-                    i >= 1
-                    i = 1
-                    abs(a(i)) = abs(a(1)) = prefix_bound(a, 1)
-                    abs(a(i)) <= prefix_bound(a, 1)
+                    i_index >= 1
+                    i_index = 1
+                    abs(a(i_index)) = abs(a(1)) = prefix_bound(a, 1)
+                    abs(a(i_index)) <= prefix_bound(a, 1)
             by def $is_finite_prefix_bounded(a, 1, prefix_bound(a, 1))
 
         ? induc:
@@ -474,18 +474,18 @@ claim:
             abs(a(n + 1)) <= finite_set_max(union({prefix_bound(a, n + 1 - 1)}, { abs(a(n + 1))})) = prefix_bound(a, n + 1)
             0 <= prefix_bound(a, n) <= prefix_bound(a, n + 1)
             claim:
-                ? forall i N_pos:
-                    i <= n + 1
+                ? forall i_index N_pos:
+                    i_index <= n + 1
                     =>:
-                        abs(a(i)) <= prefix_bound(a, n + 1)
-                i <= n or i >= n + 1
+                        abs(a(i_index)) <= prefix_bound(a, n + 1)
+                i_index <= n or i_index >= n + 1
                 by cases:
-                    ? abs(a(i)) <= prefix_bound(a, n + 1)
-                    case i <= n:
-                        abs(a(i)) <= prefix_bound(a, n) <= prefix_bound(a, n + 1)
-                    case i >= n + 1:
-                        i <= n + 1
-                        abs(a(i)) = abs(a(n + 1)) <= prefix_bound(a, n + 1)
+                    ? abs(a(i_index)) <= prefix_bound(a, n + 1)
+                    case i_index <= n:
+                        abs(a(i_index)) <= prefix_bound(a, n) <= prefix_bound(a, n + 1)
+                    case i_index >= n + 1:
+                        i_index <= n + 1
+                        abs(a(i_index)) = abs(a(n + 1)) <= prefix_bound(a, n + 1)
             by def $is_finite_prefix_bounded(a, n + 1, prefix_bound(a, n + 1))
 
 thm cauchy_sequence_is_bounded:
@@ -497,23 +497,23 @@ thm cauchy_sequence_is_bounded:
     obtain n0 from exist n0 N_pos st {$is_tail_epsilon_steady(a, 1, n0)}
     $is_finite_prefix_bounded(a, n0, prefix_bound(a, n0))
     claim:
-        ? forall i N_pos:
-            abs(a(i)) <= prefix_bound(a, n0) + abs(a(n0)) + 1
-        i <= n0 or i >= n0 + 1
+        ? forall i_index N_pos:
+            abs(a(i_index)) <= prefix_bound(a, n0) + abs(a(n0)) + 1
+        i_index <= n0 or i_index >= n0 + 1
         by cases:
-            ? abs(a(i)) <= prefix_bound(a, n0) + abs(a(n0)) + 1
-            case i <= n0:
-                abs(a(i)) <= prefix_bound(a, n0) <= prefix_bound(a, n0) + abs(a(n0)) + 1
-            case i >= n0 + 1:
-                i >= n0 + 1 > n0
-                i >= n0
+            ? abs(a(i_index)) <= prefix_bound(a, n0) + abs(a(n0)) + 1
+            case i_index <= n0:
+                abs(a(i_index)) <= prefix_bound(a, n0) <= prefix_bound(a, n0) + abs(a(n0)) + 1
+            case i_index >= n0 + 1:
+                i_index >= n0 + 1 > n0
+                i_index >= n0
                 n0 >= n0
-                abs(a(i) - a(n0)) < 1
-                a(i) = (a(i) - a(n0)) + a(n0)
-                abs(a(i)) = abs((a(i) - a(n0)) + a(n0)) <= abs(a(i) - a(n0)) + abs(a(n0))
-                abs(a(i) - a(n0)) + abs(a(n0)) < 1 + abs(a(n0))
+                abs(a(i_index) - a(n0)) < 1
+                a(i_index) = (a(i_index) - a(n0)) + a(n0)
+                abs(a(i_index)) = abs((a(i_index) - a(n0)) + a(n0)) <= abs(a(i_index) - a(n0)) + abs(a(n0))
+                abs(a(i_index) - a(n0)) + abs(a(n0)) < 1 + abs(a(n0))
                 1 + abs(a(n0)) <= prefix_bound(a, n0) + abs(a(n0)) + 1
-                abs(a(i)) <= abs(a(i) - a(n0)) + abs(a(n0)) < 1 + abs(a(n0)) <= prefix_bound(a, n0) + abs(a(n0)) + 1
+                abs(a(i_index)) <= abs(a(i_index) - a(n0)) + abs(a(n0)) < 1 + abs(a(n0)) <= prefix_bound(a, n0) + abs(a(n0)) + 1
     witness exist M R st {$is_bounded_by(a, M)} from prefix_bound(a, n0) + abs(a(n0)) + 1
 
 thm convergent_sequence_is_bounded:
@@ -605,10 +605,10 @@ thm seq_add_converges_to:
         $has_limit(a, x)
         $has_limit(b, y)
         =>:
-            $has_limit(fn(i N_pos) R {a(i) + b(i)}, x + y)
+            $has_limit(fn(i_index N_pos) R {a(i_index) + b(i_index)}, x + y)
     claim:
         ? forall epsilon R_pos:
-            $has_eventual_closeness_to(fn(i N_pos) R {a(i) + b(i)}, x + y, epsilon)
+            $has_eventual_closeness_to(fn(i_index N_pos) R {a(i_index) + b(i_index)}, x + y, epsilon)
         epsilon / 2 $in R_pos
         $has_eventual_closeness_to(a, x, epsilon / 2)
         $has_eventual_closeness_to(b, y, epsilon / 2)
@@ -616,7 +616,7 @@ thm seq_add_converges_to:
         obtain n2 from exist n2 N_pos st {$is_tail_close_to(b, y, epsilon / 2, n2)}
         finite_set_max(union({n1}, { n2})) >= n1
         finite_set_max(union({n1}, { n2})) >= n2
-        witness exist n0 N_pos st {$is_tail_close_to(fn(i N_pos) R {a(i) + b(i)}, x + y, epsilon, n0)} from finite_set_max(union({n1}, { n2})):
+        witness exist n0 N_pos st {$is_tail_close_to(fn(i_index N_pos) R {a(i_index) + b(i_index)}, x + y, epsilon, n0)} from finite_set_max(union({n1}, { n2})):
             forall n N_pos:
                 n >= finite_set_max(union({n1}, { n2}))
                 =>:
@@ -625,18 +625,18 @@ thm seq_add_converges_to:
                     abs(a(n) - x) < epsilon / 2
                     abs(b(n) - y) < epsilon / 2
                     abs(a(n) - x) + abs(b(n) - y) < epsilon / 2 + epsilon / 2 = epsilon
-                    abs(fn(i N_pos) R {a(i) + b(i)}(n) - (x + y)) = abs((a(n) - x) + (b(n) - y)) <= abs(a(n) - x) + abs(b(n) - y) < epsilon
-    by def $has_limit(fn(i N_pos) R {a(i) + b(i)}, x + y)
+                    abs(fn(i_index N_pos) R {a(i_index) + b(i_index)}(n) - (x + y)) = abs((a(n) - x) + (b(n) - y)) <= abs(a(n) - x) + abs(b(n) - y) < epsilon
+    by def $has_limit(fn(i_index N_pos) R {a(i_index) + b(i_index)}, x + y)
 
 thm seq_sub_converges_to:
     ? forall a, b seq(R), x, y R:
         $has_limit(a, x)
         $has_limit(b, y)
         =>:
-            $has_limit(fn(i N_pos) R {a(i) - b(i)}, x - y)
+            $has_limit(fn(i_index N_pos) R {a(i_index) - b(i_index)}, x - y)
     claim:
         ? forall epsilon R_pos:
-            $has_eventual_closeness_to(fn(i N_pos) R {a(i) - b(i)}, x - y, epsilon)
+            $has_eventual_closeness_to(fn(i_index N_pos) R {a(i_index) - b(i_index)}, x - y, epsilon)
         epsilon / 2 $in R_pos
         $has_eventual_closeness_to(a, x, epsilon / 2)
         $has_eventual_closeness_to(b, y, epsilon / 2)
@@ -644,7 +644,7 @@ thm seq_sub_converges_to:
         obtain n2 from exist n2 N_pos st {$is_tail_close_to(b, y, epsilon / 2, n2)}
         finite_set_max(union({n1}, { n2})) >= n1
         finite_set_max(union({n1}, { n2})) >= n2
-        witness exist n0 N_pos st {$is_tail_close_to(fn(i N_pos) R {a(i) - b(i)}, x - y, epsilon, n0)} from finite_set_max(union({n1}, { n2})):
+        witness exist n0 N_pos st {$is_tail_close_to(fn(i_index N_pos) R {a(i_index) - b(i_index)}, x - y, epsilon, n0)} from finite_set_max(union({n1}, { n2})):
             forall n N_pos:
                 n >= finite_set_max(union({n1}, { n2}))
                 =>:
@@ -653,42 +653,42 @@ thm seq_sub_converges_to:
                     abs(a(n) - x) < epsilon / 2
                     abs(b(n) - y) < epsilon / 2
                     abs(a(n) - x) + abs(b(n) - y) < epsilon / 2 + epsilon / 2 = epsilon
-                    abs(fn(i N_pos) R {a(i) - b(i)}(n) - (x - y)) = abs((a(n) - x) + (y - b(n))) <= abs(a(n) - x) + abs(y - b(n)) = abs(a(n) - x) + abs(b(n) - y) < epsilon
-    by def $has_limit(fn(i N_pos) R {a(i) - b(i)}, x - y)
+                    abs(fn(i_index N_pos) R {a(i_index) - b(i_index)}(n) - (x - y)) = abs((a(n) - x) + (y - b(n))) <= abs(a(n) - x) + abs(y - b(n)) = abs(a(n) - x) + abs(b(n) - y) < epsilon
+    by def $has_limit(fn(i_index N_pos) R {a(i_index) - b(i_index)}, x - y)
 
 thm seq_const_mul_converges_to:
     ? forall c R, a seq(R), x R:
         $has_limit(a, x)
         =>:
-            $has_limit(fn(i N_pos) R {c * a(i)}, c * x)
+            $has_limit(fn(i_index N_pos) R {c * a(i_index)}, c * x)
     claim:
         ? forall epsilon R_pos:
-            $has_eventual_closeness_to(fn(i N_pos) R {c * a(i)}, c * x, epsilon)
+            $has_eventual_closeness_to(fn(i_index N_pos) R {c * a(i_index)}, c * x, epsilon)
         abs(c) + 1 > 0
         epsilon / (abs(c) + 1) $in R_pos
         $has_eventual_closeness_to(a, x, epsilon / (abs(c) + 1))
         obtain n0 from exist n0 N_pos st {$is_tail_close_to(a, x, epsilon / (abs(c) + 1), n0)}
-        witness exist n1 N_pos st {$is_tail_close_to(fn(i N_pos) R {c * a(i)}, c * x, epsilon, n1)} from n0:
+        witness exist n1 N_pos st {$is_tail_close_to(fn(i_index N_pos) R {c * a(i_index)}, c * x, epsilon, n1)} from n0:
             forall n N_pos:
                 n >= n0
                 =>:
                     abs(a(n) - x) < epsilon / (abs(c) + 1)
                     abs(c) >= 0
                     abs(c) < abs(c) + 1
-                    fn(i N_pos) R {c * a(i)}(n) = c * a(n)
+                    fn(i_index N_pos) R {c * a(i_index)}(n) = c * a(n)
                     abs(c) * abs(a(n) - x) <= abs(c) * (epsilon / (abs(c) + 1)) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
-                    abs(fn(i N_pos) R {c * a(i)}(n) - c * x) = abs(c * (a(n) - x)) = abs(c) * abs(a(n) - x) < epsilon
-    by def $has_limit(fn(i N_pos) R {c * a(i)}, c * x)
+                    abs(fn(i_index N_pos) R {c * a(i_index)}(n) - c * x) = abs(c * (a(n) - x)) = abs(c) * abs(a(n) - x) < epsilon
+    by def $has_limit(fn(i_index N_pos) R {c * a(i_index)}, c * x)
 
 thm seq_mul_converges_to:
     ? forall a, b seq(R), x, y R:
         $has_limit(a, x)
         $has_limit(b, y)
         =>:
-            $has_limit(fn(i N_pos) R {a(i) * b(i)}, x * y)
+            $has_limit(fn(i_index N_pos) R {a(i_index) * b(i_index)}, x * y)
     claim:
         ? forall epsilon R_pos:
-            $has_eventual_closeness_to(fn(i N_pos) R {a(i) * b(i)}, x * y, epsilon)
+            $has_eventual_closeness_to(fn(i_index N_pos) R {a(i_index) * b(i_index)}, x * y, epsilon)
         abs(x) + 1 + abs(y) + 1 > 0
         epsilon / (abs(x) + 1 + abs(y) + 1) $in R_pos
         $has_eventual_closeness_to(a, x, 1)
@@ -700,7 +700,7 @@ thm seq_mul_converges_to:
         finite_set_max(union(union({n_bound}, { n1}), { n2})) >= n_bound
         finite_set_max(union(union({n_bound}, { n1}), { n2})) >= n1
         finite_set_max(union(union({n_bound}, { n1}), { n2})) >= n2
-        witness exist n0 N_pos st {$is_tail_close_to(fn(i N_pos) R {a(i) * b(i)}, x * y, epsilon, n0)} from finite_set_max(union(union({n_bound}, { n1}), { n2})):
+        witness exist n0 N_pos st {$is_tail_close_to(fn(i_index N_pos) R {a(i_index) * b(i_index)}, x * y, epsilon, n0)} from finite_set_max(union(union({n_bound}, { n1}), { n2})):
             forall n N_pos:
                 n >= finite_set_max(union(union({n_bound}, { n1}), { n2}))
                 =>:
@@ -717,9 +717,9 @@ thm seq_mul_converges_to:
                     abs(a(n)) * abs(b(n) - y) <= abs(a(n)) * (epsilon / (abs(x) + 1 + abs(y) + 1)) < (abs(x) + 1) * (epsilon / (abs(x) + 1 + abs(y) + 1))
                     abs(y) * abs(a(n) - x) <= abs(y) * (epsilon / (abs(x) + 1 + abs(y) + 1)) < (abs(y) + 1) * (epsilon / (abs(x) + 1 + abs(y) + 1))
                     abs(a(n)) * abs(b(n) - y) + abs(y) * abs(a(n) - x) < (abs(x) + 1) * (epsilon / (abs(x) + 1 + abs(y) + 1)) + (abs(y) + 1) * (epsilon / (abs(x) + 1 + abs(y) + 1)) = epsilon
-                    fn(i N_pos) R {a(i) * b(i)}(n) = a(n) * b(n)
-                    abs(fn(i N_pos) R {a(i) * b(i)}(n) - x * y) = abs(a(n) * b(n) - x * y) = abs(a(n) * (b(n) - y) + y * (a(n) - x)) <= abs(a(n) * (b(n) - y)) + abs(y * (a(n) - x)) = abs(a(n)) * abs(b(n) - y) + abs(y) * abs(a(n) - x) < epsilon
-    by def $has_limit(fn(i N_pos) R {a(i) * b(i)}, x * y)
+                    fn(i_index N_pos) R {a(i_index) * b(i_index)}(n) = a(n) * b(n)
+                    abs(fn(i_index N_pos) R {a(i_index) * b(i_index)}(n) - x * y) = abs(a(n) * b(n) - x * y) = abs(a(n) * (b(n) - y) + y * (a(n) - x)) <= abs(a(n) * (b(n) - y)) + abs(y * (a(n) - x)) = abs(a(n)) * abs(b(n) - y) + abs(y) * abs(a(n) - x) < epsilon
+    by def $has_limit(fn(i_index N_pos) R {a(i_index) * b(i_index)}, x * y)
 
 thm two_point_max_stability:
     ? forall epsilon R_pos, u, v, x, y R:
@@ -816,10 +816,10 @@ thm seq_max_converges_to:
         $has_limit(a, x)
         $has_limit(b, y)
         =>:
-            $has_limit(fn(i N_pos) R {finite_set_max(union({a(i)}, { b(i)}))}, finite_set_max(union({x}, { y})))
+            $has_limit(fn(i_index N_pos) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}, finite_set_max(union({x}, { y})))
     claim:
         ? forall epsilon R_pos:
-            $has_eventual_closeness_to(fn(i N_pos) R {finite_set_max(union({a(i)}, { b(i)}))}, finite_set_max(union({x}, { y})), epsilon)
+            $has_eventual_closeness_to(fn(i_index N_pos) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}, finite_set_max(union({x}, { y})), epsilon)
         epsilon / 2 $in R_pos
         $has_eventual_closeness_to(a, x, epsilon / 2)
         $has_eventual_closeness_to(b, y, epsilon / 2)
@@ -837,23 +837,23 @@ thm seq_max_converges_to:
             abs(a(n) - x) < epsilon / 2
             abs(b(n) - y) < epsilon / 2
             by thm two_point_max_stability(epsilon / 2, a(n), b(n), x, y)
-        witness exist n0 N_pos st {$is_tail_close_to(fn(i N_pos) R {finite_set_max(union({a(i)}, { b(i)}))}, finite_set_max(union({x}, { y})), epsilon, n0)} from finite_set_max(union({n1}, { n2})):
+        witness exist n0 N_pos st {$is_tail_close_to(fn(i_index N_pos) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}, finite_set_max(union({x}, { y})), epsilon, n0)} from finite_set_max(union({n1}, { n2})):
             forall n N_pos:
                 n >= finite_set_max(union({n1}, { n2}))
                 =>:
-                    fn(i N_pos) R {finite_set_max(union({a(i)}, { b(i)}))}(n) = finite_set_max(union({a(n)}, { b(n)}))
-                    abs(fn(i N_pos) R {finite_set_max(union({a(i)}, { b(i)}))}(n) - finite_set_max(union({x}, { y}))) = abs(finite_set_max(union({a(n)}, { b(n)})) - finite_set_max(union({x}, { y}))) <= epsilon / 2 < epsilon
-    by def $has_limit(fn(i N_pos) R {finite_set_max(union({a(i)}, { b(i)}))}, finite_set_max(union({x}, { y})))
+                    fn(i_index N_pos) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}(n) = finite_set_max(union({a(n)}, { b(n)}))
+                    abs(fn(i_index N_pos) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}(n) - finite_set_max(union({x}, { y}))) = abs(finite_set_max(union({a(n)}, { b(n)})) - finite_set_max(union({x}, { y}))) <= epsilon / 2 < epsilon
+    by def $has_limit(fn(i_index N_pos) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}, finite_set_max(union({x}, { y})))
 
 thm seq_min_converges_to:
     ? forall a, b seq(R), x, y R:
         $has_limit(a, x)
         $has_limit(b, y)
         =>:
-            $has_limit(fn(i N_pos) R {finite_set_min(union({a(i)}, { b(i)}))}, finite_set_min(union({x}, { y})))
+            $has_limit(fn(i_index N_pos) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}, finite_set_min(union({x}, { y})))
     claim:
         ? forall epsilon R_pos:
-            $has_eventual_closeness_to(fn(i N_pos) R {finite_set_min(union({a(i)}, { b(i)}))}, finite_set_min(union({x}, { y})), epsilon)
+            $has_eventual_closeness_to(fn(i_index N_pos) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}, finite_set_min(union({x}, { y})), epsilon)
         epsilon / 2 $in R_pos
         $has_eventual_closeness_to(a, x, epsilon / 2)
         $has_eventual_closeness_to(b, y, epsilon / 2)
@@ -871,13 +871,13 @@ thm seq_min_converges_to:
             abs(a(n) - x) < epsilon / 2
             abs(b(n) - y) < epsilon / 2
             by thm two_point_min_stability(epsilon / 2, a(n), b(n), x, y)
-        witness exist n0 N_pos st {$is_tail_close_to(fn(i N_pos) R {finite_set_min(union({a(i)}, { b(i)}))}, finite_set_min(union({x}, { y})), epsilon, n0)} from finite_set_max(union({n1}, { n2})):
+        witness exist n0 N_pos st {$is_tail_close_to(fn(i_index N_pos) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}, finite_set_min(union({x}, { y})), epsilon, n0)} from finite_set_max(union({n1}, { n2})):
             forall n N_pos:
                 n >= finite_set_max(union({n1}, { n2}))
                 =>:
-                    fn(i N_pos) R {finite_set_min(union({a(i)}, { b(i)}))}(n) = finite_set_min(union({a(n)}, { b(n)}))
-                    abs(fn(i N_pos) R {finite_set_min(union({a(i)}, { b(i)}))}(n) - finite_set_min(union({x}, { y}))) = abs(finite_set_min(union({a(n)}, { b(n)})) - finite_set_min(union({x}, { y}))) <= epsilon / 2 < epsilon
-    by def $has_limit(fn(i N_pos) R {finite_set_min(union({a(i)}, { b(i)}))}, finite_set_min(union({x}, { y})))
+                    fn(i_index N_pos) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}(n) = finite_set_min(union({a(n)}, { b(n)}))
+                    abs(fn(i_index N_pos) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}(n) - finite_set_min(union({x}, { y}))) = abs(finite_set_min(union({a(n)}, { b(n)})) - finite_set_min(union({x}, { y}))) <= epsilon / 2 < epsilon
+    by def $has_limit(fn(i_index N_pos) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}, finite_set_min(union({x}, { y})))
 
 thm near_nonzero_abs_lower:
     ? forall z, y R:
@@ -1473,6 +1473,7 @@ thm geom_seq_value:
 
 thm least_upper_bound_member_above:
     ? forall E set, M R, epsilon R_pos:
+        E $subset R
         $chap5::is_least_upper_bound(E, M)
         =>:
             exist x E st {M - epsilon < x}
@@ -1483,7 +1484,6 @@ thm least_upper_bound_member_above:
                 x <= M - epsilon
             not M - epsilon < x
             x <= M - epsilon
-        E $subset R
         $chap5::is_upper_bound(E, M - epsilon)
         forall B R:
             $chap5::is_upper_bound(E, B)
@@ -3078,10 +3078,10 @@ thm geometric_abs_lt_one_converges_to_zero:
         geom_seq(x)(n) = x^n
         abs(x^n) = abs(x)^n
         -abs(x^n) <= x^n <= abs(x^n)
-        fn(i N_pos) R {-1 * geom_seq(abs(x))(i)}(n) <= geom_seq(x)(n)
+        fn(i_index N_pos) R {-1 * geom_seq(abs(x))(i_index)}(n) <= geom_seq(x)(n)
         geom_seq(x)(n) <= geom_seq(abs(x))(n)
-    $is_pointwise_between(fn(i N_pos) R {-1 * geom_seq(abs(x))(i)}, geom_seq(x), geom_seq(abs(x)))
-    by thm squeeze_converges_to(fn(i N_pos) R {-1 * geom_seq(abs(x))(i)}, geom_seq(x), geom_seq(abs(x)), 0)
+    $is_pointwise_between(fn(i_index N_pos) R {-1 * geom_seq(abs(x))(i_index)}, geom_seq(x), geom_seq(abs(x)))
+    by thm squeeze_converges_to(fn(i_index N_pos) R {-1 * geom_seq(abs(x))(i_index)}, geom_seq(x), geom_seq(abs(x)), 0)
 
 thm geometric_one_converges_to_one:
     ? forall x R:
@@ -3406,8 +3406,8 @@ forall k N_pos:
     subsequence_odd_index(k) < subsequence_odd_index(k + 1)
 by def $is_subsequence_index(subsequence_odd_index)
 
-have fn subsequence_even_terms(a seq(R)) fn(k N_pos) R = fn(i N_pos) R {a(subsequence_even_index(i))}
-have fn subsequence_odd_terms(a seq(R)) fn(k N_pos) R = fn(i N_pos) R {a(subsequence_odd_index(i))}
+have fn subsequence_even_terms(a seq(R)) fn(k N_pos) R = fn(i_index N_pos) R {a(subsequence_even_index(i_index))}
+have fn subsequence_odd_terms(a seq(R)) fn(k N_pos) R = fn(i_index N_pos) R {a(subsequence_odd_index(i_index))}
 
 thm even_terms_form_subsequence:
     ? forall a seq(R):
@@ -3450,27 +3450,27 @@ thm sequence_is_subsequence_of_itself:
 # composed subsequence.
 
 thm subsequence_index_strict_mono_add:
-    ? forall phi fn(k N_pos) N_pos, i, h N_pos:
+    ? forall phi fn(k N_pos) N_pos, i_index, h N_pos:
         $is_subsequence_index(phi)
         =>:
-            phi(i) < phi(i + h)
+            phi(i_index) < phi(i_index + h)
     by induc h from 1:
-        ? phi(i) < phi(i + h)
+        ? phi(i_index) < phi(i_index + h)
         ? from h = 1:
-            phi(i) < phi(i + 1)
+            phi(i_index) < phi(i_index + 1)
         ? induc:
-            phi(i) < phi(i + h) < phi(i + h + 1) = phi(i + (h + 1))
+            phi(i_index) < phi(i_index + h) < phi(i_index + h + 1) = phi(i_index + (h + 1))
 
 thm subsequence_index_strict_mono:
-    ? forall phi fn(k N_pos) N_pos, i, j N_pos:
+    ? forall phi fn(k N_pos) N_pos, i_index, j N_pos:
         $is_subsequence_index(phi)
-        i < j
+        i_index < j
         =>:
-            phi(i) < phi(j)
-    have h N_pos = j - i
-    i + (j - i) = j
-    i + h = i + (j - i) = j
-    by thm subsequence_index_strict_mono_add(phi, i, h)
+            phi(i_index) < phi(j)
+    have h N_pos = j - i_index
+    i_index + (j - i_index) = j
+    i_index + h = i_index + (j - i_index) = j
+    by thm subsequence_index_strict_mono_add(phi, i_index, h)
 
 thm subsequence_transitive:
     ? forall a, b, c seq(R):

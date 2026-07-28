@@ -744,13 +744,13 @@ thm converges_to_mul:
 
 # Source definition ConvergesTo'. The index carrier is arbitrary, while its
 # LinearOrder instance is represented by an explicit linear-order relation.
-# The tail condition reads i0 <= i as membership of (i0,i) in that relation.
-prop _is_eventually_close_by_relation(I set, le_rel power_set(cart(I, I)), s fn(i I) R, a R, epsilon R_pos, i0 I):
-    forall i I:
-        $order_holds(I, le_rel, i0, i)
+# The tail condition reads i0 <= idx as membership of (i0,idx) in that relation.
+prop _is_eventually_close_by_relation(I set, le_rel power_set(cart(I, I)), s fn(idx I) R, a R, epsilon R_pos, i0 I):
+    forall idx I:
+        $order_holds(I, le_rel, i0, idx)
         =>:
-            abs(s(i) - a) < epsilon
+            abs(s(idx) - a) < epsilon
 
-prop converges_to_by_relation(I set, le_rel \LinearOrder<I>, s fn(i I) R, a R):
+prop converges_to_by_relation(I set, le_rel \LinearOrder<I>, s fn(idx I) R, a R):
     forall epsilon R_pos:
         exist i0 I st {$_is_eventually_close_by_relation(I, le_rel, s, a, epsilon, i0)}

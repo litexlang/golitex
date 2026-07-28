@@ -442,26 +442,7 @@ mod tests {
     }
 
     fn run_isolated_session(name: &str, input: String) -> String {
-        let root = session_test_dir(name);
-        let _ = fs::remove_dir_all(&root);
-        fs::create_dir_all(&root).expect("create isolated fixture");
-
-        let mut stdin_reader = Cursor::new(input.into_bytes());
-        let mut stdout_writer = Vec::new();
-        run_session_loop_with_readers(
-            &mut stdin_reader,
-            &mut stdout_writer,
-            &root,
-            OutputStyle::Normal,
-            false,
-            OutputLanguage::English,
-            false,
-        )
-        .expect("session must run");
-
-        let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
-        let _ = fs::remove_dir_all(&root);
-        output
+        run_isolated_session_with_style(name, input, OutputStyle::Normal)
     }
 
     #[test]
@@ -888,5 +869,70 @@ mod tests {
         assert!(output.contains(
             "\"event\":\"skipped\",\"id\":\"next\",\"error\":\"an earlier block failed\""
         ));
+    }
+
+    #[test]
+    fn error_output_session_failed_try_is_detailed_in_every_style() {
+        let mut failed_events = Vec::new();
+        for output_style in [
+            OutputStyle::Compact,
+            OutputStyle::Normal,
+            OutputStyle::Detailed,
+        ] {
+            let input = format!(
+                "{}{}close\n",
+                run_frame("failed_try", "try:\n    1 = 0\n"),
+                run_frame("next", "try:\n    1 = 1\n"),
+            );
+            let output = run_isolated_session_with_style(
+                format!("error-output-try-{:?}", output_style).as_str(),
+                input,
+                output_style,
+            );
+
+            let failed_event = output
+                .lines()
+                .find(|line| line.contains("\"id\":\"failed_try\""))
+                .expect("session should emit the failed try event")
+                .to_string();
+            assert!(failed_event.contains("\"ok\":false"));
+            assert!(failed_event.contains("\\\"phases\\\": {"));
+            assert!(failed_event.contains("\\\"previous_error\\\":"));
+            assert!(failed_event.contains("\\\"failed_goal\\\": \\\"1 = 0\\\""));
+            assert!(failed_event.contains("\\\"unknown_result\\\": {"));
+            assert!(output.contains("\"id\":\"next\",\"ok\":true"));
+            assert!(!output.contains("\"event\":\"skipped\""));
+            failed_events.push(failed_event);
+        }
+
+        assert_eq!(failed_events[0], failed_events[1]);
+        assert_eq!(failed_events[1], failed_events[2]);
+    }
+
+    fn run_isolated_session_with_style(
+        name: &str,
+        input: String,
+        output_style: OutputStyle,
+    ) -> String {
+        let root = session_test_dir(name);
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).expect("create isolated fixture");
+
+        let mut stdin_reader = Cursor::new(input.into_bytes());
+        let mut stdout_writer = Vec::new();
+        run_session_loop_with_readers(
+            &mut stdin_reader,
+            &mut stdout_writer,
+            &root,
+            output_style,
+            false,
+            OutputLanguage::English,
+            false,
+        )
+        .expect("session must run");
+
+        let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
+        let _ = fs::remove_dir_all(&root);
+        output
     }
 }

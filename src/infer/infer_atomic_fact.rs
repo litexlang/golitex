@@ -6,7 +6,15 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<InferResult, RuntimeError> {
-        match atomic_fact {
+        let fact_key = nested_obj_binder_normalized_fact_key(&atomic_fact.clone().into());
+        // Recursive inference may return to the same membership through an
+        // alpha-renamed set builder. This is a DFS back-edge guard, not an
+        // inference-depth limit: distinct nested facts still expand normally.
+        if !self.active_atomic_fact_inferences.insert(fact_key.clone()) {
+            return Ok(InferResult::new());
+        }
+
+        let result = match atomic_fact {
             // Equality: numeric bindings, cart/tuple/seq/matrix structure, `0 = a - b` => `a = b`.
             AtomicFact::EqualFact(equal_fact) => self.infer_equal_fact(equal_fact),
             // Membership `x $in S`: unfold `S` (list, set builder, intervals, standard sets, …).
@@ -32,6 +40,9 @@ impl Runtime {
             }
             // e.g. negated atoms and `$is_set`: no inference on this path.
             _ => Ok(InferResult::new()),
-        }
+        };
+
+        self.active_atomic_fact_inferences.remove(&fact_key);
+        result
     }
 }

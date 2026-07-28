@@ -1,0 +1,10 @@
+abstract_prop prime(b)
+
+know:
+    forall a, b N_pos:
+        $prime(b)
+        =>:
+            $is_finite_set({x N: a % (b^x) = 0})
+            max_of_finite_set({x N: a % (b^x) = 0}) $in N
+
+have fn euler_phi(a, b N_pos: $prime(b)) N = max_of_finite_set({x N: a % (b^x) = 0})

@@ -334,9 +334,10 @@ Basic behavior:
 | `-defgraph -e/-f/-r ... [json]` | Produce an environment-backed definition dependency graph. |
 | `-latex -e/-f/-r ...` | Compile Litex source to LaTeX; `-latex` alone starts its interactive REPL. |
 | `-python -e/-f/-r ...` | Compile the supported verified subset to Python. |
-| `-compact` | Show only result, statement type, line, and source statement. |
-| `-detail` | Include the full audit trace and raw source paths. |
+| `-compact` | Show only result, statement type, line, and source statement for successful results; any `RuntimeError` is always detailed. |
+| `-detail` | Include the full audit trace for successful results and errors, plus raw source paths. |
 | `-strict` | Verify configured dependencies and reject user trust or axiom statements. |
+| `-trust-before-line <X>` | Preview direct-file development mode: trust top-level statements before the exact header line `X`, then verify from `X`. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels without changing Litex source text. |
 
@@ -350,6 +351,21 @@ REPL.
 Litex supports multiple output languages through `-lang <code>`. See
 [`docs/cli.md`](cli.md) for the current list of supported language codes.
 
+For a faster check after editing the latter part of a long file:
+
+```bash
+litex -compact -f chapter.lit -trust-before-line 420
+```
+
+`420` must be the exact one-based line of a top-level statement header.
+Earlier top-level statements are still parsed and added to the environment,
+but their proofs and well-definedness checks are skipped. Verification resumes
+at line 420. The option is available only for direct `-f` and
+`-isolated -f` runs, cannot be combined with `-strict`, and produces explicit
+trust provenance rather than a fully checkable result. See
+[`docs/cli.md`](cli.md#trusted-prefix-file-checks-preview) for the full
+contract.
+
 Hint: if your Litex code contains spaces, newlines, or shell-sensitive characters, wrap it in quotes when using `-e`, or put it in a `.lit` file and run it with `-f`.
 
 ---
@@ -360,8 +376,11 @@ For commands that execute Litex source, such as `-e`, `-f`, and `-r`, Litex
 prints one JSON object for each executed statement.
 By default, Litex prints the normal reading view: internal statements,
 assumptions, conclusions, and direct `why_verified` reasons, without audit
-duplication. Use `-compact` to scan only the four base fields, or `-detail`
-for full trace details, execution phases, and raw paths.
+duplication. These output styles control successful results: use `-compact` to
+scan only the four base fields for each success, or `-detail` for full success
+trace details, execution phases, and raw paths. Every `RuntimeError` is
+automatically rendered with the detailed error projection in compact, normal,
+and detail modes.
 
 If the whole run succeeds:
 
@@ -399,7 +418,16 @@ For most factual statements, `why_verified` is the direct proof route. Detail
 output expands the audit information, including local assumptions,
 conclusions, nested results, and environment effects when available.
 
-If an error occurs, Litex prints an error JSON object. The important fields are usually:
+If an error occurs, Litex leaves any earlier successful objects in the selected
+style and prints only the failing result with the full available diagnostic.
+This applies consistently to file, repository, REPL, runner, session, and
+`try:` execution. Detailed errors may include `phases`,
+`previous_error`, `failed_step`, `failed_goal`, nested `unknown_result`, step
+indexes, and internal execution results. Litex omits fields for information
+that the error did not produce instead of inventing placeholder data. Warnings
+on otherwise successful statements remain in the selected success style.
+
+The important error fields are usually:
 
 - `"result": "error"`
 - `"error_type"`: the broad kind of error, such as parse, verify, or runtime error
@@ -407,6 +435,10 @@ If an error occurs, Litex prints an error JSON object. The important fields are 
 - `"previous_error"`: more context, if the error was caused by another error
 
 Hint: programs that call Litex should check the JSON output, not only the process exit code.
+
+Error field names and exit-code behavior are unchanged. Compared with older
+compact or normal output, failures may contain additional diagnostic fields,
+but retain their existing base fields.
 
 Example error output looks like this. The exact output may differ by version:
 

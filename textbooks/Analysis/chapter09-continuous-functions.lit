@@ -267,8 +267,8 @@ points of X.
 
 have fn closure_of_real_set(X power_set(R)) power_set(R) = {x R: $is_adherent_point(X, x)}
 
-prop is_closure_of(C, X power_set(R)):
-    C = closure_of_real_set(X)
+prop is_closure_of(set_C, X power_set(R)):
+    set_C = closure_of_real_set(X)
 
 thm closure_member_is_adherent:
     ? forall X power_set(R), x closure_of_real_set(X):

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Litex Todo Writer"
+  short_description: "Track textbook math holes and Litex blockers."
+  default_prompt: "Use $todo_writer to update a textbook's comment-only todo.lit mathematical-hole ledger or a technical Litex todo.md blocker list."

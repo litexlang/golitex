@@ -1,0 +1,15 @@
+claim:
+    prove:
+        forall first_batch, miss_rate_first, first_missed, second_batch, miss_rate_second, second_missed, total_missed R:
+            first_batch = 100
+            miss_rate_first = 3 / 5
+            first_missed = first_batch * miss_rate_first
+            second_batch = 75
+            miss_rate_second = 2 / 3
+            second_missed = second_batch * miss_rate_second
+            total_missed = first_missed + second_missed
+            =>:
+                first_batch = 100 and miss_rate_first = 3 / 5 and first_missed = first_batch * miss_rate_first and second_batch = 75 and miss_rate_second = 2 / 3 and second_missed = second_batch * miss_rate_second and total_missed = 110
+    first_missed = first_batch * miss_rate_first = 100 * (3 / 5) = 60
+    second_missed = second_batch * miss_rate_second = 75 * (2 / 3) = 50
+    total_missed = first_missed + second_missed = 60 + 50 = 110

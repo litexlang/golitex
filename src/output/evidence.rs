@@ -13,6 +13,7 @@ fn verified_by_builtin_rule_value(
     rule: &str,
     verify_what: Option<&Fact>,
     subgoals: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     let rule_output_text = builtin_rule_output_text(rule);
     let public_rule = render_builtin_rule_output_text(runtime.output_language, &rule_output_text);
@@ -31,7 +32,7 @@ fn verified_by_builtin_rule_value(
     }
     fields.push((
         "subgoals".to_string(),
-        JsonValue::Array(subgoal_values(runtime, subgoals)),
+        JsonValue::Array(subgoal_values(runtime, subgoals, output_style)),
     ));
     fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(vec![])));
     JsonValue::Object(fields)
@@ -41,17 +42,27 @@ fn verified_by_builtin_rule_value(
 pub(crate) fn factual_success_verified_by_value(
     runtime: &Runtime,
     x: &FactualStmtSuccess,
+    output_style: OutputStyle,
 ) -> JsonValue {
     let current_line_file = x.stmt.line_file();
-    verified_by_result_json_value(runtime, &x.verified_by, &current_line_file, Some(&x.stmt))
+    verified_by_result_json_value(
+        runtime,
+        &x.verified_by,
+        &current_line_file,
+        Some(&x.stmt),
+        output_style,
+    )
 }
 
 pub(crate) fn factual_success_forall_proof_fields(
     runtime: &Runtime,
     x: &FactualStmtSuccess,
+    output_style: OutputStyle,
 ) -> Vec<(String, JsonValue)> {
     match &x.verified_by {
-        VerifiedByResult::ForallProof(proof) => forall_proof_top_level_fields(runtime, proof),
+        VerifiedByResult::ForallProof(proof) => {
+            forall_proof_top_level_fields(runtime, proof, output_style)
+        }
         _ => vec![],
     }
 }
@@ -61,10 +72,11 @@ fn verified_by_result_json_value(
     verified_by: &VerifiedByResult,
     current_line_file: &LineFile,
     verify_goal: Option<&Fact>,
+    output_style: OutputStyle,
 ) -> JsonValue {
     match verified_by {
         VerifiedByResult::BuiltinRule(r) => {
-            verified_by_builtin_rule_value(runtime, &r.msg, None, &r.subgoals)
+            verified_by_builtin_rule_value(runtime, &r.msg, None, &r.subgoals, output_style)
         }
         VerifiedByResult::Fact(r) => {
             let citation_type = citation_type_for_stmt(r.cite_what.as_ref());
@@ -86,16 +98,21 @@ fn verified_by_result_json_value(
                 cited_stmt_plain.as_str(),
                 display_text.as_str(),
                 None,
+                output_style,
             )
         }
         VerifiedByResult::KnownForallInstantiation(r) => {
-            known_forall_instantiation_json_value(runtime, current_line_file, r, None)
+            known_forall_instantiation_json_value(runtime, current_line_file, r, None, output_style)
         }
-        VerifiedByResult::VerifiedBys(w) => {
-            verified_by_steps_object(runtime, &w.cite_what, current_line_file, verify_goal)
-        }
+        VerifiedByResult::VerifiedBys(w) => verified_by_steps_object(
+            runtime,
+            &w.cite_what,
+            current_line_file,
+            verify_goal,
+            output_style,
+        ),
         VerifiedByResult::ForallProof(proof) => {
-            JsonValue::Object(forall_proof_top_level_fields(runtime, proof))
+            JsonValue::Object(forall_proof_top_level_fields(runtime, proof, output_style))
         }
     }
 }
@@ -103,6 +120,7 @@ fn verified_by_result_json_value(
 fn forall_proof_top_level_fields(
     runtime: &Runtime,
     proof: &ForallProofResult,
+    output_style: OutputStyle,
 ) -> Vec<(String, JsonValue)> {
     let conclusions = proof
         .proves
@@ -113,6 +131,7 @@ fn forall_proof_top_level_fields(
                 &proof.forall_fact,
                 &proved.stmt,
                 proved.result.as_ref(),
+                output_style,
             )
         })
         .collect::<Vec<_>>();
@@ -163,11 +182,12 @@ pub(crate) fn forall_proved_fact_value(
     forall_fact: &ForallFact,
     stmt: &ExistOrAndChainAtomicFact,
     result: &StmtResult,
+    output_style: OutputStyle,
 ) -> JsonValue {
     let stmt_text = user_visible_stmt_or_msg_text(&stmt.to_string());
     let verification = match forall_local_assumption_source(forall_fact, stmt) {
         Some(source) => forall_local_assumption_value(source),
-        None => stmt_result_to_composite_step_verified_by(runtime, result),
+        None => stmt_result_to_composite_step_verified_by(runtime, result, output_style),
     };
     JsonValue::Object(vec![
         (JSON_KEY_STMT.to_string(), JsonValue::JsonString(stmt_text)),
@@ -215,10 +235,12 @@ fn verified_by_steps_object(
     items: &[VerifiedBysEnum],
     current_line_file: &LineFile,
     verify_goal: Option<&Fact>,
+    output_style: OutputStyle,
 ) -> JsonValue {
-    let steps = verified_by_step_items(runtime, items, current_line_file, verify_goal);
+    let steps =
+        verified_by_step_items(runtime, items, current_line_file, verify_goal, output_style);
     let mut fields = Vec::new();
-    if runtime.detail_output {
+    if output_style.is_detailed() {
         fields.push((
             "type".to_string(),
             JsonValue::JsonString(verified_by_steps_type(verify_goal).to_string()),
@@ -230,7 +252,7 @@ fn verified_by_steps_object(
             JsonValue::JsonString(summary.to_string()),
         ));
     }
-    if runtime.detail_output {
+    if output_style.is_detailed() {
         if let Some(main_rule) = verified_by_steps_main_rule(verify_goal) {
             fields.push((
                 "main_rule".to_string(),
@@ -247,15 +269,18 @@ fn verified_by_step_items(
     items: &[VerifiedBysEnum],
     current_line_file: &LineFile,
     verify_goal: Option<&Fact>,
+    output_style: OutputStyle,
 ) -> Vec<JsonValue> {
     let Some(role) = composite_step_role(verify_goal) else {
         return items
             .iter()
-            .map(|item| verified_bys_enum_json_value(runtime, item, current_line_file, true))
+            .map(|item| {
+                verified_bys_enum_json_value(runtime, item, current_line_file, true, output_style)
+            })
             .collect::<Vec<_>>();
     };
 
-    if let Some(folded) = folded_builtin_steps_value(runtime, items) {
+    if let Some(folded) = folded_builtin_steps_value(runtime, items, output_style) {
         return vec![folded];
     }
 
@@ -264,8 +289,17 @@ fn verified_by_step_items(
         .iter()
         .enumerate()
         .map(|(idx, item)| {
-            let evidence = verified_bys_enum_json_value(runtime, item, current_line_file, false);
-            composite_step_value(runtime, role, idx + 1, count, item.verify_what(), evidence)
+            let evidence =
+                verified_bys_enum_json_value(runtime, item, current_line_file, false, output_style);
+            composite_step_value(
+                runtime,
+                role,
+                idx + 1,
+                count,
+                item.verify_what(),
+                evidence,
+                output_style,
+            )
         })
         .collect::<Vec<_>>()
 }
@@ -319,6 +353,7 @@ fn verified_bys_enum_json_value(
     item: &VerifiedBysEnum,
     current_line_file: &LineFile,
     include_verify_what: bool,
+    output_style: OutputStyle,
 ) -> JsonValue {
     match item {
         VerifiedBysEnum::ByBuiltinRule(r) => verified_by_builtin_rule_value(
@@ -326,6 +361,7 @@ fn verified_bys_enum_json_value(
             &r.msg,
             include_verify_what.then_some(&r.verify_what),
             &r.subgoals,
+            output_style,
         ),
         VerifiedBysEnum::ByFact(r) => {
             let citation_type = citation_type_for_stmt(r.cite_what.as_ref());
@@ -346,6 +382,7 @@ fn verified_bys_enum_json_value(
                 cited_stmt_plain.as_str(),
                 display_text.as_str(),
                 include_verify_what.then_some(&r.verify_what),
+                output_style,
             )
         }
         VerifiedBysEnum::ByKnownForall(r) => known_forall_instantiation_json_value(
@@ -353,6 +390,7 @@ fn verified_bys_enum_json_value(
             current_line_file,
             &r.result,
             include_verify_what.then_some(&r.verify_what),
+            output_style,
         ),
     }
 }
@@ -360,9 +398,10 @@ fn verified_bys_enum_json_value(
 pub(crate) fn stmt_result_to_composite_step_verified_by(
     runtime: &Runtime,
     r: &StmtResult,
+    output_style: OutputStyle,
 ) -> JsonValue {
     if let Some(f) = r.factual_success() {
-        factual_success_verified_by_value(runtime, f)
+        factual_success_verified_by_value(runtime, f, output_style)
     } else if let Some(n) = r.non_factual_success() {
         JsonValue::Object(vec![
             (
@@ -382,14 +421,18 @@ pub(crate) fn stmt_result_to_composite_step_verified_by(
     }
 }
 
-fn subgoal_values(runtime: &Runtime, subgoals: &[StmtResult]) -> Vec<JsonValue> {
+fn subgoal_values(
+    runtime: &Runtime,
+    subgoals: &[StmtResult],
+    output_style: OutputStyle,
+) -> Vec<JsonValue> {
     subgoals
         .iter()
-        .map(|subgoal| subgoal_value(runtime, subgoal))
+        .map(|subgoal| subgoal_value(runtime, subgoal, output_style))
         .collect::<Vec<_>>()
 }
 
-fn subgoal_value(runtime: &Runtime, subgoal: &StmtResult) -> JsonValue {
+fn subgoal_value(runtime: &Runtime, subgoal: &StmtResult, output_style: OutputStyle) -> JsonValue {
     let mut fields = Vec::new();
     if let Some(f) = subgoal.factual_success() {
         fields.push((
@@ -398,7 +441,7 @@ fn subgoal_value(runtime: &Runtime, subgoal: &StmtResult) -> JsonValue {
         ));
         fields.push((
             JSON_KEY_VERIFICATION.to_string(),
-            factual_success_verified_by_value(runtime, f),
+            factual_success_verified_by_value(runtime, f, output_style),
         ));
     } else if let Some(n) = subgoal.non_factual_success() {
         fields.push((
@@ -407,7 +450,7 @@ fn subgoal_value(runtime: &Runtime, subgoal: &StmtResult) -> JsonValue {
         ));
         fields.push((
             JSON_KEY_VERIFICATION.to_string(),
-            stmt_result_to_composite_step_verified_by(runtime, subgoal),
+            stmt_result_to_composite_step_verified_by(runtime, subgoal, output_style),
         ));
     } else {
         fields.push((
@@ -419,18 +462,19 @@ fn subgoal_value(runtime: &Runtime, subgoal: &StmtResult) -> JsonValue {
 }
 
 fn composite_step_value(
-    runtime: &Runtime,
+    _runtime: &Runtime,
     role: &str,
     step_index: usize,
     step_count: usize,
     fact: &Fact,
     evidence: JsonValue,
+    output_style: OutputStyle,
 ) -> JsonValue {
     let fact_field = (
         "fact".to_string(),
         JsonValue::JsonString(user_visible_stmt_or_msg_text(&fact.to_string())),
     );
-    if !runtime.detail_output {
+    if !output_style.is_detailed() {
         return JsonValue::Object(vec![
             (fact_field.0, fact_field.1),
             (JSON_KEY_VERIFICATION.to_string(), evidence),
@@ -446,8 +490,12 @@ fn composite_step_value(
     ])
 }
 
-fn folded_builtin_steps_value(runtime: &Runtime, items: &[VerifiedBysEnum]) -> Option<JsonValue> {
-    if runtime.detail_output || items.len() < 2 {
+fn folded_builtin_steps_value(
+    runtime: &Runtime,
+    items: &[VerifiedBysEnum],
+    output_style: OutputStyle,
+) -> Option<JsonValue> {
+    if output_style.is_detailed() || items.len() < 2 {
         return None;
     }
     let first_rule = match items.first()? {
@@ -479,7 +527,7 @@ fn folded_builtin_steps_value(runtime: &Runtime, items: &[VerifiedBysEnum]) -> O
         ("facts".to_string(), JsonValue::Array(facts)),
         (
             JSON_KEY_VERIFICATION.to_string(),
-            verified_by_builtin_rule_value(runtime, first_rule, None, &[]),
+            verified_by_builtin_rule_value(runtime, first_rule, None, &[], output_style),
         ),
     ]))
 }
@@ -489,9 +537,15 @@ fn known_forall_instantiation_json_value(
     current_line_file: &LineFile,
     result: &KnownForallInstantiationResult,
     verify_what: Option<&Fact>,
+    output_style: OutputStyle,
 ) -> JsonValue {
     let citation_line_file = result.cite_what.line_file();
-    let cite_source = source_ref_json_value(runtime, &citation_line_file, Some(current_line_file));
+    let cite_source = source_ref_json_value(
+        runtime,
+        &citation_line_file,
+        Some(current_line_file),
+        output_style,
+    );
     let cited_stmt_plain = user_visible_stmt_or_msg_text(&result.cite_what.to_string());
     let mut fields = vec![
         (
@@ -504,7 +558,7 @@ fn known_forall_instantiation_json_value(
             JsonValue::JsonString(cited_stmt_plain),
         ),
     ];
-    if runtime.detail_output {
+    if output_style.is_detailed() {
         fields.push((
             "instantiation".to_string(),
             JsonValue::Object(known_forall_instantiation_fields(&result.instantiation)),
@@ -514,6 +568,7 @@ fn known_forall_instantiation_json_value(
             JsonValue::Array(known_forall_requirement_items(
                 runtime,
                 &result.requirements,
+                output_style,
             )),
         ));
     }
@@ -544,6 +599,7 @@ fn known_forall_instantiation_fields(
 fn known_forall_requirement_items(
     runtime: &Runtime,
     requirements: &[KnownForallRequirementResult],
+    output_style: OutputStyle,
 ) -> Vec<JsonValue> {
     requirements
         .iter()
@@ -557,7 +613,11 @@ fn known_forall_requirement_items(
                 ),
                 (
                     JSON_KEY_VERIFICATION.to_string(),
-                    stmt_result_to_composite_step_verified_by(runtime, requirement.result.as_ref()),
+                    stmt_result_to_composite_step_verified_by(
+                        runtime,
+                        requirement.result.as_ref(),
+                        output_style,
+                    ),
                 ),
             ])
         })
@@ -587,8 +647,14 @@ fn verified_by_citation_object(
     cited_stmt_plain: &str,
     msg: &str,
     verify_what: Option<&Fact>,
+    output_style: OutputStyle,
 ) -> JsonValue {
-    let cite_source = source_ref_json_value(runtime, citation_line_file, Some(current_line_file));
+    let cite_source = source_ref_json_value(
+        runtime,
+        citation_line_file,
+        Some(current_line_file),
+        output_style,
+    );
     let mut fields = vec![
         (
             "type".to_string(),

@@ -156,10 +156,10 @@ thm normed_field_has_element_of_norm_greater_than_one:
 
 # Continuous linear maps are candidate functions satisfying algebraic laws and
 # a global operator bound.
-prop is_operator_bound(E, F nonempty_set, source &RealNormedSpace<E>, target &RealNormedSpace<F>, f fn(x E) F, C R):
-    C >= 0
+prop is_operator_bound(E, F nonempty_set, source &RealNormedSpace<E>, target &RealNormedSpace<F>, f fn(x E) F, CarrierC R):
+    CarrierC >= 0
     forall x E:
-        target.norm(f(x)) <= C * source.norm(x)
+        target.norm(f(x)) <= CarrierC * source.norm(x)
 
 prop is_real_linear_map(E, F nonempty_set, source &RealNormedSpace<E>, target &RealNormedSpace<F>, f fn(x E) F):
     forall x, y E:
@@ -169,7 +169,7 @@ prop is_real_linear_map(E, F nonempty_set, source &RealNormedSpace<E>, target &R
 
 prop is_continuous_real_linear_map(E, F nonempty_set, source &RealNormedSpace<E>, target &RealNormedSpace<F>, f fn(x E) F):
     $is_real_linear_map(E, F, source, target, f)
-    exist C R st {$is_operator_bound(E, F, source, target, f, C)}
+    exist CarrierC R st {$is_operator_bound(E, F, source, target, f, CarrierC)}
 
 template<E nonempty_set>:
     have fn identity_map(x E) E = x
@@ -183,7 +183,7 @@ thm identity_is_continuous_linear:
         (fn(z E) E {z})(space.add(x, y)) = space.add(x, y) = space.add((fn(z E) E {z})(x), (fn(z E) E {z})(y))
     forall a R, x E:
         (fn(z E) E {z})(space.smul(a, x)) = space.smul(a, x) = space.smul(a, (fn(z E) E {z})(x))
-    witness exist C R st {$is_operator_bound(E, E, space, space, fn(x E) E {x}, C)} from 1:
+    witness exist CarrierC R st {$is_operator_bound(E, E, space, space, fn(x E) E {x}, CarrierC)} from 1:
         1 >= 0
         forall x E:
             space.norm((fn(z E) E {z})(x)) = space.norm(x) = 1 * space.norm(x)

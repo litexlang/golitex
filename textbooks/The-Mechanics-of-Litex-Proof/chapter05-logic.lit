@@ -251,8 +251,8 @@ sketch:
 # The range `closed_range(a, b)` includes both endpoints, and can also be written
 # as `a...b`.
 
-# The check is literal finite enumeration. For example, `forall i range(2, 17)`
-# is proved by substituting `i = 2`, then `i = 3`, and so on up to `i = 16`, and
+# The check is literal finite enumeration. For example, `forall i1 range(2, 17)`
+# is proved by substituting `i1 = 2`, then `i1 = 3`, and so on up to `i1 = 16`, and
 # checking the conclusion each time.
 
 # Here is the basic shape:

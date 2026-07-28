@@ -72,18 +72,10 @@ impl Runtime {
             default_line_file(),
         )
         .into();
-        let mut infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
-                type_fact.clone(),
-                InferReason::ParameterDefinition,
-            )?;
-        infer_result.new_infer_result_inside(self.store_param_memberships_in_known_supersets(
-            binding,
-            binding_kind,
-            obj,
+        self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
             type_fact,
-        )?);
-        Ok(infer_result)
+            InferReason::ParameterDefinition,
+        )
     }
 
     fn define_parameter_by_binding_set(

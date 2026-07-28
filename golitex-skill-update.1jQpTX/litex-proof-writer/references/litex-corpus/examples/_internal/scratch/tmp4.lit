@@ -1,0 +1,40 @@
+abstract_prop exist_riemann_sum(f, s)
+
+prop integrable(f fn(x R) R, s set):
+    $exist_riemann_sum(f, s)
+
+strategy sum_of_integrable_fn_integrable:
+    prove:
+        forall f, g fn(x R) R, s set:
+            $integrable(f, s)
+            $integrable(g, s)
+            =>:
+                $integrable('(x s)R{f(x) + g(x)}, s)
+    know $integrable('(x s)R{f(x) + g(x)}, s)
+
+strategy minus_of_integrable_fn_integrable:
+    prove:
+        forall f, g fn(x R) R, s set:
+            $integrable(f, s)
+            $integrable(g, s)
+            =>:
+                $integrable('(x s)R{f(x) - g(x)}, s)
+    know $integrable('(x s)R{f(x) - g(x)}, s)
+
+strategy product_of_integrable_fn_integrable:
+    prove:
+        forall f, g fn(x R) R, s set:
+            $integrable(f, s)
+            $integrable(g, s)
+            =>:
+                $integrable('(x s)R{f(x) * g(x)}, s)
+    know $integrable('(x s)R{f(x) * g(x)}, s)
+
+claim:
+    prove:
+        forall f, g set, s set:
+            $integrable(f, s)
+            $integrable(g, s)
+            =>:
+                $integrable('(x s)R{f(x) + g(x)}, s)
+    use strategy sum_of_integrable_fn_integrable

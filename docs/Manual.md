@@ -1287,8 +1287,18 @@ Execution commands:
 | `litex -session -f path/to/file.lit` | Load the project prefix through one file, then continue in the same persistent session Runtime. |
 | `litex -session -before path/to/file.lit` | Load the project prefix before one registered file, then continue in that file's environment without executing its current contents. |
 | `litex -strict ...` | Verify imports and trusted project prefix sources; reject user trust forms. |
+| `litex -f path/to/file.lit -trust-before-line X` | Preview: trust target-file top-level statements before the exact header line `X`, then verify normally from `X`. |
 | `litex -compact`, `litex -detail` | Select compact or detailed output. |
 | `litex -lang <code>` | Select a supported output language. |
+
+`-trust-before-line` is a development-only direct-file shortcut. `X` must be
+the exact one-based physical line of a top-level statement header; nested
+proof lines and lines inside a statement are not valid boundaries. The prefix
+is still parsed and registered, but its well-definedness and proofs are
+trusted. The option records `cli_trusted_prefix` provenance, so suffix results
+that use the prefix remain visibly indirectly trusted. It cannot be combined
+with `-strict` or used with repository, session, runner, graph, Python, or
+LaTeX commands.
 
 ### Utility statements
 
@@ -1974,8 +1984,19 @@ Subset verification reduces to universal membership where needed. Proper
 inclusion combines ordinary inclusion with inequality. Function equality
 reduces to compatible function interfaces and pointwise equality.
 
+A membership goal may also use one directly known inclusion on demand. If
+`x $in A` and either `A $subset B`, `B $superset A`, or
+`A $in power_set(B)` is known, the verifier can prove `x $in B`. This lookup
+does not itself store `x $in B` or traverse a second inclusion edge. Existing
+universal-membership facts may still compose several ordinary proof steps.
+This rule only answers membership goals; it does not rewrite an order goal
+such as `0 < x` into membership in a positive-number set.
+
 ```litex
 {1} $subset {1, 2}
+
+forall B set, A power_set(B), x A:
+    x $in B
 
 forall A, B set:
     A $subset B
@@ -2011,6 +2032,14 @@ construction and does not replace checked source-level arithmetic libraries.
 After an accepted or trusted fact is stored, builtin inference may add routine
 consequences to the same environment. These consequences become ordinary
 known information for later statements.
+
+Inference can be transitive: an inferred atomic fact may in turn expose its
+own routine consequences. Litex does not impose a global one-layer inference
+limit. It only stops a recursive branch when it returns to the same normalized
+atomic fact that is already being expanded on the current inference stack;
+different newly inferred facts continue normally. This prevents a cyclic
+definition graph from repeatedly reopening itself without suppressing ordinary
+parameter-type or structure-field inference.
 
 ### Verification versus inference
 
@@ -2136,6 +2165,13 @@ forall x {1}:
     x $in {1, 2}
 ```
 
+Subset and superset facts retain their reusable universal-membership
+interface. Separately, the membership builtin can check one known owner set
+against one directly known superset when a membership goal is requested. That
+direct-index check is on demand: it does not materialize the lifted membership
+or compute a transitive subset closure. Other proof rules can still use its
+one-step result as a requirement.
+
 Proper subset additionally gives subset and inequality; proper superset is
 dual. Negated proper relations do not select either branch of their
 disjunctive meaning.
@@ -2175,6 +2211,8 @@ change:
 - injective, surjective, and bijective mapping predicates;
 - explicit `by def`;
 - modules, manifests, flattening, and localized output;
+- one-step membership verification through a known subset or superset;
+- direct-file `-trust-before-line` development checks;
 - reduced rational fraction verification;
 - trusted Zorn, choice, and regularity proof steps.
 
@@ -2188,6 +2226,7 @@ change:
 | `trust have` | Accepted and reported as trusted | Rejected |
 | `axiom` | Accepted and reported as trusted | Rejected |
 | Trusted preview set-theoretic step | Accepted with trust provenance | Rejected |
+| `-trust-before-line` file prefix | Accepted with `cli_trusted_prefix` provenance | Incompatible with `-strict` |
 
 Strict mode reduces user-supplied trust; it does not turn the Litex checker and
 its builtin rules into a separately verified small kernel.

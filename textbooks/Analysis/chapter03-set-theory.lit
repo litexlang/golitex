@@ -322,8 +322,8 @@ sketch:
     forall A, B set:
         union(A, B) = union(B, A)
 
-    forall A, B, C set:
-        union(union(A, B), C) = union(A, union(B, C))
+    forall A, B, set_C set:
+        union(union(A, B), set_C) = union(A, union(B, set_C))
 
     forall A set:
         union(A, A) = A
@@ -353,11 +353,11 @@ forall A, B set:
 forall A set:
     A $subset A
 
-forall A, B, C set:
+forall A, B, set_C set:
     A $subset B
-    B $subset C
+    B $subset set_C
     =>:
-        A $subset C
+        A $subset set_C
 
 claim:
     ? forall A, B set:
@@ -604,17 +604,17 @@ finite_set_size(set_minus({1, 2, 3}, {2})) <= finite_set_size({1, 2, 3})
 forall A, B set:
     intersect(A, B) = intersect(B, A)
 
-forall A, B, C set:
-    intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
+forall A, B, set_C set:
+    intersect(intersect(A, B), set_C) = intersect(A, intersect(B, set_C))
 
-forall A, B, C set:
-    intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
+forall A, B, set_C set:
+    intersect(A, union(B, set_C)) = union(intersect(A, B), intersect(A, set_C))
 
-forall A, B, C set:
-    set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))
+forall A, B, set_C set:
+    set_minus(A, union(B, set_C)) = intersect(set_minus(A, B), set_minus(A, set_C))
 
-forall A, B, C set:
-    set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
+forall A, B, set_C set:
+    set_minus(A, intersect(B, set_C)) = union(set_minus(A, B), set_minus(A, set_C))
 
 """
 Remark 3.1.29. The de Morgan laws are basic Boolean/set laws.
@@ -694,19 +694,19 @@ sketch:
 # three-dimensional example below exhibits this construction concretely.
 
 sketch:
-    have C set = cart({1, 2}, {3, 4}, {5, 6})
-    proj(C, 1) = {1, 2}
-    proj(C, 2) = {3, 4}
-    proj(C, 3) = {5, 6}
+    have set_C set = cart({1, 2}, {3, 4}, {5, 6})
+    proj(set_C, 1) = {1, 2}
+    proj(set_C, 2) = {3, 4}
+    proj(set_C, 3) = {5, 6}
 
     have fn projection_factor_on_three(k {1, 2, 3}) {{1, 2}, {3, 4}, {5, 6}} by cases:
-        case k = 1: proj(C, 1)
-        case k = 2: proj(C, 2)
-        case k = 3: proj(C, 3)
+        case k = 1: proj(set_C, 1)
+        case k = 2: proj(set_C, 2)
+        case k = 3: proj(set_C, 3)
 
-    projection_factor_on_three(1) = proj(C, 1) = {1, 2}
-    projection_factor_on_three(2) = proj(C, 2) = {3, 4}
-    projection_factor_on_three(3) = proj(C, 3) = {5, 6}
+    projection_factor_on_three(1) = proj(set_C, 1) = {1, 2}
+    projection_factor_on_three(2) = proj(set_C, 2) = {3, 4}
+    projection_factor_on_three(3) = proj(set_C, 3) = {5, 6}
     projection_factor_on_three(1) $in fn_range(projection_factor_on_three)
     projection_factor_on_three(2) $in fn_range(projection_factor_on_three)
     projection_factor_on_three(3) $in fn_range(projection_factor_on_three)
@@ -1756,10 +1756,10 @@ objects that lie in at least one A_i.
 
 # The family is a function `A fn(i I) power_set(Y)`, and the indexed
 # union is the subset of Y whose members have some index witness.
-prop is_in_indexed_union(I set, Y set, A fn(i I) power_set(Y), z Y):
-    exist i I st {z $in A(i)}
+prop is_in_indexed_union(I set, Y set, A fn(i_index I) power_set(Y), z Y):
+    exist i_index I st {z $in A(i_index)}
 
-template<I set, Y set, A fn(i I) power_set(Y)>:
+template<I set, Y set, A fn(i_index I) power_set(Y)>:
     have indexed_union set = {z Y: $is_in_indexed_union(I, Y, A, z)}
 
 # Indexed unions first form the family `{A_i : i in I}` and then take its union.
@@ -1768,15 +1768,15 @@ template<I set, Y set, A fn(i I) power_set(Y)>:
 # indexed set.  The replacement-plus-`big_union` equality is a routine set-theory
 # fact left for later reuse.
 sketch:
-    have fn A(i {1, 2, 3}) power_set(N) by cases:
-        case i = 1: {2, 3}
-        case i = 2: {3, 4}
-        case i = 3: {4, 5}
+    have fn A(i_index {1, 2, 3}) power_set(N) by cases:
+        case i_index = 1: {2, 3}
+        case i_index = 2: {3, 4}
+        case i_index = 3: {4, 5}
 
     A(1) = {2, 3}
     2 $in {2, 3}
     2 $in A(1)
-    witness exist i {1, 2, 3} st {2 $in A(i)} from 1
+    witness exist i_index {1, 2, 3} st {2 $in A(i_index)} from 1
     by def $is_in_indexed_union({1, 2, 3}, N, A, 2)
     \indexed_union<{1, 2, 3}, N, A> = {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)}
     2 $in {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)}
@@ -1789,20 +1789,20 @@ exactly the objects that lie in every A_i.
 """
 
 # The ambient universe `Y` is explicit, while the index set remains nonempty.
-prop is_in_indexed_intersection(I nonempty_set, Y set, A fn(i I) power_set(Y), z Y):
-    forall i I:
-        z $in A(i)
+prop is_in_indexed_intersection(I nonempty_set, Y set, A fn(i_index I) power_set(Y), z Y):
+    forall i_index I:
+        z $in A(i_index)
 
-template<I nonempty_set, Y set, A fn(i I) power_set(Y)>:
+template<I nonempty_set, Y set, A fn(i_index I) power_set(Y)>:
     have indexed_intersection set = {z Y: $is_in_indexed_intersection(I, Y, A, z)}
 
 # Using the common ambient set `Y` makes the intersection independent of a
 # chosen base index.
 sketch:
-    have fn A(i {1, 2, 3}) power_set(N) by cases:
-        case i = 1: {2, 3}
-        case i = 2: {3, 4}
-        case i = 3: {3, 5}
+    have fn A(i_index {1, 2, 3}) power_set(N) by cases:
+        case i_index = 1: {2, 3}
+        case i_index = 2: {3, 4}
+        case i_index = 3: {3, 5}
 
     A(1) = {2, 3}
     3 $in {2, 3}
@@ -1814,8 +1814,8 @@ sketch:
     3 $in {3, 5}
     3 $in A(3)
     by enumerate finite_set:
-        ? forall i {1, 2, 3}:
-            3 $in A(i)
+        ? forall i_index {1, 2, 3}:
+            3 $in A(i_index)
     by def $is_in_indexed_intersection({1, 2, 3}, N, A, 3)
     \indexed_intersection<{1, 2, 3}, N, A> = {z N: $is_in_indexed_intersection({1, 2, 3}, N, A, z)}
     3 $in {z N: $is_in_indexed_intersection({1, 2, 3}, N, A, z)}
@@ -2340,11 +2340,11 @@ set when defining cardinality n.
 # bijective between `{0,1,2,3}` and `{1,2,3,4}`.
 
 sketch:
-    have fn shift_zero_to_one(i {0, 1, 2, 3}) {1, 2, 3, 4} by cases:
-        case i = 0: 1
-        case i = 1: 2
-        case i = 2: 3
-        case i = 3: 4
+    have fn shift_zero_to_one(i_index {0, 1, 2, 3}) {1, 2, 3, 4} by cases:
+        case i_index = 0: 1
+        case i_index = 1: 2
+        case i_index = 2: 3
+        case i_index = 3: 4
 
     by enumerate finite_set:
         ? forall x {0, 1, 2, 3}:

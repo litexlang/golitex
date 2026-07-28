@@ -202,7 +202,7 @@ Its midpoint is therefore a callable pointwise construction:
 
 ```litex
 template<n N>:
-    have fn standard_simplex_midpoint(a, b \standard_simplex<n>) fn(i range(0, n)) R
+    have fn standard_simplex_midpoint(a, b \standard_simplex<n>) fn(idx range(0, n)) R
 ```
 
 The corresponding closure theorem is checked by coordinate nonnegativity and

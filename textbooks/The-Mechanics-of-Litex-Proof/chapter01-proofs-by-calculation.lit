@@ -188,15 +188,15 @@ forall a, b, m, n Z:
 
 # 1.1.4
 
-# Let `a`, `b`, `c`, `d`, `e` and `f` be integers, and suppose that
-# `a * d = b * c` and `c * f = d * e`. Show that
-# `d * (a * f - b * e) = 0`.
+# Let `a`, `b`, `c`, `d`, `e1` and `f` be integers, and suppose that
+# `a * d = b * c` and `c * f = d * e1`. Show that
+# `d * (a * f - b * e1) = 0`.
 
-forall a, b, c, d, e, f Z:
+forall a, b, c, d, e1, f Z:
     a * d = b * c
-    c * f = d * e
+    c * f = d * e1
     =>:
-        d * (a * f - b * e) = (a * d) * f - d * b * e = (b * c) * f - d * b * e = b * (c * f) - d * b * e = b * (d * e) - d * b * e = 0
+        d * (a * f - b * e1) = (a * d) * f - d * b * e1 = (b * c) * f - d * b * e1 = b * (c * f) - d * b * e1 = b * (d * e1) - d * b * e1 = 0
 
 # 1.2 Optional: Litex and Lean for Lean readers
 
@@ -262,11 +262,11 @@ forall a, b, c, d, e, f Z:
 #   </tr>
 #   <tr>
 #     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-# <pre style="margin: 0; white-space: pre-wrap"><code>forall a, b, c, d, e, f Z:
+# <pre style="margin: 0; white-space: pre-wrap"><code>forall a, b, c, d, e1, f Z:
 #     a * d = b * c
-#     c * f = d * e
+#     c * f = d * e1
 #     =&gt;:
-#         d * (a * f - b * e) = (a * d) * f - d * b * e = (b * c) * f - d * b * e = b * (c * f) - d * b * e = b * (d * e) - d * b * e = 0</code></pre>
+#         d * (a * f - b * e1) = (a * d) * f - d * b * e1 = (b * c) * f - d * b * e1 = b * (c * f) - d * b * e1 = b * (d * e1) - d * b * e1 = 0</code></pre>
 #     </td>
 #     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 # <pre style="margin: 0; white-space: pre-wrap"><code>example {a b c d e f : ℤ} (h1 : a * d = b * c) (h2 : c * f = d * e) :

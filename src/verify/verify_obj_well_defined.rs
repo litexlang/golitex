@@ -32,7 +32,14 @@ impl Runtime {
             return Ok(());
         }
 
-        match obj {
+        let active_key = obj_equality_key(obj);
+        // A nested parameter check can return to the same alpha-equivalent
+        // object before the outer check has completed. Do not cache this edge.
+        if !self.active_well_defined_objects.insert(active_key.clone()) {
+            return Ok(());
+        }
+
+        let result = match obj {
             Obj::Atom(AtomObj::Identifier(identifier)) => {
                 self.verify_identifier_well_defined(identifier)
             }
@@ -145,7 +152,10 @@ impl Runtime {
             Obj::Atom(AtomObj::DefStructField(_)) => Ok(()),
             Obj::Atom(AtomObj::TupleIndex(_)) => Ok(()),
             Obj::Atom(AtomObj::CartIndex(_)) => Ok(()),
-        }?;
+        };
+
+        self.active_well_defined_objects.remove(&active_key);
+        result?;
 
         self.store_well_defined_obj_cache(obj);
 

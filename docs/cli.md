@@ -21,6 +21,7 @@ primary command. Prefer putting them before the command for readability:
 ```bash
 litex -detail -strict -isolated -f examples/tmp.lit
 litex -summarize -isolated -f examples/tmp.lit
+litex -compact -f chapter.lit -trust-before-line 420
 litex -lang zh -runner -e "1 = 1"
 ```
 
@@ -33,10 +34,11 @@ parser.
 
 | Option | Meaning |
 |--------|---------|
-| `-compact` | Show only `result`, `type`, `line`, and `statement` for each execution result. |
-| *(no output flag)* | Use the normal reading view: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. |
-| `-detail` | Include fuller JSON trace details, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
+| `-compact` | Show only `result`, `type`, `line`, and `statement` for successful execution results. Any `RuntimeError` is always detailed. |
+| *(no output flag)* | Use the normal reading view for successful results: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. Any `RuntimeError` is always detailed. |
+| `-detail` | Include fuller JSON trace details for both successful results and errors, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
 | `-strict` | Verify every configured import and every export loaded by `-f`, then reject user `trust`, `trust have`, and `axiom`. `-r` already verifies its complete export tree. Use it for CI or a complete dependency audit. |
+| `-trust-before-line <X>` | Preview development option for a direct `-f` or `-isolated -f` run. Trust top-level statements whose header is before line `X`, then verify normally from the statement whose header is exactly line `X`. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
@@ -65,6 +67,22 @@ Current mappings:
 | `vi` | Vietnamese |
 | `id` | Indonesian |
 
+Output style controls successful statement results. Every `RuntimeError` is
+rendered with the detailed error projection, whether the command uses
+`-compact`, the normal view, or `-detail`. Detailed errors preserve available
+`phases`, causal `previous_error` data, `failed_step`, `failed_goal`, nested
+`unknown_result` data, step indexes, and internal execution results. This
+includes parse, well-definedness, verification, unknown, execution,
+instantiation, and inference failures. Fields for diagnostic data that does
+not exist are omitted rather than synthesized.
+
+Only the failing result is upgraded. Earlier successful statements retain the
+selected output style, and warning-only successful results are not
+automatically expanded. This contract is consistent across file, repository,
+REPL, runner, session, and `try:` execution paths. Existing error fields and
+exit-code behavior are unchanged; compact and normal failures may contain
+additional diagnostic fields.
+
 `-compact` affects ordinary verifier commands. `-detail`, `-strict`, and `-lang` mainly affect verifier, runner, and graph commands.
 `-summarize` affects ordinary verifier commands.
 They do not make module-management or tutorial placeholder commands functional.
@@ -89,6 +107,9 @@ Because `-compact`, `-detail`, `-strict`, and `-summarize` are removed globally 
 command parsing, do not use a standalone command value exactly equal to any of
 those flags. `-lang` also consumes the next token globally.
 
+`-trust-before-line` consumes a positive ASCII decimal line number globally,
+so it may appear before or after `-f`. It may appear only once.
+
 ## Verifier Commands
 
 | Command | Behavior |
@@ -101,6 +122,40 @@ those flags. `-lang` also consumes the next token globally.
 | `litex -r <project>` | Run a module's complete recursive `[export]` tree, or trace to the module and run the prefix through a selected submodule's complete subtree. |
 | `litex -session -f <file>` | Run the registered project prefix through one file, then keep that same Runtime alive as a framed persistent session. |
 | `litex -session -before <file>` | Run the registered project prefix before one file, exclude that file, and start the persistent session in its file environment. |
+
+### Trusted prefix file checks (preview)
+
+When editing the latter part of a long file, use:
+
+```bash
+litex -compact -f chapter.lit -trust-before-line 420
+```
+
+Line `X` must be the physical, one-based line of an exact top-level statement
+header in the target file. A comment, blank line, nested proof line, line
+inside a multiline statement, or an end-of-file sentinel is rejected before
+any statement runs. Litex does not move the boundary to the next statement.
+
+Every top-level statement whose header is before `X` is parsed and applied to
+the environment in trusted mode. Names, definitions, facts, and inferred facts
+remain available to the suffix, and syntax or duplicate-name errors still
+fail. Litex skips only well-definedness and proof verification for those
+statements. The statement beginning exactly at `X` and every later top-level
+statement are verified normally.
+
+The cutoff applies only to the file named by the direct `-f`. Configured
+imports and earlier exports keep their ordinary execution policy. It is not
+supported by `-r`, `-e`, `-session`, `-runner`, graph output, Python, or LaTeX,
+and it cannot be combined with `-strict` or extra positional arguments.
+
+A cutoff run emits a leading `trusted_prefix` boundary record and always ends
+with one run summary, even without `-summarize`. Statement objects retain their
+normal `type` and report `verification_status`. A verified suffix statement
+that depends on the prefix reports `indirect_trust` with
+`cli_trusted_prefix` provenance; therefore the run must not be treated as a
+fully checkable result. `-compact` retains these trust-status fields for cutoff
+runs. An `-isolated -f` cutoff run exits after this summary instead of
+continuing into the interactive REPL.
 
 Declare local project files and child submodules in recursive ordered
 `[export]` entries. Only a `[hierarchy] module` declares non-standard packages
@@ -129,7 +184,8 @@ write dynamic `import` statements.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
-successful prefix followed by an error object.
+successful prefix in the selected success style followed by a detailed error
+object.
 
 With `-summarize`, Litex appends one final JSON object whose `output_type` is
 `"run summary"`. The ordinary statement output before that object is unchanged.

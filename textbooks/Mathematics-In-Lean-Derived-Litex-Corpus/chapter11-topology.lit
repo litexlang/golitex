@@ -694,13 +694,13 @@ thm continuous_iff_open_preimages_reverse:
 # item changes the middle topology to a coinduced topology and remains in
 # todo.lit; named intermediate preimages make this fixed-topology proof explicit.
 thm topologically_continuous_composition:
-    ? forall A, B, C set, T_A power_set(power_set(A)), T_B power_set(power_set(B)), T_C power_set(power_set(C)), f fn(x A) B, g fn(y B) C:
+    ? forall A, B, CarrierC set, T_A power_set(power_set(A)), T_B power_set(power_set(B)), T_C power_set(power_set(CarrierC)), f fn(x A) B, g fn(y B) CarrierC:
         $is_topologically_continuous(A, B, T_A, T_B, f)
-        $is_topologically_continuous(B, C, T_B, T_C, g)
+        $is_topologically_continuous(B, CarrierC, T_B, T_C, g)
         =>:
-            $is_topologically_continuous(A, C, T_A, T_C, fn(x A) C {g(f(x))})
+            $is_topologically_continuous(A, CarrierC, T_A, T_C, fn(x A) CarrierC {g(f(x))})
     by thm continuous_iff_open_preimages_forward(A, B, T_A, T_B, f)
-    by thm continuous_iff_open_preimages_forward(B, C, T_B, T_C, g)
+    by thm continuous_iff_open_preimages_forward(B, CarrierC, T_B, T_C, g)
     claim:
         ? forall U T_C:
             {x A: g(f(x)) $in U} $in T_A
@@ -728,13 +728,13 @@ thm topologically_continuous_composition:
         pre2 $in T_A
     claim:
         ? forall U T_C:
-            {candidate A: fn(argument A) C {g(f(argument))}(candidate) $in U} $in T_A
+            {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in U} $in T_A
         have direct_preimage T_A = {candidate A: g(f(candidate)) $in U}
-        have literal_preimage power_set(A) = {candidate A: fn(argument A) C {g(f(argument))}(candidate) $in U}
+        have literal_preimage power_set(A) = {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in U}
         claim:
             ? literal_preimage $subset direct_preimage
             forall z literal_preimage:
-                fn(argument A) C {g(f(argument))}(z) = g(f(z))
+                fn(argument A) CarrierC {g(f(argument))}(z) = g(f(z))
                 g(f(z)) $in U
                 z $in {candidate A: g(f(candidate)) $in U}
                 z $in direct_preimage
@@ -742,13 +742,13 @@ thm topologically_continuous_composition:
             ? direct_preimage $subset literal_preimage
             forall z direct_preimage:
                 g(f(z)) $in U
-                fn(argument A) C {g(f(argument))}(z) = g(f(z))
-                fn(argument A) C {g(f(argument))}(z) $in U
-                z $in {candidate A: fn(argument A) C {g(f(argument))}(candidate) $in U}
+                fn(argument A) CarrierC {g(f(argument))}(z) = g(f(z))
+                fn(argument A) CarrierC {g(f(argument))}(z) $in U
+                z $in {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in U}
                 z $in literal_preimage
         by extension literal_preimage = direct_preimage
         literal_preimage $in T_A
-    by thm continuous_iff_open_preimages_reverse(A, C, T_A, T_C, fn(x A) C {g(f(x))})
+    by thm continuous_iff_open_preimages_reverse(A, CarrierC, T_A, T_C, fn(x A) CarrierC {g(f(x))})
 
 # Source constructions `coinduced` and `induced` are topology-valued functions.
 template<X, Y set>:

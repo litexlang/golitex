@@ -263,8 +263,9 @@ impl Runtime {
     fn store_whole_fact_update_cache_known_fact_and_infer(
         &mut self,
         fact: Fact,
-        trust_summary: ProofTrustSummary,
+        mut trust_summary: ProofTrustSummary,
     ) -> Result<InferResult, RuntimeError> {
+        trust_summary.merge(&self.current_trusted_prefix_statement_trust());
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let nested_obj_binder_key = nested_obj_binder_normalized_fact_key(&fact);
@@ -285,7 +286,10 @@ impl Runtime {
         };
         self.top_level_env().store_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts, trust_summary.clone())?;
-        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+        self.store_transitive_prop_chain_atomic_facts(
+            transitive_chain_facts,
+            trust_summary.clone(),
+        )?;
 
         self.top_level_env()
             .store_fact_to_cache_known_fact_with_trust(
@@ -347,7 +351,10 @@ impl Runtime {
         };
         self.top_level_env().store_and_chain_atomic_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts, trust_summary.clone())?;
-        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+        self.store_transitive_prop_chain_atomic_facts(
+            transitive_chain_facts,
+            trust_summary.clone(),
+        )?;
 
         self.store_fact_cache_keys_with_nested_obj_binders(&fact_for_infer, trust_summary)?;
 
@@ -432,7 +439,10 @@ impl Runtime {
         self.top_level_env()
             .store_exist_or_and_chain_atomic_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts, trust_summary.clone())?;
-        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+        self.store_transitive_prop_chain_atomic_facts(
+            transitive_chain_facts,
+            trust_summary.clone(),
+        )?;
 
         let output_fact = fact_for_infer.clone().to_fact();
         self.store_fact_cache_keys_with_nested_obj_binders(&output_fact, trust_summary)?;
@@ -476,7 +486,10 @@ impl Runtime {
         };
         self.top_level_env().store_or_and_chain_atomic_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts, trust_summary.clone())?;
-        self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+        self.store_transitive_prop_chain_atomic_facts(
+            transitive_chain_facts,
+            trust_summary.clone(),
+        )?;
 
         let output_fact = fact_for_infer.clone().to_fact();
         self.store_fact_cache_keys_with_nested_obj_binders(&output_fact, trust_summary)?;
@@ -491,9 +504,15 @@ impl Runtime {
     fn store_transitive_prop_chain_atomic_facts(
         &mut self,
         facts: Vec<AtomicFact>,
+        trust_summary: ProofTrustSummary,
     ) -> Result<(), RuntimeError> {
         for atomic_fact in facts {
-            self.top_level_env().store_atomic_fact(atomic_fact)?;
+            self.top_level_env()
+                .store_atomic_fact(atomic_fact.clone())?;
+            self.store_fact_cache_keys_with_nested_obj_binders(
+                &atomic_fact.into(),
+                trust_summary.clone(),
+            )?;
         }
         Ok(())
     }
@@ -512,11 +531,12 @@ impl Runtime {
         Ok(())
     }
 
-    fn store_fact_cache_keys_with_nested_obj_binders(
+    pub(crate) fn store_fact_cache_keys_with_nested_obj_binders(
         &mut self,
         fact: &Fact,
-        trust_summary: ProofTrustSummary,
+        mut trust_summary: ProofTrustSummary,
     ) -> Result<(), RuntimeError> {
+        trust_summary.merge(&self.current_trusted_prefix_statement_trust());
         let line_file = fact.line_file();
         let fact_string = fact.to_string();
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
@@ -551,8 +571,7 @@ impl Runtime {
         }
 
         let reason_text = reason.store_reason();
-        let trust_summary =
-            ProofTrustSummary::from_store_reason(&reason_text, fact.line_file());
+        let trust_summary = ProofTrustSummary::from_store_reason(&reason_text, fact.line_file());
         self.top_level_env().store_fact(fact.clone())?;
         self.store_fact_cache_keys_with_nested_obj_binders(&fact, trust_summary)?;
 

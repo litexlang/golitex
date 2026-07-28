@@ -47,6 +47,8 @@ pub struct Environment {
         HashMap<(AtomicFactKey, bool), HashMap<ObjString, AtomicFact>>,
     pub known_atomic_facts_with_2_args:
         HashMap<(AtomicFactKey, bool), HashMap<(ObjString, ObjString), AtomicFact>>,
+    pub known_owner_sets: HashMap<ObjString, HashMap<ObjString, InFact>>,
+    pub known_direct_supersets: HashMap<ObjString, HashMap<ObjString, AtomicFact>>,
 
     pub known_exist_facts: HashMap<ExistFactKey, Vec<ExistFactEnum>>,
     pub known_or_facts: HashMap<OrFactKey, Vec<OrFact>>,
@@ -163,6 +165,8 @@ impl Environment {
             known_atomic_facts_with_0_or_more_than_2_args,
             known_atomic_facts_with_1_arg: known_atomic_facts_with_1_arg,
             known_atomic_facts_with_2_args: known_atomic_facts_with_2_args,
+            known_owner_sets: HashMap::new(),
+            known_direct_supersets: HashMap::new(),
             known_exist_facts,
             known_atomic_facts_in_forall_facts,
             known_atomic_facts_in_forall_facts_by_arg_shape: HashMap::new(),
@@ -301,6 +305,41 @@ impl Environment {
     }
 
     pub fn store_atomic_fact(&mut self, atomic_fact: AtomicFact) -> Result<(), RuntimeError> {
+        match &atomic_fact {
+            AtomicFact::InFact(in_fact) => {
+                let element_key = obj_equality_key(&in_fact.element);
+                let set_key = obj_equality_key(&in_fact.set);
+                self.known_owner_sets
+                    .entry(element_key.clone())
+                    .or_default()
+                    .entry(set_key)
+                    .or_insert_with(|| in_fact.clone());
+
+                if let Obj::PowerSet(power_set) = &in_fact.set {
+                    self.known_direct_supersets
+                        .entry(element_key)
+                        .or_default()
+                        .entry(obj_equality_key(power_set.set.as_ref()))
+                        .or_insert_with(|| atomic_fact.clone());
+                }
+            }
+            AtomicFact::SubsetFact(subset_fact) => {
+                self.known_direct_supersets
+                    .entry(obj_equality_key(&subset_fact.left))
+                    .or_default()
+                    .entry(obj_equality_key(&subset_fact.right))
+                    .or_insert_with(|| atomic_fact.clone());
+            }
+            AtomicFact::SupersetFact(superset_fact) => {
+                self.known_direct_supersets
+                    .entry(obj_equality_key(&superset_fact.right))
+                    .or_default()
+                    .entry(obj_equality_key(&superset_fact.left))
+                    .or_insert_with(|| atomic_fact.clone());
+            }
+            _ => {}
+        }
+
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => self.store_equality(&equal_fact),
             _ => {
@@ -940,7 +979,20 @@ impl Environment {
         self.cache_known_fact
             .insert(fact_key.clone(), fact_line_file);
         if !trust_summary.is_empty() {
-            self.cache_known_fact_trust.insert(fact_key, trust_summary);
+            let merge_cli_trust = trust_summary.contains_kind("cli_trusted_prefix")
+                || self
+                    .cache_known_fact_trust
+                    .get(&fact_key)
+                    .is_some_and(|summary| summary.contains_kind("cli_trusted_prefix"));
+            if merge_cli_trust {
+                let existing = self
+                    .cache_known_fact_trust
+                    .entry(fact_key)
+                    .or_insert_with(ProofTrustSummary::new);
+                existing.merge(&trust_summary);
+            } else {
+                self.cache_known_fact_trust.insert(fact_key, trust_summary);
+            }
         }
         Ok(())
     }

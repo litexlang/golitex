@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -38,6 +38,10 @@ pub struct Runtime {
     /// Parameters that the active recursive fact matcher may instantiate.
     /// Captured parameters of the same object kind must remain rigid.
     pub(crate) active_arg_match_bindings: Vec<(ParamObjType, String)>,
+    /// Atomic facts currently being expanded by the recursive inference cascade.
+    pub(crate) active_atomic_fact_inferences: HashSet<FactString>,
+    /// Objects currently being checked for well-definedness.
+    pub(crate) active_well_defined_objects: HashSet<ObjString>,
     pub(crate) symbol_id_allocator: Rc<SymbolIdAllocator>,
     pub(crate) template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
     /// Parser-only notation metadata. A source binder written as `a &Struct`
@@ -52,6 +56,10 @@ pub struct Runtime {
     pub isolated: bool,
     pub output_language: OutputLanguage,
     pub unverified_imports: Vec<UnverifiedImport>,
+    pub(crate) trusted_prefix_policy: Option<TrustedPrefixPolicy>,
+    pub(crate) trusted_prefix_statement_context: Option<TrustedPrefixStatementContext>,
+    pub trusted_prefix_report: Option<TrustedPrefixReport>,
+    pub trusted_prefix_setup_error: Option<String>,
 }
 
 impl Runtime {
@@ -61,6 +69,8 @@ impl Runtime {
             execution_stack: vec![],
             run_mode: RunMode::File,
             active_arg_match_bindings: vec![],
+            active_atomic_fact_inferences: HashSet::new(),
+            active_well_defined_objects: HashSet::new(),
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
             default_struct_views: HashMap::new(),
@@ -71,6 +81,10 @@ impl Runtime {
             isolated: false,
             output_language: OutputLanguage::English,
             unverified_imports: vec![],
+            trusted_prefix_policy: None,
+            trusted_prefix_statement_context: None,
+            trusted_prefix_report: None,
+            trusted_prefix_setup_error: None,
         }
     }
 }
@@ -275,6 +289,85 @@ impl Runtime {
             .expect("an execution frame should always exist");
         (frame.module_id, frame.layer)
     }
+
+    pub(crate) fn configure_trusted_prefix(
+        &mut self,
+        module_id: ModuleId,
+        layer: ExecutionLayer,
+        before_line: usize,
+    ) {
+        self.trusted_prefix_policy = Some(TrustedPrefixPolicy::new(module_id, layer, before_line));
+        self.trusted_prefix_statement_context = None;
+    }
+
+    pub(crate) fn clear_trusted_prefix_execution_policy(&mut self) {
+        self.trusted_prefix_policy = None;
+        self.trusted_prefix_statement_context = None;
+    }
+
+    pub(crate) fn trusted_prefix_before_line_for_current_target(&self) -> Option<usize> {
+        let (module_id, layer) = self.current_execution_target();
+        self.trusted_prefix_policy
+            .as_ref()
+            .filter(|policy| policy.matches(module_id, layer))
+            .map(|policy| policy.before_line)
+    }
+
+    pub(crate) fn begin_trusted_prefix_statement(
+        &mut self,
+        line_file: LineFile,
+        before_line: usize,
+        is_trusted: bool,
+    ) {
+        let (module_id, layer) = self.current_execution_target();
+        let direct_trust = if is_trusted {
+            ProofTrustSummary::cli_trusted_prefix(line_file, before_line)
+        } else {
+            ProofTrustSummary::new()
+        };
+        self.trusted_prefix_statement_context = Some(TrustedPrefixStatementContext::new(
+            module_id,
+            layer,
+            direct_trust,
+        ));
+    }
+
+    pub(crate) fn end_trusted_prefix_statement(&mut self) {
+        self.trusted_prefix_statement_context = None;
+    }
+
+    pub(crate) fn current_trusted_prefix_statement_trust(&self) -> ProofTrustSummary {
+        let (module_id, layer) = self.current_execution_target();
+        self.trusted_prefix_statement_context
+            .as_ref()
+            .filter(|context| context.matches(module_id, layer))
+            .map(|context| context.direct_trust.clone())
+            .unwrap_or_else(ProofTrustSummary::new)
+    }
+
+    pub(crate) fn current_statement_is_in_trusted_prefix_run(&self) -> bool {
+        let (module_id, layer) = self.current_execution_target();
+        self.trusted_prefix_statement_context
+            .as_ref()
+            .is_some_and(|context| context.matches(module_id, layer))
+    }
+
+    pub(crate) fn current_statement_is_cli_trusted_prefix(&self) -> bool {
+        !self.current_trusted_prefix_statement_trust().is_empty()
+    }
+
+    pub(crate) fn replace_current_execution_mode(
+        &mut self,
+        execution_mode: ExecutionMode,
+    ) -> ExecutionMode {
+        let frame = self
+            .execution_stack
+            .last_mut()
+            .expect("an execution frame should exist while running a statement");
+        let previous = frame.execution_mode;
+        frame.execution_mode = execution_mode;
+        previous
+    }
 }
 
 impl Runtime {
@@ -397,6 +490,12 @@ impl Runtime {
         self.execution_stack.clear();
         self.unverified_imports.clear();
         self.parsed_struct_definitions.clear();
+        self.active_atomic_fact_inferences.clear();
+        self.active_well_defined_objects.clear();
+        self.trusted_prefix_policy = None;
+        self.trusted_prefix_statement_context = None;
+        self.trusted_prefix_report = None;
+        self.trusted_prefix_setup_error = None;
         self.new_file_path_new_env_new_name_scope(path.as_str());
     }
 }

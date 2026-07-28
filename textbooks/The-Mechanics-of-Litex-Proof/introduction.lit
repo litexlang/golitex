@@ -1,5 +1,8 @@
 # About This Project
 #
+# Litex source:
+# https://github.com/litexlang/golitex/tree/main/textbooks/The-Mechanics-of-Litex-Proof
+#
 # The Mechanics of Litex Proof is an ongoing Litex textbook motivated by
 # Heather Macbeth's The Mechanics of Proof and its Lean-based approach to
 # learning formal mathematics. This is an independent Litex case study, not an

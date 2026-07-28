@@ -103,6 +103,35 @@ impl RunSummary {
     }
 
     fn visit_result(&mut self, result: &StmtResult, depth: usize) {
+        if let Some(trace) = result.execution_trace() {
+            for dependency in trace.trust_summary.dependencies.iter() {
+                bump_count(&mut self.trust_dependency_counts, dependency.kind.as_str());
+            }
+            if trace.verification_status.as_deref() == Some("indirect_trust") {
+                let line_file = result.line_file();
+                let mut trust_kinds = trace
+                    .trust_summary
+                    .dependencies
+                    .iter()
+                    .map(|dependency| dependency.kind.clone())
+                    .collect::<Vec<_>>();
+                trust_kinds.sort();
+                trust_kinds.dedup();
+                let reason = format!(
+                    "statement_trust:{}:{}:{}",
+                    line_file.1,
+                    line_file.0,
+                    trust_kinds.join(",")
+                );
+                if !self
+                    .indirect_trust_reasons
+                    .iter()
+                    .any(|existing| existing == &reason)
+                {
+                    self.indirect_trust_reasons.push(reason);
+                }
+            }
+        }
         if result.is_true() {
             self.verified_statements += 1;
         }
@@ -426,6 +455,43 @@ impl RunSummary {
                 self.main_environment_json_value(),
             ),
         ])
+    }
+
+    fn to_json_value_with_trusted_prefix(
+        &self,
+        ok: bool,
+        report: &TrustedPrefixReport,
+    ) -> JsonValue {
+        let JsonValue::Object(mut fields) = self.to_json_value(ok) else {
+            unreachable!("run summary must be a JSON object")
+        };
+        fields.push(("execution_ok".to_string(), JsonValue::Bool(ok)));
+        fields.push((
+            "verification_status".to_string(),
+            JsonValue::JsonString("trusted_prefix".to_string()),
+        ));
+        fields.push((
+            "trusted_prefix".to_string(),
+            JsonValue::Object(vec![
+                (
+                    "file".to_string(),
+                    JsonValue::JsonString(report.file.clone()),
+                ),
+                (
+                    "before_line".to_string(),
+                    JsonValue::Number(report.before_line),
+                ),
+                (
+                    "trusted_top_level_statements".to_string(),
+                    JsonValue::Number(report.trusted_top_level_statements),
+                ),
+                (
+                    "first_verified_statement_line".to_string(),
+                    JsonValue::Number(report.first_verified_statement_line),
+                ),
+            ]),
+        ));
+        JsonValue::Object(fields)
     }
 
     fn main_environment_json_value(&self) -> JsonValue {
@@ -870,6 +936,19 @@ pub fn display_run_summary_json_with_runtime(
 ) -> String {
     let summary = RunSummary::from_run_with_runtime(runtime, stmt_results, runtime_error);
     render_json_value(&summary.to_json_value(runtime_error.is_none()), 0)
+}
+
+pub fn display_run_summary_json_with_runtime_and_trusted_prefix(
+    runtime: &Runtime,
+    stmt_results: &[StmtResult],
+    runtime_error: &Option<RuntimeError>,
+    report: &TrustedPrefixReport,
+) -> String {
+    let summary = RunSummary::from_run_with_runtime(runtime, stmt_results, runtime_error);
+    render_json_value(
+        &summary.to_json_value_with_trusted_prefix(runtime_error.is_none(), report),
+        0,
+    )
 }
 
 fn count_map_json_value(counts: &BTreeMap<String, usize>) -> JsonValue {

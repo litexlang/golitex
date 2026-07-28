@@ -1116,22 +1116,22 @@ sketch:
 
                         witness exist q Z st {n + 1 = c * q + (n + 1) % c} from basics::integer_quotient(n + 1, c):
                             n + 1 = c * basics::integer_quotient(n + 1, c) + (n + 1) % c
-                        obtain e from exist q Z st {n + 1 = c * q + (n + 1) % c}
-                        n + 1 = c * e + (n + 1) % c = c * e = e * c
+                        obtain e1 from exist q Z st {n + 1 = c * q + (n + 1) % c}
+                        n + 1 = c * e1 + (n + 1) % c = c * e1 = e1 * c
 
                         witness exist q Z st {c = d * q + c % d} from basics::integer_quotient(c, d):
                             c = d * basics::integer_quotient(c, d) + c % d
                         obtain f from exist r Z st {c = d * r + c % d}
                         c = d * f + c % d = d * f = f * d
 
-                        witness exist t Z st {e * f * d = t * d} from e * f
+                        witness exist t Z st {e1 * f * d = t * d} from e1 * f
                         0 < d
-                        e * f * d = d * (e * f) + 0
-                        (e * f * d) % d = 0
+                        e1 * f * d = d * (e1 * f) + 0
+                        (e1 * f * d) % d = 0
 
-                        n + 1 = e * c = e * (f * d) = (e * f) * d
+                        n + 1 = e1 * c = e1 * (f * d) = (e1 * f) * d
                         0 < d
-                        n + 1 = d * (e * f) + 0
+                        n + 1 = d * (e1 * f) + 0
                         (n + 1) % d = 0
                         witness exist p N_pos st {$prime(p), (n + 1) % p = 0} from d:
                             (n + 1) % d = 0

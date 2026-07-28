@@ -1097,7 +1097,7 @@ thm union_of_two_countable_sets_is_countable:
         # trust: unfolding the local embedding together with the imported
         # bijection's injectivity currently fails in project context.
         trust $chap3::is_injective_fn(N, union(X, Y), embed_N)
-    witness exist e fn(x N) union(X, Y) st {$chap3::is_injective_fn(N, union(X, Y), e)} from embed_N
+    witness exist element_e fn(x N) union(X, Y) st {$chap3::is_injective_fn(N, union(X, Y), element_e)} from embed_N
     by thm at_most_countable_with_N_embedding_is_countably_infinite(union(X, Y))
 
 """
@@ -1474,7 +1474,7 @@ thm product_of_countable_sets_is_countable:
     claim:
         ? $chap3::is_injective_fn(N, cart(X, Y), embed_N_into_cart)
         trust $chap3::is_injective_fn(N, cart(X, Y), embed_N_into_cart)
-    witness exist e fn(x N) cart(X, Y) st {$chap3::is_injective_fn(N, cart(X, Y), e)} from embed_N_into_cart
+    witness exist element_e fn(x N) cart(X, Y) st {$chap3::is_injective_fn(N, cart(X, Y), element_e)} from embed_N_into_cart
     by thm at_most_countable_with_N_embedding_is_countably_infinite(cart(X, Y))
 
 """
@@ -1599,23 +1599,23 @@ most countable; this is used later and requires choice.
 # Choose an enumeration for each at most countable fiber, then diagonalize over
 # the countable index set.
 
-prop is_injective_code_graph(J, V set, F fn(i J) power_set(V), i J, G power_set(cart(V, N))):
-    forall x F(i):
+prop is_injective_code_graph(J, V set, F fn(i_index J) power_set(V), i_index J, G power_set(cart(V, N))):
+    forall x F(i_index):
         exist! n N st {(x, n) $in G}
-    forall x1, x2 F(i), n N:
+    forall x1, x2 F(i_index), n N:
         (x1, n) $in G
         (x2, n) $in G
         =>:
             x1 = x2
 
-prop is_owner_code(J, V set, F fn(i J) power_set(V), e fn(i J) N, x V, n N):
-    exist i J st {x $in F(i), n = e(i)}
+prop is_owner_code(J, V set, F fn(i_index J) power_set(V), element_e fn(i_index J) N, x V, n N):
+    exist i_index J st {x $in F(i_index), n = element_e(i_index)}
 
 thm countable_union_of_at_most_countable_sets:
-    ? forall I, U set, A fn(i I) power_set(U):
+    ? forall I, U set, A fn(i_index I) power_set(U):
         $is_at_most_countable(I)
-        forall i I:
-            $is_at_most_countable(A(i))
+        forall i_index I:
+            $is_at_most_countable(A(i_index))
         =>:
             $is_at_most_countable(big_union(fn_range(A)))
     # trust: the current kernel fails while checking uniqueness of the
@@ -1740,19 +1740,19 @@ thm union_of_two_at_most_countable_sets_is_at_most_countable:
     by thm finite_set_has_cardinality_count({0, 1})
     witness exist n N st {$chap3::has_cardinality({0, 1}, n)} from finite_set_size({0, 1})
     by thm finite_cardinality_gives_at_most_countable({0, 1})
-    have fn family(i {0, 1}) power_set(union(X, Y)) by cases:
-        case i = 0: X
-        case i = 1: Y
+    have fn family(i_index {0, 1}) power_set(union(X, Y)) by cases:
+        case i_index = 0: X
+        case i_index = 1: Y
     claim:
-        ? forall i {0, 1}:
-            $is_at_most_countable(family(i))
-        i = 0 or i = 1
+        ? forall i_index {0, 1}:
+            $is_at_most_countable(family(i_index))
+        i_index = 0 or i_index = 1
         by cases:
-            ? $is_at_most_countable(family(i))
-            case i = 0:
-                family(i) = X
-            case i = 1:
-                family(i) = Y
+            ? $is_at_most_countable(family(i_index))
+            case i_index = 0:
+                family(i_index) = X
+            case i_index = 1:
+                family(i_index) = Y
     by thm countable_union_of_at_most_countable_sets({0, 1}, union(X, Y), family)
     claim:
         ? big_union(fn_range(family)) = union(X, Y)
@@ -1761,15 +1761,15 @@ thm union_of_two_at_most_countable_sets_is_at_most_countable:
                 ? forall z big_union(fn_range(family)):
                     z $in union(X, Y)
                 obtain S from exist S fn_range(family) st {z $in S}
-                have by preimage i from S $in fn_range(family)
-                i = 0 or i = 1
+                have by preimage i_index from S $in fn_range(family)
+                i_index = 0 or i_index = 1
                 by cases:
                     ? z $in union(X, Y)
-                    case i = 0:
-                        S = family(i) = X
+                    case i_index = 0:
+                        S = family(i_index) = X
                         z $in X
-                    case i = 1:
-                        S = family(i) = Y
+                    case i_index = 1:
+                        S = family(i_index) = Y
                         z $in Y
             claim:
                 ? forall z union(X, Y):
@@ -1993,7 +1993,7 @@ thm nonnegative_double_sum_has_finite_support_capture:
 
 thm finite_prefix_sum_as_finite_set_sum:
     ? forall a seq(R), k N_pos:
-        sum(1, k, fn(i N_pos) R {a(i)}) = finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {a(i)})
+        sum(1, k, fn(i_index N_pos) R {a(i_index)}) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {a(i_index)})
 
 thm row_partial_sums_bounded_by_finite_double_bound:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R, n N_pos:
@@ -2025,8 +2025,8 @@ thm row_partial_sums_bounded_by_finite_double_bound:
         finite_set_sum(cart({n}, closed_range(1, k)), rect) = finite_set_sum(cart({n}, closed_range(1, k)), fn(p cart({n}, closed_range(1, k))) R {f(p)})
         finite_set_sum(cart({n}, closed_range(1, k)), rect) <= L
         by thm chap7::finite_double_sum_over_cartesian_product({n}, closed_range(1, k), rect)
-        finite_set_sum({n}, fn(i {n}) R {finite_set_sum(closed_range(1, k), fn(m closed_range(1, k)) R {rect((i, m))})}) = finite_set_sum(cart({n}, closed_range(1, k)), rect)
-        finite_set_sum({n}, fn(i {n}) R {finite_set_sum(closed_range(1, k), fn(m closed_range(1, k)) R {rect((i, m))})}) = finite_set_sum(closed_range(1, k), fn(m closed_range(1, k)) R {rect((n, m))})
+        finite_set_sum({n}, fn(i_index {n}) R {finite_set_sum(closed_range(1, k), fn(m closed_range(1, k)) R {rect((i_index, m))})}) = finite_set_sum(cart({n}, closed_range(1, k)), rect)
+        finite_set_sum({n}, fn(i_index {n}) R {finite_set_sum(closed_range(1, k), fn(m closed_range(1, k)) R {rect((i_index, m))})}) = finite_set_sum(closed_range(1, k), fn(m closed_range(1, k)) R {rect((n, m))})
         by thm chap7::partial_sum_matches_finite_sum(row, k)
         chap7::partial_sum(row, k) = sum(1, k, fn(m N_pos) R {row(m)})
         by thm finite_prefix_sum_as_finite_set_sum(row, k)
@@ -2080,31 +2080,31 @@ thm finite_rows_have_series_sum:
     ? forall f fn(p cart(N_pos, N_pos)) R, r seq(R), k N_pos:
         $has_row_sums(f, r)
         =>:
-            $chap7::has_series_sum(fn(m N_pos) R {sum(1, k, fn(i N_pos) R {f((i, m))})}, chap7::partial_sum(r, k))
+            $chap7::has_series_sum(fn(m N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, m))})}, chap7::partial_sum(r, k))
     # trust: the induction uses several project-qualified local row functions
     # whose defining equations currently fail to unfold.
-    trust $chap7::has_series_sum(fn(m N_pos) R {sum(1, k, fn(i N_pos) R {f((i, m))})}, chap7::partial_sum(r, k))
+    trust $chap7::has_series_sum(fn(m N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, m))})}, chap7::partial_sum(r, k))
 
 thm finite_row_aggregate_is_nonnegative:
     ? forall f fn(p cart(N_pos, N_pos)) R, k N_pos:
         $is_nonnegative_double_series(f)
         =>:
-            $chap7::is_nonnegative_sequence(fn(m N_pos) R {sum(1, k, fn(i N_pos) R {f((i, m))})})
+            $chap7::is_nonnegative_sequence(fn(m N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, m))})})
     claim:
         ? forall m N_pos:
-            fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}(m) >= 0
-        have row seq(R) = fn(i N_pos) R {f((i, m))}
+            fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}(m) >= 0
+        have row seq(R) = fn(i_index N_pos) R {f((i_index, m))}
         claim:
-            ? forall i closed_range(1, k):
-                0 <= row(i)
-            (i, m) $in cart(N_pos, N_pos)
-            row(i) = f((i, m)) >= 0
-        by thm chap7::finite_set_sum_monotone(closed_range(1, k), fn(i closed_range(1, k)) R {0}, fn(i closed_range(1, k)) R {row(i)})
-        finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {0}) = 0
-        finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {row(i)}) >= 0
+            ? forall i_index closed_range(1, k):
+                0 <= row(i_index)
+            (i_index, m) $in cart(N_pos, N_pos)
+            row(i_index) = f((i_index, m)) >= 0
+        by thm chap7::finite_set_sum_monotone(closed_range(1, k), fn(i_index closed_range(1, k)) R {0}, fn(i_index closed_range(1, k)) R {row(i_index)})
+        finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {0}) = 0
+        finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {row(i_index)}) >= 0
         by thm finite_prefix_sum_as_finite_set_sum(row, k)
-        sum(1, k, fn(i N_pos) R {row(i)}) = finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {row(i)})
-        fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}(m) = sum(1, k, fn(i N_pos) R {f((i, m))}) = sum(1, k, fn(i N_pos) R {row(i)}) >= 0
+        sum(1, k, fn(i_index N_pos) R {row(i_index)}) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {row(i_index)})
+        fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}(m) = sum(1, k, fn(i_index N_pos) R {f((i_index, m))}) = sum(1, k, fn(i_index N_pos) R {row(i_index)}) >= 0
 
 thm row_sums_are_nonnegative:
     ? forall f fn(p cart(N_pos, N_pos)) R, r seq(R):
@@ -2145,7 +2145,7 @@ have fn positive_pair_second(p cart(N_pos, N_pos)) N_pos = p[2]
 
 thm rectangle_partial_sum_realization:
     ? forall f fn(p cart(N_pos, N_pos)) R, k, m N_pos:
-        exist rect fn(p cart(closed_range(1, k), closed_range(1, m))) R st {$is_rectangle_restriction(f, k, m, rect), chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}, m) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect)}
+        exist rect fn(p cart(closed_range(1, k), closed_range(1, m))) R st {$is_rectangle_restriction(f, k, m, rect), chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, m) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect)}
     claim:
         ? cart(closed_range(1, k), closed_range(1, m)) $subset cart(N_pos, N_pos)
         forall p cart(closed_range(1, k), closed_range(1, m)):
@@ -2157,21 +2157,21 @@ thm rectangle_partial_sum_realization:
             p = (p[1], p[2])
             p $in cart(N_pos, N_pos)
     have fn rect(p cart(closed_range(1, k), closed_range(1, m))) R = f(p)
-    have aggregate seq(R) = fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}
-    have fn nested(j closed_range(1, m)) R = finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {rect((i, j))})
+    have aggregate seq(R) = fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}
+    have fn nested(j closed_range(1, m)) R = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, j))})
     claim:
         ? forall j closed_range(1, m):
             aggregate(j) = nested(j)
-        have row seq(R) = fn(i N_pos) R {f((i, j))}
-        aggregate(j) = sum(1, k, fn(i N_pos) R {f((i, j))}) = sum(1, k, fn(i N_pos) R {row(i)})
+        have row seq(R) = fn(i_index N_pos) R {f((i_index, j))}
+        aggregate(j) = sum(1, k, fn(i_index N_pos) R {f((i_index, j))}) = sum(1, k, fn(i_index N_pos) R {row(i_index)})
         by thm finite_prefix_sum_as_finite_set_sum(row, k)
-        sum(1, k, fn(i N_pos) R {row(i)}) = finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {row(i)})
+        sum(1, k, fn(i_index N_pos) R {row(i_index)}) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {row(i_index)})
         claim:
-            ? forall i closed_range(1, k):
-                fn(q closed_range(1, k)) R {row(q)}(i) = fn(q closed_range(1, k)) R {rect((q, j))}(i)
-            row(i) = f((i, j)) = rect((i, j))
-        $fn_eq(fn(i closed_range(1, k)) R {row(i)}, fn(i closed_range(1, k)) R {rect((i, j))})
-        finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {row(i)}) = finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {rect((i, j))}) = nested(j)
+            ? forall i_index closed_range(1, k):
+                fn(q closed_range(1, k)) R {row(q)}(i_index) = fn(q closed_range(1, k)) R {rect((q, j))}(i_index)
+            row(i_index) = f((i_index, j)) = rect((i_index, j))
+        $fn_eq(fn(i_index closed_range(1, k)) R {row(i_index)}, fn(i_index closed_range(1, k)) R {rect((i_index, j))})
+        finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {row(i_index)}) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, j))}) = nested(j)
         aggregate(j) = nested(j)
     by thm chap7::partial_sum_matches_finite_sum(aggregate, m)
     chap7::partial_sum(aggregate, m) = sum(1, m, fn(j N_pos) R {aggregate(j)})
@@ -2184,32 +2184,32 @@ thm rectangle_partial_sum_realization:
     $fn_eq(fn(j closed_range(1, m)) R {aggregate(j)}, nested)
     finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {aggregate(j)}) = finite_set_sum(closed_range(1, m), nested)
     chap7::partial_sum(aggregate, m) = finite_set_sum(closed_range(1, m), nested)
-    have fn column_nested(j closed_range(1, m)) R = finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {rect((i, j))})
+    have fn column_nested(j closed_range(1, m)) R = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, j))})
     claim:
         ? forall j closed_range(1, m):
             nested(j) = column_nested(j)
-        nested(j) = finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {rect((i, j))}) = column_nested(j)
+        nested(j) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, j))}) = column_nested(j)
     $fn_eq(nested, column_nested)
     claim:
         ? forall j closed_range(1, m):
-            column_nested(j) = fn(q closed_range(1, m)) R {finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {rect((i, q))})}(j)
-        column_nested(j) = finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {rect((i, j))})
-    $fn_eq(column_nested, fn(j closed_range(1, m)) R {finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {rect((i, j))})})
+            column_nested(j) = fn(q closed_range(1, m)) R {finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, q))})}(j)
+        column_nested(j) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, j))})
+    $fn_eq(column_nested, fn(j closed_range(1, m)) R {finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, j))})})
     by thm chap7::finite_fubini(closed_range(1, k), closed_range(1, m), rect)
-    finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {rect((i, j))})}) = finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {rect((i, j))})})
+    finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {rect((i_index, j))})}) = finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, j))})})
     # trust: finite Fubini proves the displayed equality after unfolding the
     # local nested functions, which currently remain project-qualified.
-    trust finite_set_sum(closed_range(1, m), nested) = finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {rect((i, j))})})
+    trust finite_set_sum(closed_range(1, m), nested) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {rect((i_index, j))})})
     by thm chap7::finite_double_sum_over_cartesian_product(closed_range(1, k), closed_range(1, m), rect)
-    finite_set_sum(closed_range(1, k), fn(i closed_range(1, k)) R {finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {rect((i, j))})}) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect)
+    finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {rect((i_index, j))})}) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect)
     chap7::partial_sum(aggregate, m) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect)
     claim:
         ? forall j N_pos:
-            aggregate(j) = fn(q N_pos) R {sum(1, k, fn(i N_pos) R {f((i, q))})}(j)
-        aggregate(j) = sum(1, k, fn(i N_pos) R {f((i, j))})
-    by thm chap7::partial_sum_extensional(aggregate, fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}, m)
-    chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}, m) = chap7::partial_sum(aggregate, m)
-    witness exist rect0 fn(p cart(closed_range(1, k), closed_range(1, m))) R st {$is_rectangle_restriction(f, k, m, rect0), chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}, m) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect0)} from rect:
+            aggregate(j) = fn(q N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, q))})}(j)
+        aggregate(j) = sum(1, k, fn(i_index N_pos) R {f((i_index, j))})
+    by thm chap7::partial_sum_extensional(aggregate, fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, m)
+    chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, m) = chap7::partial_sum(aggregate, m)
+    witness exist rect0 fn(p cart(closed_range(1, k), closed_range(1, m))) R st {$is_rectangle_restriction(f, k, m, rect0), chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, m) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect0)} from rect:
         forall p cart(closed_range(1, k), closed_range(1, m)):
             rect(p) = f(p)
 
@@ -2218,10 +2218,10 @@ thm rectangle_partial_sum_bounded:
         $is_nonnegative_double_series(f)
         $has_finite_double_subsum_bound(f, L)
         =>:
-            chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}, m) <= L
+            chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, m) <= L
     # trust: the current well-definedness checker rejects the restricted
     # anonymous rectangle function even though its domain is a subtype.
-    trust chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}, m) <= L
+    trust chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, m) <= L
 
 thm row_partial_sum_below_finite_double_bound:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R, r seq(R), k N_pos:
@@ -2234,9 +2234,9 @@ thm row_partial_sum_below_finite_double_bound:
     by thm finite_row_aggregate_is_nonnegative(f, k)
     claim:
         ? forall m N_pos:
-            chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}, m) <= L
+            chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, m) <= L
         by thm rectangle_partial_sum_bounded(f, L, k, m)
-    by thm chap7::series_sum_below_common_partial_sum_upper_bound(fn(j N_pos) R {sum(1, k, fn(i N_pos) R {f((i, j))})}, chap7::partial_sum(r, k), L)
+    by thm chap7::series_sum_below_common_partial_sum_upper_bound(fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, chap7::partial_sum(r, k), L)
 
 thm row_sum_partial_sums_bounded:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R, r seq(R):
@@ -3244,14 +3244,14 @@ thm nonfinite_at_most_countable_sum_has_absolute_enumeration:
                 impossible not $is_finite_set(X)
             case $is_absolutely_convergent_countable_set_series(X, f):
                 $is_absolutely_convergent_countable_set_series(X, f)
-    obtain e from exist e fn(n N_pos) X st {$is_countable_enumeration(X, e), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, e>)}
+    obtain element_e from exist element_e fn(n N_pos) X st {$is_countable_enumeration(X, element_e), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, element_e>)}
     by cases:
         ? exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>), $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, L)}
         case $has_finite_set_series_sum(X, f, L):
             impossible not $is_finite_set(X)
         case $has_countable_set_series_sum(X, f, L):
             obtain g from exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, L)}
-            by thm countable_set_absolute_convergence_well_defined(X, f, e, g)
+            by thm countable_set_absolute_convergence_well_defined(X, f, element_e, g)
             witness exist h fn(n N_pos) X st {$is_countable_enumeration(X, h), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, h>), $chap7::has_series_sum(\countable_set_series_terms<X, f, h>, L)} from g
 
 thm at_most_countable_set_series_sum_unique:
@@ -3920,19 +3920,19 @@ number.
 # The rearrangement alternately takes unused positive or negative terms so the
 # partial sums cross the target value with overshoot tending to zero.
 
-prop is_permutation_of_positive_integers(phi fn(i N_pos) N_pos):
+prop is_permutation_of_positive_integers(phi fn(i_index N_pos) N_pos):
     $chap3::is_bijective_fn(N_pos, N_pos, phi)
 
-have fn rearranged_series(a seq(R), phi fn(i N_pos) N_pos) seq(R) = fn(j N_pos) R {a(phi(j))}
+have fn rearranged_series(a seq(R), phi fn(i_index N_pos) N_pos) seq(R) = fn(j N_pos) R {a(phi(j))}
 
 thm riemann_rearrangement_theorem:
     ? forall a seq(R), L R:
         $is_only_conditionally_convergent_series(a)
         =>:
-            exist phi fn(i N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $chap7::has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
+            exist phi fn(i_index N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $chap7::has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
     # The original textbook gives only an optional sketch here and leaves the
     # details to Exercise 8.2.5.
-    trust exist phi fn(i N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $chap7::has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
+    trust exist phi fn(i_index N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $chap7::has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
 
 
 # 8.3 Uncountable sets
@@ -4498,9 +4498,9 @@ thm constant_general_cart_product_is_function_space:
 # representation bijection, not literal equality of the two sets.
 
 # A function-valued finite product has one membership condition per index.
-prop has_coordinate_values_in_family(n N_pos, U set, X fn(i closed_range(1, n)) power_set(U), f fn(i closed_range(1, n)) U):
-    forall i closed_range(1, n):
-        f(i) $in X(i)
+prop has_coordinate_values_in_family(n N_pos, U set, X fn(i_index closed_range(1, n)) power_set(U), f fn(i_index closed_range(1, n)) U):
+    forall i_index closed_range(1, n):
+        f(i_index) $in X(i_index)
 
 # `$is_cart(C)` means that `C` is a finite Cartesian-product set.  Later in the
 # proof, `have tuple t for i <= n, t[i] = ...` constructs the n-coordinate tuple
@@ -4508,17 +4508,17 @@ prop has_coordinate_values_in_family(n N_pos, U set, X fn(i closed_range(1, n)) 
 # the finitely many indices of a concrete closed range as proof cases.
 
 thm finite_cartesian_product_choice_function_representation:
-    ? forall n N_pos, U set, X fn(i closed_range(1, n)) power_set(U), C, P set:
-        $is_cart(C)
-        cart_dim(C) = n
-        forall i closed_range(1, n):
-            proj(C, i) = X(i)
-        P = {f fn(i closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, f)}
+    ? forall n N_pos, U set, X fn(i_index closed_range(1, n)) power_set(U), set_C, P set:
+        $is_cart(set_C)
+        cart_dim(set_C) = n
+        forall i_index closed_range(1, n):
+            proj(set_C, i_index) = X(i_index)
+        P = {f fn(i_index closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, f)}
         =>:
-            $chap3::has_equal_cardinality(C, P)
+            $chap3::has_equal_cardinality(set_C, P)
     # trust: the parser keeps the function-comprehension binder active while
     # checking the surjectivity proof and rejects its local reuse.
-    trust $chap3::has_equal_cardinality(C, P)
+    trust $chap3::has_equal_cardinality(set_C, P)
 """
     P = {f fn(i closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, f)}
     have fn raw_choice_tuple_encode(p C) fn(i closed_range(1, n)) U = fn(j closed_range(1, n)) U {p[j]}
@@ -4597,21 +4597,21 @@ thm finite_cartesian_product_choice_function_representation:
 
 """
 
-prop is_finite_cartesian_product_for_family(n N_pos, U set, X fn(i closed_range(1, n)) power_set(U), C set):
-    $is_cart(C)
-    cart_dim(C) = n
-    forall i closed_range(1, n):
-        proj(C, i) = X(i)
+prop is_finite_cartesian_product_for_family(n N_pos, U set, X fn(i_index closed_range(1, n)) power_set(U), set_C set):
+    $is_cart(set_C)
+    cart_dim(set_C) = n
+    forall i_index closed_range(1, n):
+        proj(set_C, i_index) = X(i_index)
 
 thm finite_index_product_agrees_with_chapter3_cartesian_product:
-    ? forall n N_pos, U set, X fn(i closed_range(1, n)) power_set(U), C, P set:
-        $is_finite_cartesian_product_for_family(n, U, X, C)
-        P = {f fn(i closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)}
+    ? forall n N_pos, U set, X fn(i_index closed_range(1, n)) power_set(U), set_C, P set:
+        $is_finite_cartesian_product_for_family(n, U, X, set_C)
+        P = {f fn(i_index closed_range(1, n)) U: $is_in_infinite_cartesian_product(closed_range(1, n), U, X, f)}
         =>:
-            $chap3::has_equal_cardinality(C, P)
+            $chap3::has_equal_cardinality(set_C, P)
     # trust: the parser keeps the function-comprehension binder active while
     # checking the two set inclusions.
-    trust $chap3::has_equal_cardinality(C, P)
+    trust $chap3::has_equal_cardinality(set_C, P)
 """
     have coordinate_product set = {f fn(i closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, f)}
     by extension P = coordinate_product:
@@ -4642,7 +4642,7 @@ thm binary_cartesian_product_choice_function_representation:
     ? forall A, B, U, P set:
         A $subset U
         B $subset U
-        P = {f fn(i closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
+        P = {f fn(i_index closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
         =>:
             $chap3::has_equal_cardinality(cart(A, B), P)
     # trust: the parser retains the comprehension binder during the
@@ -4714,7 +4714,7 @@ thm two_factor_finite_index_product_representation:
     ? forall A, B, U, P set:
         A $subset U
         B $subset U
-        P = {f fn(i closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
+        P = {f fn(i_index closed_range(1, 2)) U: f(1) $in A and f(2) $in B}
         =>:
             $chap3::has_equal_cardinality(cart(A, B), P)
     # Tuple-valued products and function-valued finite-index products have a
@@ -4722,16 +4722,16 @@ thm two_factor_finite_index_product_representation:
     by thm binary_cartesian_product_choice_function_representation(A, B, U, P)
 
 thm ternary_cartesian_product_choice_function_representation:
-    ? forall A, B, C, U, P set:
+    ? forall A, B, set_C, U, P set:
         A $subset U
         B $subset U
-        C $subset U
-        P = {f fn(i closed_range(1, 3)) U: f(1) $in A and f(2) $in B and f(3) $in C}
+        set_C $subset U
+        P = {f fn(i_index closed_range(1, 3)) U: f(1) $in A and f(2) $in B and f(3) $in set_C}
         =>:
-            $chap3::has_equal_cardinality(cart(A, B, C), P)
+            $chap3::has_equal_cardinality(cart(A, B, set_C), P)
     # trust: the parser retains the comprehension binder during the
     # surjectivity proof of the tuple encoding.
-    trust $chap3::has_equal_cardinality(cart(A, B, C), P)
+    trust $chap3::has_equal_cardinality(cart(A, B, set_C), P)
 """
     P = {f fn(i closed_range(1, 3)) U: f(1) $in A and f(2) $in B and f(3) $in C}
     have fn choice_tuple_encode(p cart(A, B, C)) P = fn(i closed_range(1, 3)) U {p[i]}
@@ -4803,16 +4803,16 @@ thm ternary_cartesian_product_choice_function_representation:
 """
 
 thm three_factor_finite_index_product_representation:
-    ? forall A, B, C, U, P set:
+    ? forall A, B, set_C, U, P set:
         A $subset U
         B $subset U
-        C $subset U
-        P = {f fn(i closed_range(1, 3)) U: f(1) $in A and f(2) $in B and f(3) $in C}
+        set_C $subset U
+        P = {f fn(i_index closed_range(1, 3)) U: f(1) $in A and f(2) $in B and f(3) $in set_C}
         =>:
-            $chap3::has_equal_cardinality(cart(A, B, C), P)
+            $chap3::has_equal_cardinality(cart(A, B, set_C), P)
     # The three-factor instance makes the tuple/function correspondence
     # explicit one step beyond the binary case.
-    by thm ternary_cartesian_product_choice_function_representation(A, B, C, U, P)
+    by thm ternary_cartesian_product_choice_function_representation(A, B, set_C, U, P)
 
 """
 Axiom 8.1 (Choice). Any family of non-empty sets has a choice function.
@@ -6240,13 +6240,13 @@ thm failed_target_gives_strict_upper_bound:
         witness exist W power_set(X) st {$is_well_ordered_chain_from_without_strict_upper_bound(X, le, x0, W)} from Y
         impossible $is_well_ordered_chain_from_without_strict_upper_bound(X, le, x0, Y)
 
-prop is_strict_upper_bound_choice_relation(X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X))):
+prop is_strict_upper_bound_choice_relation(X set, le power_set(cart(X, X)), x0 X, set_C power_set(cart(power_set(X), X))):
     forall Y power_set(X):
         $is_well_ordered_chain_with_minimum(X, le, x0, Y)
         =>:
-            exist u X st {(Y, u) $in C, $is_strict_upper_bound(X, le, Y, u)}
+            exist u X st {(Y, u) $in set_C, $is_strict_upper_bound(X, le, Y, u)}
     forall Y power_set(X), u X:
-        (Y, u) $in C
+        (Y, u) $in set_C
         $is_well_ordered_chain_with_minimum(X, le, x0, Y)
         =>:
             $is_strict_upper_bound(X, le, Y, u)
@@ -6264,10 +6264,10 @@ thm strict_upper_bound_choice_relation_exists:
             =>:
                 $has_strict_upper_bound(X, le, Y)
         =>:
-            exist C power_set(cart(power_set(X), X)) st {$is_strict_upper_bound_choice_relation(X, le, x0, C)}
+            exist set_C power_set(cart(power_set(X), X)) st {$is_strict_upper_bound_choice_relation(X, le, x0, set_C)}
     # trust: a comprehension binder named u remains active while checking
     # the relation's uniqueness/application clause.
-    trust exist C power_set(cart(power_set(X), X)) st {$is_strict_upper_bound_choice_relation(X, le, x0, C)}
+    trust exist set_C power_set(cart(power_set(X), X)) st {$is_strict_upper_bound_choice_relation(X, le, x0, set_C)}
 """
     have fn upper_choice_family(Y power_set(X)) power_set(X) = {u X: not $is_well_ordered_chain_with_minimum(X, le, x0, Y) or $is_strict_upper_bound(X, le, Y, u)}
     claim:
@@ -6328,18 +6328,18 @@ thm strict_upper_bound_choice_relation_exists:
 template<X set, le power_set(cart(X, X)), Y power_set(X), x X>:
     have initial_segment_below power_set(X) = {y Y: $is_less_than_in_order(X, le, y, x)}
 
-prop is_good_well_ordered_chain(X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X)), Y power_set(X)):
+prop is_good_well_ordered_chain(X set, le power_set(cart(X, X)), x0 X, set_C power_set(cart(power_set(X), X)), Y power_set(X)):
     $is_well_ordered_chain_with_minimum(X, le, x0, Y)
     forall x Y:
         x != x0
         =>:
-            exist u X st {(\initial_segment_below<X, le, Y, x>, u) $in C, x = u}
+            exist u X st {(\initial_segment_below<X, le, Y, x>, u) $in set_C, x = u}
 
-template<X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X))>:
-    have good_chain_family set = {Y power_set(X): $is_good_well_ordered_chain(X, le, x0, C, Y)}
+template<X set, le power_set(cart(X, X)), x0 X, set_C power_set(cart(power_set(X), X))>:
+    have good_chain_family set = {Y power_set(X): $is_good_well_ordered_chain(X, le, x0, set_C, Y)}
 
-template<X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X))>:
-    have good_chain_union set = big_union(\good_chain_family<X, le, x0, C>)
+template<X set, le power_set(cart(X, X)), x0 X, set_C power_set(cart(power_set(X), X))>:
+    have good_chain_union set = big_union(\good_chain_family<X, le, x0, set_C>)
 
 prop second_good_chain_difference_strictly_bounds_first(X set, le power_set(cart(X, X)), Y, W power_set(X)):
     forall z set_minus(W, Y):
@@ -6350,11 +6350,11 @@ prop first_good_chain_difference_strictly_bounds_second(X set, le power_set(cart
         $is_strict_upper_bound(X, le, W, y)
 
 thm good_chain_comparison_forward_from_exercise_8_5_13:
-    ? forall X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X)), Y, W power_set(X):
+    ? forall X set, le power_set(cart(X, X)), x0 X, set_C power_set(cart(power_set(X), X)), Y, W power_set(X):
         $is_partial_order(X, le)
-        $is_strict_upper_bound_choice_relation(X, le, x0, C)
-        $is_good_well_ordered_chain(X, le, x0, C, Y)
-        $is_good_well_ordered_chain(X, le, x0, C, W)
+        $is_strict_upper_bound_choice_relation(X, le, x0, set_C)
+        $is_good_well_ordered_chain(X, le, x0, set_C, Y)
+        $is_good_well_ordered_chain(X, le, x0, set_C, W)
         =>:
             $second_good_chain_difference_strictly_bounds_first(X, le, Y, W)
     # Tao assigns this comparison to Exercise 8.5.13. Its proof compares the
@@ -6364,11 +6364,11 @@ thm good_chain_comparison_forward_from_exercise_8_5_13:
     trust $second_good_chain_difference_strictly_bounds_first(X, le, Y, W)
 
 thm good_chain_comparison_reverse_from_exercise_8_5_13:
-    ? forall X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X)), Y, W power_set(X):
+    ? forall X set, le power_set(cart(X, X)), x0 X, set_C power_set(cart(power_set(X), X)), Y, W power_set(X):
         $is_partial_order(X, le)
-        $is_strict_upper_bound_choice_relation(X, le, x0, C)
-        $is_good_well_ordered_chain(X, le, x0, C, Y)
-        $is_good_well_ordered_chain(X, le, x0, C, W)
+        $is_strict_upper_bound_choice_relation(X, le, x0, set_C)
+        $is_good_well_ordered_chain(X, le, x0, set_C, Y)
+        $is_good_well_ordered_chain(X, le, x0, set_C, W)
         =>:
             $first_good_chain_difference_strictly_bounds_second(X, le, Y, W)
     # This is the symmetric half of Tao's Exercise 8.5.13. It remains an
@@ -6377,38 +6377,38 @@ thm good_chain_comparison_reverse_from_exercise_8_5_13:
     trust $first_good_chain_difference_strictly_bounds_second(X, le, Y, W)
 
 thm good_chain_union_is_chain_with_minimum:
-    ? forall X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X)):
+    ? forall X set, le power_set(cart(X, X)), x0 X, set_C power_set(cart(power_set(X), X)):
         $is_partial_order(X, le)
-        $is_strict_upper_bound_choice_relation(X, le, x0, C)
+        $is_strict_upper_bound_choice_relation(X, le, x0, set_C)
         =>:
-            $is_well_ordered_chain_with_minimum(X, le, x0, \good_chain_union<X, le, x0, C>)
+            $is_well_ordered_chain_with_minimum(X, le, x0, \good_chain_union<X, le, x0, set_C>)
     # The source proof leaves the union verification as a sequence of “why?”
     # steps: compare good chains via Exercise 8.5.13, then prove totality and
     # well-ordering of their union. We retain that omitted source argument as
     # an explicit temporary trust.
-    trust $is_well_ordered_chain_with_minimum(X, le, x0, \good_chain_union<X, le, x0, C>)
+    trust $is_well_ordered_chain_with_minimum(X, le, x0, \good_chain_union<X, le, x0, set_C>)
 
 thm good_chain_union_has_no_strict_upper_bound:
-    ? forall X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X)):
+    ? forall X set, le power_set(cart(X, X)), x0 X, set_C power_set(cart(power_set(X), X)):
         $is_partial_order(X, le)
-        $is_strict_upper_bound_choice_relation(X, le, x0, C)
+        $is_strict_upper_bound_choice_relation(X, le, x0, set_C)
         =>:
-            not $has_strict_upper_bound(X, le, \good_chain_union<X, le, x0, C>)
+            not $has_strict_upper_bound(X, le, \good_chain_union<X, le, x0, set_C>)
     # The final contradiction follows the source's deferred extension step:
     # adjoin the chosen strict upper bound to the union, using the
     # Exercise 8.5.11 route to keep the extension well-ordered. We retain
     # this source step as an explicit temporary trust.
-    trust not $has_strict_upper_bound(X, le, \good_chain_union<X, le, x0, C>)
+    trust not $has_strict_upper_bound(X, le, \good_chain_union<X, le, x0, set_C>)
 
 thm good_chain_union_construction:
-    ? forall X set, le power_set(cart(X, X)), x0 X, C power_set(cart(power_set(X), X)):
+    ? forall X set, le power_set(cart(X, X)), x0 X, set_C power_set(cart(power_set(X), X)):
         $is_partial_order(X, le)
-        $is_strict_upper_bound_choice_relation(X, le, x0, C)
+        $is_strict_upper_bound_choice_relation(X, le, x0, set_C)
         =>:
             exist Y power_set(X) st {$is_well_ordered_chain_from_without_strict_upper_bound(X, le, x0, Y)}
-    have Yinf set = \good_chain_union<X, le, x0, C>
-    by thm good_chain_union_is_chain_with_minimum(X, le, x0, C)
-    by thm good_chain_union_has_no_strict_upper_bound(X, le, x0, C)
+    have Yinf set = \good_chain_union<X, le, x0, set_C>
+    by thm good_chain_union_is_chain_with_minimum(X, le, x0, set_C)
+    by thm good_chain_union_has_no_strict_upper_bound(X, le, x0, set_C)
     by thm subset_member_of_power_set(X, Yinf)
     witness exist Y power_set(X) st {$is_well_ordered_chain_from_without_strict_upper_bound(X, le, x0, Y)} from Yinf
 
@@ -6426,8 +6426,8 @@ thm well_ordered_subset_without_strict_upper_bound:
                     $has_strict_upper_bound(X, le, Y)
             by thm failed_target_gives_strict_upper_bound(X, le, x0, Y)
         by thm strict_upper_bound_choice_relation_exists(X, le, x0)
-        obtain C from exist C power_set(cart(power_set(X), X)) st {$is_strict_upper_bound_choice_relation(X, le, x0, C)}
-        by thm good_chain_union_construction(X, le, x0, C)
+        obtain set_C from exist set_C power_set(cart(power_set(X), X)) st {$is_strict_upper_bound_choice_relation(X, le, x0, set_C)}
+        by thm good_chain_union_construction(X, le, x0, set_C)
         obtain Y from exist Y power_set(X) st {$is_well_ordered_chain_from_without_strict_upper_bound(X, le, x0, Y)}
         impossible $is_well_ordered_chain_from_without_strict_upper_bound(X, le, x0, Y)
 

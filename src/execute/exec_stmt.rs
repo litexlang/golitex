@@ -12,13 +12,28 @@ impl Runtime {
     }
 
     pub(crate) fn finish_statement_execution(
-        &self,
+        &mut self,
         result: Result<StmtResult, RuntimeError>,
         trusted: bool,
     ) -> Result<StmtResult, RuntimeError> {
         match result {
             Ok(result) => {
-                let trace = if trusted {
+                let in_trusted_prefix_run = self.current_statement_is_in_trusted_prefix_run();
+                let trace = if in_trusted_prefix_run && !result.is_unknown() {
+                    let direct_trust = self.current_trusted_prefix_statement_trust();
+                    if !direct_trust.is_empty() {
+                        StatementExecutionTrace::trusted_prefix(direct_trust)
+                    } else {
+                        let trust_summary = self
+                            .proof_trust_summary_from_stmt_results(std::slice::from_ref(&result));
+                        if trust_summary.is_empty() {
+                            StatementExecutionTrace::verified(false).with_verified_status()
+                        } else {
+                            StatementExecutionTrace::verified(false)
+                                .with_indirect_trust(trust_summary)
+                        }
+                    }
+                } else if trusted {
                     StatementExecutionTrace::trusted()
                 } else {
                     StatementExecutionTrace::verified(result.is_unknown())
@@ -197,6 +212,11 @@ impl Runtime {
             Stmt::DefStrategyStmt(s) => self.exec_def_strategy_stmt_affect_environment_only(s),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 self.exec_claim_stmt_affect_environment_only(s)
+            }
+            Stmt::ProofBlock(ProofBlockStmt::TryStmt(s))
+                if self.current_statement_is_cli_trusted_prefix() =>
+            {
+                self.exec_try_stmt(s)
             }
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_))
             | Stmt::ProofBlock(ProofBlockStmt::TryStmt(_))

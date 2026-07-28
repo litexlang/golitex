@@ -211,10 +211,13 @@ pub use crate::obj::{
 };
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
-    display_run_summary_json, display_run_summary_json_with_runtime, display_runtime_error_json,
-    display_stmt_exec_result_json, render_run_source_code_output, run_file_with_project_context,
-    run_isolated_repl_with_runtime, run_latex_repl, run_repl, run_repl_with_detail_output,
-    run_repl_with_detail_output_and_strict, run_repl_with_detail_output_and_strict_and_language,
+    display_run_summary_json, display_run_summary_json_with_runtime,
+    display_run_summary_json_with_runtime_and_trusted_prefix, display_runtime_error_json,
+    display_stmt_exec_result_json, display_trusted_prefix_report_json,
+    render_run_source_code_output, run_file_with_project_context,
+    run_file_with_project_context_and_trusted_prefix, run_isolated_repl_with_runtime,
+    run_latex_repl, run_repl, run_repl_with_detail_output, run_repl_with_detail_output_and_strict,
+    run_repl_with_detail_output_and_strict_and_language,
     run_repl_with_output_style_and_strict_and_language,
     run_repl_with_output_style_and_strict_and_language_and_isolation,
     run_repository_before_file_target, run_repository_with_output,
@@ -309,7 +312,10 @@ pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::ParseContext;
 pub use crate::runtime::RunMode;
 pub use crate::runtime::ScopeFrame;
-pub use crate::runtime::{ExecutionFrame, ExecutionLayer, OutputStyle, Runtime};
+pub use crate::runtime::{
+    ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, TrustedPrefixPolicy, TrustedPrefixReport,
+    TrustedPrefixStatementContext,
+};
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
 pub use crate::stmt::by_stmt::ByAxiomOfChoiceStmt;
 pub use crate::stmt::by_stmt::ByCasesStmt;

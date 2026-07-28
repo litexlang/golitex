@@ -238,18 +238,18 @@ lies in the interval [-M,M], equivalently abs(a_n) <= M for all n.
 
 prop is_bounded_by_in_Q(a seq(Q), M Q):
     M >= 0
-    forall i N_pos:
-        abs(a(i)) <= M
+    forall i_index N_pos:
+        abs(a(i_index)) <= M
 
 prop is_bounded_sequence_in_Q(a seq(Q)):
     exist M Q st {$is_bounded_by_in_Q(a, M)}
 
 prop is_finite_prefix_bounded_in_Q(a seq(Q), n N_pos, M Q):
     M >= 0
-    forall i N_pos:
-        i <= n
+    forall i_index N_pos:
+        i_index <= n
         =>:
-            abs(a(i)) <= M
+            abs(a(i_index)) <= M
 
 """
 Example 5.1.13. Finite sequences are bounded, while sequences with terms whose
@@ -287,13 +287,13 @@ claim:
 
         ? from n = 1:
             prefix_bound_Q(a, 1) = abs(a(1)) >= 0
-            forall i N_pos:
-                i <= 1
+            forall i_index N_pos:
+                i_index <= 1
                 =>:
-                    i >= 1
-                    i = 1
-                    abs(a(i)) = abs(a(1)) = prefix_bound_Q(a, 1)
-                    abs(a(i)) <= prefix_bound_Q(a, 1)
+                    i_index >= 1
+                    i_index = 1
+                    abs(a(i_index)) = abs(a(1)) = prefix_bound_Q(a, 1)
+                    abs(a(i_index)) <= prefix_bound_Q(a, 1)
             by def $is_finite_prefix_bounded_in_Q(a, 1, prefix_bound_Q(a, 1))
 
         ? induc:
@@ -307,18 +307,18 @@ claim:
             abs(a(n + 1)) <= finite_set_max(union({prefix_bound_Q(a, n + 1 - 1)}, { abs(a(n + 1))})) = prefix_bound_Q(a, n + 1)
             0 <= prefix_bound_Q(a, n) <= prefix_bound_Q(a, n + 1)
             claim:
-                ? forall i N_pos:
-                    i <= n + 1
+                ? forall i_index N_pos:
+                    i_index <= n + 1
                     =>:
-                        abs(a(i)) <= prefix_bound_Q(a, n + 1)
-                i <= n or i >= n + 1
+                        abs(a(i_index)) <= prefix_bound_Q(a, n + 1)
+                i_index <= n or i_index >= n + 1
                 by cases:
-                    ? abs(a(i)) <= prefix_bound_Q(a, n + 1)
-                    case i <= n:
-                        abs(a(i)) <= prefix_bound_Q(a, n) <= prefix_bound_Q(a, n + 1)
-                    case i >= n + 1:
-                        i <= n + 1
-                        abs(a(i)) = abs(a(n + 1)) <= prefix_bound_Q(a, n + 1)
+                    ? abs(a(i_index)) <= prefix_bound_Q(a, n + 1)
+                    case i_index <= n:
+                        abs(a(i_index)) <= prefix_bound_Q(a, n) <= prefix_bound_Q(a, n + 1)
+                    case i_index >= n + 1:
+                        i_index <= n + 1
+                        abs(a(i_index)) = abs(a(n + 1)) <= prefix_bound_Q(a, n + 1)
             by def $is_finite_prefix_bounded_in_Q(a, n + 1, prefix_bound_Q(a, n + 1))
 
 claim:
@@ -330,26 +330,26 @@ claim:
     obtain n0 from exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(a, 1, n0)}
     $is_finite_prefix_bounded_in_Q(a, n0, prefix_bound_Q(a, n0))
     claim:
-        ? forall i N_pos:
-            abs(a(i)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
-        i <= n0 or i >= n0 + 1
+        ? forall i_index N_pos:
+            abs(a(i_index)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
+        i_index <= n0 or i_index >= n0 + 1
         by cases:
-            ? abs(a(i)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
-            case i <= n0:
-                abs(a(i)) <= prefix_bound_Q(a, n0) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
-            case i >= n0 + 1:
-                i >= n0 + 1 > n0
-                i >= n0
+            ? abs(a(i_index)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
+            case i_index <= n0:
+                abs(a(i_index)) <= prefix_bound_Q(a, n0) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
+            case i_index >= n0 + 1:
+                i_index >= n0 + 1 > n0
+                i_index >= n0
                 n0 >= n0
-                $chap4::is_close_in_Q(1, a(i), a(n0))
-                chap4::dist_Q(a(i), a(n0)) <= 1
-                by thm chap4::rational_distance_formula(a(i), a(n0))
-                chap4::dist_Q(a(i), a(n0)) = abs(a(i) - a(n0)) <= 1
-                a(i) = (a(i) - a(n0)) + a(n0)
-                abs(a(i)) = abs((a(i) - a(n0)) + a(n0)) <= abs(a(i) - a(n0)) + abs(a(n0))
-                abs(a(i) - a(n0)) + abs(a(n0)) <= 1 + abs(a(n0))
+                $chap4::is_close_in_Q(1, a(i_index), a(n0))
+                chap4::dist_Q(a(i_index), a(n0)) <= 1
+                by thm chap4::rational_distance_formula(a(i_index), a(n0))
+                chap4::dist_Q(a(i_index), a(n0)) = abs(a(i_index) - a(n0)) <= 1
+                a(i_index) = (a(i_index) - a(n0)) + a(n0)
+                abs(a(i_index)) = abs((a(i_index) - a(n0)) + a(n0)) <= abs(a(i_index) - a(n0)) + abs(a(n0))
+                abs(a(i_index) - a(n0)) + abs(a(n0)) <= 1 + abs(a(n0))
                 1 + abs(a(n0)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
-                abs(a(i)) <= abs(a(i) - a(n0)) + abs(a(n0)) <= 1 + abs(a(n0)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
+                abs(a(i_index)) <= abs(a(i_index) - a(n0)) + abs(a(n0)) <= 1 + abs(a(n0)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
     witness exist M Q st {$is_bounded_by_in_Q(a, M)} from prefix_bound_Q(a, n0) + abs(a(n0)) + 1
 
 # 5.2 Equivalent Cauchy sequences
@@ -580,20 +580,20 @@ claim:
     by thm archimedean_property(epsilon / 2)
     obtain n0 from exist n0 N_pos st {1 / n0 < epsilon / 2}
     witness exist n1 N_pos st {$is_tail_close_in_Q(fn(n N_pos) Q {1 + 1 / 10^n}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon, n1)} from n0:
-        forall i N_pos:
-            i >= n0
+        forall i_index N_pos:
+            i_index >= n0
             =>:
-                i <= 10^i
-                n0 <= 10^i
-                1 / 10^i = n0 / (n0 * 10^i) <= 10^i / (n0 * 10^i) = 1 / n0 < epsilon / 2
-                2 / 10^i = 2 * (1 / 10^i) < 2 * (epsilon / 2) = epsilon
-                fn(n N_pos) Q {1 + 1 / 10^n}(i) = 1 + 1 / 10^i
-                fn(n N_pos) Q {1 - 1 / 10^n}(i) = 1 - 1 / 10^i
-                (1 + 1 / 10^i) - (1 - 1 / 10^i) = 2 / 10^i > 0
-                (1 + 1 / 10^i) - (1 - 1 / 10^i) > 0
-                abs((1 + 1 / 10^i) - (1 - 1 / 10^i)) = (1 + 1 / 10^i) - (1 - 1 / 10^i) = 2 / 10^i
-                chap4::dist_Q(fn(n N_pos) Q {1 + 1 / 10^n}(i), fn(n N_pos) Q {1 - 1 / 10^n}(i)) = abs((1 + 1 / 10^i) - (1 - 1 / 10^i))
-                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 + 1 / 10^n}(i), fn(n N_pos) Q {1 - 1 / 10^n}(i))
+                i_index <= 10^i_index
+                n0 <= 10^i_index
+                1 / 10^i_index = n0 / (n0 * 10^i_index) <= 10^i_index / (n0 * 10^i_index) = 1 / n0 < epsilon / 2
+                2 / 10^i_index = 2 * (1 / 10^i_index) < 2 * (epsilon / 2) = epsilon
+                fn(n N_pos) Q {1 + 1 / 10^n}(i_index) = 1 + 1 / 10^i_index
+                fn(n N_pos) Q {1 - 1 / 10^n}(i_index) = 1 - 1 / 10^i_index
+                (1 + 1 / 10^i_index) - (1 - 1 / 10^i_index) = 2 / 10^i_index > 0
+                (1 + 1 / 10^i_index) - (1 - 1 / 10^i_index) > 0
+                abs((1 + 1 / 10^i_index) - (1 - 1 / 10^i_index)) = (1 + 1 / 10^i_index) - (1 - 1 / 10^i_index) = 2 / 10^i_index
+                chap4::dist_Q(fn(n N_pos) Q {1 + 1 / 10^n}(i_index), fn(n N_pos) Q {1 - 1 / 10^n}(i_index)) = abs((1 + 1 / 10^i_index) - (1 - 1 / 10^i_index))
+                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 + 1 / 10^n}(i_index), fn(n N_pos) Q {1 - 1 / 10^n}(i_index))
 by def $is_equivalent_cauchy_sequence_in_Q(fn(n N_pos) Q {1 + 1 / 10^n}, fn(n N_pos) Q {1 - 1 / 10^n})
 
 """
@@ -613,19 +613,19 @@ claim:
     by thm archimedean_property(epsilon)
     obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
     witness exist n1 N_pos st {$is_tail_close_in_Q(fn(n N_pos) Q {1}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon, n1)} from n0:
-        forall i N_pos:
-            i >= n0
+        forall i_index N_pos:
+            i_index >= n0
             =>:
-                i <= 10^i
-                n0 <= 10^i
-                1 / 10^i = n0 / (n0 * 10^i) <= 10^i / (n0 * 10^i) = 1 / n0 < epsilon
-                fn(n N_pos) Q {1}(i) = 1
-                fn(n N_pos) Q {1 - 1 / 10^n}(i) = 1 - 1 / 10^i
-                1 - (1 - 1 / 10^i) = 1 / 10^i > 0
-                1 - (1 - 1 / 10^i) > 0
-                abs(1 - (1 - 1 / 10^i)) = 1 - (1 - 1 / 10^i) = 1 / 10^i
-                chap4::dist_Q(fn(n N_pos) Q {1}(i), fn(n N_pos) Q {1 - 1 / 10^n}(i)) = abs(1 - (1 - 1 / 10^i))
-                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1}(i), fn(n N_pos) Q {1 - 1 / 10^n}(i))
+                i_index <= 10^i_index
+                n0 <= 10^i_index
+                1 / 10^i_index = n0 / (n0 * 10^i_index) <= 10^i_index / (n0 * 10^i_index) = 1 / n0 < epsilon
+                fn(n N_pos) Q {1}(i_index) = 1
+                fn(n N_pos) Q {1 - 1 / 10^n}(i_index) = 1 - 1 / 10^i_index
+                1 - (1 - 1 / 10^i_index) = 1 / 10^i_index > 0
+                1 - (1 - 1 / 10^i_index) > 0
+                abs(1 - (1 - 1 / 10^i_index)) = 1 - (1 - 1 / 10^i_index) = 1 / 10^i_index
+                chap4::dist_Q(fn(n N_pos) Q {1}(i_index), fn(n N_pos) Q {1 - 1 / 10^n}(i_index)) = abs(1 - (1 - 1 / 10^i_index))
+                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1}(i_index), fn(n N_pos) Q {1 - 1 / 10^n}(i_index))
 by def $is_equivalent_cauchy_sequence_in_Q(fn(n N_pos) Q {1}, fn(n N_pos) Q {1 - 1 / 10^n})
 
 
@@ -1254,15 +1254,15 @@ sketch:
 
     witness exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(fn(n N_pos) Q {10^n}, c)} from 1:
         1 $in Q_pos
-        forall i N_pos:
-            i >= 1
-            i <= 10^i
-            1 <= i <= 10^i
-            10^i >= 0
-            abs(10^i) = 10^i
-            fn(n N_pos) Q {10^n}(i) = 10^i
-            abs(fn(n N_pos) Q {10^n}(i)) = abs(10^i) = 10^i
-            abs(fn(n N_pos) Q {10^n}(i)) >= 1
+        forall i_index N_pos:
+            i_index >= 1
+            i_index <= 10^i_index
+            1 <= i_index <= 10^i_index
+            10^i_index >= 0
+            abs(10^i_index) = 10^i_index
+            fn(n N_pos) Q {10^n}(i_index) = 10^i_index
+            abs(fn(n N_pos) Q {10^n}(i_index)) = abs(10^i_index) = 10^i_index
+            abs(fn(n N_pos) Q {10^n}(i_index)) >= 1
         $is_bounded_away_from_zero_by_in_Q(fn(n N_pos) Q {10^n}, 1)
     by def $is_bounded_away_from_zero_in_Q(fn(n N_pos) Q {10^n})
 
@@ -1988,14 +1988,14 @@ Remark 5.4.11. Strict inequalities do not pass to formal limits.
 # inequality in Corollary 5.4.10 cannot be strengthened to a strict one.
 
 claim:
-    ? forall i N_pos:
-        fn(k N_pos) Q {1 + 1 / k}(i) > fn(k N_pos) Q {1 - 1 / k}(i)
-    1 / i > 0
-    2 / i > 0
-    fn(k N_pos) Q {1 + 1 / k}(i) = 1 + 1 / i
-    fn(k N_pos) Q {1 - 1 / k}(i) = 1 - 1 / i
-    (1 + 1 / i) - (1 - 1 / i) = 2 / i
-    1 + 1 / i > 1 - 1 / i
+    ? forall i_index N_pos:
+        fn(k N_pos) Q {1 + 1 / k}(i_index) > fn(k N_pos) Q {1 - 1 / k}(i_index)
+    1 / i_index > 0
+    2 / i_index > 0
+    fn(k N_pos) Q {1 + 1 / k}(i_index) = 1 + 1 / i_index
+    fn(k N_pos) Q {1 - 1 / k}(i_index) = 1 - 1 / i_index
+    (1 + 1 / i_index) - (1 - 1 / i_index) = 2 / i_index
+    1 + 1 / i_index > 1 - 1 / i_index
 
 claim:
     ? forall epsilon Q_pos:
@@ -2565,6 +2565,7 @@ thm recursive_bisection_pair_states_exist:
     have fn step(p cart(R, R)) cart(R, R) by cases:
         case $is_upper_bound(E, (p[1] + p[2]) / 2): (p[1], (p[1] + p[2]) / 2)
         case not $is_upper_bound(E, (p[1] + p[2]) / 2): ((p[1] + p[2]) / 2, p[2])
+    a $in R
     have fn pair(n N) cart(R, R) by induc n from 0:
         case n = 0: (a - 1, b)
         case n > 0: step(pair(n - 1))

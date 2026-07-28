@@ -1,0 +1,527 @@
+# Litex Local Instructions
+
+Always apply these rules when working in this repository.
+
+## User-Mandated Fast Trust And Session Policy
+
+This policy overrides any lower-priority instruction in this file that asks an
+agent to keep searching for a proof before admitting a localized proof debt.
+
+1. When a Litex declaration reaches a blocker in its proof, library use,
+   inference, syntax, or formulation, immediately keep the intended
+   source-facing statement and replace only the blocked substep with the
+   narrowest legal `trust`. Mark the debt nearby and in the applicable
+   workspace ledger. Do not spend further proof-search iterations on that
+   obstruction unless the user explicitly asks to remove that trust. A
+   declaration containing `trust` is not `checkable`.
+2. For every iterative Litex edit, start one release session with
+   `target/release/litex -compact -session -before <current-file.lit>` and
+   retain that one process for the complete sequence of source-order blocks.
+   This loads the registered prefix before the current file and runs session
+   statements in that file's environment.
+   Submit every speculative candidate as a literal outermost `try:` block.
+   If block 5 fails, repair and resubmit block 5 in the same session; once it
+   succeeds, submit block 6 to that same session. Do not restart or re-preload
+   between candidate blocks merely because an earlier `try:` failed.
+3. Restart only if the session process exits, cannot accept input, or its
+   registered prefix must deliberately change, or an already committed
+   declaration must be replaced under the same name. Record an unexpected
+   session failure as `kernel_problem`; use the smallest release `-f` gate only
+   as a fallback checkpoint, not as the normal proof-debug loop.
+
+## Project Direction Through September
+
+The main project direction through September is to use real mathematical
+translation work as a pressure test for Litex. The target sources include
+Mathematics in Lean, Terry Tao's miniF2F, MATH500, high-school
+mathematics datasets, and Weil's Number Theory for Beginners.
+
+The purpose is twofold:
+
+1. Build strong evidence that Litex can express and verify meaningful
+   mathematics quickly.
+
+2. Use translation failures to discover real language, standard library,
+   kernel, inference, automation, and diagnostic gaps.
+
+Treat this as a structured feedback loop, not as a line-by-line porting
+project. For each source, start with a small vertical slice before attempting
+large-scale coverage. A useful slice is around 20-50 representative problems,
+definitions, or theorem statements.
+
+For each translated item, follow this loop:
+
+1. Understand the mathematics first.
+
+2. Write a natural Litex statement and proof attempt that matches the current
+   verifier style.
+
+3. Run the verifier and read the exact output.
+
+4. Make the next smallest correction.
+
+5. Classify the result as one of:
+   - `translated`: the mathematical statement is naturally expressed in Litex.
+   - `checkable`: the statement and proof are fully verified by Litex.
+   - `blocked`: the failure reason is understood and recorded with a minimal
+     reproduction.
+
+Classify blockers explicitly with only these labels:
+
+1. `trust`: the current proof is not complete. Use this for missing
+   definitions, lemmas, theorem organization, automation, syntax, diagnostics,
+   formulation work, or any case where the honest statement is that we do not
+   yet know how to finish the proof in Litex.
+
+2. `kernel_problem`: the issue appears to be in Litex's verifier, runtime,
+   well-definedness logic, core proof model, or another kernel-level behavior
+   rather than in the current proof attempt.
+
+Prefer early work on low-dependency, high-feedback corpora such as MATH500,
+high-school math, and small miniF2F slices. Use Mathematics in Lean as a
+standard library roadmap. Use Tao's Analysis I and Weil's Number Theory for
+Beginners as deeper stress tests for structured definitions, chapter
+dependencies, and long-form mathematical development.
+
+Successful translations should become examples, benchmarks, or documentation
+snippets when appropriate. Failed translations should become minimal blockers
+that guide standard library work, language design, kernel improvements, or
+better diagnostics. It is acceptable to use `trust` or `abstract_prop` only when
+the blocked part is clearly labeled and the rest of the development remains
+explicit and checkable.
+
+When a textbook theorem overlaps with Litex builtin behavior, kernel support,
+or a broad standard-library theorem, keep both roles visible. Preserve the
+source theorem as a local textbook-facing statement so chapter coverage and
+dependencies remain traceable. Use the Litex/std theorem as the main proof
+source when it exists or is the intended trusted interface. If the source proof
+is pedagogically important but not yet the main checked path, place its proof
+shape in a local `prove` block, proof sketch, or nearby todo as an alternate
+route/proof debt rather than replacing the chapter statement.
+
+For textbook chapter files, follow the source order when introducing local
+definitions. Do not put a large block of chapter-wide `prop` or
+`abstract_prop` declarations at the top unless the source itself starts that
+way. If Litex already has a builtin concept or standard predicate such as
+membership, subset, finite sets, `finite_set_size`, tuples, Cartesian products, or
+function equality, use it directly instead of adding a Tao-specific wrapper.
+Record broad proof debt in nearby comments or todo files; only introduce a
+named prop when it is a real source definition or a reusable local interface
+that later checked statements actually depend on.
+
+Use source-local cite packages for substantial unresolved supporting facts.
+This is the preferred workflow for textbook and dataset formalization when the
+main mathematical line is clear but a surrounding fact remains genuinely
+unproved after a direct attempt and has a substantial or library-shaped proof.
+Keep the main chapter or problem file focused on the source-facing definitions,
+theorem statements, core proof route, and checked derivations. Put the
+surrounding fact into an adjacent module such as
+`chap7_cite/main.lit`, `<source>_cite/main.lit`, or a local `cite/main.lit`.
+The main file should import this module with `import "../chap7_cite"` or the
+analogous relative module import. For repository projects, declare the cite
+package with `export mod` and import its root name. Represent source-order file
+reuse by placing the source earlier in the ordered `[export]` table and citing
+its canonical name in the dependent source; Litex has no statement for loading
+an arbitrary `.lit` path.
+
+Before adding or calling a cite theorem, test the intended fact directly in the
+real caller context without a wrapper theorem or `trust`. If builtin or infer
+rules verify it, use the fact directly and do not create a `thm` merely so later
+code can cite it. Never put a trusted duplicate of a builtin-supported fact in
+cite. This includes elementary set algebra such as commutativity of `intersect`
+or `union`, arithmetic normalization, comparisons, and automatic type or
+membership consequences. Repetition alone does not make such a fact
+cite-worthy. If the source itself names the result, keep the source-facing
+theorem in source order and let its body verify directly. If a simple expected
+fact fails, classify the missing builtin, infer, standard-library, or kernel
+support instead of hiding the gap as citation debt.
+
+Cite packages are explicit proof-debt interfaces, not completed standard
+library modules. Facts in a cite package should be named `thm` or `claim`
+interfaces whose unproved step is marked with `trust`, and each such debt should
+be tracked in the nearby `todo.md` or unfinished notes. An imported cite module
+must be self-contained: import the std modules it needs, and put shared source
+vocabulary in a small real `prop`/`have` module such as `chap9_vocab/main.lit`
+rather than copying existing chapter definitions as `abstract_prop` inside the
+cite package. Use `abstract_prop` only for genuinely external background
+interfaces that do not yet have a usable definition. Only move a cite theorem
+into `std` after its statement is stable, its proof or intended trusted
+interface is understood, and multiple files genuinely need it.
+
+By September, a good outcome is not only a large number of translated items. A
+good outcome is a working translation pipeline, checkable examples across the
+main source families, a clear standard library gap map, a benchmark set for
+Litex's mathematical ability, and minimal reproductions for the important
+blockers.
+
+For every source folder under `scripts/` or a similar local translation
+workspace, maintain a nearby `todo.md` as the local blocker list for that
+source. When translation work reveals a missing definition, theorem, infer
+rule, builtin rule, syntax feature, or diagnostic gap, append a concise item to
+that folder's `todo.md`. When one of those items is implemented or no longer
+blocks the work, remove it from that `todo.md`. For example, if work in
+`scripts/minif2f_tmp/` hits a missing feature, record it in
+`scripts/minif2f_tmp/todo.md`; if the feature is later added, delete the
+completed item.
+
+## Textbook Artifact Boundaries
+
+Treat `scripts/textbooks_drafts/<Book>/` as the canonical development surface
+for every textbook. It is a complete private mirror of the publishable module:
+chapter `.lit` files, `litex.config`, the module-owned `README.md` and
+`math_collections.md`, and any other file intended to ship with that book.
+All ordinary textbook edits, proof iteration, chapter checkpoints, whole-book
+checks, and module-documentation updates happen in this draft tree.
+
+This repository rule overrides any installed Litex skill or older local note
+that still names `textbooks/<Book>/` as the ordinary editing target. Interpret
+such a path as `scripts/textbooks_drafts/<Book>/` unless the task is explicitly
+to inspect or publish the public snapshot.
+
+Treat `textbooks/<Book>/` as the last manually published public snapshot.
+During ordinary writing or proof repair it is read-only. Do not edit, refresh,
+or synchronize it as a side effect of textbook work. Copy a draft into
+`textbooks/` only when the user explicitly requests publication or
+synchronization; by default, publication is a manual user action.
+
+Initialize a missing draft once with
+`scripts/textbooks_drafts/init_draft.sh <Book>`. The initializer may copy the
+published snapshot only when no draft exists. Never automatically merge or
+copy `textbooks/<Book>/` back over an existing draft, because the draft may
+contain unpublished work.
+
+Keep source material, translation-item records, todos, audits, experience
+notes, generated Markdown, verifier captures, and temporary artifacts in the
+book's existing workspace such as `scripts/Analysis/`, not in either module
+tree. For Analysis I, chapter tracking remains in `scripts/Analysis/todo/`;
+disposable artifacts belong in an appropriate `scripts/Analysis/` subfolder
+or `/private/tmp`.
+
+The module-owned `README.md` and `math_collections.md` live in the draft beside
+`litex.config` while being developed and are copied to the public snapshot only
+during publication. Do not export, import, render, or pass them to the Litex
+kernel.
+
+## Litex Module Documentation
+
+For every new top-level Litex module or project, maintain exactly one
+`README.md` and one `math_collections.md`. When an existing module gains or
+changes a core mathematical interface, add or refresh this pair as part of the
+same work. Do not backfill untouched modules merely to satisfy this convention.
+
+Here “module” means the top-level maintained package or project, even when it
+contains many `.lit` files, exports, or submodules. Do not create another pair
+for every chapter or submodule.
+
+- Put the pair in the root of a reusable directory module such as
+  `std/basics/`.
+- For a textbook or translation project, put the pair in
+  `scripts/textbooks_drafts/<Book>/` beside `litex.config`. They are part of
+  the draft module, not the paired tracking workspace such as
+  `scripts/Analysis/`. Publish them to `textbooks/<Book>/` only with the rest
+  of an explicitly requested release.
+- Write both files in English.
+
+The textbook pair is repository documentation, not chapter content. Do not
+list it in `[export]`, import it from Litex, add it to a rendered chapter
+manifest, or otherwise send it through the Litex kernel or textbook renderer.
+Keep todos, audits, verifier captures, and other working Markdown in
+`scripts/<Book>/`.
+
+`README.md` describes the current implemented module. Keep it factual: purpose,
+import or run entrypoint, namespace, actual public objects/functions/templates,
+predicates and main theorems, visible checked/trusted/axiom boundaries, and a
+small real use example. Do not put unimplemented wish-list interfaces there.
+
+`math_collections.md` is the mathematical design manual. Record only the
+important concepts and intermediate nodes that shape later work. For each one,
+explain its mathematical meaning, why it matters, the ideal Litex form and a
+short representative signature, the nearest rejected form, dependencies,
+downstream uses, and which proof/existence/uniqueness/well-definedness holes may
+remain. It is a narrative guide, not a machine-readable schema or exhaustive
+theorem inventory.
+
+Before generating substantial module code, read both files and compare the
+candidate declarations with `math_collections.md`. If they differ, decide
+whether the code misunderstood the intended mathematics or the design note is
+now wrong. Fix the code in the first case; update `math_collections.md` first
+and then migrate the code in the second. Do not preserve incompatible shapes
+through a wrapper, alias, `abstract_prop`, or `trust`. After the implementation
+and representative use probes verify, update `README.md` to reflect the actual
+public interface.
+
+## Dataset And Textbook Problem-Solving Loop
+
+Use this loop for MiniF2F, MATH500, high-school datasets, Mathematics in
+Lean, Tao Analysis, Weil Number Theory, and any other dataset or textbook
+translation work. The goal is a pressure-test workflow, not only a final
+answer.
+
+For every dataset, textbook, contest, exam, or generated-math item that is
+newly created or touched, maintain a structured translation item record with
+this shape:
+
+```yaml
+source:
+problem:
+proof_idea:
+litex_code:
+comments:
+```
+
+Use these fields consistently:
+
+- `source`: dataset, book, exam, contest, or source name.
+- `problem`: source problem, theorem, exercise, or a reusable reformulation if
+  the source text cannot be redistributed.
+- `proof_idea`: the mathematical idea before Litex code.
+- `litex_code`: the current runnable or intended Litex code.
+- `comments`: verifier command, proof attempt notes, blocker label, source or
+  license caveats, and follow-up work.
+
+Do not submit only raw Litex code for a translation item. Record the
+mathematical idea and, in `comments` or local tracking, the current status. Do
+not mark an item `checkable` unless the relevant Litex code has been run and
+verified. If source text cannot be redistributed, record a reusable
+mathematical reformulation and put the license concern in `comments`. Existing
+datasets do not need to be migrated all at once, but newly created or modified
+records should follow this contract.
+
+If a workspace needs dashboard or batch-tracking fields such as `id`, `topic`,
+`difficulty`, `status`, or `blocker`, add them locally, but do not treat them
+as required fields for ordinary translation records.
+
+For each item, proceed in this order:
+
+1. First explain the natural-language mathematical idea. Work out the key
+   transformations, cases, witnesses, estimates, or theorem dependencies before
+   writing Litex.
+
+2. Translate that mathematical plan into a natural Litex formulation. Prefer a
+   proof shape that the current verifier can check: explicit equality chains,
+   small intermediate facts, finite case splits, witnesses, named theorem
+   calls, and local reusable lemmas.
+
+3. For textbook work, if the source theorem can be proved by following the
+   text but Litex also has builtin/kernel/stdlib support for the same fact,
+   record both routes. Keep the source theorem statement in the chapter file,
+   use the named Litex/std interface as the main checked route when available,
+   and keep the textbook proof idea in a local `prove` block, proof sketch, or
+   nearby todo until it is checkable.
+
+4. If a supporting fact remains genuinely unproved after a direct real-context
+   attempt, has a substantial or library-shaped proof, and is needed to keep
+   the current source item moving, put it in a source-local cite package and
+   import that package from the main file. This keeps the main file readable
+   while preserving a named theorem interface and explicit proof debt. Do not
+   put builtin-supported or other elementary automatic facts in cite.
+
+5. If the proof cannot be completed immediately, write the best partial Litex
+   proof first. It is acceptable to use `trust` temporarily, but only for the
+   blocked step. Next to each temporary `trust`, add a concise comment saying
+   why the step is not yet proved and what kind of missing support it appears
+   to need.
+
+6. Put unfinished attempts in the local unfinished-explanation area. In
+   MiniF2F this is
+   `scripts/litex-minif2f/unfinished_dataset/problem_notes/`.
+   For another dataset or textbook workspace, create the analogous nearby
+   folder if it does not already exist. Name the file by the problem or theorem
+   id. Record the proof idea, the current Litex attempt, the exact verifier
+   failure if any, every remaining `trust`, and the primary blocker label.
+
+7. Iterate by removing proof debt one step at a time. Run the verifier after
+   each small change and use the exact output to decide the next correction.
+   Try splitting algebraic or numeric jumps into smaller equalities before
+   searching for new theorems.
+
+8. When the item becomes checkable, move it out of the unfinished area and into
+   the finished area for that source. Delete the matching unfinished-explanation
+   file, update any local JSONL/status/todo bookkeeping, and keep the final
+   `.lit` file runnable.
+
+9. After solving a formerly unfinished item, write a short "war story" in the
+   local solved-experience area. In MiniF2F this is
+   `scripts/litex-minif2f/experience/problem_notes/`. For another
+   source, create the analogous nearby folder if needed. Record the natural
+   idea, where the attempt got stuck, the exact trick or Litex pattern that
+   solved it, and any reusable lesson for later items.
+
+When splitting backlog work, use disjoint ranges or families. Use read-only
+triage passes to classify unfinished items, and use workers only on clearly
+separated write scopes. Each worker should return the status for each item it
+touched: `checkable`, `translated`, or `blocked` with one primary blocker
+label.
+
+## General Engineering Style
+
+1. Read the nearby code before editing. Follow the existing data model, naming, and control flow unless the user asks for a redesign.
+
+2. Write simple code, not clever code. Avoid fancy Rust syntax when a direct expression is clearer.
+
+3. Keep changes scoped to the request. Do not rewrite unrelated code or clean up unrelated files.
+
+4. Use English for comments and documentation. Comments should be concise and explain the purpose of non-obvious logic.
+
+5. Do not add many comments. If the code is simple, make the code clear instead of adding comments.
+
+6. Do not break existing data structures. Add adapters or helpers only when they preserve the current shape of the system.
+
+## Rust Kernel And Codebase Rules
+
+1. Use `use crate::prelude::*;` for repository imports. Import only `std` items directly.
+
+2. Use `.into()` to convert between types instead of directly wrapping a struct with an enum variant such as `Enum::Variant(value)`.
+
+3. Do not write code in `mod.rs`; `mod.rs` is only for module definitions.
+
+4. Use a static `new` function to create a new instance of a struct instead of using the struct literal constructor directly.
+
+5. Do not write static functions inside a struct when the struct is not needed. Use a free function instead.
+
+6. Do not write too many functions. If a piece of code is simple and only called once, write it inside the function that calls it.
+
+7. Write shared helper functions in a `helper.rs` file, not at the head of a file.
+
+8. Do not write new helper functions at the beginning of a file. Put them near the end of the file. The beginning of a file should contain major functions or struct definitions.
+
+9. When implementing a builtin rule, write comments about what mathematical property the rule is for, and include an example.
+
+10. When implementing an infer rule, write comments about the condition under which the rule is applied and what new fact is inferred. Include an example.
+
+11. All runtimes created within one top-level run must share the same module manager. In particular, imported-module runtimes should be created with `Runtime::new_for_import_from_parent` so nested imports, cycle checks, source labels, and stopped-module state all update the same `Rc<RefCell<ModuleManager>>`.
+
+## Litex Language And Proof Style
+
+1. Litex examples should expose a tight verifier feedback loop: write a small proof, run it, read the exact verifier output, and make the next smallest correction until the proof is checkable.
+
+2. Before writing Litex code, first explain the proof idea in natural language and look for the local proof pattern. Prefer starting from the mathematical move that should work in Litex rather than searching for theorem names as if the task were Lean.
+
+3. When several formulations are possible, prefer the most Litex-native and
+   simplest checkable formulation. Do not preserve a source text's original
+   shape, or Litex's lower-level raw expression shape, if doing so creates
+   special cases or a harder proof. If preserving the source shape is important
+   for comparison, record it separately and keep the main checked proof simple.
+
+4. Do not rely on external mathematical libraries when writing Litex examples unless the user explicitly asks for that. Prefer proof steps that the current Litex verifier can check directly.
+
+5. Make documentation and Mechanics of Litex Proof `litex` fenced blocks self-contained. A snippet should not depend on a previous snippet sharing the same environment. If a block is illustrative only, mark it with `<!-- litex:skip-test -->`.
+
+6. Any time the user asks for code that makes some Litex code verifiable, write the Litex code in `examples/tmp.lit` and test it, so the user can run it directly.
+
+7. When writing ordinary Litex `forall` facts, do not write an empty implication body. Write:
+
+```litex
+forall x R:
+    ...
+```
+
+instead of:
+
+```litex
+forall x R:
+    =>:
+        ...
+```
+
+The current `forall ... <=>:` syntax is an exception: if there are no shared hypotheses, keep the required `=>:` block for the left side of the iff.
+
+8. Avoid restating type and membership facts that Litex has already introduced. For example, `forall s finite_set:` already gives the finite-set typing for `s`, and `forall a s:` or `have a s` already gives `a $in s`. Prefer `forall s finite_set, a s:` over `forall s finite_set, a set:` plus a separate `a $in s` premise when the theorem is only about members of `s`.
+
+9. Avoid proof scaffolding that only repeats the same proposition. After `by thm ...`, do not add an identical conclusion line or wrap the call in a `claim` / `?` goal block unless the verifier needs that exact intermediate fact to fold a prop, bind a local variable, or expose a `forall`/`exist` shape. Try the direct theorem call first, then keep the extra line only when a verifier run shows it is needed.
+
+10. Avoid duplicate nearby facts such as repeating `$is_finite_set(T)` after it was just established, or writing both `finite_set_size(s) >= 1` and `finite_set_size(s) $in N_pos` when a typed binding such as `have n N_pos = finite_set_size(s)` can be made directly. Keep these restatements only when they are the smallest verifier-checkable bridge.
+
+11. Prefer explicit intermediate equalities and facts over large proof jumps. Each line should be something the verifier can justify from the current context.
+
+12. When a direct algebraic or numeric equality does not verify, first try adding more intermediate equalities instead of looking for a new theorem. Split the proof into small verifier-checkable steps: an algebraic identity, then local simplifications, then the final arithmetic. For example, do not stop at `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 1`; try a chain like `(3 - 2 * sqrt(2)) * (3 + 2 * sqrt(2)) = 3^2 - (2 * sqrt(2))^2 = 9 - 8 = 1`, where the first step is polynomial simplification and later steps use small equalities such as `3^2 = 9` and `(2 * sqrt(2))^2 = 8`.
+
+13. For zero-product arguments, prefer the explicit division step instead of a direct jump. If you know `u * v = 0` and `v != 0`, first write `u = 0 / v`, then close it with `u = 0 / v = 0`. Example: from `(2 * a - b) * (3 * a + b) = 0` and `2 * a - b != 0`, prefer `3 * a + b = 0 / (2 * a - b) = 0` over jumping straight to `3 * a + b = 0`.
+
+14. Keep examples minimal but complete. Include required definitions, assumptions, and imports in the same runnable context.
+
+15. Do not use `trust` to hide a proof obligation in an example. Use `trust` only when the example is explicitly introducing background mathematics, demonstrating known facts, or stating a deliberately assumed theorem.
+
+## Dataset Translation To Litex
+
+1. When translating a dataset problem into Litex, first reason about the mathematics of the problem before writing Litex code.
+
+2. Do not mechanically translate Lean code, tactic steps, or theorem prover syntax into Litex. Use the source only as reference for the mathematical meaning.
+
+3. After understanding the mathematics, design a Litex formulation that matches the current verifier and proof style of this repository.
+
+4. Prefer the most Litex-native simple formulation as the main checked
+   version. A formulation closer to the source text, or closer to Litex's raw
+   underlying expression, is secondary unless the user explicitly asks for that
+   comparison.
+
+5. The translation process should be iterative: write a small Litex proof, run it, inspect the verifier output, and make the next smallest correction.
+
+6. Before using `trust` or `abstract_prop`, first try at least one direct Litex formulation and use verifier feedback to narrow the gap.
+
+7. If part of the formalization is temporarily blocked, it is acceptable to use `trust` or `abstract_prop` as a temporary placeholder, but only for the blocked part. Keep the rest of the proof explicit and checkable.
+
+8. Prefer a mathematically natural Litex proof over a source-language-shaped translation. The goal is a verifiable Litex development, not a line-by-line transcription.
+
+## Testing And Verification
+
+### Litex execution routing
+
+For all Litex work in this repository, distinguish mathematical artifact
+verification from Rust unit testing and use the smallest release-mode
+execution surface that proves the current claim:
+
+1. Use `target/release/litex -compact -f <registered-file.lit>` for a
+   one-file baseline, checkpoint, or final file gate. A registered `-f` target
+   executes the ordered project prefix only through that file. For example,
+   an Analysis chapter target checks the book through that chapter.
+2. Use `target/release/litex -compact -r <module>` only for an explicit
+   whole-module, whole-book, or repository-wide checkpoint or final gate. Do
+   not use `-r` while iterating on one file or chapter.
+3. Use one `target/release/litex -compact -session -before
+   <current-file.lit>` plus literal outermost `try:` blocks for the proof-debug
+   loop. This loads the registered prefix before the target, excludes the
+   target's current draft, and submits its statements in source order inside
+   the target file environment.
+4. Do not use default-profile `cargo test` as a Litex verifier. It is an
+   unoptimized Rust test process. Directly invoke the release Litex CLI. If
+   Rust kernel code changed and Rust tests are genuinely required, run the
+   smallest relevant test with `cargo test --release` and then the broader
+   release test required by the kernel change.
+5. `try:` provides transactional context reuse; it does not accelerate a cold
+   process. `-compact` reduces output, while release optimization and session
+   reuse provide the important speedups.
+
+1. After changing Rust kernel logic, parser logic, verifier behavior, builtin rules, infer rules, syntax, examples, or documentation snippets, run the smallest relevant test first, then the broader relevant test.
+
+2. Run `cargo test --release run_examples -- --nocapture` after changing `examples/*.lit`, README/docs snippets, or Litex syntax used by examples and the Rust harness is needed in addition to direct release-CLI verification.
+
+3. Run `cargo test --release run_mechanics_textbook_chapters -- --nocapture` after changing `scripts/textbooks_drafts/The-Mechanics-of-Litex-Proof` chapters or their project runner. Run the same gate against `textbooks/The-Mechanics-of-Litex-Proof` only when validating an explicitly published snapshot.
+
+4. Run `cargo test --release run_all -- --nocapture` when a change can affect examples and Mechanics snippets together.
+
+5. After changing Litex kernel behavior, including parser, runtime, verifier, builtin rules, infer rules, well-definedness, or output explanation logic, make sure `cargo test --release run_all -- --nocapture` passes before treating the change as complete.
+
+6. If a verifier failure occurs, report the exact file, snippet label, or line shown by the test output before changing code.
+
+7. If any verifier or CLI output looks strange, misleading, too indirect, or hard to understand, report it to the user explicitly. This applies both to error output and to successful `verified_by` / explanation output.
+
+## Documentation Rules
+
+1. Any time you enhance a feature, check whether the documentation needs to be updated. If it does, update it in the same change.
+
+2. If you change Litex syntax or semantics, update the documentation at the same time.
+
+3. If a feature is new, put it into the preview feature section of the documentation.
+
+4. Documentation claims about the verifier should be modest and evidence-based. It is fine to say a proof demonstrates a useful feedback loop; do not imply the theorem is difficult for mature proof assistants unless that is the point being argued.
+
+## Anti-Patterns
+
+1. Do not make markdown examples pass only because prior snippets polluted the environment.
+
+2. Do not add broad abstractions before a repeated pattern is clear.
+
+3. Do not hide proof gaps by weakening examples or skipping tests unless the block is intentionally illustrative.
+
+4. Do not change generated, temporary, or user-edited files unless the task requires it.
