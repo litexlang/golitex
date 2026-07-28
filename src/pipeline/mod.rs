@@ -7,9 +7,10 @@ mod summary;
 
 pub use display::{display_runtime_error_json, display_stmt_exec_result_json};
 pub use pipeline::{
-    render_run_source_code_output, run_file_with_project_context, run_repository_with_output,
-    run_repository_with_output_style, run_source_code, run_source_code_in_file,
-    run_source_code_in_file_for_cli,
+    display_trusted_prefix_report_json, render_run_source_code_output,
+    run_file_with_project_context, run_file_with_project_context_and_trusted_prefix,
+    run_repository_with_output, run_repository_with_output_style, run_source_code,
+    run_source_code_in_file, run_source_code_in_file_for_cli,
     run_source_code_in_file_for_cli_with_output_style_and_summary_and_language_and_isolation,
     run_source_code_in_file_for_cli_with_strict,
     run_source_code_in_file_for_cli_with_strict_and_language,
@@ -32,4 +33,7 @@ pub use pipeline_session::{
     run_session_with_output_style_and_strict_and_language,
     run_session_with_output_style_and_strict_and_language_and_preload, SessionPreload,
 };
-pub use summary::{display_run_summary_json, display_run_summary_json_with_runtime, RunSummary};
+pub use summary::{
+    display_run_summary_json, display_run_summary_json_with_runtime,
+    display_run_summary_json_with_runtime_and_trusted_prefix, RunSummary,
+};

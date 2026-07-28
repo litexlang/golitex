@@ -370,9 +370,17 @@ impl Runtime {
                         in_fact.line_file.clone(),
                     );
                     let equal_atomic_fact: AtomicFact = equal_fact.clone().into();
+                    let equal_fact_key = equal_atomic_fact.to_string();
+                    let trust_summary = self.current_trusted_prefix_statement_trust();
                     let mut infer_result = InferResult::new();
                     infer_result.push_atomic_fact(&equal_atomic_fact);
                     self.top_level_env().store_atomic_fact(equal_atomic_fact)?;
+                    self.top_level_env()
+                        .store_fact_to_cache_known_fact_with_trust(
+                            equal_fact_key,
+                            in_fact.line_file.clone(),
+                            trust_summary,
+                        )?;
                     infer_result.new_infer_result_inside(self.infer_equal_fact(&equal_fact)?);
                     return Ok(infer_result);
                 }

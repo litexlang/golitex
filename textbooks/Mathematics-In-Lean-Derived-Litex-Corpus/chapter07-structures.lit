@@ -70,37 +70,37 @@ have fn standard_two_simplex_midpoint(a, b &StandardTwoSimplex) &StandardTwoSimp
 # Source structure StandardSimplex(n). It has one data field V and proof fields;
 # the faithful Litex object is the subset of coordinate functions satisfying
 # the two laws, not a nullary prop pretending to be a record.
-prop is_standard_simplex_point(n N, v fn(i range(0, n)) R):
-    forall i range(0, n):
-        v(i) >= 0
+prop is_standard_simplex_point(n N, v fn(idx range(0, n)) R):
+    forall idx range(0, n):
+        v(idx) >= 0
     finite_set_sum(range(0, n), v) = 1
 
 template<n N>:
-    have standard_simplex set = {v fn(i range(0, n)) R: $is_standard_simplex_point(n, v)}
+    have standard_simplex set = {v fn(idx range(0, n)) R: $is_standard_simplex_point(n, v)}
 
 # Source definition StandardSimplex.midpoint. The construction averages each
 # coordinate. The proof first preserves coordinatewise nonnegativity, then uses
 # finite-sum linearity and the two unit-sum laws to recover total sum one.
 thm standard_simplex_midpoint_closed:
     ? forall n N, a, b \standard_simplex<n>:
-        $is_standard_simplex_point(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
-    forall i range(0, n):
-        a(i) >= 0
-        b(i) >= 0
-        (a(i) + b(i)) / 2 >= 0
-    finite_set_sum(range(0, n), fn(i range(0, n)) R {(a(i) + b(i)) / 2}) = finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i) + (1 / 2) * b(i)})
-    finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i) + (1 / 2) * b(i)}) = finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i)}) + finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * b(i)})
-    finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i)}) = (1 / 2) * finite_set_sum(range(0, n), a)
-    finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * b(i)}) = (1 / 2) * finite_set_sum(range(0, n), b)
+        $is_standard_simplex_point(n, fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2})
+    forall idx range(0, n):
+        a(idx) >= 0
+        b(idx) >= 0
+        (a(idx) + b(idx)) / 2 >= 0
+    finite_set_sum(range(0, n), fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)})
+    finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx)}) + finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * b(idx)})
+    finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx)}) = (1 / 2) * finite_set_sum(range(0, n), a)
+    finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * b(idx)}) = (1 / 2) * finite_set_sum(range(0, n), b)
     finite_set_sum(range(0, n), a) = 1
     finite_set_sum(range(0, n), b) = 1
-    finite_set_sum(range(0, n), fn(i range(0, n)) R {(a(i) + b(i)) / 2}) = finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i) + (1 / 2) * b(i)}) = finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * a(i)}) + finite_set_sum(range(0, n), fn(i range(0, n)) R {(1 / 2) * b(i)}) = (1 / 2) * finite_set_sum(range(0, n), a) + (1 / 2) * finite_set_sum(range(0, n), b) = (1 / 2) * 1 + (1 / 2) * 1 = 1
-    by def $is_standard_simplex_point(n, fn(i range(0, n)) R {(a(i) + b(i)) / 2})
+    finite_set_sum(range(0, n), fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx)}) + finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * b(idx)}) = (1 / 2) * finite_set_sum(range(0, n), a) + (1 / 2) * finite_set_sum(range(0, n), b) = (1 / 2) * 1 + (1 / 2) * 1 = 1
+    by def $is_standard_simplex_point(n, fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2})
 
 # The midpoint remains a callable function-valued construction. Its checked
 # codomain law is the preceding source-facing closure theorem.
 template<n N>:
-    have fn standard_simplex_midpoint(a, b \standard_simplex<n>) fn(i range(0, n)) R = fn(j range(0, n)) R {(a(j) + b(j)) / 2}
+    have fn standard_simplex_midpoint(a, b \standard_simplex<n>) fn(idx range(0, n)) R = fn(j range(0, n)) R {(a(j) + b(j)) / 2}
 
 # Source structure IsLinear has no independent data field beyond the candidate
 # f, so it is correctly modeled as a property of that callable function.
@@ -131,7 +131,7 @@ template<s set>:
     have equiv_refl &Equiv<s, s> = (fn(x s) s {x}, fn(x s) s {x})
 
 template<s, t set>:
-    have fn equiv_symm(e &Equiv<s, t>) &Equiv<t, s> = (&Equiv<s, t>{e}.inverse, &Equiv<s, t>{e}.forward)
+    have fn equiv_symm(endpoint &Equiv<s, t>) &Equiv<t, s> = (&Equiv<s, t>{endpoint}.inverse, &Equiv<s, t>{endpoint}.forward)
 
 # Composition is an actual equivalence record. Its two inverse laws follow by
 # substituting the component inverse laws; the record-membership conclusion is
@@ -188,54 +188,54 @@ template<s nonempty_set, group &chap2::Group<s>>:
 # 7.3 Building the Gaussian Integers
 
 struct GaussInt:
-    re Z
+    real Z
     im Z
 
 have gauss_zero &GaussInt = (0, 0)
 have gauss_one &GaussInt = (1, 0)
 
-have fn gauss_add(x, y &GaussInt) &GaussInt = (&GaussInt{x}.re + &GaussInt{y}.re, &GaussInt{x}.im + &GaussInt{y}.im)
+have fn gauss_add(x, y &GaussInt) &GaussInt = (&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im)
 
-have fn gauss_neg(x &GaussInt) &GaussInt = (-&GaussInt{x}.re, -&GaussInt{x}.im)
+have fn gauss_neg(x &GaussInt) &GaussInt = (-&GaussInt{x}.real, -&GaussInt{x}.im)
 
-have fn gauss_mul(x, y &GaussInt) &GaussInt = (&GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re)
+have fn gauss_mul(x, y &GaussInt) &GaussInt = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
 
 # The source's zero_def through mul_im lemmas are projection-level consequences
 # of these definitions. Representative facts are kept; duplicate simp lemmas
 # are collapsed into the callable definitions above.
 thm gauss_add_def:
     ? forall x, y &GaussInt:
-        gauss_add(x, y) = (&GaussInt{x}.re + &GaussInt{y}.re, &GaussInt{x}.im + &GaussInt{y}.im)
-    gauss_add(x, y) = (&GaussInt{x}.re + &GaussInt{y}.re, &GaussInt{x}.im + &GaussInt{y}.im)
+        gauss_add(x, y) = (&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im)
+    gauss_add(x, y) = (&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im)
 
 thm gauss_mul_def:
     ? forall x, y &GaussInt:
-        gauss_mul(x, y) = (&GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re)
-    gauss_mul(x, y) = (&GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re)
+        gauss_mul(x, y) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
+    gauss_mul(x, y) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
 
 thm gauss_add_re:
     ? forall x, y &GaussInt:
-        &GaussInt{gauss_add(x, y)}.re = &GaussInt{x}.re + &GaussInt{y}.re
-    gauss_add(x, y) = (&GaussInt{x}.re + &GaussInt{y}.re, &GaussInt{x}.im + &GaussInt{y}.im)
-    &GaussInt{gauss_add(x, y)}.re = gauss_add(x, y)[1] = &GaussInt{x}.re + &GaussInt{y}.re
+        &GaussInt{gauss_add(x, y)}.real = &GaussInt{x}.real + &GaussInt{y}.real
+    gauss_add(x, y) = (&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im)
+    &GaussInt{gauss_add(x, y)}.real = gauss_add(x, y)[1] = &GaussInt{x}.real + &GaussInt{y}.real
 
 thm gauss_add_im:
     ? forall x, y &GaussInt:
         &GaussInt{gauss_add(x, y)}.im = &GaussInt{x}.im + &GaussInt{y}.im
-    gauss_add(x, y) = (&GaussInt{x}.re + &GaussInt{y}.re, &GaussInt{x}.im + &GaussInt{y}.im)
+    gauss_add(x, y) = (&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im)
     &GaussInt{gauss_add(x, y)}.im = gauss_add(x, y)[2] = &GaussInt{x}.im + &GaussInt{y}.im
 
 thm gauss_mul_re:
     ? forall x, y &GaussInt:
-        &GaussInt{gauss_mul(x, y)}.re = &GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im
-    gauss_mul(x, y) = (&GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re)
-    &GaussInt{gauss_mul(x, y)}.re = gauss_mul(x, y)[1] = &GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im
+        &GaussInt{gauss_mul(x, y)}.real = &GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im
+    gauss_mul(x, y) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
+    &GaussInt{gauss_mul(x, y)}.real = gauss_mul(x, y)[1] = &GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im
 
 thm gauss_mul_im:
     ? forall x, y &GaussInt:
-        &GaussInt{gauss_mul(x, y)}.im = &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re
-    gauss_mul(x, y) = (&GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re)
-    &GaussInt{gauss_mul(x, y)}.im = gauss_mul(x, y)[2] = &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re
+        &GaussInt{gauss_mul(x, y)}.im = &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real
+    gauss_mul(x, y) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
+    &GaussInt{gauss_mul(x, y)}.im = gauss_mul(x, y)[2] = &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real
 
 prop is_commutative_ring(s nonempty_set, add fn(x, y s) s, zero s, neg fn(x s) s, mul fn(x, y s) s, one s):
     $chap2::is_ring(s, add, zero, neg, mul, one)
@@ -273,12 +273,12 @@ have fn int_centered_div(a, b Z) Z = int_ediv(a + int_ediv(b, 2), b)
 
 have fn int_centered_mod(a, b Z) Z = int_emod(a + int_ediv(b, 2), b) - int_ediv(b, 2)
 
-have fn gauss_norm(x &GaussInt) Z = &GaussInt{x}.re^2 + &GaussInt{x}.im^2
+have fn gauss_norm(x &GaussInt) Z = &GaussInt{x}.real^2 + &GaussInt{x}.im^2
 
 thm gauss_norm_nonneg:
     ? forall x &GaussInt:
         gauss_norm(x) >= 0
-    gauss_norm(x) = &GaussInt{x}.re^2 + &GaussInt{x}.im^2 >= 0
+    gauss_norm(x) = &GaussInt{x}.real^2 + &GaussInt{x}.im^2 >= 0
 
 # The source states two iff theorems. Litex theorem targets do not admit a
 # universal `<=>` conclusion, so each source iff is recorded as its two direct
@@ -288,15 +288,15 @@ thm gauss_norm_eq_zero_forward:
         gauss_norm(x) = 0
         =>:
             x = gauss_zero
-    &GaussInt{x}.re^2 >= 0
+    &GaussInt{x}.real^2 >= 0
     &GaussInt{x}.im^2 >= 0
-    &GaussInt{x}.re^2 <= &GaussInt{x}.re^2 + &GaussInt{x}.im^2 = gauss_norm(x) = 0
-    &GaussInt{x}.im^2 <= &GaussInt{x}.re^2 + &GaussInt{x}.im^2 = gauss_norm(x) = 0
-    &GaussInt{x}.re^2 = 0
+    &GaussInt{x}.real^2 <= &GaussInt{x}.real^2 + &GaussInt{x}.im^2 = gauss_norm(x) = 0
+    &GaussInt{x}.im^2 <= &GaussInt{x}.real^2 + &GaussInt{x}.im^2 = gauss_norm(x) = 0
+    &GaussInt{x}.real^2 = 0
     &GaussInt{x}.im^2 = 0
-    &GaussInt{x}.re = 0
+    &GaussInt{x}.real = 0
     &GaussInt{x}.im = 0
-    x = (x[1], x[2]) = (&GaussInt{x}.re, &GaussInt{x}.im) = (0, 0) = gauss_zero
+    x = (x[1], x[2]) = (&GaussInt{x}.real, &GaussInt{x}.im) = (0, 0) = gauss_zero
 
 thm gauss_norm_eq_zero_reverse:
     ? forall x &GaussInt:
@@ -304,7 +304,7 @@ thm gauss_norm_eq_zero_reverse:
         =>:
             gauss_norm(x) = 0
     x = gauss_zero = (0, 0)
-    gauss_norm(x) = &GaussInt{x}.re^2 + &GaussInt{x}.im^2 = 0^2 + 0^2 = 0
+    gauss_norm(x) = &GaussInt{x}.real^2 + &GaussInt{x}.im^2 = 0^2 + 0^2 = 0
 
 thm gauss_norm_pos_forward:
     ? forall x &GaussInt:
@@ -333,26 +333,26 @@ thm gauss_norm_pos_reverse:
 thm gauss_norm_mul:
     ? forall x, y &GaussInt:
         gauss_norm(gauss_mul(x, y)) = gauss_norm(x) * gauss_norm(y)
-    gauss_mul(x, y) = (&GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re)
-    &GaussInt{gauss_mul(x, y)}.re = gauss_mul(x, y)[1] = &GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im
-    &GaussInt{gauss_mul(x, y)}.im = gauss_mul(x, y)[2] = &GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re
-    gauss_norm(gauss_mul(x, y)) = (&GaussInt{x}.re * &GaussInt{y}.re - &GaussInt{x}.im * &GaussInt{y}.im)^2 + (&GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re)^2 = (&GaussInt{x}.re^2 + &GaussInt{x}.im^2) * (&GaussInt{y}.re^2 + &GaussInt{y}.im^2) = gauss_norm(x) * gauss_norm(y)
+    gauss_mul(x, y) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
+    &GaussInt{gauss_mul(x, y)}.real = gauss_mul(x, y)[1] = &GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im
+    &GaussInt{gauss_mul(x, y)}.im = gauss_mul(x, y)[2] = &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real
+    gauss_norm(gauss_mul(x, y)) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im)^2 + (&GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)^2 = (&GaussInt{x}.real^2 + &GaussInt{x}.im^2) * (&GaussInt{y}.real^2 + &GaussInt{y}.im^2) = gauss_norm(x) * gauss_norm(y)
 
-have fn gauss_conj(x &GaussInt) &GaussInt = (&GaussInt{x}.re, -&GaussInt{x}.im)
+have fn gauss_conj(x &GaussInt) &GaussInt = (&GaussInt{x}.real, -&GaussInt{x}.im)
 
 thm gauss_norm_conj:
     ? forall x &GaussInt:
         gauss_norm(gauss_conj(x)) = gauss_norm(x)
-    gauss_conj(x) = (&GaussInt{x}.re, -&GaussInt{x}.im)
-    &GaussInt{gauss_conj(x)}.re = gauss_conj(x)[1] = &GaussInt{x}.re
+    gauss_conj(x) = (&GaussInt{x}.real, -&GaussInt{x}.im)
+    &GaussInt{gauss_conj(x)}.real = gauss_conj(x)[1] = &GaussInt{x}.real
     &GaussInt{gauss_conj(x)}.im = gauss_conj(x)[2] = -&GaussInt{x}.im
-    gauss_norm(gauss_conj(x)) = &GaussInt{x}.re^2 + (-&GaussInt{x}.im)^2 = &GaussInt{x}.re^2 + &GaussInt{x}.im^2 = gauss_norm(x)
+    gauss_norm(gauss_conj(x)) = &GaussInt{x}.real^2 + (-&GaussInt{x}.im)^2 = &GaussInt{x}.real^2 + &GaussInt{x}.im^2 = gauss_norm(x)
 
 # These coordinate formulas are the real and imaginary parts of x * conj(y).
 # Naming them avoids hiding the division construction behind an opaque record.
-have fn gauss_mul_conj_re(x, y &GaussInt) Z = &GaussInt{x}.re * &GaussInt{y}.re + &GaussInt{x}.im * &GaussInt{y}.im
+have fn gauss_mul_conj_re(x, y &GaussInt) Z = &GaussInt{x}.real * &GaussInt{y}.real + &GaussInt{x}.im * &GaussInt{y}.im
 
-have fn gauss_mul_conj_im(x, y &GaussInt) Z = -&GaussInt{x}.re * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.re
+have fn gauss_mul_conj_im(x, y &GaussInt) Z = -&GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real
 
 have fn gauss_div(x, y &GaussInt) &GaussInt = (int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)))
 

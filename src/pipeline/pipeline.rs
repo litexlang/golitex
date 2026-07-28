@@ -241,7 +241,19 @@ pub fn run_file_with_project_context(
     runtime: &mut Runtime,
     force_isolated: bool,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    run_file_with_project_context_and_trusted_prefix(entry_file_path, runtime, force_isolated, None)
+}
+
+pub fn run_file_with_project_context_and_trusted_prefix(
+    entry_file_path: &str,
+    runtime: &mut Runtime,
+    force_isolated: bool,
+    trust_before_line: Option<usize>,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
     runtime.isolated = false;
+    runtime.clear_trusted_prefix_execution_policy();
+    runtime.trusted_prefix_report = None;
+    runtime.trusted_prefix_setup_error = None;
     let path = Path::new(entry_file_path);
     let file_name = path.file_name().and_then(|name| name.to_str());
     if file_name == Some("litex.config") {
@@ -253,9 +265,76 @@ pub fn run_file_with_project_context(
             )),
         );
     }
+    if let Some(before_line) = trust_before_line {
+        let source_code = match fs::read_to_string(entry_file_path) {
+            Ok(content) => content,
+            Err(error) => {
+                return (
+                    vec![],
+                    Some(file_target_error(
+                        entry_file_path,
+                        format!("could not read file: {}", error).as_str(),
+                    )),
+                )
+            }
+        };
+        let source_code = remove_windows_carriage_return(source_code.as_str());
+        let blocks =
+            match Tokenizer::new().parse_blocks(source_code.as_str(), Rc::from(entry_file_path)) {
+                Ok(blocks) => blocks,
+                Err(error) => return (vec![], Some(error)),
+            };
+        let statement_lines = blocks
+            .iter()
+            .map(|block| block.line_file.0)
+            .collect::<Vec<_>>();
+        if !statement_lines.contains(&before_line) {
+            let message = trusted_prefix_boundary_error_message(
+                entry_file_path,
+                before_line,
+                &statement_lines,
+            );
+            runtime.trusted_prefix_setup_error = Some(message.clone());
+            return (
+                vec![],
+                Some(
+                    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                        message,
+                        (before_line, Rc::from(entry_file_path)),
+                    ))
+                    .into(),
+                ),
+            );
+        }
+        let trusted_top_level_statements = statement_lines
+            .iter()
+            .filter(|line| **line < before_line)
+            .count();
+        runtime.trusted_prefix_report = Some(TrustedPrefixReport::new(
+            entry_file_path.to_string(),
+            before_line,
+            trusted_top_level_statements,
+            before_line,
+        ));
+    }
     if !force_isolated {
         match discover_repository_for_file(runtime, entry_file_path) {
-            Ok(Some(target)) => return run_repository_file_target(runtime, target),
+            Ok(Some(target)) => {
+                if let Some(before_line) = trust_before_line {
+                    let (module_id, layer) = match target {
+                        RepositoryFileTarget::Module(module_id) => {
+                            (module_id, ExecutionLayer::Main)
+                        }
+                        RepositoryFileTarget::File { module_id, file_id } => {
+                            (module_id, ExecutionLayer::File(file_id))
+                        }
+                    };
+                    runtime.configure_trusted_prefix(module_id, layer, before_line);
+                }
+                let result = run_repository_file_target(runtime, target);
+                runtime.clear_trusted_prefix_execution_policy();
+                return result;
+            }
             Ok(None) => {
                 return (
                     vec![],
@@ -284,10 +363,19 @@ pub fn run_file_with_project_context(
         }
     };
     runtime.new_file_path_new_env_new_name_scope(entry_file_path);
-    run_source_code(
+    if let Some(before_line) = trust_before_line {
+        runtime.configure_trusted_prefix(
+            runtime.current_module_id(),
+            ExecutionLayer::Main,
+            before_line,
+        );
+    }
+    let result = run_source_code(
         remove_windows_carriage_return(source_code.as_str()).as_str(),
         runtime,
-    )
+    );
+    runtime.clear_trusted_prefix_execution_policy();
+    result
 }
 
 fn file_target_error(entry_file_path: &str, message: &str) -> RuntimeError {
@@ -342,10 +430,49 @@ pub(crate) fn run_source_code_with_failure_kind(
             return (vec![], Some(e), Some(RunSourceFailureKind::Other));
         }
     };
+    let trust_before_line = runtime.trusted_prefix_before_line_for_current_target();
+    if let Some(before_line) = trust_before_line {
+        let statement_lines = blocks
+            .iter()
+            .map(|block| block.line_file.0)
+            .collect::<Vec<_>>();
+        if !statement_lines.contains(&before_line) {
+            let message = trusted_prefix_boundary_error_message(
+                runtime.current_file_path_rc().as_ref(),
+                before_line,
+                &statement_lines,
+            );
+            runtime.trusted_prefix_setup_error = Some(message.clone());
+            return (
+                vec![],
+                Some(
+                    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+                        message,
+                        (before_line, runtime.current_file_path_rc()),
+                    ))
+                    .into(),
+                ),
+                Some(RunSourceFailureKind::Other),
+            );
+        }
+        let trusted_top_level_statements = statement_lines
+            .iter()
+            .filter(|line| **line < before_line)
+            .count();
+        runtime.trusted_prefix_report = Some(TrustedPrefixReport::new(
+            runtime.current_file_path_rc().to_string(),
+            before_line,
+            trusted_top_level_statements,
+            before_line,
+        ));
+    }
 
     let profile_repository_run = std::env::var_os("LITEX_PROFILE_REPOSITORY").is_some();
     let mut stmt_results: Vec<StmtResult> = Vec::new();
     for mut block in blocks {
+        let previous_symbol_ids = trust_before_line
+            .filter(|before_line| block.line_file.0 >= *before_line)
+            .map(|_| runtime.current_environment_symbol_ids());
         let statement_start = profile_repository_run.then(Instant::now);
         let parsing_try_stmt = block.current_token_is_equal_to(TRY);
         let stmt: Stmt = {
@@ -362,9 +489,24 @@ pub(crate) fn run_source_code_with_failure_kind(
             }
         };
         let executing_try_stmt = matches!(&stmt, Stmt::ProofBlock(ProofBlockStmt::TryStmt(_)));
+        let trusted_prefix_statement =
+            trust_before_line.is_some_and(|before_line| stmt.line_file().0 < before_line);
+        if let Some(before_line) = trust_before_line {
+            runtime.begin_trusted_prefix_statement(
+                stmt.line_file(),
+                before_line,
+                trusted_prefix_statement,
+            );
+        }
+        let previous_execution_mode = trusted_prefix_statement
+            .then(|| runtime.replace_current_execution_mode(ExecutionMode::Trusted));
         let result = match run_stmt_at_global_env(&stmt, runtime) {
             Ok(r) => r,
             Err(e) => {
+                if let Some(previous_execution_mode) = previous_execution_mode {
+                    runtime.replace_current_execution_mode(previous_execution_mode);
+                }
+                runtime.end_trusted_prefix_statement();
                 let failure_kind = if executing_try_stmt {
                     RunSourceFailureKind::TryStmt
                 } else {
@@ -373,6 +515,21 @@ pub(crate) fn run_source_code_with_failure_kind(
                 return (stmt_results, Some(e), Some(failure_kind));
             }
         };
+        if let Some(previous_symbol_ids) = previous_symbol_ids.as_ref() {
+            if let Err(error) =
+                runtime.propagate_cli_trust_to_statement_effects(&result, previous_symbol_ids)
+            {
+                if let Some(previous_execution_mode) = previous_execution_mode {
+                    runtime.replace_current_execution_mode(previous_execution_mode);
+                }
+                runtime.end_trusted_prefix_statement();
+                return (stmt_results, Some(error), Some(RunSourceFailureKind::Other));
+            }
+        }
+        if let Some(previous_execution_mode) = previous_execution_mode {
+            runtime.replace_current_execution_mode(previous_execution_mode);
+        }
+        runtime.end_trusted_prefix_statement();
         if let Some(statement_start) = statement_start {
             let line_file = stmt.line_file();
             eprintln!(
@@ -386,6 +543,70 @@ pub(crate) fn run_source_code_with_failure_kind(
     }
 
     (stmt_results, None, None)
+}
+
+fn trusted_prefix_boundary_error_message(
+    file: &str,
+    before_line: usize,
+    statement_lines: &[usize],
+) -> String {
+    let previous = statement_lines
+        .iter()
+        .copied()
+        .filter(|line| *line < before_line)
+        .max();
+    let next = statement_lines
+        .iter()
+        .copied()
+        .filter(|line| *line > before_line)
+        .min();
+    let mut nearby = Vec::new();
+    if let Some(previous) = previous {
+        nearby.push(format!(
+            "previous top-level statement starts at line {}",
+            previous
+        ));
+    }
+    if let Some(next) = next {
+        nearby.push(format!("next top-level statement starts at line {}", next));
+    }
+    let nearby = if nearby.is_empty() {
+        "the file has no top-level statements".to_string()
+    } else {
+        nearby.join("; ")
+    };
+    format!(
+        "-trust-before-line {} must be the header line of a top-level statement in `{}`; {}",
+        before_line, file, nearby
+    )
+}
+
+pub fn display_trusted_prefix_report_json(report: &TrustedPrefixReport) -> String {
+    render_json_value(
+        &JsonValue::Object(vec![
+            (
+                "type".to_string(),
+                JsonValue::JsonString("trusted_prefix".to_string()),
+            ),
+            (
+                "file".to_string(),
+                JsonValue::JsonString(report.file.clone()),
+            ),
+            (
+                "before_line".to_string(),
+                JsonValue::Number(report.before_line),
+            ),
+            (
+                "trusted_top_level_statements".to_string(),
+                JsonValue::Number(report.trusted_top_level_statements),
+            ),
+            (
+                "first_verified_statement_line".to_string(),
+                JsonValue::Number(report.first_verified_statement_line),
+            ),
+        ]),
+        0,
+    )
 }
 
 /// Render finished user output. Internal symbol identities are always removed;

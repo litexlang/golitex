@@ -306,11 +306,11 @@ prop subspace_translate_member(K, V nonempty_set, space &VectorSpace<K, V>, U po
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have fn subspace_translate(U power_set(V), v V) power_set(V) = {x V: $subspace_translate_member(K, V, space, U, v, x)}
 
-prop is_subspace_translate(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), C power_set(V)):
-    exist v V st {C = \subspace_translate<K, V, space>(U, v)}
+prop is_subspace_translate(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), CarrierC power_set(V)):
+    exist v V st {CarrierC = \subspace_translate<K, V, space>(U, v)}
 
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
-    have fn quotient_space(U power_set(V)) power_set(power_set(V)) = {C power_set(V): $is_subspace_translate(K, V, space, U, C)}
+    have fn quotient_space(U power_set(V)) power_set(power_set(V)) = {CarrierC power_set(V): $is_subspace_translate(K, V, space, U, CarrierC)}
 
 prop is_quotient_space_lift_compatible(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, U power_set(V), phi fn(v V) W):
     $is_linear_map(K, V, W, source, target, phi)
@@ -382,77 +382,77 @@ thm concrete_trace2:
     trace2(1, 4) = 1 + 4 = 5
 
 template<A set, add fn(x, y A) A, n N_pos>:
-    have fn matrix_add(P, M matrix(A, n, n)) matrix(A, n, n) = fn(i N_pos, j N_pos: i <= n, j <= n) A {add(P(i, j), M(i, j))}
+    have fn matrix_add(P, M matrix(A, n, n)) matrix(A, n, n) = fn(idx N_pos, j N_pos: idx <= n, j <= n) A {add(P(idx, j), M(idx, j))}
 
 template<A set, add fn(x, y A) A, mul fn(x, y A) A>:
-    have fn matrix2_mul(P, M matrix(A, 2, 2)) matrix(A, 2, 2) = fn(i N_pos, j N_pos: i <= 2, j <= 2) A {add(mul(P(i, 1), M(1, j)), mul(P(i, 2), M(2, j)))}
+    have fn matrix2_mul(P, M matrix(A, 2, 2)) matrix(A, 2, 2) = fn(idx N_pos, j N_pos: idx <= 2, j <= 2) A {add(mul(P(idx, 1), M(1, j)), mul(P(idx, 2), M(2, j)))}
 
 template<A set, m, n N_pos>:
-    have fn matrix_transpose(P matrix(A, m, n)) matrix(A, n, m) = fn(i N_pos, j N_pos: i <= n, j <= m) A {P(j, i)}
+    have fn matrix_transpose(P matrix(A, m, n)) matrix(A, n, m) = fn(idx N_pos, j N_pos: idx <= n, j <= m) A {P(j, idx)}
 
 # The retained source construction is real-valued; keeping that carrier visible
 # gives the entries their intended numeric power operation.
 template<n N_pos>:
-    have fn vandermonde(v fn(i N_pos: i <= n) R) matrix(R, n, n) = fn(i N_pos, j N_pos: i <= n, j <= n) R {v(i)^(j - 1)}
+    have fn vandermonde(v fn(idx N_pos: idx <= n) R) matrix(R, n, n) = fn(idx N_pos, j N_pos: idx <= n, j <= n) R {v(idx)^(j - 1)}
 
 # ---------------------------------------------------------------------------
 # 10.4.2 Bases and coordinates
 # ---------------------------------------------------------------------------
 
-prop has_basis_value_preimage(I, V set, b fn(i I) V, x V):
-    exist i I st {b(i) = x}
+prop has_basis_value_preimage(I, V set, b fn(idx I) V, x V):
+    exist idx I st {b(idx) = x}
 
-template<I, V set, b fn(i I) V>:
+template<I, V set, b fn(idx I) V>:
     have basis_values power_set(V) = {x V: $has_basis_value_preimage(I, V, b, x)}
 
-prop has_other_basis_value_preimage(I, V set, b fn(i I) V, excluded I, x V):
-    exist i I st {i != excluded, b(i) = x}
+prop has_other_basis_value_preimage(I, V set, b fn(idx I) V, excluded I, x V):
+    exist idx I st {idx != excluded, b(idx) = x}
 
-template<I, V set, b fn(i I) V>:
+template<I, V set, b fn(idx I) V>:
     have fn basis_values_except(excluded I) power_set(V) = {x V: $has_other_basis_value_preimage(I, V, b, excluded, x)}
 
-prop is_linearly_independent(K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(i I) V):
-    forall i I:
-        not b(i) $in \span<K, V, space>(\basis_values_except<I, V, b>(i))
+prop is_linearly_independent(K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(idx I) V):
+    forall idx I:
+        not b(idx) $in \span<K, V, space>(\basis_values_except<I, V, b>(idx))
 
-prop is_spanning_family(K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(i I) V):
+prop is_spanning_family(K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(idx I) V):
     \span<K, V, space>(\basis_values<I, V, b>) = V
 
-prop is_basis(K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(i I) V):
+prop is_basis(K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(idx I) V):
     $is_linearly_independent(K, V, space, I, b)
     $is_spanning_family(K, V, space, I, b)
 
 template<K, V nonempty_set, space &VectorSpace<K, V>, I set>:
-    have basis_space power_set(fn(i I) V) = {b fn(i I) V: $is_basis(K, V, space, I, b)}
+    have basis_space power_set(fn(idx I) V) = {b fn(idx I) V: $is_basis(K, V, space, I, b)}
 
-prop coefficient_support_contains_nonzero(K, I set, zeroK K, coefficients fn(i I) K, support finite_set):
-    forall i I:
-        coefficients(i) != zeroK
+prop coefficient_support_contains_nonzero(K, I set, zeroK K, coefficients fn(idx I) K, support finite_set):
+    forall idx I:
+        coefficients(idx) != zeroK
         =>:
-            i $in support
+            idx $in support
 
-prop has_finite_coefficient_support(K, I set, zeroK K, coefficients fn(i I) K):
+prop has_finite_coefficient_support(K, I set, zeroK K, coefficients fn(idx I) K):
     exist support finite_set st {$coefficient_support_contains_nonzero(K, I, zeroK, coefficients, support)}
 
 template<K, I set, zeroK K>:
-    have finitely_supported_coefficients power_set(fn(i I) K) = {coefficients fn(i I) K: $has_finite_coefficient_support(K, I, zeroK, coefficients)}
+    have finitely_supported_coefficients power_set(fn(idx I) K) = {coefficients fn(idx I) K: $has_finite_coefficient_support(K, I, zeroK, coefficients)}
 
 # ---------------------------------------------------------------------------
 # 10.4.3 Dimension
 # ---------------------------------------------------------------------------
 
 prop has_dimension(K, V nonempty_set, space &VectorSpace<K, V>, n N):
-    exist I finite_set, b fn(i I) V st {$is_basis(K, V, space, I, b), finite_set_size(I) = n}
+    exist I finite_set, b fn(idx I) V st {$is_basis(K, V, space, I, b), finite_set_size(I) = n}
 
 prop is_finite_dimensional(K, V nonempty_set, space &VectorSpace<K, V>):
     exist n N st {$has_dimension(K, V, space, n)}
 
-prop is_subspace_basis(K, V nonempty_set, space &VectorSpace<K, V>, I set, U power_set(V), b fn(i I) V):
+prop is_subspace_basis(K, V nonempty_set, space &VectorSpace<K, V>, I set, U power_set(V), b fn(idx I) V):
     $is_linearly_independent(K, V, space, I, b)
     \span<K, V, space>(\basis_values<I, V, b>) = U
 
 prop has_subspace_dimension(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), n N):
-    exist I finite_set, b fn(i I) V st {$is_subspace_basis(K, V, space, I, U, b), finite_set_size(I) = n}
+    exist I finite_set, b fn(idx I) V st {$is_subspace_basis(K, V, space, I, U, b), finite_set_size(I) = n}
 
 prop is_nontrivial_space(V set):
     exist u, v V st {u != v}

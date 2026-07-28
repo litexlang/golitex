@@ -1,6 +1,36 @@
 use super::*;
 
 #[test]
+fn cart_valued_function_membership_does_not_reenter_projection_well_definedness() {
+    run_with_large_stack(
+        "cart_valued_function_membership_does_not_reenter_projection_well_definedness",
+        || {
+            let source_code = r#"
+have fn pair_N(p, q cart(N, N)) cart(N, N) = (p[1] + q[1], p[2] + q[2])
+
+forall p, q cart(N, N):
+    pair_N(p, q) $in cart(N, N)
+    pair_N(p, q)[1] $in N
+    pair_N(p, q)[2] $in N
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "cart_valued_function_membership_does_not_reenter_projection_well_definedness",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "Cartesian-return projections should use the already registered return metadata:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn anonymous_function_application_in_unfolded_forall_uses_pointwise_fact() {
     run_with_large_stack(
         "anonymous_function_application_in_unfolded_forall_uses_pointwise_fact",
@@ -225,41 +255,673 @@ f $in fn(x R: x >= 0) {0}
 }
 
 #[test]
-fn parameter_membership_follows_known_subset_graph_transitively() {
+fn parameter_membership_uses_direct_known_subset_on_demand() {
     run_with_large_stack(
-        "parameter_membership_follows_known_subset_graph_transitively",
+        "parameter_membership_uses_direct_known_subset_on_demand",
         || {
             let source_code = r#"
-have S0, U0, T0 nonempty_set
-trust S0 $subset U0
-trust U0 $subset T0
+have S0, T0 nonempty_set
+trust S0 $subset T0
 have x0 S0
 x0 $in T0
 
-forall A, B, c set:
+forall A, B set:
     A $subset B
-    B $subset c
     =>:
-        A $subset c
-
-forall A, B, c set:
-    A $subset B
-    B $subset A
-    B $subset c
-    =>:
-        A $subset c
+        forall x A:
+            x $in B
 "#;
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "parameter_membership_follows_known_subset_graph_transitively",
+                "parameter_membership_uses_direct_known_subset_on_demand",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
             assert!(
                 run_succeeded,
-                "parameter membership should follow transitive subset chains and terminate on cycles:\n{}",
+                "parameter membership should use one directly known subset on demand:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn restricted_membership_builtin_uses_subset_in_both_fact_orders() {
+    run_with_large_stack(
+        "restricted_membership_builtin_uses_subset_in_both_fact_orders",
+        || {
+            let cases = [
+                (
+                    "restricted_membership_owner_before_subset",
+                    r#"
+have x, A, B set
+trust x $in A
+trust A $subset B
+"#,
+                ),
+                (
+                    "restricted_membership_subset_before_owner",
+                    r#"
+have x, A, B set
+trust A $subset B
+trust x $in A
+"#,
+                ),
+            ];
+
+            for (label, source_code) in cases {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(label);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                assert!(
+                    run_succeeded,
+                    "{} could not establish the indexed source facts:\n{}",
+                    label, run_output
+                );
+
+                let x_symbol = runtime
+                    .resolved_identifier_symbol("x")
+                    .expect("x should have a runtime symbol");
+                let b_symbol = runtime
+                    .resolved_identifier_symbol("B")
+                    .expect("B should have a runtime symbol");
+                let target: AtomicFact = InFact::new(
+                    Identifier::new_bound("x".to_string(), x_symbol).into(),
+                    Identifier::new_bound("B".to_string(), b_symbol).into(),
+                    default_line_file(),
+                )
+                .into();
+                let result = runtime
+                    .verify_atomic_fact_restricted_known_builtin(
+                        &target,
+                        &VerifyState::new(0, false),
+                    )
+                    .unwrap_or_else(|error| {
+                        panic!("{} restricted membership check failed: {}", label, error)
+                    });
+                assert!(
+                    result.is_true(),
+                    "{} should prove x in B through one direct subset edge",
+                    label
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn restricted_membership_builtin_accepts_power_set_and_superset_edges() {
+    run_with_large_stack(
+        "restricted_membership_builtin_accepts_power_set_and_superset_edges",
+        || {
+            let cases = [
+                (
+                    "restricted_membership_power_set_edge",
+                    r#"
+have x, A, B set
+trust A $in power_set(B)
+trust x $in A
+"#,
+                ),
+                (
+                    "restricted_membership_superset_edge_with_multiple_owners",
+                    r#"
+have x, A, B, unrelated set
+trust B $superset A
+trust x $in unrelated
+trust x $in A
+"#,
+                ),
+            ];
+
+            for (label, source_code) in cases {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(label);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                assert!(
+                    run_succeeded,
+                    "{} could not establish the indexed source facts:\n{}",
+                    label, run_output
+                );
+
+                let x_symbol = runtime
+                    .resolved_identifier_symbol("x")
+                    .expect("x should have a runtime symbol");
+                let b_symbol = runtime
+                    .resolved_identifier_symbol("B")
+                    .expect("B should have a runtime symbol");
+                let target: AtomicFact = InFact::new(
+                    Identifier::new_bound("x".to_string(), x_symbol).into(),
+                    Identifier::new_bound("B".to_string(), b_symbol).into(),
+                    default_line_file(),
+                )
+                .into();
+                let result = runtime
+                    .verify_atomic_fact_restricted_known_builtin(
+                        &target,
+                        &VerifyState::new(0, false),
+                    )
+                    .unwrap_or_else(|error| {
+                        panic!("{} restricted membership check failed: {}", label, error)
+                    });
+                assert!(
+                    result.is_true(),
+                    "{} should prove x in B through its direct inclusion edge",
+                    label
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn restricted_membership_builtin_is_direct_and_forward_only() {
+    run_with_large_stack(
+        "restricted_membership_builtin_is_direct_and_forward_only",
+        || {
+            let source_code = r#"
+have x, A, B, U set
+trust x $in A
+trust A $subset B
+trust B $subset U
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "restricted_membership_builtin_is_direct_and_forward_only",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "could not establish the direct-only source facts:\n{}",
+                run_output
+            );
+
+            let x_symbol = runtime
+                .resolved_identifier_symbol("x")
+                .expect("x should have a runtime symbol");
+            let b_symbol = runtime
+                .resolved_identifier_symbol("B")
+                .expect("B should have a runtime symbol");
+            let direct_target: AtomicFact = InFact::new(
+                Identifier::new_bound("x".to_string(), x_symbol.clone()).into(),
+                Identifier::new_bound("B".to_string(), b_symbol).into(),
+                default_line_file(),
+            )
+            .into();
+            let direct_result = runtime
+                .verify_atomic_fact_restricted_known_builtin(
+                    &direct_target,
+                    &VerifyState::new(0, false),
+                )
+                .unwrap_or_else(|error| {
+                    panic!("direct restricted membership check failed: {}", error)
+                });
+            assert!(
+                direct_result.is_true(),
+                "the first direct subset edge should prove x in B"
+            );
+
+            let u_symbol = runtime
+                .resolved_identifier_symbol("U")
+                .expect("U should have a runtime symbol");
+            let transitive_target: AtomicFact = InFact::new(
+                Identifier::new_bound("x".to_string(), x_symbol).into(),
+                Identifier::new_bound("U".to_string(), u_symbol).into(),
+                default_line_file(),
+            )
+            .into();
+            let transitive_result = runtime
+                .verify_atomic_fact_restricted_known_builtin(
+                    &transitive_target,
+                    &VerifyState::new(0, false),
+                )
+                .unwrap_or_else(|error| {
+                    panic!("transitive restricted membership check failed: {}", error)
+                });
+            assert!(
+                !transitive_result.is_true(),
+                "restricted membership must not traverse A subset B subset U"
+            );
+
+            let reverse_source_code = r#"
+have y, S, T set
+trust y $in T
+trust S $subset T
+"#;
+            let mut reverse_runtime = Runtime::new();
+            reverse_runtime.new_file_path_new_env_new_name_scope(
+                "restricted_membership_builtin_does_not_reverse_subset",
+            );
+            let (stmt_results, runtime_error) =
+                run_source_code(reverse_source_code, &mut reverse_runtime);
+            let (run_succeeded, run_output) = render_run_source_code_output(
+                &reverse_runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+            assert!(
+                run_succeeded,
+                "could not establish the reverse-safety source facts:\n{}",
+                run_output
+            );
+
+            let y_symbol = reverse_runtime
+                .resolved_identifier_symbol("y")
+                .expect("y should have a runtime symbol");
+            let s_symbol = reverse_runtime
+                .resolved_identifier_symbol("S")
+                .expect("S should have a runtime symbol");
+            let reverse_target: AtomicFact = InFact::new(
+                Identifier::new_bound("y".to_string(), y_symbol).into(),
+                Identifier::new_bound("S".to_string(), s_symbol).into(),
+                default_line_file(),
+            )
+            .into();
+            let reverse_result = reverse_runtime
+                .verify_atomic_fact_restricted_known_builtin(
+                    &reverse_target,
+                    &VerifyState::new(0, false),
+                )
+                .unwrap_or_else(|error| {
+                    panic!("reverse restricted membership check failed: {}", error)
+                });
+            assert!(
+                !reverse_result.is_true(),
+                "restricted membership must not infer y in S from y in T and S subset T"
+            );
+        },
+    );
+}
+
+#[test]
+fn restricted_membership_builtin_uses_equality_aliases_and_ignores_negative_facts() {
+    run_with_large_stack(
+        "restricted_membership_builtin_uses_equality_aliases_and_ignores_negative_facts",
+        || {
+            let alias_source = r#"
+have x, y, A, A_alias, B, B_alias set
+trust x = y
+trust A = A_alias
+trust B = B_alias
+trust x $in A
+trust A $subset B
+"#;
+            let mut alias_runtime = Runtime::new();
+            alias_runtime.new_file_path_new_env_new_name_scope(
+                "restricted_membership_builtin_uses_equality_aliases",
+            );
+            let (stmt_results, runtime_error) = run_source_code(alias_source, &mut alias_runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&alias_runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "could not establish the equality-alias source facts:\n{}",
+                run_output
+            );
+
+            let y_symbol = alias_runtime
+                .resolved_identifier_symbol("y")
+                .expect("y should have a runtime symbol");
+            let b_alias_symbol = alias_runtime
+                .resolved_identifier_symbol("B_alias")
+                .expect("B_alias should have a runtime symbol");
+            let alias_target: AtomicFact = InFact::new(
+                Identifier::new_bound("y".to_string(), y_symbol).into(),
+                Identifier::new_bound("B_alias".to_string(), b_alias_symbol).into(),
+                default_line_file(),
+            )
+            .into();
+            let alias_result = alias_runtime
+                .verify_atomic_fact_restricted_known_builtin(
+                    &alias_target,
+                    &VerifyState::new(0, false),
+                )
+                .expect("equality-alias membership verification should not error");
+            assert!(
+                alias_result.is_true(),
+                "equal elements and equal endpoint sets should share the direct membership edge"
+            );
+
+            let negative_cases = [
+                (
+                    "restricted_membership_negative_subset",
+                    r#"
+have n, S, T set
+trust n $in S
+trust not S $subset T
+"#,
+                ),
+                (
+                    "restricted_membership_negative_owner",
+                    r#"
+have n, S, T set
+trust not n $in S
+trust S $subset T
+"#,
+                ),
+            ];
+            for (label, source_code) in negative_cases {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(label);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                assert!(
+                    run_succeeded,
+                    "{} could not establish its negative source fact:\n{}",
+                    label, run_output
+                );
+
+                let n_symbol = runtime
+                    .resolved_identifier_symbol("n")
+                    .expect("n should have a runtime symbol");
+                let t_symbol = runtime
+                    .resolved_identifier_symbol("T")
+                    .expect("T should have a runtime symbol");
+                let target: AtomicFact = InFact::new(
+                    Identifier::new_bound("n".to_string(), n_symbol).into(),
+                    Identifier::new_bound("T".to_string(), t_symbol).into(),
+                    default_line_file(),
+                )
+                .into();
+                let result = runtime
+                    .verify_atomic_fact_restricted_known_builtin(
+                        &target,
+                        &VerifyState::new(0, false),
+                    )
+                    .unwrap_or_else(|error| {
+                        panic!("{} restricted membership check failed: {}", label, error)
+                    });
+                assert!(
+                    !result.is_true(),
+                    "{} must not index a negated membership or subset fact",
+                    label
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn membership_indexes_follow_try_commit_and_rollback() {
+    run_with_large_stack("membership_indexes_follow_try_commit_and_rollback", || {
+        let committed_source = r#"
+try:
+    have x, A, B set
+    trust x $in A
+    trust A $subset B
+"#;
+        let mut committed_runtime = Runtime::new();
+        committed_runtime
+            .new_file_path_new_env_new_name_scope("membership_indexes_follow_try_commit");
+        let (stmt_results, runtime_error) =
+            run_source_code(committed_source, &mut committed_runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&committed_runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            run_succeeded,
+            "a successful try block should commit membership indexes:\n{}",
+            run_output
+        );
+
+        let x_symbol = committed_runtime
+            .resolved_identifier_symbol("x")
+            .expect("committed x should have a runtime symbol");
+        let b_symbol = committed_runtime
+            .resolved_identifier_symbol("B")
+            .expect("committed B should have a runtime symbol");
+        let committed_target: AtomicFact = InFact::new(
+            Identifier::new_bound("x".to_string(), x_symbol).into(),
+            Identifier::new_bound("B".to_string(), b_symbol).into(),
+            default_line_file(),
+        )
+        .into();
+        let committed_result = committed_runtime
+            .verify_atomic_fact_restricted_known_builtin(
+                &committed_target,
+                &VerifyState::new(0, false),
+            )
+            .expect("committed membership verification should not error");
+        assert!(
+            committed_result.is_true(),
+            "a committed try block should preserve its owner and inclusion indexes"
+        );
+
+        let failed_source = r#"
+try:
+    have failed_x, failed_A, failed_B set
+    trust failed_x $in failed_A
+    trust failed_A $subset failed_B
+    0 = 1
+"#;
+        let mut failed_runtime = Runtime::new();
+        failed_runtime
+            .new_file_path_new_env_new_name_scope("membership_indexes_follow_try_rollback");
+        let before_counts = {
+            let environment = failed_runtime.top_level_env();
+            (
+                environment
+                    .known_owner_sets
+                    .values()
+                    .map(|owner_sets| owner_sets.len())
+                    .sum::<usize>(),
+                environment
+                    .known_direct_supersets
+                    .values()
+                    .map(|supersets| supersets.len())
+                    .sum::<usize>(),
+            )
+        };
+        let (_, runtime_error) = run_source_code(failed_source, &mut failed_runtime);
+        assert!(
+            runtime_error.is_some(),
+            "the deliberately false final step should roll back the try block"
+        );
+        let after_counts = {
+            let environment = failed_runtime.top_level_env();
+            (
+                environment
+                    .known_owner_sets
+                    .values()
+                    .map(|owner_sets| owner_sets.len())
+                    .sum::<usize>(),
+                environment
+                    .known_direct_supersets
+                    .values()
+                    .map(|supersets| supersets.len())
+                    .sum::<usize>(),
+            )
+        };
+        assert_eq!(
+            after_counts, before_counts,
+            "a failed try block must not leak owner or direct-superset index entries"
+        );
+    });
+}
+
+#[test]
+fn direct_membership_builtin_preserves_trust_in_theorem_provenance() {
+    run_with_large_stack(
+        "direct_membership_builtin_preserves_trust_in_theorem_provenance",
+        || {
+            let cases = [
+                (
+                    "trusted_direct_inclusion",
+                    r#"
+have x R
+have B set
+trust R $subset B
+
+thm membership_from_trusted_inclusion:
+    ? forall y set:
+        x $in B
+    x $in B
+"#,
+                    "membership_from_trusted_inclusion",
+                ),
+                (
+                    "trusted_owner_membership",
+                    r#"
+have x R
+trust x $in {1}
+{1} $subset {1, 2}
+
+thm membership_from_trusted_owner:
+    ? forall y set:
+        x $in {1, 2}
+    x $in {1, 2}
+"#,
+                    "membership_from_trusted_owner",
+                ),
+            ];
+
+            for (label, source_code, theorem_name) in cases {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(label);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                assert!(
+                    run_succeeded,
+                    "{} should verify through the direct membership builtin:\n{}",
+                    label, run_output
+                );
+                assert!(
+                    !runtime
+                        .get_thm_trust_summary_by_name(theorem_name)
+                        .is_empty(),
+                    "{} must retain indirect trust from its indexed premise",
+                    theorem_name
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn set_builder_parameter_inherits_known_numeric_carrier() {
+    run_with_large_stack(
+        "set_builder_parameter_inherits_known_numeric_carrier",
+        || {
+            let source_code = r#"
+claim:
+    ? forall E power_set(R), x0 R:
+        0 = 0
+    have fn filtered_points(n N_pos) power_set(E) = {y E: abs(y - x0) < 1 / n}
+    0 = 0
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "set_builder_parameter_inherits_known_numeric_carrier",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "a set-builder parameter should inherit the known carrier of its domain:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn set_builder_parameter_does_not_invent_numeric_carrier() {
+    run_with_large_stack(
+        "set_builder_parameter_does_not_invent_numeric_carrier",
+        || {
+            let source_code = r#"
+claim:
+    ? forall E set, x0 R:
+        0 = 0
+    have fn filtered_points(n N_pos) power_set(E) = {y E: abs(y - x0) < 1 / n}
+    0 = 0
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "set_builder_parameter_does_not_invent_numeric_carrier",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                !run_succeeded,
+                "a set-builder parameter must not acquire a numeric carrier without a subset fact:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn parameter_over_set_builder_inherits_builder_domain_carrier() {
+    run_with_large_stack(
+        "parameter_over_set_builder_inherits_builder_domain_carrier",
+        || {
+            let source_code = r#"
+claim:
+    ? forall E power_set(R), g fn(x E) R, x0 R:
+        0 = 0
+    claim:
+        ? forall y {x E: g(x) != 0}:
+            abs(y - x0) >= 0
+        abs(y - x0) >= 0
+    0 = 0
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "parameter_over_set_builder_inherits_builder_domain_carrier",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "a parameter over a set builder should inherit the builder domain carrier:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn punctured_domain_parameter_inherits_ambient_real_carrier() {
+    run_with_large_stack(
+        "punctured_domain_parameter_inherits_ambient_real_carrier",
+        || {
+            let source_code = r#"
+claim:
+    ? forall X power_set(R), g fn(z X) R, x0 X:
+        0 = 0
+    have fn local_difference_quotient(x set_minus(X, {x0})) R = (g(x) - g(x0)) / (x - x0)
+    0 = 0
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "punctured_domain_parameter_inherits_ambient_real_carrier",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "a punctured-domain parameter should inherit its ambient real carrier:\n{}",
                 run_output
             );
         },

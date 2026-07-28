@@ -105,6 +105,7 @@ pub(crate) fn source_ref_json_fields(
     runtime: &Runtime,
     source_line_file: &LineFile,
     current_line_file: Option<&LineFile>,
+    output_style: OutputStyle,
 ) -> Vec<(String, JsonValue)> {
     let mut fields = vec![(
         JSON_KEY_LINE.to_string(),
@@ -125,7 +126,7 @@ pub(crate) fn source_ref_json_fields(
                 JsonValue::JsonString(source_kind.clone()),
             ));
             fields.push((JSON_KEY_SOURCE.to_string(), JsonValue::JsonString(source)));
-            if runtime.detail_output {
+            if output_style.is_detailed() {
                 fields.push((
                     "path".to_string(),
                     JsonValue::JsonString(source_line_file.1.as_ref().to_string()),
@@ -141,11 +142,13 @@ pub(crate) fn source_ref_json_value(
     runtime: &Runtime,
     source_line_file: &LineFile,
     current_line_file: Option<&LineFile>,
+    output_style: OutputStyle,
 ) -> JsonValue {
     JsonValue::Object(source_ref_json_fields(
         runtime,
         source_line_file,
         current_line_file,
+        output_style,
     ))
 }
 

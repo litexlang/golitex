@@ -140,6 +140,12 @@ impl Runtime {
         let Obj::FnObj(fn_obj) = obj else {
             return Ok(());
         };
+        let obj_key = obj.to_string();
+        // Projected return facts re-enter this helper through index well-definedness.
+        // Existing Cartesian metadata means an outer call is already populating them.
+        if self.get_object_equal_to_tuple(&obj_key).is_some() {
+            return Ok(());
+        }
         let Some(ret_set) = self.fn_obj_return_set_after_application(fn_obj)? else {
             return Ok(());
         };
@@ -150,12 +156,7 @@ impl Runtime {
             return Ok(());
         }
 
-        self.store_tuple_obj_and_cart(
-            &obj.to_string(),
-            None,
-            Some(cart.clone()),
-            line_file.clone(),
-        );
+        self.store_tuple_obj_and_cart(&obj_key, None, Some(cart.clone()), line_file.clone());
 
         let is_tuple_fact: AtomicFact = IsTupleFact::new(obj.clone(), line_file.clone()).into();
         self.store_atomic_fact_without_well_defined_verified_and_infer(is_tuple_fact)?;

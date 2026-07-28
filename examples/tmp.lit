@@ -105,3 +105,7 @@ finite_set_product({1, 2}, fn(k Z) Z {k}) $in Z
 finite_set_product({1, 2}, fn(k Z) Q {k / 2}) $in Q
 finite_set_product({1, 2}, fn(k Z) R {k / 2}) $in R
 finite_set_product({1, 2}, fn(k N) N {k}) $in N
+
+# One-step membership through a power-set carrier is checked on demand.
+forall B set, A power_set(B), x A:
+    x $in B

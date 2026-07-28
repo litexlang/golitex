@@ -1,0 +1,4 @@
+interface:
+  display_name: "Litex Research Writer"
+  short_description: "Write rigorous Litex research copy."
+  default_prompt: "Use $litex-research-writer to write rigorous Litex documentation, research positioning, reviewer packets, benchmark reports, and soundness notes."

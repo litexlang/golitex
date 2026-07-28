@@ -18,10 +18,10 @@ endpoint adds the next term.
 # theorems use `sum(m, n, f)` for the ordinary nonempty finite interval.
 
 sketch:
-    have a fn(i Z) R
+    have a fn(i_index Z) R
     have m Z
 
-    have fn recursive_finite_series(f fn(i Z) R, start Z, length N) R by induc length from 0:
+    have fn recursive_finite_series(f fn(i_index Z) R, start Z, length N) R by induc length from 0:
         case length = 0: 0
         case length > 0: recursive_finite_series(f, start, length - 1) + f(start + length - 1)
 
@@ -39,13 +39,13 @@ sketch:
     recursive_finite_series(a, m, 2) = a(m) + a(m + 1)
 
 thm finite_series_basic_cases:
-    ? forall a fn(i Z) R, m Z:
-        sum(m, m, fn(i Z) R {a(i)}) = a(m)
-        sum(m, m + 1, fn(i Z) R {a(i)}) = a(m) + a(m + 1)
-    sum(m, m, fn(i Z) R {a(i)}) = a(m)
-    sum(m, m + 1, fn(i Z) R {a(i)}) = sum(m, m, fn(i Z) R {a(i)}) + fn(i Z) R {a(i)}(m + 1)
-    fn(i Z) R {a(i)}(m + 1) = a(m + 1)
-    sum(m, m + 1, fn(i Z) R {a(i)}) = a(m) + a(m + 1)
+    ? forall a fn(i_index Z) R, m Z:
+        sum(m, m, fn(i_index Z) R {a(i_index)}) = a(m)
+        sum(m, m + 1, fn(i_index Z) R {a(i_index)}) = a(m) + a(m + 1)
+    sum(m, m, fn(i_index Z) R {a(i_index)}) = a(m)
+    sum(m, m + 1, fn(i_index Z) R {a(i_index)}) = sum(m, m, fn(i_index Z) R {a(i_index)}) + fn(i_index Z) R {a(i_index)}(m + 1)
+    fn(i_index Z) R {a(i_index)}(m + 1) = a(m + 1)
+    sum(m, m + 1, fn(i_index Z) R {a(i_index)}) = a(m) + a(m + 1)
 
 """
 Remark 7.1.2. The word "series" names the expression, while "sum" names its
@@ -59,10 +59,10 @@ change the finite sum.
 """
 
 thm finite_series_dummy_index:
-    ? forall a fn(i Z) R, m, n Z:
+    ? forall a fn(i_index Z) R, m, n Z:
         m <= n
         =>:
-            sum(m, n, fn(i Z) R {a(i)}) = sum(m, n, fn(j Z) R {a(j)})
+            sum(m, n, fn(i_index Z) R {a(i_index)}) = sum(m, n, fn(j Z) R {a(j)})
 
 """
 Lemma 7.1.4. Finite sums split across adjacent intervals, shift indices,
@@ -75,46 +75,46 @@ and are monotone under pointwise comparison.
 # and scalar multiplication, triangle inequality, and comparison.
 
 thm finite_series_split_range:
-    ? forall a fn(i Z) R, m, n, p Z:
+    ? forall a fn(i_index Z) R, m, n, p Z:
         m <= n
         n < p
         m <= p
         =>:
-            sum(m, n, fn(i Z) R {a(i)}) + sum(n + 1, p, fn(i Z) R {a(i)}) = sum(m, p, fn(i Z) R {a(i)})
+            sum(m, n, fn(i_index Z) R {a(i_index)}) + sum(n + 1, p, fn(i_index Z) R {a(i_index)}) = sum(m, p, fn(i_index Z) R {a(i_index)})
 
 thm finite_series_shift_index:
-    ? forall a fn(i Z) R, m, n, k Z:
+    ? forall a fn(i_index Z) R, m, n, k Z:
         m <= n
         =>:
-            sum(m, n, fn(i Z) R {a(i)}) = sum(m + k, n + k, fn(j Z) R {a(j - k)})
+            sum(m, n, fn(i_index Z) R {a(i_index)}) = sum(m + k, n + k, fn(j Z) R {a(j - k)})
 
 thm finite_series_add:
-    ? forall a, b fn(i Z) R, m, n Z:
+    ? forall a, b fn(i_index Z) R, m, n Z:
         m <= n
         =>:
-            sum(m, n, fn(i Z) R {a(i) + b(i)}) = sum(m, n, fn(i Z) R {a(i)}) + sum(m, n, fn(i Z) R {b(i)})
+            sum(m, n, fn(i_index Z) R {a(i_index) + b(i_index)}) = sum(m, n, fn(i_index Z) R {a(i_index)}) + sum(m, n, fn(i_index Z) R {b(i_index)})
 
 thm finite_series_scalar_mul:
-    ? forall a fn(i Z) R, c R, m, n Z:
+    ? forall a fn(i_index Z) R, c R, m, n Z:
         m <= n
         =>:
-            sum(m, n, fn(i Z) R {c * a(i)}) = c * sum(m, n, fn(i Z) R {a(i)})
+            sum(m, n, fn(i_index Z) R {c * a(i_index)}) = c * sum(m, n, fn(i_index Z) R {a(i_index)})
 
 thm finite_series_triangle:
-    ? forall a fn(i Z) R, m, n Z:
+    ? forall a fn(i_index Z) R, m, n Z:
         m <= n
         =>:
-            abs(sum(m, n, fn(i Z) R {a(i)})) <= sum(m, n, fn(i Z) R {abs(a(i))})
+            abs(sum(m, n, fn(i_index Z) R {a(i_index)})) <= sum(m, n, fn(i_index Z) R {abs(a(i_index))})
 
 thm finite_series_comparison:
-    ? forall a, b fn(i Z) R, m, n Z:
+    ? forall a, b fn(i_index Z) R, m, n Z:
         m <= n
-        forall i Z:
-            m <= i <= n
+        forall i_index Z:
+            m <= i_index <= n
             =>:
-                a(i) <= b(i)
+                a(i_index) <= b(i_index)
         =>:
-            sum(m, n, fn(i Z) R {a(i)}) <= sum(m, n, fn(i Z) R {b(i)})
+            sum(m, n, fn(i_index Z) R {a(i_index)}) <= sum(m, n, fn(i_index Z) R {b(i_index)})
 
 """
 Remark 7.1.5. Parentheses around summands are often omitted when the dummy
@@ -131,9 +131,9 @@ the values along the index range.
 # predicate below says exactly that every element of `X` appears at a unique
 # index in the closed range.
 
-prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i closed_range(1, finite_set_size(X))) X):
+prop is_bijection_from_index_range_to_finite_set(X finite_set, g fn(i_index closed_range(1, finite_set_size(X))) X):
     forall x X:
-        exist! i closed_range(1, finite_set_size(X)) st {g(i) = x}
+        exist! i_index closed_range(1, finite_set_size(X)) st {g(i_index) = x}
 
 # Tao's construction also needs existence of at least one such enumeration.
 # The proof follows the source idea: induct on the size of the nonempty finite
@@ -145,7 +145,7 @@ prop finite_set_size_has_index(n N_pos):
         $is_finite_set(s)
         finite_set_size(s) = n
         =>:
-            exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+            exist idx fn(i_index closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
 
 thm intersect_with_singleton:
     ? forall s set, a set:
@@ -181,16 +181,16 @@ thm index_function_for_singleton:
         $is_finite_set(s)
         finite_set_size(s) = 1
         =>:
-            exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+            exist idx fn(i_index closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
     finite_set_size(s) >= 1
     $is_nonempty_set(s)
     have a s
     by thm remove_singleton_from_singleton_sized_set_is_empty(s, a)
-    have fn idx(i closed_range(1, finite_set_size(s))) s = a
-    witness exist idx0 fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
+    have fn idx(i_index closed_range(1, finite_set_size(s))) s = a
+    witness exist idx0 fn(i_index closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
         claim:
             ? forall y s:
-                exist! i closed_range(1, finite_set_size(s)) st {idx0(i) = y}
+                exist! i_index closed_range(1, finite_set_size(s)) st {idx0(i_index) = y}
             by contra:
                 ? y = a
                 y != a
@@ -199,7 +199,7 @@ thm index_function_for_singleton:
                     y $in set_minus(s, {a})
                 impossible $is_nonempty_set(set_minus(s, {a}))
             idx0(1) = idx(1) = a
-            witness exist! i closed_range(1, finite_set_size(s)) st {idx0(i) = y} from 1:
+            witness exist! i_index closed_range(1, finite_set_size(s)) st {idx0(i_index) = y} from 1:
                 1 <= finite_set_size(s)
                 idx0(1) = y
                 claim:
@@ -225,7 +225,7 @@ thm index_function_step:
         finite_set_size(s) = n + 1
         $finite_set_size_has_index(n)
         =>:
-            exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+            exist idx fn(i_index closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
     finite_set_size(s) = n + 1 >= 1
     $is_nonempty_set(s)
     have a s
@@ -234,26 +234,26 @@ thm index_function_step:
     $is_finite_set(set_minus(s, {a}))
     finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = (n + 1) - 1 = n
     $finite_set_size_has_index(n)
-    obtain prev from exist prev fn(i closed_range(1, finite_set_size(set_minus(s, {a})))) set_minus(s, {a}) st {$is_bijection_from_index_range_to_finite_set(set_minus(s, {a}), prev)}
+    obtain prev from exist prev fn(i_index closed_range(1, finite_set_size(set_minus(s, {a})))) set_minus(s, {a}) st {$is_bijection_from_index_range_to_finite_set(set_minus(s, {a}), prev)}
     set_minus(s, {a}) $subset s
-    have fn idx(i closed_range(1, finite_set_size(s))) s by cases:
-        case i <= n: prev(i)
-        case i > n: a
+    have fn idx(i_index closed_range(1, finite_set_size(s))) s by cases:
+        case i_index <= n: prev(i_index)
+        case i_index > n: a
     claim:
-        ? forall i closed_range(1, finite_set_size(s)):
-            idx(i) = a
+        ? forall i_index closed_range(1, finite_set_size(s)):
+            idx(i_index) = a
             =>:
-                i = n + 1
-        i <= n or i > n
+                i_index = n + 1
+        i_index <= n or i_index > n
         by cases:
-            ? i = n + 1
-            case i <= n:
-                i >= 1
-                i <= n = finite_set_size(set_minus(s, {a}))
-                i $in closed_range(1, finite_set_size(set_minus(s, {a})))
-                idx(i) = prev(i)
-                prev(i) $in set_minus(s, {a})
-                idx(i) $in set_minus(s, {a})
+            ? i_index = n + 1
+            case i_index <= n:
+                i_index >= 1
+                i_index <= n = finite_set_size(set_minus(s, {a}))
+                i_index $in closed_range(1, finite_set_size(set_minus(s, {a})))
+                idx(i_index) = prev(i_index)
+                prev(i_index) $in set_minus(s, {a})
+                idx(i_index) $in set_minus(s, {a})
                 claim:
                     ? not a $in set_minus(s, {a})
                     by contra:
@@ -264,9 +264,9 @@ thm index_function_step:
                         impossible not a $in {a}
                 a $in set_minus(s, {a})
                 impossible not a $in set_minus(s, {a})
-            case i > n:
-                i <= finite_set_size(s) = n + 1
-                i = n + 1
+            case i_index > n:
+                i_index <= finite_set_size(s) = n + 1
+                i_index = n + 1
     claim:
         ? forall i1, i2 closed_range(1, finite_set_size(s)):
             idx(i1) = idx(i2)
@@ -307,34 +307,34 @@ thm index_function_step:
                 i1 = i2
     claim:
         ? forall y s:
-            exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
+            exist i_index closed_range(1, finite_set_size(s)) st {y = idx(i_index)}
         y = a or y != a
         by cases:
-            ? exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
+            ? exist i_index closed_range(1, finite_set_size(s)) st {y = idx(i_index)}
             case y = a:
                 n + 1 <= finite_set_size(s)
                 y = a = idx(n + 1)
-                witness exist i closed_range(1, finite_set_size(s)) st {y = idx(i)} from n + 1:
+                witness exist i_index closed_range(1, finite_set_size(s)) st {y = idx(i_index)} from n + 1:
                     n + 1 <= finite_set_size(s)
                     y = idx(n + 1)
             case y != a:
                 y $in set_minus(s, {a})
-                obtain j from exist i closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(i) = y}
+                obtain j from exist i_index closed_range(1, finite_set_size(set_minus(s, {a}))) st {prev(i_index) = y}
                 j <= finite_set_size(set_minus(s, {a}))
                 j <= n
                 n <= n + 1
                 j <= n <= n + 1 = finite_set_size(s)
                 y = prev(j) = idx(j)
-                witness exist i closed_range(1, finite_set_size(s)) st {y = idx(i)} from j:
+                witness exist i_index closed_range(1, finite_set_size(s)) st {y = idx(i_index)} from j:
                     j <= finite_set_size(s)
                     y = idx(j)
-    witness exist idx0 fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
+    witness exist idx0 fn(i_index closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx0)} from idx:
         claim:
             ? forall y s:
-                exist! i closed_range(1, finite_set_size(s)) st {idx0(i) = y}
-            obtain i from exist i closed_range(1, finite_set_size(s)) st {y = idx(i)}
-            witness exist! i0 closed_range(1, finite_set_size(s)) st {idx0(i0) = y} from i:
-                idx0(i) = idx(i) = y
+                exist! i_index closed_range(1, finite_set_size(s)) st {idx0(i_index) = y}
+            obtain i_index from exist i_index closed_range(1, finite_set_size(s)) st {y = idx(i_index)}
+            witness exist! i0 closed_range(1, finite_set_size(s)) st {idx0(i0) = y} from i_index:
+                idx0(i_index) = idx(i_index) = y
                 forall i1, i2 closed_range(1, finite_set_size(s)):
                     idx0(i1) = y
                     idx0(i2) = y
@@ -355,7 +355,7 @@ thm finite_set_size_has_index_for_all:
                     $is_finite_set(s)
                     finite_set_size(s) = 1
                     =>:
-                        exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+                        exist idx fn(i_index closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
                 by thm index_function_for_singleton(s)
             $finite_set_size_has_index(1)
             $finite_set_size_has_index(n)
@@ -367,7 +367,7 @@ thm finite_set_size_has_index_for_all:
                     $is_finite_set(s)
                     finite_set_size(s) = n + 1
                     =>:
-                        exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+                        exist idx fn(i_index closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
                 by thm index_function_step(n, s)
             $finite_set_size_has_index(n + 1)
 
@@ -375,7 +375,7 @@ thm finite_set_has_bijective_index:
     ? forall s finite_set:
         finite_set_size(s) >= 1
         =>:
-            exist idx fn(i closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
+            exist idx fn(i_index closed_range(1, finite_set_size(s))) s st {$is_bijection_from_index_range_to_finite_set(s, idx)}
     by thm finite_set_size_has_index_for_all(finite_set_size(s))
 
 # `finite_set_sum(X, f)` denotes the enumeration-independent value of summing
@@ -415,12 +415,12 @@ enumerations of the same finite set give the same finite sum.
 # Tao's construction.
 
 thm finite_set_sum_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
+    ? forall X finite_set, f fn(x X) R, g fn(i_index closed_range(1, finite_set_size(X))) X, h fn(i_index closed_range(1, finite_set_size(X))) X:
         finite_set_size(X) >= 1
         $is_bijection_from_index_range_to_finite_set(X, g)
         $is_bijection_from_index_range_to_finite_set(X, h)
         =>:
-            sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(h(i))})
+            sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(h(i_index))})
 
 # The predicate says that `l` is the common value of all bijective-enumeration
 # sums.  We keep Tao's finite real-set hypothesis visible, and we keep the
@@ -430,20 +430,20 @@ thm finite_set_sum_enumeration_well_defined:
 prop is_finite_set_sum(X finite_set, f fn(x X) R, l R):
     X $subset R
     finite_set_size(X) >= 1
-    forall g fn(i closed_range(1, finite_set_size(X))) X:
+    forall g fn(i_index closed_range(1, finite_set_size(X))) X:
         $is_bijection_from_index_range_to_finite_set(X, g)
         =>:
-            sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l
+            sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = l
 
 thm finite_set_sum_matches_bijective_enumeration:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X:
+    ? forall X finite_set, f fn(x X) R, g fn(i_index closed_range(1, finite_set_size(X))) X:
         finite_set_size(X) >= 1
         $is_bijection_from_index_range_to_finite_set(X, g)
         =>:
-            sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = finite_set_sum(X, f)
-    finite_set_sum(X, f) = finite_set_sum(closed_range(1, finite_set_size(X)), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
-    finite_set_sum(closed_range(1, finite_set_size(X)), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
-    sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = finite_set_sum(X, f)
+            sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = finite_set_sum(X, f)
+    finite_set_sum(X, f) = finite_set_sum(closed_range(1, finite_set_size(X)), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))})
+    finite_set_sum(closed_range(1, finite_set_size(X)), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))})
+    sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = finite_set_sum(X, f)
 
 thm finite_set_sum_satisfies_self_definition:
     ? forall X finite_set, f fn(x X) R:
@@ -452,10 +452,10 @@ thm finite_set_sum_satisfies_self_definition:
         =>:
             $is_finite_set_sum(X, f, finite_set_sum(X, f))
     claim:
-        ? forall g fn(i closed_range(1, finite_set_size(X))) X:
+        ? forall g fn(i_index closed_range(1, finite_set_size(X))) X:
             $is_bijection_from_index_range_to_finite_set(X, g)
             =>:
-                sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = finite_set_sum(X, f)
+                sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = finite_set_sum(X, f)
         by thm finite_set_sum_matches_bijective_enumeration(X, f, g)
 
 prop has_finite_set_sum(X finite_set, f fn(x X) R):
@@ -493,10 +493,10 @@ thm finite_set_sum_value_unique:
             l1 = l2
     finite_set_size(X) >= 1
     by thm finite_set_has_bijective_index(X)
-    obtain g from exist g fn(i closed_range(1, finite_set_size(X))) X st {$is_bijection_from_index_range_to_finite_set(X, g)}
-    sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l1
-    sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l2
-    l1 = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))}) = l2
+    obtain g from exist g fn(i_index closed_range(1, finite_set_size(X))) X st {$is_bijection_from_index_range_to_finite_set(X, g)}
+    sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = l1
+    sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = l2
+    l1 = sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = l2
 
 thm self_finite_set_sum_matches_builtin:
     ? forall X finite_set, f fn(x X) R:
@@ -557,10 +557,10 @@ thm finite_set_sum_substitution:
             finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
 
 thm finite_set_sum_range_matches_series:
-    ? forall a fn(i Z) R, m, n Z:
+    ? forall a fn(i_index Z) R, m, n Z:
         m <= n
         =>:
-            sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
+            sum(m, n, fn(i_index Z) R {a(i_index)}) = finite_set_sum(m...n, fn(i_index m...n) R {a(i_index)})
 
 thm finite_set_sum_disjoint_union:
     ? forall X, Y finite_set, f fn(z union(X, Y)) R:
@@ -721,28 +721,28 @@ thm partial_sum_successor:
 
 thm partial_sum_matches_finite_sum:
     ? forall a seq(R), k N_pos:
-        partial_sum(a, k) = sum(1, k, fn(i N_pos) R {a(i)})
+        partial_sum(a, k) = sum(1, k, fn(i_index N_pos) R {a(i_index)})
     by induc k from 1:
-        ? partial_sum(a, k) = sum(1, k, fn(i N_pos) R {a(i)})
+        ? partial_sum(a, k) = sum(1, k, fn(i_index N_pos) R {a(i_index)})
 
         ? from k = 1:
             partial_sum(a, 0) = 0
-            partial_sum(a, 1) = partial_sum(a, 0) + a(1) = 0 + a(1) = a(1) = sum(1, 1, fn(i N_pos) R {a(i)})
+            partial_sum(a, 1) = partial_sum(a, 0) + a(1) = 0 + a(1) = a(1) = sum(1, 1, fn(i_index N_pos) R {a(i_index)})
 
         ? induc:
             (k + 1) - 1 = k
             partial_sum(a, k + 1) = partial_sum(a, (k + 1) - 1) + a(k + 1)
             partial_sum(a, (k + 1) - 1) = partial_sum(a, k)
-            partial_sum(a, k + 1) = partial_sum(a, k) + a(k + 1) = sum(1, k, fn(i N_pos) R {a(i)}) + a(k + 1) = sum(1, k + 1, fn(i N_pos) R {a(i)})
+            partial_sum(a, k + 1) = partial_sum(a, k) + a(k + 1) = sum(1, k, fn(i_index N_pos) R {a(i_index)}) + a(k + 1) = sum(1, k + 1, fn(i_index N_pos) R {a(i_index)})
 
 thm partial_sum_split_after:
     ? forall a seq(R), m, n N_pos:
         m < n
         =>:
-            partial_sum(a, n) = partial_sum(a, m) + sum(m + 1, n, fn(i N_pos) R {a(i)})
+            partial_sum(a, n) = partial_sum(a, m) + sum(m + 1, n, fn(i_index N_pos) R {a(i_index)})
     by thm partial_sum_matches_finite_sum(a, n)
     by thm partial_sum_matches_finite_sum(a, m)
-    partial_sum(a, n) = sum(1, n, fn(i N_pos) R {a(i)}) = sum(1, m, fn(i N_pos) R {a(i)}) + sum(m + 1, n, fn(i N_pos) R {a(i)}) = partial_sum(a, m) + sum(m + 1, n, fn(i N_pos) R {a(i)})
+    partial_sum(a, n) = sum(1, n, fn(i_index N_pos) R {a(i_index)}) = sum(1, m, fn(i_index N_pos) R {a(i_index)}) + sum(m + 1, n, fn(i_index N_pos) R {a(i_index)}) = partial_sum(a, m) + sum(m + 1, n, fn(i_index N_pos) R {a(i_index)})
 
 prop is_tail_close_to(a seq(R), L R, epsilon R_pos, N0 N_pos):
     forall n N_pos:
@@ -822,7 +822,7 @@ thm strict_limit_extensional:
                     abs(a(n) - L) < epsilon
                     abs(b(n) - L) < epsilon
 
-have fn constant_sequence(c R) fn(k N_pos) R = fn(i N_pos) R {c}
+have fn constant_sequence(c R) fn(k N_pos) R = fn(i_index N_pos) R {c}
 
 thm constant_sequence_has_strict_limit:
     ? forall c R:
@@ -898,7 +898,7 @@ thm series_convergence_extensional:
     by thm series_sum_extensional(a, b, L)
     witness exist M R st {$has_series_sum(b, M)} from L
 
-have fn geometric_series_terms_from_one(x R) fn(i N_pos) R = fn(j N_pos) R {x^j}
+have fn geometric_series_terms_from_one(x R) fn(i_index N_pos) R = fn(j N_pos) R {x^j}
 
 thm geometric_series_from_one_partial_sum:
     ? forall x R, k N_pos:
@@ -1446,31 +1446,31 @@ of absolute values.
 
 thm partial_sum_abs_matches_finite_sum:
     ? forall a seq(R), k N_pos:
-        partial_sum(fn(j N_pos) R {abs(a(j))}, k) = sum(1, k, fn(i N_pos) R {abs(a(i))})
+        partial_sum(fn(j N_pos) R {abs(a(j))}, k) = sum(1, k, fn(i_index N_pos) R {abs(a(i_index))})
     by thm partial_sum_matches_finite_sum(fn(j N_pos) R {abs(a(j))}, k)
-    sum(1, k, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)}) = sum(1, k, fn(i N_pos) R {abs(a(i))})
+    sum(1, k, fn(i_index N_pos) R {fn(j N_pos) R {abs(a(j))}(i_index)}) = sum(1, k, fn(i_index N_pos) R {abs(a(i_index))})
 
 thm finite_sum_abs_nonnegative:
     ? forall a seq(R), p, q N_pos:
         p <= q
         =>:
-            sum(p, q, fn(i N_pos) R {abs(a(i))}) >= 0
-    forall i N_pos:
-        p <= i <= q
+            sum(p, q, fn(i_index N_pos) R {abs(a(i_index))}) >= 0
+    forall i_index N_pos:
+        p <= i_index <= q
         =>:
-            0 <= abs(a(i))
-    sum(p, q, fn(i N_pos) R {0}) <= sum(p, q, fn(i N_pos) R {abs(a(i))})
-    sum(p, q, fn(i N_pos) R {0}) = 0
-    0 <= sum(p, q, fn(i N_pos) R {abs(a(i))})
-    sum(p, q, fn(i N_pos) R {abs(a(i))}) >= 0
+            0 <= abs(a(i_index))
+    sum(p, q, fn(i_index N_pos) R {0}) <= sum(p, q, fn(i_index N_pos) R {abs(a(i_index))})
+    sum(p, q, fn(i_index N_pos) R {0}) = 0
+    0 <= sum(p, q, fn(i_index N_pos) R {abs(a(i_index))})
+    sum(p, q, fn(i_index N_pos) R {abs(a(i_index))}) >= 0
 
 thm finite_tail_matches_finite_sum:
     ? forall a seq(R), p, q N_pos:
         p <= q
         =>:
-            finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
+            finite_tail_sum(a, p, q) = sum(p, q, fn(i_index N_pos) R {a(i_index)})
     by cases:
-        ? finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
+        ? finite_tail_sum(a, p, q) = sum(p, q, fn(i_index N_pos) R {a(i_index)})
         case p = 1:
             p - 1 = 0
             partial_sum(a, 0) = 0
@@ -1480,17 +1480,17 @@ thm finite_tail_matches_finite_sum:
             partial_sum(a, q) - 0 = partial_sum(a, q)
             finite_tail_sum(a, p, q) = partial_sum(a, q)
             by thm partial_sum_matches_finite_sum(a, q)
-            partial_sum(a, q) = sum(1, q, fn(i N_pos) R {a(i)})
-            finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
+            partial_sum(a, q) = sum(1, q, fn(i_index N_pos) R {a(i_index)})
+            finite_tail_sum(a, p, q) = sum(p, q, fn(i_index N_pos) R {a(i_index)})
         case p > 1:
             finite_tail_sum(a, p, q) = partial_sum(a, q) - partial_sum(a, p - 1)
             by thm partial_sum_split_after(a, p - 1, q)
             (p - 1) + 1 = p
-            partial_sum(a, q) = partial_sum(a, p - 1) + sum((p - 1) + 1, q, fn(i N_pos) R {a(i)})
-            sum((p - 1) + 1, q, fn(i N_pos) R {a(i)}) = sum(p, q, fn(i N_pos) R {a(i)})
-            partial_sum(a, q) = partial_sum(a, p - 1) + sum(p, q, fn(i N_pos) R {a(i)})
-            partial_sum(a, q) - partial_sum(a, p - 1) = sum(p, q, fn(i N_pos) R {a(i)})
-            finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
+            partial_sum(a, q) = partial_sum(a, p - 1) + sum((p - 1) + 1, q, fn(i_index N_pos) R {a(i_index)})
+            sum((p - 1) + 1, q, fn(i_index N_pos) R {a(i_index)}) = sum(p, q, fn(i_index N_pos) R {a(i_index)})
+            partial_sum(a, q) = partial_sum(a, p - 1) + sum(p, q, fn(i_index N_pos) R {a(i_index)})
+            partial_sum(a, q) - partial_sum(a, p - 1) = sum(p, q, fn(i_index N_pos) R {a(i_index)})
+            finite_tail_sum(a, p, q) = sum(p, q, fn(i_index N_pos) R {a(i_index)})
 
 thm finite_tail_abs_nonnegative:
     ? forall a seq(R), p, q N_pos:
@@ -1501,9 +1501,9 @@ thm finite_tail_abs_nonnegative:
             finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = 0
         case q >= p:
             by thm finite_tail_matches_finite_sum(fn(j N_pos) R {abs(a(j))}, p, q)
-            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)})
-            sum(p, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)}) = sum(p, q, fn(i N_pos) R {abs(a(i))})
-            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i N_pos) R {abs(a(i))})
+            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i_index N_pos) R {fn(j N_pos) R {abs(a(j))}(i_index)})
+            sum(p, q, fn(i_index N_pos) R {fn(j N_pos) R {abs(a(j))}(i_index)}) = sum(p, q, fn(i_index N_pos) R {abs(a(i_index))})
+            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i_index N_pos) R {abs(a(i_index))})
             by thm finite_sum_abs_nonnegative(a, p, q)
 
 thm finite_tail_abs_bound:
@@ -1517,12 +1517,12 @@ thm finite_tail_abs_bound:
         case q >= p:
             by thm finite_tail_matches_finite_sum(a, p, q)
             by thm finite_tail_matches_finite_sum(fn(j N_pos) R {abs(a(j))}, p, q)
-            finite_tail_sum(a, p, q) = sum(p, q, fn(i N_pos) R {a(i)})
-            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)})
-            sum(p, q, fn(i N_pos) R {fn(j N_pos) R {abs(a(j))}(i)}) = sum(p, q, fn(i N_pos) R {abs(a(i))})
-            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i N_pos) R {abs(a(i))})
-            abs(finite_tail_sum(a, p, q)) = abs(sum(p, q, fn(i N_pos) R {a(i)}))
-            abs(sum(p, q, fn(i N_pos) R {a(i)})) <= sum(p, q, fn(i N_pos) R {abs(a(i))})
+            finite_tail_sum(a, p, q) = sum(p, q, fn(i_index N_pos) R {a(i_index)})
+            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i_index N_pos) R {fn(j N_pos) R {abs(a(j))}(i_index)})
+            sum(p, q, fn(i_index N_pos) R {fn(j N_pos) R {abs(a(j))}(i_index)}) = sum(p, q, fn(i_index N_pos) R {abs(a(i_index))})
+            finite_tail_sum(fn(j N_pos) R {abs(a(j))}, p, q) = sum(p, q, fn(i_index N_pos) R {abs(a(i_index))})
+            abs(finite_tail_sum(a, p, q)) = abs(sum(p, q, fn(i_index N_pos) R {a(i_index)}))
+            abs(sum(p, q, fn(i_index N_pos) R {a(i_index)})) <= sum(p, q, fn(i_index N_pos) R {abs(a(i_index))})
 
 thm absolute_tail_control:
     ? forall a seq(R), epsilon R_pos, n0 N_pos:
@@ -1558,13 +1558,13 @@ thm partial_sum_triangle_bound:
     by thm partial_sum_matches_finite_sum(a, n)
     by thm partial_sum_abs_matches_finite_sum(a, n)
     1 <= n
-    abs(sum(1, n, fn(i N_pos) R {a(i)})) <= sum(1, n, fn(i N_pos) R {abs(a(i))})
-    abs(partial_sum(a, n)) = abs(sum(1, n, fn(i N_pos) R {a(i)}))
-    abs(partial_sum(a, n)) <= sum(1, n, fn(i N_pos) R {abs(a(i))})
-    sum(1, n, fn(i N_pos) R {abs(a(i))}) = partial_sum(fn(j N_pos) R {abs(a(j))}, n)
+    abs(sum(1, n, fn(i_index N_pos) R {a(i_index)})) <= sum(1, n, fn(i_index N_pos) R {abs(a(i_index))})
+    abs(partial_sum(a, n)) = abs(sum(1, n, fn(i_index N_pos) R {a(i_index)}))
+    abs(partial_sum(a, n)) <= sum(1, n, fn(i_index N_pos) R {abs(a(i_index))})
+    sum(1, n, fn(i_index N_pos) R {abs(a(i_index))}) = partial_sum(fn(j N_pos) R {abs(a(j))}, n)
     partial_sum(fn(j N_pos) R {abs(a(j))}, n) <= partial_sum(fn(j N_pos) R {abs(a(j))}, n)
-    sum(1, n, fn(i N_pos) R {abs(a(i))}) <= partial_sum(fn(j N_pos) R {abs(a(j))}, n)
-    abs(partial_sum(a, n)) <= sum(1, n, fn(i N_pos) R {abs(a(i))}) <= partial_sum(fn(j N_pos) R {abs(a(j))}, n)
+    sum(1, n, fn(i_index N_pos) R {abs(a(i_index))}) <= partial_sum(fn(j N_pos) R {abs(a(j))}, n)
+    abs(partial_sum(a, n)) <= sum(1, n, fn(i_index N_pos) R {abs(a(i_index))}) <= partial_sum(fn(j N_pos) R {abs(a(j))}, n)
     abs(partial_sum(a, n)) <= partial_sum(fn(j N_pos) R {abs(a(j))}, n)
 
 thm absolute_convergence_triangle_bound:
@@ -1654,24 +1654,24 @@ thm decreasing_finite_block_upper_by_left_endpoint:
         $is_decreasing_sequence(a)
         m <= n
         =>:
-            sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {a(m)})
-    forall i N_pos:
-        m <= i <= n
+            sum(m, n, fn(i_index N_pos) R {a(i_index)}) <= sum(m, n, fn(i_index N_pos) R {a(m)})
+    forall i_index N_pos:
+        m <= i_index <= n
         =>:
-            a(i) <= a(m)
-    sum(m, n, fn(i N_pos) R {a(i)}) <= sum(m, n, fn(i N_pos) R {a(m)})
+            a(i_index) <= a(m)
+    sum(m, n, fn(i_index N_pos) R {a(i_index)}) <= sum(m, n, fn(i_index N_pos) R {a(m)})
 
 thm decreasing_finite_block_lower_by_right_endpoint:
     ? forall a seq(R), m, n N_pos:
         $is_decreasing_sequence(a)
         m <= n
         =>:
-            sum(m, n, fn(i N_pos) R {a(n)}) <= sum(m, n, fn(i N_pos) R {a(i)})
-    forall i N_pos:
-        m <= i <= n
+            sum(m, n, fn(i_index N_pos) R {a(n)}) <= sum(m, n, fn(i_index N_pos) R {a(i_index)})
+    forall i_index N_pos:
+        m <= i_index <= n
         =>:
-            a(n) <= a(i)
-    sum(m, n, fn(i N_pos) R {a(n)}) <= sum(m, n, fn(i N_pos) R {a(i)})
+            a(n) <= a(i_index)
+    sum(m, n, fn(i_index N_pos) R {a(n)}) <= sum(m, n, fn(i_index N_pos) R {a(i_index)})
 
 thm nonnegative_partial_sum_le_add:
     ? forall a seq(R), h N, n N_pos:
@@ -1795,7 +1795,7 @@ claim:
     # interface is used in the ordered chapter context.
     trust not $is_convergent_series(harmonic_terms)
 
-have fn alternating_series_terms(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {(-1)^j * a(j)}
+have fn alternating_series_terms(a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {(-1)^j * a(j)}
 
 thm alternating_sign_abs_one:
     ? forall n N_pos:
@@ -2102,9 +2102,9 @@ shifting the index.
 # Index shift: the shifted series is a tail of the original series, so its
 # convergence follows from tail convergence.
 
-have fn series_add(a, b seq(R)) fn(i N_pos) R = fn(j N_pos) R {a(j) + b(j)}
-have fn series_scalar_mul(c R, a seq(R)) fn(i N_pos) R = fn(j N_pos) R {c * a(j)}
-have fn series_shift(a seq(R), h N) fn(i N_pos) R = fn(j N_pos) R {a(j + h)}
+have fn series_add(a, b seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {a(j) + b(j)}
+have fn series_scalar_mul(c R, a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {c * a(j)}
+have fn series_shift(a seq(R), h N) fn(i_index N_pos) R = fn(j N_pos) R {a(j + h)}
 
 thm partial_sum_series_add:
     ? forall a, b seq(R), k N_pos:
@@ -2112,13 +2112,13 @@ thm partial_sum_series_add:
     by thm partial_sum_matches_finite_sum(series_add(a, b), k)
     by thm partial_sum_matches_finite_sum(a, k)
     by thm partial_sum_matches_finite_sum(b, k)
-    partial_sum(series_add(a, b), k) = sum(1, k, fn(i N_pos) R {series_add(a, b)(i)})
-    partial_sum(a, k) = sum(1, k, fn(i N_pos) R {a(i)})
-    partial_sum(b, k) = sum(1, k, fn(i N_pos) R {b(i)})
-    forall i N_pos:
-        series_add(a, b)(i) = a(i) + b(i)
-    sum(1, k, fn(i N_pos) R {series_add(a, b)(i)}) = sum(1, k, fn(i N_pos) R {a(i) + b(i)})
-    sum(1, k, fn(i N_pos) R {a(i) + b(i)}) = sum(1, k, fn(i N_pos) R {a(i)}) + sum(1, k, fn(i N_pos) R {b(i)})
+    partial_sum(series_add(a, b), k) = sum(1, k, fn(i_index N_pos) R {series_add(a, b)(i_index)})
+    partial_sum(a, k) = sum(1, k, fn(i_index N_pos) R {a(i_index)})
+    partial_sum(b, k) = sum(1, k, fn(i_index N_pos) R {b(i_index)})
+    forall i_index N_pos:
+        series_add(a, b)(i_index) = a(i_index) + b(i_index)
+    sum(1, k, fn(i_index N_pos) R {series_add(a, b)(i_index)}) = sum(1, k, fn(i_index N_pos) R {a(i_index) + b(i_index)})
+    sum(1, k, fn(i_index N_pos) R {a(i_index) + b(i_index)}) = sum(1, k, fn(i_index N_pos) R {a(i_index)}) + sum(1, k, fn(i_index N_pos) R {b(i_index)})
     partial_sum(series_add(a, b), k) = partial_sum(a, k) + partial_sum(b, k)
 
 thm partial_sum_series_scalar_mul:
@@ -2126,14 +2126,14 @@ thm partial_sum_series_scalar_mul:
         partial_sum(series_scalar_mul(c, a), k) = c * partial_sum(a, k)
     by thm partial_sum_matches_finite_sum(series_scalar_mul(c, a), k)
     by thm partial_sum_matches_finite_sum(a, k)
-    partial_sum(series_scalar_mul(c, a), k) = sum(1, k, fn(i N_pos) R {series_scalar_mul(c, a)(i)})
-    partial_sum(a, k) = sum(1, k, fn(i N_pos) R {a(i)})
-    forall i N_pos:
-        series_scalar_mul(c, a)(i) = c * a(i)
-    sum(1, k, fn(i N_pos) R {series_scalar_mul(c, a)(i)}) = sum(1, k, fn(i N_pos) R {c * a(i)})
-    sum(1, k, fn(i N_pos) R {c * a(i)}) = c * sum(1, k, fn(i N_pos) R {a(i)})
-    c * sum(1, k, fn(i N_pos) R {a(i)}) = c * partial_sum(a, k)
-    partial_sum(series_scalar_mul(c, a), k) = sum(1, k, fn(i N_pos) R {series_scalar_mul(c, a)(i)}) = sum(1, k, fn(i N_pos) R {c * a(i)}) = c * sum(1, k, fn(i N_pos) R {a(i)}) = c * partial_sum(a, k)
+    partial_sum(series_scalar_mul(c, a), k) = sum(1, k, fn(i_index N_pos) R {series_scalar_mul(c, a)(i_index)})
+    partial_sum(a, k) = sum(1, k, fn(i_index N_pos) R {a(i_index)})
+    forall i_index N_pos:
+        series_scalar_mul(c, a)(i_index) = c * a(i_index)
+    sum(1, k, fn(i_index N_pos) R {series_scalar_mul(c, a)(i_index)}) = sum(1, k, fn(i_index N_pos) R {c * a(i_index)})
+    sum(1, k, fn(i_index N_pos) R {c * a(i_index)}) = c * sum(1, k, fn(i_index N_pos) R {a(i_index)})
+    c * sum(1, k, fn(i_index N_pos) R {a(i_index)}) = c * partial_sum(a, k)
+    partial_sum(series_scalar_mul(c, a), k) = sum(1, k, fn(i_index N_pos) R {series_scalar_mul(c, a)(i_index)}) = sum(1, k, fn(i_index N_pos) R {c * a(i_index)}) = c * sum(1, k, fn(i_index N_pos) R {a(i_index)}) = c * partial_sum(a, k)
 
 thm series_laws_add:
     ? forall a, b seq(R), x, y R:
@@ -2240,7 +2240,7 @@ thm series_laws_tail_convergence:
         partial_sum(series_shift(a, h), n) + partial_sum(a, h) = partial_sum(a, n + h)
         partial_sum(a, n + h) - partial_sum(a, h) = partial_sum(series_shift(a, h), n)
         partial_sum(a, n + h) - constant_sequence(partial_sum(a, h))(n) = partial_sum(series_shift(a, h), n)
-    by thm strict_limit_extensional(fn(i N_pos) R {partial_sum(a, i + h) - constant_sequence(partial_sum(a, h))(i)}, fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h))
+    by thm strict_limit_extensional(fn(i_index N_pos) R {partial_sum(a, i_index + h) - constant_sequence(partial_sum(a, h))(i_index)}, fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h))
     by thm strict_limit_implies_closed_limit(fn(k N_pos) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h))
     witness exist T R st {$has_series_sum(series_shift(a, h), T)} from L - partial_sum(a, h)
 
@@ -2328,7 +2328,7 @@ differences a_n - a_{n+1} sums to the first term.
 # Here the exercise proof is expanded by proving the finite telescoping
 # identity and then applying the epsilon definition of limit.
 
-have fn telescoping_terms(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {a(j) - a(j + 1)}
+have fn telescoping_terms(a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {a(j) - a(j + 1)}
 
 thm telescoping_partial_sum_identity:
     ? forall a seq(R), k N_pos:
@@ -2527,10 +2527,10 @@ thm comparison_test_for_series:
     obtain M from exist M R st {$is_partial_sum_bound(b, M)}
     witness exist M0 R st {$is_partial_sum_bound(fn(j N_pos) R {abs(a(j))}, M0)} from M:
         forall k N_pos:
-            partial_sum(fn(j N_pos) R {abs(a(j))}, k) = sum(1, k, fn(i N_pos) R {abs(a(i))})
-            partial_sum(b, k) = sum(1, k, fn(i N_pos) R {b(i)})
-            sum(1, k, fn(i N_pos) R {abs(a(i))}) <= sum(1, k, fn(i N_pos) R {b(i)})
-            partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= sum(1, k, fn(i N_pos) R {b(i)})
+            partial_sum(fn(j N_pos) R {abs(a(j))}, k) = sum(1, k, fn(i_index N_pos) R {abs(a(i_index))})
+            partial_sum(b, k) = sum(1, k, fn(i_index N_pos) R {b(i_index)})
+            sum(1, k, fn(i_index N_pos) R {abs(a(i_index))}) <= sum(1, k, fn(i_index N_pos) R {b(i_index)})
+            partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= sum(1, k, fn(i_index N_pos) R {b(i_index)})
             partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= partial_sum(b, k)
             partial_sum(b, k) <= M
             partial_sum(fn(j N_pos) R {abs(a(j))}, k) <= partial_sum(b, k) <= M
@@ -2549,20 +2549,20 @@ thm comparison_test_for_series:
 
 thm absolute_shift_abs_terms_match:
     ? forall a seq(R), k N, n N_pos:
-        fn(j N_pos) R {abs(series_shift(a, k)(j))}(n) = series_shift(fn(i N_pos) R {abs(a(i))}, k)(n)
+        fn(j N_pos) R {abs(series_shift(a, k)(j))}(n) = series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k)(n)
     fn(j N_pos) R {abs(series_shift(a, k)(j))}(n) = abs(series_shift(a, k)(n))
     series_shift(a, k)(n) = a(n + k)
     fn(j N_pos) R {abs(series_shift(a, k)(j))}(n) = abs(a(n + k))
-    series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) = fn(i N_pos) R {abs(a(i))}(n + k)
-    fn(i N_pos) R {abs(a(i))}(n + k) = abs(a(n + k))
+    series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k)(n) = fn(i_index N_pos) R {abs(a(i_index))}(n + k)
+    fn(i_index N_pos) R {abs(a(i_index))}(n + k) = abs(a(n + k))
 
 thm absolute_sequence_nonnegative:
     ? forall a seq(R):
-        $is_nonnegative_sequence(fn(i N_pos) R {abs(a(i))})
+        $is_nonnegative_sequence(fn(i_index N_pos) R {abs(a(i_index))})
     forall n N_pos:
-        fn(i N_pos) R {abs(a(i))}(n) = abs(a(n))
+        fn(i_index N_pos) R {abs(a(i_index))}(n) = abs(a(n))
         abs(a(n)) >= 0
-        fn(i N_pos) R {abs(a(i))}(n) >= 0
+        fn(i_index N_pos) R {abs(a(i_index))}(n) >= 0
 
 thm real_add_abs_nonnegative:
     ? forall M R:
@@ -2591,14 +2591,14 @@ thm partial_sum_bound_at:
 
 thm shifted_abs_partial_sum_bound_extends_to_original:
     ? forall a seq(R), k N, M R:
-        $is_partial_sum_bound(series_shift(fn(i N_pos) R {abs(a(i))}, k), M)
+        $is_partial_sum_bound(series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k), M)
         =>:
-            $is_partial_sum_bound(fn(i N_pos) R {abs(a(i))}, partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M + abs(M))
+            $is_partial_sum_bound(fn(i_index N_pos) R {abs(a(i_index))}, partial_sum(fn(i_index N_pos) R {abs(a(i_index))}, k) + M + abs(M))
     # Source handling: split at the shift index; the finite prefix is bounded
     # by monotonicity and the remaining tail by the assumed shifted bound.
     # trust: The explicit case split remains an ExecStmtError when the
     # nonnegative padding M + abs(M) is applied in the m <= k branch.
-    trust $is_partial_sum_bound(fn(i N_pos) R {abs(a(i))}, partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M + abs(M))
+    trust $is_partial_sum_bound(fn(i_index N_pos) R {abs(a(i_index))}, partial_sum(fn(i_index N_pos) R {abs(a(i_index))}, k) + M + abs(M))
 
 thm absolute_series_laws_tail_convergence_reverse:
     ? forall a seq(R), k N:
@@ -2608,24 +2608,24 @@ thm absolute_series_laws_tail_convergence_reverse:
     $is_convergent_series(fn(j N_pos) R {abs(series_shift(a, k)(j))})
     claim:
         ? forall n N_pos:
-            abs(series_shift(a, k)(n)) = series_shift(fn(i N_pos) R {abs(a(i))}, k)(n)
+            abs(series_shift(a, k)(n)) = series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k)(n)
         by thm absolute_shift_abs_terms_match(a, k, n)
-    by thm series_convergence_extensional(fn(j N_pos) R {abs(series_shift(a, k)(j))}, series_shift(fn(i N_pos) R {abs(a(i))}, k))
+    by thm series_convergence_extensional(fn(j N_pos) R {abs(series_shift(a, k)(j))}, series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k))
     claim:
         ? forall n N_pos:
-            series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) >= 0
-        series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) = fn(i N_pos) R {abs(a(i))}(n + k)
-        fn(i N_pos) R {abs(a(i))}(n + k) = abs(a(n + k))
+            series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k)(n) >= 0
+        series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k)(n) = fn(i_index N_pos) R {abs(a(i_index))}(n + k)
+        fn(i_index N_pos) R {abs(a(i_index))}(n + k) = abs(a(n + k))
         abs(a(n + k)) >= 0
-        series_shift(fn(i N_pos) R {abs(a(i))}, k)(n) >= 0
-    by def $is_nonnegative_sequence(series_shift(fn(i N_pos) R {abs(a(i))}, k))
-    by thm nonnegative_series_convergent_has_bounded_partial_sums(series_shift(fn(i N_pos) R {abs(a(i))}, k))
-    obtain M from exist M R st {$is_partial_sum_bound(series_shift(fn(i N_pos) R {abs(a(i))}, k), M)}
+        series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k)(n) >= 0
+    by def $is_nonnegative_sequence(series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k))
+    by thm nonnegative_series_convergent_has_bounded_partial_sums(series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k))
+    obtain M from exist M R st {$is_partial_sum_bound(series_shift(fn(i_index N_pos) R {abs(a(i_index))}, k), M)}
     by thm shifted_abs_partial_sum_bound_extends_to_original(a, k, M)
-    witness exist B R st {$is_partial_sum_bound(fn(i N_pos) R {abs(a(i))}, B)} from partial_sum(fn(i N_pos) R {abs(a(i))}, k) + M + abs(M)
+    witness exist B R st {$is_partial_sum_bound(fn(i_index N_pos) R {abs(a(i_index))}, B)} from partial_sum(fn(i_index N_pos) R {abs(a(i_index))}, k) + M + abs(M)
     by thm absolute_sequence_nonnegative(a)
-    by thm nonnegative_series_bounded_partial_sums_converge(fn(i N_pos) R {abs(a(i))})
-    by thm series_convergence_extensional(fn(i N_pos) R {abs(a(i))}, fn(j N_pos) R {abs(a(j))})
+    by thm nonnegative_series_bounded_partial_sums_converge(fn(i_index N_pos) R {abs(a(i_index))})
+    by thm series_convergence_extensional(fn(i_index N_pos) R {abs(a(i_index))}, fn(j N_pos) R {abs(a(j))})
 
 prop is_eventually_abs_bounded_by(a, b seq(R), n0 N_pos):
     forall n N_pos:
@@ -2667,7 +2667,7 @@ sums to 1/(1-x) when |x| < 1.
 # passes to the limit when `abs(x) < 1`; when `abs(x) >= 1`, the terms do not
 # tend to zero.
 
-have fn geometric_series_terms(x R) fn(i N_pos) R = fn(j N_pos) R {x^(j - 1)}
+have fn geometric_series_terms(x R) fn(i_index N_pos) R = fn(j N_pos) R {x^(j - 1)}
 
 thm geometric_series_formula:
     ? forall x R:
@@ -2734,7 +2734,7 @@ converges.
 # The condensation comparison groups ordinary terms into dyadic blocks and
 # compares their partial sums with the condensed partial sums.
 
-have fn condensed_terms(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {2^(j - 1) * a(2^(j - 1))}
+have fn condensed_terms(a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {2^(j - 1) * a(2^(j - 1))}
 
 thm condensed_partial_sum_successor:
     ? forall a seq(R), K N_pos:
@@ -2848,39 +2848,39 @@ thm dyadic_block_upper_by_left_endpoint:
         2^(K + 1) - 1 $in N_pos
         2^K <= 2^(K + 1) - 1
         =>:
-            sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(i)}) <= 2^K * a(2^K)
+            sum(2^K, 2^(K + 1) - 1, fn(i_index N_pos) R {a(i_index)}) <= 2^K * a(2^K)
     2^K $in N_pos
     2^(K + 1) - 1 $in N_pos
     by thm decreasing_finite_block_upper_by_left_endpoint(a, 2^K, 2^(K + 1) - 1)
     have c R = a(2^K)
-    sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {c}) = ((2^(K + 1) - 1 - 2^K) + 1) * c
-    sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(2^K)}) = sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {c})
+    sum(2^K, 2^(K + 1) - 1, fn(i_index N_pos) R {c}) = ((2^(K + 1) - 1 - 2^K) + 1) * c
+    sum(2^K, 2^(K + 1) - 1, fn(i_index N_pos) R {a(2^K)}) = sum(2^K, 2^(K + 1) - 1, fn(i_index N_pos) R {c})
     ((2^(K + 1) - 1 - 2^K) + 1) * c = ((2^(K + 1) - 1 - 2^K) + 1) * a(2^K)
-    sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(2^K)}) = ((2^(K + 1) - 1 - 2^K) + 1) * a(2^K)
+    sum(2^K, 2^(K + 1) - 1, fn(i_index N_pos) R {a(2^K)}) = ((2^(K + 1) - 1 - 2^K) + 1) * a(2^K)
     2^(K + 1) = 2^K * 2^1
     2^1 = 2
     2^(K + 1) = 2^K * 2
     ((2^(K + 1) - 1 - 2^K) + 1) = ((2^K * 2 - 1 - 2^K) + 1)
     ((2^K * 2 - 1 - 2^K) + 1) = 2^K
     ((2^(K + 1) - 1 - 2^K) + 1) * a(2^K) = 2^K * a(2^K)
-    sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(2^K)}) = 2^K * a(2^K)
-    sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(i)}) <= 2^K * a(2^K)
+    sum(2^K, 2^(K + 1) - 1, fn(i_index N_pos) R {a(2^K)}) = 2^K * a(2^K)
+    sum(2^K, 2^(K + 1) - 1, fn(i_index N_pos) R {a(i_index)}) <= 2^K * a(2^K)
 
 thm dyadic_block_lower_by_right_endpoint:
     ? forall a seq(R), K N_pos:
         $is_decreasing_sequence(a)
         2^(K - 1) + 1 <= 2^K
         =>:
-            2^(K - 1) * a(2^K) <= sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})
+            2^(K - 1) * a(2^K) <= sum(2^(K - 1) + 1, 2^K, fn(i_index N_pos) R {a(i_index)})
     2^(K - 1) $in N_pos
     2^(K - 1) + 1 $in N_pos
     2^K $in N_pos
     by thm decreasing_finite_block_lower_by_right_endpoint(a, 2^(K - 1) + 1, 2^K)
     have c R = a(2^K)
-    sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {c}) = ((2^K - (2^(K - 1) + 1)) + 1) * c
-    sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(2^K)}) = sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {c})
+    sum(2^(K - 1) + 1, 2^K, fn(i_index N_pos) R {c}) = ((2^K - (2^(K - 1) + 1)) + 1) * c
+    sum(2^(K - 1) + 1, 2^K, fn(i_index N_pos) R {a(2^K)}) = sum(2^(K - 1) + 1, 2^K, fn(i_index N_pos) R {c})
     ((2^K - (2^(K - 1) + 1)) + 1) * c = ((2^K - (2^(K - 1) + 1)) + 1) * a(2^K)
-    sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(2^K)}) = ((2^K - (2^(K - 1) + 1)) + 1) * a(2^K)
+    sum(2^(K - 1) + 1, 2^K, fn(i_index N_pos) R {a(2^K)}) = ((2^K - (2^(K - 1) + 1)) + 1) * a(2^K)
     K - 1 $in N
     2^K = 2^((K - 1) + 1)
     2^((K - 1) + 1) = 2^(K - 1) * 2^1
@@ -2889,8 +2889,8 @@ thm dyadic_block_lower_by_right_endpoint:
     ((2^K - (2^(K - 1) + 1)) + 1) = ((2^(K - 1) * 2 - (2^(K - 1) + 1)) + 1)
     ((2^(K - 1) * 2 - (2^(K - 1) + 1)) + 1) = 2^(K - 1)
     ((2^K - (2^(K - 1) + 1)) + 1) * a(2^K) = 2^(K - 1) * a(2^K)
-    sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(2^K)}) = 2^(K - 1) * a(2^K)
-    2^(K - 1) * a(2^K) <= sum(2^(K - 1) + 1, 2^K, fn(i N_pos) R {a(i)})
+    sum(2^(K - 1) + 1, 2^K, fn(i_index N_pos) R {a(2^K)}) = 2^(K - 1) * a(2^K)
+    2^(K - 1) * a(2^K) <= sum(2^(K - 1) + 1, 2^K, fn(i_index N_pos) R {a(i_index)})
 
 thm cauchy_condensation_partial_sum_lower_bound:
     ? forall a seq(R), K N_pos:
@@ -2965,10 +2965,10 @@ thm cauchy_condensation_partial_sum_lower_bound:
             2^K - 1 < 2^(K + 1) - 1
             by thm partial_sum_split_after(a, 2^K - 1, 2^(K + 1) - 1)
             (2^K - 1) + 1 = 2^K
-            sum((2^K - 1) + 1, 2^(K + 1) - 1, fn(i N_pos) R {a(i)}) = sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(i)})
-            partial_sum(a, 2^(K + 1) - 1) = partial_sum(a, 2^K - 1) + sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(i)})
+            sum((2^K - 1) + 1, 2^(K + 1) - 1, fn(i_index N_pos) R {a(i_index)}) = sum(2^K, 2^(K + 1) - 1, fn(i_index N_pos) R {a(i_index)})
+            partial_sum(a, 2^(K + 1) - 1) = partial_sum(a, 2^K - 1) + sum(2^K, 2^(K + 1) - 1, fn(i_index N_pos) R {a(i_index)})
             by thm dyadic_block_upper_by_left_endpoint(a, K)
-            partial_sum(a, 2^K - 1) + sum(2^K, 2^(K + 1) - 1, fn(i N_pos) R {a(i)}) <= partial_sum(condensed_terms(a), K) + 2^K * a(2^K)
+            partial_sum(a, 2^K - 1) + sum(2^K, 2^(K + 1) - 1, fn(i_index N_pos) R {a(i_index)}) <= partial_sum(condensed_terms(a), K) + 2^K * a(2^K)
             partial_sum(a, 2^(K + 1) - 1) <= partial_sum(condensed_terms(a), K) + 2^K * a(2^K)
             by thm condensed_partial_sum_successor(a, K)
             partial_sum(a, 2^(K + 1) - 1) <= partial_sum(condensed_terms(a), K + 1)
@@ -3131,7 +3131,7 @@ thm cauchy_condensation_test_forward:
         2 * partial_sum(a, 2^K) <= 2 * M
         partial_sum(condensed_terms(a), K) <= 2 * partial_sum(a, 2^K) <= 2 * M
         2 * M = B
-    witness exist C R st {$is_partial_sum_bound(condensed_terms(a), C)} from B
+    witness exist set_C R st {$is_partial_sum_bound(condensed_terms(a), set_C)} from B
     by thm condensed_terms_nonnegative(a)
     by thm nonnegative_series_bounded_partial_sums_converge(condensed_terms(a))
 
@@ -3170,7 +3170,7 @@ Corollary 7.3.7. The p-series sum 1/n^q converges exactly when q > 1.
 # The geometric series criterion then gives convergence exactly when
 # `abs(2^(1-q)) < 1`, which is equivalent to `q > 1`.
 
-have fn p_series_terms(q R_pos) fn(i N_pos) R = fn(j N_pos) R {1 / j^q}
+have fn p_series_terms(q R_pos) fn(i_index N_pos) R = fn(j N_pos) R {1 / j^q}
 
 thm p_series_terms_nonnegative:
     ? forall q R_pos:
@@ -3262,11 +3262,11 @@ Proposition 7.4.1. A convergent non-negative series may be rearranged by a
 bijection of the index set without changing its sum.
 """
 
-prop is_permutation_of_positive_integers(phi fn(i N_pos) N_pos):
+prop is_permutation_of_positive_integers(phi fn(i_index N_pos) N_pos):
     forall y N_pos:
         exist! x N_pos st {phi(x) = y}
 
-have fn rearranged_series(a seq(R), phi fn(i N_pos) N_pos) fn(i N_pos) R = fn(j N_pos) R {a(phi(j))}
+have fn rearranged_series(a seq(R), phi fn(i_index N_pos) N_pos) fn(i_index N_pos) R = fn(j N_pos) R {a(phi(j))}
 
 # Tao's proof compares finite partial sums.  For non-negative series, it is
 # enough that every finite partial sum of either order is bounded by a later
@@ -3278,31 +3278,31 @@ prop has_mutually_cofinal_partial_sums(a, b seq(R)):
     forall n N_pos:
         exist m N_pos st {partial_sum(b, n) <= partial_sum(a, m)}
 
-prop has_bounded_prefix_image(phi fn(i N_pos) N_pos, n N_pos, M N_pos):
+prop has_bounded_prefix_image(phi fn(i_index N_pos) N_pos, n N_pos, M N_pos):
     forall j N_pos:
         j <= n
         =>:
             phi(j) <= M
 
-prop has_bounded_prefix_preimage(phi fn(i N_pos) N_pos, n N_pos, M N_pos):
+prop has_bounded_prefix_preimage(phi fn(i_index N_pos) N_pos, n N_pos, M N_pos):
     forall j N_pos:
         j <= n
         =>:
             exist t N_pos st {t <= M, phi(t) = j}
 
 # Proof-package helper: the running maximum bounds the image of a finite prefix.
-have fn prefix_image_bound(phi fn(i N_pos) N_pos, n N_pos) N_pos by induc n from 1:
+have fn prefix_image_bound(phi fn(i_index N_pos) N_pos, n N_pos) N_pos by induc n from 1:
     case n = 1: phi(1)
     case n > 1: finite_set_max(union({prefix_image_bound(phi, n - 1)}, { phi(n)}))
 
-prop prefix_image_bound_bounds_up_to(phi fn(i N_pos) N_pos, n N_pos):
+prop prefix_image_bound_bounds_up_to(phi fn(i_index N_pos) N_pos, n N_pos):
     forall j N_pos:
         j <= n
         =>:
             phi(j) <= prefix_image_bound(phi, n)
 
 thm prefix_image_bound_bounds:
-    ? forall phi fn(i N_pos) N_pos, n N_pos:
+    ? forall phi fn(i_index N_pos) N_pos, n N_pos:
         $prefix_image_bound_bounds_up_to(phi, n)
     by induc n from 1:
         ? $prefix_image_bound_bounds_up_to(phi, n)
@@ -3346,7 +3346,7 @@ thm prefix_image_bound_bounds:
             $prefix_image_bound_bounds_up_to(phi, n + 1)
 
 thm rearranged_series_nonnegative:
-    ? forall a seq(R), phi fn(i N_pos) N_pos:
+    ? forall a seq(R), phi fn(i_index N_pos) N_pos:
         $is_nonnegative_sequence(a)
         =>:
             $is_nonnegative_sequence(rearranged_series(a, phi))
@@ -3357,7 +3357,7 @@ thm rearranged_series_nonnegative:
         rearranged_series(a, phi)(n) >= 0
 
 thm permutation_prefix_image_has_bound:
-    ? forall phi fn(i N_pos) N_pos, n N_pos:
+    ? forall phi fn(i_index N_pos) N_pos, n N_pos:
         $is_permutation_of_positive_integers(phi)
         =>:
             exist M N_pos st {$has_bounded_prefix_image(phi, n, M)}
@@ -3374,7 +3374,7 @@ thm permutation_prefix_image_has_bound:
         $has_bounded_prefix_image(phi, n, M)
 
 thm bounded_preimage_witness_from_function:
-    ? forall phi fn(i N_pos) N_pos, h fn(i N_pos) N_pos, j, M N_pos:
+    ? forall phi fn(i_index N_pos) N_pos, h fn(i_index N_pos) N_pos, j, M N_pos:
         h(j) <= M
         phi(h(j)) = j
         =>:
@@ -3384,7 +3384,7 @@ thm bounded_preimage_witness_from_function:
         phi(h(j)) = j
 
 thm prefix_preimage_bound_from_right_inverse:
-    ? forall phi fn(i N_pos) N_pos, h fn(i N_pos) N_pos, n, M N_pos:
+    ? forall phi fn(i_index N_pos) N_pos, h fn(i_index N_pos) N_pos, n, M N_pos:
         $prefix_image_bound_bounds_up_to(h, n)
         M = prefix_image_bound(h, n)
         forall j N_pos:
@@ -3404,7 +3404,7 @@ thm prefix_preimage_bound_from_right_inverse:
     $has_bounded_prefix_preimage(phi, n, M)
 
 thm permutation_prefix_preimage_has_bound:
-    ? forall phi fn(i N_pos) N_pos, n N_pos:
+    ? forall phi fn(i_index N_pos) N_pos, n N_pos:
         $is_permutation_of_positive_integers(phi)
         =>:
             exist M N_pos st {$has_bounded_prefix_preimage(phi, n, M)}
@@ -3499,7 +3499,7 @@ thm permutation_prefix_preimage_has_bound:
 #     partial_sum(rearranged_series(a, phi), n) <= partial_sum(a, M)
 # 
 thm rearranged_partial_sum_le_original_at_bounded_prefix:
-    ? forall a seq(R), phi fn(i N_pos) N_pos, n, M N_pos:
+    ? forall a seq(R), phi fn(i_index N_pos) N_pos, n, M N_pos:
         $is_nonnegative_sequence(a)
         $is_permutation_of_positive_integers(phi)
         $has_bounded_prefix_image(phi, n, M)
@@ -3598,7 +3598,7 @@ thm rearranged_partial_sum_le_original_at_bounded_prefix:
 #     partial_sum(a, n) <= partial_sum(rearranged_series(a, phi), M)
 # 
 thm original_partial_sum_le_rearranged_at_bounded_preimage:
-    ? forall a seq(R), phi fn(i N_pos) N_pos, n, M N_pos:
+    ? forall a seq(R), phi fn(i_index N_pos) N_pos, n, M N_pos:
         $is_nonnegative_sequence(a)
         $is_permutation_of_positive_integers(phi)
         $has_bounded_prefix_preimage(phi, n, M)
@@ -3611,7 +3611,7 @@ thm original_partial_sum_le_rearranged_at_bounded_preimage:
     trust partial_sum(a, n) <= partial_sum(rearranged_series(a, phi), M)
 
 thm rearranged_series_partial_sums_cofinal:
-    ? forall a seq(R), phi fn(i N_pos) N_pos:
+    ? forall a seq(R), phi fn(i_index N_pos) N_pos:
         $is_nonnegative_sequence(a)
         $is_permutation_of_positive_integers(phi)
         =>:
@@ -3696,7 +3696,7 @@ thm nonnegative_series_same_sum_from_cofinal_partial_sums:
     $has_series_sum(b, L)
 
 thm nonnegative_rearrangement:
-    ? forall a seq(R), phi fn(i N_pos) N_pos, L R:
+    ? forall a seq(R), phi fn(i_index N_pos) N_pos, L R:
         $is_nonnegative_sequence(a)
         $has_series_sum(a, L)
         $is_permutation_of_positive_integers(phi)
@@ -3723,28 +3723,28 @@ thm square_reciprocal_terms_formula:
     p_series_terms(2)(k) = 1 / k^2
 
 thm positive_even_gt_one:
-    ? forall i N_pos:
-        i % 2 = 0
+    ? forall i_index N_pos:
+        i_index % 2 = 0
         =>:
-            i > 1
-    i > 1
+            i_index > 1
+    i_index > 1
 
-have fn adjacent_pair_swap(i N_pos) N_pos by cases:
-    case i % 2 = 1: i + 1
-    case i % 2 = 0: i - 1
+have fn adjacent_pair_swap(i_index N_pos) N_pos by cases:
+    case i_index % 2 = 1: i_index + 1
+    case i_index % 2 = 0: i_index - 1
 
 thm adjacent_pair_swap_odd:
-    ? forall i N_pos:
-        i % 2 = 1
+    ? forall i_index N_pos:
+        i_index % 2 = 1
         =>:
-            adjacent_pair_swap(i) = i + 1
+            adjacent_pair_swap(i_index) = i_index + 1
 
 thm adjacent_pair_swap_even:
-    ? forall i N_pos:
-        i % 2 = 0
+    ? forall i_index N_pos:
+        i_index % 2 = 0
         =>:
-            adjacent_pair_swap(i) = i - 1
-    adjacent_pair_swap(i) = i - 1
+            adjacent_pair_swap(i_index) = i_index - 1
+    adjacent_pair_swap(i_index) = i_index - 1
 
 thm odd_successor_even:
     ? forall y N_pos:
@@ -3887,7 +3887,7 @@ may be rearranged by any bijection of the index set without changing its sum.
 
 
 thm rearranged_absolute_value_terms_pointwise:
-    ? forall a seq(R), phi fn(i N_pos) N_pos, n N_pos:
+    ? forall a seq(R), phi fn(i_index N_pos) N_pos, n N_pos:
         rearranged_series(fn(j N_pos) R {abs(a(j))}, phi)(n) = fn(j N_pos) R {abs(rearranged_series(a, phi)(j))}(n)
     rearranged_series(fn(j N_pos) R {abs(a(j))}, phi)(n) = fn(j N_pos) R {abs(a(j))}(phi(n))
     fn(j N_pos) R {abs(a(j))}(phi(n)) = abs(a(phi(n)))
@@ -3897,7 +3897,7 @@ thm rearranged_absolute_value_terms_pointwise:
     rearranged_series(fn(j N_pos) R {abs(a(j))}, phi)(n) = fn(j N_pos) R {abs(rearranged_series(a, phi)(j))}(n)
 
 thm rearranged_series_absolutely_convergent:
-    ? forall a seq(R), phi fn(i N_pos) N_pos:
+    ? forall a seq(R), phi fn(i_index N_pos) N_pos:
         $is_absolutely_convergent_series(a)
         $is_permutation_of_positive_integers(phi)
         =>:
@@ -3920,8 +3920,8 @@ thm rearranged_series_absolutely_convergent:
     $is_convergent_series(fn(j N_pos) R {abs(rearranged_series(a, phi)(j))})
     $is_absolutely_convergent_series(rearranged_series(a, phi))
 
-have fn positive_part_series(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {(abs(a(j)) + a(j)) / 2}
-have fn negative_part_series(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {(abs(a(j)) - a(j)) / 2}
+have fn positive_part_series(a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {(abs(a(j)) + a(j)) / 2}
+have fn negative_part_series(a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {(abs(a(j)) - a(j)) / 2}
 
 thm positive_part_value_nonnegative:
     ? forall x R:
@@ -4093,7 +4093,7 @@ thm positive_negative_parts_reconstruct_series_sum:
     by thm series_sum_extensional(series_add(positive_part_series(a), series_scalar_mul(-1, negative_part_series(a))), a, P - Qsum)
 
 thm rearranged_positive_negative_parts_reconstruct_series_sum:
-    ? forall a seq(R), phi fn(i N_pos) N_pos, P, Qsum R:
+    ? forall a seq(R), phi fn(i_index N_pos) N_pos, P, Qsum R:
         $has_series_sum(rearranged_series(positive_part_series(a), phi), P)
         $has_series_sum(rearranged_series(negative_part_series(a), phi), Qsum)
         =>:
@@ -4119,7 +4119,7 @@ thm rearranged_positive_negative_parts_reconstruct_series_sum:
     by thm series_sum_extensional(series_add(rearranged_series(positive_part_series(a), phi), series_scalar_mul(-1, rearranged_series(negative_part_series(a), phi))), rearranged_series(a, phi), P - Qsum)
 
 thm absolute_rearrangement:
-    ? forall a seq(R), phi fn(i N_pos) N_pos, L R:
+    ? forall a seq(R), phi fn(i_index N_pos) N_pos, L R:
         $is_absolutely_convergent_series(a)
         $has_series_sum(a, L)
         $is_permutation_of_positive_integers(phi)
@@ -4277,7 +4277,7 @@ prop has_finite_limit_superior(a seq(R), L R):
         =>:
             $exceeds_infinitely_often(a, x)
 
-have fn root_test_terms(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {abs(a(j))^(1 / j)}
+have fn root_test_terms(a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {abs(a(j))^(1 / j)}
 
 thm chapter7_nth_root_nonnegative:
     ? forall x R, n N_pos:
@@ -4555,7 +4555,7 @@ prop is_positive_sequence(c seq(R)):
         c(n) > 0
 
 # This is the sequence with kth term `c(k+1)/c(k)`.
-have fn ratio_terms(c seq(R): $is_positive_sequence(c)) fn(i N_pos) R = fn(k N_pos: c(k) > 0) R {c(k + 1) / c(k)}
+have fn ratio_terms(c seq(R): $is_positive_sequence(c)) fn(i_index N_pos) R = fn(k N_pos: c(k) > 0) R {c(k + 1) / c(k)}
 
 # thm eventual_ratio_upper_product_bound:
 #     ? forall c seq(R), r R_pos, n0 N_pos, h N:
@@ -5116,7 +5116,7 @@ prop is_absolute_ratio_sequence(a, b seq(R)):
         =>:
             b(n) = abs(a(n + 1)) / abs(a(n))
 
-have fn absolute_value_sequence(a seq(R)) fn(i N_pos) R = fn(j N_pos) R {abs(a(j))}
+have fn absolute_value_sequence(a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {abs(a(j))}
 
 thm positive_sequence_ratio_limit_one_gives_root_limit_one:
     ? forall c seq(R):

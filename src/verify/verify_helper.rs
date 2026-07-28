@@ -484,7 +484,6 @@ impl Runtime {
 
     pub(crate) fn known_sets_containing_obj(&self, obj: &Obj) -> Vec<Obj> {
         let probe: AtomicFact = InFact::new(obj.clone(), obj.clone(), default_line_file()).into();
-        let lookup_key = (probe.key(), true);
         let module_names = self.atomic_fact_referenced_module_names(&probe);
         let obj_strings = self.all_objs_equal_to_arg_for_known_atomic_fact(obj, &module_names);
         let mut sets = Vec::new();
@@ -493,7 +492,6 @@ impl Runtime {
         for environment in self.iter_environments_from_top() {
             Self::collect_known_sets_containing_obj_in_environment(
                 environment,
-                &lookup_key,
                 &obj_strings,
                 &mut sets,
                 &mut seen,
@@ -503,7 +501,6 @@ impl Runtime {
             for environment in self.imported_module_environments(module_name) {
                 Self::collect_known_sets_containing_obj_in_environment(
                     environment,
-                    &lookup_key,
                     &obj_strings,
                     &mut sets,
                     &mut seen,
@@ -516,23 +513,15 @@ impl Runtime {
 
     fn collect_known_sets_containing_obj_in_environment(
         environment: &Environment,
-        lookup_key: &(AtomicFactKey, bool),
         obj_strings: &[String],
         sets: &mut Vec<Obj>,
         seen: &mut std::collections::HashSet<String>,
     ) {
-        let Some(known_facts_map) = environment.known_atomic_facts_with_2_args.get(lookup_key)
-        else {
-            return;
-        };
         for obj_string in obj_strings {
-            for ((member_string, _), known_fact) in known_facts_map.iter() {
-                if member_string != obj_string {
-                    continue;
-                }
-                let AtomicFact::InFact(in_fact) = known_fact else {
-                    continue;
-                };
+            let Some(owner_sets) = environment.known_owner_sets.get(obj_string) else {
+                continue;
+            };
+            for in_fact in owner_sets.values() {
                 let set_string = in_fact.set.to_string();
                 if seen.insert(set_string) {
                     sets.push(in_fact.set.clone());

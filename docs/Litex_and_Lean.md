@@ -913,7 +913,7 @@ example : ({1, 2} : Set ℕ) ⊆ ({1, 2, 3} : Set ℕ) := by
 {1, 2} $in power_set({1, 2, 3})
 ```
 
-### Subset Facts Produce Membership Facts
+### Subset Facts Verify Membership Goals
 
 <!-- litex:skip-test -->
 ```litex
@@ -928,7 +928,10 @@ example {α : Type} {A B : Set α} (hAB : A ⊆ B) {x : α} (hx : x ∈ A) : x �
   exact hAB hx
 ```
 
-**What differs.** Litex infers membership consequences from `A $subset B`. Lean applies the subset hypothesis as a function.
+**What differs.** Litex can verify the one-step membership consequence on
+demand from the known owner set and subset relation. It does not need to
+materialize the lifted membership first. Lean applies the subset hypothesis as
+a function.
 
 
 ### Unequal Cardinalities Rule Out Equality

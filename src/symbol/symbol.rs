@@ -313,11 +313,28 @@ impl SymbolRole {
 pub struct SymbolDefinition {
     binding: SymbolBinding,
     role: SymbolRole,
+    trust_summary: ProofTrustSummary,
 }
 
 impl SymbolDefinition {
     pub fn new(binding: SymbolBinding, role: SymbolRole) -> Self {
-        SymbolDefinition { binding, role }
+        SymbolDefinition {
+            binding,
+            role,
+            trust_summary: ProofTrustSummary::new(),
+        }
+    }
+
+    pub fn new_with_trust(
+        binding: SymbolBinding,
+        role: SymbolRole,
+        trust_summary: ProofTrustSummary,
+    ) -> Self {
+        SymbolDefinition {
+            binding,
+            role,
+            trust_summary,
+        }
     }
 
     pub fn binding(&self) -> &SymbolBinding {
@@ -326,6 +343,14 @@ impl SymbolDefinition {
 
     pub fn role(&self) -> SymbolRole {
         self.role
+    }
+
+    pub fn trust_summary(&self) -> &ProofTrustSummary {
+        &self.trust_summary
+    }
+
+    pub fn merge_trust_summary(&mut self, trust_summary: &ProofTrustSummary) {
+        self.trust_summary.merge(trust_summary);
     }
 }
 
@@ -345,6 +370,12 @@ impl SymbolTable {
         self.definitions.get(name)
     }
 
+    pub fn get_by_id(&self, symbol_id: SymbolId) -> Option<&SymbolDefinition> {
+        self.definitions
+            .values()
+            .find(|definition| definition.binding().id() == symbol_id)
+    }
+
     pub fn contains(&self, name: &str) -> bool {
         self.definitions.contains_key(name)
     }
@@ -360,6 +391,10 @@ impl SymbolTable {
 
     pub fn iter(&self) -> impl Iterator<Item = (&String, &SymbolDefinition)> {
         self.definitions.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (&String, &mut SymbolDefinition)> {
+        self.definitions.iter_mut()
     }
 }
 

@@ -1,0 +1,11 @@
+prop Cauchy_condition(x seq(R), epsilon R_pos, n N_pos):
+    forall i, j N_pos:
+        i > n
+        j > n
+        =>:
+            abs(x(i) - x(j)) < epsilon
+
+prop Cauchy_converge(x seq(R)):
+    forall epsilon R_pos:
+        exist n N_pos st {$Cauchy_condition(x, epsilon, n)}
+

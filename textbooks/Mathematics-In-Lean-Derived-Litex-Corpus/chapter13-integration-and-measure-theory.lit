@@ -197,10 +197,10 @@ thm measurable_countable_intersection:
 # ---------------------------------------------------------------------------
 
 prop pairwise_disjoint_sequence(X set, A fn(n N) power_set(X)):
-    forall i, j N:
-        i != j
+    forall idx, j N:
+        idx != j
         =>:
-            intersect(A(i), A(j)) = {}
+            intersect(A(idx), A(j)) = {}
 
 template<X, V set, mu fn(Tset power_set(X)) V, A fn(n N) power_set(X)>:
     have fn measured_sequence(n N) V = mu(A(n))

@@ -995,4 +995,144 @@ impl Runtime {
         left_results.append(&mut right_results);
         Ok(Some(left_results))
     }
+
+    // Membership is monotone along one known direct set-inclusion edge.
+    // Example: `x $in A` plus `A $subset B`, `B $superset A`, or
+    // `A $in power_set(B)` proves `x $in B`.
+    pub(super) fn verify_in_fact_by_known_direct_superset(
+        &self,
+        in_fact: &InFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let goal: AtomicFact = in_fact.clone().into();
+        let goal_module_names = self.atomic_fact_referenced_module_names(&goal);
+        let element_keys =
+            self.all_objs_equal_to_arg_for_known_atomic_fact(&in_fact.element, &goal_module_names);
+        let target_set_keys =
+            self.all_objs_equal_to_arg_for_known_atomic_fact(&in_fact.set, &goal_module_names);
+
+        let mut owner_memberships = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            Self::collect_owner_memberships_from_environment(
+                environment,
+                &element_keys,
+                &mut owner_memberships,
+            );
+        }
+        for module_name in goal_module_names.iter() {
+            for environment in self.imported_module_environments(module_name) {
+                Self::collect_owner_memberships_from_environment(
+                    environment,
+                    &element_keys,
+                    &mut owner_memberships,
+                );
+            }
+        }
+
+        for owner_membership in owner_memberships {
+            let owner_atomic_fact: AtomicFact = owner_membership.clone().into();
+            let mut edge_module_names = goal_module_names.clone();
+            for module_name in self.atomic_fact_referenced_module_names(&owner_atomic_fact) {
+                if !edge_module_names.contains(&module_name) {
+                    edge_module_names.push(module_name);
+                }
+            }
+            let owner_set_keys = self.all_objs_equal_to_arg_for_known_atomic_fact(
+                &owner_membership.set,
+                &edge_module_names,
+            );
+
+            let mut inclusion_evidence = Vec::new();
+            for environment in self.iter_environments_from_top() {
+                Self::collect_direct_superset_evidence_from_environment(
+                    environment,
+                    &owner_set_keys,
+                    &target_set_keys,
+                    &mut inclusion_evidence,
+                );
+            }
+            for module_name in edge_module_names.iter() {
+                for environment in self.imported_module_environments(module_name) {
+                    Self::collect_direct_superset_evidence_from_environment(
+                        environment,
+                        &owner_set_keys,
+                        &target_set_keys,
+                        &mut inclusion_evidence,
+                    );
+                }
+            }
+
+            let Some(inclusion_fact) = inclusion_evidence.into_iter().next() else {
+                continue;
+            };
+            let membership_result =
+                Self::stmt_result_for_indexed_fact(owner_atomic_fact, "known owner membership");
+            let inclusion_result =
+                Self::stmt_result_for_indexed_fact(inclusion_fact, "known direct set inclusion");
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "membership through a known direct set inclusion".to_string(),
+                    vec![membership_result, inclusion_result],
+                )
+                .into(),
+            );
+        }
+
+        Ok(StmtUnknown::new().into())
+    }
+
+    fn collect_owner_memberships_from_environment(
+        environment: &Environment,
+        element_keys: &[ObjString],
+        owner_memberships: &mut Vec<InFact>,
+    ) {
+        for element_key in element_keys {
+            let Some(owner_sets) = environment.known_owner_sets.get(element_key) else {
+                continue;
+            };
+            for owner_membership in owner_sets.values() {
+                if !owner_memberships
+                    .iter()
+                    .any(|known| known.to_string() == owner_membership.to_string())
+                {
+                    owner_memberships.push(owner_membership.clone());
+                }
+            }
+        }
+    }
+
+    fn collect_direct_superset_evidence_from_environment(
+        environment: &Environment,
+        owner_set_keys: &[ObjString],
+        target_set_keys: &[ObjString],
+        evidence: &mut Vec<AtomicFact>,
+    ) {
+        for owner_set_key in owner_set_keys {
+            let Some(direct_supersets) = environment.known_direct_supersets.get(owner_set_key)
+            else {
+                continue;
+            };
+            for target_set_key in target_set_keys {
+                let Some(inclusion_fact) = direct_supersets.get(target_set_key) else {
+                    continue;
+                };
+                if !evidence
+                    .iter()
+                    .any(|known| known.to_string() == inclusion_fact.to_string())
+                {
+                    evidence.push(inclusion_fact.clone());
+                }
+            }
+        }
+    }
+
+    fn stmt_result_for_indexed_fact(indexed_fact: AtomicFact, detail: &str) -> StmtResult {
+        let fact: Fact = indexed_fact.into();
+        FactualStmtSuccess::new_with_verified_by_known_fact(
+            fact.clone(),
+            VerifiedByResult::cited_fact(fact.clone(), fact, Some(detail.to_string())),
+            Vec::new(),
+        )
+        .into()
+    }
 }

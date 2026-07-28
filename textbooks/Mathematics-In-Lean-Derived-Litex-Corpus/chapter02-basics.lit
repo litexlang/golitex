@@ -501,15 +501,15 @@ thm mul_inv_rev:
 # through four hypotheses; recording the chain exposes the source proof idea
 # without reproducing its several Lean application styles.
 claim:
-    ? forall a, b, c, d, e R:
+    ? forall a, b, c, d, endpoint R:
         a <= b
         b < c
         c <= d
-        d < e
+        d < endpoint
         =>:
-            a < e
-    a <= b < c <= d < e
-    a < e
+            a < endpoint
+    a <= b < c <= d < endpoint
+    a < endpoint
 
 # 2.4 More on Order and Divisibility
 
@@ -606,42 +606,42 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
         =>:
             $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
             $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
-    have C power_set(N) = {d N_pos: $divides(d, a), $divides(d, b)}
+    have CarrierC power_set(N) = {d N_pos: $divides(d, a), $divides(d, b)}
     claim:
-        ? $is_finite_set(C)
+        ? $is_finite_set(CarrierC)
         by cases:
-            ? $is_finite_set(C)
+            ? $is_finite_set(CarrierC)
             case a != 0:
                 claim:
-                    ? forall d C:
+                    ? forall d CarrierC:
                         d $in closed_range(1, abs(a))
-                    d $in C
+                    d $in CarrierC
                     d $in N_pos
                     d >= 1
                     $divides(d, a)
                     by thm _positive_divisor_le_abs(d, a)
                     d <= abs(a)
                     d $in closed_range(1, abs(a))
-                C $subset closed_range(1, abs(a))
-                C = set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), C))
-                $is_finite_set(set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), C)))
-                $is_finite_set(C)
+                CarrierC $subset closed_range(1, abs(a))
+                CarrierC = set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), CarrierC))
+                $is_finite_set(set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), CarrierC)))
+                $is_finite_set(CarrierC)
             case b != 0:
                 claim:
-                    ? forall d C:
+                    ? forall d CarrierC:
                         d $in closed_range(1, abs(b))
-                    d $in C
+                    d $in CarrierC
                     d $in N_pos
                     d >= 1
                     $divides(d, b)
                     by thm _positive_divisor_le_abs(d, b)
                     d <= abs(b)
                     d $in closed_range(1, abs(b))
-                C $subset closed_range(1, abs(b))
-                C = set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), C))
-                $is_finite_set(set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), C)))
-                $is_finite_set(C)
-    witness $is_nonempty_set(C) from 1:
+                CarrierC $subset closed_range(1, abs(b))
+                CarrierC = set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), CarrierC))
+                $is_finite_set(set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), CarrierC)))
+                $is_finite_set(CarrierC)
+    witness $is_nonempty_set(CarrierC) from 1:
         1 $in N_pos
         witness exist k Z st {a = 1 * k} from a:
             a = 1 * a
@@ -650,7 +650,7 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
             b = 1 * b
         $divides(1, b)
         1 $in {d N_pos: $divides(d, a), $divides(d, b)}
-        1 $in C
+        1 $in CarrierC
     $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
     $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
 

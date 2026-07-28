@@ -13,6 +13,7 @@ const STRICT_FLAG: &str = "-strict";
 const LANGUAGE_FLAG: &str = "-lang";
 const SUMMARIZE_FLAG: &str = "-summarize";
 const ISOLATED_FLAG: &str = "-isolated";
+const TRUST_BEFORE_LINE_FLAG: &str = "-trust-before-line";
 
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
@@ -41,6 +42,21 @@ pub fn run_cli() {
             process::exit(2);
         }
     };
+    let trust_before_line = match remove_trust_before_line_flag(&mut args) {
+        Ok(value) => value,
+        Err(message) => {
+            eprintln!("{}", message);
+            print_help_message();
+            process::exit(2);
+        }
+    };
+    if let Err(message) =
+        validate_trust_before_line_invocation(&args, strict_mode, trust_before_line)
+    {
+        eprintln!("{}", message);
+        print_help_message();
+        process::exit(2);
+    }
     let mut index: usize = 0;
 
     if !args.is_empty() {
@@ -112,6 +128,7 @@ pub fn run_cli() {
                     output_language,
                     summarize_output,
                     force_isolated,
+                    trust_before_line,
                 );
                 return;
             }
@@ -525,6 +542,88 @@ fn remove_flag(args: &mut Vec<String>, flag_name: &str) -> bool {
     args.len() != before_len
 }
 
+fn remove_trust_before_line_flag(args: &mut Vec<String>) -> Result<Option<usize>, String> {
+    let flag_count = args
+        .iter()
+        .filter(|arg| arg.as_str() == TRUST_BEFORE_LINE_FLAG)
+        .count();
+    if flag_count == 0 {
+        return Ok(None);
+    }
+    if flag_count > 1 {
+        return Err(format!(
+            "{} may be provided only once",
+            TRUST_BEFORE_LINE_FLAG
+        ));
+    }
+
+    let flag_index = args
+        .iter()
+        .position(|arg| arg == TRUST_BEFORE_LINE_FLAG)
+        .expect("the trust-before-line flag count was already checked");
+    let Some(value) = args.get(flag_index + 1) else {
+        return Err(format!(
+            "{} requires a positive ASCII decimal line number",
+            TRUST_BEFORE_LINE_FLAG
+        ));
+    };
+    if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) {
+        return Err(format!(
+            "{} requires a positive ASCII decimal line number, got {}",
+            TRUST_BEFORE_LINE_FLAG, value
+        ));
+    }
+    let line = value.parse::<usize>().map_err(|_| {
+        format!(
+            "{} line number exceeds the supported range: {}",
+            TRUST_BEFORE_LINE_FLAG, value
+        )
+    })?;
+    if line == 0 {
+        return Err(format!(
+            "{} requires a line number greater than 0",
+            TRUST_BEFORE_LINE_FLAG
+        ));
+    }
+
+    args.remove(flag_index + 1);
+    args.remove(flag_index);
+    Ok(Some(line))
+}
+
+fn validate_trust_before_line_invocation(
+    args: &[String],
+    strict_mode: bool,
+    trust_before_line: Option<usize>,
+) -> Result<(), String> {
+    if trust_before_line.is_none() {
+        return Ok(());
+    }
+    if strict_mode {
+        return Err(format!(
+            "{} cannot be used with {}",
+            TRUST_BEFORE_LINE_FLAG, STRICT_FLAG
+        ));
+    }
+    if args.len() != 2 || args.first().map(String::as_str) != Some("-f") {
+        return Err(format!(
+            "{} is supported only with a direct -f <file> or -isolated -f <file> command and does not accept additional arguments",
+            TRUST_BEFORE_LINE_FLAG
+        ));
+    }
+    if args
+        .get(1)
+        .map(|file| file.is_empty() || file.starts_with('-'))
+        .unwrap_or(true)
+    {
+        return Err(format!(
+            "{} requires a direct -f <file> target",
+            TRUST_BEFORE_LINE_FLAG
+        ));
+    }
+    Ok(())
+}
+
 fn remove_language_flag(args: &mut Vec<String>) -> Result<OutputLanguage, String> {
     let Some(flag_index) = args.iter().position(|arg| arg == LANGUAGE_FLAG) else {
         return Ok(OutputLanguage::English);
@@ -626,6 +725,7 @@ fn main_flag_file(
     output_language: OutputLanguage,
     summarize_output: bool,
     force_isolated: bool,
+    trust_before_line: Option<usize>,
 ) {
     let path = remove_windows_carriage_return(file_flag);
 
@@ -660,11 +760,33 @@ fn main_flag_file(
     runtime.set_output_style(output_style);
     runtime.strict_mode = strict_mode;
     runtime.output_language = output_language;
-    let (stmt_results, runtime_error) =
-        run_file_with_project_context(path_string.as_str(), &mut runtime, force_isolated);
+    let (stmt_results, runtime_error) = run_file_with_project_context_and_trusted_prefix(
+        path_string.as_str(),
+        &mut runtime,
+        force_isolated,
+        trust_before_line,
+    );
     let (ok, mut output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
-    if summarize_output {
+    if let Some(report) = runtime.trusted_prefix_report.as_ref() {
+        let mut trusted_prefix_output = display_trusted_prefix_report_json(report);
+        if !output.trim().is_empty() {
+            trusted_prefix_output.push('\n');
+            trusted_prefix_output.push_str(output.trim());
+        }
+        output = trusted_prefix_output;
+        output.push('\n');
+        output.push_str(
+            display_run_summary_json_with_runtime_and_trusted_prefix(
+                &runtime,
+                &stmt_results,
+                &runtime_error,
+                report,
+            )
+            .as_str(),
+        );
+        output.push('\n');
+    } else if summarize_output {
         output.push('\n');
         output.push_str(
             display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error).as_str(),
@@ -672,7 +794,10 @@ fn main_flag_file(
         output.push('\n');
     }
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
-    if ok && runtime.isolated {
+    if runtime.trusted_prefix_setup_error.is_some() {
+        process::exit(2);
+    }
+    if ok && runtime.isolated && trust_before_line.is_none() {
         run_isolated_repl_with_runtime(VERSION, &mut runtime);
     }
 }
@@ -1170,6 +1295,7 @@ fn help_message() -> String {
     let result = r#"litex : start an isolated persistent REPL; terminal import is available
 litex -f <file> : require a direct-parent litex.config and run the module prefix through this file
 litex -isolated -f <file> : run any standalone file and continue in an isolated REPL
+litex -f <file> -trust-before-line <X> : trust top-level statements before the exact header line X, then verify from X
 litex -r <folder> : run a module's recursive [export] tree, or the root prefix through a selected submodule
 litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
@@ -1197,10 +1323,11 @@ litex -python -r <project> : compile supported definitions in the selected recur
 litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform
-litex -compact : show only result, type, line, and statement for each result
-litex : show normal output with internal statements and direct verification reasons
-litex -detail : include full audit trace details and raw source paths in JSON output
+litex -compact : show minimal success output; RuntimeError output always uses full detailed diagnostics
+litex : show normal success output with internal statements and direct verification reasons; RuntimeError output is detailed
+litex -detail : include full audit trace details and raw source paths for both success and RuntimeError JSON output
 litex -strict : verify configured imports and -f prefix entries, and reject user trust, trust have, and axiom statements
+litex -trust-before-line <X> : preview development tool for direct -f runs; X must name an exact top-level statement header line, cannot be used with -strict, and an isolated cutoff run exits after its summary
 litex -summarize : append one run summary JSON object after ordinary verifier command output
 litex -lang <en|zh|zh-Hans|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 litex -fmt : format the given code
@@ -1215,7 +1342,10 @@ litex -tutorial : run the tutorial
 
 #[cfg(test)]
 mod tests {
-    use super::{help_message, read_session_preload, upgrade_message, validate_session_preload};
+    use super::{
+        help_message, read_session_preload, remove_trust_before_line_flag, upgrade_message,
+        validate_session_preload, validate_trust_before_line_invocation,
+    };
     use crate::prelude::SessionPreload;
 
     #[test]
@@ -1240,6 +1370,170 @@ mod tests {
     fn help_lists_compact_output() {
         let message = help_message();
         assert!(message.contains("litex -compact"));
+        assert!(message.contains("RuntimeError output always uses full detailed diagnostics"));
+    }
+
+    #[test]
+    fn help_lists_trust_before_line_command() {
+        let message = help_message();
+        assert!(message.contains("litex -f <file> -trust-before-line <X>"));
+        assert!(message.contains("exact top-level statement header line"));
+        assert!(message.contains("cannot be used with -strict"));
+    }
+
+    #[test]
+    fn trust_before_line_accepts_a_positive_ascii_decimal() {
+        let mut args = vec![
+            "-trust-before-line".to_string(),
+            "420".to_string(),
+            "-f".to_string(),
+            "chapter.lit".to_string(),
+        ];
+
+        let line = remove_trust_before_line_flag(&mut args).expect("a positive line should parse");
+
+        assert_eq!(line, Some(420));
+        assert_eq!(args, vec!["-f".to_string(), "chapter.lit".to_string()]);
+    }
+
+    #[test]
+    fn trust_before_line_accepts_the_flag_after_the_file_target() {
+        let mut args = vec![
+            "-f".to_string(),
+            "chapter.lit".to_string(),
+            "-trust-before-line".to_string(),
+            "420".to_string(),
+        ];
+
+        let line = remove_trust_before_line_flag(&mut args)
+            .expect("the global flag may follow the primary command");
+
+        assert_eq!(line, Some(420));
+        assert_eq!(args, vec!["-f".to_string(), "chapter.lit".to_string()]);
+    }
+
+    #[test]
+    fn trust_before_line_rejects_a_missing_value() {
+        let mut args = vec![
+            "-f".to_string(),
+            "chapter.lit".to_string(),
+            "-trust-before-line".to_string(),
+        ];
+
+        let error =
+            remove_trust_before_line_flag(&mut args).expect_err("the flag requires a value");
+
+        assert!(error.contains("requires a positive ASCII decimal line number"));
+    }
+
+    #[test]
+    fn trust_before_line_rejects_zero_negative_and_non_ascii_decimal_values() {
+        for value in ["0", "-1", "+1", "1.5", "１２"] {
+            let mut args = vec!["-trust-before-line".to_string(), value.to_string()];
+
+            let error = remove_trust_before_line_flag(&mut args)
+                .expect_err("only a positive ASCII decimal should parse");
+
+            assert!(
+                error.contains("positive ASCII decimal") || error.contains("greater than 0"),
+                "unexpected error for {value}: {error}"
+            );
+        }
+    }
+
+    #[test]
+    fn trust_before_line_rejects_overflow() {
+        let overflow = format!("{}0", usize::MAX);
+        let mut args = vec!["-trust-before-line".to_string(), overflow];
+
+        let error =
+            remove_trust_before_line_flag(&mut args).expect_err("overflow should be rejected");
+
+        assert!(error.contains("exceeds the supported range"));
+    }
+
+    #[test]
+    fn trust_before_line_rejects_duplicate_flags() {
+        let mut args = vec![
+            "-trust-before-line".to_string(),
+            "10".to_string(),
+            "-f".to_string(),
+            "chapter.lit".to_string(),
+            "-trust-before-line".to_string(),
+            "20".to_string(),
+        ];
+
+        let error =
+            remove_trust_before_line_flag(&mut args).expect_err("the flag must not be repeated");
+
+        assert!(error.contains("may be provided only once"));
+    }
+
+    #[test]
+    fn trust_before_line_accepts_only_an_exact_direct_file_command() {
+        let file_args = vec!["-f".to_string(), "chapter.lit".to_string()];
+        assert!(validate_trust_before_line_invocation(&file_args, false, Some(420)).is_ok());
+
+        for args in [
+            vec!["-r".to_string(), "Demo".to_string()],
+            vec!["-e".to_string(), "1 = 1".to_string()],
+            vec!["-session".to_string()],
+            vec![
+                "-runner".to_string(),
+                "-f".to_string(),
+                "chapter.lit".to_string(),
+            ],
+            vec![
+                "-graph".to_string(),
+                "-f".to_string(),
+                "chapter.lit".to_string(),
+                "graph.json".to_string(),
+            ],
+            vec![
+                "-python".to_string(),
+                "-f".to_string(),
+                "chapter.lit".to_string(),
+            ],
+            vec![
+                "-latex".to_string(),
+                "-f".to_string(),
+                "chapter.lit".to_string(),
+            ],
+            vec![
+                "-f".to_string(),
+                "chapter.lit".to_string(),
+                "extra".to_string(),
+            ],
+            vec!["-f".to_string(), "-session".to_string()],
+        ] {
+            let error = validate_trust_before_line_invocation(&args, false, Some(420))
+                .expect_err("only exact direct file commands should be accepted");
+            assert!(
+                error.contains("supported only") || error.contains("direct -f <file> target"),
+                "unexpected error for {args:?}: {error}"
+            );
+        }
+    }
+
+    #[test]
+    fn trust_before_line_rejects_strict_mode() {
+        let args = vec!["-f".to_string(), "chapter.lit".to_string()];
+
+        let error = validate_trust_before_line_invocation(&args, true, Some(420))
+            .expect_err("strict and trusted-prefix execution are incompatible");
+
+        assert!(error.contains("cannot be used with -strict"));
+    }
+
+    #[test]
+    fn trust_before_line_validation_does_not_change_flagless_commands() {
+        let args = vec![
+            "-runner".to_string(),
+            "-f".to_string(),
+            "chapter.lit".to_string(),
+        ];
+
+        assert!(validate_trust_before_line_invocation(&args, true, None).is_ok());
     }
 
     #[test]

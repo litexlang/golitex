@@ -622,6 +622,9 @@ fn runner_failure_returns_trace() {
     assert!(output.contains("\"result\": \"error\""));
     assert!(output.contains("\\\"error_type\\\": \\\"VerifyError\\\""));
     assert!(output.contains("\\\"error_type\\\": \\\"UnknownError\\\""));
+    assert!(output.contains("\\\"phases\\\": {"));
+    assert!(output.contains("\\\"failed_goal\\\": \\\"1 = 0\\\""));
+    assert!(output.contains("\\\"unknown_result\\\": {"));
 }
 
 #[test]
@@ -2320,11 +2323,11 @@ fn and_fact_unknown_reports_failed_part() {
         run_output
     );
     assert!(run_output.contains("\"statement\": \"1 = 2\""));
-    assert!(!run_output.contains("\"index\": 2"));
-    assert!(!run_output.contains("\"count\": 2"));
+    assert!(run_output.contains("\"index\": 2"));
+    assert!(run_output.contains("\"count\": 2"));
     assert!(
-        !run_output.contains("\"type\": \"atomic fact unknown\""),
-        "normal output should omit redundant nested atomic unknowns:\n{}",
+        run_output.contains("\"type\": \"atomic fact unknown\""),
+        "failed RuntimeError output should use the detailed nested projection:\n{}",
         run_output
     );
 }
@@ -2351,11 +2354,11 @@ fn chain_fact_unknown_reports_failed_chain_step() {
         run_output
     );
     assert!(run_output.contains("\"statement\": \"1 = 0\""));
-    assert!(!run_output.contains("\"index\": 1"));
-    assert!(!run_output.contains("\"count\": 2"));
+    assert!(run_output.contains("\"index\": 1"));
+    assert!(run_output.contains("\"count\": 2"));
     assert!(
-        !run_output.contains("\"type\": \"atomic fact unknown\""),
-        "normal output should omit redundant nested atomic unknowns:\n{}",
+        run_output.contains("\"type\": \"atomic fact unknown\""),
+        "failed RuntimeError output should use the detailed nested projection:\n{}",
         run_output
     );
     assert!(
@@ -2393,11 +2396,11 @@ forall x R:
     assert!(run_output.contains("\"name\": \"x\""));
     assert!(run_output.contains("\"failed_prove\": {"));
     assert!(run_output.contains("\"statement\": \"x = 0\""));
-    assert!(!run_output.contains("\"index\": 1"));
-    assert!(!run_output.contains("\"count\": 1"));
+    assert!(run_output.contains("\"index\": 1"));
+    assert!(run_output.contains("\"count\": 1"));
     assert!(
-        !run_output.contains("\"type\": \"atomic fact unknown\""),
-        "normal output should omit redundant nested atomic unknowns:\n{}",
+        run_output.contains("\"type\": \"atomic fact unknown\""),
+        "failed RuntimeError output should use the detailed nested projection:\n{}",
         run_output
     );
 }
@@ -2425,8 +2428,8 @@ forall x R:
     assert!(run_output.contains("\"type\": \"chain fact unknown\""));
     assert!(run_output.contains("\"failed_chain_step\": {"));
     assert!(run_output.contains("\"statement\": \"x = 0\""));
-    assert!(!run_output.contains("\"index\": 1"));
-    assert!(!run_output.contains("\"count\": 2"));
+    assert!(run_output.contains("\"index\": 1"));
+    assert!(run_output.contains("\"count\": 2"));
     assert!(!run_output.contains("unverified chain step"));
     assert!(!run_output.contains("\"previous_error\": null"));
 }
@@ -2508,8 +2511,8 @@ claim:
         run_output
     );
     assert!(
-        !run_output.contains("\"then_clause_index\": 1"),
-        "normal claim failure should hide positional metadata:\n{}",
+        run_output.contains("\"then_clause_index\": 1"),
+        "failed RuntimeError output should retain positional metadata:\n{}",
         run_output
     );
     assert!(
@@ -2580,4 +2583,203 @@ by cases 1 = 1:
             );
         },
     );
+}
+
+#[test]
+fn error_output_styles_render_the_same_detailed_validation_failure() {
+    let compact = render_failure_for_output_style(
+        "1 = 0",
+        "error_output_style_validation",
+        OutputStyle::Compact,
+    );
+    let normal = render_failure_for_output_style(
+        "1 = 0",
+        "error_output_style_validation",
+        OutputStyle::Normal,
+    );
+    let detailed = render_failure_for_output_style(
+        "1 = 0",
+        "error_output_style_validation",
+        OutputStyle::Detailed,
+    );
+
+    assert_eq!(compact, normal);
+    assert_eq!(normal, detailed);
+    assert!(detailed.contains("\"phases\": {"));
+    assert!(detailed.contains("\"verify_well_definedness\": {"));
+    assert!(detailed.contains("\"verify_process\": {"));
+    assert!(detailed.contains("\"affect_environment\": {"));
+    assert!(detailed.contains("\"previous_error\":"));
+    assert!(detailed.contains("\"failed_goal\": \"1 = 0\""));
+    assert!(detailed.contains("\"unknown_result\": {"));
+    assert!(detailed.contains("\"type\": \"atomic fact unknown\""));
+}
+
+#[test]
+fn error_output_parse_and_well_definedness_only_show_real_diagnostics() {
+    for source_code in ["@", "$missing(1)"] {
+        let compact = render_failure_for_output_style(
+            source_code,
+            "error_output_real_diagnostics",
+            OutputStyle::Compact,
+        );
+        let normal = render_failure_for_output_style(
+            source_code,
+            "error_output_real_diagnostics",
+            OutputStyle::Normal,
+        );
+        let detailed = render_failure_for_output_style(
+            source_code,
+            "error_output_real_diagnostics",
+            OutputStyle::Detailed,
+        );
+        assert_eq!(compact, normal);
+        assert_eq!(normal, detailed);
+
+        if source_code == "@" {
+            assert!(detailed.contains("\"error_type\": \"ParseError\""));
+            assert!(!detailed.contains("\"phases\": {"));
+        } else {
+            assert!(detailed.contains("\"error_type\": \"WellDefinedError\""));
+            assert!(detailed.contains("\"phases\": {"));
+            assert!(detailed.contains("\"status\": \"error\""));
+        }
+        assert!(!detailed.contains("\"previous_error\":"));
+        assert!(!detailed.contains("\"failed_step\":"));
+        assert!(!detailed.contains("\"failed_goal\":"));
+        assert!(!detailed.contains("\"unknown_result\":"));
+        assert!(!detailed.contains("\"proof_step_index\":"));
+        assert!(!detailed.contains("\"then_clause_index\":"));
+    }
+}
+
+#[test]
+fn error_output_compound_failure_keeps_detailed_inside_results_in_all_styles() {
+    let source_code = "sketch:\n    1 = 1\n    1 = 0";
+    let compact =
+        render_failure_for_output_style(source_code, "error_output_compound", OutputStyle::Compact);
+    let normal =
+        render_failure_for_output_style(source_code, "error_output_compound", OutputStyle::Normal);
+    let detailed = render_failure_for_output_style(
+        source_code,
+        "error_output_compound",
+        OutputStyle::Detailed,
+    );
+
+    assert_eq!(compact, normal);
+    assert_eq!(normal, detailed);
+    assert!(detailed.contains("\"error_type\": \"ExecStmtError\""));
+    assert!(detailed.contains("\"inside_results\": ["));
+    assert!(detailed.contains("\"statement\": \"1 = 1\""));
+    assert!(detailed.contains("\"verification\": {"));
+    assert!(detailed.matches("\"phases\": {").count() >= 3);
+    assert!(detailed.contains("\"failed_goal\": \"1 = 0\""));
+}
+
+#[test]
+fn error_output_does_not_change_the_style_of_earlier_successes() {
+    for output_style in [
+        OutputStyle::Compact,
+        OutputStyle::Normal,
+        OutputStyle::Detailed,
+    ] {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("error_output_previous_success");
+        runtime.set_output_style(output_style);
+        let (stmt_results, runtime_error) = run_source_code("1 = 1\n1 = 0", &mut runtime);
+
+        assert_eq!(stmt_results.len(), 1);
+        assert!(runtime_error.is_some());
+        assert_eq!(runtime.effective_output_style(), output_style);
+
+        let success_output = display_stmt_exec_result_json(&runtime, &stmt_results[0], false);
+        match output_style {
+            OutputStyle::Compact => {
+                assert!(!success_output.contains("\"verification\": {"));
+                assert!(!success_output.contains("\"phases\": {"));
+            }
+            OutputStyle::Normal => {
+                assert!(success_output.contains("\"why_verified\": {"));
+                assert!(!success_output.contains("\"phases\": {"));
+            }
+            OutputStyle::Detailed => {
+                assert!(success_output.contains("\"verification\": {"));
+                assert!(success_output.contains("\"phases\": {"));
+            }
+        }
+
+        let (_, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        let error_start = run_output
+            .find("\"error_type\":")
+            .expect("combined output should contain an error");
+        let error_output = &run_output[error_start..];
+        assert!(error_output.contains("\"phases\": {"));
+        assert!(error_output.contains("\"previous_error\":"));
+        assert!(error_output.contains("\"failed_goal\": \"1 = 0\""));
+    }
+}
+
+#[test]
+fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("error_output_failed_step");
+    let (stmt_results, runtime_error) = run_source_code("do_nothing", &mut runtime);
+    assert!(runtime_error.is_none());
+    let failed_step = stmt_results[0]
+        .non_factual_success()
+        .expect("do_nothing should have a non-factual result")
+        .stmt
+        .clone();
+    let unknown: StmtResult = StmtUnknown::new().into();
+    let error: RuntimeError = UnknownRuntimeError(RuntimeErrorStruct::new_with_output(
+        Some(failed_step.clone()),
+        "proof step unknown".to_string(),
+        failed_step.line_file(),
+        None,
+        vec![],
+        RuntimeErrorOutput::proof_step_unknown(failed_step, 2, 3, &unknown),
+    ))
+    .into();
+    let error = runtime
+        .finish_statement_execution(Err(error), false)
+        .expect_err("synthetic proof-step error should remain an error");
+
+    let mut outputs = Vec::new();
+    for output_style in [
+        OutputStyle::Compact,
+        OutputStyle::Normal,
+        OutputStyle::Detailed,
+    ] {
+        runtime.set_output_style(output_style);
+        outputs.push(display_runtime_error_json(&runtime, &error, false));
+    }
+
+    assert_eq!(outputs[0], outputs[1]);
+    assert_eq!(outputs[1], outputs[2]);
+    assert!(outputs[2].contains("\"failed_step\": {"));
+    assert!(outputs[2].contains("\"statement\": \"do_nothing\""));
+    assert!(outputs[2].contains("\"proof_step_index\": 2"));
+    assert!(outputs[2].contains("\"proof_step_count\": 3"));
+    assert!(outputs[2].contains("\"unknown_result\": {"));
+    assert!(outputs[2].contains("\"phases\": {"));
+}
+
+fn render_failure_for_output_style(
+    source_code: &str,
+    source_label: &str,
+    output_style: OutputStyle,
+) -> String {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(source_label);
+    runtime.set_output_style(output_style);
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "failure fixture unexpectedly succeeded:\n{}",
+        run_output
+    );
+    run_output.trim().to_string()
 }

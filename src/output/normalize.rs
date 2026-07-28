@@ -14,8 +14,12 @@ pub(crate) fn finalize_display_text_with_optional_strip(
     }
 }
 
-pub(crate) fn json_value_for_output(runtime: &Runtime, value: JsonValue) -> JsonValue {
-    let value = match runtime.effective_output_style() {
+pub(crate) fn json_value_for_output_with_style(
+    runtime: &Runtime,
+    value: JsonValue,
+    output_style: OutputStyle,
+) -> JsonValue {
+    let value = match output_style {
         OutputStyle::Compact => compact_output_value(value),
         OutputStyle::Normal => normal_output_value(value),
         OutputStyle::Detailed => value,
@@ -47,7 +51,15 @@ fn compact_output_value(value: JsonValue) -> JsonValue {
                     ]
                     .contains(&key.as_str())
                 } else {
-                    ["result", "type", "line", "statement"].contains(&key.as_str())
+                    [
+                        "result",
+                        "type",
+                        "line",
+                        "statement",
+                        "verification_status",
+                        "trust_dependencies",
+                    ]
+                    .contains(&key.as_str())
                 }
             })
             .collect::<Vec<_>>(),
@@ -165,5 +177,53 @@ pub(crate) fn json_value_is_empty_in_normal_output(value: &JsonValue) -> bool {
         JsonValue::Array(items) => items.is_empty(),
         JsonValue::Object(fields) => fields.is_empty(),
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trust_before_line_fields_survive_compact_and_normal_output() {
+        let input = JsonValue::Object(vec![
+            (
+                "result".to_string(),
+                JsonValue::JsonString("success".to_string()),
+            ),
+            (
+                "type".to_string(),
+                JsonValue::JsonString("theorem".to_string()),
+            ),
+            (
+                "verification_status".to_string(),
+                JsonValue::JsonString("trusted_prefix".to_string()),
+            ),
+            (
+                "trust_dependencies".to_string(),
+                JsonValue::Array(vec![JsonValue::Object(vec![(
+                    "kind".to_string(),
+                    JsonValue::JsonString("cli_trusted_prefix".to_string()),
+                )])]),
+            ),
+            (
+                "phases".to_string(),
+                JsonValue::Object(vec![(
+                    "verify_process".to_string(),
+                    JsonValue::JsonString("skipped".to_string()),
+                )]),
+            ),
+        ]);
+
+        for value in [
+            compact_output_value(input.clone()),
+            normal_output_value(input),
+        ] {
+            let JsonValue::Object(fields) = value else {
+                panic!("normalized statement output must be an object");
+            };
+            assert!(fields.iter().any(|(key, _)| key == "verification_status"));
+            assert!(fields.iter().any(|(key, _)| key == "trust_dependencies"));
+        }
     }
 }

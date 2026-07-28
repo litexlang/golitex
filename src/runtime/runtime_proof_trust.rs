@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashSet;
 
 impl Runtime {
     pub fn proof_trust_summary_from_stmt_results(
@@ -12,8 +13,31 @@ impl Runtime {
         summary
     }
 
+    pub fn proof_trust_summary_from_stmt(&self, stmt: &Stmt) -> ProofTrustSummary {
+        let mut summary = ProofTrustSummary::new();
+        self.collect_stmt_trust(stmt, &mut summary);
+        summary
+    }
+
+    pub(crate) fn propagate_cli_trust_to_statement_effects(
+        &mut self,
+        result: &StmtResult,
+        previous_symbol_ids: &HashSet<SymbolId>,
+    ) -> Result<(), RuntimeError> {
+        let Some(trace) = result.execution_trace() else {
+            return Ok(());
+        };
+        if !trace.trust_summary.contains_kind("cli_trusted_prefix") {
+            return Ok(());
+        }
+        let trust_summary = trace.trust_summary.clone();
+        self.merge_trust_into_new_environment_symbols(previous_symbol_ids, &trust_summary);
+        self.merge_trust_into_persistent_result_facts(result, &trust_summary)
+    }
+
     fn collect_stmt_result_trust(&self, result: &StmtResult, summary: &mut ProofTrustSummary) {
         if let Some(success) = result.factual_success() {
+            self.collect_stmt_trust(&success.stmt.clone().into(), summary);
             self.collect_infer_result_trust(&success.infers, summary);
             self.collect_verified_by_trust(&success.verified_by, summary);
         }
@@ -32,6 +56,7 @@ impl Runtime {
     }
 
     fn collect_stmt_trust(&self, stmt: &Stmt, summary: &mut ProofTrustSummary) {
+        self.collect_symbol_trust_from_stmt(stmt, summary);
         match stmt {
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(trust)) => {
                 summary.add_dependency("trust", None, trust.line_file.clone());
@@ -50,6 +75,21 @@ impl Runtime {
                 summary.merge(&self.trust_summary_for_cached_fact(&fact.to_string()));
             }
             _ => {}
+        }
+    }
+
+    fn collect_symbol_trust_from_stmt(&self, stmt: &Stmt, summary: &mut ProofTrustSummary) {
+        let statement = stmt.to_string();
+        for environment in self.iter_environments_from_top() {
+            for (_, definition) in environment.symbols.iter() {
+                if definition.trust_summary().is_empty() {
+                    continue;
+                }
+                let identity_prefix = format!("#{}#", definition.binding().id().value());
+                if statement.contains(identity_prefix.as_str()) {
+                    summary.merge(definition.trust_summary());
+                }
+            }
         }
     }
 
@@ -120,5 +160,39 @@ impl Runtime {
                 }
             }
         }
+    }
+
+    fn merge_trust_into_persistent_result_facts(
+        &mut self,
+        result: &StmtResult,
+        trust_summary: &ProofTrustSummary,
+    ) -> Result<(), RuntimeError> {
+        if let Some(success) = result.factual_success() {
+            self.store_fact_cache_keys_with_nested_obj_binders(
+                &success.stmt,
+                trust_summary.clone(),
+            )?;
+            self.merge_trust_into_infer_result_facts(&success.infers, trust_summary)?;
+        }
+        if let Some(success) = result.non_factual_success() {
+            self.merge_trust_into_infer_result_facts(&success.infers, trust_summary)?;
+            if matches!(&success.stmt, Stmt::ProofBlock(ProofBlockStmt::TryStmt(_))) {
+                for inside in success.inside_results.iter() {
+                    self.merge_trust_into_persistent_result_facts(inside, trust_summary)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn merge_trust_into_infer_result_facts(
+        &mut self,
+        infer_result: &InferResult,
+        trust_summary: &ProofTrustSummary,
+    ) -> Result<(), RuntimeError> {
+        for fact in infer_result.inferred_facts() {
+            self.store_fact_cache_keys_with_nested_obj_binders(&fact, trust_summary.clone())?;
+        }
+        Ok(())
     }
 }

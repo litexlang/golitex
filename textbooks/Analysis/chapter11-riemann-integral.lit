@@ -1566,6 +1566,8 @@ thm ordered_nonempty_interval_union_has_adjacent_endpoints:
             q = d
     obtain j from exist j J st {j $in J}
     obtain k from exist k K st {k $in K}
+    j $in R
+    k $in R
     j $in union(J, K)
     k $in union(J, K)
     j $in I
@@ -7345,7 +7347,7 @@ thm negated_order_reverses:
     -b <= -a
 
 thm lower_bounded_real_set_with_member_has_infimum:
-    ? forall E power_set(R), B R, e E:
+    ? forall E power_set(R), B R, element_e E:
         $is_lower_bound_of_real_set(E, B)
         =>:
             $has_infimum_of_real_set(E)
@@ -7354,18 +7356,18 @@ thm lower_bounded_real_set_with_member_has_infimum:
     have negE power_set(R) = fn_range(fn(x E) R {-x})
     negE = fn_range(fn(x E) R {-x})
     claim:
-        ? -e $in negE
-        fn(x E) R {-x}(e) = -e
-        fn(x E) R {-x}(e) $in fn_range(fn(x E) R {-x})
-        -e $in fn_range(fn(x E) R {-x})
-        -e $in negE
+        ? -element_e $in negE
+        fn(x E) R {-x}(element_e) = -element_e
+        fn(x E) R {-x}(element_e) $in fn_range(fn(x E) R {-x})
+        -element_e $in fn_range(fn(x E) R {-x})
+        -element_e $in negE
     claim:
         ? $is_nonempty_set(negE)
-        witness $is_nonempty_set(negE) from -e:
-            -e $in negE
+        witness $is_nonempty_set(negE) from -element_e:
+            -element_e $in negE
     claim:
         ? $chap5::has_upper_bound(negE)
-        witness exist C R st {$chap5::is_upper_bound(negE, C)} from -B:
+        witness exist set_C R st {$chap5::is_upper_bound(negE, set_C)} from -B:
             claim:
                 ? forall y negE:
                     y <= -B
@@ -7404,32 +7406,32 @@ thm lower_bounded_real_set_with_member_has_infimum:
                 s <= x
             $is_lower_bound_of_real_set(E, s)
         claim:
-            ? forall C R:
-                $is_lower_bound_of_real_set(E, C)
+            ? forall set_C R:
+                $is_lower_bound_of_real_set(E, set_C)
                 =>:
-                    C <= s
+                    set_C <= s
             claim:
-                ? $chap5::is_upper_bound(negE, -C)
+                ? $chap5::is_upper_bound(negE, -set_C)
                 claim:
                     ? forall y negE:
-                        y <= -C
+                        y <= -set_C
                     negE = fn_range(fn(x E) R {-x})
                     y $in fn_range(fn(x E) R {-x})
                     have by preimage x from y $in fn_range(fn(x E) R {-x})
                     fn(z E) R {-z}(x) = -x
                     y = fn(z E) R {-z}(x)
                     y = -x
-                    C <= x
-                    -x <= -C
+                    set_C <= x
+                    -x <= -set_C
                     y = -x
-                    y <= -C
-                $chap5::is_upper_bound(negE, -C)
+                    y <= -set_C
+                $chap5::is_upper_bound(negE, -set_C)
             $chap5::is_least_upper_bound(negE, L)
-            L <= -C
-            -(-C) <= -L
-            -(-C) = C
+            L <= -set_C
+            -(-set_C) <= -L
+            -(-set_C) = set_C
             s = -L
-            C <= s
+            set_C <= s
         $is_infimum_of_real_set(E, s)
     $has_infimum_of_real_set(E)
 
@@ -18171,9 +18173,9 @@ prop is_antiderivative_of(I power_set(R), f fn(x I) R, F fn(x I) R):
     forall x I:
         $chap10::has_derivative_at(I, F, x, f(x))
 
-prop differs_by_constant_on(I power_set(R), F, G fn(x I) R, C R):
+prop differs_by_constant_on(I power_set(R), F, G fn(x I) R, set_C R):
     forall x I:
-        F(x) = G(x) + C
+        F(x) = G(x) + set_C
 
 """
 Theorem 11.9.4 (Second Fundamental Theorem of Calculus).  If `F` is an
@@ -18230,10 +18232,10 @@ thm antiderivatives_differ_by_constant:
         $is_antiderivative_of(I, f, F)
         $is_antiderivative_of(I, f, G)
         =>:
-            exist C R st {$differs_by_constant_on(I, F, G, C)}
+            exist set_C R st {$differs_by_constant_on(I, F, G, set_C)}
     # proof_debt: connect the Chapter 10 derivative-difference rule to the
     # locally defined difference function.
-    trust exist C R st {$differs_by_constant_on(I, F, G, C)}
+    trust exist set_C R st {$differs_by_constant_on(I, F, G, set_C)}
     """
     # Source handling: Tao proves this in Exercise 11.9.2 using the mean-value
     # theorem applied to `F-G`.

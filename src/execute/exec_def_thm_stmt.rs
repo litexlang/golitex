@@ -158,22 +158,29 @@ impl Runtime {
         stmt: &DefThmStmt,
         trust_summary: &ProofTrustSummary,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_def_thm_with_trust(stmt, trust_summary)
+        let mut trust_summary = trust_summary.clone();
+        let direct_trust = self.current_trusted_prefix_statement_trust();
+        if direct_trust.is_empty() && self.current_statement_is_in_trusted_prefix_run() {
+            let stmt_for_trust: Stmt = stmt.clone().into();
+            trust_summary.merge(&self.proof_trust_summary_from_stmt(&stmt_for_trust));
+        }
+        trust_summary.merge(&direct_trust);
+        self.store_def_thm_with_trust(stmt, &trust_summary)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
         if self.current_execution_is_trusted_file() {
             return self.store_trusted_fact_and_infer_with_reason_and_trust(
                 Fact::ForallFact(stmt.forall_fact.clone()),
-                InferReason::Other(stmt.store_reason_with_trust(trust_summary)),
-                trust_summary.clone(),
+                InferReason::Other(stmt.store_reason_with_trust(&trust_summary)),
+                trust_summary,
             );
         }
 
         self.verify_well_defined_and_store_and_infer_with_reason_and_trust(
             Fact::ForallFact(stmt.forall_fact.clone()),
             &VerifyState::new(0, false),
-            InferReason::Other(stmt.store_reason_with_trust(trust_summary)),
-            trust_summary.clone(),
+            InferReason::Other(stmt.store_reason_with_trust(&trust_summary)),
+            trust_summary,
         )
     }
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Litex Math Textbook Translator"
+  short_description: "Translate mathematical textbooks into Litex."
+  default_prompt: "Use $litex-math-textbook-translator to translate a mathematical textbook into Litex with carrier-first interfaces, explicit trust debt, canonical draft/public boundaries, and release verification."

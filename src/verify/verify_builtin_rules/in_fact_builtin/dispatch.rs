@@ -94,6 +94,10 @@ impl Runtime {
                 }
             }
         }
+        let direct_superset_result = self.verify_in_fact_by_known_direct_superset(in_fact)?;
+        if direct_superset_result.is_true() {
+            return Ok(direct_superset_result);
+        }
         if let Some(result) =
             self.maybe_verify_in_fact_finite_set_extremum(in_fact, verify_state)?
         {

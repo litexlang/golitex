@@ -13,7 +13,6 @@
 [![litexpy](https://img.shields.io/badge/Litexpy-green?logo=python)](https://github.com/litexlang/litexpy)
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![Zulip](https://img.shields.io/badge/Zulip-blue?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
-[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-black?logo=huggingface)](https://huggingface.co/litexlang)
 [![Manual](https://img.shields.io/badge/Manual-orange?logo=book)](https://litexlang.com/doc/Manual)
 
 Litex is experimental research software. It is not ready for mission-critical work.
@@ -125,8 +124,11 @@ intend to make verification a black box. Each accepted statement can report:
 3. what it made available for later lines—facts, definitions, theorem names,
    and routine inferred consequences.
 
-Use ordinary output to read a run, `-compact` for a small machine-friendly
-record, and `-detail` when auditing recursive verification data and effects.
+Use ordinary output to read successful statements, `-compact` for a small
+machine-friendly success record, and `-detail` when auditing recursive
+verification data and effects for the whole run. Any `RuntimeError` is rendered
+with the full detailed diagnostic in all three modes, so `-compact` never hides
+the available failure context.
 The same run can also generate a relation graph. For example, the command
 below produces the data behind the Analysis I Chapter 6 graph:
 
@@ -202,21 +204,18 @@ This comparison motivates five questions that guide Litex:
 2. **Reuse the shape of a fact, not only its theorem name.** Can the checker
    recognize and instantiate an available fact without requiring the user to
    recall and invoke its name?
-3. **Present set-theoretic objects at the surface instead of requiring users
-   to learn type universes first.** Can carriers, elements, functions, and
+3. **Present set-theoretic objects at the surface instead of requiring users to learn type universes first.** Can carriers, elements, functions, and
    structures be presented directly through sets and membership?
-4. **Make the mathematical statement, rather than functional-program
-   structure, the subject.** Can a binary operation look like a binary
+4. **Make the mathematical statement, rather than functional-program structure, the subject.** Can a binary operation look like a binary
    operation, and can definitions and conclusions remain in mathematical
    order?
-5. **Derive rigor from a checkable process, and retain a familiar
-   appearance.** Can routine orchestration be omitted from the surface while
+5. **Derive rigor from a checkable process, and retain a familiar appearance.** Can routine orchestration be omitted from the surface while
    every object, fact, instantiation, and dependency is still checked?
 
 Litex should not promise to “omit proof.” Its intended promise is both stricter
 and more modest: let users first write the mathematical facts they actually
 mean, then let the machine expose the verification, provenance, and boundaries
-clearly.
+clearly. (Since Litex operates on a higher mathematical abstraction level, it usually runs faster than existing formal languages.)
 
 Litex is also designing and implementing a compilation path to Lean. For
 supported Litex content, the goal is to check it with Litex, generate Lean, and

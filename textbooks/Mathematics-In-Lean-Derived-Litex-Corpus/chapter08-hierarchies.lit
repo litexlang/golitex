@@ -269,8 +269,8 @@ prop monoid_is_commutative(M nonempty_set, monoid &Monoid<M>):
 template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M)>:
     have fn fraction_class(x M) power_set(M) = {y M: $submonoid_fraction_equiv(M, monoid, carrier, x, y)}
 
-prop is_fraction_class(M nonempty_set, monoid &Monoid<M>, carrier power_set(M), C power_set(M)):
-    exist x M st {C = \fraction_class<M, monoid, carrier>(x)}
+prop is_fraction_class(M nonempty_set, monoid &Monoid<M>, carrier power_set(M), CarrierC power_set(M)):
+    exist x M st {CarrierC = \fraction_class<M, monoid, carrier>(x)}
 
 thm fraction_relation_reflexive:
     ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x M:
@@ -321,4 +321,4 @@ thm fraction_relation_transitive:
 # Source quotient constructor. The represented-class carrier becomes a genuine
 # quotient only for a commutative monoid and a submonoid carrier.
 template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid)>:
-    have fraction_quotient power_set(power_set(M)) = {C power_set(M): $is_fraction_class(M, monoid, carrier, C)}
+    have fraction_quotient power_set(power_set(M)) = {CarrierC power_set(M): $is_fraction_class(M, monoid, carrier, CarrierC)}

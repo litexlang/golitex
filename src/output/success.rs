@@ -1,4 +1,6 @@
-use crate::common::json_value::{line_file_line_json_value, render_json_value, JsonValue};
+use crate::common::json_value::{
+    line_file_line_json_value, line_file_source_json_value, render_json_value, JsonValue,
+};
 use crate::prelude::{
     ByAssignmentVerificationResult, ByCasesVerificationResult, ByChoiceVerificationResult,
     ByContraVerificationResult, ByDefinitionVerificationResult,
@@ -7,8 +9,8 @@ use crate::prelude::{
     ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ByVerificationResult,
     ClaimFactVerificationResult, ClaimForallVerificationResult, ClaimVerificationResult,
     CommandStmt, DefObjStmt, Fact, FactualStmtSuccess, InferResult, NonFactualStmtSuccess,
-    ParamDefWithType, Runtime, StatementExecutionTrace, StatementPhaseStatus, Stmt, StmtResult,
-    TheoremVerificationResult, VerifiedByResult,
+    OutputStyle, ParamDefWithType, ProofTrustSummary, Runtime, StatementExecutionTrace,
+    StatementPhaseStatus, Stmt, StmtResult, TheoremVerificationResult, VerifiedByResult,
 };
 
 use super::evidence::{
@@ -21,7 +23,9 @@ use super::fields::{
     JSON_KEY_STMT, JSON_KEY_STMT_TYPE, JSON_KEY_SUCCESS, JSON_KEY_UNKNOWN_RESULT,
     JSON_KEY_VERIFICATION,
 };
-use super::normalize::{finalize_display_text_with_optional_strip, json_value_for_output};
+use super::normalize::{
+    finalize_display_text_with_optional_strip, json_value_for_output_with_style,
+};
 use super::phases::execution_phases_value;
 use super::source::stmt_text_for_json;
 use super::store_facts::{store_fact_json_values, store_fact_output_json_values};
@@ -32,22 +36,48 @@ pub fn display_stmt_exec_result_json(
     r: &StmtResult,
     strip_free_param_tags: bool,
 ) -> String {
-    let value = json_value_for_output(runtime, stmt_exec_result_json_value(runtime, r));
+    display_stmt_exec_result_json_with_style(
+        runtime,
+        r,
+        runtime.effective_output_style(),
+        strip_free_param_tags,
+    )
+}
+
+pub(crate) fn display_stmt_exec_result_json_with_style(
+    runtime: &Runtime,
+    r: &StmtResult,
+    output_style: OutputStyle,
+    strip_free_param_tags: bool,
+) -> String {
+    let value = json_value_for_output_with_style(
+        runtime,
+        stmt_exec_result_json_value(runtime, r, output_style),
+        output_style,
+    );
     let raw = render_json_value(&value, 0);
     finalize_display_text_with_optional_strip(raw, strip_free_param_tags)
 }
 
-fn stmt_exec_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValue {
+fn stmt_exec_result_json_value(
+    runtime: &Runtime,
+    r: &StmtResult,
+    output_style: OutputStyle,
+) -> JsonValue {
     if let Some(x) = r.factual_success() {
-        factual_stmt_success_to_json(runtime, x)
+        factual_stmt_success_to_json(runtime, x, output_style)
     } else if let Some(x) = r.non_factual_success() {
-        non_factual_stmt_success_to_json(runtime, x)
+        non_factual_stmt_success_to_json(runtime, x, output_style)
     } else {
-        unknown_stmt_result_json_value(runtime, r)
+        unknown_stmt_result_json_value(runtime, r, output_style)
     }
 }
 
-fn unknown_stmt_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValue {
+fn unknown_stmt_result_json_value(
+    runtime: &Runtime,
+    r: &StmtResult,
+    output_style: OutputStyle,
+) -> JsonValue {
     let mut fields = vec![(
         JSON_KEY_RESULT.to_string(),
         JsonValue::JsonString("unknown".to_string()),
@@ -59,9 +89,9 @@ fn unknown_stmt_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValu
         ));
         fields.push((
             JSON_KEY_UNKNOWN_RESULT.to_string(),
-            fact_unknown_json_value(runtime, unknown),
+            fact_unknown_json_value(runtime, unknown, output_style),
         ));
-        if runtime.detail_output {
+        if output_style.is_detailed() {
             let trace = StatementExecutionTrace::unknown();
             fields.push((
                 "phases".to_string(),
@@ -70,7 +100,7 @@ fn unknown_stmt_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValu
                     well_definedness_checks_for_fact(unknown.goal()),
                     vec![(
                         JSON_KEY_UNKNOWN_RESULT.to_string(),
-                        fact_unknown_json_value(runtime, unknown),
+                        fact_unknown_json_value(runtime, unknown, output_style),
                     )],
                     vec![],
                 ),
@@ -79,9 +109,9 @@ fn unknown_stmt_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValu
     } else if let Some(unknown) = r.as_unknown() {
         fields.push((
             JSON_KEY_UNKNOWN_RESULT.to_string(),
-            stmt_unknown_json_value(runtime, unknown),
+            stmt_unknown_json_value(runtime, unknown, output_style),
         ));
-        if runtime.detail_output {
+        if output_style.is_detailed() {
             let trace = StatementExecutionTrace::unknown();
             fields.push((
                 "phases".to_string(),
@@ -90,7 +120,7 @@ fn unknown_stmt_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValu
                     vec![],
                     vec![(
                         JSON_KEY_UNKNOWN_RESULT.to_string(),
-                        stmt_unknown_json_value(runtime, unknown),
+                        stmt_unknown_json_value(runtime, unknown, output_style),
                     )],
                     vec![],
                 ),
@@ -108,7 +138,11 @@ fn unknown_stmt_result_json_value(runtime: &Runtime, r: &StmtResult) -> JsonValu
     JsonValue::Object(fields)
 }
 
-fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess) -> JsonValue {
+fn non_factual_stmt_success_to_json(
+    runtime: &Runtime,
+    x: &NonFactualStmtSuccess,
+    output_style: OutputStyle,
+) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
     let stmt_text = stmt_text_for_json(runtime, &x.stmt);
 
@@ -127,8 +161,9 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
         ),
         (JSON_KEY_STMT.to_string(), JsonValue::JsonString(stmt_text)),
     ];
+    add_statement_trust_fields(x.execution_trace.as_ref(), &mut fields);
 
-    if let Some(verification) = non_factual_verification_value(runtime, x) {
+    if let Some(verification) = non_factual_verification_value(runtime, x, output_style) {
         fields.push((JSON_KEY_VERIFICATION.to_string(), verification));
     }
 
@@ -141,17 +176,17 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
 
     fields.push((
         JSON_KEY_INSIDE_RESULTS.to_string(),
-        inside_results_value(runtime, &x.stmt, &x.inside_results),
+        inside_results_value(runtime, &x.stmt, &x.inside_results, output_style),
     ));
 
-    if runtime.detail_output {
+    if output_style.is_detailed() {
         if let Some(trace) = x.execution_trace.as_ref() {
             fields.push((
                 "phases".to_string(),
                 execution_phases_value(
                     trace,
                     well_definedness_checks_for_stmt(&x.stmt),
-                    non_factual_process_fields(runtime, x),
+                    non_factual_process_fields(runtime, x, output_style),
                     environment_effect_values(&x.stmt, &x.infers, trace),
                 ),
             ));
@@ -164,9 +199,10 @@ fn non_factual_stmt_success_to_json(runtime: &Runtime, x: &NonFactualStmtSuccess
 fn non_factual_process_fields(
     runtime: &Runtime,
     x: &NonFactualStmtSuccess,
+    output_style: OutputStyle,
 ) -> Vec<(String, JsonValue)> {
     let mut fields = Vec::new();
-    if let Some(verification) = non_factual_verification_value(runtime, x) {
+    if let Some(verification) = non_factual_verification_value(runtime, x, output_style) {
         fields.push((JSON_KEY_VERIFICATION.to_string(), verification));
     }
     if !x.inside_results.is_empty() {
@@ -175,7 +211,7 @@ fn non_factual_process_fields(
             JsonValue::Array(
                 x.inside_results
                     .iter()
-                    .map(|result| stmt_exec_result_json_value(runtime, result))
+                    .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
                     .collect::<Vec<_>>(),
             ),
         ));
@@ -186,12 +222,14 @@ fn non_factual_process_fields(
 fn non_factual_verification_value(
     runtime: &Runtime,
     x: &NonFactualStmtSuccess,
+    output_style: OutputStyle,
 ) -> Option<JsonValue> {
     if let Some(theorem_verification) = x.theorem_verification.as_ref() {
         return Some(theorem_verification_value(
             runtime,
             theorem_verification,
             &x.inside_results,
+            output_style,
         ));
     }
     if let Some(claim_verification) = x.claim_verification.as_ref() {
@@ -200,11 +238,13 @@ fn non_factual_verification_value(
                 runtime,
                 verification,
                 &x.inside_results,
+                output_style,
             )),
             ClaimVerificationResult::Fact(verification) => Some(claim_fact_verification_value(
                 runtime,
                 verification,
                 &x.inside_results,
+                output_style,
             )),
         };
     }
@@ -213,63 +253,88 @@ fn non_factual_verification_value(
             runtime,
             verification,
             &x.inside_results,
+            output_style,
         )),
         ByVerificationResult::Contra(verification) => Some(by_contra_verification_value(
             runtime,
             verification,
             &x.inside_results,
+            output_style,
         )),
-        ByVerificationResult::EnumerateFiniteSet(verification) => Some(
-            by_enumerate_finite_set_verification_value(runtime, verification, &x.inside_results),
-        ),
-        ByVerificationResult::EnumerateRange(verification) => Some(
-            by_enumerate_range_verification_value(runtime, verification, &x.inside_results),
-        ),
+        ByVerificationResult::EnumerateFiniteSet(verification) => {
+            Some(by_enumerate_finite_set_verification_value(
+                runtime,
+                verification,
+                &x.inside_results,
+                output_style,
+            ))
+        }
+        ByVerificationResult::EnumerateRange(verification) => {
+            Some(by_enumerate_range_verification_value(
+                runtime,
+                verification,
+                &x.inside_results,
+                output_style,
+            ))
+        }
         ByVerificationResult::Induc(verification) => Some(by_induc_verification_value(
             runtime,
             verification,
             &x.inside_results,
+            output_style,
         )),
         ByVerificationResult::For(verification) => Some(by_for_verification_value(
             runtime,
             verification,
             &x.inside_results,
+            output_style,
         )),
         ByVerificationResult::Extension(verification) => Some(by_extension_verification_value(
             runtime,
             verification,
             &x.inside_results,
+            output_style,
         )),
-        ByVerificationResult::PropRegistration(verification) => Some(
-            by_prop_registration_verification_value(runtime, verification, &x.inside_results),
-        ),
+        ByVerificationResult::PropRegistration(verification) => {
+            Some(by_prop_registration_verification_value(
+                runtime,
+                verification,
+                &x.inside_results,
+                output_style,
+            ))
+        }
         ByVerificationResult::AxiomOfChoice(verification) => Some(by_choice_verification_value(
             runtime,
             verification,
             &x.inside_results,
             "trusted_conclusion",
+            output_style,
         )),
         ByVerificationResult::ZornLemma(verification) => Some(by_choice_verification_value(
             runtime,
             verification,
             &x.inside_results,
             "trusted_conclusion",
+            output_style,
         )),
         ByVerificationResult::RegularityAxiom(verification) => Some(by_choice_verification_value(
             runtime,
             verification,
             &x.inside_results,
             "trusted_conclusion",
+            output_style,
         )),
         ByVerificationResult::Definition(verification) => Some(by_definition_verification_value(
             runtime,
             verification,
             &x.inside_results,
+            output_style,
         )),
         ByVerificationResult::Theorem(verification) => Some(by_theorem_verification_value(
             runtime,
             verification,
             &x.inside_results,
+            output_style,
         )),
     }
 }
@@ -278,8 +343,14 @@ fn theorem_verification_value(
     runtime: &Runtime,
     verification: &TheoremVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
-    let proof_steps = proof_step_values(runtime, inside_results, verification.proof_step_count);
+    let proof_steps = proof_step_values(
+        runtime,
+        inside_results,
+        verification.proof_step_count,
+        output_style,
+    );
     let conclusion_results = inside_results.iter().skip(verification.proof_step_count);
     let conclusions = verification
         .forall_fact
@@ -287,7 +358,13 @@ fn theorem_verification_value(
         .iter()
         .zip(conclusion_results)
         .map(|(stmt, result)| {
-            forall_proved_fact_value(runtime, &verification.forall_fact, stmt, result)
+            forall_proved_fact_value(
+                runtime,
+                &verification.forall_fact,
+                stmt,
+                result,
+                output_style,
+            )
         })
         .collect::<Vec<_>>();
 
@@ -322,8 +399,14 @@ fn claim_forall_verification_value(
     runtime: &Runtime,
     verification: &ClaimForallVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
-    let proof_steps = proof_step_values(runtime, inside_results, verification.proof_step_count);
+    let proof_steps = proof_step_values(
+        runtime,
+        inside_results,
+        verification.proof_step_count,
+        output_style,
+    );
     let conclusion_results = inside_results.iter().skip(verification.proof_step_count);
     let conclusions = verification
         .forall_fact
@@ -331,7 +414,13 @@ fn claim_forall_verification_value(
         .iter()
         .zip(conclusion_results)
         .map(|(stmt, result)| {
-            forall_proved_fact_value(runtime, &verification.forall_fact, stmt, result)
+            forall_proved_fact_value(
+                runtime,
+                &verification.forall_fact,
+                stmt,
+                result,
+                output_style,
+            )
         })
         .collect::<Vec<_>>();
 
@@ -362,8 +451,14 @@ fn claim_fact_verification_value(
     runtime: &Runtime,
     verification: &ClaimFactVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
-    let proof_steps = proof_step_values(runtime, inside_results, verification.proof_step_count);
+    let proof_steps = proof_step_values(
+        runtime,
+        inside_results,
+        verification.proof_step_count,
+        output_style,
+    );
     let mut fields = vec![
         (
             "type".to_string(),
@@ -390,7 +485,7 @@ fn claim_fact_verification_value(
                 ),
                 (
                     JSON_KEY_VERIFICATION.to_string(),
-                    stmt_result_to_composite_step_verified_by(runtime, result),
+                    stmt_result_to_composite_step_verified_by(runtime, result, output_style),
                 ),
             ]),
         ));
@@ -403,11 +498,12 @@ fn proof_step_values(
     runtime: &Runtime,
     inside_results: &[StmtResult],
     proof_step_count: usize,
+    output_style: OutputStyle,
 ) -> Vec<JsonValue> {
     inside_results
         .iter()
         .take(proof_step_count)
-        .map(|r| stmt_exec_result_json_value(runtime, r))
+        .map(|r| stmt_exec_result_json_value(runtime, r, output_style))
         .collect::<Vec<_>>()
 }
 
@@ -415,10 +511,11 @@ fn by_cases_verification_value(
     runtime: &Runtime,
     verification: &ByCasesVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     let case_coverage = inside_results
         .first()
-        .map(|result| stmt_exec_result_json_value(runtime, result))
+        .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
         .unwrap_or_else(|| JsonValue::Object(vec![]));
     let prove_goals = verification
         .then_facts
@@ -442,6 +539,7 @@ fn by_cases_verification_value(
             verification,
             case_index,
             case_results,
+            output_style,
         ));
     }
 
@@ -461,13 +559,14 @@ fn by_case_value(
     verification: &ByCasesVerificationResult,
     case_index: usize,
     case_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     let proof_step_count = verification
         .proof_step_counts
         .get(case_index)
         .copied()
         .unwrap_or(0);
-    let proof_steps = proof_step_values(runtime, case_results, proof_step_count);
+    let proof_steps = proof_step_values(runtime, case_results, proof_step_count, output_style);
     let mut fields = vec![
         ("case_index".to_string(), JsonValue::Number(case_index + 1)),
         (
@@ -494,13 +593,18 @@ fn by_case_value(
         let impossible_result = case_results.get(proof_step_count);
         fields.push((
             "impossible".to_string(),
-            impossible_verification_value(runtime, impossible_fact, impossible_result),
+            impossible_verification_value(
+                runtime,
+                impossible_fact,
+                impossible_result,
+                output_style,
+            ),
         ));
     } else {
         let conclusions = case_results
             .iter()
             .skip(proof_step_count)
-            .map(|result| stmt_exec_result_json_value(runtime, result))
+            .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
             .collect::<Vec<_>>();
         fields.push((
             JSON_KEY_CONCLUSIONS.to_string(),
@@ -515,8 +619,14 @@ fn by_contra_verification_value(
     runtime: &Runtime,
     verification: &ByContraVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
-    let proof_steps = proof_step_values(runtime, inside_results, verification.proof_step_count);
+    let proof_steps = proof_step_values(
+        runtime,
+        inside_results,
+        verification.proof_step_count,
+        output_style,
+    );
     let final_checks = inside_results
         .iter()
         .skip(verification.proof_step_count)
@@ -534,6 +644,7 @@ fn by_contra_verification_value(
                 runtime,
                 &verification.impossible_fact,
                 final_checks.as_slice(),
+                output_style,
             )),
         ),
     ]);
@@ -565,6 +676,7 @@ fn by_enumerate_finite_set_verification_value(
     runtime: &Runtime,
     verification: &ByEnumerateFiniteSetVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     JsonValue::Object(vec![
         (
@@ -589,6 +701,7 @@ fn by_enumerate_finite_set_verification_value(
                 runtime,
                 &verification.assignments,
                 inside_results,
+                output_style,
             )),
         ),
         (
@@ -604,6 +717,7 @@ fn by_for_verification_value(
     runtime: &Runtime,
     verification: &ByForVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     JsonValue::Object(vec![
         (
@@ -632,6 +746,7 @@ fn by_for_verification_value(
                 runtime,
                 &verification.assignments,
                 inside_results,
+                output_style,
             )),
         ),
         (
@@ -647,6 +762,7 @@ fn iteration_assignment_values(
     runtime: &Runtime,
     assignments: &[ByAssignmentVerificationResult],
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> Vec<JsonValue> {
     let mut cursor = 0;
     let mut values = Vec::new();
@@ -654,7 +770,12 @@ fn iteration_assignment_values(
         let end = std::cmp::min(cursor + assignment.result_count, inside_results.len());
         let results = &inside_results[cursor..end];
         cursor = end;
-        values.push(iteration_assignment_value(runtime, assignment, results));
+        values.push(iteration_assignment_value(
+            runtime,
+            assignment,
+            results,
+            output_style,
+        ));
     }
     values
 }
@@ -663,6 +784,7 @@ fn iteration_assignment_value(
     runtime: &Runtime,
     assignment: &ByAssignmentVerificationResult,
     results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     let domain_end = std::cmp::min(assignment.domain_check_count, results.len());
     let proof_end = std::cmp::min(domain_end + assignment.proof_step_count, results.len());
@@ -682,7 +804,7 @@ fn iteration_assignment_value(
             JsonValue::Array(
                 results[..domain_end]
                     .iter()
-                    .map(|result| stmt_exec_result_json_value(runtime, result))
+                    .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
                     .collect::<Vec<_>>(),
             ),
         ),
@@ -691,7 +813,7 @@ fn iteration_assignment_value(
             JsonValue::Array(
                 results[domain_end..proof_end]
                     .iter()
-                    .map(|result| stmt_exec_result_json_value(runtime, result))
+                    .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
                     .collect::<Vec<_>>(),
             ),
         ),
@@ -700,7 +822,7 @@ fn iteration_assignment_value(
             JsonValue::Array(
                 results[proof_end..conclusion_end]
                     .iter()
-                    .map(|result| stmt_exec_result_json_value(runtime, result))
+                    .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
                     .collect::<Vec<_>>(),
             ),
         ),
@@ -718,6 +840,7 @@ fn by_enumerate_range_verification_value(
     runtime: &Runtime,
     verification: &ByEnumerateRangeVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     let mut check_results = Vec::new();
     if let Some(result) = inside_results.first() {
@@ -726,6 +849,7 @@ fn by_enumerate_range_verification_value(
             "membership",
             &verification.membership_fact,
             result,
+            output_style,
         ));
     }
     for (endpoint_fact, result) in verification
@@ -738,6 +862,7 @@ fn by_enumerate_range_verification_value(
             "endpoint in Z",
             endpoint_fact,
             result,
+            output_style,
         ));
     }
 
@@ -766,6 +891,7 @@ fn by_induc_verification_value(
     runtime: &Runtime,
     verification: &ByInducVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     let proof_type = if verification.finite_set {
         "by finite-set induction proof"
@@ -808,6 +934,7 @@ fn by_induc_verification_value(
                 &verification.base_assumptions,
                 verification.base_proof_step_count,
                 base_results,
+                output_style,
             ),
         ));
         fields.push((
@@ -817,6 +944,7 @@ fn by_induc_verification_value(
                 &verification.step_assumptions,
                 verification.step_proof_step_count,
                 step_results,
+                output_style,
             ),
         ));
     } else {
@@ -826,6 +954,7 @@ fn by_induc_verification_value(
                 runtime,
                 inside_results,
                 verification.proof_step_count,
+                output_style,
             )),
         ));
     }
@@ -844,6 +973,7 @@ fn induction_case_value(
     assumptions: &[(String, String)],
     proof_step_count: usize,
     results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     let proof_end = std::cmp::min(proof_step_count, results.len());
     JsonValue::Object(vec![
@@ -856,7 +986,7 @@ fn induction_case_value(
             JsonValue::Array(
                 results[..proof_end]
                     .iter()
-                    .map(|result| stmt_exec_result_json_value(runtime, result))
+                    .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
                     .collect::<Vec<_>>(),
             ),
         ),
@@ -865,7 +995,7 @@ fn induction_case_value(
             JsonValue::Array(
                 results[proof_end..]
                     .iter()
-                    .map(|result| stmt_exec_result_json_value(runtime, result))
+                    .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
                     .collect::<Vec<_>>(),
             ),
         ),
@@ -876,8 +1006,14 @@ fn by_extension_verification_value(
     runtime: &Runtime,
     verification: &ByExtensionVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
-    let proof_steps = proof_step_values(runtime, inside_results, verification.proof_step_count);
+    let proof_steps = proof_step_values(
+        runtime,
+        inside_results,
+        verification.proof_step_count,
+        output_style,
+    );
     let subset_results = inside_results.iter().skip(verification.proof_step_count);
     let subset_checks = vec![
         ("left_to_right", verification.left_to_right_subset.as_str()),
@@ -897,7 +1033,7 @@ fn by_extension_verification_value(
             ),
             (
                 JSON_KEY_VERIFICATION.to_string(),
-                stmt_result_to_composite_step_verified_by(runtime, result),
+                stmt_result_to_composite_step_verified_by(runtime, result, output_style),
             ),
         ])
     })
@@ -934,15 +1070,27 @@ fn by_prop_registration_verification_value(
     runtime: &Runtime,
     verification: &ByPropRegistrationVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
-    let proof_steps = proof_step_values(runtime, inside_results, verification.proof_step_count);
+    let proof_steps = proof_step_values(
+        runtime,
+        inside_results,
+        verification.proof_step_count,
+        output_style,
+    );
     let conclusions = verification
         .forall_fact
         .then_facts
         .iter()
         .zip(inside_results.iter().skip(verification.proof_step_count))
         .map(|(stmt, result)| {
-            forall_proved_fact_value(runtime, &verification.forall_fact, stmt, result)
+            forall_proved_fact_value(
+                runtime,
+                &verification.forall_fact,
+                stmt,
+                result,
+                output_style,
+            )
         })
         .collect::<Vec<_>>();
 
@@ -982,8 +1130,14 @@ fn by_choice_verification_value(
     verification: &ByChoiceVerificationResult,
     inside_results: &[StmtResult],
     conclusion_key: &str,
+    output_style: OutputStyle,
 ) -> JsonValue {
-    let proof_steps = proof_step_values(runtime, inside_results, verification.proof_step_count);
+    let proof_steps = proof_step_values(
+        runtime,
+        inside_results,
+        verification.proof_step_count,
+        output_style,
+    );
     let mut result_cursor = verification.proof_step_count;
     let mut obligations = Vec::new();
     for (label, statement, has_check_result) in verification.obligations.iter() {
@@ -998,7 +1152,7 @@ fn by_choice_verification_value(
                     ),
                     (
                         JSON_KEY_VERIFICATION.to_string(),
-                        stmt_result_to_composite_step_verified_by(runtime, result),
+                        stmt_result_to_composite_step_verified_by(runtime, result, output_style),
                     ),
                 ]));
             }
@@ -1044,16 +1198,19 @@ fn by_theorem_verification_value(
     runtime: &Runtime,
     verification: &ByTheoremVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     let parameter_type_check = inside_results
         .first()
-        .map(|result| stmt_exec_result_json_value(runtime, result))
+        .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
         .unwrap_or_else(|| JsonValue::Object(vec![]));
     let domain_checks = verification
         .domain_facts
         .iter()
         .zip(inside_results.iter().skip(1))
-        .map(|(statement, result)| statement_check_value(runtime, "domain", statement, result))
+        .map(|(statement, result)| {
+            statement_check_value(runtime, "domain", statement, result, output_style)
+        })
         .collect::<Vec<_>>();
 
     JsonValue::Object(vec![
@@ -1082,10 +1239,11 @@ fn by_definition_verification_value(
     runtime: &Runtime,
     verification: &ByDefinitionVerificationResult,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
     let parameter_type_check = inside_results
         .first()
-        .map(|result| stmt_exec_result_json_value(runtime, result))
+        .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
         .unwrap_or_else(|| JsonValue::Object(vec![]));
     let definition_clause_checks = verification
         .definition_clauses
@@ -1098,6 +1256,7 @@ fn by_definition_verification_value(
                 format!("definition clause {}", index + 1).as_str(),
                 statement,
                 result,
+                output_style,
             )
         })
         .collect::<Vec<_>>();
@@ -1131,6 +1290,7 @@ fn impossible_verification_value(
     runtime: &Runtime,
     impossible_fact: &crate::prelude::AtomicFact,
     result: Option<&StmtResult>,
+    output_style: OutputStyle,
 ) -> JsonValue {
     let checks = result
         .and_then(|r| r.non_factual_success())
@@ -1148,6 +1308,7 @@ fn impossible_verification_value(
                 runtime,
                 impossible_fact,
                 checks.as_slice(),
+                output_style,
             )),
         ),
     ])
@@ -1157,6 +1318,7 @@ fn impossible_check_values(
     runtime: &Runtime,
     impossible_fact: &crate::prelude::AtomicFact,
     results: &[&StmtResult],
+    output_style: OutputStyle,
 ) -> Vec<JsonValue> {
     let mut facts_and_roles = vec![(impossible_fact.clone().into(), "impossible fact")];
     if let Ok(negated) = impossible_fact.logical_negation() {
@@ -1165,7 +1327,7 @@ fn impossible_check_values(
     facts_and_roles
         .into_iter()
         .zip(results.iter())
-        .map(|((fact, role), result)| fact_check_value(runtime, role, &fact, result))
+        .map(|((fact, role), result)| fact_check_value(runtime, role, &fact, result, output_style))
         .collect::<Vec<_>>()
 }
 
@@ -1174,6 +1336,7 @@ fn fact_check_value(
     role: &str,
     fact: &crate::prelude::Fact,
     result: &StmtResult,
+    output_style: OutputStyle,
 ) -> JsonValue {
     JsonValue::Object(vec![
         ("role".to_string(), JsonValue::JsonString(role.to_string())),
@@ -1183,7 +1346,7 @@ fn fact_check_value(
         ),
         (
             JSON_KEY_VERIFICATION.to_string(),
-            stmt_result_to_composite_step_verified_by(runtime, result),
+            stmt_result_to_composite_step_verified_by(runtime, result, output_style),
         ),
     ])
 }
@@ -1193,6 +1356,7 @@ fn statement_check_value(
     role: &str,
     statement: &str,
     result: &StmtResult,
+    output_style: OutputStyle,
 ) -> JsonValue {
     JsonValue::Object(vec![
         ("role".to_string(), JsonValue::JsonString(role.to_string())),
@@ -1202,7 +1366,7 @@ fn statement_check_value(
         ),
         (
             JSON_KEY_VERIFICATION.to_string(),
-            stmt_result_to_composite_step_verified_by(runtime, result),
+            stmt_result_to_composite_step_verified_by(runtime, result, output_style),
         ),
     ])
 }
@@ -1252,8 +1416,9 @@ fn inside_results_value(
     runtime: &Runtime,
     _stmt: &Stmt,
     inside_results: &[StmtResult],
+    output_style: OutputStyle,
 ) -> JsonValue {
-    let should_show_inside_results = !runtime.is_compact_output();
+    let should_show_inside_results = output_style != OutputStyle::Compact;
     if !should_show_inside_results {
         return JsonValue::Array(vec![]);
     }
@@ -1261,20 +1426,28 @@ fn inside_results_value(
     JsonValue::Array(
         inside_results
             .iter()
-            .map(|r| stmt_exec_result_json_value(runtime, r))
+            .map(|r| stmt_exec_result_json_value(runtime, r, output_style))
             .collect::<Vec<_>>(),
     )
 }
 
-fn factual_stmt_success_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
+fn factual_stmt_success_to_json(
+    runtime: &Runtime,
+    x: &FactualStmtSuccess,
+    output_style: OutputStyle,
+) -> JsonValue {
     if x.is_verified_by_builtin_rules_only() {
-        factual_builtin_rules_to_json(runtime, x)
+        factual_builtin_rules_to_json(runtime, x, output_style)
     } else {
-        factual_citation_to_json(runtime, x)
+        factual_citation_to_json(runtime, x, output_style)
     }
 }
 
-fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
+fn factual_builtin_rules_to_json(
+    runtime: &Runtime,
+    x: &FactualStmtSuccess,
+    output_style: OutputStyle,
+) -> JsonValue {
     let fact_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
 
@@ -1296,22 +1469,31 @@ fn factual_builtin_rules_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> J
             JsonValue::JsonString(stmt_user_visible.clone()),
         ),
     ];
+    add_statement_trust_fields(x.execution_trace.as_ref(), &mut fields);
 
-    fields.extend(factual_success_forall_proof_fields(runtime, x));
+    fields.extend(factual_success_forall_proof_fields(
+        runtime,
+        x,
+        output_style,
+    ));
     if !factual_success_is_forall_proof(x) {
         fields.push((
             JSON_KEY_VERIFICATION.to_string(),
-            factual_success_verified_by_value(runtime, x),
+            factual_success_verified_by_value(runtime, x, output_style),
         ));
     }
     fields.push(("inside_results".to_string(), JsonValue::Array(vec![])));
 
-    add_factual_execution_phases(runtime, x, &mut fields);
+    add_factual_execution_phases(runtime, x, &mut fields, output_style);
 
     JsonValue::Object(fields)
 }
 
-fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonValue {
+fn factual_citation_to_json(
+    runtime: &Runtime,
+    x: &FactualStmtSuccess,
+    output_style: OutputStyle,
+) -> JsonValue {
     let stmt_line_file = x.stmt.line_file();
     let stmt_user_visible = user_visible_stmt_or_msg_text(&x.stmt.to_string());
 
@@ -1333,44 +1515,102 @@ fn factual_citation_to_json(runtime: &Runtime, x: &FactualStmtSuccess) -> JsonVa
             JsonValue::JsonString(stmt_user_visible.clone()),
         ),
     ];
+    add_statement_trust_fields(x.execution_trace.as_ref(), &mut fields);
 
-    fields.extend(factual_success_forall_proof_fields(runtime, x));
+    fields.extend(factual_success_forall_proof_fields(
+        runtime,
+        x,
+        output_style,
+    ));
     if !factual_success_is_forall_proof(x) {
         fields.push((
             JSON_KEY_VERIFICATION.to_string(),
-            factual_success_verified_by_value(runtime, x),
+            factual_success_verified_by_value(runtime, x, output_style),
         ));
     }
     fields.push(("inside_results".to_string(), JsonValue::Array(vec![])));
 
-    add_factual_execution_phases(runtime, x, &mut fields);
+    add_factual_execution_phases(runtime, x, &mut fields, output_style);
 
     JsonValue::Object(fields)
+}
+
+fn add_statement_trust_fields(
+    trace: Option<&StatementExecutionTrace>,
+    fields: &mut Vec<(String, JsonValue)>,
+) {
+    let Some(trace) = trace else {
+        return;
+    };
+    if let Some(status) = trace.verification_status.as_ref() {
+        fields.push((
+            "verification_status".to_string(),
+            JsonValue::JsonString(status.clone()),
+        ));
+    }
+    if trace.trust_summary.is_empty() {
+        return;
+    }
+    fields.push((
+        "trust_dependencies".to_string(),
+        trust_dependencies_value(&trace.trust_summary),
+    ));
+}
+
+fn trust_dependencies_value(summary: &ProofTrustSummary) -> JsonValue {
+    JsonValue::Array(
+        summary
+            .dependencies
+            .iter()
+            .map(|dependency| {
+                let mut fields = vec![(
+                    "kind".to_string(),
+                    JsonValue::JsonString(dependency.kind.clone()),
+                )];
+                if let Some(name) = dependency.name.as_ref() {
+                    fields.push(("name".to_string(), JsonValue::JsonString(name.clone())));
+                }
+                fields.push((
+                    "file".to_string(),
+                    line_file_source_json_value(&dependency.line_file),
+                ));
+                if let Some(boundary) = dependency.boundary {
+                    fields.push(("boundary".to_string(), JsonValue::Number(boundary)));
+                }
+                fields.push((
+                    "statement_line".to_string(),
+                    line_file_line_json_value(&dependency.line_file),
+                ));
+                JsonValue::Object(fields)
+            })
+            .collect::<Vec<_>>(),
+    )
 }
 
 fn add_factual_execution_phases(
     runtime: &Runtime,
     x: &FactualStmtSuccess,
     fields: &mut Vec<(String, JsonValue)>,
+    output_style: OutputStyle,
 ) {
-    if !runtime.detail_output {
+    if !output_style.is_detailed() {
         return;
     }
     let Some(trace) = x.execution_trace.as_ref() else {
         return;
     };
     let mut process_fields = if factual_success_is_forall_proof(x) {
-        factual_success_forall_proof_fields(runtime, x)
+        factual_success_forall_proof_fields(runtime, x, output_style)
     } else {
         vec![(
             JSON_KEY_VERIFICATION.to_string(),
-            factual_success_verified_by_value(runtime, x),
+            factual_success_verified_by_value(runtime, x, output_style),
         )]
     };
     if process_fields.is_empty() {
         process_fields.push((
             JSON_KEY_VERIFICATION.to_string(),
-            factual_success_verified_by_value(runtime, x),
+            factual_success_verified_by_value(runtime, x, output_style),
         ));
     }
     fields.push((
@@ -1532,10 +1772,12 @@ fn statement_environment_effects(stmt: &Stmt, trace: &StatementExecutionTrace) -
             vec![statement_environment_effect("stop_strategy", stmt)]
         }
         _ if trace.verify_well_definedness.status == StatementPhaseStatus::Skipped => {
-            vec![statement_environment_effect(
-                "trusted_environment_load",
-                stmt,
-            )]
+            let effect_kind = if trace.verification_status.as_deref() == Some("trusted_prefix") {
+                "trusted_prefix_environment_load"
+            } else {
+                "trusted_environment_load"
+            };
+            vec![statement_environment_effect(effect_kind, stmt)]
         }
         _ => vec![],
     }
@@ -1553,4 +1795,35 @@ fn statement_environment_effect(kind: &str, stmt: &Stmt) -> JsonValue {
 
 fn factual_success_is_forall_proof(x: &FactualStmtSuccess) -> bool {
     matches!(x.verified_by, VerifiedByResult::ForallProof(_))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::rc::Rc;
+
+    #[test]
+    fn trust_before_line_dependency_has_structured_output() {
+        let summary = ProofTrustSummary::cli_trusted_prefix((17, Rc::from("chapter.lit")), 42);
+        let value = trust_dependencies_value(&summary);
+        let JsonValue::Array(items) = value else {
+            panic!("trust dependencies must be an array");
+        };
+        let JsonValue::Object(fields) = &items[0] else {
+            panic!("a trust dependency must be an object");
+        };
+
+        assert!(fields.iter().any(|(key, value)| {
+            key == "kind"
+                && matches!(value, JsonValue::JsonString(kind) if kind == "cli_trusted_prefix")
+        }));
+        assert!(fields.iter().any(|(key, value)| key == "file"
+            && matches!(value, JsonValue::JsonString(file) if file == "chapter.lit")));
+        assert!(fields
+            .iter()
+            .any(|(key, value)| key == "boundary" && matches!(value, JsonValue::Number(42))));
+        assert!(fields
+            .iter()
+            .any(|(key, value)| key == "statement_line" && matches!(value, JsonValue::Number(17))));
+    }
 }

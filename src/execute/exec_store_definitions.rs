@@ -85,6 +85,8 @@ impl Runtime {
         def_thm_stmt: &DefThmStmt,
         trust_summary: &ProofTrustSummary,
     ) -> Result<(), RuntimeError> {
+        let mut trust_summary = trust_summary.clone();
+        trust_summary.merge(&self.current_trusted_prefix_statement_trust());
         if self
             .top_level_env()
             .defined_thm_stmts
@@ -102,7 +104,7 @@ impl Runtime {
             .insert(def_thm_stmt.name.clone(), def_thm_stmt.clone());
         if !trust_summary.is_empty() {
             env.defined_thm_trust_summaries
-                .insert(def_thm_stmt.name.clone(), trust_summary.clone());
+                .insert(def_thm_stmt.name.clone(), trust_summary);
         }
         Ok(())
     }

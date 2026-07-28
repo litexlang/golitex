@@ -7,16 +7,23 @@ use super::normalize::{json_value_is_empty_in_normal_output, remove_empty_json_f
 pub(crate) fn unknown_result_json_value(
     runtime: &Runtime,
     unknown_result: &RuntimeErrorUnknownResult,
+    output_style: OutputStyle,
 ) -> JsonValue {
     match unknown_result {
-        RuntimeErrorUnknownResult::Generic(unknown) => stmt_unknown_json_value(runtime, unknown),
+        RuntimeErrorUnknownResult::Generic(unknown) => {
+            stmt_unknown_json_value(runtime, unknown, output_style)
+        }
         RuntimeErrorUnknownResult::Fact(unknown) => {
-            fact_unknown_json_value(runtime, unknown.as_ref())
+            fact_unknown_json_value(runtime, unknown.as_ref(), output_style)
         }
     }
 }
 
-pub(crate) fn stmt_unknown_json_value(runtime: &Runtime, unknown: &StmtUnknown) -> JsonValue {
+pub(crate) fn stmt_unknown_json_value(
+    runtime: &Runtime,
+    unknown: &StmtUnknown,
+    _output_style: OutputStyle,
+) -> JsonValue {
     let mut fields = vec![(
         "type".to_string(),
         JsonValue::JsonString("unknown".to_string()),
@@ -25,15 +32,21 @@ pub(crate) fn stmt_unknown_json_value(runtime: &Runtime, unknown: &StmtUnknown) 
     JsonValue::Object(fields)
 }
 
-pub(crate) fn fact_unknown_json_value(runtime: &Runtime, unknown: &FactUnknown) -> JsonValue {
+pub(crate) fn fact_unknown_json_value(
+    runtime: &Runtime,
+    unknown: &FactUnknown,
+    output_style: OutputStyle,
+) -> JsonValue {
     match unknown {
         FactUnknown::AtomicFact(x) => atomic_fact_unknown_json_value(runtime, x),
         FactUnknown::ExistFact(x) => exist_fact_unknown_json_value(runtime, x),
         FactUnknown::OrFact(x) => or_fact_unknown_json_value(runtime, x),
-        FactUnknown::AndFact(x) => and_fact_unknown_json_value(runtime, x),
-        FactUnknown::ChainFact(x) => chain_fact_unknown_json_value(runtime, x),
-        FactUnknown::ForallFact(x) => forall_fact_unknown_json_value(runtime, x),
-        FactUnknown::ForallFactWithIff(x) => forall_iff_unknown_json_value(runtime, x),
+        FactUnknown::AndFact(x) => and_fact_unknown_json_value(runtime, x, output_style),
+        FactUnknown::ChainFact(x) => chain_fact_unknown_json_value(runtime, x, output_style),
+        FactUnknown::ForallFact(x) => forall_fact_unknown_json_value(runtime, x, output_style),
+        FactUnknown::ForallFactWithIff(x) => {
+            forall_iff_unknown_json_value(runtime, x, output_style)
+        }
         FactUnknown::NotForall(x) => not_forall_unknown_json_value(runtime, x),
     }
 }
@@ -74,31 +87,45 @@ fn or_fact_unknown_json_value(runtime: &Runtime, unknown: &OrFactUnknown) -> Jso
     JsonValue::Object(fields)
 }
 
-fn and_fact_unknown_json_value(runtime: &Runtime, unknown: &AndFactUnknown) -> JsonValue {
+fn and_fact_unknown_json_value(
+    runtime: &Runtime,
+    unknown: &AndFactUnknown,
+    output_style: OutputStyle,
+) -> JsonValue {
     let mut fields = base_fact_unknown_fields("and fact unknown", &unknown.goal);
     push_part_field(
         runtime,
         &mut fields,
         "failed_part",
         unknown.failed_part.as_ref(),
+        output_style,
     );
     push_detail_field(runtime, &mut fields, unknown.detail.as_deref());
     JsonValue::Object(fields)
 }
 
-fn chain_fact_unknown_json_value(runtime: &Runtime, unknown: &ChainFactUnknown) -> JsonValue {
+fn chain_fact_unknown_json_value(
+    runtime: &Runtime,
+    unknown: &ChainFactUnknown,
+    output_style: OutputStyle,
+) -> JsonValue {
     let mut fields = base_fact_unknown_fields("chain fact unknown", &unknown.goal);
     push_part_field(
         runtime,
         &mut fields,
         "failed_chain_step",
         unknown.failed_part.as_ref(),
+        output_style,
     );
     push_detail_field(runtime, &mut fields, unknown.detail.as_deref());
     JsonValue::Object(fields)
 }
 
-fn forall_fact_unknown_json_value(runtime: &Runtime, unknown: &ForallFactUnknown) -> JsonValue {
+fn forall_fact_unknown_json_value(
+    runtime: &Runtime,
+    unknown: &ForallFactUnknown,
+    output_style: OutputStyle,
+) -> JsonValue {
     let mut fields = base_fact_unknown_fields("forall unknown", &unknown.goal);
     push_json_field(
         runtime,
@@ -117,6 +144,7 @@ fn forall_fact_unknown_json_value(runtime: &Runtime, unknown: &ForallFactUnknown
         &mut fields,
         "failed_prove",
         unknown.failed_prove.as_ref(),
+        output_style,
     );
     push_detail_field(runtime, &mut fields, unknown.detail.as_deref());
     JsonValue::Object(fields)
@@ -125,6 +153,7 @@ fn forall_fact_unknown_json_value(runtime: &Runtime, unknown: &ForallFactUnknown
 fn forall_iff_unknown_json_value(
     runtime: &Runtime,
     unknown: &ForallFactWithIffUnknown,
+    output_style: OutputStyle,
 ) -> JsonValue {
     let mut fields = base_fact_unknown_fields("forall iff unknown", &unknown.goal);
     push_json_field(
@@ -148,7 +177,7 @@ fn forall_iff_unknown_json_value(
     if let Some(child_unknown) = &unknown.child_unknown {
         fields.push((
             "unknown_result".to_string(),
-            fact_unknown_json_value(runtime, child_unknown.as_ref()),
+            fact_unknown_json_value(runtime, child_unknown.as_ref(), output_style),
         ));
     }
     push_detail_field(runtime, &mut fields, unknown.detail.as_deref());
@@ -176,15 +205,23 @@ fn push_part_field(
     fields: &mut Vec<(String, JsonValue)>,
     key: &str,
     part: Option<&FactUnknownPart>,
+    output_style: OutputStyle,
 ) {
     if let Some(part) = part {
-        fields.push((key.to_string(), part_json_value(runtime, part)));
+        fields.push((
+            key.to_string(),
+            part_json_value(runtime, part, output_style),
+        ));
     }
 }
 
-fn part_json_value(runtime: &Runtime, part: &FactUnknownPart) -> JsonValue {
+fn part_json_value(
+    runtime: &Runtime,
+    part: &FactUnknownPart,
+    output_style: OutputStyle,
+) -> JsonValue {
     let mut fields = Vec::new();
-    if runtime.detail_output {
+    if output_style.is_detailed() {
         fields.push(("index".to_string(), JsonValue::Number(part.index)));
         fields.push(("count".to_string(), JsonValue::Number(part.count)));
     }
@@ -193,10 +230,10 @@ fn part_json_value(runtime: &Runtime, part: &FactUnknownPart) -> JsonValue {
         JsonValue::JsonString(user_visible_stmt_or_msg_text(&part.stmt.to_string())),
     ));
     if let Some(unknown) = &part.unknown {
-        if should_show_nested_part_unknown(runtime, part, unknown.as_ref()) {
+        if should_show_nested_part_unknown(part, unknown.as_ref(), output_style) {
             fields.push((
                 "unknown_result".to_string(),
-                fact_unknown_json_value(runtime, unknown.as_ref()),
+                fact_unknown_json_value(runtime, unknown.as_ref(), output_style),
             ));
         }
     }
@@ -204,11 +241,11 @@ fn part_json_value(runtime: &Runtime, part: &FactUnknownPart) -> JsonValue {
 }
 
 fn should_show_nested_part_unknown(
-    runtime: &Runtime,
     part: &FactUnknownPart,
     unknown: &FactUnknown,
+    output_style: OutputStyle,
 ) -> bool {
-    if runtime.detail_output {
+    if output_style.is_detailed() {
         return true;
     }
     !is_trivial_atomic_unknown_for_same_fact(part, unknown)

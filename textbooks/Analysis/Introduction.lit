@@ -1,5 +1,8 @@
 # About This Project
 #
+# Litex source:
+# https://github.com/litexlang/golitex/tree/main/textbooks/Analysis
+#
 # This project is an ongoing Litex formalization inspired by Terence Tao's
 # Analysis I. It follows the mathematical development of the book in source
 # order while expressing its definitions, constructions, and theorems through

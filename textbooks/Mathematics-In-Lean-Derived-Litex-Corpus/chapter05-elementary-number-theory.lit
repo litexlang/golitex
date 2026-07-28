@@ -119,11 +119,11 @@ thm factorial_positive:
 
 # Source theorem: dvd_fac.
 thm positive_index_divides_factorial:
-    ? forall i, n N:
-        i > 0
-        i <= n
+    ? forall idx, n N:
+        idx > 0
+        idx <= n
         =>:
-            $chap2::divides(i, factorial(n))
+            $chap2::divides(idx, factorial(n))
     prop _all_positive_indices_divide_factorial(k N):
         forall j N:
             j > 0
@@ -184,7 +184,7 @@ thm positive_index_divides_factorial:
                             $chap2::divides(j, factorial(k + 1))
                 $_all_positive_indices_divide_factorial(k + 1)
     $_all_positive_indices_divide_factorial(n)
-    $chap2::divides(i, factorial(n))
+    $chap2::divides(idx, factorial(n))
 
 # The source uses truncated natural subtraction in its exponent. Litex's
 # ordinary subtraction is integer-valued at zero, so expose the intended

@@ -46,40 +46,40 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
         =>:
             $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
             $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
-    have C power_set(N) = {d N_pos: $divides(d, a), $divides(d, b)}
+    have C1 power_set(N) = {d N_pos: $divides(d, a), $divides(d, b)}
     claim:
-        ? $is_finite_set(C)
+        ? $is_finite_set(C1)
         by cases:
-            ? $is_finite_set(C)
+            ? $is_finite_set(C1)
             case a != 0:
                 claim:
-                    ? forall d C:
+                    ? forall d C1:
                         d $in closed_range(1, abs(a))
-                    d $in C
+                    d $in C1
                     d $in N_pos
                     d >= 1
                     $divides(d, a)
                     by thm _positive_divisor_le_abs(d, a)
                     d <= abs(a)
                     d $in closed_range(1, abs(a))
-                C $subset closed_range(1, abs(a))
-                by thm basics::subset_of_finite_set_is_finite(C, closed_range(1, abs(a)))
-                $is_finite_set(C)
+                C1 $subset closed_range(1, abs(a))
+                by thm basics::subset_of_finite_set_is_finite(C1, closed_range(1, abs(a)))
+                $is_finite_set(C1)
             case b != 0:
                 claim:
-                    ? forall d C:
+                    ? forall d C1:
                         d $in closed_range(1, abs(b))
-                    d $in C
+                    d $in C1
                     d $in N_pos
                     d >= 1
                     $divides(d, b)
                     by thm _positive_divisor_le_abs(d, b)
                     d <= abs(b)
                     d $in closed_range(1, abs(b))
-                C $subset closed_range(1, abs(b))
-                by thm basics::subset_of_finite_set_is_finite(C, closed_range(1, abs(b)))
-                $is_finite_set(C)
-    witness $is_nonempty_set(C) from 1:
+                C1 $subset closed_range(1, abs(b))
+                by thm basics::subset_of_finite_set_is_finite(C1, closed_range(1, abs(b)))
+                $is_finite_set(C1)
+    witness $is_nonempty_set(C1) from 1:
         1 $in N_pos
         witness exist k Z st {a = 1 * k} from a:
             a = 1 * a
@@ -88,7 +88,7 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
             b = 1 * b
         $divides(1, b)
         1 $in {d N_pos: $divides(d, a), $divides(d, b)}
-        1 $in C
+        1 $in C1
     $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
     $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
 

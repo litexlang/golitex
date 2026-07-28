@@ -39,8 +39,8 @@ prop is_additive_monoid_hom(M, T set, addM fn(x, y M) M, zeroM M, addT fn(x, y T
     forall x, y M:
         f(addM(x, y)) = addT(f(x), f(y))
 
-template<A, B, C set>:
-    have fn compose_map(g fn(y B) C, f fn(x A) B) fn(z A) C = fn(t A) C {g(f(t))}
+template<A, B, CarrierC set>:
+    have fn compose_map(g fn(y B) CarrierC, f fn(x A) B) fn(z A) CarrierC = fn(t A) CarrierC {g(f(t))}
 
 # Opening monoid identities and map laws are facts, not proposition-valued
 # declarations. They check directly from the interfaces above.
@@ -73,24 +73,24 @@ thm additive_hom_map_zero:
     f(zeroM) = zeroT
 
 thm additive_hom_comp:
-    ? forall A, B, C set, addA fn(x, y A) A, zeroA A, addB fn(x, y B) B, zeroB B, addC fn(x, y C) C, zeroC C, f fn(x A) B, g fn(y B) C:
+    ? forall A, B, CarrierC set, addA fn(x, y A) A, zeroA A, addB fn(x, y B) B, zeroB B, addC fn(x, y CarrierC) CarrierC, zeroC CarrierC, f fn(x A) B, g fn(y B) CarrierC:
         $is_additive_monoid_hom(A, B, addA, zeroA, addB, zeroB, f)
-        $is_additive_monoid_hom(B, C, addB, zeroB, addC, zeroC, g)
+        $is_additive_monoid_hom(B, CarrierC, addB, zeroB, addC, zeroC, g)
         =>:
-            $is_additive_monoid_hom(A, C, addA, zeroA, addC, zeroC, fn(x A) C {g(f(x))})
-    (fn(x A) C {g(f(x))})(zeroA) = g(f(zeroA)) = g(zeroB) = zeroC
+            $is_additive_monoid_hom(A, CarrierC, addA, zeroA, addC, zeroC, fn(x A) CarrierC {g(f(x))})
+    (fn(x A) CarrierC {g(f(x))})(zeroA) = g(f(zeroA)) = g(zeroB) = zeroC
     claim:
         ? forall x, y A:
-            (fn(q A) C {g(f(q))})(addA(x, y)) = addC((fn(q A) C {g(f(q))})(x), (fn(q A) C {g(f(q))})(y))
+            (fn(q A) CarrierC {g(f(q))})(addA(x, y)) = addC((fn(q A) CarrierC {g(f(q))})(x), (fn(q A) CarrierC {g(f(q))})(y))
         thm function_substitution:
             ? forall U, V set, h fn(q U) V, u, v U:
                 u = v
                 =>:
                     h(u) = h(v)
             h(u) = h(v)
-        by thm function_substitution(B, C, g, f(addA(x, y)), addB(f(x), f(y)))
-        (fn(q A) C {g(f(q))})(addA(x, y)) = g(f(addA(x, y))) = g(addB(f(x), f(y))) = addC(g(f(x)), g(f(y))) = addC((fn(q A) C {g(f(q))})(x), (fn(q A) C {g(f(q))})(y))
-    $is_additive_monoid_hom(A, C, addA, zeroA, addC, zeroC, fn(x A) C {g(f(x))})
+        by thm function_substitution(B, CarrierC, g, f(addA(x, y)), addB(f(x), f(y)))
+        (fn(q A) CarrierC {g(f(q))})(addA(x, y)) = g(f(addA(x, y))) = g(addB(f(x), f(y))) = addC(g(f(x)), g(f(y))) = addC((fn(q A) CarrierC {g(f(q))})(x), (fn(q A) CarrierC {g(f(q))})(y))
+    $is_additive_monoid_hom(A, CarrierC, addA, zeroA, addC, zeroC, fn(x A) CarrierC {g(f(x))})
 
 # A group homomorphism is a property of a candidate function between two
 # operation-bearing Chapter 2 group values.
@@ -284,11 +284,11 @@ prop is_normal_subgroup(G nonempty_set, group &chap2::Group<G>, H power_set(G)):
         =>:
             group.mul(group.mul(g, h), group.inv(g)) $in H
 
-prop is_left_coset_of(G nonempty_set, group &chap2::Group<G>, H power_set(G), C power_set(G)):
-    exist g G st {C = \left_coset<G, group>(H, g)}
+prop is_left_coset_of(G nonempty_set, group &chap2::Group<G>, H power_set(G), CarrierC power_set(G)):
+    exist g G st {CarrierC = \left_coset<G, group>(H, g)}
 
 template<G nonempty_set, group &chap2::Group<G>>:
-    have fn quotient_group_carrier(H power_set(G)) power_set(power_set(G)) = {C power_set(G): $is_left_coset_of(G, group, H, C)}
+    have fn quotient_group_carrier(H power_set(G)) power_set(power_set(G)) = {CarrierC power_set(G): $is_left_coset_of(G, group, H, CarrierC)}
 
 # ---------------------------------------------------------------------------
 # 9.2 Rings
@@ -456,16 +456,16 @@ prop is_ideal(A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A)):
             ring.mul(r, x) $in I
 
 prop ideal_coset_member(A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A), r, x A):
-    exist i A st {i $in I, x = ring.add(r, i)}
+    exist idx A st {idx $in I, x = ring.add(r, idx)}
 
 template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
     have fn ideal_coset(I power_set(A), r A) power_set(A) = {x A: $ideal_coset_member(A, ring, I, r, x)}
 
-prop is_ideal_coset(A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A), C power_set(A)):
-    exist r A st {C = \ideal_coset<A, ring>(I, r)}
+prop is_ideal_coset(A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A), CarrierC power_set(A)):
+    exist r A st {CarrierC = \ideal_coset<A, ring>(I, r)}
 
 template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
-    have fn quotient_ring_carrier(I power_set(A)) power_set(power_set(A)) = {C power_set(A): $is_ideal_coset(A, ring, I, C)}
+    have fn quotient_ring_carrier(I power_set(A)) power_set(power_set(A)) = {CarrierC power_set(A): $is_ideal_coset(A, ring, I, CarrierC)}
 
 prop ideal_sum_member(A nonempty_set, ring &chap7::CommutativeRing<A>, I, J power_set(A), x A):
     exist a, b A st {a $in I, b $in J, x = ring.add(a, b)}
@@ -491,35 +491,35 @@ template<A, S set, zeroS S, f fn(x A) S>:
 template<A, S set, f fn(x A) S>:
     have ring_range power_set(S) = \ideal_map<A, S, f>(A)
 
-prop is_commutative_ring_ideal_family(Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(i Index) power_set(A)):
-    forall i Index:
-        $is_ideal(A, ring, I(i))
+prop is_commutative_ring_ideal_family(Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(idx Index) power_set(A)):
+    forall idx Index:
+        $is_ideal(A, ring, I(idx))
 
 prop ideals_coprime(A nonempty_set, ring &chap7::CommutativeRing<A>, I, J power_set(A)):
     $is_ideal(A, ring, I)
     $is_ideal(A, ring, J)
     \ideal_sum<A, ring>(I, J) = A
 
-prop ideals_pairwise_coprime(Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(i Index) power_set(A)):
+prop ideals_pairwise_coprime(Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(idx Index) power_set(A)):
     $is_commutative_ring_ideal_family(Index, A, ring, I)
-    forall i, j Index:
-        i != j
+    forall idx, j Index:
+        idx != j
         =>:
-            $ideals_coprime(A, ring, I(i), I(j))
+            $ideals_coprime(A, ring, I(idx), I(j))
 
-prop belongs_to_every_ideal(Index, A set, I fn(i Index) power_set(A), x A):
-    forall i Index:
-        x $in I(i)
+prop belongs_to_every_ideal(Index, A set, I fn(idx Index) power_set(A), x A):
+    forall idx Index:
+        x $in I(idx)
 
-template<Index, A set, I fn(i Index) power_set(A)>:
+template<Index, A set, I fn(idx Index) power_set(A)>:
     have ideal_infimum power_set(A) = {x A: $belongs_to_every_ideal(Index, A, I, x)}
 
-prop is_quotient_tuple(Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(i Index) power_set(A), q fn(i Index) power_set(A)):
-    forall i Index:
-        q(i) $in \quotient_ring_carrier<A, ring>(I(i))
+prop is_quotient_tuple(Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(idx Index) power_set(A), q fn(idx Index) power_set(A)):
+    forall idx Index:
+        q(idx) $in \quotient_ring_carrier<A, ring>(I(idx))
 
-template<Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(i Index) power_set(A)>:
-    have quotient_product power_set(fn(i Index) power_set(A)) = {q fn(i Index) power_set(A): $is_quotient_tuple(Index, A, ring, I, q)}
+template<Index set, A nonempty_set, ring &chap7::CommutativeRing<A>, I fn(idx Index) power_set(A)>:
+    have quotient_product power_set(fn(idx Index) power_set(A)) = {q fn(idx Index) power_set(A): $is_quotient_tuple(Index, A, ring, I, q)}
 
 # ---------------------------------------------------------------------------
 # 9.2.3 Algebras and polynomials
