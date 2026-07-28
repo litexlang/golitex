@@ -72,18 +72,18 @@ fn template_can_use_struct_with_function_valued_fields() {
 struct Group<s set>:
     inv fn(x s) s
     op fn(x, y s) s
-    e s
+    identity s
     <=>:
         forall x, y, z s:
             op(x, op(y, z)) = op(op(x, y), z)
         forall x s:
-            op(e, x) = x
+            op(identity, x) = x
         forall x s:
-            op(x, e) = x
+            op(x, identity) = x
         forall x s:
-            op(x, inv(x)) = e
+            op(x, inv(x)) = identity
         forall x s:
-            op(inv(x), x) = e
+            op(inv(x), x) = identity
 
 template<s set>:
     have group_quotient fn (g &Group<s>) power_set(s)
@@ -112,26 +112,26 @@ fn struct_filter_predicate_unfolds_for_default_field_view() {
         "struct_filter_predicate_unfolds_for_default_field_view",
         || {
             let source_code = r#"
-prop is_group(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
+prop is_group(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, identity s):
     forall x, y, z s:
         op(x, op(y, z)) = op(op(x, y), z)
     forall x s:
-        op(e, x) = x
-        op(x, e) = x
-        op(x, inv(x)) = e
-        op(inv(x), x) = e
+        op(identity, x) = x
+        op(x, identity) = x
+        op(x, inv(x)) = identity
+        op(inv(x), x) = identity
 
 struct Group<s nonempty_set>:
     inv fn(x s) s
     op fn(x, y s) s
-    e s
+    identity s
     <=>:
-        $is_group(s, inv, op, e)
+        $is_group(s, inv, op, identity)
 
 claim:
     ? forall s nonempty_set, g &Group<s>, x s:
-        g.op(g.inv(x), x) = g.e
-    g.op(g.inv(x), x) = g.e
+        g.op(g.inv(x), x) = g.identity
+    g.op(g.inv(x), x) = g.identity
 "#;
 
             let mut runtime = Runtime::new();

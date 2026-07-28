@@ -1108,7 +1108,12 @@ impl DepCollector {
 
     pub(crate) fn collect_obj(&mut self, obj: &Obj) {
         match obj {
-            Obj::Atom(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => {}
+            Obj::Atom(_)
+            | Obj::Number(_)
+            | Obj::ImaginaryUnit(_)
+            | Obj::EulerNumber(_)
+            | Obj::Pi(_)
+            | Obj::StandardSet(_) => {}
             Obj::FnObj(fn_obj) => {
                 self.collect_fn_head(&fn_obj.head);
                 for group in fn_obj.body.iter() {

@@ -90,27 +90,27 @@ struct Group<s nonempty_set>:
             mul(one, x) = x
             mul(inv(x), x) = one
 
-forall s nonempty_set, G &Group<s>, e s:
+forall s nonempty_set, G &Group<s>, identity s:
     forall a s:
-        G.mul(e, a) = a
-        G.mul(a, e) = a
+        G.mul(identity, a) = a
+        G.mul(a, identity) = a
     =>:
-        e = G.mul(G.one, e) = G.one
+        identity = G.mul(G.one, identity) = G.one
 ```
 
 以上例子具体展示了 Litex 如何实现前面提出的五个目标。
 
 1. 先写事实，不先编排证明脚本
 
-`Group` 的运算规律直接写在结构定义的 `<=>:` 部分，不必先给它们分别取名。单位元唯一性的证明也按数学叙述展开：先写候选元素 `e` 满足的左右单位律，再写等式链 `e = G.mul(G.one, e) = G.one`。用户提交的是要检查的局部事实和结论，而不是一串改变 proof state 的操作命令。
+`Group` 的运算规律直接写在结构定义的 `<=>:` 部分，不必先给它们分别取名。单位元唯一性的证明也按数学叙述展开：先写候选元素 `identity` 满足的左右单位律，再写等式链 `identity = G.mul(G.one, identity) = G.one`。用户提交的是要检查的局部事实和结论，而不是一串改变 proof state 的操作命令。
 
 2. 复用的是事实形状，不只是定理名字
 
-checker 能从 `Group` 的单位律识别 `G.mul(G.one, e) = e`，再利用等式的对称性得到等式链的第一步；它也能把候选单位元的规律 `G.mul(a, e) = a` 在 `a = G.one` 处实例化，得到第二步。这里没有调用 `one_mul`、`hright` 之类的名字；复用发生在已经验证的 `forall` 事实与当前表达式的形状之间。
+checker 能从 `Group` 的单位律识别 `G.mul(G.one, identity) = identity`，再利用等式的对称性得到等式链的第一步；它也能把候选单位元的规律 `G.mul(a, identity) = a` 在 `a = G.one` 处实例化，得到第二步。这里没有调用 `one_mul`、`hright` 之类的名字；复用发生在已经验证的 `forall` 事实与当前表达式的形状之间。
 
 3. 以集合论式对象为表面，而不是要求用户先学习类型宇宙
 
-`s nonempty_set` 直接说载体 `s` 是非空集合，`e s` 直接说 `e` 属于 `s`，`G &Group<s>` 则说 `G` 是定义在 `s` 上的群结构。`one s`、`inv fn(x s) s` 和 `mul fn(x, y s) s` 把常元、逆运算和乘法的定义域、值域写在对象所在的集合上。用户看到的是集合、元素、函数和结构，而不是需要先操作的 `Type` 或 universe 层级。
+`s nonempty_set` 直接说载体 `s` 是非空集合，`identity s` 直接说 `identity` 属于 `s`，`G &Group<s>` 则说 `G` 是定义在 `s` 上的群结构。`one s`、`inv fn(x s) s` 和 `mul fn(x, y s) s` 把常元、逆运算和乘法的定义域、值域写在对象所在的集合上。用户看到的是集合、元素、函数和结构，而不是需要先操作的 `Type` 或 universe 层级。
 
 4. 让数学陈述，而非函数式程序结构，成为主语
 
@@ -118,7 +118,7 @@ checker 能从 `Group` 的单位律识别 `G.mul(G.one, e) = e`，再利用等�
 
 5. 既保证严格性，又有可读性和低门槛
 
-这段代码已经通过 Litex runner，并不是因为它“看起来像”正确的教材证明。checker 仍须检查 `G.one`、`e` 和每次乘法都在正确的集合中，结构公理能够在当前参数上实例化，两段等式确实分别由已有事实支持。省略的是用户手写的事实名称和 proof-script 编排，不是这些检查本身；其可信边界仍包括 Litex 的 checker、builtin/infer rules 及任何显式引入的 `trust`。
+这段代码已经通过 Litex runner，并不是因为它“看起来像”正确的教材证明。checker 仍须检查 `G.one`、`identity` 和每次乘法都在正确的集合中，结构公理能够在当前参数上实例化，两段等式确实分别由已有事实支持。省略的是用户手写的事实名称和 proof-script 编排，不是这些检查本身；其可信边界仍包括 Litex 的 checker、builtin/infer rules 及任何显式引入的 `trust`。
 
 ## Litex是如何实现它的目标的
 

@@ -135,8 +135,7 @@ the gcd interface.
 
 ## Named positive real constants
 
-`pi` and `euler_e` are currently trusted positive real objects. Their ideal
-forms remain named real constants backed by mathematical constructions, rather
-than predicates that merely recognize an arbitrary value. The constructions
-and their characteristic properties are not yet implemented in this module,
-so this is an explicit trusted boundary rather than a checked definition.
+`e` and `pi` are native positive real constants. They are direct scalar
+objects, rather than source-level declarations or predicates that recognize an
+arbitrary value. Their carrier and positivity facts come from the kernel; this
+module does not duplicate them with trusted declarations.

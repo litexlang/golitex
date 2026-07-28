@@ -13,6 +13,9 @@ impl Runtime {
         if let Some(result) = self.try_verify_native_i_nonzero(not_equal_fact) {
             return Ok(result);
         }
+        if let Some(result) = try_verify_native_real_constant_nonzero(not_equal_fact) {
+            return Ok(result);
+        }
 
         match (
             self.resolve_obj_to_number_for_not_equal_builtin_rule(left_obj),
@@ -138,6 +141,36 @@ impl Runtime {
 
         Ok((StmtUnknown::new()).into())
     }
+}
+
+// Primitive positive real constants are nonzero.
+// Example: `e != 0` and `pi != 0`.
+fn try_verify_native_real_constant_nonzero(
+    not_equal_fact: &NotEqualFact,
+) -> Option<StmtResult> {
+    let is_zero = |obj: &Obj| {
+        matches!(
+            obj,
+            Obj::Number(number) if number.normalized_value == "0"
+        )
+    };
+    let is_native_positive_constant =
+        |obj: &Obj| matches!(obj, Obj::EulerNumber(_) | Obj::Pi(_));
+    if !((is_zero(&not_equal_fact.left)
+        && is_native_positive_constant(&not_equal_fact.right))
+        || (is_native_positive_constant(&not_equal_fact.left)
+            && is_zero(&not_equal_fact.right)))
+    {
+        return None;
+    }
+    Some(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            not_equal_fact.clone().into(),
+            "native positive real constant is nonzero".to_string(),
+            Vec::new(),
+        )
+        .into(),
+    )
 }
 
 impl Runtime {

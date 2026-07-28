@@ -111,6 +111,32 @@ impl Runtime {
                 "native imaginary unit is in C",
             ));
         }
+        // Euler's number and pi are primitive positive real constants.
+        // Example: `e $in R_pos`, `pi $in R`, and therefore both are also in `C`.
+        if matches!(&in_fact.element, Obj::EulerNumber(_) | Obj::Pi(_))
+            && matches!(
+                &in_fact.set,
+                Obj::StandardSet(StandardSet::RPos)
+                    | Obj::StandardSet(StandardSet::R)
+                    | Obj::StandardSet(StandardSet::C)
+            )
+        {
+            let reason = match &in_fact.set {
+                Obj::StandardSet(StandardSet::RPos) => {
+                    "native mathematical constant is a positive real"
+                }
+                Obj::StandardSet(StandardSet::R) => {
+                    "native mathematical constant is a real"
+                }
+                Obj::StandardSet(StandardSet::C) => {
+                    "native mathematical constant is real, hence is in C"
+                }
+                _ => unreachable!(),
+            };
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact, reason,
+            ));
+        }
         // Real and imaginary coordinates and complex modulus map a complex argument into R.
         // Example: `z $in C` implies `re(z) $in R`.
         if matches!(

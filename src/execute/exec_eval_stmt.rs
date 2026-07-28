@@ -22,6 +22,8 @@ impl Runtime {
         matches!(
             obj,
             Obj::Number(_)
+                | Obj::EulerNumber(_)
+                | Obj::Pi(_)
                 | Obj::FnObj(_)
                 | Obj::Add(_)
                 | Obj::Sub(_)
@@ -727,6 +729,15 @@ impl Runtime {
                 return Err(short_exec_error(
                     eval_stmt.clone().into(),
                     "eval: native complex values are symbolic and are not supported by the evaluator"
+                        .to_string(),
+                    None,
+                    vec![],
+                ));
+            }
+            if cur.contains_native_transcendental_syntax() {
+                return Err(short_exec_error(
+                    eval_stmt.clone().into(),
+                    "eval: transcendental constants are symbolic and are not supported by the evaluator (e and pi)"
                         .to_string(),
                     None,
                     vec![],
@@ -1452,6 +1463,15 @@ impl Runtime {
                 vec![],
             ));
         }
+        if stmt.obj_to_eval.contains_native_transcendental_syntax() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                "eval: transcendental constants are symbolic and are not supported by the evaluator (e and pi)"
+                    .to_string(),
+                None,
+                vec![],
+            ));
+        }
 
         let resolved_obj = self.resolve_obj(&stmt.obj_to_eval);
         let executable_obj = self
@@ -1461,6 +1481,15 @@ impl Runtime {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 "eval: native complex values are symbolic and are not supported by the evaluator"
+                    .to_string(),
+                None,
+                vec![],
+            ));
+        }
+        if executable_obj.contains_native_transcendental_syntax() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                "eval: transcendental constants are symbolic and are not supported by the evaluator (e and pi)"
                     .to_string(),
                 None,
                 vec![],

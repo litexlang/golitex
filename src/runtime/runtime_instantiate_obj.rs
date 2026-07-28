@@ -64,6 +64,8 @@ impl Runtime {
             Obj::FnObj(inner) => self.inst_fn_obj(inner, param_to_arg_map, param_obj_type),
             Obj::Number(inner) => self.inst_number(inner, param_to_arg_map, param_obj_type),
             Obj::ImaginaryUnit(inner) => Ok(inner.clone().into()),
+            Obj::EulerNumber(inner) => Ok(inner.clone().into()),
+            Obj::Pi(inner) => Ok(inner.clone().into()),
             Obj::Add(inner) => self.inst_add(inner, param_to_arg_map, param_obj_type),
             Obj::Sub(inner) => self.inst_sub(inner, param_to_arg_map, param_obj_type),
             Obj::Mul(inner) => self.inst_mul(inner, param_to_arg_map, param_obj_type),

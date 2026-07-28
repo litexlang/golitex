@@ -112,6 +112,7 @@ sqrt(4) = 2
 |---|---|
 | `name`, `Module::name` | Local or module-qualified name |
 | `2`, `3.5` | Exact numeric literal |
+| `e`, `pi` | Native Euler and circle constants |
 | `a + b`, `a - b`, `a * b`, `a / b` | Arithmetic operations |
 | `a % b` | Euclidean integer remainder |
 | `a^b` | Exponentiation |
@@ -128,6 +129,44 @@ sqrt(x) = 0
 
 This is an `error` unless the context proves `0 <= x`; the problem occurs
 before equality verification.
+
+### Native real constants (beta preview)
+
+`e` and `pi` are primitive scalar objects. They are parsed directly into
+dedicated object forms: neither is a decimal `Number`, an ordinary `Atom`, nor
+a name introduced by a Litex declaration. In particular, `std/basics` does not
+define or trust either constant.
+
+The kernel provides their carrier, positivity, and nonzero facts:
+
+```litex
+e $in R_pos
+pi $in R_pos
+e $in R
+pi $in R
+e $in C
+pi $in C
+0 < e
+0 < pi
+e != 0
+pi != 0
+```
+
+Both names are hard-reserved and cannot be rebound as declarations,
+parameters, indices, or fields. Longer names such as `e1`, `epsilon`, and
+`pi_value` remain ordinary identifiers.
+
+The output backends preserve the named constants rather than inserting decimal
+approximations:
+
+| Backend | `e` | `pi` |
+|---|---|---|
+| LaTeX | `\mathrm{e}` | `\pi` |
+| Python extractor | `math.e` | `math.pi` |
+| Lean extractor | `Real.exp 1` | `Real.pi` |
+
+The symbolic evaluator likewise does not assign decimal runtime values to
+these constants.
 
 ### Complex scalars (beta preview)
 
@@ -2129,6 +2168,7 @@ Preview features are public enough to test, but their syntax or semantics may
 change:
 
 - native complex scalars `C`, `i`, `re`, `img`, and `C_abs`;
+- native positive real constants `e` and `pi`;
 - compact strict-sign suffixes such as `N+` and `R-`;
 - `struct`, struct view objects, and default-view field access;
 - proper subset and proper superset relations;

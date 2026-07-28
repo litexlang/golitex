@@ -379,6 +379,8 @@ impl LeanEmitter {
         }
         match obj {
             Obj::Number(number) => Ok(format!("({} : ℝ)", number.normalized_value)),
+            Obj::EulerNumber(_) => Ok("(Real.exp 1)".to_string()),
+            Obj::Pi(_) => Ok("Real.pi".to_string()),
             Obj::Atom(atom) => self.real_atom(atom),
             Obj::Add(obj) => self.binary_expr(&obj.left, "+", &obj.right),
             Obj::Sub(obj) => self.binary_expr(&obj.left, "-", &obj.right),
@@ -517,7 +519,9 @@ impl LeanEmitter {
 
     fn emit_atomic_tactic(&mut self, fact: &AtomicFact, indent: usize) -> Result<(), RuntimeError> {
         self.atomic_fact(fact)?;
-        let tactic = if atomic_fact_contains_division(fact) {
+        let tactic = if let Some(tactic) = native_positive_constant_tactic(fact) {
+            tactic
+        } else if atomic_fact_contains_division(fact) {
             "field_simp [*] <;> ring <;> nlinarith"
         } else if matches!(fact, AtomicFact::EqualFact(_)) {
             "nlinarith"
@@ -585,6 +589,22 @@ fn natural_exponent(obj: &Obj) -> Result<String, RuntimeError> {
         ));
     }
     Ok(value.to_string())
+}
+
+fn native_positive_constant_tactic(fact: &AtomicFact) -> Option<&'static str> {
+    let (constant, zero) = match fact {
+        AtomicFact::GreaterFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::LessFact(fact) => (&fact.right, &fact.left),
+        _ => return None,
+    };
+    if !matches!(zero, Obj::Number(number) if number.normalized_value == "0") {
+        return None;
+    }
+    match constant {
+        Obj::EulerNumber(_) => Some("exact Real.exp_pos 1"),
+        Obj::Pi(_) => Some("exact Real.pi_pos"),
+        _ => None,
+    }
 }
 
 fn atomic_fact_contains_division(fact: &AtomicFact) -> bool {

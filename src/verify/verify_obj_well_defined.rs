@@ -42,6 +42,7 @@ impl Runtime {
             Obj::FnObj(fn_obj) => self.verify_fn_obj_well_defined(fn_obj, verify_state),
             Obj::Number(_) => Ok(()),
             Obj::ImaginaryUnit(_) => Ok(()),
+            Obj::EulerNumber(_) | Obj::Pi(_) => Ok(()),
             Obj::Add(add) => self.verify_add_well_defined(add, verify_state),
             Obj::Sub(sub) => self.verify_sub_well_defined(sub, verify_state),
             Obj::Mul(mul) => self.verify_mul_well_defined(mul, verify_state),

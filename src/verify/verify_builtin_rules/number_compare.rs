@@ -51,6 +51,9 @@ impl Runtime {
         {
             return Ok(StmtUnknown::new().into());
         }
+        if let Some(result) = try_verify_native_real_constant_positive(atomic_fact) {
+            return Ok(result);
+        }
         if let Some(result) =
             self.try_verify_order_semantics_builtin_rule(atomic_fact, verify_state)?
         {
@@ -395,6 +398,39 @@ impl Runtime {
             _ => None,
         }
     }
+}
+
+// Euler's number and pi are primitive positive real constants.
+// Example: `0 < e` and `pi > 0`.
+fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<StmtResult> {
+    let is_zero = |obj: &Obj| {
+        matches!(
+            obj,
+            Obj::Number(number) if number.normalized_value == "0"
+        )
+    };
+    let is_native_positive_constant =
+        |obj: &Obj| matches!(obj, Obj::EulerNumber(_) | Obj::Pi(_));
+    let applies = match atomic_fact {
+        AtomicFact::LessFact(fact) => {
+            is_zero(&fact.left) && is_native_positive_constant(&fact.right)
+        }
+        AtomicFact::GreaterFact(fact) => {
+            is_native_positive_constant(&fact.left) && is_zero(&fact.right)
+        }
+        _ => false,
+    };
+    if !applies {
+        return None;
+    }
+    Some(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            atomic_fact.clone().into(),
+            "native mathematical constant is positive".to_string(),
+            Vec::new(),
+        )
+        .into(),
+    )
 }
 
 pub enum NumberCompareResult {

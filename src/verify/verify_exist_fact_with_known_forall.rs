@@ -221,7 +221,12 @@ impl Runtime {
     pub(crate) fn obj_depends_on_given_exist_param(obj: &Obj, names: &[String]) -> bool {
         match obj {
             Obj::Atom(AtomObj::Exist(p)) => names.iter().any(|name| name == &p.name),
-            Obj::Atom(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => false,
+            Obj::Atom(_)
+            | Obj::Number(_)
+            | Obj::ImaginaryUnit(_)
+            | Obj::EulerNumber(_)
+            | Obj::Pi(_)
+            | Obj::StandardSet(_) => false,
             Obj::Add(x) => Self::obj_pair_depends_on_given_exist_param(
                 x.left.as_ref(),
                 x.right.as_ref(),

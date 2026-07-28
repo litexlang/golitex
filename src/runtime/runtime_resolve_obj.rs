@@ -60,6 +60,8 @@ impl Runtime {
         match obj {
             Obj::Number(number) => number.clone().into(),
             Obj::ImaginaryUnit(unit) => unit.clone().into(),
+            Obj::EulerNumber(number) => number.clone().into(),
+            Obj::Pi(pi) => pi.clone().into(),
             Obj::Atom(AtomObj::IdentifierWithMod(identifier))
                 if self.is_current_parse_module(&identifier.mod_name) =>
             {

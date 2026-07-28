@@ -716,7 +716,7 @@ claim:
         =>:
             $can_be_divided_by_2(x)
     obtain d from exist d Z st {x = 8 * d}
-    witness exist e Z st {x = 2 * e} from 4 * d:
+    witness exist e1 Z st {x = 2 * e1} from 4 * d:
         x = 8 * d
         8 * d = 2 * (4 * d)
 
@@ -1723,13 +1723,13 @@ fn forall_output_exposes_parameters_and_assumption_store_facts() {
         || {
             let source_code = r#"
 abstract_prop p(a, b, c)
-forall a, b, c, d, e, f R:
+forall a, b, c, d, e1, f R:
     $p(a, b, c)
     a = d
-    b = e
+    b = e1
     c = f
     =>:
-        $p(d, e, f)
+        $p(d, e1, f)
 "#;
 
             let mut runtime = Runtime::new();
@@ -1758,7 +1758,7 @@ forall a, b, c, d, e, f R:
                 format!("\"reason\": \"{}\"", ForallFact::premise_store_reason()).as_str()
             ));
             assert!(run_output.contains("\"fact\": \"a = d\""));
-            assert!(run_output.contains("\"fact\": \"b = e\""));
+            assert!(run_output.contains("\"fact\": \"b = e1\""));
             assert!(run_output.contains("\"fact\": \"c = f\""));
             assert_eq!(run_output.matches("\"fact\": \"a $in R\"").count(), 1);
         },

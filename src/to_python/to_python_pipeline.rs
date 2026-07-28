@@ -313,6 +313,7 @@ struct PythonExtractor {
     lines: Vec<String>,
     constants: HashSet<String>,
     functions: HashSet<String>,
+    needs_math: bool,
 }
 
 impl PythonExtractor {
@@ -321,6 +322,7 @@ impl PythonExtractor {
             lines: Vec::new(),
             constants: HashSet::new(),
             functions: HashSet::new(),
+            needs_math: false,
         }
     }
 
@@ -342,7 +344,12 @@ impl PythonExtractor {
         if self.lines.is_empty() {
             return "# No Python-extractable Litex definitions.".to_string();
         }
-        self.lines.join("\n")
+        if !self.needs_math {
+            return self.lines.join("\n");
+        }
+        let mut lines = vec!["import math".to_string(), String::new()];
+        lines.extend(self.lines);
+        lines.join("\n")
     }
 
     fn extract_have_obj_equal_stmt(&mut self, stmt: &HaveObjEqualStmt) -> Result<(), RuntimeError> {
@@ -529,7 +536,7 @@ impl PythonExtractor {
     }
 
     fn python_atomic_condition(
-        &self,
+        &mut self,
         fact: &AtomicFact,
         params: &HashSet<String>,
     ) -> Result<String, RuntimeError> {
@@ -551,7 +558,7 @@ impl PythonExtractor {
     }
 
     fn python_binary_condition(
-        &self,
+        &mut self,
         left: &Obj,
         op: &str,
         right: &Obj,
@@ -564,13 +571,21 @@ impl PythonExtractor {
     }
 
     fn python_expr(
-        &self,
+        &mut self,
         obj: &Obj,
         params: &HashSet<String>,
         line_file: &LineFile,
     ) -> Result<String, RuntimeError> {
         match obj {
             Obj::Number(n) => Ok(python_float_literal(&n.normalized_value)),
+            Obj::EulerNumber(_) => {
+                self.needs_math = true;
+                Ok("math.e".to_string())
+            }
+            Obj::Pi(_) => {
+                self.needs_math = true;
+                Ok("math.pi".to_string())
+            }
             Obj::ImaginaryUnit(_) => Err(python_extract_error(
                 line_file,
                 "python extractor v1 does not support native complex expressions",
@@ -610,7 +625,7 @@ impl PythonExtractor {
     }
 
     fn python_binary_expr(
-        &self,
+        &mut self,
         left: &Obj,
         op: &str,
         right: &Obj,
@@ -655,7 +670,7 @@ impl PythonExtractor {
     }
 
     fn python_fn_call(
-        &self,
+        &mut self,
         fn_obj: &FnObj,
         params: &HashSet<String>,
         line_file: &LineFile,

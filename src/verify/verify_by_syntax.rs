@@ -20,6 +20,8 @@ impl Runtime {
                 _ => false,
             },
             Obj::ImaginaryUnit(_) => matches!(right, Obj::ImaginaryUnit(_)),
+            Obj::EulerNumber(_) => matches!(right, Obj::EulerNumber(_)),
+            Obj::Pi(_) => matches!(right, Obj::Pi(_)),
             Obj::Add(a) => match right {
                 Obj::Add(b) => a.to_string() == b.to_string(),
                 _ => false,

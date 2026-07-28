@@ -9,13 +9,7 @@
 # ---------------------------------------------------------------------------
 # Named real constants
 # ---------------------------------------------------------------------------
-# Their mathematical constructions remain explicit proof debt for now.
-
-trust have pi R:
-    pi > 0
-
-trust have euler_e R:
-    euler_e > 0
+# Native e and pi are positive real constants supplied by the kernel.
 
 # A subset of a finite set is finite. Recover the subset as a double relative
 # complement, then use the builtin fact that a difference of a finite set is finite.
@@ -350,9 +344,9 @@ thm common_divisor_le_gcd:
         =>:
             d <= gcd(a, b)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    d $in {e N_pos: $divides(e, a), $divides(e, b)}
-    d <= finite_set_max({e N_pos: $divides(e, a), $divides(e, b)})
-    gcd(a, b) = finite_set_max({e N_pos: $divides(e, a), $divides(e, b)})
+    d $in {divisor N_pos: $divides(divisor, a), $divides(divisor, b)}
+    d <= finite_set_max({divisor N_pos: $divides(divisor, a), $divides(divisor, b)})
+    gcd(a, b) = finite_set_max({divisor N_pos: $divides(divisor, a), $divides(divisor, b)})
     d <= gcd(a, b)
 
 thm gcd_euclidean_base:

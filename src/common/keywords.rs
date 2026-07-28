@@ -82,6 +82,8 @@ pub const Z: &str = "Z";
 pub const R: &str = "R";
 pub const C: &str = "C";
 pub const I: &str = "i";
+pub const E: &str = "e";
+pub const PI: &str = "pi";
 pub const RE: &str = "re";
 pub const IMG: &str = "img";
 pub const C_ABS: &str = "C_abs";
@@ -276,6 +278,8 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R,
         C,
         I,
+        E,
+        PI,
         RE,
         IMG,
         C_ABS,

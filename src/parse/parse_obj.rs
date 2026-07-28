@@ -596,6 +596,14 @@ impl Runtime {
             tb.skip()?;
             return Ok(ImaginaryUnit::new().into());
         }
+        if tok == E {
+            tb.skip()?;
+            return Ok(EulerNumber::new().into());
+        }
+        if tok == PI {
+            tb.skip()?;
+            return Ok(Pi::new().into());
+        }
         if tok == RE || tok == IMG || tok == C_ABS {
             let operator = tok.to_string();
             tb.skip()?;
@@ -2249,7 +2257,7 @@ mod module_qualification_parse_tests {
 
         let stmt = parse_one_stmt_line_with_runtime(
             &mut rt,
-            "struct Group<s set>:\n    inv fn(x s) s\n    op fn(x, y s) s\n    e s",
+            "struct Group<s set>:\n    inv fn(x s) s\n    op fn(x, y s) s\n    identity s",
         );
         let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(stmt)) = stmt else {
             panic!("expected struct definition");
@@ -2398,17 +2406,37 @@ mod module_qualification_parse_tests {
     }
 
     #[test]
-    fn module_qualification_qualifies_source_identifier() {
+    fn module_qualification_keeps_native_constants_structural() {
         let mut rt = Runtime::new();
         set_test_module_name(&mut rt, "Nat");
 
-        let obj = parse_one_obj_line_with_runtime(&mut rt, "pi");
+        let euler = parse_one_obj_line_with_runtime(&mut rt, "e");
+        let pi = parse_one_obj_line_with_runtime(&mut rt, "pi");
 
-        let Obj::Atom(AtomObj::IdentifierWithMod(id)) = obj else {
-            panic!("expected module-qualified source identifier");
-        };
-        assert_eq!(id.mod_name, "Nat");
-        assert_eq!(id.name, "pi");
+        assert!(matches!(euler, Obj::EulerNumber(_)));
+        assert!(matches!(pi, Obj::Pi(_)));
+        assert_eq!(euler.to_string(), "e");
+        assert_eq!(pi.to_string(), "pi");
+    }
+
+    #[test]
+    fn native_constants_are_hard_reserved_only_as_exact_names() {
+        assert!(is_keyword(E));
+        assert!(is_keyword(PI));
+
+        let tokenizer = Tokenizer::new();
+        for source in ["have e R", "have pi R", "forall e R:\n    e = e"] {
+            let mut blocks = tokenizer
+                .parse_blocks(source, Rc::from("test.lit"))
+                .expect("tokenize reserved-name statement");
+            assert_eq!(blocks.len(), 1, "{source:?}");
+            assert!(
+                Runtime::new().parse_stmt(&mut blocks[0]).is_err(),
+                "{source:?} should reject the reserved binding"
+            );
+        }
+
+        parse_one_stmt_line_with_runtime(&mut Runtime::new(), "have e1, pi1 R");
     }
 
     #[test]
@@ -2687,19 +2715,24 @@ mod matrix_operator_parse_tests {
     }
 
     #[test]
-    fn native_complex_syntax_has_dedicated_ast_nodes() {
+    fn native_scalar_syntax_has_dedicated_ast_nodes() {
         let cases = [
             ("i", ObjKind::ImaginaryUnit),
+            ("e", ObjKind::EulerNumber),
+            ("pi", ObjKind::Pi),
             ("re(i)", ObjKind::RealPart),
             ("img(i)", ObjKind::ImaginaryPart),
             ("C_abs(i)", ObjKind::ComplexAbs),
         ];
 
         for (source, expected_kind) in cases {
-            let obj = parse_obj_line(source).expect("native complex syntax should parse");
+            let obj = parse_obj_line(source).expect("native scalar syntax should parse");
             assert_eq!(obj.kind(), expected_kind, "{source}");
             assert_eq!(obj.to_string(), source, "{source}");
         }
+
+        assert_eq!(ObjKind::EulerNumber as u8, 74);
+        assert_eq!(ObjKind::Pi as u8, 75);
     }
 
     #[test]
