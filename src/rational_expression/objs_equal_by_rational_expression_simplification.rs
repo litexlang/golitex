@@ -122,20 +122,19 @@ mod algebraic_identity_tests {
 
     #[test]
     fn nested_divisions_reach_denominator_clearing_fixed_point() {
-        let pi = Identifier::mk("pi".to_string());
+        let x = Identifier::mk("x".to_string());
         let one: Obj = Number::new("1".to_string()).into();
         let two: Obj = Number::new("2".to_string()).into();
 
         let left: Obj = Div::new(
-            Sub::new(pi.clone(), Div::new(pi.clone(), two.clone()).into()).into(),
-            pi.clone(),
+            Sub::new(x.clone(), Div::new(x.clone(), two.clone()).into()).into(),
+            x.clone(),
         )
         .into();
         let right: Obj = Sub::new(one.clone(), Div::new(one.clone(), two.clone()).into()).into();
         assert!(objs_equal_by_rational_expression_evaluation(&left, &right));
 
-        let nested_left: Obj =
-            Div::new(Div::new(pi.clone(), two.clone()).into(), pi.clone()).into();
+        let nested_left: Obj = Div::new(Div::new(x.clone(), two.clone()).into(), x.clone()).into();
         let nested_right: Obj = Div::new(one, two).into();
         assert!(objs_equal_by_rational_expression_evaluation(
             &nested_left,
