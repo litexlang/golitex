@@ -39,7 +39,7 @@ fn check_obj_has_no_duplicate_free_parameter(
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     match obj {
-        Obj::Atom(_) | Obj::Number(_) | Obj::StandardSet(_) => Ok(()),
+        Obj::Atom(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => Ok(()),
         Obj::FnObj(fn_obj) => {
             for group in fn_obj.body.iter() {
                 for obj in group.iter() {
@@ -74,6 +74,21 @@ fn check_obj_has_no_duplicate_free_parameter(
             params_already_used,
         ),
         Obj::Abs(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::RealPart(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::ImaginaryPart(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::ComplexAbs(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.arg,
             free_param_type,
             params_already_used,

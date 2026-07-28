@@ -165,11 +165,6 @@ pub fn builtin_symbol_ref(name: &str) -> Option<SymbolRef> {
         INJECTIVE => 45,
         SURJECTIVE => 46,
         BIJECTIVE => 47,
-        C => 48,
-        I => 49,
-        RE => 50,
-        IMG => 51,
-        C_ABS => 52,
         _ => return None,
     };
     Some(SymbolRef::new(

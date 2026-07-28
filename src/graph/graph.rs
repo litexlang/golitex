@@ -1108,7 +1108,7 @@ impl DepCollector {
 
     pub(crate) fn collect_obj(&mut self, obj: &Obj) {
         match obj {
-            Obj::Atom(_) | Obj::Number(_) | Obj::StandardSet(_) => {}
+            Obj::Atom(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => {}
             Obj::FnObj(fn_obj) => {
                 self.collect_fn_head(&fn_obj.head);
                 for group in fn_obj.body.iter() {
@@ -1163,6 +1163,9 @@ impl DepCollector {
                 self.collect_obj(&x.func);
             }
             Obj::Abs(x) => self.collect_obj(&x.arg),
+            Obj::RealPart(x) => self.collect_obj(&x.arg),
+            Obj::ImaginaryPart(x) => self.collect_obj(&x.arg),
+            Obj::ComplexAbs(x) => self.collect_obj(&x.arg),
             Obj::Sqrt(x) => self.collect_obj(&x.arg),
             Obj::BigUnion(x) => self.collect_obj(&x.left),
             Obj::BigIntersect(x) => self.collect_obj(&x.left),

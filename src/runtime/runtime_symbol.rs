@@ -181,7 +181,7 @@ impl Runtime {
                 existing.role().description(),
             ));
         }
-        if is_builtin_identifier_name(name) || is_builtin_predicate(name) {
+        if is_keyword(name) || is_builtin_identifier_name(name) || is_builtin_predicate(name) {
             return Err(symbol_name_already_used_error(name, "builtin"));
         }
 
@@ -217,7 +217,7 @@ impl Runtime {
                 existing.role().description(),
             ));
         }
-        if is_builtin_identifier_name(name) || is_builtin_predicate(name) {
+        if is_keyword(name) || is_builtin_identifier_name(name) || is_builtin_predicate(name) {
             return Err(symbol_name_already_used_error(name, "builtin"));
         }
         self.top_level_env()
@@ -262,6 +262,7 @@ impl Runtime {
             }
             if self.current_parse_context().active_binding(name).is_some()
                 || self.visible_symbol_definition(name).is_some()
+                || is_keyword(name)
                 || is_builtin_identifier_name(name)
                 || is_builtin_predicate(name)
             {

@@ -8,6 +8,7 @@ pub enum Obj {
     Atom(AtomObj),
     FnObj(FnObj),
     Number(Number),
+    ImaginaryUnit(ImaginaryUnit),
     Add(Add),
     Sub(Sub),
     Mul(Mul),
@@ -15,6 +16,9 @@ pub enum Obj {
     Mod(Mod),
     Pow(Pow),
     Abs(Abs),
+    RealPart(RealPart),
+    ImaginaryPart(ImaginaryPart),
+    ComplexAbs(ComplexAbs),
     Sqrt(Sqrt),
     Log(Log),
     Union(Union),
@@ -136,6 +140,10 @@ pub enum ObjKind {
     TupleIndexFreeParam = 67,
     CartIndexFreeParam = 68,
     GeneralCart = 69,
+    ImaginaryUnit = 70,
+    RealPart = 71,
+    ImaginaryPart = 72,
+    ComplexAbs = 73,
 }
 
 impl ObjKind {
@@ -541,6 +549,9 @@ pub struct Number {
 }
 
 #[derive(Clone)]
+pub struct ImaginaryUnit;
+
+#[derive(Clone)]
 pub struct Add {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
@@ -578,6 +589,21 @@ pub struct Pow {
 
 #[derive(Clone)]
 pub struct Abs {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct RealPart {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct ImaginaryPart {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct ComplexAbs {
     pub arg: Box<Obj>,
 }
 
@@ -673,6 +699,12 @@ impl Number {
     }
 }
 
+impl ImaginaryUnit {
+    pub fn new() -> Self {
+        ImaginaryUnit
+    }
+}
+
 impl Add {
     pub fn new(left: Obj, right: Obj) -> Self {
         Add {
@@ -730,6 +762,24 @@ impl Pow {
 impl Abs {
     pub fn new(arg: Obj) -> Self {
         Abs { arg: Box::new(arg) }
+    }
+}
+
+impl RealPart {
+    pub fn new(arg: Obj) -> Self {
+        RealPart { arg: Box::new(arg) }
+    }
+}
+
+impl ImaginaryPart {
+    pub fn new(arg: Obj) -> Self {
+        ImaginaryPart { arg: Box::new(arg) }
+    }
+}
+
+impl ComplexAbs {
+    pub fn new(arg: Obj) -> Self {
+        ComplexAbs { arg: Box::new(arg) }
     }
 }
 
@@ -1073,6 +1123,9 @@ fn precedence(o: &Obj) -> u8 {
         Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::MatrixScalarMul(_) => 2,
         Obj::Pow(_)
         | Obj::Abs(_)
+        | Obj::RealPart(_)
+        | Obj::ImaginaryPart(_)
+        | Obj::ComplexAbs(_)
         | Obj::Sqrt(_)
         | Obj::Log(_)
         | Obj::MatrixAdd(_)
@@ -1108,6 +1161,7 @@ impl Obj {
             },
             Obj::FnObj(_) => ObjKind::FnObj,
             Obj::Number(_) => ObjKind::Number,
+            Obj::ImaginaryUnit(_) => ObjKind::ImaginaryUnit,
             Obj::Add(_) => ObjKind::Add,
             Obj::Sub(_) => ObjKind::Sub,
             Obj::Mul(_) => ObjKind::Mul,
@@ -1115,6 +1169,9 @@ impl Obj {
             Obj::Mod(_) => ObjKind::Mod,
             Obj::Pow(_) => ObjKind::Pow,
             Obj::Abs(_) => ObjKind::Abs,
+            Obj::RealPart(_) => ObjKind::RealPart,
+            Obj::ImaginaryPart(_) => ObjKind::ImaginaryPart,
+            Obj::ComplexAbs(_) => ObjKind::ComplexAbs,
             Obj::Sqrt(_) => ObjKind::Sqrt,
             Obj::Log(_) => ObjKind::Log,
             Obj::Union(_) => ObjKind::Union,
@@ -1185,6 +1242,9 @@ impl Obj {
             Obj::Mod(_) => MOD.to_string(),
             Obj::Pow(_) => POW.to_string(),
             Obj::Abs(_) => ABS.to_string(),
+            Obj::RealPart(_) => RE.to_string(),
+            Obj::ImaginaryPart(_) => IMG.to_string(),
+            Obj::ComplexAbs(_) => C_ABS.to_string(),
             Obj::Sqrt(_) => SQRT.to_string(),
             Obj::Log(_) => LOG.to_string(),
             Obj::Union(_) => UNION.to_string(),
@@ -1298,6 +1358,21 @@ impl Obj {
                 a.arg.fmt_with_precedence(f, 0)?;
                 write!(f, "{}", RIGHT_BRACE)?;
             }
+            Obj::RealPart(real_part) => {
+                write!(f, "{}{}", RE, LEFT_BRACE)?;
+                real_part.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
+            Obj::ImaginaryPart(imaginary_part) => {
+                write!(f, "{}{}", IMG, LEFT_BRACE)?;
+                imaginary_part.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
+            Obj::ComplexAbs(complex_abs) => {
+                write!(f, "{}{}", C_ABS, LEFT_BRACE)?;
+                complex_abs.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
             Obj::Sqrt(s) => {
                 write!(f, "{} {}", SQRT, LEFT_BRACE)?;
                 s.arg.fmt_with_precedence(f, 0)?;
@@ -1319,6 +1394,7 @@ impl Obj {
             Obj::Atom(x) => write!(f, "{}", x)?,
             Obj::FnObj(x) => write!(f, "{}", x)?,
             Obj::Number(x) => write!(f, "{}", x)?,
+            Obj::ImaginaryUnit(_) => write!(f, "{}", I)?,
             Obj::ListSet(x) => write!(f, "{}", x)?,
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
             Obj::FnSet(x) => write!(f, "{}", x)?,
@@ -1381,6 +1457,7 @@ impl Obj {
                 FnObj::new(head, body).into()
             }
             Obj::Number(n) => n.into(),
+            Obj::ImaginaryUnit(i) => i.into(),
             Obj::Add(x) => Add::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
@@ -1412,6 +1489,15 @@ impl Obj {
             )
             .into(),
             Obj::Abs(x) => Abs::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::RealPart(x) => {
+                RealPart::new(Obj::replace_bound_identifier(*x.arg, from, to)).into()
+            }
+            Obj::ImaginaryPart(x) => {
+                ImaginaryPart::new(Obj::replace_bound_identifier(*x.arg, from, to)).into()
+            }
+            Obj::ComplexAbs(x) => {
+                ComplexAbs::new(Obj::replace_bound_identifier(*x.arg, from, to)).into()
+            }
             Obj::Sqrt(x) => Sqrt::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
             Obj::Log(x) => Log::new(
                 Obj::replace_bound_identifier(*x.base, from, to),
@@ -2366,6 +2452,24 @@ impl fmt::Display for Abs {
     }
 }
 
+impl fmt::Display for RealPart {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}{}{}{}", RE, LEFT_BRACE, self.arg, RIGHT_BRACE)
+    }
+}
+
+impl fmt::Display for ImaginaryPart {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}{}{}{}", IMG, LEFT_BRACE, self.arg, RIGHT_BRACE)
+    }
+}
+
+impl fmt::Display for ComplexAbs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}{}{}{}", C_ABS, LEFT_BRACE, self.arg, RIGHT_BRACE)
+    }
+}
+
 impl fmt::Display for Sqrt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {}{}{}", SQRT, LEFT_BRACE, self.arg, RIGHT_BRACE)
@@ -2523,6 +2627,12 @@ impl From<Number> for Obj {
     }
 }
 
+impl From<ImaginaryUnit> for Obj {
+    fn from(i: ImaginaryUnit) -> Self {
+        Obj::ImaginaryUnit(i)
+    }
+}
+
 impl From<Add> for Obj {
     fn from(a: Add) -> Self {
         Obj::Add(a)
@@ -2598,6 +2708,24 @@ impl From<Pow> for Obj {
 impl From<Abs> for Obj {
     fn from(a: Abs) -> Self {
         Obj::Abs(a)
+    }
+}
+
+impl From<RealPart> for Obj {
+    fn from(real_part: RealPart) -> Self {
+        Obj::RealPart(real_part)
+    }
+}
+
+impl From<ImaginaryPart> for Obj {
+    fn from(imaginary_part: ImaginaryPart) -> Self {
+        Obj::ImaginaryPart(imaginary_part)
+    }
+}
+
+impl From<ComplexAbs> for Obj {
+    fn from(complex_abs: ComplexAbs) -> Self {
+        Obj::ComplexAbs(complex_abs)
     }
 }
 

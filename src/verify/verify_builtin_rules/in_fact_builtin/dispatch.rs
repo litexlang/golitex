@@ -102,15 +102,38 @@ impl Runtime {
         if let Some(result) = self.maybe_verify_in_fact_builtin_operator_signature(in_fact) {
             return Ok(result);
         }
-        if let (Obj::Atom(AtomObj::Identifier(identifier)), Obj::StandardSet(StandardSet::C)) =
-            (&in_fact.element, &in_fact.set)
-        {
-            if identifier.is_builtin(I) {
-                return Ok(number_in_set_verified_by_builtin_rules_result(
-                    in_fact,
-                    "native imaginary unit is in C",
-                ));
+        if matches!(
+            (&in_fact.element, &in_fact.set),
+            (Obj::ImaginaryUnit(_), Obj::StandardSet(StandardSet::C))
+        ) {
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "native imaginary unit is in C",
+            ));
+        }
+        // Real and imaginary coordinates and complex modulus map a complex argument into R.
+        // Example: `z $in C` implies `re(z) $in R`.
+        if matches!(
+            &in_fact.element,
+            Obj::RealPart(_) | Obj::ImaginaryPart(_) | Obj::ComplexAbs(_)
+        ) && matches!(
+            &in_fact.set,
+            Obj::StandardSet(StandardSet::R) | Obj::StandardSet(StandardSet::C)
+        ) {
+            if self
+                .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+                .is_err()
+            {
+                return Ok(StmtUnknown::new().into());
             }
+            let reason = if matches!(&in_fact.set, Obj::StandardSet(StandardSet::R)) {
+                "native complex coordinate or modulus has real result"
+            } else {
+                "native complex coordinate or modulus has real result, hence is in C"
+            };
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact, reason,
+            ));
         }
         if let Some(result) =
             self.maybe_verify_in_fact_in_unfolded_user_defined_set(in_fact, verify_state)?

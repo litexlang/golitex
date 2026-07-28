@@ -12,6 +12,7 @@ img(i) = 1
 C_abs(i) = 1
 
 forall r R:
+    r $in C
     re(r) = r
     img(r) = 0
     C_abs(r) = abs(r)

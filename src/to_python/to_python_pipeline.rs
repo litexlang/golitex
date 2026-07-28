@@ -358,7 +358,7 @@ impl PythonExtractor {
         for ((name, param_type), obj) in names_with_types.iter().zip(stmt.objs_equal_to.iter()) {
             if matches!(
                 param_type,
-                ParamType::Obj(obj) if obj.contains_native_complex_builtin()
+                ParamType::Obj(obj) if obj.contains_native_complex_syntax()
             ) {
                 return Err(python_extract_error(
                     &stmt.line_file,
@@ -378,7 +378,7 @@ impl PythonExtractor {
     }
 
     fn reject_native_complex_function(&self, stmt: &HaveFnEqualStmt) -> Result<(), RuntimeError> {
-        if stmt.equal_to_anonymous_fn.contains_native_complex_builtin() {
+        if stmt.equal_to_anonymous_fn.contains_native_complex_syntax() {
             return Err(python_extract_error(
                 &stmt.line_file,
                 "python extractor v1 does not support native complex function signatures or bodies",
@@ -388,7 +388,7 @@ impl PythonExtractor {
     }
 
     fn reject_native_complex_fact(&self, fact: &Fact) -> Result<(), RuntimeError> {
-        if fact.contains_native_complex_builtin() {
+        if fact.contains_native_complex_syntax() {
             return Err(python_extract_error(
                 &fact.line_file(),
                 "python extractor v1 does not support native complex expressions in facts",
@@ -571,6 +571,16 @@ impl PythonExtractor {
     ) -> Result<String, RuntimeError> {
         match obj {
             Obj::Number(n) => Ok(python_float_literal(&n.normalized_value)),
+            Obj::ImaginaryUnit(_) => Err(python_extract_error(
+                line_file,
+                "python extractor v1 does not support native complex expressions",
+            )),
+            Obj::RealPart(_) | Obj::ImaginaryPart(_) | Obj::ComplexAbs(_) => {
+                Err(python_extract_error(
+                    line_file,
+                    "python extractor v1 does not support native complex coordinate or modulus expressions",
+                ))
+            }
             Obj::Atom(a) => self.python_atom(a, params, line_file),
             Obj::Add(a) => {
                 self.python_binary_expr(a.left.as_ref(), "+", a.right.as_ref(), params, line_file)
@@ -619,12 +629,6 @@ impl PythonExtractor {
         line_file: &LineFile,
     ) -> Result<String, RuntimeError> {
         let name = match atom {
-            AtomObj::Identifier(i) if i.is_builtin(I) => {
-                return Err(python_extract_error(
-                    line_file,
-                    "python extractor v1 does not support native complex expressions",
-                ));
-            }
             AtomObj::Identifier(i) => i.name.as_str(),
             AtomObj::FnSet(p) => p.name.as_str(),
             AtomObj::DefAlgo(p) => p.name.as_str(),
@@ -667,14 +671,6 @@ impl PythonExtractor {
         }
 
         let fn_name = match fn_obj.head.as_ref() {
-            FnObjHead::Identifier(i)
-                if i.is_builtin(RE) || i.is_builtin(IMG) || i.is_builtin(C_ABS) =>
-            {
-                return Err(python_extract_error(
-                    line_file,
-                    "python extractor v1 does not support native complex coordinate or modulus expressions",
-                ));
-            }
             FnObjHead::Identifier(i) => i.name.as_str(),
             _ => {
                 return Err(python_extract_error(

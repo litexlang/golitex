@@ -184,6 +184,36 @@ impl Runtime {
         Ok(())
     }
 
+    pub(in crate::verify) fn verify_real_part_well_defined(
+        &mut self,
+        real_part: &RealPart,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&real_part.arg, verify_state)?;
+        self.require_obj_in_c(&real_part.arg, verify_state)?;
+        Ok(())
+    }
+
+    pub(in crate::verify) fn verify_imaginary_part_well_defined(
+        &mut self,
+        imaginary_part: &ImaginaryPart,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&imaginary_part.arg, verify_state)?;
+        self.require_obj_in_c(&imaginary_part.arg, verify_state)?;
+        Ok(())
+    }
+
+    pub(in crate::verify) fn verify_complex_abs_well_defined(
+        &mut self,
+        complex_abs: &ComplexAbs,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&complex_abs.arg, verify_state)?;
+        self.require_obj_in_c(&complex_abs.arg, verify_state)?;
+        Ok(())
+    }
+
     pub(in crate::verify) fn verify_sqrt_well_defined(
         &mut self,
         sqrt: &Sqrt,

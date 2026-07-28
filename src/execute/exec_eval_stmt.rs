@@ -723,6 +723,15 @@ impl Runtime {
         let mut cur = initial;
 
         loop {
+            if cur.contains_native_complex_syntax() {
+                return Err(short_exec_error(
+                    eval_stmt.clone().into(),
+                    "eval: native complex values are symbolic and are not supported by the evaluator"
+                        .to_string(),
+                    None,
+                    vec![],
+                ));
+            }
             match cur {
                 Obj::FnObj(fn_obj) => {
                     cur =
@@ -1434,7 +1443,7 @@ impl Runtime {
             &stmt.obj_to_eval,
             &VerifyState::new(0, false),
         )?;
-        if stmt.obj_to_eval.contains_native_complex_builtin() {
+        if stmt.obj_to_eval.contains_native_complex_syntax() {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 "eval: native complex values are symbolic and are not supported by the evaluator"
@@ -1448,6 +1457,15 @@ impl Runtime {
         let executable_obj = self
             .executable_definition_for_eval_identifier(&resolved_obj)
             .unwrap_or(resolved_obj);
+        if executable_obj.contains_native_complex_syntax() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                "eval: native complex values are symbolic and are not supported by the evaluator"
+                    .to_string(),
+                None,
+                vec![],
+            ));
+        }
         self.run_in_local_env(|rt| {
             if !Self::object_supported_by_eval_stmt(&executable_obj) {
                 return Err(short_exec_error(

@@ -844,27 +844,6 @@ impl FiniteSeqSet {
 
 impl FnObj {
     pub fn to_latex_string(&self) -> String {
-        if let FnObjHead::Identifier(identifier) = self.head.as_ref() {
-            if let [group] = self.body.as_slice() {
-                if let [arg] = group.as_slice() {
-                    if identifier.is_builtin(RE) {
-                        return format!(
-                            r"\operatorname{{re}}\left( {} \right)",
-                            arg.to_latex_string()
-                        );
-                    }
-                    if identifier.is_builtin(IMG) {
-                        return format!(
-                            r"\operatorname{{img}}\left( {} \right)",
-                            arg.to_latex_string()
-                        );
-                    }
-                    if identifier.is_builtin(C_ABS) {
-                        return format!(r"\left| {} \right|", arg.to_latex_string());
-                    }
-                }
-            }
-        }
         let head = match self.head.as_ref() {
             FnObjHead::Identifier(i) => i.to_latex_string(),
             FnObjHead::IdentifierWithMod(i) => i.to_latex_string(),
@@ -1180,11 +1159,7 @@ impl HaveObjByExistFactsStmt {
 
 impl Identifier {
     pub fn to_latex_string(&self) -> String {
-        if self.is_builtin(I) {
-            r"\mathrm{i}".to_string()
-        } else {
-            latex_local_ident(&self.name)
-        }
+        latex_local_ident(&self.name)
     }
 }
 
@@ -1972,6 +1947,36 @@ impl StandardSet {
     }
 }
 
+impl ImaginaryUnit {
+    pub fn to_latex_string(&self) -> String {
+        r"\mathrm{i}".to_string()
+    }
+}
+
+impl RealPart {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{re}}\left( {} \right)",
+            self.arg.to_latex_string()
+        )
+    }
+}
+
+impl ImaginaryPart {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{img}}\left( {} \right)",
+            self.arg.to_latex_string()
+        )
+    }
+}
+
+impl ComplexAbs {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\left| {} \right|", self.arg.to_latex_string())
+    }
+}
+
 impl Fact {
     pub fn to_latex_string(&self) -> String {
         match self {
@@ -2040,6 +2045,7 @@ impl Obj {
             Obj::Atom(AtomObj::IdentifierWithMod(x)) => x.to_latex_string(),
             Obj::FnObj(x) => x.to_latex_string(),
             Obj::Number(x) => x.to_latex_string(),
+            Obj::ImaginaryUnit(x) => x.to_latex_string(),
             Obj::Add(x) => x.to_latex_string(),
             Obj::Sub(x) => x.to_latex_string(),
             Obj::Mul(x) => x.to_latex_string(),
@@ -2047,6 +2053,9 @@ impl Obj {
             Obj::Mod(x) => x.to_latex_string(),
             Obj::Pow(x) => x.to_latex_string(),
             Obj::Abs(x) => x.to_latex_string(),
+            Obj::RealPart(x) => x.to_latex_string(),
+            Obj::ImaginaryPart(x) => x.to_latex_string(),
+            Obj::ComplexAbs(x) => x.to_latex_string(),
             Obj::Sqrt(x) => x.to_latex_string(),
             Obj::Log(x) => x.to_latex_string(),
             Obj::Union(x) => x.to_latex_string(),

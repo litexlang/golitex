@@ -64,24 +64,6 @@ impl Runtime {
     }
 
     pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
-        if let Obj::Atom(AtomObj::Identifier(identifier)) = obj {
-            if identifier.is_builtin(RE)
-                || identifier.is_builtin(IMG)
-                || identifier.is_builtin(C_ABS)
-            {
-                let param = self
-                    .fresh_param_group_with_set(
-                        vec!["complex_arg".to_string()],
-                        StandardSet::C.into(),
-                    )
-                    .ok()?;
-                return Some(FnSetBody::new(
-                    vec![param],
-                    Vec::new(),
-                    StandardSet::R.into(),
-                ));
-            }
-        }
         if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let Some((body, _)) = info.fn_set.as_ref() {
                 return Some(body.clone());
@@ -833,6 +815,7 @@ fn collect_module_name_from_atomic_name(name: &AtomicName, module_names: &mut Ve
 fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
     match obj {
         Obj::Atom(atom) => collect_module_names_from_atom(atom, module_names),
+        Obj::ImaginaryUnit(_) => {}
         Obj::FnObj(fn_obj) => {
             collect_module_names_from_fn_obj_head(&fn_obj.head, module_names);
             for group in fn_obj.body.iter() {
@@ -847,6 +830,9 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Div(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Mod(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Pow(x) => collect_module_names_from_two(&x.base, &x.exponent, module_names),
+        Obj::RealPart(x) => collect_module_names_from_obj(&x.arg, module_names),
+        Obj::ImaginaryPart(x) => collect_module_names_from_obj(&x.arg, module_names),
+        Obj::ComplexAbs(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::Log(x) => collect_module_names_from_two(&x.base, &x.arg, module_names),
         Obj::Union(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Intersect(x) => collect_module_names_from_two(&x.left, &x.right, module_names),

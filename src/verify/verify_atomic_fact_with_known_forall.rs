@@ -804,6 +804,13 @@ impl Runtime {
             }
             Obj::FnObj(ref f) => self.match_arg_when_left_is_fn_obj(f, given_arg),
             Obj::Number(ref left) => self.match_arg_when_left_is_number(left, given_arg),
+            Obj::ImaginaryUnit(_) => {
+                if matches!(given_arg, Obj::ImaginaryUnit(_)) {
+                    Ok(Some(HashMap::new()))
+                } else {
+                    Ok(None)
+                }
+            }
             Obj::Add(ref a) => self.match_arg_when_left_is_add(&a.left, &a.right, given_arg),
             Obj::MatrixAdd(ref a) => {
                 self.match_arg_when_left_is_matrix_add(&a.left, &a.right, given_arg)
@@ -826,6 +833,24 @@ impl Runtime {
             Obj::Mod(ref a) => self.match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
             Obj::Pow(ref a) => self.match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
             Obj::Abs(ref a) => self.match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
+            Obj::RealPart(ref a) => match given_arg {
+                Obj::RealPart(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
+            Obj::ImaginaryPart(ref a) => match given_arg {
+                Obj::ImaginaryPart(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
+            Obj::ComplexAbs(ref a) => match given_arg {
+                Obj::ComplexAbs(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
             Obj::Sqrt(ref a) => self.match_arg_when_left_is_sqrt(a.arg.as_ref(), given_arg),
             Obj::Log(ref a) => self.match_arg_when_left_is_log(&a.base, &a.arg, given_arg),
             Obj::Union(ref a) => self.match_arg_when_left_is_union(&a.left, &a.right, given_arg),

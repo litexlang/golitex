@@ -20,7 +20,7 @@ pub(crate) fn obj_expr_mentions_bare_id_on_two(l: &Obj, r: &Obj, id: &str) -> bo
 pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
     match obj {
         Obj::Atom(AtomObj::Identifier(i)) => i.name == id,
-        Obj::Number(_) | Obj::StandardSet(_) => false,
+        Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => false,
         Obj::Add(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Sub(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Mul(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
@@ -54,6 +54,9 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 || obj_expr_mentions_bare_id(m.exponent.as_ref(), id)
         }
         Obj::Abs(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::RealPart(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::ImaginaryPart(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::ComplexAbs(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Sqrt(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::PowerSet(u) => obj_expr_mentions_bare_id(u.set.as_ref(), id),
         Obj::GeneralCart(g) => {

@@ -20,10 +20,15 @@ the additional integer-exponent branch requires a nonzero base.
 The initial native interface is:
 
 - `i $in C` and `i * i = -1`;
-- `re, img : C -> R`;
-- `C_abs : C -> R`;
+- unary operations `re(z), img(z) : R` for `z $in C`;
+- unary operation `C_abs(z) : R` for `z $in C`;
 - coordinate reconstruction and extensionality;
 - complex-valued interval and finite-set sums and products.
+
+`i`, `re(z)`, `img(z)`, and `C_abs(z)` are dedicated native object forms, not
+ordinary identifiers backed by builtin symbol IDs. Like `abs(z)`, the three
+unary forms are not bare first-class function values. Use an explicit lambda,
+such as `fn(z C) R {re(z)}`, when a higher-order function object is required.
 
 Order and real analysis have not changed domains. Comparisons, signs, real
 intervals, `abs`, `sqrt`, and `log` still require real operands. The preview

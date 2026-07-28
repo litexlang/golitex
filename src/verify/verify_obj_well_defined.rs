@@ -41,6 +41,7 @@ impl Runtime {
             }
             Obj::FnObj(fn_obj) => self.verify_fn_obj_well_defined(fn_obj, verify_state),
             Obj::Number(_) => Ok(()),
+            Obj::ImaginaryUnit(_) => Ok(()),
             Obj::Add(add) => self.verify_add_well_defined(add, verify_state),
             Obj::Sub(sub) => self.verify_sub_well_defined(sub, verify_state),
             Obj::Mul(mul) => self.verify_mul_well_defined(mul, verify_state),
@@ -48,6 +49,13 @@ impl Runtime {
             Obj::Mod(m) => self.verify_mod_well_defined(m, verify_state),
             Obj::Pow(pow) => self.verify_pow_well_defined(pow, verify_state),
             Obj::Abs(abs) => self.verify_abs_well_defined(abs, verify_state),
+            Obj::RealPart(real_part) => self.verify_real_part_well_defined(real_part, verify_state),
+            Obj::ImaginaryPart(imaginary_part) => {
+                self.verify_imaginary_part_well_defined(imaginary_part, verify_state)
+            }
+            Obj::ComplexAbs(complex_abs) => {
+                self.verify_complex_abs_well_defined(complex_abs, verify_state)
+            }
             Obj::Sqrt(sqrt) => self.verify_sqrt_well_defined(sqrt, verify_state),
             Obj::Log(log) => self.verify_log_well_defined(log, verify_state),
             Obj::Union(x) => self.verify_union_well_defined(x, verify_state),

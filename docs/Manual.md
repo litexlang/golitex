@@ -162,10 +162,13 @@ forall z C:
     0 <= C_abs(z)
 ```
 
-`re`, `img`, and `C_abs` have signatures `C -> R`. For a real input,
-`C_abs(r) = abs(r)`, while `C_abs(i) = 1`. Equality and inequality (`=`,
-`!=`) are available for complex objects. Ordered comparisons, signs, real
-intervals, `abs`, `sqrt`, and `log` remain real-domain operations.
+`re(z)`, `img(z)`, and `C_abs(z)` are dedicated unary builtin expression
+forms with domain `C` and result set `R`, at the same object-model level as
+`abs(z)`. Their bare names are not first-class function values; higher-order
+code can use `fn(z C) R {re(z)}` and the analogous lambdas. For a real input,
+`C_abs(r) = abs(r)`, while `C_abs(i) = 1`. Equality and inequality (`=`, `!=`)
+are available for complex objects. Ordered comparisons, signs, real intervals,
+`abs`, `sqrt`, and `log` remain real-domain operations.
 
 Natural powers `z^n` are defined for `z` in `C` and `n` in `N`, including the
 existing convention `0^0 = 1`. The additional integer-exponent branch requires
