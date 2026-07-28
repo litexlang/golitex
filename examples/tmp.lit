@@ -1,0 +1,104 @@
+# Native complex scalar smoke test.
+
+i $in C
+i * i = -1
+i ^ 2 = -1
+i ^ 4 = 1
+i ^ (-1) = -i
+re(i) = 0
+img(i) = 1
+C_abs(i) = 1
+
+forall r R:
+    re(r) = r
+    img(r) = 0
+    C_abs(r) = abs(r)
+
+forall a, b R:
+    re(a + b * i) = a
+    img(a + b * i) = b
+
+forall z C:
+    z = re(z) + img(z) * i
+    C_abs(z) = sqrt(re(z) ^ 2 + img(z) ^ 2)
+    C_abs(z) >= 0
+
+forall z, w C:
+    re(z) = re(w)
+    img(z) = img(w)
+    =>:
+        z = w
+
+forall z, w C:
+    re(z + i) = re(w + i)
+    img(z + i) = img(w + i)
+    =>:
+        z + i = w + i
+
+forall z C:
+    z = 0
+    =>:
+        C_abs(z) = 0
+
+forall z C:
+    C_abs(z) = 0
+    =>:
+        z = 0
+
+forall z, w C:
+    z + w $in C
+    z - w $in C
+    z * w $in C
+    w != 0
+    =>:
+        z / w $in C
+
+forall z C, n N:
+    z ^ n $in C
+
+forall z C, k Z:
+    z != 0
+    =>:
+        z ^ k $in C
+
+forall z C, m, n N:
+    z ^ (m + n) = z ^ m * z ^ n
+    (z ^ m) ^ n = z ^ (m * n)
+
+forall z C, m, n Z:
+    z != 0
+    =>:
+        z ^ (m + n) = z ^ m * z ^ n
+
+forall z, w C, n N:
+    (z * w) ^ n = z ^ n * w ^ n
+
+sum(1, 2, fn(k Z) C {k + i}) $in C
+product(1, 2, fn(k Z) C {k + i}) $in C
+finite_set_sum({1, 2}, fn(k Z) C {k + i}) $in C
+finite_set_product({1, 2}, fn(k Z) C {k + i}) $in C
+
+finite_set_sum({}, fn(k Z) C {k + i}) = 0
+finite_set_product({}, fn(k Z) C {k + i}) = 1
+
+have S finite_set
+finite_set_sum(S, fn(k S) C {i}) $in C
+finite_set_product(S, fn(k S) C {i}) $in C
+
+# Narrow codomains remain narrow.
+sum(1, 2, fn(k Z) Z {k}) $in Z
+sum(1, 2, fn(k Z) Q {k / 2}) $in Q
+sum(1, 2, fn(k Z) R {k / 2}) $in R
+sum(1, 2, fn(k N) N {k}) $in N
+product(1, 2, fn(k Z) Z {k}) $in Z
+product(1, 2, fn(k Z) Q {k / 2}) $in Q
+product(1, 2, fn(k Z) R {k / 2}) $in R
+product(1, 2, fn(k N) N {k}) $in N
+finite_set_sum({1, 2}, fn(k Z) Z {k}) $in Z
+finite_set_sum({1, 2}, fn(k Z) Q {k / 2}) $in Q
+finite_set_sum({1, 2}, fn(k Z) R {k / 2}) $in R
+finite_set_sum({1, 2}, fn(k N) N {k}) $in N
+finite_set_product({1, 2}, fn(k Z) Z {k}) $in Z
+finite_set_product({1, 2}, fn(k Z) Q {k / 2}) $in Q
+finite_set_product({1, 2}, fn(k Z) R {k / 2}) $in R
+finite_set_product({1, 2}, fn(k N) N {k}) $in N

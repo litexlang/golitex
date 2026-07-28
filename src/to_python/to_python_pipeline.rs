@@ -326,8 +326,12 @@ impl PythonExtractor {
 
     fn extract_stmt(&mut self, stmt: &Stmt, runtime: &Runtime) -> Result<(), RuntimeError> {
         match stmt {
+            Stmt::Fact(fact) => self.reject_native_complex_fact(fact),
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
                 self.extract_have_obj_equal_stmt(s)
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(s)) => {
+                self.reject_native_complex_function(s)
             }
             Stmt::DefAlgoStmt(s) => self.extract_def_algo_stmt(s, runtime),
             _ => Ok(()),
@@ -352,6 +356,15 @@ impl PythonExtractor {
 
         let params = HashSet::new();
         for ((name, param_type), obj) in names_with_types.iter().zip(stmt.objs_equal_to.iter()) {
+            if matches!(
+                param_type,
+                ParamType::Obj(obj) if obj.contains_native_complex_builtin()
+            ) {
+                return Err(python_extract_error(
+                    &stmt.line_file,
+                    "python extractor v1 does not support complex-valued definitions",
+                ));
+            }
             if !is_numeric_param_type(param_type) {
                 continue;
             }
@@ -361,6 +374,26 @@ impl PythonExtractor {
             self.constants.insert(name.clone());
         }
 
+        Ok(())
+    }
+
+    fn reject_native_complex_function(&self, stmt: &HaveFnEqualStmt) -> Result<(), RuntimeError> {
+        if stmt.equal_to_anonymous_fn.contains_native_complex_builtin() {
+            return Err(python_extract_error(
+                &stmt.line_file,
+                "python extractor v1 does not support native complex function signatures or bodies",
+            ));
+        }
+        Ok(())
+    }
+
+    fn reject_native_complex_fact(&self, fact: &Fact) -> Result<(), RuntimeError> {
+        if fact.contains_native_complex_builtin() {
+            return Err(python_extract_error(
+                &fact.line_file(),
+                "python extractor v1 does not support native complex expressions in facts",
+            ));
+        }
         Ok(())
     }
 
@@ -586,6 +619,12 @@ impl PythonExtractor {
         line_file: &LineFile,
     ) -> Result<String, RuntimeError> {
         let name = match atom {
+            AtomObj::Identifier(i) if i.is_builtin(I) => {
+                return Err(python_extract_error(
+                    line_file,
+                    "python extractor v1 does not support native complex expressions",
+                ));
+            }
             AtomObj::Identifier(i) => i.name.as_str(),
             AtomObj::FnSet(p) => p.name.as_str(),
             AtomObj::DefAlgo(p) => p.name.as_str(),
@@ -628,6 +667,14 @@ impl PythonExtractor {
         }
 
         let fn_name = match fn_obj.head.as_ref() {
+            FnObjHead::Identifier(i)
+                if i.is_builtin(RE) || i.is_builtin(IMG) || i.is_builtin(C_ABS) =>
+            {
+                return Err(python_extract_error(
+                    line_file,
+                    "python extractor v1 does not support native complex coordinate or modulus expressions",
+                ));
+            }
             FnObjHead::Identifier(i) => i.name.as_str(),
             _ => {
                 return Err(python_extract_error(

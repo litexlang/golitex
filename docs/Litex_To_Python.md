@@ -244,10 +244,18 @@ Unsupported in v1:
 
 - function domain restrictions such as `fn(x R: x > 0) R`
 - non-`R` function parameters or returns
+- native complex objects and genuinely complex-valued expressions, including
+  `C`, `i`, `re`, `img`, and `C_abs`
 - sets, membership facts, abstract propositions, tuples, structures, matrices,
   templates, anonymous functions, sums, products, `sqrt`, `log`, `max`, `min`,
   and calls to functions that were not extracted earlier
 - imported definitions as Python output
+
+The native complex interface is symbolic in this release. If an extraction
+candidate is genuinely complex-valued, the extractor reports it as unsupported;
+it does not emit Python `float` code or silently reinterpret the expression
+over `R`. The Litex evaluator likewise has no complex runtime value in this
+release.
 
 ## Correctness Boundary
 

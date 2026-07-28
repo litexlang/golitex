@@ -1,6 +1,6 @@
 # Manual
 
-Jiachen Shen and The Litex Team, 2026-07-24. Email: litexlang@outlook.com
+Jiachen Shen and The Litex Team, 2026-07-28. Email: litexlang@outlook.com
 
 Run the examples in a browser: https://litexlang.com/doc/Manual
 
@@ -39,7 +39,7 @@ Keep three language categories separate:
 
 | Category | Meaning | Examples |
 |---|---|---|
-| **Object** | A mathematical value or expression | `x`, `R`, `{1, 2}`, `x + 1`, `fn(t R) R` |
+| **Object** | A mathematical value or expression | `x`, `R`, `C`, `i`, `{1, 2}`, `x + 1`, `fn(t R) R` |
 | **Fact** | A proposition about objects | `x = 2`, `x $in R`, `$prime(n)` |
 | **Statement** | An action that checks or changes the context | `have`, a bare fact, `prop`, `claim`, `thm` |
 
@@ -116,6 +116,7 @@ sqrt(4) = 2
 | `a % b` | Euclidean integer remainder |
 | `a^b` | Exponentiation |
 | `abs(a)`, `sqrt(a)`, `log(base, a)` | Standard numeric objects |
+| `re(z)`, `img(z)`, `C_abs(z)` | Real coordinate, imaginary coordinate, and complex modulus |
 | `finite_set_max(S)`, `finite_set_min(S)` | Extremum of a suitable finite set |
 
 The parser does not make an invalid expression meaningful:
@@ -127,6 +128,67 @@ sqrt(x) = 0
 
 This is an `error` unless the context proves `0 <= x`; the problem occurs
 before equality verification.
+
+### Complex scalars (beta preview)
+
+`C` is the largest builtin scalar set. The standard inclusion chain is
+`N` through `Z`, `Q`, and `R` into `C`. Arithmetic does not erase narrower
+information: an operation whose operands are known integers or reals keeps the
+existing narrow result whenever that rule applies, and falls back to `C` only
+when a complex carrier is needed.
+
+The native imaginary unit and coordinate interface are symbolic builtin
+objects:
+
+```litex
+i $in C
+i * i = -1
+i^2 = -1
+i^4 = 1
+i^(-1) = -i
+
+re(3) = 3
+img(3) = 0
+re(i) = 0
+img(i) = 1
+
+forall a, b R:
+    re(a + b * i) = a
+    img(a + b * i) = b
+
+forall z C:
+    z = re(z) + img(z) * i
+    C_abs(z) = sqrt(re(z)^2 + img(z)^2)
+    0 <= C_abs(z)
+```
+
+`re`, `img`, and `C_abs` have signatures `C -> R`. For a real input,
+`C_abs(r) = abs(r)`, while `C_abs(i) = 1`. Equality and inequality (`=`,
+`!=`) are available for complex objects. Ordered comparisons, signs, real
+intervals, `abs`, `sqrt`, and `log` remain real-domain operations.
+
+Natural powers `z^n` are defined for `z` in `C` and `n` in `N`, including the
+existing convention `0^0 = 1`. The additional integer-exponent branch requires
+a nonzero complex base; the ordinary exponent-addition law remains available
+on that branch. General `C^R` or `C^C` exponentiation is not part of this
+preview.
+
+The following are deliberately invalid domain examples:
+
+<!-- litex:skip-test -->
+```litex
+i < 1
+abs(i)
+sqrt(i)
+log(2, i)
+i^(1 / 2)
+0^(-1)
+```
+
+`C`, `i`, `re`, `img`, and `C_abs` are hard-reserved builtin names and cannot
+be rebound as declarations, parameters, indices, or fields. See the
+[complex scalar migration guide](Complex_Scalar_Migration.md) for mechanical
+renaming advice and compatibility boundaries.
 
 ### Sets and set-forming objects
 
@@ -142,7 +204,7 @@ Litex exposes sets, membership, and set operations directly.
 
 | Form | Meaning |
 |---|---|
-| `N_pos`, `N`, `Z`, `Q`, `R` | Standard number sets |
+| `N_pos`, `N`, `Z`, `Q`, `R`, `C` | Standard number sets |
 | `Q_pos`, `R_pos`, `Q_neg`, `Z_neg`, `R_neg` | Signed standard subsets |
 | `N+`, `Z+`, `Q+`, `R+` | Preview compact spellings for the corresponding strictly positive sets; `Z+` is `N_pos` |
 | `Z-`, `Q-`, `R-` | Preview compact spellings for the corresponding strictly negative sets |
@@ -249,10 +311,10 @@ proj(cart(R, Z), 1) = R
 | Form | Meaning |
 |---|---|
 | `cart(A, B, ...)` | Cartesian product |
-| `cart_dim(C)`, `proj(C, i)` | Product dimension and the `i`-th factor set |
+| `cart_dim(c)`, `proj(c, i1)` | Product dimension and the `i1`-th factor set |
 | `(a, b, ...)`, `tuple_dim(t)` | Tuple and tuple dimension |
 | `finite_seq(S, n)`, `seq(S)` | Finite or infinite sequence set |
-| `[a, b, ...]`, `a[i]` | Displayed finite sequence and index access |
+| `[a, b, ...]`, `a[i1]` | Displayed finite sequence and index access |
 | `matrix(S, r, c)` | Matrix set |
 | `[[...], [...]]` | Displayed matrix |
 | `A '+ B`, `A '- B`, `A '* B` | Matrix addition, subtraction, multiplication |
@@ -272,8 +334,8 @@ Finite sets, integer ranges, and real intervals have dedicated object forms.
 
 ```litex
 finite_set_size({1, 2, 3}) = 3
-sum(1, 3, fn(i Z) Z {i}) = sum(1, 2, fn(i Z) Z {i}) + fn(i Z) Z {i}(3)
-product(1, 3, fn(i Z) Z {i}) = product(1, 2, fn(i Z) Z {i}) * fn(i Z) Z {i}(3)
+sum(1, 3, fn(i1 Z) Z {i1}) = sum(1, 2, fn(i1 Z) Z {i1}) + fn(i1 Z) Z {i1}(3)
+product(1, 3, fn(i1 Z) Z {i1}) = product(1, 2, fn(i1 Z) Z {i1}) * fn(i1 Z) Z {i1}(3)
 
 2 $in range(0, 3)
 3 $in closed_range(0, 3)
@@ -297,6 +359,13 @@ finite_set_size(R) = 1
 ```
 
 This is an `error`, because the context does not establish that `R` is finite.
+
+All four aggregate forms use the function return set to select their result
+carrier. A `C`-valued function gives a result in `C`; functions returning
+`N`, `Z`, `Q`, or `R` keep their narrower established result. Empty finite
+sums and products remain `0` and `1`. The interval forms still require the
+first index to be at most the last. Ordered, positive, and absolute-value
+aggregate rules still require a real-valued iterand.
 
 ### Struct objects and explicit or default-view field access (preview)
 
@@ -674,7 +743,7 @@ $is_finite_set({1, 2})
 | `$is_nonempty_set(A)` | `not $is_nonempty_set(A)` | Nonemptiness |
 | `$is_finite_set(A)` | `not $is_finite_set(A)` | Finiteness |
 | `x $in A` | `not x $in A` | Membership |
-| `$is_cart(C)` | `not $is_cart(C)` | Cartesian-product shape |
+| `$is_cart(c)` | `not $is_cart(c)` | Cartesian-product shape |
 | `$is_tuple(t)` | `not $is_tuple(t)` | Tuple shape |
 | `A $subset B` | `not A $subset B` | Subset relation |
 | `A $superset B` | `not A $superset B` | Superset relation |
@@ -829,11 +898,11 @@ has a symbolic dimension or coordinate formula.
 
 ```litex
 have n N_pos = 3
-have tuple t for i <= n, t[i] = i
-have cart C for i <= n, proj(C, i) = R
+have tuple t for i1 <= n, t[i1] = i1
+have cart c for i1 <= n, proj(c, i1) = R
 
-have finite_seq s finite_seq(N_pos, n) for i <= n, s(i) = i
-have matrix M matrix(N_pos, 2, n) for i <= 2, j <= n, M(i, j) = j
+have finite_seq s finite_seq(N_pos, n) for i1 <= n, s(i1) = i1
+have matrix M matrix(N_pos, 2, n) for i1 <= 2, j <= n, M(i1, j) = j
 
 t[2] = 2
 s(3) = 3
@@ -842,16 +911,16 @@ M(2, 3) = 3
 
 | Statement | Purpose |
 |---|---|
-| `have tuple t for i <= n, t[i] = expr` | Symbolic tuple coordinates |
-| `have cart C for i <= n, proj(C, i) = expr` | Symbolic product factors |
-| `have seq s seq(S) for i, s(i) = expr` | Infinite sequence entries |
-| `have finite_seq s finite_seq(S, n) for i <= n, ...` | Finite sequence entries |
-| `have matrix M matrix(S, r, c) for i <= r, j <= c, ...` | Matrix entries |
+| `have tuple t for i1 <= n, t[i1] = expr` | Symbolic tuple coordinates |
+| `have cart c for i1 <= n, proj(c, i1) = expr` | Symbolic product factors |
+| `have seq s seq(S) for i1, s(i1) = expr` | Infinite sequence entries |
+| `have finite_seq s finite_seq(S, n) for i1 <= n, ...` | Finite sequence entries |
+| `have matrix M matrix(S, r, c) for i1 <= r, j <= c, ...` | Matrix entries |
 
 The declared bounds and object type must agree:
 
 ```text
-have matrix M matrix(Z, 2, 3) for i <= 3, j <= 2, M(i, j) = 0
+have matrix M matrix(Z, 2, 3) for i1 <= 3, j <= 2, M(i1, j) = 0
 ```
 
 This is an `error`; the row and column bounds are reversed.
@@ -1509,8 +1578,8 @@ by enumerate finite_set:
     ? forall x P:
         x = 1 or x = 2 or x = 3
 
-have i closed_range(1, 3)
-by closed_range as cases: i $in 1...3
+have i1 closed_range(1, 3)
+by closed_range as cases: i1 $in 1...3
 ```
 
 Enumeration is not an unbounded decision procedure:
@@ -1577,7 +1646,7 @@ Cartesian products. `by extension` proves set equality through mutual
 membership.
 
 ```litex
-by for forall! i range(0, 3) => {i < 3}
+by for forall! i1 range(0, 3) => {i1 < 3}
 
 by extension {1, 2} = {2, 1}:
     by enumerate finite_set:
@@ -1706,7 +1775,7 @@ write a smaller intermediate fact that exposes a supported shape.
 | Exact evaluation | Concrete rational arithmetic and comparisons |
 | Algebraic normalization | Polynomial identities and normalized numeric expressions |
 | Equality matching | Reflexivity, symmetry, transitivity, substitution, and known-value resolution |
-| Order | Signs, monotonicity, inequality combination, powers, and absolute values |
+| Order | Real signs, monotonicity, inequality combination, real powers, and real absolute values |
 | Membership | Standard number sets, displayed sets, ranges, intervals, products, and function values |
 | Set relations | Set shape, nonemptiness, finiteness, subset and proper subset patterns |
 | Functions | Application equations, pointwise equality, global function equality, mapping properties |
@@ -1746,6 +1815,8 @@ Equality rules cover these main shapes:
 - standard facts for `abs`, powers, logarithms, finite aggregates, and `%`;
 - equality from both weak-order directions;
 - equality of materialized template values when their resolved objects agree.
+- complex coordinate reconstruction and extensionality, plus the native
+  imaginary-unit identities.
 
 ```litex
 forall x, y R:
@@ -1776,6 +1847,8 @@ fact first.
 Order rules include concrete comparisons, standard bounds from numeric sets,
 sign propagation through arithmetic, monotonicity, combination of
 inequalities, power order on supported domains, and absolute-value bounds.
+Every ordered comparison requires both operands to be real; membership in `C`
+alone never supplies an order.
 
 ```litex
 forall x R:
@@ -1807,7 +1880,10 @@ sign of `c` is not known.
 
 The checker recognizes standard well-defined power domains, many concrete and
 symbolic power identities, logarithm laws under their domain conditions,
-finite aggregate expansions, and common congruence patterns.
+finite aggregate expansions, and common congruence patterns. Complex bases
+support natural exponents and, when nonzero, integer exponents. Positivity,
+monotonicity, roots, logarithms, and even-power absolute-value rules remain
+restricted to real bases.
 
 ```litex
 forall m Z:
@@ -1837,6 +1913,8 @@ nonempty, finite, tuple, and Cartesian-product shapes.
 ```litex
 1 $in N_pos
 not (-1) $in N
+i $in C
+R $subset C
 
 $is_set(power_set(Z))
 $is_nonempty_set(power_set(Z))
@@ -1980,10 +2058,10 @@ Membership inference exposes the ordinary information carried by a set.
 have a {1, 2}
 a = 1 or a = 2
 
-have i Z = 3
-i $in range(2, 6)
-i $in Z
-2 <= i < 6
+have i1 Z = 3
+i1 $in range(2, 6)
+i1 $in Z
+2 <= i1 < 6
 
 have u cart(R, Z)
 u[1] $in R
@@ -2053,6 +2131,7 @@ are checker code, not source-level theorems silently imported from a library.
 Preview features are public enough to test, but their syntax or semantics may
 change:
 
+- native complex scalars `C`, `i`, `re`, `img`, and `C_abs`;
 - compact nonempty and strict-sign suffixes such as `set+`, `N+`, and `R-`;
 - `struct`, struct view objects, and default-view field access;
 - proper subset and proper superset relations;

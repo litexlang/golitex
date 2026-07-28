@@ -24,7 +24,7 @@ forall n Z, m Z:
 forall n Z, m N_pos, k N_pos:
     n ^ m % k = ((n % k) ^ m) % k
 
-forall i N_pos:
-    i % 2 = 0
+forall i1 N_pos:
+    i1 % 2 = 0
     =>:
-        i > 1
+        i1 > 1

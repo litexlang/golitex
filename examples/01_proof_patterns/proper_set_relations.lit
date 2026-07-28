@@ -25,12 +25,12 @@ forall A, B set:
         not A $proper_subset B
 
 # A same-direction chain is strict when at least one edge is strict.
-forall A, B, C set:
-    A $subset B $proper_subset C
+forall A, B, c set:
+    A $subset B $proper_subset c
     =>:
-        A $proper_subset C
+        A $proper_subset c
 
-forall A, B, C set:
-    A $proper_superset B $superset C
+forall A, B, c set:
+    A $proper_superset B $superset c
     =>:
-        A $proper_superset C
+        A $proper_superset c

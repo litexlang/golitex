@@ -169,9 +169,9 @@ impl Runtime {
                 return Ok(true);
             }
 
-            // Natural-exponent power law for real bases:
+            // Natural-exponent power law for complex bases:
             // `a^(m+n) = a^m * a^n`, including the cases m=0 or n=0.
-            // Example: `forall a R, m, n N: a^m * a^n = a^(m+n)`.
+            // Example: `forall a C, m, n N: a^m * a^n = a^(m+n)`.
             let exponents_are_natural = self.obj_is_verified_in_standard_set_for_power_builtin(
                 left_exp,
                 StandardSet::N,
@@ -185,13 +185,13 @@ impl Runtime {
                     verify_state,
                 )?;
             if exponents_are_natural {
-                let base_in_r = self.obj_is_verified_in_standard_set_for_power_builtin(
+                let base_in_c = self.obj_is_verified_in_standard_set_for_power_builtin(
                     combined_power.base.as_ref(),
-                    StandardSet::R,
+                    StandardSet::C,
                     line_file.clone(),
                     verify_state,
                 )?;
-                if base_in_r {
+                if base_in_c {
                     return Ok(true);
                 }
             }
@@ -278,7 +278,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: a^(m+n) = a^m * a^n for real exponents over positive real bases, natural exponents over real bases, positive integer exponents, or integer exponents with nonzero base",
+                "equality: a^(m+n) = a^m * a^n for real exponents over positive real bases, natural exponents over complex bases, positive integer exponents, or integer exponents with nonzero base",
             )));
         }
         Ok(None)
@@ -361,8 +361,8 @@ impl Runtime {
             return Ok(true);
         }
 
-        // Natural-exponent power-of-power law over real bases, including zero exponents.
-        // Example: `forall a R, m, n N: (a^m)^n = a^(m*n)`.
+        // Natural-exponent power-of-power law over complex bases, including zero exponents.
+        // Example: `forall a C, m, n N: (a^m)^n = a^(m*n)`.
         let exponents_are_natural = self.obj_is_verified_in_standard_set_for_power_builtin(
             inner_power.exponent.as_ref(),
             StandardSet::N,
@@ -377,7 +377,7 @@ impl Runtime {
         if exponents_are_natural
             && self.obj_is_verified_in_standard_set_for_power_builtin(
                 combined_power.base.as_ref(),
-                StandardSet::R,
+                StandardSet::C,
                 line_file.clone(),
                 verify_state,
             )?
@@ -466,7 +466,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: (a^m)^n = a^(m*n) for real exponents over positive real bases, natural exponents over real bases, positive integer exponents, or integer exponents with nonzero base",
+                "equality: (a^m)^n = a^(m*n) for real exponents over positive real bases, natural exponents over complex bases, positive integer exponents, or integer exponents with nonzero base",
             )));
         }
         Ok(None)
@@ -494,25 +494,25 @@ impl Runtime {
                 line_file.clone(),
                 verify_state,
             )?;
-            let natural_exponent_over_real_bases = if exponent_in_n {
-                let left_base_in_r = self.obj_is_verified_in_standard_set_for_power_builtin(
+            let natural_exponent_over_complex_bases = if exponent_in_n {
+                let left_base_in_c = self.obj_is_verified_in_standard_set_for_power_builtin(
                     combined_base.left.as_ref(),
-                    StandardSet::R,
+                    StandardSet::C,
                     line_file.clone(),
                     verify_state,
                 )?;
-                let right_base_in_r = self.obj_is_verified_in_standard_set_for_power_builtin(
+                let right_base_in_c = self.obj_is_verified_in_standard_set_for_power_builtin(
                     combined_base.right.as_ref(),
-                    StandardSet::R,
+                    StandardSet::C,
                     line_file.clone(),
                     verify_state,
                 )?;
-                left_base_in_r && right_base_in_r
+                left_base_in_c && right_base_in_c
             } else {
                 false
             };
 
-            let integer_exponent_over_nonzero_bases = if natural_exponent_over_real_bases {
+            let integer_exponent_over_nonzero_bases = if natural_exponent_over_complex_bases {
                 false
             } else {
                 let exponent_is_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
@@ -542,12 +542,12 @@ impl Runtime {
                 }
             };
 
-            if !natural_exponent_over_real_bases && !integer_exponent_over_nonzero_bases {
+            if !natural_exponent_over_complex_bases && !integer_exponent_over_nonzero_bases {
                 return Ok(false);
             }
         }
 
-        // Product power law for natural integer exponents over real bases, and the
+        // Product power law for natural integer exponents over complex bases, and the
         // existing positive-integer exponent shape; integer exponents need nonzero
         // factors so negative powers are defined.
         // Example: `forall a,b R_nz, n Z: (a*b)^n = a^n*b^n`.
@@ -618,7 +618,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: (a*b)^n = a^n * b^n for n in N over real bases, n in N_pos, or n in Z with nonzero bases",
+                "equality: (a*b)^n = a^n * b^n for n in N over complex bases, n in N_pos, or n in Z with nonzero bases",
             )));
         }
         Ok(None)

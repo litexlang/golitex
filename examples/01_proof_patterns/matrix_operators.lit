@@ -1,13 +1,13 @@
 # The apostrophe marks a matrix-level operation.
 
-forall m, n N_pos, A, B matrix(R, m, n), c R, i, j N_pos:
-    i <= m
+forall m, n N_pos, A, B matrix(R, m, n), c R, i1, j N_pos:
+    i1 <= m
     j <= n
     =>:
         A '+ B $in matrix(R, m, n)
         A '- B $in matrix(R, m, n)
         c *' A $in matrix(R, m, n)
-        (A '+ B)(i, j) = A(i, j) + B(i, j)
+        (A '+ B)(i1, j) = A(i1, j) + B(i1, j)
 
 forall m, n, p N_pos, A matrix(R, m, n), B matrix(R, n, p):
     A '* B $in matrix(R, m, p)

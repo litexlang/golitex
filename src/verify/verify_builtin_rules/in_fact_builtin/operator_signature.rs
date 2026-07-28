@@ -1,8 +1,9 @@
 use super::*;
 
 impl Runtime {
-    // Proves the total real binary arithmetic signatures.
-    // Example: `+ $in fn(a, b R) R`.
+    // Proves the scalar arithmetic signatures, preserving real specializations while exposing
+    // the complex maximum carrier and its natural/integer power domains.
+    // Example: `+ $in fn(a, b C) C` and `^ $in fn(z C, n N) C`.
     pub(super) fn maybe_verify_in_fact_builtin_operator_signature(
         &mut self,
         in_fact: &InFact,
@@ -13,41 +14,82 @@ impl Runtime {
             return None;
         };
 
-        let reason = match identifier.name.as_str() {
-            "+" | "-" | "*"
-                if fn_set_has_exact_standard_signature(
-                    fn_set,
-                    &[StandardSet::R, StandardSet::R],
-                    StandardSet::R,
-                ) && fn_set.body.dom_facts.is_empty() =>
-            {
-                "real binary arithmetic operator signature"
-            }
-            "/" if fn_set_has_exact_standard_signature(
+        let is_add_sub_or_mul =
+            identifier.is_builtin(ADD) || identifier.is_builtin(SUB) || identifier.is_builtin(MUL);
+        let reason = if is_add_sub_or_mul
+            && fn_set_has_exact_standard_signature(
+                fn_set,
+                &[StandardSet::C, StandardSet::C],
+                StandardSet::C,
+            )
+            && fn_set.body.dom_facts.is_empty()
+        {
+            "complex binary arithmetic operator signature"
+        } else if is_add_sub_or_mul
+            && fn_set_has_exact_standard_signature(
                 fn_set,
                 &[StandardSet::R, StandardSet::R],
                 StandardSet::R,
-            ) && fn_set_has_nonzero_second_parameter_condition(fn_set) =>
-            {
-                "real division operator signature"
-            }
-            "%" if fn_set_has_exact_standard_signature(
+            )
+            && fn_set.body.dom_facts.is_empty()
+        {
+            "real binary arithmetic operator signature"
+        } else if identifier.is_builtin(DIV)
+            && fn_set_has_exact_standard_signature(
+                fn_set,
+                &[StandardSet::C, StandardSet::C],
+                StandardSet::C,
+            )
+            && fn_set_has_nonzero_second_parameter_condition(fn_set)
+        {
+            "complex division operator signature"
+        } else if identifier.is_builtin(DIV)
+            && fn_set_has_exact_standard_signature(
+                fn_set,
+                &[StandardSet::R, StandardSet::R],
+                StandardSet::R,
+            )
+            && fn_set_has_nonzero_second_parameter_condition(fn_set)
+        {
+            "real division operator signature"
+        } else if identifier.is_builtin(MOD)
+            && fn_set_has_exact_standard_signature(
                 fn_set,
                 &[StandardSet::Z, StandardSet::Z],
                 StandardSet::Z,
-            ) && fn_set_has_nonzero_second_parameter_condition(fn_set) =>
-            {
-                "integer modulo operator signature"
-            }
-            "^" if fn_set_has_exact_standard_signature(
+            )
+            && fn_set_has_nonzero_second_parameter_condition(fn_set)
+        {
+            "integer modulo operator signature"
+        } else if identifier.is_builtin(POW)
+            && fn_set_has_exact_standard_signature(
+                fn_set,
+                &[StandardSet::C, StandardSet::N],
+                StandardSet::C,
+            )
+            && fn_set.body.dom_facts.is_empty()
+        {
+            "complex natural-power operator signature"
+        } else if identifier.is_builtin(POW)
+            && fn_set_has_exact_standard_signature(
+                fn_set,
+                &[StandardSet::C, StandardSet::Z],
+                StandardSet::C,
+            )
+            && fn_set_has_nonzero_first_parameter_condition(fn_set)
+        {
+            "nonzero complex integer-power operator signature"
+        } else if identifier.is_builtin(POW)
+            && fn_set_has_exact_standard_signature(
                 fn_set,
                 &[StandardSet::R, StandardSet::R],
                 StandardSet::R,
-            ) && fn_set_has_real_power_domain_condition(fn_set) =>
-            {
-                "real power operator signature"
-            }
-            _ => return None,
+            )
+            && fn_set_has_real_power_domain_condition(fn_set)
+        {
+            "real power operator signature"
+        } else {
+            return None;
         };
 
         Some(number_in_set_verified_by_builtin_rules_result(
@@ -83,7 +125,8 @@ fn fn_set_has_exact_standard_signature(
 fn standard_set_obj_matches(obj: &Obj, expected_set: StandardSet) -> bool {
     matches!(
         (obj, expected_set),
-        (Obj::StandardSet(StandardSet::R), StandardSet::R)
+        (Obj::StandardSet(StandardSet::C), StandardSet::C)
+            | (Obj::StandardSet(StandardSet::R), StandardSet::R)
             | (Obj::StandardSet(StandardSet::Q), StandardSet::Q)
             | (Obj::StandardSet(StandardSet::Z), StandardSet::Z)
             | (Obj::StandardSet(StandardSet::N), StandardSet::N)
@@ -105,6 +148,19 @@ fn fn_set_has_nonzero_second_parameter_condition(fn_set: &FnSet) -> bool {
     };
     obj_is_fn_set_param_named(&not_equal.left, second_param)
         && obj_is_literal_zero(&not_equal.right)
+}
+
+fn fn_set_has_nonzero_first_parameter_condition(fn_set: &FnSet) -> bool {
+    let params = fn_set.get_params();
+    let Some(first_param) = params.first() else {
+        return false;
+    };
+    let [OrAndChainAtomicFact::AtomicFact(AtomicFact::NotEqualFact(not_equal))] =
+        fn_set.body.dom_facts.as_slice()
+    else {
+        return false;
+    };
+    obj_is_fn_set_param_named(&not_equal.left, first_param) && obj_is_literal_zero(&not_equal.right)
 }
 
 fn obj_is_fn_set_param_named(obj: &Obj, name: &str) -> bool {

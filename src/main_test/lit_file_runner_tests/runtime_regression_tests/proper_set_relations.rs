@@ -138,27 +138,27 @@ forall A, B set:
 #[test]
 fn mixed_strict_set_inclusion_chains_close_in_each_direction() {
     let source_code = r#"
-forall A, B, C, D set:
-    A $subset B $proper_subset C $subset D
+forall A, B, c, D set:
+    A $subset B $proper_subset c $subset D
     =>:
-        A $proper_subset C
+        A $proper_subset c
         A $proper_subset D
         B $proper_subset D
 
-forall A, B, C set:
-    A $proper_subset B $subset C
+forall A, B, c set:
+    A $proper_subset B $subset c
     =>:
-        A $proper_subset C
+        A $proper_subset c
 
-forall A, B, C set:
-    A $superset B $proper_superset C
+forall A, B, c set:
+    A $superset B $proper_superset c
     =>:
-        A $proper_superset C
+        A $proper_superset c
 
-forall A, B, C set:
-    A $proper_superset B $superset C
+forall A, B, c set:
+    A $proper_superset B $superset c
     =>:
-        A $proper_superset C
+        A $proper_superset c
 "#;
 
     let (run_succeeded, run_output) = run_proper_relation_source(
@@ -214,8 +214,8 @@ fn proper_set_relations_reject_reflexive_goals_and_wrong_arity() {
 fn set_relation_and_family_operator_latex_uses_standard_symbols() {
     let output = to_latex_from_source(
         r#"
-A $proper_subset B $proper_superset C
-not A $proper_subset C
+A $proper_subset B $proper_superset c
+not A $proper_subset c
 x $in union(A, B)
 x $in intersect(A, B)
 x $in big_union(F)

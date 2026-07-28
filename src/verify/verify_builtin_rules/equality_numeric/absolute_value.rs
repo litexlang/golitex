@@ -193,6 +193,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Pow(left_pow), Obj::Pow(right_pow)) = (left, right) else {
             return Ok(None);
@@ -207,20 +208,32 @@ impl Runtime {
             return Ok(None);
         }
 
-        let bases_match = match (left_pow.base.as_ref(), right_pow.base.as_ref()) {
-            (Obj::Abs(abs), other) => objs_equal_by_display_string(abs.arg.as_ref(), other),
-            (other, Obj::Abs(abs)) => objs_equal_by_display_string(other, abs.arg.as_ref()),
-            _ => false,
+        let (bases_match, real_base) = match (left_pow.base.as_ref(), right_pow.base.as_ref()) {
+            (Obj::Abs(abs), other) => (
+                objs_equal_by_display_string(abs.arg.as_ref(), other),
+                abs.arg.as_ref(),
+            ),
+            (other, Obj::Abs(abs)) => (
+                objs_equal_by_display_string(other, abs.arg.as_ref()),
+                abs.arg.as_ref(),
+            ),
+            _ => return Ok(None),
         };
         if !bases_match {
             return Ok(None);
         }
+        let Some(steps) =
+            self.verify_objects_are_known_reals(&[real_base], &line_file, verify_state)?
+        else {
+            return Ok(None);
+        };
 
-        Ok(Some(factual_equal_success_by_builtin_reason(
+        Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
             left,
             right,
             line_file,
             "abs: x^n = abs(x)^n for even integer n",
+            steps,
         )))
     }
 
@@ -273,7 +286,9 @@ impl Runtime {
         if let Some(done) = self.try_verify_abs_sign_invariance(left, right, line_file.clone())? {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_abs_even_power(left, right, line_file.clone())? {
+        if let Some(done) =
+            self.try_verify_abs_even_power(left, right, line_file.clone(), verify_state)?
+        {
             return Ok(Some(done));
         }
         if let Some(done) = self.try_verify_zero_from_abs_zero(left, right, line_file)? {

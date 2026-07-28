@@ -2,71 +2,71 @@
 # coordinate-factor membership from the product metadata.
 
 have n N_pos = 3
-have cart C for i <= n, proj(C, i) = R
+have cart c for i1 <= n, proj(c, i1) = R
 
-forall p C:
+forall p c:
     tuple_dim(p) = n
 
-forall p C, i closed_range(1, n):
-    p[i] $in proj(C, i)
+forall p c, i1 closed_range(1, n):
+    p[i1] $in proj(c, i1)
 
-forall p C:
-    p[1] $in proj(C, 1)
-    proj(C, 1) = R
+forall p c:
+    p[1] $in proj(c, 1)
+    proj(c, 1) = R
     p[1] $in R
-    p[2] $in proj(C, 2)
-    proj(C, 2) = R
+    p[2] $in proj(c, 2)
+    proj(c, 2) = R
     p[2] $in R
-    p[3] $in proj(C, 3)
-    proj(C, 3) = R
+    p[3] $in proj(c, 3)
+    proj(c, 3) = R
     p[3] $in R
 
-have tuple q for i <= n, q[i] = 0
+have tuple q for i1 <= n, q[i1] = 0
 tuple_dim(q) = n
 
-forall i closed_range(1, n):
-    q[i] = 0
+forall i1 closed_range(1, n):
+    q[i1] = 0
     0 $in R
-    proj(C, i) = R
-    q[i] $in proj(C, i)
+    proj(c, i1) = R
+    q[i1] $in proj(c, i1)
 
-q $in C
+q $in c
 
-have tuple r for i <= n, r[i] = 0
+have tuple r for i1 <= n, r[i1] = 0
 
-forall i closed_range(1, n):
-    q[i] = 0
-    r[i] = 0
-    q[i] = r[i]
+forall i1 closed_range(1, n):
+    q[i1] = 0
+    r[i1] = 0
+    q[i1] = r[i1]
 
 q = r
 
-have fn X(i closed_range(1, n)) power_set(R) = R
-prop has_X_values(f fn(i closed_range(1, n)) R):
+have fn X(i1 closed_range(1, n)) power_set(R) = R
+prop has_X_values(f fn(i1 closed_range(1, n)) R):
     forall j closed_range(1, n):
         f(j) $in X(j)
-prop has_values_in_family(m N_pos, V set, Y fn(i closed_range(1, m)) power_set(V), g fn(i closed_range(1, m)) V):
-    forall i closed_range(1, m):
-        g(i) $in Y(i)
-have P set = {f fn(i closed_range(1, n)) R: $has_X_values(f)}
-have fn raw_choice_tuple_encode(p C) fn(i closed_range(1, n)) R = fn(j closed_range(1, n)) R {p[j]}
+prop has_values_in_family(m N_pos, V set, Y fn(i1 closed_range(1, m)) power_set(V), g fn(i1 closed_range(1, m)) V):
+    forall i1 closed_range(1, m):
+        g(i1) $in Y(i1)
+have P set = {f fn(i1 closed_range(1, n)) R: $has_X_values(f)}
+have fn raw_choice_tuple_encode(p c) fn(i1 closed_range(1, n)) R = fn(j closed_range(1, n)) R {p[j]}
 
 claim:
-    ? forall p C:
+    ? forall p c:
         raw_choice_tuple_encode(p) $in P
     claim:
-        ? forall i closed_range(1, n):
-            raw_choice_tuple_encode(p)(i) $in X(i)
-        raw_choice_tuple_encode(p)(i) = p[i]
-        p[i] $in proj(C, i)
-        proj(C, i) = R = X(i)
-        p[i] $in X(i)
-        raw_choice_tuple_encode(p)(i) $in X(i)
+        ? forall i1 closed_range(1, n):
+            raw_choice_tuple_encode(p)(i1) $in X(i1)
+        raw_choice_tuple_encode(p)(i1) = p[i1]
+        p[i1] $in proj(c, i1)
+        proj(c, i1) = R = X(i1)
+        p[i1] $in X(i1)
+        raw_choice_tuple_encode(p)(i1) $in X(i1)
     $has_X_values(raw_choice_tuple_encode(p))
-    raw_choice_tuple_encode(p) $in {f fn(i closed_range(1, n)) R: $has_X_values(f)}
+    raw_choice_tuple_encode(p) $in {f fn(i1 closed_range(1, n)) R: $has_X_values(f)}
     raw_choice_tuple_encode(p) $in P
 
-have fn choice_tuple_encode(p C) P = raw_choice_tuple_encode(p)
+have fn choice_tuple_encode(p c) P = raw_choice_tuple_encode(p)
 
 # Symbolic dimensions remain available for a tuple defined inside a forall proof.
 claim:
@@ -74,21 +74,21 @@ claim:
         2 <= m
         =>:
             m = m
-    have tuple symbolic_tuple for i <= m, symbolic_tuple[i] = 0
+    have tuple symbolic_tuple for i1 <= m, symbolic_tuple[i1] = 0
     tuple_dim(symbolic_tuple) = m
     m = m
 
 claim:
-    ? forall m N_pos, V set, Y fn(i closed_range(1, m)) power_set(V), S set:
+    ? forall m N_pos, V set, Y fn(i1 closed_range(1, m)) power_set(V), S set:
         2 <= m
-        S = {g fn(i closed_range(1, m)) V: $has_values_in_family(m, V, Y, g)}
+        S = {g fn(i1 closed_range(1, m)) V: $has_values_in_family(m, V, Y, g)}
         =>:
             S = S
     claim:
         ? forall g S:
             g = g
-        g $in {h fn(i closed_range(1, m)) V: $has_values_in_family(m, V, Y, h)}
-        have tuple tuple_from_member for i <= m, tuple_from_member[i] = g(i)
+        g $in {h fn(i1 closed_range(1, m)) V: $has_values_in_family(m, V, Y, h)}
+        have tuple tuple_from_member for i1 <= m, tuple_from_member[i1] = g(i1)
         tuple_dim(tuple_from_member) = m
         g = g
     S = S

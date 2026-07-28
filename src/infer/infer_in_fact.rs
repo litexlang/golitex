@@ -571,7 +571,8 @@ impl Runtime {
             // Full `Z`, `Q`, `R`: no extra atomic facts inferred here.
             Obj::StandardSet(StandardSet::Q)
             | Obj::StandardSet(StandardSet::Z)
-            | Obj::StandardSet(StandardSet::R) => Ok(InferResult::new()),
+            | Obj::StandardSet(StandardSet::R)
+            | Obj::StandardSet(StandardSet::C) => Ok(InferResult::new()),
             // Struct membership releases its named tuple-view facts.
             // Example: from `p $in &Point`, infer `&Point{p}.x $in R`
             // and `p[1] $in R`. Equivalent facts are instantiated with the

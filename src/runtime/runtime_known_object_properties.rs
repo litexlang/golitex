@@ -64,6 +64,24 @@ impl Runtime {
     }
 
     pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
+        if let Obj::Atom(AtomObj::Identifier(identifier)) = obj {
+            if identifier.is_builtin(RE)
+                || identifier.is_builtin(IMG)
+                || identifier.is_builtin(C_ABS)
+            {
+                let param = self
+                    .fresh_param_group_with_set(
+                        vec!["complex_arg".to_string()],
+                        StandardSet::C.into(),
+                    )
+                    .ok()?;
+                return Some(FnSetBody::new(
+                    vec![param],
+                    Vec::new(),
+                    StandardSet::R.into(),
+                ));
+            }
+        }
         if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let Some((body, _)) = info.fn_set.as_ref() {
                 return Some(body.clone());

@@ -71,7 +71,12 @@ impl Runtime {
                         e,
                     ),
                 ))
-            })
+            })?;
+        self.verify_symbolic_finite_set_anonymous_iterand_return(
+            "finite_set_sum",
+            x.func.as_ref(),
+            verify_state,
+        )
     }
 
     fn verify_finite_set_iterand_has_exact_domain(
@@ -136,6 +141,12 @@ impl Runtime {
                 ),
             )));
         }
+        self.verify_finite_list_anonymous_iterand_return(
+            "finite_set_sum",
+            list_set,
+            func,
+            verify_state,
+        )?;
         for element in list_set.list.iter() {
             let application = self.finite_set_sum_application_obj(func, element.as_ref())?;
             self.verify_obj_well_defined_and_store_cache(&application, verify_state)
@@ -224,7 +235,12 @@ impl Runtime {
                         e,
                     ),
                 ))
-            })
+            })?;
+        self.verify_symbolic_finite_set_anonymous_iterand_return(
+            "finite_set_product",
+            x.func.as_ref(),
+            verify_state,
+        )
     }
 
     pub(in crate::verify) fn verify_finite_set_product_list_factor_well_defined(
@@ -248,6 +264,12 @@ impl Runtime {
                 ),
             )));
         }
+        self.verify_finite_list_anonymous_iterand_return(
+            "finite_set_product",
+            list_set,
+            func,
+            verify_state,
+        )?;
         for element in list_set.list.iter() {
             let application = self.finite_set_product_application_obj(func, element.as_ref())?;
             self.verify_obj_well_defined_and_store_cache(&application, verify_state)
@@ -333,8 +355,8 @@ impl Runtime {
         None
     }
 
-    /// For a closed range `[a,b]` with explicit integer endpoints, require each integer in the range
-    /// to be in the index parameter's declared set (e.g. `Z_neg` disallows 1,2,3 in `1..3`).
+    /// Require the whole closed integer interval to lie in the iterand's declared domain.
+    /// Example: a `N` iterand accepts `sum(m, n, f)` only when `m $in N` is known.
     pub(in crate::verify) fn verify_closed_range_each_integer_satisfies_unary_param_set(
         &mut self,
         start: &Obj,
@@ -343,43 +365,77 @@ impl Runtime {
         verify_state: &VerifyState,
         op: &str,
     ) -> Result<(), RuntimeError> {
-        let Some(a_num) = self.resolve_obj_to_number(start) else {
-            return Ok(());
-        };
-        let Some(b_num) = self.resolve_obj_to_number(end) else {
-            return Ok(());
-        };
-        let as_ = a_num.normalized_value.trim();
-        let bs = b_num.normalized_value.trim();
-        if !is_number_string_literally_integer_without_dot(as_.to_string())
-            || !is_number_string_literally_integer_without_dot(bs.to_string())
-        {
-            return Ok(());
-        }
-        let Some(ai) = as_.parse::<i128>().ok() else {
-            return Ok(());
-        };
-        let Some(bi) = bs.parse::<i128>().ok() else {
-            return Ok(());
-        };
-        if ai > bi {
-            return Ok(());
-        }
-        for k in ai..=bi {
-            let k_obj: Obj = Number::new(k.to_string()).into();
-            let in_fact = InFact::new(k_obj, param_set.clone(), default_line_file());
-            let atomic_fact = AtomicFact::InFact(in_fact);
-            let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
-            if result.is_unknown() {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
+        if let (Some(a_num), Some(b_num)) = (
+            self.resolve_obj_to_number(start),
+            self.resolve_obj_to_number(end),
+        ) {
+            let as_ = a_num.normalized_value.trim();
+            let bs = b_num.normalized_value.trim();
+            if is_number_string_literally_integer_without_dot(as_.to_string())
+                && is_number_string_literally_integer_without_dot(bs.to_string())
+            {
+                if let (Ok(ai), Ok(bi)) = (as_.parse::<i128>(), bs.parse::<i128>()) {
+                    for k in ai..=bi {
+                        let k_obj: Obj = Number::new(k.to_string()).into();
+                        let in_fact =
+                            InFact::new(k_obj, param_set.clone(), default_line_file()).into();
+                        let result = self.verify_atomic_fact(&in_fact, verify_state)?;
+                        if result.is_unknown() {
+                            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                                RuntimeErrorStruct::new_with_just_msg(format!(
                             "{op}: each integer in the closed range from {} to {} must belong to the index parameter's type; not satisfied at index {}",
                             start, end, k
                         )),
-                )));
+                            )));
+                        }
+                    }
+                    return Ok(());
+                }
             }
         }
-        Ok(())
+
+        let endpoint_requirements: Vec<(&Obj, StandardSet)> = match param_set {
+            Obj::StandardSet(StandardSet::Z)
+            | Obj::StandardSet(StandardSet::Q)
+            | Obj::StandardSet(StandardSet::R)
+            | Obj::StandardSet(StandardSet::C) => return Ok(()),
+            Obj::StandardSet(StandardSet::N) => vec![(start, StandardSet::N)],
+            Obj::StandardSet(StandardSet::NPos)
+            | Obj::StandardSet(StandardSet::QPos)
+            | Obj::StandardSet(StandardSet::RPos) => vec![(start, StandardSet::NPos)],
+            Obj::StandardSet(StandardSet::ZNeg)
+            | Obj::StandardSet(StandardSet::QNeg)
+            | Obj::StandardSet(StandardSet::RNeg) => vec![(end, StandardSet::ZNeg)],
+            Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::QNz)
+            | Obj::StandardSet(StandardSet::RNz) => {
+                vec![(start, StandardSet::NPos), (end, StandardSet::ZNeg)]
+            }
+            _ => Vec::new(),
+        };
+        for (endpoint, required_set) in endpoint_requirements {
+            let fact: AtomicFact =
+                InFact::new(endpoint.clone(), required_set.into(), default_line_file()).into();
+            if self.verify_atomic_fact(&fact, verify_state)?.is_true() {
+                return Ok(());
+            }
+        }
+
+        let interval: Obj = ClosedRange::new(start.clone(), end.clone()).into();
+        let subset_fact: AtomicFact =
+            SubsetFact::new(interval, param_set.clone(), default_line_file()).into();
+        if self
+            .verify_atomic_fact(&subset_fact, verify_state)?
+            .is_true()
+        {
+            return Ok(());
+        }
+
+        Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(format!(
+                "{op}: cannot verify that every integer from {start} to {end} belongs to the iterand domain {param_set}"
+            )),
+        )))
     }
 
     pub(in crate::verify) fn verify_iterated_op_summand_with_stored_fn_set_body(
@@ -458,14 +514,30 @@ impl Runtime {
                     ))
                 })?;
             for df in fs_body.dom_facts.iter() {
-                rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
-                    df,
-                    verify_state,
+                let result = rt
+                    .verify_or_and_chain_atomic_fact(df, verify_state)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_cause(
+                                format!("{op}: function set domain check failed"),
+                                e,
+                            ),
+                        ))
+                    })?;
+                if !result.is_true() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "{op}: cannot verify function domain condition {df} on the whole integer range"
+                        )),
+                    )));
+                }
+                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    df.clone(),
                 )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!("{op}: function set dom in local check failed"),
+                            format!("{op}: could not store verified function domain condition"),
                             e,
                         ),
                     ))
@@ -615,9 +687,25 @@ impl Runtime {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not add upper bound in local check"), e)))
                 })?;
             for df in af.body.dom_facts.iter() {
-                rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
-                    df,
-                    verify_state,
+                let result = rt
+                    .verify_or_and_chain_atomic_fact(df, verify_state)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_cause(
+                                format!("{op}: anonymous iterand domain check failed"),
+                                e,
+                            ),
+                        ))
+                    })?;
+                if !result.is_true() {
+                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(format!(
+                            "{op}: cannot verify anonymous iterand domain condition {df} on the whole integer range"
+                        )),
+                    )));
+                }
+                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    df.clone(),
                 )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: local dom of anonymous summand in integer range check failed"), e)))
@@ -630,7 +718,23 @@ impl Runtime {
             rt.verify_obj_well_defined_and_store_cache(&af.equal_to, verify_state)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: expression body not well-defined on the integer range"), e)))
-                })
+                })?;
+            let return_membership: AtomicFact = InFact::new(
+                (*af.equal_to).clone(),
+                (*af.body.ret_set).clone(),
+                default_line_file(),
+            )
+            .into();
+            let return_result = rt.verify_atomic_fact(&return_membership, verify_state)?;
+            if return_result.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "{op}: iterand body {} is not verified to belong to declared return set {}",
+                        af.equal_to, af.body.ret_set
+                    )),
+                )));
+            }
+            Ok(())
         })
     }
 
@@ -656,5 +760,219 @@ impl Runtime {
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
         Ok(())
+    }
+
+    fn verify_finite_list_anonymous_iterand_return(
+        &mut self,
+        op: &str,
+        list_set: &ListSet,
+        func: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let Some(anonymous) = Self::summand_as_unary_anonymous_fn(func) else {
+            return Ok(());
+        };
+        if list_set.list.is_empty() {
+            return self.verify_symbolic_finite_set_anonymous_iterand_return(
+                op,
+                func,
+                verify_state,
+            );
+        }
+        for element in &list_set.list {
+            let args = vec![element.as_ref().clone()];
+            let substitutions = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
+                &anonymous.body.params_def_with_set,
+                &args,
+            );
+            let body = self.inst_obj(&anonymous.equal_to, &substitutions, ParamObjType::FnSet)?;
+            let return_set =
+                self.inst_obj(&anonymous.body.ret_set, &substitutions, ParamObjType::FnSet)?;
+            let return_membership: AtomicFact =
+                InFact::new(body.clone(), return_set.clone(), default_line_file()).into();
+            let result = self.verify_atomic_fact(&return_membership, verify_state)?;
+            if result.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "{op}: iterand body {body} is not verified to belong to declared return set {return_set} at {}",
+                        element
+                    )),
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_symbolic_finite_set_anonymous_iterand_return(
+        &mut self,
+        op: &str,
+        func: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let Some(anonymous) = Self::summand_as_unary_anonymous_fn(func) else {
+            return Ok(());
+        };
+        self.run_in_local_env(|rt| {
+            for param in anonymous.body.params_def_with_set.iter() {
+                rt.define_params_with_set_in_scope(param, ParamObjType::FnSet)?;
+            }
+            let bindings = anonymous.body.params_def_with_set.collect_param_bindings();
+            if let [binding] = bindings.as_slice() {
+                if let Some(param_set) = Self::unary_param_set_from_params_def(
+                    &anonymous.body.params_def_with_set,
+                    binding.name(),
+                ) {
+                    if rt.verify_iterand_domain_is_contained_in_return_set(
+                        &param_set,
+                        anonymous.body.ret_set.as_ref(),
+                        verify_state,
+                    )? {
+                        let param_obj = obj_for_bound_param_in_scope(binding, ParamObjType::FnSet);
+                        let domain_membership: AtomicFact =
+                            InFact::new(param_obj.clone(), param_set, default_line_file()).into();
+                        if rt
+                            .verify_atomic_fact(&domain_membership, verify_state)?
+                            .is_true()
+                        {
+                            let return_membership: AtomicFact = InFact::new(
+                                param_obj,
+                                (*anonymous.body.ret_set).clone(),
+                                default_line_file(),
+                            )
+                            .into();
+                            rt.store_atomic_fact_without_well_defined_verified_and_infer(
+                                return_membership,
+                            )?;
+                        }
+                    }
+                }
+            }
+            rt.verify_obj_well_defined_and_store_cache(&anonymous.equal_to, verify_state)?;
+            let return_membership: AtomicFact = InFact::new(
+                (*anonymous.equal_to).clone(),
+                (*anonymous.body.ret_set).clone(),
+                default_line_file(),
+            )
+            .into();
+            if rt
+                .verify_atomic_fact(&return_membership, verify_state)?
+                .is_unknown()
+            {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "{op}: iterand body {} is not verified to belong to declared return set {}",
+                        anonymous.equal_to, anonymous.body.ret_set
+                    )),
+                )));
+            }
+            Ok(())
+        })
+    }
+
+    fn verify_iterand_domain_is_contained_in_return_set(
+        &mut self,
+        domain: &Obj,
+        return_set: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
+        let subset_fact: AtomicFact =
+            SubsetFact::new(domain.clone(), return_set.clone(), default_line_file()).into();
+        if self
+            .verify_atomic_fact(&subset_fact, verify_state)?
+            .is_true()
+        {
+            return Ok(true);
+        }
+
+        match domain {
+            Obj::StandardSet(domain_set) => {
+                let Obj::StandardSet(return_standard_set) = return_set else {
+                    return Ok(false);
+                };
+                Ok(Self::standard_set_is_subset_eq(
+                    domain_set,
+                    return_standard_set,
+                ))
+            }
+            Obj::ListSet(list) => {
+                for element in &list.list {
+                    let membership: AtomicFact = InFact::new(
+                        element.as_ref().clone(),
+                        return_set.clone(),
+                        default_line_file(),
+                    )
+                    .into();
+                    if !self
+                        .verify_atomic_fact(&membership, verify_state)?
+                        .is_true()
+                    {
+                        return Ok(false);
+                    }
+                }
+                Ok(true)
+            }
+            Obj::Union(union) => {
+                if !self.verify_iterand_domain_is_contained_in_return_set(
+                    union.left.as_ref(),
+                    return_set,
+                    verify_state,
+                )? {
+                    return Ok(false);
+                }
+                self.verify_iterand_domain_is_contained_in_return_set(
+                    union.right.as_ref(),
+                    return_set,
+                    verify_state,
+                )
+            }
+            Obj::Intersect(intersect) => {
+                if self.verify_iterand_domain_is_contained_in_return_set(
+                    intersect.left.as_ref(),
+                    return_set,
+                    verify_state,
+                )? {
+                    return Ok(true);
+                }
+                self.verify_iterand_domain_is_contained_in_return_set(
+                    intersect.right.as_ref(),
+                    return_set,
+                    verify_state,
+                )
+            }
+            Obj::SetMinus(set_minus) => self.verify_iterand_domain_is_contained_in_return_set(
+                set_minus.left.as_ref(),
+                return_set,
+                verify_state,
+            ),
+            Obj::SetDiff(set_diff) => {
+                if !self.verify_iterand_domain_is_contained_in_return_set(
+                    set_diff.left.as_ref(),
+                    return_set,
+                    verify_state,
+                )? {
+                    return Ok(false);
+                }
+                self.verify_iterand_domain_is_contained_in_return_set(
+                    set_diff.right.as_ref(),
+                    return_set,
+                    verify_state,
+                )
+            }
+            Obj::SetBuilder(builder) => self.verify_iterand_domain_is_contained_in_return_set(
+                builder.param_set.as_ref(),
+                return_set,
+                verify_state,
+            ),
+            Obj::Range(_) | Obj::ClosedRange(_) => {
+                let Obj::StandardSet(return_standard_set) = return_set else {
+                    return Ok(false);
+                };
+                Ok(Self::standard_set_is_subset_eq(
+                    &StandardSet::Z,
+                    return_standard_set,
+                ))
+            }
+            _ => Ok(false),
+        }
     }
 }

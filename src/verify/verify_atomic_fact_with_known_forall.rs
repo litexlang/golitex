@@ -854,6 +854,7 @@ impl Runtime {
             Obj::StandardSet(StandardSet::Q) => self.match_arg_when_left_is_q_obj(given_arg),
             Obj::StandardSet(StandardSet::Z) => self.match_arg_when_left_is_z_obj(given_arg),
             Obj::StandardSet(StandardSet::R) => self.match_arg_when_left_is_r_obj(given_arg),
+            Obj::StandardSet(StandardSet::C) => self.match_arg_when_left_is_c_obj(given_arg),
             Obj::Cart(ref left) => self.match_arg_when_left_is_cart(&left.args, given_arg),
             Obj::CartDim(ref left) => {
                 self.match_arg_when_left_is_cart_dim(left.set.as_ref(), given_arg)
@@ -2401,7 +2402,8 @@ impl Runtime {
 
     pub(crate) fn standard_set_is_subset_eq(subset: &StandardSet, superset: &StandardSet) -> bool {
         match (subset, superset) {
-            (StandardSet::NPos, StandardSet::NPos)
+            (_, StandardSet::C)
+            | (StandardSet::NPos, StandardSet::NPos)
             | (StandardSet::NPos, StandardSet::N)
             | (StandardSet::NPos, StandardSet::Z)
             | (StandardSet::NPos, StandardSet::Q)
@@ -2536,6 +2538,20 @@ impl Runtime {
             | Obj::StandardSet(StandardSet::ZNz)
             | Obj::StandardSet(StandardSet::N)
             | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_c_obj(
+        &mut self,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::StandardSet(standard_set)
+                if Self::standard_set_is_subset_eq(standard_set, &StandardSet::C) =>
+            {
+                self.match_arg_same_type(given_arg)
+            }
             _ => Ok(None),
         }
     }

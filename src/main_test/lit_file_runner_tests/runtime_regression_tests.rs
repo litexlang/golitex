@@ -73,6 +73,7 @@ fn runtime_contract_builtin_and_clear() {
     );
 }
 
+mod complex_scalars;
 mod core_definitions_and_syntax;
 mod definitions_and_runtime;
 mod finite_set_induction;

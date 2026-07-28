@@ -56,14 +56,14 @@ thm rational_has_unique_reduced_fraction:
 # enumeration they need without depending on this proof's induction machinery.
 thm finite_set_has_bijective_index:
     ? forall s finite_set:
-        exist idx fn(i range(0, finite_set_size(s))) s st {$bijective(range(0, finite_set_size(s)), s, idx)}
+        exist idx fn(i1 range(0, finite_set_size(s))) s st {$bijective(range(0, finite_set_size(s)), s, idx)}
 
     thm extend_bijective_index:
-        ? forall a set, T finite_set, prev fn(i range(0, finite_set_size(T))) T:
+        ? forall a set, T finite_set, prev fn(i1 range(0, finite_set_size(T))) T:
             not a $in T
             $bijective(range(0, finite_set_size(T)), T, prev)
             =>:
-                exist idx fn(i range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$bijective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx)}
+                exist idx fn(i1 range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$bijective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx)}
         by extension intersect({a}, T) = {}:
             claim:
                 ? forall z intersect({a}, T):
@@ -86,28 +86,28 @@ thm finite_set_has_bijective_index:
         finite_set_size({a}) = 1
         finite_set_size(intersect({a}, T)) = finite_set_size({}) = 0
         finite_set_size(union({a}, T)) = finite_set_size({a}) + finite_set_size(T) - finite_set_size(intersect({a}, T)) = 1 + finite_set_size(T) - 0 = finite_set_size(T) + 1
-        have fn idx(i range(0, finite_set_size(union({a}, T)))) union({a}, T) by cases:
-            case i < finite_set_size(T): prev(i)
-            case i >= finite_set_size(T): a
+        have fn idx(i1 range(0, finite_set_size(union({a}, T)))) union({a}, T) by cases:
+            case i1 < finite_set_size(T): prev(i1)
+            case i1 >= finite_set_size(T): a
         claim:
-            ? forall i range(0, finite_set_size(union({a}, T))):
-                idx(i) = a
+            ? forall i1 range(0, finite_set_size(union({a}, T))):
+                idx(i1) = a
                 =>:
-                    i = finite_set_size(T)
-            i < finite_set_size(T) or i >= finite_set_size(T)
+                    i1 = finite_set_size(T)
+            i1 < finite_set_size(T) or i1 >= finite_set_size(T)
             by cases:
-                ? i = finite_set_size(T)
-                case i < finite_set_size(T):
-                    i $in range(0, finite_set_size(T))
-                    idx(i) = prev(i)
-                    prev(i) $in T
-                    idx(i) $in T
-                    idx(i) = a
+                ? i1 = finite_set_size(T)
+                case i1 < finite_set_size(T):
+                    i1 $in range(0, finite_set_size(T))
+                    idx(i1) = prev(i1)
+                    prev(i1) $in T
+                    idx(i1) $in T
+                    idx(i1) = a
                     a $in T
                     impossible not a $in T
-                case i >= finite_set_size(T):
-                    i < finite_set_size(union({a}, T)) = finite_set_size(T) + 1
-                    i = finite_set_size(T)
+                case i1 >= finite_set_size(T):
+                    i1 < finite_set_size(union({a}, T)) = finite_set_size(T) + 1
+                    i1 = finite_set_size(T)
         claim:
             ? forall y union({a}, T):
                 y != a
@@ -122,34 +122,34 @@ thm finite_set_has_bijective_index:
                 case y $in T:
                     y $in T
         claim:
-            ? forall y union({a}, T), i range(0, finite_set_size(union({a}, T))):
+            ? forall y union({a}, T), i1 range(0, finite_set_size(union({a}, T))):
                 y != a
-                idx(i) = y
+                idx(i1) = y
                 =>:
-                    i < finite_set_size(T)
-            i < finite_set_size(T) or i >= finite_set_size(T)
+                    i1 < finite_set_size(T)
+            i1 < finite_set_size(T) or i1 >= finite_set_size(T)
             by cases:
-                ? i < finite_set_size(T)
-                case i < finite_set_size(T):
-                    i < finite_set_size(T)
-                case i >= finite_set_size(T):
-                    i = finite_set_size(T)
-                    idx(i) = a
-                    y = idx(i) = a
+                ? i1 < finite_set_size(T)
+                case i1 < finite_set_size(T):
+                    i1 < finite_set_size(T)
+                case i1 >= finite_set_size(T):
+                    i1 = finite_set_size(T)
+                    idx(i1) = a
+                    y = idx(i1) = a
                     impossible y != a
-        witness exist idx0 fn(i range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$bijective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx0)} from idx:
+        witness exist idx0 fn(i1 range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$bijective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx0)} from idx:
             claim:
                 ? forall y union({a}, T):
-                    exist i range(0, finite_set_size(union({a}, T))) st {y = idx0(i)}
+                    exist i1 range(0, finite_set_size(union({a}, T))) st {y = idx0(i1)}
                 y = a or y != a
                 by cases:
-                    ? exist i range(0, finite_set_size(union({a}, T))) st {y = idx0(i)}
+                    ? exist i1 range(0, finite_set_size(union({a}, T))) st {y = idx0(i1)}
                     case y = a:
                         finite_set_size(T) >= 0
                         finite_set_size(T) < finite_set_size(T) + 1
                         finite_set_size(T) < finite_set_size(union({a}, T))
                         idx0(finite_set_size(T)) = idx(finite_set_size(T)) = a = y
-                        witness exist i range(0, finite_set_size(union({a}, T))) st {y = idx0(i)} from finite_set_size(T):
+                        witness exist i1 range(0, finite_set_size(union({a}, T))) st {y = idx0(i1)} from finite_set_size(T):
                             y = idx0(finite_set_size(T))
                     case y != a:
                         y $in T
@@ -160,7 +160,7 @@ thm finite_set_has_bijective_index:
                         finite_set_size(T) < finite_set_size(union({a}, T))
                         j < finite_set_size(union({a}, T))
                         y = prev(j) = idx(j) = idx0(j)
-                        witness exist i range(0, finite_set_size(union({a}, T))) st {y = idx0(i)} from j
+                        witness exist i1 range(0, finite_set_size(union({a}, T))) st {y = idx0(i1)} from j
             $surjective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx0)
             claim:
                 ? forall i1, i2 range(0, finite_set_size(union({a}, T))):
@@ -192,15 +192,15 @@ thm finite_set_has_bijective_index:
             $bijective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx0)
 
     by induc P:
-        ? exist idx fn(i range(0, finite_set_size(P))) P st {$bijective(range(0, finite_set_size(P)), P, idx)}
+        ? exist idx fn(i1 range(0, finite_set_size(P))) P st {$bijective(range(0, finite_set_size(P)), P, idx)}
         ? from P = {}:
             finite_set_size({}) = 0
             range(0, finite_set_size({})) = {}
-            have fn empty_index(i range(0, finite_set_size({}))) {} = i
+            have fn empty_index(i1 range(0, finite_set_size({}))) {} = i1
             $bijective(range(0, finite_set_size({})), {}, empty_index)
-            witness exist idx fn(i range(0, finite_set_size({}))) {} st {$bijective(range(0, finite_set_size({})), {}, idx)} from empty_index
+            witness exist idx fn(i1 range(0, finite_set_size({}))) {} st {$bijective(range(0, finite_set_size({})), {}, idx)} from empty_index
         ? induc a, T:
-            obtain prev from exist prev fn(i range(0, finite_set_size(T))) T st {$bijective(range(0, finite_set_size(T)), T, prev)}
+            obtain prev from exist prev fn(i1 range(0, finite_set_size(T))) T st {$bijective(range(0, finite_set_size(T)), T, prev)}
             by thm extend_bijective_index(a, T, prev)
 
 # ---------------------------------------------------------------------------
@@ -262,38 +262,38 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
         =>:
             $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
             $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
-    have C power_set(N) = {d N_pos: $divides(d, a), $divides(d, b)}
+    have c power_set(N) = {d N_pos: $divides(d, a), $divides(d, b)}
     claim:
-        ? $is_finite_set(C)
+        ? $is_finite_set(c)
         by cases:
-            ? $is_finite_set(C)
+            ? $is_finite_set(c)
             case a != 0:
                 claim:
-                    ? forall d C:
+                    ? forall d c:
                         d $in closed_range(1, abs(a))
-                    d $in C
+                    d $in c
                     d $in N_pos
                     d >= 1
                     $divides(d, a)
                     by thm _positive_divisor_le_abs(d, a)
                     d <= abs(a)
                     d $in closed_range(1, abs(a))
-                C $subset closed_range(1, abs(a))
-                $is_finite_set(C)
+                c $subset closed_range(1, abs(a))
+                $is_finite_set(c)
             case b != 0:
                 claim:
-                    ? forall d C:
+                    ? forall d c:
                         d $in closed_range(1, abs(b))
-                    d $in C
+                    d $in c
                     d $in N_pos
                     d >= 1
                     $divides(d, b)
                     by thm _positive_divisor_le_abs(d, b)
                     d <= abs(b)
                     d $in closed_range(1, abs(b))
-                C $subset closed_range(1, abs(b))
-                $is_finite_set(C)
-    witness $is_nonempty_set(C) from 1:
+                c $subset closed_range(1, abs(b))
+                $is_finite_set(c)
+    witness $is_nonempty_set(c) from 1:
         1 $in N_pos
         witness exist k Z st {a = 1 * k} from a:
             a = 1 * a
@@ -302,7 +302,7 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
             b = 1 * b
         $divides(1, b)
         1 $in {d N_pos: $divides(d, a), $divides(d, b)}
-        1 $in C
+        1 $in c
     $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
     $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
 

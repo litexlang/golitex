@@ -24,11 +24,6 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(result) =
-            self.try_verify_order_semantics_builtin_rule(atomic_fact, verify_state)?
-        {
-            return Ok(result);
-        }
         // Most rules in this dispatcher are facts about the real-number order.
         // The direct order-semantics rules above additionally handle integer
         // discreteness and numeric transitivity after their own type checks.
@@ -55,6 +50,14 @@ impl Runtime {
             .is_none()
         {
             return Ok(StmtUnknown::new().into());
+        }
+        if let Some(result) =
+            self.try_verify_order_semantics_builtin_rule(atomic_fact, verify_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_complex_abs_nonnegative(atomic_fact) {
+            return Ok(result);
         }
         // Real-order reflexivity and strict irreflexivity.
         // Example: `a R` proves `a <= a` and `not a < a`.
@@ -194,7 +197,9 @@ impl Runtime {
         {
             return Ok(result);
         }
-        if let Some(result) = self.verify_zero_le_even_integer_pow_builtin_rule(atomic_fact)? {
+        if let Some(result) =
+            self.verify_zero_le_even_integer_pow_builtin_rule(atomic_fact, verify_state)?
+        {
             return Ok(result);
         }
         if let Some(result) =
@@ -2295,6 +2300,7 @@ impl Runtime {
     fn verify_zero_le_even_integer_pow_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2306,20 +2312,29 @@ impl Runtime {
             return Ok(None);
         }
         let right = &less_equal_fact.right;
-        let is_equal_factors_mul = match right {
-            Obj::Mul(mul_obj) => mul_obj.left.to_string() == mul_obj.right.to_string(),
-            _ => false,
-        };
-        let is_even_pow = match right {
-            Obj::Pow(pow_obj) => match pow_obj.exponent.as_ref() {
-                Obj::Number(n) => normalized_decimal_string_is_even_integer(&n.normalized_value),
-                _ => false,
-            },
-            _ => false,
+        let (base, is_equal_factors_mul, is_even_pow) = match right {
+            Obj::Mul(mul_obj) if mul_obj.left.to_string() == mul_obj.right.to_string() => {
+                (mul_obj.left.as_ref(), true, false)
+            }
+            Obj::Pow(pow_obj) => {
+                let Obj::Number(n) = pow_obj.exponent.as_ref() else {
+                    return Ok(None);
+                };
+                if !normalized_decimal_string_is_even_integer(&n.normalized_value) {
+                    return Ok(None);
+                }
+                (pow_obj.base.as_ref(), false, true)
+            }
+            _ => return Ok(None),
         };
         if !is_equal_factors_mul && !is_even_pow {
             return Ok(None);
         }
+        let Some(steps) =
+            self.verify_objects_are_known_reals(&[base], &less_equal_fact.line_file, verify_state)?
+        else {
+            return Ok(None);
+        };
         let msg = if is_equal_factors_mul {
             "0 <= a * a from even integer exponent (here 2) (forall a R)".to_string()
         } else {
@@ -2329,7 +2344,7 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 msg,
-                Vec::new(),
+                steps,
             ),
         )))
     }

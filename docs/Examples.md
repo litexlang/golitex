@@ -305,13 +305,15 @@ sketch:
 ```litex
 by enumerate finite_set:
     ? forall a {1, 2}, b {3, 4}:
+        a $in R
+        b $in R
         a > 1
         b > 3
         =>:
             a = 2
             b = 4
 
-by enumerate finite_set forall! a {1, 2}, b {3, 4}: a > 1 and b > 3 => {(a, b) = (2, 4)}:
+by enumerate finite_set forall! a {1, 2}, b {3, 4}: a $in R and b $in R and a > 1 and b > 3 => {(a, b) = (2, 4)}:
     do_nothing
 ```
 
@@ -1053,17 +1055,17 @@ forall a R_pos, x, y R:
 forall A, B set:
     intersect(A, B) = intersect(B, A)
 
-forall A, B, C set:
-    intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
+forall A, B, c set:
+    intersect(intersect(A, B), c) = intersect(A, intersect(B, c))
 
-forall A, B, C set:
-    intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
+forall A, B, c set:
+    intersect(A, union(B, c)) = union(intersect(A, B), intersect(A, c))
 
-forall A, B, C set:
-    set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))
+forall A, B, c set:
+    set_minus(A, union(B, c)) = intersect(set_minus(A, B), set_minus(A, c))
 
-forall A, B, C set:
-    set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
+forall A, B, c set:
+    set_minus(A, intersect(B, c)) = union(set_minus(A, B), set_minus(A, c))
 
 forall S set, x set, y set:
     x $in S
@@ -1071,12 +1073,12 @@ forall S set, x set, y set:
     =>:
         intersect(S, {x, y}) = {x}
 
-have A, B, C set
+have A, B, c set
 intersect(A, B) = intersect(B, A)
-intersect(intersect(A, B), C) = intersect(A, intersect(B, C))
-intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))
-set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))
-set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))
+intersect(intersect(A, B), c) = intersect(A, intersect(B, c))
+intersect(A, union(B, c)) = union(intersect(A, B), intersect(A, c))
+set_minus(A, union(B, c)) = intersect(set_minus(A, B), set_minus(A, c))
+set_minus(A, intersect(B, c)) = union(set_minus(A, B), set_minus(A, c))
 ```
 
 ### 30. Defining And Controlling Strategies
@@ -1591,10 +1593,10 @@ forall A, B set:
         A $subset B
         A != B
 
-forall A, B, C set:
-    A $subset B $proper_subset C
+forall A, B, c set:
+    A $subset B $proper_subset c
     =>:
-        A $proper_subset C
+        A $proper_subset c
 
 forall A, B set:
     A = B
@@ -1666,8 +1668,8 @@ This is a map of mathematical rules Litex already knows, not a proof-writing
 tutorial. Use it when a proof step feels like ordinary arithmetic, order, set,
 function, or object reasoning and you want to see the checked shapes.
 
-Examples cover builtin arithmetic, order, intervals, finite sets, powers,
-absolute value, logs, sums, products, and modular arithmetic.
+Examples cover builtin real and complex arithmetic, order, intervals, finite
+sets, powers, absolute value, logs, sums, products, and modular arithmetic.
 
 
 The examples keep the checked expression close to ordinary algebra. When a
@@ -1792,6 +1794,115 @@ forall a, b R, k N_pos:
 5 % 2 = 1
 2^3 = 8
 ```
+
+### 2.1. Native Complex Scalars (Beta Preview)
+
+- Category: `preview builtin object and rule`
+- Purpose: Shows the symbolic complex carrier without weakening real-domain
+  order, absolute value, roots, or logarithms.
+
+The imaginary unit, its integer powers, and the coordinate functions are
+builtin:
+
+```litex
+i $in C
+i * i = -1
+i^2 = -1
+i^4 = 1
+i^(-1) = -i
+
+forall z C, n N:
+    z^n $in C
+
+forall z C, k Z:
+    z != 0
+    =>:
+        z^k $in C
+
+forall z C, m, n N:
+    z^(m + n) = z^m * z^n
+    (z^m)^n = z^(m * n)
+
+forall z C, m, n Z:
+    z != 0
+    =>:
+        z^(m + n) = z^m * z^n
+
+re(5) = 5
+img(5) = 0
+re(i) = 0
+img(i) = 1
+C_abs(i) = 1
+
+forall a, b R:
+    re(a + b * i) = a
+    img(a + b * i) = b
+```
+
+Reconstruction and coordinate extensionality work for arbitrary complex
+objects:
+
+```litex
+forall z C:
+    z = re(z) + img(z) * i
+    C_abs(z) = sqrt(re(z)^2 + img(z)^2)
+    0 <= C_abs(z)
+
+forall z, w C:
+    re(z) = re(w)
+    img(z) = img(w)
+    =>:
+        z = w
+
+forall z, w C:
+    re(z + i) = re(w + i)
+    img(z + i) = img(w + i)
+    =>:
+        z + i = w + i
+
+forall r R:
+    C_abs(r) = abs(r)
+
+forall z C:
+    z = 0
+    =>:
+        C_abs(z) = 0
+
+forall z C:
+    C_abs(z) = 0
+    =>:
+        z = 0
+```
+
+Interval and finite-set aggregation infer the carrier from the iterand return
+set:
+
+```litex
+sum(1, 3, fn(k Z) C {k + i}) $in C
+product(1, 3, fn(k Z) C {k + i}) $in C
+
+finite_set_sum({1, 2, 3}, fn(k Z) C {k + i}) $in C
+finite_set_product({1, 2, 3}, fn(k Z) C {k + i}) $in C
+
+finite_set_sum({}, fn(k Z) C {k + i}) = 0
+finite_set_product({}, fn(k Z) C {k + i}) = 1
+```
+
+These rejected forms show the real/complex boundary. They are intentionally
+not verifier tests:
+
+<!-- litex:skip-test -->
+```litex
+i <= 1
+abs(i)
+sqrt(i)
+log(2, i)
+i^(1 / 2)
+0^(-1)
+```
+
+See [Complex Scalar Migration](Complex_Scalar_Migration.md) before updating
+older sources that used one of the new reserved names.
 
 ### 3. Common Builtin Rules
 
@@ -1934,29 +2045,29 @@ a = 1 or a = 2 or a = 3
 - Purpose: Shows interaction between half-open and closed ranges.
 
 ```litex
-forall i Z:
-    1 < i < 5
+forall i1 Z:
+    1 < i1 < 5
     =>:
-        i $in range(2, 5)
-        i $in 2...4
+        i1 $in range(2, 5)
+        i1 $in 2...4
 
-forall i Z:
-    1 <= i < 5
+forall i1 Z:
+    1 <= i1 < 5
     =>:
-        i $in range(1, 5)
-        i $in 1...4
+        i1 $in range(1, 5)
+        i1 $in 1...4
 
-forall i Z:
-    1 <= i <= 5
+forall i1 Z:
+    1 <= i1 <= 5
     =>:
-        i $in range(1, 6)
-        i $in 1...5
+        i1 $in range(1, 6)
+        i1 $in 1...5
 
-forall i Z:
-    1 < i <= 5
+forall i1 Z:
+    1 < i1 <= 5
     =>:
-        i $in range(2, 6)
-        i $in 2...5
+        i1 $in range(2, 6)
+        i1 $in 2...5
 
 finite_set_size(1...5) =  5
 finite_set_size(range(1, 5)) = 4
@@ -2097,7 +2208,7 @@ claim:
 - Purpose: Shows comparison facts that need local side conditions.
 
 ```litex
-forall a, b, c, d, e, f, g, h, i, j, k, l, m, n, o R:
+forall a, b, c, d, e, f, g, h, i1, j, k, l, m, n, o R:
     0 <= a
     0 <= b
     0 <= c
@@ -2107,7 +2218,7 @@ forall a, b, c, d, e, f, g, h, i, j, k, l, m, n, o R:
     0 <= g
     =>:
         0 <= a + b + c + d + e + f + g
-        0 <= a + b + (h + i)^2 + (j + k)^4 + (l + m)^6 + (n + o)^8
+        0 <= a + b + (h + i1)^2 + (j + k)^4 + (l + m)^6 + (n + o)^8
         0 <= a^3 + b^3 + c^3 + d^3 + e^3 + f^3 + g^3
 ```
 
@@ -2758,10 +2869,10 @@ sum(1, 3, fn(x Z) Z {x + x}) = sum(1, 3, fn(x Z) Z {x}) + sum(1, 3, fn(x Z) Z {x
 
 ## Point-wise order on the same range gives order between finite sums.
 forall f, g fn(x Z) R:
-    forall i Z:
-        1 <= i <= 3
+    forall i1 Z:
+        1 <= i1 <= 3
         =>:
-            f(i) <= g(i)
+            f(i1) <= g(i1)
     =>:
         sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
 
@@ -2811,11 +2922,11 @@ thm finite_set_sum_substitution_example:
     finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
 
 thm finite_set_sum_range_bridge_example:
-    ? forall a fn(i Z) R, m, n Z:
+    ? forall a fn(i1 Z) R, m, n Z:
         m <= n
         =>:
-            sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
-    sum(m, n, fn(i Z) R {a(i)}) = finite_set_sum(m...n, fn(i m...n) R {a(i)})
+            sum(m, n, fn(i1 Z) R {a(i1)}) = finite_set_sum(m...n, fn(i1 m...n) R {a(i1)})
+    sum(m, n, fn(i1 Z) R {a(i1)}) = finite_set_sum(m...n, fn(i1 m...n) R {a(i1)})
 
 thm finite_set_sum_disjoint_union_example:
     ? forall X, Y finite_set, f fn(z union(X, Y)) R:
@@ -2858,11 +2969,11 @@ thm finite_fubini_example:
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 
 ## A finite-set sum defined by a bijective enumeration is independent of the enumeration.
-template<X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $bijective(closed_range(1, finite_set_size(X)), X, g)>:
-    have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i closed_range(1, finite_set_size(X))) R {f(g(i))})
+template<X finite_set, f fn(x X) R, g fn(i1 closed_range(1, finite_set_size(X))) X: finite_set_size(X) >= 1, $bijective(closed_range(1, finite_set_size(X)), X, g)>:
+    have self_finite_set_sum R = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))})
 
 thm finite_set_sum_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i closed_range(1, finite_set_size(X))) X, h fn(i closed_range(1, finite_set_size(X))) X:
+    ? forall X finite_set, f fn(x X) R, g fn(i1 closed_range(1, finite_set_size(X))) X, h fn(i1 closed_range(1, finite_set_size(X))) X:
         finite_set_size(X) >= 1
         $bijective(closed_range(1, finite_set_size(X)), X, g)
         $bijective(closed_range(1, finite_set_size(X)), X, h)
@@ -3423,10 +3534,10 @@ Purpose: define structured objects by coordinate or projection rules.
 have n N_pos = 3
 2 <= n
 
-have tuple t for i <= n, t[i] = i
+have tuple t for i1 <= n, t[i1] = i1
 t[1] = 1
 
-have cart R3 for i <= n, proj(R3, i) = R
+have cart R3 for i1 <= n, proj(R3, i1) = R
 R3 = cart(R, R, R)
 ```
 
@@ -3434,7 +3545,7 @@ R3 = cart(R, R, R)
 have r N_pos = 2
 have c N_pos = 2
 
-have matrix M matrix(N_pos, r, c) for i <= r, j <= c, M(i, j) = j
+have matrix M matrix(N_pos, r, c) for i1 <= r, j <= c, M(i1, j) = j
 M $in matrix(N_pos, r, c)
 M(1, 2) = 2
 ```

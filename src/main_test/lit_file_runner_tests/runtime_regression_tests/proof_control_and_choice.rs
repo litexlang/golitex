@@ -1216,11 +1216,11 @@ by zorn_lemma: set s, prop leq:
             $leq(y, x)
             =>:
                 x = y
-        forall C power_set(s):
-            forall x, y C:
+        forall c power_set(s):
+            forall x, y c:
                 $leq(x, y) or $leq(y, x)
             =>:
-                exist u s st {forall! x C => {$leq(x, u)}}
+                exist u s st {forall! x c => {$leq(x, u)}}
 
 exist m s st {forall! x s: $leq(m, x) => {x = m}}
 "#;

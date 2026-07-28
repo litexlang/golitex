@@ -844,6 +844,27 @@ impl FiniteSeqSet {
 
 impl FnObj {
     pub fn to_latex_string(&self) -> String {
+        if let FnObjHead::Identifier(identifier) = self.head.as_ref() {
+            if let [group] = self.body.as_slice() {
+                if let [arg] = group.as_slice() {
+                    if identifier.is_builtin(RE) {
+                        return format!(
+                            r"\operatorname{{re}}\left( {} \right)",
+                            arg.to_latex_string()
+                        );
+                    }
+                    if identifier.is_builtin(IMG) {
+                        return format!(
+                            r"\operatorname{{img}}\left( {} \right)",
+                            arg.to_latex_string()
+                        );
+                    }
+                    if identifier.is_builtin(C_ABS) {
+                        return format!(r"\left| {} \right|", arg.to_latex_string());
+                    }
+                }
+            }
+        }
         let head = match self.head.as_ref() {
             FnObjHead::Identifier(i) => i.to_latex_string(),
             FnObjHead::IdentifierWithMod(i) => i.to_latex_string(),
@@ -1159,7 +1180,11 @@ impl HaveObjByExistFactsStmt {
 
 impl Identifier {
     pub fn to_latex_string(&self) -> String {
-        latex_local_ident(&self.name)
+        if self.is_builtin(I) {
+            r"\mathrm{i}".to_string()
+        } else {
+            latex_local_ident(&self.name)
+        }
     }
 }
 
@@ -1939,6 +1964,7 @@ impl StandardSet {
             StandardSet::QNeg => r"\mathbb{Q}_{<0}".to_string(),
             StandardSet::QNz => r"\mathbb{Q}\setminus\{0\}".to_string(),
             StandardSet::R => r"\mathbb{R}".to_string(),
+            StandardSet::C => r"\mathbb{C}".to_string(),
             StandardSet::RPos => r"\mathbb{R}_{>0}".to_string(),
             StandardSet::RNeg => r"\mathbb{R}_{<0}".to_string(),
             StandardSet::RNz => r"\mathbb{R}\setminus\{0\}".to_string(),

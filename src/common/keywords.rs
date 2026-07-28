@@ -82,6 +82,11 @@ pub const N: &str = "N";
 pub const Q: &str = "Q";
 pub const Z: &str = "Z";
 pub const R: &str = "R";
+pub const C: &str = "C";
+pub const I: &str = "i";
+pub const RE: &str = "re";
+pub const IMG: &str = "img";
+pub const C_ABS: &str = "C_abs";
 pub const CART: &str = "cart";
 pub const CART_DIM: &str = "cart_dim";
 pub const TUPLE_DIM: &str = "tuple_dim";
@@ -272,6 +277,11 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         Q,
         Z,
         R,
+        C,
+        I,
+        RE,
+        IMG,
+        C_ABS,
         CART,
         CART_DIM,
         TUPLE_DIM,
@@ -456,6 +466,11 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == Q
         || atom_name == Z
         || atom_name == R
+        || atom_name == C
+        || atom_name == I
+        || atom_name == RE
+        || atom_name == IMG
+        || atom_name == C_ABS
         || atom_name == FINITE_SET_SIZE
         || atom_name == FINITE_SET_MAX
         || atom_name == FINITE_SET_MIN

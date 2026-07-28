@@ -32,6 +32,12 @@ impl Identifier {
             symbol: Some(symbol),
         }
     }
+
+    pub fn is_builtin(&self, name: &str) -> bool {
+        self.symbol
+            .as_ref()
+            .is_some_and(|symbol| symbol.is_builtin(name))
+    }
 }
 
 impl IdentifierWithMod {

@@ -215,6 +215,15 @@ impl Runtime {
         {
             return Ok(None);
         }
+        let base_in_r = self.obj_is_verified_in_standard_set_for_power_builtin(
+            inner_pow.base.as_ref(),
+            StandardSet::R,
+            line_file.clone(),
+            verify_state,
+        )?;
+        if !base_in_r {
+            return Ok(None);
+        }
         if self.obj_is_verified_in_n_pos(
             inner_pow.exponent.as_ref(),
             line_file.clone(),
@@ -236,13 +245,7 @@ impl Runtime {
             line_file.clone(),
             verify_state,
         )?;
-        let base_in_r = self.obj_is_verified_in_standard_set_for_power_builtin(
-            inner_pow.base.as_ref(),
-            StandardSet::R,
-            line_file.clone(),
-            verify_state,
-        )?;
-        if exponent_in_n && base_in_r {
+        if exponent_in_n {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 left,
                 right,

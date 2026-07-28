@@ -69,6 +69,7 @@ impl Runtime {
             Obj::StandardSet(StandardSet::Q) => self.verify_q_obj_well_defined(),
             Obj::StandardSet(StandardSet::Z) => self.verify_z_obj_well_defined(),
             Obj::StandardSet(StandardSet::R) => self.verify_r_obj_well_defined(),
+            Obj::StandardSet(StandardSet::C) => self.verify_c_obj_well_defined(),
             Obj::Cart(x) => self.verify_cart_well_defined(x, verify_state),
             Obj::CartDim(x) => self.verify_cart_dim_well_defined(x, verify_state),
             Obj::Proj(x) => self.verify_proj_well_defined(x, verify_state),

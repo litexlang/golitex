@@ -23,6 +23,12 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_native_complex_equality(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_matrix_power_definition(left, right, left, right, line_file.clone())
         {
             return Ok(done);

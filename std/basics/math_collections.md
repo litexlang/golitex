@@ -39,7 +39,7 @@ indexing function, not the induction machinery that constructs one:
 ```litex
 thm finite_set_has_bijective_index:
     ? forall s finite_set:
-        exist idx fn(i range(0, finite_set_size(s))) s st {
+        exist idx fn(i1 range(0, finite_set_size(s))) s st {
             $bijective(range(0, finite_set_size(s)), s, idx)
         }
 ```

@@ -363,6 +363,10 @@ impl Runtime {
         Ok(())
     }
 
+    pub(in crate::verify) fn verify_c_obj_well_defined(&self) -> Result<(), RuntimeError> {
+        Ok(())
+    }
+
     pub(in crate::verify) fn verify_cart_well_defined(
         &mut self,
         x: &Cart,
