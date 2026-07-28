@@ -90,27 +90,27 @@ struct Group<s nonempty_set>:
             mul(one, x) = x
             mul(inv(x), x) = one
 
-forall s nonempty_set, G &Group<s>, e s:
+forall s nonempty_set, G &Group<s>, identity s:
     forall a s:
-        G.mul(e, a) = a
-        G.mul(a, e) = a
+        G.mul(identity, a) = a
+        G.mul(a, identity) = a
     =>:
-        e = G.mul(G.one, e) = G.one
+        identity = G.mul(G.one, identity) = G.one
 ```
 
 This example shows concretely how Litex pursues the five goals above.
 
 1. Write facts before orchestrating a proof script
 
-The group laws are written directly in the `<=>:` section of the structure definition; they do not first need individual names. The uniqueness proof also follows the mathematical narrative: state that the candidate `e` satisfies the left- and right-identity laws, then write the equality chain `e = G.mul(G.one, e) = G.one`. The user submits local facts and a conclusion to be checked, rather than a sequence of commands that manipulate a proof state.
+The group laws are written directly in the `<=>:` section of the structure definition; they do not first need individual names. The uniqueness proof also follows the mathematical narrative: state that the candidate `identity` satisfies the left- and right-identity laws, then write the equality chain `identity = G.mul(G.one, identity) = G.one`. The user submits local facts and a conclusion to be checked, rather than a sequence of commands that manipulate a proof state.
 
 2. Reuse the shape of a fact, not only its theorem name
 
-The checker can recognize `G.mul(G.one, e) = e` from the group identity law and use symmetry for the first step of the equality chain. It can also instantiate the candidate identity law `G.mul(a, e) = a` at `a = G.one` to obtain the second step. No names such as `one_mul` or `hright` are invoked. Reuse happens by matching verified `forall` facts against the current expression.
+The checker can recognize `G.mul(G.one, identity) = identity` from the group identity law and use symmetry for the first step of the equality chain. It can also instantiate the candidate identity law `G.mul(a, identity) = a` at `a = G.one` to obtain the second step. No names such as `one_mul` or `hright` are invoked. Reuse happens by matching verified `forall` facts against the current expression.
 
 3. Present set-theoretic objects at the surface instead of requiring users to learn type universes first
 
-The phrase `s nonempty_set` says directly that the carrier `s` is a nonempty set; `e s` says that `e` belongs to `s`; and `G &Group<s>` says that `G` is a group structure on `s`. The declarations `one s`, `inv fn(x s) s`, and `mul fn(x, y s) s` state the domains and codomains of the constant, inverse operation, and multiplication in terms of the sets containing their objects. The user sees sets, elements, functions, and structures rather than a `Type` or universe hierarchy that must first be manipulated.
+The phrase `s nonempty_set` says directly that the carrier `s` is a nonempty set; `identity s` says that `identity` belongs to `s`; and `G &Group<s>` says that `G` is a group structure on `s`. The declarations `one s`, `inv fn(x s) s`, and `mul fn(x, y s) s` state the domains and codomains of the constant, inverse operation, and multiplication in terms of the sets containing their objects. The user sees sets, elements, functions, and structures rather than a `Type` or universe hierarchy that must first be manipulated.
 
 4. Make the mathematical statement, rather than functional-program structure, the subject
 
@@ -118,7 +118,7 @@ Binary multiplication is declared as `mul fn(x, y s) s` and applied in the famil
 
 5. Derive rigor from a checkable process, and remain a familiar appearance
 
-The snippet is accepted by the Litex runner not merely because it resembles a correct textbook proof. The checker must still verify that `G.one`, `e`, and every multiplication lie in the appropriate set; that the structure laws can be instantiated with the current arguments; and that the two equality steps are each supported by established facts. What is omitted is the user's manual naming and proof-script orchestration, not the checks themselves. The trusted boundary still includes the Litex checker, its builtin and inference rules, and any explicitly introduced `trust` assumptions.
+The snippet is accepted by the Litex runner not merely because it resembles a correct textbook proof. The checker must still verify that `G.one`, `identity`, and every multiplication lie in the appropriate set; that the structure laws can be instantiated with the current arguments; and that the two equality steps are each supported by established facts. What is omitted is the user's manual naming and proof-script orchestration, not the checks themselves. The trusted boundary still includes the Litex checker, its builtin and inference rules, and any explicitly introduced `trust` assumptions.
 
 ## How Litex Pursues These Goals
 

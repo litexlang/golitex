@@ -24,14 +24,6 @@ Litex is a readable, fact-oriented language for checked mathematics. Write
 familiar objects, definitions, and mathematical facts; Litex checks each line
 against the context that came before it and records why that line was accepted.
 
-**Start here:** [try the Playground](https://litexlang.com), or
-[install Litex locally](https://litexlang.com/doc/Setup). After installation,
-this should produce a checked equality fact:
-
-```bash
-litex -e '1 + 1 = 2'
-```
-
 ## Start with one checked fact
 
 ```litex
@@ -66,29 +58,6 @@ The first useful mental model has four parts:
 Common LaTeX-style notation, set theory, and basic logic stay close to ordinary
 mathematical writing. Routine consequences can be written directly as facts;
 explicit proof routes remain available when an argument needs them.
-
-## Native complex scalars in 0.9.110 beta
-
-`C` is now the largest builtin scalar carrier, extending
-`N ⊆ Z ⊆ Q ⊆ R ⊆ C` while preserving narrower arithmetic conclusions.
-The first symbolic interface includes `i`, real and imaginary coordinates,
-complex modulus, legal integer powers, and complex-valued finite aggregation:
-
-```litex
-i^2 = -1
-
-forall z C:
-    z = re(z) + img(z) * i
-    C_abs(z) = sqrt(re(z)^2 + img(z)^2)
-
-sum(1, 3, fn(k Z) C {k + i}) $in C
-```
-
-Order, `abs`, `sqrt`, and `log` remain real-domain operations. The evaluator
-and current Python and Lean extractors report native complex expressions as
-unsupported instead of lowering them as real values. Existing uses of the now
-reserved names `C`, `i`, `re`, `img`, and `C_abs` should follow the
-[migration guide](docs/Complex_Scalar_Migration.md).
 
 ## Let facts build a checked context
 
@@ -175,65 +144,89 @@ toy diagram:
 The graph is one view of a checked development; source code, statement output,
 and trust assumptions remain available to inspect alongside it.
 
-### Litex to Lean compiler
+## A mathematical frontend for Lean
 
-The current compiler is an MVP for a limited, trust-free arithmetic subset. It
-is a bridge experiment, not a claim that every Litex feature has Lean-kernel
-coverage. The table shows the intended relationship between a Litex verification
-trace and the Lean source it can make explicit:
-
-| Litex evidence | Compiler treatment | Lean result |
-| --- | --- | --- |
-| A supported, checked fact | Emit its assumptions and conclusion as a theorem | `theorem litex_line_08 ...` |
-| A later checked use that cites a matching `forall` fact | Replay the cited source theorem with its verified instantiation | `exact litex_line_08 y hy` *(design target; not yet in the MVP)* |
-| Any `trust` dependency | Refuse to export it as trust-free Lean | No generated theorem |
-
-For example, a future compiler pass can turn the following verified relation
-and its trace into an ordinary Lean theorem application:
-
-```text
-# Litex evidence
-# line 8: a proved, stored forall fact
-forall x Z:
-    $divisible_by_8(x)
-    =>:
-        $divisible_by_2(x)
-
-# line 17: accepted automatically
-forall y Z:
-    $divisible_by_8(y)
-    =>:
-        $divisible_by_2(y)
-
-detail: cite forall fact
-  source: line 8
-  instantiation: x ↦ y
-  requirement: $divisible_by_8(y)
-```
+Consider a small but complete example: 1. definition of a group 2. the uniqueness of the identity in a
+group. Here is a Lean formulation:
 
 ```lean
-theorem litex_line_08 (x : ℤ) (hx : 8 ∣ x) :
-    2 ∣ x := by
-  rcases hx with ⟨d, rfl⟩
-  exact ⟨4 * d, by ring⟩
+structure Group where
+  Carrier : Type
+  mul : Carrier → Carrier → Carrier
+  one : Carrier
+  inv : Carrier → Carrier
+  mul_assoc : ∀ a b c : Carrier, mul (mul a b) c = mul a (mul b c)
+  one_mul : ∀ a : Carrier, mul one a = a
+  mul_one : ∀ a : Carrier, mul a one = a
+  mul_left_inv : ∀ a : Carrier, mul (inv a) a = one
 
-theorem litex_line_17 (y : ℤ) (hy : 8 ∣ y) :
-    2 ∣ y := by
-  exact litex_line_08 y hy
+theorem one_unique
+    (G : Group)
+    (e : G.Carrier)
+    (hleft : ∀ a : G.Carrier, G.mul e a = a)
+    (hright : ∀ a : G.Carrier, G.mul a e = a) :
+    e = G.one := by
+  calc
+    e = G.mul G.one e := (G.one_mul e).symm
+    _ = G.one := hright G.one
 ```
 
-The second theorem is the planned known-`forall` replay shown on the website;
-the current MVP does not yet emit that form. See [Litex and Lean](https://litexlang.com/doc/Litex_and_Lean)
-for the supported subset and current boundary.
+Here is the corresponding Litex formulation:
 
-Litex is not trying to replace Lean, Coq, Rocq, Isabelle, or other mature proof
-assistants. It tests a different hypothesis: whether a smaller, readable,
-fact-oriented interface can make some checked mathematical data cheaper to
-produce, inspect, repair, and teach.
+```litex
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
 
-*Maybe the foothold of Litex should be a no-tactic, no-type-dependent, set-theory-based frontend language of Lean just for math (not functional programming), and be more accessible for human (especially non-experts because no matter how AI develops, most people still can not understand type-theory-based math) and AI (especially fields Mathlib hasn't cover yet)? It may be a math language that teaches you how math works.*
+forall s nonempty_set, G &Group<s>, e s:
+    forall a s:
+        G.mul(e, a) = a
+        G.mul(a, e) = a
+    =>:
+        e = G.mul(G.one, e) = G.one
+```
 
-*Litex welcomes formal language experts, math professionals and AI developers to share ideas with us.*
+This comparison motivates five questions that guide Litex:
+
+1. **Write facts before orchestrating a proof script.** Can users state the
+   mathematical facts in their natural order instead of first organizing them
+   as commands that manipulate a proof state?
+2. **Reuse the shape of a fact, not only its theorem name.** Can the checker
+   recognize and instantiate an available fact without requiring the user to
+   recall and invoke its name?
+3. **Present set-theoretic objects at the surface instead of requiring users
+   to learn type universes first.** Can carriers, elements, functions, and
+   structures be presented directly through sets and membership?
+4. **Make the mathematical statement, rather than functional-program
+   structure, the subject.** Can a binary operation look like a binary
+   operation, and can definitions and conclusions remain in mathematical
+   order?
+5. **Derive rigor from a checkable process, and retain a familiar
+   appearance.** Can routine orchestration be omitted from the surface while
+   every object, fact, instantiation, and dependency is still checked?
+
+Litex should not promise to “omit proof.” Its intended promise is both stricter
+and more modest: let users first write the mathematical facts they actually
+mean, then let the machine expose the verification, provenance, and boundaries
+clearly.
+
+Litex is also designing and implementing a compilation path to Lean. For
+supported Litex content, the goal is to check it with Litex, generate Lean, and
+then check the result independently with Lean.
+
+The compiler is ongoing research. Its current MVP covers a limited, trust-free
+arithmetic subset; the group example above illustrates the intended language
+relationship, not current compiler coverage. See
+[Litex and Lean](https://litexlang.com/doc/Litex_and_Lean) for the supported
+subset and current boundary.
 
 ## Real mathematics is the pressure test
 
@@ -251,6 +244,12 @@ This makes four practical directions possible:
 | AI repair loops | machine-checkable local feedback, explicit assumptions, and a visible first unsupported step |
 | scientific work | a lighter path from familiar notation to an inspectable checked artifact |
 | collaboration | source-native definitions, named interfaces, explicit dependencies, and visible trust boundaries |
+
+As Terence Tao noted in his public lecture, “Mathematics in the Age of AI”,
+mathematical knowledge will shift from scarcity to abundance. The
+research process will be unbundled into distinct stages—including
+generation, verification, explanation, review, and knowledge
+integration—and the division of labor between humans and AI will be reshaped accordingly. I hope Litex can be part of this revolutionary process.
 
 Visit our website for more information: [Litexlang.com](https://litexlang.com)
 

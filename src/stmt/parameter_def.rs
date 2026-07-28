@@ -591,7 +591,11 @@ fn collect_cited_param_indices_from_obj(
                 }
             }
         }
-        Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => {}
+        Obj::Number(_)
+        | Obj::ImaginaryUnit(_)
+        | Obj::EulerNumber(_)
+        | Obj::Pi(_)
+        | Obj::StandardSet(_) => {}
         Obj::Add(x) => collect_cited_param_indices_from_two_objs(
             &x.left,
             &x.right,

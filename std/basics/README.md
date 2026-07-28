@@ -23,8 +23,8 @@ Names beginning with `_` are implementation details, not client API.
 
 | Name | Type / role | Status |
 | --- | --- | --- |
-| `pi` | a positive real constant | Trusted |
-| `euler_e` | a positive real constant | Trusted |
+| `e` | Euler's positive real constant | Native |
+| `pi` | the positive circle constant | Native |
 | `integer_quotient(a, d)` | the integer `q` selected by `a = d * q + a % d`, for `d : N_pos` | Checked |
 | `gcd(a, b)` | positive greatest common divisor of a nonzero integer pair | Checked |
 

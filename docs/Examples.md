@@ -143,13 +143,13 @@ small so the proof pattern is easy to recognize.
 
 ```litex
 abstract_prop p(a, b, c)
-forall a, b, c, d, e, f R:
+forall a, b, c, d, e1, f R:
     $p(a, b, c)
     a = d
-    b = e
+    b = e1
     c = f
     =>:
-        $p(d, e, f)
+        $p(d, e1, f)
 ```
 
 ### 3. Choice Functions From Nonempty Sets
@@ -1195,7 +1195,7 @@ claim:
         =>:
             $can_be_divided_by_2(x)
     obtain d from exist d Z st {x = 8 * d}
-    witness exist e Z st {x = 2 * e} from 4 * d:
+    witness exist e1 Z st {x = 2 * e1} from 4 * d:
         x = 8 * d
         8 * d = 2 * (4 * d)
 
@@ -2208,18 +2208,18 @@ claim:
 - Purpose: Shows comparison facts that need local side conditions.
 
 ```litex
-forall a, b, c, d, e, f, g, h, i1, j, k, l, m, n, o R:
+forall a, b, c, d, e1, f, g, h, i1, j, k, l, m, n, o R:
     0 <= a
     0 <= b
     0 <= c
     0 <= d
-    0 <= e
+    0 <= e1
     0 <= f
     0 <= g
     =>:
-        0 <= a + b + c + d + e + f + g
+        0 <= a + b + c + d + e1 + f + g
         0 <= a + b + (h + i1)^2 + (j + k)^4 + (l + m)^6 + (n + o)^8
-        0 <= a^3 + b^3 + c^3 + d^3 + e^3 + f^3 + g^3
+        0 <= a^3 + b^3 + c^3 + d^3 + e1^3 + f^3 + g^3
 ```
 
 ### 11. Division And Reciprocals
@@ -2303,9 +2303,9 @@ have d '[0, 1]
 0 <= d
 d <= 1
 
-have e '(,1)
-e $in R
-e < 1
+have e1 '(,1)
+e1 $in R
+e1 < 1
 
 have f '(,1]
 f $in R
@@ -3002,7 +3002,7 @@ forall X power_set(Z):
 ## Reindex: same summand, parallel shift of both bounds, pointwise on the (rhs) range.
 sum(1, 3, fn(x Z) Z {x}) = sum(2, 4, fn(x Z) Z {x - 1})
 
-## Last index: sum(s..e,f) = sum(s..e-1,f) + f(e) (same unary f); product analogue with *.
+## Last index: sum(s..t,f) = sum(s..t-1,f) + f(t) (same unary f); product analogue with *.
 sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + fn(x Z) Z {x}(3)
 product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * fn(x Z) Z {x}(3)
 
@@ -3844,16 +3844,16 @@ interface: a property, a structure carrying the data, and one concrete checked
 instance.
 
 ```litex
-prop HasAdditiveIdentity(s nonempty_set, op fn(x, y s) s, e s):
+prop HasAdditiveIdentity(s nonempty_set, op fn(x, y s) s, identity s):
     forall x s:
-        op(e, x) = x
-        op(x, e) = x
+        op(identity, x) = x
+        op(x, identity) = x
 
 struct PointedOperation<s nonempty_set>:
     op fn(x, y s) s
-    e s
+    identity s
     <=>:
-        $HasAdditiveIdentity(s, op, e)
+        $HasAdditiveIdentity(s, op, identity)
 
 $HasAdditiveIdentity(Z, fn(x, y Z) Z {x + y}, 0)
 
@@ -3876,28 +3876,28 @@ template<S set, z S>:
 
 A larger algebraic world can keep its carrier, operations, and relations
 visible. Binding `g &Group<s>` selects the group view, so `g.inv`, `g.op`, and
-`g.e` are available directly. Subgroups, normality, cosets, and quotient
+`g.identity` are available directly. Subgroups, normality, cosets, and quotient
 objects are then ordinary predicates over that supplied data.
 
 ```litex
 struct Group<s nonempty_set>:
     inv fn(x s) s
     op fn(x, y s) s
-    e s
+    identity s
     <=>:
         forall x, y, z s:
             op(x, op(y, z)) = op(op(x, y), z)
         forall x s:
-            op(e, x) = x
+            op(identity, x) = x
         forall x s:
-            op(x, e) = x
+            op(x, identity) = x
         forall x s:
-            op(x, inv(x)) = e
+            op(x, inv(x)) = identity
         forall x s:
-            op(inv(x), x) = e
+            op(inv(x), x) = identity
 
 prop is_subgroup(s nonempty_set, g &Group<s>, h power_set(s)):
-    g.e $in h
+    g.identity $in h
     forall a, b s:
         a $in h
         b $in h
@@ -3981,18 +3981,18 @@ thm group_left_cancel:
         g.op(a, b) = g.op(a, c)
         =>:
             b = c
-    g.op(g.inv(a), a) = g.e
-    g.op(g.e, b) = b
-    g.op(g.e, c) = c
-    g.op(g.op(g.inv(a), a), b) = g.op(g.e, b) = b
-    g.op(g.op(g.inv(a), a), b) = g.op(g.inv(a), g.op(a, b)) = g.op(g.inv(a), g.op(a, c)) = g.op(g.op(g.inv(a), a), c) = g.op(g.e, c) = c
+    g.op(g.inv(a), a) = g.identity
+    g.op(g.identity, b) = b
+    g.op(g.identity, c) = c
+    g.op(g.op(g.inv(a), a), b) = g.op(g.identity, b) = b
+    g.op(g.op(g.inv(a), a), b) = g.op(g.inv(a), g.op(a, b)) = g.op(g.inv(a), g.op(a, c)) = g.op(g.op(g.inv(a), a), c) = g.op(g.identity, c) = c
     b = c
 
 thm group_inv_inv:
     ? forall s nonempty_set, g &Group<s>, a s:
         g.inv(g.inv(a)) = a
-    g.op(g.inv(a), g.inv(g.inv(a))) = g.e
-    g.op(g.inv(a), a) = g.e
+    g.op(g.inv(a), g.inv(g.inv(a))) = g.identity
+    g.op(g.inv(a), a) = g.identity
     g.op(g.inv(a), g.inv(g.inv(a))) = g.op(g.inv(a), a)
     by thm group_left_cancel(s, g, g.inv(a), g.inv(g.inv(a)), a)
 ```
@@ -4009,21 +4009,21 @@ packages operation fields satisfying those laws. The carrier remains explicit:
 `s` is a set, and a value of `&Field<s>` is field data on that carrier.
 
 ```litex
-prop is_group(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, e s):
+prop is_group(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, identity s):
     forall x, y, z s:
         op(x, op(y, z)) = op(op(x, y), z)
     forall x s:
-        op(e, x) = x
-        op(x, e) = x
-        op(x, inv(x)) = e
-        op(inv(x), x) = e
+        op(identity, x) = x
+        op(x, identity) = x
+        op(x, inv(x)) = identity
+        op(inv(x), x) = identity
 
 struct Group<s nonempty_set>:
     inv fn(x s) s
     op fn(x, y s) s
-    e s
+    identity s
     <=>:
-        $is_group(s, inv, op, e)
+        $is_group(s, inv, op, identity)
 
 prop is_abelian_group(s nonempty_set, neg fn(x s) s, add fn(x, y s) s, zero s):
     $is_group(s, neg, add, zero)

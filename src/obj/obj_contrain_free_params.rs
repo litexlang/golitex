@@ -86,7 +86,11 @@ impl Obj {
     fn collect_free_param_names_into(&self, collector: &mut FreeParamNameCollector) {
         match self {
             Obj::Atom(atom) => collector.collect_atom(atom),
-            Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => {}
+            Obj::Number(_)
+            | Obj::ImaginaryUnit(_)
+            | Obj::EulerNumber(_)
+            | Obj::Pi(_)
+            | Obj::StandardSet(_) => {}
             Obj::FnObj(fn_obj) => {
                 fn_obj.head.collect_free_param_names_into(collector);
                 for args in &fn_obj.body {

@@ -34,7 +34,12 @@ fn collect_obj_binder_bindings(
     depth: usize,
 ) {
     match obj {
-        Obj::Atom(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => {}
+        Obj::Atom(_)
+        | Obj::Number(_)
+        | Obj::ImaginaryUnit(_)
+        | Obj::EulerNumber(_)
+        | Obj::Pi(_)
+        | Obj::StandardSet(_) => {}
         Obj::FnObj(x) => {
             collect_fn_obj_head_binder_bindings(x.head.as_ref(), bindings, seen, depth);
             for group in &x.body {

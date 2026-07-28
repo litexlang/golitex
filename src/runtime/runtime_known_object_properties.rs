@@ -815,7 +815,7 @@ fn collect_module_name_from_atomic_name(name: &AtomicName, module_names: &mut Ve
 fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
     match obj {
         Obj::Atom(atom) => collect_module_names_from_atom(atom, module_names),
-        Obj::ImaginaryUnit(_) => {}
+        Obj::ImaginaryUnit(_) | Obj::EulerNumber(_) | Obj::Pi(_) => {}
         Obj::FnObj(fn_obj) => {
             collect_module_names_from_fn_obj_head(&fn_obj.head, module_names);
             for group in fn_obj.body.iter() {

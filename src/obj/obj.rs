@@ -9,6 +9,8 @@ pub enum Obj {
     FnObj(FnObj),
     Number(Number),
     ImaginaryUnit(ImaginaryUnit),
+    EulerNumber(EulerNumber),
+    Pi(Pi),
     Add(Add),
     Sub(Sub),
     Mul(Mul),
@@ -144,6 +146,8 @@ pub enum ObjKind {
     RealPart = 71,
     ImaginaryPart = 72,
     ComplexAbs = 73,
+    EulerNumber = 74,
+    Pi = 75,
 }
 
 impl ObjKind {
@@ -552,6 +556,12 @@ pub struct Number {
 pub struct ImaginaryUnit;
 
 #[derive(Clone)]
+pub struct EulerNumber;
+
+#[derive(Clone)]
+pub struct Pi;
+
+#[derive(Clone)]
 pub struct Add {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
@@ -702,6 +712,18 @@ impl Number {
 impl ImaginaryUnit {
     pub fn new() -> Self {
         ImaginaryUnit
+    }
+}
+
+impl EulerNumber {
+    pub fn new() -> Self {
+        EulerNumber
+    }
+}
+
+impl Pi {
+    pub fn new() -> Self {
+        Pi
     }
 }
 
@@ -1162,6 +1184,8 @@ impl Obj {
             Obj::FnObj(_) => ObjKind::FnObj,
             Obj::Number(_) => ObjKind::Number,
             Obj::ImaginaryUnit(_) => ObjKind::ImaginaryUnit,
+            Obj::EulerNumber(_) => ObjKind::EulerNumber,
+            Obj::Pi(_) => ObjKind::Pi,
             Obj::Add(_) => ObjKind::Add,
             Obj::Sub(_) => ObjKind::Sub,
             Obj::Mul(_) => ObjKind::Mul,
@@ -1395,6 +1419,8 @@ impl Obj {
             Obj::FnObj(x) => write!(f, "{}", x)?,
             Obj::Number(x) => write!(f, "{}", x)?,
             Obj::ImaginaryUnit(_) => write!(f, "{}", I)?,
+            Obj::EulerNumber(_) => write!(f, "{}", E)?,
+            Obj::Pi(_) => write!(f, "{}", PI)?,
             Obj::ListSet(x) => write!(f, "{}", x)?,
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
             Obj::FnSet(x) => write!(f, "{}", x)?,
@@ -1458,6 +1484,8 @@ impl Obj {
             }
             Obj::Number(n) => n.into(),
             Obj::ImaginaryUnit(i) => i.into(),
+            Obj::EulerNumber(e) => e.into(),
+            Obj::Pi(pi) => pi.into(),
             Obj::Add(x) => Add::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
@@ -2630,6 +2658,18 @@ impl From<Number> for Obj {
 impl From<ImaginaryUnit> for Obj {
     fn from(i: ImaginaryUnit) -> Self {
         Obj::ImaginaryUnit(i)
+    }
+}
+
+impl From<EulerNumber> for Obj {
+    fn from(e: EulerNumber) -> Self {
+        Obj::EulerNumber(e)
+    }
+}
+
+impl From<Pi> for Obj {
+    fn from(pi: Pi) -> Self {
+        Obj::Pi(pi)
     }
 }
 

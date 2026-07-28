@@ -811,6 +811,20 @@ impl Runtime {
                     Ok(None)
                 }
             }
+            Obj::EulerNumber(_) => {
+                if matches!(given_arg, Obj::EulerNumber(_)) {
+                    Ok(Some(HashMap::new()))
+                } else {
+                    Ok(None)
+                }
+            }
+            Obj::Pi(_) => {
+                if matches!(given_arg, Obj::Pi(_)) {
+                    Ok(Some(HashMap::new()))
+                } else {
+                    Ok(None)
+                }
+            }
             Obj::Add(ref a) => self.match_arg_when_left_is_add(&a.left, &a.right, given_arg),
             Obj::MatrixAdd(ref a) => {
                 self.match_arg_when_left_is_matrix_add(&a.left, &a.right, given_arg)

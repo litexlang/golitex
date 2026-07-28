@@ -814,10 +814,10 @@ trust d $in '[0, 1]
 0 <= d
 d <= 1
 
-have e R
-trust e $in '(,1)
-e $in R
-e < 1
+have e1 R
+trust e1 $in '(,1)
+e1 $in R
+e1 < 1
 
 have f R
 trust f $in '(,1]
@@ -997,7 +997,7 @@ fn real_power_and_order_builtins_require_real_operands() {
         "real_power_and_order_builtins_require_real_operands",
         || {
             let positive_source = r#"
-have a, b, c, d, e, f, x R
+have a, b, c, d, e1, f, x R
 have n N_pos
 trust:
     0 < a
@@ -1006,8 +1006,8 @@ trust:
     a < b
     c <= d
     d <= c
-    3 <= e
-    e < 3
+    3 <= e1
+    e1 < 3
     2 < f
 0 < a^x
 0 <= a^x
@@ -1018,8 +1018,8 @@ a > x
 a <= b
 a != b
 c = d
-2 <= e
-e < 4
+2 <= e1
+e1 < 4
 0 < f
 "#;
             let mut positive_runtime = Runtime::new();

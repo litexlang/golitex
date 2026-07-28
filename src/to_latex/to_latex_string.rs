@@ -2045,6 +2045,8 @@ impl Obj {
             Obj::Atom(AtomObj::IdentifierWithMod(x)) => x.to_latex_string(),
             Obj::FnObj(x) => x.to_latex_string(),
             Obj::Number(x) => x.to_latex_string(),
+            Obj::EulerNumber(_) => r"\mathrm{e}".to_string(),
+            Obj::Pi(_) => r"\pi".to_string(),
             Obj::ImaginaryUnit(x) => x.to_latex_string(),
             Obj::Add(x) => x.to_latex_string(),
             Obj::Sub(x) => x.to_latex_string(),
