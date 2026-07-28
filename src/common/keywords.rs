@@ -66,8 +66,6 @@ pub const FN_LOWER_CASE: &str = "fn";
 pub const INTERVAL_LITERAL_PREFIX: &str = "'";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
-/// Preview compact spelling for a nonempty-set parameter type.
-pub const COMPACT_NONEMPTY_SET: &str = "set+";
 pub const FINITE_SET: &str = "finite_set";
 pub const N_POS: &str = "N_pos";
 /// Preview compact spellings for strict positive and negative standard sets.
@@ -212,7 +210,6 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         FACT_PREFIX,
         DOT_AKA_FIELD_ACCESS_SIGN,
         MOD_SIGN,
-        COMPACT_NONEMPTY_SET,
         COMPACT_N_POS,
         COMPACT_Z_POS,
         COMPACT_Q_POS,

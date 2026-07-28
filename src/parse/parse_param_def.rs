@@ -30,7 +30,7 @@ impl Runtime {
 
     pub fn parse_param_type(&mut self, tb: &mut TokenBlock) -> Result<ParamType, RuntimeError> {
         match tb.current()? {
-            NONEMPTY_SET | COMPACT_NONEMPTY_SET => self.parse_param_type_nonempty_set(tb),
+            NONEMPTY_SET => self.parse_param_type_nonempty_set(tb),
             FINITE_SET => self.parse_param_type_finite_set(tb),
             SET => self.parse_param_type_set(tb),
             _ => self.parse_param_type_obj(tb),

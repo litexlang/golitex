@@ -444,7 +444,6 @@ pub use crate::common::keywords::CLEAR;
 pub use crate::common::keywords::CLOSED_RANGE;
 pub use crate::common::keywords::COLON;
 pub use crate::common::keywords::COMMA;
-pub use crate::common::keywords::COMPACT_NONEMPTY_SET;
 pub use crate::common::keywords::COMPACT_N_POS;
 pub use crate::common::keywords::COMPACT_Q_NEG;
 pub use crate::common::keywords::COMPACT_Q_POS;

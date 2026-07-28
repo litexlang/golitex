@@ -2756,14 +2756,10 @@ forall a, b, c, d R:
 #### Compact Set Suffixes (Preview)
 
 An adjacent `+` selects a strictly positive numeric set, while an adjacent `-`
-selects a strictly negative one. For set binders, `set+` is the compact spelling
-of `nonempty_set`. These inputs normalize to the existing long names in
-verifier output.
+selects a strictly negative one. These inputs normalize to the existing long
+names in verifier output.
 
 ```litex
-have S set+
-$is_nonempty_set(S)
-
 have n N+
 n $in N_pos
 have zp Z+

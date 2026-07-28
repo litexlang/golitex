@@ -1,6 +1,8 @@
 # Native complex scalar smoke test.
 
 i $in C
+1 $in C
+1.1 $in C
 i * i = -1
 i ^ 2 = -1
 i ^ 4 = 1
