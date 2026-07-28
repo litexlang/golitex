@@ -264,12 +264,6 @@ have S0, T0 nonempty_set
 trust S0 $subset T0
 have x0 S0
 x0 $in T0
-
-forall A, B set:
-    A $subset B
-    =>:
-        forall x A:
-            x $in B
 "#;
 
             let mut runtime = Runtime::new();
@@ -282,6 +276,59 @@ forall A, B set:
             assert!(
                 run_succeeded,
                 "parameter membership should use one directly known subset on demand:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn membership_builtin_does_not_rewrite_positive_order_goals() {
+    run_with_large_stack(
+        "membership_builtin_does_not_rewrite_positive_order_goals",
+        || {
+            let order_only_source = r#"
+forall A power_set(R_pos), x A:
+    0 < x
+"#;
+            let mut order_only_runtime = Runtime::new();
+            order_only_runtime.new_file_path_new_env_new_name_scope(
+                "membership_builtin_does_not_rewrite_positive_order_goals",
+            );
+            let (stmt_results, runtime_error) =
+                run_source_code(order_only_source, &mut order_only_runtime);
+            let (run_succeeded, run_output) = render_run_source_code_output(
+                &order_only_runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+            assert!(
+                !run_succeeded,
+                "the membership feature must not synthesize a positive-set premise from an order goal:\n{}",
+                run_output
+            );
+
+            let explicit_membership_source = r#"
+forall A power_set(R_pos), x A:
+    x $in R_pos
+    0 < x
+"#;
+            let mut explicit_runtime = Runtime::new();
+            explicit_runtime.new_file_path_new_env_new_name_scope(
+                "explicit_positive_membership_can_keep_inference_moving",
+            );
+            let (stmt_results, runtime_error) =
+                run_source_code(explicit_membership_source, &mut explicit_runtime);
+            let (run_succeeded, run_output) = render_run_source_code_output(
+                &explicit_runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+            assert!(
+                run_succeeded,
+                "an explicit accepted R_pos membership may still trigger existing order inference:\n{}",
                 run_output
             );
         },
@@ -336,6 +383,11 @@ trust x $in A
                     default_line_file(),
                 )
                 .into();
+                assert!(
+                    !runtime.cache_known_facts_contains(&target.to_string()).0,
+                    "{} must not eagerly materialize x in B",
+                    label
+                );
                 let result = runtime
                     .verify_atomic_fact_restricted_known_builtin(
                         &target,
@@ -347,6 +399,11 @@ trust x $in A
                 assert!(
                     result.is_true(),
                     "{} should prove x in B through one direct subset edge",
+                    label
+                );
+                assert!(
+                    !runtime.cache_known_facts_contains(&target.to_string()).0,
+                    "{} should leave the on-demand result unstored",
                     label
                 );
             }
@@ -805,6 +862,54 @@ thm membership_from_trusted_owner:
                     theorem_name
                 );
             }
+        },
+    );
+}
+
+#[test]
+fn membership_indexes_are_available_through_qualified_exports() {
+    run_with_large_stack(
+        "membership_indexes_are_available_through_qualified_exports",
+        || {
+            let project_root = std::env::temp_dir().join(format!(
+                "litex-membership-qualified-export-{}",
+                std::process::id()
+            ));
+            let _ = std::fs::remove_dir_all(&project_root);
+            std::fs::create_dir_all(&project_root)
+                .expect("create qualified-membership project fixture");
+            std::fs::write(
+                project_root.join("litex.config"),
+                "[hierarchy]\nmodule\n\n[export]\nsource = \"./source.lit\"\nmain = \"./main.lit\"\n",
+            )
+            .expect("write qualified-membership project config");
+            std::fs::write(
+                project_root.join("source.lit"),
+                "have x_import, A_import, B_import set\ntrust x_import $in A_import\ntrust A_import $subset B_import\n",
+            )
+            .expect("write qualified-membership source file");
+            std::fs::write(
+                project_root.join("main.lit"),
+                "source::x_import $in source::B_import\n",
+            )
+            .expect("write qualified-membership target file");
+
+            let repository_path = project_root
+                .to_str()
+                .expect("temporary project path should be UTF-8");
+            let (run_succeeded, run_output) = run_repository_with_output(
+                repository_path,
+                false,
+                false,
+                OutputLanguage::English,
+                false,
+            );
+            let _ = std::fs::remove_dir_all(&project_root);
+            assert!(
+                run_succeeded,
+                "qualified exports should retain owner and inclusion indexes:\n{}",
+                run_output
+            );
         },
     );
 }

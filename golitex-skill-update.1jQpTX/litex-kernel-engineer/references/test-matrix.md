@@ -11,8 +11,12 @@ Use the smallest relevant command first, then broaden.
 - Registered project file: use `target/release/litex -compact -f <file.lit>`;
   this executes the ordered manifest prefix through that file.
 - Examples harness: `cargo test --release run_examples -- --nocapture`.
-- Mechanics draft chapters and their project runner:
-  `cargo test --release run_mechanics_textbook_chapters -- --nocapture`.
+- Mechanics draft chapters: run
+  `cargo test --release run_mechanics_textbook_chapters -- --nocapture` as
+  required by the live policy, then inspect its target. While it points at
+  `textbooks/The-Mechanics-of-Litex-Proof`, also use the release CLI against
+  `scripts/textbooks_drafts/The-Mechanics-of-Litex-Proof`; the harness is only
+  an explicitly published-snapshot gate, not a draft gate.
 - MATH500 local snippets:
   `cargo test --release run_math500_litex_simple -- --nocapture`.
 - Whole-project gate: `target/release/litex -compact -r <module>`. Use it only

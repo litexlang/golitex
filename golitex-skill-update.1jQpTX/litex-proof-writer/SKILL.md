@@ -215,8 +215,10 @@ distract from the current source item:
    Cite facts should be named `thm` or `claim` interfaces, with unresolved
    proof steps marked by narrow `trust` proof debt. Never add a cite wrapper
    for a fact already discharged by builtin or infer rules.
-4. Import cite packages with `import`, not `run_file`. Reserve `run_file` for
-   source-order reuse where expanding the earlier file is intentional.
+4. For repository projects, declare cite packages with `export mod`, place
+   them before their consumers in the ordered `[export]` table, and cite their
+   canonical imported names. Litex has no statement for loading an arbitrary
+   `.lit` path.
 5. Make cite theorem statements reusable and abstract enough for the local
    mathematics, not one-off facts tailored to a single proof line.
 6. Consider a reusable project package only after the fact is fully checkable,
@@ -269,8 +271,8 @@ Use the corpus this way:
 For repeated proof iteration, build current source with `cargo build --release`
 and start one persistent
 `target/release/litex -compact -session -before <current-file.lit>` process.
-Use an older binary only when the current source cannot produce the release
-binary; never use the debug binary for performance-sensitive verification.
+If the current source cannot produce the release binary, report that build
+failure and stop verification; do not substitute an older or debug binary.
 Submit the target's statements from the first one in source order, with each
 candidate protected by a literal outermost `try:`. This is the default inner
 loop because failed attempts normally roll back only themselves and do not
@@ -535,45 +537,13 @@ prop is_sequence_in_subset(a seq(R), X set):
 
 ## Blockers
 
-When an item cannot be completed, record the smallest reproduction and choose exactly one primary label:
-
-`trust` or `kernel_problem`.
-
-Before writing a blocker, classify the root cause more precisely. This
-root-cause class is human-facing metadata; it does not replace the primary
-Litex label above.
-
-1. `direct_definition`: the missing piece should be a `prop is_xxx` /
-   `prop has_xxx` / `abstract_prop is_xxx` / `abstract_prop has_xxx`
-   definition, not a theorem proof.
-2. `general_theorem_interface`: the local step is an instance of a reusable
-   theorem family. Prefer adding or recording the general `thm` interface over
-   solving only one occurrence.
-3. `skipped_by_previous_pass`: a previous translation skipped a harder item, but
-   no verifier evidence says it is blocked. Try one direct real-context Litex
-   formulation before recording debt.
-4. `true_proof_debt`: the concepts and interfaces are clear, but the proof is
-   genuinely long or not yet formalized.
-5. `litex_blocker`: verifier, kernel, parser, syntax, or diagnostics blocked a
-   natural statement. Use `kernel_problem` only when the issue appears to be in
-   core verifier/runtime/proof-model behavior; otherwise keep `trust` and
-   describe the surprising behavior.
-6. `naming_or_structure`: the issue is namespace, theorem naming, file
-   organization, or chapter/source traceability, not missing mathematics.
-7. `background_axiom`: the item is a main trusted interface that should be
-   introduced with `trust` temporarily as std/background, with its trusted role
-   documented.
-8. `repeated_local_interface`: several local proofs need the same small
-   interface. Abstract it into a lemma or prop instead of copying the local
-   workaround.
-
-For abstractions, distinguish two kinds:
-
-- Mathematical abstraction: factor the common structure of a family of objects
-  or theorems, such as groups, metric spaces, finite sets, or derivatives.
-- Litex-expression abstraction: add a notation, object shape, statement form, or
-  helper interface that makes many propositions easy to write, even if the
-  underlying mathematics is not more general.
+When an item cannot be completed, record the smallest reproduction and choose
+exactly one primary label: `trust` or `kernel_problem`. Explain the concrete
+cause in prose—such as a missing definition or theorem interface, proof debt,
+file organization, syntax, diagnostics, or suspected verifier behavior—but do
+not create another coded blocker taxonomy. Once a direct real-context attempt
+identifies a non-kernel blocker, keep the intended statement, add the narrowest
+legal `trust`, record the debt, and continue.
 
 For source work under `scripts/` or a local translation workspace, update the nearby `todo.md` with concise blocker notes. Remove completed blocker notes when they no longer block the work.
 

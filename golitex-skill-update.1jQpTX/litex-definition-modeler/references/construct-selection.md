@@ -152,9 +152,9 @@ Ask these before accepting a `prop` translation:
 
 ## Source anchors
 
-- `textbooks/Analysis/chapter04-integers-and-rationals.lit`: `dist_Q` and
-  `is_close_in_Q`.
-- `textbooks/Analysis/chapter10-differentiation.lit`: `derivative` from
-  unique existence.
-- `textbooks/Analysis/chapter05-real-numbers.lit`: `seq_starting_at`
-  template.
+- `scripts/textbooks_drafts/Analysis/chapter04-integers-and-rationals.lit`:
+  `dist_Q` and `is_close_in_Q`.
+- `scripts/textbooks_drafts/Analysis/chapter10-differentiation.lit`:
+  `derivative` from unique existence.
+- `scripts/textbooks_drafts/Analysis/chapter05-real-numbers.lit`:
+  `seq_starting_at` template.
