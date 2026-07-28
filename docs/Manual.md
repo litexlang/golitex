@@ -218,16 +218,10 @@ Litex exposes sets, membership, and set operations directly.
 | `replacement(P, A)` | Replacement set defined by a functional predicate `P` |
 | `general_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` |
 
-The compact suffix must be adjacent to its base. `set+` is the preview compact
-parameter type for `nonempty_set`; it is available wherever a nonempty-set
-binder type is accepted. The long spellings remain canonical, so verifier
-output normalizes compact input back to names such as `nonempty_set`, `N_pos`,
-and `R_neg`.
+The compact suffix must be adjacent to its base. Verifier output normalizes
+compact numeric input back to names such as `N_pos` and `R_neg`.
 
 ```litex
-have S set+
-$is_nonempty_set(S)
-
 have n N+
 n $in N_pos
 have z Z-
@@ -2132,7 +2126,7 @@ Preview features are public enough to test, but their syntax or semantics may
 change:
 
 - native complex scalars `C`, `i`, `re`, `img`, and `C_abs`;
-- compact nonempty and strict-sign suffixes such as `set+`, `N+`, and `R-`;
+- compact strict-sign suffixes such as `N+` and `R-`;
 - `struct`, struct view objects, and default-view field access;
 - proper subset and proper superset relations;
 - injective, surjective, and bijective mapping predicates;

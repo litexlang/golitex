@@ -1322,18 +1322,11 @@ builder_like(X) = X
 }
 
 #[test]
-fn compact_standard_set_suffixes_use_existing_set_semantics() {
+fn compact_numeric_set_suffixes_use_existing_set_semantics() {
     run_with_large_stack(
-        "compact_standard_set_suffixes_use_existing_set_semantics",
+        "compact_numeric_set_suffixes_use_existing_set_semantics",
         || {
             let source_code = r#"
-struct CompactCarrier<c set+>:
-    point c
-    other c
-
-have S set+
-$is_nonempty_set(S)
-
 have n N+
 n $in N_pos
 have zp Z+
@@ -1349,8 +1342,6 @@ qn $in Q_neg
 have rn R-
 rn $in R_neg
 
-forall T set+:
-    $is_nonempty_set(T)
 forall x R+:
     x $in R_pos
 
@@ -1368,7 +1359,7 @@ fn(x Z-) R- = fn(x Z_neg) R_neg
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "compact_standard_set_suffixes_use_existing_set_semantics",
+                "compact_numeric_set_suffixes_use_existing_set_semantics",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1376,10 +1367,9 @@ fn(x Z-) R- = fn(x Z_neg) R_neg
 
             assert!(
                 run_succeeded,
-                "compact standard-set suffixes should reuse existing semantics:\n{}",
+                "compact numeric-set suffixes should reuse existing semantics:\n{}",
                 run_output
             );
-            assert!(run_output.contains("have S nonempty_set"), "{run_output}");
             assert!(run_output.contains("have n N_pos"), "{run_output}");
             assert!(run_output.contains("have zp N_pos"), "{run_output}");
             assert!(run_output.contains("have qn Q_neg"), "{run_output}");
@@ -1391,6 +1381,7 @@ fn(x Z-) R- = fn(x Z_neg) R_neg
 fn unsupported_compact_standard_set_suffixes_still_fail() {
     for (name, source_code) in [
         ("compact_n_negative", "have n N-"),
+        ("compact_nonempty_set", "have S set+"),
         ("compact_set_negative", "have S set-"),
         ("compact_r_nonzero", "have x R*"),
         ("spaced_compact_n_positive", "have n N +"),

@@ -363,8 +363,7 @@ impl Tokenizer {
         // compact set only where its suffix ends the current lexical item.
         if !matches!(
             token,
-            COMPACT_NONEMPTY_SET
-                | COMPACT_N_POS
+            COMPACT_N_POS
                 | COMPACT_Z_POS
                 | COMPACT_Q_POS
                 | COMPACT_R_POS
@@ -489,13 +488,13 @@ mod tests {
     }
 
     #[test]
-    fn compact_standard_set_suffixes_require_adjacency() {
+    fn compact_numeric_set_suffixes_require_adjacency() {
         let tokenizer = Tokenizer::new();
         assert_eq!(
             tokenizer
                 .tokenize_line("set+ N+ Z+ Q+ R+ Z- Q- R-", test_line_file())
                 .unwrap(),
-            vec!["set+", "N+", "Z+", "Q+", "R+", "Z-", "Q-", "R-"]
+            vec!["set", "+", "N+", "Z+", "Q+", "R+", "Z-", "Q-", "R-"]
         );
         assert_eq!(
             tokenizer
