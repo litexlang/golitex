@@ -221,7 +221,7 @@ impl Runtime {
     pub(crate) fn obj_depends_on_given_exist_param(obj: &Obj, names: &[String]) -> bool {
         match obj {
             Obj::Atom(AtomObj::Exist(p)) => names.iter().any(|name| name == &p.name),
-            Obj::Atom(_) | Obj::Number(_) | Obj::StandardSet(_) => false,
+            Obj::Atom(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => false,
             Obj::Add(x) => Self::obj_pair_depends_on_given_exist_param(
                 x.left.as_ref(),
                 x.right.as_ref(),
@@ -327,6 +327,9 @@ impl Runtime {
                 Self::obj_pair_depends_on_given_exist_param(x.obj.as_ref(), x.index.as_ref(), names)
             }
             Obj::Abs(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::RealPart(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::ImaginaryPart(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::ComplexAbs(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Sqrt(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::BigUnion(x) => Self::obj_depends_on_given_exist_param(x.left.as_ref(), names),
             Obj::BigIntersect(x) => Self::obj_depends_on_given_exist_param(x.left.as_ref(), names),

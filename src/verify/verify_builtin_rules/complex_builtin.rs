@@ -2,8 +2,8 @@ use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
 
 impl Runtime {
-    /// Native complex equalities use stable builtin symbols and intentionally normalize only
-    /// the imaginary unit and the first coordinate/modulus interfaces.
+    /// Native complex equalities use dedicated AST nodes and intentionally normalize only the
+    /// imaginary unit and the first coordinate/modulus interfaces.
     /// Example: `i^2 = -1`, while an arbitrary `(a + b*i) * (c + d*i)` stays opaque.
     pub(super) fn try_verify_native_complex_equality(
         &mut self,
@@ -76,58 +76,55 @@ impl Runtime {
             None
         };
         if let Some(z) = candidate {
-            if let Some(complex_abs) = native_builtin_call(C_ABS, z.clone()) {
-                let known_zero =
-                    self.verify_objs_are_equal_known_only(&complex_abs, &zero, line_file.clone());
-                if known_zero.is_true() {
-                    let Some(mut steps) =
-                        self.verify_objects_are_known_complex(&[z], &line_file, verify_state)?
-                    else {
-                        return Ok(None);
-                    };
-                    steps.push(known_zero);
-                    return Ok(Some(complex_equality_result_with_steps(
-                        left,
-                        right,
-                        line_file,
-                        "complex modulus zero implies zero argument",
-                        steps,
-                    )));
-                }
+            let complex_abs: Obj = ComplexAbs::new(z.clone()).into();
+            let known_zero =
+                self.verify_objs_are_equal_known_only(&complex_abs, &zero, line_file.clone());
+            if known_zero.is_true() {
+                let Some(mut steps) =
+                    self.verify_objects_are_known_complex(&[z], &line_file, verify_state)?
+                else {
+                    return Ok(None);
+                };
+                steps.push(known_zero);
+                return Ok(Some(complex_equality_result_with_steps(
+                    left,
+                    right,
+                    line_file,
+                    "complex modulus zero implies zero argument",
+                    steps,
+                )));
             }
         }
 
-        if let Some((z, expected)) = native_reconstruction_pair(left) {
-            if verify_equality_by_they_are_the_same(&expected, right) {
-                let Some(steps) =
-                    self.verify_objects_are_known_complex(&[z], &line_file, verify_state)?
-                else {
-                    return Ok(None);
-                };
-                return Ok(Some(complex_equality_result_with_steps(
-                    left,
-                    right,
-                    line_file,
-                    "complex reconstruction from real and imaginary coordinates",
-                    steps,
-                )));
-            }
+        let (z, expected) = native_reconstruction_pair(left);
+        if verify_equality_by_they_are_the_same(&expected, right) {
+            let Some(steps) =
+                self.verify_objects_are_known_complex(&[z], &line_file, verify_state)?
+            else {
+                return Ok(None);
+            };
+            return Ok(Some(complex_equality_result_with_steps(
+                left,
+                right,
+                line_file,
+                "complex reconstruction from real and imaginary coordinates",
+                steps,
+            )));
         }
-        if let Some((z, expected)) = native_reconstruction_pair(right) {
-            if verify_equality_by_they_are_the_same(&expected, left) {
-                let Some(steps) =
-                    self.verify_objects_are_known_complex(&[z], &line_file, verify_state)?
-                else {
-                    return Ok(None);
-                };
-                return Ok(Some(complex_equality_result_with_steps(
-                    left,
-                    right,
-                    line_file,
-                    "complex reconstruction from real and imaginary coordinates",
-                    steps,
-                )));
-            }
+        let (z, expected) = native_reconstruction_pair(right);
+        if verify_equality_by_they_are_the_same(&expected, left) {
+            let Some(steps) =
+                self.verify_objects_are_known_complex(&[z], &line_file, verify_state)?
+            else {
+                return Ok(None);
+            };
+            return Ok(Some(complex_equality_result_with_steps(
+                left,
+                right,
+                line_file,
+                "complex reconstruction from real and imaginary coordinates",
+                steps,
+            )));
         }
 
         let Some(mut steps) =
@@ -138,18 +135,10 @@ impl Runtime {
         if self.objects_have_known_standard_membership(&[left, right], StandardSet::R) {
             return Ok(None);
         }
-        let Some(left_re) = native_builtin_call(RE, left.clone()) else {
-            return Ok(None);
-        };
-        let Some(right_re) = native_builtin_call(RE, right.clone()) else {
-            return Ok(None);
-        };
-        let Some(left_img) = native_builtin_call(IMG, left.clone()) else {
-            return Ok(None);
-        };
-        let Some(right_img) = native_builtin_call(IMG, right.clone()) else {
-            return Ok(None);
-        };
+        let left_re: Obj = RealPart::new(left.clone()).into();
+        let right_re: Obj = RealPart::new(right.clone()).into();
+        let left_img: Obj = ImaginaryPart::new(left.clone()).into();
+        let right_img: Obj = ImaginaryPart::new(right.clone()).into();
         let re_result =
             self.verify_objs_are_equal_known_only(&left_re, &right_re, line_file.clone());
         if !re_result.is_true() {
@@ -196,10 +185,10 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let matches = match atomic_fact {
             AtomicFact::LessEqualFact(f) => {
-                obj_is_literal_zero(&f.left) && native_builtin_call_arg(&f.right, C_ABS).is_some()
+                obj_is_literal_zero(&f.left) && matches!(&f.right, Obj::ComplexAbs(_))
             }
             AtomicFact::GreaterEqualFact(f) => {
-                obj_is_literal_zero(&f.right) && native_builtin_call_arg(&f.left, C_ABS).is_some()
+                obj_is_literal_zero(&f.right) && matches!(&f.left, Obj::ComplexAbs(_))
             }
             _ => false,
         };
@@ -220,17 +209,14 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
-        let (coordinate, arg) = if let Some(arg) = native_builtin_call_arg(application, RE) {
-            (RE, arg)
-        } else if let Some(arg) = native_builtin_call_arg(application, IMG) {
-            (IMG, arg)
-        } else {
-            return Ok(None);
+        let (coordinate, is_real_part, arg) = match application {
+            Obj::RealPart(real_part) => (RE, true, real_part.arg.as_ref()),
+            Obj::ImaginaryPart(imaginary_part) => (IMG, false, imaginary_part.arg.as_ref()),
+            _ => return Ok(None),
         };
 
         if obj_is_native_i(arg) {
-            let target: Obj =
-                Number::new(if coordinate == RE { "0" } else { "1" }.to_string()).into();
+            let target: Obj = Number::new(if is_real_part { "0" } else { "1" }.to_string()).into();
             if verify_equality_by_they_are_the_same(&target, expected) {
                 return Ok(Some((
                     format!("{coordinate}: native imaginary-unit coordinate"),
@@ -240,7 +226,7 @@ impl Runtime {
         }
 
         if let Some((real_part, imaginary_part)) = linear_complex_parts(arg) {
-            let target = if coordinate == RE {
+            let target = if is_real_part {
                 real_part.clone()
             } else {
                 imaginary_part.clone()
@@ -261,7 +247,7 @@ impl Runtime {
             }
         }
 
-        if verify_equality_by_they_are_the_same(arg, expected) && coordinate == RE {
+        if verify_equality_by_they_are_the_same(arg, expected) && is_real_part {
             let Some(steps) =
                 self.verify_objects_are_known_reals(&[arg], &line_file, verify_state)?
             else {
@@ -269,7 +255,7 @@ impl Runtime {
             };
             return Ok(Some(("re: real embedding".to_string(), steps)));
         }
-        if obj_is_literal_zero(expected) && coordinate == IMG {
+        if obj_is_literal_zero(expected) && !is_real_part {
             let Some(steps) =
                 self.verify_objects_are_known_reals(&[arg], &line_file, verify_state)?
             else {
@@ -313,9 +299,10 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
-        let Some(arg) = native_builtin_call_arg(application, C_ABS) else {
+        let Obj::ComplexAbs(complex_abs) = application else {
             return Ok(None);
         };
+        let arg = complex_abs.arg.as_ref();
         if obj_is_native_i(arg) && obj_is_literal_one(expected) {
             return Ok(Some(("complex modulus of i".to_string(), Vec::new())));
         }
@@ -333,9 +320,7 @@ impl Runtime {
             )));
         }
 
-        let Some(definition) = native_complex_abs_definition(arg) else {
-            return Ok(None);
-        };
+        let definition = native_complex_abs_definition(arg);
         if verify_equality_by_they_are_the_same(&definition, expected) {
             return Ok(Some((
                 "complex modulus coordinate definition".to_string(),
@@ -438,11 +423,11 @@ fn native_i_normal_form(obj: &Obj) -> Option<(Obj, &'static str)> {
     let exponent = exponent.normalized_value.parse::<i128>().ok()?;
     let normalized = match exponent.rem_euclid(4) {
         0 => Number::new("1".to_string()).into(),
-        1 => native_builtin_identifier_obj(I)?,
+        1 => ImaginaryUnit::new().into(),
         2 => Number::new("-1".to_string()).into(),
         3 => Mul::new(
             Number::new("-1".to_string()).into(),
-            native_builtin_identifier_obj(I)?,
+            ImaginaryUnit::new().into(),
         )
         .into(),
         _ => unreachable!(),
@@ -465,21 +450,21 @@ fn native_normal_form_matches(expected: &Obj, target: &Obj) -> bool {
     }
 }
 
-fn native_reconstruction_pair(obj: &Obj) -> Option<(&Obj, Obj)> {
+fn native_reconstruction_pair(obj: &Obj) -> (&Obj, Obj) {
     let z = obj;
-    let re = native_builtin_call(RE, z.clone())?;
-    let img = native_builtin_call(IMG, z.clone())?;
-    let imaginary_term = Mul::new(img, native_builtin_identifier_obj(I)?).into();
-    Some((z, Add::new(re, imaginary_term).into()))
+    let re: Obj = RealPart::new(z.clone()).into();
+    let img: Obj = ImaginaryPart::new(z.clone()).into();
+    let imaginary_term = Mul::new(img, ImaginaryUnit::new().into()).into();
+    (z, Add::new(re, imaginary_term).into())
 }
 
-fn native_complex_abs_definition(arg: &Obj) -> Option<Obj> {
-    let re = native_builtin_call(RE, arg.clone())?;
-    let img = native_builtin_call(IMG, arg.clone())?;
+fn native_complex_abs_definition(arg: &Obj) -> Obj {
+    let re: Obj = RealPart::new(arg.clone()).into();
+    let img: Obj = ImaginaryPart::new(arg.clone()).into();
     let two: Obj = Number::new("2".to_string()).into();
     let squared_re: Obj = Pow::new(re, two.clone()).into();
     let squared_img: Obj = Pow::new(img, two).into();
-    Some(Sqrt::new(Add::new(squared_re, squared_img).into()).into())
+    Sqrt::new(Add::new(squared_re, squared_img).into()).into()
 }
 
 fn linear_complex_parts(obj: &Obj) -> Option<(&Obj, &Obj)> {
@@ -498,36 +483,8 @@ fn linear_complex_parts(obj: &Obj) -> Option<(&Obj, &Obj)> {
     }
 }
 
-fn native_builtin_call(name: &str, arg: Obj) -> Option<Obj> {
-    let identifier = Identifier::new_bound(name.to_string(), builtin_symbol_ref(name)?);
-    Some(FnObj::new(FnObjHead::Identifier(identifier), vec![vec![Box::new(arg)]]).into())
-}
-
-fn native_builtin_call_arg<'a>(obj: &'a Obj, name: &str) -> Option<&'a Obj> {
-    let Obj::FnObj(fn_obj) = obj else {
-        return None;
-    };
-    let FnObjHead::Identifier(identifier) = fn_obj.head.as_ref() else {
-        return None;
-    };
-    if !identifier.is_builtin(name) {
-        return None;
-    }
-    let [group] = fn_obj.body.as_slice() else {
-        return None;
-    };
-    let [arg] = group.as_slice() else {
-        return None;
-    };
-    Some(arg.as_ref())
-}
-
-fn native_builtin_identifier_obj(name: &str) -> Option<Obj> {
-    Some(Identifier::new_bound(name.to_string(), builtin_symbol_ref(name)?).into())
-}
-
 fn obj_is_native_i(obj: &Obj) -> bool {
-    matches!(obj, Obj::Atom(AtomObj::Identifier(identifier)) if identifier.is_builtin(I))
+    matches!(obj, Obj::ImaginaryUnit(_))
 }
 
 fn obj_is_literal_zero(obj: &Obj) -> bool {

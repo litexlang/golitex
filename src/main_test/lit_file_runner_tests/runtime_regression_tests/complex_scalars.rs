@@ -1,13 +1,20 @@
 use super::*;
 
 #[test]
-fn complex_builtin_symbol_ids_are_stably_appended() {
-    let start = 1_u64 << 62;
-    let expected = [(C, 48), (I, 49), (RE, 50), (IMG, 51), (C_ABS, 52)];
+fn native_complex_ast_keywords_do_not_use_builtin_symbol_ids() {
+    let last_existing = builtin_symbol_ref(BIJECTIVE).expect("existing builtin ID should remain");
+    assert_eq!(last_existing.id().value(), (1_u64 << 62) + 47);
 
-    for (name, offset) in expected {
-        let symbol = builtin_symbol_ref(name).expect("native complex name should have a symbol ID");
-        assert_eq!(symbol.id().value(), start + offset, "{name}");
+    for name in [C, I, RE, IMG, C_ABS] {
+        assert!(is_keyword(name), "{name} should remain hard reserved");
+        assert!(
+            !is_builtin_identifier_name(name),
+            "{name} should not use the builtin Identifier path"
+        );
+        assert!(
+            builtin_symbol_ref(name).is_none(),
+            "{name} should not allocate a builtin SymbolId"
+        );
     }
 }
 
@@ -30,9 +37,6 @@ C_abs(i) = 1
 / $in fn(a, b C: b != 0) C
 ^ $in fn(z C, n N) C
 ^ $in fn(z C, k Z: z != 0) C
-re $in fn(z C) R
-img $in fn(z C) R
-C_abs $in fn(z C) R
 
 forall r R:
     re(r) = r
@@ -44,6 +48,9 @@ forall a, b R:
     img(a + b * i) = b
 
 forall z C:
+    re(z) $in R
+    img(z) $in R
+    C_abs(z) $in R
     z = re(z) + img(z) * i
     C_abs(z) = sqrt(re(z) ^ 2 + img(z) ^ 2)
     C_abs(z) >= 0

@@ -34,7 +34,7 @@ fn collect_obj_binder_bindings(
     depth: usize,
 ) {
     match obj {
-        Obj::Atom(_) | Obj::Number(_) | Obj::StandardSet(_) => {}
+        Obj::Atom(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => {}
         Obj::FnObj(x) => {
             collect_fn_obj_head_binder_bindings(x.head.as_ref(), bindings, seen, depth);
             for group in &x.body {
@@ -59,6 +59,9 @@ fn collect_obj_binder_bindings(
         Obj::MatrixScalarMul(x) => collect_two(&x.scalar, &x.matrix, bindings, seen, depth),
         Obj::MatrixPow(x) => collect_two(&x.base, &x.exponent, bindings, seen, depth),
         Obj::Abs(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
+        Obj::RealPart(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
+        Obj::ImaginaryPart(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
+        Obj::ComplexAbs(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
         Obj::Sqrt(x) => collect_obj_binder_bindings(&x.arg, bindings, seen, depth),
         Obj::Log(x) => {
             collect_obj_binder_bindings(&x.base, bindings, seen, depth);

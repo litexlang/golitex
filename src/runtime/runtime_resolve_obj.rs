@@ -59,6 +59,7 @@ impl Runtime {
         }
         match obj {
             Obj::Number(number) => number.clone().into(),
+            Obj::ImaginaryUnit(unit) => unit.clone().into(),
             Obj::Atom(AtomObj::IdentifierWithMod(identifier))
                 if self.is_current_parse_module(&identifier.mod_name) =>
             {
@@ -122,6 +123,13 @@ impl Runtime {
                 }
                 let result: Obj = Abs::new(resolved_arg).into();
                 self.resolve_obj_try_fold_arithmetic(result)
+            }
+            Obj::RealPart(real_part) => RealPart::new(self.resolve_obj(&real_part.arg)).into(),
+            Obj::ImaginaryPart(imaginary_part) => {
+                ImaginaryPart::new(self.resolve_obj(&imaginary_part.arg)).into()
+            }
+            Obj::ComplexAbs(complex_abs) => {
+                ComplexAbs::new(self.resolve_obj(&complex_abs.arg)).into()
             }
             Obj::Log(l) => {
                 let result: Obj =

@@ -463,11 +463,6 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == Q
         || atom_name == Z
         || atom_name == R
-        || atom_name == C
-        || atom_name == I
-        || atom_name == RE
-        || atom_name == IMG
-        || atom_name == C_ABS
         || atom_name == FINITE_SET_SIZE
         || atom_name == FINITE_SET_MAX
         || atom_name == FINITE_SET_MIN

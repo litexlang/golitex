@@ -572,6 +572,7 @@ impl Runtime {
             let name = binding.name();
             if self.current_parse_context().active_binding(name).is_some()
                 || self.visible_symbol_definition(name).is_some()
+                || is_keyword(name)
                 || is_builtin_identifier_name(name)
                 || is_builtin_predicate(name)
             {

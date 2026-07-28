@@ -72,7 +72,7 @@ impl LeanEmitter {
         }
 
         if let Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(stmt)) = &verified_stmt.stmt {
-            if stmt.equal_to_anonymous_fn.contains_native_complex_builtin() {
+            if stmt.equal_to_anonymous_fn.contains_native_complex_syntax() {
                 return Err(lean_extract_error(
                     &stmt.line_file,
                     "Lean extractor MVP does not support native complex function signatures or bodies",
@@ -200,7 +200,7 @@ impl LeanEmitter {
     }
 
     fn fact(&self, fact: &Fact) -> Result<String, RuntimeError> {
-        if fact.contains_native_complex_builtin() {
+        if fact.contains_native_complex_syntax() {
             return Err(lean_extract_error(
                 &fact.line_file(),
                 "Lean extractor MVP does not support native complex expressions in facts",
@@ -371,7 +371,7 @@ impl LeanEmitter {
     }
 
     fn real_expr(&self, obj: &Obj) -> Result<String, RuntimeError> {
-        if obj.contains_native_complex_builtin() {
+        if obj.contains_native_complex_syntax() {
             return Err(lean_extract_error(
                 &default_line_file(),
                 "Lean extractor MVP does not support native complex expressions",

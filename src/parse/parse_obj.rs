@@ -592,6 +592,23 @@ impl Runtime {
         if tok == TEMPLATE_INSTANCE_PREFIX {
             return self.parse_instantiated_template_obj(tb);
         }
+        if tok == I {
+            tb.skip()?;
+            return Ok(ImaginaryUnit::new().into());
+        }
+        if tok == RE || tok == IMG || tok == C_ABS {
+            let operator = tok.to_string();
+            tb.skip()?;
+            tb.skip_token(LEFT_BRACE)?;
+            let arg = self.parse_obj(tb)?;
+            tb.skip_token(RIGHT_BRACE)?;
+            return Ok(match operator.as_str() {
+                RE => RealPart::new(arg).into(),
+                IMG => ImaginaryPart::new(arg).into(),
+                C_ABS => ComplexAbs::new(arg).into(),
+                _ => unreachable!(),
+            });
+        }
         if tok == ABS {
             tb.skip()?;
             tb.skip_token(LEFT_BRACE)?;
@@ -2667,6 +2684,22 @@ mod matrix_operator_parse_tests {
 
         assert_eq!(ObjKind::BigUnion as u8, 18);
         assert_eq!(ObjKind::BigIntersect as u8, 19);
+    }
+
+    #[test]
+    fn native_complex_syntax_has_dedicated_ast_nodes() {
+        let cases = [
+            ("i", ObjKind::ImaginaryUnit),
+            ("re(i)", ObjKind::RealPart),
+            ("img(i)", ObjKind::ImaginaryPart),
+            ("C_abs(i)", ObjKind::ComplexAbs),
+        ];
+
+        for (source, expected_kind) in cases {
+            let obj = parse_obj_line(source).expect("native complex syntax should parse");
+            assert_eq!(obj.kind(), expected_kind, "{source}");
+            assert_eq!(obj.to_string(), source, "{source}");
+        }
     }
 
     #[test]

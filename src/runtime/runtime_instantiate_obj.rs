@@ -63,6 +63,7 @@ impl Runtime {
             }
             Obj::FnObj(inner) => self.inst_fn_obj(inner, param_to_arg_map, param_obj_type),
             Obj::Number(inner) => self.inst_number(inner, param_to_arg_map, param_obj_type),
+            Obj::ImaginaryUnit(inner) => Ok(inner.clone().into()),
             Obj::Add(inner) => self.inst_add(inner, param_to_arg_map, param_obj_type),
             Obj::Sub(inner) => self.inst_sub(inner, param_to_arg_map, param_obj_type),
             Obj::Mul(inner) => self.inst_mul(inner, param_to_arg_map, param_obj_type),
@@ -77,6 +78,24 @@ impl Runtime {
             }
             Obj::MatrixPow(inner) => self.inst_matrix_pow(inner, param_to_arg_map, param_obj_type),
             Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map, param_obj_type),
+            Obj::RealPart(inner) => {
+                Ok(
+                    RealPart::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?)
+                        .into(),
+                )
+            }
+            Obj::ImaginaryPart(inner) => Ok(ImaginaryPart::new(self.inst_obj(
+                &inner.arg,
+                param_to_arg_map,
+                param_obj_type,
+            )?)
+            .into()),
+            Obj::ComplexAbs(inner) => {
+                Ok(
+                    ComplexAbs::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?)
+                        .into(),
+                )
+            }
             Obj::Sqrt(inner) => self.inst_sqrt(inner, param_to_arg_map, param_obj_type),
             Obj::Log(inner) => self.inst_log(inner, param_to_arg_map, param_obj_type),
             Obj::Union(inner) => self.inst_union(inner, param_to_arg_map, param_obj_type),

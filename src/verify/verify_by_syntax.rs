@@ -19,6 +19,7 @@ impl Runtime {
                 Obj::Number(m) => n.to_string() == m.to_string(),
                 _ => false,
             },
+            Obj::ImaginaryUnit(_) => matches!(right, Obj::ImaginaryUnit(_)),
             Obj::Add(a) => match right {
                 Obj::Add(b) => a.to_string() == b.to_string(),
                 _ => false,
@@ -65,6 +66,18 @@ impl Runtime {
             },
             Obj::Abs(a) => match right {
                 Obj::Abs(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::RealPart(a) => match right {
+                Obj::RealPart(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::ImaginaryPart(a) => match right {
+                Obj::ImaginaryPart(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::ComplexAbs(a) => match right {
+                Obj::ComplexAbs(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::Sqrt(a) => match right {

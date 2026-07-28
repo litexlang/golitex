@@ -113,7 +113,7 @@ fn mark_forall_param_coverage_in_obj(
                 }
             }
         }
-        Obj::Number(_) | Obj::StandardSet(_) => {}
+        Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => {}
         Obj::Add(binary) => {
             mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
@@ -159,6 +159,15 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(binary.exponent.as_ref(), coverage_by_forall_param);
         }
         Obj::Abs(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::RealPart(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::ImaginaryPart(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::ComplexAbs(unary) => {
             mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
         }
         Obj::Sqrt(unary) => {

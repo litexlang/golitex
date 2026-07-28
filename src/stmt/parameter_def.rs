@@ -591,7 +591,7 @@ fn collect_cited_param_indices_from_obj(
                 }
             }
         }
-        Obj::Number(_) | Obj::StandardSet(_) => {}
+        Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => {}
         Obj::Add(x) => collect_cited_param_indices_from_two_objs(
             &x.left,
             &x.right,
@@ -635,6 +635,24 @@ fn collect_cited_param_indices_from_obj(
             out,
         ),
         Obj::Abs(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::RealPart(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::ImaginaryPart(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::ComplexAbs(x) => collect_cited_param_indices_from_obj(
             &x.arg,
             previous_param_indices,
             shadowed_names,
