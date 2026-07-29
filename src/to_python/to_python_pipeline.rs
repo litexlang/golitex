@@ -596,6 +596,12 @@ impl PythonExtractor {
                     "python extractor v1 does not support native complex coordinate or modulus expressions",
                 ))
             }
+            Obj::Sin(_) | Obj::Cos(_) | Obj::Tan(_) | Obj::Cot(_) => {
+                Err(python_extract_error(
+                    line_file,
+                    "python extractor v1 does not support native trigonometric expressions",
+                ))
+            }
             Obj::Atom(a) => self.python_atom(a, params, line_file),
             Obj::Add(a) => {
                 self.python_binary_expr(a.left.as_ref(), "+", a.right.as_ref(), params, line_file)

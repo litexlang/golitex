@@ -381,6 +381,10 @@ impl LeanEmitter {
             Obj::Number(number) => Ok(format!("({} : ℝ)", number.normalized_value)),
             Obj::EulerNumber(_) => Ok("(Real.exp 1)".to_string()),
             Obj::Pi(_) => Ok("Real.pi".to_string()),
+            Obj::Sin(_) | Obj::Cos(_) | Obj::Tan(_) | Obj::Cot(_) => Err(lean_extract_error(
+                &default_line_file(),
+                "Lean extractor MVP does not support native trigonometric expressions",
+            )),
             Obj::Atom(atom) => self.real_atom(atom),
             Obj::Add(obj) => self.binary_expr(&obj.left, "+", &obj.right),
             Obj::Sub(obj) => self.binary_expr(&obj.left, "-", &obj.right),

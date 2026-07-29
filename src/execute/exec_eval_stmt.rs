@@ -737,7 +737,7 @@ impl Runtime {
             if cur.contains_native_transcendental_syntax() {
                 return Err(short_exec_error(
                     eval_stmt.clone().into(),
-                    "eval: transcendental constants are symbolic and are not supported by the evaluator (e and pi)"
+                    "eval: native transcendental symbols are symbolic and are not supported by the evaluator (e, pi, sin, cos, tan, and cot)"
                         .to_string(),
                     None,
                     vec![],
@@ -1466,7 +1466,7 @@ impl Runtime {
         if stmt.obj_to_eval.contains_native_transcendental_syntax() {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "eval: transcendental constants are symbolic and are not supported by the evaluator (e and pi)"
+                "eval: native transcendental symbols are symbolic and are not supported by the evaluator (e, pi, sin, cos, tan, and cot)"
                     .to_string(),
                 None,
                 vec![],
@@ -1489,7 +1489,7 @@ impl Runtime {
         if executable_obj.contains_native_transcendental_syntax() {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "eval: transcendental constants are symbolic and are not supported by the evaluator (e and pi)"
+                "eval: native transcendental symbols are symbolic and are not supported by the evaluator (e, pi, sin, cos, tan, and cot)"
                     .to_string(),
                 None,
                 vec![],

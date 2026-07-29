@@ -16,6 +16,7 @@ mod order_algebra_builtin;
 mod order_normalize;
 mod order_semantics_builtin;
 mod set_relation_duality;
+mod trigonometry;
 mod type_predicates_builtin;
 
 pub(crate) use in_fact_builtin::{general_cart_member_fn_set, general_cart_member_pointwise_fact};

@@ -1168,6 +1168,10 @@ impl DepCollector {
                 self.collect_obj(&x.func);
             }
             Obj::Abs(x) => self.collect_obj(&x.arg),
+            Obj::Sin(x) => self.collect_obj(&x.arg),
+            Obj::Cos(x) => self.collect_obj(&x.arg),
+            Obj::Tan(x) => self.collect_obj(&x.arg),
+            Obj::Cot(x) => self.collect_obj(&x.arg),
             Obj::RealPart(x) => self.collect_obj(&x.arg),
             Obj::ImaginaryPart(x) => self.collect_obj(&x.arg),
             Obj::ComplexAbs(x) => self.collect_obj(&x.arg),

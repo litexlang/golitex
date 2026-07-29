@@ -847,6 +847,30 @@ impl Runtime {
             Obj::Mod(ref a) => self.match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
             Obj::Pow(ref a) => self.match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
             Obj::Abs(ref a) => self.match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
+            Obj::Sin(ref a) => match given_arg {
+                Obj::Sin(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
+            Obj::Cos(ref a) => match given_arg {
+                Obj::Cos(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
+            Obj::Tan(ref a) => match given_arg {
+                Obj::Tan(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
+            Obj::Cot(ref a) => match given_arg {
+                Obj::Cot(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
             Obj::RealPart(ref a) => match given_arg {
                 Obj::RealPart(g) => {
                     self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
@@ -2228,6 +2252,30 @@ impl Runtime {
                     anonymous_fn_body,
                 ),
             (Obj::Abs(left), Obj::Abs(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Sin(left), Obj::Sin(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Cos(left), Obj::Cos(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Tan(left), Obj::Tan(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Cot(left), Obj::Cot(given)) => self
                 .match_arg_in_anonymous_fn_body_with_given_arg(
                     left.arg.as_ref(),
                     given.arg.as_ref(),

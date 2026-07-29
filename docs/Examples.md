@@ -1904,6 +1904,61 @@ i^(1 / 2)
 See [Complex Scalar Migration](Complex_Scalar_Migration.md) before updating
 older sources that used one of the new reserved names.
 
+### 2.2. Native Real Trigonometry (Beta Preview)
+
+- Category: `preview builtin object and rule`
+- Purpose: Shows the centralized symbolic interface and the partial domains of
+  tangent and cotangent.
+
+The core values, addition formulas, and unit-circle identity require no import.
+Parity, difference, double-angle, `pi` values, periodicity, and bounds are
+derived by the same canonical rule layer:
+
+```litex
+sin(0) = 0
+cos(0) = 1
+sin(pi / 2) = 1
+cos(pi / 2) = 0
+sin(pi) = 0
+cos(pi) = -1
+
+forall x, y R:
+    sin(x + y) = sin(x) * cos(y) + cos(x) * sin(y)
+    cos(x - y) = cos(x) * cos(y) + sin(x) * sin(y)
+
+forall x R:
+    sin(x)^2 + cos(x)^2 = 1
+    sin(-x) = -sin(x)
+    cos(-x) = cos(x)
+    sin(2 * x) = 2 * sin(x) * cos(x)
+    cos(2 * x) = 1 - 2 * sin(x)^2
+    sin(x + 2 * pi) = sin(x)
+    cos(x + 2 * pi) = cos(x)
+    -1 <= sin(x) <= 1
+    -1 <= cos(x) <= 1
+```
+
+Tangent and cotangent are well-defined only with their denominator facts:
+
+```litex
+forall x R:
+    cos(x) != 0
+    =>:
+        tan(x) = sin(x) / cos(x)
+        cos(x + pi) != 0
+        tan(x + pi) = tan(x)
+
+forall x R:
+    sin(x) != 0
+    =>:
+        cot(x) = cos(x) / sin(x)
+        sin(x + pi) != 0
+        cot(x + pi) = cot(x)
+```
+
+For a complete checked sample, see
+[`examples/01_proof_patterns/trigonometric_builtin_rules.lit`](../examples/01_proof_patterns/trigonometric_builtin_rules.lit).
+
 ### 3. Common Builtin Rules
 
 - Category: `builtin rule`

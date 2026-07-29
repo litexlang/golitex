@@ -108,6 +108,10 @@ impl Obj {
                     || pow.exponent.contains_native_complex_syntax()
             }
             Obj::Abs(abs) => abs.arg.contains_native_complex_syntax(),
+            Obj::Sin(x) => x.arg.contains_native_complex_syntax(),
+            Obj::Cos(x) => x.arg.contains_native_complex_syntax(),
+            Obj::Tan(x) => x.arg.contains_native_complex_syntax(),
+            Obj::Cot(x) => x.arg.contains_native_complex_syntax(),
             Obj::Sqrt(sqrt) => sqrt.arg.contains_native_complex_syntax(),
             Obj::Log(log) => {
                 log.base.contains_native_complex_syntax()
@@ -267,11 +271,16 @@ impl Obj {
         }
     }
 
-    /// Detect native named transcendental constants before a backend attempts to lower them as
-    /// ordinary identifiers.
+    /// Detect native transcendental symbols before a backend attempts to lower them as ordinary
+    /// identifiers or executable function calls.
     pub(crate) fn contains_native_transcendental_syntax(&self) -> bool {
         match self {
-            Obj::EulerNumber(_) | Obj::Pi(_) => true,
+            Obj::EulerNumber(_)
+            | Obj::Pi(_)
+            | Obj::Sin(_)
+            | Obj::Cos(_)
+            | Obj::Tan(_)
+            | Obj::Cot(_) => true,
             Obj::Atom(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => false,
             Obj::FnObj(fn_obj) => {
                 let native_head = match fn_obj.head.as_ref() {

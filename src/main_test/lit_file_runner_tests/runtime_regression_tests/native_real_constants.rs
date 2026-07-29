@@ -145,7 +145,7 @@ fn native_real_constants_remain_symbolic_in_evaluator() {
             "{label} should be rejected by evaluator:\n{run_output}"
         );
         assert!(
-            run_output.contains("transcendental constants are symbolic"),
+            run_output.contains("native transcendental symbols are symbolic"),
             "{run_output}"
         );
     }

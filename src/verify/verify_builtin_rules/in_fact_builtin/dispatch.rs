@@ -163,6 +163,30 @@ impl Runtime {
                 in_fact, reason,
             ));
         }
+        // Native real trigonometric objects map a well-defined real argument into R.
+        // Example: `x R` implies `sin(x) $in R`; `tan(x)` additionally needs `cos(x) != 0`.
+        if matches!(
+            &in_fact.element,
+            Obj::Sin(_) | Obj::Cos(_) | Obj::Tan(_) | Obj::Cot(_)
+        ) && matches!(
+            &in_fact.set,
+            Obj::StandardSet(StandardSet::R) | Obj::StandardSet(StandardSet::C)
+        ) {
+            if self
+                .verify_obj_well_defined_and_store_cache(&in_fact.element, verify_state)
+                .is_err()
+            {
+                return Ok(StmtUnknown::new().into());
+            }
+            let reason = if matches!(&in_fact.set, Obj::StandardSet(StandardSet::R)) {
+                "native real trigonometric object has real result"
+            } else {
+                "native real trigonometric object has real result, hence is in C"
+            };
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact, reason,
+            ));
+        }
         if let Some(result) =
             self.maybe_verify_in_fact_in_unfolded_user_defined_set(in_fact, verify_state)?
         {
@@ -408,6 +432,10 @@ impl Runtime {
                 | Obj::Mod(_)
                 | Obj::Pow(_)
                 | Obj::Abs(_)
+                | Obj::Sin(_)
+                | Obj::Cos(_)
+                | Obj::Tan(_)
+                | Obj::Cot(_)
                 | Obj::Sqrt(_)
                 | Obj::Log(_),
                 Obj::StandardSet(StandardSet::R),

@@ -57,6 +57,10 @@ impl Runtime {
             Obj::Mod(m) => self.verify_mod_well_defined(m, verify_state),
             Obj::Pow(pow) => self.verify_pow_well_defined(pow, verify_state),
             Obj::Abs(abs) => self.verify_abs_well_defined(abs, verify_state),
+            Obj::Sin(x) => self.verify_sin_well_defined(x, verify_state),
+            Obj::Cos(x) => self.verify_cos_well_defined(x, verify_state),
+            Obj::Tan(x) => self.verify_tan_well_defined(x, verify_state),
+            Obj::Cot(x) => self.verify_cot_well_defined(x, verify_state),
             Obj::RealPart(real_part) => self.verify_real_part_well_defined(real_part, verify_state),
             Obj::ImaginaryPart(imaginary_part) => {
                 self.verify_imaginary_part_well_defined(imaginary_part, verify_state)

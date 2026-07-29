@@ -177,6 +177,10 @@ pub const PREIMAGE: &str = "preimage";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const ALGO: &str = "algo";
 pub const ABS: &str = "abs";
+pub const SIN: &str = "sin";
+pub const COS: &str = "cos";
+pub const TAN: &str = "tan";
+pub const COT: &str = "cot";
 pub const SQRT: &str = "sqrt";
 pub const LOG: &str = "log";
 pub const Q_POS: &str = "Q_pos";
@@ -353,6 +357,10 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TUPLE,
         ALGO,
         ABS,
+        SIN,
+        COS,
+        TAN,
+        COT,
         SQRT,
         LOG,
         Q_POS,

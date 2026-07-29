@@ -70,6 +70,22 @@ impl Runtime {
                 Obj::Abs(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Sin(a) => match right {
+                Obj::Sin(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Cos(a) => match right {
+                Obj::Cos(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Tan(a) => match right {
+                Obj::Tan(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Cot(a) => match right {
+                Obj::Cot(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::RealPart(a) => match right {
                 Obj::RealPart(b) => a.to_string() == b.to_string(),
                 _ => false,

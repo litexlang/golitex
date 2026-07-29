@@ -332,6 +332,10 @@ impl Runtime {
                 Self::obj_pair_depends_on_given_exist_param(x.obj.as_ref(), x.index.as_ref(), names)
             }
             Obj::Abs(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Sin(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Cos(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Tan(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Cot(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::RealPart(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::ImaginaryPart(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::ComplexAbs(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),

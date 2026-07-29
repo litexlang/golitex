@@ -18,6 +18,10 @@ pub enum Obj {
     Mod(Mod),
     Pow(Pow),
     Abs(Abs),
+    Sin(Sin),
+    Cos(Cos),
+    Tan(Tan),
+    Cot(Cot),
     RealPart(RealPart),
     ImaginaryPart(ImaginaryPart),
     ComplexAbs(ComplexAbs),
@@ -148,6 +152,10 @@ pub enum ObjKind {
     ComplexAbs = 73,
     EulerNumber = 74,
     Pi = 75,
+    Sin = 76,
+    Cos = 77,
+    Tan = 78,
+    Cot = 79,
 }
 
 impl ObjKind {
@@ -603,6 +611,26 @@ pub struct Abs {
 }
 
 #[derive(Clone)]
+pub struct Sin {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Cos {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Tan {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Cot {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
 pub struct RealPart {
     pub arg: Box<Obj>,
 }
@@ -784,6 +812,30 @@ impl Pow {
 impl Abs {
     pub fn new(arg: Obj) -> Self {
         Abs { arg: Box::new(arg) }
+    }
+}
+
+impl Sin {
+    pub fn new(arg: Obj) -> Self {
+        Sin { arg: Box::new(arg) }
+    }
+}
+
+impl Cos {
+    pub fn new(arg: Obj) -> Self {
+        Cos { arg: Box::new(arg) }
+    }
+}
+
+impl Tan {
+    pub fn new(arg: Obj) -> Self {
+        Tan { arg: Box::new(arg) }
+    }
+}
+
+impl Cot {
+    pub fn new(arg: Obj) -> Self {
+        Cot { arg: Box::new(arg) }
     }
 }
 
@@ -1145,6 +1197,10 @@ fn precedence(o: &Obj) -> u8 {
         Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::MatrixScalarMul(_) => 2,
         Obj::Pow(_)
         | Obj::Abs(_)
+        | Obj::Sin(_)
+        | Obj::Cos(_)
+        | Obj::Tan(_)
+        | Obj::Cot(_)
         | Obj::RealPart(_)
         | Obj::ImaginaryPart(_)
         | Obj::ComplexAbs(_)
@@ -1193,6 +1249,10 @@ impl Obj {
             Obj::Mod(_) => ObjKind::Mod,
             Obj::Pow(_) => ObjKind::Pow,
             Obj::Abs(_) => ObjKind::Abs,
+            Obj::Sin(_) => ObjKind::Sin,
+            Obj::Cos(_) => ObjKind::Cos,
+            Obj::Tan(_) => ObjKind::Tan,
+            Obj::Cot(_) => ObjKind::Cot,
             Obj::RealPart(_) => ObjKind::RealPart,
             Obj::ImaginaryPart(_) => ObjKind::ImaginaryPart,
             Obj::ComplexAbs(_) => ObjKind::ComplexAbs,
@@ -1266,6 +1326,10 @@ impl Obj {
             Obj::Mod(_) => MOD.to_string(),
             Obj::Pow(_) => POW.to_string(),
             Obj::Abs(_) => ABS.to_string(),
+            Obj::Sin(_) => SIN.to_string(),
+            Obj::Cos(_) => COS.to_string(),
+            Obj::Tan(_) => TAN.to_string(),
+            Obj::Cot(_) => COT.to_string(),
             Obj::RealPart(_) => RE.to_string(),
             Obj::ImaginaryPart(_) => IMG.to_string(),
             Obj::ComplexAbs(_) => C_ABS.to_string(),
@@ -1380,6 +1444,26 @@ impl Obj {
             Obj::Abs(a) => {
                 write!(f, "{} {}", ABS, LEFT_BRACE)?;
                 a.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
+            Obj::Sin(x) => {
+                write!(f, "{}{}", SIN, LEFT_BRACE)?;
+                x.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
+            Obj::Cos(x) => {
+                write!(f, "{}{}", COS, LEFT_BRACE)?;
+                x.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
+            Obj::Tan(x) => {
+                write!(f, "{}{}", TAN, LEFT_BRACE)?;
+                x.arg.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
+            Obj::Cot(x) => {
+                write!(f, "{}{}", COT, LEFT_BRACE)?;
+                x.arg.fmt_with_precedence(f, 0)?;
                 write!(f, "{}", RIGHT_BRACE)?;
             }
             Obj::RealPart(real_part) => {
@@ -1517,6 +1601,10 @@ impl Obj {
             )
             .into(),
             Obj::Abs(x) => Abs::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Sin(x) => Sin::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Cos(x) => Cos::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Tan(x) => Tan::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Cot(x) => Cot::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
             Obj::RealPart(x) => {
                 RealPart::new(Obj::replace_bound_identifier(*x.arg, from, to)).into()
             }
@@ -2480,6 +2568,30 @@ impl fmt::Display for Abs {
     }
 }
 
+impl fmt::Display for Sin {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}{}{}{}", SIN, LEFT_BRACE, self.arg, RIGHT_BRACE)
+    }
+}
+
+impl fmt::Display for Cos {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}{}{}{}", COS, LEFT_BRACE, self.arg, RIGHT_BRACE)
+    }
+}
+
+impl fmt::Display for Tan {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}{}{}{}", TAN, LEFT_BRACE, self.arg, RIGHT_BRACE)
+    }
+}
+
+impl fmt::Display for Cot {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}{}{}{}", COT, LEFT_BRACE, self.arg, RIGHT_BRACE)
+    }
+}
+
 impl fmt::Display for RealPart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}{}{}{}", RE, LEFT_BRACE, self.arg, RIGHT_BRACE)
@@ -2748,6 +2860,30 @@ impl From<Pow> for Obj {
 impl From<Abs> for Obj {
     fn from(a: Abs) -> Self {
         Obj::Abs(a)
+    }
+}
+
+impl From<Sin> for Obj {
+    fn from(x: Sin) -> Self {
+        Obj::Sin(x)
+    }
+}
+
+impl From<Cos> for Obj {
+    fn from(x: Cos) -> Self {
+        Obj::Cos(x)
+    }
+}
+
+impl From<Tan> for Obj {
+    fn from(x: Tan) -> Self {
+        Obj::Tan(x)
+    }
+}
+
+impl From<Cot> for Obj {
+    fn from(x: Cot) -> Self {
+        Obj::Cot(x)
     }
 }
 
