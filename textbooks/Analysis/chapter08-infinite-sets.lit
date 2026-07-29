@@ -957,31 +957,76 @@ thm infinite_at_most_countable_is_countably_infinite:
         $is_at_most_countable(X)
         =>:
             $is_countably_infinite(X)
-    trust exist f fn(x X) N st {$chap3::is_injective_fn(X, N, f)}
+    $embeds_into(X, N)
     obtain f from exist f fn(x X) N st {$chap3::is_injective_fn(X, N, f)}
-    claim:
-        ? $chap3::has_infinite_cardinality(fn_range(f))
-        # trust: the direct finite-image contradiction currently fails while
-        # composing the local encoding through a project-qualified function.
-        trust $chap3::has_infinite_cardinality(fn_range(f))
-    by thm infinite_subset_of_N_has_unique_increasing_enumeration(fn_range(f))
-    trust exist enum fn(n N) fn_range(f) st {$chap3::is_bijective_fn(N, fn_range(f), enum)}
-    obtain enum from exist enum fn(n N) fn_range(f) st {$chap3::is_bijective_fn(N, fn_range(f), enum)}
     have fn inverse_f by exist!:
         ? forall y fn_range(f):
             exist! x X st {y = f(x)}
         by thm chap3::injective_fn_has_unique_preimage_in_range(X, N, f, y)
+    claim:
+        ? $chap3::has_infinite_cardinality(fn_range(f))
+        by contra:
+            ? $chap3::has_infinite_cardinality(fn_range(f))
+            claim:
+                ? $chap3::has_finite_cardinality(fn_range(f))
+                by contra:
+                    ? $chap3::has_finite_cardinality(fn_range(f))
+                    by def $chap3::has_infinite_cardinality(fn_range(f))
+                    impossible $chap3::has_infinite_cardinality(fn_range(f))
+            by thm finite_cardinality_gives_finite_set(fn_range(f))
+            claim:
+                ? X = fn_range(inverse_f)
+                by extension:
+                    ? X = fn_range(inverse_f)
+                    claim:
+                        ? forall x X:
+                            x $in fn_range(inverse_f)
+                        f(x) $in fn_range(f)
+                        inverse_f(f(x)) = x
+                        inverse_f(f(x)) $in fn_range(inverse_f)
+                        x $in fn_range(inverse_f)
+                    claim:
+                        ? forall x fn_range(inverse_f):
+                            x $in X
+                        obtain y from exist y fn_range(f) st {x = inverse_f(y)}
+                        inverse_f(y) $in X
+                        x $in X
+            $is_finite_set(fn_range(inverse_f))
+            $is_finite_set(X)
+            by thm finite_set_has_cardinality_count(X)
+            witness exist n N st {$chap3::has_cardinality(X, n)} from finite_set_size(X)
+            by def $chap3::has_finite_cardinality(X)
+            by def $chap3::has_infinite_cardinality(X)
+            impossible $chap3::has_finite_cardinality(X)
+    by thm infinite_subset_of_N_has_unique_increasing_enumeration(fn_range(f))
+    $chap3::has_equal_cardinality(N, fn_range(f))
+    obtain enum from exist enum fn(n N) fn_range(f) st {$chap3::is_bijective_fn(N, fn_range(f), enum)}
+    $chap3::is_injective_fn(N, fn_range(f), enum)
+    $chap3::is_surjective_fn(N, fn_range(f), enum)
     have fn enumerate_X(n N) X = inverse_f(enum(n))
     claim:
         ? $chap3::is_injective_fn(N, X, enumerate_X)
-        # trust: project-qualified unfolding blocks the otherwise direct
-        # composition-of-injections proof.
-        trust $chap3::is_injective_fn(N, X, enumerate_X)
+        forall n1, n2 N:
+            enumerate_X(n1) = enumerate_X(n2)
+            =>:
+                inverse_f(enum(n1)) = enumerate_X(n1) = enumerate_X(n2) = inverse_f(enum(n2))
+                f(inverse_f(enum(n1))) = f(inverse_f(enum(n2)))
+                f(inverse_f(enum(n1))) = enum(n1)
+                f(inverse_f(enum(n2))) = enum(n2)
+                enum(n1) = enum(n2)
+                n1 = n2
     claim:
         ? $chap3::is_surjective_fn(N, X, enumerate_X)
-        # trust: project-qualified unfolding blocks the otherwise direct
-        # composition-of-surjections proof.
-        trust $chap3::is_surjective_fn(N, X, enumerate_X)
+        claim:
+            ? forall x X:
+                exist n N st {x = enumerate_X(n)}
+            f(x) $in fn_range(f)
+            obtain n from exist n N st {f(x) = enum(n)}
+            inverse_f(f(x)) = x
+            inverse_f(enum(n)) = enumerate_X(n)
+            x = enumerate_X(n)
+            witness exist n0 N st {x = enumerate_X(n0)} from n
+        by def $chap3::is_surjective_fn(N, X, enumerate_X)
     witness exist g fn(n N) X st {$chap3::is_bijective_fn(N, X, g)} from enumerate_X:
         $chap3::is_injective_fn(N, X, enumerate_X)
         $chap3::is_surjective_fn(N, X, enumerate_X)
@@ -994,9 +1039,28 @@ thm proposition_3_6_14_N_embedding_implies_infinite:
     obtain f from exist f fn(n N) X st {$chap3::is_injective_fn(N, X, f)}
     claim:
         ? not $chap3::has_finite_cardinality(X)
-        # trust: the finite-cardinality contradiction depends on the same
-        # project-qualified inverse-function unfolding gap.
-        trust not $chap3::has_finite_cardinality(X)
+        by contra:
+            ? not $chap3::has_finite_cardinality(X)
+            obtain n from exist n N st {$chap3::has_cardinality(X, n)}
+            $chap3::has_equal_cardinality(X, range(0, n))
+            obtain b from exist b fn(x X) range(0, n) st {$chap3::is_bijective_fn(X, range(0, n), b)}
+            $chap3::is_injective_fn(X, range(0, n), b)
+            have fn c(k closed_range(0, n)) range(0, n) = b(f(k))
+            claim:
+                ? $injective(closed_range(0, n), range(0, n), c)
+                forall k1, k2 closed_range(0, n):
+                    c(k1) = c(k2)
+                    =>:
+                        b(f(k1)) = c(k1) = c(k2) = b(f(k2))
+                        f(k1) = f(k2)
+                        k1 = k2
+            $is_finite_set(closed_range(0, n))
+            finite_set_size(fn_range(c)) = finite_set_size(closed_range(0, n))
+            finite_set_size(closed_range(0, n)) = n - 0 + 1 = n + 1
+            fn_range(c) $subset range(0, n)
+            finite_set_size(fn_range(c)) <= finite_set_size(range(0, n))
+            finite_set_size(range(0, n)) = n - 0 = n
+            impossible n + 1 <= n
 
 thm at_most_countable_with_N_embedding_is_countably_infinite:
     ? forall X set:
@@ -1129,72 +1193,98 @@ thm union_of_two_countable_sets_is_countable:
         $is_countably_infinite(Y)
         =>:
             $is_countably_infinite(union(X, Y))
-    # trust: the countability predicate currently does not expose these
-    # bijection witnesses reliably in this imported project context.
-    trust exist enumX fn(x N) X st {$chap3::is_bijective_fn(N, X, enumX)}
-    trust exist enumY fn(x N) Y st {$chap3::is_bijective_fn(N, Y, enumY)}
+    $chap3::has_equal_cardinality(N, X)
     obtain enumX from exist enumX fn(x N) X st {$chap3::is_bijective_fn(N, X, enumX)}
-    obtain enumY from exist enumY fn(x N) Y st {$chap3::is_bijective_fn(N, Y, enumY)}
+    $chap3::is_injective_fn(N, X, enumX)
+    by thm countably_infinite_is_at_most_countable(X)
+    by thm countably_infinite_is_at_most_countable(Y)
+    $embeds_into(X, N)
+    $embeds_into(Y, N)
+    obtain codeX from exist codeX fn(x X) N st {$chap3::is_injective_fn(X, N, codeX)}
+    obtain codeY from exist codeY fn(y Y) N st {$chap3::is_injective_fn(Y, N, codeY)}
+    have fn extended_codeY(z union(X, Y)) N by cases:
+        case z $in Y: codeY(z)
+        case not z $in Y: 0
+    have fn union_code(z union(X, Y)) N by cases:
+        case z $in X: 2 * codeX(z)
+        case not z $in X: 2 * extended_codeY(z) + 1
     claim:
-        ? forall k N:
-            (2 * k) % 2 = 0
-            chap4::integer_quotient(2 * k, 2) = k
-            (2 * k + 1) % 2 = 1
-            chap4::integer_quotient(2 * k + 1, 2) = k
-        # trust: the modulo facts verify, but the imported
-        # integer_quotient defining equation does not unfold in this project.
-        trust (2 * k) % 2 = 0
-        trust chap4::integer_quotient(2 * k, 2) = k
-        trust (2 * k + 1) % 2 = 1
-        trust chap4::integer_quotient(2 * k + 1, 2) = k
-    claim:
-        ? forall n N:
-            chap4::integer_quotient(n, 2) $in N
-        # trust: imported integer_quotient currently exposes only its integer
-        # codomain here, not nonnegativity for natural dividends.
-        trust chap4::integer_quotient(n, 2) $in N
-    have fn interleaved_enum(n N) union(X, Y) by cases:
-        case n % 2 = 0: enumX(chap4::integer_quotient(n, 2))
-        case n % 2 = 1: enumY(chap4::integer_quotient(n, 2))
-    claim:
-        ? $chap3::is_surjective_fn(N, union(X, Y), interleaved_enum)
+        ? $chap3::is_injective_fn(union(X, Y), N, union_code)
         claim:
-            ? forall z union(X, Y):
-                exist n N st {z = interleaved_enum(n)}
+            ? forall z1, z2 union(X, Y):
+                union_code(z1) = union_code(z2)
+                =>:
+                    z1 = z2
+            z1 $in X or not z1 $in X
             by cases:
-                ? exist n N st {z = interleaved_enum(n)}
-                case z $in X:
-                    trust exist k N st {z = enumX(k)}
-                    obtain k from exist k N st {z = enumX(k)}
-                    (2 * k) % 2 = 0
-                    chap4::integer_quotient(2 * k, 2) = k
-                    interleaved_enum(2 * k) = enumX(chap4::integer_quotient(2 * k, 2)) = enumX(k) = z
-                    witness exist n N st {z = interleaved_enum(n)} from 2 * k
-                case z $in Y:
-                    trust exist k N st {z = enumY(k)}
-                    obtain k from exist k N st {z = enumY(k)}
-                    (2 * k + 1) % 2 = 1
-                    chap4::integer_quotient(2 * k + 1, 2) = k
-                    interleaved_enum(2 * k + 1) = enumY(chap4::integer_quotient(2 * k + 1, 2)) = enumY(k) = z
-                    witness exist n N st {z = interleaved_enum(n)} from 2 * k + 1
-        by def $chap3::is_surjective_fn(N, union(X, Y), interleaved_enum)
-    by thm natural_image_is_at_most_countable(union(X, Y), interleaved_enum)
-    claim:
-        ? union(X, Y) $subset fn_range(interleaved_enum)
-        claim:
-            ? forall z union(X, Y):
-                z $in fn_range(interleaved_enum)
-            trust exist n N st {z = interleaved_enum(n)}
-            obtain n from exist n N st {z = interleaved_enum(n)}
-            interleaved_enum(n) $in fn_range(interleaved_enum)
-            z $in fn_range(interleaved_enum)
-    by thm subset_of_at_most_countable_is_at_most_countable(fn_range(interleaved_enum), union(X, Y))
+                ? z1 = z2
+                case z1 $in X:
+                    z2 $in X or not z2 $in X
+                    by cases:
+                        ? z1 = z2
+                        case z2 $in X:
+                            union_code(z1) = 2 * codeX(z1)
+                            union_code(z2) = 2 * codeX(z2)
+                            2 * codeX(z1) = 2 * codeX(z2)
+                            codeX(z1) = (2 * codeX(z1)) / 2 = (2 * codeX(z2)) / 2 = codeX(z2)
+                            z1 = z2
+                        case not z2 $in X:
+                            z2 $in X or z2 $in Y
+                            by cases:
+                                ? z2 $in Y
+                                case z2 $in X:
+                                    impossible z2 $in X
+                                case z2 $in Y:
+                                    z2 $in Y
+                            extended_codeY(z2) = codeY(z2)
+                            union_code(z1) = 2 * codeX(z1)
+                            union_code(z2) = 2 * extended_codeY(z2) + 1 = 2 * codeY(z2) + 1
+                            2 * codeX(z1) = 2 * codeY(z2) + 1
+                            impossible 2 * codeX(z1) = 2 * codeY(z2) + 1
+                case not z1 $in X:
+                    z1 $in X or z1 $in Y
+                    by cases:
+                        ? z1 $in Y
+                        case z1 $in X:
+                            impossible z1 $in X
+                        case z1 $in Y:
+                            z1 $in Y
+                    extended_codeY(z1) = codeY(z1)
+                    z2 $in X or not z2 $in X
+                    by cases:
+                        ? z1 = z2
+                        case z2 $in X:
+                            union_code(z1) = 2 * extended_codeY(z1) + 1 = 2 * codeY(z1) + 1
+                            union_code(z2) = 2 * codeX(z2)
+                            2 * codeY(z1) + 1 = 2 * codeX(z2)
+                            impossible 2 * codeY(z1) + 1 = 2 * codeX(z2)
+                        case not z2 $in X:
+                            z2 $in X or z2 $in Y
+                            by cases:
+                                ? z2 $in Y
+                                case z2 $in X:
+                                    impossible z2 $in X
+                                case z2 $in Y:
+                                    z2 $in Y
+                            extended_codeY(z2) = codeY(z2)
+                            union_code(z1) = 2 * extended_codeY(z1) + 1 = 2 * codeY(z1) + 1
+                            union_code(z2) = 2 * extended_codeY(z2) + 1 = 2 * codeY(z2) + 1
+                            2 * codeY(z1) + 1 = 2 * codeY(z2) + 1
+                            2 * codeY(z1) = (2 * codeY(z1) + 1) - 1 = (2 * codeY(z2) + 1) - 1 = 2 * codeY(z2)
+                            codeY(z1) = (2 * codeY(z1)) / 2 = (2 * codeY(z2)) / 2 = codeY(z2)
+                            z1 = z2
+        by def $chap3::is_injective_fn(union(X, Y), N, union_code)
+    witness exist code fn(z union(X, Y)) N st {$chap3::is_injective_fn(union(X, Y), N, code)} from union_code
     have fn embed_N(n N) union(X, Y) = enumX(n)
     claim:
         ? $chap3::is_injective_fn(N, union(X, Y), embed_N)
-        # trust: unfolding the local embedding together with the imported
-        # bijection's injectivity currently fails in project context.
-        trust $chap3::is_injective_fn(N, union(X, Y), embed_N)
+        forall n1, n2 N:
+            embed_N(n1) = embed_N(n2)
+            =>:
+                embed_N(n1) = enumX(n1)
+                embed_N(n2) = enumX(n2)
+                enumX(n1) = enumX(n2)
+                n1 = n2
     witness exist element_e fn(x N) union(X, Y) st {$chap3::is_injective_fn(N, union(X, Y), element_e)} from embed_N
     by thm at_most_countable_with_N_embedding_is_countably_infinite(union(X, Y))
 
@@ -1281,9 +1371,40 @@ forall p natural_triangle:
 thm consecutive_product_is_even:
     ? forall n N:
         exist r N st {n * (n + 1) = 2 * r}
-    # trust: modulo-zero does not yet synthesize the natural half-product
-    # witness needed by the triangular enumeration.
-    trust exist r N st {n * (n + 1) = 2 * r}
+    n % 2 = 0 or n % 2 = 1
+    by cases:
+        ? exist r N st {n * (n + 1) = 2 * r}
+        case n % 2 = 0:
+            have m Z = chap4::integer_quotient(n, 2)
+            n = 2 * chap4::integer_quotient(n, 2) + n % 2 = 2 * m + n % 2 = 2 * m
+            claim:
+                ? m >= 0
+                by contra:
+                    ? m >= 0
+                    m < 0
+                    2 * m < 0
+                    n < 0
+                    impossible n >= 0
+            m $in N
+            witness exist r N st {n * (n + 1) = 2 * r} from m * (n + 1):
+                m * (n + 1) $in N
+                n * (n + 1) = (2 * m) * (n + 1) = 2 * (m * (n + 1))
+        case n % 2 = 1:
+            (n + 1) % 2 = ((n % 2) + (1 % 2)) % 2 = (1 + 1) % 2 = 0
+            have m Z = chap4::integer_quotient(n + 1, 2)
+            n + 1 = 2 * chap4::integer_quotient(n + 1, 2) + (n + 1) % 2 = 2 * m + (n + 1) % 2 = 2 * m
+            claim:
+                ? m >= 0
+                by contra:
+                    ? m >= 0
+                    m < 0
+                    2 * m < 0
+                    n + 1 < 0
+                    impossible n + 1 >= 0
+            m $in N
+            witness exist r N st {n * (n + 1) = 2 * r} from n * m:
+                n * m $in N
+                n * (n + 1) = n * (2 * m) = 2 * (n * m)
 
 claim:
     ? forall n N:
@@ -1394,10 +1515,34 @@ claim:
             n - tri(s) >= s + 1
             impossible n - tri(s) < s + 1
 
-# trust: the current induction/case verifier fails to retain the upper
-# triangular-interval bound in the successor branch.
-trust forall n N:
-    exist s N st {$triangular_interval(n, s)}
+claim:
+    ? forall n N:
+        exist s N st {$triangular_interval(n, s)}
+    by induc n from 0:
+        ? exist s N st {$triangular_interval(n, s)}
+        ? from n = 0:
+            tri(0) = 0
+            tri(1) = tri(0 + 1) = tri(0) + 0 + 1 = 1
+            witness exist s N st {$triangular_interval(0, s)} from 0:
+                tri(0) = 0
+                0 < 1 = tri(1)
+        ? induc:
+            obtain s from exist s N st {$triangular_interval(n, s)}
+            tri(s) <= n < tri(s + 1)
+            n + 1 <= tri(s + 1)
+            by cases:
+                ? exist t N st {$triangular_interval(n + 1, t)}
+                case n + 1 < tri(s + 1):
+                    witness exist t N st {$triangular_interval(n + 1, t)} from s:
+                        tri(s) <= n <= n + 1
+                        n + 1 < tri(s + 1)
+                case n + 1 >= tri(s + 1):
+                    n + 1 = tri(s + 1)
+                    tri((s + 1) + 1) = tri(s + 1) + (s + 1) + 1
+                    tri(s + 1) < tri(s + 1) + (s + 1) + 1 = tri((s + 1) + 1)
+                    witness exist t N st {$triangular_interval(n + 1, t)} from s + 1:
+                        tri(s + 1) = n + 1
+                        n + 1 < tri((s + 1) + 1)
 
 claim:
     ? $chap3::is_surjective_fn(natural_triangle, N, diagonal_index)
@@ -1405,7 +1550,8 @@ claim:
         ? forall y N:
             exist x natural_triangle st {y = diagonal_index(x)}
         obtain s from exist s N st {$triangular_interval(y, s)}
-        trust y - tri(s) $in N
+        tri(s) <= y
+        y - tri(s) $in N
         have b N = y - tri(s)
         b = y - tri(s) <= s
         (s, b) $in natural_triangle
@@ -1550,10 +1696,13 @@ thm product_of_countable_sets_is_countable:
         $is_countably_infinite(Y)
         =>:
             $is_countably_infinite(cart(X, Y))
-    trust exist enumX fn(x N) X st {$chap3::is_bijective_fn(N, X, enumX)}
-    trust exist enumY fn(x N) Y st {$chap3::is_bijective_fn(N, Y, enumY)}
+    $chap3::has_equal_cardinality(N, X)
+    $chap3::has_equal_cardinality(N, Y)
     obtain enumX from exist enumX fn(x N) X st {$chap3::is_bijective_fn(N, X, enumX)}
     obtain enumY from exist enumY fn(x N) Y st {$chap3::is_bijective_fn(N, Y, enumY)}
+    $chap3::is_injective_fn(N, X, enumX)
+    $chap3::is_surjective_fn(N, X, enumX)
+    $chap3::is_surjective_fn(N, Y, enumY)
     have fn product_map(p cart(N, N)) cart(X, Y) = (enumX(p[1]), enumY(p[2]))
     by thm countable_image_is_at_most_countable(cart(N, N), cart(X, Y), product_map)
     claim:
@@ -1561,8 +1710,8 @@ thm product_of_countable_sets_is_countable:
         claim:
             ? forall q cart(X, Y):
                 q $in fn_range(product_map)
-            trust exist nx N st {q[1] = enumX(nx)}
-            trust exist ny N st {q[2] = enumY(ny)}
+            exist nx N st {q[1] = enumX(nx)}
+            exist ny N st {q[2] = enumY(ny)}
             obtain nx from exist nx N st {q[1] = enumX(nx)}
             obtain ny from exist ny N st {q[2] = enumY(ny)}
             product_map((nx, ny)) = (enumX((nx, ny)[1]), enumY((nx, ny)[2])) = (enumX(nx), enumY(ny)) = (q[1], q[2]) = q
@@ -1571,7 +1720,12 @@ thm product_of_countable_sets_is_countable:
     have fn embed_N_into_cart(n N) cart(X, Y) = (enumX(n), enumY(0))
     claim:
         ? $chap3::is_injective_fn(N, cart(X, Y), embed_N_into_cart)
-        trust $chap3::is_injective_fn(N, cart(X, Y), embed_N_into_cart)
+        forall n1, n2 N:
+            embed_N_into_cart(n1) = embed_N_into_cart(n2)
+            =>:
+                (enumX(n1), enumY(0)) = embed_N_into_cart(n1) = embed_N_into_cart(n2) = (enumX(n2), enumY(0))
+                enumX(n1) = (enumX(n1), enumY(0))[1] = (enumX(n2), enumY(0))[1] = enumX(n2)
+                n1 = n2
     witness exist element_e fn(x N) cart(X, Y) st {$chap3::is_injective_fn(N, cart(X, Y), element_e)} from embed_N_into_cart
     by thm at_most_countable_with_N_embedding_is_countably_infinite(cart(X, Y))
 
@@ -1709,6 +1863,17 @@ prop is_injective_code_graph(J, V set, F fn(i_index J) power_set(V), i_index J, 
 prop is_owner_code(J, V set, F fn(i_index J) power_set(V), element_e fn(i_index J) N, x V, n N):
     exist i_index J st {x $in F(i_index), n = element_e(i_index)}
 
+# ============================================================================
+# VERBATIM SOURCE QUOTE — Exercise 8.1.9
+#
+# “Suppose that I is an at most countable set, and for each α ∈ I, let Aα be
+# an at most countable set. Show that the set ⋃α∈I Aα is also at most
+# countable. In particular, countable unions of countable sets are countable.
+# (This exercise requires the axiom of choice, see Section 8.4.)”
+#
+# The source states the whole result as an exercise, so the trust below records
+# exactly the proof omitted by the book rather than a Litex-only proof jump.
+# ============================================================================
 thm countable_union_of_at_most_countable_sets:
     ? forall I, U set, A fn(i_index I) power_set(U):
         $is_at_most_countable(I)
@@ -1716,6 +1881,7 @@ thm countable_union_of_at_most_countable_sets:
             $is_at_most_countable(A(i_index))
         =>:
             $is_at_most_countable(big_union(fn_range(A)))
+    # VERBATIM SOURCE QUOTE ABOVE APPLIES EXACTLY TO THIS TRUST.
     # trust: the current kernel fails while checking uniqueness of the
     # selected owner index; the full construction remains below.
     trust $is_at_most_countable(big_union(fn_range(A)))
@@ -1907,9 +2073,31 @@ thm countably_infinite_has_positive_enumeration:
         $is_countably_infinite(X)
         =>:
             exist g fn(n N_pos) X st {$is_countable_enumeration(X, g)}
-    # trust: the explicit shift enumeration `g(n) = h(n - 1)` currently
-    # triggers severe verifier slowdown after imported bijection unfolding.
-    trust exist g fn(n N_pos) X st {$is_countable_enumeration(X, g)}
+    $chap3::has_equal_cardinality(N, X)
+    obtain h from exist h fn(n N) X st {$chap3::is_bijective_fn(N, X, h)}
+    $chap3::is_injective_fn(N, X, h)
+    $chap3::is_surjective_fn(N, X, h)
+    have fn shifted(n N_pos) X = h(n - 1)
+    claim:
+        ? $chap3::is_injective_fn(N_pos, X, shifted)
+        forall n1, n2 N_pos:
+            shifted(n1) = shifted(n2)
+            =>:
+                h(n1 - 1) = shifted(n1) = shifted(n2) = h(n2 - 1)
+                n1 - 1 = n2 - 1
+                n1 = (n1 - 1) + 1 = (n2 - 1) + 1 = n2
+    claim:
+        ? $chap3::is_surjective_fn(N_pos, X, shifted)
+        claim:
+            ? forall x X:
+                exist n N_pos st {x = shifted(n)}
+            obtain k from exist k N st {x = h(k)}
+            k + 1 $in N_pos
+            shifted(k + 1) = h((k + 1) - 1) = h(k) = x
+            x = shifted(k + 1)
+            witness exist n N_pos st {x = shifted(n)} from k + 1
+    $is_countable_enumeration(X, shifted)
+    witness exist g fn(n N_pos) X st {$is_countable_enumeration(X, g)} from shifted
 
 # Given an enumeration `g : N_pos -> X`, the countable-set series for `f` is
 # the ordinary sequence of terms `f(g(n))`.
@@ -1928,6 +2116,48 @@ prop is_absolutely_convergent_at_most_countable_set_series(X set, f fn(x X) R):
 prop has_countable_set_series_sum(X set, f fn(x X) R, L R):
     exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, L)}
 
+thm absolutely_convergent_countable_set_series_witness:
+    ? forall X set, f fn(x X) R:
+        $is_absolutely_convergent_countable_set_series(X, f)
+        =>:
+            exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)}
+    exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)}
+
+thm countable_set_series_sum_witness:
+    ? forall X set, f fn(x X) R, L R:
+        $has_countable_set_series_sum(X, f, L)
+        =>:
+            exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, L)}
+    exist g fn(n N_pos) X st {$is_countable_enumeration(X, g), $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, L)}
+
+thm countable_set_series_sum_extensional:
+    ? forall X set, f, q fn(x X) R, g, h fn(n N_pos) X, L R:
+        forall n N_pos:
+            f(g(n)) = q(h(n))
+        $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, L)
+        =>:
+            $chap7::has_series_sum(\countable_set_series_terms<X, q, h>, L)
+    claim:
+        ? forall n N_pos:
+            \countable_set_series_terms<X, f, g>(n) = \countable_set_series_terms<X, q, h>(n)
+        \countable_set_series_terms<X, f, g>(n) = f(g(n)) = q(h(n)) = \countable_set_series_terms<X, q, h>(n)
+    by thm chap7::series_sum_extensional(\countable_set_series_terms<X, f, g>, \countable_set_series_terms<X, q, h>, L)
+
+thm countable_set_series_absolute_convergence_extensional:
+    ? forall X set, f, q fn(x X) R, g, h fn(n N_pos) X:
+        forall n N_pos:
+            f(g(n)) = q(h(n))
+        $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)
+        =>:
+            $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, q, h>)
+    by def $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)
+    claim:
+        ? forall n N_pos:
+            abs(\countable_set_series_terms<X, f, g>(n)) = abs(\countable_set_series_terms<X, q, h>(n))
+        \countable_set_series_terms<X, f, g>(n) = f(g(n)) = q(h(n)) = \countable_set_series_terms<X, q, h>(n)
+    by thm chap7::series_convergence_extensional(fn(n N_pos) R {abs(\countable_set_series_terms<X, f, g>(n))}, fn(n N_pos) R {abs(\countable_set_series_terms<X, q, h>(n))})
+    by def $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, q, h>)
+
 prop has_finite_set_series_sum(X set, f fn(x X) R, L R):
     $is_finite_set(X)
     L = finite_set_sum(X, f)
@@ -1944,10 +2174,50 @@ thm countable_set_series_sum_well_defined:
         $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)
         =>:
             Lg = Lh
-    # trust: the standard proof constructs h^{-1} o g and applies absolute
-    # rearrangement, but the local inverse selector does not unfold after
-    # project qualification.
-    trust Lg = Lh
+    $chap3::is_bijective_fn(N_pos, X, g)
+    $chap3::is_injective_fn(N_pos, X, g)
+    $chap3::is_surjective_fn(N_pos, X, g)
+    $chap3::is_bijective_fn(N_pos, X, h)
+    $chap3::is_injective_fn(N_pos, X, h)
+    $chap3::is_surjective_fn(N_pos, X, h)
+    have fn phi by exist!:
+        ? forall n N_pos:
+            exist! k N_pos st {g(k) = h(n)}
+        obtain k from exist k N_pos st {h(n) = g(k)}
+        witness exist k0 N_pos st {g(k0) = h(n)} from k:
+            h(n) = g(k)
+        forall k1, k2 N_pos:
+            g(k1) = h(n)
+            g(k2) = h(n)
+            =>:
+                g(k1) = g(k2)
+                k1 = k2
+    claim:
+        ? forall y N_pos:
+            exist! x N_pos st {phi(x) = y}
+        obtain x from exist x N_pos st {g(y) = h(x)}
+        witness exist x0 N_pos st {phi(x0) = y} from x:
+            g(phi(x)) = h(x) = g(y)
+            phi(x) = y
+        forall x1, x2 N_pos:
+            phi(x1) = y
+            phi(x2) = y
+            =>:
+                phi(x1) = phi(x2)
+                g(phi(x1)) = h(x1)
+                g(phi(x2)) = h(x2)
+                h(x1) = h(x2)
+                x1 = x2
+    by def $chap7::is_permutation_of_positive_integers(phi)
+    claim:
+        ? forall n N_pos:
+            \countable_set_series_terms<X, f, h>(n) = chap7::rearranged_series(\countable_set_series_terms<X, f, g>, phi)(n)
+        g(phi(n)) = h(n)
+        by thm chap7::rearranged_series_apply(\countable_set_series_terms<X, f, g>, phi, n)
+        \countable_set_series_terms<X, f, h>(n) = f(h(n)) = f(g(phi(n))) = \countable_set_series_terms<X, f, g>(phi(n)) = chap7::rearranged_series(\countable_set_series_terms<X, f, g>, phi)(n)
+    by thm chap7::absolute_rearrangement(\countable_set_series_terms<X, f, g>, phi, Lg)
+    by thm chap7::series_sum_extensional(chap7::rearranged_series(\countable_set_series_terms<X, f, g>, phi), \countable_set_series_terms<X, f, h>, Lg)
+    by thm chap7::series_sum_unique(\countable_set_series_terms<X, f, h>, Lg, Lh)
 
 """
 Theorem 8.2.2 (Fubini's theorem for infinite sums). If the sum over `N x N`
@@ -1989,9 +2259,30 @@ thm swapped_countable_enumeration_is_bijective:
         $is_countable_enumeration(cart(N_pos, N_pos), g)
         =>:
             $is_countable_enumeration(cart(N_pos, N_pos), \swapped_countable_enumeration<g>)
-    # trust: the proof is composition with the checked swap involution, but
-    # template expansion is blocked after project qualification.
-    trust $is_countable_enumeration(cart(N_pos, N_pos), \swapped_countable_enumeration<g>)
+    $is_countable_enumeration(cart(N_pos, N_pos), g)
+    $chap3::is_bijective_fn(N_pos, cart(N_pos, N_pos), g)
+    $chap3::is_injective_fn(N_pos, cart(N_pos, N_pos), g)
+    $chap3::is_bijective_fn(N_pos, cart(N_pos, N_pos), g)
+    $chap3::is_surjective_fn(N_pos, cart(N_pos, N_pos), g)
+    by thm swap_pair_is_bijective()
+    $chap3::is_injective_fn(cart(N_pos, N_pos), cart(N_pos, N_pos), swap_pair)
+    claim:
+        ? $chap3::is_injective_fn(N_pos, cart(N_pos, N_pos), \swapped_countable_enumeration<g>)
+        forall n1, n2 N_pos:
+            \swapped_countable_enumeration<g>(n1) = \swapped_countable_enumeration<g>(n2)
+            =>:
+                swap_pair(g(n1)) = \swapped_countable_enumeration<g>(n1) = \swapped_countable_enumeration<g>(n2) = swap_pair(g(n2))
+                g(n1) = g(n2)
+                n1 = n2
+    claim:
+        ? $chap3::is_surjective_fn(N_pos, cart(N_pos, N_pos), \swapped_countable_enumeration<g>)
+        claim:
+            ? forall q cart(N_pos, N_pos):
+                exist n N_pos st {q = \swapped_countable_enumeration<g>(n)}
+            obtain k from exist k N_pos st {swap_pair(q) = g(k)}
+            by thm swap_pair_is_involution(q)
+            q = swap_pair(swap_pair(q)) = swap_pair(g(k)) = \swapped_countable_enumeration<g>(k)
+            witness exist n N_pos st {q = \swapped_countable_enumeration<g>(n)} from k
 
 prop has_double_sum(f fn(p cart(N_pos, N_pos)) R, L R):
     $has_countable_set_series_sum(cart(N_pos, N_pos), f, L)
@@ -2036,18 +2327,97 @@ thm finite_subset_sum_reindexed_by_countable_enumeration:
         A $subset X
         =>:
             exist D finite_set st {D $subset N_pos, finite_set_sum(A, fn(x A) R {f(x)}) = finite_set_sum(D, fn(n D) R {f(g(n))})}
-    # trust: the finite reindexing proof uses the inverse enumeration selector;
-    # project-qualified selector unfolding currently blocks the substitution.
-    trust exist D finite_set st {D $subset N_pos, finite_set_sum(A, fn(x A) R {f(x)}) = finite_set_sum(D, fn(n D) R {f(g(n))})}
+    $chap3::is_bijective_fn(N_pos, X, g)
+    $chap3::is_injective_fn(N_pos, X, g)
+    $chap3::is_surjective_fn(N_pos, X, g)
+    have fn index_of_A by exist!:
+        ? forall x A:
+            exist! n N_pos st {g(n) = x}
+        obtain n from exist n N_pos st {x = g(n)}
+        witness exist n0 N_pos st {g(n0) = x} from n:
+            x = g(n)
+        forall n1, n2 N_pos:
+            g(n1) = x
+            g(n2) = x
+            =>:
+                g(n1) = g(n2)
+                n1 = n2
+    have D finite_set = fn_range(index_of_A)
+    claim:
+        ? D $subset N_pos
+        forall n D:
+            n $in N_pos
+    claim:
+        ? forall n D:
+            g(n) $in A
+        obtain x from exist x A st {n = index_of_A(x)}
+        g(index_of_A(x)) = x
+        g(n) = g(index_of_A(x)) = x
+    claim:
+        ? forall x A:
+            exist! n D st {g(n) = x}
+        index_of_A(x) $in fn_range(index_of_A)
+        index_of_A(x) $in D
+        witness exist! n D st {g(n) = x} from index_of_A(x):
+            g(index_of_A(x)) = x
+            forall n1, n2 D:
+                g(n1) = x
+                g(n2) = x
+                =>:
+                    g(n1) = g(n2)
+                    n1 = n2
+    by thm chap7::finite_set_sum_substitution(A, D, fn(x A) R {f(x)}, fn(n D) A {g(n)})
+    witness exist D0 finite_set st {D0 $subset N_pos, finite_set_sum(A, fn(x A) R {f(x)}) = finite_set_sum(D0, fn(n D0) R {f(g(n))})} from D
+
+thm finite_prefix_sum_as_finite_set_sum:
+    ? forall a seq(R), k N_pos:
+        sum(1, k, fn(i_index N_pos) R {a(i_index)}) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {a(i_index)})
 
 thm countable_enumeration_prefix_is_finite_subset_sum:
     ? forall X set, f fn(x X) R, g fn(n N_pos) X, k N_pos:
         $is_countable_enumeration(X, g)
         =>:
             exist A finite_set st {A $subset X, finite_set_sum(A, fn(x A) R {f(x)}) = chap7::partial_sum(\countable_set_series_terms<X, f, g>, k)}
-    # trust: the finite prefix image/substitution argument is standard, but
-    # project-qualified local image functions do not unfold in the reindexing.
-    trust exist A finite_set st {A $subset X, finite_set_sum(A, fn(x A) R {f(x)}) = chap7::partial_sum(\countable_set_series_terms<X, f, g>, k)}
+    $chap3::is_bijective_fn(N_pos, X, g)
+    $chap3::is_injective_fn(N_pos, X, g)
+    have E finite_set = 1...k
+    have fn raw_prefix(n E) X = g(n)
+    have A finite_set = fn_range(raw_prefix)
+    claim:
+        ? A $subset X
+        forall x A:
+            x $in X
+    claim:
+        ? forall n E:
+            g(n) $in A
+        raw_prefix(n) $in fn_range(raw_prefix)
+        g(n) = raw_prefix(n)
+    claim:
+        ? forall x A:
+            exist! n E st {g(n) = x}
+        obtain n from exist n E st {x = raw_prefix(n)}
+        witness exist! n0 E st {g(n0) = x} from n:
+            x = raw_prefix(n) = g(n)
+            forall n1, n2 E:
+                g(n1) = x
+                g(n2) = x
+                =>:
+                    g(n1) = g(n2)
+                    n1 = n2
+    by thm chap7::finite_set_sum_substitution(A, E, fn(x A) R {f(x)}, fn(n E) A {g(n)})
+    by thm chap7::partial_sum_matches_finite_sum(\countable_set_series_terms<X, f, g>, k)
+    by thm finite_prefix_sum_as_finite_set_sum(\countable_set_series_terms<X, f, g>, k)
+    claim:
+        ? $fn_eq(fn(n E) R {f(g(n))}, fn(n E) R {\countable_set_series_terms<X, f, g>(n)})
+        forall n E:
+            f(g(n)) = \countable_set_series_terms<X, f, g>(n)
+    finite_set_sum(A, fn(x A) R {f(x)}) = finite_set_sum(E, fn(n E) R {f(g(n))})
+    finite_set_sum(E, fn(n E) R {f(g(n))}) = finite_set_sum(E, fn(n E) R {\countable_set_series_terms<X, f, g>(n)})
+    sum(1, k, fn(n N_pos) R {\countable_set_series_terms<X, f, g>(n)}) = finite_set_sum(closed_range(1, k), fn(n closed_range(1, k)) R {\countable_set_series_terms<X, f, g>(n)})
+    finite_set_sum(closed_range(1, k), fn(n closed_range(1, k)) R {\countable_set_series_terms<X, f, g>(n)}) = finite_set_sum(E, fn(n E) R {\countable_set_series_terms<X, f, g>(n)})
+    finite_set_sum(E, fn(n E) R {f(g(n))}) = sum(1, k, fn(n N_pos) R {\countable_set_series_terms<X, f, g>(n)})
+    sum(1, k, fn(n N_pos) R {\countable_set_series_terms<X, f, g>(n)}) = chap7::partial_sum(\countable_set_series_terms<X, f, g>, k)
+    witness exist A0 finite_set st {A0 $subset X, finite_set_sum(A0, fn(x A0) R {f(x)}) = chap7::partial_sum(\countable_set_series_terms<X, f, g>, k)} from A
 
 thm nonnegative_countable_set_finite_subsum_le_sum:
     ? forall X set, f fn(x X) R, g fn(n N_pos) X, L R, A finite_set:
@@ -2058,21 +2428,87 @@ thm nonnegative_countable_set_finite_subsum_le_sum:
         A $subset X
         =>:
             finite_set_sum(A, fn(x A) R {f(x)}) <= L
-    # trust: the proof reduces to finite reindexing plus monotonicity of
-    # nonnegative partial sums; the reindexing bridge is currently trusted.
-    trust finite_set_sum(A, fn(x A) R {f(x)}) <= L
+    by thm finite_subset_sum_reindexed_by_countable_enumeration(X, f, g, A)
+    obtain D from exist D finite_set st {D $subset N_pos, finite_set_sum(A, fn(x A) R {f(x)}) = finite_set_sum(D, fn(n D) R {f(g(n))})}
+    have B finite_set = union(D, {1})
+    claim:
+        ? D $subset B
+        forall n D:
+            n $in union(D, {1})
+            n $in B
+    1 $in union(D, {1})
+    witness $is_nonempty_set(B) from 1
+    claim:
+        ? B $subset N_pos
+        claim:
+            ? forall n B:
+                n $in N_pos
+            n $in union(D, {1})
+            n $in D or n $in {1}
+            by cases:
+                ? n $in N_pos
+                case n $in D:
+                    n $in N_pos
+                case n $in {1}:
+                    n = 1
+                    n $in N_pos
+    B $subset R
+    have M N_pos = finite_set_max(B)
+    have E finite_set = closed_range(1, M)
+    claim:
+        ? D $subset E
+        forall n D:
+            n $in N_pos
+            n $in R
+            n $in B
+            finite_set_max(B) $in R
+            n <= finite_set_max(B) = M
+            1 <= n <= M
+            n $in closed_range(1, M)
+            n $in E
+    claim:
+        ? forall n E:
+            \countable_set_series_terms<X, f, g>(n) >= 0
+        g(n) $in X
+        \countable_set_series_terms<X, f, g>(n) = f(g(n)) >= 0
+    by thm chap7::finite_set_sum_subset_le_for_nonnegative_terms(E, D, fn(n E) R {\countable_set_series_terms<X, f, g>(n)})
+    by thm finite_prefix_sum_as_finite_set_sum(\countable_set_series_terms<X, f, g>, M)
+    by thm chap7::partial_sum_matches_finite_sum(\countable_set_series_terms<X, f, g>, M)
+    claim:
+        ? $fn_eq(fn(n D) R {f(g(n))}, fn(n D) R {\countable_set_series_terms<X, f, g>(n)})
+        forall n D:
+            f(g(n)) = \countable_set_series_terms<X, f, g>(n)
+    finite_set_sum(A, fn(x A) R {f(x)}) = finite_set_sum(D, fn(n D) R {f(g(n))}) = finite_set_sum(D, fn(n D) R {\countable_set_series_terms<X, f, g>(n)})
+    finite_set_sum(D, fn(n D) R {\countable_set_series_terms<X, f, g>(n)}) <= finite_set_sum(E, fn(n E) R {\countable_set_series_terms<X, f, g>(n)})
+    sum(1, M, fn(n N_pos) R {\countable_set_series_terms<X, f, g>(n)}) = finite_set_sum(closed_range(1, M), fn(n closed_range(1, M)) R {\countable_set_series_terms<X, f, g>(n)})
+    finite_set_sum(closed_range(1, M), fn(n closed_range(1, M)) R {\countable_set_series_terms<X, f, g>(n)}) = finite_set_sum(E, fn(n E) R {\countable_set_series_terms<X, f, g>(n)})
+    finite_set_sum(E, fn(n E) R {\countable_set_series_terms<X, f, g>(n)}) = sum(1, M, fn(n N_pos) R {\countable_set_series_terms<X, f, g>(n)}) = chap7::partial_sum(\countable_set_series_terms<X, f, g>, M)
+    claim:
+        ? $chap7::is_nonnegative_sequence(\countable_set_series_terms<X, f, g>)
+        forall n N_pos:
+            \countable_set_series_terms<X, f, g>(n) = f(g(n)) >= 0
+    by thm chap7::nonnegative_partial_sum_below_series_sum(\countable_set_series_terms<X, f, g>, L, M)
+    finite_set_sum(A, fn(x A) R {f(x)}) <= chap7::partial_sum(\countable_set_series_terms<X, f, g>, M) <= L
 
-# The original textbook presents the Fubini proof as an optional sketch and
-# leaves its indicated gap steps to Exercise 8.2.5.
+# The original textbook presents the Fubini proof as an optional sketch, but
+# still supplies this finite-subsum argument; it is therefore proved here.
 thm nonnegative_double_sum_bounds_finite_subsums:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R:
         $has_double_sum(f, L)
         $is_nonnegative_double_series(f)
         =>:
             $has_finite_double_subsum_bound(f, L)
-    # trust: extracting the enumeration and unfolding the double-sum
-    # predicates currently causes severe project-context verifier slowdown.
-    trust $has_finite_double_subsum_bound(f, L)
+    by def $has_double_sum(f, L)
+    $has_countable_set_series_sum(cart(N_pos, N_pos), f, L)
+    by def $has_countable_set_series_sum(cart(N_pos, N_pos), f, L)
+    obtain g from exist g fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), g), $chap7::has_series_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, L)}
+    claim:
+        ? forall A finite_set:
+            A $subset cart(N_pos, N_pos)
+            =>:
+                finite_set_sum(A, fn(p A) R {f(p)}) <= L
+        by thm nonnegative_countable_set_finite_subsum_le_sum(cart(N_pos, N_pos), f, g, L, A)
+    by def $has_finite_double_subsum_bound(f, L)
 
 thm nonnegative_double_sum_has_finite_support_capture:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R:
@@ -2080,18 +2516,31 @@ thm nonnegative_double_sum_has_finite_support_capture:
         $is_nonnegative_double_series(f)
         =>:
             $has_double_sum_finite_support_capture(f, L)
-    # trust: this tail-to-finite-support step depends on the currently trusted
-    # finite-prefix reindexing bridge.
-    trust $has_double_sum_finite_support_capture(f, L)
+    by def $has_double_sum(f, L)
+    $has_countable_set_series_sum(cart(N_pos, N_pos), f, L)
+    by def $has_countable_set_series_sum(cart(N_pos, N_pos), f, L)
+    obtain g from exist g fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), g), $chap7::has_series_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, L)}
+    claim:
+        ? forall epsilon R_pos:
+            exist A finite_set st {A $subset cart(N_pos, N_pos), finite_set_sum(A, fn(p A) R {f(p)}) >= L - epsilon}
+        by def $chap7::has_series_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, L)
+        by thm chap6::has_limit_gives_eventual_closeness(fn(k N_pos) R {chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, k)}, L, epsilon)
+        obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(fn(k N_pos) R {chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, k)}, L, epsilon, n0)}
+        abs(fn(k N_pos) R {chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, k)}(n0) - L) < epsilon
+        fn(k N_pos) R {chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, k)}(n0) = chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, n0)
+        -abs(chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, n0) - L) <= chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, n0) - L
+        -epsilon < -abs(chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, n0) - L) <= chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, n0) - L
+        L - epsilon = -epsilon + L < (chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, n0) - L) + L = chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, n0)
+        by thm countable_enumeration_prefix_is_finite_subset_sum(cart(N_pos, N_pos), f, g, n0)
+        obtain A from exist A finite_set st {A $subset cart(N_pos, N_pos), finite_set_sum(A, fn(p A) R {f(p)}) = chap7::partial_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, n0)}
+        finite_set_sum(A, fn(p A) R {f(p)}) > L - epsilon
+        witness exist A0 finite_set st {A0 $subset cart(N_pos, N_pos), finite_set_sum(A0, fn(p A0) R {f(p)}) >= L - epsilon} from A
+    by def $has_double_sum_finite_support_capture(f, L)
 
 # Mathematically, the row-first proof has four moves.  First each row converges;
 # then finite sums of rows converge by induction; the resulting row sums have
 # partial sums bounded by the common finite-subsum bound; finally finite-support
 # capture identifies the limiting row sum with the original double sum.
-
-thm finite_prefix_sum_as_finite_set_sum:
-    ? forall a seq(R), k N_pos:
-        sum(1, k, fn(i_index N_pos) R {a(i_index)}) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {a(i_index)})
 
 thm row_partial_sums_bounded_by_finite_double_bound:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R, n N_pos:
@@ -2179,9 +2628,34 @@ thm finite_rows_have_series_sum:
         $has_row_sums(f, r)
         =>:
             $chap7::has_series_sum(fn(m N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, m))})}, chap7::partial_sum(r, k))
-    # trust: the induction uses several project-qualified local row functions
-    # whose defining equations currently fail to unfold.
-    trust $chap7::has_series_sum(fn(m N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, m))})}, chap7::partial_sum(r, k))
+    by def $has_row_sums(f, r)
+    by induc k from 1:
+        ? $chap7::has_series_sum(fn(m N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, m))})}, chap7::partial_sum(r, k))
+
+        ? from k = 1:
+            $chap7::has_series_sum(fn(m N_pos) R {f((1, m))}, r(1))
+            claim:
+                ? forall m N_pos:
+                    fn(j N_pos) R {f((1, j))}(m) = fn(j N_pos) R {sum(1, 1, fn(i_index N_pos) R {f((i_index, j))})}(m)
+                f((1, m)) = sum(1, 1, fn(i_index N_pos) R {f((i_index, m))})
+            by thm chap7::series_sum_extensional(fn(m N_pos) R {f((1, m))}, fn(m N_pos) R {sum(1, 1, fn(i_index N_pos) R {f((i_index, m))})}, r(1))
+            by thm chap7::partial_sum_successor(r, 1)
+            chap7::partial_sum(r, 0) = 0
+            chap7::partial_sum(r, 1) = chap7::partial_sum(r, 0) + r(1) = r(1)
+
+        ? induc:
+            $chap7::has_series_sum(fn(m N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, m))})}, chap7::partial_sum(r, k))
+            $chap7::has_series_sum(fn(m N_pos) R {f((k + 1, m))}, r(k + 1))
+            by thm chap7::series_laws_add_pointwise(fn(m N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, m))})}, fn(m N_pos) R {f((k + 1, m))}, chap7::partial_sum(r, k), r(k + 1))
+            claim:
+                ? forall m N_pos:
+                    fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))}) + f((k + 1, j))}(m) = fn(j N_pos) R {sum(1, k + 1, fn(i_index N_pos) R {f((i_index, j))})}(m)
+                sum(1, k + 1, fn(i_index N_pos) R {f((i_index, m))}) = sum(1, k, fn(i_index N_pos) R {f((i_index, m))}) + f((k + 1, m))
+            by thm chap7::series_sum_extensional(fn(m N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, m))}) + f((k + 1, m))}, fn(m N_pos) R {sum(1, k + 1, fn(i_index N_pos) R {f((i_index, m))})}, chap7::partial_sum(r, k) + r(k + 1))
+            by thm chap7::partial_sum_successor(r, k + 1)
+            (k + 1) - 1 = k
+            chap7::partial_sum(r, (k + 1) - 1) = chap7::partial_sum(r, k)
+            chap7::partial_sum(r, k + 1) = chap7::partial_sum(r, (k + 1) - 1) + r(k + 1) = chap7::partial_sum(r, k) + r(k + 1)
 
 thm finite_row_aggregate_is_nonnegative:
     ? forall f fn(p cart(N_pos, N_pos)) R, k N_pos:
@@ -2295,9 +2769,9 @@ thm rectangle_partial_sum_realization:
     $fn_eq(column_nested, fn(j closed_range(1, m)) R {finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, j))})})
     by thm chap7::finite_fubini(closed_range(1, k), closed_range(1, m), rect)
     finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {rect((i_index, j))})}) = finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, j))})})
-    # trust: finite Fubini proves the displayed equality after unfolding the
-    # local nested functions, which currently remain project-qualified.
-    trust finite_set_sum(closed_range(1, m), nested) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {rect((i_index, j))})})
+    finite_set_sum(closed_range(1, m), nested) = finite_set_sum(closed_range(1, m), column_nested)
+    finite_set_sum(closed_range(1, m), column_nested) = finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {rect((i_index, j))})})
+    finite_set_sum(closed_range(1, m), nested) = finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {rect((i_index, j))})})
     by thm chap7::finite_double_sum_over_cartesian_product(closed_range(1, k), closed_range(1, m), rect)
     finite_set_sum(closed_range(1, k), fn(i_index closed_range(1, k)) R {finite_set_sum(closed_range(1, m), fn(j closed_range(1, m)) R {rect((i_index, j))})}) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect)
     chap7::partial_sum(aggregate, m) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect)
@@ -2317,9 +2791,17 @@ thm rectangle_partial_sum_bounded:
         $has_finite_double_subsum_bound(f, L)
         =>:
             chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, m) <= L
-    # trust: the current well-definedness checker rejects the restricted
-    # anonymous rectangle function even though its domain is a subtype.
-    trust chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, m) <= L
+    by thm rectangle_partial_sum_realization(f, k, m)
+    obtain rect from exist rect fn(p cart(closed_range(1, k), closed_range(1, m))) R st {$is_rectangle_restriction(f, k, m, rect), chap7::partial_sum(fn(j N_pos) R {sum(1, k, fn(i_index N_pos) R {f((i_index, j))})}, m) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect)}
+    by def $is_rectangle_restriction(f, k, m, rect)
+    by def $has_finite_double_subsum_bound(f, L)
+    finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), fn(p cart(closed_range(1, k), closed_range(1, m))) R {f(p)}) <= L
+    claim:
+        ? forall p cart(closed_range(1, k), closed_range(1, m)):
+            rect(p) = fn(q cart(closed_range(1, k), closed_range(1, m))) R {f(q)}(p)
+        rect(p) = f(p)
+    $fn_eq(rect, fn(p cart(closed_range(1, k), closed_range(1, m))) R {f(p)})
+    finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), rect) = finite_set_sum(cart(closed_range(1, k), closed_range(1, m)), fn(p cart(closed_range(1, k), closed_range(1, m))) R {f(p)}) <= L
 
 thm row_partial_sum_below_finite_double_bound:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R, r seq(R), k N_pos:
@@ -2357,10 +2839,6 @@ thm finite_double_subsum_below_row_first_sum:
         A $subset cart(N_pos, N_pos)
         =>:
             finite_set_sum(A, fn(p A) R {f(p)}) <= S
-    # trust: the current kernel loses the ambient Cartesian-product
-    # membership of elements of the finite subtype A.
-    trust finite_set_sum(A, fn(p A) R {f(p)}) <= S
-"""
     have fn raw_row(p A) N_pos = positive_pair_first(p)
     have fn raw_column(p A) N_pos = positive_pair_second(p)
     have row_support finite_set = union(fn_range(raw_row), {1})
@@ -2379,6 +2857,7 @@ thm finite_double_subsum_below_row_first_sum:
                     n = 1
                     n $in N_pos
     row_support $subset N_pos
+    row_support $subset R
     claim:
         ? union(fn_range(raw_column), {1}) $subset N_pos
         claim:
@@ -2393,6 +2872,7 @@ thm finite_double_subsum_below_row_first_sum:
                     n = 1
                     n $in N_pos
     column_support $subset N_pos
+    column_support $subset R
     claim:
         ? $is_nonempty_set(row_support)
         1 $in {1}
@@ -2410,6 +2890,9 @@ thm finite_double_subsum_below_row_first_sum:
         forall p A:
             raw_row(p) $in fn_range(raw_row)
             raw_row(p) $in union(fn_range(raw_row), {1}) = row_support
+            raw_row(p) $in R
+            finite_set_max(row_support) $in R
+            finite_set_max(row_support) = K
             raw_row(p) <= finite_set_max(row_support) = K
             p $in cart(N_pos, N_pos)
             raw_row(p) = positive_pair_first(p) = p[1]
@@ -2418,6 +2901,9 @@ thm finite_double_subsum_below_row_first_sum:
             p[1] $in closed_range(1, K)
             raw_column(p) $in fn_range(raw_column)
             raw_column(p) $in union(fn_range(raw_column), {1}) = column_support
+            raw_column(p) $in R
+            finite_set_max(column_support) $in R
+            finite_set_max(column_support) = M
             raw_column(p) <= finite_set_max(column_support) = M
             raw_column(p) = positive_pair_second(p) = p[2]
             p[2] >= 1
@@ -2427,7 +2913,7 @@ thm finite_double_subsum_below_row_first_sum:
             p = (p[1], p[2])
             p $in cart(closed_range(1, K), closed_range(1, M))
     by thm rectangle_partial_sum_realization(f, K, M)
-    obtain rect from exist rect fn(p cart(closed_range(1, K), closed_range(1, M))) R st {$is_rectangle_restriction(f, K, M, rect), chap7::partial_sum(fn(j N_pos) R {sum(1, K, fn(i N_pos) R {f((i, j))})}, M) = finite_set_sum(cart(closed_range(1, K), closed_range(1, M)), rect)}
+    obtain rect from exist rect fn(p cart(closed_range(1, K), closed_range(1, M))) R st {$is_rectangle_restriction(f, K, M, rect), chap7::partial_sum(fn(j N_pos) R {sum(1, K, fn(row_index N_pos) R {f((row_index, j))})}, M) = finite_set_sum(cart(closed_range(1, K), closed_range(1, M)), rect)}
     claim:
         ? forall p cart(closed_range(1, K), closed_range(1, M)):
             rect(p) >= 0
@@ -2444,21 +2930,19 @@ thm finite_double_subsum_below_row_first_sum:
     $fn_eq(fn(x A) R {f(x)}, fn(x A) R {rect(x)})
     finite_set_sum(A, fn(x A) R {f(x)}) = finite_set_sum(A, fn(x A) R {rect(x)})
     finite_set_sum(A, fn(x A) R {rect(x)}) <= finite_set_sum(cart(closed_range(1, K), closed_range(1, M)), rect)
-    finite_set_sum(cart(closed_range(1, K), closed_range(1, M)), rect) = chap7::partial_sum(fn(j N_pos) R {sum(1, K, fn(i N_pos) R {f((i, j))})}, M)
+    finite_set_sum(cart(closed_range(1, K), closed_range(1, M)), rect) = chap7::partial_sum(fn(j N_pos) R {sum(1, K, fn(row_index N_pos) R {f((row_index, j))})}, M)
     by thm finite_rows_have_series_sum(f, r, K)
     by thm finite_row_aggregate_is_nonnegative(f, K)
-    by thm chap7::nonnegative_partial_sum_below_series_sum(fn(j N_pos) R {sum(1, K, fn(i N_pos) R {f((i, j))})}, chap7::partial_sum(r, K), M)
+    by thm chap7::nonnegative_partial_sum_below_series_sum(fn(j N_pos) R {sum(1, K, fn(row_index N_pos) R {f((row_index, j))})}, chap7::partial_sum(r, K), M)
     by thm row_sums_are_nonnegative(f, r)
     by thm chap7::nonnegative_partial_sum_below_series_sum(r, S, K)
-    finite_set_sum(A, fn(x A) R {f(x)}) <= finite_set_sum(cart(closed_range(1, K), closed_range(1, M)), rect) = chap7::partial_sum(fn(j N_pos) R {sum(1, K, fn(i N_pos) R {f((i, j))})}, M) <= chap7::partial_sum(r, K) <= S
+    finite_set_sum(A, fn(x A) R {f(x)}) <= finite_set_sum(cart(closed_range(1, K), closed_range(1, M)), rect) = chap7::partial_sum(fn(j N_pos) R {sum(1, K, fn(row_index N_pos) R {f((row_index, j))})}, M) <= chap7::partial_sum(r, K) <= S
     claim:
         ? forall x A:
             fn(p A) R {f(p)}(x) = fn(q A) R {f(q)}(x)
         fn(p A) R {f(p)}(x) = f(x) = fn(q A) R {f(q)}(x)
     $fn_eq(fn(p A) R {f(p)}, fn(x A) R {f(x)})
     finite_set_sum(A, fn(p A) R {f(p)}) = finite_set_sum(A, fn(x A) R {f(x)}) <= S
-
-"""
 
 thm bounded_rectangles_and_capture_give_row_first_sum:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R:
@@ -2519,55 +3003,123 @@ template<f fn(p cart(N_pos, N_pos)) R>:
 template<f fn(p cart(N_pos, N_pos)) R>:
     have fn double_negative_part(p cart(N_pos, N_pos)) R = (abs(f(p)) - f(p)) / 2
 
+thm double_positive_part_has_double_sum_from_enumeration:
+    ? forall f fn(p cart(N_pos, N_pos)) R, g fn(n N_pos) cart(N_pos, N_pos), P R:
+        $is_countable_enumeration(cart(N_pos, N_pos), g)
+        $chap7::has_series_sum(chap7::positive_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>), P)
+        =>:
+            $has_double_sum(\double_positive_part<f>, P)
+    claim:
+        ? forall n N_pos:
+            \countable_set_series_terms<cart(N_pos, N_pos), \double_positive_part<f>, g>(n) = chap7::positive_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)(n)
+        \countable_set_series_terms<cart(N_pos, N_pos), \double_positive_part<f>, g>(n) = \double_positive_part<f>(g(n))
+        \double_positive_part<f>(g(n)) = (abs(f(g(n))) + f(g(n))) / 2
+        \countable_set_series_terms<cart(N_pos, N_pos), f, g>(n) = f(g(n))
+        by thm chap7::positive_part_series_apply(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, n)
+        (abs(f(g(n))) + f(g(n))) / 2 = (abs(\countable_set_series_terms<cart(N_pos, N_pos), f, g>(n)) + \countable_set_series_terms<cart(N_pos, N_pos), f, g>(n)) / 2 = chap7::positive_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)(n)
+        \countable_set_series_terms<cart(N_pos, N_pos), \double_positive_part<f>, g>(n) = \double_positive_part<f>(g(n)) = (abs(f(g(n))) + f(g(n))) / 2 = chap7::positive_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)(n)
+    by thm chap7::series_sum_extensional(chap7::positive_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>), \countable_set_series_terms<cart(N_pos, N_pos), \double_positive_part<f>, g>, P)
+    witness exist g0 fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), g0), $chap7::has_series_sum(\countable_set_series_terms<cart(N_pos, N_pos), \double_positive_part<f>, g0>, P)} from g
+    $has_countable_set_series_sum(cart(N_pos, N_pos), \double_positive_part<f>, P)
+    $has_double_sum(\double_positive_part<f>, P)
+
+thm double_negative_part_has_double_sum_from_enumeration:
+    ? forall f fn(p cart(N_pos, N_pos)) R, g fn(n N_pos) cart(N_pos, N_pos), Nsum R:
+        $is_countable_enumeration(cart(N_pos, N_pos), g)
+        $chap7::has_series_sum(chap7::negative_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>), Nsum)
+        =>:
+            $has_double_sum(\double_negative_part<f>, Nsum)
+    claim:
+        ? forall n N_pos:
+            \countable_set_series_terms<cart(N_pos, N_pos), \double_negative_part<f>, g>(n) = chap7::negative_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)(n)
+        \countable_set_series_terms<cart(N_pos, N_pos), \double_negative_part<f>, g>(n) = \double_negative_part<f>(g(n))
+        \double_negative_part<f>(g(n)) = (abs(f(g(n))) - f(g(n))) / 2
+        \countable_set_series_terms<cart(N_pos, N_pos), f, g>(n) = f(g(n))
+        by thm chap7::negative_part_series_apply(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, n)
+        (abs(f(g(n))) - f(g(n))) / 2 = (abs(\countable_set_series_terms<cart(N_pos, N_pos), f, g>(n)) - \countable_set_series_terms<cart(N_pos, N_pos), f, g>(n)) / 2 = chap7::negative_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)(n)
+        \countable_set_series_terms<cart(N_pos, N_pos), \double_negative_part<f>, g>(n) = \double_negative_part<f>(g(n)) = (abs(f(g(n))) - f(g(n))) / 2 = chap7::negative_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)(n)
+    by thm chap7::series_sum_extensional(chap7::negative_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>), \countable_set_series_terms<cart(N_pos, N_pos), \double_negative_part<f>, g>, Nsum)
+    witness exist g0 fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), g0), $chap7::has_series_sum(\countable_set_series_terms<cart(N_pos, N_pos), \double_negative_part<f>, g0>, Nsum)} from g
+    $has_countable_set_series_sum(cart(N_pos, N_pos), \double_negative_part<f>, Nsum)
+    $has_double_sum(\double_negative_part<f>, Nsum)
+
+thm double_parts_are_nonnegative:
+    ? forall f fn(p cart(N_pos, N_pos)) R:
+        $is_nonnegative_double_series(\double_positive_part<f>)
+        $is_nonnegative_double_series(\double_negative_part<f>)
+    claim:
+        ? forall p cart(N_pos, N_pos):
+            \double_positive_part<f>(p) >= 0
+        \double_positive_part<f>(p) = (abs(f(p)) + f(p)) / 2
+        by thm chap7::positive_part_value_nonnegative(f(p))
+    by def $is_nonnegative_double_series(\double_positive_part<f>)
+    claim:
+        ? forall p cart(N_pos, N_pos):
+            \double_negative_part<f>(p) >= 0
+        \double_negative_part<f>(p) = (abs(f(p)) - f(p)) / 2
+        by thm chap7::negative_part_value_nonnegative(f(p))
+    by def $is_nonnegative_double_series(\double_negative_part<f>)
+
+thm row_sums_reconstruct_from_double_parts:
+    ? forall f fn(p cart(N_pos, N_pos)) R, positive_rows, negative_rows seq(R):
+        $has_row_sums(\double_positive_part<f>, positive_rows)
+        $has_row_sums(\double_negative_part<f>, negative_rows)
+        =>:
+            $has_row_sums(f, chap7::series_add(positive_rows, chap7::series_scalar_mul(-1, negative_rows)))
+    by def $has_row_sums(\double_positive_part<f>, positive_rows)
+    by def $has_row_sums(\double_negative_part<f>, negative_rows)
+    claim:
+        ? forall n N_pos:
+            $chap7::has_series_sum(fn(m N_pos) R {f((n, m))}, chap7::series_add(positive_rows, chap7::series_scalar_mul(-1, negative_rows))(n))
+        $chap7::has_series_sum(fn(m N_pos) R {\double_positive_part<f>((n, m))}, positive_rows(n))
+        $chap7::has_series_sum(fn(m N_pos) R {\double_negative_part<f>((n, m))}, negative_rows(n))
+        by thm chap7::series_laws_scalar_mul(fn(m N_pos) R {\double_negative_part<f>((n, m))}, -1, negative_rows(n))
+        by thm chap7::series_laws_add(fn(m N_pos) R {\double_positive_part<f>((n, m))}, chap7::series_scalar_mul(-1, fn(m N_pos) R {\double_negative_part<f>((n, m))}), positive_rows(n), -1 * negative_rows(n))
+        claim:
+            ? forall q N_pos:
+                chap7::series_add(fn(m N_pos) R {\double_positive_part<f>((n, m))}, chap7::series_scalar_mul(-1, fn(m N_pos) R {\double_negative_part<f>((n, m))}))(q) = f((n, q))
+            by thm chap7::series_add_apply(fn(m N_pos) R {\double_positive_part<f>((n, m))}, chap7::series_scalar_mul(-1, fn(m N_pos) R {\double_negative_part<f>((n, m))}), q)
+            by thm chap7::series_scalar_mul_apply(-1, fn(m N_pos) R {\double_negative_part<f>((n, m))}, q)
+            \double_positive_part<f>((n, q)) = (abs(f((n, q))) + f((n, q))) / 2
+            \double_negative_part<f>((n, q)) = (abs(f((n, q))) - f((n, q))) / 2
+            (abs(f((n, q))) + f((n, q))) / 2 + -1 * ((abs(f((n, q))) - f((n, q))) / 2) = f((n, q))
+            \double_positive_part<f>((n, q)) + -1 * \double_negative_part<f>((n, q)) = (abs(f((n, q))) + f((n, q))) / 2 + -1 * ((abs(f((n, q))) - f((n, q))) / 2) = f((n, q))
+            chap7::series_add(fn(m N_pos) R {\double_positive_part<f>((n, m))}, chap7::series_scalar_mul(-1, fn(m N_pos) R {\double_negative_part<f>((n, m))}))(q) = \double_positive_part<f>((n, q)) + -1 * \double_negative_part<f>((n, q)) = f((n, q))
+        by thm chap7::series_sum_extensional(chap7::series_add(fn(m N_pos) R {\double_positive_part<f>((n, m))}, chap7::series_scalar_mul(-1, fn(m N_pos) R {\double_negative_part<f>((n, m))})), fn(m N_pos) R {f((n, m))}, positive_rows(n) + -1 * negative_rows(n))
+        by thm chap7::series_add_apply(positive_rows, chap7::series_scalar_mul(-1, negative_rows), n)
+        by thm chap7::series_scalar_mul_apply(-1, negative_rows, n)
+        chap7::series_add(positive_rows, chap7::series_scalar_mul(-1, negative_rows))(n) = positive_rows(n) + -1 * negative_rows(n)
+    by def $has_row_sums(f, chap7::series_add(positive_rows, chap7::series_scalar_mul(-1, negative_rows)))
+
 thm fubini_row_first_general_case:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R:
         $has_double_sum(f, L)
         $is_absolutely_convergent_double_sum(f)
         =>:
             $has_row_first_sum(f, L)
-    trust exist g fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), g), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)}
+    by def $is_absolutely_convergent_double_sum(f)
+    by thm absolutely_convergent_countable_set_series_witness(cart(N_pos, N_pos), f)
     obtain g from exist g fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), g), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)}
-    have terms seq(R) = \countable_set_series_terms<cart(N_pos, N_pos), f, g>
-    claim:
-        ? $chap7::is_absolutely_convergent_series(terms)
-        # trust: the local alias is definitionally the enumerated term
-        # sequence, but project-qualified function equality does not unfold.
-        trust $chap7::is_absolutely_convergent_series(terms)
-    by thm chap7::positive_part_convergent_from_absolute(terms)
-    obtain P from exist P R st {$chap7::has_series_sum(chap7::positive_part_series(terms), P)}
-    by thm chap7::negative_part_convergent_from_absolute(terms)
-    obtain Nsum from exist Nsum R st {$chap7::has_series_sum(chap7::negative_part_series(terms), Nsum)}
-    by thm chap7::positive_negative_parts_reconstruct_series_sum(terms, P, Nsum)
-    trust exist h fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), h), $chap7::has_series_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, h>, L)}
+    by thm chap7::positive_part_convergent_from_absolute(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)
+    obtain P from exist P R st {$chap7::has_series_sum(chap7::positive_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>), P)}
+    by thm chap7::negative_part_convergent_from_absolute(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)
+    obtain Nsum from exist Nsum R st {$chap7::has_series_sum(chap7::negative_part_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>), Nsum)}
+    by thm chap7::positive_negative_parts_reconstruct_series_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, P, Nsum)
+    by def $has_double_sum(f, L)
+    by thm countable_set_series_sum_witness(cart(N_pos, N_pos), f, L)
     obtain h from exist h fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), h), $chap7::has_series_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, h>, L)}
     by thm countable_set_series_sum_well_defined(cart(N_pos, N_pos), f, g, h, P - Nsum, L)
 
-    claim:
-        ? $has_double_sum(\double_positive_part<f>, P)
-        # trust: template unfolding blocks identification with the positive
-        # part of the enumerated scalar series.
-        trust $has_double_sum(\double_positive_part<f>, P)
-    claim:
-        ? $has_double_sum(\double_negative_part<f>, Nsum)
-        # trust: template unfolding blocks identification with the negative
-        # part of the enumerated scalar series.
-        trust $has_double_sum(\double_negative_part<f>, Nsum)
-    claim:
-        ? $is_nonnegative_double_series(\double_positive_part<f>)
-        trust $is_nonnegative_double_series(\double_positive_part<f>)
-    claim:
-        ? $is_nonnegative_double_series(\double_negative_part<f>)
-        trust $is_nonnegative_double_series(\double_negative_part<f>)
+    by thm double_positive_part_has_double_sum_from_enumeration(f, g, P)
+    by thm double_negative_part_has_double_sum_from_enumeration(f, g, Nsum)
+    by thm double_parts_are_nonnegative(f)
     by thm fubini_row_first_nonnegative_case(\double_positive_part<f>, P)
     obtain positive_rows from exist r seq(R) st {$has_row_sums(\double_positive_part<f>, r), $chap7::has_series_sum(r, P)}
     by thm fubini_row_first_nonnegative_case(\double_negative_part<f>, Nsum)
     obtain negative_rows from exist r seq(R) st {$has_row_sums(\double_negative_part<f>, r), $chap7::has_series_sum(r, Nsum)}
     have row_sums seq(R) = chap7::series_add(positive_rows, chap7::series_scalar_mul(-1, negative_rows))
-    claim:
-        ? $has_row_sums(f, row_sums)
-        # trust: row-wise reconstruction is pointwise positive part minus
-        # negative part; local aliases/templates do not unfold in this module.
-        trust $has_row_sums(f, row_sums)
+    by thm row_sums_reconstruct_from_double_parts(f, positive_rows, negative_rows)
+    $has_row_sums(f, row_sums)
     by thm chap7::series_laws_scalar_mul(negative_rows, -1, Nsum)
     by thm chap7::series_laws_add(positive_rows, chap7::series_scalar_mul(-1, negative_rows), P, -1 * Nsum)
     P + (-1 * Nsum) = P - Nsum = L
@@ -2579,9 +3131,21 @@ thm swapped_double_series_is_absolutely_convergent:
         $is_absolutely_convergent_double_sum(f)
         =>:
             $is_absolutely_convergent_double_sum(fn(p cart(N_pos, N_pos)) R {f(swap_pair(p))})
-    # trust: invariance under the checked coordinate-swap bijection is blocked
-    # by template expansion of the swapped enumeration.
-    trust $is_absolutely_convergent_double_sum(fn(p cart(N_pos, N_pos)) R {f(swap_pair(p))})
+    by def $is_absolutely_convergent_double_sum(f)
+    have swapped fn(p cart(N_pos, N_pos)) R = fn(p cart(N_pos, N_pos)) R {f(swap_pair(p))}
+    by thm absolutely_convergent_countable_set_series_witness(cart(N_pos, N_pos), f)
+    obtain g from exist g fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), g), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<cart(N_pos, N_pos), f, g>)}
+    by thm swapped_countable_enumeration_is_bijective(g)
+    claim:
+        ? forall n N_pos:
+            f(g(n)) = swapped(\swapped_countable_enumeration<g>(n))
+        \swapped_countable_enumeration<g>(n) = swap_pair(g(n))
+        swap_pair(swap_pair(g(n))) = g(n)
+        swapped(\swapped_countable_enumeration<g>(n)) = f(swap_pair(\swapped_countable_enumeration<g>(n))) = f(swap_pair(swap_pair(g(n)))) = f(g(n))
+    by thm countable_set_series_absolute_convergence_extensional(cart(N_pos, N_pos), f, swapped, g, \swapped_countable_enumeration<g>)
+    witness exist h fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), h), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<cart(N_pos, N_pos), swapped, h>)} from \swapped_countable_enumeration<g>
+    $is_absolutely_convergent_countable_set_series(cart(N_pos, N_pos), swapped)
+    $is_absolutely_convergent_double_sum(fn(p cart(N_pos, N_pos)) R {f(swap_pair(p))})
 
 thm fubini_swapped_double_sum_from_absolute_convergence:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R:
@@ -2589,9 +3153,21 @@ thm fubini_swapped_double_sum_from_absolute_convergence:
         $is_absolutely_convergent_double_sum(f)
         =>:
             $has_swapped_double_sum(f, L)
-    # trust: the direct enumeration-extensionality proof currently triggers a
-    # Rust stack overflow instead of returning a failed transactional block.
-    trust $has_swapped_double_sum(f, L)
+    by def $has_double_sum(f, L)
+    have swapped fn(p cart(N_pos, N_pos)) R = fn(p cart(N_pos, N_pos)) R {f(swap_pair(p))}
+    by thm countable_set_series_sum_witness(cart(N_pos, N_pos), f, L)
+    obtain g from exist g fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), g), $chap7::has_series_sum(\countable_set_series_terms<cart(N_pos, N_pos), f, g>, L)}
+    by thm swapped_countable_enumeration_is_bijective(g)
+    claim:
+        ? forall n N_pos:
+            f(g(n)) = swapped(\swapped_countable_enumeration<g>(n))
+        \swapped_countable_enumeration<g>(n) = swap_pair(g(n))
+        swap_pair(swap_pair(g(n))) = g(n)
+        swapped(\swapped_countable_enumeration<g>(n)) = f(swap_pair(\swapped_countable_enumeration<g>(n))) = f(swap_pair(swap_pair(g(n)))) = f(g(n))
+    by thm countable_set_series_sum_extensional(cart(N_pos, N_pos), f, swapped, g, \swapped_countable_enumeration<g>, L)
+    witness exist h fn(n N_pos) cart(N_pos, N_pos) st {$is_countable_enumeration(cart(N_pos, N_pos), h), $chap7::has_series_sum(\countable_set_series_terms<cart(N_pos, N_pos), swapped, h>, L)} from \swapped_countable_enumeration<g>
+    $has_countable_set_series_sum(cart(N_pos, N_pos), swapped, L)
+    $has_swapped_double_sum(f, L)
 
 thm fubini_column_first_from_swapped_sum:
     ? forall f fn(p cart(N_pos, N_pos)) R, L R:
@@ -2930,9 +3506,9 @@ thm finite_set_sum_ignores_zero_outside_subset:
             not x $in T
             f(x) = 0
     finite_set_sum(R0, fn(x R0) R {f(x)}) = finite_set_sum(R0, fn(x R0) R {0}) = 0
-    # trust: the disjoint-union calculation above is complete, but the final
-    # rewrite through the project-qualified remainder set is not retained.
-    trust finite_set_sum(S, fn(x S) R {f(x)}) = finite_set_sum(T, fn(x T) R {f(x)})
+    have t_sum R = finite_set_sum(T, fn(x T) R {f(x)})
+    finite_set_sum(T, fn(x T) R {f(x)}) + 0 = t_sum + 0 = t_sum = finite_set_sum(T, fn(x T) R {f(x)})
+    finite_set_sum(S, fn(x S) R {f(x)}) = finite_set_sum(T, fn(x T) R {f(x)}) + finite_set_sum(R0, fn(x R0) R {f(x)}) = finite_set_sum(T, fn(x T) R {f(x)}) + 0 = finite_set_sum(T, fn(x T) R {f(x)})
 
 thm nonnegative_finite_subsum_below_some_partial_sum:
     ? forall X set, f fn(x X) R, g fn(n N_pos) X, A finite_set:
@@ -2942,9 +3518,61 @@ thm nonnegative_finite_subsum_below_some_partial_sum:
             f(x) >= 0
         =>:
             exist M N_pos st {finite_set_sum(A, fn(x A) R {f(x)}) <= chap7::partial_sum(\countable_set_series_terms<X, f, g>, M)}
-    # trust: this cofinality step depends directly on the trusted finite
-    # reindexing bridge.
-    trust exist M N_pos st {finite_set_sum(A, fn(x A) R {f(x)}) <= chap7::partial_sum(\countable_set_series_terms<X, f, g>, M)}
+    by thm finite_subset_sum_reindexed_by_countable_enumeration(X, f, g, A)
+    obtain D from exist D finite_set st {D $subset N_pos, finite_set_sum(A, fn(x A) R {f(x)}) = finite_set_sum(D, fn(n D) R {f(g(n))})}
+    have B finite_set = union(D, {1})
+    claim:
+        ? D $subset B
+        forall n D:
+            n $in union(D, {1})
+            n $in B
+    1 $in {1}
+    1 $in union(D, {1}) = B
+    witness $is_nonempty_set(B) from 1
+    claim:
+        ? B $subset N_pos
+        claim:
+            ? forall n B:
+                n $in N_pos
+            n $in D or n $in {1}
+            by cases:
+                ? n $in N_pos
+                case n $in D:
+                    n $in N_pos
+                case n $in {1}:
+                    n = 1
+                    n $in N_pos
+    B $subset R
+    have M N_pos = finite_set_max(B)
+    have E finite_set = closed_range(1, M)
+    claim:
+        ? D $subset E
+        forall n D:
+            n $in N_pos
+            n $in R
+            n $in B
+            n <= finite_set_max(B) = M
+            1 <= n <= M
+            n $in closed_range(1, M)
+            n $in E
+    claim:
+        ? forall n E:
+            \countable_set_series_terms<X, f, g>(n) >= 0
+        \countable_set_series_terms<X, f, g>(n) = f(g(n)) >= 0
+    by thm chap7::finite_set_sum_subset_le_for_nonnegative_terms(E, D, fn(n E) R {\countable_set_series_terms<X, f, g>(n)})
+    by thm finite_prefix_sum_as_finite_set_sum(\countable_set_series_terms<X, f, g>, M)
+    by thm chap7::partial_sum_matches_finite_sum(\countable_set_series_terms<X, f, g>, M)
+    claim:
+        ? $fn_eq(fn(n D) R {f(g(n))}, fn(n D) R {\countable_set_series_terms<X, f, g>(n)})
+        forall n D:
+            f(g(n)) = \countable_set_series_terms<X, f, g>(n)
+    finite_set_sum(A, fn(x A) R {f(x)}) = finite_set_sum(D, fn(n D) R {f(g(n))}) = finite_set_sum(D, fn(n D) R {\countable_set_series_terms<X, f, g>(n)})
+    finite_set_sum(D, fn(n D) R {\countable_set_series_terms<X, f, g>(n)}) <= finite_set_sum(E, fn(n E) R {\countable_set_series_terms<X, f, g>(n)})
+    sum(1, M, fn(n N_pos) R {\countable_set_series_terms<X, f, g>(n)}) = finite_set_sum(closed_range(1, M), fn(n closed_range(1, M)) R {\countable_set_series_terms<X, f, g>(n)})
+    finite_set_sum(closed_range(1, M), fn(n closed_range(1, M)) R {\countable_set_series_terms<X, f, g>(n)}) = finite_set_sum(E, fn(n E) R {\countable_set_series_terms<X, f, g>(n)})
+    finite_set_sum(E, fn(n E) R {\countable_set_series_terms<X, f, g>(n)}) = sum(1, M, fn(n N_pos) R {\countable_set_series_terms<X, f, g>(n)}) = chap7::partial_sum(\countable_set_series_terms<X, f, g>, M)
+    finite_set_sum(A, fn(x A) R {f(x)}) <= chap7::partial_sum(\countable_set_series_terms<X, f, g>, M)
+    witness exist M0 N_pos st {finite_set_sum(A, fn(x A) R {f(x)}) <= chap7::partial_sum(\countable_set_series_terms<X, f, g>, M0)} from M
 
 thm nonnegative_countable_zero_extension_has_cofinal_partial_sums:
     ? forall S, T set, f fn(x T) R, g fn(n N_pos) S, h fn(n N_pos) T:
@@ -4050,9 +4678,32 @@ template<X set, f fn(x X) power_set(X)>:
 thm cantor_theorem:
     ? forall X set:
         not $chap3::has_equal_cardinality(X, power_set(X))
-    # trust: the diagonal proof is blocked by project-qualified template
-    # unfolding of the self-avoiding set.
-    trust not $chap3::has_equal_cardinality(X, power_set(X))
+    by contra:
+        ? not $chap3::has_equal_cardinality(X, power_set(X))
+        $chap3::has_equal_cardinality(X, power_set(X))
+        obtain f from exist f fn(x X) power_set(X) st {$chap3::is_bijective_fn(X, power_set(X), f)}
+        $chap3::is_surjective_fn(X, power_set(X), f)
+        have diagonal power_set(X) = {x X: not x $in f(x)}
+        obtain y from exist y X st {diagonal = f(y)}
+        claim:
+            ? not y $in diagonal
+            by contra:
+                ? not y $in diagonal
+                y $in diagonal
+                not y $in f(y)
+                y $in f(y)
+                impossible y $in f(y)
+        claim:
+            ? y $in f(y)
+            by contra:
+                ? y $in f(y)
+                not y $in f(y)
+                y $in {x X: not x $in f(x)}
+                y $in diagonal
+                impossible y $in diagonal
+        diagonal = f(y)
+        y $in diagonal
+        impossible y $in diagonal
 
 """
 Remark 8.3.2. Cantor's diagonal proof resembles Russell's paradox: a universal
@@ -4100,10 +4751,6 @@ thm series_shift_has_sum:
         $chap7::has_series_sum(a, L)
         =>:
             $chap7::has_series_sum(chap7::series_shift(a, h), L - chap7::partial_sum(a, h))
-    # trust: imported constant-sequence and series-shift definitions no
-    # longer unfold inside the extensionality bridge.
-    trust $chap7::has_series_sum(chap7::series_shift(a, h), L - chap7::partial_sum(a, h))
-"""
     by thm chap7::closed_limit_implies_strict_limit(fn(k N_pos) R {chap7::partial_sum(a, k)}, L)
     claim:
         ? $chap6::has_limit(fn(n N_pos) R {chap7::partial_sum(a, n + h)}, L)
@@ -4121,19 +4768,28 @@ thm series_shift_has_sum:
                         fn(m N_pos) R {chap7::partial_sum(a, m + h)}(n) = fn(k N_pos) R {chap7::partial_sum(a, k)}(n + h)
                         abs(fn(m N_pos) R {chap7::partial_sum(a, m + h)}(n) - L) = abs(fn(k N_pos) R {chap7::partial_sum(a, k)}(n + h) - L) < epsilon
         $chap6::has_limit(fn(n N_pos) R {chap7::partial_sum(a, n + h)}, L)
-    by thm chap7::constant_sequence_has_strict_limit(chap7::partial_sum(a, h))
-    by thm chap6::seq_sub_converges_to(fn(n N_pos) R {chap7::partial_sum(a, n + h)}, chap7::constant_sequence(chap7::partial_sum(a, h)), L, chap7::partial_sum(a, h))
+    have fn prefix_constant(n N_pos) R = chap7::partial_sum(a, h)
+    claim:
+        ? $chap6::has_limit(prefix_constant, chap7::partial_sum(a, h))
+        claim:
+            ? forall epsilon R_pos:
+                $chap6::has_eventual_closeness_to(prefix_constant, chap7::partial_sum(a, h), epsilon)
+            witness exist n0 N_pos st {$chap6::is_tail_close_to(prefix_constant, chap7::partial_sum(a, h), epsilon, n0)} from 1:
+                forall n N_pos:
+                    n >= 1
+                    =>:
+                        prefix_constant(n) = chap7::partial_sum(a, h)
+                        abs(prefix_constant(n) - chap7::partial_sum(a, h)) = 0 < epsilon
+    by thm chap6::seq_sub_converges_to(fn(n N_pos) R {chap7::partial_sum(a, n + h)}, prefix_constant, L, chap7::partial_sum(a, h))
     claim:
         ? forall n N_pos:
-            chap7::partial_sum(a, n + h) - chap7::constant_sequence(chap7::partial_sum(a, h))(n) = chap7::partial_sum(chap7::series_shift(a, h), n)
+            chap7::partial_sum(a, n + h) - prefix_constant(n) = chap7::partial_sum(chap7::series_shift(a, h), n)
         by thm chap7::partial_sum_series_shift_plus_prefix(a, h, n)
-        chap7::constant_sequence(chap7::partial_sum(a, h))(n) = chap7::partial_sum(a, h)
+        prefix_constant(n) = chap7::partial_sum(a, h)
         chap7::partial_sum(chap7::series_shift(a, h), n) + chap7::partial_sum(a, h) = chap7::partial_sum(a, n + h)
         chap7::partial_sum(a, n + h) - chap7::partial_sum(a, h) = chap7::partial_sum(chap7::series_shift(a, h), n)
-    by thm chap7::strict_limit_extensional(fn(i N_pos) R {chap7::partial_sum(a, i + h) - chap7::constant_sequence(chap7::partial_sum(a, h))(i)}, fn(k N_pos) R {chap7::partial_sum(chap7::series_shift(a, h), k)}, L - chap7::partial_sum(a, h))
-    by thm chap7::strict_limit_implies_closed_limit(fn(k N_pos) R {chap7::partial_sum(chap7::series_shift(a, h), k)}, L - chap7::partial_sum(a, h))
-
-"""
+    by thm chap7::strict_limit_extensional(fn(shift_index_a N_pos) R {chap7::partial_sum(a, shift_index_a + h) - prefix_constant(shift_index_a)}, fn(shift_index_b N_pos) R {chap7::partial_sum(chap7::series_shift(a, h), shift_index_b)}, L - chap7::partial_sum(a, h))
+    by thm chap7::strict_limit_implies_closed_limit(fn(shift_index_c N_pos) R {chap7::partial_sum(chap7::series_shift(a, h), shift_index_c)}, L - chap7::partial_sum(a, h))
 
 thm partial_sum_zero_through:
     ? forall a seq(R), h N:
@@ -4143,9 +4799,24 @@ thm partial_sum_zero_through:
                 a(k) = 0
         =>:
             chap7::partial_sum(a, h) = 0
-    # trust: the induction hypothesis does not retain the quantified
-    # zero-prefix premise after strengthening h to h + 1.
-    trust chap7::partial_sum(a, h) = 0
+    h = 0 or h > 0
+    by cases:
+        ? chap7::partial_sum(a, h) = 0
+        case h = 0:
+            chap7::partial_sum(a, h) = chap7::partial_sum(a, 0) = 0
+        case h > 0:
+            h $in N_pos
+            by thm chap7::partial_sum_matches_finite_sum(a, h)
+            forall k closed_range(1, h):
+                k $in N_pos
+                k <= h
+                a(k) = 0
+                a(k) <= 0
+                0 <= a(k)
+            sum(1, h, fn(k N_pos) R {a(k)}) <= sum(1, h, fn(k N_pos) R {0})
+            sum(1, h, fn(k N_pos) R {0}) <= sum(1, h, fn(k N_pos) R {a(k)})
+            sum(1, h, fn(k N_pos) R {a(k)}) = sum(1, h, fn(k N_pos) R {0}) = 0
+            chap7::partial_sum(a, h) = 0
 
 template<A power_set(N)>:
     have fn binary_decimal_terms(k N_pos) R by cases:
@@ -4982,9 +5653,37 @@ thm least_upper_bound_of_real_set_member_above:
         $is_least_upper_bound_of_real_set(E, M)
         =>:
             exist x E st {M - epsilon < x}
-    # trust: the current kernel does not unfold the least-upper-bound
-    # predicate far enough to recognize M - epsilon as a competing bound.
-    trust exist x E st {M - epsilon < x}
+    have b0 R = M - epsilon
+    prop has_member_above():
+        exist x E st {b0 < x}
+    claim:
+        ? $has_member_above()
+        by contra:
+            ? $has_member_above()
+            claim:
+                ? $is_upper_bound_of_real_set(E, b0)
+                claim:
+                    ? forall x E:
+                        x <= b0
+                    by contra:
+                        ? x <= b0
+                        x > b0
+                        claim:
+                            ? $has_member_above()
+                            witness exist z E st {b0 < z} from x:
+                                x > b0
+                            by def $has_member_above()
+                        impossible $has_member_above()
+                forall x E:
+                    x <= b0
+                $is_upper_bound_of_real_set(E, b0)
+            M <= b0 = M - epsilon
+            M - epsilon < M
+            impossible M <= M - epsilon
+    by def $has_member_above()
+    obtain x from exist x E st {b0 < x}
+    witness exist y E st {M - epsilon < y} from x:
+        M - epsilon = b0 < x
 
 prop is_supremum_window_member(E power_set(R), M R, n N_pos, x R):
     x $in E
@@ -4998,9 +5697,21 @@ thm supremum_window_nonempty:
         $is_least_upper_bound_of_real_set(E, M)
         =>:
             $is_nonempty_set(\supremum_window<E, M, n>)
-    # trust: the project-qualified window predicate does not unfold after
-    # obtaining the near-supremum witness.
-    trust $is_nonempty_set(\supremum_window<E, M, n>)
+    by thm least_upper_bound_of_real_set_member_above(E, M, 1 / n)
+    obtain x from exist x E st {M - 1 / n < x}
+    claim:
+        ? x $in \supremum_window<E, M, n>
+        M - 1 / n < x
+        M - 1 / n <= x
+        $is_upper_bound_of_real_set(E, M)
+        forall y E:
+            y <= M
+        x <= M
+        $is_supremum_window_member(E, M, n, x)
+        x $in {y R: $is_supremum_window_member(E, M, n, y)}
+        x $in \supremum_window<E, M, n>
+    witness $is_nonempty_set(\supremum_window<E, M, n>) from x:
+        x $in \supremum_window<E, M, n>
 
 prop is_sequence_in_real_set(a seq(R), E power_set(R)):
     forall n N_pos:

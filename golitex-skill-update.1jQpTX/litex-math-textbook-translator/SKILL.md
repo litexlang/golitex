@@ -8,8 +8,8 @@ description: Translate mathematical textbooks, lecture notes, and textbook-deriv
 ## Critical: Repository Policy And Verifier Loop
 
 - In the golitex repository, apply `$golitex-repository-policy` alongside this
-  skill and read the live repository `AGENTS.md` completely. The live policy
-  overrides generic or older guidance here.
+  skill and read its canonical bundled policy completely. That repository
+  policy overrides generic or older guidance here.
 - Build current source once with `cargo build --release` and invoke
   `target/release/litex`; never use `target/debug/litex` for Litex work.
 - For every iterative chapter edit, start one
@@ -440,11 +440,11 @@ Example format:
 
 ## Workflow
 
-For a textbook workspace, first read the live repository `AGENTS.md`, any
-source-local style guide and `todo.md`, the module documentation, and the
-relevant chapter under `scripts/textbooks_drafts/<Book>/`. Keep source
-material, translation records, todos, audits, and experience notes in the
-book's paired `scripts/` workspace.
+For a textbook workspace, first read the canonical bundled repository policy,
+any source-local style guide and `todo.md`, the module documentation, and the
+relevant chapter under `scripts/textbooks_drafts/<Book>/`. Keep source material,
+translation records, todos, audits, and experience notes in the book's paired
+`scripts/` workspace.
 
 For long chapters, build current source with `cargo build --release`, start one
 release `-session -before <current-chapter.lit>`, and submit statements from

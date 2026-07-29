@@ -1,0 +1,88 @@
+# Linear Algebra Done Right, fourth edition — Section 8C.
+# Consequences of Generalized Eigenspace Decomposition.
+# Result 8.39. Truncate the formal series for sqrt(1+x) at the nilpotence
+# index; every higher coefficient multiplies a zero power of T.
+axiom identity_plus_nilpotent_has_square_root:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>:
+        $chap8a::is_nilpotent(s, VSet, V, T)
+        =>:
+            exist S \chap3a::linear_map_space<s, VSet, VSet, V, V> st {$chap7c::is_square_root_of(s, VSet, V, \chap3a::linear_map_add<s, VSet, VSet, V, V>(\chap3a::identity_linear_map<s, VSet, V>, T), S)}
+# Result 8.41. On each generalized eigenspace factor the restriction as
+# lambda(I+N/lambda), take the two square roots, and join the local maps along
+# the direct-sum decomposition.
+axiom invertible_complex_operator_has_square_root:
+    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
+        $chap3d::is_invertible_linear_map(&chap1a::Complex, VSet, VSet, V, V, T)
+        =>:
+            exist S \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V> st {$chap7c::is_square_root_of(&chap1a::Complex, VSet, V, T, S)}
+# Example 8.42. The reverse power chain gives one nilpotent Jordan block.
+sketch:
+    have A matrix(R, 4, 4) = [[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [0, 0, 0, 0]]
+    A(1, 2) = A(2, 3) = A(3, 4) = 1
+    A(1, 1) = A(2, 2) = A(3, 3) = A(4, 4) = 0
+# Example 8.43. The source operator has Jordan block sizes 3, 2, and 1.
+sketch:
+    have A matrix(R, 6, 6) = [[0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
+    A(1, 2) = A(2, 3) = A(4, 5) = 1
+    A(3, 4) = A(5, 6) = 0
+
+prop jordan_diagonal_entries(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A matrix(s, n, n), block_of fn(idx N_pos: idx <= n) N_pos, lambda_of fn(k N_pos) s):
+    forall idx N_pos:
+        idx <= n
+        =>:
+            A(idx, idx) = lambda_of(block_of(idx))
+
+prop jordan_superdiagonal_entries(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A matrix(s, n, n), block_of fn(idx N_pos: idx <= n) N_pos):
+    forall idx N_pos:
+        idx < n
+        block_of(idx) = block_of(idx + 1)
+        =>:
+            A(idx, idx + 1) = scalars.one
+
+prop jordan_off_diagonal_entries(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A matrix(s, n, n), block_of fn(idx N_pos: idx <= n) N_pos):
+    forall row, column N_pos:
+        row <= n
+        column <= n
+        row != column
+        column != row + 1
+        =>:
+            A(row, column) = scalars.zero
+    $chap8b::has_zero_cross_block_entries(s, scalars, n, A, block_of)
+
+prop jordan_block_labels_are_eigenvalues(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, p N_pos, lambda_of fn(k N_pos: k <= p) s):
+    forall k N_pos:
+        k <= p
+        =>:
+            $chap5a::is_eigenvalue(s, VSet, V, T, lambda_of(k))
+
+prop is_jordan_matrix_with_partition(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n, p N_pos, A matrix(s, n, n), block_of fn(idx N_pos: idx <= n) N_pos, lambda_of fn(k N_pos: k <= p) s):
+    $chap8b::is_block_partition(n, p, block_of)
+    $jordan_diagonal_entries(s, V.scalars, n, A, block_of, lambda_of)
+    $jordan_superdiagonal_entries(s, V.scalars, n, A, block_of)
+    $jordan_off_diagonal_entries(s, V.scalars, n, A, block_of)
+    $jordan_block_labels_are_eigenvalues(s, VSet, V, T, p, lambda_of)
+# Definition 8.44. A Jordan basis is a basis whose operator matrix has a
+# consecutive block partition, constant eigenvalue diagonal, unit
+# superdiagonal inside each block, and zero everywhere else.
+prop is_jordan_basis(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N_pos, basis &chap1a::FiniteList<VSet, n>):
+    $chap2b::is_basis(s, VSet, V, n, basis)
+    exist p N_pos, block_of fn(idx N_pos: idx <= n) N_pos, lambda_of fn(k N_pos: k <= p) s st {$is_jordan_matrix_with_partition(s, VSet, V, T, n, p, \chap5c::matrix_of_operator<s, VSet, V, n>(basis, T), block_of, lambda_of)}
+# Result 8.45. Induct on dimension. Split off a longest nilpotent chain, build
+# an invariant complement with a dual functional, and concatenate the two
+# smaller Jordan bases.
+axiom every_nilpotent_operator_has_jordan_basis:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        \chap2c::dimension<s, VSet, V> > 0
+        $chap8a::is_nilpotent(s, VSet, V, T)
+        =>:
+            exist n N_pos, basis &chap1a::FiniteList<VSet, n> st {$is_jordan_basis(s, VSet, V, T, n, basis)}
+# Result 8.46. Apply 8.45 to the nilpotent shift on each generalized
+# eigenspace, then concatenate those bases along Result 8.22.
+axiom jordan_form:
+    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
+        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
+        \chap2c::dimension<&chap1a::Complex, VSet, V> > 0
+        =>:
+            exist n N_pos, basis &chap1a::FiniteList<VSet, n> st {$is_jordan_basis(&chap1a::Complex, VSet, V, T, n, basis)}

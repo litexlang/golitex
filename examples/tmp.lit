@@ -109,3 +109,14 @@ finite_set_product({1, 2}, fn(k N) N {k}) $in N
 # One-step membership through a power-set carrier is checked on demand.
 forall B set, A power_set(B), x A:
     x $in B
+
+# finite_set_max/min bounds remain available through a named equality.
+have finite_max_left R = 1
+have finite_max_right R = 2
+have finite_max_value R = finite_set_max({finite_max_left, finite_max_right})
+finite_max_value >= finite_max_left
+finite_max_value >= finite_max_right
+
+have finite_min_value R = finite_set_min({finite_max_left, finite_max_right})
+finite_min_value <= finite_max_left
+finite_min_value <= finite_max_right

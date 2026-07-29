@@ -1,0 +1,352 @@
+# Linear Algebra Done Right, fourth edition — Section 3E.
+# Products and Quotients of Vector Spaces.
+# Definition 3.87. A finite product is represented by iterating this binary
+# cartesian product. Litex's cart(VSet,WSet) keeps the two carrier types distinct.
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>: V.scalars = W.scalars>:
+    have product_zero cart(VSet, WSet) = (V.zero, W.zero)
+
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>: V.scalars = W.scalars>:
+    have fn product_add(x, y cart(VSet, WSet)) cart(VSet, WSet) = (V.add(x[1], y[1]), W.add(x[2], y[2]))
+
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>: V.scalars = W.scalars>:
+    have fn product_smul(a s, x cart(VSet, WSet)) cart(VSet, WSet) = (V.smul(a, x[1]), W.smul(a, x[2]))
+# Example 3.88 is comment-only: P_5(R) x R^3 illustrates componentwise
+# addition and scalar multiplication.
+# Result 3.89. The componentwise operations make the product a vector space.
+axiom product_is_vector_space:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
+        V.scalars = W.scalars
+        (V.scalars, \product_zero<s, VSet, WSet, V, W>, \product_add<s, VSet, WSet, V, W>, \product_smul<s, VSet, WSet, V, W>) $in &chap1b::VectorSpace<s, cart(VSet, WSet)>
+
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>: V.scalars = W.scalars>:
+    trust have product_vector_space &chap1b::VectorSpace<s, cart(VSet, WSet)>:
+        product_vector_space = (V.scalars, \product_zero<s, VSet, WSet, V, W>, \product_add<s, VSet, WSet, V, W>, \product_smul<s, VSet, WSet, V, W>)
+# Examples 3.90 and 3.91 are comment-only: R^2 x R^3 is naturally isomorphic
+# (but not literally equal) to R^5, and the source displays a product basis.
+# Result 3.92. Binary dimensions add; the printed m-fold statement follows by
+# iterating the binary product representation.
+axiom dimension_of_product_is_sum:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
+        V.scalars = W.scalars
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, WSet, W)
+        =>:
+            \chap2c::dimension<s, cart(VSet, WSet), \product_vector_space<s, VSet, WSet, V, W>> = \chap2c::dimension<s, VSet, V> + \chap2c::dimension<s, WSet, W>
+# Result 3.93. The addition map Gamma: U x WSet -> U+WSet is injective exactly when
+# the sum is direct (the finite-family statement is obtained by iteration).
+prop direct_sum_iff_addition_injective_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U, WSet power_set(VSet)):
+    forall:
+        =>:
+            $chap1c::is_direct_sum_pair(s, VSet, V, U, WSet)
+        <=>:
+            $chap3b::is_injective(cart(U, WSet), \chap1c::subspace_sum_pair<s, VSet, V>(U, WSet), fn(p cart(U, WSet)) \chap1c::subspace_sum_pair<s, VSet, V>(U, WSet) {V.add(p[1], p[2])})
+
+axiom products_and_direct_sums:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U, WSet power_set(VSet):
+        $chap1c::is_subspace(s, VSet, V, U)
+        $chap1c::is_subspace(s, VSet, V, WSet)
+        =>:
+            $direct_sum_iff_addition_injective_statement(s, VSet, V, U, WSet)
+# Result 3.94. In finite dimension, a pair sum is direct exactly when the
+# dimension of the sum is the sum of the dimensions.
+prop direct_sum_iff_dimension_adds_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U, WSet power_set(VSet)):
+    forall:
+        =>:
+            $chap1c::is_direct_sum_pair(s, VSet, V, U, WSet)
+        <=>:
+            \chap2c::dimension<s, \chap1c::subspace_sum_pair<s, VSet, V>(U, WSet), \chap1c::subspace_vector_space<s, VSet, V, \chap1c::subspace_sum_pair<s, VSet, V>(U, WSet)>> = \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, VSet, V, U>> + \chap2c::dimension<s, WSet, \chap1c::subspace_vector_space<s, VSet, V, WSet>>
+
+axiom dimension_criterion_for_direct_sum:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U, WSet power_set(VSet):
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap1c::is_subspace(s, VSet, V, U)
+        $chap1c::is_subspace(s, VSet, V, WSet)
+        =>:
+            $direct_sum_iff_dimension_adds_statement(s, VSet, V, U, WSet)
+# Notation 3.95. v+U is the subset obtained by adding v to every element of U.
+# Definition 3.97. A set of the form v+U is called a translate of U.
+prop belongs_to_translate(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, x VSet):
+    exist u U st {x = V.add(v, u)}
+
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
+    have fn translate(U power_set(VSet), v VSet) power_set(VSet) = {x VSet: $belongs_to_translate(s, VSet, V, U, v, x)}
+# Examples 3.96 and 3.98 are comment-only: affine lines and planes are
+# translates of the corresponding origin-containing subspaces.
+# Definition 3.99. VSet/U is the set of all translates v+U.
+prop is_translate_of(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), A power_set(VSet)):
+    exist v VSet st {A = \translate<s, VSet, V>(U, v)}
+
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
+    have fn quotient_space(U power_set(VSet)) power_set(power_set(VSet)) = {A power_set(VSet): $is_translate_of(s, VSet, V, U, A)}
+# Litex requires a nonempty carrier to instantiate VectorSpace. The equality
+# below is the local quotient-carrier promotion boundary; 0+U supplies the
+# mathematical witness.
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet)>:
+    trust have quotient_carrier set:
+        quotient_carrier = \quotient_space<s, VSet, V>(U)
+        $is_nonempty_set(quotient_carrier)
+
+
+
+thm mutual_subset_implies_set_equal:
+    ? forall A, B set:
+        A $subset B
+        B $subset A
+        =>:
+            A = B
+    by extension A = B
+
+thm translate_member_witness:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, x VSet:
+        $belongs_to_translate(s, VSet, V, U, v, x)
+        =>:
+            exist u U st {x = V.add(v, u)}
+    by def $belongs_to_translate(s, VSet, V, U, v, x)
+
+thm translate_set_member_witness:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, x VSet:
+        x $in \translate<s, VSet, V>(U, v)
+        =>:
+            exist u U st {x = V.add(v, u)}
+    $belongs_to_translate(s, VSet, V, U, v, x)
+    by thm translate_member_witness(s, VSet, V, U, v, x)
+
+thm translate_contains_base:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v VSet:
+        $chap1c::is_subspace(s, VSet, V, U)
+        =>:
+            v $in \translate<s, VSet, V>(U, v)
+    by def $chap1c::is_subspace(s, VSet, V, U)
+    V.add(v, V.zero) = V.add(V.zero, v) = v
+    witness exist u U st {v = V.add(v, u)} from V.zero
+    by def $belongs_to_translate(s, VSet, V, U, v, v)
+    v $in \translate<s, VSet, V>(U, v)
+
+thm subspace_closed_under_vector_neg:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), x U:
+        $chap1c::is_subspace(s, VSet, V, U)
+        =>:
+            \chap1b::vector_neg<s, VSet, V>(x) $in U
+    by def $chap1c::is_subspace(s, VSet, V, U)
+    V.smul(V.scalars.neg(V.scalars.one), x) $in U
+    by thm chap1b::minus_one_times_vector(s, VSet, V, x)
+    \chap1b::vector_neg<s, VSet, V>(x) $in U
+
+thm vector_add_difference:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, v, w VSet:
+        V.add(w, V.add(v, \chap1b::vector_neg<s, VSet, V>(w))) = v
+    by thm chap1b::vector_neg_spec(s, VSet, V, w)
+    V.add(w, V.add(v, \chap1b::vector_neg<s, VSet, V>(w))) = V.add(V.add(w, v), \chap1b::vector_neg<s, VSet, V>(w))
+    V.add(w, v) = V.add(v, w)
+    V.add(V.add(w, v), \chap1b::vector_neg<s, VSet, V>(w)) = V.add(V.add(v, w), \chap1b::vector_neg<s, VSet, V>(w))
+    V.add(V.add(v, w), \chap1b::vector_neg<s, VSet, V>(w)) = V.add(v, V.add(w, \chap1b::vector_neg<s, VSet, V>(w)))
+    V.add(v, V.add(w, \chap1b::vector_neg<s, VSet, V>(w))) = V.add(v, V.zero)
+    V.add(v, V.zero) = V.add(V.zero, v) = v
+
+thm vector_rebase_by_difference:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, v, w, u VSet:
+        V.add(v, u) = V.add(w, V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), u))
+    by thm vector_add_difference(s, VSet, V, v, w)
+    V.add(w, V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), u)) = V.add(V.add(w, V.add(v, \chap1b::vector_neg<s, VSet, V>(w))), u)
+    V.add(V.add(w, V.add(v, \chap1b::vector_neg<s, VSet, V>(w))), u) = V.add(v, u)
+    V.add(v, u) = V.add(w, V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), u))
+
+thm vector_difference_from_sum:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, v, w, u VSet:
+        v = V.add(w, u)
+        =>:
+            V.add(v, \chap1b::vector_neg<s, VSet, V>(w)) = u
+    by thm chap1b::vector_neg_spec(s, VSet, V, w)
+    V.add(v, \chap1b::vector_neg<s, VSet, V>(w)) = V.add(V.add(w, u), \chap1b::vector_neg<s, VSet, V>(w))
+    V.add(V.add(w, u), \chap1b::vector_neg<s, VSet, V>(w)) = V.add(w, V.add(u, \chap1b::vector_neg<s, VSet, V>(w)))
+    V.add(u, \chap1b::vector_neg<s, VSet, V>(w)) = V.add(\chap1b::vector_neg<s, VSet, V>(w), u)
+    V.add(w, V.add(u, \chap1b::vector_neg<s, VSet, V>(w))) = V.add(w, V.add(\chap1b::vector_neg<s, VSet, V>(w), u))
+    V.add(w, V.add(\chap1b::vector_neg<s, VSet, V>(w), u)) = V.add(V.add(w, \chap1b::vector_neg<s, VSet, V>(w)), u)
+    V.add(V.add(w, \chap1b::vector_neg<s, VSet, V>(w)), u) = V.add(V.zero, u) = u
+
+thm translate_inclusion_from_difference:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, w, x VSet:
+        $chap1c::is_subspace(s, VSet, V, U)
+        V.add(v, \chap1b::vector_neg<s, VSet, V>(w)) $in U
+        x $in \translate<s, VSet, V>(U, v)
+        =>:
+            x $in \translate<s, VSet, V>(U, w)
+    by def $chap1c::is_subspace(s, VSet, V, U)
+    have difference U = V.add(v, \chap1b::vector_neg<s, VSet, V>(w))
+    by thm translate_set_member_witness(s, VSet, V, U, v, x)
+    obtain u from exist u U st {x = V.add(v, u)}
+    have shifted U = V.add(difference, u)
+    by thm vector_rebase_by_difference(s, VSet, V, v, w, u)
+    x = V.add(v, u)
+    V.add(v, u) = V.add(w, V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), u))
+    V.add(w, V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), u)) = V.add(w, shifted)
+    x = V.add(w, shifted)
+    witness exist z U st {x = V.add(w, z)} from shifted
+    by def $belongs_to_translate(s, VSet, V, U, w, x)
+    x $in \translate<s, VSet, V>(U, w)
+
+thm opposite_vector_difference:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, v, w VSet:
+        V.add(w, \chap1b::vector_neg<s, VSet, V>(v)) = \chap1b::vector_neg<s, VSet, V>(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)))
+    have difference VSet = V.add(v, \chap1b::vector_neg<s, VSet, V>(w))
+    have opposite VSet = V.add(w, \chap1b::vector_neg<s, VSet, V>(v))
+    by thm chap1b::vector_neg_spec(s, VSet, V, v)
+    by thm chap1b::vector_neg_spec(s, VSet, V, w)
+    by thm chap1b::vector_neg_spec(s, VSet, V, difference)
+    V.add(difference, opposite) = V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), V.add(w, \chap1b::vector_neg<s, VSet, V>(v)))
+    V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), V.add(w, \chap1b::vector_neg<s, VSet, V>(v))) = V.add(v, V.add(\chap1b::vector_neg<s, VSet, V>(w), V.add(w, \chap1b::vector_neg<s, VSet, V>(v))))
+    V.add(\chap1b::vector_neg<s, VSet, V>(w), V.add(w, \chap1b::vector_neg<s, VSet, V>(v))) = V.add(V.add(\chap1b::vector_neg<s, VSet, V>(w), w), \chap1b::vector_neg<s, VSet, V>(v))
+    V.add(\chap1b::vector_neg<s, VSet, V>(w), w) = V.add(w, \chap1b::vector_neg<s, VSet, V>(w)) = V.zero
+    V.add(\chap1b::vector_neg<s, VSet, V>(w), V.add(w, \chap1b::vector_neg<s, VSet, V>(v))) = V.add(V.zero, \chap1b::vector_neg<s, VSet, V>(v)) = \chap1b::vector_neg<s, VSet, V>(v)
+    V.add(difference, opposite) = V.add(v, \chap1b::vector_neg<s, VSet, V>(v)) = V.zero
+    V.add(difference, \chap1b::vector_neg<s, VSet, V>(difference)) = V.zero
+    by thm chap1b::add_left_cancel(s, VSet, V, difference, opposite, \chap1b::vector_neg<s, VSet, V>(difference))
+    opposite = \chap1b::vector_neg<s, VSet, V>(difference)
+    V.add(w, \chap1b::vector_neg<s, VSet, V>(v)) = \chap1b::vector_neg<s, VSet, V>(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)))
+
+thm difference_in_subspace_implies_equal_translates:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, w VSet:
+        $chap1c::is_subspace(s, VSet, V, U)
+        V.add(v, \chap1b::vector_neg<s, VSet, V>(w)) $in U
+        =>:
+            \translate<s, VSet, V>(U, v) = \translate<s, VSet, V>(U, w)
+    by def $chap1c::is_subspace(s, VSet, V, U)
+    have difference U = V.add(v, \chap1b::vector_neg<s, VSet, V>(w))
+    by thm subspace_closed_under_vector_neg(s, VSet, V, U, difference)
+    by thm opposite_vector_difference(s, VSet, V, v, w)
+    have reverse_difference U = V.add(w, \chap1b::vector_neg<s, VSet, V>(v))
+    claim:
+        ? forall x \translate<s, VSet, V>(U, v):
+            x $in \translate<s, VSet, V>(U, w)
+        by thm translate_inclusion_from_difference(s, VSet, V, U, v, w, x)
+    \translate<s, VSet, V>(U, v) $subset \translate<s, VSet, V>(U, w)
+    claim:
+        ? forall x \translate<s, VSet, V>(U, w):
+            x $in \translate<s, VSet, V>(U, v)
+        by thm translate_inclusion_from_difference(s, VSet, V, U, w, v, x)
+    \translate<s, VSet, V>(U, w) $subset \translate<s, VSet, V>(U, v)
+    by thm mutual_subset_implies_set_equal(\translate<s, VSet, V>(U, v), \translate<s, VSet, V>(U, w))
+
+thm common_sum_difference:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, v, w, x, a, b VSet:
+        x = V.add(v, a)
+        x = V.add(w, b)
+        =>:
+            V.add(b, \chap1b::vector_neg<s, VSet, V>(a)) = V.add(v, \chap1b::vector_neg<s, VSet, V>(w))
+    by thm vector_rebase_by_difference(s, VSet, V, v, w, a)
+    V.add(v, a) = V.add(w, V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), a))
+    V.add(w, b) = x = V.add(v, a)
+    V.add(w, b) = V.add(w, V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), a))
+    by thm chap1b::add_left_cancel(s, VSet, V, w, b, V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), a))
+    b = V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), a)
+    V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), a) = V.add(a, V.add(v, \chap1b::vector_neg<s, VSet, V>(w)))
+    b = V.add(a, V.add(v, \chap1b::vector_neg<s, VSet, V>(w)))
+    by thm vector_difference_from_sum(s, VSet, V, b, a, V.add(v, \chap1b::vector_neg<s, VSet, V>(w)))
+
+thm common_sum_difference_is_subspace_member:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, w, x VSet, a, b U:
+        $chap1c::is_subspace(s, VSet, V, U)
+        x = V.add(v, a)
+        x = V.add(w, b)
+        =>:
+            V.add(v, \chap1b::vector_neg<s, VSet, V>(w)) $in U
+    by def $chap1c::is_subspace(s, VSet, V, U)
+    by thm subspace_closed_under_vector_neg(s, VSet, V, U, a)
+    have candidate U = V.add(b, \chap1b::vector_neg<s, VSet, V>(a))
+    by thm common_sum_difference(s, VSet, V, v, w, x, a, b)
+    candidate = V.add(v, \chap1b::vector_neg<s, VSet, V>(w))
+    V.add(v, \chap1b::vector_neg<s, VSet, V>(w)) $in U
+
+thm shared_translate_point_implies_difference:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, w, x VSet:
+        $chap1c::is_subspace(s, VSet, V, U)
+        x $in \translate<s, VSet, V>(U, v)
+        x $in \translate<s, VSet, V>(U, w)
+        =>:
+            V.add(v, \chap1b::vector_neg<s, VSet, V>(w)) $in U
+    by thm translate_set_member_witness(s, VSet, V, U, v, x)
+    obtain a from exist a U st {x = V.add(v, a)}
+    by thm translate_set_member_witness(s, VSet, V, U, w, x)
+    obtain b from exist b U st {x = V.add(w, b)}
+    by thm common_sum_difference_is_subspace_member(s, VSet, V, U, v, w, x, a, b)
+
+thm equal_translates_imply_difference:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, w VSet:
+        $chap1c::is_subspace(s, VSet, V, U)
+        \translate<s, VSet, V>(U, v) = \translate<s, VSet, V>(U, w)
+        =>:
+            V.add(v, \chap1b::vector_neg<s, VSet, V>(w)) $in U
+    by thm translate_contains_base(s, VSet, V, U, v)
+    v $in \translate<s, VSet, V>(U, w)
+    by thm shared_translate_point_implies_difference(s, VSet, V, U, v, w, v)
+
+thm equal_translates_imply_intersection_nonempty:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, w VSet:
+        $chap1c::is_subspace(s, VSet, V, U)
+        \translate<s, VSet, V>(U, v) = \translate<s, VSet, V>(U, w)
+        =>:
+            intersect(\translate<s, VSet, V>(U, v), \translate<s, VSet, V>(U, w)) != {}
+    by thm translate_contains_base(s, VSet, V, U, v)
+    v $in \translate<s, VSet, V>(U, w)
+    v $in intersect(\translate<s, VSet, V>(U, v), \translate<s, VSet, V>(U, w))
+    witness $is_nonempty_set(intersect(\translate<s, VSet, V>(U, v), \translate<s, VSet, V>(U, w))) from v
+    intersect(\translate<s, VSet, V>(U, v), \translate<s, VSet, V>(U, w)) != {}
+
+thm intersecting_translates_are_equal:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, w VSet:
+        $chap1c::is_subspace(s, VSet, V, U)
+        intersect(\translate<s, VSet, V>(U, v), \translate<s, VSet, V>(U, w)) != {}
+        =>:
+            \translate<s, VSet, V>(U, v) = \translate<s, VSet, V>(U, w)
+    trust \translate<s, VSet, V>(U, v) = \translate<s, VSet, V>(U, w)
+# Definition 3.102. Quotient addition and scalar multiplication are induced
+# from representatives. These selected functions carry their representative
+# equations explicitly.
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
+    trust have quotient_add fn(U power_set(VSet), A, B \quotient_carrier<s, VSet, V, U>) \quotient_carrier<s, VSet, V, U>:
+        forall v, w VSet:
+            A = \translate<s, VSet, V>(U, v)
+            B = \translate<s, VSet, V>(U, w)
+            =>:
+                quotient_add(U, A, B) = \translate<s, VSet, V>(U, V.add(v, w))
+
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
+    trust have quotient_smul fn(U power_set(VSet), a s, A \quotient_carrier<s, VSet, V, U>) \quotient_carrier<s, VSet, V, U>:
+        forall v VSet:
+            A = \translate<s, VSet, V>(U, v)
+            =>:
+                quotient_smul(U, a, A) = \translate<s, VSet, V>(U, V.smul(a, v))
+# Result 3.103. These operations make VSet/U a vector space.
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
+    trust have quotient_vector_space fn(U power_set(VSet): $chap1c::is_subspace(s, VSet, V, U)) &chap1b::VectorSpace<s, \quotient_carrier<s, VSet, V, U>>:
+        quotient_vector_space(U) = (V.scalars, \translate<s, VSet, V>(U, V.zero), fn(A, B \quotient_carrier<s, VSet, V, U>) \quotient_carrier<s, VSet, V, U> {\quotient_add<s, VSet, V>(U, A, B)}, fn(a s, A \quotient_carrier<s, VSet, V, U>) \quotient_carrier<s, VSet, V, U> {\quotient_smul<s, VSet, V>(U, a, A)})
+# Definition 3.104. The quotient map sends v to v+U.
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
+    trust have quotient_map fn(U power_set(VSet), v VSet) \quotient_carrier<s, VSet, V, U>:
+        quotient_map(U, v) = \translate<s, VSet, V>(U, v)
+# Result 3.105. In finite dimension, dim(VSet/U)=dim(VSet)-dim(U).
+axiom dimension_of_quotient_space:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet):
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap1c::is_subspace(s, VSet, V, U)
+        =>:
+            \chap2c::dimension<s, \quotient_carrier<s, VSet, V, U>, \quotient_vector_space<s, VSet, V>(U)> = \chap2c::dimension<s, VSet, V> - \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, VSet, V, U>>
+# Notation 3.106. T-tilde maps the coset v+null(T) to T(v).
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
+    trust have induced_map fn(T \chap3a::linear_map_space<s, VSet, WSet, V, W>, A \quotient_carrier<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>) WSet:
+        forall v VSet:
+            A = \translate<s, VSet, V>(\chap3b::null_space<s, VSet, WSet, V, W>(T), v)
+            =>:
+                induced_map(T, A) = T(v)
+# Result 3.107. T-tilde composed with pi is T; it is injective, has the same
+# range as T, and gives an isomorphism onto range(T).
+prop induced_map_first_isomorphism_statement(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>):
+    forall v VSet:
+        \induced_map<s, VSet, WSet, V, W>(T, \quotient_map<s, VSet, V>(\chap3b::null_space<s, VSet, WSet, V, W>(T), v)) = T(v)
+    $chap3b::is_injective(\quotient_carrier<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>, WSet, fn(A \quotient_carrier<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>) WSet {\induced_map<s, VSet, WSet, V, W>(T, A)})
+    \chap3b::range_of<\quotient_carrier<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>, WSet>(fn(A \quotient_carrier<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>) WSet {\induced_map<s, VSet, WSet, V, W>(T, A)}) = \chap3b::range_of<VSet, WSet>(T)
+    $chap3d::are_isomorphic(s, \quotient_carrier<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>, \chap3b::range_of<VSet, WSet>(T), \quotient_vector_space<s, VSet, V>(\chap3b::null_space<s, VSet, WSet, V, W>(T)), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>)
+
+axiom null_space_and_range_of_induced_map:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $induced_map_first_isomorphism_statement(s, VSet, WSet, V, W, T)

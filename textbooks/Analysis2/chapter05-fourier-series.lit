@@ -49,7 +49,7 @@ prop is_complex_function_coordinate_view(f fn(x R) &chap4::ComplexNumber, real_p
 prop is_periodic_inner_product_coordinate_data(f, g fn(x R) &chap4::ComplexNumber, f_re, f_im, g_re, g_im fn(x R) R, value &chap4::ComplexNumber):
     $is_complex_function_coordinate_view(f, f_re, f_im)
     $is_complex_function_coordinate_view(g, g_re, g_im)
-    $chap3::has_riemann_integral_value('[0, 1], fn(x '[0, 1]) R {f_re(x) * g_re(x) + f_im(x) * g_im(x)}, value.re)
+    $chap3::has_riemann_integral_value('[0, 1], fn(x '[0, 1]) R {f_re(x) * g_re(x) + f_im(x) * g_im(x)}, value.real_part)
     $chap3::has_riemann_integral_value('[0, 1], fn(x '[0, 1]) R {f_im(x) * g_re(x) - f_re(x) * g_im(x)}, value.im)
 
 prop has_periodic_inner_product(f, g fn(x R) &chap4::ComplexNumber, value &chap4::ComplexNumber):
@@ -71,7 +71,7 @@ thm periodic_inner_product_laws:
 # Cauchy--Schwarz, the triangle inequality, Pythagoras, and homogeneity.
 prop has_periodic_l2_norm(f fn(x R) &chap4::ComplexNumber, norm R):
     norm >= 0
-    exist value &chap4::ComplexNumber st {$has_periodic_inner_product(f, f, value), value.im = 0, norm^2 = value.re}
+    exist value &chap4::ComplexNumber st {$has_periodic_inner_product(f, f, value), value.im = 0, norm^2 = value.real_part}
 
 thm periodic_l2_norm_laws:
     ? forall f, g fn(x R) &chap4::ComplexNumber, norm_f, norm_g R:
@@ -142,7 +142,7 @@ thm periodic_weierstrass_approximation:
 prop is_periodic_convolution_coordinate_data(f, g fn(x R) &chap4::ComplexNumber, f_re, f_im, g_re, g_im fn(x R) R, x R, value &chap4::ComplexNumber):
     $is_complex_function_coordinate_view(f, f_re, f_im)
     $is_complex_function_coordinate_view(g, g_re, g_im)
-    $chap3::has_riemann_integral_value('[0, 1], fn(y '[0, 1]) R {f_re(y) * g_re(x - y) - f_im(y) * g_im(x - y)}, value.re)
+    $chap3::has_riemann_integral_value('[0, 1], fn(y '[0, 1]) R {f_re(y) * g_re(x - y) - f_im(y) * g_im(x - y)}, value.real_part)
     $chap3::has_riemann_integral_value('[0, 1], fn(y '[0, 1]) R {f_re(y) * g_im(x - y) + f_im(y) * g_re(x - y)}, value.im)
 
 prop has_periodic_convolution_value(f, g fn(x R) &chap4::ComplexNumber, x R, value &chap4::ComplexNumber):

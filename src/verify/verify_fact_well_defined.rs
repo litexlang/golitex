@@ -356,16 +356,13 @@ impl Runtime {
 
         for dom_fact in forall_fact.dom_facts.iter() {
             let store_result = match dom_fact {
-                Fact::AtomicFact(AtomicFact::NormalAtomicFact(_)) => {
-                    self.verify_well_defined_and_store_without_infer(
+                Fact::AtomicFact(AtomicFact::NormalAtomicFact(_)) => self
+                    .verify_well_defined_and_store_without_infer(
                         dom_fact.clone(),
                         InferReason::VerifiedStatement,
-                    )
-                }
-                _ => self.verify_fact_well_defined_and_store_and_infer(
-                    dom_fact.clone(),
-                    verify_state,
-                ),
+                    ),
+                _ => self
+                    .verify_fact_well_defined_and_store_and_infer(dom_fact.clone(), verify_state),
             };
             if let Err(exec_stmt_error) = store_result {
                 return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(

@@ -426,13 +426,13 @@ have informal_complex_coordinates set = cart(R, R)
 
 # Definition 4.6.2 (Formal complex numbers).
 struct ComplexNumber:
-    re R
+    real_part R
     im R
 
 # Definition 4.6.3 (Complex addition, negation, and zero).
 have complex_zero &ComplexNumber = (0, 0)
-have fn complex_add(z, w &ComplexNumber) &ComplexNumber = (z.re + w.re, z.im + w.im)
-have fn complex_neg(z &ComplexNumber) &ComplexNumber = (-z.re, -z.im)
+have fn complex_add(z, w &ComplexNumber) &ComplexNumber = (z.real_part + w.real_part, z.im + w.im)
+have fn complex_neg(z &ComplexNumber) &ComplexNumber = (-z.real_part, -z.im)
 
 # Lemma 4.6.4 (The complex numbers are an additive group).
 thm complex_additive_group_laws:
@@ -457,7 +457,7 @@ thm complex_additive_group_laws:
 
 # Definition 4.6.5 (Complex multiplication).
 have complex_one &ComplexNumber = (1, 0)
-have fn complex_mul(z, w &ComplexNumber) &ComplexNumber = (z.re * w.re - z.im * w.im, z.re * w.im + z.im * w.re)
+have fn complex_mul(z, w &ComplexNumber) &ComplexNumber = (z.real_part * w.real_part - z.im * w.im, z.real_part * w.im + z.im * w.real_part)
 
 # Lemma 4.6.6 (Complex multiplication laws).
 thm complex_multiplication_laws:
@@ -483,26 +483,26 @@ have fn complex_of_real(x R) &ComplexNumber = (x, 0)
 
 thm complex_cartesian_representation:
     ? forall z &ComplexNumber:
-        z = complex_add(complex_of_real(z.re), complex_mul(complex_of_real(z.im), imaginary_unit))
+        z = complex_add(complex_of_real(z.real_part), complex_mul(complex_of_real(z.im), imaginary_unit))
         complex_mul(imaginary_unit, imaginary_unit) = complex_neg(complex_one)
         complex_neg(z) = complex_mul(complex_of_real(-1), z)
     # proof_debt: nested struct-valued function unfolding does not yet bridge the coordinate computation back to z.
-    trust z = complex_add(complex_of_real(z.re), complex_mul(complex_of_real(z.im), imaginary_unit))
+    trust z = complex_add(complex_of_real(z.real_part), complex_mul(complex_of_real(z.im), imaginary_unit))
     # proof_debt: struct-valued function unfolding does not yet normalize both computed constants to the same tuple.
     trust complex_mul(imaginary_unit, imaginary_unit) = complex_neg(complex_one)
     # proof_debt: struct-valued function unfolding does not yet normalize the two coordinate expressions.
     trust complex_neg(z) = complex_mul(complex_of_real(-1), z)
 
 # Definition 4.6.8 (Real part, imaginary part, and conjugate).
-have fn complex_real_part(z &ComplexNumber) R = z.re
+have fn complex_real_part(z &ComplexNumber) R = z.real_part
 have fn complex_imaginary_part(z &ComplexNumber) R = z.im
-have fn complex_conjugate(z &ComplexNumber) &ComplexNumber = (z.re, -z.im)
+have fn complex_conjugate(z &ComplexNumber) &ComplexNumber = (z.real_part, -z.im)
 
 prop is_real_complex(z &ComplexNumber):
     z.im = 0
 
 prop is_imaginary_complex(z &ComplexNumber):
-    z.re = 0
+    z.real_part = 0
 
 # Lemma 4.6.9 (Complex conjugation is an involution).
 thm complex_conjugation_laws:
@@ -521,7 +521,7 @@ thm complex_conjugation_laws:
     trust complex_conjugate(complex_conjugate(z)) = z
 
 # Definition 4.6.10 (Complex absolute value).
-have fn complex_abs(z &ComplexNumber) R = sqrt(z.re^2 + z.im^2)
+have fn complex_abs(z &ComplexNumber) R = sqrt(z.real_part^2 + z.im^2)
 
 # Lemma 4.6.11 (Properties of complex absolute value).
 thm complex_absolute_value_laws:
@@ -530,11 +530,11 @@ thm complex_absolute_value_laws:
         complex_mul(z, complex_conjugate(z)) = complex_of_real(complex_abs(z)^2)
         complex_abs(complex_mul(z, w)) = complex_abs(z) * complex_abs(w)
         complex_abs(complex_conjugate(z)) = complex_abs(z)
-        -complex_abs(z) <= z.re
-        z.re <= complex_abs(z)
+        -complex_abs(z) <= z.real_part
+        z.real_part <= complex_abs(z)
         -complex_abs(z) <= z.im
         z.im <= complex_abs(z)
-        complex_abs(z) <= abs(z.re) + abs(z.im)
+        complex_abs(z) <= abs(z.real_part) + abs(z.im)
         complex_abs(complex_add(z, w)) <= complex_abs(z) + complex_abs(w)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust complex_abs(z) >= 0
@@ -545,15 +545,15 @@ thm complex_absolute_value_laws:
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust complex_abs(complex_conjugate(z)) = complex_abs(z)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust -complex_abs(z) <= z.re
+    trust -complex_abs(z) <= z.real_part
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust z.re <= complex_abs(z)
+    trust z.real_part <= complex_abs(z)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust -complex_abs(z) <= z.im
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust z.im <= complex_abs(z)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust complex_abs(z) <= abs(z.re) + abs(z.im)
+    trust complex_abs(z) <= abs(z.real_part) + abs(z.im)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust complex_abs(complex_add(z, w)) <= complex_abs(z) + complex_abs(w)
 
@@ -592,16 +592,16 @@ thm complex_convergence_implies_coordinatewise:
     ? forall sequence fn(n N_pos) &ComplexNumber, z &ComplexNumber:
         $chap1::has_metric_limit(&ComplexNumber, complex_distance, sequence, z)
         =>:
-            $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.re}, z.re)
+            $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.real_part}, z.real_part)
             $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.im}, z.im)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.re}, z.re)
+    trust $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.real_part}, z.real_part)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.im}, z.im)
 
 thm coordinatewise_convergence_implies_complex:
     ? forall sequence fn(n N_pos) &ComplexNumber, z &ComplexNumber:
-        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.re}, z.re)
+        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.real_part}, z.real_part)
         $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.im}, z.im)
         =>:
             $chap1::has_metric_limit(&ComplexNumber, complex_distance, sequence, z)
@@ -669,8 +669,8 @@ prop is_complex_exponential_coordinate_data(z &ComplexNumber, data fn(entry cart
     data((0, 2)) = 1
     data((0, 3)) = 0
     forall n N_pos:
-        data((n, 0)) = z.re * data((n - 1, 0)) - z.im * data((n - 1, 1))
-        data((n, 1)) = z.re * data((n - 1, 1)) + z.im * data((n - 1, 0))
+        data((n, 0)) = z.real_part * data((n - 1, 0)) - z.im * data((n - 1, 1))
+        data((n, 1)) = z.real_part * data((n - 1, 1)) + z.im * data((n - 1, 0))
         factorial_real(n) * (data((n, 2)) - data((n - 1, 2))) = data((n, 0))
         factorial_real(n) * (data((n, 3)) - data((n - 1, 3))) = data((n, 1))
 
@@ -688,12 +688,12 @@ have fn exp_complex by exist!:
     trust exist! L &ComplexNumber st {$has_complex_exponential_series_sum(z, L)}
 
 # Definition 4.7.1 (Trigonometric functions).
-have fn complex_scale(a R, z &ComplexNumber) &ComplexNumber = (a * z.re, a * z.im)
+have fn complex_scale(a R, z &ComplexNumber) &ComplexNumber = (a * z.real_part, a * z.im)
 have fn complex_cos(z &ComplexNumber) &ComplexNumber = complex_scale(1 / 2, complex_add(exp_complex(complex_mul(imaginary_unit, z)), exp_complex(complex_neg(complex_mul(imaginary_unit, z)))))
 have fn complex_sin(z &ComplexNumber) &ComplexNumber = complex_mul((0, -1 / 2), complex_add(exp_complex(complex_mul(imaginary_unit, z)), complex_neg(exp_complex(complex_neg(complex_mul(imaginary_unit, z))))))
 
 prop is_real_cosine_value(x, y R):
-    y = &ComplexNumber{exp_complex(complex_mul(imaginary_unit, complex_of_real(x)))}.re
+    y = &ComplexNumber{exp_complex(complex_mul(imaginary_unit, complex_of_real(x)))}.real_part
 
 prop is_real_sine_value(x, y R):
     y = &ComplexNumber{exp_complex(complex_mul(imaginary_unit, complex_of_real(x)))}.im

@@ -14,10 +14,14 @@
 /// `equality_can_use_known_forall` controls an important recursion boundary:
 /// equality verification may usually instantiate known `forall` facts, but some
 /// equality subchecks disable that route to prevent circular proof search.
+///
+/// `list_set_membership_can_use_equality_builtin` lets selected builtin premises
+/// restrict list-set membership to reflexive or already-known element equality.
 pub struct VerifyState {
     pub round: u8,
     pub well_defined_already_verified: bool,
     pub equality_can_use_known_forall: bool,
+    pub list_set_membership_can_use_equality_builtin: bool,
 }
 
 impl VerifyState {
@@ -26,6 +30,7 @@ impl VerifyState {
             round,
             well_defined_already_verified,
             equality_can_use_known_forall: true,
+            list_set_membership_can_use_equality_builtin: true,
         }
     }
 
@@ -34,6 +39,8 @@ impl VerifyState {
             round: self.round + 1,
             well_defined_already_verified: self.well_defined_already_verified,
             equality_can_use_known_forall: self.equality_can_use_known_forall,
+            list_set_membership_can_use_equality_builtin: self
+                .list_set_membership_can_use_equality_builtin,
         };
     }
 
@@ -42,6 +49,8 @@ impl VerifyState {
             round: self.round,
             well_defined_already_verified: true,
             equality_can_use_known_forall: self.equality_can_use_known_forall,
+            list_set_membership_can_use_equality_builtin: self
+                .list_set_membership_can_use_equality_builtin,
         };
     }
 
@@ -54,6 +63,8 @@ impl VerifyState {
             round: 2,
             well_defined_already_verified: self.well_defined_already_verified,
             equality_can_use_known_forall: self.equality_can_use_known_forall,
+            list_set_membership_can_use_equality_builtin: self
+                .list_set_membership_can_use_equality_builtin,
         };
     }
 
@@ -66,6 +77,17 @@ impl VerifyState {
             round: self.round,
             well_defined_already_verified: self.well_defined_already_verified,
             equality_can_use_known_forall: false,
+            list_set_membership_can_use_equality_builtin: self
+                .list_set_membership_can_use_equality_builtin,
+        };
+    }
+
+    pub fn without_equality_builtin_for_list_set_membership(&self) -> Self {
+        return Self {
+            round: self.round,
+            well_defined_already_verified: self.well_defined_already_verified,
+            equality_can_use_known_forall: self.equality_can_use_known_forall,
+            list_set_membership_can_use_equality_builtin: false,
         };
     }
 }

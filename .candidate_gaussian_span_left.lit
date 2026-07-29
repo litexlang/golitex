@@ -1,8 +1,0 @@
-thm binary_gaussian_span_contains_left_generator:
-    ? forall ax, ay, bx, b_y Z:
-        (ax, ay) $in binary_gaussian_span(ax, ay, bx, b_y)
-    witness exist ux, uy, vx, vy Z st {ax = ax * ux - ay * uy + bx * vx - b_y * vy, ay = ax * uy + ay * ux + bx * vy + b_y * vx} from 1, 0, 0, 0:
-        ax = ax * 1 - ay * 0 + bx * 0 - b_y * 0
-        ay = ax * 0 + ay * 1 + bx * 0 + b_y * 0
-    by def $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, ax, ay)
-    (ax, ay) $in binary_gaussian_span(ax, ay, bx, b_y)

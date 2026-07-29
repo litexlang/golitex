@@ -1,8 +1,0 @@
-thm binary_gaussian_span_contains_zero:
-    ? forall ax, ay, bx, b_y Z:
-        (0, 0) $in binary_gaussian_span(ax, ay, bx, b_y)
-    witness exist ux, uy, vx, vy Z st {0 = ax * ux - ay * uy + bx * vx - b_y * vy, 0 = ax * uy + ay * ux + bx * vy + b_y * vx} from 0, 0, 0, 0:
-        0 = ax * 0 - ay * 0 + bx * 0 - b_y * 0
-        0 = ax * 0 + ay * 0 + bx * 0 + b_y * 0
-    by def $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, 0, 0)
-    (0, 0) $in binary_gaussian_span(ax, ay, bx, b_y)

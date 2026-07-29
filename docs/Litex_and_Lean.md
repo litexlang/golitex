@@ -279,17 +279,15 @@ have fn signed_area(x, y cart(R, R)) R = x[1] * y[2] - x[2] * y[1]
 signed_area((1, 0), (0, 1)) = 1 * 1 - 0 * 0 = 1
 ```
 
-### Checked Numeric Kernels Can Become Python
+### Frozen Python Extraction Experiment
 
-The same surface matters when a mathematical definition also has an obvious
-programming-language shape. Some scientific-computing code is essentially a
-numeric formula or update rule: choose constants, define a real-valued function,
-compose it with other functions, and run it later in Python. Litex can keep the
-formula in mathematical form, verify the supported source first, and then emit
-ordinary Python with `litex -python`.
+Litex preserves a frozen experimental extractor for a small set of mathematical
+definitions with an obvious programming-language shape. It can verify the
+supported source and emit ordinary Python with `litex -python`, but it is not a
+general compiler or a production backend.
 
 ```litex
-have dt R_pos = 1 / 100
+have dt R+ = 1 / 100
 have fn euler_step(y, dy R) R = y + dt * dy
 have algo for euler_step(y, dy):
     y + dt * dy
@@ -310,14 +308,11 @@ def twice_step(y, dy):
     return euler_step(euler_step(y, dy), dy)
 ```
 
-This is not only syntax translation. The intended workflow is to write the
-executable definition together with the mathematical facts and constraints it
-should satisfy, check the Litex source, and then extract the supported
-definitions. In the current v1 backend, extraction is deliberately narrow:
-numeric constants and `R`-parameter `have algo for` implementations become Python
-`float` code. Domain-restricted mathematical functions such as
-`fn(x R: x > 0) R` are part of the verification language, while direct
-extraction for that shape is future backend work. See
+The preserved v1 subset emits numeric constants and `R`-parameter
+`have algo for` implementations as Python `float` code. Domain-restricted
+mathematical functions such as `fn(x R: x > 0) R` remain outside that subset.
+The extractor receives compatibility and regression fixes, but its feature
+surface is not being expanded. See
 [Litex To Python](https://litexlang.com/doc/Litex_To_Python) for the exact
 supported subset and trust boundary.
 
@@ -327,7 +322,7 @@ Litex treats anonymous functions as ordinary objects. You can pass them directly
 
 <!-- litex:skip-test -->
 ```litex
-eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
+eval sum(1, 3, fn(x N+) N+ {sum(1, x, fn(y N+) N+ {x + y})})
 ```
 
 ```lean
@@ -340,7 +335,7 @@ def total : ℤ :=
 **What differs.** Litex can pass an anonymous function object directly to a repeated sum or product. Lean can do the same mathematics, but users often introduce `fun` expressions, named definitions, ranges, coercions, or library conventions around finite sums.
 
 ```litex
-eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
+eval sum(1, 3, fn(x N+) N+ {sum(1, x, fn(y N+) N+ {x + y})})
 ```
 
 ### Set Expressions Are Ordinary Objects
@@ -431,7 +426,7 @@ Lean also has structured proof commands and tactics. The difference is that Lite
 ### Witness Statements
 <!-- litex:skip-test -->
 ```litex
-witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481
+witness exist a, b, c, d N+ st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481
 ```
 
 ```lean
@@ -446,7 +441,7 @@ example : ∃ a b c d : ℕ,
 **What differs.** Litex puts the concrete values first. Lean packages values and obligations through constructors.
 
 ```litex
-witness exist a, b, c, d N_pos st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481
+witness exist a, b, c, d N+ st {a ^ 4 + b ^ 4 + c ^ 4 = d ^ 4} from 95800, 217519, 414560, 422481
 ```
 
 ### Contradiction
@@ -982,38 +977,38 @@ Both systems can express the classic proof that there are infinitely many primes
 
 <!-- litex:skip-test -->
 ```litex
-prop prime(a N_pos):
+prop prime(a N+):
     2 <= a
-    forall b N_pos:
+    forall b N+:
         2 <= b < a
         =>:
             a % b != 0
 
 claim:
-    ? forall a N_pos:
-        forall n, k N_pos:
+    ? forall a N+:
+        forall n, k N+:
             k <= n
             =>:
-                product(1, n, fn(x N_pos) N_pos {x}) % k = 0
-        forall n N_pos:
+                product(1, n, fn(x N+) N+ {x}) % k = 0
+        forall n N+:
             2 <= n
             =>:
-                exist k N_pos st {$prime(k), n % k = 0}
-        forall n N_pos:
-            n <= product(1, n, fn(x N_pos) N_pos {x})
+                exist k N+ st {$prime(k), n % k = 0}
+        forall n N+:
+            n <= product(1, n, fn(x N+) N+ {x})
         2 <= a
         =>:
-            exist k N_pos st {k > a, $prime(k)}
-    2 <= a <= product(1, a, fn(x N_pos) N_pos {x}) <= product(1, a, fn(x N_pos) N_pos {x}) + 1
-    obtain k from exist k N_pos st {$prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
+            exist k N+ st {k > a, $prime(k)}
+    2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1
+    obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}
     by cases k > a:
         case k <= a:
-            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
-            (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
+            product(1, a, fn(x N+) N+ {x}) % k = 0
+            (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
+            impossible (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0
         case k > a:
             do_nothing
-    witness exist k N_pos st {k > a, $prime(k)} from k
+    witness exist k N+ st {k > a, $prime(k)} from k
 ```
 
 ```lean

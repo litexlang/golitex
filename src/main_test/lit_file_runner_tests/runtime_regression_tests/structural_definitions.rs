@@ -1259,6 +1259,33 @@ a = b
 }
 
 #[test]
+fn two_known_weak_order_directions_prove_equality() {
+    let source_code = r#"
+have a, b R
+trust a <= b
+trust b <= a
+a = b
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("two_known_weak_order_directions_prove_equality");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "known weak-order facts should prove equality by antisymmetry:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"rule\": \"equality from a >= b and b >= a\""),
+        "weak-order equality should report its builtin provenance:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn real_line_comparison_exist_witnesses_are_builtin_rules() {
     let source_code = r#"
 have above R:

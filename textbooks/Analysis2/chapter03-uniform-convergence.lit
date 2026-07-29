@@ -467,7 +467,7 @@ prop has_derivative_at(I power_set(R), f fn(z I) R, x I, L R):
 prop has_continuous_derivative_on(I power_set(R), f, derivative fn(x I) R):
     forall x I:
         $has_derivative_at(I, f, x, derivative(x))
-    $chap2::is_metric_continuous(I, R, fn(x, y I) R {abs(x - y)}, chap1::real_distance, derivative)
+    $chap2::is_metric_continuous(I, R, \chap1::restricted_distance<R, chap1::real_distance, I>, chap1::real_distance, derivative)
 
 # Theorem 3.7.1 (Uniform convergence of derivatives).
 thm uniform_derivative_limit_theorem:

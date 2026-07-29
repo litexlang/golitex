@@ -8,8 +8,8 @@ description: Model a mathematical subject, textbook, chapter, or Litex module be
 ## Critical: Repository Policy And Verifier Loop
 
 - In the golitex repository, apply `$golitex-repository-policy` alongside this
-  skill and read the live repository `AGENTS.md` completely. The live policy
-  overrides generic or older guidance here.
+  skill and read its canonical bundled policy completely. That repository
+  policy overrides generic or older guidance here.
 - Build current source once with `cargo build --release` and invoke
   `target/release/litex`; never use `target/debug/litex` for Litex work.
 - For every iterative edit to a registered target, start one

@@ -1103,6 +1103,13 @@ have fn tail_inf by exist!:
         =>:
             L1 = L2
 
+thm tail_sup_apply:
+    ? forall a seq(R), m N_pos:
+        $has_tail_supremum(a, m)
+        =>:
+            $is_tail_supremum(a, m, tail_sup(a, m))
+    $is_tail_supremum(a, m, tail_sup(a, m))
+
 # In the finite real-valued case, the notation is represented by the functions
 # `tail_sup(a, m)` and `tail_inf(a, m)`. Their domains require the corresponding
 # real supremum or infimum to exist; unbounded tails remain infinity-facing
@@ -2354,6 +2361,91 @@ thm bounded_sequence_tail_sup_sequence_converges:
     by thm bounded_sequence_tail_sup_sequence_decreasing(a)
     by thm bounded_sequence_tail_sup_sequence_bounded_below(a)
     by thm bounded_decreasing_sequence_converges(fn(m N_pos) R {tail_sup(a, m)})
+
+thm tail_sup_limit_is_finite_limsup:
+    ? forall a, b seq(R), L R:
+        forall m N_pos:
+            $has_tail_supremum(a, m)
+            b(m) = tail_sup(a, m)
+        $has_limit(b, L)
+        =>:
+            $has_finite_limit_superior(a, L)
+    claim:
+        ? forall x R:
+            x > L
+            =>:
+                exist n_tail N_pos st {$is_eventually_below_threshold(a, x, n_tail)}
+        $has_eventual_closeness_to(b, L, x - L)
+        obtain n0 from exist n0 N_pos st {$is_tail_close_to(b, L, x - L, n0)}
+        b(n0) = tail_sup(a, n0)
+        abs(b(n0) - L) < x - L
+        b(n0) - L <= abs(b(n0) - L) < x - L
+        b(n0) = (b(n0) - L) + L < (x - L) + L = x
+        by thm tail_sup_apply(a, n0)
+        claim:
+            ? forall n N_pos:
+                n >= n0
+                =>:
+                    a(n) <= tail_sup(a, n0) = b(n0) < x
+            by thm tail_upper_bound_on_later_tail(a, n0, n, tail_sup(a, n0))
+            a(n) <= tail_sup(a, n0) = b(n0) < x
+        witness exist n_tail N_pos st {$is_eventually_below_threshold(a, x, n_tail)} from n0:
+            forall n N_pos:
+                n >= n0
+                =>:
+                    a(n) <= tail_sup(a, n0) = b(n0) < x
+    by def $is_eventually_below_every_threshold_above(a, L)
+    claim:
+        ? forall x R:
+            x < L
+            =>:
+                $exceeds_threshold_arbitrarily_late(a, x)
+        $has_eventual_closeness_to(b, L, L - x)
+        obtain n0 from exist n0 N_pos st {$is_tail_close_to(b, L, L - x, n0)}
+        claim:
+            ? forall n_tail N_pos:
+                exist n N_pos st {n >= n_tail and x < a(n)}
+            finite_set_max(union({n_tail}, {n0})) >= n_tail and finite_set_max(union({n_tail}, {n0})) >= n0
+            have m0 N_pos = finite_set_max(union({n_tail}, {n0}))
+            m0 >= n_tail and m0 >= n0
+            b(m0) = tail_sup(a, m0)
+            abs(b(m0) - L) < L - x
+            abs(L - b(m0)) = abs(b(m0) - L)
+            L - b(m0) <= abs(L - b(m0)) = abs(b(m0) - L) < L - x
+            x = L - (L - x) < L - (L - b(m0)) = b(m0) = tail_sup(a, m0)
+            by thm tail_sup_apply(a, m0)
+            by thm tail_supremum_crosses_every_lower_threshold(a, m0, tail_sup(a, m0), x)
+            obtain n1 from exist n1 N_pos st {n1 >= m0 and x < a(n1)}
+            witness exist n N_pos st {n >= n_tail and x < a(n)} from n1
+    by def $exceeds_every_threshold_below_arbitrarily_late(a, L)
+
+thm bounded_sequence_has_finite_limsup:
+    ? forall a seq(R):
+        $is_bounded_sequence(a)
+        =>:
+            exist Lplus R st {$has_finite_limit_superior(a, Lplus)}
+    forall m N_pos:
+        $has_tail_supremum(a, m)
+    by thm bounded_sequence_tail_sup_sequence_converges(a)
+    obtain Lplus from exist Lplus R st {$has_limit(fn(m N_pos) R {tail_sup(a, m)}, Lplus)}
+    have b seq(R) = fn(m N_pos) R {tail_sup(a, m)}
+    claim:
+        ? forall m N_pos:
+            b(m) = tail_sup(a, m)
+    claim:
+        ? forall epsilon R_pos:
+            $has_eventual_closeness_to(b, Lplus, epsilon)
+        $has_eventual_closeness_to(fn(m N_pos) R {tail_sup(a, m)}, Lplus, epsilon)
+        obtain n0 from exist n0 N_pos st {$is_tail_close_to(fn(m N_pos) R {tail_sup(a, m)}, Lplus, epsilon, n0)}
+        witness exist n1 N_pos st {$is_tail_close_to(b, Lplus, epsilon, n1)} from n0:
+            forall n N_pos:
+                n >= n0
+                =>:
+                    b(n) = tail_sup(a, n) = fn(m N_pos) R {tail_sup(a, m)}(n)
+                    abs(b(n) - Lplus) = abs(fn(m N_pos) R {tail_sup(a, m)}(n) - Lplus) < epsilon
+    by def $has_limit(b, Lplus)
+    by thm tail_sup_limit_is_finite_limsup(a, b, Lplus)
+    witness exist L0 R st {$has_finite_limit_superior(a, L0)} from Lplus
 
 thm finite_limsup_le_tail_supremum:
     ? forall a seq(R), Lplus, S R:
@@ -3709,10 +3801,7 @@ thm bolzano_weierstrass_convergent_subsequence:
         $is_bounded_sequence(a)
         =>:
             exist b seq(R) st {$has_subsequence(a, b), $is_convergent_sequence(b)}
-    # kernel_problem: registering the source proof through the convergent
-    # tail-supremum sequence still overflows the verifier stack, even after the
-    # two threshold directions are split and the process stack is raised.
-    trust exist Lplus R st {$has_finite_limit_superior(a, Lplus)}
+    by thm bounded_sequence_has_finite_limsup(a)
     obtain Lplus from exist Lplus R st {$has_finite_limit_superior(a, Lplus)}
     by thm finite_limsup_is_limit_point(a, Lplus)
     by thm limit_point_has_convergent_subsequence(a, Lplus)

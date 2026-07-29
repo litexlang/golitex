@@ -1,1 +1,0 @@
-have fn binary_gaussian_span(ax, ay, bx, b_y Z) power_set(cart(Z, Z)) = {z cart(Z, Z): $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, z[1], z[2])}

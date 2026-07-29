@@ -17,8 +17,9 @@ concepts and intermediate nodes that determine later interfaces.
 - A scalar domain is a carrier `s` together with a `ScalarSystem<s>` structure;
   it is not a predicate on untyped values. The two source instances are `R`
   and the concrete pair carrier `Complex`.
-- A vector space is a carrier `V` together with a `VectorSpace<s,V>`
-  structure. The structure owns its `scalars &ScalarSystem<s>` field, so later
+- A vector space is a carrier `VSet` together with a
+  `V &VectorSpace<s,VSet>` structure. The structure owns its
+  `scalars &ScalarSystem<s>` field, so later
   mathematics receives scalar and vector operations from one coherent bundle.
   Candidate operations and laws may still be tested by a relation before the
   structure is constructed. A theorem, `prop`, or template that already owns
@@ -33,8 +34,8 @@ concepts and intermediate nodes that determine later interfaces.
   not itself a semantic layer. Source-facing results remain named even when a
   builtin or a more general checked interface supplies their proof.
 - An explicit structure type on a binding selects its default field view.
-  Thus `space &VectorSpace<s,V>` supports `space.zero`,
-  `space.smul(a,v)`, and the nested access `space.scalars.mul(a,b)`. Source
+  Thus `V &VectorSpace<s,VSet>` supports `V.zero`,
+  `V.smul(a,v)`, and the nested access `V.scalars.mul(a,b)`. Source
   declarations use complete expressions rather than a pre-parser abbreviation
   layer; public theorem and definition parameters remain explicit only when
   the mathematical object is not already owned by a supplied structure.
@@ -52,7 +53,8 @@ concepts and intermediate nodes that determine later interfaces.
 - **Semantic role:** Carrier plus bundled structure.
 - **Ideal Litex form:** `struct Complex`; callable `have fn` operations; and
   `struct ScalarSystem<s>` with checked real and complex instances.
-- **Interface sketch:** `have complex_scalars &ScalarSystem<&Complex>`.
+- **Interface sketch:** `struct Complex: real_coord R; im R`, followed by
+  `have complex_scalars &ScalarSystem<&Complex>`.
 - **Nearest wrong alternative:** A predicate `is_complex(z)` or a bare global
   carrier `F` would not expose values and operations to later maps.
 - **Dependencies:** `R` by `signature`; coordinate formulas by `definition`;
@@ -60,7 +62,9 @@ concepts and intermediate nodes that determine later interfaces.
 - **Downstream uses:** The vector-space and finite-dimensional interfaces in
   the published slice. Probe: apply `ScalarSystem.add(a,b)` and obtain a value
   in `s`.
-- **Allowable hole:** None in the ideal interface. The real instance is now
+- **Allowable hole:** None in the ideal interface. The pair field is named
+  `real_coord` because native `re` is reserved for the builtin `C` carrier.
+  The real instance is now
   checked from explicit `real_add`, `real_neg`, `real_mul`, and `real_inv`
   laws. Complex normalization, inverse, and selected-instance debt remain.
 
@@ -94,10 +98,10 @@ concepts and intermediate nodes that determine later interfaces.
   identifies the bundled scalar system, while the complex one takes candidate
   vector operations and states the axioms with the callable complex operations.
 - **Ideal Litex form:**
-  `struct VectorSpace<s nonempty_set,V nonempty_set>` with directly declared
+  `struct VectorSpace<s nonempty_set,VSet nonempty_set>` with directly declared
   `scalars &ScalarSystem<s>`, `zero`, `add`, and `smul` fields.
-- **Interface sketch:** `space &VectorSpace<s,V>` followed by
-  `space.add(u,v)` or `space.scalars.mul(a,b)`.
+- **Interface sketch:** `V &VectorSpace<s,VSet>` followed by
+  `V.add(u,v)` or `V.scalars.mul(a,b)`.
 - **Nearest wrong alternative:** A proposition that hides the three operations
   cannot support ordinary vector expressions or structures inherited by a
   subspace, product, quotient, or function space.

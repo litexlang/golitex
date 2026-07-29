@@ -1,5 +1,8 @@
 # About This Project
 #
+# Litex source:
+# https://github.com/litexlang/golitex/tree/main/textbooks/Analysis2
+#
 # This project is an ongoing Litex formalization inspired by Terence Tao's
 # Analysis II. It follows the book's development from metric spaces and
 # continuity through Fourier analysis, multivariable calculus, measure, and

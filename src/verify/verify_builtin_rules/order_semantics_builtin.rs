@@ -129,12 +129,8 @@ impl Runtime {
         }
 
         let line_file = atomic_fact.line_file();
-        let in_n_pos: AtomicFact = InFact::new(
-            integer.clone(),
-            StandardSet::NPos.into(),
-            line_file.clone(),
-        )
-        .into();
+        let in_n_pos: AtomicFact =
+            InFact::new(integer.clone(), StandardSet::NPos.into(), line_file.clone()).into();
         let membership_result =
             self.verify_non_equational_known_then_builtin_rules_only(&in_n_pos, verify_state)?;
         if !membership_result.is_true() {
@@ -251,9 +247,10 @@ impl Runtime {
         Ok(None)
     }
 
-    // A finite-set maximum bounds every member and a finite-set minimum is below every member.
+    // A finite-set maximum bounds every member and a finite-set minimum is below every member,
+    // including when the extremum is named by a known equality.
     // Examples: `x $in S` => `x <= finite_set_max(S)` and
-    // `x $in S` => `finite_set_min(S) <= x`.
+    // `n = finite_set_max(S), x $in S` => `x <= n`.
     fn try_verify_finite_set_extrema_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -284,6 +281,36 @@ impl Runtime {
                 ));
             }
         }
+        for maximum in self.known_equal_finite_set_max_candidates(&fact.right) {
+            let maximum_obj: Obj = maximum.clone().into();
+            let equality_result = self.verify_objs_are_equal_known_only(
+                &fact.right,
+                &maximum_obj,
+                fact.line_file.clone(),
+            );
+            if !equality_result.is_true() {
+                continue;
+            }
+            let member_fact: AtomicFact = InFact::new(
+                fact.left.clone(),
+                maximum.set.as_ref().clone(),
+                fact.line_file.clone(),
+            )
+            .into();
+            let member_state = verify_state.without_equality_builtin_for_list_set_membership();
+            let member_result = self
+                .verify_non_equational_known_then_builtin_rules_only(&member_fact, &member_state)?;
+            if member_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "finite_set_max: every member is at most a known-equal maximum".to_string(),
+                        vec![equality_result, member_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
 
         if let Obj::FiniteSetMin(minimum) = &fact.left {
             let member_fact: AtomicFact = InFact::new(
@@ -300,6 +327,36 @@ impl Runtime {
                         atomic_fact.clone().into(),
                         "finite_set_min: the minimum is at most every member".to_string(),
                         vec![member_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+        for minimum in self.known_equal_finite_set_min_candidates(&fact.left) {
+            let minimum_obj: Obj = minimum.clone().into();
+            let equality_result = self.verify_objs_are_equal_known_only(
+                &fact.left,
+                &minimum_obj,
+                fact.line_file.clone(),
+            );
+            if !equality_result.is_true() {
+                continue;
+            }
+            let member_fact: AtomicFact = InFact::new(
+                fact.right.clone(),
+                minimum.set.as_ref().clone(),
+                fact.line_file.clone(),
+            )
+            .into();
+            let member_state = verify_state.without_equality_builtin_for_list_set_membership();
+            let member_result = self
+                .verify_non_equational_known_then_builtin_rules_only(&member_fact, &member_state)?;
+            if member_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "finite_set_min: a known-equal minimum is at most every member".to_string(),
+                        vec![equality_result, member_result],
                     )
                     .into(),
                 ));
@@ -513,6 +570,50 @@ impl Runtime {
         };
         steps.extend(right_steps);
         Ok(Some(steps))
+    }
+
+    fn known_equal_finite_set_max_candidates(&self, obj: &Obj) -> Vec<FiniteSetMax> {
+        let key = obj_equality_key(obj);
+        let mut candidates = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            let Some((_, equal_objs)) = environment.known_equality.get(&key) else {
+                continue;
+            };
+            for equal_obj in equal_objs.iter() {
+                let Obj::FiniteSetMax(maximum) = equal_obj else {
+                    continue;
+                };
+                if !candidates
+                    .iter()
+                    .any(|seen: &FiniteSetMax| seen.to_string() == maximum.to_string())
+                {
+                    candidates.push(maximum.clone());
+                }
+            }
+        }
+        candidates
+    }
+
+    fn known_equal_finite_set_min_candidates(&self, obj: &Obj) -> Vec<FiniteSetMin> {
+        let key = obj_equality_key(obj);
+        let mut candidates = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            let Some((_, equal_objs)) = environment.known_equality.get(&key) else {
+                continue;
+            };
+            for equal_obj in equal_objs.iter() {
+                let Obj::FiniteSetMin(minimum) = equal_obj else {
+                    continue;
+                };
+                if !candidates
+                    .iter()
+                    .any(|seen: &FiniteSetMin| seen.to_string() == minimum.to_string())
+                {
+                    candidates.push(minimum.clone());
+                }
+            }
+        }
+        candidates
     }
 
     // Integer discreteness at one successor/predecessor step.

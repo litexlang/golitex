@@ -40,7 +40,7 @@ object-introduction family of `have` statements listed below.
 | Object form | Mathematical meaning | Typical well-definedness notes |
 |---|---|---|
 | Numeric literals and arithmetic expressions | Exact natural, integer, rational, or real number objects, with arithmetic interpreted in the usual numeric structure. | Operands must be numeric enough for the operation; division and remainder require nonzero divisors where relevant. |
-| `N`, `Z`, `Q`, `R` and suffix subsets | Built-in number sets: naturals, integers, rationals, reals, and common subsets such as positive or nonzero values. | Membership facts such as `x $in R_pos` infer the corresponding ambient numeric membership. |
+| `N`, `Z`, `Q`, `R` and suffix subsets | Built-in number sets: naturals, integers, rationals, reals, and common subsets such as positive or nonzero values. | Membership facts such as `x $in R+` infer the corresponding ambient numeric membership. |
 | Displayed finite sets `{a, b, c}` | A finite set containing the displayed elements. | Elements must be well-defined; finite-set facts and `finite_set_size` facts are inferred for displayed finite sets. |
 | Set builders `{x S: P(x)}` | The subset of `S` whose elements satisfy the predicate in the builder. | The base set and predicate body must be well-defined under the bound variable assumptions. |
 | `union(A, B)`, `intersect(A, B)`, `set_minus(A, B)`, `set_diff(A, B)` | Ordinary binary union, intersection, relative complement, and symmetric difference. | Arguments must be well-defined sets when set facts about the result are used. |
@@ -83,11 +83,11 @@ explicit `&StructName{obj}.field` form to select another view at one access.
 | `have fn by induc` | Function and induction shapes are checked. | Proves the measure and lower bound are integer-valued, then verifies the lower bound, case partition, return values, and strict decrease of recursive calls. | Stores the function definition facts. |
 | `have algo for f(...)` | `f` must already be a function; parameters and case shape are checked against it. | Verifies every executable return and case against the function facts. | Stores the checked implementation so later `eval f(...)` can use it. |
 | `have fn ... by exist!` | The source `forall` must have the expected existence-uniqueness shape. | Verifies the source `forall` or the provided proof block. | Stores the function name, function type, property `forall`, and uniqueness fact. |
-| `have tuple` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N_pos` and `2 <= dimension`. | Stores tuple marker, dimension equality, and coordinate `forall` fact. |
-| `have cart` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N_pos` and `2 <= dimension`. | Stores set/cart markers, dimension equality, and projection `forall` fact. |
+| `have tuple` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N+` and `2 <= dimension`. | Stores tuple marker, dimension equality, and coordinate `forall` fact. |
+| `have cart` | Name must be unused; dimension and coordinate-value expression must be well-defined. | Verifies `dimension $in N+` and `2 <= dimension`. | Stores set/cart markers, dimension equality, and projection `forall` fact. |
 | `have seq` | Name must be unused; sequence set, anonymous function, and function set must be well-defined. | Verifies each generated value belongs to the return set. | Stores sequence membership, known function-body data, and equality to the anonymous function. |
-| `have finite_seq` | Same checks as `have seq`, plus the bound must match the finite sequence length. | Verifies the bound is in `N_pos`, equals the declared length, and values are in the return set. | Stores finite-sequence membership, known function-body data, and equality to the anonymous function. |
-| `have matrix` | Same checks as `have seq`, plus row and column bounds must match matrix dimensions. | Verifies row and column bounds are in `N_pos`, match declared dimensions, and values are in the return set. | Stores matrix membership, known function-body data, and equality to the anonymous function. |
+| `have finite_seq` | Same checks as `have seq`, plus the bound must match the finite sequence length. | Verifies the bound is in `N+`, equals the declared length, and values are in the return set. | Stores finite-sequence membership, known function-body data, and equality to the anonymous function. |
+| `have matrix` | Same checks as `have seq`, plus row and column bounds must match matrix dimensions. | Verifies row and column bounds are in `N+`, match declared dimensions, and values are in the return set. | Stores matrix membership, known function-body data, and equality to the anonymous function. |
 
 ## Definitions And Interfaces
 

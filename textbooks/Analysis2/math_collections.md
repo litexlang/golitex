@@ -764,8 +764,8 @@ downstream consumer that needs the package as a single value.
   may remain visible trusted constructions; coordinate operations and their
   source-facing laws must remain explicit.
 - **Current implementation:** `exp_real`, `log_real`, and their candidate
-  relations are selected interfaces. `ComplexNumber` has concrete `re` and
-  `im` fields and concrete addition, negation, multiplication, conjugation,
+  relations are selected interfaces. `ComplexNumber` has concrete
+  `real_part` and `im` fields and concrete addition, negation, multiplication, conjugation,
   modulus, reciprocal/quotient, distance, powers, and exponential
   constructions. Algebraic, metric, and limit laws remain trusted.
 
@@ -969,7 +969,7 @@ downstream.
   the source omits. Full source proofs that remain blocked require an exact
   working note and smallest identified missing interface.
 - `ComplexNumber` is a concrete two-field `struct`. This is the ideal reusable form because
-  later complex analysis consumes `.re` and `.im` directly. The nearest wrong
+  later complex analysis consumes `.real_part` and `.im` directly. The nearest wrong
   form is an opaque equality predicate or an abstract complex-number carrier:
   either would hide coordinate computation. Addition and multiplication
   commutativity are checked from their formulas. Nested function returns do
