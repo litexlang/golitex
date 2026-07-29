@@ -129,7 +129,7 @@ calculus.
 Litex is easiest to understand through four related layers:
 
 - an `object` is a mathematical expression, such as `x`, `x + 1`, `R`,
-  `{1, 2}`, `abs(x)`, or `fn(n N_pos) R`;
+  `{1, 2}`, `abs(x)`, or `fn(n N+) R`;
 - a `fact` is a proposition about objects, such as `x > y`, `x $in R`,
   `1 + 2 = 3`, or `x = y or x < y or x > y`;
 - a `statement` is a line or block that acts on the mathematical context, such
@@ -655,17 +655,17 @@ define the same idea ourselves, we would define a family of function spaces:
 
 ```litex
 template<S set>:
-    have my_seq set = fn(n N_pos) S
+    have my_seq set = fn(n N+) S
 
-\my_seq<R> = fn(n N_pos) R
+\my_seq<R> = fn(n N+) R
 
-have a fn(n N_pos) R
+have a fn(n N+) R
 a $in \my_seq<R>
 ```
 
 The important point is that `S` is not an ordinary function input. It is a
 parameter of the family. After instantiation, `\my_seq<R>` is the ordinary set
-of real-valued sequences, namely functions from `N_pos` to `R`. Similarly,
+of real-valued sequences, namely functions from `N+` to `R`. Similarly,
 `\my_seq<Z>` would be the set of integer-valued sequences. The angle-bracket
 argument keeps the value set visible at every use.
 

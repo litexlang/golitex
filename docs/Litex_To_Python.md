@@ -1,15 +1,18 @@
-#  Litex To Python Translator
+# Litex To Python Frozen Experiment
 
-`litex -python` is a trusted-programming translation mode, similar in shape to
-`litex -latex`. It first runs the Litex verifier on the input, then emits Python
-only for the small executable subset supported by the extractor.
+> **Status: frozen experiment.** The current extractor is preserved as a
+> research prototype and compatibility surface. Its supported v1 subset is not
+> being expanded. Maintenance is limited to regressions caused by Litex core
+> changes and fixes needed to keep the documented subset working.
 
-The point is not just to translate syntax from Litex to Python.  The point is to
-change how code is produced: write the executable definition together with the
-mathematical facts and safety requirements it must satisfy, verify those facts
-first, and only then extract the executable Python.  In this workflow, code is
-not merely generated and tested after the fact; it is emitted from a checked
-Litex source whose intended constraints were stated in advance.
+`litex -python` first runs the Litex verifier on the input, then emits Python
+only for the small executable subset supported by the frozen extractor. It is
+not a general Litex-to-Python compiler and is not a production backend.
+
+The experiment tests a narrow idea: write an executable definition together
+with mathematical facts and requirements, verify the Litex source, and then
+extract the supported definition. The generated Python still has the
+correctness limits described below.
 
 ## CLI
 
@@ -136,7 +139,7 @@ A small scientific-computing kernel has the same shape: define constants,
 write a numeric update rule, and reuse earlier extracted functions.
 
 ```litex
-have dt R_pos = 1 / 100
+have dt R+ = 1 / 100
 have fn euler_step(y, dy R) R = y + dt * dy
 have algo for euler_step(y, dy):
     y + dt * dy
@@ -155,7 +158,7 @@ def twice_step(y, dy):
     return euler_step(euler_step(y, dy), dy)
 ```
 
-## Recursive Algorithm Shape
+## Preserved Recursive Algorithm Shape
 
 The v1 Python extractor emits `have algo for` bodies with `R` parameters and
 an `R` return value, including calls from an implementation to itself.
@@ -194,28 +197,17 @@ This exact Fibonacci source is outside the current v1 boundary because it uses
 `Z`. A `have algo for` implementation with the supported `R` signature is
 emitted in this same Python shape, including its self-calls.
 
-This is the main reason the Litex-to-programming-language direction should
-scale beyond the current extractor subset. The pure mathematical core of an
-ordinary program function can be viewed as case analysis plus recursive state
-transitions. Conditionals are case splits; loops are recursive updates over an
-explicit state; dynamic-programming recurrences are recursive equations with a
-chosen evaluation strategy. Litex supports checked case definitions,
-bounded integer-measured recursive definitions, and executable `algo` bodies, so in principle
-the algorithms used in scientific computation can be expressed in Litex once
-their data and state are made explicit.
-
-The remaining work is backend engineering and numeric contracts. A future
-Python extractor still needs `by induc` lowering, richer data structures,
-arrays, matrices, library functions, iterative evaluation strategies, and a
-clear contract for exact arithmetic, floating-point arithmetic, or interval
-arithmetic.
+This example records the direction explored by the prototype; it is not a
+promise of continued backend development. Supporting this exact integer
+function would require work outside the frozen subset, including `by induc`
+lowering and an explicit numeric contract.
 
 ## Selection Rules
 
 `litex -python` automatically scans verified top-level statements.
 
 - Numeric `have obj equal` statements are extraction candidates when their type
-  is one of `R`, `Q`, `Z`, `N`, `N_pos`, or the positive/negative/nonzero
+  is one of `R`, `Q`, `Z`, `N`, `N+`, or the positive/negative/nonzero
   variants of those standard sets.
 - `have algo for f(...)` statements are extraction candidates when the already
   declared function has an `R^n -> R` signature.
@@ -265,7 +257,7 @@ so the trusted-programming claim is about properties that were actually stated
 and checked in the Litex source before extraction.
 
 The v1 backend uses Python `float`. Litex's proof is about the mathematical
-real-number specification; v1 does not prove IEEE-754 rounding behavior, overflow
-behavior, or numerical error bounds. Those require a later backend contract,
-such as exact rationals, interval arithmetic, or explicit floating-point error
-facts in Litex.
+real-number specification; v1 does not prove IEEE-754 rounding behavior,
+overflow behavior, or numerical error bounds. The frozen experiment does not
+provide an exact-rational, interval-arithmetic, or floating-point error
+contract.

@@ -226,6 +226,16 @@ forall a, b, c R:
     =>:
         c <= finite_set_min(union({a}, {b}))
 
+have n1 R = 1
+have n2 R = 2
+have selected_max R = finite_set_max({n1, n2})
+selected_max >= n1
+selected_max >= n2
+
+have selected_min R = finite_set_min({n1, n2})
+selected_min <= n1
+selected_min <= n2
+
 forall a, b Z:
     a < b
     =>:
@@ -261,6 +271,8 @@ forall x, n Z:
                 "finite_set_min: the minimum is at most every member",
                 "finite_set_max: least upper bound of a concrete finite-set expression",
                 "finite_set_min: greatest lower bound of a concrete finite-set expression",
+                "finite_set_max: every member is at most a known-equal maximum",
+                "finite_set_min: a known-equal minimum is at most every member",
                 "integer successor: a < b gives a + 1 <= b",
                 "integer predecessor: a < b gives a <= b - 1",
                 "or: integer discrete split x <= n or x >= n + 1",
@@ -273,6 +285,51 @@ forall x, n Z:
                     run_output
                 );
             }
+        },
+    );
+}
+
+#[test]
+fn extrema_equalities_do_not_recurse_through_weak_order() {
+    run_with_large_stack(
+        "extrema_equalities_do_not_recurse_through_weak_order",
+        || {
+            let source_code = r#"
+have u, v R
+trust u <= v
+finite_set_min(union({u}, {v})) <= u
+u <= finite_set_min(union({u}, {v}))
+finite_set_min(union({u}, {v})) = u
+-v <= -u
+finite_set_max(union({-u}, {-v})) <= -u
+-u <= finite_set_max(union({-u}, {-v}))
+finite_set_max(union({-u}, {-v})) = -u
+-finite_set_max(union({-u}, {-v})) = -(-u)
+
+have epsilon R_pos
+have a, b, A, B R
+trust abs(a - A) < epsilon
+trust abs(b - B) < epsilon
+trust a < b
+finite_set_max(union({a}, {b})) = b
+trust A < B
+finite_set_max(union({A}, {B})) = B
+abs(finite_set_max(union({a}, {b})) - finite_set_max(union({A}, {B}))) = abs(b - B) < epsilon
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "extrema_equalities_do_not_recurse_through_weak_order",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "extrema equality rewrites must terminate:\n{}",
+                run_output
+            );
         },
     );
 }

@@ -30,8 +30,7 @@
 # for basis extraction and extension remain to be proved. The source proof that
 # two bases have the same length applies the two resulting length inequalities
 # in opposite directions; its full release replay remains a named boundary.
-# Its basis-length existence wrapper is likewise a named boundary after its
-# direct witness repackaging exceeded the release profile window. Results 2.38 and 2.42 follow the source
+# Results 2.38 and 2.42 follow the source
 # routes, but each retains one trusted equality because equal natural indices do
 # not yet transport a FiniteList value between its dependent length types.
 # Results 2.37 and 2.39 now check their dimension comparison and span-minimality
@@ -75,7 +74,8 @@
 # Chapter 3F, Definitions 3.108-3.124 — dual spaces
 # Scalar, dual, dual-basis, and dual-map interfaces are present. The vector
 # space structures, dual-basis construction, and contravariant map proof have
-# not yet been supplied.
+# not yet been supplied. The dual carrier and its zero member are established;
+# evaluation of a selected dual-basis entry remains an assumed value.
 #
 # Chapter 4 — polynomial factorization
 # The coordinate complex-number laws, polynomial representation and division,
@@ -87,6 +87,8 @@
 # existence and consequences, invariant restrictions, triangularization,
 # diagonalization, eigenspace dimension arguments, Gershgorin's theorem, and
 # simultaneous-basis results still contain unproved mathematical steps.
+# Matrix commutativity and invariance of an eigenspace under a commuting
+# operator remain assumed relations rather than derived results.
 #
 # Chapter 6, Sections 6A-6C — inner-product spaces
 # The scalar-geometry instances, norm inequalities, Gram-Schmidt and Riesz
@@ -170,3 +172,5 @@
 # bases, inner products, and both universal-map directions are callable. The
 # dependent component/dual structures, tensor-basis arguments, and universal
 # extension proofs remain explicit trust boundaries.
+# Result 3.118: dual_map is selected with trust. Its pointwise equation is
+# represented by dual_map_spec because a nested template body loses T.

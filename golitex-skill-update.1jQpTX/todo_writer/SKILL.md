@@ -10,8 +10,8 @@ description: Write or update Litex todo artifacts in the applicable source or tr
 When a todo diagnosis executes Litex rather than only editing comments:
 
 - In the golitex repository, apply `$golitex-repository-policy` alongside this
-  skill and read the live repository `AGENTS.md` completely. The live policy
-  overrides generic or older guidance here.
+  skill and read its canonical bundled policy completely. That repository
+  policy overrides generic or older guidance here.
 - Build current source once with `cargo build --release` and invoke
   `target/release/litex`; never use `target/debug/litex`.
 - For every iterative reproduction in a registered target, start one

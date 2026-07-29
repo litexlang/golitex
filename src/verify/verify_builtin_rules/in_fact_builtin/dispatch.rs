@@ -129,9 +129,7 @@ impl Runtime {
                 Obj::StandardSet(StandardSet::RPos) => {
                     "native mathematical constant is a positive real"
                 }
-                Obj::StandardSet(StandardSet::R) => {
-                    "native mathematical constant is a real"
-                }
+                Obj::StandardSet(StandardSet::R) => "native mathematical constant is a real",
                 Obj::StandardSet(StandardSet::C) => {
                     "native mathematical constant is real, hence is in C"
                 }

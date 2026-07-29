@@ -319,9 +319,12 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_equality_from_two_sided_weak_order(left, right, line_file.clone())?
-        {
+        if let Some(done) = self.try_verify_equality_from_two_sided_weak_order(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
             return Ok(done);
         }
 
@@ -2446,6 +2449,7 @@ impl Runtime {
         greater_or_equal: &Obj,
         less_or_equal: &Obj,
         line_file: LineFile,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let greater_equal: AtomicFact = GreaterEqualFact::new(
             greater_or_equal.clone(),
@@ -2453,20 +2457,16 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let result = self.verify_non_equational_known_then_builtin_rules_only(
-            &greater_equal,
-            &VerifyState::new(0, true),
-        )?;
+        let result =
+            self.verify_non_equational_known_then_builtin_rules_only(&greater_equal, verify_state)?;
         if result.is_true() {
             return Ok(Some(result));
         }
 
         let less_equal: AtomicFact =
             LessEqualFact::new(less_or_equal.clone(), greater_or_equal.clone(), line_file).into();
-        let result = self.verify_non_equational_known_then_builtin_rules_only(
-            &less_equal,
-            &VerifyState::new(0, true),
-        )?;
+        let result =
+            self.verify_non_equational_known_then_builtin_rules_only(&less_equal, verify_state)?;
         if result.is_true() {
             return Ok(Some(result));
         }
@@ -2476,23 +2476,27 @@ impl Runtime {
 
     // Equality follows from antisymmetry of the standard weak order.
     // Example: from `a >= b` and `b >= a`, prove `a = b`.
+    // Membership premises in selected order builtins restrict list-set equality
+    // search so that this fallback cannot recursively reopen the same goals.
     fn try_verify_equality_from_two_sided_weak_order(
         &mut self,
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let verify_state = VerifyState::new(0, true);
         let Some(mut steps) =
-            self.verify_objects_are_known_reals(&[left, right], &line_file, &verify_state)?
+            self.verify_objects_are_known_reals(&[left, right], &line_file, verify_state)?
         else {
             return Ok(None);
         };
-        let Some(left_ge_right) = self.verify_weak_order_subgoal(left, right, line_file.clone())?
+        let Some(left_ge_right) =
+            self.verify_weak_order_subgoal(left, right, line_file.clone(), verify_state)?
         else {
             return Ok(None);
         };
-        let Some(right_ge_left) = self.verify_weak_order_subgoal(right, left, line_file.clone())?
+        let Some(right_ge_left) =
+            self.verify_weak_order_subgoal(right, left, line_file.clone(), verify_state)?
         else {
             return Ok(None);
         };

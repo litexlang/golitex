@@ -7353,13 +7353,14 @@ thm lower_bounded_real_set_with_member_has_infimum:
             $has_infimum_of_real_set(E)
     # Reflect a nonempty lower-bounded set through zero, apply the Chapter 5
     # least-upper-bound theorem, and reflect the bound back.
-    have negE power_set(R) = fn_range(fn(x E) R {-x})
-    negE = fn_range(fn(x E) R {-x})
+    have fn negate_on_E(x E) R = -x
+    have negE power_set(R) = fn_range(negate_on_E)
+    negE = fn_range(negate_on_E)
     claim:
         ? -element_e $in negE
-        fn(x E) R {-x}(element_e) = -element_e
-        fn(x E) R {-x}(element_e) $in fn_range(fn(x E) R {-x})
-        -element_e $in fn_range(fn(x E) R {-x})
+        negate_on_E(element_e) = -element_e
+        negate_on_E(element_e) $in fn_range(negate_on_E)
+        -element_e $in fn_range(negate_on_E)
         -element_e $in negE
     claim:
         ? $is_nonempty_set(negE)
@@ -7371,11 +7372,11 @@ thm lower_bounded_real_set_with_member_has_infimum:
             claim:
                 ? forall y negE:
                     y <= -B
-                negE = fn_range(fn(x E) R {-x})
-                y $in fn_range(fn(x E) R {-x})
-                have by preimage x from y $in fn_range(fn(x E) R {-x})
-                fn(z E) R {-z}(x) = -x
-                y = fn(z E) R {-z}(x)
+                negE = fn_range(negate_on_E)
+                y $in fn_range(negate_on_E)
+                have by preimage x from y $in fn_range(negate_on_E)
+                negate_on_E(x) = -x
+                y = negate_on_E(x)
                 y = -x
                 B <= x
                 -x <= -B
@@ -7393,10 +7394,10 @@ thm lower_bounded_real_set_with_member_has_infimum:
                 ? forall x E:
                     s <= x
                 s = -L
-                negE = fn_range(fn(z E) R {-z})
-                fn(z E) R {-z}(x) = -x
-                fn(z E) R {-z}(x) $in fn_range(fn(z E) R {-z})
-                -x $in fn_range(fn(z E) R {-z})
+                negE = fn_range(negate_on_E)
+                negate_on_E(x) = -x
+                negate_on_E(x) $in fn_range(negate_on_E)
+                -x $in fn_range(negate_on_E)
                 -x $in negE
                 $chap5::is_upper_bound(negE, L)
                 -x <= L
@@ -7415,11 +7416,11 @@ thm lower_bounded_real_set_with_member_has_infimum:
                 claim:
                     ? forall y negE:
                         y <= -set_C
-                    negE = fn_range(fn(x E) R {-x})
-                    y $in fn_range(fn(x E) R {-x})
-                    have by preimage x from y $in fn_range(fn(x E) R {-x})
-                    fn(z E) R {-z}(x) = -x
-                    y = fn(z E) R {-z}(x)
+                    negE = fn_range(negate_on_E)
+                    y $in fn_range(negate_on_E)
+                    have by preimage x from y $in fn_range(negate_on_E)
+                    negate_on_E(x) = -x
+                    y = negate_on_E(x)
                     y = -x
                     set_C <= x
                     -x <= -set_C

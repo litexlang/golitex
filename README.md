@@ -10,7 +10,6 @@
 
 [![Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
-[![litexpy](https://img.shields.io/badge/Litexpy-green?logo=python)](https://github.com/litexlang/litexpy)
 [![Email](https://img.shields.io/badge/Email-red?logo=email)](mailto:litexlang@outlook.com)
 [![Zulip](https://img.shields.io/badge/Zulip-blue?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 [![Manual](https://img.shields.io/badge/Manual-orange?logo=book)](https://litexlang.com/doc/Manual)

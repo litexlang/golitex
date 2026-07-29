@@ -147,10 +147,13 @@ restricted families to the union, applies addition, and uses disjointness
 pointwise.  The scalar law, including the zero-scalar empty-support branch,
 is checked.  The binary-decimal map is selected from a
 proved unique series sum, and its injectivity is checked using the first
-differing digit and a geometric-tail bound.  The remaining Chapter 8 `trust`
-is concentrated in the conditional-sign and Riemann rearrangement exercises
-and four good-chain lemmas.  The axiom of choice remains an
-explicit `axiom`; checked callers do not erase that provenance.
+differing digit and a geometric-tail bound.  Chapter 8 still has 32
+non-source-deferred proof gaps to remove, principally in arbitrary-support
+summation, binary expansions, finite products, and the good-chain
+construction.  Six additional sites correspond
+to explicitly assigned source exercises and carry verbatim source quotations.
+The axiom of choice remains an explicit `axiom`; checked callers do not erase
+that provenance.
 
 ## Chapter 10 differentiation interface
 
@@ -177,4 +180,3 @@ also stated directly.  In Section 10.5, `lhopital_rule_first` returns one
 punctured radius together with the quotient limit on that same local carrier.
 `lhopital_rule_second` is the complete right-hand theorem: it returns both
 denominator nonvanishing on `(a,b]` and the quotient limit.
-

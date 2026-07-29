@@ -1317,9 +1317,9 @@ litex -latex : run Litex interactively and print LaTeX output in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <project> : compile the given project to LaTeX
-litex -python -f <file> : compile supported verified Litex definitions to Python
-litex -python -e <code> : compile supported verified Litex code to Python
-litex -python -r <project> : compile supported definitions in the selected recursive project run to Python
+litex -python -f <file> : run the frozen experimental Python extractor on a file
+litex -python -e <code> : run the frozen experimental Python extractor on source code
+litex -python -r <project> : run the frozen experimental Python extractor on a recursive project
 litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform

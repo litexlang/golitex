@@ -145,21 +145,16 @@ impl Runtime {
 
 // Primitive positive real constants are nonzero.
 // Example: `e != 0` and `pi != 0`.
-fn try_verify_native_real_constant_nonzero(
-    not_equal_fact: &NotEqualFact,
-) -> Option<StmtResult> {
+fn try_verify_native_real_constant_nonzero(not_equal_fact: &NotEqualFact) -> Option<StmtResult> {
     let is_zero = |obj: &Obj| {
         matches!(
             obj,
             Obj::Number(number) if number.normalized_value == "0"
         )
     };
-    let is_native_positive_constant =
-        |obj: &Obj| matches!(obj, Obj::EulerNumber(_) | Obj::Pi(_));
-    if !((is_zero(&not_equal_fact.left)
-        && is_native_positive_constant(&not_equal_fact.right))
-        || (is_native_positive_constant(&not_equal_fact.left)
-            && is_zero(&not_equal_fact.right)))
+    let is_native_positive_constant = |obj: &Obj| matches!(obj, Obj::EulerNumber(_) | Obj::Pi(_));
+    if !((is_zero(&not_equal_fact.left) && is_native_positive_constant(&not_equal_fact.right))
+        || (is_native_positive_constant(&not_equal_fact.left) && is_zero(&not_equal_fact.right)))
     {
         return None;
     }

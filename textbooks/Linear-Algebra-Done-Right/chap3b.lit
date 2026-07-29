@@ -1,0 +1,187 @@
+# Linear Algebra Done Right, fourth edition — Section 3B.
+# Null Spaces and Ranges.
+# Definition 3.11. The null space of T is the set of domain vectors sent to
+# the zero vector of the codomain.
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
+    have fn null_space(T fn(v VSet) WSet) power_set(VSet) = {v VSet: T(v) = W.zero}
+# Result 3.13. The null space of a linear map is a subspace of its domain.
+thm null_space_is_subspace:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+    by thm chap3a::linear_maps_take_zero_to_zero(s, VSet, WSet, V, W, T)
+    V.zero $in \null_space<s, VSet, WSet, V, W>(T)
+    witness $is_nonempty_set(\null_space<s, VSet, WSet, V, W>(T)) from V.zero
+    forall x, y \null_space<s, VSet, WSet, V, W>(T):
+        T(x) = W.zero
+        T(y) = W.zero
+        T(V.add(x, y)) = W.add(T(x), T(y))
+        W.add(W.zero, W.zero) = W.zero
+        T(V.add(x, y)) = W.zero
+        V.add(x, y) $in \null_space<s, VSet, WSet, V, W>(T)
+    forall a s, x \null_space<s, VSet, WSet, V, W>(T):
+        T(x) = W.zero
+        T(V.smul(a, x)) = W.smul(a, T(x))
+        W.smul(a, W.zero) = W.zero
+        T(V.smul(a, x)) = W.zero
+        V.smul(a, x) $in \null_space<s, VSet, WSet, V, W>(T)
+    by def $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+# Definition 3.14. A map is injective when equal outputs force equal inputs.
+prop is_injective(VSet, WSet set, T fn(v VSet) WSet):
+    forall u, v VSet:
+        T(u) = T(v)
+        =>:
+            u = v
+# Result 3.15. A linear map is injective exactly when its null space consists
+# only of the zero vector.
+prop injective_iff_null_space_is_zero_statement(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>):
+    forall:
+        =>:
+            $is_injective(VSet, WSet, T)
+        <=>:
+            \null_space<s, VSet, WSet, V, W>(T) = {V.zero}
+
+thm injective_iff_null_space_is_zero:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $injective_iff_null_space_is_zero_statement(s, VSet, WSet, V, W, T)
+    by thm chap3a::linear_maps_take_zero_to_zero(s, VSet, WSet, V, W, T)
+    V.zero $in \null_space<s, VSet, WSet, V, W>(T)
+    claim:
+        ? forall:
+            $is_injective(VSet, WSet, T)
+            =>:
+                \null_space<s, VSet, WSet, V, W>(T) = {V.zero}
+        by extension \null_space<s, VSet, WSet, V, W>(T) = {V.zero}:
+            forall x \null_space<s, VSet, WSet, V, W>(T):
+                T(x) = W.zero = T(V.zero)
+                x = V.zero
+                x $in {V.zero}
+            forall x {V.zero}:
+                x = V.zero
+                x $in \null_space<s, VSet, WSet, V, W>(T)
+    claim:
+        ? forall:
+            \null_space<s, VSet, WSet, V, W>(T) = {V.zero}
+            =>:
+                $is_injective(VSet, WSet, T)
+        claim:
+            ? forall u, v VSet:
+                T(u) = T(v)
+                =>:
+                    u = v
+            by thm chap3a::linear_map_preserves_vector_neg(s, VSet, WSet, V, W, T, v)
+            T(V.add(u, \chap1b::vector_neg<s, VSet, V>(v))) = W.add(T(u), T(\chap1b::vector_neg<s, VSet, V>(v)))
+            W.add(T(u), T(\chap1b::vector_neg<s, VSet, V>(v))) = W.add(T(v), \chap1b::vector_neg<s, WSet, W>(T(v)))
+            by thm chap1b::vector_neg_spec(s, WSet, W, T(v))
+            T(V.add(u, \chap1b::vector_neg<s, VSet, V>(v))) = W.zero
+            V.add(u, \chap1b::vector_neg<s, VSet, V>(v)) $in \null_space<s, VSet, WSet, V, W>(T)
+            V.add(u, \chap1b::vector_neg<s, VSet, V>(v)) $in {V.zero}
+            V.add(u, \chap1b::vector_neg<s, VSet, V>(v)) = V.zero
+            by thm chap1b::vector_neg_spec(s, VSet, V, v)
+            V.add(u, \chap1b::vector_neg<s, VSet, V>(v)) = V.add(v, \chap1b::vector_neg<s, VSet, V>(v))
+            by thm chap1b::add_right_cancel(s, VSet, V, u, v, \chap1b::vector_neg<s, VSet, V>(v))
+        by def $is_injective(VSet, WSet, T)
+    forall:
+        =>:
+            $is_injective(VSet, WSet, T)
+        <=>:
+            \null_space<s, VSet, WSet, V, W>(T) = {V.zero}
+    by def $injective_iff_null_space_is_zero_statement(s, VSet, WSet, V, W, T)
+# Definition 3.16. The range of T is the set of all values T(v). The helper
+# relation keeps the existential out of the set-builder parser while the
+# source-facing range remains a callable set-valued construction.
+prop has_preimage(VSet, WSet set, T fn(v VSet) WSet, w WSet):
+    exist v VSet st {w = T(v)}
+
+template<VSet, WSet set>:
+    have fn range_of(T fn(v VSet) WSet) power_set(WSet) = {w WSet: $has_preimage(VSet, WSet, T, w)}
+# Result 3.18. The range of a linear map is a subspace of its codomain.
+thm range_is_subspace:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+    by thm chap3a::linear_maps_take_zero_to_zero(s, VSet, WSet, V, W, T)
+    witness exist v VSet st {W.zero = T(v)} from V.zero
+    by def $has_preimage(VSet, WSet, T, W.zero)
+    W.zero $in \range_of<VSet, WSet>(T)
+    witness $is_nonempty_set(\range_of<VSet, WSet>(T)) from W.zero
+    claim:
+        ? forall x, y WSet:
+            x $in \range_of<VSet, WSet>(T)
+            y $in \range_of<VSet, WSet>(T)
+            =>:
+                W.add(x, y) $in \range_of<VSet, WSet>(T)
+        obtain u from exist v VSet st {x = T(v)}
+        obtain v from exist z VSet st {y = T(z)}
+        W.add(x, y) = W.add(T(u), T(v)) = T(V.add(u, v))
+        witness exist z VSet st {W.add(x, y) = T(z)} from V.add(u, v)
+        by def $has_preimage(VSet, WSet, T, W.add(x, y))
+        W.add(x, y) $in \range_of<VSet, WSet>(T)
+    claim:
+        ? forall a s, x WSet:
+            x $in \range_of<VSet, WSet>(T)
+            =>:
+                W.smul(a, x) $in \range_of<VSet, WSet>(T)
+        obtain u from exist v VSet st {x = T(v)}
+        W.smul(a, x) = W.smul(a, T(u)) = T(V.smul(a, u))
+        witness exist z VSet st {W.smul(a, x) = T(z)} from V.smul(a, u)
+        by def $has_preimage(VSet, WSet, T, W.smul(a, x))
+        W.smul(a, x) $in \range_of<VSet, WSet>(T)
+    by def $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+# Definition 3.19. A map is surjective when every codomain vector is attained.
+prop is_surjective(VSet, WSet set, T fn(v VSet) WSet):
+    forall w WSet:
+        exist v VSet st {T(v) = w}
+# Result 3.21. For finite-dimensional VSet, its dimension is the sum of the
+# dimensions of null T and range T. Axler proves this by extending a basis of
+# the null space to a basis of VSet.
+axiom fundamental_theorem_of_linear_maps:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        =>:
+            \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>> + \chap2c::dimension<s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>>
+# Result 3.22. A linear map into a lower-dimensional space cannot be injective.
+axiom lower_dimensional_codomain_prevents_injectivity:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, WSet, W)
+        \chap2c::dimension<s, WSet, W> < \chap2c::dimension<s, VSet, V>
+        =>:
+            not $is_injective(VSet, WSet, T)
+# Result 3.24. A linear map into a higher-dimensional space cannot be
+# surjective.
+axiom higher_dimensional_codomain_prevents_surjectivity:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, WSet, W)
+        \chap2c::dimension<s, VSet, V> < \chap2c::dimension<s, WSet, W>
+        =>:
+            not $is_surjective(VSet, WSet, T)
+# A finite scalar sum is the book-local bridge used to state linear systems.
+# Its recursive implementation is deferred because the operation comes from a
+# parameterized scalar structure rather than a builtin numeric carrier.
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
+    trust have scalar_finite_sum fn(a finite_seq(s, n)) s:
+        scalar_finite_sum(a) $in s
+
+prop solves_linear_system(s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n), b finite_seq(s, m), x finite_seq(s, n)):
+    forall j N_pos:
+        j <= m
+        =>:
+            \scalar_finite_sum<s, scalars, n>(fn(k N_pos: k <= n) s {scalars.mul(A(j, k), x(k))}) = b(j)
+# Result 3.26. A homogeneous system with more variables than equations has a
+# nonzero solution.
+axiom homogeneous_system_with_more_variables_has_nonzero_solution:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n):
+        m < n
+        =>:
+            exist x finite_seq(s, n) st {$solves_linear_system(s, scalars, m, n, A, fn(j N_pos: j <= m) s {scalars.zero}, x), x != fn(k N_pos: k <= n) s {scalars.zero}}
+# Result 3.28. If a system has more equations than variables, some choice of
+# right-hand side makes the system unsolvable.
+prop is_inconsistent_right_hand_side(s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n), b finite_seq(s, m)):
+    forall x finite_seq(s, n):
+        not $solves_linear_system(s, scalars, m, n, A, b, x)
+
+axiom more_equations_than_variables_can_be_inconsistent:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n):
+        n < m
+        =>:
+            exist b finite_seq(s, m) st {$is_inconsistent_right_hand_side(s, scalars, m, n, A, b)}

@@ -80,12 +80,8 @@ impl Runtime {
         list_set: &ListSet,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let equality_or_result =
-            self.verify_in_fact_by_equality_or_for_list_set(in_fact, list_set, verify_state)?;
-        if equality_or_result.is_true() {
-            return Ok(equality_or_result);
-        }
-
+        // Check reflexive and already-known element equalities before invoking
+        // the broader equality builtin search for list-set membership.
         for current_element_in_list_set in list_set.list.iter() {
             let equal_fact_verify_result = self.verify_objs_are_equal_known_only(
                 &in_fact.element,
@@ -106,6 +102,17 @@ impl Runtime {
                 );
             }
         }
+
+        if !verify_state.list_set_membership_can_use_equality_builtin {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let equality_or_result =
+            self.verify_in_fact_by_equality_or_for_list_set(in_fact, list_set, verify_state)?;
+        if equality_or_result.is_true() {
+            return Ok(equality_or_result);
+        }
+
         Ok((StmtUnknown::new()).into())
     }
 

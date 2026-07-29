@@ -390,13 +390,13 @@ by for:
 
 ```litex
 sketch:
-    prop Prime(x N_pos):
+    prop Prime(x N+):
         2 <= x
         forall y range(2, x):
             x % y != 0
 
-    prop superpowered(k N_pos):
-        forall n N_pos:
+    prop superpowered(k N+):
+        forall n N+:
             $Prime(k ^ (k ^ n) + 1)
 
     by for:
@@ -405,7 +405,7 @@ sketch:
 
     $Prime(2)
 
-    forall n N_pos:
+    forall n N+:
         1^n = 1
         1^(1^n) + 1 = 1^1 + 1 = 2
         $Prime(1^(1^n) + 1)
@@ -417,7 +417,7 @@ sketch:
         (2^(2^5) + 1) % 641 = 0
         impossible (2^(2^5) + 1) % 641 = 0
 
-    witness exist k N_pos st {$superpowered(k) and not $superpowered(k + 1)} from 1
+    witness exist k N+ st {$superpowered(k) and not $superpowered(k + 1)} from 1
 ```
 
 ### 11. Induction With `by induc`
@@ -834,7 +834,7 @@ forall a, b, c R:
 ```litex
 ## Set-valued have fn applications unfold one layer for membership.
 
-have fn circle(r R_pos) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
+have fn circle(r R+) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
 have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
 
 (3, 4) $in circle(5)
@@ -968,19 +968,19 @@ forall x Q, n, m N:
 forall x, y Q, n N:
     (x * y)^n = x^n * y^n
 
-forall x Q, n N_pos:
+forall x Q, n N+:
     x^n = 0
     =>:
         x = 0
 
-forall x, y Q, n N_pos:
+forall x, y Q, n N+:
     x >= y
     y >= 0
     =>:
         x^n >= y^n
         y^n >= 0
 
-forall x, y R, n N_pos:
+forall x, y R, n N+:
     x > y
     y >= 0
     =>:
@@ -991,13 +991,13 @@ forall x R:
     =>:
         x^3 < 0
 
-forall x R, n N_pos:
+forall x R, n N+:
     x < 0
     n % 2 = 1
     =>:
         x^n < 0
 
-forall x, y R, n N_pos:
+forall x, y R, n N+:
     x < y
     n % 2 = 1
     =>:
@@ -1013,33 +1013,33 @@ forall x R_nz, n Z:
     x^n != 0
     abs(x^n) = abs(x)^n
 
-forall x R_nz, n N_pos:
+forall x R_nz, n N+:
     x^(-n) = 1 / x^n
 
 forall x, y R_nz, n Z:
     (x * y)^n = x^n * y^n
 
-forall x, y R_pos, n Z:
+forall x, y R+, n Z:
     x >= y
     n < 0
     =>:
         x^n <= y^n
 
-forall x, y R_pos, n Z:
+forall x, y R+, n Z:
     n != 0
     x^n = y^n
     =>:
         x = y
 
-forall a R_pos, x R:
-    a^x $in R_pos
+forall a R+, x R:
+    a^x $in R+
 
-forall a R_pos, x, y R:
+forall a R+, x, y R:
     a^x = y
     =>:
-        y $in R_pos
+        y $in R+
 
-forall a R_pos, x, y R:
+forall a R+, x, y R:
     a != 1
     a^x = y
     =>:
@@ -1535,7 +1535,7 @@ claim:
 forall n N:
     n != 0
     =>:
-        n $in N_pos
+        n $in N+
 ```
 
 ### 41. Foundation/Regularity As A Proof Step
@@ -1774,7 +1774,7 @@ forall a, b R:
     =>:
         abs(a) <= abs(b)
 
-forall a, b R, k N_pos:
+forall a, b R, k N+:
     k % 2 = 0
     abs(a) <= abs(b)
     =>:
@@ -1910,12 +1910,12 @@ older sources that used one of the new reserved names.
 - Purpose: Shows common builtin arithmetic/order inference rules.
 
 ```litex
-forall a, b R_pos:
+forall a, b R+:
     1 <= a
     =>:
         b <= a * b
 
-forall a, b R_pos:
+forall a, b R+:
     1 < a
     =>:
         b < a * b
@@ -2368,36 +2368,36 @@ log(10, 100) = 2
 log(3, 1) = 0
 log(5, 5) = 1
 
-forall a R_pos, b R:
+forall a R+, b R:
     a != 1
     =>:
         log(a, a^b) = b
 
-forall a, b R_pos:
+forall a, b R+:
     a != 1
     =>:
         a ^ log(a, b) = b
         log(a, a) = 1
         log(a, 1) = 0
 
-forall a, b, c R_pos:
+forall a, b, c R+:
     a != 1
     a^b != 1
     =>:
         log(a^b, c) = log(a, c) / b
 
-forall a, x, b R_pos:
+forall a, x, b R+:
     a != 1
     =>:
         log(a, x^b) = b * log(a, x)
 
-forall a, x, y R_pos:
+forall a, x, y R+:
     a != 1
     =>:
         log(a, x * y) = log(a, x) + log(a, y)
         log(a, x / y) = log(a, x) - log(a, y)
 
-forall a, b R_pos, c R:
+forall a, b R+, c R:
     a != 1
     a^c = b
     =>:
@@ -2413,12 +2413,12 @@ log(3, 9^2) = 2 * log(3, 9) = 2 * 2 = 4
 
 ## Additional builtin logarithm rules.
 
-forall a, x R_pos:
+forall a, x R+:
     a != 1
     =>:
         log(a, 1 / x) = -log(a, x)
 
-forall a, b, c R_pos:
+forall a, b, c R+:
     a != 1
     b != 1
     c != 1
@@ -2426,31 +2426,31 @@ forall a, b, c R_pos:
     =>:
         log(a, b) = log(c, b) / log(c, a)
 
-forall a, x, y R_pos:
+forall a, x, y R+:
     a > 1
     x < y
     =>:
         log(a, x) < log(a, y)
 
-forall a, x, y R_pos:
+forall a, x, y R+:
     a < 1
     x < y
     =>:
         log(a, x) > log(a, y)
 
-forall a, x R_pos:
+forall a, x R+:
     a > 1
     x > 1
     =>:
         log(a, x) > 0
 
-forall a, x R_pos:
+forall a, x R+:
     a > 1
     x < 1
     =>:
         log(a, x) < 0
 
-forall a, b R_pos, c R:
+forall a, b R+, c R:
     a != 1
     =>:
         log(a, b) = c
@@ -2502,11 +2502,11 @@ forall x Z:
 forall x Z:
     x % 1 = 0
 
-forall a Z, b N_pos:
+forall a Z, b N+:
     0 <= a % b < b
     (a - a % b) % b = 0
 
-forall a N, b N_pos:
+forall a N, b N+:
     0 <= a % b < b
     (a - a % b) % b = 0
 ```
@@ -2653,17 +2653,17 @@ forall a Z, n N:
 forall a N, n N:
     a^n $in N
 
-forall a N_pos, n N:
-    a^n $in N_pos
+forall a N+, n N:
+    a^n $in N+
 
-forall x, y R, m N_pos:
+forall x, y R, m N+:
     x >= 0
     y >= 0
     x <= y
     =>:
         x^m <= y^m
 
-forall x, y R, m N_pos:
+forall x, y R, m N+:
     x > y
     y >= 0
     =>:
@@ -2674,38 +2674,38 @@ forall x R:
     =>:
         x^3 < 0
 
-forall x R, m N_pos:
+forall x R, m N+:
     x < 0
     m % 2 = 1
     =>:
         x^m < 0
 
-forall x R, m N_pos:
+forall x R, m N+:
     x <= 0
     m % 2 = 1
     =>:
         x^m <= 0
 
-forall x, y R, m N_pos:
+forall x, y R, m N+:
     x < y
     m % 2 = 1
     =>:
         x^m < y^m
 
-forall x, y R, m N_pos:
+forall x, y R, m N+:
     x >= 0
     y >= 0
     x^m <= y^m
     =>:
         x <= y
 
-forall x, y R_pos, q R:
+forall x, y R+, q R:
     q > 0
     x > y
     =>:
         x^q > y^q
 
-forall x, y R_pos, q Q:
+forall x, y R+, q Q:
     q > 0
     x > y
     =>:
@@ -2715,19 +2715,19 @@ forall x R_nz, n Z:
     x^n != 0
     abs(x^n) = abs(x)^n
 
-forall x R_nz, n N_pos:
+forall x R_nz, n N+:
     x^(-n) = 1 / x^n
 
 forall x, y R_nz, n Z:
     (x * y)^n = x^n * y^n
 
-forall x, y R_pos, n Z:
+forall x, y R+, n Z:
     x >= y
     n < 0
     =>:
         x^n <= y^n
 
-forall x, y R_pos, n Z:
+forall x, y R+, n Z:
     n != 0
     x^n = y^n
     =>:
@@ -2761,13 +2761,13 @@ names in verifier output.
 
 ```litex
 have n N+
-n $in N_pos
+n $in N+
 have zp Z+
-zp $in N_pos
+zp $in N+
 have qp Q+
-qp $in Q_pos
+qp $in Q+
 have rp R+
-rp $in R_pos
+rp $in R+
 
 have zn Z-
 zn $in Z_neg
@@ -2788,13 +2788,13 @@ v $in R
 c $in Z
 
 1 $in N
-1 $in N_pos
+1 $in N+
 1 $in Z
 1 $in Q
 1 $in R
 
-1 $in Q_pos
-1 $in R_pos
+1 $in Q+
+1 $in R+
 -1 $in R_neg
 -1.1 $in Q_neg
 -1 $in Z_neg
@@ -2807,7 +2807,7 @@ c $in Z
 2 - 9.5 + 10.5 $in Z
 
 1 - 5 $in Z_neg
-2 + 3 $in N_pos
+2 + 3 $in N+
 4 - 1 $in N
 
 -0.5 * 6 $in Q_neg
@@ -2818,30 +2818,30 @@ c $in Z
 7 - 3 $in Q_nz
 10 - 10 + 1 $in Q_nz
 
-3 - 1 $in Q_pos
-1 + 0.5 $in Q_pos
+3 - 1 $in Q+
+1 + 0.5 $in Q+
 
 forall a, b N:
     a + b $in N
     a * b $in N
 
-forall a N_pos, b N:
-    a + b $in N_pos
-    b + a $in N_pos
+forall a N+, b N:
+    a + b $in N+
+    b + a $in N+
 
-forall a, b N_pos:
-    a * b $in N_pos
+forall a, b N+:
+    a * b $in N+
 
 forall a Q:
     a > 0
     =>:
-        a $in Q_pos
-        a / 2 $in Q_pos
+        a $in Q+
+        a / 2 $in Q+
 
 forall a R:
     a > 0
     =>:
-        a $in R_pos
+        a $in R+
 ```
 
 ### 19. Finite Sums And Products
@@ -2892,7 +2892,7 @@ finite_set_sum({1, 2, 3}, fn(x Z) Z {x}) = 1 + 2 + 3
 finite_set_sum({}, fn(x Z) Z {x}) = 0
 finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
 finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z
-finite_set_sum({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
+finite_set_sum({1, 2}, fn(x N+) N+ {x}) $in N+
 ```
 
 ```litex
@@ -2982,8 +2982,8 @@ finite_set_product({2, 3, 4}, fn(x Z) Z {x}) = 2 * 3 * 4
 finite_set_product({}, fn(x Z) Z {x}) = 1
 finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})
 finite_set_product({1, 2}, fn(x Z) Z {x}) $in Z
-finite_set_product({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
-finite_set_product({}, fn(x N_pos) N_pos {x}) $in N_pos
+finite_set_product({1, 2}, fn(x N+) N+ {x}) $in N+
+finite_set_product({}, fn(x N+) N+ {x}) $in N+
 ```
 
 ```litex
@@ -3062,8 +3062,8 @@ name common subsets like positive or nonzero numbers.
 0 $in Z
 0 $in Q
 0 $in R
-1 $in N_pos
-1 $in R_pos
+1 $in N+
+1 $in R+
 -1 $in Z_neg
 1 $in Z_nz
 1 / 6 $in Q
@@ -3185,11 +3185,11 @@ index application syntax.
 ```litex
 have a finite_seq(R, 3) = [1, 2, 3]
 
-a $in fn(x N_pos: x <= 3) R
+a $in fn(x N+: x <= 3) R
 a(1) = 1
 a(2) = 2
 a(3) = 3
-finite_seq(R, 3) = fn(x N_pos: x <= 3) R
+finite_seq(R, 3) = fn(x N+: x <= 3) R
 ```
 
 ```litex
@@ -3210,7 +3210,7 @@ eval [[1, 0], [0, 1]] '+ [[1, 0], [0, 1]]
 
 have m matrix(R, 2, 2) = [[1, 0], [0, 1]]
 
-m $in fn (x1 N_pos, x2 N_pos: x1 <= 2, x2 <= 2) R
+m $in fn (x1 N+, x2 N+: x1 <= 2, x2 <= 2) R
 
 eval m '+ m
 eval [[2, 0], [0, 2]] '- [[1, 0], [0, 1]]
@@ -3533,7 +3533,7 @@ Purpose: define structured objects by coordinate or projection rules.
   coordinate or projection facts.
 
 ```litex
-have n N_pos = 3
+have n N+ = 3
 2 <= n
 
 have tuple t for i1 <= n, t[i1] = i1
@@ -3544,11 +3544,11 @@ R3 = cart(R, R, R)
 ```
 
 ```litex
-have r N_pos = 2
-have c N_pos = 2
+have r N+ = 2
+have c N+ = 2
 
-have matrix M matrix(N_pos, r, c) for i1 <= r, j <= c, M(i1, j) = j
-M $in matrix(N_pos, r, c)
+have matrix M matrix(N+, r, c) for i1 <= r, j <= c, M(i1, j) = j
+M $in matrix(N+, r, c)
 M(1, 2) = 2
 ```
 
@@ -4179,7 +4179,7 @@ claim:
 
 ```litex
 claim:
-    ? forall n N_pos:
+    ? forall n N+:
         sum(0, n, fn(x R) R {x}) = n * (n + 1) / 2
 
     by induc n from 1:

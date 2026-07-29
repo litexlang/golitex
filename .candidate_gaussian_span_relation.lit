@@ -1,2 +1,0 @@
-prop is_binary_gaussian_linear_combination(ax, ay, bx, b_y, zx, zy Z):
-    exist ux, uy, vx, vy Z st {zx = ax * ux - ay * uy + bx * vx - b_y * vy, zy = ax * uy + ay * ux + bx * vy + b_y * vx}

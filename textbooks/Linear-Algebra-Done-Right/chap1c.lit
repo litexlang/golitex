@@ -1,6 +1,4 @@
 # Linear Algebra Done Right, fourth edition, Section 1C: Subspaces.
-
-
 # Definition 1.33. A subspace U is a subset of the ambient carrier that uses
 # the same zero, addition, and scalar multiplication. Litex stores the
 # equivalent closure interface from Result 1.34 directly, because those facts
@@ -12,13 +10,11 @@ prop is_subspace(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v
         space.add(x, y) $in U
     forall a s, x U:
         space.smul(a, x) $in U
-
 # Remaining inherited-structure selector boundary. Closure makes the tuple
 # well typed, but the template cannot yet expose its full record-law proof.
 template<s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U power_set(v): $is_subspace(s, v, space, U)>:
     trust have subspace_vector_space &chap1b::VectorSpace<s, U>:
         subspace_vector_space = (space.scalars, space.zero, fn(x, y U) U {space.add(x, y)}, fn(a s, x U) U {space.smul(a, x)})
-
 # Result 1.34. The practical subspace test is: contain zero and be closed under
 # addition and scalar multiplication. This predicate states those three
 # conditions separately so both directions can be checked by unfolding.
@@ -43,18 +39,15 @@ thm subspace_criterion_implies_subspace:
         =>:
             $is_subspace(s, v, space, U)
     $satisfies_subspace_criterion(s, v, space, U)
-
 # Example 1.35. The source applies Result 1.34 to coordinate, function,
 # derivative, and convergent-sequence subsets. Homogeneous conditions contain
 # zero and are closed; affine equations with a nonzero constant fail the zero
 # test. Calculus-dependent cases remain explanatory until their later carriers
 # and operations are introduced.
-
 # Remark on low-dimensional subspaces. The subspaces of R^2 and R^3 are zero,
 # origin-containing lines and planes of the appropriate dimensions, and the
 # whole space. The efficient classification proof is deferred until span,
 # basis, and dimension are available in Chapter 2.
-
 # Definition 1.36. A finite sum is built from a list of chosen summands and a
 # left-associated partial-sum sequence. These relations are proof vocabulary;
 # subspace_sum itself is the source-defined callable set-valued construction.
@@ -80,7 +73,6 @@ prop is_pointwise_vector_smul(s nonempty_set, v nonempty_set, space &chap1b::Vec
         k <= m
         =>:
             terms2(k) = space.smul(a, terms1(k))
-
 # A zero term sequence has the constant-zero partial-sum trace. This is the
 # zero-vector construction needed for the subspace-sum closure proof.
 thm finite_vector_sum_of_zero_terms:
@@ -108,7 +100,6 @@ thm finite_vector_sum_of_zero_terms:
         by def $is_partial_sum_sequence(s, v, space, m, terms, partial)
     partial(m) = space.zero
     witness exist accumulated finite_seq(v, m) st {$is_partial_sum_sequence(s, v, space, m, terms, accumulated), accumulated(m) = space.zero} from partial
-
 # Regroup two pointwise sums so their partial traces and current terms align.
 thm vector_add_regroup_for_direct_sum:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, u, w, p, q v:
@@ -202,7 +193,6 @@ prop is_subspace_sum_member(s nonempty_set, v nonempty_set, space &chap1b::Vecto
 
 template<s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos>:
     have fn subspace_sum(parts finite_seq(power_set(v), m)) power_set(v) = {x v: $is_subspace_sum_member(s, v, space, m, parts, x)}
-
 # Membership in the instantiated set builder exposes its defining predicate.
 thm subspace_sum_member_spec:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, parts finite_seq(power_set(v), m), x v:
@@ -211,7 +201,6 @@ thm subspace_sum_member_spec:
             $is_subspace_sum_member(s, v, space, m, parts, x)
 
     $is_subspace_sum_member(s, v, space, m, parts, x)
-
 # The canonical two-summand specialization is kept separate because later
 # kernel/range and dimension arguments need a compact callable interface.
 prop is_subspace_sum_pair_member(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W power_set(v), x v):
@@ -219,17 +208,14 @@ prop is_subspace_sum_pair_member(s nonempty_set, v nonempty_set, space &chap1b::
 
 template<s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>>:
     have fn subspace_sum_pair(U, W power_set(v)) power_set(v) = {x v: $is_subspace_sum_pair_member(s, v, space, U, W, x)}
-
 # Example 1.37. In F^3 the sum of the first- and second-coordinate axes is the
 # xy-plane: generic summands add to (x,y,0), and every (x,y,0) splits into the
 # displayed axis vectors. This is the immediate geometric reading of
 # subspace_sum_pair.
-
 # Example 1.38. For U={(x,x,y,y)} and W={(x,x,x,y)}, the source proves
 # U+W={(x,x,y,z)}. The reverse inclusion uses the explicit decomposition
 # (x,x,y,z)=(x,x,y,y)+(0,0,0,z-y); the displayed inclusion numbered 1.39 is an
 # intermediate step rather than a separate source item.
-
 # Result 1.40. The sum of subspaces is itself a subspace and is the smallest
 # subspace containing each summand. The two auxiliary predicates make the
 # finite-family premises usable without hiding the callable subspace_sum map.
@@ -244,7 +230,6 @@ prop contains_subspace_family(v nonempty_set, m N_pos, parts finite_seq(power_se
         k <= m
         =>:
             parts(k) $subset W
-
 # Zero, addition, and scalar closure follow by constructing and combining the
 # corresponding finite partial-sum traces.
 thm subspace_sum_is_subspace:
@@ -327,31 +312,31 @@ thm each_subspace_is_contained_in_sum:
         parts(k) $subset v
         x $in v
         have zero v = space.zero
-        have fn terms(i N_pos: i <= m) v by cases:
-            case i = k: x
-            case i != k: zero
+        have fn terms(idx N_pos: idx <= m) v by cases:
+            case idx = k: x
+            case idx != k: zero
         claim:
             ? $is_summand_sequence(v, m, parts, terms)
             claim:
-                ? forall i N_pos:
-                    i <= m
+                ? forall idx N_pos:
+                    idx <= m
                     =>:
-                        terms(i) $in parts(i)
-                i = k or i != k
+                        terms(idx) $in parts(idx)
+                idx = k or idx != k
                 by cases:
-                    ? terms(i) $in parts(i)
-                    case i = k:
-                        terms(i) = x
-                        terms(i) $in parts(i)
-                    case i != k:
-                        terms(i) = zero
-                        $is_subspace(s, v, space, parts(i))
-                        zero $in parts(i)
-                        terms(i) $in parts(i)
+                    ? terms(idx) $in parts(idx)
+                    case idx = k:
+                        terms(idx) = x
+                        terms(idx) $in parts(idx)
+                    case idx != k:
+                        terms(idx) = zero
+                        $is_subspace(s, v, space, parts(idx))
+                        zero $in parts(idx)
+                        terms(idx) $in parts(idx)
             $is_summand_sequence(v, m, parts, terms)
-        have fn partial(i N_pos: i <= m) v by cases:
-            case i < k: zero
-            case i >= k: x
+        have fn partial(idx N_pos: idx <= m) v by cases:
+            case idx < k: zero
+            case idx >= k: x
         claim:
             ? $is_partial_sum_sequence(s, v, space, m, terms, partial)
             k = 1 or k != 1
@@ -372,33 +357,33 @@ thm each_subspace_is_contained_in_sum:
                     partial(1) = zero
                     terms(1) = zero
             claim:
-                ? forall i N_pos:
-                    2 <= i
-                    i <= m
+                ? forall idx N_pos:
+                    2 <= idx
+                    idx <= m
                     =>:
-                        partial(i) = space.add(partial(i - 1), terms(i))
-                i < k or i = k or i > k
+                        partial(idx) = space.add(partial(idx - 1), terms(idx))
+                idx < k or idx = k or idx > k
                 by cases:
-                    ? partial(i) = space.add(partial(i - 1), terms(i))
-                    case i < k:
-                        i != k
-                        i - 1 < k
-                        partial(i) = zero
-                        partial(i - 1) = zero
-                        terms(i) = zero
+                    ? partial(idx) = space.add(partial(idx - 1), terms(idx))
+                    case idx < k:
+                        idx != k
+                        idx - 1 < k
+                        partial(idx) = zero
+                        partial(idx - 1) = zero
+                        terms(idx) = zero
                         space.add(zero, zero) = space.add(space.zero, zero) = zero
-                    case i = k:
-                        i - 1 < k
-                        partial(i) = x
-                        partial(i - 1) = zero
-                        terms(i) = x
+                    case idx = k:
+                        idx - 1 < k
+                        partial(idx) = x
+                        partial(idx - 1) = zero
+                        terms(idx) = x
                         space.add(zero, x) = space.add(space.zero, x) = x
-                    case i > k:
-                        i - 1 >= k
-                        i != k
-                        partial(i) = x
-                        partial(i - 1) = x
-                        terms(i) = zero
+                    case idx > k:
+                        idx - 1 >= k
+                        idx != k
+                        partial(idx) = x
+                        partial(idx - 1) = x
+                        terms(idx) = zero
                         space.add(x, zero) = space.add(zero, x) = space.add(space.zero, x) = x
             $is_partial_sum_sequence(s, v, space, m, terms, partial)
         partial(m) = x
@@ -491,7 +476,6 @@ thm subspace_sum_is_least:
         partial(m) $in W
         x = partial(m)
         x $in W
-
 # Definition 1.41. A finite sum is direct when a vector has at most one list
 # of summands; existence is already encoded by membership in subspace_sum.
 # Direct sum is therefore a property of the ordinary callable sum, not a
@@ -511,7 +495,6 @@ prop is_direct_sum_pair(s nonempty_set, v nonempty_set, space &chap1b::VectorSpa
         =>:
             u1 = u2
             w1 = w2
-
 # Definitional elimination bridge: symbolic prop parameters do not currently
 # expose the universal uniqueness clause at an application site.
 axiom direct_sum_pair_unique_spec:
@@ -521,19 +504,15 @@ axiom direct_sum_pair_unique_spec:
         =>:
             u1 = u2
             w1 = w2
-
 # Example 1.42. F^3 is the direct sum of the xy-plane and z-axis: every
 # (x,y,z) has the displayed split and equality of coordinates forces it to be
 # unique. This is the concrete two-summand use of is_direct_sum_pair.
-
 # Example 1.43. F^n is the direct sum of its n coordinate-axis subspaces. The
 # vector's coordinates give the unique summand list; the symbolic family is
 # represented by finite_seq(power_set(s),n).
-
 # Example 1.44. The three source subspaces sum to F^3 but not directly: zero
 # has a nontrivial summand list. The example also warns that pairwise zero
 # intersections do not characterize direct sums with three or more summands.
-
 # Result 1.45. A finite subspace sum is direct iff its only representation of
 # zero is the all-zero summand list.
 prop is_zero_vector_sequence(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, m N_pos, terms finite_seq(v, m)):
@@ -548,7 +527,6 @@ prop has_only_trivial_zero_decomposition(s nonempty_set, v nonempty_set, space &
         $is_finite_vector_sum(s, v, space, m, terms, space.zero)
         =>:
             $is_zero_vector_sequence(s, v, space, m, terms)
-
 # The source's standing subspace-family hypothesis makes the all-zero
 # comparison sequence available.
 thm direct_sum_implies_trivial_zero_decomposition:
@@ -666,7 +644,6 @@ thm trivial_zero_decomposition_implies_direct_sum:
         $fn_eq(terms1, terms2)
         terms1 = terms2
     by def $is_direct_sum(s, v, space, m, parts)
-
 # Result 1.46. For two subspaces, the sum is direct iff their intersection is
 # the singleton containing vector zero.  For the forward implication, compare
 # x+0 and 0+x and use uniqueness of the two summands.
@@ -818,6 +795,3 @@ thm zero_intersection_implies_direct_sum_pair:
         by thm zero_intersection_unique_components(s, v, space, U, W, u1, u2, w1, w2)
     by def $is_direct_sum_pair(s, v, space, U, W)
 
-# Remark on the direct-sum analogy. Direct sums play the role of disjoint
-# unions, but Example 1.44 shows that pairwise intersections equal to {0} do
-# not suffice when three or more subspaces are present.

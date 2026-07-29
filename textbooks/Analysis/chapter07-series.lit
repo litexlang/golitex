@@ -2141,6 +2141,16 @@ have fn series_add(a, b seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {a(j) + b(j)
 have fn series_scalar_mul(c R, a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {c * a(j)}
 have fn series_shift(a seq(R), h N) fn(i_index N_pos) R = fn(j N_pos) R {a(j + h)}
 
+thm series_add_apply:
+    ? forall a, b seq(R), n N_pos:
+        series_add(a, b)(n) = a(n) + b(n)
+    series_add(a, b)(n) = a(n) + b(n)
+
+thm series_scalar_mul_apply:
+    ? forall c R, a seq(R), n N_pos:
+        series_scalar_mul(c, a)(n) = c * a(n)
+    series_scalar_mul(c, a)(n) = c * a(n)
+
 thm partial_sum_series_add:
     ? forall a, b seq(R), k N_pos:
         partial_sum(series_add(a, b), k) = partial_sum(a, k) + partial_sum(b, k)
@@ -2185,6 +2195,19 @@ thm series_laws_add:
         by thm partial_sum_series_add(a, b, n)
     by thm strict_limit_extensional(fn(k N_pos) R {partial_sum(a, k) + partial_sum(b, k)}, fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y)
     by thm strict_limit_implies_closed_limit(fn(k N_pos) R {partial_sum(series_add(a, b), k)}, x + y)
+
+thm series_laws_add_pointwise:
+    ? forall a, b seq(R), x, y R:
+        $has_series_sum(a, x)
+        $has_series_sum(b, y)
+        =>:
+            $has_series_sum(fn(n N_pos) R {a(n) + b(n)}, x + y)
+    by thm series_laws_add(a, b, x, y)
+    claim:
+        ? forall n N_pos:
+            series_add(a, b)(n) = fn(j N_pos) R {a(j) + b(j)}(n)
+        series_add(a, b)(n) = a(n) + b(n)
+    by thm series_sum_extensional(series_add(a, b), fn(n N_pos) R {a(n) + b(n)}, x + y)
 
 thm series_laws_scalar_mul:
     ? forall a seq(R), c, x R:
@@ -3303,6 +3326,11 @@ prop is_permutation_of_positive_integers(phi fn(i_index N_pos) N_pos):
 
 have fn rearranged_series(a seq(R), phi fn(i_index N_pos) N_pos) fn(i_index N_pos) R = fn(j N_pos) R {a(phi(j))}
 
+thm rearranged_series_apply:
+    ? forall a seq(R), phi fn(i_index N_pos) N_pos, n N_pos:
+        rearranged_series(a, phi)(n) = a(phi(n))
+    rearranged_series(a, phi)(n) = a(phi(n))
+
 # Tao's proof compares finite partial sums.  For non-negative series, it is
 # enough that every finite partial sum of either order is bounded by a later
 # finite partial sum of the other order.
@@ -3677,10 +3705,24 @@ thm nonnegative_partial_sum_below_series_sum:
         $has_series_sum(a, L)
         =>:
             partial_sum(a, n) <= L
-    # Source handling: monotonicity prevents a partial sum from lying above
-    # the limit, since all later partial sums would stay above it.
-    # trust: The explicit epsilon/2 contradiction remains an ExecStmtError.
-    trust partial_sum(a, n) <= L
+    by def $has_series_sum(a, L)
+    by contra:
+        ? partial_sum(a, n) <= L
+        partial_sum(a, n) > L
+        have epsilon R_pos = (partial_sum(a, n) - L) / 2
+        by thm chap6::has_limit_gives_eventual_closeness(fn(k N_pos) R {partial_sum(a, k)}, L, epsilon)
+        obtain n0 from exist n0 N_pos st {$chap6::is_tail_close_to(fn(k N_pos) R {partial_sum(a, k)}, L, epsilon, n0)}
+        have m N_pos = n + n0
+        m = n + n0 >= n
+        m = n + n0 = n0 + n >= n0
+        by thm nonnegative_partial_sum_le_of_le(a, n, m)
+        abs(fn(k N_pos) R {partial_sum(a, k)}(m) - L) < epsilon
+        fn(k N_pos) R {partial_sum(a, k)}(m) = partial_sum(a, m)
+        partial_sum(a, m) - L <= abs(partial_sum(a, m) - L) < epsilon
+        partial_sum(a, n) - L <= partial_sum(a, m) - L < epsilon
+        partial_sum(a, n) - L < (partial_sum(a, n) - L) / 2
+        (partial_sum(a, n) - L) / 2 < partial_sum(a, n) - L
+        impossible partial_sum(a, n) - L < partial_sum(a, n) - L
 
 thm series_sum_below_common_partial_sum_upper_bound:
     ? forall a seq(R), L, M R:
@@ -3957,6 +3999,16 @@ thm rearranged_series_absolutely_convergent:
 
 have fn positive_part_series(a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {(abs(a(j)) + a(j)) / 2}
 have fn negative_part_series(a seq(R)) fn(i_index N_pos) R = fn(j N_pos) R {(abs(a(j)) - a(j)) / 2}
+
+thm positive_part_series_apply:
+    ? forall a seq(R), n N_pos:
+        positive_part_series(a)(n) = (abs(a(n)) + a(n)) / 2
+    positive_part_series(a)(n) = (abs(a(n)) + a(n)) / 2
+
+thm negative_part_series_apply:
+    ? forall a seq(R), n N_pos:
+        negative_part_series(a)(n) = (abs(a(n)) - a(n)) / 2
+    negative_part_series(a)(n) = (abs(a(n)) - a(n)) / 2
 
 thm positive_part_value_nonnegative:
     ? forall x R:

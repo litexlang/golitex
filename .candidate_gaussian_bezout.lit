@@ -1,2 +1,0 @@
-prop gaussian_bezout_pair(ax, ay, bx, b_y Z):
-    $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, 1, 0)

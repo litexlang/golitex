@@ -140,8 +140,8 @@ define or trust either constant.
 The kernel provides their carrier, positivity, and nonzero facts:
 
 ```litex
-e $in R_pos
-pi $in R_pos
+e $in R+
+pi $in R+
 e $in R
 pi $in R
 e $in C
@@ -246,9 +246,9 @@ Litex exposes sets, membership, and set operations directly.
 
 | Form | Meaning |
 |---|---|
-| `N_pos`, `N`, `Z`, `Q`, `R`, `C` | Standard number sets |
-| `Q_pos`, `R_pos`, `Q_neg`, `Z_neg`, `R_neg` | Signed standard subsets |
-| `N+`, `Z+`, `Q+`, `R+` | Preview compact spellings for the corresponding strictly positive sets; `Z+` is `N_pos` |
+| `N+`, `N`, `Z`, `Q`, `R`, `C` | Standard number sets |
+| `Q+`, `R+`, `Q_neg`, `Z_neg`, `R_neg` | Signed standard subsets |
+| `N+`, `Z+`, `Q+`, `R+` | Preview compact spellings for the corresponding strictly positive sets; `Z+` is `N+` |
 | `Z-`, `Q-`, `R-` | Preview compact spellings for the corresponding strictly negative sets |
 | `Q_nz`, `Z_nz`, `R_nz` | Nonzero standard subsets |
 | `{a, b, ...}` | Displayed finite set |
@@ -261,11 +261,11 @@ Litex exposes sets, membership, and set operations directly.
 | `general_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` |
 
 The compact suffix must be adjacent to its base. Verifier output normalizes
-compact numeric input back to names such as `N_pos` and `R_neg`.
+compact numeric input back to names such as `N+` and `R_neg`.
 
 ```litex
 have n N+
-n $in N_pos
+n $in N+
 have z Z-
 z $in Z_neg
 ```
@@ -340,7 +340,7 @@ tuple_dim((1, 2)) = 2
 proj(cart(R, Z), 1) = R
 (1, 2)[1] = 1
 
-[1, 2, 3] $in finite_seq(N_pos, 3)
+[1, 2, 3] $in finite_seq(N+, 3)
 [[1, 0], [0, 1]] $in matrix(Z, 2, 2)
 ```
 
@@ -933,12 +933,12 @@ Use dedicated `have` forms when a tuple, Cartesian product, sequence, or matrix
 has a symbolic dimension or coordinate formula.
 
 ```litex
-have n N_pos = 3
+have n N+ = 3
 have tuple t for i1 <= n, t[i1] = i1
 have cart c for i1 <= n, proj(c, i1) = R
 
-have finite_seq s finite_seq(N_pos, n) for i1 <= n, s(i1) = i1
-have matrix M matrix(N_pos, 2, n) for i1 <= 2, j <= n, M(i1, j) = j
+have finite_seq s finite_seq(N+, n) for i1 <= n, s(i1) = i1
+have matrix M matrix(N+, 2, n) for i1 <= 2, j <= n, M(i1, j) = j
 
 t[2] = 2
 s(3) = 3
@@ -1045,7 +1045,7 @@ forall n N:
 A merely decreasing real measure is not accepted:
 
 ```text
-have fn dense(x R_pos) N by induc x from 0:
+have fn dense(x R+) N by induc x from 0:
     case x <= 1: 0
     case x > 1: dense(x / 2)
 ```
@@ -1959,7 +1959,7 @@ sets, and finite aggregate codomains. Type-predicate rules recognize set,
 nonempty, finite, tuple, and Cartesian-product shapes.
 
 ```litex
-1 $in N_pos
+1 $in N+
 not (-1) $in N
 i $in C
 R $subset C
@@ -2021,7 +2021,7 @@ a rational number with positive denominator.
 
 ```litex
 forall a Q:
-    exist! p Z, q N_pos st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}
+    exist! p Z, q N+ st {a = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 1}}
 ```
 
 This rule recognizes the displayed representation; it is not a general gcd

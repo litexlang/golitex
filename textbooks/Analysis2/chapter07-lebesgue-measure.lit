@@ -76,14 +76,14 @@ prop has_outer_measure_value(n N_pos, E power_set(\euclidean_space<n>), value R)
 # Lemma 7.2.5. Outer measure is nonnegative, null on the empty set, monotone,
 # translation invariant, and countably subadditive.
 thm outer_measure_laws:
-    ? forall n N_pos, E, F power_set(\euclidean_space<n>), e, f R:
+    ? forall n N_pos, E, F power_set(\euclidean_space<n>), measure_E, f R:
         E $subset F
-        $has_outer_measure_value(n, E, e)
+        $has_outer_measure_value(n, E, measure_E)
         $has_outer_measure_value(n, F, f)
         =>:
-            0 <= e <= f
-    0 <= e
-    trust e <= f
+            0 <= measure_E <= f
+    0 <= measure_E
+    trust measure_E <= f
 
 # Proposition 7.2.6. The outer measure of a closed box is its coordinate
 # volume.
@@ -154,16 +154,16 @@ thm measurable_set_laws:
 # Lemma 7.4.5. Outer measure is finitely additive over disjoint measurable
 # pieces, even after intersection with an arbitrary test set.
 thm measurable_sets_are_finitely_additive:
-    ? forall n N_pos, A, E, F power_set(\euclidean_space<n>), total, e, f R:
+    ? forall n N_pos, A, E, F power_set(\euclidean_space<n>), total, measure_E, f R:
         intersect(E, F) = {}
         $is_lebesgue_measurable(n, E)
         $is_lebesgue_measurable(n, F)
         $has_outer_measure_value(n, intersect(A, union(E, F)), total)
-        $has_outer_measure_value(n, intersect(A, E), e)
+        $has_outer_measure_value(n, intersect(A, E), measure_E)
         $has_outer_measure_value(n, intersect(A, F), f)
         =>:
-            total = e + f
-    trust total = e + f
+            total = measure_E + f
+    trust total = measure_E + f
 
 # Corollary 7.4.7. The difference of nested measurable sets is measurable, and
 # its measure is the difference when the larger measure is finite.

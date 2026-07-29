@@ -1,6 +1,6 @@
 ---
 name: golitex-repository-policy
-description: Apply the golitex repository's mandatory cross-cutting policy for Litex work, including localized trust, persistent session-before proof iteration, release gates, textbook draft/public boundaries, translation records and todos, Rust/kernel conventions, and documentation tests. Use alongside a task-specific Litex skill whenever Codex edits or verifies .lit files, translates source mathematics, changes the golitex kernel/parser/runtime/stdlib/docs/examples, writes Litex todo artifacts, or is asked to follow the golitex AGENTS workflow.
+description: Apply the golitex repository's mandatory cross-cutting policy for all work in the repository, including localized trust, persistent session-before proof iteration, release gates, textbook draft/public boundaries, translation records and todos, Rust/kernel conventions, documentation, tests, examples, scripts, configuration, and general maintenance. Use whenever Codex reads, edits, verifies, reviews, diagnoses, or maintains anything in the golitex repository, and use it alongside every task-specific Litex skill.
 ---
 
 # Golitex Repository Policy
@@ -11,14 +11,14 @@ research writing, or todo workflows.
 
 ## Required policy loading
 
-1. When working inside a repository, locate and read the nearest live
-   `AGENTS.md` completely before taking task actions.
-2. In the golitex repository, treat that live file as the authority.
-3. When the live file is unavailable, read
+1. Read
    [`references/golitex-agents.md`](references/golitex-agents.md) completely
-   and use it as the portable fallback.
-4. If the live file and bundled snapshot differ, follow the live file, report
-   the drift, and refresh the snapshot when the task authorizes skill updates.
+   before taking task actions. It is the canonical detailed policy.
+2. Treat a repository `AGENTS.md` as a bootstrap that activates this skill,
+   not as a second copy of the detailed rules.
+3. If a live repository instruction conflicts with the bundled policy, follow
+   the live higher-priority instruction and report the drift so the skill can
+   be refreshed.
 
 User instructions take precedence over this skill. The golitex repository
 policy takes precedence over generic or older workflow advice in another
@@ -46,6 +46,6 @@ Litex skill.
 - Finish a file with a clean release `-f` run without the cutoff. Reserve
   release `-r` for an explicit whole-module or whole-book gate.
 - When a mandated Rust harness currently targets a different tree from the
-  artifact named by the live policy, still run the mandated command, but do not
-  misreport its coverage. Add the smallest release CLI gate against the
+  artifact named by the repository policy, still run the mandated command, but
+  do not misreport its coverage. Add the smallest release CLI gate against the
   intended artifact and report the harness drift as `kernel_problem`.

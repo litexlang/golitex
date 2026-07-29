@@ -949,24 +949,34 @@ thm derivative_gives_difference_quotient_function_limit:
     $chap9::is_limit_point_of_set(X, x0)
     $chap9::is_adherent_point(set_minus(X, {x0}), x0)
     claim:
-        ? forall epsilon R_pos:
-            $chap9::is_locally_epsilon_close_to(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg, epsilon)
-        obtain delta from exist delta R_pos st {$is_difference_quotient_close_to(X, g, x0, Lg, epsilon, delta)}
-        witness exist eta R_pos st {$chap9::is_delta_neighborhood_close_to(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg, epsilon, eta)} from delta:
-            claim:
-                ? forall y set_minus(X, {x0}):
-                    abs(y - x0) < delta
-                    =>:
-                        abs(fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) - Lg) <= epsilon
-                y $in X
-                y != x0
-                y - x0 != 0
-                abs((g(y) - g(x0)) / (y - x0) - Lg) <= epsilon
-                fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) = (g(y) - g(x0)) / (y - x0)
-                abs(fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) - Lg) = abs((g(y) - g(x0)) / (y - x0) - Lg)
-                abs(fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) - Lg) <= epsilon
-            $chap9::is_delta_neighborhood_close_to(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg, epsilon, delta)
-        $chap9::is_locally_epsilon_close_to(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg, epsilon)
+        ? $chap9::has_function_limit(set_minus(X, {x0}), difference_quotient(X, g, x0), x0, Lg)
+        claim:
+            ? forall epsilon R_pos:
+                $chap9::is_locally_epsilon_close_to(set_minus(X, {x0}), difference_quotient(X, g, x0), x0, Lg, epsilon)
+            obtain delta from exist delta R_pos st {$is_difference_quotient_close_to(X, g, x0, Lg, epsilon, delta)}
+            witness exist eta R_pos st {$chap9::is_delta_neighborhood_close_to(set_minus(X, {x0}), difference_quotient(X, g, x0), x0, Lg, epsilon, eta)} from delta:
+                claim:
+                    ? forall y set_minus(X, {x0}):
+                        abs(y - x0) < delta
+                        =>:
+                            abs(difference_quotient(X, g, x0)(y) - Lg) <= epsilon
+                    y $in X
+                    y != x0
+                    y - x0 != 0
+                    abs((g(y) - g(x0)) / (y - x0) - Lg) <= epsilon
+                    difference_quotient(X, g, x0)(y) = (g(y) - g(x0)) / (y - x0)
+                    abs(difference_quotient(X, g, x0)(y) - Lg) = abs((g(y) - g(x0)) / (y - x0) - Lg)
+                    abs(difference_quotient(X, g, x0)(y) - Lg) <= epsilon
+                $chap9::is_delta_neighborhood_close_to(set_minus(X, {x0}), difference_quotient(X, g, x0), x0, Lg, epsilon, delta)
+            $chap9::is_locally_epsilon_close_to(set_minus(X, {x0}), difference_quotient(X, g, x0), x0, Lg, epsilon)
+        $chap9::has_function_limit(set_minus(X, {x0}), difference_quotient(X, g, x0), x0, Lg)
+    claim:
+        ? forall y set_minus(X, {x0}):
+            difference_quotient(X, g, x0)(y) = fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y)
+        difference_quotient(X, g, x0)(y) = (g(y) - g(x0)) / (y - x0)
+        fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y) = (g(y) - g(x0)) / (y - x0)
+        difference_quotient(X, g, x0)(y) = fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}(y)
+    by thm chap9::equal_functions_have_equal_function_limits(set_minus(X, {x0}), difference_quotient(X, g, x0), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg)
     $chap9::has_function_limit(set_minus(X, {x0}), fn(x set_minus(X, {x0})) R {(g(x) - g(x0)) / (x - x0)}, x0, Lg)
 
 # This is the converse direction of the bridge above: a limit of the literal

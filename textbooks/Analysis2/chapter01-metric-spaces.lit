@@ -1064,17 +1064,17 @@ thm metric_interior_is_largest_open_subset:
     by thm metric_open_iff_equals_interior_forward(X, dist, V)
     V = \metric_interior<X, dist>(V)
     claim:
-        ? forall A, B, C power_set(X):
+        ? forall A, B, target_set power_set(X):
             A $subset B
-            B $subset C
+            B $subset target_set
             =>:
-                A $subset C
+                A $subset target_set
         claim:
             ? forall y A:
-                y $in C
+                y $in target_set
             y $in B
-            y $in C
-        A $subset C
+            y $in target_set
+        A $subset target_set
     claim:
         ? forall y V:
             y $in \metric_interior<X, dist>(E)
@@ -1598,10 +1598,10 @@ thm compact_subset_of_compact_metric_subset_is_closed:
 
 # Theorem 1.5.10(b). A finite union of compact subsets is compact.
 thm finite_union_of_compact_metric_subsets_is_compact:
-    ? forall X set, dist fn(x, y X) R, I finite_set, family fn(i I) power_set(X):
+    ? forall X set, dist fn(x, y X) R, I finite_set, family fn(index I) power_set(X):
         $is_metric_space(X, dist)
-        forall i I:
-            $is_metric_compact(X, dist, family(i))
+        forall index I:
+            $is_metric_compact(X, dist, family(index))
         =>:
             $is_metric_compact(X, dist, \set_family_union<X, I, family>)
     # proof_debt: source Exercise 1.5.7; one family member contains infinitely

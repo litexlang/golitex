@@ -1,5 +1,8 @@
 # About This Project
 #
+# Litex source:
+# https://github.com/litexlang/golitex/tree/main/textbooks/Linear-Algebra-Done-Right
+#
 # This project is an ongoing Litex formalization inspired by the fourth edition
 # of Sheldon Axler's Linear Algebra Done Right. The current published slice
 # covers Chapters 1 and 2, through vector spaces, subspaces, linear combinations,

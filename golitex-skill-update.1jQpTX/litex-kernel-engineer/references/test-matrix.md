@@ -13,7 +13,7 @@ Use the smallest relevant command first, then broaden.
 - Examples harness: `cargo test --release run_examples -- --nocapture`.
 - Mechanics draft chapters: run
   `cargo test --release run_mechanics_textbook_chapters -- --nocapture` as
-  required by the live policy, then inspect its target. While it points at
+  required by the repository policy, then inspect its target. While it points at
   `textbooks/The-Mechanics-of-Litex-Proof`, also use the release CLI against
   `scripts/textbooks_drafts/The-Mechanics-of-Litex-Proof`; the harness is only
   an explicitly published-snapshot gate, not a draft gate.

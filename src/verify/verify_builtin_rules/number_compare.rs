@@ -409,8 +409,7 @@ fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<
             Obj::Number(number) if number.normalized_value == "0"
         )
     };
-    let is_native_positive_constant =
-        |obj: &Obj| matches!(obj, Obj::EulerNumber(_) | Obj::Pi(_));
+    let is_native_positive_constant = |obj: &Obj| matches!(obj, Obj::EulerNumber(_) | Obj::Pi(_));
     let applies = match atomic_fact {
         AtomicFact::LessFact(fact) => {
             is_zero(&fact.left) && is_native_positive_constant(&fact.right)

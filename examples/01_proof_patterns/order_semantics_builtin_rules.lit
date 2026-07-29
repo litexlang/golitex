@@ -43,6 +43,18 @@ forall a, b, c R:
     =>:
         c <= finite_set_min(union({a}, { b}))
 
+# Known equality aliases preserve the extremum bounds.
+# Example: `selected_max = finite_set_max({n1, n2})` bounds both members.
+have n1 R = 1
+have n2 R = 2
+have selected_max R = finite_set_max({n1, n2})
+selected_max >= n1
+selected_max >= n2
+
+have selected_min R = finite_set_min({n1, n2})
+selected_min <= n1
+selected_min <= n2
+
 forall a, b Z:
     a < b
     =>:

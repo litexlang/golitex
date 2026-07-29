@@ -333,7 +333,7 @@ Basic behavior:
 | `-factgraph -e/-f/-r ... [json]` | Produce a fact-only verification dependency graph. |
 | `-defgraph -e/-f/-r ... [json]` | Produce an environment-backed definition dependency graph. |
 | `-latex -e/-f/-r ...` | Compile Litex source to LaTeX; `-latex` alone starts its interactive REPL. |
-| `-python -e/-f/-r ...` | Compile the supported verified subset to Python. |
+| `-python -e/-f/-r ...` | Run the frozen experimental extractor for its supported verified subset. |
 | `-compact` | Show only result, statement type, line, and source statement for successful results; any `RuntimeError` is always detailed. |
 | `-detail` | Include the full audit trace for successful results and errors, plus raw source paths. |
 | `-strict` | Verify configured dependencies and reject user trust or axiom statements. |
