@@ -4,12 +4,22 @@ thm binary_gaussian_span_is_closed_under_gaussian_multiplication:
         =>:
             gaussian_mul(a[1], a[2], q[1], q[2]) $in binary_gaussian_span(ax, ay, bx, b_y)
     obtain ux, uy, vx, vy from exist ux0, uy0, vx0, vy0 Z st {a[1] = ax * ux0 - ay * uy0 + bx * vx0 - b_y * vy0, a[2] = ax * uy0 + ay * ux0 + bx * vy0 + b_y * vx0}
-    have px Z = ux * q[1] - uy * q[2]
-    have py Z = ux * q[2] + uy * q[1]
-    have sx Z = vx * q[1] - vy * q[2]
-    have sy Z = vx * q[2] + vy * q[1]
-    witness exist px0, py0, sx0, sy0 Z st {gaussian_mul(a[1], a[2], q[1], q[2])[1] = ax * px0 - ay * py0 + bx * sx0 - b_y * sy0, gaussian_mul(a[1], a[2], q[1], q[2])[2] = ax * py0 + ay * px0 + bx * sy0 + b_y * sx0} from px, py, sx, sy:
-        gaussian_mul(a[1], a[2], q[1], q[2])[1] = a[1] * q[1] - a[2] * q[2] = ax * px - ay * py + bx * sx - b_y * sy
-        gaussian_mul(a[1], a[2], q[1], q[2])[2] = a[1] * q[2] + a[2] * q[1] = ax * py + ay * px + bx * sy + b_y * sx
+    have au cart(Z, Z) = gaussian_mul(ax, ay, ux, uy)
+    have bv cart(Z, Z) = gaussian_mul(bx, b_y, vx, vy)
+    gaussian_add(au[1], au[2], bv[1], bv[2]) = (ax * ux - ay * uy + bx * vx - b_y * vy, ax * uy + ay * ux + bx * vy + b_y * vx) = (a[1], a[2])
+    have uq cart(Z, Z) = gaussian_mul(ux, uy, q[1], q[2])
+    have vq cart(Z, Z) = gaussian_mul(vx, vy, q[1], q[2])
+    by thm gaussian_mul_is_associative(ax, ay, ux, uy, q[1], q[2])
+    gaussian_mul(ax, ay, uq[1], uq[2]) = gaussian_mul(au[1], au[2], q[1], q[2])
+    by thm gaussian_mul_is_associative(bx, b_y, vx, vy, q[1], q[2])
+    gaussian_mul(bx, b_y, vq[1], vq[2]) = gaussian_mul(bv[1], bv[2], q[1], q[2])
+    by thm gaussian_mul_distributes_over_addition_on_right(au[1], au[2], bv[1], bv[2], q[1], q[2])
+    gaussian_add(gaussian_mul(au[1], au[2], q[1], q[2])[1], gaussian_mul(au[1], au[2], q[1], q[2])[2], gaussian_mul(bv[1], bv[2], q[1], q[2])[1], gaussian_mul(bv[1], bv[2], q[1], q[2])[2]) = gaussian_mul(gaussian_add(au[1], au[2], bv[1], bv[2])[1], gaussian_add(au[1], au[2], bv[1], bv[2])[2], q[1], q[2])
+    gaussian_mul(gaussian_add(au[1], au[2], bv[1], bv[2])[1], gaussian_add(au[1], au[2], bv[1], bv[2])[2], q[1], q[2]) = gaussian_mul(a[1], a[2], q[1], q[2])
+    gaussian_add(gaussian_mul(ax, ay, uq[1], uq[2])[1], gaussian_mul(ax, ay, uq[1], uq[2])[2], gaussian_mul(bx, b_y, vq[1], vq[2])[1], gaussian_mul(bx, b_y, vq[1], vq[2])[2]) = gaussian_mul(a[1], a[2], q[1], q[2])
+    gaussian_add(gaussian_mul(ax, ay, uq[1], uq[2])[1], gaussian_mul(ax, ay, uq[1], uq[2])[2], gaussian_mul(bx, b_y, vq[1], vq[2])[1], gaussian_mul(bx, b_y, vq[1], vq[2])[2]) = (ax * uq[1] - ay * uq[2] + bx * vq[1] - b_y * vq[2], ax * uq[2] + ay * uq[1] + bx * vq[2] + b_y * vq[1])
+    witness exist px, py, sx, sy Z st {gaussian_mul(a[1], a[2], q[1], q[2])[1] = ax * px - ay * py + bx * sx - b_y * sy, gaussian_mul(a[1], a[2], q[1], q[2])[2] = ax * py + ay * px + bx * sy + b_y * sx} from uq[1], uq[2], vq[1], vq[2]:
+        gaussian_mul(a[1], a[2], q[1], q[2])[1] = gaussian_add(gaussian_mul(ax, ay, uq[1], uq[2])[1], gaussian_mul(ax, ay, uq[1], uq[2])[2], gaussian_mul(bx, b_y, vq[1], vq[2])[1], gaussian_mul(bx, b_y, vq[1], vq[2])[2])[1] = (ax * uq[1] - ay * uq[2] + bx * vq[1] - b_y * vq[2], ax * uq[2] + ay * uq[1] + bx * vq[2] + b_y * vq[1])[1] = ax * uq[1] - ay * uq[2] + bx * vq[1] - b_y * vq[2]
+        gaussian_mul(a[1], a[2], q[1], q[2])[2] = gaussian_add(gaussian_mul(ax, ay, uq[1], uq[2])[1], gaussian_mul(ax, ay, uq[1], uq[2])[2], gaussian_mul(bx, b_y, vq[1], vq[2])[1], gaussian_mul(bx, b_y, vq[1], vq[2])[2])[2] = (ax * uq[1] - ay * uq[2] + bx * vq[1] - b_y * vq[2], ax * uq[2] + ay * uq[1] + bx * vq[2] + b_y * vq[1])[2] = ax * uq[2] + ay * uq[1] + bx * vq[2] + b_y * vq[1]
     by def $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, gaussian_mul(a[1], a[2], q[1], q[2])[1], gaussian_mul(a[1], a[2], q[1], q[2])[2])
     gaussian_mul(a[1], a[2], q[1], q[2]) $in binary_gaussian_span(ax, ay, bx, b_y)
