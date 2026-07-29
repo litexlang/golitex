@@ -83,6 +83,26 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
+        Obj::Sin(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::Cos(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::Tan(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::Cot(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
         Obj::RealPart(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.arg,
             free_param_type,

@@ -16,6 +16,11 @@ impl Runtime {
         if let Some(result) = try_verify_native_real_constant_nonzero(not_equal_fact) {
             return Ok(result);
         }
+        if let Some(result) =
+            self.try_verify_trigonometric_not_equal(not_equal_fact, verify_state)?
+        {
+            return Ok(result);
+        }
 
         match (
             self.resolve_obj_to_number_for_not_equal_builtin_rule(left_obj),

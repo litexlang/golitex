@@ -1,0 +1,74 @@
+# Native real trigonometry is symbolic and needs no import.
+#
+# The verifier keeps a small core interface: values at 0 and pi/2, angle
+# addition, the unit-circle identity, and the quotient definitions of tan and
+# cot. The remaining facts below are derived through the same normalizer.
+
+sin(0) = 0
+cos(0) = 1
+sin(pi / 2) = 1
+cos(pi / 2) = 0
+
+forall x R:
+    sin(x) $in R
+    cos(x) $in R
+    sin(x)^2 + cos(x)^2 = 1
+
+forall x, y R:
+    sin(x + y) = sin(x) * cos(y) + cos(x) * sin(y)
+    cos(x + y) = cos(x) * cos(y) - sin(x) * sin(y)
+
+# Parity, difference, and double-angle formulas are derived layers.
+
+forall x, y R:
+    sin(-x) = -sin(x)
+    cos(-x) = cos(x)
+    sin(x - y) = sin(x) * cos(y) - cos(x) * sin(y)
+    cos(x - y) = cos(x) * cos(y) + sin(x) * sin(y)
+    sin(2 * x) = 2 * sin(x) * cos(x)
+    cos(2 * x) = cos(x)^2 - sin(x)^2
+    cos(2 * x) = 1 - 2 * sin(x)^2
+
+# Values at pi, cofunction rules, periodicity, and bounds use those same
+# dependencies rather than independent builtin copies.
+
+sin(pi) = 0
+cos(pi) = -1
+sin(2 * pi) = 0
+cos(2 * pi) = 1
+
+forall x R:
+    sin(pi / 2 - x) = cos(x)
+    cos(pi / 2 - x) = sin(x)
+    sin(x + 2 * pi) = sin(x)
+    cos(x + 2 * pi) = cos(x)
+    -1 <= sin(x) <= 1
+    -1 <= cos(x) <= 1
+    abs(sin(x)) <= 1
+    abs(cos(x)) <= 1
+
+# tan and cot are partial: their denominator facts make each use well-defined.
+
+forall x R:
+    cos(x) != 0
+    =>:
+        tan(x) = sin(x) / cos(x)
+        tan(-x) = -tan(x)
+        cos(x + pi) != 0
+        tan(x + pi) = tan(x)
+
+forall x R:
+    sin(x) != 0
+    =>:
+        cot(x) = cos(x) / sin(x)
+        cot(-x) = -cot(x)
+        sin(x + pi) != 0
+        cot(x + pi) = cot(x)
+
+forall x R:
+    cos(x) != 0
+    sin(x) != 0
+    =>:
+        tan(x) * cot(x) = 1
+        1 + tan(x)^2 = 1 / cos(x)^2
+        1 + cot(x)^2 = 1 / sin(x)^2

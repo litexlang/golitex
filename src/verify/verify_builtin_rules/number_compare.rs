@@ -55,6 +55,11 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) =
+            self.try_verify_trigonometric_order_bound(atomic_fact, verify_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
             self.try_verify_order_semantics_builtin_rule(atomic_fact, verify_state)?
         {
             return Ok(result);
@@ -2332,7 +2337,7 @@ impl Runtime {
         weak_then_strict(self)
     }
 
-    fn verify_zero_le_even_integer_pow_builtin_rule(
+    pub(super) fn verify_zero_le_even_integer_pow_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,

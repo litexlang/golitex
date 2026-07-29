@@ -117,6 +117,7 @@ sqrt(4) = 2
 | `a % b` | Euclidean integer remainder |
 | `a^b` | Exponentiation |
 | `abs(a)`, `sqrt(a)`, `log(base, a)` | Standard numeric objects |
+| `sin(a)`, `cos(a)`, `tan(a)`, `cot(a)` | Native symbolic real trigonometric objects |
 | `re(z)`, `img(z)`, `C_abs(z)` | Real coordinate, imaginary coordinate, and complex modulus |
 | `finite_set_max(S)`, `finite_set_min(S)` | Extremum of a suitable finite set |
 
@@ -167,6 +168,82 @@ approximations:
 
 The symbolic evaluator likewise does not assign decimal runtime values to
 these constants.
+
+### Native real trigonometry (beta preview)
+
+`sin(x)`, `cos(x)`, `tan(x)`, and `cot(x)` are dedicated builtin object forms,
+not source-defined functions or ordinary function calls. Their arguments are
+real angles in radians. `sin` and `cos` are total on `R`; `tan(x)` is
+well-defined only when `cos(x) != 0`, and `cot(x)` only when `sin(x) != 0`.
+
+The kernel keeps one centralized symbolic interface. Its core consists of the
+values at `0` and `pi / 2`, the sine and cosine addition formulas, the
+unit-circle identity, and the quotient definitions of tangent and cotangent:
+
+```litex
+sin(0) = 0
+cos(0) = 1
+sin(pi / 2) = 1
+cos(pi / 2) = 0
+
+forall x, y R:
+    sin(x + y) = sin(x) * cos(y) + cos(x) * sin(y)
+    cos(x + y) = cos(x) * cos(y) - sin(x) * sin(y)
+
+forall x R:
+    sin(x)^2 + cos(x)^2 = 1
+```
+
+A single canonical normalizer builds the derived layers from that interface.
+It handles parity, difference and double-angle formulas, values at integral
+and supported half-integral multiples of `pi`, cofunction and shift formulas,
+periodicity, and the `[-1, 1]` bounds. Those are not maintained as unrelated
+copies:
+
+```litex
+forall x R:
+    sin(-x) = -sin(x)
+    cos(-x) = cos(x)
+    sin(2 * x) = 2 * sin(x) * cos(x)
+    cos(2 * x) = 1 - 2 * sin(x)^2
+    sin(x + 2 * pi) = sin(x)
+    cos(x + 2 * pi) = cos(x)
+    -1 <= sin(x) <= 1
+    -1 <= cos(x) <= 1
+
+sin(pi) = 0
+cos(pi) = -1
+```
+
+Tangent and cotangent uses must expose the appropriate denominator fact:
+
+```litex
+forall x R:
+    cos(x) != 0
+    =>:
+        tan(x) = sin(x) / cos(x)
+        cos(x + pi) != 0
+        tan(x + pi) = tan(x)
+
+forall x R:
+    sin(x) != 0
+    =>:
+        cot(x) = cos(x) / sin(x)
+        sin(x + pi) != 0
+        cot(x + pi) = cot(x)
+```
+
+The preview intentionally does not assign every familiar special-angle value;
+for example, `sin(pi / 6) = 1 / 2` still needs an explicit source fact.
+Complex trigonometry, inverse trigonometric functions, analytic definitions,
+and continuity or monotonicity theorems are also outside this interface.
+
+The names `sin`, `cos`, `tan`, and `cot` are hard-reserved. Their bare names
+are not first-class function values; higher-order code can use
+`fn(x R) R {sin(x)}`. LaTeX emits standard trigonometric notation. The
+evaluator and current Python and Lean extractors report native trigonometric
+expressions as unsupported rather than choosing a numerical or library
+semantics silently.
 
 ### Complex scalars (beta preview)
 
@@ -2207,6 +2284,7 @@ change:
 
 - native complex scalars `C`, `i`, `re`, `img`, and `C_abs`;
 - native positive real constants `e` and `pi`;
+- native symbolic real trigonometry `sin`, `cos`, `tan`, and `cot`;
 - compact strict-sign suffixes such as `N+` and `R-`;
 - `struct`, struct view objects, and default-view field access;
 - proper subset and proper superset relations;

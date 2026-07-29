@@ -80,6 +80,18 @@ impl Runtime {
             }
             Obj::MatrixPow(inner) => self.inst_matrix_pow(inner, param_to_arg_map, param_obj_type),
             Obj::Abs(inner) => self.inst_abs(inner, param_to_arg_map, param_obj_type),
+            Obj::Sin(inner) => {
+                Ok(Sin::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
+            }
+            Obj::Cos(inner) => {
+                Ok(Cos::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
+            }
+            Obj::Tan(inner) => {
+                Ok(Tan::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
+            }
+            Obj::Cot(inner) => {
+                Ok(Cot::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
+            }
             Obj::RealPart(inner) => {
                 Ok(
                     RealPart::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?)

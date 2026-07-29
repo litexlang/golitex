@@ -238,6 +238,7 @@ Unsupported in v1:
 - non-`R` function parameters or returns
 - native complex objects and genuinely complex-valued expressions, including
   `C`, `i`, `re`, `img`, and `C_abs`
+- native trigonometric expressions `sin(x)`, `cos(x)`, `tan(x)`, and `cot(x)`
 - sets, membership facts, abstract propositions, tuples, structures, matrices,
   templates, anonymous functions, sums, products, `sqrt`, `log`, `max`, `min`,
   and calls to functions that were not extracted earlier
@@ -248,6 +249,11 @@ candidate is genuinely complex-valued, the extractor reports it as unsupported;
 it does not emit Python `float` code or silently reinterpret the expression
 over `R`. The Litex evaluator likewise has no complex runtime value in this
 release.
+
+Native trigonometry is symbolic at this boundary as well. The extractor does
+not silently choose `math.sin`, a floating-point angle convention, or values
+at undefined tangent and cotangent inputs; it reports the expression as
+unsupported.
 
 ## Correctness Boundary
 

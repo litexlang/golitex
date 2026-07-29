@@ -624,6 +624,20 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Abs::new(arg).into());
         }
+        if tok == SIN || tok == COS || tok == TAN || tok == COT {
+            let operator = tok.to_string();
+            tb.skip()?;
+            tb.skip_token(LEFT_BRACE)?;
+            let arg = self.parse_obj(tb)?;
+            tb.skip_token(RIGHT_BRACE)?;
+            return Ok(match operator.as_str() {
+                SIN => Sin::new(arg).into(),
+                COS => Cos::new(arg).into(),
+                TAN => Tan::new(arg).into(),
+                COT => Cot::new(arg).into(),
+                _ => unreachable!(),
+            });
+        }
         if tok == SQRT {
             tb.skip()?;
             tb.skip_token(LEFT_BRACE)?;

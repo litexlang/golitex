@@ -184,6 +184,70 @@ impl Runtime {
         Ok(())
     }
 
+    pub(in crate::verify) fn verify_sin_well_defined(
+        &mut self,
+        sin: &Sin,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&sin.arg, verify_state)?;
+        self.require_obj_in_r(&sin.arg, verify_state)
+    }
+
+    pub(in crate::verify) fn verify_cos_well_defined(
+        &mut self,
+        cos: &Cos,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&cos.arg, verify_state)?;
+        self.require_obj_in_r(&cos.arg, verify_state)
+    }
+
+    pub(in crate::verify) fn verify_tan_well_defined(
+        &mut self,
+        tan: &Tan,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&tan.arg, verify_state)?;
+        self.require_obj_in_r(&tan.arg, verify_state)?;
+        let denominator: Obj = Cos::new((*tan.arg).clone()).into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let fact: AtomicFact =
+            NotEqualFact::new(denominator.clone(), zero, default_line_file()).into();
+        let result = self.verify_atomic_fact(&fact, verify_state)?;
+        if result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "tan argument `{}` requires {} != 0",
+                    tan.arg, denominator
+                )),
+            )));
+        }
+        Ok(())
+    }
+
+    pub(in crate::verify) fn verify_cot_well_defined(
+        &mut self,
+        cot: &Cot,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&cot.arg, verify_state)?;
+        self.require_obj_in_r(&cot.arg, verify_state)?;
+        let denominator: Obj = Sin::new((*cot.arg).clone()).into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let fact: AtomicFact =
+            NotEqualFact::new(denominator.clone(), zero, default_line_file()).into();
+        let result = self.verify_atomic_fact(&fact, verify_state)?;
+        if result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "cot argument `{}` requires {} != 0",
+                    cot.arg, denominator
+                )),
+            )));
+        }
+        Ok(())
+    }
+
     pub(in crate::verify) fn verify_real_part_well_defined(
         &mut self,
         real_part: &RealPart,

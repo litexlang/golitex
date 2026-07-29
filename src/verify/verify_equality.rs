@@ -605,6 +605,34 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::Sin(left), Obj::Sin(right)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left.arg,
+                    &right.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Cos(left), Obj::Cos(right)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left.arg,
+                    &right.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Tan(left), Obj::Tan(right)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left.arg,
+                    &right.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Cot(left), Obj::Cot(right)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left.arg,
+                    &right.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Sqrt(left_sqrt), Obj::Sqrt(right_sqrt)) => self
                 .verify_unary_objs_are_equal_when_their_only_args_are_equal(
                     &left_sqrt.arg,

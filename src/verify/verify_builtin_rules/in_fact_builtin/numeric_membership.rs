@@ -1094,7 +1094,14 @@ impl Runtime {
                 is_real(self, div.left.as_ref())? && is_real(self, div.right.as_ref())?
             }
             Obj::Pow(pow) => is_real(self, pow.base.as_ref())?,
-            Obj::Mod(_) | Obj::Abs(_) | Obj::Sqrt(_) | Obj::Log(_) => true,
+            Obj::Mod(_)
+            | Obj::Abs(_)
+            | Obj::Sin(_)
+            | Obj::Cos(_)
+            | Obj::Tan(_)
+            | Obj::Cot(_)
+            | Obj::Sqrt(_)
+            | Obj::Log(_) => true,
             _ => false,
         };
         if !verified {

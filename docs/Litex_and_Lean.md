@@ -1118,6 +1118,11 @@ genuinely complex-valued expressions. It reports them as unsupported instead
 of emitting an expression over `ℝ`; complex extraction and its proof replay
 contract remain future work.
 
+The same boundary applies to native `sin`, `cos`, `tan`, and `cot`. Litex can
+verify their current symbolic real interface, but the bridge does not yet map
+it to Mathlib's analytic trigonometric definitions. It reports native
+trigonometric expressions as unsupported.
+
 ### Closed Fact
 
 Litex:

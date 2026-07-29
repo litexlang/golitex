@@ -389,6 +389,21 @@ Litex can formalize a particular construction when that construction is the
 mathematical subject. Its default builtin interface simply does not force all
 later users to inherit one privileged construction history.
 
+## Are `sin`, `cos`, `tan`, and `cot` numerical functions?
+
+They are native symbolic real objects in the 0.9.110 beta preview. Arguments
+are real angles in radians. The verifier knows a small central interface and
+derives parity, difference and double-angle formulas, selected `pi` values,
+periodicity, cofunction formulas, and range bounds through one canonical
+normalizer.
+
+`sin` and `cos` are total on `R`. A use of `tan(x)` requires
+`cos(x) != 0`, while `cot(x)` requires `sin(x) != 0`; an undefined expression
+fails well-definedness before equality checking. The preview remains symbolic:
+`eval`, Python extraction, and Lean extraction reject native trigonometric
+expressions explicitly. It also does not yet include inverse or complex
+trigonometry, analytic definitions, or every common special-angle value.
+
 ## Does the native `C` scalar system turn every number into a complex value?
 
 No. In the 0.9.110 beta preview, `C` is the largest default scalar carrier and

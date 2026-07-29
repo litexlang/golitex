@@ -82,6 +82,7 @@ mod kernel_soundness;
 mod matrix_semantics;
 mod missing_numeric_builtins;
 mod native_real_constants;
+mod native_trigonometry;
 mod numeric_and_set_rules;
 mod output_contracts;
 mod proof_control_and_choice;

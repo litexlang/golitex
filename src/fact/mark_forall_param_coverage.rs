@@ -165,6 +165,18 @@ fn mark_forall_param_coverage_in_obj(
         Obj::Abs(unary) => {
             mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
         }
+        Obj::Sin(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Cos(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Tan(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Cot(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
         Obj::RealPart(unary) => {
             mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
         }

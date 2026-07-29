@@ -644,6 +644,30 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::Sin(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Cos(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Tan(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Cot(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
         Obj::RealPart(x) => collect_cited_param_indices_from_obj(
             &x.arg,
             previous_param_indices,

@@ -154,6 +154,30 @@ impl Abs {
     }
 }
 
+impl Sin {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\sin\left({}\right)", self.arg.to_latex_string())
+    }
+}
+
+impl Cos {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\cos\left({}\right)", self.arg.to_latex_string())
+    }
+}
+
+impl Tan {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\tan\left({}\right)", self.arg.to_latex_string())
+    }
+}
+
+impl Cot {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\cot\left({}\right)", self.arg.to_latex_string())
+    }
+}
+
 impl Sqrt {
     pub fn to_latex_string(&self) -> String {
         format!(r"\sqrt{{{}}}", self.arg.to_latex_string())
@@ -2055,6 +2079,10 @@ impl Obj {
             Obj::Mod(x) => x.to_latex_string(),
             Obj::Pow(x) => x.to_latex_string(),
             Obj::Abs(x) => x.to_latex_string(),
+            Obj::Sin(x) => x.to_latex_string(),
+            Obj::Cos(x) => x.to_latex_string(),
+            Obj::Tan(x) => x.to_latex_string(),
+            Obj::Cot(x) => x.to_latex_string(),
             Obj::RealPart(x) => x.to_latex_string(),
             Obj::ImaginaryPart(x) => x.to_latex_string(),
             Obj::ComplexAbs(x) => x.to_latex_string(),

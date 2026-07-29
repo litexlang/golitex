@@ -58,6 +58,10 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 || obj_expr_mentions_bare_id(m.exponent.as_ref(), id)
         }
         Obj::Abs(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Sin(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Cos(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Tan(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Cot(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::RealPart(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::ImaginaryPart(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::ComplexAbs(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
