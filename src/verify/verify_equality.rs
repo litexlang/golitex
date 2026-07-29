@@ -28,13 +28,16 @@ impl Runtime {
             return Ok(done);
         }
 
-        let mut result =
-            self.verify_equality_by_builtin_rules(left, right, line_file.clone(), verify_state)?;
+        // Reuse an already established equality class before trying structural
+        // or algebraic builtin rules. Example: after `a = b` and `b = c`,
+        // checking `a = c` should be a direct known-equality lookup.
+        let mut result = self.verify_objs_are_equal_known_only(left, right, line_file.clone());
         if result.is_true() {
             return Ok(result);
         }
 
-        result = self.verify_objs_are_equal_known_only(left, right, line_file.clone());
+        result =
+            self.verify_equality_by_builtin_rules(left, right, line_file.clone(), verify_state)?;
         if result.is_true() {
             return Ok(result);
         }

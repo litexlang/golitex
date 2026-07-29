@@ -248,6 +248,36 @@ by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
 }
 
 #[test]
+fn direct_known_equality_precedes_builtin_fallback() {
+    let source_code = r#"
+have a R
+have b R
+have c R
+trust a = b
+trust b = c
+a = c
+1 + 1 = 2
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("direct_known_equality_precedes_builtin_fallback");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "known equality should short-circuit while new arithmetic still reaches builtin rules:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"rule\": \"same known equality class\""),
+        "the transitive equality must use the direct known-equality path:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn positive_real_power_closure_enables_log_inverse() {
     let source_code = r#"
 forall a R_pos, x R:
