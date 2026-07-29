@@ -133,6 +133,18 @@ impl Runtime {
         }
     }
 
+    pub(crate) fn exec_preverified_stmt_affect_environment_only(
+        &mut self,
+        stmt: &Stmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        // Reuse the no-verification environment path for a statement whose
+        // generic form was already checked before capture-avoiding substitution.
+        let previous_execution_mode = self.replace_current_execution_mode(ExecutionMode::Trusted);
+        let result = self.exec_stmt_affect_environment_only(stmt);
+        self.replace_current_execution_mode(previous_execution_mode);
+        result
+    }
+
     fn exec_stmt_affect_environment_only(
         &mut self,
         stmt: &Stmt,

@@ -675,26 +675,94 @@ prop is_topologically_continuous(X, Y set, T_X power_set(power_set(X)), T_Y powe
         $is_topologically_continuous_at(X, Y, T_X, T_Y, f, x)
 
 thm continuous_iff_open_preimages_forward:
-    ? forall X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y:
+    ? forall X, Y set, T_X \Topology<X>, T_Y \Topology<Y>, f fn(x X) Y:
         $is_topologically_continuous(X, Y, T_X, T_Y, f)
         =>:
             $has_open_preimages(X, Y, T_X, T_Y, f)
-    # Proof debt: derive open preimages from pointwise neighborhood continuity.
-    trust $has_open_preimages(X, Y, T_X, T_Y, f)
+    $is_topology_on(X, T_X)
+    claim:
+        ? forall V T_Y:
+            {q X: f(q) $in V} $in T_X
+        have P power_set(X) = {q X: f(q) $in V}
+        have family power_set(power_set(X)) = {U T_X: U $subset P}
+        claim:
+            ? family $subset T_X
+            forall U family:
+                U $in T_X
+        by thm topology_closed_under_arbitrary_unions(X, T_X, family)
+        claim:
+            ? \family_union<X>(family) $subset P
+            claim:
+                ? forall z \family_union<X>(family):
+                    z $in P
+                $_belongs_family_union(X, family, z)
+                obtain U from exist U family st {z $in U}
+                U $subset P
+                z $in P
+        claim:
+            ? P $subset \family_union<X>(family)
+            claim:
+                ? forall z P:
+                    z $in \family_union<X>(family)
+                f(z) $in V
+                claim:
+                    ? V $in \topological_neighborhood_filter_sets<Y>(T_Y, f(z))
+                    witness exist W T_Y st {f(z) $in W, W $subset V} from V:
+                        V $subset V
+                    by def $_is_topological_neighborhood(Y, T_Y, f(z), V)
+                $is_topologically_continuous_at(X, Y, T_X, T_Y, f, z)
+                $tends_to_by_preimage(X, Y, f, \topological_neighborhood_filter_sets<X>(T_X, z), \topological_neighborhood_filter_sets<Y>(T_Y, f(z)))
+                by thm tends_to_by_preimage_member(X, Y, f, \topological_neighborhood_filter_sets<X>(T_X, z), \topological_neighborhood_filter_sets<Y>(T_Y, f(z)), V)
+                {q X: f(q) $in V} $in \topological_neighborhood_filter_sets<X>(T_X, z)
+                P $in \topological_neighborhood_filter_sets<X>(T_X, z)
+                $_is_topological_neighborhood(X, T_X, z, P)
+                obtain U from exist U T_X st {z $in U, U $subset P}
+                U $in {W T_X: W $subset P}
+                U $in family
+                witness exist W family st {z $in W} from U
+                by def $_belongs_family_union(X, family, z)
+                z $in \family_union<X>(family)
+        by extension \family_union<X>(family) = P
+        P $in T_X
+        {q X: f(q) $in V} $in T_X
+    by def $has_open_preimages(X, Y, T_X, T_Y, f)
 
 thm continuous_iff_open_preimages_reverse:
-    ? forall X, Y set, T_X power_set(power_set(X)), T_Y power_set(power_set(Y)), f fn(x X) Y:
+    ? forall X, Y set, T_X \Topology<X>, T_Y \Topology<Y>, f fn(x X) Y:
         $has_open_preimages(X, Y, T_X, T_Y, f)
         =>:
             $is_topologically_continuous(X, Y, T_X, T_Y, f)
-    # Proof debt: assemble source neighborhoods from pulled-back target opens.
-    trust $is_topologically_continuous(X, Y, T_X, T_Y, f)
+    claim:
+        ? forall x X:
+            $is_topologically_continuous_at(X, Y, T_X, T_Y, f, x)
+        claim:
+            ? forall S power_set(Y):
+                S $in \topological_neighborhood_filter_sets<Y>(T_Y, f(x))
+                =>:
+                    {q X: f(q) $in S} $in \topological_neighborhood_filter_sets<X>(T_X, x)
+            $_is_topological_neighborhood(Y, T_Y, f(x), S)
+            obtain V from exist V T_Y st {f(x) $in V, V $subset S}
+            have U T_X = {q X: f(q) $in V}
+            claim:
+                ? U $subset {q X: f(q) $in S}
+                forall w U:
+                    f(w) $in V
+                    f(w) $in S
+                    w $in {q X: f(q) $in S}
+            witness exist U0 T_X st {x $in U0, U0 $subset {q X: f(q) $in S}} from U:
+                f(x) $in V
+                x $in {q X: f(q) $in V}
+                x $in U
+            by def $_is_topological_neighborhood(X, T_X, x, {q X: f(q) $in S})
+        by def $tends_to_by_preimage(X, Y, f, \topological_neighborhood_filter_sets<X>(T_X, x), \topological_neighborhood_filter_sets<Y>(T_Y, f(x)))
+        by def $is_topologically_continuous_at(X, Y, T_X, T_Y, f, x)
+    by def $is_topologically_continuous(X, Y, T_X, T_Y, f)
 
 # Supplementary ordinary continuity-composition lemma. The retained source
 # item changes the middle topology to a coinduced topology and remains in
 # todo.lit; named intermediate preimages make this fixed-topology proof explicit.
 thm topologically_continuous_composition:
-    ? forall A, B, CarrierC set, T_A power_set(power_set(A)), T_B power_set(power_set(B)), T_C power_set(power_set(CarrierC)), f fn(x A) B, g fn(y B) CarrierC:
+    ? forall A, B, CarrierC set, T_A \Topology<A>, T_B \Topology<B>, T_C \Topology<CarrierC>, f fn(x A) B, g fn(y B) CarrierC:
         $is_topologically_continuous(A, B, T_A, T_B, f)
         $is_topologically_continuous(B, CarrierC, T_B, T_C, g)
         =>:

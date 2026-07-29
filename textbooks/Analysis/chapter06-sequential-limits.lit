@@ -3709,8 +3709,9 @@ thm bolzano_weierstrass_convergent_subsequence:
         $is_bounded_sequence(a)
         =>:
             exist b seq(R) st {$has_subsequence(a, b), $is_convergent_sequence(b)}
-    # Source handling: Proposition 6.4.12 supplies a finite limsup for every bounded sequence.
-    # proof_debt: registering that existence theorem currently causes a verifier stack overflow.
+    # kernel_problem: registering the source proof through the convergent
+    # tail-supremum sequence still overflows the verifier stack, even after the
+    # two threshold directions are split and the process stack is raised.
     trust exist Lplus R st {$has_finite_limit_superior(a, Lplus)}
     obtain Lplus from exist Lplus R st {$has_finite_limit_superior(a, Lplus)}
     by thm finite_limsup_is_limit_point(a, Lplus)
@@ -3757,11 +3758,13 @@ thm positive_base_power_preserves_sequence_limit:
         $has_limit(a, L)
         =>:
             $has_limit(fn(n N_pos) R {x^(a(n))}, x^L)
-    # Source handling: the proof controls power differences by the Cauchy
-    # estimate for the exponents and the nth-root limit, with separate cases
-    # for bases above, below, and equal to one.
-    # proof_debt: The real-exponent continuity estimate has not yet been
-    # expanded into checkable Litex inequalities.
+    # Lemma 6.7.1 controls power differences by the Cauchy estimate for the
+    # exponents and the nth-root limit, with separate cases for bases above,
+    # below, and equal to one.
+    #
+    # proof_debt: direct inference fails at the `has_limit` conclusion.  The
+    # source supplies a full proof, so this non-source-deferred trust remains a
+    # final-sprint blocker until those estimates are formalized.
     trust $has_limit(fn(n N_pos) R {x^(a(n))}, x^L)
 
 thm rational_power_approx_seq_has_limit:

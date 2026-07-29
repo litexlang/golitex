@@ -64,6 +64,119 @@ template id_on_set<s set>:
 }
 
 #[test]
+fn template_body_is_still_checked_when_declared() {
+    let source_code = r#"
+template<S set>:
+    have broken S = 1
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("template_body_is_still_checked_when_declared");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "an invalid generic template body must fail at declaration time:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn template_application_still_checks_its_header() {
+    let cases = [
+        ("wrong_arity", r#"\guarded<R> = R"#, "expects"),
+        (
+            "wrong_parameter_type",
+            r#"\guarded<R, 0> = R"#,
+            "parameter types",
+        ),
+        (
+            "unsatisfied_domain_fact",
+            r#"\guarded<R, 1> = R"#,
+            "domain fact",
+        ),
+    ];
+
+    for (case_name, application, expected_output) in cases {
+        let source_code = format!(
+            r#"
+template<S set, n N_pos: 2 <= n>:
+    have guarded set = S
+
+{}
+"#,
+            application
+        );
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(case_name);
+        let (stmt_results, runtime_error) = run_source_code(&source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "invalid template application `{}` should fail:\n{}",
+            case_name, run_output
+        );
+        assert!(
+            run_output.contains(expected_output),
+            "invalid template application `{}` should mention `{}`:\n{}",
+            case_name,
+            expected_output,
+            run_output
+        );
+    }
+
+    let source_code = r#"
+template<S set, n N_pos: 2 <= n>:
+    have guarded set = S
+
+\guarded<R, 2> = R
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("valid_template_header");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "a valid template application should still instantiate:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn preverified_template_set_builder_alias_still_unfolds() {
+    let source_code = r#"
+abstract_prop marked(x)
+
+template<S set>:
+    have Filtered power_set(S) = {x S: $marked(x)}
+
+have x R
+trust x $in \Filtered<R>
+$marked(x)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("preverified_template_set_builder_alias_unfolds");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "a preverified template instance must still register its set-builder alias:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn template_can_use_struct_with_function_valued_fields() {
     run_with_large_stack(
         "template_can_use_struct_with_function_valued_fields",

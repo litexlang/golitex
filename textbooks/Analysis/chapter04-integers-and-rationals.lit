@@ -1053,14 +1053,9 @@ thm rational_closeness_scaled_by_nonzero_factor:
             $is_close_in_Q(epsilon * abs(z), x * z, y * z)
     dist_Q(x * z, y * z) = abs(x * z - y * z) = abs((x - y) * z) = abs(x - y) * abs(z) = dist_Q(x, y) * abs(z) <= epsilon * abs(z)
 
-# Source handling: Proposition 4.3.7 rewrites `xz-yw` as
+# Proposition 4.3.7 rewrites `xz-yw` as
 # `(x-y)z + x(z-w) - (x-y)(z-w)` and applies the triangle inequality to the
 # three error terms.
-#
-# proof_debt: The complete estimate verifies in isolation, but the current
-# chapter context spends unbounded search time on this proof shape.  Keep only
-# the final product-closeness interface unchecked until the calculation is
-# refactored into smaller reusable estimates.
 
 thm rational_closeness_of_products:
     ? forall epsilon, delta Q_pos, x, y, z, w Q:
@@ -1068,7 +1063,25 @@ thm rational_closeness_of_products:
         $is_close_in_Q(delta, z, w)
         =>:
             $is_close_in_Q(epsilon * abs(z) + delta * abs(x) + epsilon * delta, x * z, y * w)
-    trust $is_close_in_Q(epsilon * abs(z) + delta * abs(x) + epsilon * delta, x * z, y * w)
+    dist_Q(x, y) <= epsilon
+    dist_Q(z, w) <= delta
+    dist_Q(z, w) = abs(z - w) >= 0
+    abs((x - y) * z) = abs(x - y) * abs(z)
+    abs(x - y) = dist_Q(x, y)
+    abs((x - y) * z) = dist_Q(x, y) * abs(z) <= epsilon * abs(z)
+    abs(x * (z - w)) = abs(x) * abs(z - w)
+    abs(z - w) = dist_Q(z, w)
+    abs(x * (z - w)) = abs(x) * dist_Q(z, w) <= abs(x) * delta = delta * abs(x)
+    dist_Q(x, y) * dist_Q(z, w) <= epsilon * dist_Q(z, w) <= epsilon * delta
+    abs((x - y) * (z - w)) = abs(x - y) * abs(z - w)
+    abs((x - y) * (z - w)) = dist_Q(x, y) * dist_Q(z, w) <= epsilon * delta
+    x * z - y * w = (x - y) * z + x * (z - w) - (x - y) * (z - w)
+    abs((x - y) * z + x * (z - w)) <= abs((x - y) * z) + abs(x * (z - w))
+    abs((x - y) * z + x * (z - w) - (x - y) * (z - w)) <= abs((x - y) * z + x * (z - w)) + abs((x - y) * (z - w))
+    abs((x - y) * z + x * (z - w)) + abs((x - y) * (z - w)) <= abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w))
+    abs((x - y) * z + x * (z - w) - (x - y) * (z - w)) <= abs((x - y) * z + x * (z - w)) + abs((x - y) * (z - w)) <= abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w))
+    abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w)) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
+    dist_Q(x * z, y * w) = abs(x * z - y * w) = abs((x - y) * z + x * (z - w) - (x - y) * (z - w)) <= abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w)) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
 
 """
 Remark 4.3.8. It is often useful to think of the notion of "epsilon-close" as an approximate substitute for that of equality in analysis.
@@ -1219,17 +1232,29 @@ forall x, y Q_pos, n Z:
 forall x Q_nz, n Z:
     abs(x^n) = abs(x)^n
 
-# Source handling: Proposition 4.4.1 uses the standard fact that every rational
-# admits an integer numerator and a positive natural denominator.
-#
-# proof_debt: The direct construction replaces a nonzero denominator by its
-# absolute value and negates the numerator when needed.  That proof verifies in
-# a focused context but remains too search-heavy in the ordered chapter.
+# Proposition 4.4.1 uses the standard fact that every rational admits an
+# integer numerator and a positive natural denominator.  Starting from the
+# signed nonzero denominator supplied by Definition 4.2.1, change both signs
+# when the denominator is negative.
 
 thm rational_has_positive_denominator_representation:
     ? forall x Q:
         exist a0 Z, b0 N_pos st {x = a0 / b0}
-    trust exist a0 Z, b0 N_pos st {x = a0 / b0}
+    obtain a, b from exist a Z, b Z_nz st {x = a / b}
+    b > 0 or b = 0 or b < 0
+    by cases:
+        ? exist a0 Z, b0 N_pos st {x = a0 / b0}
+        case b > 0:
+            b $in N_pos
+            witness exist a0 Z, b0 N_pos st {x = a0 / b0} from a,b
+        case b = 0:
+            impossible b != 0
+        case b < 0:
+            0 - b $in N_pos
+            -b = 0 - b
+            -b $in N_pos
+            a / b = (-a) / (-b)
+            witness exist a0 Z, b0 N_pos st {x = a0 / b0} from -a,-b
 
 """
 Proposition 4.4.1 (Interspersing of integers by rationals). Every rational x

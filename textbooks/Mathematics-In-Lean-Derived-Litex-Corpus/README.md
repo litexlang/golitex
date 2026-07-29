@@ -29,7 +29,8 @@ routine consequences. It does not, by itself, establish a comparison with
 Lean or a Lean-kernel certificate.
 
 Chapter 2's reusable algebra core is now carried by checked
-`AdditiveCommutativeGroup<s>`, `Group<s>`, and flat `Ring<s>` values. A ring
+`AdditiveCommutativeGroup<s>`, `Group<s>`, flat `Ring<s>`, and
+`Lattice<s>` values. A ring
 exposes `add`, `zero`, `neg`, `mul`, and `one` directly, while its structure
 body composes the reusable additive-group law predicate. Chapter 8 reuses that
 canonical `Ring`, keeps its stronger two-sided group experiment under the
@@ -53,29 +54,24 @@ operation-plus-law signatures are explicitly named `*_from_laws`.
   better, but which proof-interface choices are visible in a particular
   mathematical example.
 
-The corpus deliberately omits exercises, repeated tactic demonstrations, and
-Lean elaboration examples that do not introduce a new retained mathematical
-interface. Consequently it should not be used to learn Lean, to measure
-Mathlib coverage, or to compare source-line counts between the two systems.
+The current completion target keeps source exercises and admitted declarations
+in scope. Repeated tactic demonstrations may share one checked mathematical
+counterpart, but a source `sorry` is never treated as an exclusion.
+Consequently this corpus should not be used to learn Lean or to compare raw
+source-line counts between the two systems.
 
 ## Evidence and limits
 
-The declaration-level source registry was regenerated on 2026-07-26 from the
-pinned non-solution Lean files. It replaces the older grouped workflow counts
-as the source-coverage surface.
+All 14 configured public `.lit` files passed individual release `-f` gates on
+2026-07-29. Every exported chapter is free of user `trust`, `know`, `axiom`,
+`abstract_prop`, and `sketch` directives.
 
-| Status | Count | Meaning |
-| --- | ---: | --- |
-| Source declarations | 1096 | Individually enumerated non-solution Lean declarations. |
-| Checkable correspondences | 143 | A matching checked Litex route is recorded. |
-| Translated/excluded rows | 4 | Standalone exercises excluded by the corpus policy. |
-| Blocked or unaligned rows | 949 | No declaration-level checked correspondence is currently established. |
-| Executable trust directives | 2 | The two C11 continuity-equivalence directions contain narrow proof debt. |
-
-The former 291/202/89 table remains historical workflow bookkeeping and is not
-reported as source coverage. Current counts are generated in
-`scripts/mathematics_in_litex/source_item_coverage.md` from
-`source_registry.jsonl`.
+Completion is tracked by original book section and named mathematical family.
+The former declaration registry was retired because its one-to-one matching
+treated collapsed examples and existing but unregistered Litex interfaces as
+untranslated. It must not be used as a mathematical completion percentage.
+The current section inventory and work order are maintained in
+[`scripts/mathematics_in_litex/PLAN.md`](../../scripts/mathematics_in_litex/PLAN.md).
 
 At the Litex source-module level, this project has no configured `std` import
 and no cite module. The small shared number-theory layer is ordinary checked
@@ -86,14 +82,9 @@ module dependencies, not a claim that the corpus needs no verifier support.
 Arithmetic normalization, finite-set operations and extrema, and the narrow
 Euclidean-quotient existence rule remain kernel builtin boundaries.
 
-The declaration-level counts and blocker labels are in
-[`scripts/mathematics_in_litex/source_item_coverage.md`](../../scripts/mathematics_in_litex/source_item_coverage.md)
-and [`blocker_taxonomy.md`](../../scripts/mathematics_in_litex/blocker_taxonomy.md).
-
-Strict project success would establish that the configured no-`std` graph
-loads and verifies every exported chapter in order. The current draft does not
-pass that gate because strict mode correctly rejects its two localized Chapter
-11 continuity-equivalence `trust` statements.
+Strict project success establishes that the configured no-`std` graph loads
+and verifies every exported chapter in order. The continuity equivalence now
+uses refined topology carriers and checked neighborhood/open-preimage proofs.
 
 The same pressure test found a verifier issue in automatic universal-fact
 matching across unrelated free set parameters. It was fixed on 2026-07-22:
@@ -132,12 +123,8 @@ The full project acceptance gate is:
 RUST_MIN_STACK=8388608 target/release/litex -compact -strict -r scripts/textbooks_drafts/Mathematics-In-Lean-Derived-Litex-Corpus
 ~~~
 
-At the current checkpoint this command fails at
-`chapter11-topology.lit:676`: strict mode rejects the first user `trust` in
-`continuous_iff_open_preimages_forward`. A second localized `trust` remains in
-the reverse direction at line 684. The ordinary release module gate and the
-registered Chapter 13 `-f` prefix checkpoint succeed, but the draft must not be
-called strict-checkable until both debts are removed.
+This release gate passed on 2026-07-28 without user trust directives. Run it
+again after any chapter edit before publishing the draft.
 
 The project exports only `chap1` through `chap13` in source order. It has no
 `[import std]` section and no cite export. Cross-chapter objects, functions,
@@ -201,11 +188,11 @@ this corpus is commit
 
 The upstream repository publishes its code under the
 [Apache License 2.0][mil-license], and the online book identifies its text as
-[CC BY 4.0][cc-by]. This corpus changes the selection, language, naming, proof
-organization, and implementation of the source material: it retains
-definitions and main results, omits exercises and repeated Lean presentations,
-and translates the retained mathematical content into independently
-maintained Litex files. The names “Mathematics in Lean”, “Lean”, and “Mathlib”
+[CC BY 4.0][cc-by]. This corpus changes the language, naming, proof
+organization, and implementation of the source material. It retains exercises
+and admitted declarations as proof targets, while repeated Lean presentations
+may share one mathematical implementation. The names “Mathematics in Lean”,
+“Lean”, and “Mathlib”
 are used only to identify provenance and technical context.
 
 ## Feedback is welcome
