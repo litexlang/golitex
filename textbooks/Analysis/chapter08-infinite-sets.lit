@@ -27,9 +27,31 @@ thm countably_infinite_is_at_most_countable:
         $is_countably_infinite(X)
         =>:
             $is_at_most_countable(X)
-    # trust: the current kernel no longer unfolds bijectivity into the
-    # injectivity/surjectivity facts needed for the inverse encoding.
-    trust $is_at_most_countable(X)
+    $chap3::has_equal_cardinality(N, X)
+    obtain f from exist f fn(n N) X st {$chap3::is_bijective_fn(N, X, f)}
+    $chap3::is_injective_fn(N, X, f)
+    $chap3::is_surjective_fn(N, X, f)
+    have fn inverse_f by exist!:
+        ? forall x X:
+            exist! n N st {f(n) = x}
+        obtain n from exist n N st {x = f(n)}
+        witness exist k N st {f(k) = x} from n:
+            x = f(n)
+        forall n1, n2 N:
+            f(n1) = x
+            f(n2) = x
+            =>:
+                f(n1) = f(n2)
+                n1 = n2
+    claim:
+        ? $chap3::is_injective_fn(X, N, inverse_f)
+        forall x1, x2 X:
+            inverse_f(x1) = inverse_f(x2)
+            =>:
+                f(inverse_f(x1)) = x1
+                f(inverse_f(x2)) = x2
+                x1 = f(inverse_f(x1)) = f(inverse_f(x2)) = x2
+    witness exist g fn(x X) N st {$chap3::is_injective_fn(X, N, g)} from inverse_f
 
 thm finite_cardinality_gives_at_most_countable:
     ? forall X set:
@@ -37,13 +59,23 @@ thm finite_cardinality_gives_at_most_countable:
         =>:
             $is_at_most_countable(X)
     obtain n from exist n N st {$chap3::has_cardinality(X, n)}
-    range(0, n) $subset N
-    trust exist f fn(x X) range(0, n) st {$chap3::is_bijective_fn(X, range(0, n), f)}
+    $chap3::has_equal_cardinality(X, range(0, n))
     obtain f from exist f fn(x X) range(0, n) st {$chap3::is_bijective_fn(X, range(0, n), f)}
+    $chap3::is_injective_fn(X, range(0, n), f)
+    range(0, n) $subset N
+    forall x X:
+        f(x) $in range(0, n)
+        f(x) $in N
     have fn encode_X(x X) N = f(x)
     claim:
         ? $chap3::is_injective_fn(X, N, encode_X)
-        trust $chap3::is_injective_fn(X, N, encode_X)
+        forall x1, x2 X:
+            encode_X(x1) = encode_X(x2)
+            =>:
+                encode_X(x1) = f(x1)
+                encode_X(x2) = f(x2)
+                f(x1) = f(x2)
+                x1 = x2
     witness exist g fn(x X) N st {$chap3::is_injective_fn(X, N, g)} from encode_X
 
 thm injection_into_at_most_countable_gives_at_most_countable:
@@ -52,9 +84,23 @@ thm injection_into_at_most_countable_gives_at_most_countable:
         $chap3::is_injective_fn(X, Y, phi)
         =>:
             $is_at_most_countable(X)
-    # trust: nested predicate and local composition unfolding are unavailable
-    # in the current project verifier.
-    trust $is_at_most_countable(X)
+    $embeds_into(Y, N)
+    obtain encode_Y from exist encode_Y fn(y Y) N st {$chap3::is_injective_fn(Y, N, encode_Y)}
+    forall x X:
+        phi(x) $in Y
+        encode_Y(phi(x)) $in N
+    have fn encode_X(x X) N = encode_Y(phi(x))
+    claim:
+        ? $chap3::is_injective_fn(X, N, encode_X)
+        forall x1, x2 X:
+            encode_X(x1) = encode_X(x2)
+            =>:
+                encode_X(x1) = encode_Y(phi(x1))
+                encode_X(x2) = encode_Y(phi(x2))
+                encode_Y(phi(x1)) = encode_Y(phi(x2))
+                phi(x1) = phi(x2)
+                x1 = x2
+    witness exist g fn(x X) N st {$chap3::is_injective_fn(X, N, g)} from encode_X
 
 """
 Remark 8.1.2. Countably infinite sets are also called denumerable sets.
@@ -72,13 +118,25 @@ prop is_even_natural_number(n N):
 have even_natural_numbers set = {m N: $is_even_natural_number(m)}
 even_natural_numbers = {m N: $is_even_natural_number(m)}
 
-have fn identity_on_N(x N) N = x
-
 claim:
     ? $is_countably_infinite(N)
-    # trust: project-module top-level claims currently fail to unfold the
-    # qualified identity function; the same theorem verifies in isolated mode.
-    trust $is_countably_infinite(N)
+    have fn id_N(x N) N = x
+    claim:
+        ? $chap3::is_injective_fn(N, N, id_N)
+        forall x1, x2 N:
+            id_N(x1) = id_N(x2)
+            =>:
+                x1 = id_N(x1) = id_N(x2) = x2
+    claim:
+        ? $chap3::is_surjective_fn(N, N, id_N)
+        claim:
+            ? forall y N:
+                exist x N st {y = id_N(x)}
+            witness exist x N st {y = id_N(x)} from y:
+                id_N(y) = y
+                y = id_N(y)
+    $chap3::is_bijective_fn(N, N, id_N)
+    witness exist f fn(x N) N st {$chap3::is_bijective_fn(N, N, f)} from id_N
 
 claim:
     ? $is_countably_infinite(N_pos)
@@ -281,56 +339,44 @@ thm positive_count_finite_set_has_cardinality:
         finite_set_size(s) >= 1
         =>:
             $chap3::has_cardinality(s, finite_set_size(s))
-    # trust: the current kernel no longer exposes bijection components from
-    # the Chapter 7 finite-set indexing predicate.
-    trust $chap3::has_cardinality(s, finite_set_size(s))
-"""
     by thm chap7::finite_set_has_bijective_index(s)
-    obtain idx from exist idx fn(i closed_range(1, finite_set_size(s))) s st {$chap7::is_bijection_from_index_range_to_finite_set(s, idx)}
+    obtain idx from exist idx fn(index closed_range(1, finite_set_size(s))) s st {$chap7::is_bijection_from_index_range_to_finite_set(s, idx)}
     have fn shift_up by exist!:
-        ? forall i range(0, finite_set_size(s)):
-            exist! j closed_range(1, finite_set_size(s)) st {j = i + 1}
-        i >= 0
-        i < finite_set_size(s)
-        i + 1 >= 1
-        i + 1 <= finite_set_size(s)
-        i + 1 $in closed_range(1, finite_set_size(s))
-        witness exist j closed_range(1, finite_set_size(s)) st {j = i + 1} from i + 1:
-            i + 1 = i + 1
+        ? forall t range(0, finite_set_size(s)):
+            exist! j closed_range(1, finite_set_size(s)) st {j = t + 1}
+        t >= 0
+        t < finite_set_size(s)
+        t + 1 >= 1
+        t + 1 <= finite_set_size(s)
+        t + 1 $in closed_range(1, finite_set_size(s))
+        witness exist j closed_range(1, finite_set_size(s)) st {j = t + 1} from t + 1
         forall j1, j2 closed_range(1, finite_set_size(s)):
-            j1 = i + 1
-            j2 = i + 1
+            j1 = t + 1
+            j2 = t + 1
             =>:
                 j1 = j2
     have fn zero_index_of_s by exist!:
         ? forall x s:
-            exist! i range(0, finite_set_size(s)) st {idx(shift_up(i)) = x}
+            exist! t range(0, finite_set_size(s)) st {idx(shift_up(t)) = x}
         exist! j closed_range(1, finite_set_size(s)) st {idx(j) = x}
         obtain j from exist j closed_range(1, finite_set_size(s)) st {idx(j) = x}
         j >= 1
         j <= finite_set_size(s)
         j - 1 >= 0
-        j - 1 < j <= finite_set_size(s)
         j - 1 < finite_set_size(s)
         j - 1 $in range(0, finite_set_size(s))
-        witness exist i range(0, finite_set_size(s)) st {idx(shift_up(i)) = x} from j - 1:
-            shift_up(j - 1) = (j - 1) + 1
-            (j - 1) + 1 = j
-            idx(shift_up(j - 1)) = idx(j)
-            idx(j) = x
-            idx(shift_up(j - 1)) = x
-        forall i1, i2 range(0, finite_set_size(s)):
-            idx(shift_up(i1)) = x
-            idx(shift_up(i2)) = x
+        witness exist t range(0, finite_set_size(s)) st {idx(shift_up(t)) = x} from j - 1:
+            shift_up(j - 1) = (j - 1) + 1 = j
+            idx(shift_up(j - 1)) = idx(j) = x
+        forall t1, t2 range(0, finite_set_size(s)):
+            idx(shift_up(t1)) = x
+            idx(shift_up(t2)) = x
             =>:
-                shift_up(i1) = i1 + 1
-                shift_up(i2) = i2 + 1
-                shift_up(i1) = shift_up(i2)
-                i1 + 1 = i2 + 1
-                i1 = (i1 + 1) - 1
-                (i1 + 1) - 1 = (i2 + 1) - 1
-                (i2 + 1) - 1 = i2
-                i1 = i2
+                shift_up(t1) = t1 + 1
+                shift_up(t2) = t2 + 1
+                shift_up(t1) = shift_up(t2)
+                t1 + 1 = t2 + 1
+                t1 = (t1 + 1) - 1 = (t2 + 1) - 1 = t2
     claim:
         ? $chap3::is_injective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
         forall x1, x2 s:
@@ -344,26 +390,16 @@ thm positive_count_finite_set_has_cardinality:
     claim:
         ? $chap3::is_surjective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
         claim:
-            ? forall i range(0, finite_set_size(s)):
-                exist x s st {i = zero_index_of_s(x)}
-            have x s = idx(shift_up(i))
-            idx(shift_up(zero_index_of_s(x))) = x
-            idx(shift_up(i)) = x
-            idx(shift_up(zero_index_of_s(x))) = idx(shift_up(i))
-            exist! j closed_range(1, finite_set_size(s)) st {idx(j) = idx(shift_up(i))}
-            shift_up(zero_index_of_s(x)) = shift_up(i)
-            zero_index_of_s(x) = i
-            i = zero_index_of_s(x)
-            witness exist x0 s st {i = zero_index_of_s(x0)} from x:
-                i = zero_index_of_s(x)
-        $chap3::is_surjective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
+            ? forall t range(0, finite_set_size(s)):
+                exist x s st {t = zero_index_of_s(x)}
+            have x s = idx(shift_up(t))
+            idx(shift_up(zero_index_of_s(x))) = x = idx(shift_up(t))
+            exist! j closed_range(1, finite_set_size(s)) st {idx(j) = x}
+            shift_up(zero_index_of_s(x)) = shift_up(t)
+            zero_index_of_s(x) = t
+            witness exist x0 s st {t = zero_index_of_s(x0)} from x
     $chap3::is_bijective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
-    witness exist f fn(x s) range(0, finite_set_size(s)) st {$chap3::is_bijective_fn(s, range(0, finite_set_size(s)), f)} from zero_index_of_s:
-        $chap3::is_bijective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
-    $chap3::has_equal_cardinality(s, range(0, finite_set_size(s)))
-    $chap3::has_cardinality(s, finite_set_size(s))
-
-"""
+    witness exist f fn(x s) range(0, finite_set_size(s)) st {$chap3::is_bijective_fn(s, range(0, finite_set_size(s)), f)} from zero_index_of_s
 
 thm finite_set_has_cardinality_count:
     ? forall s finite_set:
@@ -386,9 +422,42 @@ thm finite_cardinality_gives_finite_set:
         $chap3::has_finite_cardinality(X)
         =>:
             $is_finite_set(X)
-    # trust: the inverse-bijection construction is blocked by nested
-    # cardinality predicate and local selector unfolding.
-    trust $is_finite_set(X)
+    obtain n from exist n N st {$chap3::has_cardinality(X, n)}
+    $chap3::has_equal_cardinality(X, range(0, n))
+    obtain f from exist f fn(x X) range(0, n) st {$chap3::is_bijective_fn(X, range(0, n), f)}
+    $chap3::is_injective_fn(X, range(0, n), f)
+    $chap3::is_surjective_fn(X, range(0, n), f)
+    have fn inverse_f by exist!:
+        ? forall y range(0, n):
+            exist! x X st {f(x) = y}
+        obtain x from exist x X st {y = f(x)}
+        witness exist z X st {f(z) = y} from x:
+            y = f(x)
+        forall x1, x2 X:
+            f(x1) = y
+            f(x2) = y
+            =>:
+                f(x1) = f(x2)
+                x1 = x2
+    claim:
+        ? X = fn_range(inverse_f)
+        by extension:
+            ? X = fn_range(inverse_f)
+            claim:
+                ? forall x X:
+                    x $in fn_range(inverse_f)
+                f(x) $in range(0, n)
+                inverse_f(f(x)) = x
+                inverse_f(f(x)) $in fn_range(inverse_f)
+                x $in fn_range(inverse_f)
+            claim:
+                ? forall x fn_range(inverse_f):
+                    x $in X
+                obtain y from exist y range(0, n) st {x = inverse_f(y)}
+                inverse_f(y) $in X
+                x $in X
+    $is_finite_set(fn_range(inverse_f))
+    $is_finite_set(X)
 
 thm infinite_natural_subset_is_nonempty:
     ? forall X power_set(N):
@@ -436,9 +505,34 @@ thm least_natural_element_above_exists_unique:
         $is_nonempty_set({x N: x $in X and a < x})
         =>:
             exist! y N st {$is_least_natural_element_above_in_subset(X, a, y)}
-    # trust: the checked minimum-selector route no longer unfolds through the
-    # project-qualified tail set after the concurrent kernel change.
-    trust exist! y N st {$is_least_natural_element_above_in_subset(X, a, y)}
+    have T power_set(N) = {x N: x $in X and a < x}
+    have b {x N: x $in X and a < x}
+    witness $is_nonempty_set(T) from b:
+        b $in {x N: x $in X and a < x}
+        b $in T
+    by thm natural_subset_has_unique_minimum(T)
+    obtain y from exist y N st {$is_minimum_of_natural_subset(T, y)}
+    witness exist z N st {$is_least_natural_element_above_in_subset(X, a, z)} from y:
+        y $in T
+        y $in X
+        a < y
+        forall m T:
+            y <= m
+        forall m X:
+            a < m
+            =>:
+                T = {x N: x $in X and a < x}
+                m $in {x N: x $in X and a < x}
+                m $in T
+                y <= m
+        $is_least_natural_element_above_in_subset(X, a, y)
+    forall y1, y2 N:
+        $is_least_natural_element_above_in_subset(X, a, y1)
+        $is_least_natural_element_above_in_subset(X, a, y2)
+        =>:
+            y1 <= y2
+            y2 <= y1
+            y1 = y2
 
 have fn first_in_infinite_N_subset_value by exist!:
     ? forall X power_set(N):
@@ -955,9 +1049,16 @@ thm subset_of_at_most_countable_is_at_most_countable:
         Y $subset X
         =>:
             $is_at_most_countable(Y)
-    # trust: restriction of the ambient injection is blocked by nested
-    # predicate/local function unfolding in the current kernel.
-    trust $is_at_most_countable(Y)
+    forall y Y:
+        y $in X
+    have fn include_Y(y Y) X = y
+    claim:
+        ? $chap3::is_injective_fn(Y, X, include_Y)
+        forall y1, y2 Y:
+            include_Y(y1) = include_Y(y2)
+            =>:
+                y1 = include_Y(y1) = include_Y(y2) = y2
+    by thm injection_into_at_most_countable_gives_at_most_countable(Y, X, include_Y)
 
 """
 Proposition 8.1.8. The image of a function from `N` is at most countable.
@@ -997,10 +1098,9 @@ thm countable_image_is_at_most_countable:
         $is_countably_infinite(X)
         =>:
             $is_at_most_countable(fn_range(f))
-    # trust: the countability predicate currently does not expose its
-    # bijection witness reliably in this imported project context.
-    trust exist enum fn(x N) X st {$chap3::is_bijective_fn(N, X, enum)}
+    $chap3::has_equal_cardinality(N, X)
     obtain enum from exist enum fn(x N) X st {$chap3::is_bijective_fn(N, X, enum)}
+    $chap3::is_surjective_fn(N, X, enum)
     have fn composed_image(n N) Y = f(enum(n))
     by thm natural_image_is_at_most_countable(Y, composed_image)
     claim:
@@ -1009,9 +1109,7 @@ thm countable_image_is_at_most_countable:
             ? forall y fn_range(f):
                 y $in fn_range(composed_image)
             have by preimage x from y $in fn_range(f)
-            # trust: surjectivity of the selected enumeration does not unfold
-            # to its preimage fact in the current imported project context.
-            trust exist n N st {x = enum(n)}
+            exist n N st {x = enum(n)}
             obtain n from exist n N st {x = enum(n)}
             composed_image(n) = f(enum(n)) = f(x) = y
             composed_image(n) $in fn_range(composed_image)
@@ -3900,7 +3998,9 @@ template<a seq(R)>:
 template<a seq(R)>:
     have negative_index_set set = {n N_pos: a(n) < 0}
 
-# The original textbook leaves Lemma 8.2.7 to Exercise 8.2.4.
+# VERBATIM SOURCE QUOTE — Lemma 8.2.7:
+# “Proof. See Exercise 8.2.4.”
+# The trust below records exactly that source-deferred proof.
 thm positive_and_negative_parts_of_conditional_series_diverge:
     ? forall a seq(R):
         $is_only_conditionally_convergent_series(a)
@@ -3930,8 +4030,10 @@ thm riemann_rearrangement_theorem:
         $is_only_conditionally_convergent_series(a)
         =>:
             exist phi fn(i_index N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $chap7::has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
-    # The original textbook gives only an optional sketch here and leaves the
-    # details to Exercise 8.2.5.
+    # VERBATIM SOURCE QUOTE — Theorem 8.2.8:
+    # “Proof. (Optional) We give a sketch of the proof, leaving the details to
+    # be filled in in Exercise 8.2.5.”
+    # The trust below records exactly those source-deferred details.
     trust exist phi fn(i_index N_pos) N_pos st {$is_permutation_of_positive_integers(phi), $chap7::has_series_sum(rearranged_series(a, phi), L), $is_only_conditionally_convergent_series(rearranged_series(a, phi))}
 
 
@@ -5893,8 +5995,11 @@ thm finite_total_order_is_well_ordered:
         $is_total_order_on_subset(X, le, X)
         =>:
             $is_well_ordered_subset(X, le, X)
-    # trust: finite-set induction currently fails to propagate the recursive
-    # least-element property through the nonempty successor case.
+    # VERBATIM SOURCE QUOTE — Exercise 8.5.8:
+    # “Show that every finite non-empty subset of a totally ordered set has a
+    # minimum and a maximum. (Hint: use induction.) Conclude in particular
+    # that every finite totally ordered set is well-ordered.”
+    # The trust below records exactly this source-assigned exercise.
     trust $is_well_ordered_subset(X, le, X)
 """
     # The original textbook leaves this finite-order fact to Exercise 8.5.8.
@@ -6357,10 +6462,10 @@ thm good_chain_comparison_forward_from_exercise_8_5_13:
         $is_good_well_ordered_chain(X, le, x0, set_C, W)
         =>:
             $second_good_chain_difference_strictly_bounds_first(X, le, Y, W)
-    # Tao assigns this comparison to Exercise 8.5.13. Its proof compares the
-    # common initial segments of the two good chains and uses the selected
-    # upper bound of their intersection. We keep that source exercise as an
-    # explicit temporary trust until its comparison argument is formalized.
+    # VERBATIM SOURCE QUOTE — Exercise 8.5.13:
+    # “Prove the claim in the proof of Lemma 8.5.14, namely that every element
+    # of Y′ \ Y is an upper bound for Y and vice versa.”
+    # The trust below is the forward half of exactly that source exercise.
     trust $second_good_chain_difference_strictly_bounds_first(X, le, Y, W)
 
 thm good_chain_comparison_reverse_from_exercise_8_5_13:
@@ -6371,9 +6476,10 @@ thm good_chain_comparison_reverse_from_exercise_8_5_13:
         $is_good_well_ordered_chain(X, le, x0, set_C, W)
         =>:
             $first_good_chain_difference_strictly_bounds_second(X, le, Y, W)
-    # This is the symmetric half of Tao's Exercise 8.5.13. It remains an
-    # explicit temporary trust with the same deferred good-chain comparison
-    # argument.
+    # VERBATIM SOURCE QUOTE — Exercise 8.5.13:
+    # “Prove the claim in the proof of Lemma 8.5.14, namely that every element
+    # of Y′ \ Y is an upper bound for Y and vice versa.”
+    # The trust below is the reverse half of exactly that source exercise.
     trust $first_good_chain_difference_strictly_bounds_second(X, le, Y, W)
 
 thm good_chain_union_is_chain_with_minimum:

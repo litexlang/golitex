@@ -1,0 +1,26 @@
+try:
+    thm gaussian_divisor_with_equal_positive_norm_is_associate:
+        ? forall ax, ay, bx, b_y Z:
+            $gaussian_divides(ax, ay, bx, b_y)
+            gaussian_norm(ax, ay) = gaussian_norm(bx, b_y)
+            gaussian_norm(ax, ay) > 0
+            =>:
+                $gaussian_associate(ax, ay, bx, b_y)
+        by def $gaussian_divides(ax, ay, bx, b_y)
+        obtain qx, qy from exist qx0, qy0 Z st {gaussian_mul(ax, ay, qx0, qy0) = (bx, b_y)}
+        gaussian_mul(ax, ay, qx, qy) = (ax * qx - ay * qy, ax * qy + ay * qx) = (bx, b_y)
+        bx = ax * qx - ay * qy
+        b_y = ax * qy + ay * qx
+        by thm gaussian_norm_is_multiplicative(ax, ay, qx, qy)
+        gaussian_norm(bx, b_y) = gaussian_norm(ax, ay) * gaussian_norm(qx, qy)
+        gaussian_norm(ax, ay) = gaussian_norm(ax, ay) * gaussian_norm(qx, qy)
+        gaussian_norm(ax, ay) / gaussian_norm(ax, ay) = (gaussian_norm(ax, ay) * gaussian_norm(qx, qy)) / gaussian_norm(ax, ay)
+        1 = gaussian_norm(qx, qy)
+        gaussian_norm(qx, qy) = 1
+        witness exist ux, uy Z st {gaussian_mul(bx, b_y, ux, uy) = (ax, ay)} from qx, -qy:
+            qx ^ 2 + qy ^ 2 = gaussian_norm(qx, qy) = 1
+            bx * qx - b_y * (-qy) = (ax * qx - ay * qy) * qx - (ax * qy + ay * qx) * (-qy) = ax * (qx ^ 2 + qy ^ 2) = ax
+            bx * (-qy) + b_y * qx = (ax * qx - ay * qy) * (-qy) + (ax * qy + ay * qx) * qx = ay * (qx ^ 2 + qy ^ 2) = ay
+            gaussian_mul(bx, b_y, qx, -qy) = (bx * qx - b_y * (-qy), bx * (-qy) + b_y * qx) = (ax, ay)
+        by def $gaussian_divides(bx, b_y, ax, ay)
+        by def $gaussian_associate(ax, ay, bx, b_y)

@@ -11,8 +11,8 @@ Source snapshot: *Mathematics in Lean* at
 “Checked” means checked by the current Litex verifier in this project. It does
 not mean Lean-certified, and it does not imply that omitted source results have
 been proved. The two directions between neighborhood continuity and the
-open-preimage property currently contain narrow `trust`; no executable
-`know`, `axiom`, or `abstract_prop` is present. Other absent source mathematics
+open-preimage property are checked for refined topology carriers; no executable
+`trust`, `know`, `axiom`, or `abstract_prop` is present. Other absent source mathematics
 is listed in the comment-only `todo.lit`. The project imports no Litex standard-library
 module and has no cite module. Its kernel builtin rules remain part of the
 verifier boundary, so this source-level independence is not a claim that the
@@ -37,9 +37,10 @@ chapter: algebraic structure laws, convergence, continuity, differentiability,
 and measurability are reusable relationships; a source identity or existence
 result is a fact and remains executable only when checked.
 
-Fermat's Last Theorem illustrates the boundary. The source item is not
-implemented here, so neither a theorem nor a wrapper proposition appears in
-Chapter 1. Its exact mathematical obligation is recorded in `todo.lit`.
+Fermat's Last Theorem is the largest visible instance of this boundary. The
+source uses an admitted proof term, but the current completion target requires
+a real checked theorem. Its natural-number statement and full proof therefore
+remain explicit Litex proof debt rather than an exclusion or assumption.
 
 ## Carrier-first algebra
 
@@ -63,6 +64,23 @@ struct Ring<s nonempty_set>:
     mul fn(x, y s) s
     one s
 ```
+
+The same carrier-first rule applies to Chapter 2's lattice exercises.
+`Lattice<s>` stores an order relation together with callable `meet` and `join`
+operations. Its laws say that the relation is a partial order, `meet(x,y)` is
+the greatest lower bound, and `join(x,y)` is the least upper bound:
+
+```litex
+struct Lattice<s nonempty_set>:
+    le_rel power_set(cart(s, s))
+    meet fn(x, y s) s
+    join fn(x, y s) s
+```
+
+The nearest rejected form is a collection of isolated propositions for
+commutativity, associativity, and absorption. Such propositions would not give
+later proofs an object whose meet, join, and order can be applied. The first
+use probes are the two checked absorption laws.
 
 Structures expose their mathematical operations directly. Their `<=>:` bodies
 compose reusable law predicates such as

@@ -972,9 +972,44 @@ thm geometric_series_from_one_formula:
         1 - x != 0
         =>:
             $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
-    # Source handling: the finite geometric-sum identity and quotient limit give the displayed sum.
-    # proof_debt: the Chapter 6 quotient-limit theorem is temporarily absent from the runnable module.
-    trust $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
+    # The finite geometric-sum identity and ordinary scalar limit laws give the
+    # displayed sum; no general quotient-limit theorem is needed because the
+    # denominator is constant.
+    have tail seq(R) = geometric_series_from_one_tail(x)
+    by thm geometric_series_from_one_tail_has_strict_limit_zero(x)
+    have numerator seq(R) = fn(k N_pos) R {x - tail(k)}
+    by thm constant_sequence_has_strict_limit(x)
+    by thm chap6::seq_sub_converges_to(constant_sequence(x), tail, x, 0)
+    claim:
+        ? forall k N_pos:
+            fn(i_index N_pos) R {constant_sequence(x)(i_index) - tail(i_index)}(k) = numerator(k)
+        constant_sequence(x)(k) = x
+        numerator(k) = x - tail(k)
+    by thm strict_limit_extensional(fn(i_index N_pos) R {constant_sequence(x)(i_index) - tail(i_index)}, numerator, x - 0)
+    have scaled seq(R) = fn(k N_pos) R {(1 / (1 - x)) * numerator(k)}
+    by thm chap6::seq_const_mul_converges_to(1 / (1 - x), numerator, x - 0)
+    claim:
+        ? forall k N_pos:
+            fn(i_index N_pos) R {(1 / (1 - x)) * numerator(i_index)}(k) = scaled(k)
+        scaled(k) = (1 / (1 - x)) * numerator(k)
+    by thm strict_limit_extensional(fn(i_index N_pos) R {(1 / (1 - x)) * numerator(i_index)}, scaled, (1 / (1 - x)) * (x - 0))
+    (1 / (1 - x)) * (x - 0) = x / (1 - x)
+    claim:
+        ? forall k N_pos:
+            scaled(k) = partial_sum(geometric_series_terms_from_one(x), k)
+        tail(k) = geometric_series_from_one_tail(x)(k)
+        geometric_series_from_one_tail(x)(k) = x^(k + 1)
+        tail(k) = x^(k + 1)
+        numerator(k) = x - tail(k) = x - x^(k + 1)
+        scaled(k) = (1 / (1 - x)) * numerator(k)
+        (1 / (1 - x)) * numerator(k) = (1 / (1 - x)) * (x - x^(k + 1))
+        (1 / (1 - x)) * (x - x^(k + 1)) = (x - x^(k + 1)) / (1 - x)
+        scaled(k) = (x - x^(k + 1)) / (1 - x)
+        by thm geometric_series_from_one_partial_sum(x, k)
+        partial_sum(geometric_series_terms_from_one(x), k) = (x - x^(k + 1)) / (1 - x)
+    by thm strict_limit_extensional(scaled, fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x))
+    by thm strict_limit_implies_closed_limit(fn(k N_pos) R {partial_sum(geometric_series_terms_from_one(x), k)}, x / (1 - x))
+    by def $has_series_sum(geometric_series_terms_from_one(x), x / (1 - x))
 
 thm real_power_at_least_one:
     ? forall y R, n N_pos:
@@ -5270,36 +5305,41 @@ forall n N_pos:
     positive_natural_sequence(n) > 0
 by def $is_positive_sequence(positive_natural_sequence)
 
-# claim:
-#     ? forall epsilon R_pos:
-#         exist n0 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n0)}
-#     by thm chap5::archimedean_property(epsilon)
-#     obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
-#     witness exist n1 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n1)} from n0:
-#         claim:
-#             ? forall n N_pos:
-#                 n >= n0
-#                 =>:
-#                     abs(ratio_terms(positive_natural_sequence)(n) - 1) <= epsilon
-#             positive_natural_sequence(n) > 0
-#             ratio_terms(positive_natural_sequence)(n) = (n + 1) / n
-#             (n + 1) / n - 1 = 1 / n
-#             n0 <= n
-#             1 / n <= 1 / n0 < epsilon
-#             1 / n > 0
-#             abs(ratio_terms(positive_natural_sequence)(n) - 1) = 1 / n
-#             abs(ratio_terms(positive_natural_sequence)(n) - 1) <= epsilon
-#         $is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n0)
-# by def $has_limit(ratio_terms(positive_natural_sequence), 1)
+claim:
+    ? forall epsilon R_pos:
+        exist n0 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n0)}
+    by thm chap5::archimedean_property(epsilon)
+    obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
+    witness exist n1 N_pos st {$is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n1)} from n0:
+        claim:
+            ? forall n N_pos:
+                n >= n0
+                =>:
+                    abs(ratio_terms(positive_natural_sequence)(n) - 1) <= epsilon
+            positive_natural_sequence(n) > 0
+            ratio_terms(positive_natural_sequence)(n) = positive_natural_sequence(n + 1) / positive_natural_sequence(n)
+            positive_natural_sequence(n + 1) = n + 1
+            positive_natural_sequence(n) = n
+            ratio_terms(positive_natural_sequence)(n) = (n + 1) / n
+            (n + 1) / n - 1 = 1 / n
+            n0 <= n
+            by thm chap6::reciprocal_nat_order_reversing(n0, n)
+            1 / n <= 1 / n0 < epsilon
+            1 / n > 0
+            ratio_terms(positive_natural_sequence)(n) - 1 = (n + 1) / n - 1 = 1 / n
+            abs(ratio_terms(positive_natural_sequence)(n) - 1) = abs(1 / n) = 1 / n
+            abs(ratio_terms(positive_natural_sequence)(n) - 1) <= epsilon
+        $is_tail_close_to(ratio_terms(positive_natural_sequence), 1, epsilon, n0)
+by def $has_limit(ratio_terms(positive_natural_sequence), 1)
 
-# Source handling: (n+1)/n = 1 + 1/n and the Archimedean property makes
-# 1/n eventually smaller than every positive epsilon.
-# trust: The explicit tail witness remains an ExecStmtError.
-trust $has_limit(ratio_terms(positive_natural_sequence), 1)
-
-# trust: The pointwise unfolding of abs(n)^(1/n) to n^(1/n) is not recovered
-# automatically for the positive-natural sequence.
-trust $pointwise_equal_sequences(root_test_terms(positive_natural_sequence), fn(j N_pos) R {j^(1 / j)})
+claim:
+    ? forall n N_pos:
+        root_test_terms(positive_natural_sequence)(n) = fn(j N_pos) R {j^(1 / j)}(n)
+    root_test_terms(positive_natural_sequence)(n) = abs(positive_natural_sequence(n))^(1 / n)
+    positive_natural_sequence(n) = n
+    abs(positive_natural_sequence(n)) = abs(n) = n
+    fn(j N_pos) R {j^(1 / j)}(n) = n^(1 / n)
+by def $pointwise_equal_sequences(root_test_terms(positive_natural_sequence), fn(j N_pos) R {j^(1 / j)})
 
 by thm positive_sequence_ratio_limit_one_gives_root_limit_one(positive_natural_sequence)
 by thm has_limit_extensional(root_test_terms(positive_natural_sequence), fn(j N_pos) R {j^(1 / j)}, 1)

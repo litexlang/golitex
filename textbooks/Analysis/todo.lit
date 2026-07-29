@@ -3,9 +3,10 @@
 # This is a documentation-only ledger.  It is not a chapter, is not exported by
 # litex.config, and contains no executable Litex declarations.
 # 
-# Snapshot: 2026-07-26.  The Chapter 7 draft contains 37 direct `trust` sites
-# and two temporary abstract graph interfaces.  Chapters 1-3, 5, 6, and 10,
-# together with Appendix A, contain no direct `trust` statement.
+# Snapshot update: 2026-07-28.  The Chapter 7 draft contains 32 direct `trust`
+# sites and two temporary abstract graph interfaces.  Chapters 1-5, together
+# with Appendix A, contain no direct `trust` statement.  Chapter 6 contains two
+# non-source-deferred final-sprint blockers tracked separately.
 # 
 # A formalization gap is mathematics supplied or used by the source whose
 # Litex proof remains unfinished.  A source-deferred proof is an unchecked
@@ -13,23 +14,7 @@
 # visible trust boundary, not an omitted source proof.  Each item states the
 # missing mathematics and the source-facing result it supports.
 # 
-# Chapter 4 — Integers and rationals (2 direct trust sites)
-# 
-# Formalization gaps (2)
-# 
-# Item 04-01 — Section 4.3; rational_closeness_of_products.
-# Supply the three-term product-error estimate obtained from
-# xz-yw=(x-y)z+x(z-w)-(x-y)(z-w), using multiplicativity and the triangle
-# inequality for absolute value.  This gives the epsilon-close bound for two
-# simultaneously moving rational factors.
-# 
-# Item 04-02 — Section 4.4; rational_has_positive_denominator_representation.
-# Construct a positive-denominator representation from an arbitrary nonzero
-# integer denominator by replacing the denominator by its absolute value and,
-# in the negative case, negating the numerator.  This representation supplies
-# the Euclidean-quotient proof of the integer interval containing a rational.
-# 
-# Chapter 7 — Infinite series (37 direct trust sites)
+# Chapter 7 — Infinite series (32 direct trust sites)
 # 
 # Formalization gaps
 # 
@@ -57,15 +42,29 @@
 # failure of the zero limit above ratio one, and the squeeze proof when the
 # ratio tends to one.
 # 
-# Items 07-33 through 07-37 — absolute ratio test and the natural-root example.
+# Items 07-33 through 07-36 — absolute ratio test and the natural-root example.
 # Implement the absolute-ratio sequence graph, remove its trusted unique
 # selector, prove the two ratio-test conclusions, and restore the checked
-# limits `(n+1)/n -> 1` and `n^(1/n) -> 1`.  The temporary abstract graph is
+# limit `n^(1/n) -> 1`.  The limit `(n+1)/n -> 1` and the final pointwise
+# unfolding are now checked.  The temporary abstract graph is
 # `is_absolute_ratio_sequence`.
 # 
-# Chapter 8 — Infinite sets (6 direct trust sites)
+# Chapter 8 — Infinite sets (96 executable trust sites)
 # 
-# Source-deferred unchecked proofs (6)
+# Formalization gaps not deferred by the source (91)
+#
+# The gaps cover cardinality transport, enumerations, pairing, products,
+# countable unions, finite-subsums, arbitrary-set summation, Fubini, support
+# transport, diagonalization, binary expansions, finite products, supremum
+# sequences, and the good-chain construction.
+#
+# In particular, the broad trusts for the good-chain union being well-ordered
+# and having no strict upper bound are not legitimate source-deferred
+# boundaries: Tao supplies the main proofs and leaves only individual “why?”
+# steps or Exercise 8.5.11 to the reader.  These trusts must be narrowed to
+# precisely those omitted substeps or removed.
+# 
+# Source-deferred unchecked proofs eligible to retain with exact quotations (5)
 # 
 # Item 08-05 — Section 8.2;
 # positive_and_negative_parts_of_conditional_series_diverge, trust at line 4628.
@@ -78,6 +77,10 @@
 # partial sums converge to the target, and retain non-absolute convergence.
 # The source leaves these details to Exercise 8.2.5.
 # 
+# Item 08-08 — Section 8.5; finite_total_order_is_well_ordered.
+# Prove by induction that each finite nonempty subset of a total order has a
+# minimum.  The source assigns this fact to Exercise 8.5.8.
+# 
 # Item 08-09 — Section 8.5;
 # good_chain_comparison_forward_from_exercise_8_5_13, trust at line 7050.
 # Prove that every point of W minus Y strictly bounds Y.  This is one half of
@@ -86,14 +89,6 @@
 # Item 08-10 — Section 8.5;
 # good_chain_comparison_reverse_from_exercise_8_5_13, trust at line 7063.
 # Prove the symmetric comparison for points of Y minus W.
-# 
-# Item 08-11 — Section 8.5; good_chain_union_is_chain_with_minimum, trust at line 7075.
-# Prove that the union of all good chains is itself well-ordered with x0 as
-# minimum.  The source marks the union-order verification as "why?".
-# 
-# Item 08-12 — Section 8.5; good_chain_union_has_no_strict_upper_bound,
-# trust at line 7087.  Show that a chosen strict upper bound extends the union to a
-# larger good chain, contradicting the definition of the union.
 # 
 # Chapter 9 — Continuous functions on R (6 direct trust sites)
 # 

@@ -344,6 +344,25 @@ thm eq_neg_of_add_eq_zero:
     by thm add_left_cancel(A, add, zero, neg, x, y, neg(x))
     y = neg(x)
 
+# Result (source label: neg_eq_of_add_eq_zero). The preceding inverse-
+# uniqueness theorem gives the same equality in the opposite orientation.
+thm neg_eq_of_add_eq_zero:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, x, y A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        add(x, y) = zero
+        =>:
+            neg(x) = y
+    by thm eq_neg_of_add_eq_zero(A, add, zero, neg, x, y)
+
+# Result (source label: neg_zero). Zero is its own additive inverse. Apply the
+# preceding theorem to zero plus zero, whose value follows from the group laws.
+thm neg_zero:
+    ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A:
+        $is_additive_commutative_group(A, add, zero, neg)
+        =>:
+            neg(zero) = zero
+    by thm neg_eq_of_add_eq_zero(A, add, zero, neg, zero, zero)
+
 # Negation is involutive.
 thm neg_neg:
     ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, x A:
@@ -783,3 +802,89 @@ thm gcd_comm:
     by thm common_divisor_le_gcd(a, b, gcd(b, a))
     gcd(b, a) <= gcd(a, b)
     gcd(a, b) = gcd(b, a)
+
+# 2.5 Proving Facts about Algebraic Structures
+
+# A lattice packages a partial order with callable meet and join operations.
+# The final two law families are the universal properties: meet is the
+# greatest lower bound and join is the least upper bound.
+struct Lattice<s nonempty_set>:
+    le_rel power_set(cart(s, s))
+    meet fn(x, y s) s
+    join fn(x, y s) s
+    <=>:
+        forall x s:
+            (x, x) $in le_rel
+        forall x, y, z s:
+            (x, y) $in le_rel
+            (y, z) $in le_rel
+            =>:
+                (x, z) $in le_rel
+        forall x, y s:
+            (x, y) $in le_rel
+            (y, x) $in le_rel
+            =>:
+                x = y
+        forall x, y s:
+            (meet(x, y), x) $in le_rel
+            (meet(x, y), y) $in le_rel
+            (x, join(x, y)) $in le_rel
+            (y, join(x, y)) $in le_rel
+        forall x, y, z s:
+            (z, x) $in le_rel
+            (z, y) $in le_rel
+            =>:
+                (z, meet(x, y)) $in le_rel
+        forall x, y, z s:
+            (x, z) $in le_rel
+            (y, z) $in le_rel
+            =>:
+                (join(x, y), z) $in le_rel
+
+# The source's meet-commutativity example follows because each meet is a lower
+# bound for the arguments of the other meet; antisymmetry then identifies them.
+thm lattice_meet_comm:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y s:
+        lattice.meet(x, y) = lattice.meet(y, x)
+    (lattice.meet(x, y), y) $in lattice.le_rel
+    (lattice.meet(x, y), x) $in lattice.le_rel
+    (lattice.meet(x, y), lattice.meet(y, x)) $in lattice.le_rel
+    (lattice.meet(y, x), x) $in lattice.le_rel
+    (lattice.meet(y, x), y) $in lattice.le_rel
+    (lattice.meet(y, x), lattice.meet(x, y)) $in lattice.le_rel
+    lattice.meet(x, y) = lattice.meet(y, x)
+
+# The join-commutativity example is dual: each join is an upper bound for the
+# arguments of the other join, and antisymmetry closes the equality.
+thm lattice_join_comm:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y s:
+        lattice.join(x, y) = lattice.join(y, x)
+    (y, lattice.join(x, y)) $in lattice.le_rel
+    (x, lattice.join(x, y)) $in lattice.le_rel
+    (lattice.join(y, x), lattice.join(x, y)) $in lattice.le_rel
+    (x, lattice.join(y, x)) $in lattice.le_rel
+    (y, lattice.join(y, x)) $in lattice.le_rel
+    (lattice.join(x, y), lattice.join(y, x)) $in lattice.le_rel
+    lattice.join(x, y) = lattice.join(y, x)
+
+# Result (source label: absorb1). The meet is below x. Conversely, x is below
+# both x and x join y, so it is below their meet; antisymmetry gives equality.
+thm lattice_meet_join_absorb:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y s:
+        lattice.meet(x, lattice.join(x, y)) = x
+    (lattice.meet(x, lattice.join(x, y)), x) $in lattice.le_rel
+    (x, x) $in lattice.le_rel
+    (x, lattice.join(x, y)) $in lattice.le_rel
+    (x, lattice.meet(x, lattice.join(x, y))) $in lattice.le_rel
+    lattice.meet(x, lattice.join(x, y)) = x
+
+# Result (source label: absorb2). This is the order-dual argument: x and
+# x meet y are below x, so their join is below x, while x is below the join.
+thm lattice_join_meet_absorb:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y s:
+        lattice.join(x, lattice.meet(x, y)) = x
+    (x, lattice.join(x, lattice.meet(x, y))) $in lattice.le_rel
+    (x, x) $in lattice.le_rel
+    (lattice.meet(x, y), x) $in lattice.le_rel
+    (lattice.join(x, lattice.meet(x, y)), x) $in lattice.le_rel
+    lattice.join(x, lattice.meet(x, y)) = x

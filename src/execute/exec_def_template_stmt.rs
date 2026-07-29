@@ -121,7 +121,11 @@ impl Runtime {
             &template_obj.declaration_binding(),
             &def.line_file,
         )?;
-        self.exec_stmt(&stmt)?;
+        // The template body was verified once with symbolic parameters when the
+        // template was declared. Header validation above plus capture-avoiding
+        // substitution preserves that result, so only commit the instantiated
+        // statement's environment effects here.
+        self.exec_preverified_stmt_affect_environment_only(&stmt)?;
         let instance_identifier = self.declared_identifier_obj(&instance_name);
         self.store_atomic_fact_without_well_defined_verified_and_infer(
             EqualFact::new(

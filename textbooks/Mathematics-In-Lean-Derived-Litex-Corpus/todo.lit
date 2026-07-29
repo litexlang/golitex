@@ -2,14 +2,12 @@
 # executable Litex chapters. It is intentionally comment-only and is not
 # exported by litex.config.
 
-# Chapter 1 — Introduction; source labels FermatLastTheorem and hard.
-# Missing mathematics: prove Fermat's Last Theorem for nonzero natural x, y,
-# z and every exponent n greater than two. The upstream item is admitted with
-# sorry, so this corpus does not present it as a checked Litex fact.
-
-# Chapter 3 — Logic; source upper-bound monotonicity example.
-# Missing mathematics: prove that if a is an upper bound for S and a <= b in
-# the given partial order, then b is also an upper bound for S.
+# Chapter 1 — Introduction; source definition FermatLastTheorem and theorem
+# hard.
+# Missing mathematics: state the natural-number theorem that no nonzero
+# x, y, z satisfy x^n + y^n = z^n for n > 2, and supply a checked proof rather
+# than the source's admitted illustration. This is a full number-theory
+# development, not an executable assumption.
 
 # Chapter 4 — Sets and Functions; source definition inverse and theorem
 # inverse_spec.
