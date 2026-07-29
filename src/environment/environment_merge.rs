@@ -227,6 +227,7 @@ impl Environment {
             cache_well_defined_obj,
             cache_known_fact,
             cache_known_fact_trust,
+            cache_infer_rule_firing,
             used_strategy_stmts,
             stopped_strategy_stmts,
         } = child;
@@ -371,6 +372,9 @@ impl Environment {
         }
         for (key, summary) in cache_known_fact_trust {
             self.cache_known_fact_trust.insert(key, summary);
+        }
+        for (key, _) in cache_infer_rule_firing {
+            self.cache_infer_rule_firing.insert(key, ());
         }
 
         for (key, strategy_name) in used_strategy_stmts {

@@ -1,0 +1,9 @@
+prop is_binary_gaussian_linear_combination(ax, ay, bx, b_y, zx, zy Z):
+    exist ux, uy, vx, vy Z st {
+        gaussian_add(
+            gaussian_mul(ax, ay, ux, uy)[1],
+            gaussian_mul(ax, ay, ux, uy)[2],
+            gaussian_mul(bx, b_y, vx, vy)[1],
+            gaussian_mul(bx, b_y, vx, vy)[2]
+        ) = (zx, zy)
+    }

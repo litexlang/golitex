@@ -190,6 +190,21 @@ impl Runtime {
         in_fact: &InFact,
         set_builder: &SetBuilder,
     ) -> Result<InferResult, RuntimeError> {
+        let unfolded_membership: Fact = InFact::new(
+            in_fact.element.clone(),
+            set_builder.clone().into(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let firing_key = format!(
+            "set builder membership:{}",
+            nested_obj_binder_normalized_fact_key(&unfolded_membership)
+        );
+        // Membership in one fixed set builder has one substitution result.
+        // Example: `x $in {y S: P(y)}` infers `x $in S` and `P(x)` once.
+        if self.infer_rule_firing_cached(&firing_key) {
+            return Ok(InferResult::new());
+        }
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         insert_symbol_substitution(
             &mut param_to_arg_map,
@@ -236,6 +251,7 @@ impl Runtime {
             self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)?;
         }
 
+        self.store_infer_rule_firing(firing_key);
         Ok(infer_result)
     }
 
@@ -586,10 +602,26 @@ impl Runtime {
             // and `p[1] $in R`. Equivalent facts are instantiated with the
             // explicit field-access objects and tuple projections.
             Obj::StructObj(struct_obj) => {
+                let firing_key = format!(
+                    "struct membership:{}",
+                    nested_obj_binder_normalized_fact_key(&in_fact.clone().into())
+                );
+                // A fixed struct membership has deterministic field and filter
+                // consequences. Example: repeating `p $in &Point` must not
+                // rebuild the same field memberships and equivalent facts.
+                if self.infer_rule_firing_cached(&firing_key) {
+                    return Ok(InferResult::new());
+                }
                 let (def, header_map) =
                     self.struct_header_param_to_arg_map(struct_obj, &VerifyState::new(0, false))?;
-                let field_types =
-                    self.instantiated_struct_field_types(struct_obj, &VerifyState::new(0, false))?;
+                let mut field_types = Vec::with_capacity(def.fields.len());
+                for (_, field_type) in def.fields.iter() {
+                    field_types.push(self.inst_obj(
+                        field_type,
+                        &header_map,
+                        ParamObjType::DefHeader,
+                    )?);
+                }
 
                 let mut infer_result = InferResult::new();
                 let cart_membership: Fact = InFact::new(
@@ -715,6 +747,7 @@ impl Runtime {
                     );
                 }
 
+                self.store_infer_rule_firing(firing_key);
                 Ok(infer_result)
             }
             // Finite sequence space: desugar to `FnSet`, then same as function-space membership.

@@ -177,6 +177,120 @@ $marked(x)
 }
 
 #[test]
+fn deterministic_infer_rule_firings_are_cached() {
+    let setup = r#"
+struct Box<S set>:
+    value S
+    tag N
+
+prop accepts(S set, b &Box<S>):
+    b.value = b.value
+
+have b &Box<R> = (0, 0)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("deterministic_infer_rule_firings_are_cached");
+    let (stmt_results, runtime_error) = run_source_code(setup, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "cached infer-rule setup failed:\n{}",
+        run_output
+    );
+
+    let (stmt_results, runtime_error) = run_source_code("trust $accepts(R, b)", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "the first predicate inference failed:\n{}",
+        run_output
+    );
+    let counts_after_first = {
+        let environment = runtime.top_level_env();
+        (
+            environment.cache_known_fact.len(),
+            environment.cache_infer_rule_firing.len(),
+        )
+    };
+
+    let (stmt_results, runtime_error) = run_source_code("trust $accepts(R, b)", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "the cached predicate inference failed:\n{}",
+        run_output
+    );
+    let counts_after_second = {
+        let environment = runtime.top_level_env();
+        (
+            environment.cache_known_fact.len(),
+            environment.cache_infer_rule_firing.len(),
+        )
+    };
+
+    assert_eq!(
+        counts_after_second, counts_after_first,
+        "repeating a known predicate fact must not store facts or fire deterministic infer rules again"
+    );
+}
+
+#[test]
+fn cached_membership_can_use_a_later_set_builder_alias() {
+    let source_code = r#"
+abstract_prop marked(x)
+have x R
+have A set
+trust x $in A
+trust A = {y R: $marked(y)}
+trust x $in A
+$marked(x)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime
+        .new_file_path_new_env_new_name_scope("cached_membership_can_use_later_set_builder_alias");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "a cached membership must be reconsidered after a new alias appears:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn failed_try_discards_infer_rule_firings() {
+    let source_code = r#"
+try:
+    abstract_prop marked(x)
+    have x R
+    trust x $in {y R: $marked(y)}
+    0 = 1
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("failed_try_discards_infer_rule_firings");
+    let firings_before = runtime.top_level_env().cache_infer_rule_firing.len();
+    let (_, runtime_error) = run_source_code(source_code, &mut runtime);
+    assert!(
+        runtime_error.is_some(),
+        "the deliberately false try body should fail"
+    );
+    let firings_after = runtime.top_level_env().cache_infer_rule_firing.len();
+
+    assert_eq!(
+        firings_after, firings_before,
+        "a failed try block must roll back infer-rule firing cache entries"
+    );
+}
+
+#[test]
 fn template_can_use_struct_with_function_valued_fields() {
     run_with_large_stack(
         "template_can_use_struct_with_function_valued_fields",

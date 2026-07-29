@@ -53,6 +53,10 @@ impl Runtime {
         reason_text: String,
         trust_summary: ProofTrustSummary,
     ) -> Result<InferResult, RuntimeError> {
+        if self.non_forall_fact_is_cached(&fact) {
+            self.merge_new_trust_into_cached_fact(&fact, trust_summary)?;
+            return self.infer(&fact);
+        }
         if self.current_execution_is_trusted_file() {
             return self
                 .store_and_infer_fact_without_well_defined_verified_with_reason_text_and_trust(
@@ -135,6 +139,10 @@ impl Runtime {
         reason_text: String,
         trust_summary: ProofTrustSummary,
     ) -> Result<InferResult, RuntimeError> {
+        if self.non_forall_fact_is_cached(&fact) {
+            self.merge_new_trust_into_cached_fact(&fact, trust_summary)?;
+            return self.infer(&fact);
+        }
         let output_fact = fact.clone();
 
         let ret = match fact {
@@ -266,6 +274,10 @@ impl Runtime {
         mut trust_summary: ProofTrustSummary,
     ) -> Result<InferResult, RuntimeError> {
         trust_summary.merge(&self.current_trusted_prefix_statement_trust());
+        if self.non_forall_fact_is_cached(&fact) {
+            self.merge_new_trust_into_cached_fact(&fact, trust_summary)?;
+            return self.infer(&fact);
+        }
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
         let nested_obj_binder_key = nested_obj_binder_normalized_fact_key(&fact);
@@ -562,6 +574,12 @@ impl Runtime {
         fact: Fact,
         reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
+        let reason_text = reason.store_reason();
+        let trust_summary = ProofTrustSummary::from_store_reason(&reason_text, fact.line_file());
+        if self.non_forall_fact_is_cached(&fact) {
+            self.merge_new_trust_into_cached_fact(&fact, trust_summary)?;
+            return Ok(InferResult::new());
+        }
         let verify_state = match &fact {
             Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => VerifyState::new(0, false),
             _ => VerifyState::new_with_final_round(false),
@@ -570,14 +588,36 @@ impl Runtime {
             self.verify_fact_well_defined(&fact, &verify_state)?;
         }
 
-        let reason_text = reason.store_reason();
-        let trust_summary = ProofTrustSummary::from_store_reason(&reason_text, fact.line_file());
         self.top_level_env().store_fact(fact.clone())?;
         self.store_fact_cache_keys_with_nested_obj_binders(&fact, trust_summary)?;
 
         let mut infer_result = InferResult::new();
         infer_result.add_store_fact_output(&fact, reason_text, vec![]);
         Ok(infer_result)
+    }
+
+    fn non_forall_fact_is_cached(&self, fact: &Fact) -> bool {
+        if matches!(fact, Fact::ForallFact(_) | Fact::ForallFactWithIff(_)) {
+            return false;
+        }
+        let fact_key = fact.to_string();
+        if self.cache_known_facts_contains(&fact_key).0 {
+            return true;
+        }
+        let normalized_key = nested_obj_binder_normalized_fact_key(fact);
+        normalized_key != fact_key && self.cache_known_facts_contains(&normalized_key).0
+    }
+
+    fn merge_new_trust_into_cached_fact(
+        &mut self,
+        fact: &Fact,
+        mut trust_summary: ProofTrustSummary,
+    ) -> Result<(), RuntimeError> {
+        trust_summary.merge(&self.current_trusted_prefix_statement_trust());
+        if trust_summary.is_empty() {
+            return Ok(());
+        }
+        self.store_fact_cache_keys_with_nested_obj_binders(fact, trust_summary)
     }
 
     fn transitive_prop_chain_closure_facts(
