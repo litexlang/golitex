@@ -326,6 +326,15 @@ impl Runtime {
         ProofTrustSummary::new()
     }
 
+    pub fn infer_rule_firing_cached(&self, key: &str) -> bool {
+        self.iter_environments_from_top()
+            .any(|env| env.cache_infer_rule_firing.contains_key(key))
+    }
+
+    pub fn store_infer_rule_firing(&mut self, key: String) {
+        self.top_level_env().store_infer_rule_firing(key);
+    }
+
     pub fn get_object_equal_to_cart(&self, name: &str) -> Option<Cart> {
         for env in self.iter_environments_from_top() {
             if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(name) {

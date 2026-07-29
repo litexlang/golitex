@@ -83,6 +83,7 @@ pub struct Environment {
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
     pub cache_known_fact_trust: HashMap<FactString, ProofTrustSummary>,
+    pub cache_infer_rule_firing: HashMap<String, ()>,
 
     pub used_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
     pub stopped_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
@@ -188,6 +189,7 @@ impl Environment {
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
             cache_known_fact_trust,
+            cache_infer_rule_firing: HashMap::new(),
             used_strategy_stmts: HashMap::new(),
             stopped_strategy_stmts: HashMap::new(),
         }
@@ -995,6 +997,10 @@ impl Environment {
             }
         }
         Ok(())
+    }
+
+    pub fn store_infer_rule_firing(&mut self, firing_key: String) {
+        self.cache_infer_rule_firing.insert(firing_key, ());
     }
 }
 

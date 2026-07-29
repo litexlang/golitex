@@ -1,0 +1,22 @@
+thm gaussian_prime_divides_or_has_bezout_pair:
+    ? forall px, py, ax, ay Z:
+        $gaussian_prime(px, py)
+        =>:
+            $gaussian_divides(px, py, ax, ay) or $gaussian_bezout_pair(px, py, ax, ay)
+    by thm binary_gaussian_span_is_ideal(px, py, ax, ay)
+    by thm gaussian_ideal_has_generator(binary_gaussian_span(px, py, ax, ay))
+    obtain dx, dy from exist dx0, dy0 Z st {
+        $is_generator_of_gaussian_ideal(binary_gaussian_span(px, py, ax, ay), dx0, dy0)
+    }
+    by thm binary_gaussian_span_generator_properties(px, py, ax, ay, dx, dy)
+    by def $gaussian_prime(px, py)
+    $gaussian_unit(dx, dy) or $gaussian_associate(dx, dy, px, py)
+    by cases:
+        ? $gaussian_divides(px, py, ax, ay) or $gaussian_bezout_pair(px, py, ax, ay)
+        case $gaussian_unit(dx, dy):
+            by thm gaussian_unit_linear_combination_gives_bezout_pair(px, py, ax, ay, dx, dy)
+            $gaussian_bezout_pair(px, py, ax, ay)
+        case $gaussian_associate(dx, dy, px, py):
+            by def $gaussian_associate(dx, dy, px, py)
+            by thm gaussian_divides_is_transitive(px, py, dx, dy, ax, ay)
+            $gaussian_divides(px, py, ax, ay)

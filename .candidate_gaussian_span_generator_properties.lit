@@ -1,0 +1,23 @@
+thm binary_gaussian_span_generator_properties:
+    ? forall ax, ay, bx, b_y, dx, dy Z:
+        $is_generator_of_gaussian_ideal(binary_gaussian_span(ax, ay, bx, b_y), dx, dy)
+        =>:
+            $gaussian_divides(dx, dy, ax, ay)
+            $gaussian_divides(dx, dy, bx, b_y)
+            $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, dx, dy)
+    by def $is_generator_of_gaussian_ideal(binary_gaussian_span(ax, ay, bx, b_y), dx, dy)
+    by thm binary_gaussian_span_contains_left_generator(ax, ay, bx, b_y)
+    by thm binary_gaussian_span_contains_right_generator(ax, ay, bx, b_y)
+    exist qx, qy Z st {gaussian_mul(dx, dy, qx, qy) = ((ax, ay)[1], (ax, ay)[2])}
+    obtain qx, qy from exist qx0, qy0 Z st {gaussian_mul(dx, dy, qx0, qy0) = ((ax, ay)[1], (ax, ay)[2])}
+    witness exist qx0, qy0 Z st {gaussian_mul(dx, dy, qx0, qy0) = (ax, ay)} from qx, qy:
+        gaussian_mul(dx, dy, qx, qy) = ((ax, ay)[1], (ax, ay)[2]) = (ax, ay)
+    by def $gaussian_divides(dx, dy, ax, ay)
+    exist sx, sy Z st {gaussian_mul(dx, dy, sx, sy) = ((bx, b_y)[1], (bx, b_y)[2])}
+    obtain sx, sy from exist sx0, sy0 Z st {gaussian_mul(dx, dy, sx0, sy0) = ((bx, b_y)[1], (bx, b_y)[2])}
+    witness exist sx0, sy0 Z st {gaussian_mul(dx, dy, sx0, sy0) = (bx, b_y)} from sx, sy:
+        gaussian_mul(dx, dy, sx, sy) = ((bx, b_y)[1], (bx, b_y)[2]) = (bx, b_y)
+    by def $gaussian_divides(dx, dy, bx, b_y)
+    (dx, dy) $in binary_gaussian_span(ax, ay, bx, b_y)
+    $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, (dx, dy)[1], (dx, dy)[2])
+    $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, dx, dy)

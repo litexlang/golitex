@@ -1,0 +1,19 @@
+thm gaussian_divides_is_transitive:
+    ? forall ax, ay, bx, b_y, cx, cy Z:
+        $gaussian_divides(ax, ay, bx, b_y)
+        $gaussian_divides(bx, b_y, cx, cy)
+        =>:
+            $gaussian_divides(ax, ay, cx, cy)
+    by def $gaussian_divides(ax, ay, bx, b_y)
+    by def $gaussian_divides(bx, b_y, cx, cy)
+    obtain qx, qy from exist qx0, qy0 Z st {gaussian_mul(ax, ay, qx0, qy0) = (bx, b_y)}
+    obtain rx, ry from exist rx0, ry0 Z st {gaussian_mul(bx, b_y, rx0, ry0) = (cx, cy)}
+    have sx Z = qx * rx - qy * ry
+    have sy Z = qx * ry + qy * rx
+    witness exist sx0, sy0 Z st {gaussian_mul(ax, ay, sx0, sy0) = (cx, cy)} from sx, sy:
+        gaussian_mul(ax, ay, sx, sy) = gaussian_mul(
+            gaussian_mul(ax, ay, qx, qy)[1],
+            gaussian_mul(ax, ay, qx, qy)[2],
+            rx, ry
+        ) = gaussian_mul(bx, b_y, rx, ry) = (cx, cy)
+    by def $gaussian_divides(ax, ay, cx, cy)

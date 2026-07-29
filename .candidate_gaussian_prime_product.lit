@@ -1,0 +1,18 @@
+thm gaussian_prime_divides_product:
+    ? forall px, py, ax, ay, bx, b_y Z:
+        $gaussian_prime(px, py)
+        $gaussian_divides(
+            px, py,
+            gaussian_mul(ax, ay, bx, b_y)[1],
+            gaussian_mul(ax, ay, bx, b_y)[2]
+        )
+        =>:
+            $gaussian_divides(px, py, ax, ay) or $gaussian_divides(px, py, bx, b_y)
+    by thm gaussian_prime_divides_or_has_bezout_pair(px, py, ax, ay)
+    by cases:
+        ? $gaussian_divides(px, py, ax, ay) or $gaussian_divides(px, py, bx, b_y)
+        case $gaussian_divides(px, py, ax, ay):
+            $gaussian_divides(px, py, ax, ay)
+        case $gaussian_bezout_pair(px, py, ax, ay):
+            by thm gaussian_bezout_cancels_product(px, py, ax, ay, bx, b_y)
+            $gaussian_divides(px, py, bx, b_y)

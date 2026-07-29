@@ -1,0 +1,52 @@
+thm binary_gaussian_span_is_closed_under_gaussian_multiplication:
+    ? forall ax, ay, bx, b_y Z, a, q cart(Z, Z):
+        a $in binary_gaussian_span(ax, ay, bx, b_y)
+        =>:
+            gaussian_mul(a[1], a[2], q[1], q[2]) $in binary_gaussian_span(ax, ay, bx, b_y)
+    obtain ux, uy, vx, vy from exist ux0, uy0, vx0, vy0 Z st {
+        gaussian_add(
+            gaussian_mul(ax, ay, ux0, uy0)[1],
+            gaussian_mul(ax, ay, ux0, uy0)[2],
+            gaussian_mul(bx, b_y, vx0, vy0)[1],
+            gaussian_mul(bx, b_y, vx0, vy0)[2]
+        ) = (a[1], a[2])
+    }
+    have uq cart(Z, Z) = gaussian_mul(ux, uy, q[1], q[2])
+    have vq cart(Z, Z) = gaussian_mul(vx, vy, q[1], q[2])
+    witness exist px, py, sx, sy Z st {
+        gaussian_add(
+            gaussian_mul(ax, ay, px, py)[1],
+            gaussian_mul(ax, ay, px, py)[2],
+            gaussian_mul(bx, b_y, sx, sy)[1],
+            gaussian_mul(bx, b_y, sx, sy)[2]
+        ) = (
+            gaussian_mul(a[1], a[2], q[1], q[2])[1],
+            gaussian_mul(a[1], a[2], q[1], q[2])[2]
+        )
+    } from uq[1], uq[2], vq[1], vq[2]:
+        gaussian_mul(ax, ay, uq[1], uq[2]) = gaussian_mul(
+            gaussian_mul(ax, ay, ux, uy)[1],
+            gaussian_mul(ax, ay, ux, uy)[2],
+            q[1], q[2]
+        )
+        gaussian_mul(bx, b_y, vq[1], vq[2]) = gaussian_mul(
+            gaussian_mul(bx, b_y, vx, vy)[1],
+            gaussian_mul(bx, b_y, vx, vy)[2],
+            q[1], q[2]
+        )
+        gaussian_add(
+            gaussian_mul(ax, ay, uq[1], uq[2])[1],
+            gaussian_mul(ax, ay, uq[1], uq[2])[2],
+            gaussian_mul(bx, b_y, vq[1], vq[2])[1],
+            gaussian_mul(bx, b_y, vq[1], vq[2])[2]
+        ) = gaussian_mul(a[1], a[2], q[1], q[2])
+        gaussian_mul(a[1], a[2], q[1], q[2]) = (
+            gaussian_mul(a[1], a[2], q[1], q[2])[1],
+            gaussian_mul(a[1], a[2], q[1], q[2])[2]
+        )
+    $is_binary_gaussian_linear_combination(
+        ax, ay, bx, b_y,
+        gaussian_mul(a[1], a[2], q[1], q[2])[1],
+        gaussian_mul(a[1], a[2], q[1], q[2])[2]
+    )
+    gaussian_mul(a[1], a[2], q[1], q[2]) $in binary_gaussian_span(ax, ay, bx, b_y)

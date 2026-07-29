@@ -485,6 +485,16 @@ impl Runtime {
         normal_atomic_fact: &NormalAtomicFact,
     ) -> Result<InferResult, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
+        let firing_key = format!(
+            "normal predicate definition:{}",
+            nested_obj_binder_normalized_fact_key(&normal_atomic_fact.clone().into())
+        );
+        // A fixed predicate definition has deterministic consequences for fixed
+        // arguments. Example: expanding `$is_linear_map(..., T)` twice must not
+        // repeat its parameter typing and `iff` facts.
+        if self.infer_rule_firing_cached(&firing_key) {
+            return Ok(InferResult::new());
+        }
         let proper_relation_facts = crate::verify::verify_proper_set_relations_builtin::positive_proper_set_relation_definition_facts(normal_atomic_fact);
         let builtin_definition_facts = match proper_relation_facts {
             Some(facts) => Some(facts),
@@ -510,6 +520,7 @@ impl Runtime {
                     )?,
                 );
             }
+            self.store_infer_rule_firing(firing_key);
             return Ok(infer_result);
         }
         let predicate_definition = match self.get_prop_definition_by_name(&predicate_name) {
@@ -577,12 +588,11 @@ impl Runtime {
                 &fact_to_store,
             );
             let store_result = match &fact_to_store {
-                Fact::AtomicFact(AtomicFact::NormalAtomicFact(_)) => {
-                    self.verify_well_defined_and_store_without_infer(
+                Fact::AtomicFact(AtomicFact::NormalAtomicFact(_)) => self
+                    .verify_well_defined_and_store_without_infer(
                         fact_to_store,
                         by_definition_reason.clone(),
-                    )
-                }
+                    ),
                 _ => self
                     .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
                         fact_to_store,
@@ -603,6 +613,7 @@ impl Runtime {
             })?;
         }
 
+        self.store_infer_rule_firing(firing_key);
         Ok(infer_result)
     }
 }

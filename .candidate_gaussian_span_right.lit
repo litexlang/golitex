@@ -1,0 +1,16 @@
+thm binary_gaussian_span_contains_right_generator:
+    ? forall ax, ay, bx, b_y Z:
+        (bx, b_y) $in binary_gaussian_span(ax, ay, bx, b_y)
+    witness exist ux, uy, vx, vy Z st {
+        gaussian_add(
+            gaussian_mul(ax, ay, ux, uy)[1],
+            gaussian_mul(ax, ay, ux, uy)[2],
+            gaussian_mul(bx, b_y, vx, vy)[1],
+            gaussian_mul(bx, b_y, vx, vy)[2]
+        ) = (bx, b_y)
+    } from 0, 0, 1, 0:
+        gaussian_mul(ax, ay, 0, 0) = (0, 0)
+        gaussian_mul(bx, b_y, 1, 0) = (bx, b_y)
+        gaussian_add(0, 0, bx, b_y) = (bx, b_y)
+    $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, bx, b_y)
+    (bx, b_y) $in binary_gaussian_span(ax, ay, bx, b_y)

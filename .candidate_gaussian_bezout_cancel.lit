@@ -1,0 +1,37 @@
+thm gaussian_bezout_cancels_product:
+    ? forall px, py, ax, ay, bx, b_y Z:
+        $gaussian_bezout_pair(px, py, ax, ay)
+        $gaussian_divides(
+            px, py,
+            gaussian_mul(ax, ay, bx, b_y)[1],
+            gaussian_mul(ax, ay, bx, b_y)[2]
+        )
+        =>:
+            $gaussian_divides(px, py, bx, b_y)
+    by def $gaussian_bezout_pair(px, py, ax, ay)
+    by def $is_binary_gaussian_linear_combination(px, py, ax, ay, 1, 0)
+    obtain ux, uy, vx, vy from exist ux0, uy0, vx0, vy0 Z st {
+        gaussian_add(
+            gaussian_mul(px, py, ux0, uy0)[1],
+            gaussian_mul(px, py, ux0, uy0)[2],
+            gaussian_mul(ax, ay, vx0, vy0)[1],
+            gaussian_mul(ax, ay, vx0, vy0)[2]
+        ) = (1, 0)
+    }
+    by def $gaussian_divides(
+        px, py,
+        gaussian_mul(ax, ay, bx, b_y)[1],
+        gaussian_mul(ax, ay, bx, b_y)[2]
+    )
+    obtain qx, qy from exist qx0, qy0 Z st {
+        gaussian_mul(px, py, qx0, qy0) = (
+            gaussian_mul(ax, ay, bx, b_y)[1],
+            gaussian_mul(ax, ay, bx, b_y)[2]
+        )
+    }
+    have ub cart(Z, Z) = gaussian_mul(ux, uy, bx, b_y)
+    have qv cart(Z, Z) = gaussian_mul(qx, qy, vx, vy)
+    have w cart(Z, Z) = gaussian_add(ub[1], ub[2], qv[1], qv[2])
+    witness exist wx, wy Z st {gaussian_mul(px, py, wx, wy) = (bx, b_y)} from w[1], w[2]:
+        gaussian_mul(px, py, w[1], w[2]) = (bx, b_y)
+    by def $gaussian_divides(px, py, bx, b_y)
