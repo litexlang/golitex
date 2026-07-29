@@ -77,16 +77,6 @@ impl Runtime {
     }
 
     pub fn store_def_thm(&mut self, def_thm_stmt: &DefThmStmt) -> Result<(), RuntimeError> {
-        self.store_def_thm_with_trust(def_thm_stmt, &ProofTrustSummary::new())
-    }
-
-    pub fn store_def_thm_with_trust(
-        &mut self,
-        def_thm_stmt: &DefThmStmt,
-        trust_summary: &ProofTrustSummary,
-    ) -> Result<(), RuntimeError> {
-        let mut trust_summary = trust_summary.clone();
-        trust_summary.merge(&self.current_trusted_prefix_statement_trust());
         if self
             .top_level_env()
             .defined_thm_stmts
@@ -102,10 +92,6 @@ impl Runtime {
         let env = self.top_level_env();
         env.defined_thm_stmts
             .insert(def_thm_stmt.name.clone(), def_thm_stmt.clone());
-        if !trust_summary.is_empty() {
-            env.defined_thm_trust_summaries
-                .insert(def_thm_stmt.name.clone(), trust_summary);
-        }
         Ok(())
     }
 

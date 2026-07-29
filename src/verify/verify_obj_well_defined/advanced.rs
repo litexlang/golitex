@@ -98,6 +98,36 @@ impl Runtime {
 
         self.store_fn_obj_cart_return_facts_if_available(&x.obj, default_line_file())?;
 
+        // A struct binding keeps its tuple view lazy until a projection is
+        // actually used. Example: `q &Point` stores no `q $in cart(...)`,
+        // while `q[1]` materializes that cart membership on demand.
+        let default_struct_view = match x.obj.as_ref() {
+            Obj::Atom(atom) => atom
+                .symbol_ref()
+                .and_then(|symbol| self.default_struct_view_for_symbol(symbol)),
+            _ => None,
+        };
+        if let Some(struct_obj) = default_struct_view {
+            let struct_membership: AtomicFact = InFact::new(
+                (*x.obj).clone(),
+                struct_obj.clone().into(),
+                default_line_file(),
+            )
+            .into();
+            let membership_result = self.verify_atomic_fact(&struct_membership, verify_state)?;
+            if membership_result.is_true() {
+                let field_types =
+                    self.instantiated_struct_field_types(&struct_obj, verify_state)?;
+                let cart_membership: AtomicFact = InFact::new(
+                    (*x.obj).clone(),
+                    Cart::new(field_types).into(),
+                    default_line_file(),
+                )
+                .into();
+                self.store_atomic_fact_without_well_defined_verified_and_infer(cart_membership)?;
+            }
+        }
+
         let target_obj_is_tuple_fact =
             IsTupleFact::new((*x.obj).clone(), default_line_file()).into();
         let target_obj_is_tuple_result =

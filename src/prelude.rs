@@ -284,8 +284,6 @@ pub use crate::result::NotForallUnknown;
 pub use crate::result::ObjectIntroductionItem;
 pub use crate::result::OrFactUnknown;
 pub use crate::result::ProofBlockStmtResult;
-pub use crate::result::ProofTrustDependency;
-pub use crate::result::ProofTrustSummary;
 pub use crate::result::StatementExecutionPhase;
 pub use crate::result::StatementExecutionTrace;
 pub use crate::result::StatementPhaseStatus;

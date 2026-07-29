@@ -362,7 +362,8 @@ Earlier top-level statements are still parsed and added to the environment,
 but their proofs and well-definedness checks are skipped. Verification resumes
 at line 420. The option is available only for direct `-f` and
 `-isolated -f` runs, cannot be combined with `-strict`, and produces explicit
-trust provenance rather than a fully checkable result. See
+`trusted_prefix` statement statuses rather than a fully checkable result. It
+does not propagate trust metadata into the verified suffix. See
 [`docs/cli.md`](cli.md#trusted-prefix-file-checks-preview) for the full
 contract.
 

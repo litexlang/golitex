@@ -387,16 +387,13 @@ impl Runtime {
                     );
                     let equal_atomic_fact: AtomicFact = equal_fact.clone().into();
                     let equal_fact_key = equal_atomic_fact.to_string();
-                    let trust_summary = self.current_trusted_prefix_statement_trust();
                     let mut infer_result = InferResult::new();
                     infer_result.push_atomic_fact(&equal_atomic_fact);
                     self.top_level_env().store_atomic_fact(equal_atomic_fact)?;
-                    self.top_level_env()
-                        .store_fact_to_cache_known_fact_with_trust(
-                            equal_fact_key,
-                            in_fact.line_file.clone(),
-                            trust_summary,
-                        )?;
+                    self.top_level_env().store_fact_to_cache_known_fact(
+                        equal_fact_key,
+                        in_fact.line_file.clone(),
+                    )?;
                     infer_result.new_infer_result_inside(self.infer_equal_fact(&equal_fact)?);
                     return Ok(infer_result);
                 }
@@ -597,10 +594,10 @@ impl Runtime {
             | Obj::StandardSet(StandardSet::Z)
             | Obj::StandardSet(StandardSet::R)
             | Obj::StandardSet(StandardSet::C) => Ok(InferResult::new()),
-            // Struct membership releases its named tuple-view facts.
-            // Example: from `p $in &Point`, infer `&Point{p}.x $in R`
-            // and `p[1] $in R`. Equivalent facts are instantiated with the
-            // explicit field-access objects and tuple projections.
+            // Struct membership releases named field-view facts. Tuple/cart
+            // projection facts are released only for a tuple literal.
+            // Example: `p $in &Point` infers `&Point{p}.x $in R`, while
+            // `(a, b) $in &Point` additionally checks the tuple components.
             Obj::StructObj(struct_obj) => {
                 let firing_key = format!(
                     "struct membership:{}",
@@ -624,21 +621,27 @@ impl Runtime {
                 }
 
                 let mut infer_result = InferResult::new();
-                let cart_membership: Fact = InFact::new(
-                    in_fact.element.clone(),
-                    Cart::new(field_types.clone()).into(),
-                    in_fact.line_file.clone(),
-                )
-                .into();
-                infer_result.new_fact(&cart_membership);
-                infer_result.new_infer_result_inside(
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
-                        cart_membership,
-                    )?,
-                );
+                let tuple = match &in_fact.element {
+                    Obj::Tuple(tuple) => Some(tuple),
+                    _ => None,
+                };
+                if tuple.is_some() {
+                    let cart_membership: Fact = InFact::new(
+                        in_fact.element.clone(),
+                        Cart::new(field_types.clone()).into(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
+                    infer_result.new_fact(&cart_membership);
+                    infer_result.new_infer_result_inside(
+                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            cart_membership,
+                        )?,
+                    );
+                }
 
                 let mut field_map: HashMap<String, Obj> = HashMap::new();
-                let mut projection_field_map: HashMap<String, Obj> = HashMap::new();
+                let mut projection_field_map = tuple.map(|_| HashMap::new());
                 let field_access_element = match &in_fact.element {
                     Obj::Atom(AtomObj::Identifier(identifier)) => self
                         .current_parse_namespace()
@@ -682,31 +685,28 @@ impl Runtime {
                         )?,
                     );
 
-                    let projected_field: Obj = match &in_fact.element {
-                        Obj::Tuple(tuple) => (*tuple.args[index]).clone(),
-                        _ => ObjAtIndex::new(
-                            in_fact.element.clone(),
-                            Number::new((index + 1).to_string()).into(),
+                    if let (Some(tuple), Some(projection_field_map)) =
+                        (tuple, projection_field_map.as_mut())
+                    {
+                        let projected_field = (*tuple.args[index]).clone();
+                        insert_symbol_substitution(
+                            projection_field_map,
+                            field_binding,
+                            projected_field.clone(),
+                        );
+                        let projected_field_in_type: Fact = InFact::new(
+                            projected_field,
+                            field_types[index].clone(),
+                            in_fact.line_file.clone(),
                         )
-                        .into(),
-                    };
-                    insert_symbol_substitution(
-                        &mut projection_field_map,
-                        field_binding,
-                        projected_field.clone(),
-                    );
-                    let projected_field_in_type: Fact = InFact::new(
-                        projected_field,
-                        field_types[index].clone(),
-                        in_fact.line_file.clone(),
-                    )
-                    .into();
-                    infer_result.new_fact(&projected_field_in_type);
-                    infer_result.new_infer_result_inside(
-                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
-                            projected_field_in_type,
-                        )?,
-                    );
+                        .into();
+                        infer_result.new_fact(&projected_field_in_type);
+                        infer_result.new_infer_result_inside(
+                            self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                                projected_field_in_type,
+                            )?,
+                        );
+                    }
                 }
 
                 for fact in def.equivalent_facts.iter() {
@@ -733,18 +733,20 @@ impl Runtime {
                         )?,
                     );
 
-                    let projected_fact = self.inst_fact(
-                        &after_header,
-                        &projection_field_map,
-                        ParamObjType::DefStructField,
-                        Some(in_fact.line_file.clone()),
-                    )?;
-                    infer_result.new_fact(&projected_fact);
-                    infer_result.new_infer_result_inside(
-                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
-                            projected_fact,
-                        )?,
-                    );
+                    if let Some(projection_field_map) = projection_field_map.as_ref() {
+                        let projected_fact = self.inst_fact(
+                            &after_header,
+                            projection_field_map,
+                            ParamObjType::DefStructField,
+                            Some(in_fact.line_file.clone()),
+                        )?;
+                        infer_result.new_fact(&projected_fact);
+                        infer_result.new_infer_result_inside(
+                            self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                                projected_fact,
+                            )?,
+                        );
+                    }
                 }
 
                 self.store_infer_rule_firing(firing_key);

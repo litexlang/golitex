@@ -11,7 +11,6 @@ impl Runtime {
                 vec![],
             )
         })?;
-        let theorem_trust_summary = self.get_thm_trust_summary_by_name(&thm_name);
 
         let verify_state = VerifyState::new(0, false);
         let arg_type_result = self
@@ -123,11 +122,10 @@ impl Runtime {
                 })?;
             stored_then_facts.push(instantiated_then.to_string());
             infer_result.new_infer_result_inside(
-                self.verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer_with_reason_and_trust(
+                self.verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer_with_reason(
                     &instantiated_then,
                     &verify_state,
-                    InferReason::TheoremInstantiation.store_reason(),
-                    theorem_trust_summary.clone(),
+                    InferReason::TheoremInstantiation,
                 )
                 .map_err(|e| {
                     short_exec_error(
@@ -171,7 +169,6 @@ impl Runtime {
                 vec![],
             )
         })?;
-        let theorem_trust_summary = self.get_thm_trust_summary_by_name(&thm_name);
 
         let param_to_arg_map = thm
             .forall_fact
@@ -201,10 +198,9 @@ impl Runtime {
                 })?;
             stored_then_facts.push(instantiated_then.to_string());
             infer_result.new_infer_result_inside(
-                self.store_trusted_fact_and_infer_with_reason_and_trust(
+                self.store_trusted_fact_and_infer_with_reason(
                     instantiated_then.clone().to_fact(),
                     InferReason::TheoremInstantiation,
-                    theorem_trust_summary.clone(),
                 )
                 .map_err(|e| {
                     short_exec_error(

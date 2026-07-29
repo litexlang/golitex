@@ -175,13 +175,8 @@ impl Runtime {
             self.cache_known_facts_contains(&alpha_normalized_key);
         if alpha_cached {
             let fact: Fact = forall_fact.clone().into();
-            let trust_summary = self.trust_summary_for_cached_fact(&alpha_normalized_key);
             self.top_level_env()
-                .store_fact_to_cache_known_fact_with_trust(
-                    fact.to_string(),
-                    cite_fact_source.clone(),
-                    trust_summary,
-                )?;
+                .store_fact_to_cache_known_fact(fact.to_string(), cite_fact_source.clone())?;
             return Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
                 fact.clone(),
                 VerifiedByResult::cached_fact(fact, cite_fact_source),

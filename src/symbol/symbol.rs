@@ -313,28 +313,11 @@ impl SymbolRole {
 pub struct SymbolDefinition {
     binding: SymbolBinding,
     role: SymbolRole,
-    trust_summary: ProofTrustSummary,
 }
 
 impl SymbolDefinition {
     pub fn new(binding: SymbolBinding, role: SymbolRole) -> Self {
-        SymbolDefinition {
-            binding,
-            role,
-            trust_summary: ProofTrustSummary::new(),
-        }
-    }
-
-    pub fn new_with_trust(
-        binding: SymbolBinding,
-        role: SymbolRole,
-        trust_summary: ProofTrustSummary,
-    ) -> Self {
-        SymbolDefinition {
-            binding,
-            role,
-            trust_summary,
-        }
+        SymbolDefinition { binding, role }
     }
 
     pub fn binding(&self) -> &SymbolBinding {
@@ -343,14 +326,6 @@ impl SymbolDefinition {
 
     pub fn role(&self) -> SymbolRole {
         self.role
-    }
-
-    pub fn trust_summary(&self) -> &ProofTrustSummary {
-        &self.trust_summary
-    }
-
-    pub fn merge_trust_summary(&mut self, trust_summary: &ProofTrustSummary) {
-        self.trust_summary.merge(trust_summary);
     }
 }
 

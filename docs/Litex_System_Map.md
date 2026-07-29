@@ -14,7 +14,7 @@ Object -> Fact -> Statement -> growing proof context
 This page describes the stable, author-facing execution model. It is not an
 exhaustive token glossary or a specification of kernel internals. The contract
 here is what an author needs to predict the scope, proof obligations, context
-effects, and trust status of ordinary Litex code.
+effects, and direct trust boundaries of ordinary Litex code.
 
 For runnable syntax examples, start with [Litex Examples](Examples.md#start-here).
 For a denser executor reference, use the
@@ -185,8 +185,8 @@ universal instantiation. A named `thm` also stores its universal fact, while
 The tables below describe the stable core statements. "Commit" means an effect
 visible in the parent/current scope after the statement succeeds. "Trust
 boundary" distinguishes checked work from declarations that deliberately add
-unproved content. Checked results can still depend on earlier trusted facts;
-that dependency remains part of their trust provenance.
+unproved content. The runtime records direct trusted statement forms, but does
+not persist or propagate trust metadata through later facts and theorems.
 
 ### Facts, Objects, and Definitions
 
@@ -210,8 +210,8 @@ that dependency remains part of their trust provenance.
 
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
-| `claim: ? target ...` | Proof steps run in a child scope; a universal target also opens parameters and premises there. | The target must be well-defined. `claim` does not accept a universal equivalence target. | Execute the proof, then verify the target or all universal conclusions. | Store the target and infer in the parent scope. | Checked; inherited trusted dependencies remain visible. |
-| `thm name: ? forall ...` | Theorem parameters and premises live in a child proof scope. | The name must be unused and the universal statement well-defined. | Execute the proof and verify every conclusion. | Store the named theorem and its universal fact. | Checked, with trust inherited from proof dependencies. |
+| `claim: ? target ...` | Proof steps run in a child scope; a universal target also opens parameters and premises there. | The target must be well-defined. `claim` does not accept a universal equivalence target. | Execute the proof, then verify the target or all universal conclusions. | Store the target and infer in the parent scope. | Checked; any explicit trusted step remains visible as its own statement result. |
+| `thm name: ? forall ...` | Theorem parameters and premises live in a child proof scope. | The name must be unused and the universal statement well-defined. | Execute the proof and verify every conclusion. | Store the named theorem and its universal fact. | The theorem itself carries no transitive trust tag; direct trusted proof steps remain separately countable. |
 | `axiom name: ? forall ...` | No proof scope is needed. | The named universal statement must be well-defined. | No truth proof. | Store a named theorem-like interface and universal fact. | Explicit axiom; rejected in strict mode. |
 | `trust facts` | Current scope. | In user code, every assumed fact must still be well-defined and storable. | No truth proof. | Store the facts as unsafe assumptions and run inference. | Explicit proof debt; rejected in strict mode. |
 | `trust have ...` | Current scope. | Bindings, types, and attached facts must be valid enough to store. | No truth proof of the attached facts. | Store names, type facts, attached assumptions, and inferred consequences. | Explicit proof debt; rejected in strict mode. |
@@ -229,7 +229,7 @@ unrelated verifier.
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
 | `by def $P(args)` | No persistent child scope. | `P` must be concrete, arguments must match, and the instantiated clauses must be well-defined. | Verify every defining clause even if `$P(args)` is already known. A direct clause that is itself a concrete predicate is stored without recursively unfolding its definition. | Store `$P(args)` and its direct definition clauses. | Checked use of a definition. |
-| `by thm name(args)` | The instantiation is checked against the current scope. | The theorem must exist; argument count and types must match. | Instantiate and verify the theorem's domain premises. | Store the instantiated conclusions and infer. | Inherits the theorem's trust provenance. |
+| `by thm name(args)` | The instantiation is checked against the current scope. | The theorem must exist; argument count and types must match. | Instantiate and verify the theorem's domain premises. | Store the instantiated conclusions and infer. | Does not copy trust metadata from the theorem; the runtime stores no such theorem metadata. |
 | `by cases` | One child scope per case. | Target, cases, and branch shapes must be well-defined. | Prove the cases are exhaustive, then prove every target in every branch. | Store the common target facts and infer. | Checked case analysis. |
 | `by contra` | A child scope assumes the logical negation of the target. | The target must support logical negation and be well-defined. | Execute the proof and verify both a stated impossible fact and its negation. | Store the original target and infer. | Checked contradiction proof. |
 | `by induc` / `by strong_induc` | Separate base and step scopes with ordinary or strong induction hypotheses. | Parameter, starting point, target, and induction shape must be valid. | Verify base and step obligations. | Store the resulting universal fact and infer. | Checked induction. |
@@ -284,7 +284,7 @@ specified result is released.
 | `true` | The statement was structurally valid, its objects were well-defined, and its required verification route or declaration action succeeded. | The statement's documented commit effect occurs, followed by inference where applicable. |
 | `unknown` | The verifier found the target meaningful but could not establish it from the visible context and supported routes. This does not mean false. A bare top-level fact surfaces this as a verification failure whose reason is `unknown`, not as a successful statement. | The target is not committed as a proved fact. Add a missing premise, equality, witness, case, or intermediate result. |
 | `error` | Parsing, name resolution, statement shape, scope, or well-definedness failed, or a proof block violated its execution contract. | The failed target is not committed as a verified result. Supporting facts produced while checking well-definedness may already be present; general statement failure is not a rollback promise. |
-| Trusted dependency | A successful result depends on `axiom`, `trust`, `trust have`, or another trusted source. This is provenance, not a fourth truth value. | The result can enter the context, but strict mode rejects source-level trust forms and the trust boundary remains auditable. |
+| Direct trusted statement | The source explicitly uses `axiom`, `trust`, `trust have`, or another trusted proof form. This is a statement classification, not a fourth truth value. | The declared fact can enter the context. Strict mode rejects the source-level trusted form; later results are not transitively tagged by the runtime. |
 
 A useful explanation separates:
 
@@ -292,12 +292,13 @@ A useful explanation separates:
 verified by ...      why the target was accepted
 store ...            what entered the context
 infer ...            what was added after that storage
-trust provenance ... which explicit assumptions the result depends on
+direct trust count ... which explicit trusted statement forms occurred
 ```
 
-That separation is the core of the author-facing proof model. Litex proofs are
-not only successful searches for isolated goals. They are controlled,
-scope-aware updates to a growing mathematical context.
+Definition-graph output may analyze direct trusted syntax and graph edges at
+graph-generation time. That reporting analysis is separate from Runtime
+execution and does not require trust fields in the environment. Litex proofs
+are controlled, scope-aware updates to a growing mathematical context.
 
 ## Boundary of This Map
 

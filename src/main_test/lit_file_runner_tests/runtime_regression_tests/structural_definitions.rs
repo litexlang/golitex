@@ -239,6 +239,110 @@ have b &Box<R> = (0, 0)
 }
 
 #[test]
+fn named_struct_membership_does_not_materialize_tuple_projection_view() {
+    let source_code = r#"
+struct Pair<S set>:
+    first S
+    second S
+
+have p &Pair<R>
+p.first $in R
+p.second $in R
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "named_struct_membership_does_not_materialize_tuple_projection_view",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "named struct fields must remain available without tuple projection inference:\n{}",
+        run_output
+    );
+
+    let tuple_related_facts = runtime
+        .top_level_env()
+        .cache_known_fact
+        .keys()
+        .filter(|fact| fact.contains("p[") || fact.contains("p $in cart("))
+        .cloned()
+        .collect::<Vec<_>>();
+    assert!(
+        tuple_related_facts.is_empty(),
+        "named struct membership must not materialize tuple projection facts: {:?}",
+        tuple_related_facts
+    );
+}
+
+#[test]
+fn struct_tuple_projection_materializes_cart_view_on_demand() {
+    let source_code = r#"
+struct Pair<S set>:
+    first S
+    second S
+
+have p &Pair<R>
+p[1] $in R
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "struct_tuple_projection_materializes_cart_view_on_demand",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "an explicit projection must lazily materialize its struct cart view:\n{}",
+        run_output
+    );
+
+    assert!(
+        runtime
+            .top_level_env()
+            .cache_known_fact
+            .keys()
+            .any(|fact| fact.contains("p $in cart(")),
+        "using `p[1]` must materialize the cart membership required by the projection"
+    );
+}
+
+#[test]
+fn tuple_struct_membership_still_materializes_tuple_view() {
+    let source_code = r#"
+struct Pair<S set>:
+    first S
+    second S
+
+trust (1, 2) $in &Pair<R>
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("tuple_struct_membership_materializes_tuple_view");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "tuple struct membership must still check and expose tuple components:\n{}",
+        run_output
+    );
+
+    assert!(
+        runtime
+            .top_level_env()
+            .cache_known_fact
+            .keys()
+            .any(|fact| fact.contains("(1, 2) $in cart(")),
+        "tuple struct membership must retain its cart membership view"
+    );
+}
+
+#[test]
 fn cached_membership_can_use_a_later_set_builder_alias() {
     let source_code = r#"
 abstract_prop marked(x)

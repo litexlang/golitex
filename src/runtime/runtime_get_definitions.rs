@@ -180,26 +180,6 @@ impl Runtime {
             .cloned()
     }
 
-    pub fn get_thm_trust_summary_by_name(&self, thm_name: &str) -> ProofTrustSummary {
-        if let Some((module_name, local_name)) = split_module_qualified_name(thm_name) {
-            if self.is_current_parse_module(module_name) {
-                return self.get_thm_trust_summary_by_name_in_current_envs(local_name);
-            }
-            return self
-                .imported_module_environments(module_name)
-                .into_iter()
-                .find_map(|environment| {
-                    environment
-                        .defined_thm_trust_summaries
-                        .get(local_name)
-                        .cloned()
-                })
-                .unwrap_or_else(ProofTrustSummary::new);
-        }
-
-        self.get_thm_trust_summary_by_name_in_current_envs(thm_name)
-    }
-
     fn get_thm_definition_by_name_in_current_envs(&self, thm_name: &str) -> Option<&DefThmStmt> {
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment.defined_thm_stmts.get(thm_name) {
@@ -208,16 +188,6 @@ impl Runtime {
         }
 
         None
-    }
-
-    fn get_thm_trust_summary_by_name_in_current_envs(&self, thm_name: &str) -> ProofTrustSummary {
-        for environment in self.iter_environments_from_top() {
-            if let Some(summary) = environment.defined_thm_trust_summaries.get(thm_name) {
-                return summary.clone();
-            }
-        }
-
-        ProofTrustSummary::new()
     }
 
     pub fn get_strategy_definition_by_name(&self, strategy_name: &str) -> Option<DefStrategyStmt> {

@@ -7,7 +7,6 @@ mod execution_trace;
 mod fact_result;
 mod fact_unknown;
 mod proof_block_stmt_result;
-mod proof_trust;
 mod runtime_result;
 mod runtime_success;
 mod runtime_unknown;
@@ -29,7 +28,6 @@ pub use fact_unknown::{
     NotForallUnknown, OrFactUnknown,
 };
 pub use proof_block_stmt_result::ProofBlockStmtResult;
-pub use proof_trust::{ProofTrustDependency, ProofTrustSummary};
 pub use runtime_result::StmtResult;
 pub use runtime_success::{
     ByAssignmentVerificationResult, ByCasesVerificationResult, ByChoiceVerificationResult,

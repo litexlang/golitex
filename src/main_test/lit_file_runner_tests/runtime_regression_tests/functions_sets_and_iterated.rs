@@ -808,9 +808,9 @@ try:
 }
 
 #[test]
-fn direct_membership_builtin_preserves_trust_in_theorem_provenance() {
+fn direct_membership_builtin_uses_facts_introduced_by_trust() {
     run_with_large_stack(
-        "direct_membership_builtin_preserves_trust_in_theorem_provenance",
+        "direct_membership_builtin_uses_facts_introduced_by_trust",
         || {
             let cases = [
                 (
@@ -825,7 +825,6 @@ thm membership_from_trusted_inclusion:
         x $in B
     x $in B
 "#,
-                    "membership_from_trusted_inclusion",
                 ),
                 (
                     "trusted_owner_membership",
@@ -839,11 +838,10 @@ thm membership_from_trusted_owner:
         x $in {1, 2}
     x $in {1, 2}
 "#,
-                    "membership_from_trusted_owner",
                 ),
             ];
 
-            for (label, source_code, theorem_name) in cases {
+            for (label, source_code) in cases {
                 let mut runtime = Runtime::new();
                 runtime.new_file_path_new_env_new_name_scope(label);
                 let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
@@ -853,13 +851,6 @@ thm membership_from_trusted_owner:
                     run_succeeded,
                     "{} should verify through the direct membership builtin:\n{}",
                     label, run_output
-                );
-                assert!(
-                    !runtime
-                        .get_thm_trust_summary_by_name(theorem_name)
-                        .is_empty(),
-                    "{} must retain indirect trust from its indexed premise",
-                    theorem_name
                 );
             }
         },

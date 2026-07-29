@@ -20,18 +20,10 @@ impl Runtime {
             Ok(result) => {
                 let in_trusted_prefix_run = self.current_statement_is_in_trusted_prefix_run();
                 let trace = if in_trusted_prefix_run && !result.is_unknown() {
-                    let direct_trust = self.current_trusted_prefix_statement_trust();
-                    if !direct_trust.is_empty() {
-                        StatementExecutionTrace::trusted_prefix(direct_trust)
+                    if self.current_statement_is_cli_trusted_prefix() {
+                        StatementExecutionTrace::trusted_prefix()
                     } else {
-                        let trust_summary = self
-                            .proof_trust_summary_from_stmt_results(std::slice::from_ref(&result));
-                        if trust_summary.is_empty() {
-                            StatementExecutionTrace::verified(false).with_verified_status()
-                        } else {
-                            StatementExecutionTrace::verified(false)
-                                .with_indirect_trust(trust_summary)
-                        }
+                        StatementExecutionTrace::verified(false).with_verified_status()
                     }
                 } else if trusted {
                     StatementExecutionTrace::trusted()

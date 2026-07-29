@@ -127,12 +127,10 @@ impl Runtime {
         }
 
         let target_fact: Fact = stmt.fact.clone().into();
-        let trust_summary = self.proof_trust_summary_from_stmt_results(&inside_results);
         let infer_result = self.run_in_local_env_and_commit(|rt| {
-            rt.store_trusted_fact_and_infer_with_reason_and_trust(
+            rt.store_trusted_fact_and_infer_with_reason(
                 target_fact.clone(),
                 InferReason::Other(ByDefStmt::store_reason().to_string()),
-                trust_summary,
             )
         })?;
 

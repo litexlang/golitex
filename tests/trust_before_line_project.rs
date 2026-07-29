@@ -85,10 +85,6 @@ target = "./target.lit"
                     trace.verification_status, None,
                     "ordinary project imports and exports must retain their old status"
                 );
-                assert!(
-                    !trace.trust_summary.contains_kind("cli_trusted_prefix"),
-                    "cutoff provenance must not leak into preceding files"
-                );
             }
 
             let prefix_trace = target_results[0]
@@ -98,9 +94,6 @@ target = "./target.lit"
                 prefix_trace.verification_status.as_deref(),
                 Some("trusted_prefix")
             );
-            assert!(prefix_trace
-                .trust_summary
-                .contains_kind("cli_trusted_prefix"));
 
             let suffix_trace = target_results[1]
                 .execution_trace()
@@ -109,9 +102,6 @@ target = "./target.lit"
                 suffix_trace.verification_status.as_deref(),
                 Some("verified")
             );
-            assert!(!suffix_trace
-                .trust_summary
-                .contains_kind("cli_trusted_prefix"));
             assert!(runtime
                 .unverified_imports
                 .iter()

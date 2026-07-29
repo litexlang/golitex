@@ -313,36 +313,15 @@ impl Runtime {
             .map(|policy| policy.before_line)
     }
 
-    pub(crate) fn begin_trusted_prefix_statement(
-        &mut self,
-        line_file: LineFile,
-        before_line: usize,
-        is_trusted: bool,
-    ) {
+    pub(crate) fn begin_trusted_prefix_statement(&mut self, is_trusted: bool) {
         let (module_id, layer) = self.current_execution_target();
-        let direct_trust = if is_trusted {
-            ProofTrustSummary::cli_trusted_prefix(line_file, before_line)
-        } else {
-            ProofTrustSummary::new()
-        };
         self.trusted_prefix_statement_context = Some(TrustedPrefixStatementContext::new(
-            module_id,
-            layer,
-            direct_trust,
+            module_id, layer, is_trusted,
         ));
     }
 
     pub(crate) fn end_trusted_prefix_statement(&mut self) {
         self.trusted_prefix_statement_context = None;
-    }
-
-    pub(crate) fn current_trusted_prefix_statement_trust(&self) -> ProofTrustSummary {
-        let (module_id, layer) = self.current_execution_target();
-        self.trusted_prefix_statement_context
-            .as_ref()
-            .filter(|context| context.matches(module_id, layer))
-            .map(|context| context.direct_trust.clone())
-            .unwrap_or_else(ProofTrustSummary::new)
     }
 
     pub(crate) fn current_statement_is_in_trusted_prefix_run(&self) -> bool {
@@ -353,7 +332,11 @@ impl Runtime {
     }
 
     pub(crate) fn current_statement_is_cli_trusted_prefix(&self) -> bool {
-        !self.current_trusted_prefix_statement_trust().is_empty()
+        let (module_id, layer) = self.current_execution_target();
+        self.trusted_prefix_statement_context
+            .as_ref()
+            .filter(|context| context.matches(module_id, layer))
+            .is_some_and(|context| context.is_trusted)
     }
 
     pub(crate) fn replace_current_execution_mode(

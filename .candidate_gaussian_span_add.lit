@@ -4,58 +4,11 @@ thm binary_gaussian_span_is_closed_under_addition:
         b $in binary_gaussian_span(ax, ay, bx, b_y)
         =>:
             gaussian_add(a[1], a[2], b[1], b[2]) $in binary_gaussian_span(ax, ay, bx, b_y)
-    obtain ux, uy, vx, vy from exist ux0, uy0, vx0, vy0 Z st {
-        gaussian_add(
-            gaussian_mul(ax, ay, ux0, uy0)[1],
-            gaussian_mul(ax, ay, ux0, uy0)[2],
-            gaussian_mul(bx, b_y, vx0, vy0)[1],
-            gaussian_mul(bx, b_y, vx0, vy0)[2]
-        ) = (a[1], a[2])
-    }
-    obtain sx, sy, tx, ty from exist sx0, sy0, tx0, ty0 Z st {
-        gaussian_add(
-            gaussian_mul(ax, ay, sx0, sy0)[1],
-            gaussian_mul(ax, ay, sx0, sy0)[2],
-            gaussian_mul(bx, b_y, tx0, ty0)[1],
-            gaussian_mul(bx, b_y, tx0, ty0)[2]
-        ) = (b[1], b[2])
-    }
-    witness exist px, py, qx, qy Z st {
-        gaussian_add(
-            gaussian_mul(ax, ay, px, py)[1],
-            gaussian_mul(ax, ay, px, py)[2],
-            gaussian_mul(bx, b_y, qx, qy)[1],
-            gaussian_mul(bx, b_y, qx, qy)[2]
-        ) = (
-            gaussian_add(a[1], a[2], b[1], b[2])[1],
-            gaussian_add(a[1], a[2], b[1], b[2])[2]
-        )
-    } from ux + sx, uy + sy, vx + tx, vy + ty:
-        gaussian_mul(ax, ay, ux + sx, uy + sy) = gaussian_add(
-            gaussian_mul(ax, ay, ux, uy)[1],
-            gaussian_mul(ax, ay, ux, uy)[2],
-            gaussian_mul(ax, ay, sx, sy)[1],
-            gaussian_mul(ax, ay, sx, sy)[2]
-        )
-        gaussian_mul(bx, b_y, vx + tx, vy + ty) = gaussian_add(
-            gaussian_mul(bx, b_y, vx, vy)[1],
-            gaussian_mul(bx, b_y, vx, vy)[2],
-            gaussian_mul(bx, b_y, tx, ty)[1],
-            gaussian_mul(bx, b_y, tx, ty)[2]
-        )
-        gaussian_add(
-            gaussian_mul(ax, ay, ux + sx, uy + sy)[1],
-            gaussian_mul(ax, ay, ux + sx, uy + sy)[2],
-            gaussian_mul(bx, b_y, vx + tx, vy + ty)[1],
-            gaussian_mul(bx, b_y, vx + tx, vy + ty)[2]
-        ) = gaussian_add(a[1], a[2], b[1], b[2])
-        gaussian_add(a[1], a[2], b[1], b[2]) = (
-            gaussian_add(a[1], a[2], b[1], b[2])[1],
-            gaussian_add(a[1], a[2], b[1], b[2])[2]
-        )
-    $is_binary_gaussian_linear_combination(
-        ax, ay, bx, b_y,
-        gaussian_add(a[1], a[2], b[1], b[2])[1],
-        gaussian_add(a[1], a[2], b[1], b[2])[2]
-    )
+    obtain ux, uy, vx, vy from exist ux0, uy0, vx0, vy0 Z st {a[1] = ax * ux0 - ay * uy0 + bx * vx0 - b_y * vy0, a[2] = ax * uy0 + ay * ux0 + bx * vy0 + b_y * vx0}
+    obtain sx, sy, tx, ty from exist sx0, sy0, tx0, ty0 Z st {b[1] = ax * sx0 - ay * sy0 + bx * tx0 - b_y * ty0, b[2] = ax * sy0 + ay * sx0 + bx * ty0 + b_y * tx0}
+    gaussian_add(a[1], a[2], b[1], b[2]) = (a[1] + b[1], a[2] + b[2])
+    witness exist px, py, qx, qy Z st {gaussian_add(a[1], a[2], b[1], b[2])[1] = ax * px - ay * py + bx * qx - b_y * qy, gaussian_add(a[1], a[2], b[1], b[2])[2] = ax * py + ay * px + bx * qy + b_y * qx} from ux + sx, uy + sy, vx + tx, vy + ty:
+        gaussian_add(a[1], a[2], b[1], b[2])[1] = (a[1] + b[1], a[2] + b[2])[1] = a[1] + b[1] = ax * (ux + sx) - ay * (uy + sy) + bx * (vx + tx) - b_y * (vy + ty)
+        gaussian_add(a[1], a[2], b[1], b[2])[2] = (a[1] + b[1], a[2] + b[2])[2] = a[2] + b[2] = ax * (uy + sy) + ay * (ux + sx) + bx * (vy + ty) + b_y * (vx + tx)
+    by def $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, gaussian_add(a[1], a[2], b[1], b[2])[1], gaussian_add(a[1], a[2], b[1], b[2])[2])
     gaussian_add(a[1], a[2], b[1], b[2]) $in binary_gaussian_span(ax, ay, bx, b_y)

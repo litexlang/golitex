@@ -150,12 +150,13 @@ and it cannot be combined with `-strict` or extra positional arguments.
 
 A cutoff run emits a leading `trusted_prefix` boundary record and always ends
 with one run summary, even without `-summarize`. Statement objects retain their
-normal `type` and report `verification_status`. A verified suffix statement
-that depends on the prefix reports `indirect_trust` with
-`cli_trusted_prefix` provenance; therefore the run must not be treated as a
-fully checkable result. `-compact` retains these trust-status fields for cutoff
-runs. An `-isolated -f` cutoff run exits after this summary instead of
-continuing into the interactive REPL.
+normal `type` and report `verification_status`: prefix statements report
+`trusted_prefix`, while suffix statements report `verified`. The runtime does
+not attach transitive trust metadata to suffix statements that use prefix
+facts. The run is still not fully checkable because the prefix proofs were
+skipped. `-compact` retains the statement status needed to see that boundary.
+An `-isolated -f` cutoff run exits after this summary instead of continuing
+into the interactive REPL.
 
 Declare local project files and child submodules in recursive ordered
 `[export]` entries. Only a `[hierarchy] module` declares non-standard packages
@@ -191,10 +192,12 @@ With `-summarize`, Litex appends one final JSON object whose `output_type` is
 `"run summary"`. The ordinary statement output before that object is unchanged.
 The summary reports top-level and expanded statement counts, fact/prop/theorem
 definition counts, proof-block and `by` counts, direct `trust` statements,
-indirect trusted dependencies, axioms, trusted local names, abstract interfaces, and
-stack/runner warnings. It also includes `statement_type_counts`,
-`output_type_counts`, and a `statements` array with line numbers and rendered
-statement text for editor-side cursor selection. Prefer:
+`trust have` assumptions, axioms, abstract interfaces, and stack/runner
+warnings. These are direct statement counts; the runtime does not classify
+theorems or derived facts by transitive trust dependency. It also includes
+`statement_type_counts`, `output_type_counts`, and a `statements` array with
+line numbers and rendered statement text for editor-side cursor selection.
+Prefer:
 
 ```bash
 litex -summarize -isolated -f examples/tmp.lit

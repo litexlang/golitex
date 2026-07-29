@@ -3,9 +3,8 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_def_thm_stmt(&mut self, stmt: &DefThmStmt) -> Result<StmtResult, RuntimeError> {
         self.exec_def_thm_stmt_verify_well_definedness(stmt)?;
-        let (body_exec_result, trust_summary) = self.exec_def_thm_stmt_verify_process(stmt)?;
-        let infer_result_after_store =
-            self.exec_def_thm_stmt_affect_environment(stmt, &trust_summary)?;
+        let body_exec_result = self.exec_def_thm_stmt_verify_process(stmt)?;
+        let infer_result_after_store = self.exec_def_thm_stmt_affect_environment(stmt)?;
 
         Ok(body_exec_result.with_infers(infer_result_after_store))
     }
@@ -41,17 +40,11 @@ impl Runtime {
     fn exec_def_thm_stmt_verify_process(
         &mut self,
         stmt: &DefThmStmt,
-    ) -> Result<(StmtResult, ProofTrustSummary), RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         if stmt.is_axiom() {
-            let trust_summary = ProofTrustSummary::from_dependency(
-                "axiom",
-                Some(stmt.name.clone()),
-                stmt.line_file.clone(),
-            );
-            return Ok((
+            return Ok(
                 NonFactualStmtSuccess::new(stmt.clone().into(), InferResult::new(), vec![]).into(),
-                trust_summary,
-            ));
+            );
         }
 
         let thm_name = stmt.name.clone();
@@ -132,7 +125,6 @@ impl Runtime {
                 inside_results.push(result);
             }
 
-            let trust_summary = rt.proof_trust_summary_from_stmt_results(&inside_results);
             let theorem_verification = TheoremVerificationResult::new(
                 stmt.name.clone(),
                 stmt.forall_fact.clone(),
@@ -140,47 +132,34 @@ impl Runtime {
                 proof_len,
             );
 
-            Ok((
-                NonFactualStmtSuccess::new_with_theorem_verification(
-                    stmt.clone().into(),
-                    InferResult::new(),
-                    inside_results,
-                    theorem_verification,
-                )
-                .into(),
-                trust_summary,
-            ))
+            Ok(NonFactualStmtSuccess::new_with_theorem_verification(
+                stmt.clone().into(),
+                InferResult::new(),
+                inside_results,
+                theorem_verification,
+            )
+            .into())
         })
     }
 
     pub(crate) fn exec_def_thm_stmt_affect_environment(
         &mut self,
         stmt: &DefThmStmt,
-        trust_summary: &ProofTrustSummary,
     ) -> Result<InferResult, RuntimeError> {
-        let mut trust_summary = trust_summary.clone();
-        let direct_trust = self.current_trusted_prefix_statement_trust();
-        if direct_trust.is_empty() && self.current_statement_is_in_trusted_prefix_run() {
-            let stmt_for_trust: Stmt = stmt.clone().into();
-            trust_summary.merge(&self.proof_trust_summary_from_stmt(&stmt_for_trust));
-        }
-        trust_summary.merge(&direct_trust);
-        self.store_def_thm_with_trust(stmt, &trust_summary)
+        self.store_def_thm(stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
         if self.current_execution_is_trusted_file() {
-            return self.store_trusted_fact_and_infer_with_reason_and_trust(
+            return self.store_trusted_fact_and_infer_with_reason(
                 Fact::ForallFact(stmt.forall_fact.clone()),
-                InferReason::Other(stmt.store_reason_with_trust(&trust_summary)),
-                trust_summary,
+                InferReason::Other(stmt.store_reason().to_string()),
             );
         }
 
-        self.verify_well_defined_and_store_and_infer_with_reason_and_trust(
+        self.verify_well_defined_and_store_and_infer_with_reason(
             Fact::ForallFact(stmt.forall_fact.clone()),
             &VerifyState::new(0, false),
-            InferReason::Other(stmt.store_reason_with_trust(&trust_summary)),
-            trust_summary,
+            InferReason::Other(stmt.store_reason().to_string()),
         )
     }
 
@@ -188,16 +167,7 @@ impl Runtime {
         &mut self,
         stmt: &DefThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let trust_summary = if stmt.is_axiom() {
-            ProofTrustSummary::from_dependency(
-                "axiom",
-                Some(stmt.name.clone()),
-                stmt.line_file.clone(),
-            )
-        } else {
-            ProofTrustSummary::new()
-        };
-        let infer_result = self.exec_def_thm_stmt_affect_environment(stmt, &trust_summary)?;
+        let infer_result = self.exec_def_thm_stmt_affect_environment(stmt)?;
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 }

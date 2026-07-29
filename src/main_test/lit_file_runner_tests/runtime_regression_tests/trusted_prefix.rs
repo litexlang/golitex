@@ -28,7 +28,7 @@ fn trust_before_line_trusts_only_statements_before_the_exact_boundary() {
         error.is_some(),
         "the false fact starting at the boundary must fail"
     );
-    assert_trace(&results[0], "trusted_prefix", 1, 3);
+    assert_trace(&results[0], "trusted_prefix");
     let report = runtime
         .trusted_prefix_report
         .as_ref()
@@ -124,7 +124,7 @@ have duplicate_object R
         error.is_some(),
         "trusted declarations must still update the environment"
     );
-    assert_trace(&results[0], "trusted_prefix", 1, 4);
+    assert_trace(&results[0], "trusted_prefix");
     assert_eq!(runtime.current_execution_mode(), ExecutionMode::Verified);
 }
 
@@ -143,31 +143,26 @@ fn trust_before_line_reports_trusted_and_verified_statement_traces() {
 
     assert!(error.is_none());
     assert_eq!(results.len(), 2);
-    assert_trace(&results[0], "trusted_prefix", 1, 3);
-    assert_trace(&results[1], "verified", 0, 0);
+    assert_trace(&results[0], "trusted_prefix");
+    assert_trace(&results[1], "verified");
 
     let (_, output) = render_run_source_code_output(&runtime, &results, &error, false);
     assert!(output.contains("\"verification_status\": \"trusted_prefix\""));
     assert!(output.contains("\"verification_status\": \"verified\""));
-    assert!(output.contains("\"kind\": \"cli_trusted_prefix\""));
+    assert!(!output.contains("\"trust_dependencies\""));
     assert!(output.contains("\"kind\": \"trusted_prefix_environment_load\""));
     assert!(!output.contains("\"kind\": \"trusted_environment_load\""));
 }
 
 #[test]
-fn trust_before_line_does_not_invent_cli_provenance_for_suffix_trust() {
+fn trust_before_line_reports_a_suffix_trust_as_verified_execution() {
     let fixture = TrustedPrefixFixture::new("suffix_trust", "trust 1 = 2\n");
     let mut runtime = Runtime::new();
     let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 1);
 
     assert!(error.is_none());
     assert_eq!(results.len(), 1);
-    let trace = results[0]
-        .execution_trace()
-        .expect("the suffix trust statement should have a trace");
-    assert_eq!(trace.verification_status.as_deref(), Some("indirect_trust"));
-    assert!(trace.trust_summary.contains_kind("trust"));
-    assert!(!trace.trust_summary.contains_kind("cli_trusted_prefix"));
+    assert_trace(&results[0], "verified");
 
     let report = runtime
         .trusted_prefix_report
@@ -176,11 +171,13 @@ fn trust_before_line_does_not_invent_cli_provenance_for_suffix_trust() {
     let summary = display_run_summary_json_with_runtime_and_trusted_prefix(
         &runtime, &results, &error, report,
     );
-    assert!(!summary.contains("cli_trusted_prefix"));
+    assert!(summary.contains("\"direct_trust\": 1"));
+    assert!(!summary.contains("indirect_trust"));
+    assert!(!summary.contains("trust_dependencies"));
 }
 
 #[test]
-fn trust_before_line_marks_a_suffix_cached_fact_as_indirect_trust() {
+fn trust_before_line_reuses_a_suffix_cached_fact_without_provenance() {
     let fixture = TrustedPrefixFixture::new(
         "cached_fact",
         r#"1 = 2
@@ -193,11 +190,11 @@ fn trust_before_line_marks_a_suffix_cached_fact_as_indirect_trust() {
 
     assert!(error.is_none());
     assert_eq!(results.len(), 2);
-    assert_trace(&results[1], "indirect_trust", 1, 3);
+    assert_trace(&results[1], "verified");
 }
 
 #[test]
-fn trust_before_line_marks_a_suffix_inferred_fact_as_indirect_trust() {
+fn trust_before_line_reuses_a_suffix_inferred_fact_without_provenance() {
     let fixture = TrustedPrefixFixture::new(
         "inferred_fact",
         r#"2 $in {3}
@@ -210,12 +207,12 @@ fn trust_before_line_marks_a_suffix_inferred_fact_as_indirect_trust() {
 
     assert!(error.is_none());
     assert_eq!(results.len(), 2);
-    assert_trace(&results[0], "trusted_prefix", 1, 3);
-    assert_trace(&results[1], "indirect_trust", 1, 3);
+    assert_trace(&results[0], "trusted_prefix");
+    assert_trace(&results[1], "verified");
 }
 
 #[test]
-fn trust_before_line_marks_a_suffix_theorem_call_as_indirect_trust() {
+fn trust_before_line_reuses_a_suffix_theorem_without_provenance() {
     let fixture = TrustedPrefixFixture::new(
         "theorem_call",
         r#"thm prefix_false:
@@ -237,18 +234,15 @@ thm suffix_from_prefix:
         "suffix theorem should be supplied by the prefix theorem"
     );
     assert_eq!(results.len(), 2);
-    assert_trace(&results[0], "trusted_prefix", 1, 6);
-    assert_trace(&results[1], "indirect_trust", 1, 6);
-    assert!(
-        runtime
-            .get_thm_trust_summary_by_name("suffix_from_prefix")
-            .contains_kind("cli_trusted_prefix"),
-        "the suffix theorem interface must retain its indirect CLI trust"
-    );
+    assert_trace(&results[0], "trusted_prefix");
+    assert_trace(&results[1], "verified");
+    assert!(runtime
+        .get_thm_definition_by_name("suffix_from_prefix")
+        .is_some());
 }
 
 #[test]
-fn trust_before_line_marks_a_suffix_object_reference_as_indirect_trust() {
+fn trust_before_line_reuses_a_suffix_object_without_provenance() {
     let fixture = TrustedPrefixFixture::new(
         "object_reference",
         r#"have prefix_object R = 1
@@ -261,12 +255,12 @@ prefix_object = prefix_object
 
     assert!(error.is_none());
     assert_eq!(results.len(), 2);
-    assert_trace(&results[0], "trusted_prefix", 1, 3);
-    assert_trace(&results[1], "indirect_trust", 1, 3);
+    assert_trace(&results[0], "trusted_prefix");
+    assert_trace(&results[1], "verified");
 }
 
 #[test]
-fn trust_before_line_propagates_indirect_trust_through_a_suffix_object() {
+fn trust_before_line_reuses_a_suffix_object_fact_without_provenance() {
     let fixture = TrustedPrefixFixture::new(
         "suffix_object_propagation",
         r#"exist x R st {x != x}
@@ -281,9 +275,9 @@ y = y
 
     assert!(error.is_none());
     assert_eq!(results.len(), 3);
-    assert_trace(&results[0], "trusted_prefix", 1, 3);
-    assert_trace(&results[1], "indirect_trust", 1, 3);
-    assert_trace(&results[2], "indirect_trust", 1, 3);
+    assert_trace(&results[0], "trusted_prefix");
+    assert_trace(&results[1], "verified");
+    assert_trace(&results[2], "verified");
 }
 
 #[test]
@@ -305,8 +299,8 @@ committed_object = 1
         "a trusted top-level try must commit its child environment"
     );
     assert_eq!(results.len(), 2);
-    assert_trace(&results[0], "trusted_prefix", 1, 5);
-    assert_trace(&results[1], "indirect_trust", 1, 5);
+    assert_trace(&results[0], "trusted_prefix");
+    assert_trace(&results[1], "verified");
 }
 
 #[test]
@@ -375,23 +369,11 @@ fn run_trusted_prefix(
     )
 }
 
-fn assert_trace(result: &StmtResult, status: &str, statement_line: usize, boundary: usize) {
+fn assert_trace(result: &StmtResult, status: &str) {
     let trace = result
         .execution_trace()
         .expect("statement result should have an execution trace");
     assert_eq!(trace.verification_status.as_deref(), Some(status));
-    if statement_line == 0 {
-        assert!(trace.trust_summary.is_empty());
-        return;
-    }
-    let dependency = trace
-        .trust_summary
-        .dependencies
-        .iter()
-        .find(|dependency| dependency.kind == "cli_trusted_prefix")
-        .expect("trace should contain CLI trusted-prefix provenance");
-    assert_eq!(dependency.line_file.0, statement_line);
-    assert_eq!(dependency.boundary, Some(boundary));
 }
 
 fn assert_verified_probe_fails(runtime: &mut Runtime, source: &str) {
