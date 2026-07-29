@@ -1295,10 +1295,11 @@ Execution commands:
 the exact one-based physical line of a top-level statement header; nested
 proof lines and lines inside a statement are not valid boundaries. The prefix
 is still parsed and registered, but its well-definedness and proofs are
-trusted. The option records `cli_trusted_prefix` provenance, so suffix results
-that use the prefix remain visibly indirectly trusted. It cannot be combined
-with `-strict` or used with repository, session, runner, graph, Python, or
-LaTeX commands.
+trusted. Prefix statements report `verification_status: trusted_prefix`, while
+normally checked suffix statements report `verification_status: verified`.
+The runtime does not propagate trust metadata from the prefix into suffix
+results. It cannot be combined with `-strict` or used with repository,
+session, runner, graph, Python, or LaTeX commands.
 
 ### Utility statements
 
@@ -1777,8 +1778,9 @@ claim:
     by axiom_of_choice: set S
 ```
 
-These forms are not ordinary derived proofs. Their output and trust summary
-must keep the boundary visible; `-strict` rejects them.
+These forms are not ordinary derived proofs. Their statement form and output
+keep the direct boundary visible; `-strict` rejects them. Litex does not taint
+later theorems or facts with transitive trust metadata.
 
 ### Reading verifier output
 
@@ -2225,8 +2227,8 @@ change:
 | `trust` | Accepted and reported as trusted | Rejected |
 | `trust have` | Accepted and reported as trusted | Rejected |
 | `axiom` | Accepted and reported as trusted | Rejected |
-| Trusted preview set-theoretic step | Accepted with trust provenance | Rejected |
-| `-trust-before-line` file prefix | Accepted with `cli_trusted_prefix` provenance | Incompatible with `-strict` |
+| Trusted preview set-theoretic step | Accepted as an explicit trusted proof step | Rejected |
+| `-trust-before-line` file prefix | Accepted and marked `trusted_prefix` statement by statement | Incompatible with `-strict` |
 
 Strict mode reduces user-supplied trust; it does not turn the Litex checker and
 its builtin rules into a separately verified small kernel.

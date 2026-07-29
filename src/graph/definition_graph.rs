@@ -482,7 +482,7 @@ impl DefinitionGraphBuilder {
                 }
             }
         }
-        builder.add_result_provenance(runtime, stmt_results);
+        builder.add_result_provenance(stmt_results);
         builder.propagate_knowledge_status();
         builder
     }
@@ -820,11 +820,6 @@ impl DefinitionGraphBuilder {
                 well_definedness.collect_fact(fact);
             }
             self.add_dependency_edges(&node_id, well_definedness, "well_definedness");
-
-            if let Some(trust_summary) = environment.defined_thm_trust_summaries.get(name) {
-                self.set_node_knowledge_status(&node_id, "trust", Some("indirect"));
-                self.add_trust_summary_edges(&node_id, trust_summary);
-            }
         }
     }
 
@@ -971,13 +966,13 @@ impl DefinitionGraphBuilder {
         }
     }
 
-    fn add_result_provenance(&mut self, runtime: &Runtime, stmt_results: &[StmtResult]) {
+    fn add_result_provenance(&mut self, stmt_results: &[StmtResult]) {
         for result in stmt_results {
-            self.add_one_result_provenance(runtime, result);
+            self.add_one_result_provenance(result);
         }
     }
 
-    fn add_one_result_provenance(&mut self, runtime: &Runtime, result: &StmtResult) {
+    fn add_one_result_provenance(&mut self, result: &StmtResult) {
         let Some(success) = result.non_factual_success() else {
             return;
         };
@@ -999,14 +994,11 @@ impl DefinitionGraphBuilder {
                     if direct_trust {
                         self.set_node_knowledge_status(&target_id, "trust", Some("direct"));
                     }
-                    let summary = runtime
-                        .proof_trust_summary_from_stmt_results(success.inside_results.as_slice());
-                    self.add_trust_summary_edges(&target_id, &summary);
                 }
                 self.active_canonical_name = previous_canonical_name;
             }
             Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(statement)) => {
-                self.add_selection_certificate(runtime, statement, success);
+                self.add_selection_certificate(statement, success);
             }
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(statement)) => {
                 let source_id =
@@ -1029,7 +1021,6 @@ impl DefinitionGraphBuilder {
 
     fn add_selection_certificate(
         &mut self,
-        runtime: &Runtime,
         statement: &HaveFnByForallExistUniqueStmt,
         success: &NonFactualStmtSuccess,
     ) {
@@ -1052,7 +1043,6 @@ impl DefinitionGraphBuilder {
             &statement.line_file,
             statement.to_string().as_str(),
         );
-        self.inherit_selection_function_trust(&function_id, &certificate_id);
         self.set_node_semantic_role(&function_id, "canonical_selection");
         self.set_node_litex_form(&function_id, "have_fn_by_exist_unique");
 
@@ -1080,43 +1070,12 @@ impl DefinitionGraphBuilder {
             self.add_edge(&source_id, &certificate_id, "proof");
         }
         let direct_trust = stmt_results_contain_direct_trust(&success.inside_results);
-        let summary = runtime.proof_trust_summary_from_stmt_results(&success.inside_results);
-        if !summary.is_empty() {
-            let trust_kind = if direct_trust { "direct" } else { "indirect" };
-            self.set_node_knowledge_status(&certificate_id, "trust", Some(trust_kind));
-            self.set_node_knowledge_status(&function_id, "trust", Some(trust_kind));
-            self.add_trust_summary_edges(&certificate_id, &summary);
+        if direct_trust {
+            self.set_node_knowledge_status(&certificate_id, "trust", Some("direct"));
+            self.set_node_knowledge_status(&function_id, "trust", Some("direct"));
         }
         self.add_edge(&certificate_id, &function_id, "selection");
         self.active_canonical_name = previous_canonical_name;
-    }
-
-    fn inherit_selection_function_trust(&mut self, function_id: &str, certificate_id: &str) {
-        let Some(function_index) = self.node_index.get(function_id).copied() else {
-            return;
-        };
-        let function_status = self.nodes[function_index].knowledge_status.clone();
-        let function_trust_kind = self.nodes[function_index].trust_kind.clone();
-        if function_status == "trust" {
-            self.set_node_knowledge_status(
-                certificate_id,
-                "trust",
-                function_trust_kind.as_deref().or(Some("indirect")),
-            );
-        } else if function_status == "axiom" {
-            self.set_node_knowledge_status(certificate_id, "trust", Some("indirect"));
-        } else {
-            return;
-        }
-        let source_ids = self
-            .edges
-            .iter()
-            .filter(|edge| edge.to == function_id && edge.kind == "trust_source")
-            .map(|edge| edge.from.clone())
-            .collect::<Vec<_>>();
-        for source_id in source_ids {
-            self.add_edge(&source_id, certificate_id, "trust_source");
-        }
     }
 
     fn proof_source_ids_from_results(&mut self, results: &[StmtResult]) -> Vec<String> {
@@ -1319,36 +1278,6 @@ impl DefinitionGraphBuilder {
                 ));
             }
             _ => {}
-        }
-    }
-
-    fn add_trust_summary_edges(&mut self, target_id: &str, summary: &ProofTrustSummary) {
-        for dependency in summary.dependencies.iter() {
-            let source_id = if dependency.kind == "axiom" {
-                if let Some(name) = dependency.name.as_ref() {
-                    let name = self.normalized_dependency_name(name);
-                    let source_id = definition_id("theorem", name.as_str());
-                    self.ensure_node(
-                        source_id.clone(),
-                        "theorem",
-                        "axiom",
-                        name.as_str(),
-                        false,
-                        Some(&dependency.line_file),
-                        None,
-                    );
-                    source_id
-                } else {
-                    self.ensure_direct_trust_source("axiom", None, &dependency.line_file)
-                }
-            } else {
-                self.ensure_direct_trust_source(
-                    dependency.kind.as_str(),
-                    dependency.name.as_deref(),
-                    &dependency.line_file,
-                )
-            };
-            self.add_edge(&source_id, target_id, "trust_source");
         }
     }
 

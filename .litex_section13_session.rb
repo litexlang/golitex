@@ -19,7 +19,8 @@ stop_index = blocks.index { |block| block.match?(/\A(?:prop|thm|have fn|have) #{
 abort("stop declaration not found: #{stop_name}") unless stop_index
 
 def wrapped(block)
-  "try:\n" + block.each_line.map { |line| "    #{line}" }.join
+  payload = "try:\n" + block.each_line.map { |line| "    #{line}" }.join
+  payload.end_with?("\n") ? payload : "#{payload}\n"
 end
 
 def submit(stdin, stdout, id, block)

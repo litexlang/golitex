@@ -317,15 +317,6 @@ impl Runtime {
         (false, default_line_file())
     }
 
-    pub fn trust_summary_for_cached_fact(&self, key: &str) -> ProofTrustSummary {
-        for env in self.iter_environments_from_top() {
-            if let Some(summary) = env.cache_known_fact_trust.get(key) {
-                return summary.clone();
-            }
-        }
-        ProofTrustSummary::new()
-    }
-
     pub fn infer_rule_firing_cached(&self, key: &str) -> bool {
         self.iter_environments_from_top()
             .any(|env| env.cache_infer_rule_firing.contains_key(key))

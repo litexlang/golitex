@@ -1,6 +1,4 @@
-use crate::common::json_value::{
-    line_file_line_json_value, line_file_source_json_value, render_json_value, JsonValue,
-};
+use crate::common::json_value::{line_file_line_json_value, render_json_value, JsonValue};
 use crate::prelude::{
     ByAssignmentVerificationResult, ByCasesVerificationResult, ByChoiceVerificationResult,
     ByContraVerificationResult, ByDefinitionVerificationResult,
@@ -9,8 +7,8 @@ use crate::prelude::{
     ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ByVerificationResult,
     ClaimFactVerificationResult, ClaimForallVerificationResult, ClaimVerificationResult,
     CommandStmt, DefObjStmt, Fact, FactualStmtSuccess, InferResult, NonFactualStmtSuccess,
-    OutputStyle, ParamDefWithType, ProofTrustSummary, Runtime, StatementExecutionTrace,
-    StatementPhaseStatus, Stmt, StmtResult, TheoremVerificationResult, VerifiedByResult,
+    OutputStyle, ParamDefWithType, Runtime, StatementExecutionTrace, StatementPhaseStatus, Stmt,
+    StmtResult, TheoremVerificationResult, VerifiedByResult,
 };
 
 use super::evidence::{
@@ -1548,43 +1546,6 @@ fn add_statement_trust_fields(
             JsonValue::JsonString(status.clone()),
         ));
     }
-    if trace.trust_summary.is_empty() {
-        return;
-    }
-    fields.push((
-        "trust_dependencies".to_string(),
-        trust_dependencies_value(&trace.trust_summary),
-    ));
-}
-
-fn trust_dependencies_value(summary: &ProofTrustSummary) -> JsonValue {
-    JsonValue::Array(
-        summary
-            .dependencies
-            .iter()
-            .map(|dependency| {
-                let mut fields = vec![(
-                    "kind".to_string(),
-                    JsonValue::JsonString(dependency.kind.clone()),
-                )];
-                if let Some(name) = dependency.name.as_ref() {
-                    fields.push(("name".to_string(), JsonValue::JsonString(name.clone())));
-                }
-                fields.push((
-                    "file".to_string(),
-                    line_file_source_json_value(&dependency.line_file),
-                ));
-                if let Some(boundary) = dependency.boundary {
-                    fields.push(("boundary".to_string(), JsonValue::Number(boundary)));
-                }
-                fields.push((
-                    "statement_line".to_string(),
-                    line_file_line_json_value(&dependency.line_file),
-                ));
-                JsonValue::Object(fields)
-            })
-            .collect::<Vec<_>>(),
-    )
 }
 
 fn add_factual_execution_phases(
@@ -1795,35 +1756,4 @@ fn statement_environment_effect(kind: &str, stmt: &Stmt) -> JsonValue {
 
 fn factual_success_is_forall_proof(x: &FactualStmtSuccess) -> bool {
     matches!(x.verified_by, VerifiedByResult::ForallProof(_))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::rc::Rc;
-
-    #[test]
-    fn trust_before_line_dependency_has_structured_output() {
-        let summary = ProofTrustSummary::cli_trusted_prefix((17, Rc::from("chapter.lit")), 42);
-        let value = trust_dependencies_value(&summary);
-        let JsonValue::Array(items) = value else {
-            panic!("trust dependencies must be an array");
-        };
-        let JsonValue::Object(fields) = &items[0] else {
-            panic!("a trust dependency must be an object");
-        };
-
-        assert!(fields.iter().any(|(key, value)| {
-            key == "kind"
-                && matches!(value, JsonValue::JsonString(kind) if kind == "cli_trusted_prefix")
-        }));
-        assert!(fields.iter().any(|(key, value)| key == "file"
-            && matches!(value, JsonValue::JsonString(file) if file == "chapter.lit")));
-        assert!(fields
-            .iter()
-            .any(|(key, value)| key == "boundary" && matches!(value, JsonValue::Number(42))));
-        assert!(fields
-            .iter()
-            .any(|(key, value)| key == "statement_line" && matches!(value, JsonValue::Number(17))));
-    }
 }

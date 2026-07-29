@@ -470,9 +470,6 @@ pub(crate) fn run_source_code_with_failure_kind(
     let profile_repository_run = std::env::var_os("LITEX_PROFILE_REPOSITORY").is_some();
     let mut stmt_results: Vec<StmtResult> = Vec::new();
     for mut block in blocks {
-        let previous_symbol_ids = trust_before_line
-            .filter(|before_line| block.line_file.0 >= *before_line)
-            .map(|_| runtime.current_environment_symbol_ids());
         let statement_start = profile_repository_run.then(Instant::now);
         let parsing_try_stmt = block.current_token_is_equal_to(TRY);
         let stmt: Stmt = {
@@ -491,12 +488,8 @@ pub(crate) fn run_source_code_with_failure_kind(
         let executing_try_stmt = matches!(&stmt, Stmt::ProofBlock(ProofBlockStmt::TryStmt(_)));
         let trusted_prefix_statement =
             trust_before_line.is_some_and(|before_line| stmt.line_file().0 < before_line);
-        if let Some(before_line) = trust_before_line {
-            runtime.begin_trusted_prefix_statement(
-                stmt.line_file(),
-                before_line,
-                trusted_prefix_statement,
-            );
+        if trust_before_line.is_some() {
+            runtime.begin_trusted_prefix_statement(trusted_prefix_statement);
         }
         let previous_execution_mode = trusted_prefix_statement
             .then(|| runtime.replace_current_execution_mode(ExecutionMode::Trusted));
@@ -515,17 +508,6 @@ pub(crate) fn run_source_code_with_failure_kind(
                 return (stmt_results, Some(e), Some(failure_kind));
             }
         };
-        if let Some(previous_symbol_ids) = previous_symbol_ids.as_ref() {
-            if let Err(error) =
-                runtime.propagate_cli_trust_to_statement_effects(&result, previous_symbol_ids)
-            {
-                if let Some(previous_execution_mode) = previous_execution_mode {
-                    runtime.replace_current_execution_mode(previous_execution_mode);
-                }
-                runtime.end_trusted_prefix_statement();
-                return (stmt_results, Some(error), Some(RunSourceFailureKind::Other));
-            }
-        }
         if let Some(previous_execution_mode) = previous_execution_mode {
             runtime.replace_current_execution_mode(previous_execution_mode);
         }

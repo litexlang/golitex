@@ -83,10 +83,6 @@ impl Environment {
             }
             self.defined_thm_stmts.insert(name.clone(), stmt.clone());
         }
-        for (name, summary) in child.defined_thm_trust_summaries.iter() {
-            self.defined_thm_trust_summaries
-                .insert(name.clone(), summary.clone());
-        }
 
         for (name, stmt) in child.defined_strategy_stmts.iter() {
             if self.defined_strategy_stmts.contains_key(name) {
@@ -197,7 +193,6 @@ impl Environment {
             defined_structs: _,
             defined_templates: _,
             defined_thm_stmts: _,
-            defined_thm_trust_summaries: _,
             defined_strategy_stmts: _,
             known_equality: _,
             known_atomic_facts_with_0_or_more_than_2_args,
@@ -226,7 +221,6 @@ impl Environment {
             known_antisymmetric_props,
             cache_well_defined_obj,
             cache_known_fact,
-            cache_known_fact_trust,
             cache_infer_rule_firing,
             used_strategy_stmts,
             stopped_strategy_stmts,
@@ -369,9 +363,6 @@ impl Environment {
         }
         for (key, line_file) in cache_known_fact {
             self.cache_known_fact.insert(key, line_file);
-        }
-        for (key, summary) in cache_known_fact_trust {
-            self.cache_known_fact_trust.insert(key, summary);
         }
         for (key, _) in cache_infer_rule_firing {
             self.cache_infer_rule_firing.insert(key, ());

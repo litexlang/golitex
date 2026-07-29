@@ -16,7 +16,6 @@ pub struct RunSummary {
     pub object_definitions: usize,
     pub function_definitions: usize,
     pub direct_trust: usize,
-    pub indirect_trust: usize,
     pub axioms: usize,
     pub trusted_object_assumptions: usize,
     pub abstract_interfaces: usize,
@@ -26,7 +25,6 @@ pub struct RunSummary {
     pub nested_fact_statements: usize,
     pub stored_fact_outputs: usize,
     pub inferred_fact_outputs: usize,
-    indirect_trust_reasons: Vec<String>,
     statement_type_counts: BTreeMap<String, usize>,
     output_type_counts: BTreeMap<String, usize>,
     proof_method_counts: BTreeMap<String, usize>,
@@ -35,7 +33,6 @@ pub struct RunSummary {
     stored_fact_reason_counts: BTreeMap<String, usize>,
     inferred_builtin_rule_counts: BTreeMap<String, usize>,
     inferred_infer_rule_counts: BTreeMap<String, usize>,
-    trust_dependency_counts: BTreeMap<String, usize>,
     unverified_imports: Vec<UnverifiedImportSummary>,
     main_environment: Option<EnvironmentSummary>,
 }
@@ -54,9 +51,6 @@ struct EnvironmentSummary {
     field_item_counts: BTreeMap<String, usize>,
     category_counts: BTreeMap<String, usize>,
     fact_index_counts: BTreeMap<String, usize>,
-    fact_origin_counts: BTreeMap<String, usize>,
-    cache_fact_trust_dependency_counts: BTreeMap<String, usize>,
-    theorem_trust_dependency_counts: BTreeMap<String, usize>,
 }
 
 impl RunSummary {
@@ -72,7 +66,6 @@ impl RunSummary {
         if let Some(error) = runtime_error {
             summary.visit_runtime_error(error);
         }
-        summary.indirect_trust = summary.indirect_trust_reasons.len();
         summary
     }
 
@@ -103,35 +96,6 @@ impl RunSummary {
     }
 
     fn visit_result(&mut self, result: &StmtResult, depth: usize) {
-        if let Some(trace) = result.execution_trace() {
-            for dependency in trace.trust_summary.dependencies.iter() {
-                bump_count(&mut self.trust_dependency_counts, dependency.kind.as_str());
-            }
-            if trace.verification_status.as_deref() == Some("indirect_trust") {
-                let line_file = result.line_file();
-                let mut trust_kinds = trace
-                    .trust_summary
-                    .dependencies
-                    .iter()
-                    .map(|dependency| dependency.kind.clone())
-                    .collect::<Vec<_>>();
-                trust_kinds.sort();
-                trust_kinds.dedup();
-                let reason = format!(
-                    "statement_trust:{}:{}:{}",
-                    line_file.1,
-                    line_file.0,
-                    trust_kinds.join(",")
-                );
-                if !self
-                    .indirect_trust_reasons
-                    .iter()
-                    .any(|existing| existing == &reason)
-                {
-                    self.indirect_trust_reasons.push(reason);
-                }
-            }
-        }
         if result.is_true() {
             self.verified_statements += 1;
         }
@@ -265,15 +229,6 @@ impl RunSummary {
             if let Some(rule) = reason_rule_name(reason, "inferred by infer rule `") {
                 bump_count(&mut self.inferred_infer_rule_counts, rule.as_str());
             }
-            if reason.contains("depends_on_unproved_assumptions")
-                && reason.contains("trust")
-                && !self
-                    .indirect_trust_reasons
-                    .iter()
-                    .any(|existing| existing == reason)
-            {
-                self.indirect_trust_reasons.push(reason.clone());
-            }
         }
     }
 
@@ -303,9 +258,8 @@ impl RunSummary {
                     self.visit_result(&proved.result, depth + 1);
                 }
             }
-            VerifiedByResult::Fact(result) => {
+            VerifiedByResult::Fact(_) => {
                 bump_count(&mut self.proof_method_counts, "known fact");
-                self.visit_stmt_trust_dependencies(&result.cite_what);
             }
         }
     }
@@ -323,9 +277,8 @@ impl RunSummary {
                 bump_count(&mut self.proof_method_counts, "known forall instantiation");
                 self.visit_known_forall_instantiation(&result.result, depth);
             }
-            VerifiedBysEnum::ByFact(result) => {
+            VerifiedBysEnum::ByFact(_) => {
                 bump_count(&mut self.proof_method_counts, "known fact");
-                self.visit_stmt_trust_dependencies(&result.cite_what);
             }
         }
     }
@@ -335,7 +288,6 @@ impl RunSummary {
         result: &KnownForallInstantiationResult,
         depth: usize,
     ) {
-        self.visit_stmt_trust_dependencies(&result.cite_what);
         for requirement in result.requirements.iter() {
             self.visit_result(&requirement.result, depth + 1);
         }
@@ -388,21 +340,6 @@ impl RunSummary {
         }
     }
 
-    fn visit_stmt_trust_dependencies(&mut self, stmt: &Stmt) {
-        match stmt {
-            Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(_)) => {
-                bump_count(&mut self.trust_dependency_counts, "trust");
-            }
-            Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_)) => {
-                bump_count(&mut self.trust_dependency_counts, "trust_have");
-            }
-            Stmt::DefThmStmt(def_thm) if def_thm.is_axiom() => {
-                bump_count(&mut self.trust_dependency_counts, "axiom");
-            }
-            _ => {}
-        }
-    }
-
     fn visit_runtime_error(&mut self, error: &RuntimeError) {
         let text = error.to_string().to_ascii_lowercase();
         if text.contains("stack") || text.contains("runner warning") {
@@ -429,17 +366,10 @@ impl RunSummary {
                 "direct_trust".to_string(),
                 JsonValue::Number(self.direct_trust),
             ),
-            (
-                "indirect_trust".to_string(),
-                JsonValue::Number(self.indirect_trust),
-            ),
+            ("axioms".to_string(), JsonValue::Number(self.axioms)),
             (
                 "trusted_object_assumptions".to_string(),
                 JsonValue::Number(self.trusted_object_assumptions),
-            ),
-            (
-                "trust_dependencies".to_string(),
-                count_map_json_value(&self.trust_dependency_counts),
             ),
             (
                 "unverified_imports".to_string(),
@@ -551,11 +481,6 @@ impl EnvironmentSummary {
             "defined_thm_stmts",
             environment.defined_thm_stmts.len(),
             environment.defined_thm_stmts.len(),
-        );
-        summary.add_field_counts(
-            "defined_thm_trust_summaries",
-            environment.defined_thm_trust_summaries.len(),
-            environment.defined_thm_trust_summaries.len(),
         );
         summary.add_field_counts(
             "defined_strategy_stmts",
@@ -753,11 +678,6 @@ impl EnvironmentSummary {
             environment.cache_known_fact.len(),
         );
         summary.add_field_counts(
-            "cache_known_fact_trust",
-            environment.cache_known_fact_trust.len(),
-            environment.cache_known_fact_trust.len(),
-        );
-        summary.add_field_counts(
             "used_strategy_stmts",
             environment.used_strategy_stmts.len(),
             environment.used_strategy_stmts.len(),
@@ -770,8 +690,6 @@ impl EnvironmentSummary {
 
         summary.add_category_counts(environment);
         summary.add_fact_index_counts(environment);
-        summary.add_fact_origin_counts(environment);
-        summary.add_trust_dependency_counts(environment);
 
         summary
     }
@@ -835,53 +753,6 @@ impl EnvironmentSummary {
         );
     }
 
-    fn add_fact_origin_counts(&mut self, environment: &Environment) {
-        let cached_total = environment.cache_known_fact.len();
-        let cached_with_trust = environment.cache_known_fact_trust.len();
-        self.fact_origin_counts
-            .insert("known_facts_total".to_string(), cached_total);
-        self.fact_origin_counts.insert(
-            "known_facts_without_unproved_dependencies".to_string(),
-            cached_total.saturating_sub(cached_with_trust),
-        );
-        self.fact_origin_counts.insert(
-            "known_facts_with_unproved_dependencies".to_string(),
-            cached_with_trust,
-        );
-
-        let theorem_total = environment.defined_thm_stmts.len();
-        let theorem_with_trust = environment.defined_thm_trust_summaries.len();
-        self.fact_origin_counts
-            .insert("theorems_total".to_string(), theorem_total);
-        self.fact_origin_counts.insert(
-            "theorems_without_unproved_dependencies".to_string(),
-            theorem_total.saturating_sub(theorem_with_trust),
-        );
-        self.fact_origin_counts.insert(
-            "theorems_with_unproved_dependencies".to_string(),
-            theorem_with_trust,
-        );
-    }
-
-    fn add_trust_dependency_counts(&mut self, environment: &Environment) {
-        for summary in environment.cache_known_fact_trust.values() {
-            for dependency in summary.dependencies.iter() {
-                bump_count(
-                    &mut self.cache_fact_trust_dependency_counts,
-                    dependency.kind.as_str(),
-                );
-            }
-        }
-        for summary in environment.defined_thm_trust_summaries.values() {
-            for dependency in summary.dependencies.iter() {
-                bump_count(
-                    &mut self.theorem_trust_dependency_counts,
-                    dependency.kind.as_str(),
-                );
-            }
-        }
-    }
-
     fn json_value(&self) -> JsonValue {
         JsonValue::Object(vec![
             (
@@ -893,29 +764,8 @@ impl EnvironmentSummary {
                 count_map_json_value(&self.fact_index_counts),
             ),
             (
-                "trust_summary".to_string(),
-                count_map_json_value(&self.fact_origin_counts),
-            ),
-            (
-                "unproved_dependency_counts".to_string(),
-                self.unproved_dependency_counts_json_value(),
-            ),
-            (
                 "environment_field_counts".to_string(),
                 field_counts_json_value(&self.field_key_counts, &self.field_item_counts),
-            ),
-        ])
-    }
-
-    fn unproved_dependency_counts_json_value(&self) -> JsonValue {
-        JsonValue::Object(vec![
-            (
-                "known_facts".to_string(),
-                count_map_json_value(&self.cache_fact_trust_dependency_counts),
-            ),
-            (
-                "theorems".to_string(),
-                count_map_json_value(&self.theorem_trust_dependency_counts),
             ),
         ])
     }

@@ -49,19 +49,15 @@ impl TrustedPrefixPolicy {
 pub struct TrustedPrefixStatementContext {
     pub module_id: ModuleId,
     pub layer: ExecutionLayer,
-    pub direct_trust: ProofTrustSummary,
+    pub is_trusted: bool,
 }
 
 impl TrustedPrefixStatementContext {
-    pub fn new(
-        module_id: ModuleId,
-        layer: ExecutionLayer,
-        direct_trust: ProofTrustSummary,
-    ) -> Self {
+    pub fn new(module_id: ModuleId, layer: ExecutionLayer, is_trusted: bool) -> Self {
         TrustedPrefixStatementContext {
             module_id,
             layer,
-            direct_trust,
+            is_trusted,
         }
     }
 

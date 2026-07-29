@@ -15,7 +15,7 @@
 [![Zulip](https://img.shields.io/badge/Zulip-blue?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 [![Manual](https://img.shields.io/badge/Manual-orange?logo=book)](https://litexlang.com/doc/Manual)
 
-Litex is experimental research software. It is not ready for mission-critical work.
+Litex is experimental research software. It is not ready for mission-critical work. *VISIT [OUR WEBSITE](litexlang.com) FOR EXECUTABLE INTRODUCTION OF LITEX*
 
 </div>
 

@@ -60,10 +60,6 @@ impl DefThmStmt {
         }
     }
 
-    pub fn store_reason_with_trust(&self, trust_summary: &ProofTrustSummary) -> String {
-        trust_summary.reason_with_base(self.store_reason())
-    }
-
     pub fn axiom_store_reason() -> &'static str {
         "declared axiom"
     }

@@ -220,6 +220,8 @@ witness exist z R st {z = 1} from 1:
         assert_eq!(summary.abstract_interfaces, 1);
         assert_eq!(summary.axioms, 1);
         assert!(summary_output.contains("\"output_type\": \"run summary\""));
+        assert!(summary_output.contains("\"direct_trust\": 1"));
+        assert!(summary_output.contains("\"axioms\": 1"));
         assert!(summary_output.contains("\"proof_method_counts\""));
         assert!(summary_output.contains("\"claim\""));
         assert!(!summary_output.contains("\"claim fact proof\""));
@@ -238,8 +240,10 @@ witness exist z R st {z = 1} from 1:
         assert!(summary_output.contains("\"stored_items\""));
         assert!(summary_output.contains("\"known_fact_counts\""));
         assert!(summary_output.contains("\"known_facts\""));
-        assert!(summary_output.contains("\"trust_summary\""));
-        assert!(summary_output.contains("\"unproved_dependency_counts\""));
+        assert!(!summary_output.contains("\"indirect_trust\""));
+        assert!(!summary_output.contains("\"trust_dependencies\""));
+        assert!(!summary_output.contains("\"trust_summary\""));
+        assert!(!summary_output.contains("\"unproved_dependency_counts\""));
         assert!(!summary_output.contains("\"category_counts\""));
         assert!(!summary_output.contains("\"field_key_counts\""));
         assert!(!summary_output.contains("\"field_item_counts\""));

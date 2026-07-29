@@ -660,7 +660,7 @@ claim:
 }
 
 #[test]
-fn forall_alpha_cache_preserves_proof_trust() {
+fn forall_alpha_cache_reuses_trusted_and_clean_facts() {
     let trusted_source = r#"
 abstract_prop p(x)
 trust:
@@ -673,8 +673,7 @@ thm alpha_from_trust:
         $p(z)
 "#;
     let mut trusted_runtime = Runtime::new();
-    trusted_runtime
-        .new_file_path_new_env_new_name_scope("forall_alpha_cache_preserves_proof_trust");
+    trusted_runtime.new_file_path_new_env_new_name_scope("forall_alpha_cache_reuses_trusted_fact");
     let (trusted_results, trusted_error) = run_source_code(trusted_source, &mut trusted_runtime);
     let (trusted_succeeded, trusted_output) =
         render_run_source_code_output(&trusted_runtime, &trusted_results, &trusted_error, false);
@@ -683,12 +682,9 @@ thm alpha_from_trust:
         "trusted alpha-equivalent forall should verify:\n{}",
         trusted_output
     );
-    assert!(
-        !trusted_runtime
-            .get_thm_trust_summary_by_name("alpha_from_trust")
-            .is_empty(),
-        "alpha-equivalent forall cache hits must retain indirect trust"
-    );
+    assert!(trusted_runtime
+        .get_thm_definition_by_name("alpha_from_trust")
+        .is_some());
 
     let clean_source = r#"
 forall x R:
@@ -709,12 +705,9 @@ thm clean_alpha:
         "clean alpha-equivalent forall should verify:\n{}",
         clean_output
     );
-    assert!(
-        clean_runtime
-            .get_thm_trust_summary_by_name("clean_alpha")
-            .is_empty(),
-        "a clean alpha-equivalent forall cache hit must remain clean"
-    );
+    assert!(clean_runtime
+        .get_thm_definition_by_name("clean_alpha")
+        .is_some());
 }
 
 #[test]

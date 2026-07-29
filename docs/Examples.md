@@ -3247,6 +3247,12 @@ type is a struct. Binding `p &Point` selects `&Point` for that binding, so the
 parser lowers `p.x` to `&Point{p}.x`. A later fact `p $in &Point` does not
 select a default view.
 
+Struct bindings keep their tuple projection view lazy. Declaring `p &Point`
+does not immediately infer `p $in cart(...)` or facts about every `p[i]`;
+using an explicit projection such as `p[1]` materializes that view on demand.
+An actual tuple membership such as `(1, 2) $in &Point` still checks its tuple
+components immediately.
+
 ```litex
 struct Point:
     x R

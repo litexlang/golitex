@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::collections::HashSet;
 
 impl Runtime {
     pub(crate) fn allocate_symbol_id(&self) -> Result<SymbolId, RuntimeError> {
@@ -187,14 +186,9 @@ impl Runtime {
         }
 
         let binding = self.allocate_declared_symbol_binding(name.to_string())?;
-        let trust_summary = self.current_trusted_prefix_statement_trust();
         self.top_level_env()
             .symbols
-            .insert(SymbolDefinition::new_with_trust(
-                binding.clone(),
-                role,
-                trust_summary,
-            ))
+            .insert(SymbolDefinition::new(binding.clone(), role))
             .expect("symbol was checked absent before registration");
         Ok(binding)
     }
@@ -226,14 +220,9 @@ impl Runtime {
         if is_keyword(name) || is_builtin_identifier_name(name) || is_builtin_predicate(name) {
             return Err(symbol_name_already_used_error(name, "builtin"));
         }
-        let trust_summary = self.current_trusted_prefix_statement_trust();
         self.top_level_env()
             .symbols
-            .insert(SymbolDefinition::new_with_trust(
-                binding,
-                role,
-                trust_summary,
-            ))
+            .insert(SymbolDefinition::new(binding, role))
             .expect("symbol was checked absent before registration");
         Ok(())
     }
@@ -321,26 +310,6 @@ impl Runtime {
             self.allocate_local_symbol_bindings(&names)?,
             set,
         ))
-    }
-
-    pub(crate) fn current_environment_symbol_ids(&mut self) -> HashSet<SymbolId> {
-        self.top_level_env()
-            .symbols
-            .iter()
-            .map(|(_, definition)| definition.binding().id())
-            .collect()
-    }
-
-    pub(crate) fn merge_trust_into_new_environment_symbols(
-        &mut self,
-        previous_symbol_ids: &HashSet<SymbolId>,
-        trust_summary: &ProofTrustSummary,
-    ) {
-        for (_, definition) in self.top_level_env().symbols.iter_mut() {
-            if !previous_symbol_ids.contains(&definition.binding().id()) {
-                definition.merge_trust_summary(trust_summary);
-            }
-        }
     }
 }
 

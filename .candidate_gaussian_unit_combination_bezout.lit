@@ -8,29 +8,13 @@ thm gaussian_unit_linear_combination_gives_bezout_pair:
     by def $gaussian_divides(dx, dy, 1, 0)
     obtain wx, wy from exist wx0, wy0 Z st {gaussian_mul(dx, dy, wx0, wy0) = (1, 0)}
     by def $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, dx, dy)
-    obtain ux, uy, vx, vy from exist ux0, uy0, vx0, vy0 Z st {
-        gaussian_add(
-            gaussian_mul(ax, ay, ux0, uy0)[1],
-            gaussian_mul(ax, ay, ux0, uy0)[2],
-            gaussian_mul(bx, b_y, vx0, vy0)[1],
-            gaussian_mul(bx, b_y, vx0, vy0)[2]
-        ) = (dx, dy)
-    }
-    have uw cart(Z, Z) = gaussian_mul(ux, uy, wx, wy)
-    have vw cart(Z, Z) = gaussian_mul(vx, vy, wx, wy)
-    witness exist px, py, qx, qy Z st {
-        gaussian_add(
-            gaussian_mul(ax, ay, px, py)[1],
-            gaussian_mul(ax, ay, px, py)[2],
-            gaussian_mul(bx, b_y, qx, qy)[1],
-            gaussian_mul(bx, b_y, qx, qy)[2]
-        ) = (1, 0)
-    } from uw[1], uw[2], vw[1], vw[2]:
-        gaussian_add(
-            gaussian_mul(ax, ay, uw[1], uw[2])[1],
-            gaussian_mul(ax, ay, uw[1], uw[2])[2],
-            gaussian_mul(bx, b_y, vw[1], vw[2])[1],
-            gaussian_mul(bx, b_y, vw[1], vw[2])[2]
-        ) = gaussian_mul(dx, dy, wx, wy) = (1, 0)
+    obtain ux, uy, vx, vy from exist ux0, uy0, vx0, vy0 Z st {dx = ax * ux0 - ay * uy0 + bx * vx0 - b_y * vy0, dy = ax * uy0 + ay * ux0 + bx * vy0 + b_y * vx0}
+    have px Z = ux * wx - uy * wy
+    have py Z = ux * wy + uy * wx
+    have qx Z = vx * wx - vy * wy
+    have qy Z = vx * wy + vy * wx
+    witness exist px0, py0, qx0, qy0 Z st {1 = ax * px0 - ay * py0 + bx * qx0 - b_y * qy0, 0 = ax * py0 + ay * px0 + bx * qy0 + b_y * qx0} from px, py, qx, qy:
+        1 = gaussian_mul(dx, dy, wx, wy)[1] = dx * wx - dy * wy = ax * px - ay * py + bx * qx - b_y * qy
+        0 = gaussian_mul(dx, dy, wx, wy)[2] = dx * wy + dy * wx = ax * py + ay * px + bx * qy + b_y * qx
     by def $is_binary_gaussian_linear_combination(ax, ay, bx, b_y, 1, 0)
     by def $gaussian_bezout_pair(ax, ay, bx, b_y)
