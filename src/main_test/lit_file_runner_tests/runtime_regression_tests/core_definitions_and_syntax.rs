@@ -1797,9 +1797,9 @@ $middle(1)
 }
 
 #[test]
-fn user_prop_inference_does_not_recursively_expand_direct_prop_clause() {
+fn user_prop_inference_recursively_expands_positive_prop_clauses() {
     run_with_large_stack(
-        "user_prop_inference_does_not_recursively_expand_direct_prop_clause",
+        "user_prop_inference_recursively_expands_positive_prop_clauses",
         || {
             let source_code = r#"
 prop leaf(x R):
@@ -1818,20 +1818,15 @@ $leaf(1)
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "user_prop_inference_does_not_recursively_expand_direct_prop_clause",
+                "user_prop_inference_recursively_expands_positive_prop_clauses",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
             assert!(
-                !run_succeeded,
-                "a nested user-prop clause should require another explicit projection:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("$leaf(1)"),
-                "the rejected nested clause should be reported:\n{}",
+                run_succeeded,
+                "nested positive user-prop clauses should be inferred recursively:\n{}",
                 run_output
             );
         },
@@ -1873,11 +1868,9 @@ $leaf(y)
 }
 
 #[test]
-fn obtain_does_not_recursively_expand_direct_predicate_body() {
-    run_with_large_stack(
-        "obtain_does_not_recursively_expand_direct_predicate_body",
-        || {
-            let source_code = r#"
+fn obtain_recursively_expands_positive_predicate_body() {
+    run_with_large_stack("obtain_recursively_expands_positive_predicate_body", || {
+        let source_code = r#"
 prop leaf(x R):
     x = 0
 
@@ -1892,24 +1885,170 @@ obtain y from exist x R st {$outer(x)}
 $leaf(y)
 "#;
 
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            "obtain_recursively_expands_positive_predicate_body",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "obtain should recursively expose positive predicate bodies:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn grouped_forall_law_projects_clause_over_used_nonempty_parameters() {
+    run_with_large_stack(
+        "grouped_forall_law_projects_clause_over_used_nonempty_parameters",
+        || {
+            let source_code = r#"
+abstract_prop p(a, x)
+
+prop grouped_laws(seed R):
+    forall a, b, x, y R:
+        $p(a, x)
+        $p(b, y)
+
+trust $grouped_laws(0)
+
+$p(1, 2)
+"#;
+
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "obtain_does_not_recursively_expand_direct_predicate_body",
+                "grouped_forall_law_projects_clause_over_used_nonempty_parameters",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
             assert!(
-                !run_succeeded,
-                "nested predicate bodies should require `by def`:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("$leaf(y)"),
-                "the rejected nested predicate should be reported:\n{}",
+                run_succeeded,
+                "grouped forall clause should project over its used parameters:\n{}",
                 run_output
             );
         },
+    );
+}
+
+#[test]
+fn known_implication_packages_as_classical_or() {
+    let source_code = r#"
+abstract_prop p(x)
+abstract_prop q(x)
+
+trust forall x R:
+    $p(x)
+    =>:
+        $q(x)
+
+forall x R:
+    not $p(x) or $q(x)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("known_implication_packages_as_classical_or");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "a known implication should package as its classical disjunction:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn template_set_builder_alias_exposes_membership_definition() {
+    let source_code = r#"
+abstract_prop marked(x)
+
+template<T set>:
+    have selected power_set(T) = {x T: $marked(x)}
+
+trust $marked(1)
+
+1 $in \selected<R>
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "template_set_builder_alias_exposes_membership_definition",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "template set-builder aliases should retain their defining membership facts:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn membership_in_template_set_builder_alias_infers_definition() {
+    let source_code = r#"
+abstract_prop marked(x)
+
+template<T set>:
+    have selected power_set(T) = {x T: $marked(x)}
+
+trust 1 $in \selected<R>
+
+$marked(1)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "membership_in_template_set_builder_alias_infers_definition",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "membership in a template set-builder alias should infer its definition:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn template_set_builder_membership_definition_forms_equivalence() {
+    let source_code = r#"
+abstract_prop marked(x)
+
+template<T set>:
+    have selected power_set(T) = {x T: $marked(x)}
+
+prop eventually_in(T set, F power_set(T), x T):
+    x $in F
+
+prop marked_eventually_equivalence(x R):
+    not $marked(x) or $eventually_in(R, \selected<R>, x)
+    not $eventually_in(R, \selected<R>, x) or $marked(x)
+
+by def $marked_eventually_equivalence(1)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "template_set_builder_membership_definition_forms_equivalence",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "template set-builder membership should package into both equivalence directions:\n{}",
+        run_output
     );
 }

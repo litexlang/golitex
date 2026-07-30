@@ -3030,7 +3030,10 @@ thm finite_set_sum_enumeration_well_defined:
         $bijective(closed_range(1, finite_set_size(X)), X, h)
         =>:
             \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
-    \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
+    \self_finite_set_sum<X, f, g> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))})
+    sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}) = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))})
+    \self_finite_set_sum<X, f, h> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))})
+    \self_finite_set_sum<X, f, g> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}) = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))}) = \self_finite_set_sum<X, f, h>
 
 ## Finite-set product: multiply the function value over each element of a finite set.
 finite_set_product({2, 3, 4}, fn(x Z) Z {x}) = 2 * 3 * 4

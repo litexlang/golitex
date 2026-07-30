@@ -1,6 +1,41 @@
 use super::*;
 
 #[test]
+fn obtain_from_exist_unique_preserves_uniqueness_for_struct_members() {
+    let source_code = r#"
+struct BoxedReal:
+    value R
+    tag R
+
+abstract_prop selected_box(x)
+
+trust exist! x &BoxedReal st {$selected_box(x)}
+
+obtain chosen from exist! x &BoxedReal st {$selected_box(x)}
+
+forall x1, x2 &BoxedReal:
+    $selected_box(x1)
+    $selected_box(x2)
+    =>:
+        x1 = x2
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "obtain_from_exist_unique_preserves_uniqueness_for_struct_members",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "exist! elimination must retain its uniqueness projection:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn template_instantiation_prefers_angle_brackets() {
     let source_code = r#"
 template<s set: s = s>:
@@ -1167,9 +1202,8 @@ template<S nonempty_set>:
             exist! y S st {y = x}
         by thm unique_self(S, x)
 
-axiom selected_self_spec:
-    ? forall S nonempty_set, x S:
-        \selected_self<S>(x) = x
+forall S nonempty_set, x S:
+    \selected_self<S>(x) = x
 "#;
 
             let mut runtime = Runtime::new();
@@ -1183,6 +1217,50 @@ axiom selected_self_spec:
             assert!(
                 run_succeeded,
                 "a materialized template proof must use the instantiated forall binder:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn template_choice_materializes_local_exist_elimination_and_witness() {
+    run_with_large_stack(
+        "template_choice_materializes_local_exist_elimination_and_witness",
+        || {
+            let source_code = r#"
+axiom self_exists:
+    ? forall S nonempty_set, x S:
+        exist y S st {y = x}
+
+template<S nonempty_set>:
+    have fn selected_self_with_local_proof by exist!:
+        ? forall x S:
+            exist! y S st {y = x}
+        by thm self_exists(S, x)
+        obtain y from exist candidate S st {candidate = x}
+        witness exist candidate S st {candidate = x} from y
+        forall y1, y2 S:
+            y1 = x
+            y2 = x
+            =>:
+                y1 = y2
+
+forall S nonempty_set, x S:
+    \selected_self_with_local_proof<S>(x) = x
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "template_choice_materializes_local_exist_elimination_and_witness",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a materialized template proof must retain local exist elimination and witness statements:\n{}",
                 run_output
             );
         },
@@ -2360,5 +2438,52 @@ B = set_minus(A, set_minus(A, B))
         !run_output.contains("set minus recovers subset from relative complement"),
         "the builtin rule must not apply without a subset premise:\n{}",
         run_output
+    );
+}
+
+#[test]
+fn distinct_template_struct_memberships_expand_distinct_field_views() {
+    run_with_large_stack(
+        "distinct_template_struct_memberships_expand_distinct_field_views",
+        || {
+            let source_code = r#"
+struct Family<U nonempty_set, m N_pos>:
+    carriers finite_seq(power_set(U), m)
+    zeros finite_seq(U, m)
+
+prop is_family(U nonempty_set, m N_pos, family &Family<U, m>):
+    forall k N_pos:
+        k <= m
+        =>:
+            $is_nonempty_set(family.carriers(k))
+            family.zeros(k) $in family.carriers(k)
+
+prop is_dual_family(U nonempty_set, m N_pos, original &Family<U, m>, dual &Family<fn(u U) R, m>):
+    $is_family(U, m, original)
+    $is_family(fn(u U) R, m, dual)
+
+template<U nonempty_set, m N_pos, original &Family<U, m>: $is_family(U, m, original)>:
+    trust have selected_family &Family<fn(u U) R, m>:
+        $is_dual_family(U, m, original, selected_family)
+
+trust have original &Family<R, 2>:
+    $is_family(R, 2, original)
+trust $is_dual_family(R, 2, original, \selected_family<R, 2, original>)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "distinct_template_struct_memberships_expand_distinct_field_views",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "each selected struct object needs its own callable field view:\n{}",
+                run_output
+            );
+        },
     );
 }

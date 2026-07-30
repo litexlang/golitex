@@ -599,7 +599,63 @@ impl Runtime {
             return Ok(result);
         }
 
+        if let Some(result) =
+            self.try_verify_or_by_classical_implication(or_fact, &verify_state_for_children)?
+        {
+            return Ok(result);
+        }
+
         Ok(StmtUnknown::new().into())
+    }
+
+    // Package an implication as a classical disjunction.
+    // If `B` verifies under the temporary case `A`, conclude `not A or B`.
+    // Example: a known `P(x) => Q(x)` proves `not P(x) or Q(x)`.
+    fn try_verify_or_by_classical_implication(
+        &mut self,
+        or_fact: &OrFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if or_fact.facts.len() != 2 {
+            return Ok(None);
+        }
+        let (
+            AndChainAtomicFact::AtomicFact(first_atomic),
+            AndChainAtomicFact::AtomicFact(second_atomic),
+        ) = (&or_fact.facts[0], &or_fact.facts[1])
+        else {
+            return Ok(None);
+        };
+
+        for (disjunction_branch, conclusion) in
+            [(first_atomic, second_atomic), (second_atomic, first_atomic)]
+        {
+            let Ok(assumed_opposite) = disjunction_branch.logical_negation() else {
+                continue;
+            };
+            let conclusion_result = self.run_in_local_env(|rt| {
+                rt.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    assumed_opposite.clone().into(),
+                )?;
+                rt.verify_atomic_fact(conclusion, verify_state)
+            })?;
+            if conclusion_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        or_fact.clone().into(),
+                        InferResult::new(),
+                        format!(
+                            "or: classical implication packaging; `{}` follows under `{}`",
+                            conclusion, assumed_opposite
+                        ),
+                        vec![conclusion_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+
+        Ok(None)
     }
 
     /// Integer lower-bound split into finitely many successor equalities plus a strict tail.

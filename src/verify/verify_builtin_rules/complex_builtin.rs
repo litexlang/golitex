@@ -264,6 +264,99 @@ impl Runtime {
             return Ok(Some(("img: real embedding".to_string(), steps)));
         }
 
+        // Coordinates respect a known equality of complex numbers.
+        // Example: `z = w` implies `re(z) = re(w)` and `img(z) = img(w)`.
+        let expected_coordinate_arg = match expected {
+            Obj::RealPart(real_part) if is_real_part => Some(real_part.arg.as_ref()),
+            Obj::ImaginaryPart(imaginary_part) if !is_real_part => {
+                Some(imaginary_part.arg.as_ref())
+            }
+            _ => None,
+        };
+        if let Some(expected_arg) = expected_coordinate_arg {
+            let known = self.verify_objs_are_equal_known_only(arg, expected_arg, line_file.clone());
+            if known.is_true() {
+                return Ok(Some((
+                    format!("{coordinate}: coordinates respect complex equality"),
+                    vec![known],
+                )));
+            }
+        }
+
+        // Complex coordinates distribute over addition and subtraction.
+        // Example: `re(z + w) = re(z) + re(w)` and `img(z - w) = img(z) - img(w)`.
+        let additive_target = match arg {
+            Obj::Add(add) => Some(
+                Add::new(
+                    native_coordinate(add.left.as_ref(), is_real_part),
+                    native_coordinate(add.right.as_ref(), is_real_part),
+                )
+                .into(),
+            ),
+            Obj::Sub(sub) => Some(
+                Sub::new(
+                    native_coordinate(sub.left.as_ref(), is_real_part),
+                    native_coordinate(sub.right.as_ref(), is_real_part),
+                )
+                .into(),
+            ),
+            _ => None,
+        };
+        if let Some(target) = additive_target {
+            if verify_equality_by_they_are_the_same(&target, expected) {
+                let operands = match arg {
+                    Obj::Add(add) => [add.left.as_ref(), add.right.as_ref()],
+                    Obj::Sub(sub) => [sub.left.as_ref(), sub.right.as_ref()],
+                    _ => unreachable!(),
+                };
+                let Some(steps) =
+                    self.verify_objects_are_known_complex(&operands, &line_file, verify_state)?
+                else {
+                    return Ok(None);
+                };
+                return Ok(Some((
+                    format!("{coordinate}: coordinate of complex sum or difference"),
+                    steps,
+                )));
+            }
+        }
+
+        // Complex multiplication follows the usual coordinate formulas.
+        // Example: `re(z*w) = re(z)*re(w) - img(z)*img(w)`.
+        if let Obj::Mul(mul) = arg {
+            let left_re = native_coordinate(mul.left.as_ref(), true);
+            let left_img = native_coordinate(mul.left.as_ref(), false);
+            let right_re = native_coordinate(mul.right.as_ref(), true);
+            let right_img = native_coordinate(mul.right.as_ref(), false);
+            let target: Obj = if is_real_part {
+                Sub::new(
+                    Mul::new(left_re, right_re).into(),
+                    Mul::new(left_img, right_img).into(),
+                )
+                .into()
+            } else {
+                Add::new(
+                    Mul::new(left_re, right_img).into(),
+                    Mul::new(left_img, right_re).into(),
+                )
+                .into()
+            };
+            if verify_equality_by_they_are_the_same(&target, expected) {
+                let Some(steps) = self.verify_objects_are_known_complex(
+                    &[mul.left.as_ref(), mul.right.as_ref()],
+                    &line_file,
+                    verify_state,
+                )?
+                else {
+                    return Ok(None);
+                };
+                return Ok(Some((
+                    format!("{coordinate}: coordinate of complex product"),
+                    steps,
+                )));
+            }
+        }
+
         Ok(None)
     }
 
@@ -465,6 +558,14 @@ fn native_complex_abs_definition(arg: &Obj) -> Obj {
     let squared_re: Obj = Pow::new(re, two.clone()).into();
     let squared_img: Obj = Pow::new(img, two).into();
     Sqrt::new(Add::new(squared_re, squared_img).into()).into()
+}
+
+fn native_coordinate(arg: &Obj, is_real_part: bool) -> Obj {
+    if is_real_part {
+        RealPart::new(arg.clone()).into()
+    } else {
+        ImaginaryPart::new(arg.clone()).into()
+    }
 }
 
 fn linear_complex_parts(obj: &Obj) -> Option<(&Obj, &Obj)> {

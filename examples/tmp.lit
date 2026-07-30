@@ -21,6 +21,20 @@ forall a, b R:
     re(a + b * i) = a
     img(a + b * i) = b
 
+forall z, w C:
+    re(z + w) = re(z) + re(w)
+    img(z + w) = img(z) + img(w)
+    re(z - w) = re(z) - re(w)
+    img(z - w) = img(z) - img(w)
+    re(z * w) = re(z) * re(w) - img(z) * img(w)
+    img(z * w) = re(z) * img(w) + img(z) * re(w)
+
+forall z, w C:
+    z = w
+    =>:
+        re(z) = re(w)
+        img(z) = img(w)
+
 forall z C:
     z = re(z) + img(z) * i
     C_abs(z) = sqrt(re(z) ^ 2 + img(z) ^ 2)
@@ -120,3 +134,97 @@ finite_max_value >= finite_max_right
 have finite_min_value R = finite_set_min({finite_max_left, finite_max_right})
 finite_min_value <= finite_max_left
 finite_min_value <= finite_max_right
+
+# Nested prop projection regression. Structure membership gives the outer law
+# package; verification should be able to use a universal law from the inner
+# package without a trusted wrapper.
+prop tmp_inner_norm_laws(A nonempty_set, norm fn(x A) R):
+    forall x A:
+        norm(x) >= 0
+
+prop tmp_outer_norm_laws(A nonempty_set, norm fn(x A) R):
+    $tmp_inner_norm_laws(A, norm)
+
+struct TmpNormed<A nonempty_set>:
+    norm fn(x A) R
+    marker A
+    <=>:
+        $tmp_outer_norm_laws(A, norm)
+
+forall A nonempty_set, space &TmpNormed<A>, x A:
+    space.norm(x) >= 0
+
+prop tmp_inner_map_laws(A, B nonempty_set, add_A fn(x, y A) A, add_B fn(x, y B) B, f fn(x A) B):
+    forall x, y A:
+        f(add_A(x, y)) = add_B(f(x), f(y))
+
+prop tmp_outer_map_laws(A, B nonempty_set, add_A fn(x, y A) A, add_B fn(x, y B) B, f fn(x A) B):
+    $tmp_inner_map_laws(A, B, add_A, add_B, f)
+
+forall A, B nonempty_set, add_A fn(x, y A) A, add_B fn(x, y B) B, f fn(x A) B, x, y A:
+    $tmp_outer_map_laws(A, B, add_A, add_B, f)
+    =>:
+        f(add_A(x, y)) = add_B(f(x), f(y))
+
+# A conclusion in a grouped universal law is reusable over only the parameters
+# it mentions when every omitted domain is independently known nonempty.
+abstract_prop tmp_grouped_relation(a, x)
+
+prop tmp_grouped_laws(seed R):
+    forall a, b, x, y R:
+        $tmp_grouped_relation(a, x)
+        $tmp_grouped_relation(b, y)
+
+trust $tmp_grouped_laws(0)
+$tmp_grouped_relation(1, 2)
+
+# A known implication can be packaged as its classical disjunction.
+abstract_prop tmp_implication_left(x)
+abstract_prop tmp_implication_right(x)
+
+trust forall x R:
+    $tmp_implication_left(x)
+    =>:
+        $tmp_implication_right(x)
+
+forall x R:
+    not $tmp_implication_left(x) or $tmp_implication_right(x)
+
+# Instantiated template-selected set builders preserve definitional membership
+# in both directions and support explicit equivalence folding.
+abstract_prop tmp_selected_marked(x)
+
+template<T set>:
+    have tmp_selected_set power_set(T) = {x T: $tmp_selected_marked(x)}
+
+prop tmp_eventually_in(T set, F power_set(T), x T):
+    x $in F
+
+prop tmp_selected_equivalence(x R):
+    not $tmp_selected_marked(x) or $tmp_eventually_in(R, \tmp_selected_set<R>, x)
+    not $tmp_eventually_in(R, \tmp_selected_set<R>, x) or $tmp_selected_marked(x)
+
+by def $tmp_selected_equivalence(1)
+
+# A template-selected function may use local existence elimination and an
+# explicit witness in its checked proof. Materializing the template must retain
+# those proof statements after substituting the template argument.
+axiom tmp_self_exists:
+    ? forall Carrier nonempty_set, x Carrier:
+        exist y Carrier st {y = x}
+
+template<Carrier nonempty_set>:
+    have fn tmp_selected_self_with_local_proof by exist!:
+        ? forall x Carrier:
+            exist! y Carrier st {y = x}
+        by thm tmp_self_exists(Carrier, x)
+        obtain y from exist candidate Carrier st {candidate = x}
+        witness exist candidate Carrier st {candidate = x} from y
+        forall y1, y2 Carrier:
+            y1 = x
+            y2 = x
+            =>:
+                y1 = y2
+
+forall Carrier nonempty_set, x Carrier:
+    \tmp_selected_self_with_local_proof<Carrier>(x) = x

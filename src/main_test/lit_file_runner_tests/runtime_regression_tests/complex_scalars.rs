@@ -47,6 +47,20 @@ forall a, b R:
     re(a + b * i) = a
     img(a + b * i) = b
 
+forall z, w C:
+    re(z + w) = re(z) + re(w)
+    img(z + w) = img(z) + img(w)
+    re(z - w) = re(z) - re(w)
+    img(z - w) = img(z) - img(w)
+    re(z * w) = re(z) * re(w) - img(z) * img(w)
+    img(z * w) = re(z) * img(w) + img(z) * re(w)
+
+forall z, w C:
+    z = w
+    =>:
+        re(z) = re(w)
+        img(z) = img(w)
+
 forall z C:
     re(z) $in R
     img(z) $in R

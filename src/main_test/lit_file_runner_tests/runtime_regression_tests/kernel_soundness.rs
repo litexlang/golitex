@@ -772,6 +772,72 @@ forall x1 R:
     );
 }
 
+#[test]
+fn grouped_forall_law_does_not_drop_parameter_over_empty_domain() {
+    let source_code = r#"
+abstract_prop p(x)
+
+prop grouped_law_over(E set):
+    forall x R, y E:
+        $p(x)
+
+trust $grouped_law_over({})
+
+$p(1)
+"#;
+
+    let (run_succeeded, run_output) =
+        run_kernel_soundness_source(source_code, "grouped_forall_empty_domain_regression");
+    assert!(
+        !run_succeeded,
+        "a vacuous forall over an empty omitted domain must not imply its body:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn classical_implication_packaging_does_not_prove_converse() {
+    let source_code = r#"
+abstract_prop p(x)
+abstract_prop q(x)
+
+trust forall x R:
+    $p(x)
+    =>:
+        $q(x)
+
+not $q(1) or $p(1)
+"#;
+
+    let (run_succeeded, run_output) =
+        run_kernel_soundness_source(source_code, "classical_implication_converse_regression");
+    assert!(
+        !run_succeeded,
+        "packaging P => Q must not prove the converse disjunction not Q or P:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn template_set_builder_alias_does_not_invent_membership_definition() {
+    let source_code = r#"
+abstract_prop marked(x)
+
+template<T set>:
+    have selected power_set(T) = {x T: $marked(x)}
+
+1 $in \selected<R>
+"#;
+
+    let (run_succeeded, run_output) =
+        run_kernel_soundness_source(source_code, "template_set_builder_alias_soundness");
+    assert!(
+        !run_succeeded,
+        "a set-builder alias must still require its defining membership fact:\n{}",
+        run_output
+    );
+}
+
 fn run_kernel_soundness_source(source_code: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(label);

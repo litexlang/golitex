@@ -342,6 +342,15 @@ impl Runtime {
             self.declared_identifier_obj(&stmt.fn_name),
             &forall_param_bindings,
         );
+        self.have_fn_by_forall_exist_unique_property_forall_with_function(stmt, shape, function_obj)
+    }
+
+    fn have_fn_by_forall_exist_unique_property_forall_with_function(
+        &self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+        shape: &HaveFnByForallExistUniqueShape,
+        function_obj: Obj,
+    ) -> Result<ForallFact, RuntimeError> {
         let mut witness_map = HashMap::new();
         insert_symbol_substitution(&mut witness_map, &shape.witness_binding, function_obj);
 
@@ -365,6 +374,32 @@ impl Runtime {
             stmt.line_file.clone(),
         )
         .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))
+    }
+
+    pub(crate) fn store_instantiated_template_choice_property(
+        &mut self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+        template_obj: &InstantiatedTemplateObj,
+    ) -> Result<(), RuntimeError> {
+        let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
+        let forall_param_bindings = stmt.forall.params_def_with_type.collect_param_bindings();
+        let head = FnObjHead::InstantiatedTemplateObj(template_obj.clone());
+        let args = forall_param_bindings
+            .iter()
+            .map(|binding| Box::new(obj_for_bound_param_in_scope(binding, ParamObjType::Forall)))
+            .collect();
+        let function_obj: Obj = FnObj::new(head, vec![args]).into();
+        let property_forall = self.have_fn_by_forall_exist_unique_property_forall_with_function(
+            stmt,
+            &shape,
+            function_obj,
+        )?;
+        let property_fact = self
+            .inst_have_fn_forall_fact_for_store(property_forall)
+            .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+        self.store_fact_without_forall_coverage_check_and_infer(property_fact)
+            .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+        Ok(())
     }
 
     fn have_fn_by_forall_exist_unique_uniqueness_forall(
