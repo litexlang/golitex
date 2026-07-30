@@ -276,7 +276,7 @@ sketch:
 # from the general divisibility facts already established.
 
 sketch:
-    prop prime(a N_pos):
+    prop prime_by_trial_division(a N_pos):
         2 <= a
         forall b N_pos:
             2 <= b < a
@@ -287,6 +287,7 @@ sketch:
         ? forall n range(2, 2):
             2 % n != 0
 
+    $prime_by_trial_division(2)
     $prime(2)
 
 # 4.2 “If and Only If”

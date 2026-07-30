@@ -125,7 +125,8 @@ sqrt(4) = 2
 Concrete gcd calls normalize inside ordinary facts, so
 `gcd(54, -24) = 6` verifies directly and `gcd(54, -24) + 1 = 7` behaves like
 ordinary arithmetic. Write `eval gcd(54, -24)` when an explicit evaluation
-statement is the intended presentation.
+statement is the intended presentation. Signs do not affect the positive
+result. The pair `(0, 0)` is intentionally outside the object's domain.
 
 The parser does not make an invalid expression meaningful:
 
@@ -706,9 +707,10 @@ $prime(97)
 not $prime(1)
 ```
 
-`$prime(p)` is a native predicate on `N_pos`. Concrete machine-size integers
-are decided exactly; `by def $prime(p)` exposes the symbolic trial-divisor
-contract (`2 <= p` and no divisor in `range(2, p)`).
+`$prime(p)` is a native predicate on `N_pos`. Concrete positive integer
+literals that fit in `u64` are decided exactly; larger literals are left to
+proof rather than guessed. `by def $prime(p)` exposes the symbolic
+trial-divisor contract (`2 <= p` and no divisor in `range(2, p)`).
 
 An object expression alone is not a fact:
 
@@ -1109,11 +1111,12 @@ function. The proof must establish both existence and uniqueness.
 Inside a template, the proof may use local `obtain` and `witness` statements;
 materializing the template substitutes the template arguments through those
 local proof statements before committing the selected function. Local
-`have fn ... = ...`, `have fn ... by cases`, `by cases`, and `by extension`
-steps are materialized in the same way. This permits a selected function to
-be built from a local piecewise candidate and proved unique by function
-extensionality. If the selected return carrier is itself a refined function
-space, the materialized result remains callable.
+`have candidate T = value`, `have fn ... = ...`, `have fn ... by cases`,
+`by cases`, and `by extension` steps are materialized in the same way. This
+permits a selected function to be built from a local object or piecewise
+function candidate and proved unique by extensionality. If the selected return
+carrier is itself a refined function space, the materialized result remains
+callable.
 
 ```litex
 have fn identity_choice by exist!:

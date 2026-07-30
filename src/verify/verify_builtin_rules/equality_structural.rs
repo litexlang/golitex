@@ -164,11 +164,17 @@ impl Runtime {
         if left_resolved.to_string() != left.to_string()
             || right_resolved.to_string() != right.to_string()
         {
+            if left_resolved.two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved) {
+                return factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "calculation",
+                );
+            }
             if verify_equality_by_they_are_the_same(&left_resolved, &right_resolved)
                 || self
                     .objs_have_same_known_equality_rc_in_some_env(&left_resolved, &right_resolved)
-                || left_resolved
-                    .two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved)
             {
                 return factual_equal_success_by_builtin_reason(
                     left,

@@ -424,10 +424,19 @@ pub(crate) fn run_source_code_with_failure_kind(
 
     let tokenizer = Tokenizer::new();
     let current_file_path = runtime.current_file_path_rc();
+    let source_starts_with_try = source_code
+        .lines()
+        .find(|line| !line.trim().is_empty() && !line.trim_start().starts_with('#'))
+        .is_some_and(|line| line.trim_end() == "try:");
     let blocks = match tokenizer.parse_blocks(source_code, current_file_path) {
         Ok(b) => b,
         Err(e) => {
-            return (vec![], Some(e), Some(RunSourceFailureKind::Other));
+            let failure_kind = if source_starts_with_try {
+                RunSourceFailureKind::TryStmt
+            } else {
+                RunSourceFailureKind::Other
+            };
+            return (vec![], Some(e), Some(failure_kind));
         }
     };
     let trust_before_line = runtime.trusted_prefix_before_line_for_current_target();

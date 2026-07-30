@@ -158,6 +158,44 @@ fn native_number_theory_latex_is_mathematical() {
     assert!(latex.contains(r"\operatorname{prime}"), "{latex}");
 }
 
+#[test]
+fn native_number_theory_python_boundary_is_structural() {
+    let ordinary_function = to_python_from_source(
+        r#"
+have fn euclidean_gcd(x R) R = x
+
+forall x R:
+    euclidean_gcd(x) = x
+"#,
+        "native_number_theory_python_boundary_is_structural",
+    )
+    .expect("an ordinary function whose name ends in gcd should remain extractable");
+    assert!(
+        ordinary_function.contains("No Python-extractable Litex definitions"),
+        "{ordinary_function}"
+    );
+
+    let gcd_error = to_python_from_source(
+        "gcd(54, 24) = 6",
+        "native_gcd_python_boundary_is_structural",
+    )
+    .expect_err("the native gcd object is not supported by the Python extractor")
+    .trace_message();
+    assert!(
+        gcd_error.contains("does not support native gcd"),
+        "{gcd_error}"
+    );
+
+    let prime_error =
+        to_python_from_source("$prime(97)", "native_prime_python_boundary_is_structural")
+            .expect_err("the builtin prime predicate is not supported by the Python extractor")
+            .trace_message();
+    assert!(
+        prime_error.contains("does not support builtin prime"),
+        "{prime_error}"
+    );
+}
+
 fn assert_source_succeeds(source: &str, label: &str) {
     let (succeeded, output) = run_source(source, label);
     assert!(succeeded, "{label} failed:\n{output}");

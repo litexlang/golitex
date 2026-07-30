@@ -1041,7 +1041,7 @@ sketch:
         exist c Z st {b = a * c}
 
     # This no-small-divisor formulation is convenient for the strong-induction split below.
-    prop prime(a N_pos):
+    prop prime_by_trial_division(a N_pos):
         2 <= a
         forall b N_pos:
             2 <= b < a
@@ -1830,10 +1830,10 @@ sketch:
         abs(-b) = abs(b)
         abs(fmod(a, -b)) < abs(b)
 
-    have fn gcd(a Z, b Z) Z by induc abs(b) from 0:
-        case 0 < b: gcd(b, fmod(a, b))
+    have fn euclidean_gcd(a Z, b Z) Z by induc abs(b) from 0:
+        case 0 < b: euclidean_gcd(b, fmod(a, b))
         case 0 >= b:
-            case b < 0: gcd(b, fmod(a, -b))
+            case b < 0: euclidean_gcd(b, fmod(a, -b))
             case b >= 0:
                 case 0 <= a: a
                 case 0 > a: -a
@@ -1854,31 +1854,31 @@ sketch:
         forall u, v Z:
             abs(v) = m
             =>:
-                egcd_l(u, v) * u + egcd_r(u, v) * v = gcd(u, v)
+                egcd_l(u, v) * u + egcd_r(u, v) * v = euclidean_gcd(u, v)
 
     claim:
         ? forall a, b Z:
             abs(b) = 0
             =>:
-                egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+                egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
 
         b = 0
         0 >= b
         b >= 0
         by cases:
-            ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+            ? egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
             case 0 <= a:
                 egcd_pair(a, b) = (1, 0)
                 egcd_l(a, b) = egcd_pair(a, b)[1] = (1, 0)[1] = 1
                 egcd_r(a, b) = egcd_pair(a, b)[2] = (1, 0)[2] = 0
-                gcd(a, b) = a
-                egcd_l(a, b) * a + egcd_r(a, b) * b = 1 * a + 0 * b = a = gcd(a, b)
+                euclidean_gcd(a, b) = a
+                egcd_l(a, b) * a + egcd_r(a, b) * b = 1 * a + 0 * b = a = euclidean_gcd(a, b)
             case 0 > a:
                 egcd_pair(a, b) = (-1, 0)
                 egcd_l(a, b) = egcd_pair(a, b)[1] = (-1, 0)[1] = -1
                 egcd_r(a, b) = egcd_pair(a, b)[2] = (-1, 0)[2] = 0
-                gcd(a, b) = -a
-                egcd_l(a, b) * a + egcd_r(a, b) * b = -1 * a + 0 * b = -a = gcd(a, b)
+                euclidean_gcd(a, b) = -a
+                egcd_l(a, b) * a + egcd_r(a, b) * b = -1 * a + 0 * b = -a = euclidean_gcd(a, b)
 
     $egcd_identity_at_measure(0)
 
@@ -1897,10 +1897,10 @@ sketch:
             ? forall a, b Z:
                 abs(b) = m + 1
                 =>:
-                    egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+                    egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
 
             by cases:
-                ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+                ? egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
                 case 0 < b:
                     abs(fmod(a, b)) >= 0
                     abs(fmod(a, b)) < abs(b) = m + 1
@@ -1914,7 +1914,7 @@ sketch:
                     $egcd_identity_at_measure(abs(fmod(a, b)))
                     fmod(a, b) $in Z
                     abs(fmod(a, b)) = abs(fmod(a, b))
-                    egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = gcd(b, fmod(a, b))
+                    egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = euclidean_gcd(b, fmod(a, b))
                     egcd_pair(a, b) = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])
                     egcd_l(a, b) = egcd_pair(a, b)[1] = (egcd_pair(b, fmod(a, b))[2], egcd_pair(b, fmod(a, b))[1] - fdiv(a, b) * egcd_pair(b, fmod(a, b))[2])[1] = egcd_pair(b, fmod(a, b))[2]
                     egcd_r(b, fmod(a, b)) = egcd_pair(b, fmod(a, b))[2]
@@ -1927,11 +1927,11 @@ sketch:
                     fmod(a, b) + b * fdiv(a, b) = a
                     a = fmod(a, b) + b * fdiv(a, b)
                     a - b * fdiv(a, b) = fmod(a, b) + b * fdiv(a, b) - b * fdiv(a, b) = fmod(a, b)
-                    gcd(a, b) = gcd(b, fmod(a, b))
-                    egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, b)) * a + (egcd_l(b, fmod(a, b)) - fdiv(a, b) * egcd_r(b, fmod(a, b))) * b = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * (a - b * fdiv(a, b)) = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = gcd(b, fmod(a, b)) = gcd(a, b)
+                    euclidean_gcd(a, b) = euclidean_gcd(b, fmod(a, b))
+                    egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, b)) * a + (egcd_l(b, fmod(a, b)) - fdiv(a, b) * egcd_r(b, fmod(a, b))) * b = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * (a - b * fdiv(a, b)) = egcd_l(b, fmod(a, b)) * b + egcd_r(b, fmod(a, b)) * fmod(a, b) = euclidean_gcd(b, fmod(a, b)) = euclidean_gcd(a, b)
                 case 0 >= b:
                     by cases:
-                        ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+                        ? egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
                         case b < 0:
                             abs(fmod(a, -b)) >= 0
                             abs(fmod(a, -b)) < abs(b) = m + 1
@@ -1945,7 +1945,7 @@ sketch:
                             $egcd_identity_at_measure(abs(fmod(a, -b)))
                             fmod(a, -b) $in Z
                             abs(fmod(a, -b)) = abs(fmod(a, -b))
-                            egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * fmod(a, -b) = gcd(b, fmod(a, -b))
+                            egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * fmod(a, -b) = euclidean_gcd(b, fmod(a, -b))
                             egcd_pair(a, b) = (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])
                             egcd_l(a, b) = egcd_pair(a, b)[1] = (egcd_pair(b, fmod(a, -b))[2], egcd_pair(b, fmod(a, -b))[1] + fdiv(a, -b) * egcd_pair(b, fmod(a, -b))[2])[1] = egcd_pair(b, fmod(a, -b))[2]
                             egcd_r(b, fmod(a, -b)) = egcd_pair(b, fmod(a, -b))[2]
@@ -1958,24 +1958,24 @@ sketch:
                             fmod(a, -b) + (-b) * fdiv(a, -b) = a
                             a = fmod(a, -b) + (-b) * fdiv(a, -b)
                             a + b * fdiv(a, -b) = fmod(a, -b) + (-b) * fdiv(a, -b) + b * fdiv(a, -b) = fmod(a, -b)
-                            gcd(a, b) = gcd(b, fmod(a, -b))
-                            egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, -b)) * a + (egcd_l(b, fmod(a, -b)) + fdiv(a, -b) * egcd_r(b, fmod(a, -b))) * b = egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * (a + b * fdiv(a, -b)) = egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * fmod(a, -b) = gcd(b, fmod(a, -b)) = gcd(a, b)
+                            euclidean_gcd(a, b) = euclidean_gcd(b, fmod(a, -b))
+                            egcd_l(a, b) * a + egcd_r(a, b) * b = egcd_r(b, fmod(a, -b)) * a + (egcd_l(b, fmod(a, -b)) + fdiv(a, -b) * egcd_r(b, fmod(a, -b))) * b = egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * (a + b * fdiv(a, -b)) = egcd_l(b, fmod(a, -b)) * b + egcd_r(b, fmod(a, -b)) * fmod(a, -b) = euclidean_gcd(b, fmod(a, -b)) = euclidean_gcd(a, b)
                         case b >= 0:
                             b = 0
                             by cases:
-                                ? egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+                                ? egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
                                 case 0 <= a:
                                     egcd_pair(a, b) = (1, 0)
                                     egcd_l(a, b) = egcd_pair(a, b)[1] = (1, 0)[1] = 1
                                     egcd_r(a, b) = egcd_pair(a, b)[2] = (1, 0)[2] = 0
-                                    gcd(a, b) = a
-                                    egcd_l(a, b) * a + egcd_r(a, b) * b = 1 * a + 0 * b = a = gcd(a, b)
+                                    euclidean_gcd(a, b) = a
+                                    egcd_l(a, b) * a + egcd_r(a, b) * b = 1 * a + 0 * b = a = euclidean_gcd(a, b)
                                 case 0 > a:
                                     egcd_pair(a, b) = (-1, 0)
                                     egcd_l(a, b) = egcd_pair(a, b)[1] = (-1, 0)[1] = -1
                                     egcd_r(a, b) = egcd_pair(a, b)[2] = (-1, 0)[2] = 0
-                                    gcd(a, b) = -a
-                                    egcd_l(a, b) * a + egcd_r(a, b) * b = -1 * a + 0 * b = -a = gcd(a, b)
+                                    euclidean_gcd(a, b) = -a
+                                    egcd_l(a, b) * a + egcd_r(a, b) * b = -1 * a + 0 * b = -a = euclidean_gcd(a, b)
 
         $egcd_identity_at_measure(m + 1)
 
@@ -1990,12 +1990,12 @@ sketch:
 
     claim:
         ? forall a, b Z:
-            egcd_l(a, b) * a + egcd_r(a, b) * b = gcd(a, b)
+            egcd_l(a, b) * a + egcd_r(a, b) * b = euclidean_gcd(a, b)
 
         forall a1, b1 Z:
             abs(b1) >= 0
             $egcd_identity_at_measure(abs(b1))
-            egcd_l(a1, b1) * a1 + egcd_r(a1, b1) * b1 = gcd(a1, b1)
+            egcd_l(a1, b1) * a1 + egcd_r(a1, b1) * b1 = euclidean_gcd(a1, b1)
 
 # The proof is organized around three induction measures:
 

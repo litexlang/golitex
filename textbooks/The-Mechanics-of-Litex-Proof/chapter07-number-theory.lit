@@ -93,10 +93,10 @@ claim:
     ? forall a N_pos:
         2 <= a
         =>:
-            exist k N_pos st {$citation::prime(k), a % k = 0}
+            exist k N_pos st {$prime(k), a % k = 0}
 
     by strong_induc x from 2:
-        ? exist k N_pos st {$citation::prime(k), x % k = 0}
+        ? exist k N_pos st {$prime(k), x % k = 0}
 
         claim:
             ? forall b N_pos:
@@ -105,13 +105,13 @@ claim:
                     2 % b != 0
             by contra 2 % b != 0:
                 impossible b < 2
-        $citation::prime(2)
+        $prime(2)
 
         witness exist t Z st {2 = t * 2} from 1
         0 < 2
         2 = 2 * 1 + 0
         2 % 2 = 0
-        witness exist k N_pos st {$citation::prime(k), 2 % k = 0} from 2
+        witness exist k N_pos st {$prime(k), 2 % k = 0} from 2
 
         claim:
             ? forall n Z:
@@ -120,26 +120,26 @@ claim:
                     2 <= m
                     m <= n
                     =>:
-                        exist k N_pos st {$citation::prime(k), m % k = 0}
+                        exist k N_pos st {$prime(k), m % k = 0}
                 =>:
-                    exist k N_pos st {$citation::prime(k), (n + 1) % k = 0}
+                    exist k N_pos st {$prime(k), (n + 1) % k = 0}
 
-            by cases exist k N_pos st {$citation::prime(k), (n + 1) % k = 0}:
-                case $citation::prime(n+1):
+            by cases exist k N_pos st {$prime(k), (n + 1) % k = 0}:
+                case $prime(n+1):
                     witness exist t Z st {n + 1 = t * (n + 1)} from 1
                     0 < n + 1
                     n + 1 = (n + 1) * 1 + 0
                     (n + 1) % (n + 1) = 0
-                    witness exist k N_pos st {$citation::prime(k), (n + 1) % k = 0} from n+1
-                case not $citation::prime(n+1):
+                    witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from n+1
+                case not $prime(n+1):
                     by contra:
                         ? not forall b N_pos:
                             2 <= b < n + 1
                             =>:
                                 (n + 1) % b != 0
                         2 <= n + 1
-                        $citation::prime(n+1)
-                        impossible $citation::prime(n+1)
+                        $prime(n+1)
+                        impossible $prime(n+1)
 
                     obtain c from exist b N_pos st {2 <= b < n+1, not (n + 1) % b != 0}
 
@@ -154,7 +154,7 @@ claim:
                         case c >= n + 1:
                             impossible c < n + 1
 
-                    obtain d from exist k N_pos st {$citation::prime(k), c % k = 0}
+                    obtain d from exist k N_pos st {$prime(k), c % k = 0}
 
                     witness exist q Z st {n + 1 = c * q + (n + 1) % c} from basics::integer_quotient(n + 1, c):
                         n + 1 = c * basics::integer_quotient(n + 1, c) + (n + 1) % c
@@ -175,14 +175,14 @@ claim:
                     0 < d
                     n + 1 = d * (e1 * f) + 0
                     (n + 1) % d = 0
-                    witness exist k N_pos st {$citation::prime(k), (n + 1) % k = 0} from d:
+                    witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from d:
                         (n + 1) % d = 0
 
 # With these facts in the context, the whole proof body is the following 11 lines:
 
-claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}:
+claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
     2 <= a <= product(1, a, fn(x N_pos) N_pos {x}) <= product(1, a, fn(x N_pos) N_pos {x}) + 1
-    obtain k from exist k N_pos st {$citation::prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
+    obtain k from exist k N_pos st {$prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
     by cases k > a:
         case k <= a:
             product(1, a, fn(x N_pos) N_pos {x}) % k = 0
@@ -195,7 +195,7 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}
             impossible 0 = 1
         case k > a:
             do_nothing
-    witness exist prime_larger N_pos st {prime_larger > a, $citation::prime(prime_larger)} from k
+    witness exist prime_larger N_pos st {prime_larger > a, $prime(prime_larger)} from k
 
 # For comparison, here is the same proof body next to the Lean version from the
 # original chapter. The Litex side is the complete forward proof body after the
@@ -208,9 +208,9 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}
 #   </tr>
 #   <tr>
 #     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-# <pre style="margin: 0; white-space: pre-wrap"><code>claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}:
+# <pre style="margin: 0; white-space: pre-wrap"><code>claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
 #     2 <= a <= product(1, a, fn(x N_pos) N_pos {x}) <= product(1, a, fn(x N_pos) N_pos {x}) + 1
-#     obtain k from exist k N_pos st {$citation::prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
+#     obtain k from exist k N_pos st {$prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
 #     by cases k > a:
 #         case k <= a:
 #             product(1, a, fn(x N_pos) N_pos {x}) % k = 0
@@ -219,7 +219,7 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}
 #             impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
 #         case k > a:
 #             do_nothing
-#     witness exist k N_pos st {k > a, $citation::prime(k)} from k</code></pre>
+#     witness exist k N_pos st {k > a, $prime(k)} from k</code></pre>
 #     </td>
 #     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 # <pre style="margin: 0; white-space: pre-wrap"><code>example (N : ℕ) : ∃ p ≥ N, Prime p := by
@@ -275,7 +275,7 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}
 
 # The next useful number-theoretic move is Gauss's lemma. In Lean, after one has
 # Bézout's identity, the proof is a short calculation: if `d | a * b` and
-# `a != 0 or d != 0` and `citation::gcd(a, d) = 1`, take integers `x` and `y` with
+# `a != 0 or d != 0` and `gcd(a, d) = 1`, take integers `x` and `y` with
 # `1 = x * a + y * d`, take `z` with `a * b = d * z`, and then rewrite
 
 # ```text
@@ -293,7 +293,7 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $citation::prime(k)}}
 
 prop gcd_eq_one(a, d Z):
     a != 0 or d != 0
-    citation::gcd(a, d) = 1
+    gcd(a, d) = 1
 
 thm bezout_of_coprime:
     ? forall a, d Z:
@@ -301,9 +301,9 @@ thm bezout_of_coprime:
         =>:
             exist x Z, y Z st {1 = x * a + y * d}
     by thm citation::bezout_identity(a, d)
-    obtain x, y from exist x Z, y Z st {citation::gcd(a, d) = x * a + y * d}
+    obtain x, y from exist x Z, y Z st {gcd(a, d) = x * a + y * d}
     witness exist u Z, v Z st {1 = u * a + v * d} from x, y:
-        1 = citation::gcd(a, d) = x * a + y * d
+        1 = gcd(a, d) = x * a + y * d
 
 # With Bézout in context, Gauss's lemma is just an existential witness proof.
 # The two `have by exist` lines extract the Bézout coefficients and the quotient
@@ -327,7 +327,7 @@ claim:
 
 # This section proves two standard number-theoretic tools. The first is Gauss's
 # lemma in a Bézout-style form: if `d` divides `a * b` and `a != 0 or d != 0`
-# with `citation::gcd(a, d) = 1`, then
+# with `gcd(a, d) = 1`, then
 # `d` divides `b`. The second is Euclid's lemma for primes: if a prime `p`
 # divides `a * b`, then `p` divides `a` or `p` divides `b`. After that, we use
 # induction to extend Euclid's lemma from a product of two factors to a power:
@@ -363,7 +363,7 @@ sketch:
 
     claim:
         ? forall a, b N, p N_pos:
-            $citation::prime(p)
+            $prime(p)
             $citation::divides(p, a * b)
             =>:
                 $citation::divides(p, a) or $citation::divides(p, b)
@@ -372,32 +372,32 @@ sketch:
         b $in Z
         p $in Z
         by thm citation::gcd_positive(a, p)
-        1 <= citation::gcd(a, p)
+        1 <= gcd(a, p)
         by thm citation::gcd_divides_right(a, p)
-        $citation::divides(citation::gcd(a, p), p)
+        $citation::divides(gcd(a, p), p)
         by thm citation::gcd_of_prime_is_one_or_prime(a, p)
-        citation::gcd(a, p) = 1 or citation::gcd(a, p) = p
+        gcd(a, p) = 1 or gcd(a, p) = p
         by cases:
             ? $citation::divides(p, a) or $citation::divides(p, b)
-            case citation::gcd(a, p) = 1:
+            case gcd(a, p) = 1:
                 by thm bezout_of_coprime(a, p)
                 obtain u, v from exist u Z, v Z st {1 = u * a + v * p}
                 obtain z from exist z Z st {a * b = p * z}
                 witness exist k Z st {b = p * k} from u * z + b * v:
                     b = b * 1 = b * (u * a + v * p) = u * (a * b) + b * v * p = u * (p * z) + b * v * p = p * (u * z + b * v)
                 $citation::divides(p, a) or $citation::divides(p, b)
-            case citation::gcd(a, p) = p:
+            case gcd(a, p) = p:
                 by thm citation::gcd_divides_left(a, p)
-                $citation::divides(citation::gcd(a, p), a)
-                obtain q from exist q Z st {a = citation::gcd(a, p) * q}
+                $citation::divides(gcd(a, p), a)
+                obtain q from exist q Z st {a = gcd(a, p) * q}
                 witness exist k Z st {a = p * k} from q:
-                    a = citation::gcd(a, p) * q = p * q
+                    a = gcd(a, p) * q = p * q
                 $citation::divides(p, a) or $citation::divides(p, b)
 
     prop euclid_lemma_pow_at(k Z):
         forall a N, p N_pos:
             k >= 1
-            $citation::prime(p)
+            $prime(p)
             $citation::divides(p, a ^ k)
             =>:
                 $citation::divides(p, a)
@@ -409,7 +409,7 @@ sketch:
             claim:
                 ? forall a N, p N_pos:
                     k >= 1
-                    $citation::prime(p)
+                    $prime(p)
                     $citation::divides(p, a ^ k)
                     =>:
                         $citation::divides(p, a)
@@ -423,7 +423,7 @@ sketch:
             claim:
                 ? forall a N, p N_pos:
                     k + 1 >= 1
-                    $citation::prime(p)
+                    $prime(p)
                     $citation::divides(p, a ^ (k + 1))
                     =>:
                         $citation::divides(p, a)
@@ -445,7 +445,7 @@ sketch:
     claim:
         ? forall a, k N, p N_pos:
             1 <= k
-            $citation::prime(p)
+            $prime(p)
             $citation::divides(p, a ^ k)
             =>:
                 $citation::divides(p, a)
@@ -466,7 +466,7 @@ sketch:
 
 # we get that `2` divides `p^2`, hence `2` divides `p`. Writing `p = 2 * c`
 # then gives `q^2 = 2 * c^2`, so `2` also divides `q`. This contradicts the
-# choice of `p / q` as a fraction with `citation::gcd(p, q) = 1`.
+# choice of `p / q` as a fraction with `gcd(p, q) = 1`.
 
 # The citation package supplies only the general gcd laws. The three facts used
 # only by this example -- a positive reduced fraction, prime divisibility of a
@@ -477,7 +477,7 @@ sketch:
         ? forall a Q:
             a > 0
             =>:
-                exist p, q N_pos st {a = p / q, citation::gcd(p, q) = 1}
+                exist p, q N_pos st {a = p / q, gcd(p, q) = 1}
         by thm basics::rational_has_unique_reduced_fraction(a)
         obtain p, q from exist! p Z, q N_pos st {a = p / q, $basics::is_reduced_fraction(p, q)}
         q > 0
@@ -488,29 +488,29 @@ sketch:
         by thm citation::gcd_positive(p, q)
         by thm citation::gcd_divides_left(p, q)
         by thm citation::gcd_divides_right(p, q)
-        obtain x from exist x Z st {p = citation::gcd(p, q) * x}
-        obtain y from exist y Z st {q = citation::gcd(p, q) * y}
-        p = citation::gcd(p, q) * x + 0
-        q = citation::gcd(p, q) * y + 0
-        p % citation::gcd(p, q) = 0
-        q % citation::gcd(p, q) = 0
+        obtain x from exist x Z st {p = gcd(p, q) * x}
+        obtain y from exist y Z st {q = gcd(p, q) * y}
+        p = gcd(p, q) * x + 0
+        q = gcd(p, q) * y + 0
+        p % gcd(p, q) = 0
+        q % gcd(p, q) = 0
         $basics::is_reduced_fraction(p, q)
-        citation::gcd(p, q) = 1
-        witness exist r, s N_pos st {a = r / s, citation::gcd(r, s) = 1} from p, q:
+        gcd(p, q) = 1
+        witness exist r, s N_pos st {a = r / s, gcd(r, s) = 1} from p, q:
             a = p / q
-            citation::gcd(p, q) = 1
+            gcd(p, q) = 1
 
     claim:
         ? forall a, k N_pos:
-            $citation::prime(a)
+            $prime(a)
             k^2 % a = 0
             =>:
                 k % a = 0
         by thm citation::gcd_of_prime_is_one_or_prime(k, a)
-        citation::gcd(k, a) = 1 or citation::gcd(k, a) = a
+        gcd(k, a) = 1 or gcd(k, a) = a
         by cases:
             ? k % a = 0
-            case citation::gcd(k, a) = 1:
+            case gcd(k, a) = 1:
                 by contra:
                     ? k % a = 0
                     k % a != 0
@@ -526,27 +526,27 @@ sketch:
                     k = a * t + 0
                     k % a = 0
                     impossible k % a != 0
-            case citation::gcd(k, a) = a:
+            case gcd(k, a) = a:
                 by contra:
                     ? k % a = 0
                     k % a != 0
                     by thm citation::gcd_divides_left(k, a)
-                    obtain t from exist t Z st {k = citation::gcd(k, a) * t}
-                    k = citation::gcd(k, a) * t = a * t
+                    obtain t from exist t Z st {k = gcd(k, a) * t}
+                    k = gcd(k, a) * t = a * t
                     k = a * t + 0
                     k % a = 0
                     impossible k % a != 0
 
     claim:
-        ? $citation::prime(2)
+        ? $prime(2)
         2 <= 2
         by for:
             ? forall d range(2, 2):
                 2 % d != 0
-        $citation::prime(2)
+        $prime(2)
 
     by contra not 2^(1/2) $in Q:
-        obtain p, q from exist p, q N_pos st {2^(1/2) = p / q, citation::gcd(p, q) = 1}
+        obtain p, q from exist p, q N_pos st {2^(1/2) = p / q, gcd(p, q) = 1}
         (2^(1 / 2))^2 = 2^(1 / 2 * 2)
         p^2 / q^2 = (p/q)^2 = (2^(1/2))^2 = 2^(1/2 * 2) = 2^(1) = 2
         p^2 = 2 * q^2
@@ -574,7 +574,7 @@ sketch:
         witness exist t Z st {q = 2 * t} from d
         $citation::divides(2, q)
         by thm citation::common_divisor_le_gcd(p, q, 2)
-        2 <= citation::gcd(p, q) = 1
+        2 <= gcd(p, q) = 1
         impossible 2 <= 1
 
 # Summary

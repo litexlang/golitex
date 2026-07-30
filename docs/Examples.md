@@ -1959,6 +1959,31 @@ forall x R:
 For a complete checked sample, see
 [`examples/01_proof_patterns/trigonometric_builtin_rules.lit`](../examples/01_proof_patterns/trigonometric_builtin_rules.lit).
 
+### 2.3. Native Gcd And Prime
+
+- Category: `builtin object and predicate`
+- Purpose: Shows direct gcd calculation, optional explicit evaluation, and
+  concrete primality decisions.
+
+```litex
+gcd(54, -24) = 6
+gcd(54, -24) + gcd(10, 15) = 11
+eval gcd(54, -24)
+
+$prime(97)
+not $prime(1)
+```
+
+`gcd(a, b)` takes integer arguments and requires `a != 0 or b != 0`.
+Concrete gcd expressions normalize inside ordinary facts, so `eval` is a
+presentation choice rather than a prerequisite. `$prime(p)` is a native
+predicate on `N_pos`; concrete literals in the `u64` range are decided
+exactly, while `by def $prime(p)` exposes the symbolic trial-divisor
+definition.
+
+For symbolic examples, see
+[`examples/01_proof_patterns/gcd_and_prime_builtin.lit`](../examples/01_proof_patterns/gcd_and_prime_builtin.lit).
+
 ### 3. Common Builtin Rules
 
 - Category: `builtin rule`

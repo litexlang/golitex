@@ -1,3 +1,0 @@
-run_file "./runfile2.lit"
-
-$p(1, 2)

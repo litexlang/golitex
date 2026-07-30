@@ -673,19 +673,14 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
     $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
     $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
 
-# The local gcd is the greatest positive common divisor. It is defined only
-# when the input pair is nonzero.
-have fn gcd(a, b Z: a != 0 or b != 0) N = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+# The native gcd object is the greatest positive common divisor and is
+# well-defined when the input pair is not all zero.
 
 thm gcd_positive:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
             gcd(a, b) $in N_pos
-    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
     gcd(a, b) $in N_pos
 
 thm gcd_divides_left:
@@ -693,10 +688,9 @@ thm gcd_divides_left:
         a != 0 or b != 0
         =>:
             $divides(gcd(a, b), a)
-    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    by thm gcd_positive(a, b)
+    a % gcd(a, b) = 0
+    exist k Z st {a = gcd(a, b) * k}
     $divides(gcd(a, b), a)
 
 thm gcd_divides_right:
@@ -704,10 +698,9 @@ thm gcd_divides_right:
         a != 0 or b != 0
         =>:
             $divides(gcd(a, b), b)
-    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    by thm gcd_positive(a, b)
+    b % gcd(a, b) = 0
+    exist k Z st {b = gcd(a, b) * k}
     $divides(gcd(a, b), b)
 
 thm common_divisor_le_gcd:
@@ -717,10 +710,14 @@ thm common_divisor_le_gcd:
         $divides(d, b)
         =>:
             d <= gcd(a, b)
-    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    d $in {candidate_divisor N_pos: $divides(candidate_divisor, a), $divides(candidate_divisor, b)}
-    d <= finite_set_max({candidate_divisor N_pos: $divides(candidate_divisor, a), $divides(candidate_divisor, b)})
-    gcd(a, b) = finite_set_max({candidate_divisor N_pos: $divides(candidate_divisor, a), $divides(candidate_divisor, b)})
+    by thm gcd_positive(a, b)
+    obtain ka from exist ka Z st {a = d * ka}
+    obtain kb from exist kb Z st {b = d * kb}
+    d = d * 1 + 0
+    0 < d
+    d % d = 0
+    a % d = (d * ka) % d = ((d % d) * (ka % d)) % d = (0 * (ka % d)) % d = 0 % d = 0
+    b % d = (d * kb) % d = ((d % d) * (kb % d)) % d = (0 * (kb % d)) % d = 0 % d = 0
     d <= gcd(a, b)
 
 thm gcd_euclidean_base:

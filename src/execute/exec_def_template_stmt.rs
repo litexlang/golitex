@@ -578,6 +578,33 @@ impl Runtime {
                 )
                 .into())
             }
+            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
+                let mut groups = Vec::with_capacity(s.param_def.groups.len());
+                for group in s.param_def.groups.iter() {
+                    groups.push(ParamGroupWithParamType::new(
+                        group.params.clone(),
+                        self.inst_param_type(
+                            &group.param_type,
+                            param_to_arg_map,
+                            ParamObjType::DefHeader,
+                        )?,
+                    ));
+                }
+                let mut objs_equal_to = Vec::with_capacity(s.objs_equal_to.len());
+                for obj in s.objs_equal_to.iter() {
+                    objs_equal_to.push(self.inst_obj(
+                        obj,
+                        param_to_arg_map,
+                        ParamObjType::DefHeader,
+                    )?);
+                }
+                Ok(HaveObjEqualStmt::new(
+                    ParamDefWithType::new(groups),
+                    objs_equal_to,
+                    line_file.clone(),
+                )
+                .into())
+            }
             Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(s)) => {
                 let (fn_set_clause, body_map) =
                     self.inst_fn_set_clause(&s.fn_set_clause, param_to_arg_map)?;

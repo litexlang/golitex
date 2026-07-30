@@ -1,4 +1,0 @@
-interface:
-  display_name: "golitex Repository Policy"
-  short_description: "Apply mandatory golitex repository workflow"
-  default_prompt: "Use $golitex-repository-policy to apply the repository’s mandatory Litex workflow and validation rules."

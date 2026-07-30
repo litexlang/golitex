@@ -18,13 +18,8 @@ have evens power_set(N) = {n N: $chap1::even(n)}
 # even naturals, so the definition retains that logical form.
 have odds power_set(N) = {n N: not $chap1::even(n)}
 
-# A positive natural is prime when it has no divisor between two and itself.
-# The predicate is source-local because the later chapter proofs need only this
-# direct mathematical definition.
-prop prime(p N_pos):
-    2 <= p
-    forall d range(2, p):
-        p % d != 0
+# Litex's native prime predicate uses the same trial-division characterization
+# as this chapter's source-facing definition.
 
 # Source definition `primes`. Primality already forces positivity, so the
 # carrier is N_pos.

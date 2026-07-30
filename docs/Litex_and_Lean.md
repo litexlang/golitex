@@ -977,12 +977,8 @@ Both systems can express the classic proof that there are infinitely many primes
 
 <!-- litex:skip-test -->
 ```litex
-prop prime(a N+):
-    2 <= a
-    forall b N+:
-        2 <= b < a
-        =>:
-            a % b != 0
+# `$prime(a)` is native. Its symbolic contract is `2 <= a` together with
+# `a % b != 0` for every `b` in `range(2, a)`.
 
 claim:
     ? forall a N+:

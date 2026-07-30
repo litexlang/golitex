@@ -396,10 +396,16 @@ impl PythonExtractor {
 
     fn reject_native_complex_fact(&self, fact: &Fact) -> Result<(), RuntimeError> {
         let rendered = fact.to_string();
-        if rendered.contains("$prime(") || rendered.contains("gcd(") {
+        if contains_unqualified_function_call(&rendered, GCD) {
             return Err(python_extract_error(
                 &fact.line_file(),
-                "python extractor v1 does not support native gcd or builtin prime",
+                "python extractor v1 does not support native gcd",
+            ));
+        }
+        if rendered.contains("$prime(") {
+            return Err(python_extract_error(
+                &fact.line_file(),
+                "python extractor v1 does not support builtin prime",
             ));
         }
         if fact.contains_native_complex_syntax() {
@@ -771,6 +777,16 @@ fn is_numeric_set_obj(obj: &Obj) -> bool {
                 | StandardSet::RNz
         )
     )
+}
+
+fn contains_unqualified_function_call(rendered: &str, name: &str) -> bool {
+    rendered.match_indices(name).any(|(index, _)| {
+        let before_is_identifier = rendered[..index]
+            .chars()
+            .next_back()
+            .is_some_and(|ch| ch.is_alphanumeric() || ch == '_' || ch == ':');
+        !before_is_identifier && rendered[index + name.len()..].starts_with('(')
+    })
 }
 
 fn python_float_literal(value: &str) -> String {

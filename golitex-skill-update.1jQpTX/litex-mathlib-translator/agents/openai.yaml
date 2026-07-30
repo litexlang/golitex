@@ -1,4 +1,0 @@
-interface:
-  display_name: "Litex Mathlib Translator"
-  short_description: "Translate mathlib interfaces and theorems into Litex."
-  default_prompt: "Use $litex-mathlib-translator to translate Lean/mathlib interfaces, definitions, and theorem slices into natural Litex code and classify reusable library or kernel blockers."

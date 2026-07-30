@@ -1,4 +1,0 @@
-interface:
-  display_name: "Litex Proof Writer"
-  short_description: "Write and simplify Litex proofs"
-  default_prompt: "Use $litex-proof-writer to derive a concise natural-language proof spine, translate it into nonredundant Litex, verify it with persistent REPL plus try blocks, and classify blockers."
