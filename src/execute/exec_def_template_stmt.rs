@@ -140,6 +140,13 @@ impl Runtime {
         // substitution preserves that result, so only commit the instantiated
         // statement's environment effects here.
         self.exec_preverified_stmt_affect_environment_only(&stmt)?;
+        if let Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(case_stmt)) = &stmt {
+            self.store_template_surface_case_equations(case_stmt, template_obj)?;
+        }
+        if let Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(recursive_stmt)) = &stmt {
+            let flat = recursive_stmt.to_have_fn_equal_case_by_case_stmt();
+            self.store_template_surface_case_equations(&flat, template_obj)?;
+        }
         if let Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(choice_stmt)) = &stmt {
             // The generic choice theorem was checked at template declaration.
             // Register its instantiated property under the public template
@@ -280,23 +287,20 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(s) => {
-                let fn_set_clause = self.inst_fn_set_clause(&s.fn_set_clause, param_to_arg_map)?;
+                let (fn_set_clause, body_map) =
+                    self.inst_fn_set_clause(&s.fn_set_clause, param_to_arg_map)?;
                 let mut cases = Vec::with_capacity(s.cases.len());
                 for c in s.cases.iter() {
                     cases.push(self.inst_and_chain_atomic_fact(
                         c,
-                        param_to_arg_map,
+                        &body_map,
                         ParamObjType::DefHeader,
                         Some(line_file),
                     )?);
                 }
                 let mut equal_tos = Vec::with_capacity(s.equal_tos.len());
                 for obj in s.equal_tos.iter() {
-                    equal_tos.push(self.inst_obj(
-                        obj,
-                        param_to_arg_map,
-                        ParamObjType::DefHeader,
-                    )?);
+                    equal_tos.push(self.inst_obj(obj, &body_map, ParamObjType::DefHeader)?);
                 }
                 Ok(HaveFnEqualCaseByCaseStmt::new(
                     instance_name.to_string(),
@@ -309,14 +313,20 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::HaveFnByInducStmt(s) => {
-                let fn_set_clause = self.inst_fn_set_clause(&s.fn_set_clause, param_to_arg_map)?;
-                let measure =
-                    self.inst_obj(&s.measure, param_to_arg_map, ParamObjType::DefHeader)?;
+                let (fn_set_clause, mut body_map) =
+                    self.inst_fn_set_clause(&s.fn_set_clause, param_to_arg_map)?;
+                insert_symbol_substitution(
+                    &mut body_map,
+                    &s.symbol_binding,
+                    Identifier::new_bound(instance_name.to_string(), instance_binding.as_ref())
+                        .into(),
+                );
+                let measure = self.inst_obj(&s.measure, &body_map, ParamObjType::DefHeader)?;
                 let lower_bound =
-                    self.inst_obj(&s.lower_bound, param_to_arg_map, ParamObjType::DefHeader)?;
+                    self.inst_obj(&s.lower_bound, &body_map, ParamObjType::DefHeader)?;
                 let mut cases = Vec::with_capacity(s.cases.len());
                 for c in s.cases.iter() {
-                    cases.push(self.inst_have_fn_by_induc_case(c, param_to_arg_map, line_file)?);
+                    cases.push(self.inst_have_fn_by_induc_case(c, &body_map, line_file)?);
                 }
                 Ok(HaveFnByInducStmt::new(
                     instance_name.to_string(),
@@ -568,6 +578,54 @@ impl Runtime {
                 )
                 .into())
             }
+            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(s)) => {
+                let (fn_set_clause, body_map) =
+                    self.inst_fn_set_clause(&s.fn_set_clause, param_to_arg_map)?;
+                let mut cases = Vec::with_capacity(s.cases.len());
+                for case in s.cases.iter() {
+                    cases.push(self.inst_and_chain_atomic_fact(
+                        case,
+                        &body_map,
+                        ParamObjType::DefHeader,
+                        Some(line_file),
+                    )?);
+                }
+                let mut equal_tos = Vec::with_capacity(s.equal_tos.len());
+                for equal_to in s.equal_tos.iter() {
+                    equal_tos.push(self.inst_obj(equal_to, &body_map, ParamObjType::DefHeader)?);
+                }
+                Ok(HaveFnEqualCaseByCaseStmt::new(
+                    s.name.clone(),
+                    s.symbol_binding.clone(),
+                    fn_set_clause,
+                    cases,
+                    equal_tos,
+                    line_file.clone(),
+                )
+                .into())
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(s)) => {
+                let obj = self.inst_obj(
+                    &s.equal_to_anonymous_fn.clone().into(),
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                )?;
+                let Obj::AnonymousFn(anonymous_fn) = obj else {
+                    return Err(RuntimeError::from(InstantiateRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(
+                            "local template proof function did not instantiate to anonymous function"
+                                .to_string(),
+                        ),
+                    )));
+                };
+                Ok(HaveFnEqualStmt::new(
+                    s.name.clone(),
+                    s.symbol_binding.clone(),
+                    anonymous_fn,
+                    line_file.clone(),
+                )
+                .into())
+            }
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => {
                 let mut equal_tos = Vec::with_capacity(s.equal_tos.len());
                 for obj in s.equal_tos.iter() {
@@ -630,6 +688,65 @@ impl Runtime {
                 let fact = NormalAtomicFact::new(s.fact.predicate.clone(), args, line_file.clone());
                 Ok(ByDefStmt::new(fact, line_file.clone()).into())
             }
+            Stmt::By(ByStmt::ByCasesStmt(s)) => {
+                let mut cases = Vec::with_capacity(s.cases.len());
+                for case in s.cases.iter() {
+                    cases.push(self.inst_and_chain_atomic_fact(
+                        case,
+                        param_to_arg_map,
+                        ParamObjType::DefHeader,
+                        Some(line_file),
+                    )?);
+                }
+                let mut then_facts = Vec::with_capacity(s.then_facts.len());
+                for fact in s.then_facts.iter() {
+                    then_facts.push(self.inst_fact(
+                        fact,
+                        param_to_arg_map,
+                        ParamObjType::DefHeader,
+                        Some(line_file.clone()),
+                    )?);
+                }
+                let mut proofs = Vec::with_capacity(s.proofs.len());
+                for proof in s.proofs.iter() {
+                    proofs.push(self.inst_template_proof_process(
+                        proof,
+                        param_to_arg_map,
+                        line_file,
+                    )?);
+                }
+                let mut impossible_facts = Vec::with_capacity(s.impossible_facts.len());
+                for impossible_fact in s.impossible_facts.iter() {
+                    impossible_facts.push(
+                        impossible_fact
+                            .as_ref()
+                            .map(|fact| {
+                                self.inst_atomic_fact(
+                                    fact,
+                                    param_to_arg_map,
+                                    ParamObjType::DefHeader,
+                                    Some(line_file),
+                                )
+                            })
+                            .transpose()?,
+                    );
+                }
+                Ok(ByCasesStmt::new(
+                    cases,
+                    then_facts,
+                    proofs,
+                    impossible_facts,
+                    line_file.clone(),
+                )
+                .into())
+            }
+            Stmt::By(ByStmt::ByExtensionStmt(s)) => {
+                let left = self.inst_obj(&s.left, param_to_arg_map, ParamObjType::DefHeader)?;
+                let right = self.inst_obj(&s.right, param_to_arg_map, ParamObjType::DefHeader)?;
+                let proof =
+                    self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
+                Ok(ByExtensionStmt::new(left, right, proof, line_file.clone()).into())
+            }
             _ => Err(RuntimeError::from(InstantiateRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "template proof body does not support statement `{}` yet",
@@ -669,30 +786,40 @@ impl Runtime {
         &self,
         clause: &FnSetClause,
         param_to_arg_map: &HashMap<String, Obj>,
-    ) -> Result<FnSetClause, RuntimeError> {
+    ) -> Result<(FnSetClause, HashMap<String, Obj>), RuntimeError> {
+        let mut body_map = param_to_arg_map.clone();
         let mut params_def_with_set = Vec::with_capacity(clause.params_def_with_set.len());
         for g in clause.params_def_with_set.iter() {
-            params_def_with_set.push(
-                self.fresh_param_group_with_set(
-                    g.params
-                        .iter()
-                        .map(|binding| binding.name().to_string())
-                        .collect(),
-                    self.inst_obj(g.set_obj(), param_to_arg_map, ParamObjType::DefHeader)?,
-                )?,
-            );
+            let fresh_group = self.fresh_param_group_with_set(
+                g.params
+                    .iter()
+                    .map(|binding| binding.name().to_string())
+                    .collect(),
+                self.inst_obj(g.set_obj(), &body_map, ParamObjType::DefHeader)?,
+            )?;
+            for (source_binding, fresh_binding) in g.params.iter().zip(fresh_group.params.iter()) {
+                insert_symbol_substitution(
+                    &mut body_map,
+                    source_binding,
+                    obj_for_bound_param_in_scope(fresh_binding, ParamObjType::FnSet),
+                );
+            }
+            params_def_with_set.push(fresh_group);
         }
         let mut dom_facts = Vec::with_capacity(clause.dom_facts.len());
         for fact in clause.dom_facts.iter() {
             dom_facts.push(self.inst_or_and_chain_atomic_fact(
                 fact,
-                param_to_arg_map,
+                &body_map,
                 ParamObjType::DefHeader,
                 None,
             )?);
         }
-        let ret_set = self.inst_obj(&clause.ret_set, param_to_arg_map, ParamObjType::DefHeader)?;
-        FnSetClause::new(params_def_with_set, dom_facts, ret_set)
+        let ret_set = self.inst_obj(&clause.ret_set, &body_map, ParamObjType::DefHeader)?;
+        Ok((
+            FnSetClause::new(params_def_with_set, dom_facts, ret_set)?,
+            body_map,
+        ))
     }
 
     fn inst_have_fn_by_induc_case(

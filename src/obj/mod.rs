@@ -26,7 +26,7 @@ pub use free_param_obj::{
 pub use obj::{
     fn_obj_to_string, Abs, Add, BigIntersect, BigUnion, Cart, CartDim, ClosedRange, ComplexAbs,
     Cos, Cot, Div, EulerNumber, FiniteSeqListObj, FiniteSeqSet, FiniteSetMax, FiniteSetMin,
-    FiniteSetSize, FnObj, FnRange, GeneralCart, ImaginaryPart, ImaginaryUnit,
+    FiniteSetSize, FnObj, FnRange, Gcd, GeneralCart, ImaginaryPart, ImaginaryUnit,
     InstantiatedTemplateObj, Intersect, IntervalObj, IntervalObjStruct, ListSet, Log, MatrixAdd,
     MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Mod, Mul, Number,
     Obj, ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind, OneSideInfinityIntervalObj,

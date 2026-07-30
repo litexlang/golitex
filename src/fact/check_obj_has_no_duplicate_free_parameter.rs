@@ -72,6 +72,9 @@ fn check_obj_has_no_duplicate_free_parameter(
         Obj::Mod(obj) => {
             check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
         }
+        Obj::Gcd(obj) => {
+            check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
+        }
         Obj::Pow(obj) => check_two_objs(
             &obj.base,
             &obj.exponent,

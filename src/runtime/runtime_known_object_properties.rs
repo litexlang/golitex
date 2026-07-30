@@ -829,6 +829,7 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Mul(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Div(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Mod(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
+        Obj::Gcd(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Pow(x) => collect_module_names_from_two(&x.base, &x.exponent, module_names),
         Obj::RealPart(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::ImaginaryPart(x) => collect_module_names_from_obj(&x.arg, module_names),

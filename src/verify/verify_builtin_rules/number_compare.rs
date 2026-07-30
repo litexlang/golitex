@@ -45,6 +45,44 @@ impl Runtime {
             }
             _ => return Ok(StmtUnknown::new().into()),
         };
+        // Every positive common divisor is bounded by the gcd.
+        // Example: `d in N_pos`, `a % d = 0`, `b % d = 0` imply `d <= gcd(a, b)`.
+        if let (AtomicFact::LessEqualFact(_), Obj::Gcd(gcd)) = (atomic_fact, &right) {
+            let d_in_n_pos: AtomicFact =
+                InFact::new(left.clone(), StandardSet::NPos.into(), line_file.clone()).into();
+            let left_divisible: AtomicFact = EqualFact::new(
+                Mod::new((*gcd.left).clone(), left.clone()).into(),
+                Number::new("0".to_string()).into(),
+                line_file.clone(),
+            )
+            .into();
+            let right_divisible: AtomicFact = EqualFact::new(
+                Mod::new((*gcd.right).clone(), left.clone()).into(),
+                Number::new("0".to_string()).into(),
+                line_file.clone(),
+            )
+            .into();
+            let mut subgoals = Vec::new();
+            for premise in [d_in_n_pos, left_divisible, right_divisible] {
+                let result =
+                    self.verify_atomic_fact_restricted_known_builtin(&premise, verify_state)?;
+                if result.is_unknown() {
+                    subgoals.clear();
+                    break;
+                }
+                subgoals.push(result);
+            }
+            if subgoals.len() == 3 {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "every positive common divisor is at most the gcd".to_string(),
+                        subgoals,
+                    )
+                    .into(),
+                );
+            }
+        }
         if self
             .verify_objects_are_known_reals(&[&left, &right], &line_file, verify_state)?
             .is_none()

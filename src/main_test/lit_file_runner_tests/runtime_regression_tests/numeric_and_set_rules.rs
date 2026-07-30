@@ -290,6 +290,33 @@ forall x, n Z:
 }
 
 #[test]
+fn set_minus_membership_excludes_the_removed_set() {
+    run_with_large_stack("set_minus_membership_excludes_the_removed_set", || {
+        let source_code = r#"
+forall A, B set, x set:
+    x $in set_minus(A, B)
+    =>:
+        not x $in B
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime
+            .new_file_path_new_env_new_name_scope("set_minus_membership_excludes_the_removed_set");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            run_succeeded,
+            "set-minus membership should exclude the removed set:\n{run_output}"
+        );
+        assert!(
+            run_output.contains("\"not x $in B\""),
+            "missing set-minus elimination consequence:\n{run_output}"
+        );
+    });
+}
+
+#[test]
 fn extrema_equalities_do_not_recurse_through_weak_order() {
     run_with_large_stack(
         "extrema_equalities_do_not_recurse_through_weak_order",
@@ -2418,5 +2445,25 @@ max(1, 2) = 2
     assert!(
         run_output.contains("function `max` not defined"),
         "the failure should identify max as an ordinary undefined function:\n{run_output}"
+    );
+}
+
+#[test]
+fn gcd_accepts_known_non_all_zero_disjunction() {
+    let source_code = r#"
+forall a, b Z:
+    a != 0 or b != 0
+    =>:
+        gcd(a, b) $in N_pos
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("gcd_accepts_known_non_all_zero_disjunction");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "gcd should be well-defined from the known non-all-zero disjunction:\n{run_output}"
     );
 }

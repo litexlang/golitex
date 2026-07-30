@@ -78,7 +78,7 @@ impl Runtime {
             for name in param_def.params.iter() {
                 let current_param_equal_to = &have_obj_equal_stmt.objs_equal_to[current_index];
 
-                let verify_result = self
+                let mut verify_result = self
                     .verify_obj_satisfies_param_type(
                         current_param_equal_to.clone(),
                         current_type,
@@ -92,6 +92,29 @@ impl Runtime {
                             vec![],
                         )
                     })?;
+                // A `have x T = y` declaration may transport `y` across a
+                // propositionally equal indexed carrier.  Typical examples
+                // are `FiniteList<A, m>` and `FiniteList<A, n>` after the
+                // proof has established `m = n`.  Ordinary membership lookup
+                // sees the source carrier recorded for `y`; recognize the
+                // target carrier when those two set objects are already known
+                // equal.
+                if verify_result.is_unknown() {
+                    if let ParamType::Obj(target_set) = current_type {
+                        for source_set in self.known_sets_containing_obj(current_param_equal_to) {
+                            let set_equality = self.verify_objs_are_equal_in_equality_builtin(
+                                &source_set,
+                                target_set,
+                                have_obj_equal_stmt.line_file.clone(),
+                                &VerifyState::new(0, false),
+                            )?;
+                            if !set_equality.is_unknown() {
+                                verify_result = set_equality;
+                                break;
+                            }
+                        }
+                    }
+                }
                 if verify_result.is_unknown() {
                     let msg = format!(
                         "have_obj_equal_stmt: {} is not in type {}",

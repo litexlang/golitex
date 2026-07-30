@@ -1224,6 +1224,110 @@ forall S nonempty_set, x S:
 }
 
 #[test]
+fn template_recursive_function_materializes_public_computation_equations() {
+    run_with_large_stack(
+        "template_recursive_function_materializes_public_computation_equations",
+        || {
+            let source_code = r#"
+template<T nonempty_set, combine fn(left, right T) T, identity T>:
+    have fn recursive_fold(values fn(index N) T, count N) T by induc count from 0:
+        case count = 0: identity
+        case count > 0: combine(recursive_fold(values, count - 1), values(count - 1))
+
+forall T nonempty_set, combine fn(left, right T) T, identity T, values fn(index N) T:
+    \recursive_fold<T, combine, identity>(values, 0) = identity
+
+forall T nonempty_set, combine fn(left, right T) T, identity T, values fn(index N) T, count N:
+    \recursive_fold<T, combine, identity>(values, count + 1) = combine(\recursive_fold<T, combine, identity>(values, (count + 1) - 1), values((count + 1) - 1)) = combine(\recursive_fold<T, combine, identity>(values, count), values(count))
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "template_recursive_function_materializes_public_computation_equations",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "template recursive functions must expose equations through their public application:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn template_case_function_materializes_public_computation_equations() {
+    run_with_large_stack(
+        "template_case_function_materializes_public_computation_equations",
+        || {
+            let source_code = r#"
+template<T nonempty_set, marker, fallback T>:
+    have fn choose_marker(value T) T by cases:
+        case value = marker: marker
+        case value != marker: fallback
+
+forall T nonempty_set, marker, fallback, value T:
+    value = marker
+    =>:
+        \choose_marker<T, marker, fallback>(value) = marker
+
+forall T nonempty_set, marker, fallback, value T:
+    value != marker
+    =>:
+        \choose_marker<T, marker, fallback>(value) = fallback
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "template_case_function_materializes_public_computation_equations",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "template case functions must expose equations through their public application:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn template_simple_function_materializes_public_computation_equation() {
+    run_with_large_stack(
+        "template_simple_function_materializes_public_computation_equation",
+        || {
+            let source_code = r#"
+template<T nonempty_set, combine fn(left, right T) T, marker T>:
+    have fn combine_with_marker(value T) T = combine(value, marker)
+
+forall T nonempty_set, combine fn(left, right T) T, marker, value T:
+    \combine_with_marker<T, combine, marker>(value) = combine(value, marker)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "template_simple_function_materializes_public_computation_equation",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "template simple functions must expose equations through their public application:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn template_choice_materializes_local_exist_elimination_and_witness() {
     run_with_large_stack(
         "template_choice_materializes_local_exist_elimination_and_witness",
@@ -1261,6 +1365,102 @@ forall S nonempty_set, x S:
             assert!(
                 run_succeeded,
                 "a materialized template proof must retain local exist elimination and witness statements:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn template_choice_materializes_local_case_function() {
+    run_with_large_stack("template_choice_materializes_local_case_function", || {
+        let source_code = r#"
+template<S nonempty_set, marker S>:
+    have fn selected_marker_with_local_case by exist!:
+        ? forall x S:
+            exist! y S st {y = marker}
+        have fn local_marker(input S) S by cases:
+            case input = marker: marker
+            case input != marker: marker
+        witness exist y S st {y = marker} from marker
+        forall y1, y2 S:
+            y1 = marker
+            y2 = marker
+            =>:
+                y1 = y2
+
+forall S nonempty_set, marker, x S:
+    \selected_marker_with_local_case<S, marker>(x) = marker
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            "template_choice_materializes_local_case_function",
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "a materialized template proof must retain local case-defined functions:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
+fn template_choice_returning_refined_function_remains_callable() {
+    run_with_large_stack(
+        "template_choice_returning_refined_function_remains_callable",
+        || {
+            let source_code = r#"
+prop is_constant(S nonempty_set, marker S, value fn(x S) S):
+    forall x S:
+        value(x) = marker
+
+template<S nonempty_set, marker S>:
+    have ConstantFunctions power_set(fn(x S) S) = {value fn(x S) S: $is_constant(S, marker, value)}
+
+template<S nonempty_set, marker S>:
+    have fn selected_constant by exist!:
+        ? forall seed S:
+            exist! value \ConstantFunctions<S, marker> st {$is_constant(S, marker, value)}
+        have fn candidate(x S) S = marker
+        forall x S:
+            candidate(x) = marker
+        by def $is_constant(S, marker, candidate)
+        candidate $in \ConstantFunctions<S, marker>
+        witness exist value \ConstantFunctions<S, marker> st {$is_constant(S, marker, value)} from candidate
+        claim:
+            ? forall value1, value2 \ConstantFunctions<S, marker>:
+                $is_constant(S, marker, value1)
+                $is_constant(S, marker, value2)
+                =>:
+                    value1 = value2
+            claim:
+                ? forall x S:
+                    value1(x) = value2(x)
+                value1(x) = marker = value2(x)
+            $fn_eq(value1, value2)
+            value1 = value2
+
+forall S nonempty_set, marker, seed, x S:
+    $is_constant(S, marker, \selected_constant<S, marker>(seed))
+    \selected_constant<S, marker>(seed)(x) = marker
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "template_choice_returning_refined_function_remains_callable",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a selected value in a refined function carrier must remain callable:\n{}",
                 run_output
             );
         },
@@ -2485,5 +2685,44 @@ trust $is_dual_family(R, 2, original, \selected_family<R, 2, original>)
                 run_output
             );
         },
+    );
+}
+
+#[test]
+fn have_equal_object_transports_across_equal_struct_indices() {
+    let source_code = r#"
+struct IndexedBox<A nonempty_set, n N>:
+    value A
+    stored_index N
+    entry fn(slot closed_range(0, n)) A
+
+thm equal_index_transport:
+    ? forall A nonempty_set, m, n N, x &IndexedBox<A, n>:
+        m = n
+        =>:
+            exist y &IndexedBox<A, m> st {y = x}
+    have transported &IndexedBox<A, m> = x
+    transported.value = x.value
+    transported.stored_index = x.stored_index
+    claim:
+        ? forall index closed_range(0, m):
+            transported.entry(index) = x.entry(index)
+        index <= n
+        transported.entry(index) = x.entry(index)
+    witness exist y &IndexedBox<A, m> st {y = x} from transported
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "have_equal_object_transports_across_equal_struct_indices",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "known equality of struct indices should transport membership in the indexed carrier:\n{}",
+        run_output
     );
 }

@@ -589,6 +589,15 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::Gcd(left_gcd), Obj::Gcd(right_gcd)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left_gcd.left,
+                    &left_gcd.right,
+                    &right_gcd.left,
+                    &right_gcd.right,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Pow(left_pow), Obj::Pow(right_pow)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_pow.base,

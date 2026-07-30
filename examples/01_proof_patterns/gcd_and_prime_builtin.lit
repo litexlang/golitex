@@ -1,0 +1,25 @@
+# Native gcd computes in ordinary facts, like arithmetic operators.
+gcd(54, -24) = 6
+gcd(54, -24) + 1 = 7
+
+# `eval` remains useful when an explicit evaluation step is clearer.
+eval gcd(54, -24)
+
+# Prime is a native predicate with exact computation for machine-size integers.
+$prime(97)
+not $prime(1)
+
+# Symbolic use exposes the mathematical contract.
+thm prime_is_at_least_two:
+    ? forall p N_pos:
+        $prime(p)
+        =>:
+            2 <= p
+    by def $prime(p)
+
+thm prime_has_no_trial_divisor:
+    ? forall p N_pos, d range(2, p):
+        $prime(p)
+        =>:
+            p % d != 0
+    by def $prime(p)

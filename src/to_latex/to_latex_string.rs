@@ -1453,6 +1453,16 @@ impl Mod {
     }
 }
 
+impl Gcd {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\gcd\left( {}, {} \right)",
+            self.left.to_latex_string(),
+            self.right.to_latex_string()
+        )
+    }
+}
+
 impl Mul {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -1466,6 +1476,12 @@ impl Mul {
 impl NormalAtomicFact {
     pub fn to_latex_string(&self) -> String {
         if let AtomicName::WithoutMod(name) = &self.predicate {
+            if name == PRIME && self.body.len() == 1 {
+                return format!(
+                    r"\operatorname{{prime}}\left( {} \right)",
+                    self.body[0].to_latex_string()
+                );
+            }
             if self.body.len() == 2 && matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET) {
                 let operator = if name == PROPER_SUBSET {
                     r"\subsetneq"
@@ -1604,6 +1620,12 @@ impl NotLessFact {
 impl NotNormalAtomicFact {
     pub fn to_latex_string(&self) -> String {
         if let AtomicName::WithoutMod(name) = &self.predicate {
+            if name == PRIME && self.body.len() == 1 {
+                return format!(
+                    r"\neg \operatorname{{prime}}\left( {} \right)",
+                    self.body[0].to_latex_string()
+                );
+            }
             if self.body.len() == 2 && matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET) {
                 let operator = if name == PROPER_SUBSET {
                     r"\subsetneq"
@@ -2077,6 +2099,7 @@ impl Obj {
             Obj::Mul(x) => x.to_latex_string(),
             Obj::Div(x) => x.to_latex_string(),
             Obj::Mod(x) => x.to_latex_string(),
+            Obj::Gcd(x) => x.to_latex_string(),
             Obj::Pow(x) => x.to_latex_string(),
             Obj::Abs(x) => x.to_latex_string(),
             Obj::Sin(x) => x.to_latex_string(),

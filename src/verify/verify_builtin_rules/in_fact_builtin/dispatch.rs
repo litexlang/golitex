@@ -56,7 +56,43 @@ impl Runtime {
                     intersect,
                     _verify_state,
                 ),
-            _ => Ok((StmtUnknown::new()).into()),
+            (_, right) => {
+                // Set-difference elimination: membership in A \ B entails
+                // non-membership in B.
+                let mut evidence = None;
+                for environment in self.iter_environments_from_top() {
+                    for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+                        for known_fact in known_facts_map.values() {
+                            let AtomicFact::InFact(member) = known_fact else {
+                                continue;
+                            };
+                            let Obj::SetMinus(set_minus) = &member.set else {
+                                continue;
+                            };
+                            if verify_equality_by_they_are_the_same(
+                                &member.element,
+                                &not_in_fact.element,
+                            ) && verify_equality_by_they_are_the_same(&set_minus.right, right)
+                            {
+                                evidence = Some(known_fact.clone());
+                                break;
+                            }
+                        }
+                    }
+                }
+                if evidence.is_some() {
+                    Ok(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            not_in_fact.clone().into(),
+                            "set-minus membership excludes the right operand".to_string(),
+                            Vec::new(),
+                        )
+                        .into(),
+                    )
+                } else {
+                    Ok((StmtUnknown::new()).into())
+                }
+            }
         }
     }
 
@@ -338,9 +374,6 @@ impl Runtime {
             (Obj::FnObj(fn_obj), Obj::FnRange(fn_range)) => {
                 self.verify_in_fact_fn_application_in_fn_range(in_fact, fn_obj, fn_range)
             }
-            (_, Obj::StandardSet(StandardSet::N)) => {
-                self.verify_in_fact_n_by_nonnegative_integer(in_fact, verify_state)
-            }
             (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_add_in_n_pos_from_n_pos_and_n(in_fact, add, verify_state)
             }
@@ -355,6 +388,29 @@ impl Runtime {
                     StandardSet::NPos,
                     "N_pos: a^k from a in N_pos and k in N",
                 ),
+            (
+                Obj::Gcd(_),
+                Obj::StandardSet(
+                    StandardSet::NPos
+                    | StandardSet::N
+                    | StandardSet::Z
+                    | StandardSet::Q
+                    | StandardSet::R
+                    | StandardSet::C
+                    | StandardSet::QPos
+                    | StandardSet::RPos,
+                ),
+            ) => Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "gcd of a non-all-zero integer pair is a positive integer".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ),
+            (_, Obj::StandardSet(StandardSet::N)) => {
+                self.verify_in_fact_n_by_nonnegative_integer(in_fact, verify_state)
+            }
             (Obj::Pow(pow), Obj::StandardSet(StandardSet::RPos)) => self
                 .verify_in_fact_pow_in_r_pos_from_positive_base_real_exponent(
                     in_fact,

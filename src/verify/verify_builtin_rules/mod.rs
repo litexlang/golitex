@@ -15,6 +15,7 @@ mod number_compare_div_elimination;
 mod order_algebra_builtin;
 mod order_normalize;
 mod order_semantics_builtin;
+mod prime_builtin;
 mod set_relation_duality;
 mod trigonometry;
 mod type_predicates_builtin;

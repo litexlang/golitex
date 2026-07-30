@@ -387,4 +387,67 @@ impl Runtime {
 
         Ok(verify_result)
     }
+
+    pub(crate) fn store_template_surface_case_equations(
+        &mut self,
+        stmt: &HaveFnEqualCaseByCaseStmt,
+        surface: &InstantiatedTemplateObj,
+    ) -> Result<(), RuntimeError> {
+        let (param_defs_with_type, base_forall_dom_facts, mut param_to_forall_param) =
+            forall_param_defs_dom_and_map_from_have_fn_clause(self, &stmt.fn_set_clause)?;
+        insert_symbol_substitution(
+            &mut param_to_forall_param,
+            &stmt.symbol_binding,
+            surface.clone().into(),
+        );
+
+        let param_bindings = param_defs_with_type.collect_param_bindings();
+        let function_head =
+            FnObjHead::from_callable_obj(surface.clone().into()).ok_or_else(|| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "template surface is not callable".to_string(),
+                    None,
+                    vec![],
+                )
+            })?;
+        let function_args = param_bindings
+            .iter()
+            .map(|binding| Box::new(obj_for_bound_param_in_scope(binding, ParamObjType::Forall)))
+            .collect();
+        let function_obj: Obj = FnObj::new(function_head, vec![function_args]).into();
+
+        for (case_fact, equal_to) in stmt.cases.iter().zip(stmt.equal_tos.iter()) {
+            let mut forall_dom_facts = base_forall_dom_facts.clone();
+            forall_dom_facts.push(
+                self.inst_and_chain_atomic_fact(
+                    case_fact,
+                    &param_to_forall_param,
+                    ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+                    None,
+                )?
+                .into(),
+            );
+            let equal_to = self.inst_obj(
+                equal_to,
+                &param_to_forall_param,
+                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+            )?;
+            let equation: AtomicFact =
+                EqualFact::new(function_obj.clone(), equal_to, stmt.line_file.clone()).into();
+            let forall = ForallFact::new(
+                param_defs_with_type.clone(),
+                forall_dom_facts,
+                vec![equation.into()],
+                stmt.line_file.clone(),
+            )?;
+            self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                forall.into(),
+                InferReason::FunctionDefinition,
+            )
+            .map_err(|cause| short_exec_error(stmt.clone().into(), "", Some(cause), vec![]))?;
+        }
+
+        Ok(())
+    }
 }

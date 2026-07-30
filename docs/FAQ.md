@@ -467,10 +467,10 @@ For example:
 - A nonempty finite subset of `R` having a maximum can require a finite-set
   induction or enumeration interface, a nonempty witness, and the fact that
   inserting one real preserves a chosen maximum.
-- Defining `gcd` requires more than its familiar name: choose whether the
-  public interface is a function or a relation, then account for divisibility,
-  sign conventions, Euclidean reduction or an equivalent existence argument,
-  and the intended specification.
+- Native `gcd(a, b)` is available for non-all-zero integer pairs. A textbook
+  that wants to explain its construction may still define a transparently
+  named source function such as `gcd_by_finite_divisors`, prove its
+  specification, and bridge it to native `gcd`.
 - The bound `|S union T| <= |S| + |T|` can require a cardinality interface:
   a decomposition into disjoint pieces, or an injection/bijection argument
   that makes overlap visible.

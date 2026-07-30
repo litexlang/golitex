@@ -42,6 +42,10 @@ impl Runtime {
                 Obj::Mod(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Gcd(a) => match right {
+                Obj::Gcd(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Pow(a) => match right {
                 Obj::Pow(b) => a.to_string() == b.to_string(),
                 _ => false,

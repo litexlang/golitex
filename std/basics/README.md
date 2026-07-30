@@ -8,7 +8,9 @@ import std basics
 ```
 
 Use its public names with the explicit `basics::` namespace, for example
-`basics::gcd(a, b)` and `by thm basics::bezout_identity(a, b)`.
+`basics::gcd_by_finite_divisors(a, b)` and
+`by thm basics::bezout_identity(a, b)`. The ordinary `gcd(a, b)` object and
+`$prime(p)` predicate are native and need no import.
 
 ## Status labels
 
@@ -26,11 +28,12 @@ Names beginning with `_` are implementation details, not client API.
 | `e` | Euler's positive real constant | Native |
 | `pi` | the positive circle constant | Native |
 | `integer_quotient(a, d)` | the integer `q` selected by `a = d * q + a % d`, for `d : N_pos` | Checked |
-| `gcd(a, b)` | positive greatest common divisor of a nonzero integer pair | Checked |
+| `gcd_by_finite_divisors(a, b)` | source construction of the positive greatest common divisor | Checked |
 
-`integer_quotient` is an ordinary source-level function selected from the
-kernel's narrow Euclidean unique-existence fact; it is not reserved syntax or
-a dedicated kernel object. `gcd(a, b)` requires the side condition
+`integer_quotient` and `gcd_by_finite_divisors` are ordinary source-level
+functions. The former is selected from the kernel's narrow Euclidean
+unique-existence fact; neither is reserved syntax or a dedicated kernel
+object. Native `gcd(a, b)` requires the side condition
 `a != 0 or b != 0`.
 
 ## Predicates
@@ -38,7 +41,7 @@ a dedicated kernel object. `gcd(a, b)` requires the side condition
 | Name | Meaning |
 | --- | --- |
 | `is_reduced_fraction(a, b)` | `a : Z`, `b : N_pos`, and their only positive common divisor is `1` |
-| `prime(p)` | `p : N_pos`, `p >= 2`, with no divisor in `range(2, p)` |
+| `prime_by_trial_division(p)` | source definition: `p >= 2`, with no divisor in `range(2, p)` |
 | `divides(a, b)` | there is `k : Z` with `b = a * k` |
 
 ## Theorems
@@ -87,6 +90,11 @@ they belong to the set and bound every member. Literal calls such as
 Except where a row states a stronger condition, gcd theorems require
 `a != 0 or b != 0`.
 
+`gcd_by_finite_divisors_eq_gcd` connects the source construction to native
+`gcd`; `prime_implies_prime_by_trial_division` and
+`prime_by_trial_division_implies_prime` connect the source and native prime
+interfaces.
+
 ## Minimal use
 
 ```litex
@@ -94,7 +102,7 @@ import std basics
 
 thm every_rational_has_coprime_integer_fraction:
     ? forall q Q:
-        exist p Z, d N_pos st {q = p / d, basics::gcd(p, d) = 1}
+        exist p Z, d N_pos st {q = p / d, gcd(p, d) = 1}
     by thm basics::rational_has_reduced_fraction(q)
 ```
 

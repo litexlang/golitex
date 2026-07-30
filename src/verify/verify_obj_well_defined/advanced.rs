@@ -303,6 +303,13 @@ impl Runtime {
                 _ => {}
             }
 
+            // A refined carrier can be a named set builder over a function
+            // space. Values returned in that carrier remain callable.
+            // Example: `selected(i) $in {f fn(j I) V: P(f)}` permits
+            // `selected(i)(j)`.
+            if let Some(set_builder) = self.get_obj_equal_to_set_builder(&candidate.to_string()) {
+                candidates.push(set_builder.into());
+            }
             candidates.extend(self.get_all_obj_representatives_equal_to_given(&candidate));
         }
 

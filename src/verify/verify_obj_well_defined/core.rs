@@ -268,6 +268,9 @@ impl Runtime {
                 break;
             }
 
+            if let Obj::InstantiatedTemplateObj(template_obj) = &set_where_the_next_fn_obj_is_in {
+                self.materialize_instantiated_template_obj(template_obj, verify_state)?;
+            }
             space = self.fn_set_space_from_return_set_obj(set_where_the_next_fn_obj_is_in)?;
         }
 

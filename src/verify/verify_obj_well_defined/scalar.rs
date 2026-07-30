@@ -159,6 +159,9 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&m.right, verify_state)?;
         self.require_obj_in_z(&m.left, verify_state)?;
         self.require_obj_in_z(&m.right, verify_state)?;
+        if matches!(m.right.as_ref(), Obj::Gcd(_)) {
+            return Ok(());
+        }
         let zero: Obj = Number::new("0".to_string()).into();
         let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, default_line_file());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
@@ -172,6 +175,63 @@ impl Runtime {
             )));
         }
         Ok(())
+    }
+
+    pub(in crate::verify) fn verify_gcd_well_defined(
+        &mut self,
+        gcd: &Gcd,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&gcd.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&gcd.right, verify_state)?;
+        self.require_obj_in_z(&gcd.left, verify_state)?;
+        self.require_obj_in_z(&gcd.right, verify_state)?;
+
+        let zero: Obj = Number::new("0".to_string()).into();
+        let left_nonzero: AtomicFact =
+            NotEqualFact::new((*gcd.left).clone(), zero.clone(), default_line_file()).into();
+        let right_nonzero: AtomicFact =
+            NotEqualFact::new((*gcd.right).clone(), zero, default_line_file()).into();
+        if self
+            .verify_atomic_fact(&left_nonzero, verify_state)?
+            .is_true()
+            || self
+                .verify_atomic_fact(&right_nonzero, verify_state)?
+                .is_true()
+        {
+            return Ok(());
+        }
+
+        let non_all_zero = OrFact::new(
+            vec![
+                AndChainAtomicFact::AtomicFact(left_nonzero.clone()),
+                AndChainAtomicFact::AtomicFact(right_nonzero.clone()),
+            ],
+            default_line_file(),
+        );
+        if self.verify_or_fact(&non_all_zero, verify_state)?.is_true() {
+            return Ok(());
+        }
+        let reversed_non_all_zero = OrFact::new(
+            vec![
+                AndChainAtomicFact::AtomicFact(right_nonzero),
+                AndChainAtomicFact::AtomicFact(left_nonzero),
+            ],
+            default_line_file(),
+        );
+        if self
+            .verify_or_fact(&reversed_non_all_zero, verify_state)?
+            .is_true()
+        {
+            return Ok(());
+        }
+
+        Err(RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(format!(
+                "{} requires at least one non-zero argument",
+                gcd
+            )),
+        )))
     }
 
     pub(in crate::verify) fn verify_abs_well_defined(
