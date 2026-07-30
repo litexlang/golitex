@@ -1,4 +1,0 @@
-interface:
-  display_name: "Litex Concept Modeler"
-  short_description: "Map mathematical concepts and dependencies"
-  default_prompt: "Use $litex-concept-modeler to classify this mathematical domain, draft ideal Litex interfaces, and order its dependency graph before proof writing."

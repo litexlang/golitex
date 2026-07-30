@@ -1,4 +1,0 @@
-interface:
-  display_name: "Litex Todo Writer"
-  short_description: "Track Litex math holes and blockers."
-  default_prompt: "Use $todo_writer to update a source workspace todo.md, unfinished note, or solved-experience record for Litex work."

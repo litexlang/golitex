@@ -316,7 +316,7 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
     $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
     $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
 
-# The ordinary gcd is defined only for a nonzero integer pair.
+# The transparent source construction is defined only for a nonzero integer pair.
 have fn gcd_by_finite_divisors(a, b Z: a != 0 or b != 0) N = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
 
 thm gcd_by_finite_divisors_eq_gcd:

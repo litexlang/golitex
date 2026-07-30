@@ -823,6 +823,23 @@ mod tests {
     }
 
     #[test]
+    fn session_continues_after_failed_try_block_tokenization() {
+        let input = format!(
+            "{}{}close\n",
+            run_frame(
+                "failed_try",
+                "try:\n    prop malformed:\n        1 = 1\n            2 = 2\n",
+            ),
+            run_frame("next", "try:\n    1 = 1\n"),
+        );
+        let output = run_isolated_session("failed-try-block-tokenization", input);
+
+        assert!(output.contains("\"id\":\"failed_try\",\"ok\":false"));
+        assert!(output.contains("\"id\":\"next\",\"ok\":true"));
+        assert!(!output.contains("\"event\":\"skipped\""));
+    }
+
+    #[test]
     fn session_continues_after_failed_try_execution() {
         let input = format!(
             "{}{}artifacts final\nclose\n",

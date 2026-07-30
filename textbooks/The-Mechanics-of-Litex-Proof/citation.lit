@@ -1,132 +1,37 @@
-# Shared standard-library candidates for The Mechanics of Litex Proof.
+# Shared number-theory interfaces for The Mechanics of Litex Proof.
 #
-# Public API:
-#   prime, divides, gcd
-#   gcd_positive, gcd_divides_left, gcd_divides_right
-#   common_divisor_le_gcd
-#   gcd_euclidean_base, gcd_euclidean_step, bezout_identity
-#   gcd_of_prime_is_one_or_prime
-#
-# These are general number-theory interfaces that can later move together into
-# std/basics. Textbook-specific consequences stay in Chapter 7.
-
-prop prime(p N_pos):
-    2 <= p
-    forall d range(2, p):
-        p % d != 0
+# `gcd(a, b)` and `$prime(p)` are native Litex vocabulary. Their transparent
+# finite-divisor and trial-division constructions remain available from
+# `std/basics`; this file keeps the textbook-facing theorem names used in
+# Chapter 7.
 
 prop divides(a Z, b Z):
     exist k Z st {b = a * k}
-
-# A positive divisor of a nonzero integer is at most its absolute value.
-# This is proof machinery shared by the gcd construction and its basic laws.
-thm _positive_divisor_le_abs:
-    ? forall d N_pos, a Z:
-        $divides(d, a)
-        a != 0
-        =>:
-            d <= abs(a)
-    obtain k from exist k Z st {a = d * k}
-    by contra:
-        ? k != 0
-        k = 0
-        a = d * k = d * 0 = 0
-        impossible a != 0
-    abs(k) > 0
-    abs(k) $in N_pos
-    d * 1 <= d * abs(k)
-    abs(d) = d
-    abs(a) = abs(d * k) = abs(d) * abs(k) = d * abs(k)
-    d = d * 1 <= d * abs(k) = abs(a)
-
-# For a nonzero pair, the positive common divisors form a finite nonempty set.
-thm _gcd_divisor_set_is_finite_and_nonempty:
-    ? forall a, b Z:
-        a != 0 or b != 0
-        =>:
-            $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
-            $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
-    have C1 power_set(N) = {d N_pos: $divides(d, a), $divides(d, b)}
-    claim:
-        ? $is_finite_set(C1)
-        by cases:
-            ? $is_finite_set(C1)
-            case a != 0:
-                claim:
-                    ? forall d C1:
-                        d $in closed_range(1, abs(a))
-                    d $in C1
-                    d $in N_pos
-                    d >= 1
-                    $divides(d, a)
-                    by thm _positive_divisor_le_abs(d, a)
-                    d <= abs(a)
-                    d $in closed_range(1, abs(a))
-                C1 $subset closed_range(1, abs(a))
-                by thm basics::subset_of_finite_set_is_finite(C1, closed_range(1, abs(a)))
-                $is_finite_set(C1)
-            case b != 0:
-                claim:
-                    ? forall d C1:
-                        d $in closed_range(1, abs(b))
-                    d $in C1
-                    d $in N_pos
-                    d >= 1
-                    $divides(d, b)
-                    by thm _positive_divisor_le_abs(d, b)
-                    d <= abs(b)
-                    d $in closed_range(1, abs(b))
-                C1 $subset closed_range(1, abs(b))
-                by thm basics::subset_of_finite_set_is_finite(C1, closed_range(1, abs(b)))
-                $is_finite_set(C1)
-    witness $is_nonempty_set(C1) from 1:
-        1 $in N_pos
-        witness exist k Z st {a = 1 * k} from a:
-            a = 1 * a
-        $divides(1, a)
-        witness exist k Z st {b = 1 * k} from b:
-            b = 1 * b
-        $divides(1, b)
-        1 $in {d N_pos: $divides(d, a), $divides(d, b)}
-        1 $in C1
-    $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
-    $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
-
-# The ordinary gcd is defined only for a nonzero integer pair.
-have fn gcd(a, b Z: a != 0 or b != 0) N = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
 
 thm gcd_positive:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
             gcd(a, b) $in N_pos
-    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    gcd(a, b) $in N_pos
+    by thm basics::gcd_positive(a, b)
 
 thm gcd_divides_left:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
             $divides(gcd(a, b), a)
-    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    $divides(gcd(a, b), a)
+    by thm basics::gcd_divides_left(a, b)
+    obtain k from exist k Z st {a = gcd(a, b) * k}
+    witness exist t Z st {a = gcd(a, b) * t} from k
 
 thm gcd_divides_right:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
             $divides(gcd(a, b), b)
-    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
-    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    $divides(gcd(a, b), b)
+    by thm basics::gcd_divides_right(a, b)
+    obtain k from exist k Z st {b = gcd(a, b) * k}
+    witness exist t Z st {b = gcd(a, b) * t} from k
 
 thm common_divisor_le_gcd:
     ? forall a, b Z, d N_pos:
@@ -135,91 +40,23 @@ thm common_divisor_le_gcd:
         $divides(d, b)
         =>:
             d <= gcd(a, b)
-    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
-    d $in {divisor N_pos: $divides(divisor, a), $divides(divisor, b)}
-    d <= finite_set_max({divisor N_pos: $divides(divisor, a), $divides(divisor, b)})
-    gcd(a, b) = finite_set_max({divisor N_pos: $divides(divisor, a), $divides(divisor, b)})
-    d <= gcd(a, b)
+    by def $basics::divides(d, a)
+    by def $basics::divides(d, b)
+    by thm basics::common_divisor_le_gcd(a, b, d)
 
 thm gcd_euclidean_base:
     ? forall a Z:
         a != 0
         =>:
             gcd(a, 0) = abs(a)
-    by thm gcd_positive(a, 0)
-    by thm gcd_divides_left(a, 0)
-    by thm _positive_divisor_le_abs(gcd(a, 0), a)
-    gcd(a, 0) <= abs(a)
-    abs(a) > 0
-    abs(a) $in N_pos
-    by cases:
-        ? $divides(abs(a), a)
-        case a >= 0:
-            abs(a) = a
-            a = a * 1 = abs(a) * 1
-            witness exist k Z st {a = abs(a) * k} from 1
-        case a < 0:
-            abs(a) = -a
-            a = abs(a) * (-1)
-            witness exist k Z st {a = abs(a) * k} from -1
-    witness exist k Z st {0 = abs(a) * k} from 0:
-        0 = abs(a) * 0
-    $divides(abs(a), 0)
-    by thm common_divisor_le_gcd(a, 0, abs(a))
-    abs(a) <= gcd(a, 0)
-    gcd(a, 0) = abs(a)
+    by thm basics::gcd_euclidean_base(a)
 
 thm gcd_euclidean_step:
     ? forall a, b Z:
         b != 0
         =>:
             gcd(a, b) = gcd(b, a % abs(b))
-
-    claim:
-        ? forall d N_pos, z Z:
-            $divides(d, z)
-            =>:
-                $divides(d, abs(z))
-        obtain k from exist k Z st {z = d * k}
-        by cases:
-            ? $divides(d, abs(z))
-            case z >= 0:
-                abs(z) = z = d * k
-                witness exist t Z st {abs(z) = d * t} from k
-            case z < 0:
-                abs(z) = -z = -(d * k) = d * (-k)
-                witness exist t Z st {abs(z) = d * t} from -k
-
-    by thm gcd_positive(b, a % abs(b))
-    by thm gcd_divides_left(b, a % abs(b))
-    by thm gcd_divides_right(b, a % abs(b))
-    $divides(gcd(b, a % abs(b)), abs(b))
-    obtain x from exist k Z st {abs(b) = gcd(b, a % abs(b)) * k}
-    obtain y from exist k Z st {a % abs(b) = gcd(b, a % abs(b)) * k}
-    witness exist q Z st {a = abs(b) * q + a % abs(b)} from basics::integer_quotient(a, abs(b)):
-        a = abs(b) * basics::integer_quotient(a, abs(b)) + a % abs(b)
-    obtain q from exist q Z st {a = abs(b) * q + a % abs(b)}
-    witness exist t Z st {a = gcd(b, a % abs(b)) * t} from x * q + y:
-        a = abs(b) * q + a % abs(b) = (gcd(b, a % abs(b)) * x) * q + gcd(b, a % abs(b)) * y = gcd(b, a % abs(b)) * (x * q + y)
-    $divides(gcd(b, a % abs(b)), a)
-    by thm common_divisor_le_gcd(a, b, gcd(b, a % abs(b)))
-    gcd(b, a % abs(b)) <= gcd(a, b)
-
-    by thm gcd_positive(a, b)
-    by thm gcd_divides_left(a, b)
-    by thm gcd_divides_right(a, b)
-    $divides(gcd(a, b), abs(b))
-    obtain u from exist k Z st {a = gcd(a, b) * k}
-    obtain v from exist k Z st {abs(b) = gcd(a, b) * k}
-    witness exist r Z st {a = abs(b) * r + a % abs(b)} from basics::integer_quotient(a, abs(b)):
-        a = abs(b) * basics::integer_quotient(a, abs(b)) + a % abs(b)
-    obtain r from exist r Z st {a = abs(b) * r + a % abs(b)}
-    witness exist t Z st {a % abs(b) = gcd(a, b) * t} from u - v * r:
-        a % abs(b) = a - abs(b) * r = gcd(a, b) * u - (gcd(a, b) * v) * r = gcd(a, b) * (u - v * r)
-    $divides(gcd(a, b), a % abs(b))
-    by thm common_divisor_le_gcd(b, a % abs(b), gcd(a, b))
-    gcd(a, b) <= gcd(b, a % abs(b))
-    gcd(a, b) = gcd(b, a % abs(b))
+    by thm basics::gcd_euclidean_step(a, b)
 
 thm bezout_identity:
     ? forall a, b Z:
@@ -228,54 +65,9 @@ thm bezout_identity:
             exist x Z, y Z st {gcd(a, b) = x * a + y * b}
     by thm basics::bezout_identity(a, b)
 
-    by thm gcd_positive(a, b)
-    by thm gcd_divides_left(a, b)
-    by thm gcd_divides_right(a, b)
-    $basics::divides(gcd(a, b), a)
-    $basics::divides(gcd(a, b), b)
-    by thm basics::common_divisor_le_gcd(a, b, gcd(a, b))
-    gcd(a, b) <= basics::gcd(a, b)
-
-    by thm basics::gcd_positive(a, b)
-    by thm basics::gcd_divides_left(a, b)
-    by thm basics::gcd_divides_right(a, b)
-    $divides(basics::gcd(a, b), a)
-    $divides(basics::gcd(a, b), b)
-    by thm common_divisor_le_gcd(a, b, basics::gcd(a, b))
-    basics::gcd(a, b) <= gcd(a, b)
-    gcd(a, b) = basics::gcd(a, b)
-
-    obtain x, y from exist x Z, y Z st {basics::gcd(a, b) = x * a + y * b}
-    witness exist x0 Z, y0 Z st {gcd(a, b) = x0 * a + y0 * b} from x, y:
-        gcd(a, b) = basics::gcd(a, b) = x * a + y * b
-
 thm gcd_of_prime_is_one_or_prime:
     ? forall a Z, p N_pos:
         $prime(p)
         =>:
             gcd(a, p) = 1 or gcd(a, p) = p
-    by thm gcd_positive(a, p)
-    by thm gcd_divides_right(a, p)
-    obtain k from exist k Z st {p = gcd(a, p) * k}
-    p = gcd(a, p) * k + 0
-    p % gcd(a, p) = 0
-    by thm _positive_divisor_le_abs(gcd(a, p), p)
-    abs(p) = p
-    gcd(a, p) <= p
-    gcd(a, p) = p or gcd(a, p) < p
-    by cases:
-        ? gcd(a, p) = 1 or gcd(a, p) = p
-        case gcd(a, p) = p:
-            gcd(a, p) = 1 or gcd(a, p) = p
-        case gcd(a, p) < p:
-            gcd(a, p) = 1 or gcd(a, p) > 1
-            by cases:
-                ? gcd(a, p) = 1 or gcd(a, p) = p
-                case gcd(a, p) = 1:
-                    gcd(a, p) = 1 or gcd(a, p) = p
-                case gcd(a, p) > 1:
-                    gcd(a, p) >= 2
-                    gcd(a, p) $in range(2, p)
-                    $prime(p)
-                    p % gcd(a, p) != 0
-                    impossible p % gcd(a, p) = 0
+    by thm basics::gcd_of_prime_is_one_or_prime(a, p)

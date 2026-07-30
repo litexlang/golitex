@@ -1,4 +1,0 @@
-abstract_prop p(a, b)
-
-know forall a, b R:
-    $p(a, b)

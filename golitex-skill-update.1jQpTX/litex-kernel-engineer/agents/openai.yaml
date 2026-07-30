@@ -1,4 +1,0 @@
-interface:
-  display_name: "Litex Kernel Engineer"
-  short_description: "Modify Litex verifier and rules."
-  default_prompt: "Use $litex-kernel-engineer to modify the Litex parser, runtime, verifier, builtin rules, infer rules, standard library, diagnostics, and tests."

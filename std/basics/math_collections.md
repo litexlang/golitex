@@ -109,10 +109,10 @@ have fn gcd_by_finite_divisors(a, b Z: a != 0 or b != 0) N =
     finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
 ```
 
-The source construction exposes why the result exists: the set
-of positive common divisors is finite and nonempty, and the kernel
-`finite_set_max` selects its greatest member. Checked bridge theorems identify
-it with native `gcd` and identify trial-division primality with `$prime`. This node supports the divisor
+The source construction exposes why the result exists: the set of positive
+common divisors is finite and nonempty, and the kernel `finite_set_max` selects
+its greatest member. Checked bridge theorems identify it with native `gcd` and
+identify trial-division primality with `$prime`. This node supports the divisor
 laws, Euclidean reduction, Bezout's identity, reduced fractions, and the
 prime-divisor dichotomy. The construction and these main laws are checked.
 

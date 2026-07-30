@@ -1,4 +1,0 @@
-interface:
-  display_name: "Litex Definition Modeler"
-  short_description: "Choose usable Litex definition forms"
-  default_prompt: "Use $litex-definition-modeler to model these mathematical definitions in Litex."

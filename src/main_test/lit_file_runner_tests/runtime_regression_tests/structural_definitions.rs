@@ -1372,6 +1372,48 @@ forall S nonempty_set, x S:
 }
 
 #[test]
+fn template_choice_materializes_local_equal_object_definition() {
+    run_with_large_stack(
+        "template_choice_materializes_local_equal_object_definition",
+        || {
+            let source_code = r#"
+template<S nonempty_set>:
+    have fn selected_self_with_local_object by exist!:
+        ? forall x S:
+            exist! y S st {y = x}
+        have candidate S = x
+        witness exist y S st {y = x} from candidate
+        forall y1, y2 S:
+            y1 = x
+            y2 = x
+            =>:
+                y1 = y2
+
+template<S nonempty_set>:
+    have fn selected_self_again(x S) S = \selected_self_with_local_object<S>(x)
+
+forall S nonempty_set, x S:
+    \selected_self_again<S>(x) $in S
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "template_choice_materializes_local_equal_object_definition",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a materialized template choice proof must retain local equal-object definitions:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn template_choice_materializes_local_case_function() {
     run_with_large_stack("template_choice_materializes_local_case_function", || {
         let source_code = r#"
