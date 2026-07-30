@@ -21,6 +21,40 @@ impl Runtime {
             )
             .into());
         }
+        // A gcd divides each input.
+        // Example: `a % gcd(a, b) = 0`.
+        if gcd_divides_its_argument_shape(left, right)
+            || gcd_divides_its_argument_shape(right, left)
+        {
+            return Ok(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "gcd divides each argument",
+            ));
+        }
+        // A product is divisible by either of its factors.
+        // Well-definedness has already established integer operands and a
+        // nonzero modulus for the surrounding `%` expression.
+        if product_mod_factor_is_zero_shape(left, right)
+            || product_mod_factor_is_zero_shape(right, left)
+        {
+            return Ok(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "a product modulo either factor is zero",
+            ));
+        }
+        if let Some(result) = self.try_verify_equal_by_same_shape_and_known_equality_args(
+            left,
+            right,
+            line_file.clone(),
+        ) {
+            if result.is_true() {
+                return Ok(result);
+            }
+        }
 
         if let Some(done) =
             self.try_verify_native_complex_equality(left, right, line_file.clone(), verify_state)?
@@ -3091,4 +3125,38 @@ impl Runtime {
 
         Ok(None)
     }
+}
+
+fn gcd_divides_its_argument_shape(remainder: &Obj, zero: &Obj) -> bool {
+    if zero
+        .evaluate_to_normalized_decimal_number()
+        .is_none_or(|number| number.normalized_value != "0")
+    {
+        return false;
+    }
+    let Obj::Mod(modulo) = remainder else {
+        return false;
+    };
+    let Obj::Gcd(gcd) = modulo.right.as_ref() else {
+        return false;
+    };
+    verify_equality_by_they_are_the_same(&modulo.left, &gcd.left)
+        || verify_equality_by_they_are_the_same(&modulo.left, &gcd.right)
+}
+
+fn product_mod_factor_is_zero_shape(remainder: &Obj, zero: &Obj) -> bool {
+    if zero
+        .evaluate_to_normalized_decimal_number()
+        .is_none_or(|number| number.normalized_value != "0")
+    {
+        return false;
+    }
+    let Obj::Mod(modulo) = remainder else {
+        return false;
+    };
+    let Obj::Mul(product) = modulo.left.as_ref() else {
+        return false;
+    };
+    verify_equality_by_they_are_the_same(&modulo.right, &product.left)
+        || verify_equality_by_they_are_the_same(&modulo.right, &product.right)
 }

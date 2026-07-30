@@ -95,6 +95,10 @@ impl Obj {
                 binary.left.contains_native_complex_syntax()
                     || binary.right.contains_native_complex_syntax()
             }
+            Obj::Gcd(binary) => {
+                binary.left.contains_native_complex_syntax()
+                    || binary.right.contains_native_complex_syntax()
+            }
             Obj::Div(binary) => {
                 binary.left.contains_native_complex_syntax()
                     || binary.right.contains_native_complex_syntax()
@@ -328,6 +332,10 @@ impl Obj {
                     || binary.right.contains_native_transcendental_syntax()
             }
             Obj::Mul(binary) => {
+                binary.left.contains_native_transcendental_syntax()
+                    || binary.right.contains_native_transcendental_syntax()
+            }
+            Obj::Gcd(binary) => {
                 binary.left.contains_native_transcendental_syntax()
                     || binary.right.contains_native_transcendental_syntax()
             }

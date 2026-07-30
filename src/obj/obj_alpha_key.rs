@@ -53,6 +53,7 @@ fn collect_obj_binder_bindings(
         Obj::Mul(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::Div(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::Mod(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
+        Obj::Gcd(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::Union(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::Intersect(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::SetMinus(x) => collect_two(&x.left, &x.right, bindings, seen, depth),

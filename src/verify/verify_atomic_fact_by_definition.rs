@@ -1,12 +1,44 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub(crate) fn verify_prime_fact_by_definition(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let AtomicFact::NormalAtomicFact(normal_fact) = atomic_fact else {
+            return Ok(None);
+        };
+        let Some(definition_facts) = self.builtin_prime_definition_facts(normal_fact)? else {
+            return Ok(None);
+        };
+        let mut subgoals = Vec::new();
+        for definition_fact in definition_facts {
+            let result = self.verify_fact_full(&definition_fact, verify_state)?;
+            if result.is_unknown() {
+                return Ok(None);
+            }
+            subgoals.push(result);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "prime by trial-division definition".to_string(),
+                subgoals,
+            )
+            .into(),
+        ))
+    }
+
     // Built-in subset/superset definitions first, then user `prop` iff-clauses.
     pub(crate) fn verify_atomic_fact_using_builtin_or_prop_definition(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) = self.verify_prime_fact_by_definition(atomic_fact, verify_state)? {
+            return Ok(Some(result));
+        }
         if let Some(result) =
             self.verify_builtin_fact_with_their_definition(atomic_fact, verify_state)?
         {

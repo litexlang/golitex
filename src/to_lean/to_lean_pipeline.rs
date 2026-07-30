@@ -233,6 +233,18 @@ impl LeanEmitter {
             AtomicFact::LessEqualFact(fact) => self.binary_fact(&fact.left, "≤", &fact.right),
             AtomicFact::GreaterFact(fact) => self.binary_fact(&fact.left, ">", &fact.right),
             AtomicFact::GreaterEqualFact(fact) => self.binary_fact(&fact.left, "≥", &fact.right),
+            AtomicFact::NormalAtomicFact(fact) if fact.predicate.to_string() == PRIME => {
+                Err(lean_extract_error(
+                    &fact.line_file,
+                    "Lean extractor MVP does not support builtin prime",
+                ))
+            }
+            AtomicFact::NotNormalAtomicFact(fact) if fact.predicate.to_string() == PRIME => {
+                Err(lean_extract_error(
+                    &fact.line_file,
+                    "Lean extractor MVP does not support builtin prime",
+                ))
+            }
             other => Err(lean_extract_error(
                 &other.line_file(),
                 format!(
@@ -384,6 +396,10 @@ impl LeanEmitter {
             Obj::Sin(_) | Obj::Cos(_) | Obj::Tan(_) | Obj::Cot(_) => Err(lean_extract_error(
                 &default_line_file(),
                 "Lean extractor MVP does not support native trigonometric expressions",
+            )),
+            Obj::Gcd(_) => Err(lean_extract_error(
+                &default_line_file(),
+                "Lean extractor MVP does not support native gcd",
             )),
             Obj::Atom(atom) => self.real_atom(atom),
             Obj::Add(obj) => self.binary_expr(&obj.left, "+", &obj.right),

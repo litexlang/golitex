@@ -156,6 +156,7 @@ pub use crate::obj::FnSetBody;
 pub use crate::obj::FnSetFreeParamObj;
 pub use crate::obj::FnSetSpace;
 pub use crate::obj::ForallFreeParamObj;
+pub use crate::obj::Gcd;
 pub use crate::obj::GeneralCart;
 pub use crate::obj::Identifier;
 pub use crate::obj::IdentifierWithMod;
@@ -238,6 +239,7 @@ pub use crate::pipeline::{
     run_source_code_in_repository_for_cli_with_summary_and_language, run_stmt_at_global_env,
     RunSummary, SessionPreload,
 };
+pub use crate::rational_expression::gcd_decimal_str_and_normalize;
 pub use crate::rational_expression::mul_signed_decimal_str;
 pub use crate::rational_expression::normalize_decimal_number_string;
 pub use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
@@ -499,6 +501,7 @@ pub use crate::common::keywords::FOR;
 pub use crate::common::keywords::FORALL;
 pub use crate::common::keywords::FORALL_BANG;
 pub use crate::common::keywords::FROM;
+pub use crate::common::keywords::GCD;
 pub use crate::common::keywords::GENERAL_CART;
 pub use crate::common::keywords::GREATER;
 pub use crate::common::keywords::GREATER_EQUAL;
@@ -550,6 +553,7 @@ pub use crate::common::keywords::PI;
 pub use crate::common::keywords::POW;
 pub use crate::common::keywords::POWER_SET;
 pub use crate::common::keywords::PREIMAGE;
+pub use crate::common::keywords::PRIME;
 pub use crate::common::keywords::PRODUCT;
 pub use crate::common::keywords::PROJ;
 pub use crate::common::keywords::PROP;

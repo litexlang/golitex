@@ -204,7 +204,7 @@ thm finite_set_has_bijective_index:
 # Shared standard-library candidates for The Mechanics of Litex Proof.
 #
 # Public API:
-#   prime, divides, gcd
+#   prime_by_trial_division, divides, gcd_by_finite_divisors
 #   gcd_positive, gcd_divides_left, gcd_divides_right
 #   common_divisor_le_gcd
 #   gcd_euclidean_base, gcd_euclidean_step, bezout_identity
@@ -214,10 +214,26 @@ thm finite_set_has_bijective_index:
 # These are general number-theory interfaces that can later move together into
 # std/basics. Textbook-specific consequences stay in Chapter 7.
 
-prop prime(p N_pos):
+prop prime_by_trial_division(p N_pos):
     2 <= p
     forall d range(2, p):
         p % d != 0
+
+thm prime_implies_prime_by_trial_division:
+    ? forall p N_pos:
+        $prime(p)
+        =>:
+            $prime_by_trial_division(p)
+    by def $prime_by_trial_division(p)
+    by def $prime(p)
+
+thm prime_by_trial_division_implies_prime:
+    ? forall p N_pos:
+        $prime_by_trial_division(p)
+        =>:
+            $prime(p)
+    by def $prime_by_trial_division(p)
+    by def $prime(p)
 
 # The Euclidean quotient is an ordinary source-defined selection. The kernel
 # verifies only the narrow unique-existence fact used by this declaration.
@@ -301,7 +317,58 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
     $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
 
 # The ordinary gcd is defined only for a nonzero integer pair.
-have fn gcd(a, b Z: a != 0 or b != 0) N = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+have fn gcd_by_finite_divisors(a, b Z: a != 0 or b != 0) N = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+
+thm gcd_by_finite_divisors_eq_gcd:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            gcd_by_finite_divisors(a, b) = gcd(a, b)
+    by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
+    gcd_by_finite_divisors(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    gcd_by_finite_divisors(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    $divides(gcd_by_finite_divisors(a, b), a)
+    $divides(gcd_by_finite_divisors(a, b), b)
+    obtain ka from exist k Z st {a = gcd_by_finite_divisors(a, b) * k}
+    obtain kb from exist k Z st {b = gcd_by_finite_divisors(a, b) * k}
+    a % gcd_by_finite_divisors(a, b) = (gcd_by_finite_divisors(a, b) * ka) % gcd_by_finite_divisors(a, b) = 0
+    b % gcd_by_finite_divisors(a, b) = (gcd_by_finite_divisors(a, b) * kb) % gcd_by_finite_divisors(a, b) = 0
+    gcd_by_finite_divisors(a, b) <= gcd(a, b)
+    gcd(a, b) $in N_pos
+    a % gcd(a, b) = 0
+    b % gcd(a, b) = 0
+    by def $divides(gcd(a, b), a)
+    by def $divides(gcd(a, b), b)
+    $divides(gcd(a, b), a)
+    $divides(gcd(a, b), b)
+    gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
+    gcd(a, b) <= finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    gcd(a, b) <= gcd_by_finite_divisors(a, b)
+    gcd_by_finite_divisors(a, b) = gcd(a, b)
+
+thm gcd_comm:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            gcd(a, b) = gcd(b, a)
+    claim:
+        ? b != 0 or a != 0
+        by cases:
+            ? b != 0 or a != 0
+            case a != 0:
+                b != 0 or a != 0
+            case b != 0:
+                b != 0 or a != 0
+    gcd(a, b) $in N_pos
+    a % gcd(a, b) = 0
+    b % gcd(a, b) = 0
+    gcd(a, b) <= gcd(b, a)
+    gcd(b, a) $in N_pos
+    b % gcd(b, a) = 0
+    a % gcd(b, a) = 0
+    gcd(b, a) <= gcd(a, b)
+    gcd(a, b) = gcd(b, a)
 
 thm gcd_positive:
     ? forall a, b Z:
@@ -310,7 +377,8 @@ thm gcd_positive:
             gcd(a, b) $in N_pos
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
     finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    by thm gcd_by_finite_divisors_eq_gcd(a, b)
+    gcd_by_finite_divisors(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
     gcd(a, b) $in N_pos
 
@@ -321,7 +389,8 @@ thm gcd_divides_left:
             $divides(gcd(a, b), a)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
     finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    by thm gcd_by_finite_divisors_eq_gcd(a, b)
+    gcd_by_finite_divisors(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
     $divides(gcd(a, b), a)
 
@@ -332,7 +401,8 @@ thm gcd_divides_right:
             $divides(gcd(a, b), b)
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
     finite_set_max({d N_pos: $divides(d, a), $divides(d, b)}) $in {d N_pos: $divides(d, a), $divides(d, b)}
-    gcd(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
+    by thm gcd_by_finite_divisors_eq_gcd(a, b)
+    gcd_by_finite_divisors(a, b) = finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
     gcd(a, b) $in {d N_pos: $divides(d, a), $divides(d, b)}
     $divides(gcd(a, b), b)
 
@@ -346,7 +416,8 @@ thm common_divisor_le_gcd:
     by thm _gcd_divisor_set_is_finite_and_nonempty(a, b)
     d $in {divisor N_pos: $divides(divisor, a), $divides(divisor, b)}
     d <= finite_set_max({divisor N_pos: $divides(divisor, a), $divides(divisor, b)})
-    gcd(a, b) = finite_set_max({divisor N_pos: $divides(divisor, a), $divides(divisor, b)})
+    by thm gcd_by_finite_divisors_eq_gcd(a, b)
+    gcd_by_finite_divisors(a, b) = finite_set_max({divisor N_pos: $divides(divisor, a), $divides(divisor, b)})
     d <= gcd(a, b)
 
 thm gcd_euclidean_base:

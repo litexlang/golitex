@@ -16,6 +16,7 @@ pub enum Obj {
     Mul(Mul),
     Div(Div),
     Mod(Mod),
+    Gcd(Gcd),
     Pow(Pow),
     Abs(Abs),
     Sin(Sin),
@@ -156,6 +157,7 @@ pub enum ObjKind {
     Cos = 77,
     Tan = 78,
     Cot = 79,
+    Gcd = 80,
 }
 
 impl ObjKind {
@@ -600,6 +602,12 @@ pub struct Mod {
 }
 
 #[derive(Clone)]
+pub struct Gcd {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
 pub struct Pow {
     pub base: Box<Obj>,
     pub exponent: Box<Obj>,
@@ -794,6 +802,15 @@ impl Div {
 impl Mod {
     pub fn new(left: Obj, right: Obj) -> Self {
         Mod {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl Gcd {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        Gcd {
             left: Box::new(left),
             right: Box::new(right),
         }
@@ -1247,6 +1264,7 @@ impl Obj {
             Obj::Mul(_) => ObjKind::Mul,
             Obj::Div(_) => ObjKind::Div,
             Obj::Mod(_) => ObjKind::Mod,
+            Obj::Gcd(_) => ObjKind::Gcd,
             Obj::Pow(_) => ObjKind::Pow,
             Obj::Abs(_) => ObjKind::Abs,
             Obj::Sin(_) => ObjKind::Sin,
@@ -1324,6 +1342,7 @@ impl Obj {
             Obj::Mul(_) => MUL.to_string(),
             Obj::Div(_) => DIV.to_string(),
             Obj::Mod(_) => MOD.to_string(),
+            Obj::Gcd(_) => GCD.to_string(),
             Obj::Pow(_) => POW.to_string(),
             Obj::Abs(_) => ABS.to_string(),
             Obj::Sin(_) => SIN.to_string(),
@@ -1410,6 +1429,13 @@ impl Obj {
                 m.left.fmt_with_precedence(f, 2)?;
                 write!(f, " {} ", MOD)?;
                 m.right.fmt_with_precedence(f, 2)?;
+            }
+            Obj::Gcd(g) => {
+                write!(f, "{}{}", GCD, LEFT_BRACE)?;
+                g.left.fmt_with_precedence(f, 0)?;
+                write!(f, "{COMMA} ")?;
+                g.right.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
             }
             Obj::Pow(p) => {
                 p.base.fmt_with_precedence(f, 1)?;
@@ -1591,6 +1617,11 @@ impl Obj {
             )
             .into(),
             Obj::Mod(x) => Mod::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Gcd(x) => Gcd::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
             )
@@ -2526,6 +2557,12 @@ impl fmt::Display for Mod {
     }
 }
 
+impl fmt::Display for Gcd {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}({}, {})", GCD, self.left, self.right)
+    }
+}
+
 impl fmt::Display for Pow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.base, POW, self.exponent)
@@ -2848,6 +2885,12 @@ impl From<Div> for Obj {
 impl From<Mod> for Obj {
     fn from(m: Mod) -> Self {
         Obj::Mod(m)
+    }
+}
+
+impl From<Gcd> for Obj {
+    fn from(g: Gcd) -> Self {
+        Obj::Gcd(g)
     }
 }
 

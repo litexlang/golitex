@@ -94,23 +94,25 @@ locally when that better preserves its dependency structure.
 
 ## Divisibility, primality, and greatest common divisors
 
-`divides(a, b)` means that `b = a * k` for some integer `k`. `prime(p)` uses
-trial divisors in `range(2, p)`. For a nonzero integer pair, `gcd(a, b)` is the
-largest positive common divisor:
+`divides(a, b)` means that `b = a * k` for some integer `k`. Native `$prime(p)`
+and `gcd(a, b)` are the directly usable interfaces. The module retains
+transparent teaching constructions:
 
 <!-- litex:skip-test -->
 ```litex
-prop divides(a Z, b Z):
-    exist k Z st {b = a * k}
+prop prime_by_trial_division(p N_pos):
+    2 <= p
+    forall d range(2, p):
+        p % d != 0
 
-have fn gcd(a, b Z: a != 0 or b != 0) N =
+have fn gcd_by_finite_divisors(a, b Z: a != 0 or b != 0) N =
     finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
 ```
 
-The rejected form treats `gcd` only as an unspecified function plus a collection
-of axioms. The implemented construction exposes why the result exists: the set
+The source construction exposes why the result exists: the set
 of positive common divisors is finite and nonempty, and the kernel
-`finite_set_max` selects its greatest member. This node supports the divisor
+`finite_set_max` selects its greatest member. Checked bridge theorems identify
+it with native `gcd` and identify trial-division primality with `$prime`. This node supports the divisor
 laws, Euclidean reduction, Bezout's identity, reduced fractions, and the
 prime-divisor dichotomy. The construction and these main laws are checked.
 

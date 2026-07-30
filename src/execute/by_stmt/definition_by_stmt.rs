@@ -3,6 +3,70 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_by_def_stmt(&mut self, stmt: &ByDefStmt) -> Result<StmtResult, RuntimeError> {
         let predicate_name = stmt.fact.predicate.to_string();
+        if predicate_name == PRIME {
+            if stmt.fact.body.len() != 1 {
+                return Err(short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by def `prime`: expected 1 argument, got {}",
+                        stmt.fact.body.len()
+                    ),
+                    None,
+                    vec![],
+                ));
+            }
+            let target_atomic: AtomicFact = stmt.fact.clone().into();
+            self.verify_atomic_fact_well_defined(&target_atomic, &VerifyState::new(0, false))?;
+            let definition_facts = self
+                .builtin_prime_definition_facts(&stmt.fact)?
+                .expect("prime fact has a builtin definition");
+            let mut inside_results = Vec::new();
+            let instantiated_clauses = definition_facts
+                .iter()
+                .map(|fact| fact.to_string())
+                .collect::<Vec<_>>();
+            let computed = self.verify_prime_fact_by_computation(&target_atomic);
+            if computed.as_ref().is_some_and(StmtResult::is_true) {
+                inside_results.push(computed.expect("checked as present"));
+            } else {
+                for (index, fact) in definition_facts.into_iter().enumerate() {
+                    let result = self.verify_fact_full(&fact, &VerifyState::new(0, false))?;
+                    if result.is_unknown() {
+                        return Err(short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "by def `prime`: definition clause {} is not verified: `{}`",
+                                index + 1,
+                                fact
+                            ),
+                            None,
+                            vec![result],
+                        ));
+                    }
+                    inside_results.push(result);
+                }
+            }
+            let target_fact: Fact = stmt.fact.clone().into();
+            let infer_result = self.run_in_local_env_and_commit(|rt| {
+                rt.store_trusted_fact_and_infer_with_reason(
+                    target_fact.clone(),
+                    InferReason::Other(ByDefStmt::store_reason().to_string()),
+                )
+            })?;
+            let by_verification = ByDefinitionVerificationResult::new(
+                predicate_name,
+                stmt.fact.body.iter().map(|arg| arg.to_string()).collect(),
+                instantiated_clauses,
+                target_fact.to_string(),
+            );
+            return Ok(NonFactualStmtSuccess::new_with_by_verification(
+                stmt.clone().into(),
+                infer_result,
+                inside_results,
+                by_verification.into(),
+            )
+            .into());
+        }
         if matches!(
             predicate_name.as_str(),
             INJECTIVE | SURJECTIVE | BIJECTIVE | PROPER_SUBSET | PROPER_SUPERSET

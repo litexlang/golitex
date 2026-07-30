@@ -512,7 +512,10 @@ impl Runtime {
         let proper_relation_facts = crate::verify::verify_proper_set_relations_builtin::positive_proper_set_relation_definition_facts(normal_atomic_fact);
         let builtin_definition_facts = match proper_relation_facts {
             Some(facts) => Some(facts),
-            None => self.builtin_function_property_definition_facts(normal_atomic_fact)?,
+            None => match self.builtin_prime_definition_facts(normal_atomic_fact)? {
+                Some(facts) => Some(facts),
+                None => self.builtin_function_property_definition_facts(normal_atomic_fact)?,
+            },
         };
         if let Some(definition_facts) = builtin_definition_facts {
             let mut infer_result = InferResult::new();

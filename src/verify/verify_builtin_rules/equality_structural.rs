@@ -256,10 +256,80 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let reason = "same shape and paired args share known equality class";
         match (left, right) {
+            (Obj::StructObj(left_struct), Obj::StructObj(right_struct)) => {
+                if left_struct.name != right_struct.name
+                    || left_struct.params.len() != right_struct.params.len()
+                {
+                    return Some((StmtUnknown::new()).into());
+                }
+                if left_struct
+                    .params
+                    .iter()
+                    .zip(right_struct.params.iter())
+                    .all(|(left_param, right_param)| {
+                        verify_equality_by_they_are_the_same(left_param, right_param)
+                            || self.objs_have_same_known_equality_rc_in_some_env(
+                                left_param,
+                                right_param,
+                            )
+                    })
+                {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (
+                Obj::ObjAsStructInstanceWithFieldAccess(left_access),
+                Obj::ObjAsStructInstanceWithFieldAccess(right_access),
+            ) => {
+                if left_access.field_name != right_access.field_name
+                    || left_access.struct_obj.name != right_access.struct_obj.name
+                    || left_access.struct_obj.params.len() != right_access.struct_obj.params.len()
+                    || self
+                        .verify_objs_are_equal_known_only(
+                            left_access.obj.as_ref(),
+                            right_access.obj.as_ref(),
+                            line_file.clone(),
+                        )
+                        .is_unknown()
+                    || !left_access
+                        .struct_obj
+                        .params
+                        .iter()
+                        .zip(right_access.struct_obj.params.iter())
+                        .all(|(left_param, right_param)| {
+                            !self
+                                .verify_objs_are_equal_known_only(
+                                    left_param,
+                                    right_param,
+                                    line_file.clone(),
+                                )
+                                .is_unknown()
+                        })
+                {
+                    Some((StmtUnknown::new()).into())
+                } else {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                }
+            }
             (Obj::FnObj(left_fn), Obj::FnObj(right_fn)) => {
                 let left_head_obj = left_fn.head.as_ref().clone().into();
                 let right_head_obj = right_fn.head.as_ref().clone().into();
-                if !verify_equality_by_they_are_the_same(&left_head_obj, &right_head_obj) {
+                let heads_match =
+                    verify_equality_by_they_are_the_same(&left_head_obj, &right_head_obj)
+                        || self
+                            .try_verify_equal_by_same_shape_and_known_equality_args(
+                                &left_head_obj,
+                                &right_head_obj,
+                                line_file.clone(),
+                            )
+                            .is_some_and(|result| result.is_true());
+                if !heads_match {
                     return Some((StmtUnknown::new()).into());
                 }
                 if left_fn.body.len() != right_fn.body.len() {
@@ -383,6 +453,18 @@ impl Runtime {
                 }
             }
             (Obj::Mod(l), Obj::Mod(r)) => {
+                if self.arg_pairs_share_known_equality_class(&[
+                    (&l.left, &r.left),
+                    (&l.right, &r.right),
+                ]) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::Gcd(l), Obj::Gcd(r)) => {
                 if self.arg_pairs_share_known_equality_class(&[
                     (&l.left, &r.left),
                     (&l.right, &r.right),

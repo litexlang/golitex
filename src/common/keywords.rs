@@ -13,6 +13,7 @@ pub const SUB: &str = "-";
 pub const MUL: &str = "*";
 pub const DIV: &str = "/";
 pub const MOD: &str = "%";
+pub const GCD: &str = "gcd";
 pub const POW: &str = "^";
 /// Matrix addition. Example: `A '+ B`.
 pub const MATRIX_ADD: &str = "'+";
@@ -201,6 +202,7 @@ pub const FN_EQ: &str = "fn_eq";
 pub const INJECTIVE: &str = "injective";
 pub const SURJECTIVE: &str = "surjective";
 pub const BIJECTIVE: &str = "bijective";
+pub const PRIME: &str = "prime";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -294,6 +296,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         FINITE_SET_SIZE,
         FINITE_SET_MAX,
         FINITE_SET_MIN,
+        GCD,
         FN_RANGE,
         REPLACEMENT,
         SUM,
@@ -379,6 +382,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         INJECTIVE,
         SURJECTIVE,
         BIJECTIVE,
+        PRIME,
         PROPER_SUBSET,
         PROPER_SUPERSET,
     ];
@@ -448,6 +452,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == INJECTIVE
         || atom_name == SURJECTIVE
         || atom_name == BIJECTIVE
+        || atom_name == PRIME
 }
 
 pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
@@ -478,6 +483,7 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == FINITE_SET_SIZE
         || atom_name == FINITE_SET_MAX
         || atom_name == FINITE_SET_MIN
+        || atom_name == GCD
 }
 
 #[cfg(test)]

@@ -395,6 +395,13 @@ impl PythonExtractor {
     }
 
     fn reject_native_complex_fact(&self, fact: &Fact) -> Result<(), RuntimeError> {
+        let rendered = fact.to_string();
+        if rendered.contains("$prime(") || rendered.contains("gcd(") {
+            return Err(python_extract_error(
+                &fact.line_file(),
+                "python extractor v1 does not support native gcd or builtin prime",
+            ));
+        }
         if fact.contains_native_complex_syntax() {
             return Err(python_extract_error(
                 &fact.line_file(),
@@ -602,6 +609,10 @@ impl PythonExtractor {
                     "python extractor v1 does not support native trigonometric expressions",
                 ))
             }
+            Obj::Gcd(_) => Err(python_extract_error(
+                line_file,
+                "python extractor v1 does not support native gcd",
+            )),
             Obj::Atom(a) => self.python_atom(a, params, line_file),
             Obj::Add(a) => {
                 self.python_binary_expr(a.left.as_ref(), "+", a.right.as_ref(), params, line_file)

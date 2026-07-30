@@ -70,6 +70,12 @@ impl Obj {
                     None
                 }
             }
+            Obj::Gcd(gcd) => {
+                let left = gcd.left.evaluate_to_normalized_decimal_number()?;
+                let right = gcd.right.evaluate_to_normalized_decimal_number()?;
+                gcd_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
+                    .map(Number::new)
+            }
             Obj::Pow(pow_obj) => {
                 let base_number = pow_obj.base.evaluate_to_normalized_decimal_number();
                 let exponent_number = pow_obj.exponent.evaluate_to_normalized_decimal_number();
@@ -174,6 +180,31 @@ impl Obj {
             _ => return false,
         }
     }
+}
+
+pub fn gcd_decimal_str_and_normalize(left: &str, right: &str) -> Option<String> {
+    let normalized_left = normalize_decimal_number_string(left);
+    let normalized_right = normalize_decimal_number_string(right);
+    if normalized_left.contains('.') || normalized_right.contains('.') {
+        return None;
+    }
+    let mut a = normalized_left
+        .strip_prefix('-')
+        .unwrap_or(&normalized_left)
+        .to_string();
+    let mut b = normalized_right
+        .strip_prefix('-')
+        .unwrap_or(&normalized_right)
+        .to_string();
+    if a == "0" && b == "0" {
+        return None;
+    }
+    while b != "0" {
+        let remainder = mod_decimal_str_and_normalize(&a, &b);
+        a = b;
+        b = remainder;
+    }
+    Some(a)
 }
 
 fn evaluate_nonempty_numeric_list_set(set: &Obj, take_maximum: bool) -> Option<Number> {

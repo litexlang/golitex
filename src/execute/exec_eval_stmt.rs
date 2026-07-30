@@ -30,6 +30,7 @@ impl Runtime {
                 | Obj::Mul(_)
                 | Obj::Div(_)
                 | Obj::Pow(_)
+                | Obj::Gcd(_)
                 | Obj::FiniteSetMax(_)
                 | Obj::FiniteSetMin(_)
                 | Obj::Sum(_)
@@ -124,6 +125,19 @@ impl Runtime {
                     active_fn_calls,
                 )?;
                 Ok(Mul::new(l, r).into())
+            }
+            Obj::Gcd(g) => {
+                let left = self.eval_reduce_nested_sum_product_in_obj(
+                    (*g.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let right = self.eval_reduce_nested_sum_product_in_obj(
+                    (*g.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                Ok(Gcd::new(left, right).into())
             }
             Obj::Div(b) => {
                 let l = self.eval_reduce_nested_sum_product_in_obj(
@@ -810,6 +824,33 @@ impl Runtime {
                             ));
                         }
                     }
+                }
+                Obj::Gcd(gcd) => {
+                    let left = self.evaluate_symbol_obj_iterative_with_active(
+                        (*gcd.left).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let right = self.evaluate_symbol_obj_iterative_with_active(
+                        (*gcd.right).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let combined: Obj = Gcd::new(left, right).into();
+                    let Some(value) = Self::evaluate_numeric_obj_for_eval(&combined) else {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: gcd arguments must resolve to non-all-zero integers".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    };
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        value,
+                        &mut pending,
+                        eval_stmt,
+                        active_fn_calls,
+                    );
                 }
                 Obj::FiniteSetMax(extremum) => {
                     let reduced: Obj =

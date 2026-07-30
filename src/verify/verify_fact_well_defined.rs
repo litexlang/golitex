@@ -122,6 +122,28 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
+        if name_string == PRIME {
+            let arg = atomic_fact.args_ref()[0];
+            let in_n_pos: AtomicFact = InFact::new(
+                arg.clone(),
+                StandardSet::NPos.into(),
+                atomic_fact.line_file(),
+            )
+            .into();
+            if self
+                .verify_atomic_fact(&in_n_pos, verify_state)?
+                .is_unknown()
+            {
+                return Err(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("{} requires its argument to belong to N_pos", atomic_fact),
+                        atomic_fact.line_file(),
+                    ),
+                )
+                .into());
+            }
+        }
+
         if matches!(
             atomic_fact,
             AtomicFact::LessFact(_)

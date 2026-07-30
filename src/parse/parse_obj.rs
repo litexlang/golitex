@@ -624,6 +624,22 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Abs::new(arg).into());
         }
+        if tok == GCD {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 2 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "gcd expects 2 arguments".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let mut args = args.into_iter();
+            let left = args.next().expect("gcd arity was checked");
+            let right = args.next().expect("gcd arity was checked");
+            return Ok(Gcd::new(left, right).into());
+        }
         if tok == SIN || tok == COS || tok == TAN || tok == COT {
             let operator = tok.to_string();
             tb.skip()?;

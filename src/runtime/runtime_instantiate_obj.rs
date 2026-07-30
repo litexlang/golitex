@@ -71,6 +71,11 @@ impl Runtime {
             Obj::Mul(inner) => self.inst_mul(inner, param_to_arg_map, param_obj_type),
             Obj::Div(inner) => self.inst_div(inner, param_to_arg_map, param_obj_type),
             Obj::Mod(inner) => self.inst_mod(inner, param_to_arg_map, param_obj_type),
+            Obj::Gcd(inner) => Ok(Gcd::new(
+                self.inst_obj(&inner.left, param_to_arg_map, param_obj_type)?,
+                self.inst_obj(&inner.right, param_to_arg_map, param_obj_type)?,
+            )
+            .into()),
             Obj::Pow(inner) => self.inst_pow(inner, param_to_arg_map, param_obj_type),
             Obj::MatrixAdd(inner) => self.inst_matrix_add(inner, param_to_arg_map, param_obj_type),
             Obj::MatrixSub(inner) => self.inst_matrix_sub(inner, param_to_arg_map, param_obj_type),

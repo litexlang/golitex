@@ -95,6 +95,11 @@ impl Runtime {
                 .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
+            Obj::Gcd(gcd) => {
+                let result: Obj =
+                    Gcd::new(self.resolve_obj(&gcd.left), self.resolve_obj(&gcd.right)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
             Obj::Pow(pow) => {
                 let result = self.resolve_pow_after_children(
                     self.resolve_obj(&pow.base),

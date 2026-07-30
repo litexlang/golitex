@@ -6,6 +6,9 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) = self.verify_prime_fact_by_computation(atomic_fact) {
+            return Ok(result);
+        }
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(),
             AtomicFact::NotEqualFact(not_equal_fact) => {
@@ -97,6 +100,9 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) = self.verify_prime_fact_by_computation(atomic_fact) {
+            return Ok(result);
+        }
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(),
             AtomicFact::FnEqualInFact(_) | AtomicFact::FnEqualFact(_) => {

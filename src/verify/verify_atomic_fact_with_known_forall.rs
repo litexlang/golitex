@@ -845,6 +845,12 @@ impl Runtime {
             Obj::Mul(ref a) => self.match_arg_when_left_is_mul(&a.left, &a.right, given_arg),
             Obj::Div(ref a) => self.match_arg_when_left_is_div(&a.left, &a.right, given_arg),
             Obj::Mod(ref a) => self.match_arg_when_left_is_mod(&a.left, &a.right, given_arg),
+            Obj::Gcd(ref a) => match given_arg {
+                Obj::Gcd(g) => {
+                    self.match_arg_binary_then_merge(&a.left, &a.right, &g.left, &g.right)
+                }
+                _ => Ok(None),
+            },
             Obj::Pow(ref a) => self.match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
             Obj::Abs(ref a) => self.match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
             Obj::Sin(ref a) => match given_arg {

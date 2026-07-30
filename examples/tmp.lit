@@ -228,3 +228,144 @@ template<Carrier nonempty_set>:
 
 forall Carrier nonempty_set, x Carrier:
     \tmp_selected_self_with_local_proof<Carrier>(x) = x
+
+# A template-selected function may also use a local case-defined function in
+# its proof. Materialization substitutes the template arguments through the
+# local function's domain, cases, and values.
+template<Carrier nonempty_set, marker Carrier>:
+    have fn tmp_selected_marker_with_local_case by exist!:
+        ? forall x Carrier:
+            exist! y Carrier st {y = marker}
+        have fn local_marker(input Carrier) Carrier by cases:
+            case input = marker: marker
+            case input != marker: marker
+        witness exist y Carrier st {y = marker} from marker
+        forall y1, y2 Carrier:
+            y1 = marker
+            y2 = marker
+            =>:
+                y1 = y2
+
+forall Carrier nonempty_set, marker, x Carrier:
+    \tmp_selected_marker_with_local_case<Carrier, marker>(x) = marker
+
+# A singleton-supported function is selected inside a template from a local
+# piecewise function. This is the kernel pattern used by Chapter 10's direct
+# sum inclusion.
+prop tmp_supports_single(I set, V nonempty_set, zero V, value fn(coordinate I) V, support finite_set):
+    forall coordinate I:
+        value(coordinate) != zero
+        =>:
+            coordinate $in support
+
+prop tmp_has_finite_support(I set, V nonempty_set, zero V, value fn(coordinate I) V):
+    exist support finite_set st {$tmp_supports_single(I, V, zero, value, support)}
+
+prop tmp_is_single_value(I set, V nonempty_set, zero V, pivot I, v V, value fn(coordinate I) V):
+    forall coordinate I:
+        coordinate = pivot
+        =>:
+            value(coordinate) = v
+    forall coordinate I:
+        coordinate != pivot
+        =>:
+            value(coordinate) = zero
+
+template<I set, V nonempty_set, zero V>:
+    have tmp_finitely_supported power_set(fn(coordinate I) V) = {value fn(coordinate I) V: $tmp_has_finite_support(I, V, zero, value)}
+
+template<I set, V nonempty_set, zero V>:
+    have fn tmp_single by exist!:
+        ? forall pivot I, v V:
+            exist! value \tmp_finitely_supported<I, V, zero> st {$tmp_is_single_value(I, V, zero, pivot, v, value)}
+        have fn candidate(coordinate I) V by cases:
+            case coordinate = pivot: v
+            case coordinate != pivot: zero
+        claim:
+            ? $tmp_has_finite_support(I, V, zero, candidate)
+            claim:
+                ? $tmp_supports_single(I, V, zero, candidate, {pivot})
+                claim:
+                    ? forall coordinate I:
+                        candidate(coordinate) != zero
+                        =>:
+                            coordinate $in {pivot}
+                    by cases:
+                        ? coordinate $in {pivot}
+                        case coordinate = pivot:
+                            coordinate $in {pivot}
+                        case coordinate != pivot:
+                            candidate(coordinate) = zero
+                            impossible candidate(coordinate) = zero
+                by def $tmp_supports_single(I, V, zero, candidate, {pivot})
+            witness exist support finite_set st {$tmp_supports_single(I, V, zero, candidate, support)} from {pivot}
+        candidate $in \tmp_finitely_supported<I, V, zero>
+        witness exist value \tmp_finitely_supported<I, V, zero> st {$tmp_is_single_value(I, V, zero, pivot, v, value)} from candidate:
+            forall coordinate I:
+                coordinate = pivot
+                =>:
+                    candidate(coordinate) = v
+            forall coordinate I:
+                coordinate != pivot
+                =>:
+                    candidate(coordinate) = zero
+            by def $tmp_is_single_value(I, V, zero, pivot, v, candidate)
+        claim:
+            ? forall value1, value2 \tmp_finitely_supported<I, V, zero>:
+                $tmp_is_single_value(I, V, zero, pivot, v, value1)
+                $tmp_is_single_value(I, V, zero, pivot, v, value2)
+                =>:
+                    value1 = value2
+            claim:
+                ? forall coordinate I:
+                    value1(coordinate) = value2(coordinate)
+                by cases:
+                    ? value1(coordinate) = value2(coordinate)
+                    case coordinate = pivot:
+                        value1(coordinate) = v = value2(coordinate)
+                    case coordinate != pivot:
+                        value1(coordinate) = zero = value2(coordinate)
+            $fn_eq(value1, value2)
+            value1 = value2
+
+forall I set, V nonempty_set, zero, v V, pivot, coordinate I:
+    coordinate = pivot
+    =>:
+        $tmp_is_single_value(I, V, zero, pivot, v, \tmp_single<I, V, zero>(pivot, v))
+        \tmp_single<I, V, zero>(pivot, v)(coordinate) = v
+
+# Template-instantiated recursive functions must expose their computation
+# equations at the public template application.
+template<T nonempty_set, combine fn(left, right T) T, identity T>:
+    have fn tmp_recursive_fold(values fn(index N) T, count N) T by induc count from 0:
+        case count = 0: identity
+        case count > 0: combine(tmp_recursive_fold(values, count - 1), values(count - 1))
+
+forall T nonempty_set, combine fn(left, right T) T, identity T, values fn(index N) T:
+    \tmp_recursive_fold<T, combine, identity>(values, 0) = identity
+
+forall T nonempty_set, combine fn(left, right T) T, identity T, values fn(index N) T, count N:
+    \tmp_recursive_fold<T, combine, identity>(values, count + 1) = combine(\tmp_recursive_fold<T, combine, identity>(values, (count + 1) - 1), values((count + 1) - 1)) = combine(\tmp_recursive_fold<T, combine, identity>(values, count), values(count))
+
+# Template-instantiated case functions expose the selected branch equation
+# through the public template application.
+template<T nonempty_set, marker, fallback T>:
+    have fn tmp_choose_marker(value T) T by cases:
+        case value = marker: marker
+        case value != marker: fallback
+
+forall T nonempty_set, marker, fallback, value T:
+    value = marker
+    =>:
+        \tmp_choose_marker<T, marker, fallback>(value) = marker
+
+forall T nonempty_set, marker, fallback, value T:
+    value != marker
+    =>:
+        \tmp_choose_marker<T, marker, fallback>(value) = fallback
+
+template<T nonempty_set, combine fn(left, right T) T, marker T>:
+    have fn tmp_combine_with_marker(value T) T = combine(value, marker)
+
+forall T nonempty_set, combine fn(left, right T) T, marker, value T:
+    \tmp_combine_with_marker<T, combine, marker>(value) = combine(value, marker)
