@@ -212,6 +212,20 @@ impl Runtime {
             infer_result.new_infer_result_inside(fact_infer_result);
         }
 
+        if exist_fact_in_have_obj_stmt.is_exist_unique() {
+            let uniqueness_forall = self
+                .build_exist_unique_uniqueness_forall_fact(exist_fact_in_have_obj_stmt)
+                .map_err(|runtime_error| {
+                    exec_stmt_error_with_stmt_and_cause(stmt.clone(), runtime_error)
+                })?;
+            let uniqueness_infer_result = self
+                .store_fact_without_forall_coverage_check_and_infer(uniqueness_forall.into())
+                .map_err(|store_fact_error| {
+                    exec_stmt_error_with_stmt_and_cause(stmt.clone(), store_fact_error)
+                })?;
+            infer_result.new_infer_result_inside(uniqueness_infer_result);
+        }
+
         Ok(infer_result)
     }
 }

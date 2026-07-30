@@ -690,18 +690,21 @@ impl Runtime {
 
     // Membership through a set-valued definition: if `S(a) = {x T: P(x)}`,
     // then `y $in S(a)` is checked by unfolding one layer and proving
-    // `y $in T` plus `P(y)`. Example: `(3, 4) $in circle(5)`.
+    // `y $in T` plus `P(y)`. This includes instantiated template aliases.
+    // Examples: `(3, 4) $in circle(5)` and `y $in \selected<T>`.
     pub(super) fn maybe_verify_in_fact_in_unfolded_user_defined_set(
         &mut self,
         in_fact: &InFact,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let Some(unfolded_set) =
-            self.unfold_known_fn_application_once(&in_fact.set, verify_state)?
-        else {
-            return Ok(None);
+        if let Obj::InstantiatedTemplateObj(template_obj) = &in_fact.set {
+            self.materialize_instantiated_template_obj(template_obj, verify_state)?;
+        }
+        let set_builder = match self.unfold_known_fn_application_once(&in_fact.set, verify_state)? {
+            Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
+            _ => self.get_obj_equal_to_set_builder(&in_fact.set.to_string()),
         };
-        let Obj::SetBuilder(set_builder) = unfolded_set else {
+        let Some(set_builder) = set_builder else {
             return Ok(None);
         };
 
@@ -722,7 +725,7 @@ impl Runtime {
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "membership in a set-valued user-defined function: unfold one function application to a set builder".to_string(),
+                "membership in a set-valued definition: unfold one function or template alias to a set builder".to_string(),
                 vec![unfolded_result],
             )
             .into(),

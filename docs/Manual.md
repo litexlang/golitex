@@ -286,6 +286,12 @@ code can use `fn(z C) R {re(z)}` and the analogous lambdas. For a real input,
 are available for complex objects. Ordered comparisons, signs, real intervals,
 `abs`, `sqrt`, and `log` remain real-domain operations.
 
+Known complex equalities can be observed through `re` and `img`. The verifier
+also supplies the standard coordinate formulas for native complex addition,
+subtraction, and multiplication. Thus a proof can reason directly about
+`re(z * w)` and `img(z * w)` without introducing a coordinate-pair
+compatibility layer.
+
 Natural powers `z^n` are defined for `z` in `C` and `n` in `N`, including the
 existing convention `0^0 = 1`. The additional integer-exponent branch requires
 a nonzero complex base; the ordinary exponent-addition law remains available
@@ -565,6 +571,23 @@ template<S set>:
 A template parameter such as `S set` is not a function argument ranging over a
 set of all sets. The body is checked once in the parameterized context and is
 materialized at an instance.
+
+When a template selects a set-builder value, the instantiated object preserves
+that defining view in both directions:
+
+```litex
+abstract_prop marked(x)
+
+template<S set>:
+    have marked_elements power_set(S) = {x S: $marked(x)}
+
+trust $marked(1)
+1 $in \marked_elements<R>
+```
+
+Conversely, known membership in `\marked_elements<R>` exposes `$marked(1)`.
+The verifier still requires the base-set membership and every defining fact;
+the alias does not invent membership.
 
 ```text
 template<S set>:
@@ -1071,6 +1094,9 @@ This is an `error`: `x != 0` and `x > 0` overlap.
 
 `have fn name by exist!` turns a proved unique-existence statement into a
 function. The proof must establish both existence and uniqueness.
+Inside a template, the proof may use local `obtain` and `witness` statements;
+materializing the template substitutes the template arguments through those
+local proof statements before committing the selected function.
 
 ```litex
 have fn identity_choice by exist!:
@@ -1538,6 +1564,11 @@ a > 0
 a != 0
 ```
 
+Litex can also package an instantiated implication into its classical
+disjunction. If `P(t) => Q(t)` is available, then
+`not P(t) or Q(t)` verifies by checking `Q(t)` in the temporary `P(t)` case.
+This rule does not reverse the implication.
+
 Do not add a theorem call merely to repeat the same fact after it has already
 matched:
 
@@ -1556,12 +1587,21 @@ A concrete `prop` can normally fold and unfold through ordinary verification.
 `by def $P(args)` explicitly checks every instantiated clause when the
 dependency should be visible.
 
-Automatic positive-predicate inference exposes the direct clauses of `P`.
-When a direct clause is another concrete predicate, Litex stores that clause
-but does not recursively unfold it in the same inference step. Use another
-`by def` when the nested predicate's own clauses are needed. This keeps
-existential definitions such as basis, span, and linear combination from
-recursively generating fresh witnesses.
+Automatic positive-predicate inference exposes the clauses of `P` and
+recursively exposes any positive concrete predicates among those clauses.
+Inference uses cycle guards, so mutually recursive predicate definitions do
+not expand indefinitely.
+
+When a grouped universal law binds shared convenience variables, a conclusion
+may use only some of them. Litex stores the corresponding reduced universal
+rule when every omitted parameter has an independent, known-nonempty domain.
+For example, a clause using only `a` and `x` inside
+`forall a, b R, x, y E` becomes reusable as a rule over `a` and `x` when `E`
+is nonempty. It does not make this projection across an empty or unresolved
+omitted domain.
+
+Automatic positive inference does not manufacture witnesses for existential
+definition clauses such as basis, span, and linear combination.
 
 ```litex
 prop is_unit_pair(x, y R):
@@ -1586,9 +1626,10 @@ Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
 name witnesses from an already known existential. Use `have by preimage` to
 name a preimage from known range or replacement membership.
 
-`obtain` exposes each direct fact in the existential body. If one of those
-facts is a user-defined predicate, Litex does not recursively unfold it; use
-`by def` when that predicate's own clauses are needed.
+`obtain` exposes each direct fact in the existential body. Positive concrete
+predicates among those facts recursively expose their positive clauses under
+the same cycle guards used by ordinary inference. Use `by def` when the
+definition step should be explicit in the proof.
 
 ```litex
 witness exist u R st {0 < u, u < 1} from 1 / 2:

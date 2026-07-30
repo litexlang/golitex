@@ -176,9 +176,21 @@ To prove `B(t)`, Litex matches the conclusion and obtains the substitution
 premises are ordinary goals and can themselves use builtin rules, known facts,
 definitions, or other known universal facts.
 
+For a grouped universal declaration, each positive conclusion is also stored
+over just the parameters it uses when the omitted parameter types are
+independent and known nonempty. Thus a law written under
+`forall a, b R, x, y E` can expose its `a, x` clause without inventing values
+for `b` or `y`; the projection is deliberately unavailable when an omitted
+domain may be empty.
+
 Pattern matching is therefore shared by builtin routes, known-fact reuse, and
 universal instantiation. A named `thm` also stores its universal fact, while
 `by thm` provides an explicit theorem-instantiation route.
+
+For a two-branch atomic disjunction, the verifier may use classical
+implication packaging: to establish `not A or B`, temporarily assume `A` and
+verify `B`. The temporary case and anything inferred only inside it do not
+escape the local environment.
 
 ## Stable Statement Execution
 
@@ -196,13 +208,13 @@ not persist or propagate trust metadata through later facts and theorems.
 | `have x S` | Introduces `x` in the current scope only after checks pass. | `x` must be unused; `S` must be well-defined. | Prove that `S` is nonempty. | Bind `x`, store `x $in S`, then infer. | Checked object introduction. |
 | `have x S = value` | The defining value is checked before `x` is committed. | Name, type, and value must be well-defined. | Prove `value $in S`. | Bind `x`; store its type/membership and `x = value`; then infer. | Checked definition. |
 | `have x S: body` | Uses an existential binder while checking the obligation. | The corresponding `exist x S st {body}` must be well-defined. | Prove that corresponding existential fact. | Bind an opaque witness `x`; store its type and instantiated body facts; then infer. | Checked existence, not unrestricted witness creation. |
-| `obtain names from exist ...` | Opens existential binders into the current scope. | Witness count, parameter types, and existential shape must match. | Verify the source existential fact from the current context. | Bind opaque witness names and store the instantiated direct body facts; a predicate body fact is not recursively unfolded. | Adds no new trust. |
+| `obtain names from exist ...` | Opens existential binders into the current scope. | Witness count, parameter types, and existential shape must match. | Verify the source existential fact from the current context. | Bind opaque witness names and store the instantiated direct body facts; positive concrete predicate bodies recursively expose their positive clauses under cycle guards. | Adds no new trust. |
 | `prop P(params): clauses` | Parameters are local while the definition is checked. | Name, parameter domains, and clauses must be well-defined. | The clauses are not proved; they declare the meaning of `P`. | Store the concrete predicate definition. | A definition, not a theorem or assumption about existing objects. |
 | `abstract_prop P(params)` | Parameters describe an interface only. | Name and parameter shape must be valid and nonconflicting. | None. There is no defining body. | Store the predicate symbol and arity. | Introduces no fact; later properties still need proof or explicit trust. |
 | `have fn f(params) T = body` | Parameters and domain conditions are local. | Signature, domain conditions, return set, and body must be well-defined. | Check the body has return type `T` under the parameter assumptions. | Store `f`, its function type, defining equation, and callable body facts. | Checked mathematical definition. |
 | `have fn f(...) T by cases` | Each case is checked under its own local condition. | Signature, cases, conditions, and return expressions must be well-defined. | Prove coverage, mutual exclusivity, and return membership for every case. | Store the function and the case-specific universal equations. | Checked mathematical definition. |
 | `have fn f(...) T by induc ...` | Base and recursive cases receive induction-local bindings. | Signature, measure, lower bound, cases, and recursive calls must have valid shapes. | Check the lower bound, coverage, return membership, and strict decrease of recursive calls. | Store the recursive function definition and its usable equations. | Checked definition with termination obligations. |
-| `have fn f by exist!` | Its proof, when supplied, runs in a child scope. | The source must have the expected parameterized unique-existence shape. | Verify the source `forall ... exist! ...` fact or its proof block. | Store the selected function, its type, defining property, and uniqueness fact. | Checked use of unique existence. |
+| `have fn f by exist!` | Its proof, when supplied, runs in a child scope; template materialization substitutes through local `obtain` and `witness` statements. | The source must have the expected parameterized unique-existence shape. | Verify the source `forall ... exist! ...` fact or its proof block. | Store the selected function, its type, defining property, and uniqueness fact. | Checked use of unique existence. |
 | `have algo for f(params)` | Implementation parameters and cases are local. | `f` must already be a function; parameters must match its mathematical signature. | Check each executable result and case against the established function facts. | Attach executable data used by `eval`; do not replace the mathematical definition. | Adds no mathematical assumption. |
 | `eval expression` | None. | The expression must be supported and evaluable. | Compute the supported value; there is no separate proof of the resulting equality. | Report and store `expression = value`. | No user trust; the evaluator is part of the implementation's trusted surface. |
 
@@ -228,7 +240,7 @@ unrelated verifier.
 
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
-| `by def $P(args)` | No persistent child scope. | `P` must be concrete, arguments must match, and the instantiated clauses must be well-defined. | Verify every defining clause even if `$P(args)` is already known. A direct clause that is itself a concrete predicate is stored without recursively unfolding its definition. | Store `$P(args)` and its direct definition clauses. | Checked use of a definition. |
+| `by def $P(args)` | No persistent child scope. | `P` must be concrete, arguments must match, and the instantiated clauses must be well-defined. | Verify every defining clause even if `$P(args)` is already known. Positive concrete-predicate clauses are recursively unfolded, with cycle guards. | Store `$P(args)` and the recursively exposed positive definition clauses. | Checked use of a definition. |
 | `by thm name(args)` | The instantiation is checked against the current scope. | The theorem must exist; argument count and types must match. | Instantiate and verify the theorem's domain premises. | Store the instantiated conclusions and infer. | Does not copy trust metadata from the theorem; the runtime stores no such theorem metadata. |
 | `by cases` | One child scope per case. | Target, cases, and branch shapes must be well-defined. | Prove the cases are exhaustive, then prove every target in every branch. | Store the common target facts and infer. | Checked case analysis. |
 | `by contra` | A child scope assumes the logical negation of the target. | The target must support logical negation and be well-defined. | Execute the proof and verify both a stated impossible fact and its negation. | Store the original target and infer. | Checked contradiction proof. |

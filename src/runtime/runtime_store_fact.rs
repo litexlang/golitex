@@ -153,6 +153,57 @@ impl Runtime {
 
         let coverage_error_detail_lines =
             forall_fact.error_messages_if_forall_param_missing_in_some_then_clause();
+        let mut projected_forall_facts = Vec::new();
+        if !coverage_error_detail_lines.is_empty()
+            && forall_fact
+                .params_def_with_type
+                .param_type_cited_param_indices
+                .iter()
+                .all(|indices| indices.is_empty())
+        {
+            for (then_index, _) in coverage_error_detail_lines.iter() {
+                let then_fact = &forall_fact.then_facts[*then_index];
+                let coverage = forall_fact.forall_param_coverage_for_then_clause(then_fact);
+                let mut retained_groups = Vec::new();
+                let mut omitted_types_are_nonempty = true;
+                for group in forall_fact.params_def_with_type.groups.iter() {
+                    let mut retained_params = Vec::new();
+                    for binding in group.params.iter() {
+                        if coverage.get(binding.name()).copied().unwrap_or(false) {
+                            retained_params.push(binding.clone());
+                        } else if self
+                            .verify_param_type_nonempty_if_required(&group.param_type, true)
+                            .is_err()
+                        {
+                            omitted_types_are_nonempty = false;
+                            break;
+                        }
+                    }
+                    if !retained_params.is_empty() {
+                        retained_groups.push(ParamGroupWithParamType::new(
+                            retained_params,
+                            group.param_type.clone(),
+                        ));
+                    }
+                    if !omitted_types_are_nonempty {
+                        break;
+                    }
+                }
+                if omitted_types_are_nonempty && !retained_groups.is_empty() {
+                    // A grouped law may bind convenient shared variables even when one
+                    // positive clause uses only a subset. Eliminate only unused
+                    // parameters whose independent domains are known nonempty.
+                    // Example: `forall a,b R, x,y E: norm(a • x)=...` exposes
+                    // `forall a R, x E: norm(a • x)=...` when `E` is nonempty.
+                    projected_forall_facts.push(ForallFact::new(
+                        ParamDefWithType::new(retained_groups),
+                        forall_fact.dom_facts.clone(),
+                        vec![then_fact.clone()],
+                        forall_fact.line_file.clone(),
+                    )?);
+                }
+            }
+        }
         if !coverage_error_detail_lines.is_empty() {
             let then_drop: HashSet<usize> = coverage_error_detail_lines
                 .iter()
@@ -166,7 +217,13 @@ impl Runtime {
                 .map(|(_, f)| f)
                 .collect();
             if forall_fact.then_facts.is_empty() {
-                return Ok(InferResult::new());
+                let mut infer_result = InferResult::new();
+                for projected in projected_forall_facts {
+                    infer_result.new_infer_result_inside(
+                        self.store_forall_fact_without_well_defined_verified_and_infer(projected)?,
+                    );
+                }
+                return Ok(infer_result);
             }
         }
 
@@ -180,6 +237,11 @@ impl Runtime {
             InferReason::StoredForallFact.store_reason(),
             inferred_facts,
         );
+        for projected in projected_forall_facts {
+            infer_result.new_infer_result_inside(
+                self.store_forall_fact_without_well_defined_verified_and_infer(projected)?,
+            );
+        }
         Ok(infer_result)
     }
 

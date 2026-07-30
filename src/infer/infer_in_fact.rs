@@ -599,10 +599,11 @@ impl Runtime {
             // Example: `p $in &Point` infers `&Point{p}.x $in R`, while
             // `(a, b) $in &Point` additionally checks the tuple components.
             Obj::StructObj(struct_obj) => {
-                let firing_key = format!(
-                    "struct membership:{}",
-                    nested_obj_binder_normalized_fact_key(&in_fact.clone().into())
-                );
+                // Field views are tied to the concrete struct object. Do not
+                // alpha-normalize distinct bound identifiers into one firing:
+                // a template may introduce `original` and `selected` with the
+                // same struct type, and both need their own projected fields.
+                let firing_key = format!("struct membership:{}", in_fact);
                 // A fixed struct membership has deterministic field and filter
                 // consequences. Example: repeating `p $in &Point` must not
                 // rebuild the same field memberships and equivalent facts.

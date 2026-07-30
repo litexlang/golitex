@@ -340,18 +340,32 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<InferResult, RuntimeError> {
-        if let Obj::SetBuilder(set_builder) = &equal_fact.left {
+        let left_set_builder = match &equal_fact.left {
+            Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
+            _ => self.get_obj_equal_to_set_builder(&equal_fact.left.to_string()),
+        };
+        let right_set_builder = match &equal_fact.right {
+            Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
+            _ => self.get_obj_equal_to_set_builder(&equal_fact.right.to_string()),
+        };
+
+        // Equality propagates a known set-builder representative across aliases.
+        // This is used when a template instance first equals its materialized
+        // identifier and that identifier equals `{x T: P(x)}`.
+        // Example: `\selected<T> = selected<T> = {x T: P(x)}` lets membership
+        // in either selected object expose `P(x)`.
+        if let Some(set_builder) = left_set_builder {
             self.infer_equal_fact_set_builder_from_known_side(
-                set_builder,
+                &set_builder,
                 &equal_fact.left,
                 &equal_fact.right,
                 equal_fact,
             );
         }
 
-        if let Obj::SetBuilder(set_builder) = &equal_fact.right {
+        if let Some(set_builder) = right_set_builder {
             self.infer_equal_fact_set_builder_from_known_side(
-                set_builder,
+                &set_builder,
                 &equal_fact.right,
                 &equal_fact.left,
                 equal_fact,
@@ -587,18 +601,15 @@ impl Runtime {
                 Some(predicate_name.clone()),
                 &fact_to_store,
             );
-            let store_result = match &fact_to_store {
-                Fact::AtomicFact(AtomicFact::NormalAtomicFact(_)) => self
-                    .verify_well_defined_and_store_without_infer(
-                        fact_to_store,
-                        by_definition_reason.clone(),
-                    ),
-                _ => self
-                    .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
-                        fact_to_store,
-                        by_definition_reason.clone(),
-                    ),
-            };
+            // A positive user prop recursively exposes positive user props in
+            // its definition. Example: `Outer(x) := Inner(x)` and
+            // `Inner(x) := x >= 0`, so `Outer(x)` infers `x >= 0`.
+            // The active-fact guard and firing cache stop cyclic definitions.
+            let store_result = self
+                .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                    fact_to_store,
+                    by_definition_reason.clone(),
+                );
             store_result.map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,

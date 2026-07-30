@@ -121,20 +121,41 @@ impl Runtime {
             &template_obj.declaration_binding(),
             &def.line_file,
         )?;
+        let instance_identifier = self.declared_identifier_obj(&instance_name);
+        // Register the public template application as an alias before the
+        // instantiated body stores derived facts. For a selected function,
+        // this lets its unique-existence property normalize directly to calls
+        // such as `\selected<T>(x)` instead of remaining attached only to the
+        // hidden materialized identifier.
+        self.store_atomic_fact_without_well_defined_verified_and_infer(
+            EqualFact::new(
+                template_obj.clone().into(),
+                instance_identifier.clone(),
+                def.line_file.clone(),
+            )
+            .into(),
+        )?;
         // The template body was verified once with symbolic parameters when the
         // template was declared. Header validation above plus capture-avoiding
         // substitution preserves that result, so only commit the instantiated
         // statement's environment effects here.
         self.exec_preverified_stmt_affect_environment_only(&stmt)?;
-        let instance_identifier = self.declared_identifier_obj(&instance_name);
-        self.store_atomic_fact_without_well_defined_verified_and_infer(
-            EqualFact::new(
-                template_obj.clone().into(),
-                instance_identifier,
+        if let Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(choice_stmt)) = &stmt {
+            // The generic choice theorem was checked at template declaration.
+            // Register its instantiated property under the public template
+            // application as well as the hidden materialized identifier.
+            self.store_instantiated_template_choice_property(choice_stmt, template_obj)?;
+        }
+        if let Some(set_builder) = self.get_obj_equal_to_set_builder(&instance_name) {
+            // Keep the template surface object connected to a materialized
+            // set-builder value. Example: after `template<T>: have selected =
+            // {x T: P(x)}`, membership in `\selected<T>` can expose `P(x)`.
+            self.store_known_set_builder_obj(
+                &template_obj.to_string(),
+                set_builder,
                 def.line_file.clone(),
-            )
-            .into(),
-        )?;
+            );
+        }
         Ok(())
     }
 
@@ -531,6 +552,47 @@ impl Runtime {
                     )?);
                 }
                 Ok(TrustStmt::new(facts, line_file.clone()).into())
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(s)) => {
+                let exist_fact = self.inst_exist_fact(
+                    &s.exist_fact_in_have_obj_st,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file),
+                )?;
+                Ok(HaveByExistStmt::new(
+                    s.equal_tos.clone(),
+                    s.equal_to_bindings.clone(),
+                    exist_fact,
+                    line_file.clone(),
+                )
+                .into())
+            }
+            Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => {
+                let mut equal_tos = Vec::with_capacity(s.equal_tos.len());
+                for obj in s.equal_tos.iter() {
+                    equal_tos.push(self.inst_obj(
+                        obj,
+                        param_to_arg_map,
+                        ParamObjType::DefHeader,
+                    )?);
+                }
+                let exist_fact = self.inst_exist_fact(
+                    &s.exist_fact_in_witness,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file),
+                )?;
+                let proof =
+                    self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
+                Ok(WitnessExistFact::new(equal_tos, exist_fact, proof, line_file.clone()).into())
+            }
+            Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => {
+                let obj = self.inst_obj(&s.obj, param_to_arg_map, ParamObjType::DefHeader)?;
+                let set = self.inst_obj(&s.set, param_to_arg_map, ParamObjType::DefHeader)?;
+                let proof =
+                    self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
+                Ok(WitnessNonemptySet::new(obj, set, proof, line_file.clone()).into())
             }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 let fact = self.inst_fact(

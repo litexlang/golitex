@@ -18,9 +18,10 @@ Litex is experimental research software. It is not ready for mission-critical wo
 
 </div>
 
-Litex is a readable, fact-oriented language for checked mathematics. Write
-familiar objects, definitions, and mathematical facts; Litex checks each line
-against the context that came before it and records why that line was accepted.
+> Litex: a formal language in readable, fact-oriented, set-theory-based
+> checked mathematics—with a minimal vocabulary of ubiquitous
+> mathematical objects, LaTeX-like notation, pattern-matching fact
+> invocation, and one fact-first verification workflow.
 
 ## Start with one checked fact
 

@@ -746,6 +746,24 @@ fn mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
 }
 
 impl ForallFact {
+    pub(crate) fn forall_param_coverage_for_then_clause(
+        &self,
+        then_fact: &ExistOrAndChainAtomicFact,
+    ) -> HashMap<IdentifierName, bool> {
+        let mut coverage_by_forall_param = HashMap::new();
+        for param_name in self.params_def_with_type.collect_param_names() {
+            coverage_by_forall_param.insert(param_name, false);
+        }
+        for dom_fact in self.dom_facts.iter() {
+            mark_forall_param_coverage_in_fact(dom_fact, &mut coverage_by_forall_param);
+        }
+        mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
+            then_fact,
+            &mut coverage_by_forall_param,
+        );
+        coverage_by_forall_param
+    }
+
     pub fn error_messages_if_forall_param_missing_in_some_then_clause(
         &self,
     ) -> Vec<(usize, String)> {
@@ -757,17 +775,7 @@ impl ForallFact {
         let mut then_index: usize = 0;
         while then_index < self.then_facts.len() {
             let then_fact = &self.then_facts[then_index];
-            let mut coverage_by_forall_param: HashMap<IdentifierName, bool> = HashMap::new();
-            for param_name in forall_param_names.iter() {
-                coverage_by_forall_param.insert(param_name.clone(), false);
-            }
-            for dom_fact in self.dom_facts.iter() {
-                mark_forall_param_coverage_in_fact(dom_fact, &mut coverage_by_forall_param);
-            }
-            mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
-                then_fact,
-                &mut coverage_by_forall_param,
-            );
+            let coverage_by_forall_param = self.forall_param_coverage_for_then_clause(then_fact);
             let mut missing_param_names = Vec::new();
             for param_name in forall_param_names.iter() {
                 let is_mentioned_in_then_clause = match coverage_by_forall_param.get(param_name) {
