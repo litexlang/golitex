@@ -1,0 +1,14 @@
+have fn s(x R: x > 0) R = x
+
+s(1) = s(1)
+
+forall x R:
+    x > 0
+    =>:
+        s(x) = s(x)
+
+forall x R:
+    x = -1
+    x > 0
+    =>:
+        s(-1) = s(-1)
