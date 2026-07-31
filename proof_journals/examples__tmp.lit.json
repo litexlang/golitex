@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "target": "examples/tmp.lit",
+  "session_command": "target/release/litex -compact -session -before examples/tmp.lit",
+  "proof_spine": [
+    "Define s on the positive real domain.",
+    "Check reflexivity only after the function application is well-defined.",
+    "Expose the positivity hypothesis explicitly for a symbolic argument."
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Define s on positive real arguments.",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "have fn s(x R: x > 0) R = x",
+          "result": "accepted",
+          "verifier_evidence": "session block B001 returned ok=true",
+          "diagnosis": "",
+          "next_change": ""
+        }
+      ],
+      "accepted_litex": "have fn s(x R: x > 0) R = x",
+      "reusable_lesson": "A restricted Litex function keeps its admissibility fact in the parameter binder.",
+      "status": "materialized"
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "intent": "Check reflexivity at a concrete argument whose positivity is automatic.",
+      "dependencies": [
+        "B001: s"
+      ],
+      "attempts": [
+        {
+          "candidate": "s(1) = s(1)",
+          "result": "accepted",
+          "verifier_evidence": "session block B002 returned ok=true",
+          "diagnosis": "",
+          "next_change": ""
+        }
+      ],
+      "accepted_litex": "s(1) = s(1)",
+      "reusable_lesson": "Reflexivity succeeds only after Litex proves each function call satisfies its domain condition.",
+      "status": "materialized"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "intent": "Make the domain evidence explicit for a symbolic real argument.",
+      "dependencies": [
+        "B001: s"
+      ],
+      "attempts": [
+        {
+          "candidate": "forall x R:\n    x > 0\n    =>:\n        s(x) = s(x)",
+          "result": "accepted",
+          "verifier_evidence": "session block B003 returned ok=true",
+          "diagnosis": "",
+          "next_change": ""
+        }
+      ],
+      "accepted_litex": "forall x R:\n    x > 0\n    =>:\n        s(x) = s(x)",
+      "reusable_lesson": "Place a function's domain condition before `=>:` so the call is checked under that hypothesis.",
+      "status": "materialized"
+    },
+    {
+      "id": "B004",
+      "source_order": 4,
+      "intent": "Compare a direct negative call with the same call under an explicit domain hypothesis.",
+      "dependencies": [
+        "B001: s"
+      ],
+      "attempts": [
+        {
+          "candidate": "s(-1) = s(-1)",
+          "result": "failed",
+          "verifier_evidence": "verify_well_definedness error: failed to verify function domain fact `-1 * 1 > 0`",
+          "diagnosis": "The term `s(-1)` is not well-defined, so equality verification never runs.",
+          "next_change": "State the call only under an explicit positivity hypothesis."
+        },
+        {
+          "candidate": "forall x R:\n    x = -1\n    x > 0\n    =>:\n        s(-1) = s(-1)",
+          "result": "accepted",
+          "verifier_evidence": "session block B005 returned ok=true",
+          "diagnosis": "",
+          "next_change": ""
+        }
+      ],
+      "accepted_litex": "forall x R:\n    x = -1\n    x > 0\n    =>:\n        s(-1) = s(-1)",
+      "reusable_lesson": "Reflexivity does not bypass domain checking; an otherwise invalid call is meaningful only inside a scope that explicitly assumes its domain fact.",
+      "status": "materialized"
+    }
+  ],
+  "session_notes": [
+    {
+      "command": "target/release/litex -compact -session -before examples/tmp.lit",
+      "result": "failed",
+      "evidence": "`-session -before` requires a litex.config in the target file's folder",
+      "classification": "kernel_problem",
+      "fallback": "Used one isolated persistent `-session` process because examples/tmp.lit is intentionally standalone."
+    }
+  ],
+  "materialization": {
+    "block_ids": [
+      "B001",
+      "B002",
+      "B003",
+      "B004"
+    ],
+    "file_gate_command": "target/release/litex -compact -isolated -f examples/tmp.lit",
+    "file_gate_result": "success: all four materialized blocks verified"
+  }
+}
