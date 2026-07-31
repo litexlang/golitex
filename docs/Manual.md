@@ -114,6 +114,12 @@ sqrt(4) = 2
 | `2`, `3.5` | Exact numeric literal |
 | `e`, `pi` | Native Euler and circle constants |
 | `gcd(a, b)` | Native positive greatest common divisor for integer arguments, with `a != 0 or b != 0` |
+| `lcm(a, b)` | Native nonnegative least common multiple for integer arguments; `lcm(0, 0) = 0` |
+| `floor(a)`, `ceil(a)` | Native integer floor and ceiling of a real argument |
+| `min(a, b)`, `max(a, b)` | Native binary minimum and maximum of real arguments |
+| `exp(a)`, `ln(a)` | Native real exponential and natural logarithm |
+| `sign(a)` | Native real sign function with values `-1`, `0`, and `1` |
+| `factorial(n)` | Native natural-number factorial |
 | `a + b`, `a - b`, `a * b`, `a / b` | Arithmetic operations |
 | `a % b` | Euclidean integer remainder |
 | `a^b` | Exponentiation |
@@ -127,6 +133,86 @@ Concrete gcd calls normalize inside ordinary facts, so
 ordinary arithmetic. Write `eval gcd(54, -24)` when an explicit evaluation
 statement is the intended presentation. Signs do not affect the positive
 result. The pair `(0, 0)` is intentionally outside the object's domain.
+
+Native `lcm`, integer rounding, and binary extrema likewise normalize exact
+numeric inputs:
+
+```litex
+lcm(12, -18) = 36
+lcm(0, 0) = 0
+floor(3.75) = 3
+floor(-3.75) = -4
+ceil(3.25) = 4
+min(7, -2) = -2
+max(7, -2) = 7
+```
+
+Their symbolic core is intentionally small. Floor and ceiling return integers
+and expose their characteristic bounds; `min` and `max` expose their two
+argument bounds and select an argument once its order is known. For
+non-all-zero integer pairs, `lcm(a, b) * gcd(a, b) = abs(a * b)`.
+
+```litex
+forall x R:
+    floor(x) $in Z
+    ceil(x) $in Z
+    floor(x) <= x
+    x < floor(x) + 1
+    ceil(x) - 1 < x
+    x <= ceil(x)
+
+forall a, b R:
+    a <= b
+    =>:
+        min(a, b) = a
+        max(a, b) = b
+```
+
+The five names are hard-reserved. LaTeX uses the conventional floor, ceiling,
+minimum, maximum, and least-common-multiple notation. Python extraction uses
+`math.floor`, `math.ceil`, `min`, `max`, and `math.lcm`; Lean extraction uses
+the corresponding Mathlib integer-rounding, order, and natural-lcm objects.
+
+The second native-function batch adds `exp`, `ln`, `sign`, and `factorial`.
+Their exact special values and finite integer calculations normalize directly:
+
+```litex
+exp(0) = 1
+ln(1) = 0
+sign(-9) = -1
+sign(0) = 0
+sign(2.5) = 1
+factorial(10) = 3628800
+```
+
+`exp` maps reals to positive reals. `ln` accepts positive real arguments and
+agrees with `log(e, x)`. The two functions expose their inverse and elementary
+algebra laws. Litex does not decimal-approximate transcendental values:
+`exp(2)` and `ln(2)` remain symbolic.
+
+```litex
+forall x R:
+    exp(x) $in R_pos
+    exp(x) = e^x
+    ln(exp(x)) = x
+
+forall x R:
+    x > 0
+    =>:
+        exp(ln(x)) = x
+        ln(x) = log(e, x)
+
+forall a, b R:
+    exp(a + b) = exp(a) * exp(b)
+```
+
+`sign` always returns an integer between `-1` and `1`, selects the expected
+value from comparison with zero, and satisfies `sign(x) * abs(x) = x`.
+`factorial` accepts `N`, returns `N_pos`, and exposes the successor recurrence
+`factorial(n + 1) = (n + 1) * factorial(n)`. All four names are hard-reserved.
+Python extraction uses `math.exp`, `math.log`, a conditional sign expression,
+and `math.factorial`; Lean extraction uses the corresponding `Real`/`Nat`
+objects.
 
 The parser does not make an invalid expression meaningful:
 
@@ -651,6 +737,13 @@ Every row also requires its subobjects to be well-defined.
 | `a^b` | One of Litex's supported real/integer power-domain combinations holds. |
 | `sqrt(a)` | `a $in R` and `0 <= a`. |
 | `log(base, a)` | Real arguments, `base > 0`, `a > 0`, and `base != 1`. |
+| `lcm(a, b)` | `a, b $in Z`. |
+| `floor(a)`, `ceil(a)` | `a $in R`. |
+| `min(a, b)`, `max(a, b)` | `a, b $in R`. |
+| `exp(a)` | `a $in R`. |
+| `ln(a)` | `a $in R` and `a > 0`. |
+| `sign(a)` | `a $in R`. |
+| `factorial(n)` | `n $in N`. |
 | `finite_set_size(S)` | `S` is finite. |
 | `finite_set_max(S)`, `finite_set_min(S)` | `S` is finite, nonempty, and real-valued. |
 | A set operation | Its operands have the required set or family-of-sets shape. |
@@ -1487,7 +1580,7 @@ explanation; this index does not repeat its examples.
 
 | Family | Forms | Canonical section |
 |---|---|---|
-| Names and arithmetic | names, literals, `+ - * / % ^`, `abs`, `sqrt`, `log` | [Names, numbers, and arithmetic](#names-numbers-and-arithmetic) |
+| Names and arithmetic | names, literals, `+ - * / % ^`, `abs`, `sqrt`, `log`, `gcd`, `lcm`, `floor`, `ceil`, `min`, `max`, `exp`, `ln`, `sign`, `factorial` | [Names, numbers, and arithmetic](#names-numbers-and-arithmetic) |
 | Sets | standard number sets, displays, builders, union/intersection/differences, power set, replacement, general product | [Sets and set-forming objects](#sets-and-set-forming-objects) |
 | Functions | `fn`, anonymous functions, application, `fn_range` | [Functions, application, and range](#functions-application-and-range) |
 | Structured data | `cart`, `proj`, tuples, sequences, matrices, indexing | [Products, tuples, sequences, and matrices](#products-tuples-sequences-and-matrices) |
@@ -2346,6 +2439,8 @@ change:
 - native complex scalars `C`, `i`, `re`, `img`, and `C_abs`;
 - native positive real constants `e` and `pi`;
 - native symbolic real trigonometry `sin`, `cos`, `tan`, and `cot`;
+- native `floor`, `ceil`, binary `min`/`max`, and integer `lcm`;
+- native real `exp`/`ln`, real `sign`, and natural `factorial`;
 - compact strict-sign suffixes such as `N+` and `R-`;
 - `struct`, struct view objects, and default-view field access;
 - proper subset and proper superset relations;
@@ -2378,7 +2473,6 @@ its builtin rules into a separately verified small kernel.
 |---|---|
 | `alias prop new <=> old` | Define a concrete `prop` explicitly. |
 | `lemma name:` | Use `thm name:`. |
-| `max(a, b)`, `min(a, b)` | No current builtin objects; use an explicit definition when needed. |
 | `by struct` | Not part of the current struct surface. |
 | Bare template instance `T<A>` | Current syntax is `\T<A>`. |
 | `[requires]`, `[run]` | Project dependencies and order come from imports and ordered exports. |

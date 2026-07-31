@@ -830,6 +830,13 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Div(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Mod(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Gcd(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
+        Obj::Lcm(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
+        Obj::Min(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
+        Obj::Max(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
+        Obj::Exp(x) => collect_module_names_from_obj(&x.arg, module_names),
+        Obj::Ln(x) => collect_module_names_from_obj(&x.arg, module_names),
+        Obj::Sign(x) => collect_module_names_from_obj(&x.arg, module_names),
+        Obj::Factorial(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::Pow(x) => collect_module_names_from_two(&x.base, &x.exponent, module_names),
         Obj::RealPart(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::ImaginaryPart(x) => collect_module_names_from_obj(&x.arg, module_names),
@@ -876,6 +883,8 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
             collect_module_names_from_obj(&x.func, module_names);
         }
         Obj::Abs(x) => collect_module_names_from_obj(&x.arg, module_names),
+        Obj::Floor(x) => collect_module_names_from_obj(&x.arg, module_names),
+        Obj::Ceil(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::Sin(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::Cos(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::Tan(x) => collect_module_names_from_obj(&x.arg, module_names),

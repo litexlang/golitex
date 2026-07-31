@@ -89,6 +89,14 @@ impl Runtime {
         {
             return Ok(StmtUnknown::new().into());
         }
+        if let Some(result) = self.try_verify_native_rounding_extrema_order(atomic_fact) {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_native_exp_sign_factorial_order(atomic_fact, verify_state)?
+        {
+            return Ok(result);
+        }
         if let Some(result) = try_verify_native_real_constant_positive(atomic_fact) {
             return Ok(result);
         }
@@ -443,8 +451,8 @@ impl Runtime {
     }
 }
 
-// Euler's number and pi are primitive positive real constants.
-// Example: `0 < e` and `pi > 0`.
+// Euler's number and pi are primitive positive real constants, and e is greater than one.
+// Example: `0 < e`, `pi > 0`, and `e > 1`.
 fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<StmtResult> {
     let is_zero = |obj: &Obj| {
         matches!(
@@ -453,12 +461,21 @@ fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<
         )
     };
     let is_native_positive_constant = |obj: &Obj| matches!(obj, Obj::EulerNumber(_) | Obj::Pi(_));
+    let is_one = |obj: &Obj| {
+        matches!(
+            obj,
+            Obj::Number(number) if number.normalized_value == "1"
+        )
+    };
+    let is_e = |obj: &Obj| matches!(obj, Obj::EulerNumber(_));
     let applies = match atomic_fact {
         AtomicFact::LessFact(fact) => {
-            is_zero(&fact.left) && is_native_positive_constant(&fact.right)
+            (is_zero(&fact.left) && is_native_positive_constant(&fact.right))
+                || (is_one(&fact.left) && is_e(&fact.right))
         }
         AtomicFact::GreaterFact(fact) => {
-            is_native_positive_constant(&fact.left) && is_zero(&fact.right)
+            (is_native_positive_constant(&fact.left) && is_zero(&fact.right))
+                || (is_e(&fact.left) && is_one(&fact.right))
         }
         _ => false,
     };
@@ -468,7 +485,7 @@ fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<
     Some(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             atomic_fact.clone().into(),
-            "native mathematical constant is positive".to_string(),
+            "native mathematical constant positivity bound".to_string(),
             Vec::new(),
         )
         .into(),

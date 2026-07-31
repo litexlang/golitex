@@ -531,6 +531,36 @@ its domain, or writing `1 / 0`.
 
 In Lean, the user often chooses the step explicitly: rewrite with this hypothesis, simplify this definition, apply this theorem, run this tactic. This gives very fine control and scales to deep formal developments. Litex chooses a different default for ordinary mathematics: many routine proof paths are tried by the checker.
 
+### Conceptual Verification Correspondence
+
+The following table compares verification responsibilities, not surface syntax
+or compiler stages. It is not a claim that every Litex verification route has a
+single corresponding Lean primitive, nor is it a list of features supported by
+the current Litex-to-Lean compiler. On the Lean side, elaboration, tactics, and
+library theorems may construct a proof term; Lean's kernel then checks that
+term.
+
+| Litex verification route | Conceptual Lean counterpart |
+| --- | --- |
+| well-definedness | elaboration and type checking; subtype or dependent-type proof obligations; termination checking for recursive definitions |
+| builtin rule | application of a Mathlib theorem, or generation of another proof term checked by Lean |
+| direct match with the same known atomic fact | a local hypothesis or theorem used by `exact` or `assumption` |
+| equality-compatible matching and substitution | equality transport or rewriting, such as `rw`, `subst`, `Eq.mp`, or `Eq.rec` |
+| use of a `prop` definition | definition unfolding or an explicit fold/unfold theorem, often exposed through `rw` or `simp` |
+| instantiation of a known `forall` fact | theorem application, treating a universal proof as a function, such as `h a` |
+| witness | construction of an existential proof, such as `Exists.intro witness proof` |
+| conjunction | construction of both components, such as `And.intro hp hq` |
+| cases | elimination of a disjunction or another inductive value, such as `Or.elim` or an inductive recursor |
+| contradiction | construction of the target from `False`, such as `False.elim` |
+| strategy | a Lean tactic or macro that must ultimately elaborate to a proof term |
+
+Likewise, storing a verified Litex fact in the current context corresponds
+conceptually to extending a Lean local context with a proof `h : P`. If the fact
+is intended to remain available globally, the closer Lean counterpart is a
+named theorem declaration. Litex additionally indexes, matches, and infers from
+stored facts automatically, so its runtime environment is not identical to a
+Lean local context.
+
 ### Less IDE-Centered Proof Writing
 
 Lean's editor support is one of its strengths. In ordinary Lean development,
@@ -1104,6 +1134,75 @@ Litex source
   -> emit named Lean theorems
   -> ask Lean and Mathlib to check the generated file
 ```
+
+### Chosen Contract: Faithful Materialization
+
+The intended correctness-oriented backend should faithfully materialize the
+verified execution, rather than merely ask Lean to rediscover the final result.
+Every source fact and every inferred fact stored by Litex should appear as a
+Lean declaration or local `have`. Later facts should refer to those generated
+proofs explicitly:
+
+```lean
+have haA : a ∈ A := ...
+have hAB : A ⊆ B := ...
+have haB : a ∈ B := hAB haA
+```
+
+This output is deliberately verbose. Its primary purpose is not to produce
+small, idiomatic Lean source; it is to provide an independently checked,
+human-readable audit of what the Litex verifier did. A reader can inspect the
+Lean proof for each individual fact and the proof-term connection between
+facts. If either a fact or a dependency edge is invalid, Lean rejects the
+generated file at a local, identifiable point.
+
+The faithful artifact should preserve:
+
+- every accepted source fact;
+- every inferred fact added to the Litex environment, including unused ones;
+- the rule and earlier facts used to justify each generated proof;
+- lexical scope, assumptions, witnesses, branches, and contradiction scopes;
+- stable source, fact, rule, and dependency IDs linking Litex output to Lean.
+
+An optimized dependency slice may eventually be useful as a secondary export,
+but it should not replace the full artifact used for correctness auditing.
+Generated size is an acceptable cost for that artifact because the aim is
+transparency and independent checking, not handwritten-code quality.
+
+There are several other possible correspondence designs:
+
+| Design | What Lean checks | Limitation for the Litex audit |
+| --- | --- | --- |
+| final-result-only export | one final theorem | does not expose intermediate inference or environment changes |
+| statement reconstruction | each source statement is translated, then Lean tactics rediscover a proof | checks the translated claims but not the proof route taken by Litex |
+| used dependency slice | only inferred facts needed by a later result are emitted | omits successful verifier actions and facts that happened not to be used |
+| faithful materialization | every stored source and inferred fact, with explicit dependencies | chosen design; larger output |
+| structured proof-certificate replay | Lean checks a machine-readable Litex trace with a small certificate checker | a useful future implementation of faithful materialization, but requires a stable trace schema and a reviewed checker |
+| deep semantic embedding | Litex syntax, environments, rules, and execution are defined in Lean and the verifier is related to that model | strongest route toward a general soundness theorem, but a substantially larger formalization project |
+
+These designs are not all mutually exclusive. The compiler can emit readable
+`have` blocks from a structured proof certificate, while a feature-conformance
+suite checks each Rust verifier rule against a small generated Lean example.
+The correspondence can then be tested at several levels:
+
+1. **Representation:** each supported Litex object and proposition lowers to
+   the intended Lean type and proposition.
+2. **Local rule:** each builtin, matching, substitution, definition, or
+   quantifier rule produces a Lean-checkable proof term.
+3. **Dependency edge:** each inferred fact refers to the exact earlier facts
+   that justify it.
+4. **Environment transition:** facts enter and leave scope in Lean where they
+   enter and leave the Litex environment.
+5. **Whole execution:** the complete generated file checks without `sorry`,
+   `admit`, or generated axioms.
+
+Passing all five levels gives strong executable evidence for each supported
+Litex run and makes disagreements locally auditable. It is still important not
+to overstate the result: checking generated traces does not by itself prove a
+universal soundness theorem about every Rust execution. Such a theorem would
+also require a formal semantics and a proof relating the implementation to it.
+The faithful Lean artifact instead certifies the particular materialized run,
+within the supported lowering and with every trust boundary disclosed.
 
 The following pairs show the current mapping. The examples omit the generated
 `import Mathlib` and namespace wrapper.

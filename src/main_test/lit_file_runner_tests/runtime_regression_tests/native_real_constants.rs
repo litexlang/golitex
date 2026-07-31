@@ -27,8 +27,10 @@ e $in C
 pi $in C
 0 < e
 pi > 0
+e > 1
 e != 0
 pi != 0
+e != 1
 e + pi $in R
 e * pi $in R
 1 / e $in R

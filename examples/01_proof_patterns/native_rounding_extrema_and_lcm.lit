@@ -1,0 +1,54 @@
+# Native integer rounding computes exact decimal inputs.
+floor(3.75) = 3
+floor(-3.75) = -4
+ceil(3.25) = 4
+ceil(-3.25) = -3
+
+# Binary extrema and lcm also normalize concrete inputs.
+min(7, -2) = -2
+max(7, -2) = 7
+lcm(12, -18) = 36
+lcm(0, 0) = 0
+
+# Native functions remain first-class objects.
+have fn apply_integer_map(f fn(t R) Z, x R) Z = f(x)
+apply_integer_map(fn(y R) Z {floor(y)}, 3.75) = 3
+
+# Symbolic objects expose their characteristic contracts.
+forall x R:
+    floor(x) $in Z
+    ceil(x) $in Z
+    floor(x) <= x
+    x < floor(x) + 1
+    ceil(x) - 1 < x
+    x <= ceil(x)
+
+forall n Z:
+    floor(n) = n
+    ceil(n) = n
+
+forall a, b R:
+    min(a, b) <= a
+    min(a, b) <= b
+    a <= max(a, b)
+    b <= max(a, b)
+
+forall a, b R:
+    a <= b
+    =>:
+        min(a, b) = a
+        max(a, b) = b
+
+forall a, b Z:
+    lcm(a, b) $in N
+
+forall a, b Z:
+    a != 0 or b != 0
+    =>:
+        lcm(a, b) * gcd(a, b) = abs(a * b)
+
+eval floor(-8.125)
+eval ceil(8.125)
+eval min(4, -9)
+eval max(4, -9)
+eval lcm(21, 6)

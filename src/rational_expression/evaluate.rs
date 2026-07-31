@@ -76,6 +76,49 @@ impl Obj {
                 gcd_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
                     .map(Number::new)
             }
+            Obj::Lcm(lcm) => {
+                let left = lcm.left.evaluate_to_normalized_decimal_number()?;
+                let right = lcm.right.evaluate_to_normalized_decimal_number()?;
+                lcm_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
+                    .map(Number::new)
+            }
+            Obj::Floor(floor) => {
+                let arg = floor.arg.evaluate_to_normalized_decimal_number()?;
+                Some(Number::new(floor_decimal_str(&arg.normalized_value)))
+            }
+            Obj::Ceil(ceil) => {
+                let arg = ceil.arg.evaluate_to_normalized_decimal_number()?;
+                Some(Number::new(ceil_decimal_str(&arg.normalized_value)))
+            }
+            Obj::Min(min) => {
+                evaluate_numeric_min_or_max(min.left.as_ref(), min.right.as_ref(), false)
+            }
+            Obj::Max(max) => {
+                evaluate_numeric_min_or_max(max.left.as_ref(), max.right.as_ref(), true)
+            }
+            Obj::Exp(exp) => {
+                let arg = exp.arg.evaluate_to_normalized_decimal_number()?;
+                (arg.normalized_value == "0").then(|| Number::new("1".to_string()))
+            }
+            Obj::Ln(ln) => {
+                let arg = ln.arg.evaluate_to_normalized_decimal_number()?;
+                (arg.normalized_value == "1").then(|| Number::new("0".to_string()))
+            }
+            Obj::Sign(sign) => {
+                let arg = sign.arg.evaluate_to_normalized_decimal_number()?;
+                let value = if arg.normalized_value == "0" {
+                    "0"
+                } else if arg.normalized_value.starts_with('-') {
+                    "-1"
+                } else {
+                    "1"
+                };
+                Some(Number::new(value.to_string()))
+            }
+            Obj::Factorial(factorial) => {
+                let arg = factorial.arg.evaluate_to_normalized_decimal_number()?;
+                factorial_decimal_str_and_normalize(&arg.normalized_value).map(Number::new)
+            }
             Obj::Pow(pow_obj) => {
                 let base_number = pow_obj.base.evaluate_to_normalized_decimal_number();
                 let exponent_number = pow_obj.exponent.evaluate_to_normalized_decimal_number();
@@ -205,6 +248,73 @@ pub fn gcd_decimal_str_and_normalize(left: &str, right: &str) -> Option<String> 
         b = remainder;
     }
     Some(a)
+}
+
+pub fn lcm_decimal_str_and_normalize(left: &str, right: &str) -> Option<String> {
+    let normalized_left = normalize_decimal_number_string(left);
+    let normalized_right = normalize_decimal_number_string(right);
+    if normalized_left.contains('.') || normalized_right.contains('.') {
+        return None;
+    }
+    if normalized_left == "0" || normalized_right == "0" {
+        return Some("0".to_string());
+    }
+    let gcd = gcd_decimal_str_and_normalize(&normalized_left, &normalized_right)?;
+    let quotient = safe_div(&normalized_left, &gcd)?;
+    let product = mul_signed_decimal_str(&quotient, &normalized_right);
+    Some(product.strip_prefix('-').unwrap_or(&product).to_string())
+}
+
+pub fn factorial_decimal_str_and_normalize(value: &str) -> Option<String> {
+    let normalized = normalize_decimal_number_string(value);
+    if normalized.starts_with('-') || normalized.contains('.') {
+        return None;
+    }
+    let n = normalized.parse::<usize>().ok()?;
+    let mut result = "1".to_string();
+    for factor in 2..=n {
+        result = mul_signed_decimal_str(&result, &factor.to_string());
+    }
+    Some(result)
+}
+
+fn floor_decimal_str(value: &str) -> String {
+    let normalized = normalize_decimal_number_string(value);
+    let Some((integer, fraction)) = normalized.split_once('.') else {
+        return normalized;
+    };
+    if normalized.starts_with('-') && fraction.bytes().any(|digit| digit != b'0') {
+        let magnitude = integer.strip_prefix('-').unwrap_or(integer);
+        return format!("-{}", add_decimal_str_and_normalize(magnitude, "1"));
+    }
+    integer.to_string()
+}
+
+fn ceil_decimal_str(value: &str) -> String {
+    let normalized = normalize_decimal_number_string(value);
+    let Some((integer, fraction)) = normalized.split_once('.') else {
+        return normalized;
+    };
+    if fraction.bytes().all(|digit| digit == b'0') {
+        return integer.to_string();
+    }
+    if normalized.starts_with('-') {
+        return integer.to_string();
+    }
+    add_decimal_str_and_normalize(integer, "1")
+}
+
+fn evaluate_numeric_min_or_max(left: &Obj, right: &Obj, take_maximum: bool) -> Option<Number> {
+    let left = left.evaluate_to_normalized_decimal_number()?;
+    let right = right.evaluate_to_normalized_decimal_number()?;
+    let difference =
+        sub_signed_decimal_str(right.normalized_value.trim(), left.normalized_value.trim());
+    let right_is_larger = !difference.trim().starts_with('-') && difference.trim() != "0";
+    if right_is_larger == take_maximum {
+        Some(right)
+    } else {
+        Some(left)
+    }
 }
 
 fn evaluate_nonempty_numeric_list_set(set: &Obj, take_maximum: bool) -> Option<Number> {

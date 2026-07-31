@@ -1,0 +1,83 @@
+# Exact special values and integer functions calculate natively.
+exp(0) = 1
+ln(1) = 0
+sign(-9) = -1
+sign(0) = 0
+sign(2.5) = 1
+factorial(10) = 3628800
+
+# The analytic functions expose their natural domains and identities.
+forall x R:
+    exp(x) $in R_pos
+    exp(x) > 0
+    exp(x) = e^x
+    ln(exp(x)) = x
+
+forall x R:
+    x > 0
+    =>:
+        ln(x) $in R
+        exp(ln(x)) = x
+        ln(x) = log(e, x)
+
+forall a, b R:
+    exp(a + b) = exp(a) * exp(b)
+    exp(a - b) = exp(a) / exp(b)
+
+forall a, b R:
+    a > 0
+    b > 0
+    =>:
+        ln(a * b) = ln(a) + ln(b)
+
+forall x R:
+    x > 1
+    =>:
+        ln(x) > 0
+
+forall x R:
+    x > 0
+    x < 1
+    =>:
+        ln(x) < 0
+
+# sign and factorial expose their characteristic algebra.
+forall x R:
+    sign(x) $in Z
+    -1 <= sign(x)
+    sign(x) <= 1
+    sign(x) * abs(x) = x
+
+forall x R:
+    x > 0
+    =>:
+        sign(x) = 1
+
+forall x R:
+    x = 0
+    =>:
+        sign(x) = 0
+
+forall x R:
+    x < 0
+    =>:
+        sign(x) = -1
+
+forall n N:
+    factorial(n) $in N_pos
+    factorial(n) >= 1
+    factorial(n + 1) = (n + 1) * factorial(n)
+
+forall n N:
+    n > 0
+    =>:
+        factorial(n) = n * factorial(n - 1)
+
+# Native objects remain usable inside first-class function literals.
+have fn apply_real_map(f fn(t R) R, x R) R = f(x)
+apply_real_map(fn(y R) R {exp(y)}, 0) = 1
+
+eval exp(0)
+eval ln(1)
+eval sign(-4.25)
+eval factorial(8)

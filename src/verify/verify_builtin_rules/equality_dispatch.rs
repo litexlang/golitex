@@ -46,6 +46,47 @@ impl Runtime {
                 "a product modulo either factor is zero",
             ));
         }
+        if let Some(result) =
+            self.try_verify_native_min_max_equality(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_rounding_integer_equality(
+            left,
+            right,
+            line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_native_lcm_gcd_product_equality(left, right, line_file.clone())
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_exp_ln_identity(left, right, line_file.clone())
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_exp_ln_algebra(left, right, line_file.clone())
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_native_sign_value(left, right, line_file.clone(), verify_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_native_sign_abs_identity(left, right, line_file.clone())
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_native_factorial_recurrence(left, right, line_file.clone())
+        {
+            return Ok(result);
+        }
         if let Some(result) = self.try_verify_equal_by_same_shape_and_known_equality_args(
             left,
             right,

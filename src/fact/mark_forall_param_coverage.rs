@@ -142,6 +142,18 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
         }
+        Obj::Lcm(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Min(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Max(binary) => {
+            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
+            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
+        }
         Obj::Pow(binary) => {
             mark_forall_param_coverage_in_obj(binary.base.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.exponent.as_ref(), coverage_by_forall_param);
@@ -167,6 +179,24 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(binary.exponent.as_ref(), coverage_by_forall_param);
         }
         Obj::Abs(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Floor(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Ceil(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Exp(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Ln(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Sign(unary) => {
+            mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
+        }
+        Obj::Factorial(unary) => {
             mark_forall_param_coverage_in_obj(unary.arg.as_ref(), coverage_by_forall_param);
         }
         Obj::Sin(unary) => {

@@ -624,21 +624,28 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Abs::new(arg).into());
         }
-        if tok == GCD {
+        if tok == GCD || tok == LCM || tok == MIN || tok == MAX {
+            let operator = tok.to_string();
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 2 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "gcd expects 2 arguments".to_string(),
+                        format!("{operator} expects 2 arguments"),
                         tb.line_file.clone(),
                     ),
                 )));
             }
             let mut args = args.into_iter();
-            let left = args.next().expect("gcd arity was checked");
-            let right = args.next().expect("gcd arity was checked");
-            return Ok(Gcd::new(left, right).into());
+            let left = args.next().expect("native binary arity was checked");
+            let right = args.next().expect("native binary arity was checked");
+            return Ok(match operator.as_str() {
+                GCD => Gcd::new(left, right).into(),
+                LCM => Lcm::new(left, right).into(),
+                MIN => Min::new(left, right).into(),
+                MAX => Max::new(left, right).into(),
+                _ => unreachable!(),
+            });
         }
         if tok == SIN || tok == COS || tok == TAN || tok == COT {
             let operator = tok.to_string();
@@ -660,6 +667,32 @@ impl Runtime {
             let arg = self.parse_obj(tb)?;
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(Sqrt::new(arg).into());
+        }
+        if tok == FLOOR || tok == CEIL {
+            let operator = tok.to_string();
+            tb.skip()?;
+            tb.skip_token(LEFT_BRACE)?;
+            let arg = self.parse_obj(tb)?;
+            tb.skip_token(RIGHT_BRACE)?;
+            return Ok(if operator == FLOOR {
+                Floor::new(arg).into()
+            } else {
+                Ceil::new(arg).into()
+            });
+        }
+        if tok == EXP || tok == LN || tok == SIGN || tok == FACTORIAL {
+            let operator = tok.to_string();
+            tb.skip()?;
+            tb.skip_token(LEFT_BRACE)?;
+            let arg = self.parse_obj(tb)?;
+            tb.skip_token(RIGHT_BRACE)?;
+            return Ok(match operator.as_str() {
+                EXP => Exp::new(arg).into(),
+                LN => Ln::new(arg).into(),
+                SIGN => Sign::new(arg).into(),
+                FACTORIAL => Factorial::new(arg).into(),
+                _ => unreachable!(),
+            });
         }
         if tok == LOG {
             tb.skip()?;

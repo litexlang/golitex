@@ -31,6 +31,15 @@ impl Runtime {
                 | Obj::Div(_)
                 | Obj::Pow(_)
                 | Obj::Gcd(_)
+                | Obj::Lcm(_)
+                | Obj::Floor(_)
+                | Obj::Ceil(_)
+                | Obj::Min(_)
+                | Obj::Max(_)
+                | Obj::Exp(_)
+                | Obj::Ln(_)
+                | Obj::Sign(_)
+                | Obj::Factorial(_)
                 | Obj::FiniteSetMax(_)
                 | Obj::FiniteSetMin(_)
                 | Obj::Sum(_)
@@ -139,6 +148,81 @@ impl Runtime {
                 )?;
                 Ok(Gcd::new(left, right).into())
             }
+            Obj::Lcm(x) => {
+                let left = self.eval_reduce_nested_sum_product_in_obj(
+                    (*x.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let right = self.eval_reduce_nested_sum_product_in_obj(
+                    (*x.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                Ok(Lcm::new(left, right).into())
+            }
+            Obj::Floor(x) => Ok(Floor::new(self.eval_reduce_nested_sum_product_in_obj(
+                (*x.arg).clone(),
+                eval_stmt,
+                active_fn_calls,
+            )?)
+            .into()),
+            Obj::Ceil(x) => Ok(Ceil::new(self.eval_reduce_nested_sum_product_in_obj(
+                (*x.arg).clone(),
+                eval_stmt,
+                active_fn_calls,
+            )?)
+            .into()),
+            Obj::Min(x) => {
+                let left = self.eval_reduce_nested_sum_product_in_obj(
+                    (*x.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let right = self.eval_reduce_nested_sum_product_in_obj(
+                    (*x.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                Ok(Min::new(left, right).into())
+            }
+            Obj::Max(x) => {
+                let left = self.eval_reduce_nested_sum_product_in_obj(
+                    (*x.left).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                let right = self.eval_reduce_nested_sum_product_in_obj(
+                    (*x.right).clone(),
+                    eval_stmt,
+                    active_fn_calls,
+                )?;
+                Ok(Max::new(left, right).into())
+            }
+            Obj::Exp(x) => Ok(Exp::new(self.eval_reduce_nested_sum_product_in_obj(
+                (*x.arg).clone(),
+                eval_stmt,
+                active_fn_calls,
+            )?)
+            .into()),
+            Obj::Ln(x) => Ok(Ln::new(self.eval_reduce_nested_sum_product_in_obj(
+                (*x.arg).clone(),
+                eval_stmt,
+                active_fn_calls,
+            )?)
+            .into()),
+            Obj::Sign(x) => Ok(Sign::new(self.eval_reduce_nested_sum_product_in_obj(
+                (*x.arg).clone(),
+                eval_stmt,
+                active_fn_calls,
+            )?)
+            .into()),
+            Obj::Factorial(x) => Ok(Factorial::new(self.eval_reduce_nested_sum_product_in_obj(
+                (*x.arg).clone(),
+                eval_stmt,
+                active_fn_calls,
+            )?)
+            .into()),
             Obj::Div(b) => {
                 let l = self.eval_reduce_nested_sum_product_in_obj(
                     (*b.left).clone(),
@@ -748,10 +832,12 @@ impl Runtime {
                     vec![],
                 ));
             }
-            if cur.contains_native_transcendental_syntax() {
+            if cur.contains_native_transcendental_syntax()
+                && cur.evaluate_to_normalized_decimal_number().is_none()
+            {
                 return Err(short_exec_error(
                     eval_stmt.clone().into(),
-                    "eval: native transcendental symbols are symbolic and are not supported by the evaluator (e, pi, sin, cos, tan, and cot)"
+                    "eval: native transcendental symbols are symbolic when non-exact (e, pi, sin, cos, tan, cot, exp, and ln)"
                         .to_string(),
                     None,
                     vec![],
@@ -844,6 +930,179 @@ impl Runtime {
                             None,
                             vec![],
                         ));
+                    };
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        value,
+                        &mut pending,
+                        eval_stmt,
+                        active_fn_calls,
+                    );
+                }
+                Obj::Lcm(x) => {
+                    let left = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.left).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let right = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.right).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let combined: Obj = Lcm::new(left, right).into();
+                    let Some(value) = Self::evaluate_numeric_obj_for_eval(&combined) else {
+                        return Err(short_exec_error(
+                            eval_stmt.clone().into(),
+                            "eval: lcm arguments must resolve to integers".to_string(),
+                            None,
+                            vec![],
+                        ));
+                    };
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        value,
+                        &mut pending,
+                        eval_stmt,
+                        active_fn_calls,
+                    );
+                }
+                Obj::Floor(x) => {
+                    let arg = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.arg).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let combined: Obj = Floor::new(arg).into();
+                    let Some(value) = Self::evaluate_numeric_obj_for_eval(&combined) else {
+                        return Ok(combined);
+                    };
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        value,
+                        &mut pending,
+                        eval_stmt,
+                        active_fn_calls,
+                    );
+                }
+                Obj::Ceil(x) => {
+                    let arg = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.arg).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let combined: Obj = Ceil::new(arg).into();
+                    let Some(value) = Self::evaluate_numeric_obj_for_eval(&combined) else {
+                        return Ok(combined);
+                    };
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        value,
+                        &mut pending,
+                        eval_stmt,
+                        active_fn_calls,
+                    );
+                }
+                Obj::Min(x) => {
+                    let left = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.left).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let right = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.right).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let combined: Obj = Min::new(left, right).into();
+                    let Some(value) = Self::evaluate_numeric_obj_for_eval(&combined) else {
+                        return Ok(combined);
+                    };
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        value,
+                        &mut pending,
+                        eval_stmt,
+                        active_fn_calls,
+                    );
+                }
+                Obj::Max(x) => {
+                    let left = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.left).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let right = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.right).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let combined: Obj = Max::new(left, right).into();
+                    let Some(value) = Self::evaluate_numeric_obj_for_eval(&combined) else {
+                        return Ok(combined);
+                    };
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        value,
+                        &mut pending,
+                        eval_stmt,
+                        active_fn_calls,
+                    );
+                }
+                Obj::Exp(x) => {
+                    let arg = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.arg).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let combined: Obj = Exp::new(arg).into();
+                    let Some(value) = Self::evaluate_numeric_obj_for_eval(&combined) else {
+                        return Ok(combined);
+                    };
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        value,
+                        &mut pending,
+                        eval_stmt,
+                        active_fn_calls,
+                    );
+                }
+                Obj::Ln(x) => {
+                    let arg = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.arg).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let combined: Obj = Ln::new(arg).into();
+                    let Some(value) = Self::evaluate_numeric_obj_for_eval(&combined) else {
+                        return Ok(combined);
+                    };
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        value,
+                        &mut pending,
+                        eval_stmt,
+                        active_fn_calls,
+                    );
+                }
+                Obj::Sign(x) => {
+                    let arg = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.arg).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let combined: Obj = Sign::new(arg).into();
+                    let Some(value) = Self::evaluate_numeric_obj_for_eval(&combined) else {
+                        return Ok(combined);
+                    };
+                    return self.finish_numeric_accumulator_with_pending_rights(
+                        value,
+                        &mut pending,
+                        eval_stmt,
+                        active_fn_calls,
+                    );
+                }
+                Obj::Factorial(x) => {
+                    let arg = self.evaluate_symbol_obj_iterative_with_active(
+                        (*x.arg).clone(),
+                        eval_stmt,
+                        active_fn_calls,
+                    )?;
+                    let combined: Obj = Factorial::new(arg).into();
+                    let Some(value) = Self::evaluate_numeric_obj_for_eval(&combined) else {
+                        return Ok(combined);
                     };
                     return self.finish_numeric_accumulator_with_pending_rights(
                         value,
@@ -1504,10 +1763,15 @@ impl Runtime {
                 vec![],
             ));
         }
-        if stmt.obj_to_eval.contains_native_transcendental_syntax() {
+        if stmt.obj_to_eval.contains_native_transcendental_syntax()
+            && stmt
+                .obj_to_eval
+                .evaluate_to_normalized_decimal_number()
+                .is_none()
+        {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "eval: native transcendental symbols are symbolic and are not supported by the evaluator (e, pi, sin, cos, tan, and cot)"
+                "eval: native transcendental symbols are symbolic when non-exact (e, pi, sin, cos, tan, cot, exp, and ln)"
                     .to_string(),
                 None,
                 vec![],
@@ -1527,10 +1791,14 @@ impl Runtime {
                 vec![],
             ));
         }
-        if executable_obj.contains_native_transcendental_syntax() {
+        if executable_obj.contains_native_transcendental_syntax()
+            && executable_obj
+                .evaluate_to_normalized_decimal_number()
+                .is_none()
+        {
             return Err(short_exec_error(
                 stmt.clone().into(),
-                "eval: native transcendental symbols are symbolic and are not supported by the evaluator (e, pi, sin, cos, tan, and cot)"
+                "eval: native transcendental symbols are symbolic when non-exact (e, pi, sin, cos, tan, cot, exp, and ln)"
                     .to_string(),
                 None,
                 vec![],

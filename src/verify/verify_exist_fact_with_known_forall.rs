@@ -257,6 +257,21 @@ impl Runtime {
                 x.right.as_ref(),
                 names,
             ),
+            Obj::Lcm(x) => Self::obj_pair_depends_on_given_exist_param(
+                x.left.as_ref(),
+                x.right.as_ref(),
+                names,
+            ),
+            Obj::Min(x) => Self::obj_pair_depends_on_given_exist_param(
+                x.left.as_ref(),
+                x.right.as_ref(),
+                names,
+            ),
+            Obj::Max(x) => Self::obj_pair_depends_on_given_exist_param(
+                x.left.as_ref(),
+                x.right.as_ref(),
+                names,
+            ),
             Obj::Pow(x) => Self::obj_pair_depends_on_given_exist_param(
                 x.base.as_ref(),
                 x.exponent.as_ref(),
@@ -310,6 +325,10 @@ impl Runtime {
             Obj::Log(x) => {
                 Self::obj_pair_depends_on_given_exist_param(x.base.as_ref(), x.arg.as_ref(), names)
             }
+            Obj::Exp(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Ln(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Sign(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Factorial(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Range(x) => {
                 Self::obj_pair_depends_on_given_exist_param(x.start.as_ref(), x.end.as_ref(), names)
             }
@@ -337,6 +356,8 @@ impl Runtime {
                 Self::obj_pair_depends_on_given_exist_param(x.obj.as_ref(), x.index.as_ref(), names)
             }
             Obj::Abs(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Floor(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
+            Obj::Ceil(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Sin(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Cos(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),
             Obj::Tan(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), names),

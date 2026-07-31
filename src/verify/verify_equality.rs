@@ -598,6 +598,33 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
+            (Obj::Lcm(left), Obj::Lcm(right)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left.left,
+                    &left.right,
+                    &right.left,
+                    &right.right,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Min(left), Obj::Min(right)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left.left,
+                    &left.right,
+                    &right.left,
+                    &right.right,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Max(left), Obj::Max(right)) => self
+                .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
+                    &left.left,
+                    &left.right,
+                    &right.left,
+                    &right.right,
+                    verify_state,
+                    equality_line_file,
+                ),
             (Obj::Pow(left_pow), Obj::Pow(right_pow)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_pow.base,
@@ -611,6 +638,48 @@ impl Runtime {
                 .verify_unary_objs_are_equal_when_their_only_args_are_equal(
                     &left_abs.arg,
                     &right_abs.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Floor(left), Obj::Floor(right)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left.arg,
+                    &right.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Ceil(left), Obj::Ceil(right)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left.arg,
+                    &right.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Exp(left), Obj::Exp(right)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left.arg,
+                    &right.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Ln(left), Obj::Ln(right)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left.arg,
+                    &right.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Sign(left), Obj::Sign(right)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left.arg,
+                    &right.arg,
+                    verify_state,
+                    equality_line_file,
+                ),
+            (Obj::Factorial(left), Obj::Factorial(right)) => self
+                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
+                    &left.arg,
+                    &right.arg,
                     verify_state,
                     equality_line_file,
                 ),
