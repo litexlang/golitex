@@ -8,7 +8,7 @@ factorial(10) = 3628800
 
 # The analytic functions expose their natural domains and identities.
 forall x R:
-    exp(x) $in R_pos
+    exp(x) $in R+
     exp(x) > 0
     exp(x) = e^x
     ln(exp(x)) = x
@@ -64,7 +64,7 @@ forall x R:
         sign(x) = -1
 
 forall n N:
-    factorial(n) $in N_pos
+    factorial(n) $in N+
     factorial(n) >= 1
     factorial(n + 1) = (n + 1) * factorial(n)
 

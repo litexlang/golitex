@@ -2,7 +2,7 @@ trust have x R:
     x = 4
 x = 4
 
-forall y R_pos:
+forall y R+:
     y = 2
     =>:
         y^2 = 4

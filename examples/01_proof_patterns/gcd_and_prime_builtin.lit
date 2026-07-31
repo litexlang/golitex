@@ -11,14 +11,14 @@ not $prime(1)
 
 # Symbolic use exposes the mathematical contract.
 thm prime_is_at_least_two:
-    ? forall p N_pos:
+    ? forall p N+:
         $prime(p)
         =>:
             2 <= p
     by def $prime(p)
 
 thm prime_has_no_trial_divisor:
-    ? forall p N_pos, d range(2, p):
+    ? forall p N+, d range(2, p):
         $prime(p)
         =>:
             p % d != 0

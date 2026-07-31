@@ -192,7 +192,7 @@ algebra laws. Litex does not decimal-approximate transcendental values:
 
 ```litex
 forall x R:
-    exp(x) $in R_pos
+    exp(x) $in R+
     exp(x) = e^x
     ln(exp(x)) = x
 
@@ -208,7 +208,7 @@ forall a, b R:
 
 `sign` always returns an integer between `-1` and `1`, selects the expected
 value from comparison with zero, and satisfies `sign(x) * abs(x) = x`.
-`factorial` accepts `N`, returns `N_pos`, and exposes the successor recurrence
+`factorial` accepts `N`, returns `N+`, and exposes the successor recurrence
 `factorial(n + 1) = (n + 1) * factorial(n)`. All four names are hard-reserved.
 Python extraction uses `math.exp`, `math.log`, a conditional sign expression,
 and `math.factorial`; Lean extraction uses the corresponding `Real`/`Nat`
@@ -422,10 +422,9 @@ Litex exposes sets, membership, and set operations directly.
 
 | Form | Meaning |
 |---|---|
-| `N+`, `N`, `Z`, `Q`, `R`, `C` | Standard number sets |
-| `Q+`, `R+`, `Q_neg`, `Z_neg`, `R_neg` | Signed standard subsets |
-| `N+`, `Z+`, `Q+`, `R+` | Preview compact spellings for the corresponding strictly positive sets; `Z+` is `N+` |
-| `Z-`, `Q-`, `R-` | Preview compact spellings for the corresponding strictly negative sets |
+| `N`, `Z`, `Q`, `R`, `C` | Standard number sets |
+| `N+`, `Z+`, `Q+`, `R+` | Strictly positive standard subsets; `Z+` is the same set as `N+` |
+| `Z-`, `Q-`, `R-` | Strictly negative standard subsets |
 | `Q_nz`, `Z_nz`, `R_nz` | Nonzero standard subsets |
 | `{a, b, ...}` | Displayed finite set |
 | `{x S: facts}` | Set comprehension over `S` |
@@ -436,19 +435,19 @@ Litex exposes sets, membership, and set operations directly.
 | `replacement(P, A)` | Replacement set defined by a functional predicate `P` |
 | `general_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` |
 
-The compact suffix must be adjacent to its base. Verifier output normalizes
-compact numeric input back to names such as `N+` and `R_neg`.
+The sign suffix must be adjacent to its base. Verifier output may use an
+internal normalized name for the same set.
 
 ```litex
 have n N+
 n $in N+
 have z Z-
-z $in Z_neg
+z $in Z-
 ```
 
 The signs are strict: `+` means greater than zero and `-` means less than zero.
-Nonzero sets keep the explicit spellings `Z_nz`, `Q_nz`, and `R_nz`; compact
-`*` suffixes are not part of this preview.
+Nonzero sets keep the explicit spellings `Z_nz`, `Q_nz`, and `R_nz`; there is
+no `*` suffix.
 
 Set-builder conditions are facts, not arbitrary statements:
 
@@ -800,7 +799,7 @@ $prime(97)
 not $prime(1)
 ```
 
-`$prime(p)` is a native predicate on `N_pos`. Concrete positive integer
+`$prime(p)` is a native predicate on `N+`. Concrete positive integer
 literals that fit in `u64` are decided exactly; larger literals are left to
 proof rather than guessed. `by def $prime(p)` exposes the symbolic
 trial-divisor contract (`2 <= p` and no divisor in `range(2, p)`).

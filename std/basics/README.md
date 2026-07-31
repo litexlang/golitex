@@ -8,9 +8,9 @@ import std basics
 ```
 
 Use its public names with the explicit `basics::` namespace, for example
-`basics::gcd_by_finite_divisors(a, b)` and
-`by thm basics::bezout_identity(a, b)`. The ordinary `gcd(a, b)` object and
-`$prime(p)` predicate are native and need no import.
+`basics::divides(a, b)` and `by thm basics::bezout_identity(a, b)`. The
+ordinary `gcd(a, b)` object and `$prime(p)` predicate are native and need no
+import.
 
 ## Status labels
 
@@ -28,13 +28,10 @@ Names beginning with `_` are implementation details, not client API.
 | `e` | Euler's positive real constant | Native |
 | `pi` | the positive circle constant | Native |
 | `integer_quotient(a, d)` | the integer `q` selected by `a = d * q + a % d`, for `d : N_pos` | Checked |
-| `gcd_by_finite_divisors(a, b)` | source construction of the positive greatest common divisor | Checked |
 
-`integer_quotient` and `gcd_by_finite_divisors` are ordinary source-level
-functions. The former is selected from the kernel's narrow Euclidean
-unique-existence fact; neither is reserved syntax or a dedicated kernel
-object. Native `gcd(a, b)` requires the side condition
-`a != 0 or b != 0`.
+`integer_quotient` is an ordinary source-level function selected from the
+kernel's narrow Euclidean unique-existence fact. Native `gcd(a, b)` is the
+user-facing gcd object and requires the side condition `a != 0 or b != 0`.
 
 ## Predicates
 
@@ -78,6 +75,7 @@ they belong to the set and bound every member. Literal calls such as
 
 | Theorem | Conclusion |
 | --- | --- |
+| `gcd_comm(a, b)` | `gcd(a, b) = gcd(b, a)` |
 | `gcd_positive(a, b)` | `gcd(a, b) $in N_pos` |
 | `gcd_divides_left(a, b)` | `gcd(a, b)` divides `a` |
 | `gcd_divides_right(a, b)` | `gcd(a, b)` divides `b` |
@@ -90,8 +88,12 @@ they belong to the set and bound every member. Literal calls such as
 Except where a row states a stronger condition, gcd theorems require
 `a != 0 or b != 0`.
 
-`gcd_by_finite_divisors_eq_gcd` connects the source construction to native
-`gcd`; `prime_implies_prime_by_trial_division` and
+These theorems use the native gcd contract directly. The teaching example
+[`gcd_from_finite_divisors.lit`](../../examples/01_proof_patterns/gcd_from_finite_divisors.lit)
+separately constructs gcd as the largest positive common divisor and proves
+that construction equal to native `gcd`.
+
+`prime_implies_prime_by_trial_division` and
 `prime_by_trial_division_implies_prime` connect the source and native prime
 interfaces.
 

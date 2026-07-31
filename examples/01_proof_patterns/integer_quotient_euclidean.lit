@@ -3,12 +3,12 @@ import std basics
 # The quotient is an ordinary source-defined function in std/basics. The
 # kernel verifies the narrow unique-existence fact behind that selection.
 
-forall a Z, d N_pos:
+forall a Z, d N+:
     basics::integer_quotient(a, d) $in Z
     a = d * basics::integer_quotient(a, d) + a % d
 
 # A bounded decomposition has the Euclidean remainder.
-forall a Z, m N_pos, q Z, r N:
+forall a Z, m N+, q Z, r N:
     r < m
     a = m * q + r
     =>:
