@@ -167,6 +167,15 @@ pub fn builtin_symbol_ref(name: &str) -> Option<SymbolRef> {
         BIJECTIVE => 47,
         GCD => 48,
         PRIME => 49,
+        LCM => 50,
+        FLOOR => 51,
+        CEIL => 52,
+        MIN => 53,
+        MAX => 54,
+        EXP => 55,
+        LN => 56,
+        SIGN => 57,
+        FACTORIAL => 58,
         _ => return None,
     };
     Some(SymbolRef::new(

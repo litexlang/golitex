@@ -99,6 +99,18 @@ impl Obj {
                 binary.left.contains_native_complex_syntax()
                     || binary.right.contains_native_complex_syntax()
             }
+            Obj::Lcm(binary) => {
+                binary.left.contains_native_complex_syntax()
+                    || binary.right.contains_native_complex_syntax()
+            }
+            Obj::Min(binary) => {
+                binary.left.contains_native_complex_syntax()
+                    || binary.right.contains_native_complex_syntax()
+            }
+            Obj::Max(binary) => {
+                binary.left.contains_native_complex_syntax()
+                    || binary.right.contains_native_complex_syntax()
+            }
             Obj::Div(binary) => {
                 binary.left.contains_native_complex_syntax()
                     || binary.right.contains_native_complex_syntax()
@@ -112,6 +124,12 @@ impl Obj {
                     || pow.exponent.contains_native_complex_syntax()
             }
             Obj::Abs(abs) => abs.arg.contains_native_complex_syntax(),
+            Obj::Floor(x) => x.arg.contains_native_complex_syntax(),
+            Obj::Ceil(x) => x.arg.contains_native_complex_syntax(),
+            Obj::Exp(x) => x.arg.contains_native_complex_syntax(),
+            Obj::Ln(x) => x.arg.contains_native_complex_syntax(),
+            Obj::Sign(x) => x.arg.contains_native_complex_syntax(),
+            Obj::Factorial(x) => x.arg.contains_native_complex_syntax(),
             Obj::Sin(x) => x.arg.contains_native_complex_syntax(),
             Obj::Cos(x) => x.arg.contains_native_complex_syntax(),
             Obj::Tan(x) => x.arg.contains_native_complex_syntax(),
@@ -284,7 +302,9 @@ impl Obj {
             | Obj::Sin(_)
             | Obj::Cos(_)
             | Obj::Tan(_)
-            | Obj::Cot(_) => true,
+            | Obj::Cot(_)
+            | Obj::Exp(_)
+            | Obj::Ln(_) => true,
             Obj::Atom(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::StandardSet(_) => false,
             Obj::FnObj(fn_obj) => {
                 let native_head = match fn_obj.head.as_ref() {
@@ -339,6 +359,18 @@ impl Obj {
                 binary.left.contains_native_transcendental_syntax()
                     || binary.right.contains_native_transcendental_syntax()
             }
+            Obj::Lcm(binary) => {
+                binary.left.contains_native_transcendental_syntax()
+                    || binary.right.contains_native_transcendental_syntax()
+            }
+            Obj::Min(binary) => {
+                binary.left.contains_native_transcendental_syntax()
+                    || binary.right.contains_native_transcendental_syntax()
+            }
+            Obj::Max(binary) => {
+                binary.left.contains_native_transcendental_syntax()
+                    || binary.right.contains_native_transcendental_syntax()
+            }
             Obj::Div(binary) => {
                 binary.left.contains_native_transcendental_syntax()
                     || binary.right.contains_native_transcendental_syntax()
@@ -352,6 +384,10 @@ impl Obj {
                     || pow.exponent.contains_native_transcendental_syntax()
             }
             Obj::Abs(abs) => abs.arg.contains_native_transcendental_syntax(),
+            Obj::Floor(x) => x.arg.contains_native_transcendental_syntax(),
+            Obj::Ceil(x) => x.arg.contains_native_transcendental_syntax(),
+            Obj::Sign(x) => x.arg.contains_native_transcendental_syntax(),
+            Obj::Factorial(x) => x.arg.contains_native_transcendental_syntax(),
             Obj::RealPart(real_part) => real_part.arg.contains_native_transcendental_syntax(),
             Obj::ImaginaryPart(imaginary_part) => {
                 imaginary_part.arg.contains_native_transcendental_syntax()

@@ -8,6 +8,8 @@ mod equality_numeric;
 mod equality_structural;
 mod in_fact_builtin;
 mod mapping_properties_builtin;
+mod native_exp_sign_factorial;
+mod native_integer_extrema;
 mod non_equational_dispatch;
 mod not_equal_builtin;
 mod number_compare;

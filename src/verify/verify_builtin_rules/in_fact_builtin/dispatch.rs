@@ -408,6 +408,92 @@ impl Runtime {
                 )
                 .into(),
             ),
+            (
+                Obj::Lcm(_),
+                Obj::StandardSet(
+                    StandardSet::N
+                    | StandardSet::Z
+                    | StandardSet::Q
+                    | StandardSet::R
+                    | StandardSet::C,
+                ),
+            ) => Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "lcm of two integers is a nonnegative integer".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ),
+            (
+                Obj::Floor(_) | Obj::Ceil(_),
+                Obj::StandardSet(StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C),
+            ) => Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "floor and ceil return integers".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ),
+            (Obj::Min(_) | Obj::Max(_), Obj::StandardSet(StandardSet::R | StandardSet::C)) => Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "minimum and maximum of real arguments are real".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ),
+            (
+                Obj::Exp(_),
+                Obj::StandardSet(StandardSet::RPos | StandardSet::R | StandardSet::C),
+            ) => Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "real exponential values are positive reals".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ),
+            (Obj::Ln(_), Obj::StandardSet(StandardSet::R | StandardSet::C)) => Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "natural logarithm of a positive real is real".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ),
+            (
+                Obj::Sign(_),
+                Obj::StandardSet(StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C),
+            ) => Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "the real sign function returns an integer".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ),
+            (
+                Obj::Factorial(_),
+                Obj::StandardSet(
+                    StandardSet::NPos
+                    | StandardSet::N
+                    | StandardSet::Z
+                    | StandardSet::Q
+                    | StandardSet::R
+                    | StandardSet::C
+                    | StandardSet::QPos
+                    | StandardSet::RPos,
+                ),
+            ) => Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "factorial of a natural number is a positive integer".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ),
             (_, Obj::StandardSet(StandardSet::N)) => {
                 self.verify_in_fact_n_by_nonnegative_integer(in_fact, verify_state)
             }

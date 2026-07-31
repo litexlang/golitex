@@ -46,6 +46,26 @@ impl Runtime {
                 Obj::Gcd(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Lcm(a) => match right {
+                Obj::Lcm(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Floor(a) => match right {
+                Obj::Floor(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Ceil(a) => match right {
+                Obj::Ceil(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Min(a) => match right {
+                Obj::Min(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Max(a) => match right {
+                Obj::Max(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Pow(a) => match right {
                 Obj::Pow(b) => a.to_string() == b.to_string(),
                 _ => false,
@@ -108,6 +128,22 @@ impl Runtime {
             },
             Obj::Log(a) => match right {
                 Obj::Log(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Exp(a) => match right {
+                Obj::Exp(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Ln(a) => match right {
+                Obj::Ln(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Sign(a) => match right {
+                Obj::Sign(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Factorial(a) => match right {
+                Obj::Factorial(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::Union(a) => match right {

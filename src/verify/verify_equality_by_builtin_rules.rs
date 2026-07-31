@@ -31,6 +31,9 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::Div(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Mod(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Gcd(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Lcm(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Min(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
+        Obj::Max(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Union(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::Intersect(b) => {
             obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
@@ -59,6 +62,12 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
                 || obj_expr_mentions_bare_id(m.exponent.as_ref(), id)
         }
         Obj::Abs(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Floor(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Ceil(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Exp(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Ln(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Sign(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
+        Obj::Factorial(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Sin(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Cos(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Tan(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),

@@ -76,6 +76,42 @@ impl Runtime {
                 self.inst_obj(&inner.right, param_to_arg_map, param_obj_type)?,
             )
             .into()),
+            Obj::Lcm(inner) => Ok(Lcm::new(
+                self.inst_obj(&inner.left, param_to_arg_map, param_obj_type)?,
+                self.inst_obj(&inner.right, param_to_arg_map, param_obj_type)?,
+            )
+            .into()),
+            Obj::Floor(inner) => {
+                Ok(Floor::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
+            }
+            Obj::Ceil(inner) => {
+                Ok(Ceil::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
+            }
+            Obj::Min(inner) => Ok(Min::new(
+                self.inst_obj(&inner.left, param_to_arg_map, param_obj_type)?,
+                self.inst_obj(&inner.right, param_to_arg_map, param_obj_type)?,
+            )
+            .into()),
+            Obj::Max(inner) => Ok(Max::new(
+                self.inst_obj(&inner.left, param_to_arg_map, param_obj_type)?,
+                self.inst_obj(&inner.right, param_to_arg_map, param_obj_type)?,
+            )
+            .into()),
+            Obj::Exp(inner) => {
+                Ok(Exp::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
+            }
+            Obj::Ln(inner) => {
+                Ok(Ln::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
+            }
+            Obj::Sign(inner) => {
+                Ok(Sign::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?).into())
+            }
+            Obj::Factorial(inner) => {
+                Ok(
+                    Factorial::new(self.inst_obj(&inner.arg, param_to_arg_map, param_obj_type)?)
+                        .into(),
+                )
+            }
             Obj::Pow(inner) => self.inst_pow(inner, param_to_arg_map, param_obj_type),
             Obj::MatrixAdd(inner) => self.inst_matrix_add(inner, param_to_arg_map, param_obj_type),
             Obj::MatrixSub(inner) => self.inst_matrix_sub(inner, param_to_arg_map, param_obj_type),

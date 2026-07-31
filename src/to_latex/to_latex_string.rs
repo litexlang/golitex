@@ -1463,6 +1463,75 @@ impl Gcd {
     }
 }
 
+impl Lcm {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{lcm}}\left( {}, {} \right)",
+            self.left.to_latex_string(),
+            self.right.to_latex_string()
+        )
+    }
+}
+
+impl Floor {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\left\lfloor {} \right\rfloor", self.arg.to_latex_string())
+    }
+}
+
+impl Ceil {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\left\lceil {} \right\rceil", self.arg.to_latex_string())
+    }
+}
+
+impl Min {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\min\left( {}, {} \right)",
+            self.left.to_latex_string(),
+            self.right.to_latex_string()
+        )
+    }
+}
+
+impl Max {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\max\left( {}, {} \right)",
+            self.left.to_latex_string(),
+            self.right.to_latex_string()
+        )
+    }
+}
+
+impl Exp {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\exp\left( {} \right)", self.arg.to_latex_string())
+    }
+}
+
+impl Ln {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\ln\left( {} \right)", self.arg.to_latex_string())
+    }
+}
+
+impl Sign {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{sgn}}\left( {} \right)",
+            self.arg.to_latex_string()
+        )
+    }
+}
+
+impl Factorial {
+    pub fn to_latex_string(&self) -> String {
+        format!(r"\left( {} \right)!", self.arg.to_latex_string())
+    }
+}
+
 impl Mul {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2100,6 +2169,15 @@ impl Obj {
             Obj::Div(x) => x.to_latex_string(),
             Obj::Mod(x) => x.to_latex_string(),
             Obj::Gcd(x) => x.to_latex_string(),
+            Obj::Lcm(x) => x.to_latex_string(),
+            Obj::Floor(x) => x.to_latex_string(),
+            Obj::Ceil(x) => x.to_latex_string(),
+            Obj::Min(x) => x.to_latex_string(),
+            Obj::Max(x) => x.to_latex_string(),
+            Obj::Exp(x) => x.to_latex_string(),
+            Obj::Ln(x) => x.to_latex_string(),
+            Obj::Sign(x) => x.to_latex_string(),
+            Obj::Factorial(x) => x.to_latex_string(),
             Obj::Pow(x) => x.to_latex_string(),
             Obj::Abs(x) => x.to_latex_string(),
             Obj::Sin(x) => x.to_latex_string(),

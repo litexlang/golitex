@@ -1128,6 +1128,13 @@ impl DepCollector {
             Obj::Div(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Mod(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Gcd(x) => self.collect_two_objs(&x.left, &x.right),
+            Obj::Lcm(x) => self.collect_two_objs(&x.left, &x.right),
+            Obj::Min(x) => self.collect_two_objs(&x.left, &x.right),
+            Obj::Max(x) => self.collect_two_objs(&x.left, &x.right),
+            Obj::Exp(x) => self.collect_obj(&x.arg),
+            Obj::Ln(x) => self.collect_obj(&x.arg),
+            Obj::Sign(x) => self.collect_obj(&x.arg),
+            Obj::Factorial(x) => self.collect_obj(&x.arg),
             Obj::Pow(x) => self.collect_two_objs(&x.base, &x.exponent),
             Obj::Log(x) => self.collect_two_objs(&x.base, &x.arg),
             Obj::Union(x) => self.collect_two_objs(&x.left, &x.right),
@@ -1169,6 +1176,8 @@ impl DepCollector {
                 self.collect_obj(&x.func);
             }
             Obj::Abs(x) => self.collect_obj(&x.arg),
+            Obj::Floor(x) => self.collect_obj(&x.arg),
+            Obj::Ceil(x) => self.collect_obj(&x.arg),
             Obj::Sin(x) => self.collect_obj(&x.arg),
             Obj::Cos(x) => self.collect_obj(&x.arg),
             Obj::Tan(x) => self.collect_obj(&x.arg),

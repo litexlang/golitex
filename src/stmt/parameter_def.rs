@@ -638,6 +638,27 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::Lcm(x) => collect_cited_param_indices_from_two_objs(
+            &x.left,
+            &x.right,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Min(x) => collect_cited_param_indices_from_two_objs(
+            &x.left,
+            &x.right,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Max(x) => collect_cited_param_indices_from_two_objs(
+            &x.left,
+            &x.right,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
         Obj::Pow(x) => collect_cited_param_indices_from_two_objs(
             &x.base,
             &x.exponent,
@@ -646,6 +667,18 @@ fn collect_cited_param_indices_from_obj(
             out,
         ),
         Obj::Abs(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Floor(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Ceil(x) => collect_cited_param_indices_from_obj(
             &x.arg,
             previous_param_indices,
             shadowed_names,
@@ -694,6 +727,30 @@ fn collect_cited_param_indices_from_obj(
             out,
         ),
         Obj::Sqrt(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Exp(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Ln(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Sign(x) => collect_cited_param_indices_from_obj(
+            &x.arg,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
+        Obj::Factorial(x) => collect_cited_param_indices_from_obj(
             &x.arg,
             previous_param_indices,
             shadowed_names,

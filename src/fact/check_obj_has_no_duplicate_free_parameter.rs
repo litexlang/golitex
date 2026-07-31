@@ -75,6 +75,15 @@ fn check_obj_has_no_duplicate_free_parameter(
         Obj::Gcd(obj) => {
             check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
         }
+        Obj::Lcm(obj) => {
+            check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
+        }
+        Obj::Min(obj) => {
+            check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
+        }
+        Obj::Max(obj) => {
+            check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
+        }
         Obj::Pow(obj) => check_two_objs(
             &obj.base,
             &obj.exponent,
@@ -82,6 +91,36 @@ fn check_obj_has_no_duplicate_free_parameter(
             params_already_used,
         ),
         Obj::Abs(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::Floor(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::Ceil(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::Exp(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::Ln(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::Sign(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.arg,
+            free_param_type,
+            params_already_used,
+        ),
+        Obj::Factorial(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.arg,
             free_param_type,
             params_already_used,

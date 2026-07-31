@@ -69,6 +69,22 @@ impl Runtime {
         Ok(())
     }
 
+    pub(in crate::verify) fn require_obj_in_n(
+        &mut self,
+        obj: &Obj,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        let in_fact: AtomicFact =
+            InFact::new(obj.clone(), StandardSet::N.into(), default_line_file()).into();
+        let result = self.verify_atomic_fact(&in_fact, verify_state)?;
+        if result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!("obj {obj} is not in N")),
+            )));
+        }
+        Ok(())
+    }
+
     /// Require `left <= right` to be verifiable; does not store the fact.
     pub(in crate::verify) fn require_less_equal_verified(
         &mut self,
@@ -242,6 +258,110 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&abs.arg, verify_state)?;
         self.require_obj_in_r(&abs.arg, verify_state)?;
         Ok(())
+    }
+
+    pub(in crate::verify) fn verify_lcm_well_defined(
+        &mut self,
+        lcm: &Lcm,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&lcm.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&lcm.right, verify_state)?;
+        self.require_obj_in_z(&lcm.left, verify_state)?;
+        self.require_obj_in_z(&lcm.right, verify_state)
+    }
+
+    pub(in crate::verify) fn verify_floor_well_defined(
+        &mut self,
+        floor: &Floor,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&floor.arg, verify_state)?;
+        self.require_obj_in_r(&floor.arg, verify_state)
+    }
+
+    pub(in crate::verify) fn verify_ceil_well_defined(
+        &mut self,
+        ceil: &Ceil,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&ceil.arg, verify_state)?;
+        self.require_obj_in_r(&ceil.arg, verify_state)
+    }
+
+    pub(in crate::verify) fn verify_min_well_defined(
+        &mut self,
+        min: &Min,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&min.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&min.right, verify_state)?;
+        self.require_obj_in_r(&min.left, verify_state)?;
+        self.require_obj_in_r(&min.right, verify_state)
+    }
+
+    pub(in crate::verify) fn verify_max_well_defined(
+        &mut self,
+        max: &Max,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&max.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&max.right, verify_state)?;
+        self.require_obj_in_r(&max.left, verify_state)?;
+        self.require_obj_in_r(&max.right, verify_state)
+    }
+
+    pub(in crate::verify) fn verify_exp_well_defined(
+        &mut self,
+        exp: &Exp,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&exp.arg, verify_state)?;
+        self.require_obj_in_r(&exp.arg, verify_state)
+    }
+
+    pub(in crate::verify) fn verify_ln_well_defined(
+        &mut self,
+        ln: &Ln,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&ln.arg, verify_state)?;
+        self.require_obj_in_r(&ln.arg, verify_state)?;
+        let positive: AtomicFact = GreaterFact::new(
+            (*ln.arg).clone(),
+            Number::new("0".to_string()).into(),
+            default_line_file(),
+        )
+        .into();
+        if self
+            .verify_atomic_fact(&positive, verify_state)?
+            .is_unknown()
+        {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(
+                    "ln: argument must be a positive real".to_string(),
+                ),
+            )));
+        }
+        Ok(())
+    }
+
+    pub(in crate::verify) fn verify_sign_well_defined(
+        &mut self,
+        sign: &Sign,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&sign.arg, verify_state)?;
+        self.require_obj_in_r(&sign.arg, verify_state)
+    }
+
+    pub(in crate::verify) fn verify_factorial_well_defined(
+        &mut self,
+        factorial: &Factorial,
+        verify_state: &VerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache(&factorial.arg, verify_state)?;
+        self.require_obj_in_n(&factorial.arg, verify_state)
     }
 
     pub(in crate::verify) fn verify_sin_well_defined(

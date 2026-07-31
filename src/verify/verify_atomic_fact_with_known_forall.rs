@@ -851,8 +851,38 @@ impl Runtime {
                 }
                 _ => Ok(None),
             },
+            Obj::Lcm(ref a) => match given_arg {
+                Obj::Lcm(g) => {
+                    self.match_arg_binary_then_merge(&a.left, &a.right, &g.left, &g.right)
+                }
+                _ => Ok(None),
+            },
+            Obj::Min(ref a) => match given_arg {
+                Obj::Min(g) => {
+                    self.match_arg_binary_then_merge(&a.left, &a.right, &g.left, &g.right)
+                }
+                _ => Ok(None),
+            },
+            Obj::Max(ref a) => match given_arg {
+                Obj::Max(g) => {
+                    self.match_arg_binary_then_merge(&a.left, &a.right, &g.left, &g.right)
+                }
+                _ => Ok(None),
+            },
             Obj::Pow(ref a) => self.match_arg_when_left_is_pow(&a.base, &a.exponent, given_arg),
             Obj::Abs(ref a) => self.match_arg_when_left_is_abs(a.arg.as_ref(), given_arg),
+            Obj::Floor(ref a) => match given_arg {
+                Obj::Floor(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
+            Obj::Ceil(ref a) => match given_arg {
+                Obj::Ceil(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
             Obj::Sin(ref a) => match given_arg {
                 Obj::Sin(g) => {
                     self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
@@ -896,6 +926,30 @@ impl Runtime {
                 _ => Ok(None),
             },
             Obj::Sqrt(ref a) => self.match_arg_when_left_is_sqrt(a.arg.as_ref(), given_arg),
+            Obj::Exp(ref a) => match given_arg {
+                Obj::Exp(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
+            Obj::Ln(ref a) => match given_arg {
+                Obj::Ln(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
+            Obj::Sign(ref a) => match given_arg {
+                Obj::Sign(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
+            Obj::Factorial(ref a) => match given_arg {
+                Obj::Factorial(g) => {
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(&a.arg, &g.arg)
+                }
+                _ => Ok(None),
+            },
             Obj::Log(ref a) => self.match_arg_when_left_is_log(&a.base, &a.arg, given_arg),
             Obj::Union(ref a) => self.match_arg_when_left_is_union(&a.left, &a.right, given_arg),
             Obj::Intersect(ref a) => {
@@ -2288,6 +2342,29 @@ impl Runtime {
                     anonymous_fn_body,
                 ),
             (Obj::Sqrt(left), Obj::Sqrt(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Exp(left), Obj::Exp(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Ln(left), Obj::Ln(given)) => self.match_arg_in_anonymous_fn_body_with_given_arg(
+                left.arg.as_ref(),
+                given.arg.as_ref(),
+                anonymous_fn_body,
+            ),
+            (Obj::Sign(left), Obj::Sign(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.arg.as_ref(),
+                    given.arg.as_ref(),
+                    anonymous_fn_body,
+                ),
+            (Obj::Factorial(left), Obj::Factorial(given)) => self
                 .match_arg_in_anonymous_fn_body_with_given_arg(
                     left.arg.as_ref(),
                     given.arg.as_ref(),

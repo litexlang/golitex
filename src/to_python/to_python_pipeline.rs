@@ -619,6 +619,51 @@ impl PythonExtractor {
                 line_file,
                 "python extractor v1 does not support native gcd",
             )),
+            Obj::Lcm(x) => {
+                self.needs_math = true;
+                let left = self.python_expr(&x.left, params, line_file)?;
+                let right = self.python_expr(&x.right, params, line_file)?;
+                Ok(format!("math.lcm(int({left}), int({right}))"))
+            }
+            Obj::Floor(x) => {
+                self.needs_math = true;
+                let arg = self.python_expr(&x.arg, params, line_file)?;
+                Ok(format!("math.floor({arg})"))
+            }
+            Obj::Ceil(x) => {
+                self.needs_math = true;
+                let arg = self.python_expr(&x.arg, params, line_file)?;
+                Ok(format!("math.ceil({arg})"))
+            }
+            Obj::Min(x) => {
+                let left = self.python_expr(&x.left, params, line_file)?;
+                let right = self.python_expr(&x.right, params, line_file)?;
+                Ok(format!("min({left}, {right})"))
+            }
+            Obj::Max(x) => {
+                let left = self.python_expr(&x.left, params, line_file)?;
+                let right = self.python_expr(&x.right, params, line_file)?;
+                Ok(format!("max({left}, {right})"))
+            }
+            Obj::Exp(x) => {
+                self.needs_math = true;
+                let arg = self.python_expr(&x.arg, params, line_file)?;
+                Ok(format!("math.exp({arg})"))
+            }
+            Obj::Ln(x) => {
+                self.needs_math = true;
+                let arg = self.python_expr(&x.arg, params, line_file)?;
+                Ok(format!("math.log({arg})"))
+            }
+            Obj::Sign(x) => {
+                let arg = self.python_expr(&x.arg, params, line_file)?;
+                Ok(format!("(1 if {arg} > 0 else (-1 if {arg} < 0 else 0))"))
+            }
+            Obj::Factorial(x) => {
+                self.needs_math = true;
+                let arg = self.python_expr(&x.arg, params, line_file)?;
+                Ok(format!("math.factorial(int({arg}))"))
+            }
             Obj::Atom(a) => self.python_atom(a, params, line_file),
             Obj::Add(a) => {
                 self.python_binary_expr(a.left.as_ref(), "+", a.right.as_ref(), params, line_file)

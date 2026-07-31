@@ -17,6 +17,15 @@ pub enum Obj {
     Div(Div),
     Mod(Mod),
     Gcd(Gcd),
+    Lcm(Lcm),
+    Floor(Floor),
+    Ceil(Ceil),
+    Min(Min),
+    Max(Max),
+    Exp(Exp),
+    Ln(Ln),
+    Sign(Sign),
+    Factorial(Factorial),
     Pow(Pow),
     Abs(Abs),
     Sin(Sin),
@@ -158,6 +167,15 @@ pub enum ObjKind {
     Tan = 78,
     Cot = 79,
     Gcd = 80,
+    Lcm = 81,
+    Floor = 82,
+    Ceil = 83,
+    Min = 84,
+    Max = 85,
+    Exp = 86,
+    Ln = 87,
+    Sign = 88,
+    Factorial = 89,
 }
 
 impl ObjKind {
@@ -608,6 +626,58 @@ pub struct Gcd {
 }
 
 #[derive(Clone)]
+pub struct Lcm {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Floor {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Ceil {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Min {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
+pub struct Max {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+/// Real exponential `e^x`.
+#[derive(Clone)]
+pub struct Exp {
+    pub arg: Box<Obj>,
+}
+
+/// Natural logarithm on the positive reals.
+#[derive(Clone)]
+pub struct Ln {
+    pub arg: Box<Obj>,
+}
+
+/// Real sign function with values `-1`, `0`, and `1`.
+#[derive(Clone)]
+pub struct Sign {
+    pub arg: Box<Obj>,
+}
+
+/// Natural-number factorial.
+#[derive(Clone)]
+pub struct Factorial {
+    pub arg: Box<Obj>,
+}
+
+#[derive(Clone)]
 pub struct Pow {
     pub base: Box<Obj>,
     pub exponent: Box<Obj>,
@@ -814,6 +884,69 @@ impl Gcd {
             left: Box::new(left),
             right: Box::new(right),
         }
+    }
+}
+
+impl Lcm {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        Lcm {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl Floor {
+    pub fn new(arg: Obj) -> Self {
+        Floor { arg: Box::new(arg) }
+    }
+}
+
+impl Ceil {
+    pub fn new(arg: Obj) -> Self {
+        Ceil { arg: Box::new(arg) }
+    }
+}
+
+impl Min {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        Min {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl Max {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        Max {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl Exp {
+    pub fn new(arg: Obj) -> Self {
+        Exp { arg: Box::new(arg) }
+    }
+}
+
+impl Ln {
+    pub fn new(arg: Obj) -> Self {
+        Ln { arg: Box::new(arg) }
+    }
+}
+
+impl Sign {
+    pub fn new(arg: Obj) -> Self {
+        Sign { arg: Box::new(arg) }
+    }
+}
+
+impl Factorial {
+    pub fn new(arg: Obj) -> Self {
+        Factorial { arg: Box::new(arg) }
     }
 }
 
@@ -1223,6 +1356,15 @@ fn precedence(o: &Obj) -> u8 {
         | Obj::ComplexAbs(_)
         | Obj::Sqrt(_)
         | Obj::Log(_)
+        | Obj::Lcm(_)
+        | Obj::Floor(_)
+        | Obj::Ceil(_)
+        | Obj::Min(_)
+        | Obj::Max(_)
+        | Obj::Exp(_)
+        | Obj::Ln(_)
+        | Obj::Sign(_)
+        | Obj::Factorial(_)
         | Obj::MatrixAdd(_)
         | Obj::MatrixSub(_)
         | Obj::MatrixMul(_)
@@ -1265,6 +1407,15 @@ impl Obj {
             Obj::Div(_) => ObjKind::Div,
             Obj::Mod(_) => ObjKind::Mod,
             Obj::Gcd(_) => ObjKind::Gcd,
+            Obj::Lcm(_) => ObjKind::Lcm,
+            Obj::Floor(_) => ObjKind::Floor,
+            Obj::Ceil(_) => ObjKind::Ceil,
+            Obj::Min(_) => ObjKind::Min,
+            Obj::Max(_) => ObjKind::Max,
+            Obj::Exp(_) => ObjKind::Exp,
+            Obj::Ln(_) => ObjKind::Ln,
+            Obj::Sign(_) => ObjKind::Sign,
+            Obj::Factorial(_) => ObjKind::Factorial,
             Obj::Pow(_) => ObjKind::Pow,
             Obj::Abs(_) => ObjKind::Abs,
             Obj::Sin(_) => ObjKind::Sin,
@@ -1343,6 +1494,15 @@ impl Obj {
             Obj::Div(_) => DIV.to_string(),
             Obj::Mod(_) => MOD.to_string(),
             Obj::Gcd(_) => GCD.to_string(),
+            Obj::Lcm(_) => LCM.to_string(),
+            Obj::Floor(_) => FLOOR.to_string(),
+            Obj::Ceil(_) => CEIL.to_string(),
+            Obj::Min(_) => MIN.to_string(),
+            Obj::Max(_) => MAX.to_string(),
+            Obj::Exp(_) => EXP.to_string(),
+            Obj::Ln(_) => LN.to_string(),
+            Obj::Sign(_) => SIGN.to_string(),
+            Obj::Factorial(_) => FACTORIAL.to_string(),
             Obj::Pow(_) => POW.to_string(),
             Obj::Abs(_) => ABS.to_string(),
             Obj::Sin(_) => SIN.to_string(),
@@ -1437,6 +1597,29 @@ impl Obj {
                 g.right.fmt_with_precedence(f, 0)?;
                 write!(f, "{}", RIGHT_BRACE)?;
             }
+            Obj::Lcm(x) => {
+                write!(f, "{}{}", LCM, LEFT_BRACE)?;
+                x.left.fmt_with_precedence(f, 0)?;
+                write!(f, "{COMMA} ")?;
+                x.right.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
+            }
+            Obj::Floor(x) => write!(f, "{}{}{}{}", FLOOR, LEFT_BRACE, x.arg, RIGHT_BRACE)?,
+            Obj::Ceil(x) => write!(f, "{}{}{}{}", CEIL, LEFT_BRACE, x.arg, RIGHT_BRACE)?,
+            Obj::Min(x) => write!(
+                f,
+                "{}{}{}, {}{}",
+                MIN, LEFT_BRACE, x.left, x.right, RIGHT_BRACE
+            )?,
+            Obj::Max(x) => write!(
+                f,
+                "{}{}{}, {}{}",
+                MAX, LEFT_BRACE, x.left, x.right, RIGHT_BRACE
+            )?,
+            Obj::Exp(x) => write!(f, "{}{}{}{}", EXP, LEFT_BRACE, x.arg, RIGHT_BRACE)?,
+            Obj::Ln(x) => write!(f, "{}{}{}{}", LN, LEFT_BRACE, x.arg, RIGHT_BRACE)?,
+            Obj::Sign(x) => write!(f, "{}{}{}{}", SIGN, LEFT_BRACE, x.arg, RIGHT_BRACE)?,
+            Obj::Factorial(x) => write!(f, "{}{}{}{}", FACTORIAL, LEFT_BRACE, x.arg, RIGHT_BRACE)?,
             Obj::Pow(p) => {
                 p.base.fmt_with_precedence(f, 1)?;
                 write!(f, " {} ", POW)?;
@@ -1626,6 +1809,29 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.right, from, to),
             )
             .into(),
+            Obj::Lcm(x) => Lcm::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Floor(x) => Floor::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Ceil(x) => Ceil::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Min(x) => Min::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Max(x) => Max::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Exp(x) => Exp::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Ln(x) => Ln::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Sign(x) => Sign::new(Obj::replace_bound_identifier(*x.arg, from, to)).into(),
+            Obj::Factorial(x) => {
+                Factorial::new(Obj::replace_bound_identifier(*x.arg, from, to)).into()
+            }
             Obj::Pow(x) => Pow::new(
                 Obj::replace_bound_identifier(*x.base, from, to),
                 Obj::replace_bound_identifier(*x.exponent, from, to),
@@ -2563,6 +2769,60 @@ impl fmt::Display for Gcd {
     }
 }
 
+impl fmt::Display for Lcm {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}({}, {})", LCM, self.left, self.right)
+    }
+}
+
+impl fmt::Display for Floor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}({})", FLOOR, self.arg)
+    }
+}
+
+impl fmt::Display for Ceil {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}({})", CEIL, self.arg)
+    }
+}
+
+impl fmt::Display for Min {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}({}, {})", MIN, self.left, self.right)
+    }
+}
+
+impl fmt::Display for Max {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}({}, {})", MAX, self.left, self.right)
+    }
+}
+
+impl fmt::Display for Exp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}({})", EXP, self.arg)
+    }
+}
+
+impl fmt::Display for Ln {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}({})", LN, self.arg)
+    }
+}
+
+impl fmt::Display for Sign {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}({})", SIGN, self.arg)
+    }
+}
+
+impl fmt::Display for Factorial {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{}({})", FACTORIAL, self.arg)
+    }
+}
+
 impl fmt::Display for Pow {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{} {} {}", self.base, POW, self.exponent)
@@ -2891,6 +3151,60 @@ impl From<Mod> for Obj {
 impl From<Gcd> for Obj {
     fn from(g: Gcd) -> Self {
         Obj::Gcd(g)
+    }
+}
+
+impl From<Lcm> for Obj {
+    fn from(x: Lcm) -> Self {
+        Obj::Lcm(x)
+    }
+}
+
+impl From<Floor> for Obj {
+    fn from(x: Floor) -> Self {
+        Obj::Floor(x)
+    }
+}
+
+impl From<Ceil> for Obj {
+    fn from(x: Ceil) -> Self {
+        Obj::Ceil(x)
+    }
+}
+
+impl From<Min> for Obj {
+    fn from(x: Min) -> Self {
+        Obj::Min(x)
+    }
+}
+
+impl From<Max> for Obj {
+    fn from(x: Max) -> Self {
+        Obj::Max(x)
+    }
+}
+
+impl From<Exp> for Obj {
+    fn from(x: Exp) -> Self {
+        Obj::Exp(x)
+    }
+}
+
+impl From<Ln> for Obj {
+    fn from(x: Ln) -> Self {
+        Obj::Ln(x)
+    }
+}
+
+impl From<Sign> for Obj {
+    fn from(x: Sign) -> Self {
+        Obj::Sign(x)
+    }
+}
+
+impl From<Factorial> for Obj {
+    fn from(x: Factorial) -> Self {
+        Obj::Factorial(x)
     }
 }
 

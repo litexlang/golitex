@@ -14,6 +14,15 @@ pub const MUL: &str = "*";
 pub const DIV: &str = "/";
 pub const MOD: &str = "%";
 pub const GCD: &str = "gcd";
+pub const LCM: &str = "lcm";
+pub const FLOOR: &str = "floor";
+pub const CEIL: &str = "ceil";
+pub const MIN: &str = "min";
+pub const MAX: &str = "max";
+pub const EXP: &str = "exp";
+pub const LN: &str = "ln";
+pub const SIGN: &str = "sign";
+pub const FACTORIAL: &str = "factorial";
 pub const POW: &str = "^";
 /// Matrix addition. Example: `A '+ B`.
 pub const MATRIX_ADD: &str = "'+";
@@ -297,6 +306,15 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         FINITE_SET_MAX,
         FINITE_SET_MIN,
         GCD,
+        LCM,
+        FLOOR,
+        CEIL,
+        MIN,
+        MAX,
+        EXP,
+        LN,
+        SIGN,
+        FACTORIAL,
         FN_RANGE,
         REPLACEMENT,
         SUM,
@@ -484,6 +502,15 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == FINITE_SET_MAX
         || atom_name == FINITE_SET_MIN
         || atom_name == GCD
+        || atom_name == LCM
+        || atom_name == FLOOR
+        || atom_name == CEIL
+        || atom_name == MIN
+        || atom_name == MAX
+        || atom_name == EXP
+        || atom_name == LN
+        || atom_name == SIGN
+        || atom_name == FACTORIAL
 }
 
 #[cfg(test)]

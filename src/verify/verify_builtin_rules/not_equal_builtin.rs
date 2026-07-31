@@ -148,8 +148,8 @@ impl Runtime {
     }
 }
 
-// Primitive positive real constants are nonzero.
-// Example: `e != 0` and `pi != 0`.
+// Primitive positive real constants are nonzero, and Euler's number is not one.
+// Example: `e != 0`, `pi != 0`, and `e != 1`.
 fn try_verify_native_real_constant_nonzero(not_equal_fact: &NotEqualFact) -> Option<StmtResult> {
     let is_zero = |obj: &Obj| {
         matches!(
@@ -158,15 +158,24 @@ fn try_verify_native_real_constant_nonzero(not_equal_fact: &NotEqualFact) -> Opt
         )
     };
     let is_native_positive_constant = |obj: &Obj| matches!(obj, Obj::EulerNumber(_) | Obj::Pi(_));
+    let is_one = |obj: &Obj| {
+        matches!(
+            obj,
+            Obj::Number(number) if number.normalized_value == "1"
+        )
+    };
+    let is_e = |obj: &Obj| matches!(obj, Obj::EulerNumber(_));
     if !((is_zero(&not_equal_fact.left) && is_native_positive_constant(&not_equal_fact.right))
-        || (is_native_positive_constant(&not_equal_fact.left) && is_zero(&not_equal_fact.right)))
+        || (is_native_positive_constant(&not_equal_fact.left) && is_zero(&not_equal_fact.right))
+        || (is_one(&not_equal_fact.left) && is_e(&not_equal_fact.right))
+        || (is_e(&not_equal_fact.left) && is_one(&not_equal_fact.right)))
     {
         return None;
     }
     Some(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             not_equal_fact.clone().into(),
-            "native positive real constant is nonzero".to_string(),
+            "native real constant distinctness".to_string(),
             Vec::new(),
         )
         .into(),

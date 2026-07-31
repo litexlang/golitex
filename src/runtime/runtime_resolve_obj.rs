@@ -100,6 +100,45 @@ impl Runtime {
                     Gcd::new(self.resolve_obj(&gcd.left), self.resolve_obj(&gcd.right)).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
+            Obj::Lcm(x) => {
+                let result: Obj =
+                    Lcm::new(self.resolve_obj(&x.left), self.resolve_obj(&x.right)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
+            Obj::Floor(x) => {
+                let result: Obj = Floor::new(self.resolve_obj(&x.arg)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
+            Obj::Ceil(x) => {
+                let result: Obj = Ceil::new(self.resolve_obj(&x.arg)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
+            Obj::Min(x) => {
+                let result: Obj =
+                    Min::new(self.resolve_obj(&x.left), self.resolve_obj(&x.right)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
+            Obj::Max(x) => {
+                let result: Obj =
+                    Max::new(self.resolve_obj(&x.left), self.resolve_obj(&x.right)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
+            Obj::Exp(x) => {
+                let result: Obj = Exp::new(self.resolve_obj(&x.arg)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
+            Obj::Ln(x) => {
+                let result: Obj = Ln::new(self.resolve_obj(&x.arg)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
+            Obj::Sign(x) => {
+                let result: Obj = Sign::new(self.resolve_obj(&x.arg)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
+            Obj::Factorial(x) => {
+                let result: Obj = Factorial::new(self.resolve_obj(&x.arg)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
             Obj::Pow(pow) => {
                 let result = self.resolve_pow_after_children(
                     self.resolve_obj(&pow.base),

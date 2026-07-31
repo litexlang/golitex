@@ -24,15 +24,16 @@ pub use free_param_obj::{
     ForallFreeParamObj, ParamObjType, SetBuilderFreeParamObj, TupleIndexFreeParamObj,
 };
 pub use obj::{
-    fn_obj_to_string, Abs, Add, BigIntersect, BigUnion, Cart, CartDim, ClosedRange, ComplexAbs,
-    Cos, Cot, Div, EulerNumber, FiniteSeqListObj, FiniteSeqSet, FiniteSetMax, FiniteSetMin,
-    FiniteSetSize, FnObj, FnRange, Gcd, GeneralCart, ImaginaryPart, ImaginaryUnit,
-    InstantiatedTemplateObj, Intersect, IntervalObj, IntervalObjStruct, ListSet, Log, MatrixAdd,
-    MatrixListObj, MatrixMul, MatrixPow, MatrixScalarMul, MatrixSet, MatrixSub, Mod, Mul, Number,
-    Obj, ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind, OneSideInfinityIntervalObj,
+    fn_obj_to_string, Abs, Add, BigIntersect, BigUnion, Cart, CartDim, Ceil, ClosedRange,
+    ComplexAbs, Cos, Cot, Div, EulerNumber, Exp, Factorial, FiniteSeqListObj, FiniteSeqSet,
+    FiniteSetMax, FiniteSetMin, FiniteSetSize, Floor, FnObj, FnRange, Gcd, GeneralCart,
+    ImaginaryPart, ImaginaryUnit, InstantiatedTemplateObj, Intersect, IntervalObj,
+    IntervalObjStruct, Lcm, ListSet, Ln, Log, MatrixAdd, MatrixListObj, MatrixMul, MatrixPow,
+    MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul, Number, Obj,
+    ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind, OneSideInfinityIntervalObj,
     OneSideInfinityIntervalObjStruct, Pi, Pow, PowerSet, Product, ProductOfFiniteSet, Proj, Range,
-    RealPart, Replacement, SeqSet, SetBuilder, SetDiff, SetMinus, Sin, Sqrt, StructObj, Sub, Sum,
-    SumOfFiniteSet, Tan, Tuple, TupleDim, Union,
+    RealPart, Replacement, SeqSet, SetBuilder, SetDiff, SetMinus, Sign, Sin, Sqrt, StructObj, Sub,
+    Sum, SumOfFiniteSet, Tan, Tuple, TupleDim, Union,
 };
 pub use obj_alpha_key::{
     nested_obj_binder_normalized_key, obj_equality_key,

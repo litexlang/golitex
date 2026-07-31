@@ -505,6 +505,42 @@ impl Runtime {
                     Some((StmtUnknown::new()).into())
                 }
             }
+            (Obj::Exp(l), Obj::Exp(r)) => {
+                if self.objs_have_same_known_equality_rc_in_some_env(&l.arg, &r.arg) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::Ln(l), Obj::Ln(r)) => {
+                if self.objs_have_same_known_equality_rc_in_some_env(&l.arg, &r.arg) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::Sign(l), Obj::Sign(r)) => {
+                if self.objs_have_same_known_equality_rc_in_some_env(&l.arg, &r.arg) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
+            (Obj::Factorial(l), Obj::Factorial(r)) => {
+                if self.objs_have_same_known_equality_rc_in_some_env(&l.arg, &r.arg) {
+                    Some(factual_equal_success_by_builtin_reason(
+                        left, right, line_file, reason,
+                    ))
+                } else {
+                    Some((StmtUnknown::new()).into())
+                }
+            }
             (Obj::Union(l), Obj::Union(r)) => {
                 if self.arg_pairs_share_known_equality_class(&[
                     (&l.left, &r.left),

@@ -401,6 +401,51 @@ impl LeanEmitter {
                 &default_line_file(),
                 "Lean extractor MVP does not support native gcd",
             )),
+            Obj::Lcm(x) => {
+                let left = self.real_expr(&x.left)?;
+                let right = self.real_expr(&x.right)?;
+                Ok(format!(
+                    "((Nat.lcm (Int.natAbs (Int.floor {left})) (Int.natAbs (Int.floor {right}))) : ℝ)"
+                ))
+            }
+            Obj::Floor(x) => {
+                let arg = self.real_expr(&x.arg)?;
+                Ok(format!("((Int.floor {arg}) : ℝ)"))
+            }
+            Obj::Ceil(x) => {
+                let arg = self.real_expr(&x.arg)?;
+                Ok(format!("((Int.ceil {arg}) : ℝ)"))
+            }
+            Obj::Min(x) => {
+                let left = self.real_expr(&x.left)?;
+                let right = self.real_expr(&x.right)?;
+                Ok(format!("(min {left} {right})"))
+            }
+            Obj::Max(x) => {
+                let left = self.real_expr(&x.left)?;
+                let right = self.real_expr(&x.right)?;
+                Ok(format!("(max {left} {right})"))
+            }
+            Obj::Exp(x) => {
+                let arg = self.real_expr(&x.arg)?;
+                Ok(format!("(Real.exp {arg})"))
+            }
+            Obj::Ln(x) => {
+                let arg = self.real_expr(&x.arg)?;
+                Ok(format!("(Real.log {arg})"))
+            }
+            Obj::Sign(x) => {
+                let arg = self.real_expr(&x.arg)?;
+                Ok(format!(
+                    "(if {arg} > 0 then (1 : ℝ) else if {arg} < 0 then (-1 : ℝ) else (0 : ℝ))"
+                ))
+            }
+            Obj::Factorial(x) => {
+                let arg = self.real_expr(&x.arg)?;
+                Ok(format!(
+                    "((Nat.factorial (Int.natAbs (Int.floor {arg}))) : ℝ)"
+                ))
+            }
             Obj::Atom(atom) => self.real_atom(atom),
             Obj::Add(obj) => self.binary_expr(&obj.left, "+", &obj.right),
             Obj::Sub(obj) => self.binary_expr(&obj.left, "-", &obj.right),
