@@ -235,6 +235,12 @@ gaps in language design, the standard library, verification rules, diagnostics,
 and proof organization. A failed translation is useful evidence when its first
 unsupported step and any remaining assumptions are visible.
 
+The guide
+[Write Math with Litex by AI](docs/Write_Math_With_Litex_By_AI.md)
+describes the persistent-session, transactional `try:`, proof-journal, and
+clean-checkpoint workflow used to turn those successes and failures into
+reusable writing experience.
+
 This makes four practical directions possible:
 
 | Direction | What Litex contributes today |

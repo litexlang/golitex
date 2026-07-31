@@ -1977,7 +1977,7 @@ not $prime(1)
 `gcd(a, b)` takes integer arguments and requires `a != 0 or b != 0`.
 Concrete gcd expressions normalize inside ordinary facts, so `eval` is a
 presentation choice rather than a prerequisite. `$prime(p)` is a native
-predicate on `N_pos`; concrete literals in the `u64` range are decided
+predicate on `N+`; concrete literals in the `u64` range are decided
 exactly, while `by def $prime(p)` exposes the symbolic trial-divisor
 definition.
 
@@ -2833,11 +2833,11 @@ forall a, b, c, d R:
 - Category: `obj`
 - Purpose: Shows membership and subset facts for N, Z, Q, and R.
 
-#### Compact Set Suffixes (Preview)
+#### Signed Standard Sets
 
 An adjacent `+` selects a strictly positive numeric set, while an adjacent `-`
-selects a strictly negative one. These inputs normalize to the existing long
-names in verifier output.
+selects a strictly negative one. Verifier output may use an internal normalized
+name for the same set.
 
 ```litex
 have n N+
@@ -2850,11 +2850,11 @@ have rp R+
 rp $in R+
 
 have zn Z-
-zn $in Z_neg
+zn $in Z-
 have qn Q-
-qn $in Q_neg
+qn $in Q-
 have rn R-
-rn $in R_neg
+rn $in R-
 ```
 
 The suffix must be adjacent: `N +` is not a compact type. Nonzero sets continue
@@ -2875,9 +2875,9 @@ c $in Z
 
 1 $in Q+
 1 $in R+
--1 $in R_neg
--1.1 $in Q_neg
--1 $in Z_neg
+-1 $in R-
+-1.1 $in Q-
+-1 $in Z-
 1 $in Q_nz
 
 1 + 1 $in N
@@ -2886,15 +2886,15 @@ c $in Z
 
 2 - 9.5 + 10.5 $in Z
 
-1 - 5 $in Z_neg
+1 - 5 $in Z-
 2 + 3 $in N+
 4 - 1 $in N
 
--0.5 * 6 $in Q_neg
-1 - 2.25 $in Q_neg
-0 - 3 $in R_neg
+-0.5 * 6 $in Q-
+1 - 2.25 $in Q-
+0 - 3 $in R-
 
--2 * 2.5 $in R_neg
+-2 * 2.5 $in R-
 7 - 3 $in Q_nz
 10 - 10 + 1 $in Q_nz
 
@@ -3147,7 +3147,7 @@ name common subsets like positive or nonzero numbers.
 0 $in R
 1 $in N+
 1 $in R+
--1 $in Z_neg
+-1 $in Z-
 1 $in Z_nz
 1 / 6 $in Q
 6 / 3 $in Z

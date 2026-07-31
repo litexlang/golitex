@@ -95,8 +95,9 @@ locally when that better preserves its dependency structure.
 ## Divisibility, primality, and greatest common divisors
 
 `divides(a, b)` means that `b = a * k` for some integer `k`. Native `$prime(p)`
-and `gcd(a, b)` are the directly usable interfaces. The module retains
-transparent teaching constructions:
+and `gcd(a, b)` are the directly usable interfaces. The module retains the
+transparent trial-division predicate, but does not expose a second gcd
+function:
 
 <!-- litex:skip-test -->
 ```litex
@@ -104,17 +105,23 @@ prop prime_by_trial_division(p N_pos):
     2 <= p
     forall d range(2, p):
         p % d != 0
-
-have fn gcd_by_finite_divisors(a, b Z: a != 0 or b != 0) N =
-    finite_set_max({d N_pos: $divides(d, a), $divides(d, b)})
 ```
 
-The source construction exposes why the result exists: the set of positive
-common divisors is finite and nonempty, and the kernel `finite_set_max` selects
-its greatest member. Checked bridge theorems identify it with native `gcd` and
-identify trial-division primality with `$prime`. This node supports the divisor
-laws, Euclidean reduction, Bezout's identity, reduced fractions, and the
-prime-divisor dichotomy. The construction and these main laws are checked.
+The rejected standard-library form is a parallel source function such as
+`gcd_by_finite_divisors`. User code should not have to choose between two gcd
+objects. The checked public theorems instead build directly on the native
+contract: positivity, divisibility of both arguments, and maximality among
+positive common divisors.
+
+The separate teaching example
+[`gcd_from_finite_divisors.lit`](../../examples/01_proof_patterns/gcd_from_finite_divisors.lit)
+shows that the set of positive common divisors is finite and nonempty, selects
+its greatest member with `finite_set_max`, and proves the result equal to native
+`gcd`. Keeping that construction outside the module preserves its explanatory
+value without making it a competing public interface. Checked bridge theorems
+still identify trial-division primality with `$prime`. This node supports the
+divisor laws, Euclidean reduction, Bezout's identity, reduced fractions, and
+the prime-divisor dichotomy.
 
 ## Reduced rational fractions
 

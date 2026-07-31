@@ -1,7 +1,7 @@
 # A member of a symbolic Cartesian product inherits its tuple dimension and
 # coordinate-factor membership from the product metadata.
 
-have n N_pos = 3
+have n N+ = 3
 have cart c for i1 <= n, proj(c, i1) = R
 
 forall p c:
@@ -45,7 +45,7 @@ have fn X(i1 closed_range(1, n)) power_set(R) = R
 prop has_X_values(f fn(i1 closed_range(1, n)) R):
     forall j closed_range(1, n):
         f(j) $in X(j)
-prop has_values_in_family(m N_pos, V set, Y fn(i1 closed_range(1, m)) power_set(V), g fn(i1 closed_range(1, m)) V):
+prop has_values_in_family(m N+, V set, Y fn(i1 closed_range(1, m)) power_set(V), g fn(i1 closed_range(1, m)) V):
     forall i1 closed_range(1, m):
         g(i1) $in Y(i1)
 have P set = {f fn(i1 closed_range(1, n)) R: $has_X_values(f)}
@@ -70,7 +70,7 @@ have fn choice_tuple_encode(p c) P = raw_choice_tuple_encode(p)
 
 # Symbolic dimensions remain available for a tuple defined inside a forall proof.
 claim:
-    ? forall m N_pos:
+    ? forall m N+:
         2 <= m
         =>:
             m = m
@@ -79,7 +79,7 @@ claim:
     m = m
 
 claim:
-    ? forall m N_pos, V set, Y fn(i1 closed_range(1, m)) power_set(V), S set:
+    ? forall m N+, V set, Y fn(i1 closed_range(1, m)) power_set(V), S set:
         2 <= m
         S = {g fn(i1 closed_range(1, m)) V: $has_values_in_family(m, V, Y, g)}
         =>:
