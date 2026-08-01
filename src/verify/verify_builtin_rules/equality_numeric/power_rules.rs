@@ -1,4 +1,9 @@
 use super::*;
+use crate::verify::{
+    number_is_in_n, number_is_in_n_pos, number_is_in_q_neg, number_is_in_q_nz, number_is_in_q_pos,
+    number_is_in_r_neg, number_is_in_r_nz, number_is_in_r_pos, number_is_in_z, number_is_in_z_neg,
+    number_is_in_z_nz,
+};
 
 impl Runtime {
     pub(super) fn obj_is_builtin_literal_two(obj: &Obj) -> bool {
@@ -14,7 +19,7 @@ impl Runtime {
         base: &Obj,
         exponent: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let Obj::Pow(pow) = factor else {
             if !Self::obj_is_builtin_literal_one(exponent) {
@@ -25,7 +30,7 @@ impl Runtime {
                     base,
                     factor,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true());
         };
@@ -34,7 +39,7 @@ impl Runtime {
                 base,
                 pow.base.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -45,7 +50,7 @@ impl Runtime {
                 exponent,
                 pow.exponent.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true())
     }
@@ -54,12 +59,12 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let in_n_pos: AtomicFact =
             InFact::new(obj.clone(), StandardSet::NPos.into(), line_file).into();
         Ok(self
-            .verify_non_equational_known_then_builtin_rules_only(&in_n_pos, verify_state)?
+            .verify_cross_family_builtin_child(&in_n_pos, builtin_state)?
             .is_true())
     }
 
@@ -68,25 +73,67 @@ impl Runtime {
         obj: &Obj,
         standard_set: StandardSet,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
-        let in_set: AtomicFact = InFact::new(obj.clone(), standard_set.into(), line_file).into();
-        Ok(self
-            .verify_non_equational_known_then_builtin_rules_only(&in_set, verify_state)?
-            .is_true())
+        let in_set: AtomicFact =
+            InFact::new(obj.clone(), standard_set.clone().into(), line_file.clone()).into();
+        if self
+            .verify_cross_family_builtin_child(&in_set, builtin_state)?
+            .is_true()
+        {
+            return Ok(true);
+        }
+
+        if let Obj::Number(number) = obj {
+            let is_member = match &standard_set {
+                StandardSet::C | StandardSet::R | StandardSet::Q => true,
+                StandardSet::RPos => number_is_in_r_pos(number),
+                StandardSet::RNeg => number_is_in_r_neg(number),
+                StandardSet::RNz => number_is_in_r_nz(number),
+                StandardSet::QPos => number_is_in_q_pos(number),
+                StandardSet::QNeg => number_is_in_q_neg(number),
+                StandardSet::QNz => number_is_in_q_nz(number),
+                StandardSet::Z => number_is_in_z(number),
+                StandardSet::ZNeg => number_is_in_z_neg(number),
+                StandardSet::ZNz => number_is_in_z_nz(number),
+                StandardSet::N => number_is_in_n(number),
+                StandardSet::NPos => number_is_in_n_pos(number),
+            };
+            if is_member {
+                return Ok(true);
+            }
+        }
+
+        for known_set in self.known_sets_containing_obj(obj) {
+            let Obj::StandardSet(known_standard_set) = &known_set else {
+                continue;
+            };
+            if !Self::standard_set_is_subset_eq(known_standard_set, &standard_set) {
+                continue;
+            }
+            let known_membership: AtomicFact =
+                InFact::new(obj.clone(), known_set, line_file.clone()).into();
+            if self
+                .verify_known_non_forall_atomic_fact(&known_membership)?
+                .is_true()
+            {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 
     pub(super) fn obj_is_verified_integer_exponent_for_power_builtin(
         &mut self,
         obj: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         if self.obj_is_verified_in_standard_set_for_power_builtin(
             obj,
             StandardSet::Z,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(true);
         }
@@ -94,7 +141,7 @@ impl Runtime {
             obj,
             StandardSet::N,
             line_file,
-            verify_state,
+            builtin_state,
         )
     }
 
@@ -102,7 +149,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let nonzero: AtomicFact = NotEqualFact::new(
             obj.clone(),
@@ -111,7 +158,7 @@ impl Runtime {
         )
         .into();
         Ok(self
-            .verify_non_equational_known_then_builtin_rules_only(&nonzero, verify_state)?
+            .verify_same_family_builtin_child(&nonzero, builtin_state)?
             .is_true())
     }
 
@@ -120,7 +167,7 @@ impl Runtime {
         combined_power: &Pow,
         product: &Mul,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let Obj::Add(add_exponent) = combined_power.exponent.as_ref() else {
             return Ok(false);
@@ -149,7 +196,7 @@ impl Runtime {
                 combined_power.base.as_ref(),
                 left_exp,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? {
                 continue;
             }
@@ -158,13 +205,17 @@ impl Runtime {
                 combined_power.base.as_ref(),
                 right_exp,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? {
                 continue;
             }
             let exponents_are_positive =
-                self.obj_is_verified_in_n_pos(left_exp, line_file.clone(), verify_state)?
-                    && self.obj_is_verified_in_n_pos(right_exp, line_file.clone(), verify_state)?;
+                self.obj_is_verified_in_n_pos(left_exp, line_file.clone(), builtin_state)?
+                    && self.obj_is_verified_in_n_pos(
+                        right_exp,
+                        line_file.clone(),
+                        builtin_state,
+                    )?;
             if exponents_are_positive {
                 return Ok(true);
             }
@@ -176,20 +227,20 @@ impl Runtime {
                 left_exp,
                 StandardSet::N,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? && self
                 .obj_is_verified_in_standard_set_for_power_builtin(
                     right_exp,
                     StandardSet::N,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
             if exponents_are_natural {
                 let base_in_c = self.obj_is_verified_in_standard_set_for_power_builtin(
                     combined_power.base.as_ref(),
                     StandardSet::C,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if base_in_c {
                     return Ok(true);
@@ -202,19 +253,19 @@ impl Runtime {
                 left_exp,
                 StandardSet::R,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? && self.obj_is_verified_in_standard_set_for_power_builtin(
                 right_exp,
                 StandardSet::R,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if exponents_are_real
                 && self.obj_is_verified_in_standard_set_for_power_builtin(
                     combined_power.base.as_ref(),
                     StandardSet::RPos,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
             {
                 return Ok(true);
@@ -226,12 +277,12 @@ impl Runtime {
             let exponents_are_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
                 left_exp,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? && self
                 .obj_is_verified_integer_exponent_for_power_builtin(
                     right_exp,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
             if !exponents_are_integer {
                 return Ok(false);
@@ -239,7 +290,7 @@ impl Runtime {
             if !self.obj_is_verified_nonzero_for_power_builtin(
                 combined_power.base.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? {
                 return Ok(false);
             }
@@ -254,7 +305,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let holds = match (left, right) {
             (Obj::Pow(pow), Obj::Mul(product)) => self
@@ -262,14 +313,14 @@ impl Runtime {
                     pow,
                     product,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?,
             (Obj::Mul(product), Obj::Pow(pow)) => self
                 .power_addition_exponent_rule_holds_one_direction(
                     pow,
                     product,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?,
             _ => false,
         };
@@ -289,7 +340,7 @@ impl Runtime {
         nested_power: &Pow,
         combined_power: &Pow,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let Obj::Pow(inner_power) = nested_power.base.as_ref() else {
             return Ok(false);
@@ -299,7 +350,7 @@ impl Runtime {
                 inner_power.base.as_ref(),
                 combined_power.base.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -316,7 +367,7 @@ impl Runtime {
                 &multiplied_exponent,
                 combined_power.exponent.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -329,18 +380,18 @@ impl Runtime {
             combined_power.base.as_ref(),
             StandardSet::RPos,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         let exponents_are_real = self.obj_is_verified_in_standard_set_for_power_builtin(
             inner_power.exponent.as_ref(),
             StandardSet::R,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? && self.obj_is_verified_in_standard_set_for_power_builtin(
             nested_power.exponent.as_ref(),
             StandardSet::R,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if base_is_positive_real && exponents_are_real {
             return Ok(true);
@@ -351,11 +402,11 @@ impl Runtime {
         let exponents_are_positive = self.obj_is_verified_in_n_pos(
             inner_power.exponent.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? && self.obj_is_verified_in_n_pos(
             nested_power.exponent.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if exponents_are_positive {
             return Ok(true);
@@ -367,19 +418,19 @@ impl Runtime {
             inner_power.exponent.as_ref(),
             StandardSet::N,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? && self.obj_is_verified_in_standard_set_for_power_builtin(
             nested_power.exponent.as_ref(),
             StandardSet::N,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if exponents_are_natural
             && self.obj_is_verified_in_standard_set_for_power_builtin(
                 combined_power.base.as_ref(),
                 StandardSet::C,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
         {
             return Ok(true);
@@ -391,11 +442,11 @@ impl Runtime {
         let exponents_are_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
             inner_power.exponent.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? && self.obj_is_verified_integer_exponent_for_power_builtin(
             nested_power.exponent.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !exponents_are_integer {
             return Ok(false);
@@ -403,7 +454,7 @@ impl Runtime {
         self.obj_is_verified_nonzero_for_power_builtin(
             combined_power.base.as_ref(),
             line_file,
-            verify_state,
+            builtin_state,
         )
     }
 
@@ -414,7 +465,7 @@ impl Runtime {
         nested_power: &Pow,
         base: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let one: Obj = Number::new("1".to_string()).into();
         let combined_power = Pow::new(base.clone(), one);
@@ -422,7 +473,7 @@ impl Runtime {
             nested_power,
             &combined_power,
             line_file,
-            verify_state,
+            builtin_state,
         )
     }
 
@@ -431,7 +482,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let holds = match (left, right) {
             (Obj::Pow(left_power), Obj::Pow(right_power)) => {
@@ -439,25 +490,25 @@ impl Runtime {
                     left_power,
                     right_power,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )? || self.power_of_power_rule_holds_one_direction(
                     right_power,
                     left_power,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
             }
             (Obj::Pow(nested_power), base) => self.power_of_power_equals_base_holds(
                 nested_power,
                 base,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?,
             (base, Obj::Pow(nested_power)) => self.power_of_power_equals_base_holds(
                 nested_power,
                 base,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?,
             _ => false,
         };
@@ -477,7 +528,7 @@ impl Runtime {
         combined_power: &Pow,
         product: &Mul,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let Obj::Mul(combined_base) = combined_power.base.as_ref() else {
             return Ok(false);
@@ -485,27 +536,27 @@ impl Runtime {
         let exponent_in_n_pos = self.obj_is_verified_in_n_pos(
             combined_power.exponent.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !exponent_in_n_pos {
             let exponent_in_n = self.obj_is_verified_in_standard_set_for_power_builtin(
                 combined_power.exponent.as_ref(),
                 StandardSet::N,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             let natural_exponent_over_complex_bases = if exponent_in_n {
                 let left_base_in_c = self.obj_is_verified_in_standard_set_for_power_builtin(
                     combined_base.left.as_ref(),
                     StandardSet::C,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 let right_base_in_c = self.obj_is_verified_in_standard_set_for_power_builtin(
                     combined_base.right.as_ref(),
                     StandardSet::C,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 left_base_in_c && right_base_in_c
             } else {
@@ -518,7 +569,7 @@ impl Runtime {
                 let exponent_is_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
                     combined_power.exponent.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !exponent_is_integer {
                     false
@@ -526,17 +577,17 @@ impl Runtime {
                     let left_base_nonzero = self.obj_is_verified_nonzero_for_power_builtin(
                         combined_base.left.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?;
                     let right_base_nonzero = self.obj_is_verified_nonzero_for_power_builtin(
                         combined_base.right.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?;
                     let combined_base_nonzero = self.obj_is_verified_nonzero_for_power_builtin(
                         combined_power.base.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?;
                     left_base_nonzero && right_base_nonzero && combined_base_nonzero
                 }
@@ -572,7 +623,7 @@ impl Runtime {
                 left_base,
                 combined_power.exponent.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? {
                 continue;
             }
@@ -581,7 +632,7 @@ impl Runtime {
                 right_base,
                 combined_power.exponent.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? {
                 continue;
             }
@@ -596,20 +647,20 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let holds = match (left, right) {
             (Obj::Pow(pow), Obj::Mul(product)) => self.power_product_rule_holds_one_direction(
                 pow,
                 product,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?,
             (Obj::Mul(product), Obj::Pow(pow)) => self.power_product_rule_holds_one_direction(
                 pow,
                 product,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?,
             _ => false,
         };

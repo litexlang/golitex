@@ -6,6 +6,7 @@ forall x1, x2 {1, 2, 3}:
     mapping_identity(x1) = mapping_identity(x2)
     =>:
         x1 = mapping_identity(x1) = mapping_identity(x2) = x2
+by def $injective({1, 2, 3}, {1, 2, 3}, mapping_identity)
 $injective({1, 2, 3}, {1, 2, 3}, mapping_identity)
 
 claim:
@@ -13,7 +14,9 @@ claim:
         exist x {1, 2, 3} st {y = mapping_identity(x)}
     y = mapping_identity(y)
     witness exist x {1, 2, 3} st {y = mapping_identity(x)} from y
+by def $surjective({1, 2, 3}, {1, 2, 3}, mapping_identity)
 $surjective({1, 2, 3}, {1, 2, 3}, mapping_identity)
+by def $bijective({1, 2, 3}, {1, 2, 3}, mapping_identity)
 $bijective({1, 2, 3}, {1, 2, 3}, mapping_identity)
 
 # A finite injection has the same cardinality as its range.

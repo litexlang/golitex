@@ -51,7 +51,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (sign, selected) = match (left, right) {
             (Obj::Sign(sign), selected) | (selected, Obj::Sign(sign)) => (sign, selected),
@@ -67,8 +67,7 @@ impl Runtime {
             "-1" => LessFact::new((*sign.arg).clone(), zero, line_file.clone()).into(),
             _ => return Ok(None),
         };
-        let premise_result =
-            self.verify_atomic_fact_restricted_known_builtin(&premise, verify_state)?;
+        let premise_result = self.verify_cross_family_builtin_child(&premise, builtin_state)?;
         if premise_result.is_unknown() {
             return Ok(None);
         }
@@ -126,10 +125,10 @@ impl Runtime {
     pub(super) fn try_verify_native_exp_sign_factorial_order(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((verified, subgoals)) =
-            self.native_exp_sign_factorial_order_shape(atomic_fact, verify_state)?
+            self.native_exp_sign_factorial_order_shape(atomic_fact, builtin_state)?
         else {
             return Ok(None);
         };
@@ -149,7 +148,7 @@ impl Runtime {
     fn native_exp_sign_factorial_order_shape(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<(bool, Vec<StmtResult>)>, RuntimeError> {
         let (left, right, strict) = match atomic_fact {
             AtomicFact::LessFact(f) => (&f.left, &f.right, true),
@@ -202,8 +201,7 @@ impl Runtime {
             return Ok(None);
         };
         let _ = ln;
-        let premise_result =
-            self.verify_atomic_fact_restricted_known_builtin(&premise, verify_state)?;
+        let premise_result = self.verify_cross_family_builtin_child(&premise, builtin_state)?;
         if premise_result.is_unknown() {
             return Ok(None);
         }

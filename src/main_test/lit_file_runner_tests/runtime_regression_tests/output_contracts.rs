@@ -1504,6 +1504,46 @@ forall x R_pos:
 }
 
 #[test]
+fn recursive_builtin_rule_results_are_nested_back_to_the_root() {
+    let source_code = r#"
+have a, b, c, d R_pos
+(a + b) + (c + d) > 0
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("recursive_builtin_result_chain");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "recursive builtin fixture failed:\n{run_output}"
+    );
+
+    let root = stmt_results
+        .last()
+        .and_then(StmtResult::factual_success)
+        .expect("the final order fact should have a factual result");
+    let VerifiedByResult::BuiltinRule(root_rule) = &root.verified_by else {
+        panic!("the root should be verified by a builtin rule: {root:?}");
+    };
+    assert_eq!(root_rule.subgoals.len(), 2);
+
+    for branch in &root_rule.subgoals {
+        let branch = branch
+            .factual_success()
+            .expect("each recursive branch should remain a factual result");
+        let VerifiedByResult::BuiltinRule(branch_rule) = &branch.verified_by else {
+            panic!("each branch should retain its builtin-rule evidence: {branch:?}");
+        };
+        assert!(
+            !branch_rule.subgoals.is_empty(),
+            "a recursive branch must propagate its own child evidence"
+        );
+    }
+}
+
+#[test]
 fn detail_output_moves_store_facts_into_environment_effects() {
     run_with_large_stack(
         "detail_output_moves_store_facts_into_environment_effects_large_stack",

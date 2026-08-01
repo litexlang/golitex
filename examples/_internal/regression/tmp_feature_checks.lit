@@ -44,6 +44,7 @@ forall x, y Q+, n Z:
         x = y
 
 forall x Q_nz, n Z:
+    x $in R
     abs(x^n) = abs(x)^n
 
 forall a, b R:

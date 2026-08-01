@@ -2,6 +2,14 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
+    pub(crate) fn verify_non_equational_known_then_builtin_rules_only(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        _verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.verify_atomic_fact_with_builtin_rules(atomic_fact)
+    }
+
     /// If the fact string is in the known-facts cache, return the cached verification result.
     pub fn verify_fact_from_cache_using_display_string(&self, fact: &Fact) -> Option<StmtResult> {
         let key = fact.to_string();
@@ -89,24 +97,14 @@ impl Runtime {
     pub(crate) fn verify_atomic_fact_restricted_known_builtin(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&atomic_fact.clone().into())
         {
             return Ok(cached_result);
         }
-        match atomic_fact {
-            AtomicFact::EqualFact(equal_fact) => self.verify_objs_are_equal_in_equality_builtin(
-                &equal_fact.left,
-                &equal_fact.right,
-                equal_fact.line_file.clone(),
-                verify_state,
-            ),
-            _ => {
-                self.verify_non_equational_known_then_builtin_rules_only(atomic_fact, verify_state)
-            }
-        }
+        self.verify_atomic_fact_with_builtin_rules(atomic_fact)
     }
 
     pub(crate) fn verify_atomic_fact_by_known_atomic_or_builtin_only(
@@ -123,16 +121,6 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
-    }
-
-    pub(crate) fn non_equational_atomic_fact_holds_by_known_then_builtin_rules_only(
-        &mut self,
-        atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
-    ) -> Result<bool, RuntimeError> {
-        let result =
-            self.verify_non_equational_known_then_builtin_rules_only(atomic_fact, verify_state)?;
-        Ok(result.is_true())
     }
 
     pub(crate) fn verify_or_and_chain_atomic_fact_restricted_known_builtin(
@@ -408,7 +396,7 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
-        verify_state: &VerifyState,
+        _verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut seen = Vec::new();
         let mut steps = Vec::new();
@@ -420,8 +408,7 @@ impl Runtime {
             seen.push(key);
             let in_r: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::R.into(), line_file.clone()).into();
-            let result =
-                self.verify_non_equational_known_then_builtin_rules_only(&in_r, verify_state)?;
+            let result = self.verify_atomic_fact_with_builtin_rules(&in_r)?;
             if result.is_true() {
                 steps.push(result);
                 continue;

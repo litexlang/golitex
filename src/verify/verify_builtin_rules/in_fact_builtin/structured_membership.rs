@@ -8,17 +8,36 @@ impl Runtime {
         in_fact: &InFact,
         set_builder: &SetBuilder,
         power_set: &PowerSet,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
-        let subset_fact = SubsetFact::new(
+        let subset_fact: AtomicFact = SubsetFact::new(
             (*set_builder.param_set).clone(),
             base_set.clone(),
             in_fact.line_file.clone(),
         )
         .into();
-        let verify_subset_result =
-            self.verify_atomic_fact_by_known_atomic_or_builtin_only(&subset_fact, verify_state)?;
+        let verify_subset_result = match (&*set_builder.param_set, base_set) {
+            (Obj::StandardSet(left), Obj::StandardSet(right))
+                if Self::standard_set_is_subset_eq(left, right) =>
+            {
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    subset_fact.clone().into(),
+                    "standard_set_subset".to_string(),
+                    Vec::new(),
+                )
+                .into()
+            }
+            (left, right) if objs_equal_with_nested_binder_alpha_equivalence(left, right) => {
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    subset_fact.clone().into(),
+                    "subset reflexivity".to_string(),
+                    Vec::new(),
+                )
+                .into()
+            }
+            _ => self.verify_cross_family_builtin_child(&subset_fact, builtin_state)?,
+        };
         if !verify_subset_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -26,14 +45,12 @@ impl Runtime {
         infer_result.new_infer_result_inside(verify_subset_result.infer_result());
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
-        Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
-            stmt.clone(),
+        Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+            stmt,
             infer_result,
-            VerifiedByResult::builtin_rule(
-                "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
-                    .to_string(),
-                stmt,
-            ),
+            "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
+                .to_string(),
+            vec![verify_subset_result],
         ))
         .into())
     }
@@ -43,42 +60,41 @@ impl Runtime {
         in_fact: &InFact,
         list_set: &ListSet,
         power_set: &PowerSet,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
         let mut infer_result = InferResult::new();
+        let mut subgoals = Vec::with_capacity(list_set.list.len());
         for element_box in list_set.list.iter() {
             let element_obj = *element_box.clone();
             let element_in_base_fact =
                 InFact::new(element_obj, base_set.clone(), in_fact.line_file.clone()).into();
-            let verify_one_element_result = self
-                .verify_atomic_fact_by_known_atomic_or_builtin_only(
-                    &element_in_base_fact,
-                    verify_state,
-                )?;
+            let verify_one_element_result =
+                self.verify_same_family_builtin_child(&element_in_base_fact, builtin_state)?;
             if !verify_one_element_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
             infer_result.new_infer_result_inside(verify_one_element_result.infer_result());
+            subgoals.push(verify_one_element_result);
         }
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
-        Ok((FactualStmtSuccess::new_with_verified_by_builtin_rules(
-            stmt.clone(),
-            infer_result,
-            VerifiedByResult::builtin_rule(
-                "list_set in power_set: each element is in the base set".to_string(),
+        Ok(
+            (FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                 stmt,
-            ),
-        ))
-        .into())
+                infer_result,
+                "list_set in power_set: each element is in the base set".to_string(),
+                subgoals,
+            ))
+            .into(),
+        )
     }
 
     pub(super) fn verify_in_fact_by_equal_to_one_element_in_list_set(
         &mut self,
         in_fact: &InFact,
         list_set: &ListSet,
-        verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Check reflexive and already-known element equalities before invoking
         // the broader equality builtin search for list-set membership.
@@ -103,71 +119,6 @@ impl Runtime {
             }
         }
 
-        if !verify_state.list_set_membership_can_use_equality_builtin {
-            return Ok((StmtUnknown::new()).into());
-        }
-
-        let equality_or_result =
-            self.verify_in_fact_by_equality_or_for_list_set(in_fact, list_set, verify_state)?;
-        if equality_or_result.is_true() {
-            return Ok(equality_or_result);
-        }
-
-        Ok((StmtUnknown::new()).into())
-    }
-
-    pub(super) fn verify_in_fact_by_equality_or_for_list_set(
-        &mut self,
-        in_fact: &InFact,
-        list_set: &ListSet,
-        verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        if list_set.list.is_empty() {
-            return Ok((StmtUnknown::new()).into());
-        }
-
-        let mut left_equal_facts = Vec::with_capacity(list_set.list.len());
-        let mut right_equal_facts = Vec::with_capacity(list_set.list.len());
-        for current_element_in_list_set in list_set.list.iter() {
-            left_equal_facts.push(AndChainAtomicFact::AtomicFact(
-                EqualFact::new(
-                    in_fact.element.clone(),
-                    *current_element_in_list_set.clone(),
-                    in_fact.line_file.clone(),
-                )
-                .into(),
-            ));
-            right_equal_facts.push(AndChainAtomicFact::AtomicFact(
-                EqualFact::new(
-                    *current_element_in_list_set.clone(),
-                    in_fact.element.clone(),
-                    in_fact.line_file.clone(),
-                )
-                .into(),
-            ));
-        }
-
-        let candidate_or_facts = [
-            OrFact::new(left_equal_facts, in_fact.line_file.clone()),
-            OrFact::new(right_equal_facts, in_fact.line_file.clone()),
-        ];
-
-        for candidate_or_fact in candidate_or_facts {
-            let candidate_result = self
-                .verify_or_fact_known_then_builtin_rules_only(&candidate_or_fact, verify_state)?;
-            if candidate_result.is_true() {
-                return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
-                        in_fact.clone().into(),
-                        InferResult::from_fact(&in_fact.clone().into()),
-                        "list_set membership: equality with one listed element".to_string(),
-                        vec![candidate_result],
-                    )
-                    .into(),
-                );
-            }
-        }
-
         Ok((StmtUnknown::new()).into())
     }
 
@@ -175,8 +126,9 @@ impl Runtime {
         &mut self,
         not_in_fact: &NotInFact,
         list_set: &ListSet,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        let mut steps = Vec::with_capacity(list_set.list.len());
         for current_element_in_list_set in list_set.list.iter() {
             let not_equal_fact = NotEqualFact::new(
                 not_in_fact.element.clone(),
@@ -184,11 +136,25 @@ impl Runtime {
                 not_in_fact.line_file.clone(),
             )
             .into();
-            let not_equal_fact_verify_result = self
-                .verify_atomic_fact_known_then_builtin_rules_only(&not_equal_fact, verify_state)?;
+            let known_result =
+                self.verify_cross_family_builtin_child(&not_equal_fact, builtin_state)?;
+            let not_equal_fact_verify_result = if known_result.is_true() {
+                known_result
+            } else {
+                let AtomicFact::NotEqualFact(not_equal_fact) = &not_equal_fact else {
+                    unreachable!("the constructed list exclusion premise is not-equal")
+                };
+                let Some(result) = self
+                    .verify_resolved_numeric_not_equal_without_builtin_recursion(not_equal_fact)
+                else {
+                    return Ok((StmtUnknown::new()).into());
+                };
+                result
+            };
             if !not_equal_fact_verify_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
+            steps.push(not_equal_fact_verify_result);
         }
 
         Ok(
@@ -198,7 +164,7 @@ impl Runtime {
                     "{} is not equal to every element in list_set {}",
                     not_in_fact.element, not_in_fact.set
                 ),
-                Vec::new(),
+                steps,
             ))
             .into(),
         )
@@ -289,7 +255,7 @@ impl Runtime {
     }
 
     // If the env already has `element $in fn_def` (from `known_objs_in_fn_sets`), compare to the RHS `fn ...`.
-    pub(super) fn verify_in_fact_element_in_fn_set_by_stored_definition(
+    pub(crate) fn verify_in_fact_element_in_fn_set_by_stored_definition(
         &mut self,
         element: &Obj,
         expected_fn_set: &FnSet,
@@ -337,7 +303,7 @@ impl Runtime {
     /// `anon $in S` when `S` is a function space [`FnSet`] and the anonymous function's
     /// [`FnSetBody`] (params, dom facts, return set) matches `S` (same as comparing `S` to a
     /// [`FnSet`] built from the anon's body without the braced `equal_to`).
-    pub(super) fn verify_in_fact_anonymous_fn_signature_matches_fn_set(
+    pub(crate) fn verify_in_fact_anonymous_fn_signature_matches_fn_set(
         &mut self,
         anon: &AnonymousFn,
         expected_fn_set: &FnSet,
@@ -412,7 +378,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         target_set_obj: &Obj,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::FnObj(fn_obj) = &in_fact.element else {
             return Ok((StmtUnknown::new()).into());
@@ -434,7 +400,7 @@ impl Runtime {
         )
         .into();
         let index_in_n_pos_result =
-            self.verify_atomic_fact_known_then_builtin_rules_only(&index_in_n_pos, verify_state)?;
+            self.verify_same_family_builtin_child(&index_in_n_pos, builtin_state)?;
         if !index_in_n_pos_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -444,7 +410,7 @@ impl Runtime {
         let index_in_range: AtomicFact =
             LessEqualFact::new(index_obj, list_len_obj, in_fact.line_file.clone()).into();
         let index_in_range_result =
-            self.verify_atomic_fact_known_then_builtin_rules_only(&index_in_range, verify_state)?;
+            self.verify_cross_family_builtin_child(&index_in_range, builtin_state)?;
         if !index_in_range_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -457,10 +423,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let result = self.verify_atomic_fact_known_then_builtin_rules_only(
-                &element_in_target_set,
-                verify_state,
-            )?;
+            let result =
+                self.verify_same_family_builtin_child(&element_in_target_set, builtin_state)?;
             if !result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -486,7 +450,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         target_set_obj: &Obj,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::StandardSet(_) = target_set_obj else {
             return Ok((StmtUnknown::new()).into());
@@ -520,10 +484,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let result = self.verify_atomic_fact_known_then_builtin_rules_only(
-                &element_in_target_set,
-                verify_state,
-            )?;
+            let result =
+                self.verify_same_family_builtin_child(&element_in_target_set, builtin_state)?;
             if !result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -585,7 +547,7 @@ impl Runtime {
     pub(super) fn verify_in_fact_by_known_list_set_carrier(
         &mut self,
         in_fact: &InFact,
-        _verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::StandardSet(target_set) = &in_fact.set else {
             return Ok((StmtUnknown::new()).into());

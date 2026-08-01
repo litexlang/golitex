@@ -8,12 +8,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
-
         let (sum_m, sum_a, sum_b) = match (left, right) {
             (Obj::Sum(m), Obj::Add(a)) => match (a.left.as_ref(), a.right.as_ref()) {
                 (Obj::Sum(a1), Obj::Sum(a2)) => (m, a1, a2),
@@ -28,7 +24,7 @@ impl Runtime {
 
         let mut require_eq = |a: &Obj, b: &Obj| -> Result<bool, RuntimeError> {
             Ok(self
-                .verify_objs_are_equal_in_equality_builtin(a, b, line_file.clone(), verify_state)?
+                .verify_objs_are_equal_in_equality_builtin(a, b, line_file.clone(), builtin_state)?
                 .is_true())
         };
         if !require_eq(sum_m.start.as_ref(), sum_a.start.as_ref())? {
@@ -75,7 +71,7 @@ impl Runtime {
             x_binding,
             vec![dom_lo, dom_hi],
             &then_fact,
-            verify_state,
+            builtin_state,
         )?;
         if r.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -125,7 +121,7 @@ impl Runtime {
         param_binding: SymbolBinding,
         dom_facts: Vec<Fact>,
         then_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -136,7 +132,7 @@ impl Runtime {
             for dom_fact in dom_facts {
                 rt.store_fact_without_forall_coverage_check_and_infer(dom_fact)?;
             }
-            rt.verify_atomic_fact_by_known_atomic_or_builtin_only(then_fact, verify_state)
+            rt.verify_same_family_builtin_child(then_fact, builtin_state)
         })
     }
 
@@ -146,11 +142,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         let (add, s3) = match (left, right) {
             (Obj::Add(a), Obj::Sum(s)) => (a, s),
             (Obj::Sum(s), Obj::Add(a)) => (a, s),
@@ -168,7 +161,7 @@ impl Runtime {
                 left,
                 right,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? {
                 return Ok(Some(done));
             }
@@ -184,7 +177,7 @@ impl Runtime {
         stmt_left: &Obj,
         stmt_right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let one: Obj = Number::new("1".to_string()).into();
         let gap = Add::new((*s1.end).clone(), one).into();
@@ -193,7 +186,7 @@ impl Runtime {
                 &gap,
                 s2.start.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -204,7 +197,7 @@ impl Runtime {
                 s1.start.as_ref(),
                 s3.start.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -215,7 +208,7 @@ impl Runtime {
                 s2.end.as_ref(),
                 s3.end.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -226,7 +219,7 @@ impl Runtime {
                 s1.func.as_ref(),
                 s2.func.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -237,7 +230,7 @@ impl Runtime {
                 s1.func.as_ref(),
                 s3.func.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -258,7 +251,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (sum_obj, other) in [(left, right), (right, left)] {
             let Obj::Sum(sum) = sum_obj else {
@@ -269,7 +262,7 @@ impl Runtime {
                     sum.start.as_ref(),
                     sum.end.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -285,7 +278,7 @@ impl Runtime {
                     &expected,
                     other,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -307,7 +300,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (product_obj, other) in [(left, right), (right, left)] {
             let Obj::Product(product) = product_obj else {
@@ -318,7 +311,7 @@ impl Runtime {
                     product.start.as_ref(),
                     product.end.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -336,7 +329,7 @@ impl Runtime {
                     &expected,
                     other,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -357,11 +350,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         let one: Obj = Number::new("1".to_string()).into();
         for (full_obj, add_obj) in [(left, right), (right, left)] {
             let Obj::Sum(s_full) = full_obj else {
@@ -382,7 +372,7 @@ impl Runtime {
                         s_full.start.as_ref(),
                         s_pre.start.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -394,7 +384,7 @@ impl Runtime {
                         s_full.end.as_ref(),
                         &end_pre_plus_one,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -405,7 +395,7 @@ impl Runtime {
                         s_full.func.as_ref(),
                         s_pre.func.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -423,7 +413,7 @@ impl Runtime {
                         &expected_tail,
                         tail,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -446,11 +436,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         let one: Obj = Number::new("1".to_string()).into();
         for (full_obj, mul_obj) in [(left, right), (right, left)] {
             let Obj::Product(p_full) = full_obj else {
@@ -471,7 +458,7 @@ impl Runtime {
                         p_full.start.as_ref(),
                         p_pre.start.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -483,7 +470,7 @@ impl Runtime {
                         p_full.end.as_ref(),
                         &end_pre_plus_one,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -494,7 +481,7 @@ impl Runtime {
                         p_full.func.as_ref(),
                         p_pre.func.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -512,7 +499,7 @@ impl Runtime {
                         &expected_tail,
                         tail,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -557,11 +544,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         let one: Obj = Number::new("1".to_string()).into();
         for (full_side, add_side) in [(left, right), (right, left)] {
             let Obj::Sum(s_full) = full_side else {
@@ -592,7 +576,7 @@ impl Runtime {
                     s_full.start.as_ref(),
                     sums[0].start.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -603,7 +587,7 @@ impl Runtime {
                     s_full.end.as_ref(),
                     sums[sums.len() - 1].end.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -617,7 +601,7 @@ impl Runtime {
                         &gap,
                         sums[i + 1].start.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -635,7 +619,7 @@ impl Runtime {
                         s_full.func.as_ref(),
                         s.func.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -662,11 +646,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         let one: Obj = Number::new("1".to_string()).into();
         for (full_side, mul_side) in [(left, right), (right, left)] {
             let Obj::Product(p_full) = full_side else {
@@ -697,7 +678,7 @@ impl Runtime {
                     p_full.start.as_ref(),
                     products[0].start.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -708,7 +689,7 @@ impl Runtime {
                     p_full.end.as_ref(),
                     products[products.len() - 1].end.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -722,7 +703,7 @@ impl Runtime {
                         &gap,
                         products[i + 1].start.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -740,7 +721,7 @@ impl Runtime {
                         p_full.func.as_ref(),
                         p.func.as_ref(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -768,11 +749,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (l_obj, r_obj) in [(left, right), (right, left)] {
             let (Obj::Sum(l_sum), Obj::Sum(r_sum)) = (l_obj, r_obj) else {
                 continue;
@@ -784,7 +762,7 @@ impl Runtime {
                     &k,
                     &k_end,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -812,7 +790,7 @@ impl Runtime {
                 y_binding,
                 vec![dom_lo, dom_hi],
                 &then_fact,
-                verify_state,
+                builtin_state,
             )?;
             if r.is_true() {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -832,11 +810,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (sum_side, other) in [(left, right), (right, left)] {
             let Obj::Sum(s) = sum_side else {
                 continue;
@@ -871,7 +846,7 @@ impl Runtime {
                     other,
                     &m1,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
                 || self
@@ -879,7 +854,7 @@ impl Runtime {
                         other,
                         &m2,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
             {
@@ -901,12 +876,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
-
         for (sum_side, product_side) in [(left, right), (right, left)] {
             let Obj::Sum(sum) = sum_side else {
                 continue;
@@ -925,7 +896,7 @@ impl Runtime {
                     sum.start.as_ref(),
                     base_sum.start.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !start_result.is_true() {
                     continue;
@@ -934,7 +905,7 @@ impl Runtime {
                     sum.end.as_ref(),
                     base_sum.end.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !end_result.is_true() {
                     continue;
@@ -965,7 +936,7 @@ impl Runtime {
                         x_binding,
                         vec![dom_lo, dom_hi],
                         &pointwise_fact,
-                        verify_state,
+                        builtin_state,
                     )?;
                 if !pointwise_result.is_true() {
                     continue;

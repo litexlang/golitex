@@ -31,7 +31,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (x, y) = if Self::obj_is_builtin_literal_zero(left) {
             match right {
@@ -48,7 +48,7 @@ impl Runtime {
         };
 
         let inner =
-            self.verify_objs_are_equal_in_equality_builtin(x, y, line_file.clone(), verify_state)?;
+            self.verify_objs_are_equal_in_equality_builtin(x, y, line_file.clone(), builtin_state)?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 left,
@@ -67,7 +67,7 @@ impl Runtime {
         target: &Obj,
         factor: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Do not call the full equality builtin here; that would re-enter zero-product
         // cancellation while this rule is already trying to match a factor.
@@ -81,7 +81,7 @@ impl Runtime {
                 target,
                 factor,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
         if calculation_result.is_true() {
             return Ok(calculation_result);
@@ -103,7 +103,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let target = if Self::obj_is_builtin_literal_zero(left) {
             right
@@ -134,7 +134,7 @@ impl Runtime {
                     target,
                     mul.left.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if left_target_result.is_true() {
                     let right_nonzero: AtomicFact = NotEqualFact::new(
@@ -143,11 +143,8 @@ impl Runtime {
                         line_file.clone(),
                     )
                     .into();
-                    let right_nonzero_result = self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &right_nonzero,
-                            verify_state,
-                        )?;
+                    let right_nonzero_result =
+                        self.verify_same_family_builtin_child(&right_nonzero, builtin_state)?;
                     if right_nonzero_result.is_true() {
                         return Ok(Some(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -164,7 +161,7 @@ impl Runtime {
                     target,
                     mul.right.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if right_target_result.is_true() {
                     let left_nonzero: AtomicFact = NotEqualFact::new(
@@ -173,11 +170,8 @@ impl Runtime {
                         line_file.clone(),
                     )
                     .into();
-                    let left_nonzero_result = self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &left_nonzero,
-                            verify_state,
-                        )?;
+                    let left_nonzero_result =
+                        self.verify_same_family_builtin_child(&left_nonzero, builtin_state)?;
                     if left_nonzero_result.is_true() {
                         return Ok(Some(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -201,7 +195,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let pow = if Self::obj_is_builtin_literal_zero(left) {
             match right {
@@ -239,7 +233,7 @@ impl Runtime {
             base,
             zero_side,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -324,7 +318,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let modulus = if Self::obj_is_builtin_literal_one(left) {
             let Obj::Mod(mod_obj) = right else {
@@ -352,10 +346,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let modulus_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &modulus_at_least_two,
-            verify_state,
-        )?;
+        let modulus_result =
+            self.verify_cross_family_builtin_child(&modulus_at_least_two, builtin_state)?;
         if !modulus_result.is_true() {
             return Ok(None);
         }
@@ -377,7 +369,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let target = if Self::obj_is_builtin_literal_zero(left) {
             right
@@ -409,7 +401,7 @@ impl Runtime {
         )
         .into();
         let dividend_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&dividend_in_z, verify_state)?;
+            self.verify_cross_family_builtin_child(&dividend_in_z, builtin_state)?;
         if !dividend_result.is_true() {
             return Ok(None);
         }
@@ -420,8 +412,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let modulus_result = self
-            .verify_non_equational_known_then_builtin_rules_only(&modulus_in_n_pos, verify_state)?;
+        let modulus_result =
+            self.verify_cross_family_builtin_child(&modulus_in_n_pos, builtin_state)?;
         if !modulus_result.is_true() {
             return Ok(None);
         }
@@ -443,7 +435,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (modulus, dividend, remainder) = match (left, right) {
             (Obj::Mod(mod_obj), remainder) => {
@@ -481,26 +473,16 @@ impl Runtime {
             let remainder_lt_modulus: AtomicFact =
                 LessFact::new(remainder.clone(), modulus.clone(), line_file.clone()).into();
 
-            let dividend_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &dividend_in_z,
-                verify_state,
-            )?;
-            let divisor_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &divisor_in_n_pos,
-                verify_state,
-            )?;
-            let quotient_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &quotient_in_z,
-                verify_state,
-            )?;
-            let remainder_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &remainder_in_n,
-                verify_state,
-            )?;
-            let bound_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &remainder_lt_modulus,
-                verify_state,
-            )?;
+            let dividend_result =
+                self.verify_cross_family_builtin_child(&dividend_in_z, builtin_state)?;
+            let divisor_result =
+                self.verify_cross_family_builtin_child(&divisor_in_n_pos, builtin_state)?;
+            let quotient_result =
+                self.verify_cross_family_builtin_child(&quotient_in_z, builtin_state)?;
+            let remainder_result =
+                self.verify_cross_family_builtin_child(&remainder_in_n, builtin_state)?;
+            let bound_result =
+                self.verify_cross_family_builtin_child(&remainder_lt_modulus, builtin_state)?;
             let decomposition_result =
                 self.verify_objs_are_equal_known_only(dividend, &candidate, line_file.clone());
             if !dividend_result.is_true()

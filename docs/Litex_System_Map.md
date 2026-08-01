@@ -137,9 +137,8 @@ Most proof obligations eventually ask for an atomic target. The public model is:
 ```text
 atomic target
   -> all objects are well-defined
-  -> match a builtin mathematical pattern, or
   -> match a known atomic fact, or
-  -> use a concrete predicate definition, or
+  -> match a bounded builtin mathematical pattern, or
   -> match the conclusion of a known forall and verify its premises
   -> true or unknown
 ```
@@ -148,8 +147,12 @@ These are route families, not a promise about internal search priority.
 
 **Builtin mathematical patterns.** The target shape is matched against
 implemented arithmetic, equality, order, membership, set, function, and
-composite-object rules. A route may generate smaller prerequisites, which
-return to the same verification machinery.
+composite-object rules. One builtin DFS shares a 64-unknown-child budget. Each
+premise first checks known non-`forall` atomic facts; an unknown same-family
+premise may recurse into builtin dispatch, while an unknown cross-family
+premise returns `unknown`. This DFS does not enter the full verifier, known
+`forall` matching, definitions, or strategies, and its child result tree is
+returned to the root.
 
 **Known atomic facts.** Litex looks for the same predicate and truth value in
 the visible context. Arguments need not be textually identical: known
@@ -157,10 +160,11 @@ equalities can make two arguments match. For example, a known `$P(a)` may close
 `$P(b)` when the context also establishes `a = b`.
 
 **Concrete definitions.** A concrete `prop` gives Litex defining clauses for
-the predicate. The verifier can use those clauses to connect `$P(args)` with
-its mathematical definition. `by def $P(args)` requests the explicit direction:
-instantiate the definition, verify all clauses, and only then store
-`$P(args)`.
+the predicate. The proof-producing direction is explicit:
+`by def $P(args)` instantiates the definition, verifies all clauses with the
+full verifier, and only then stores `$P(args)`. Supported builtin definitions
+use the same statement, including `by def A $subset B` and
+`by def $injective(A, B, f)`.
 
 **Known universal facts.** Suppose the context contains:
 
@@ -173,8 +177,9 @@ forall x S:
 
 To prove `B(t)`, Litex matches the conclusion and obtains the substitution
 `x := t`. It then checks the parameter domain and verifies `A(t)`. Those
-premises are ordinary goals and can themselves use builtin rules, known facts,
-definitions, or other known universal facts.
+premises are ordinary full-verifier goals and can use builtin rules, known
+facts, or other known universal facts. A mathematical-definition step is
+written explicitly with `by def`.
 
 For a grouped universal declaration, each positive conclusion is also stored
 over just the parameters it uses when the omitted parameter types are
@@ -240,8 +245,8 @@ unrelated verifier.
 
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
-| `by def $P(args)` | No persistent child scope. | `P` must be concrete, arguments must match, and the instantiated clauses must be well-defined. | Verify every defining clause even if `$P(args)` is already known. Positive concrete-predicate clauses are recursively unfolded, with cycle guards. | Store `$P(args)` and the recursively exposed positive definition clauses. | Checked use of a definition. |
-| `by thm name(args)` | The instantiation is checked against the current scope. | The theorem must exist; argument count and types must match. | Instantiate and verify the theorem's domain premises. | Store the instantiated conclusions and infer. | Does not copy trust metadata from the theorem; the runtime stores no such theorem metadata. |
+| `by def fact` | No persistent child scope. | The target must be a concrete positive prop or supported positive builtin definition. | Verify every defining requirement with the full verifier, even if the target is already known. | Store the target and infer only after all requirements succeed. | Checked use of a definition. |
+| `by thm name(args)` | The instantiation is checked against the current scope. | A user theorem must exist and match its arguments; a reserved builtin theorem checks fixed arity and target shape. | Verify theorem domains or explicit builtin requirements with the full verifier. | Store conclusions and infer only after all checks succeed. | Builtin names remain bare and globally reserved; detailed output identifies `builtin_rule` source and any provenance. |
 | `by cases` | One child scope per case. | Target, cases, and branch shapes must be well-defined. | Prove the cases are exhaustive, then prove every target in every branch. | Store the common target facts and infer. | Checked case analysis. |
 | `by contra` | A child scope assumes the logical negation of the target. | The target must support logical negation and be well-defined. | Execute the proof and verify both a stated impossible fact and its negation. | Store the original target and infer. | Checked contradiction proof. |
 | `by induc` / `by strong_induc` | Separate base and step scopes with ordinary or strong induction hypotheses. | Parameter, starting point, target, and induction shape must be valid. | Verify base and step obligations. | Store the resulting universal fact and infer. | Checked induction. |

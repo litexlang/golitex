@@ -58,7 +58,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (arg, other) = match (left, right) {
             (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
@@ -74,8 +74,18 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let nonnegative_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&nonnegative, verify_state)?;
+        let mut nonnegative_result =
+            self.verify_cross_family_known_or_number_calculation(&nonnegative, builtin_state)?;
+        if !nonnegative_result.is_true() {
+            let positive: AtomicFact = LessFact::new(
+                Self::literal_zero_obj_for_abs_builtin(),
+                arg.clone(),
+                line_file.clone(),
+            )
+            .into();
+            nonnegative_result =
+                self.verify_cross_family_known_or_number_calculation(&positive, builtin_state)?;
+        }
         if !nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -94,7 +104,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (arg, other) = match (left, right) {
             (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
@@ -110,8 +120,18 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let nonpositive_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&nonpositive, verify_state)?;
+        let mut nonpositive_result =
+            self.verify_cross_family_known_or_number_calculation(&nonpositive, builtin_state)?;
+        if !nonpositive_result.is_true() {
+            let negative: AtomicFact = LessFact::new(
+                arg.clone(),
+                Self::literal_zero_obj_for_abs_builtin(),
+                line_file.clone(),
+            )
+            .into();
+            nonpositive_result =
+                self.verify_cross_family_known_or_number_calculation(&negative, builtin_state)?;
+        }
         if !nonpositive_result.is_true() {
             return Ok(None);
         }
@@ -193,7 +213,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Pow(left_pow), Obj::Pow(right_pow)) = (left, right) else {
             return Ok(None);
@@ -222,8 +242,11 @@ impl Runtime {
         if !bases_match {
             return Ok(None);
         }
-        let Some(steps) =
-            self.verify_objects_are_known_reals(&[real_base], &line_file, verify_state)?
+        let Some(steps) = self.verify_objects_are_known_reals_in_builtin(
+            &[real_base],
+            &line_file,
+            builtin_state,
+        )?
         else {
             return Ok(None);
         };
@@ -268,15 +291,15 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) =
-            self.try_verify_abs_nonnegative_identity(left, right, line_file.clone(), verify_state)?
+            self.try_verify_abs_nonnegative_identity(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_abs_nonpositive_negation(left, right, line_file.clone(), verify_state)?
+            self.try_verify_abs_nonpositive_negation(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
@@ -287,7 +310,7 @@ impl Runtime {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_abs_even_power(left, right, line_file.clone(), verify_state)?
+            self.try_verify_abs_even_power(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }

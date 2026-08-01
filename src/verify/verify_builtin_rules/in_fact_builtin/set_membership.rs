@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         union: &Union,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         for (side, side_name) in [
             (union.left.as_ref(), "left"),
@@ -19,8 +19,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let member_result = self
-                .verify_non_equational_known_then_builtin_rules_only(&member_fact, verify_state)?;
+            let member_result =
+                self.verify_same_family_builtin_child(&member_fact, builtin_state)?;
             if member_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -42,7 +42,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         intersect: &Intersect,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let left_member_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -50,8 +50,8 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let left_member_result = self
-            .verify_non_equational_known_then_builtin_rules_only(&left_member_fact, verify_state)?;
+        let left_member_result =
+            self.verify_same_family_builtin_child(&left_member_fact, builtin_state)?;
         if !left_member_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -62,10 +62,8 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let right_member_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &right_member_fact,
-            verify_state,
-        )?;
+        let right_member_result =
+            self.verify_same_family_builtin_child(&right_member_fact, builtin_state)?;
         if !right_member_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -86,7 +84,7 @@ impl Runtime {
         &mut self,
         not_in_fact: &NotInFact,
         intersect: &Intersect,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         for (side, side_name) in [
             (intersect.left.as_ref(), "left"),
@@ -98,10 +96,8 @@ impl Runtime {
                 not_in_fact.line_file.clone(),
             )
             .into();
-            let non_member_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &non_member_fact,
-                verify_state,
-            )?;
+            let non_member_result =
+                self.verify_same_family_builtin_child(&non_member_fact, builtin_state)?;
             if non_member_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -123,7 +119,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         set_minus: &SetMinus,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let left_member_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -131,8 +127,8 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let left_member_result = self
-            .verify_non_equational_known_then_builtin_rules_only(&left_member_fact, verify_state)?;
+        let left_member_result =
+            self.verify_same_family_builtin_child(&left_member_fact, builtin_state)?;
         if !left_member_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -143,10 +139,8 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let right_non_member_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &right_non_member_fact,
-            verify_state,
-        )?;
+        let right_non_member_result =
+            self.verify_same_family_builtin_child(&right_non_member_fact, builtin_state)?;
         if !right_non_member_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -169,7 +163,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         big_union: &BigUnion,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let exist_fact = self.big_union_membership_exist_fact(in_fact, big_union)?;
         let exist_result =
@@ -195,10 +189,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let member_set_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &member_set_in_family,
-                verify_state,
-            )?;
+            let member_set_result =
+                self.verify_same_family_builtin_child(&member_set_in_family, builtin_state)?;
             if !member_set_result.is_true() {
                 continue;
             }
@@ -209,10 +201,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let element_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &element_in_member_set,
-                verify_state,
-            )?;
+            let element_result =
+                self.verify_same_family_builtin_child(&element_in_member_set, builtin_state)?;
             if element_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -261,7 +251,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         replacement: &Replacement,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let exist_fact = self.replacement_membership_exist_fact(in_fact, replacement)?;
         let exist_result =
@@ -285,10 +275,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let preimage_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &preimage_in_source,
-                verify_state,
-            )?;
+            let preimage_result =
+                self.verify_same_family_builtin_child(&preimage_in_source, builtin_state)?;
             if !preimage_result.is_true() {
                 continue;
             }
@@ -299,10 +287,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let relation_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &relation_fact,
-                verify_state,
-            )?;
+            let relation_result =
+                self.verify_same_family_builtin_child(&relation_fact, builtin_state)?;
             if relation_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -491,12 +477,6 @@ impl Runtime {
         {
             return Ok((StmtUnknown::new()).into());
         }
-        if self
-            .verify_obj_well_defined_and_store_cache(&in_fact.element, &VerifyState::new(0, false))
-            .is_err()
-        {
-            return Ok((StmtUnknown::new()).into());
-        }
         Ok(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
@@ -515,7 +495,7 @@ impl Runtime {
         in_fact: &InFact,
         fn_range: &FnRange,
         power_set: &PowerSet,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
             return Ok((StmtUnknown::new()).into());
@@ -526,8 +506,25 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let subset_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+        let mut subset_result =
+            self.verify_cross_family_builtin_child(&subset_fact, builtin_state)?;
+        if !subset_result.is_true()
+            && (objs_equal_with_nested_binder_alpha_equivalence(
+                body.ret_set.as_ref(),
+                power_set.set.as_ref(),
+            ) || matches!(
+                (body.ret_set.as_ref(), power_set.set.as_ref()),
+                (Obj::StandardSet(left), Obj::StandardSet(right))
+                    if Self::standard_set_is_subset_eq(left, right)
+            ))
+        {
+            subset_result = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                subset_fact.clone().into(),
+                "structural subset".to_string(),
+                Vec::new(),
+            )
+            .into();
+        }
         if !subset_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -549,7 +546,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         power_set: &PowerSet,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let subset_fact: AtomicFact = SubsetFact::new(
             in_fact.element.clone(),
@@ -557,8 +554,25 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let subset_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+        let mut subset_result =
+            self.verify_cross_family_builtin_child(&subset_fact, builtin_state)?;
+        if !subset_result.is_true()
+            && (objs_equal_with_nested_binder_alpha_equivalence(
+                &in_fact.element,
+                power_set.set.as_ref(),
+            ) || matches!(
+                (&in_fact.element, power_set.set.as_ref()),
+                (Obj::StandardSet(left), Obj::StandardSet(right))
+                    if Self::standard_set_is_subset_eq(left, right)
+            ))
+        {
+            subset_result = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                subset_fact.clone().into(),
+                "structural subset".to_string(),
+                Vec::new(),
+            )
+            .into();
+        }
         if !subset_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -578,7 +592,7 @@ impl Runtime {
     // whose value at every index lies in the indexed factor.
     // Example: `f $in general_cart(I, s, g)` follows from
     // `f $in fn(t I)big_union(s)` and `forall! t I => {f(t) $in g(t)}`.
-    pub(super) fn verify_in_fact_in_general_cart_by_defining_facts(
+    pub(crate) fn verify_in_fact_in_general_cart_by_defining_facts(
         &mut self,
         in_fact: &InFact,
         general_cart: &GeneralCart,
@@ -590,8 +604,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let fn_set_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&fn_set_fact, verify_state)?;
+        let fn_set_result = self.verify_atomic_fact(&fn_set_fact, verify_state)?;
         if !fn_set_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -619,7 +632,7 @@ impl Runtime {
         .into())
     }
 
-    pub(super) fn verify_in_fact_in_set_builder_by_defining_facts(
+    pub(crate) fn verify_in_fact_in_set_builder_by_defining_facts(
         &mut self,
         in_fact: &InFact,
         set_builder: &SetBuilder,
@@ -633,10 +646,8 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let element_in_param_set_result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
-            &element_in_param_set,
-            verify_state,
-        )?;
+        let element_in_param_set_result =
+            self.verify_atomic_fact(&element_in_param_set, verify_state)?;
         if !element_in_param_set_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -692,7 +703,7 @@ impl Runtime {
     // then `y $in S(a)` is checked by unfolding one layer and proving
     // `y $in T` plus `P(y)`. This includes instantiated template aliases.
     // Examples: `(3, 4) $in circle(5)` and `y $in \selected<T>`.
-    pub(super) fn maybe_verify_in_fact_in_unfolded_user_defined_set(
+    pub(crate) fn maybe_verify_in_fact_in_unfolded_user_defined_set(
         &mut self,
         in_fact: &InFact,
         verify_state: &VerifyState,
@@ -732,7 +743,7 @@ impl Runtime {
         ))
     }
 
-    pub(super) fn verify_in_fact_by_struct_obj(
+    pub(crate) fn verify_in_fact_by_struct_obj(
         &mut self,
         in_fact: &InFact,
         struct_obj: &StructObj,
@@ -747,8 +758,7 @@ impl Runtime {
         let cart_obj: Obj = Cart::new(field_types).into();
         let cart_membership: AtomicFact =
             InFact::new(in_fact.element.clone(), cart_obj, in_fact.line_file.clone()).into();
-        let cart_result = self
-            .verify_atomic_fact_by_known_atomic_or_builtin_only(&cart_membership, verify_state)?;
+        let cart_result = self.verify_atomic_fact(&cart_membership, verify_state)?;
         if !cart_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -806,14 +816,12 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         finite_set_size: &FiniteSetSize,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let finite_fact =
             IsFiniteSetFact::new((*finite_set_size.set).clone(), in_fact.line_file.clone());
-        let finite_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &finite_fact.into(),
-            verify_state,
-        )?;
+        let finite_result =
+            self.verify_cross_family_builtin_child(&finite_fact.into(), builtin_state)?;
         if finite_result.is_true() {
             return Ok(number_in_set_verified_by_builtin_rules_result(
                 in_fact,
@@ -829,7 +837,7 @@ impl Runtime {
     pub(super) fn maybe_verify_in_fact_finite_set_extremum(
         &mut self,
         in_fact: &InFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let source_set = match &in_fact.element {
             Obj::FiniteSetMax(extremum) => extremum.set.as_ref(),
@@ -864,7 +872,7 @@ impl Runtime {
         )
         .into();
         let source_member_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&source_member, verify_state)?;
+            self.verify_same_family_builtin_child(&source_member, builtin_state)?;
         if !source_member_result.is_true() {
             return Ok(Some((StmtUnknown::new()).into()));
         }
@@ -873,7 +881,7 @@ impl Runtime {
             source_set,
             &in_fact.set,
             &in_fact.line_file,
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(Some((StmtUnknown::new()).into()));
@@ -897,7 +905,7 @@ impl Runtime {
         source_set: &Obj,
         standard_set: &Obj,
         line_file: &LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         match source_set {
             Obj::ListSet(list_set) => {
@@ -909,9 +917,9 @@ impl Runtime {
                         line_file.clone(),
                     )
                     .into();
-                    let result = self.verify_non_equational_known_then_builtin_rules_only(
+                    let result = self.verify_same_family_builtin_child(
                         &element_in_standard_set,
-                        verify_state,
+                        builtin_state,
                     )?;
                     if !result.is_true() {
                         return Ok(None);
@@ -925,41 +933,38 @@ impl Runtime {
                 &union.right,
                 standard_set,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             Obj::Intersect(intersect) => self.verify_finite_set_extremum_source_in_standard_set(
                 &intersect.left,
                 standard_set,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             Obj::SetMinus(set_minus) => self.verify_finite_set_extremum_source_in_standard_set(
                 &set_minus.left,
                 standard_set,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             Obj::SetDiff(set_diff) => self.verify_two_finite_set_parts_in_standard_set(
                 &set_diff.left,
                 &set_diff.right,
                 standard_set,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             Obj::SetBuilder(set_builder) => self.verify_finite_set_extremum_source_in_standard_set(
                 &set_builder.param_set,
                 standard_set,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             _ => {
                 let subset_fact: AtomicFact =
                     SubsetFact::new(source_set.clone(), standard_set.clone(), line_file.clone())
                         .into();
-                let result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &subset_fact,
-                    verify_state,
-                )?;
+                let result = self.verify_same_family_builtin_child(&subset_fact, builtin_state)?;
                 if result.is_true() {
                     Ok(Some(vec![result]))
                 } else {
@@ -975,13 +980,13 @@ impl Runtime {
         right: &Obj,
         standard_set: &Obj,
         line_file: &LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Some(mut left_results) = self.verify_finite_set_extremum_source_in_standard_set(
             left,
             standard_set,
             line_file,
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
@@ -990,7 +995,7 @@ impl Runtime {
             right,
             standard_set,
             line_file,
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);

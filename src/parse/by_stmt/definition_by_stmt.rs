@@ -13,14 +13,14 @@ impl Runtime {
         }
 
         let fact = self.parse_atomic_fact(tb, true)?;
-        let AtomicFact::NormalAtomicFact(fact) = fact else {
+        if !fact.is_true() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by def expects one positive concrete prop fact such as `$P(a, b)`".to_string(),
+                    "by def expects one positive atomic fact".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
-        };
+        }
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(

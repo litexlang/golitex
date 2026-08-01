@@ -86,6 +86,7 @@ by reflexive_prop:
     ? forall x set:
         $tmp_same_obj(x, x)
     x = x
+    by def $tmp_same_obj(x, x)
 
 by transitive_prop:
     ? forall x, y, z set:

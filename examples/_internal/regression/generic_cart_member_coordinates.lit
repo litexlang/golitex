@@ -10,13 +10,26 @@ forall p c:
 forall p c, i1 closed_range(1, n):
     p[i1] $in proj(c, i1)
 
-forall p c:
+claim:
+    ? forall p c:
+        p[1] $in proj(c, 1)
+        proj(c, 1) = R
+        p[1] $in R
+        p[2] $in proj(c, 2)
+        proj(c, 2) = R
+        p[2] $in R
+        p[3] $in proj(c, 3)
+        proj(c, 3) = R
+        p[3] $in R
+    1 $in closed_range(1, n)
     p[1] $in proj(c, 1)
     proj(c, 1) = R
     p[1] $in R
+    2 $in closed_range(1, n)
     p[2] $in proj(c, 2)
     proj(c, 2) = R
     p[2] $in R
+    3 $in closed_range(1, n)
     p[3] $in proj(c, 3)
     proj(c, 3) = R
     p[3] $in R
@@ -30,6 +43,7 @@ forall i1 closed_range(1, n):
     proj(c, i1) = R
     q[i1] $in proj(c, i1)
 
+by thm cart_member_from_coordinates(q, c)
 q $in c
 
 have tuple r for i1 <= n, r[i1] = 0
@@ -39,6 +53,7 @@ forall i1 closed_range(1, n):
     r[i1] = 0
     q[i1] = r[i1]
 
+by thm tuple_equal_from_coordinates(q, r)
 q = r
 
 have fn X(i1 closed_range(1, n)) power_set(R) = R
@@ -62,7 +77,9 @@ claim:
         proj(c, i1) = R = X(i1)
         p[i1] $in X(i1)
         raw_choice_tuple_encode(p)(i1) $in X(i1)
+    by def $has_X_values(raw_choice_tuple_encode(p))
     $has_X_values(raw_choice_tuple_encode(p))
+    by thm set_builder_member(raw_choice_tuple_encode(p), {f fn(i1 closed_range(1, n)) R: $has_X_values(f)})
     raw_choice_tuple_encode(p) $in {f fn(i1 closed_range(1, n)) R: $has_X_values(f)}
     raw_choice_tuple_encode(p) $in P
 
@@ -74,6 +91,7 @@ claim:
         2 <= m
         =>:
             m = m
+    1 <= m
     have tuple symbolic_tuple for i1 <= m, symbolic_tuple[i1] = 0
     tuple_dim(symbolic_tuple) = m
     m = m
@@ -84,6 +102,7 @@ claim:
         S = {g fn(i1 closed_range(1, m)) V: $has_values_in_family(m, V, Y, g)}
         =>:
             S = S
+    1 <= m
     claim:
         ? forall g S:
             g = g

@@ -7,25 +7,13 @@ impl Runtime {
         verify_state: &VerifyState,
         post_process: bool,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut result =
-            self.verify_non_equational_atomic_fact_with_builtin_rules(atomic_fact, verify_state)?;
-        if result.is_true() {
-            return Ok(result);
-        }
-
-        result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)?;
+        let mut result = self.verify_atomic_fact_with_builtin_rules(atomic_fact)?;
         if result.is_true() {
             return Ok(result);
         }
 
         if verify_state.is_round_0() {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
-
-            if let Some(verified_by_definition) =
-                self.verify_atomic_fact_using_builtin_or_prop_definition(atomic_fact, verify_state)?
-            {
-                return Ok(verified_by_definition);
-            }
 
             result = self
                 .verify_atomic_fact_with_known_forall(atomic_fact, &verify_state_add_one_round)?;

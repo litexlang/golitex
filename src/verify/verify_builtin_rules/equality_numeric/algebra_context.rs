@@ -6,10 +6,10 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         Ok(self
-            .verify_objs_are_equal_in_equality_builtin(left, right, line_file, verify_state)?
+            .verify_objs_are_equal_in_equality_builtin(left, right, line_file, builtin_state)?
             .is_true())
     }
 
@@ -20,7 +20,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let args_equal = match (left, right) {
             (Obj::Add(l), Obj::Add(r)) => {
@@ -28,12 +28,12 @@ impl Runtime {
                     l.left.as_ref(),
                     r.left.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )? && self.verify_context_arg_equality(
                     l.right.as_ref(),
                     r.right.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
             }
             (Obj::Sub(l), Obj::Sub(r)) => {
@@ -41,12 +41,12 @@ impl Runtime {
                     l.left.as_ref(),
                     r.left.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )? && self.verify_context_arg_equality(
                     l.right.as_ref(),
                     r.right.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
             }
             (Obj::Mul(l), Obj::Mul(r)) => {
@@ -54,12 +54,12 @@ impl Runtime {
                     l.left.as_ref(),
                     r.left.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )? && self.verify_context_arg_equality(
                     l.right.as_ref(),
                     r.right.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
             }
             (Obj::Div(l), Obj::Div(r)) => {
@@ -67,12 +67,12 @@ impl Runtime {
                     l.left.as_ref(),
                     r.left.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )? && self.verify_context_arg_equality(
                     l.right.as_ref(),
                     r.right.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
             }
             (Obj::Mod(l), Obj::Mod(r)) => {
@@ -80,12 +80,12 @@ impl Runtime {
                     l.left.as_ref(),
                     r.left.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )? && self.verify_context_arg_equality(
                     l.right.as_ref(),
                     r.right.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
             }
             (Obj::Pow(l), Obj::Pow(r)) => {
@@ -93,12 +93,12 @@ impl Runtime {
                     l.base.as_ref(),
                     r.base.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )? && self.verify_context_arg_equality(
                     l.exponent.as_ref(),
                     r.exponent.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
             }
             _ => return Ok(None),

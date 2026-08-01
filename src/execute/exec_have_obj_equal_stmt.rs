@@ -102,11 +102,13 @@ impl Runtime {
                 if verify_result.is_unknown() {
                     if let ParamType::Obj(target_set) = current_type {
                         for source_set in self.known_sets_containing_obj(current_param_equal_to) {
-                            let set_equality = self.verify_objs_are_equal_in_equality_builtin(
-                                &source_set,
-                                target_set,
-                                have_obj_equal_stmt.line_file.clone(),
-                                &VerifyState::new(0, false),
+                            let set_equality = self.verify_atomic_fact_with_builtin_rules(
+                                &EqualFact::new(
+                                    source_set,
+                                    target_set.clone(),
+                                    have_obj_equal_stmt.line_file.clone(),
+                                )
+                                .into(),
                             )?;
                             if !set_equality.is_unknown() {
                                 verify_result = set_equality;

@@ -8,7 +8,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let empty_set: Obj = ListSet::new(vec![]).into();
         let zero: Obj = Number::new("0".to_string()).into();
@@ -21,7 +21,7 @@ impl Runtime {
                     s.set.as_ref(),
                     &empty_set,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -32,7 +32,7 @@ impl Runtime {
                     other,
                     &zero,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -55,7 +55,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (sum_side, other) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(s) = sum_side else {
@@ -93,7 +93,7 @@ impl Runtime {
                         other,
                         &expected,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -116,7 +116,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (finite_side, range_side) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(finite_sum) = finite_side else {
@@ -133,7 +133,7 @@ impl Runtime {
                     range.start.as_ref(),
                     range_sum.start.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -144,7 +144,7 @@ impl Runtime {
                     range.end.as_ref(),
                     range_sum.end.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -154,7 +154,7 @@ impl Runtime {
                 finite_sum.func.as_ref(),
                 range_sum.func.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !exact_func_result.is_true() {
                 let x_name = self.generate_random_unused_name();
@@ -184,7 +184,7 @@ impl Runtime {
                         x_binding,
                         vec![dom_lo, dom_hi],
                         &pointwise_fact,
-                        verify_state,
+                        builtin_state,
                     )?;
                 if !pointwise_result.is_true() {
                     continue;
@@ -207,11 +207,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (sum_side, other) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(s) = sum_side else {
                 continue;
@@ -244,7 +241,7 @@ impl Runtime {
                     other,
                     &m1,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
                 || self
@@ -252,7 +249,7 @@ impl Runtime {
                         other,
                         &m2,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
             {
@@ -275,11 +272,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         let (left_sum, right_sum) = match (left, right) {
             (Obj::SumOfFiniteSet(l), Obj::SumOfFiniteSet(r)) => (l, r),
             _ => return Ok(None),
@@ -289,7 +283,7 @@ impl Runtime {
                 left_sum.set.as_ref(),
                 right_sum.set.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -311,7 +305,7 @@ impl Runtime {
             x_binding,
             left_sum.set.as_ref().clone(),
             &then_fact,
-            verify_state,
+            builtin_state,
         )?;
         if r.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -332,11 +326,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (source_side, pullback_side) in [(left, right), (right, left)] {
             let (Obj::SumOfFiniteSet(source_sum), Obj::SumOfFiniteSet(pullback_sum)) =
                 (source_side, pullback_side)
@@ -369,38 +360,13 @@ impl Runtime {
                     y_binding,
                     pullback_sum.set.as_ref().clone(),
                     &pointwise_fact,
-                    verify_state,
+                    builtin_state,
                 )?;
             if !pointwise_result.is_true() {
                 continue;
             }
 
-            let base_name = self.generate_random_unused_name();
-            let x_name = format!("{}a", base_name);
-            let exist_y_name = format!("{}b", base_name);
-            let x_group = self.fresh_param_group_with_type(
-                vec![x_name],
-                ParamType::Obj(source_sum.set.as_ref().clone()),
-            )?;
-            let exist_y_group = self.fresh_param_group_with_type(
-                vec![exist_y_name],
-                ParamType::Obj(pullback_sum.set.as_ref().clone()),
-            )?;
-            let x_obj = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Forall);
-            let exist_y_obj =
-                obj_for_bound_param_in_scope(&exist_y_group.params[0], ParamObjType::Exist);
-            let Some(pullback_at_exist_y) =
-                self.instantiate_unary_function_at(pullback_sum.func.as_ref(), &exist_y_obj)?
-            else {
-                continue;
-            };
-            let Some(map_exist_y) = Self::unary_application_arg_matching_callable(
-                &pullback_at_exist_y,
-                source_sum.func.as_ref(),
-            ) else {
-                continue;
-            };
-            let known_bijection = match &map_exist_y {
+            let known_bijection = match &map_y {
                 Obj::FnObj(map_call) => {
                     let map: Obj = map_call.head.as_ref().clone().into();
                     self.has_known_builtin_bijection(
@@ -412,23 +378,8 @@ impl Runtime {
                 }
                 _ => false,
             };
-            let preimage_eq: AtomicFact =
-                EqualFact::new(map_exist_y, x_obj, line_file.clone()).into();
-            let exist_body = ExistFactBody::new(
-                ParamDefWithType::new(vec![exist_y_group]),
-                vec![ExistBodyFact::AtomicFact(preimage_eq)],
-                line_file.clone(),
-            )?;
-            let unique_preimage_fact: Fact = ExistFactEnum::ExistUniqueFact(exist_body).into();
             if !known_bijection {
-                let unique_preimage_result = self.run_in_local_env(|rt| {
-                    let params_def = ParamDefWithType::new(vec![x_group]);
-                    rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
-                    rt.verify_fact_full(&unique_preimage_fact, verify_state)
-                })?;
-                if !unique_preimage_result.is_true() {
-                    continue;
-                }
+                continue;
             }
 
             return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -449,11 +400,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (union_side, add_side) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(union_sum) = union_side else {
                 continue;
@@ -479,7 +427,7 @@ impl Runtime {
                     union_sum.set.as_ref(),
                     &expected_union,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !union_result.is_true() {
                     continue;
@@ -494,7 +442,7 @@ impl Runtime {
                     &intersection,
                     &empty_set,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !disjoint_result.is_true() {
                     continue;
@@ -504,7 +452,7 @@ impl Runtime {
                     first_sum.func.as_ref(),
                     first_sum.set.as_ref().clone(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !first_pointwise.is_true() {
                     continue;
@@ -514,7 +462,7 @@ impl Runtime {
                     second_sum.func.as_ref(),
                     second_sum.set.as_ref().clone(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !second_pointwise.is_true() {
                     continue;
@@ -538,11 +486,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (sum_side, add_side) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(sum) = sum_side else {
                 continue;
@@ -559,7 +504,7 @@ impl Runtime {
                 sum.set.as_ref(),
                 first_sum.set.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !first_set_result.is_true() {
                 continue;
@@ -568,7 +513,7 @@ impl Runtime {
                 sum.set.as_ref(),
                 second_sum.set.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !second_set_result.is_true() {
                 continue;
@@ -598,7 +543,7 @@ impl Runtime {
                     x_binding,
                     sum.set.as_ref().clone(),
                     &pointwise_fact,
-                    verify_state,
+                    builtin_state,
                 )?;
             if !pointwise_result.is_true() {
                 continue;
@@ -620,11 +565,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (sum_side, product_side) in [(left, right), (right, left)] {
             let Obj::SumOfFiniteSet(sum) = sum_side else {
                 continue;
@@ -643,7 +585,7 @@ impl Runtime {
                     sum.set.as_ref(),
                     base_sum.set.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !set_result.is_true() {
                     continue;
@@ -669,7 +611,7 @@ impl Runtime {
                         x_binding,
                         sum.set.as_ref().clone(),
                         &pointwise_fact,
-                        verify_state,
+                        builtin_state,
                     )?;
                 if !pointwise_result.is_true() {
                     continue;
@@ -694,16 +636,13 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (nested_side, flat_side) in [(left, right), (right, left)] {
             let Some(nested_shape) = self.nested_finite_set_sum_cartesian_shape(
                 nested_side,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             else {
                 continue;
@@ -715,7 +654,7 @@ impl Runtime {
                 flat_sum.set.as_ref(),
                 &nested_shape.product_set,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !set_result.is_true() {
                 continue;
@@ -724,7 +663,7 @@ impl Runtime {
                 flat_sum.func.as_ref(),
                 &nested_shape.function,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !func_result.is_true() {
                 continue;
@@ -747,18 +686,15 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         let Some(left_shape) =
-            self.nested_finite_set_sum_cartesian_shape(left, line_file.clone(), verify_state)?
+            self.nested_finite_set_sum_cartesian_shape(left, line_file.clone(), builtin_state)?
         else {
             return Ok(None);
         };
         let Some(right_shape) =
-            self.nested_finite_set_sum_cartesian_shape(right, line_file.clone(), verify_state)?
+            self.nested_finite_set_sum_cartesian_shape(right, line_file.clone(), builtin_state)?
         else {
             return Ok(None);
         };
@@ -766,7 +702,7 @@ impl Runtime {
             &left_shape.product_set,
             &right_shape.product_set,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !set_result.is_true() {
             return Ok(None);
@@ -775,7 +711,7 @@ impl Runtime {
             &left_shape.function,
             &right_shape.function,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !func_result.is_true() {
             return Ok(None);
@@ -797,11 +733,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         let (left_sum, right_sum) = match (left, right) {
             (Obj::Sum(l), Obj::Sum(r)) => (l, r),
             _ => return Ok(None),
@@ -811,7 +744,7 @@ impl Runtime {
                 left_sum.start.as_ref(),
                 right_sum.start.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -822,7 +755,7 @@ impl Runtime {
                 left_sum.end.as_ref(),
                 right_sum.end.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -830,12 +763,12 @@ impl Runtime {
         }
 
         let Some(left_shape) =
-            self.finite_set_enumeration_summand_shape(left_sum, line_file.clone(), verify_state)?
+            self.finite_set_enumeration_summand_shape(left_sum, line_file.clone(), builtin_state)?
         else {
             return Ok(None);
         };
         let Some(right_shape) =
-            self.finite_set_enumeration_summand_shape(right_sum, line_file.clone(), verify_state)?
+            self.finite_set_enumeration_summand_shape(right_sum, line_file.clone(), builtin_state)?
         else {
             return Ok(None);
         };
@@ -845,7 +778,7 @@ impl Runtime {
                 &left_shape.outer_function,
                 &right_shape.outer_function,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -856,7 +789,7 @@ impl Runtime {
                 &left_shape.index_set,
                 &right_shape.index_set,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -867,7 +800,7 @@ impl Runtime {
                 &left_shape.target_set,
                 &right_shape.target_set,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -877,7 +810,7 @@ impl Runtime {
         let finite_target: AtomicFact =
             IsFiniteSetFact::new(left_shape.target_set.clone(), line_file.clone()).into();
         if !self
-            .verify_non_equational_known_then_builtin_rules_only(&finite_target, verify_state)?
+            .verify_cross_family_builtin_child(&finite_target, builtin_state)?
             .is_true()
         {
             return Ok(None);
@@ -885,14 +818,14 @@ impl Runtime {
         if !self.verify_unique_preimage_enumerator_fact(
             &left_shape,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(None);
         }
         if !self.verify_unique_preimage_enumerator_fact(
             &right_shape,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(None);
         }

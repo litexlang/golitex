@@ -6,6 +6,7 @@ trust have probe_integral fn(f fn(x R) R) R
 thm direct_anonymous_function_body_equality:
     ? forall g fn(x R) R:
         fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
+    by def $fn_eq(fn(x R) R {-1 * 1 * g(x)}, fn(x R) R {-1 * g(x)})
     fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
 
 thm probe_scalar_multiplication:
@@ -38,6 +39,7 @@ thm probe_subtraction:
     by thm probe_scalar_multiplication(g, -1)
     $is_probe_integrable(fn(x R) R {-1 * g(x)})
     probe_integral(fn(x R) R {-1 * g(x)}) = -1 * probe_integral(g)
+    by thm fn_set_member(fn(x R) R {-1 * g(x)}, fn(x R) R)
     by thm probe_addition(f, fn(x R) R {-1 * g(x)})
     $is_probe_integrable(fn(x R) R {f(x) + (-1 * g(x))})
     probe_integral(fn(x R) R {f(x) + (-1 * g(x))}) = probe_integral(f) + probe_integral(fn(x R) R {-1 * g(x)})

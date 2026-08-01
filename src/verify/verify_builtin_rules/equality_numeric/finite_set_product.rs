@@ -8,7 +8,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let empty_set: Obj = ListSet::new(vec![]).into();
         let one: Obj = Number::new("1".to_string()).into();
@@ -21,7 +21,7 @@ impl Runtime {
                     p.set.as_ref(),
                     &empty_set,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -32,7 +32,7 @@ impl Runtime {
                     other,
                     &one,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -55,7 +55,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (product_side, other) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(p) = product_side else {
@@ -83,7 +83,7 @@ impl Runtime {
                     other,
                     &expected,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -106,11 +106,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (union_side, product_side) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(union_product) = union_side else {
                 continue;
@@ -139,7 +136,7 @@ impl Runtime {
                 let freshness: AtomicFact =
                     NotInFact::new(inserted.clone(), smaller_set.clone(), line_file.clone()).into();
                 if !self
-                    .verify_non_equational_known_then_builtin_rules_only(&freshness, verify_state)?
+                    .verify_cross_family_builtin_child(&freshness, builtin_state)?
                     .is_true()
                 {
                     continue;
@@ -149,7 +146,7 @@ impl Runtime {
                         smaller_product.set.as_ref(),
                         smaller_set,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -161,7 +158,7 @@ impl Runtime {
                         smaller_product.func.as_ref(),
                         smaller_set.clone(),
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -177,7 +174,7 @@ impl Runtime {
                         mul.right.as_ref(),
                         &inserted_factor,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -202,11 +199,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (full_side, product_side) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(full_product) = full_side else {
                 continue;
@@ -232,7 +226,7 @@ impl Runtime {
                     full_product.set.as_ref(),
                     remaining_set.left.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -245,7 +239,7 @@ impl Runtime {
             )
             .into();
             if !self
-                .verify_non_equational_known_then_builtin_rules_only(&membership, verify_state)?
+                .verify_cross_family_builtin_child(&membership, builtin_state)?
                 .is_true()
             {
                 continue;
@@ -256,7 +250,7 @@ impl Runtime {
                     remaining_product.func.as_ref(),
                     remaining_product.set.as_ref().clone(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -272,7 +266,7 @@ impl Runtime {
                     mul.right.as_ref(),
                     &removed_factor,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -295,7 +289,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (finite_side, range_side) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(finite_product) = finite_side else {
@@ -312,7 +306,7 @@ impl Runtime {
                     range.start.as_ref(),
                     range_product.start.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -323,7 +317,7 @@ impl Runtime {
                     range.end.as_ref(),
                     range_product.end.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -334,7 +328,7 @@ impl Runtime {
                     finite_product.func.as_ref(),
                     range_product.func.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -357,11 +351,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         for (product_side, other) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(p) = product_side else {
                 continue;
@@ -393,7 +384,7 @@ impl Runtime {
                     other,
                     &expected,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -416,11 +407,8 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !verify_state.is_round_0() {
-            return Ok(None);
-        }
         let (left_product, right_product) = match (left, right) {
             (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => (l, r),
             _ => return Ok(None),
@@ -430,7 +418,7 @@ impl Runtime {
                 left_product.set.as_ref(),
                 right_product.set.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -453,7 +441,7 @@ impl Runtime {
             x_binding,
             left_product.set.as_ref().clone(),
             &then_fact,
-            verify_state,
+            builtin_state,
         )?;
         if r.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -515,7 +503,7 @@ impl Runtime {
         right_func: &Obj,
         set: Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
@@ -530,7 +518,7 @@ impl Runtime {
             x_binding,
             set,
             &pointwise_fact,
-            verify_state,
+            builtin_state,
         )
     }
 
@@ -538,7 +526,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         _line_file: LineFile,
-        _verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<NestedFiniteSetSumCartesianShape>, RuntimeError> {
         let Obj::SumOfFiniteSet(outer_sum) = obj else {
             return Ok(None);
@@ -656,7 +644,7 @@ impl Runtime {
         param_binding: SymbolBinding,
         set: Obj,
         then_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -664,7 +652,7 @@ impl Runtime {
                 ParamType::Obj(set),
             )]);
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
-            rt.verify_atomic_fact_by_known_atomic_or_builtin_only(then_fact, verify_state)
+            rt.verify_same_family_builtin_child(then_fact, builtin_state)
         })
     }
 
@@ -672,7 +660,7 @@ impl Runtime {
         &mut self,
         sum: &Sum,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<FiniteSetEnumerationSummand>, RuntimeError> {
         let af = match sum.func.as_ref() {
             Obj::AnonymousFn(af) => af,
@@ -701,7 +689,7 @@ impl Runtime {
                 &index_set,
                 &sum_index_set,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -766,7 +754,7 @@ impl Runtime {
                 &enumerator_index_set,
                 &index_set,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -777,7 +765,7 @@ impl Runtime {
                 enumerator_body.ret_set.as_ref(),
                 &target_set,
                 line_file,
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -796,7 +784,7 @@ impl Runtime {
         &mut self,
         shape: &FiniteSetEnumerationSummand,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let enumerator: Obj = shape.enumerator_head.clone().into();
         if self.has_known_builtin_bijection(
@@ -831,9 +819,9 @@ impl Runtime {
             vec![ExistFactEnum::ExistUniqueFact(exist_body).into()],
             line_file,
         )?;
-        let fact: Fact = forall_fact.into();
-        let result = self.verify_fact_full(&fact, verify_state)?;
-        Ok(result.is_true())
+        let _fact: Fact = forall_fact.into();
+        let _ = builtin_state;
+        Ok(false)
     }
 
     pub(super) fn set_for_unary_param(

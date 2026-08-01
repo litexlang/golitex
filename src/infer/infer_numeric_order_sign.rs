@@ -141,10 +141,7 @@ impl Runtime {
             atomic_fact.line_file(),
         )
         .into();
-        let source_in_r_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &source_in_r,
-            &VerifyState::new(0, true),
-        )?;
+        let source_in_r_result = self.verify_atomic_fact_with_builtin_rules(&source_in_r)?;
         if !source_in_r_result.is_true() {
             return Ok(InferResult::new());
         }

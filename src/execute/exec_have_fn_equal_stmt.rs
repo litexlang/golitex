@@ -218,14 +218,9 @@ impl Runtime {
                     dom_fact.clone(),
                 )?;
             }
-            let equal_to_in_ret_set_atomic_fact = InFact::new(
+            let result = rt.verify_obj_satisfies_param_type(
                 (*have_fn_equal_stmt.equal_to_anonymous_fn.equal_to).clone(),
-                (*have_fn_equal_stmt.equal_to_anonymous_fn.body.ret_set).clone(),
-                have_fn_equal_stmt.line_file.clone(),
-            )
-            .into();
-            let result = rt.verify_atomic_fact(
-                &equal_to_in_ret_set_atomic_fact,
+                &ParamType::Obj((*have_fn_equal_stmt.equal_to_anonymous_fn.body.ret_set).clone()),
                 &VerifyState::new(0, false),
             )?;
             if !result.is_unknown() {
@@ -283,14 +278,11 @@ impl Runtime {
                 Obj::SetBuilder(_) => "set-builder alias",
                 _ => continue,
             };
-            let representative_membership: AtomicFact = InFact::new(
+            let representative_result = self.verify_obj_satisfies_param_type(
                 value_fn.clone().into(),
-                return_set_representative,
-                have_fn_equal_stmt.line_file.clone(),
-            )
-            .into();
-            let representative_result =
-                self.verify_atomic_fact(&representative_membership, verify_state)?;
+                &ParamType::Obj(return_set_representative),
+                verify_state,
+            )?;
             if !representative_result.is_true() {
                 continue;
             }

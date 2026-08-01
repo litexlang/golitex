@@ -1296,7 +1296,7 @@ mod tests {
     #[test]
     fn fact_graph_flattens_definition_dependencies_into_fact_edges() {
         let output = fact_graph_output(
-            "abstract_prop p(x)\nabstract_prop q(x)\nprop packed(x R):\n    $p(x)\n    $q(x)\nthm packed_from_facts:\n    ? forall x R:\n        $p(x)\n        $q(x)\n        =>:\n            $packed(x)\n    $packed(x)\n",
+            "abstract_prop p(x)\nabstract_prop q(x)\nprop packed(x R):\n    $p(x)\n    $q(x)\nthm packed_from_facts:\n    ? forall x R:\n        $p(x)\n        $q(x)\n        =>:\n            $packed(x)\n    by def $packed(x)\n",
         );
 
         assert!(output.contains(r#""kind": "unfolds""#));

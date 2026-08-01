@@ -29,7 +29,9 @@ prop finite_set_size_has_index(n N+):
 # kept as local debt until finite-cardinality algebra has a dedicated design.
 trust:
     forall A, B finite_set:
-        finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
+        $is_finite_set(intersect(A, B))
+        =>:
+            finite_set_size(set_minus(A, B)) = finite_set_size(A) - finite_set_size(intersect(A, B))
     forall A finite_set:
         finite_set_size(A) = 0
         =>:
@@ -62,6 +64,7 @@ thm remove_singleton_from_singleton_sized_set_is_empty:
     intersect(s, {a}) = {a}
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
+    $is_finite_set(intersect(s, {a}))
     finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = 1 - 1 = 0
     set_minus(s, {a}) = {}
 
@@ -91,6 +94,7 @@ thm index_function_for_singleton:
             witness exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)} from 1:
                 1 <= finite_set_size(s)
                 y = idx0(1)
+        by def $is_index_fn(s, idx0)
         $is_index_fn(s, idx0)
 
 thm index_function_step:
@@ -110,6 +114,7 @@ thm index_function_step:
     intersect(s, {a}) = {a}
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
+    $is_finite_set(intersect(s, {a}))
     finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = (n + 1) - 1 = n
     $finite_set_size_has_index(n)
     $is_finite_set(set_minus(s, {a}))
@@ -148,6 +153,7 @@ thm index_function_step:
                     witness exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)} from j:
                         j <= finite_set_size(s)
                         y = idx0(j)
+        by def $is_index_fn(s, idx0)
         $is_index_fn(s, idx0)
 
 claim:
@@ -165,6 +171,7 @@ claim:
                         exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
                 by thm index_function_for_singleton(s)
                 exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
+            by def $finite_set_size_has_index(1)
             $finite_set_size_has_index(1)
             $finite_set_size_has_index(n)
 
@@ -178,6 +185,7 @@ claim:
                         exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
                 by thm index_function_step(n, s)
                 exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
+            by def $finite_set_size_has_index(n + 1)
             $finite_set_size_has_index(n + 1)
 
 claim:

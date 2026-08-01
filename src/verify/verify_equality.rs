@@ -28,16 +28,9 @@ impl Runtime {
             return Ok(done);
         }
 
-        // Reuse an already established equality class before trying structural
-        // or algebraic builtin rules. Example: after `a = b` and `b = c`,
-        // checking `a = c` should be a direct known-equality lookup.
-        let mut result = self.verify_objs_are_equal_known_only(left, right, line_file.clone());
-        if result.is_true() {
-            return Ok(result);
-        }
-
-        result =
-            self.verify_equality_by_builtin_rules(left, right, line_file.clone(), verify_state)?;
+        let builtin_goal: AtomicFact =
+            EqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+        let mut result = self.verify_atomic_fact_with_builtin_rules(&builtin_goal)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -68,15 +61,6 @@ impl Runtime {
                 ))
                 .into(),
             );
-        }
-
-        if let Some(done) = self.try_verify_anonymous_functions_equal_by_fn_eq(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
         }
 
         if verify_state.is_round_0() && verify_state.equality_can_use_known_forall {
@@ -135,37 +119,6 @@ impl Runtime {
         ))
     }
 
-    fn try_verify_anonymous_functions_equal_by_fn_eq(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !matches!((left, right), (Obj::AnonymousFn(_), Obj::AnonymousFn(_))) {
-            return Ok(None);
-        }
-
-        // Function extensionality for anonymous function values.
-        // Example: `fn(x R) R {f(x) + g(x)} = fn(y R) R {g(y) + f(y)}` follows from
-        // the existing `$fn_eq` pointwise equality verifier.
-        let fn_eq_fact = FnEqualFact::new(left.clone(), right.clone(), line_file.clone());
-        let fn_eq_result =
-            self.verify_fn_equal_fact_with_builtin_rules(&fn_eq_fact, verify_state)?;
-        if !fn_eq_result.is_true() {
-            return Ok(None);
-        }
-
-        Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                "anonymous fn equality: pointwise function equality".to_string(),
-                vec![fn_eq_result],
-            )
-            .into(),
-        ))
-    }
-
     pub(crate) fn verify_equality_with_known_equalities(
         &mut self,
         left: &Obj,
@@ -179,16 +132,13 @@ impl Runtime {
         let known_pairs =
             self.collect_known_equality_pairs_from_envs(&left_string, &right_string, left, right);
         for (known_left, known_right) in known_pairs {
-            if let Some(result) = self
-                .try_verify_equality_with_known_equalities_by_builtin_rules_only(
-                    left,
-                    right,
-                    line_file.clone(),
-                    verify_state,
-                    known_left.as_ref(),
-                    known_right.as_ref(),
-                )?
-            {
+            if let Some(result) = self.try_verify_known_equality_candidates_with_builtin_root(
+                left,
+                right,
+                line_file.clone(),
+                known_left.as_ref(),
+                known_right.as_ref(),
+            )? {
                 return Ok(result);
             }
         }
@@ -203,6 +153,68 @@ impl Runtime {
         }
 
         Ok((StmtUnknown::new()).into())
+    }
+
+    fn try_verify_known_equality_candidates_with_builtin_root(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
+        known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        match (known_objs_equal_to_left, known_objs_equal_to_right) {
+            (None, None) => Ok(None),
+            (Some(left_candidates), None) => {
+                for candidate in left_candidates.iter() {
+                    if let Some(result) = self.verify_one_equality_candidate_with_builtin_root(
+                        candidate,
+                        right,
+                        line_file.clone(),
+                    )? {
+                        return Ok(Some(result));
+                    }
+                }
+                Ok(None)
+            }
+            (None, Some(right_candidates)) => {
+                for candidate in right_candidates.iter() {
+                    if let Some(result) = self.verify_one_equality_candidate_with_builtin_root(
+                        left,
+                        candidate,
+                        line_file.clone(),
+                    )? {
+                        return Ok(Some(result));
+                    }
+                }
+                Ok(None)
+            }
+            (Some(left_candidates), Some(right_candidates)) => {
+                for left_candidate in left_candidates.iter() {
+                    for right_candidate in right_candidates.iter() {
+                        if let Some(result) = self.verify_one_equality_candidate_with_builtin_root(
+                            left_candidate,
+                            right_candidate,
+                            line_file.clone(),
+                        )? {
+                            return Ok(Some(result));
+                        }
+                    }
+                }
+                Ok(None)
+            }
+        }
+    }
+
+    fn verify_one_equality_candidate_with_builtin_root(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let candidate: AtomicFact = EqualFact::new(left.clone(), right.clone(), line_file).into();
+        let result = self.verify_atomic_fact_with_builtin_rules(&candidate)?;
+        Ok(result.is_true().then_some(result))
     }
 
     /// Stored `have fn` body (`KnownFnInfo.equal_to`): unfold one application and compare.
@@ -250,11 +262,8 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let inner = self.verify_objs_are_equal_in_equality_builtin(
-            &reduced,
-            other_side,
-            line_file.clone(),
-            verify_state,
+        let inner = self.verify_atomic_fact_with_builtin_rules(
+            &EqualFact::new(reduced.clone(), other_side.clone(), line_file.clone()).into(),
         )?;
         if !inner.is_true() {
             return Ok(None);
@@ -381,14 +390,14 @@ impl Runtime {
         // Iterated operators such as sum/product compare their summand
         // functions extensionally. Example:
         // `sum(1, n, fn(x Z) Z {f(x)}) = sum(1, n, fn(y Z) Z {f(y)})`.
-        let fn_eq_fact = FnEqualFact::new(
-            left_func.clone(),
-            right_func.clone(),
-            equality_line_file.clone(),
-        );
-        let fn_eq_result =
-            self.verify_fn_equal_fact_with_builtin_rules(&fn_eq_fact, verify_state)?;
-        if fn_eq_result.is_true() {
+        if self
+            .try_verify_function_equality_from_known_fn_eq(
+                left_func,
+                right_func,
+                equality_line_file.clone(),
+            )?
+            .is_some()
+        {
             return Ok(true);
         }
 
@@ -1082,11 +1091,13 @@ impl Runtime {
         verify_state: &VerifyState,
         equality_line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut result = self.verify_equality_by_builtin_rules(
-            left_obj,
-            right_obj,
-            equality_line_file.clone(),
-            verify_state,
+        let mut result = self.verify_atomic_fact_with_builtin_rules(
+            &EqualFact::new(
+                left_obj.clone(),
+                right_obj.clone(),
+                equality_line_file.clone(),
+            )
+            .into(),
         )?;
         if result.is_true() {
             return Ok(

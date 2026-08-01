@@ -239,7 +239,9 @@ claim:
     $surjective_fn(G, D, phi)
     $finite_surjective_map_bijective(G, D, r, f, rho, sigma, phi)
     $bijective_fn(G, D, phi)
+    by def $group_isomorphism(G, D, phi)
     $group_isomorphism(G, D, phi)
 
     witness exist psi fn(x G) D st {$group_isomorphism(G, D, psi)} from phi:
         $group_isomorphism(G, D, phi)
+    by def $isomorphic_group(G, D)

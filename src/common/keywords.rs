@@ -428,7 +428,27 @@ pub fn key_symbols_sorted_by_len_desc() -> Vec<&'static str> {
 }
 
 pub fn is_keyword(atom_name: &str) -> bool {
-    keywords_map().contains_key(atom_name)
+    keywords_map().contains_key(atom_name) || is_builtin_theorem_name(atom_name)
+}
+
+pub fn is_builtin_theorem_name(name: &str) -> bool {
+    matches!(
+        name,
+        "fn_set_member"
+            | "set_builder_member"
+            | "defined_set_member"
+            | "struct_member"
+            | "cart_member_from_coordinates"
+            | "general_cart_member"
+            | "general_cart_nonempty_by_choice_from_family"
+            | "general_cart_nonempty_by_choice_from_pointwise"
+            | "sum_le_sum_from_pointwise"
+            | "finite_set_sum_le_from_pointwise"
+            | "finite_set_summand_le_sum"
+            | "tuple_equal_from_coordinates"
+            | "finite_set_sum_substitution"
+            | "sum_over_bijective_finite_set_enumerations"
+    )
 }
 
 fn is_key_symbol(atom_name: &str) -> bool {

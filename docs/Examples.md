@@ -71,13 +71,14 @@ forall x R:
 
 ### 4. A Predicate Gives A Shape A Name
 
-A `prop` defines a reusable predicate. Calling the predicate with `$...` asks
-Litex to unfold and verify the defining facts.
+A `prop` defines a reusable predicate. Use `by def` when the proof should
+unfold and verify its defining facts.
 
 ```litex
 prop is_unit_distance_from_two(t R):
     abs(t - 2) = 1
 
+by def $is_unit_distance_from_two(3)
 $is_unit_distance_from_two(3)
 ```
 
@@ -171,7 +172,8 @@ claim:
 ### 3.1. General Cartesian Products As Choice Functions
 
 - Category: `proof pattern`
-- Purpose: Uses the built-in general Cartesian product as a choice-function set.
+- Purpose: Explicitly invokes the choice-backed builtin theorem, then uses the
+  general Cartesian product as a choice-function set.
 
 ```litex
 have I set
@@ -181,6 +183,7 @@ have g fn(alpha I) s
 trust forall X s:
     $is_nonempty_set(X)
 
+by thm general_cart_nonempty_by_choice_from_family(general_cart(I, s, g))
 $is_nonempty_set(general_cart(I, s, g))
 general_cart(I, s, g) = {f fn(t I)big_union(s): forall! alpha I => {f(alpha) $in g(alpha)}}
 
@@ -292,6 +295,7 @@ sketch:
 ```litex
 sketch:
     have a Z
+    a <= a + 10
     have x closed_range(a, a + 10)
 
     by closed_range as cases: x $in a...a + 10
@@ -403,13 +407,20 @@ sketch:
         ? forall n range(2, 2):
             2 % n != 0
 
+    by def $Prime(2)
     $Prime(2)
 
-    forall n N+:
+    claim:
+        ? forall n N+:
+            1^n = 1
+            1^(1^n) + 1 = 1^1 + 1 = 2
+            $Prime(1^(1^n) + 1)
         1^n = 1
         1^(1^n) + 1 = 1^1 + 1 = 2
+        by def $Prime(1^(1^n) + 1)
         $Prime(1^(1^n) + 1)
 
+    by def $superpowered(1)
     $superpowered(1)
 
     by contra not $superpowered(2):
@@ -496,11 +507,13 @@ sketch:
         ? forall x set:
             $same_obj(x, x)
         x = x
+        by def $same_obj(x, x)
 
     by reflexive_prop:
         ? forall x set:
             $r(x, x)
         x = x
+        by def $r(x, x)
 
     by symmetric_prop:
         ? forall x, y set:
@@ -509,6 +522,7 @@ sketch:
                 $p(y, x)
         x = y
         y = x
+        by def $p(y, x)
 
     by antisymmetric_prop:
         ? forall x, y set:
@@ -829,7 +843,8 @@ forall a, b, c R:
 ### 24. Membership In A Set-Valued Function
 
 - Category: `fact`
-- Purpose: Shows membership unfolding for set-valued functions.
+- Purpose: Shows explicit one-layer membership introduction for set-valued
+  functions and the retained elimination inference.
 
 ```litex
 ## Set-valued have fn applications unfold one layer for membership.
@@ -837,13 +852,18 @@ forall a, b, c R:
 have fn circle(r R+) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
 have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
 
+by thm defined_set_member((3, 4), circle(5))
 (3, 4) $in circle(5)
+by thm defined_set_member((2, 2), line(1, -1, 0))
 (2, 2) $in line(1, -1, 0)
 
-forall a, b R:
-    a != 0 or b != 0
-    =>:
-        (0, 0) $in line(a, b, 0)
+claim:
+    ? forall a, b R:
+        a != 0 or b != 0
+        =>:
+            (0, 0) $in line(a, b, 0)
+    by thm defined_set_member((0, 0), line(a, b, 0))
+    (0, 0) $in line(a, b, 0)
 
 forall p cart(R, R):
     p $in circle(5)
@@ -1100,6 +1120,7 @@ strategy prove_p:
         =>:
             $p(x)
     x = 1
+    by def $p(x)
 
 ## A verified strategy is enabled immediately after definition.
 $p(1)
@@ -1110,6 +1131,7 @@ strategy prove_q:
         =>:
             $q(x)
     x = x
+    by def $q(x)
 
 ## A stopped strategy still leaves its proved forall available to ordinary proofs.
 strategy prove_r:
@@ -1118,6 +1140,7 @@ strategy prove_r:
         =>:
             $r(x)
     x = 1
+    by def $r(x)
 
 stop strategy prove_r
 claim:
@@ -1198,9 +1221,12 @@ claim:
     witness exist e1 Z st {x = 2 * e1} from 4 * d:
         x = 8 * d
         8 * d = 2 * (4 * d)
+    by def $can_be_divided_by_2(x)
+    $can_be_divided_by_2(x)
 
 witness exist d Z st {8 = 8 * d} from 1:
     8 = 8 * 1
+by def $can_be_divided_by_8(8)
 $can_be_divided_by_8(8)
 $can_be_divided_by_2(8)
 ```
@@ -1331,7 +1357,10 @@ thm thm_stored_forall:
         =>:
             $thm_match_q(x)
     x = 1
+    by def $thm_match_q(x)
+    $thm_match_q(x)
 
+by def $thm_match_p(1)
 $thm_match_p(1)
 $thm_match_q(1)
 
@@ -1580,12 +1609,17 @@ thm big_union_elim_to_exist:
   of strict set inclusion.
 
 ```litex
-forall A, B set:
-    A $subset B
-    A != B
-    =>:
-        A $proper_subset B
-        B $proper_superset A
+claim:
+    ? forall A, B set:
+        A $subset B
+        A != B
+        =>:
+            A $proper_subset B
+            B $proper_superset A
+    by def A $proper_subset B
+    by def B $proper_superset A
+    A $proper_subset B
+    B $proper_superset A
 
 forall A, B set:
     A $proper_subset B
@@ -1593,15 +1627,24 @@ forall A, B set:
         A $subset B
         A != B
 
-forall A, B, c set:
-    A $subset B $proper_subset c
-    =>:
-        A $proper_subset c
+claim:
+    ? forall A, B, c set:
+        A $subset B $proper_subset c
+        =>:
+            A $proper_subset c
+    by def A $proper_subset c
+    A $proper_subset c
 
-forall A, B set:
-    A = B
-    =>:
-        not A $proper_subset B
+claim:
+    ? forall A, B set:
+        A = B
+        =>:
+            not A $proper_subset B
+    by contra:
+        ? not A $proper_subset B
+        A $proper_subset B
+        A != B
+        impossible A = B
 ```
 
 ---
@@ -1632,9 +1675,13 @@ struct InnerProductAccessProbe:
 
 have fn real_mul(x, y R) R = x * y
 have fn real_neg(x R) R = -x
+by thm struct_member((0, real_mul), &ScalarSystem)
 have scalar_system &ScalarSystem = (0, real_mul)
+by thm struct_member((scalar_system, 0, real_mul), &VectorSpace)
 have vector_space &VectorSpace = (scalar_system, 0, real_mul)
+by thm struct_member((scalar_system, real_neg), &InnerProductScalarGeometry)
 have scalar_geometry &InnerProductScalarGeometry = (scalar_system, real_neg)
+by thm struct_member((scalar_geometry, 0), &InnerProductAccessProbe)
 have inner_space &InnerProductAccessProbe = (scalar_geometry, 0)
 
 inner_space.scalar_geometry.scalars.mul(2, 3) $in R
@@ -2087,6 +2134,7 @@ forall x, a, b R:
     x >= 0
     a >= 0
     b > 0
+    sqrt(b) != 0
     x = a / b
     =>:
         sqrt(x) = sqrt(a) / sqrt(b)
@@ -2183,17 +2231,33 @@ sketch:
         =>:
             x != 0
 
-forall x, y R:
-    =>:
+claim:
+    ? forall x, y R:
         x != 0 or y != 0
-    <=>:
-        x^2 + y^2 != 0
+        =>:
+            x^2 + y^2 != 0
+    by cases:
+        ? x^2 + y^2 != 0
+        case x != 0:
+            x^2 + y^2 != 0
+        case y != 0:
+            x^2 + y^2 != 0
 
-forall x, y R:
-    =>:
-        x*x + y*y != 0
-    <=>:
-        x != 0 or y != 0
+claim:
+    ? forall x, y R:
+        x^2 + y^2 != 0
+        =>:
+            x != 0 or y != 0
+    by cases:
+        ? x != 0 or y != 0
+        case x != 0:
+            do_nothing
+        case x = 0:
+            by contra:
+                ? y != 0
+                y = 0
+                x^2 + y^2 = 0
+                impossible x^2 + y^2 != 0
 
 
 forall a, b R:
@@ -2600,11 +2664,13 @@ sketch:
         ? $mod_eq(11, 3, 4)
         witness exist k Z st {11 - 3 = 4 * k} from 2:
             11 - 3 = 4 * 2
+        by def $mod_eq(11, 3, 4)
 
     claim:
         ? $mod_eq(-5, 1, 3)
         witness exist k Z st {(-5) - 1 = 3 * k} from -2:
             (-5) - 1 = 3 * (-2)
+        by def $mod_eq(-5, 1, 3)
 
     claim:
         ? forall a, b, c, d, n Z:
@@ -2616,6 +2682,7 @@ sketch:
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {(a + c) - (b + d) = n * k} from x + y:
             (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
+        by def $mod_eq(a + c, b + d, n)
 
     claim:
         ? forall a, b, c, d, n Z:
@@ -2627,6 +2694,7 @@ sketch:
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {(a - c) - (b - d) = n * k} from x - y:
             (a - c) - (b - d) = (a - b) - (c - d) = n * x - n * y = n * (x - y)
+        by def $mod_eq(a - c, b - d, n)
 
     claim:
         ? forall a, b, n Z:
@@ -2636,6 +2704,7 @@ sketch:
         obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {(-a) - (-b) = n * k} from -x:
             (-a) - (-b) = -(a - b) = -(n * x) = n * (-x)
+        by def $mod_eq(-a, -b, n)
 
     claim:
         ? forall a, b, c, d, n Z:
@@ -2647,6 +2716,7 @@ sketch:
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {a * c - b * d = n * k} from x * c + b * y:
             a * c - b * d = (a - b) * c + b * (c - d) = n * x * c + b * (n * y) = n * (x * c + b * y)
+        by def $mod_eq(a * c, b * d, n)
 
     claim:
         ? forall a, b, n Z:
@@ -2656,6 +2726,7 @@ sketch:
         obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {a^2 - b^2 = n * k} from x * (a + b):
             a^2 - b^2 = (a - b) * (a + b) = n * x * (a + b) = n * (x * (a + b))
+        by def $mod_eq(a^2, b^2, n)
 
     claim:
         ? forall a, b, n Z:
@@ -2665,12 +2736,14 @@ sketch:
         obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {a^3 - b^3 = n * k} from x * (a^2 + a * b + b^2):
             a^3 - b^3 = (a - b) * (a^2 + a * b + b^2) = n * x * (a^2 + a * b + b^2) = n * (x * (a^2 + a * b + b^2))
+        by def $mod_eq(a^3, b^3, n)
 
     claim:
         ? forall a, n Z:
             $mod_eq(a, a, n)
         witness exist k Z st {a - a = n * k} from 0:
             a - a = n * 0
+        by def $mod_eq(a, a, n)
 
     claim:
         ? forall a, b Z:
@@ -2680,6 +2753,7 @@ sketch:
         obtain x from exist x Z st {a - 2 = 4 * x}
         witness exist k Z st {a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = 4 * k} from x * (b^2 + a * b + 2 * b + 3):
             a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = (a - 2) * (b^2 + a * b + 2 * b + 3) = 4 * x * (b^2 + a * b + 2 * b + 3) = 4 * (x * (b^2 + a * b + 2 * b + 3))
+        by def $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
 
     claim:
         ? forall a, b Z:
@@ -2912,11 +2986,15 @@ forall a N+, b N:
 forall a, b N+:
     a * b $in N+
 
-forall a Q:
-    a > 0
-    =>:
-        a $in Q+
-        a / 2 $in Q+
+claim:
+    ? forall a Q:
+        a > 0
+        =>:
+            a $in Q+
+            a / 2 $in Q+
+    a $in Q+
+    a / 2 > 0
+    a / 2 $in Q+
 
 forall a R:
     a > 0
@@ -2944,13 +3022,16 @@ eval sum(1, 2, fn(x Z) Z {sum(2, 3, fn(y Z) Z {x + y})})
 sum(1, 3, fn(x Z) Z {x + x}) = sum(1, 3, fn(x Z) Z {x}) + sum(1, 3, fn(x Z) Z {x})
 
 ## Point-wise order on the same range gives order between finite sums.
-forall f, g fn(x Z) R:
-    forall i1 Z:
-        1 <= i1 <= 3
+claim:
+    ? forall f, g fn(x Z) R:
+        forall i1 Z:
+            1 <= i1 <= 3
+            =>:
+                f(i1) <= g(i1)
         =>:
-            f(i1) <= g(i1)
-    =>:
-        sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
+            sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
+    by thm sum_le_sum_from_pointwise(sum(1, 3, fn(x Z) R {f(x)}), sum(1, 3, fn(x Z) R {g(x)}))
+    sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
 
 ## Finite-sum triangle inequality.
 forall f fn(x Z) R:
@@ -2995,6 +3076,7 @@ thm finite_set_sum_substitution_example:
         $bijective(Y, X, g)
         =>:
             finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
+    by thm finite_set_sum_substitution(finite_set_sum(X, f), finite_set_sum(Y, fn(y Y) R {f(g(y))}))
     finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
 
 thm finite_set_sum_range_bridge_example:
@@ -3027,6 +3109,7 @@ thm finite_set_sum_monotone_example:
             f(x) <= g(x)
         =>:
             finite_set_sum(X, f) <= finite_set_sum(X, g)
+    by thm finite_set_sum_le_from_pointwise(finite_set_sum(X, f), finite_set_sum(X, g))
     finite_set_sum(X, f) <= finite_set_sum(X, g)
 
 thm finite_set_sum_triangle_example:
@@ -3056,6 +3139,7 @@ thm finite_set_sum_enumeration_well_defined:
         =>:
             \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
     \self_finite_set_sum<X, f, g> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))})
+    by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}), sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))}))
     sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}) = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))})
     \self_finite_set_sum<X, f, h> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))})
     \self_finite_set_sum<X, f, g> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}) = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))}) = \self_finite_set_sum<X, f, h>
@@ -3164,9 +3248,11 @@ builder is best read as ordinary set-comprehension notation.
 ```litex
 1 $in {1, 2, 3}
 $is_finite_set({1, 2})
+by thm set_builder_member(1, {x R: x > 0})
 1 $in {x R: x > 0}
 
 have positive_reals set = {x R: x > 0}
+by thm defined_set_member(1, positive_reals)
 1 $in positive_reals
 ```
 
@@ -3226,6 +3312,7 @@ have fn shift(x R) R = x + 1
 shift $in fn(x R) R
 shift(2) = 3
 fn(x R) R {x + 1}(2) = 3
+by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
@@ -3318,6 +3405,7 @@ struct Point:
     x R
     y R
 
+by thm struct_member((1, 2), &Point)
 (1, 2) $in &Point
 have p &Point = (1, 2)
 &Point{p}.x = p[1]
@@ -3333,14 +3421,15 @@ select a default view.
 Struct bindings keep their tuple projection view lazy. Declaring `p &Point`
 does not immediately infer `p $in cart(...)` or facts about every `p[i]`;
 using an explicit projection such as `p[1]` materializes that view on demand.
-An actual tuple membership such as `(1, 2) $in &Point` still checks its tuple
-components immediately.
+Use `by thm struct_member((1, 2), &Point)` to check an actual tuple's fields
+and store its struct membership explicitly.
 
 ```litex
 struct Point:
     x R
     y R
 
+by thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
 p.x = &Point{p}.x
 p.x = 1
@@ -3623,6 +3712,9 @@ have tuple t for i1 <= n, t[i1] = i1
 t[1] = 1
 
 have cart R3 for i1 <= n, proj(R3, i1) = R
+proj(R3, 1) = R
+proj(R3, 2) = R
+proj(R3, 3) = R
 R3 = cart(R, R, R)
 ```
 
@@ -3649,6 +3741,7 @@ Purpose: introduce named predicates for reusable mathematical properties.
 prop is_one(x R):
     x = 1
 
+by def $is_one(1)
 $is_one(1)
 
 abstract_prop related(x, y)
@@ -3673,6 +3766,7 @@ struct Point:
     x R
     y R
 
+by thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
 &Point{p}.x = 1
 &Point{p}.y = 2
@@ -3919,10 +4013,12 @@ struct Point:
 prop lies_on_x_axis(p &Point):
     &Point{p}.y = 0
 
+by thm struct_member((0, 0), &Point)
 have origin &Point = (0, 0)
 
 &Point{origin}.x = 0
 &Point{origin}.y = 0
+by def $lies_on_x_axis(origin)
 $lies_on_x_axis(origin)
 ```
 
@@ -3944,8 +4040,10 @@ struct PointedOperation<s nonempty_set>:
     <=>:
         $HasAdditiveIdentity(s, op, identity)
 
+by def $HasAdditiveIdentity(Z, fn(x, y Z) Z {x + y}, 0)
 $HasAdditiveIdentity(Z, fn(x, y Z) Z {x + y}, 0)
 
+by thm struct_member((fn(x, y Z) Z {x + y}, 0), &PointedOperation<Z>)
 (fn(x, y Z) Z {x + y}, 0) $in &PointedOperation<Z>
 ```
 
@@ -4024,6 +4122,7 @@ claim:
     ? forall s nonempty_set, g &Group<s>, h power_set(s):
         exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
     witness exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)} from {c power_set(s): $is_left_coset(s, g, h, c)}:
+        by def $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
         $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
         claim:
             ? forall q1, q2 power_set(power_set(s)):
@@ -4165,6 +4264,9 @@ struct Field<s nonempty_set>:
     <=>:
         $is_field(s, zero, one, add, neg, mul, inv)
 
+by def $is_group(Z, fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
+by def $is_abelian_group(Z, fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
+by thm struct_member((fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0), &AbelianGroup<Z>)
 have Z_additive_group &AbelianGroup<Z> = (fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
 ```
 

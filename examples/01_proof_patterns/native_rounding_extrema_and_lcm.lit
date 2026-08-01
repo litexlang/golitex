@@ -12,6 +12,7 @@ lcm(0, 0) = 0
 
 # Native functions remain first-class objects.
 have fn apply_integer_map(f fn(t R) Z, x R) Z = f(x)
+by thm fn_set_member(fn(y R) Z {floor(y)}, fn(t R) Z)
 apply_integer_map(fn(y R) Z {floor(y)}, 3.75) = 3
 
 # Symbolic objects expose their characteristic contracts.

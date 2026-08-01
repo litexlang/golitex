@@ -5,6 +5,7 @@ impl Runtime {
     pub(crate) fn verify_abs_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -15,10 +16,14 @@ impl Runtime {
         if let Some(result) = self.try_verify_abs_basic_lower_bound(f, atomic_fact)? {
             return Ok(Some(result));
         }
-        if let Some(result) = self.try_verify_abs_finite_sum_triangle(f, atomic_fact)? {
+        if let Some(result) =
+            self.try_verify_abs_finite_sum_triangle(f, atomic_fact, builtin_state)?
+        {
             return Ok(Some(result));
         }
-        if let Some(result) = self.try_verify_abs_finite_set_sum_triangle(f, atomic_fact)? {
+        if let Some(result) =
+            self.try_verify_abs_finite_set_sum_triangle(f, atomic_fact, builtin_state)?
+        {
             return Ok(Some(result));
         }
         if let Some(result) = self.try_verify_abs_triangle(f, atomic_fact)? {
@@ -27,9 +32,14 @@ impl Runtime {
         if let Some(result) = self.try_verify_abs_reverse_triangle(f, atomic_fact)? {
             return Ok(Some(result));
         }
-        if let Some(result) =
-            self.try_verify_abs_upper_bound(&f.left, &f.right, &f.line_file, atomic_fact, false)?
-        {
+        if let Some(result) = self.try_verify_abs_upper_bound(
+            &f.left,
+            &f.right,
+            &f.line_file,
+            atomic_fact,
+            false,
+            builtin_state,
+        )? {
             return Ok(Some(result));
         }
         if let Some(result) = self.try_verify_abs_lower_bound_from_abs_compare(
@@ -38,6 +48,7 @@ impl Runtime {
             &f.line_file,
             atomic_fact,
             false,
+            builtin_state,
         )? {
             return Ok(Some(result));
         }
@@ -47,6 +58,7 @@ impl Runtime {
     pub(crate) fn verify_abs_order_strict_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -54,12 +66,19 @@ impl Runtime {
         let AtomicFact::LessFact(f) = &norm else {
             return Ok(None);
         };
-        if let Some(result) = self.try_verify_abs_positive_from_arg_nonzero(f, atomic_fact)? {
+        if let Some(result) =
+            self.try_verify_abs_positive_from_arg_nonzero(f, atomic_fact, builtin_state)?
+        {
             return Ok(Some(result));
         }
-        if let Some(result) =
-            self.try_verify_abs_upper_bound(&f.left, &f.right, &f.line_file, atomic_fact, true)?
-        {
+        if let Some(result) = self.try_verify_abs_upper_bound(
+            &f.left,
+            &f.right,
+            &f.line_file,
+            atomic_fact,
+            true,
+            builtin_state,
+        )? {
             return Ok(Some(result));
         }
         if let Some(result) = self.try_verify_abs_lower_bound_from_abs_compare(
@@ -68,6 +87,7 @@ impl Runtime {
             &f.line_file,
             atomic_fact,
             true,
+            builtin_state,
         )? {
             return Ok(Some(result));
         }
@@ -187,8 +207,17 @@ fn peel_abs(obj: &Obj) -> Option<&Obj> {
 }
 
 impl Runtime {
-    fn verify_abs_order_subgoal(&mut self, fact: AtomicFact) -> Result<StmtResult, RuntimeError> {
-        self.verify_non_equational_known_then_builtin_rules_only(&fact, &VerifyState::new(0, true))
+    fn verify_abs_order_subgoal(
+        &mut self,
+        fact: AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        match fact {
+            AtomicFact::LessFact(_) | AtomicFact::LessEqualFact(_) => {
+                self.verify_same_family_builtin_child(&fact, builtin_state)
+            }
+            _ => self.verify_cross_family_builtin_child(&fact, builtin_state),
+        }
     }
 
     // Absolute value bounds: x <= abs(x) and -x <= abs(x).
@@ -220,6 +249,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Abs(abs) = &f.left else {
             return Ok(None);
@@ -231,22 +261,23 @@ impl Runtime {
             return Ok(None);
         };
 
-        let verify_state = VerifyState::new(0, true);
-        let start_result = self.verify_objs_are_equal_in_equality_builtin(
-            left_sum.start.as_ref(),
-            right_sum.start.as_ref(),
+        let start_fact: AtomicFact = EqualFact::new(
+            left_sum.start.as_ref().clone(),
+            right_sum.start.as_ref().clone(),
             f.line_file.clone(),
-            &verify_state,
-        )?;
+        )
+        .into();
+        let start_result = self.verify_cross_family_builtin_child(&start_fact, builtin_state)?;
         if !start_result.is_true() {
             return Ok(None);
         }
-        let end_result = self.verify_objs_are_equal_in_equality_builtin(
-            left_sum.end.as_ref(),
-            right_sum.end.as_ref(),
+        let end_fact: AtomicFact = EqualFact::new(
+            left_sum.end.as_ref().clone(),
+            right_sum.end.as_ref().clone(),
             f.line_file.clone(),
-            &verify_state,
-        )?;
+        )
+        .into();
+        let end_result = self.verify_cross_family_builtin_child(&end_fact, builtin_state)?;
         if !end_result.is_true() {
             return Ok(None);
         }
@@ -273,13 +304,16 @@ impl Runtime {
         .into();
         let dom_hi: Fact =
             LessEqualFact::new(x_obj, (*left_sum.end).clone(), f.line_file.clone()).into();
-        let pointwise_result = self
-            .verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
-                x_binding,
-                vec![dom_lo, dom_hi],
-                &pointwise_fact,
-                &verify_state,
-            )?;
+        let pointwise_result = self.run_in_local_env(|rt| {
+            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![x_binding],
+                ParamType::Obj(StandardSet::Z.into()),
+            )]);
+            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.store_fact_without_forall_coverage_check_and_infer(dom_lo)?;
+            rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
+            rt.verify_cross_family_builtin_child(&pointwise_fact, builtin_state)
+        })?;
         if !pointwise_result.is_true() {
             return Ok(None);
         }
@@ -299,6 +333,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Abs(abs) = &f.left else {
             return Ok(None);
@@ -310,13 +345,13 @@ impl Runtime {
             return Ok(None);
         };
 
-        let verify_state = VerifyState::new(0, true);
-        let set_result = self.verify_objs_are_equal_in_equality_builtin(
-            left_sum.set.as_ref(),
-            right_sum.set.as_ref(),
+        let set_fact: AtomicFact = EqualFact::new(
+            left_sum.set.as_ref().clone(),
+            right_sum.set.as_ref().clone(),
             f.line_file.clone(),
-            &verify_state,
-        )?;
+        )
+        .into();
+        let set_result = self.verify_cross_family_builtin_child(&set_fact, builtin_state)?;
         if !set_result.is_true() {
             return Ok(None);
         }
@@ -340,7 +375,7 @@ impl Runtime {
                 ParamType::Obj(left_sum.set.as_ref().clone()),
             )]);
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
-            rt.verify_atomic_fact(&pointwise_fact, &verify_state)
+            rt.verify_cross_family_builtin_child(&pointwise_fact, builtin_state)
         })?;
         if !pointwise_result.is_true() {
             return Ok(None);
@@ -361,6 +396,7 @@ impl Runtime {
         &mut self,
         f: &LessFact,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if !obj_is_literal_zero(&f.left) {
             return Ok(None);
@@ -374,7 +410,7 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let nonzero_result = self.verify_abs_order_subgoal(arg_nonzero)?;
+        let nonzero_result = self.verify_abs_order_subgoal(arg_nonzero, builtin_state)?;
         if !nonzero_result.is_true() {
             return Ok(None);
         }
@@ -397,6 +433,7 @@ impl Runtime {
         line_file: &LineFile,
         atomic_fact: &AtomicFact,
         strict: bool,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Abs(abs) = left else {
             return Ok(None);
@@ -405,11 +442,11 @@ impl Runtime {
         let arg_le_bound = abs_order_subgoal(arg.clone(), right.clone(), line_file.clone(), strict);
         let neg_arg_le_bound =
             abs_order_subgoal(neg_obj(arg), right.clone(), line_file.clone(), strict);
-        let r1 = self.verify_abs_order_subgoal(arg_le_bound)?;
+        let r1 = self.verify_abs_order_subgoal(arg_le_bound, builtin_state)?;
         if !r1.is_true() {
             return Ok(None);
         }
-        let r2 = self.verify_abs_order_subgoal(neg_arg_le_bound)?;
+        let r2 = self.verify_abs_order_subgoal(neg_arg_le_bound, builtin_state)?;
         if !r2.is_true() {
             return Ok(None);
         }
@@ -439,6 +476,7 @@ impl Runtime {
         line_file: &LineFile,
         atomic_fact: &AtomicFact,
         strict: bool,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let rule_suffix = if strict { " (strict)" } else { "" };
         let zero: Obj = Number::new("0".to_string()).into();
@@ -470,7 +508,7 @@ impl Runtime {
                 {
                     let ge_y: AtomicFact =
                         GreaterEqualFact::new(y.clone(), zero.clone(), line_file.clone()).into();
-                    let r_sign = self.verify_abs_order_subgoal(ge_y)?;
+                    let r_sign = self.verify_abs_order_subgoal(ge_y, builtin_state)?;
                     if r_sign.is_true() {
                         let rule = format!(
                             "abs: -y {} x from abs(x) {} abs(y) and 0 <= y{}",
@@ -532,7 +570,11 @@ impl Runtime {
         {
             let le_y: AtomicFact =
                 LessEqualFact::new(left.clone(), zero.clone(), line_file.clone()).into();
-            let r_sign = self.verify_abs_order_subgoal(le_y)?;
+            let r_sign = if strict {
+                self.verify_cross_family_builtin_child(&le_y, builtin_state)?
+            } else {
+                self.verify_abs_order_subgoal(le_y, builtin_state)?
+            };
             if r_sign.is_true() {
                 let rule = format!(
                     "abs: y {} x from abs(x) {} abs(y) and y <= 0{}",
@@ -557,7 +599,11 @@ impl Runtime {
             {
                 let le_y: AtomicFact =
                     LessEqualFact::new(y.clone(), zero.clone(), line_file.clone()).into();
-                let r_sign = self.verify_abs_order_subgoal(le_y)?;
+                let r_sign = if strict {
+                    self.verify_cross_family_builtin_child(&le_y, builtin_state)?
+                } else {
+                    self.verify_abs_order_subgoal(le_y, builtin_state)?
+                };
                 if r_sign.is_true() {
                     let rule = format!(
                         "abs: x {} -y from abs(x) {} abs(y) and y <= 0{}",
@@ -582,7 +628,7 @@ impl Runtime {
         {
             let ge_y: AtomicFact =
                 GreaterEqualFact::new(right.clone(), zero.clone(), line_file.clone()).into();
-            let r_sign = self.verify_abs_order_subgoal(ge_y)?;
+            let r_sign = self.verify_abs_order_subgoal(ge_y, builtin_state)?;
             if r_sign.is_true() {
                 let rule = format!(
                     "abs: x {} y from abs(x) {} abs(y) and 0 <= y{}",

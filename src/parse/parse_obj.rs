@@ -2529,7 +2529,10 @@ mod module_qualification_parse_tests {
         let Stmt::By(ByStmt::ByDefStmt(def_stmt)) = def_stmt else {
             panic!("expected by def stmt");
         };
-        assert_with_mod(&def_stmt.fact.predicate, "Nat", "P");
+        let AtomicFact::NormalAtomicFact(fact) = &def_stmt.fact else {
+            panic!("expected normal atomic fact");
+        };
+        assert_with_mod(&fact.predicate, "Nat", "P");
 
         let strategy_stmt = parse_one_stmt_line_with_runtime(&mut rt, "use strategy S");
         let Stmt::Command(CommandStmt::UseStrategyStmt(strategy_stmt)) = strategy_stmt else {
@@ -2571,7 +2574,10 @@ mod module_qualification_parse_tests {
         let Stmt::By(ByStmt::ByDefStmt(def_stmt)) = def_stmt else {
             panic!("expected by def stmt");
         };
-        assert_with_mod(&def_stmt.fact.predicate, "Other", "P");
+        let AtomicFact::NormalAtomicFact(fact) = &def_stmt.fact else {
+            panic!("expected normal atomic fact");
+        };
+        assert_with_mod(&fact.predicate, "Other", "P");
 
         let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\Other::Template<2>");
         let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {

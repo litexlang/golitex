@@ -470,10 +470,7 @@ impl Runtime {
             equal_fact.line_file.clone(),
         )
         .into();
-        let power_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &power_in_r_pos,
-            &VerifyState::new(0, true),
-        )?;
+        let power_result = self.verify_atomic_fact_with_builtin_rules(&power_in_r_pos)?;
         if !power_result.is_true() {
             return Ok(());
         }

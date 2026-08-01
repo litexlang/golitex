@@ -482,6 +482,7 @@ example (p q : ℝ → ℝ → Prop)
 <!-- litex:skip-test -->
 ```litex
 by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
+    by thm set_builder_member(2, {a N: a % 2 = 0})
     2 $in {a N: a % 2 = 0}
     2 $in {a N: a % 4 = 0}
     impossible 2 % 4 = 0
@@ -503,6 +504,7 @@ example : ({a : ℕ | a % 4 = 0} : Set ℕ) ≠ {a : ℕ | a % 2 = 0} := by
 
 ```litex
 by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
+    by thm set_builder_member(2, {a N: a % 2 = 0})
     2 $in {a N: a % 2 = 0}
     2 $in {a N: a % 4 = 0}
     impossible 2 % 4 = 0

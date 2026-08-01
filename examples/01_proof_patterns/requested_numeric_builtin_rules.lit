@@ -12,6 +12,8 @@ forall a, b R:
         a != 0 and b != 0
 
 forall a R+, b R_nz:
+    b $in R
+    1 / b $in R
     a = (a ^ b) ^ (1 / b)
     a = (a ^ (1 / b)) ^ b
 
@@ -22,6 +24,7 @@ forall n Z, m Z:
     n >= m or n <= m - 1
 
 forall n Z, m N+, k N+:
+    m $in N
     n ^ m % k = ((n % k) ^ m) % k
 
 forall i1 N+:

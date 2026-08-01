@@ -10,7 +10,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if verify_equality_by_they_are_the_same(left, right) {
             return Ok(factual_equal_success_by_builtin_reason(
@@ -47,7 +47,7 @@ impl Runtime {
             ));
         }
         if let Some(result) =
-            self.try_verify_native_min_max_equality(left, right, line_file.clone(), verify_state)?
+            self.try_verify_native_min_max_equality(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(result);
         }
@@ -55,7 +55,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(result);
         }
@@ -73,7 +73,7 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_native_sign_value(left, right, line_file.clone(), verify_state)?
+            self.try_verify_native_sign_value(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(result);
         }
@@ -96,9 +96,50 @@ impl Runtime {
                 return Ok(result);
             }
         }
+        if let Some(result) =
+            self.try_verify_indexed_fn_set_definition_equality(left, right, line_file.clone())?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_cart_equality_from_dim_and_projections(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(result);
+        }
+
+        // Prefer exact modulo shapes before generic equality rewrites.  The
+        // congruence rule has two recursive residue premises; handling it here
+        // keeps both branches within the one shared DFS budget.
+        if let Some(done) = self.try_verify_mod_nested_same_modulus_absorption(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+        if let Some(done) = self.try_verify_mod_peel_nested_same_modulus(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+        if let Some(done) = self.try_verify_mod_congruence_from_inner_binary(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
 
         if let Some(done) =
-            self.try_verify_native_complex_equality(left, right, line_file.clone(), verify_state)?
+            self.try_verify_native_complex_equality(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
@@ -121,12 +162,10 @@ impl Runtime {
 
         if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = left {
             let projected = self.struct_field_access_projection(field_access)?;
-            let projected_result = self.verify_equality_by_builtin_rules(
-                &projected,
-                right,
-                line_file.clone(),
-                verify_state,
-            )?;
+            let projected_fact: AtomicFact =
+                EqualFact::new(projected, right.clone(), line_file.clone()).into();
+            let projected_result =
+                self.verify_same_family_builtin_child(&projected_fact, builtin_state)?;
             if projected_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -140,12 +179,10 @@ impl Runtime {
         }
         if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = right {
             let projected = self.struct_field_access_projection(field_access)?;
-            let projected_result = self.verify_equality_by_builtin_rules(
-                left,
-                &projected,
-                line_file.clone(),
-                verify_state,
-            )?;
+            let projected_fact: AtomicFact =
+                EqualFact::new(left.clone(), projected, line_file.clone()).into();
+            let projected_result =
+                self.verify_same_family_builtin_child(&projected_fact, builtin_state)?;
             if projected_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -158,20 +195,11 @@ impl Runtime {
             }
         }
 
-        if let Some(done) = self.try_verify_instantiated_template_obj_equality_by_resolved_values(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
         if let Some(done) = self.try_verify_general_cart_set_builder_equality(
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -186,7 +214,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -195,7 +223,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -204,13 +232,13 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_abs_equalities(left, right, line_file.clone(), verify_state)?
+            self.try_verify_abs_equalities(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
@@ -219,7 +247,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -228,7 +256,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -237,7 +265,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -246,7 +274,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -258,7 +286,7 @@ impl Runtime {
                 left,
                 right,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
         if result.is_true() {
             return Ok(result);
@@ -303,7 +331,7 @@ impl Runtime {
                 left,
                 right,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? {
                 return Ok(done);
             }
@@ -315,20 +343,20 @@ impl Runtime {
                 right,
                 left,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )? {
                 return Ok(done);
             }
         }
 
         if let Some(done) =
-            self.try_verify_intersection_from_subset(left, right, line_file.clone(), verify_state)?
+            self.try_verify_intersection_from_subset(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_set_minus_equalities(left, right, line_file.clone(), verify_state)?
+            self.try_verify_set_minus_equalities(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
@@ -337,7 +365,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -346,7 +374,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -355,7 +383,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -364,7 +392,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -373,7 +401,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -388,7 +416,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -403,7 +431,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -412,14 +440,17 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_equality_from_known_antisymmetric_props(left, right, line_file.clone())?
-        {
+        if let Some(done) = self.try_verify_equality_from_known_antisymmetric_props(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
@@ -427,7 +458,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -436,7 +467,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -445,13 +476,13 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_pow_one_identity(left, right, line_file.clone(), verify_state)?
+            self.try_verify_pow_one_identity(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
@@ -468,13 +499,13 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_sqrt_equalities(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sqrt_equalities(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
@@ -483,19 +514,19 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_power_of_power_rule(left, right, line_file.clone(), verify_state)?
+            self.try_verify_power_of_power_rule(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_power_product_rule(left, right, line_file.clone(), verify_state)?
+            self.try_verify_power_product_rule(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
@@ -504,19 +535,19 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_abs_power_rule(left, right, line_file.clone(), verify_state)?
+            self.try_verify_abs_power_rule(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_power_inverse_rule(left, right, line_file.clone(), verify_state)?
+            self.try_verify_power_inverse_rule(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
@@ -525,7 +556,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -534,38 +565,41 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_log_identity_equalities(left, right, line_file.clone(), verify_state)?
+            self.try_verify_log_identity_equalities(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_log_algebra_identities(left, right, line_file.clone(), verify_state)?
+            self.try_verify_log_algebra_identities(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_log_reciprocal_rule(left, right, line_file.clone(), verify_state)?
+            self.try_verify_log_reciprocal_rule(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_log_change_of_base_rule(left, right, line_file.clone(), verify_state)?
+            self.try_verify_log_change_of_base_rule(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_log_equals_by_pow_inverse(left, right, line_file.clone(), verify_state)?
-        {
+        if let Some(done) = self.try_verify_log_equals_by_pow_inverse(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
@@ -573,43 +607,46 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_sum_additivity(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sum_additivity(left, right, line_file.clone(), builtin_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_sum_merge_adjacent_ranges(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_sum_single_term(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_sum_merge_adjacent_ranges(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sum_split_last_term(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_sum_single_term(left, right, line_file.clone(), verify_state)?
+            self.try_verify_product_single_term(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_sum_split_last_term(left, right, line_file.clone(), verify_state)?
-        {
-            return Ok(done);
-        }
-
-        if let Some(done) =
-            self.try_verify_product_single_term(left, right, line_file.clone(), verify_state)?
-        {
-            return Ok(done);
-        }
-
-        if let Some(done) =
-            self.try_verify_product_split_last_term(left, right, line_file.clone(), verify_state)?
+            self.try_verify_product_split_last_term(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
@@ -618,7 +655,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -627,31 +664,31 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_sum_reindex_shift(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sum_reindex_shift(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_sum_constant_summand(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sum_constant_summand(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_sum_scalar_mul(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sum_scalar_mul(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_finite_set_sum_empty(left, right, line_file.clone(), verify_state)?
+            self.try_verify_finite_set_sum_empty(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
@@ -660,7 +697,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -669,7 +706,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -678,7 +715,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -687,16 +724,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_finite_set_sum_substitution(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -705,20 +733,23 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_finite_set_sum_add(left, right, line_file.clone(), verify_state)?
+            self.try_verify_finite_set_sum_add(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_finite_set_sum_scalar_mul(left, right, line_file.clone(), verify_state)?
-        {
+        if let Some(done) = self.try_verify_finite_set_sum_scalar_mul(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
@@ -726,28 +757,19 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
         if let Some(done) =
-            self.try_verify_finite_set_sum_fubini(left, right, line_file.clone(), verify_state)?
+            self.try_verify_finite_set_sum_fubini(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_over_bijective_finite_set_enumerations(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
         if let Some(done) =
-            self.try_verify_finite_set_product_empty(left, right, line_file.clone(), verify_state)?
+            self.try_verify_finite_set_product_empty(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
         }
@@ -756,7 +778,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -765,7 +787,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -774,7 +796,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -783,7 +805,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -792,7 +814,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -801,7 +823,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -813,16 +835,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_mod_nested_same_modulus_absorption(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -839,7 +852,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -848,7 +861,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -857,32 +870,17 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_mod_peel_nested_same_modulus(
+        if let Some(done) = self.try_verify_integer_mod_negation_rule(
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_mod_congruence_from_inner_binary(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) =
-            self.try_verify_integer_mod_negation_rule(left, right, line_file.clone(), verify_state)?
-        {
             return Ok(done);
         }
 
@@ -890,34 +888,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_tuple_equality_from_dim_and_projections(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_symbolic_tuple_equality_from_coordinates(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_cart_equality_from_dim_and_projections(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -934,7 +905,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
         }
@@ -944,48 +915,9 @@ impl Runtime {
             right,
             left,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_matrix_product_entry_equals_sum(
-            left,
-            right,
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-        if let Some(done) = self.try_verify_matrix_product_entry_equals_sum(
-            left,
-            right,
-            right,
-            left,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_indexed_fn_set_definition_equality(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let (Obj::FnSet(left_fn_set), Obj::FnSet(right_fn_set)) = (left, right) {
-            return self.verify_fn_set_with_params_equality_by_builtin_rules(
-                left_fn_set,
-                right_fn_set,
-                line_file,
-                verify_state,
-            );
         }
 
         if let (Obj::AnonymousFn(l), Obj::AnonymousFn(r)) = (left, right) {
@@ -1190,7 +1122,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // A symmetric difference is the union of its two asymmetric differences.
         // Example: `set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))`.
@@ -1238,8 +1170,8 @@ impl Runtime {
         {
             let subset_fact: AtomicFact =
                 SubsetFact::new(subset, container, line_file.clone()).into();
-            let subset_result = self
-                .verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+            let subset_result =
+                self.verify_cross_family_builtin_child(&subset_fact, builtin_state)?;
             if subset_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1282,7 +1214,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // Removing a finite subset counts the original set minus its overlap with the removed set.
         // Example: `finite_set_size(set_minus(S, T)) = finite_set_size(S) - finite_set_size(intersect(S, T))`.
@@ -1293,15 +1225,14 @@ impl Runtime {
         };
 
         let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
-        let first_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&first_finite, verify_state)?;
+        let first_result = self.verify_cross_family_builtin_child(&first_finite, builtin_state)?;
         if !first_result.is_true() {
             return Ok(None);
         }
 
         let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file.clone()).into();
         let second_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&second_finite, verify_state)?;
+            self.verify_cross_family_builtin_child(&second_finite, builtin_state)?;
         if !second_result.is_true() {
             return Ok(None);
         }
@@ -1323,7 +1254,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((first_set, second_set)) = Self::finite_set_size_union_shape(left, right)
             .or_else(|| Self::finite_set_size_union_shape(right, left))
@@ -1334,7 +1265,7 @@ impl Runtime {
             first_set,
             second_set,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
@@ -1357,7 +1288,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((first_set, second_set)) = Self::finite_set_size_partition_shape(left, right)
             .or_else(|| Self::finite_set_size_partition_shape(right, left))
@@ -1368,7 +1299,7 @@ impl Runtime {
             first_set,
             second_set,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
@@ -1391,7 +1322,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((first_set, second_set)) = Self::finite_set_size_set_diff_shape(left, right)
             .or_else(|| Self::finite_set_size_set_diff_shape(right, left))
@@ -1402,7 +1333,7 @@ impl Runtime {
             first_set,
             second_set,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
@@ -1425,7 +1356,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((container, subset)) =
             Self::finite_set_size_set_minus_of_subset_shape(left, right)
@@ -1436,21 +1367,20 @@ impl Runtime {
 
         let subset_fact: AtomicFact =
             SubsetFact::new(subset.clone(), container.clone(), line_file.clone()).into();
-        let subset_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+        let subset_result = self.verify_cross_family_builtin_child(&subset_fact, builtin_state)?;
         if !subset_result.is_true() {
             return Ok(None);
         }
         let container_finite: AtomicFact =
             IsFiniteSetFact::new(container, line_file.clone()).into();
-        let container_result = self
-            .verify_non_equational_known_then_builtin_rules_only(&container_finite, verify_state)?;
+        let container_result =
+            self.verify_cross_family_builtin_child(&container_finite, builtin_state)?;
         if !container_result.is_true() {
             return Ok(None);
         }
         let subset_finite: AtomicFact = IsFiniteSetFact::new(subset, line_file.clone()).into();
         let subset_finite_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&subset_finite, verify_state)?;
+            self.verify_cross_family_builtin_child(&subset_finite, builtin_state)?;
         if !subset_finite_result.is_true() {
             return Ok(None);
         }
@@ -1473,7 +1403,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((start, end, closed)) = Self::finite_set_size_integer_range_shape(left, right)
             .or_else(|| Self::finite_set_size_integer_range_shape(right, left))
@@ -1483,26 +1413,22 @@ impl Runtime {
 
         let start_in_n: AtomicFact =
             InFact::new(start.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let start_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&start_in_n, verify_state)?;
+        let start_result = self.verify_cross_family_builtin_child(&start_in_n, builtin_state)?;
         if !start_result.is_true() {
             return Ok(None);
         }
 
         let end_in_n: AtomicFact =
             InFact::new(end.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let end_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&end_in_n, verify_state)?;
+        let end_result = self.verify_cross_family_builtin_child(&end_in_n, builtin_state)?;
         if !end_result.is_true() {
             return Ok(None);
         }
 
         let endpoints_ordered: AtomicFact =
             LessEqualFact::new(start, end, line_file.clone()).into();
-        let order_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &endpoints_ordered,
-            verify_state,
-        )?;
+        let order_result =
+            self.verify_cross_family_builtin_child(&endpoints_ordered, builtin_state)?;
         if !order_result.is_true() {
             return Ok(None);
         }
@@ -1527,7 +1453,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // Cardinality of a finite power set is `2` to the cardinality of the base set.
         // Example: from `$is_finite_set(S)`, prove `finite_set_size(power_set(S)) = 2^finite_set_size(S)`.
@@ -1538,8 +1464,7 @@ impl Runtime {
         };
 
         let base_finite: AtomicFact = IsFiniteSetFact::new(base_set, line_file.clone()).into();
-        let base_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&base_finite, verify_state)?;
+        let base_result = self.verify_cross_family_builtin_child(&base_finite, builtin_state)?;
         if !base_result.is_true() {
             return Ok(None);
         }
@@ -1963,17 +1888,16 @@ impl Runtime {
         first_set: Obj,
         second_set: Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
-        let first_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&first_finite, verify_state)?;
+        let first_result = self.verify_cross_family_builtin_child(&first_finite, builtin_state)?;
         if !first_result.is_true() {
             return Ok(None);
         }
         let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file).into();
         let second_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&second_finite, verify_state)?;
+            self.verify_cross_family_builtin_child(&second_finite, builtin_state)?;
         if !second_result.is_true() {
             return Ok(None);
         }
@@ -2069,7 +1993,7 @@ impl Runtime {
         statement_left: &Obj,
         statement_right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (intersection_side, target_side) in [
             (statement_left, statement_right),
@@ -2094,8 +2018,8 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let subset_result = self
-                .verify_non_equational_known_then_builtin_rules_only(&subset_fact, verify_state)?;
+            let subset_result =
+                self.verify_cross_family_builtin_child(&subset_fact, builtin_state)?;
             if !subset_result.is_true() {
                 continue;
             }
@@ -2123,7 +2047,7 @@ impl Runtime {
         intersection_side: &Obj,
         target_side: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Intersect(intersection) = intersection_side else {
             return Ok(None);
@@ -2141,8 +2065,7 @@ impl Runtime {
             let element_obj = element.as_ref().clone();
             let in_set: AtomicFact =
                 InFact::new(element_obj.clone(), set.clone(), line_file.clone()).into();
-            let in_result =
-                self.verify_non_equational_known_then_builtin_rules_only(&in_set, verify_state)?;
+            let in_result = self.verify_cross_family_builtin_child(&in_set, builtin_state)?;
             if in_result.is_true() {
                 kept.push(element_obj);
                 steps.push(in_result);
@@ -2151,8 +2074,8 @@ impl Runtime {
 
             let not_in_set: AtomicFact =
                 NotInFact::new(element_obj, set.clone(), line_file.clone()).into();
-            let not_in_result = self
-                .verify_non_equational_known_then_builtin_rules_only(&not_in_set, verify_state)?;
+            let not_in_result =
+                self.verify_cross_family_builtin_child(&not_in_set, builtin_state)?;
             if not_in_result.is_true() {
                 steps.push(not_in_result);
                 continue;
@@ -2252,7 +2175,7 @@ impl Runtime {
     // Tuple extensionality: a tuple is equal to `(a, b, ...)` when its dimension matches
     // and each projection matches the corresponding component.
     // Example: from `tuple_dim(t) = 2`, `t[1] = a`, and `t[2] = b`, prove `t = (a, b)`.
-    fn try_verify_tuple_equality_from_dim_and_projections(
+    pub(crate) fn try_verify_tuple_equality_from_dim_and_projections(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -2271,8 +2194,7 @@ impl Runtime {
 
         let is_tuple_fact: AtomicFact =
             IsTupleFact::new(target_obj.clone(), line_file.clone()).into();
-        let is_tuple_result =
-            self.verify_atomic_fact_known_then_builtin_rules_only(&is_tuple_fact, verify_state)?;
+        let is_tuple_result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
         if !is_tuple_result.is_true() {
             return Ok(None);
         }
@@ -2281,8 +2203,7 @@ impl Runtime {
         let tuple_dim_value_obj: Obj = Number::new(tuple_obj.args.len().to_string()).into();
         let tuple_dim_fact: AtomicFact =
             EqualFact::new(tuple_dim_obj, tuple_dim_value_obj, line_file.clone()).into();
-        let tuple_dim_result =
-            self.verify_atomic_fact_known_then_builtin_rules_only(&tuple_dim_fact, verify_state)?;
+        let tuple_dim_result = self.verify_atomic_fact(&tuple_dim_fact, verify_state)?;
         if !tuple_dim_result.is_true() {
             return Ok(None);
         }
@@ -2314,7 +2235,7 @@ impl Runtime {
     // coordinates on their common index range. Example: `tuple_dim(p) = n`,
     // `tuple_dim(q) = n`, and `forall i closed_range(1, n): p[i] = q[i]`
     // prove `p = q`.
-    fn try_verify_symbolic_tuple_equality_from_coordinates(
+    pub(crate) fn try_verify_symbolic_tuple_equality_from_coordinates(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -2354,15 +2275,13 @@ impl Runtime {
         }
 
         let left_is_tuple: AtomicFact = IsTupleFact::new(left.clone(), line_file.clone()).into();
-        let left_is_tuple_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&left_is_tuple, verify_state)?;
+        let left_is_tuple_result = self.verify_atomic_fact(&left_is_tuple, verify_state)?;
         if !left_is_tuple_result.is_true() {
             return Ok(None);
         }
 
         let right_is_tuple: AtomicFact = IsTupleFact::new(right.clone(), line_file.clone()).into();
-        let right_is_tuple_result = self
-            .verify_non_equational_known_then_builtin_rules_only(&right_is_tuple, verify_state)?;
+        let right_is_tuple_result = self.verify_atomic_fact(&right_is_tuple, verify_state)?;
         if !right_is_tuple_result.is_true() {
             return Ok(None);
         }
@@ -2371,8 +2290,7 @@ impl Runtime {
         let right_dim: Obj = TupleDim::new(right.clone()).into();
         let same_dim: AtomicFact =
             EqualFact::new(left_dim.clone(), right_dim, line_file.clone()).into();
-        let same_dim_result =
-            self.verify_atomic_fact_known_then_builtin_rules_only(&same_dim, verify_state)?;
+        let same_dim_result = self.verify_atomic_fact(&same_dim, verify_state)?;
         if !same_dim_result.is_true() {
             return Ok(None);
         }
@@ -2383,11 +2301,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let dimension_is_positive_result = self
-            .verify_non_equational_known_then_builtin_rules_only(
-                &dimension_is_positive,
-                verify_state,
-            )?;
+        let dimension_is_positive_result =
+            self.verify_atomic_fact(&dimension_is_positive, verify_state)?;
         if !dimension_is_positive_result.is_true() {
             return Ok(None);
         }
@@ -2440,7 +2355,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (cart_obj, target_obj) = match (left, right) {
             (target_obj, Obj::Cart(cart_obj)) => (cart_obj, target_obj),
@@ -2455,7 +2370,7 @@ impl Runtime {
         let is_cart_fact: AtomicFact =
             IsCartFact::new(target_obj.clone(), line_file.clone()).into();
         let is_cart_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&is_cart_fact, verify_state)?;
+            self.verify_cross_family_builtin_child(&is_cart_fact, builtin_state)?;
         if !is_cart_result.is_true() {
             return Ok(None);
         }
@@ -2465,7 +2380,7 @@ impl Runtime {
         let cart_dim_fact: AtomicFact =
             EqualFact::new(cart_dim_obj, cart_dim_value_obj, line_file.clone()).into();
         let cart_dim_result =
-            self.verify_atomic_fact_known_then_builtin_rules_only(&cart_dim_fact, verify_state)?;
+            self.verify_same_family_builtin_child(&cart_dim_fact, builtin_state)?;
         if !cart_dim_result.is_true() {
             return Ok(None);
         }
@@ -2476,7 +2391,8 @@ impl Runtime {
             let projected_target: Obj = Proj::new(target_obj.clone(), index_obj).into();
             let projection_fact: AtomicFact =
                 EqualFact::new(projected_target, arg.as_ref().clone(), line_file.clone()).into();
-            let projection_result = self.verify_atomic_fact(&projection_fact, verify_state)?;
+            let projection_result =
+                self.verify_same_family_builtin_child(&projection_fact, builtin_state)?;
             if !projection_result.is_true() {
                 return Ok(None);
             }
@@ -2498,7 +2414,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let set = match (left, right) {
             (Obj::ListSet(list), set) if list.list.is_empty() => set.clone(),
@@ -2506,9 +2422,40 @@ impl Runtime {
             _ => return Ok(None),
         };
 
-        let not_nonempty: AtomicFact = NotIsNonemptySetFact::new(set, line_file.clone()).into();
-        let sub =
-            self.verify_non_equational_known_then_builtin_rules_only(&not_nonempty, verify_state)?;
+        let not_nonempty: AtomicFact =
+            NotIsNonemptySetFact::new(set.clone(), line_file.clone()).into();
+        let mut sub = self.verify_cross_family_builtin_child(&not_nonempty, builtin_state)?;
+        if !sub.is_true() {
+            let empty_order: Option<AtomicFact> = match &set {
+                Obj::Range(range) => Some(
+                    LessEqualFact::new(
+                        range.end.as_ref().clone(),
+                        range.start.as_ref().clone(),
+                        line_file.clone(),
+                    )
+                    .into(),
+                ),
+                Obj::ClosedRange(range) => Some(
+                    LessFact::new(
+                        range.end.as_ref().clone(),
+                        range.start.as_ref().clone(),
+                        line_file.clone(),
+                    )
+                    .into(),
+                ),
+                _ => None,
+            };
+            if empty_order.as_ref().is_some_and(|order| {
+                self.verify_number_comparison_builtin_rule(order) == Some(true)
+            }) {
+                sub = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    not_nonempty.clone().into(),
+                    "integer interval emptiness by number comparison".to_string(),
+                    Vec::new(),
+                )
+                .into();
+            }
+        }
         if !sub.is_true() {
             return Ok(None);
         }
@@ -2529,7 +2476,7 @@ impl Runtime {
         greater_or_equal: &Obj,
         less_or_equal: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let greater_equal: AtomicFact = GreaterEqualFact::new(
             greater_or_equal.clone(),
@@ -2537,16 +2484,14 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let result =
-            self.verify_non_equational_known_then_builtin_rules_only(&greater_equal, verify_state)?;
+        let result = self.verify_cross_family_builtin_child(&greater_equal, builtin_state)?;
         if result.is_true() {
             return Ok(Some(result));
         }
 
         let less_equal: AtomicFact =
             LessEqualFact::new(less_or_equal.clone(), greater_or_equal.clone(), line_file).into();
-        let result =
-            self.verify_non_equational_known_then_builtin_rules_only(&less_equal, verify_state)?;
+        let result = self.verify_cross_family_builtin_child(&less_equal, builtin_state)?;
         if result.is_true() {
             return Ok(Some(result));
         }
@@ -2563,20 +2508,23 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let Some(mut steps) =
-            self.verify_objects_are_known_reals(&[left, right], &line_file, verify_state)?
+        let Some(mut steps) = self.verify_objects_are_known_reals_in_builtin(
+            &[left, right],
+            &line_file,
+            builtin_state,
+        )?
         else {
             return Ok(None);
         };
         let Some(left_ge_right) =
-            self.verify_weak_order_subgoal(left, right, line_file.clone(), verify_state)?
+            self.verify_weak_order_subgoal(left, right, line_file.clone(), builtin_state)?
         else {
             return Ok(None);
         };
         let Some(right_ge_left) =
-            self.verify_weak_order_subgoal(right, left, line_file.clone(), verify_state)?
+            self.verify_weak_order_subgoal(right, left, line_file.clone(), builtin_state)?
         else {
             return Ok(None);
         };
@@ -2606,7 +2554,7 @@ impl Runtime {
         &mut self,
         denominator: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let not_zero: AtomicFact = NotEqualFact::new(
             denominator.clone(),
@@ -2614,8 +2562,7 @@ impl Runtime {
             line_file,
         )
         .into();
-        let result =
-            self.verify_non_equational_known_then_builtin_rules_only(&not_zero, verify_state)?;
+        let result = self.verify_same_family_builtin_child(&not_zero, builtin_state)?;
         if result.is_true() {
             return Ok(Some(result));
         }
@@ -2630,7 +2577,7 @@ impl Runtime {
         target_left: &Obj,
         target_right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let division_obj: Obj = Div::new(dividend.clone(), denominator.clone()).into();
         if !self.objs_are_the_same_or_known_equal(&division_obj, quotient) {
@@ -2639,7 +2586,7 @@ impl Runtime {
         let Some(nonzero_result) = self.verify_division_denominator_nonzero_subgoal(
             denominator,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
@@ -2660,7 +2607,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (dividend, product) = match (left, right) {
             (dividend, Obj::Mul(product)) => (dividend, product),
@@ -2675,7 +2622,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(Some(done));
         }
@@ -2687,7 +2634,7 @@ impl Runtime {
             left,
             right,
             line_file,
-            verify_state,
+            builtin_state,
         )
     }
 
@@ -2696,7 +2643,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (division, quotient) = match (left, right) {
             (Obj::Div(division), quotient) => (division, quotient),
@@ -2715,7 +2662,7 @@ impl Runtime {
         let Some(nonzero_result) = self.verify_division_denominator_nonzero_subgoal(
             division.right.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
@@ -2739,18 +2686,18 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) = self.try_verify_product_from_known_division(
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(Some(done));
         }
 
-        self.try_verify_division_from_known_product(left, right, line_file, verify_state)
+        self.try_verify_division_from_known_product(left, right, line_file, builtin_state)
     }
 
     fn verify_user_prop_subgoal(
@@ -2759,6 +2706,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = NormalAtomicFact::new(
             AtomicName::WithoutMod(prop_name.to_string()),
@@ -2766,99 +2714,7 @@ impl Runtime {
             line_file,
         )
         .into();
-        self.verify_non_equational_known_then_builtin_rules_only(&fact, &VerifyState::new(0, true))
-    }
-
-    // Instantiated template objects materialize to ordinary Litex objects; compare those
-    // materialized values when a template instance appears in an equality.
-    // Example: if `\T<a>` resolves to `sum(1, n, f)` and `\T<b>` resolves to `sum(1, n, g)`,
-    // prove `\T<a> = \T<b>` by proving the resolved sums equal.
-    fn try_verify_instantiated_template_obj_equality_by_resolved_values(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !matches!(left, Obj::InstantiatedTemplateObj(_))
-            && !matches!(right, Obj::InstantiatedTemplateObj(_))
-        {
-            return Ok(None);
-        }
-
-        self.materialize_instantiated_template_obj_if_needed(left, verify_state)?;
-        self.materialize_instantiated_template_obj_if_needed(right, verify_state)?;
-
-        let mut left_candidates = self.known_equal_objs_for_template_candidate(left);
-        if left_candidates.is_empty() {
-            left_candidates.push(left.clone());
-        }
-        let mut right_candidates = self.known_equal_objs_for_template_candidate(right);
-        if right_candidates.is_empty() {
-            right_candidates.push(right.clone());
-        }
-
-        for left_candidate in left_candidates.iter() {
-            for right_candidate in right_candidates.iter() {
-                if verify_equality_by_they_are_the_same(left_candidate, left)
-                    && verify_equality_by_they_are_the_same(right_candidate, right)
-                {
-                    continue;
-                }
-                let resolved_result = self.verify_objs_are_equal_in_equality_builtin(
-                    left_candidate,
-                    right_candidate,
-                    line_file.clone(),
-                    verify_state,
-                )?;
-                if resolved_result.is_true() {
-                    return Ok(Some(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                            "equality: instantiated template objects resolve to equal objects"
-                                .to_string(),
-                            vec![resolved_result],
-                        )
-                        .into(),
-                    ));
-                }
-            }
-        }
-
-        Ok(None)
-    }
-
-    fn materialize_instantiated_template_obj_if_needed(
-        &mut self,
-        obj: &Obj,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        let Obj::InstantiatedTemplateObj(template_obj) = obj else {
-            return Ok(());
-        };
-        if !self.known_equal_objs_for_template_candidate(obj).is_empty() {
-            return Ok(());
-        }
-        self.materialize_instantiated_template_obj(template_obj, verify_state)
-    }
-
-    fn known_equal_objs_for_template_candidate(&self, obj: &Obj) -> Vec<Obj> {
-        let key = obj_equality_key(obj);
-        let mut result: Vec<Obj> = Vec::new();
-        for env in self.iter_environments_from_top() {
-            let Some((_, equal_objs)) = env.known_equality.get(&key) else {
-                continue;
-            };
-            for equal_obj in equal_objs.iter() {
-                if !result
-                    .iter()
-                    .any(|seen| verify_equality_by_they_are_the_same(seen, equal_obj))
-                {
-                    result.push(equal_obj.clone());
-                }
-            }
-        }
-        result
+        self.verify_cross_family_builtin_child(&fact, builtin_state)
     }
 
     // General Cartesian product definition as a canonical set-builder.
@@ -2868,7 +2724,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (general_cart_side, set_builder_side) in [(left, right), (right, left)] {
             let Obj::GeneralCart(general_cart) = general_cart_side else {
@@ -2881,7 +2737,7 @@ impl Runtime {
                 general_cart,
                 set_builder,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             else {
                 continue;
@@ -2902,7 +2758,7 @@ impl Runtime {
         general_cart: &GeneralCart,
         set_builder: &SetBuilder,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Obj::FnSet(fn_set) = set_builder.param_set.as_ref() else {
             return Ok(None);
@@ -2919,7 +2775,7 @@ impl Runtime {
             domain_set,
             general_cart.index_set.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !domain_result.is_true() {
             return Ok(None);
@@ -2930,7 +2786,7 @@ impl Runtime {
             fn_set.body.ret_set.as_ref(),
             &expected_ret_set,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !ret_result.is_true() {
             return Ok(None);
@@ -2940,7 +2796,7 @@ impl Runtime {
             general_cart,
             set_builder,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(None);
         }
@@ -2953,7 +2809,7 @@ impl Runtime {
         general_cart: &GeneralCart,
         set_builder: &SetBuilder,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         if set_builder.facts.len() != 1 {
             return Ok(false);
@@ -2975,7 +2831,7 @@ impl Runtime {
             param_type,
             general_cart.index_set.as_ref(),
             line_file,
-            verify_state,
+            builtin_state,
         )?;
         if !param_type_result.is_true() {
             return Ok(false);
@@ -3081,7 +2937,6 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (indexed_set_side, fn_set_side) in [(left, right), (right, left)] {
             let Obj::FnSet(fn_set) = fn_set_side else {
@@ -3103,19 +2958,22 @@ impl Runtime {
                 ),
                 _ => continue,
             };
-            let expanded_equality = self.verify_fn_set_with_params_equality_by_builtin_rules(
-                &expanded,
-                fn_set,
-                line_file.clone(),
-                verify_state,
-            )?;
-            if expanded_equality.is_true() {
-                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                    left,
-                    right,
-                    line_file,
-                    rule,
-                    vec![expanded_equality],
+            let param_count =
+                ParamGroupWithSet::number_of_params(&expanded.body.params_def_with_set);
+            if param_count != ParamGroupWithSet::number_of_params(&fn_set.body.params_def_with_set)
+            {
+                continue;
+            }
+            let alpha_names = (0..param_count)
+                .map(|index| format!("#indexed_fn_set_alpha_{index}"))
+                .collect::<Vec<_>>();
+            let expanded_obj =
+                self.fn_set_alpha_renamed_for_display_compare(&expanded.body, &alpha_names)?;
+            let explicit_obj =
+                self.fn_set_alpha_renamed_for_display_compare(&fn_set.body, &alpha_names)?;
+            if verify_equality_by_they_are_the_same(&expanded_obj, &explicit_obj) {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left, right, line_file, rule,
                 )));
             }
         }
@@ -3130,6 +2988,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let mut prop_names: Vec<String> = Vec::new();
         for env in self.iter_environments_from_top() {
@@ -3141,13 +3000,23 @@ impl Runtime {
         }
 
         for prop_name in prop_names {
-            let left_to_right =
-                self.verify_user_prop_subgoal(&prop_name, left, right, line_file.clone())?;
+            let left_to_right = self.verify_user_prop_subgoal(
+                &prop_name,
+                left,
+                right,
+                line_file.clone(),
+                builtin_state,
+            )?;
             if !left_to_right.is_true() {
                 continue;
             }
-            let right_to_left =
-                self.verify_user_prop_subgoal(&prop_name, right, left, line_file.clone())?;
+            let right_to_left = self.verify_user_prop_subgoal(
+                &prop_name,
+                right,
+                left,
+                line_file.clone(),
+                builtin_state,
+            )?;
             if !right_to_left.is_true() {
                 continue;
             }

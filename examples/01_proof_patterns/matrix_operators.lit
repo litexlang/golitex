@@ -1,18 +1,34 @@
 # The apostrophe marks a matrix-level operation.
 
-forall m, n N+, A, B matrix(R, m, n), c R, i1, j N+:
-    i1 <= m
-    j <= n
-    =>:
-        A '+ B $in matrix(R, m, n)
-        A '- B $in matrix(R, m, n)
-        c *' A $in matrix(R, m, n)
-        (A '+ B)(i1, j) = A(i1, j) + B(i1, j)
+claim:
+    ? forall m, n N+, A, B matrix(R, m, n), c R, i1, j N+:
+        i1 <= m
+        j <= n
+        =>:
+            A '+ B $in matrix(R, m, n)
+            A '- B $in matrix(R, m, n)
+            c *' A $in matrix(R, m, n)
+            (A '+ B)(i1, j) = A(i1, j) + B(i1, j)
+    by thm fn_set_member(A '+ B, matrix(R, m, n))
+    by thm fn_set_member(A '- B, matrix(R, m, n))
+    by thm fn_set_member(c *' A, matrix(R, m, n))
+    A '+ B $in matrix(R, m, n)
+    A '- B $in matrix(R, m, n)
+    c *' A $in matrix(R, m, n)
+    (A '+ B)(i1, j) = A(i1, j) + B(i1, j)
 
-forall m, n, p N+, A matrix(R, m, n), B matrix(R, n, p):
+claim:
+    ? forall m, n, p N+, A matrix(R, m, n), B matrix(R, n, p):
+        A '* B $in matrix(R, m, p)
+    by thm fn_set_member(A '* B, matrix(R, m, p))
     A '* B $in matrix(R, m, p)
 
-forall n, k N+, A matrix(R, n, n):
+claim:
+    ? forall n, k N+, A matrix(R, n, n):
+        A '^ k $in matrix(R, n, n)
+        A '^ 1 = A
+        A '^ (k + 1) = (A '^ k) '* A
+    by thm fn_set_member(A '^ k, matrix(R, n, n))
     A '^ k $in matrix(R, n, n)
     A '^ 1 = A
     A '^ (k + 1) = (A '^ k) '* A

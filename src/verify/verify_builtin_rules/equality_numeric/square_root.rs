@@ -8,7 +8,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (pow, other) = match (left, right) {
             (Obj::Pow(pow), other) => (pow, other),
@@ -25,7 +25,7 @@ impl Runtime {
             sqrt.arg.as_ref(),
             other,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !arg_result.is_true() {
             return Ok(None);
@@ -47,7 +47,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (sqrt, other) = match (left, right) {
             (Obj::Sqrt(sqrt), other) => (sqrt, other),
@@ -62,7 +62,7 @@ impl Runtime {
                 sqrt.arg.as_ref(),
                 &literal,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !arg_result.is_true() {
                 continue;
@@ -71,7 +71,7 @@ impl Runtime {
                 other,
                 &literal,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !other_result.is_true() {
                 continue;
@@ -95,7 +95,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Sqrt(left_sqrt), Obj::Sqrt(right_sqrt)) = (left, right) else {
             return Ok(None);
@@ -104,7 +104,7 @@ impl Runtime {
             left_sqrt.arg.as_ref(),
             right_sqrt.arg.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !arg_result.is_true() {
             return Ok(None);
@@ -127,7 +127,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (sqrt, other) = match (left, right) {
             (Obj::Sqrt(sqrt), other) => (sqrt, other),
@@ -142,7 +142,7 @@ impl Runtime {
         )
         .into();
         let nonnegative_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&nonnegative, verify_state)?;
+            self.verify_cross_family_known_or_number_calculation(&nonnegative, builtin_state)?;
         if !nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -153,7 +153,7 @@ impl Runtime {
             sqrt.arg.as_ref(),
             &other_squared,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !square_result.is_true() {
             return Ok(None);
@@ -177,7 +177,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (sqrt, product) = match (left, right) {
             (Obj::Sqrt(sqrt), Obj::Mul(product)) => (sqrt, product),
@@ -196,8 +196,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let left_nonnegative_result = self
-            .verify_non_equational_known_then_builtin_rules_only(&left_nonnegative, verify_state)?;
+        let left_nonnegative_result =
+            self.verify_cross_family_known_or_number_calculation(&left_nonnegative, builtin_state)?;
         if !left_nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -208,10 +208,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let right_nonnegative_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &right_nonnegative,
-            verify_state,
-        )?;
+        let right_nonnegative_result = self
+            .verify_cross_family_known_or_number_calculation(&right_nonnegative, builtin_state)?;
         if !right_nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -225,7 +223,7 @@ impl Runtime {
             sqrt.arg.as_ref(),
             &arg_product,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !arg_product_result.is_true() {
             return Ok(None);
@@ -253,7 +251,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (sqrt, quotient) = match (left, right) {
             (Obj::Sqrt(sqrt), Obj::Div(quotient)) => (sqrt, quotient),
@@ -272,11 +270,10 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let numerator_nonnegative_result = self
-            .verify_non_equational_known_then_builtin_rules_only(
-                &numerator_nonnegative,
-                verify_state,
-            )?;
+        let numerator_nonnegative_result = self.verify_cross_family_known_or_number_calculation(
+            &numerator_nonnegative,
+            builtin_state,
+        )?;
         if !numerator_nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -287,11 +284,10 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let denominator_positive_result = self
-            .verify_non_equational_known_then_builtin_rules_only(
-                &denominator_positive,
-                verify_state,
-            )?;
+        let denominator_positive_result = self.verify_cross_family_known_or_number_calculation(
+            &denominator_positive,
+            builtin_state,
+        )?;
         if !denominator_positive_result.is_true() {
             return Ok(None);
         }
@@ -305,7 +301,7 @@ impl Runtime {
             sqrt.arg.as_ref(),
             &arg_quotient,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !arg_quotient_result.is_true() {
             return Ok(None);
@@ -330,35 +326,35 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) =
-            self.try_verify_sqrt_square_identity(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sqrt_square_identity(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_sqrt_zero_one_identity(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sqrt_zero_one_identity(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_sqrt_equal_args_identity(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sqrt_equal_args_identity(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_sqrt_of_square_identity(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sqrt_of_square_identity(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_sqrt_product_identity(left, right, line_file.clone(), verify_state)?
+            self.try_verify_sqrt_product_identity(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_sqrt_quotient_identity(left, right, line_file, verify_state)?
+            self.try_verify_sqrt_quotient_identity(left, right, line_file, builtin_state)?
         {
             return Ok(Some(done));
         }

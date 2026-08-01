@@ -331,6 +331,44 @@ have repeated_object R
     assert_verified_probe_fails(&mut failing_runtime, "4 = 5");
 }
 
+#[test]
+fn trust_before_line_replays_builtin_theorem_conclusions_without_rechecking_requirements() {
+    let fixture = TrustedPrefixFixture::new(
+        "builtin_theorem_replay",
+        r#"by thm set_builder_member(0, {x R: x = 1})
+
+0 $in {x R: x = 1}
+"#,
+    );
+    let mut runtime = Runtime::new();
+    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 3);
+
+    assert!(
+        error.is_none(),
+        "trusted-prefix replay should restore the builtin conclusion: {error:?}"
+    );
+    assert_eq!(results.len(), 2);
+    assert_trace(&results[0], "trusted_prefix");
+    assert_trace(&results[1], "verified");
+}
+
+#[test]
+fn trust_before_line_still_checks_builtin_theorem_arity() {
+    let fixture = TrustedPrefixFixture::new(
+        "builtin_theorem_bad_arity",
+        r#"by thm set_builder_member(0)
+
+1 = 1
+"#,
+    );
+    let mut runtime = Runtime::new();
+    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 3);
+
+    assert!(results.is_empty());
+    let message = format!("{:?}", error.expect("wrong arity must fail during replay"));
+    assert!(message.contains("expects 2 argument(s), but got 1"));
+}
+
 impl TrustedPrefixFixture {
     fn new(label: &str, source: &str) -> Self {
         let fixture_id = NEXT_FIXTURE_ID.fetch_add(1, Ordering::Relaxed);

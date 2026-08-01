@@ -85,7 +85,10 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        if !self.verify_atomic_fact(&in_left, verify_state)?.is_true() {
+        if !self
+            .verify_function_value_in_fn_set_explicit(&f.left, &right_t, &in_left, verify_state)?
+            .is_true()
+        {
             return Ok(StmtUnknown::new().into());
         }
         let in_right: AtomicFact = InFact::new(
@@ -94,7 +97,10 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        if !self.verify_atomic_fact(&in_right, verify_state)?.is_true() {
+        if !self
+            .verify_function_value_in_fn_set_explicit(&f.right, &left_t, &in_right, verify_state)?
+            .is_true()
+        {
             return Ok(StmtUnknown::new().into());
         }
 
@@ -129,6 +135,34 @@ impl Runtime {
             )
             .into(),
         )
+    }
+
+    fn verify_function_value_in_fn_set_explicit(
+        &mut self,
+        value: &Obj,
+        expected: &FnSet,
+        membership: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let AtomicFact::InFact(in_fact) = membership else {
+            return Ok(StmtUnknown::new().into());
+        };
+        let known = self.verify_known_non_forall_atomic_fact(membership)?;
+        if known.is_true() {
+            return Ok(known);
+        }
+        match value {
+            Obj::AnonymousFn(anonymous) => self
+                .verify_in_fact_anonymous_fn_signature_matches_fn_set(
+                    anonymous,
+                    expected,
+                    in_fact,
+                    verify_state,
+                ),
+            _ => {
+                self.verify_in_fact_element_in_fn_set_by_stored_definition(value, expected, in_fact)
+            }
+        }
     }
 }
 

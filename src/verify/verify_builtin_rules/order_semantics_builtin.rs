@@ -6,6 +6,19 @@ fn obj_is_literal_one(obj: &Obj) -> bool {
     matches!(obj, Obj::Number(number) if number.normalized_value == "1")
 }
 
+fn object_is_explicit_member_of_finite_set_expression(element: &Obj, set: &Obj) -> bool {
+    match set {
+        Obj::ListSet(list) => list.list.iter().any(|candidate| {
+            objs_equal_with_nested_binder_alpha_equivalence(element, candidate.as_ref())
+        }),
+        Obj::Union(union) => {
+            object_is_explicit_member_of_finite_set_expression(element, union.left.as_ref())
+                || object_is_explicit_member_of_finite_set_expression(element, union.right.as_ref())
+        }
+        _ => false,
+    }
+}
+
 fn obj_plus_one_base(obj: &Obj) -> Option<Obj> {
     let Obj::Add(add) = obj else {
         return None;
@@ -96,22 +109,24 @@ impl Runtime {
     pub(crate) fn try_verify_order_semantics_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(result) =
-            self.try_verify_positive_even_integer_greater_than_one(atomic_fact, verify_state)?
+            self.try_verify_positive_even_integer_greater_than_one(atomic_fact, builtin_state)?
         {
-            return Ok(Some(result));
-        }
-        if let Some(result) = self.try_verify_order_transitivity_builtin_rule(atomic_fact)? {
             return Ok(Some(result));
         }
         if let Some(result) =
-            self.try_verify_finite_set_extrema_order_builtin_rule(atomic_fact, verify_state)?
+            self.try_verify_order_transitivity_builtin_rule(atomic_fact, builtin_state)?
         {
             return Ok(Some(result));
         }
-        self.try_verify_integer_successor_predecessor_builtin_rule(atomic_fact, verify_state)
+        if let Some(result) =
+            self.try_verify_finite_set_extrema_order_builtin_rule(atomic_fact, builtin_state)?
+        {
+            return Ok(Some(result));
+        }
+        self.try_verify_integer_successor_predecessor_builtin_rule(atomic_fact, builtin_state)
     }
 
     // A positive even integer is at least two and therefore greater than one.
@@ -119,7 +134,7 @@ impl Runtime {
     fn try_verify_positive_even_integer_greater_than_one(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((left, integer, true)) = direct_positive_order_shape(atomic_fact) else {
             return Ok(None);
@@ -131,8 +146,7 @@ impl Runtime {
         let line_file = atomic_fact.line_file();
         let in_n_pos: AtomicFact =
             InFact::new(integer.clone(), StandardSet::NPos.into(), line_file.clone()).into();
-        let membership_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&in_n_pos, verify_state)?;
+        let membership_result = self.verify_cross_family_builtin_child(&in_n_pos, builtin_state)?;
         if !membership_result.is_true() {
             return Ok(None);
         }
@@ -140,12 +154,8 @@ impl Runtime {
         let two: Obj = Number::new("2".to_string()).into();
         let zero: Obj = Number::new("0".to_string()).into();
         let remainder: Obj = Mod::new(integer, two).into();
-        let even_result = self.verify_objs_are_equal_in_equality_builtin(
-            &remainder,
-            &zero,
-            line_file,
-            verify_state,
-        )?;
+        let even_fact: AtomicFact = EqualFact::new(remainder, zero, line_file).into();
+        let even_result = self.verify_cross_family_builtin_child(&even_fact, builtin_state)?;
         if !even_result.is_true() {
             return Ok(None);
         }
@@ -165,6 +175,7 @@ impl Runtime {
     fn try_verify_order_transitivity_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((target_left, target_right, target_is_strict)) =
             direct_positive_order_shape(atomic_fact)
@@ -207,18 +218,17 @@ impl Runtime {
                 }
 
                 let line_file = atomic_fact.line_file();
-                let type_verify_state = VerifyState::new(0, true);
-                let type_steps = self.verify_objects_are_known_reals(
+                let type_steps = self.verify_objects_are_known_reals_in_builtin(
                     &[&target_left, &middle, &target_right],
                     &line_file,
-                    &type_verify_state,
+                    builtin_state,
                 )?;
                 let type_steps = match type_steps {
                     Some(steps) => Some(steps),
                     None => self.verify_objects_are_known_integers(
                         &[&target_left, &middle, &target_right],
                         &line_file,
-                        &type_verify_state,
+                        builtin_state,
                     )?,
                 };
                 let Some(mut steps) = type_steps else {
@@ -254,7 +264,7 @@ impl Runtime {
     fn try_verify_finite_set_extrema_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(fact)) =
             normalize_positive_order_atomic_fact(atomic_fact)
@@ -268,8 +278,8 @@ impl Runtime {
                 fact.line_file.clone(),
             )
             .into();
-            let member_result = self
-                .verify_non_equational_known_then_builtin_rules_only(&member_fact, verify_state)?;
+            let member_result =
+                self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
             if member_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -297,9 +307,8 @@ impl Runtime {
                 fact.line_file.clone(),
             )
             .into();
-            let member_state = verify_state.without_equality_builtin_for_list_set_membership();
-            let member_result = self
-                .verify_non_equational_known_then_builtin_rules_only(&member_fact, &member_state)?;
+            let member_result =
+                self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
             if member_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -319,8 +328,8 @@ impl Runtime {
                 fact.line_file.clone(),
             )
             .into();
-            let member_result = self
-                .verify_non_equational_known_then_builtin_rules_only(&member_fact, verify_state)?;
+            let member_result =
+                self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
             if member_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -348,9 +357,8 @@ impl Runtime {
                 fact.line_file.clone(),
             )
             .into();
-            let member_state = verify_state.without_equality_builtin_for_list_set_membership();
-            let member_result = self
-                .verify_non_equational_known_then_builtin_rules_only(&member_fact, &member_state)?;
+            let member_result =
+                self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
             if member_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -368,7 +376,7 @@ impl Runtime {
                 maximum.set.as_ref(),
                 &fact.right,
                 &fact.line_file,
-                verify_state,
+                builtin_state,
             )? {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -387,7 +395,7 @@ impl Runtime {
                 minimum.set.as_ref(),
                 &fact.left,
                 &fact.line_file,
-                verify_state,
+                builtin_state,
             )? {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -409,7 +417,7 @@ impl Runtime {
         set: &Obj,
         upper_bound: &Obj,
         line_file: &LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         match set {
             Obj::ListSet(list_set) => {
@@ -421,8 +429,7 @@ impl Runtime {
                         line_file.clone(),
                     )
                     .into();
-                    let result = self
-                        .verify_non_equational_known_then_builtin_rules_only(&fact, verify_state)?;
+                    let result = self.verify_same_family_builtin_child(&fact, builtin_state)?;
                     if !result.is_true() {
                         return Ok(None);
                     }
@@ -435,26 +442,26 @@ impl Runtime {
                 union.right.as_ref(),
                 upper_bound,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             Obj::Intersect(intersect) => self.verify_finite_set_members_are_at_most(
                 intersect.left.as_ref(),
                 upper_bound,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             Obj::SetMinus(set_minus) => self.verify_finite_set_members_are_at_most(
                 set_minus.left.as_ref(),
                 upper_bound,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             Obj::SetDiff(set_diff) => self.verify_two_finite_set_parts_are_at_most(
                 set_diff.left.as_ref(),
                 set_diff.right.as_ref(),
                 upper_bound,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             _ => Ok(None),
         }
@@ -466,10 +473,14 @@ impl Runtime {
         right: &Obj,
         upper_bound: &Obj,
         line_file: &LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
-        let Some(mut steps) =
-            self.verify_finite_set_members_are_at_most(left, upper_bound, line_file, verify_state)?
+        let Some(mut steps) = self.verify_finite_set_members_are_at_most(
+            left,
+            upper_bound,
+            line_file,
+            builtin_state,
+        )?
         else {
             return Ok(None);
         };
@@ -477,7 +488,7 @@ impl Runtime {
             right,
             upper_bound,
             line_file,
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
@@ -491,7 +502,7 @@ impl Runtime {
         set: &Obj,
         lower_bound: &Obj,
         line_file: &LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         match set {
             Obj::ListSet(list_set) => {
@@ -503,8 +514,7 @@ impl Runtime {
                         line_file.clone(),
                     )
                     .into();
-                    let result = self
-                        .verify_non_equational_known_then_builtin_rules_only(&fact, verify_state)?;
+                    let result = self.verify_same_family_builtin_child(&fact, builtin_state)?;
                     if !result.is_true() {
                         return Ok(None);
                     }
@@ -517,26 +527,26 @@ impl Runtime {
                 union.right.as_ref(),
                 lower_bound,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             Obj::Intersect(intersect) => self.verify_finite_set_members_are_at_least(
                 intersect.left.as_ref(),
                 lower_bound,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             Obj::SetMinus(set_minus) => self.verify_finite_set_members_are_at_least(
                 set_minus.left.as_ref(),
                 lower_bound,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             Obj::SetDiff(set_diff) => self.verify_two_finite_set_parts_are_at_least(
                 set_diff.left.as_ref(),
                 set_diff.right.as_ref(),
                 lower_bound,
                 line_file,
-                verify_state,
+                builtin_state,
             ),
             _ => Ok(None),
         }
@@ -548,13 +558,13 @@ impl Runtime {
         right: &Obj,
         lower_bound: &Obj,
         line_file: &LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Some(mut steps) = self.verify_finite_set_members_are_at_least(
             left,
             lower_bound,
             line_file,
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
@@ -563,13 +573,37 @@ impl Runtime {
             right,
             lower_bound,
             line_file,
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
         };
         steps.extend(right_steps);
         Ok(Some(steps))
+    }
+
+    fn verify_known_or_concrete_finite_set_membership(
+        &mut self,
+        member_fact: &AtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let known = self.verify_known_non_forall_atomic_fact(member_fact)?;
+        if known.is_true() {
+            return Ok(known);
+        }
+        let AtomicFact::InFact(in_fact) = member_fact else {
+            return Ok(StmtUnknown::new().into());
+        };
+        if !object_is_explicit_member_of_finite_set_expression(&in_fact.element, &in_fact.set) {
+            return Ok(StmtUnknown::new().into());
+        }
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                member_fact.clone().into(),
+                "membership by concrete finite-set structure".to_string(),
+                Vec::new(),
+            )
+            .into(),
+        )
     }
 
     fn known_equal_finite_set_max_candidates(&self, obj: &Obj) -> Vec<FiniteSetMax> {
@@ -621,7 +655,7 @@ impl Runtime {
     fn try_verify_integer_successor_predecessor_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(fact)) =
             normalize_positive_order_atomic_fact(atomic_fact)
@@ -633,15 +667,14 @@ impl Runtime {
             let Some(mut steps) = self.verify_objects_are_known_integers(
                 &[&predecessor, &fact.right],
                 &fact.line_file,
-                verify_state,
+                builtin_state,
             )?
             else {
                 return Ok(None);
             };
             let strict: AtomicFact =
                 LessFact::new(predecessor, fact.right.clone(), fact.line_file.clone()).into();
-            let strict_result =
-                self.verify_non_equational_known_then_builtin_rules_only(&strict, verify_state)?;
+            let strict_result = self.verify_cross_family_builtin_child(&strict, builtin_state)?;
             if strict_result.is_true() {
                 steps.push(strict_result);
                 return Ok(Some(
@@ -659,15 +692,14 @@ impl Runtime {
             let Some(mut steps) = self.verify_objects_are_known_integers(
                 &[&fact.left, &successor],
                 &fact.line_file,
-                verify_state,
+                builtin_state,
             )?
             else {
                 return Ok(None);
             };
             let strict: AtomicFact =
                 LessFact::new(fact.left.clone(), successor, fact.line_file.clone()).into();
-            let strict_result =
-                self.verify_non_equational_known_then_builtin_rules_only(&strict, verify_state)?;
+            let strict_result = self.verify_cross_family_builtin_child(&strict, builtin_state)?;
             if strict_result.is_true() {
                 steps.push(strict_result);
                 return Ok(Some(
@@ -691,11 +723,14 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (subject, base) in [(left, right), (right, left)] {
-            let Some(mut steps) =
-                self.verify_objects_are_known_integers(&[subject, base], &line_file, verify_state)?
+            let Some(mut steps) = self.verify_objects_are_known_integers(
+                &[subject, base],
+                &line_file,
+                builtin_state,
+            )?
             else {
                 continue;
             };
@@ -703,13 +738,11 @@ impl Runtime {
                 LessEqualFact::new(base.clone(), subject.clone(), line_file.clone()).into();
             let upper: AtomicFact =
                 LessFact::new(subject.clone(), obj_plus_one(base), line_file.clone()).into();
-            let lower_result =
-                self.verify_non_equational_known_then_builtin_rules_only(&lower, verify_state)?;
+            let lower_result = self.verify_cross_family_builtin_child(&lower, builtin_state)?;
             if lower_result.is_unknown() {
                 continue;
             }
-            let upper_result =
-                self.verify_non_equational_known_then_builtin_rules_only(&upper, verify_state)?;
+            let upper_result = self.verify_cross_family_builtin_child(&upper, builtin_state)?;
             if upper_result.is_unknown() {
                 continue;
             }
@@ -732,7 +765,7 @@ impl Runtime {
     pub(crate) fn try_verify_integer_discrete_split_or_builtin_rule(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &VerifyState,
+        _verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);
@@ -763,14 +796,20 @@ impl Runtime {
         } else {
             return Ok(None);
         };
-        let Some(steps) = self.verify_objects_are_known_integers(
-            &[&subject, &base],
-            &or_fact.line_file,
-            verify_state,
-        )?
-        else {
-            return Ok(None);
-        };
+        let mut steps = Vec::new();
+        for obj in [&subject, &base] {
+            let in_z: AtomicFact = InFact::new(
+                obj.clone(),
+                StandardSet::Z.into(),
+                or_fact.line_file.clone(),
+            )
+            .into();
+            let result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_z)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            steps.push(result);
+        }
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 or_fact.clone().into(),
@@ -785,14 +824,13 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut steps = Vec::with_capacity(objs.len());
         for obj in objs {
             let in_z: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::Z.into(), line_file.clone()).into();
-            let result =
-                self.verify_non_equational_known_then_builtin_rules_only(&in_z, verify_state)?;
+            let result = self.verify_cross_family_builtin_child(&in_z, builtin_state)?;
             if result.is_unknown() {
                 return Ok(None);
             }

@@ -13,51 +13,46 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
         "verify_forall_fact(",
         "verify_exist_or_and_chain_atomic_fact(",
         "verify_or_and_chain_atomic_fact(",
+        "verify_atomic_fact_with_known_forall(",
+        "verify_atomic_fact_using_builtin_or_prop_definition(",
+        "verify_atomic_fact_with_strategy(",
+        "VerifyState::new(",
     ];
-    // These older rules verify explicitly generated side conditions in a local
-    // environment. Keep the exact baseline count here so a new unrestricted
-    // verifier call cannot silently enter a builtin rule.
-    let mut reviewed_calls = vec![
-        ("type_predicates_builtin.rs", "verify_fact_full(", 2usize),
-        ("equality_numeric/finite_set_sum.rs", "verify_fact_full(", 1),
-        (
-            "equality_numeric/finite_set_product.rs",
-            "verify_fact_full(",
-            1,
-        ),
-        ("in_fact_builtin/cart_membership.rs", "verify_fact_full(", 1),
-        ("in_fact_builtin/set_membership.rs", "verify_fact_full(", 3),
-        ("equality_dispatch.rs", "verify_atomic_fact(", 2),
-        ("abs_order_builtin.rs", "verify_atomic_fact(", 1),
-        ("order_algebra_builtin.rs", "verify_atomic_fact(", 3),
+    // Full verification is permitted only inside handlers reached explicitly
+    // through `by thm`. Automatic builtin dispatch must stay atomic and must
+    // not regain an unrestricted verifier through a new call site.
+    let explicit_builtin_theorem_handlers = [
+        "try_verify_in_fact_by_symbolic_cart",
+        "verify_in_fact_in_general_cart_by_defining_facts",
+        "verify_in_fact_in_set_builder_by_defining_facts",
+        "verify_in_fact_by_struct_obj",
+        "try_verify_tuple_equality_from_dim_and_projections",
+        "try_verify_symbolic_tuple_equality_from_coordinates",
+        "try_less_equal_sum_pointwise_on_same_integer_range",
+        "try_less_equal_finite_set_sum_pointwise_on_same_set",
+        "try_less_equal_finite_set_summand_nonnegative_sum",
+        "verify_general_cart_nonempty_by_choice_explicit",
     ];
     let mut violations = Vec::new();
     let mut source_files = Vec::new();
     collect_rust_files_under_dir(&builtin_rules_dir, &mut source_files);
     for path in source_files {
         let content = fs::read_to_string(&path).expect("read verify_builtin_rules source file");
-        let relative_path = path
-            .strip_prefix(&builtin_rules_dir)
-            .expect("builtin rule file should be under its root")
-            .to_string_lossy();
         for (line_index, line) in content.lines().enumerate() {
             for disallowed_call in disallowed_calls {
                 if line.contains(disallowed_call) {
-                    if let Some((_, _, remaining)) = reviewed_calls.iter_mut().find(
-                        |(reviewed_path, reviewed_call, remaining)| {
-                            *remaining > 0
-                                && *reviewed_path == relative_path
-                                && *reviewed_call == disallowed_call
-                        },
-                    ) {
-                        *remaining -= 1;
+                    let enclosing_function = enclosing_rust_function_name(&content, line_index);
+                    if enclosing_function.as_ref().is_some_and(|name| {
+                        explicit_builtin_theorem_handlers.contains(&name.as_str())
+                    }) {
                         continue;
                     }
                     violations.push(format!(
-                        "{}:{} contains `{}`",
+                        "{}:{} contains `{}` in {:?}",
                         path.display(),
                         line_index + 1,
-                        disallowed_call
+                        disallowed_call,
+                        enclosing_function,
                     ));
                 }
             }
@@ -69,6 +64,17 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
         "builtin rules introduced unreviewed full-verifier calls:\n{}",
         violations.join("\n")
     );
+}
+
+fn enclosing_rust_function_name(source: &str, line_index: usize) -> Option<String> {
+    let preceding_lines: Vec<_> = source.lines().take(line_index + 1).collect();
+    preceding_lines.into_iter().rev().find_map(|line| {
+        let trimmed = line.trim_start();
+        let after_fn = ["fn ", "pub fn ", "pub(crate) fn ", "pub(super) fn "]
+            .into_iter()
+            .find_map(|prefix| trimmed.strip_prefix(prefix))?;
+        Some(after_fn.split('(').next()?.trim().to_string())
+    })
 }
 
 fn collect_rust_files_under_dir(dir: &Path, out: &mut Vec<PathBuf>) {

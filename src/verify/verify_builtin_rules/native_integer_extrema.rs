@@ -9,7 +9,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (arg, other, name) = match (left, right) {
             (Obj::Floor(value), other) | (other, Obj::Floor(value)) => {
@@ -26,7 +26,7 @@ impl Runtime {
         let integer_fact: AtomicFact =
             InFact::new(arg.clone(), StandardSet::Z.into(), line_file.clone()).into();
         let premise_result =
-            self.verify_atomic_fact_restricted_known_builtin(&integer_fact, verify_state)?;
+            self.verify_cross_family_builtin_child(&integer_fact, builtin_state)?;
         if premise_result.is_unknown() {
             return Ok(None);
         }
@@ -47,7 +47,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (first_arg, second_arg, selected, is_min) = match (left, right) {
             (Obj::Min(value), selected) | (selected, Obj::Min(value)) => {
@@ -75,7 +75,7 @@ impl Runtime {
             line_file.clone(),
         );
         let premise_result =
-            self.verify_atomic_fact_restricted_known_builtin(&premise.into(), verify_state)?;
+            self.verify_cross_family_builtin_child(&premise.into(), builtin_state)?;
         if premise_result.is_unknown() {
             return Ok(None);
         }
