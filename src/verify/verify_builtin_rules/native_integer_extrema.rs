@@ -9,7 +9,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (arg, other, name) = match (left, right) {
             (Obj::Floor(value), other) | (other, Obj::Floor(value)) => {
@@ -46,7 +46,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (first_arg, second_arg, selected, is_min) = match (left, right) {
             (Obj::Min(value), selected) | (selected, Obj::Min(value)) => {

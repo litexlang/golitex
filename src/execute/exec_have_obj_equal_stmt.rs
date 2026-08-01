@@ -82,7 +82,7 @@ impl Runtime {
                     .verify_obj_satisfies_param_type(
                         current_param_equal_to.clone(),
                         current_type,
-                        &VerifyState::new(0, false),
+                        &UseContextVerifyState::new(0, false),
                     )
                     .map_err(|verify_error| {
                         short_exec_error(

@@ -326,7 +326,7 @@ impl Runtime {
         surface_set: &Obj,
         fn_set: &FnSet,
     ) -> Result<(), RuntimeError> {
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
         self.verify_obj_well_defined_and_store_cache(surface_set, &verify_state)
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
         self.verify_obj_well_defined_and_store_cache(&anonymous_fn.clone().into(), &verify_state)
@@ -360,7 +360,7 @@ impl Runtime {
                     line_file,
                 )
                 .into();
-                rt.verify_atomic_fact(&value_membership, &VerifyState::new(0, false))
+                rt.verify_atomic_fact(&value_membership, &UseContextVerifyState::new(0, false))
             })
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
         if verify_result.is_unknown() {
@@ -389,7 +389,7 @@ impl Runtime {
         let in_n_pos: AtomicFact =
             InFact::new(bound.clone(), StandardSet::NPos.into(), line_file.clone()).into();
         let in_n_pos_result = self
-            .verify_atomic_fact(&in_n_pos, &VerifyState::new(0, false))
+            .verify_atomic_fact(&in_n_pos, &UseContextVerifyState::new(0, false))
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
         if in_n_pos_result.is_unknown() {
             return Err(short_exec_error(
@@ -404,7 +404,7 @@ impl Runtime {
         let equal_fact: AtomicFact =
             EqualFact::new(bound.clone(), expected.clone(), line_file).into();
         let equal_result = self
-            .verify_atomic_fact(&equal_fact, &VerifyState::new(0, false))
+            .verify_atomic_fact(&equal_fact, &UseContextVerifyState::new(0, false))
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
         if equal_result.is_unknown() {
             return Err(short_exec_error(

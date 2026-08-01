@@ -417,7 +417,7 @@ pub use crate::symbol::{
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;
 pub(crate) use crate::verify::nested_obj_binder_normalized_fact_key;
-pub use crate::verify::{BuiltinRuleVerifyState, VerifyState};
+pub use crate::verify::{UseBuiltinRuleVerifyState, UseContextVerifyState};
 
 pub use crate::cli::run_cli;
 pub use crate::common::defaults::default_line_file;

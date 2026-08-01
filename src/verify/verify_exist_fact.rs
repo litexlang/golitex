@@ -544,7 +544,7 @@ impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
         exist_fact: &ExistFactEnum,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&exist_fact.clone().into())
@@ -1103,7 +1103,7 @@ impl Runtime {
     fn try_verify_exist_unique_by_exist_and_uniqueness_forall(
         &mut self,
         exist_fact: &ExistFactEnum,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if exist_fact.params_def_with_type().number_of_params() == 0 {
             return Ok(None);

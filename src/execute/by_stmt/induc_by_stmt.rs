@@ -260,15 +260,18 @@ impl Runtime {
                 None,
             )?
             .to_fact();
-        self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
-            .map_err(|verify_error| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!("strong_induc: base case is not proved `{}`", base_case_fact),
-                    Some(verify_error),
-                    vec![],
-                )
-            })?;
+        self.verify_fact_return_err_if_not_true(
+            &base_case_fact,
+            &UseContextVerifyState::new(0, false),
+        )
+        .map_err(|verify_error| {
+            short_exec_error(
+                stmt.clone().into(),
+                format!("strong_induc: base case is not proved `{}`", base_case_fact),
+                Some(verify_error),
+                vec![],
+            )
+        })?;
 
         let induc_from_in_z_fact = InFact::new(
             stmt.induc_from.clone(),
@@ -277,7 +280,7 @@ impl Runtime {
         )
         .into();
         let verify_induc_from_in_z_result = self
-            .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
+            .verify_atomic_fact(&induc_from_in_z_fact, &UseContextVerifyState::new(0, false))
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -299,7 +302,7 @@ impl Runtime {
 
         self.verify_fact_return_err_if_not_true(
             &corresponding_forall_fact,
-            &VerifyState::new(0, false),
+            &UseContextVerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
             short_exec_error(
@@ -539,15 +542,18 @@ impl Runtime {
                 None,
             )?
             .to_fact();
-        self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
-            .map_err(|verify_error| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!("by induc: base case is not proved `{}`", base_case_fact),
-                    Some(verify_error),
-                    vec![],
-                )
-            })?;
+        self.verify_fact_return_err_if_not_true(
+            &base_case_fact,
+            &UseContextVerifyState::new(0, false),
+        )
+        .map_err(|verify_error| {
+            short_exec_error(
+                stmt.clone().into(),
+                format!("by induc: base case is not proved `{}`", base_case_fact),
+                Some(verify_error),
+                vec![],
+            )
+        })?;
 
         let induc_from_in_z_fact = InFact::new(
             stmt.induc_from.clone(),
@@ -556,7 +562,7 @@ impl Runtime {
         )
         .into();
         let verify_induc_from_in_z_result = self
-            .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
+            .verify_atomic_fact(&induc_from_in_z_fact, &UseContextVerifyState::new(0, false))
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -624,7 +630,7 @@ impl Runtime {
 
         self.verify_fact_return_err_if_not_true(
             &corresponding_forall_fact,
-            &VerifyState::new(0, false),
+            &UseContextVerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
             short_exec_error(
@@ -676,7 +682,10 @@ impl Runtime {
             for fact in stmt.to_prove.iter() {
                 let base_fact = rt.induc_goal_fact_at_obj(stmt, fact, stmt.induc_from.clone())?;
                 let result = rt
-                    .verify_fact_return_err_if_not_true(&base_fact, &VerifyState::new(0, false))
+                    .verify_fact_return_err_if_not_true(
+                        &base_fact,
+                        &UseContextVerifyState::new(0, false),
+                    )
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
@@ -718,7 +727,10 @@ impl Runtime {
             for fact in stmt.to_prove.iter() {
                 let next_fact = rt.induc_goal_fact_at_obj(stmt, fact, next_obj.clone())?;
                 let result = rt
-                    .verify_fact_return_err_if_not_true(&next_fact, &VerifyState::new(0, false))
+                    .verify_fact_return_err_if_not_true(
+                        &next_fact,
+                        &UseContextVerifyState::new(0, false),
+                    )
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
@@ -817,7 +829,7 @@ impl Runtime {
         )
         .into();
         let verify_result = self
-            .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
+            .verify_atomic_fact(&induc_from_in_z_fact, &UseContextVerifyState::new(0, false))
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),

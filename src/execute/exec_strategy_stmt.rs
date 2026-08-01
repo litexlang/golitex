@@ -8,7 +8,7 @@ impl Runtime {
         let strategy_name = stmt.name.clone();
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall_fact.clone()),
-            &VerifyState::new(0, false),
+            &UseContextVerifyState::new(0, false),
         )
         .map_err(|e| {
             short_exec_error(
@@ -63,7 +63,7 @@ impl Runtime {
             for (then_index, then_fact) in stmt.forall_fact.then_facts.iter().enumerate() {
                 let mut result = rt.verify_exist_or_and_chain_atomic_fact(
                     then_fact,
-                    &VerifyState::new(0, false),
+                    &UseContextVerifyState::new(0, false),
                 )?;
                 if result.is_unknown() {
                     let then_goal = then_fact.clone().to_fact();

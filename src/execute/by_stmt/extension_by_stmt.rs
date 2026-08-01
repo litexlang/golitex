@@ -5,27 +5,33 @@ impl Runtime {
         &mut self,
         stmt: &ByExtensionStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::new(0, false))
-            .map_err(|well_defined_error| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!("by extension: left set `{}` is not well-defined", stmt.left),
-                    Some(well_defined_error),
-                    vec![],
-                )
-            })?;
-        self.verify_obj_well_defined_and_store_cache(&stmt.right, &VerifyState::new(0, false))
-            .map_err(|well_defined_error| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!(
-                        "by extension: right set `{}` is not well-defined",
-                        stmt.right
-                    ),
-                    Some(well_defined_error),
-                    vec![],
-                )
-            })?;
+        self.verify_obj_well_defined_and_store_cache(
+            &stmt.left,
+            &UseContextVerifyState::new(0, false),
+        )
+        .map_err(|well_defined_error| {
+            short_exec_error(
+                stmt.clone().into(),
+                format!("by extension: left set `{}` is not well-defined", stmt.left),
+                Some(well_defined_error),
+                vec![],
+            )
+        })?;
+        self.verify_obj_well_defined_and_store_cache(
+            &stmt.right,
+            &UseContextVerifyState::new(0, false),
+        )
+        .map_err(|well_defined_error| {
+            short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "by extension: right set `{}` is not well-defined",
+                    stmt.right
+                ),
+                Some(well_defined_error),
+                vec![],
+            )
+        })?;
 
         let local_proof_result: Result<(Vec<StmtResult>, Fact, Fact), RuntimeError> = self
             .run_in_local_env(|rt| {
@@ -57,7 +63,7 @@ impl Runtime {
                 let left_to_right_subset_result = rt
                     .verify_atomic_fact_by_known_atomic_or_builtin_only(
                         &left_to_right_subset_fact,
-                        &VerifyState::new(0, false),
+                        &UseContextVerifyState::new(0, false),
                     )?;
 
                 let left_to_right_param = rt.fresh_param_group_with_type(
@@ -84,7 +90,7 @@ impl Runtime {
                 } else {
                     rt.verify_fact_return_err_if_not_true(
                         &left_to_right_forall_fact,
-                        &VerifyState::new(0, false),
+                        &UseContextVerifyState::new(0, false),
                     )
                     .map_err(|verify_error| {
                         short_exec_error(
@@ -109,7 +115,7 @@ impl Runtime {
                 let right_to_left_subset_result = rt
                     .verify_atomic_fact_by_known_atomic_or_builtin_only(
                         &right_to_left_subset_fact,
-                        &VerifyState::new(0, false),
+                        &UseContextVerifyState::new(0, false),
                     )?;
 
                 let right_to_left_param = rt.fresh_param_group_with_type(
@@ -136,7 +142,7 @@ impl Runtime {
                 } else {
                     rt.verify_fact_return_err_if_not_true(
                         &right_to_left_forall_fact,
-                        &VerifyState::new(0, false),
+                        &UseContextVerifyState::new(0, false),
                     )
                     .map_err(|verify_error| {
                         short_exec_error(

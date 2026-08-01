@@ -45,7 +45,7 @@ impl Runtime {
         left: &FnSet,
         right: &FnSet,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if ParamGroupWithSet::number_of_params(&left.body.params_def_with_set)
             != ParamGroupWithSet::number_of_params(&right.body.params_def_with_set)
@@ -83,7 +83,7 @@ impl Runtime {
         source: &FnSet,
         target: &FnSet,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<bool, RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.verify_fn_set_with_params_directionally_in_local_env_body(
@@ -100,7 +100,7 @@ impl Runtime {
         source: &FnSet,
         target: &FnSet,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<bool, RuntimeError> {
         let target_flat_param_bindings = target.body.params_def_with_set.collect_param_bindings();
         let generated_param_names =
@@ -338,7 +338,7 @@ impl Runtime {
         target: &FnSet,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<bool, RuntimeError> {
         for param_def_with_set in target.body.params_def_with_set.iter() {
             let instantiated_param_type = ParamType::Obj(
@@ -390,7 +390,7 @@ impl Runtime {
         target: &FnSet,
         line_file: LineFile,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<bool, RuntimeError> {
         for dom_fact in target.body.dom_facts.iter() {
             let instantiated_dom_fact = self

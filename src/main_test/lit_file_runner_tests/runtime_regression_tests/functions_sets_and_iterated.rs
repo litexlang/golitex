@@ -391,7 +391,7 @@ trust x $in A
                 let result = runtime
                     .verify_atomic_fact_restricted_known_builtin(
                         &target,
-                        &VerifyState::new(0, false),
+                        &UseContextVerifyState::new(0, false),
                     )
                     .unwrap_or_else(|error| {
                         panic!("{} restricted membership check failed: {}", label, error)
@@ -463,7 +463,7 @@ trust x $in A
                 let result = runtime
                     .verify_atomic_fact_restricted_known_builtin(
                         &target,
-                        &VerifyState::new(0, false),
+                        &UseContextVerifyState::new(0, false),
                     )
                     .unwrap_or_else(|error| {
                         panic!("{} restricted membership check failed: {}", label, error)
@@ -518,7 +518,7 @@ trust B $subset U
             let direct_result = runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &direct_target,
-                    &VerifyState::new(0, false),
+                    &UseContextVerifyState::new(0, false),
                 )
                 .unwrap_or_else(|error| {
                     panic!("direct restricted membership check failed: {}", error)
@@ -540,7 +540,7 @@ trust B $subset U
             let transitive_result = runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &transitive_target,
-                    &VerifyState::new(0, false),
+                    &UseContextVerifyState::new(0, false),
                 )
                 .unwrap_or_else(|error| {
                     panic!("transitive restricted membership check failed: {}", error)
@@ -588,7 +588,7 @@ trust S $subset T
             let reverse_result = reverse_runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &reverse_target,
-                    &VerifyState::new(0, false),
+                    &UseContextVerifyState::new(0, false),
                 )
                 .unwrap_or_else(|error| {
                     panic!("reverse restricted membership check failed: {}", error)
@@ -642,7 +642,7 @@ trust A $subset B
             let alias_result = alias_runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &alias_target,
-                    &VerifyState::new(0, false),
+                    &UseContextVerifyState::new(0, false),
                 )
                 .expect("equality-alias membership verification should not error");
             assert!(
@@ -695,7 +695,7 @@ trust S $subset T
                 let result = runtime
                     .verify_atomic_fact_restricted_known_builtin(
                         &target,
-                        &VerifyState::new(0, false),
+                        &UseContextVerifyState::new(0, false),
                     )
                     .unwrap_or_else(|error| {
                         panic!("{} restricted membership check failed: {}", label, error)
@@ -747,7 +747,7 @@ try:
         let committed_result = committed_runtime
             .verify_atomic_fact_restricted_known_builtin(
                 &committed_target,
-                &VerifyState::new(0, false),
+                &UseContextVerifyState::new(0, false),
             )
             .expect("committed membership verification should not error");
         assert!(

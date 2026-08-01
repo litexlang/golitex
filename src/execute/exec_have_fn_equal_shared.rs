@@ -279,7 +279,7 @@ fn case_condition_implies_not_other(
             let Ok(negated) = atom.logical_negation() else {
                 continue;
             };
-            let result = rt.verify_atomic_fact(&negated, &VerifyState::new(0, false))?;
+            let result = rt.verify_atomic_fact(&negated, &UseContextVerifyState::new(0, false))?;
             if result.is_true() {
                 return Ok(true);
             }

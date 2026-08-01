@@ -11,11 +11,11 @@ impl Runtime {
     }
 
     fn exec_fact_stmt_verify_well_definedness(&mut self, fact: &Fact) -> Result<(), RuntimeError> {
-        self.verify_fact_well_defined(fact, &VerifyState::new(0, false))
+        self.verify_fact_well_defined(fact, &UseContextVerifyState::new(0, false))
     }
 
     fn exec_fact_stmt_verify_process(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
-        self.verify_fact_return_err_if_not_true(fact, &VerifyState::new(0, false))
+        self.verify_fact_return_err_if_not_true(fact, &UseContextVerifyState::new(0, false))
     }
 
     fn exec_fact_stmt_affect_environment(

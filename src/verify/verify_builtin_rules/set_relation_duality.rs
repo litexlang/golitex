@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_subset_fact_with_builtin_rules(
         &mut self,
         subset_fact: &SubsetFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Fundamental set containments follow directly from membership definitions.
         // Examples: `intersect(A, B) $subset A`, `A $subset union(A, B)`.
@@ -135,7 +135,7 @@ impl Runtime {
     pub fn verify_superset_fact_with_builtin_rules(
         &mut self,
         superset_fact: &SupersetFact,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Standard number sets form a fixed inclusion chain. Example: `R $supset N`.
         if let (Obj::StandardSet(left), Obj::StandardSet(right)) =
@@ -194,7 +194,7 @@ impl Runtime {
     pub fn verify_not_subset_fact_with_builtin_rules(
         &mut self,
         not_subset_fact: &NotSubsetFact,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let converted_not_superset_fact = NotSupersetFact::new(
             not_subset_fact.right.clone(),
@@ -223,7 +223,7 @@ impl Runtime {
     pub fn verify_not_superset_fact_with_builtin_rules(
         &mut self,
         not_superset_fact: &NotSupersetFact,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let converted_not_subset_fact = NotSubsetFact::new(
             not_superset_fact.right.clone(),

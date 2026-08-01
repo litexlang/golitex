@@ -18,7 +18,7 @@ impl Runtime {
     pub(crate) fn verify_order_algebra_structural_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -35,7 +35,7 @@ impl Runtime {
     fn verify_order_subgoal(
         &mut self,
         fact: AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             AtomicFact::LessFact(_) | AtomicFact::LessEqualFact(_) => {
@@ -67,7 +67,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         lf: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let in_n_pos: AtomicFact =
             InFact::new(obj.clone(), StandardSet::NPos.into(), lf.clone()).into();
@@ -81,7 +81,7 @@ impl Runtime {
         exponent: &Obj,
         lf: &LineFile,
         allow_strict_recursion: bool,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut positive_membership_steps = Vec::new();
         let mut all_are_positive_reals = true;
@@ -187,7 +187,7 @@ impl Runtime {
         &mut self,
         exp: &Obj,
         lf: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         if Self::obj_is_positive_even_integer_number(exp) {
             return Ok(Some(Vec::new()));
@@ -215,7 +215,7 @@ impl Runtime {
         &mut self,
         exp: &Obj,
         lf: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         if Self::obj_is_positive_odd_integer_number(exp) {
             return Ok(Some(Vec::new()));
@@ -284,7 +284,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -394,7 +394,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let candidates = self.collect_known_power_le_candidates(&f.left, &f.right);
         for candidate in candidates {
@@ -442,7 +442,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let candidates = self.collect_known_power_le_candidates(&f.left, &f.right);
         for candidate in candidates {
@@ -489,7 +489,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -530,7 +530,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -580,7 +580,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -620,7 +620,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -659,7 +659,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (&f.left, &f.right) else {
             return Ok(None);
@@ -723,7 +723,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if !Self::objs_same_by_display(left_pow.exponent.as_ref(), right_pow.exponent.as_ref()) {
             return Ok(None);
@@ -779,7 +779,7 @@ impl Runtime {
         &mut self,
         f: &LessFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let candidates = self.collect_known_power_lt_candidates(&f.left, &f.right);
         for candidate in candidates {
@@ -826,7 +826,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -866,7 +866,7 @@ impl Runtime {
         pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(mut step_results) =
             self.verify_odd_exponent_in_n_pos_subgoal(pow.exponent.as_ref(), lf, builtin_state)?
@@ -899,7 +899,7 @@ impl Runtime {
         pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(mut step_results) =
             self.verify_odd_exponent_in_n_pos_subgoal(pow.exponent.as_ref(), lf, builtin_state)?
@@ -934,7 +934,7 @@ impl Runtime {
         right_pow: &Pow,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if left_pow.exponent.to_string() != right_pow.exponent.to_string() {
             return Ok(None);
@@ -987,7 +987,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         msg_nonneg: &str,
         msg_nonpos: &str,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let g0 = LessEqualFact::new(z.clone(), x.clone(), lf.clone()).into();
@@ -1029,7 +1029,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         msg_pos: &str,
         msg_neg: &str,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let g_pos = LessFact::new(z.clone(), x.clone(), lf.clone()).into();
@@ -1071,7 +1071,7 @@ impl Runtime {
         r2: &Obj,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let mut try_pairing =
@@ -1114,7 +1114,7 @@ impl Runtime {
         right: &Obj,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let mut try_signs =
@@ -1146,7 +1146,7 @@ impl Runtime {
         right: &Obj,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let mut try_signs = |first_nonnegative: bool| -> Result<Option<StmtResult>, RuntimeError> {
@@ -1187,7 +1187,7 @@ impl Runtime {
         right: &Obj,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let mut try_signs =
@@ -1219,7 +1219,7 @@ impl Runtime {
         right: &Obj,
         lf: &LineFile,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let cases: [(AtomicFact, AtomicFact); 4] = [
@@ -1264,7 +1264,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Sum(left_sum), Obj::Sum(right_sum)) = (&f.left, &f.right) else {
             return Ok(None);
@@ -1364,7 +1364,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::SumOfFiniteSet(left_sum), Obj::SumOfFiniteSet(right_sum)) = (&f.left, &f.right)
         else {
@@ -1426,7 +1426,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::SumOfFiniteSet(sum) = &f.right else {
             return Ok(None);
@@ -1493,7 +1493,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let lf = &f.line_file;
         let z = Self::literal_zero_obj();
@@ -1985,7 +1985,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Div(quotient) = &f.right else {
             return Ok(None);
@@ -2038,7 +2038,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Mul(product) = &f.right else {
             return Ok(None);
@@ -2090,7 +2090,7 @@ impl Runtime {
         &mut self,
         f: &LessFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let lf = &f.line_file;
         let z = Self::literal_zero_obj();

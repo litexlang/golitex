@@ -1,9 +1,9 @@
 #[derive(Clone, Copy)]
-pub struct BuiltinRuleVerifyState {
+pub struct UseBuiltinRuleVerifyState {
     builtin_rule_depth: u8,
 }
 
-impl BuiltinRuleVerifyState {
+impl UseBuiltinRuleVerifyState {
     pub fn new() -> Self {
         Self {
             builtin_rule_depth: 0,
@@ -27,13 +27,13 @@ mod tests {
 
     #[test]
     fn root_state_allows_one_builtin_rule() {
-        let state = BuiltinRuleVerifyState::new();
+        let state = UseBuiltinRuleVerifyState::new();
         assert!(state.can_apply_builtin_rule());
     }
 
     #[test]
     fn child_state_does_not_allow_another_builtin_rule() {
-        let root = BuiltinRuleVerifyState::new();
+        let root = UseBuiltinRuleVerifyState::new();
         let child = root.after_applying_builtin_rule();
         assert!(!child.can_apply_builtin_rule());
         assert!(root.can_apply_builtin_rule());

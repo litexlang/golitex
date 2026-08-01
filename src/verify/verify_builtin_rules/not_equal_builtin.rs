@@ -5,7 +5,7 @@ impl Runtime {
     pub fn _verify_not_equal_fact_with_builtin_rules(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let left_obj = &not_equal_fact.left;
         let right_obj = &not_equal_fact.right;
@@ -266,7 +266,7 @@ impl Runtime {
     fn try_verify_not_equal_empty_set_from_nonempty(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let set = match (&not_equal_fact.left, &not_equal_fact.right) {
@@ -296,7 +296,7 @@ impl Runtime {
     fn try_verify_not_equal_from_known_strict_order(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let x = not_equal_fact.left.clone();
@@ -378,7 +378,7 @@ impl Runtime {
     fn try_verify_abs_not_equal_zero_from_arg_nonzero(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let abs = match (&not_equal_fact.left, &not_equal_fact.right) {
@@ -640,7 +640,7 @@ impl Runtime {
     fn try_verify_not_equal_zero_from_n_and_one_le(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let one_obj: Obj = Number::new("1".to_string()).into();
@@ -687,7 +687,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         if let Obj::Number(exp_num) = obj {
             return Ok(is_integer_after_simplification(exp_num));
@@ -709,7 +709,7 @@ impl Runtime {
     fn try_verify_not_equal_pow_from_base_nonzero(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let zero_obj: Obj = Number::new("0".to_string()).into();
@@ -748,7 +748,7 @@ impl Runtime {
     fn try_verify_div_not_equal_zero_from_numerator_nonzero(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let div = match (&not_equal_fact.left, &not_equal_fact.right) {
@@ -801,7 +801,7 @@ impl Runtime {
     fn try_verify_product_nonzero_component_from_known_product(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let target = match (&not_equal_fact.left, &not_equal_fact.right) {
             (target, zero) if self.obj_represents_zero_for_not_equal_builtin_rules(zero) => {
@@ -898,7 +898,7 @@ impl Runtime {
     fn try_verify_square_sum_not_equal_zero_from_nonzero_component(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let expression_obj =
@@ -1041,7 +1041,7 @@ impl Runtime {
         &mut self,
         operand: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let operand_not_equal_zero_fact =
@@ -1059,7 +1059,7 @@ impl Runtime {
         left_operand: &Obj,
         right_operand: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Some(left_nonzero) = self.operand_is_not_equal_to_zero_by_known_non_equational_facts(
             left_operand,
@@ -1085,7 +1085,7 @@ impl Runtime {
         left_operand: &Obj,
         right_operand: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let zero_less_than_left =
@@ -1108,7 +1108,7 @@ impl Runtime {
         left_operand: &Obj,
         right_operand: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let left_less_than_zero =
@@ -1131,7 +1131,7 @@ impl Runtime {
         left_factor: &Obj,
         right_factor: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let left_less_than_zero =
@@ -1161,7 +1161,7 @@ impl Runtime {
         minuend: &Obj,
         subtrahend: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let zero_less_than_minuend =
@@ -1193,7 +1193,7 @@ impl Runtime {
     fn try_verify_not_equal_fact_when_zero_and_binary_arithmetic_reduces_by_operand_facts(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let expression_obj =

@@ -32,6 +32,7 @@ pub use verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberComp
 pub(crate) use verify_builtin_rules::{
     general_cart_member_fn_set, general_cart_member_pointwise_fact,
 };
+mod use_context_verify_state;
 mod verify_arg_satisfy_param_def;
 mod verify_fn_membership_by_definition;
 mod verify_number_in_standard_set;
@@ -39,7 +40,6 @@ mod verify_obj_well_defined;
 mod verify_or_fact;
 mod verify_or_fact_with_known_forall;
 pub(crate) mod verify_proper_set_relations_builtin;
-mod verify_state;
 mod verify_well_defined_in_local_env;
 
 pub use verify_number_in_standard_set::number_is_in_n;
@@ -54,5 +54,5 @@ pub use verify_number_in_standard_set::number_is_in_z;
 pub use verify_number_in_standard_set::number_is_in_z_neg;
 pub use verify_number_in_standard_set::number_is_in_z_nz;
 
-pub use builtin_rule_verify_state::BuiltinRuleVerifyState;
-pub use verify_state::VerifyState;
+pub use builtin_rule_verify_state::UseBuiltinRuleVerifyState;
+pub use use_context_verify_state::UseContextVerifyState;

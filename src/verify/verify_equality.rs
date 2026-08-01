@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_equal_fact(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_objs_are_equal(
             &equal_fact.left,
@@ -20,7 +20,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(done) =
             self.try_verify_function_equality_from_known_fn_eq(left, right, line_file.clone())?
@@ -132,7 +132,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let left_string = obj_equality_key(left);
         let right_string = obj_equality_key(right);
@@ -232,7 +232,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) = self.try_one_side_user_defined_fn_app_equals_other_side(
             left,
@@ -264,7 +264,7 @@ impl Runtime {
         application_side: &Obj,
         other_side: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(reduced) =
             self.unfold_known_fn_application_once(application_side, verify_state)?
@@ -346,7 +346,7 @@ impl Runtime {
         left_right: &Obj,
         right_left: &Obj,
         right_right: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
         let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
@@ -374,7 +374,7 @@ impl Runtime {
         &mut self,
         left_value: &Obj,
         right_value: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
         let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
@@ -393,7 +393,7 @@ impl Runtime {
         &mut self,
         left_func: &Obj,
         right_func: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
         // Iterated operators such as sum/product compare their summand
@@ -422,7 +422,7 @@ impl Runtime {
         &mut self,
         left_values: &Vec<Box<Obj>>,
         right_values: &Vec<Box<Obj>>,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
         if left_values.len() != right_values.len() {
@@ -449,7 +449,7 @@ impl Runtime {
         &mut self,
         left: &MatrixListObj,
         right: &MatrixListObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
         if left.rows.len() != right.rows.len() {
@@ -472,7 +472,7 @@ impl Runtime {
         &mut self,
         left_fn_obj: &FnObj,
         right_fn_obj: &FnObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
         if left_fn_obj.body.len() != right_fn_obj.body.len() {
@@ -502,7 +502,7 @@ impl Runtime {
         &mut self,
         left_fn_obj: &FnObj,
         right_fn_obj: &FnObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
         let mut remaining_left_group_count = left_fn_obj.body.len();
@@ -539,7 +539,7 @@ impl Runtime {
         &mut self,
         left_obj: &Obj,
         right_obj: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         equality_line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
         match (left_obj, right_obj) {
@@ -1097,7 +1097,7 @@ impl Runtime {
         &mut self,
         left_obj: &Obj,
         right_obj: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         equality_line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
         let mut result = self

@@ -6,7 +6,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         Ok(self
             .verify_objs_are_equal_in_equality_builtin(left, right, line_file, builtin_state)?
@@ -20,7 +20,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let args_equal = match (left, right) {
             (Obj::Add(l), Obj::Add(r)) => {

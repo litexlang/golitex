@@ -26,7 +26,7 @@ impl Runtime {
             .verify_objects_are_known_reals(
                 &[&left, &right],
                 &line_file,
-                &VerifyState::new(0, true),
+                &UseContextVerifyState::new(0, true),
             )?
             .is_none()
         {

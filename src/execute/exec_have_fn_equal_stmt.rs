@@ -137,7 +137,7 @@ impl Runtime {
         have_fn_equal_stmt: &HaveFnEqualStmt,
         fn_set_stored: &FnSet,
     ) -> Result<(), RuntimeError> {
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
 
         self.verify_obj_well_defined_and_store_cache(
             &have_fn_equal_stmt.equal_to_anonymous_fn.clone().into(),
@@ -221,7 +221,7 @@ impl Runtime {
             let result = rt.verify_obj_satisfies_param_type(
                 (*have_fn_equal_stmt.equal_to_anonymous_fn.equal_to).clone(),
                 &ParamType::Obj((*have_fn_equal_stmt.equal_to_anonymous_fn.body.ret_set).clone()),
-                &VerifyState::new(0, false),
+                &UseContextVerifyState::new(0, false),
             )?;
             if !result.is_unknown() {
                 return Ok(result);
@@ -229,7 +229,7 @@ impl Runtime {
 
             if let Some(result) = rt.verify_anonymous_fn_in_declared_return_set_by_definition(
                 have_fn_equal_stmt,
-                &VerifyState::new(0, false),
+                &UseContextVerifyState::new(0, false),
             )? {
                 return Ok(result);
             }
@@ -249,7 +249,7 @@ impl Runtime {
     fn verify_anonymous_fn_in_declared_return_set_by_definition(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::AnonymousFn(value_fn) = have_fn_equal_stmt
             .equal_to_anonymous_fn

@@ -69,7 +69,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = EqualFact::new(left.clone(), right.clone(), line_file).into();
         self.verify_builtin_rule_premise(&fact, builtin_state)
@@ -711,7 +711,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<(StmtResult, Obj, Obj), RuntimeError> {
         if verify_equality_by_they_are_the_same(left, right) {
             return Ok((

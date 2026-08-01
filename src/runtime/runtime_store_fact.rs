@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_well_defined_and_store_and_infer(
         &mut self,
         fact: Fact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<InferResult, RuntimeError> {
         self.verify_well_defined_and_store_and_infer_with_reason(
             fact,
@@ -17,7 +17,7 @@ impl Runtime {
     pub fn verify_well_defined_and_store_and_infer_with_reason(
         &mut self,
         fact: Fact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
         let reason_text = reason.store_reason();
@@ -31,7 +31,7 @@ impl Runtime {
     fn verify_well_defined_and_store_and_infer_with_reason_text(
         &mut self,
         fact: Fact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         reason_text: String,
     ) -> Result<InferResult, RuntimeError> {
         if self.non_forall_fact_is_cached(&fact) {
@@ -72,9 +72,9 @@ impl Runtime {
         reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
         let verify_state = match &fact {
-            Fact::ForallFact(_) => VerifyState::new(0, false),
-            Fact::ForallFactWithIff(_) => VerifyState::new(0, false),
-            _ => VerifyState::new_with_final_round(false),
+            Fact::ForallFact(_) => UseContextVerifyState::new(0, false),
+            Fact::ForallFactWithIff(_) => UseContextVerifyState::new(0, false),
+            _ => UseContextVerifyState::new_with_final_round(false),
         };
         self.verify_well_defined_and_store_and_infer_with_reason(fact, &verify_state, reason)
     }
@@ -509,8 +509,10 @@ impl Runtime {
             return Ok(InferResult::new());
         }
         let verify_state = match &fact {
-            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => VerifyState::new(0, false),
-            _ => VerifyState::new_with_final_round(false),
+            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => {
+                UseContextVerifyState::new(0, false)
+            }
+            _ => UseContextVerifyState::new_with_final_round(false),
         };
         if !self.current_execution_is_trusted_file() {
             self.verify_fact_well_defined(&fact, &verify_state)?;

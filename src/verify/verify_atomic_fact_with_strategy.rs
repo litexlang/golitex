@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_non_equational_atomic_fact_with_strategy(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(strategy_name) = self.active_strategy_name_for_atomic_fact(atomic_fact) else {
             return Ok(StmtUnknown::new().into());
@@ -69,7 +69,7 @@ impl Runtime {
         strategy: &DefStrategyStmt,
         strategy_name: &str,
         arg_map: HashMap<String, Obj>,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let param_names = strategy
             .forall_fact

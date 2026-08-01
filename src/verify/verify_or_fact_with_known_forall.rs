@@ -9,7 +9,7 @@ impl Runtime {
     pub fn verify_or_fact_with_known_forall(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(fact_verified) =
             self.try_verify_or_fact_with_known_forall_facts_in_envs(or_fact, verify_state)?
@@ -88,7 +88,7 @@ impl Runtime {
     fn try_verify_or_fact_with_known_forall_facts_in_envs(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
@@ -127,7 +127,7 @@ impl Runtime {
         known_forall: &Rc<KnownForallFactParamsAndDom>,
         arg_map: HashMap<String, Obj>,
         given_or_fact: &OrFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let Some((instantiation, requirements)) = self
             .verify_known_forall_requirements_and_build_evidence(

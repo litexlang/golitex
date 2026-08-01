@@ -11,7 +11,7 @@ impl Runtime {
             .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
         self.verify_forall_fact_params_and_dom_well_defined(
             &stmt.forall_fact,
-            &VerifyState::new(0, false),
+            &UseContextVerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
             short_exec_error(
@@ -558,7 +558,7 @@ impl Runtime {
         &mut self,
         stmt: &ByForStmt,
     ) -> Result<(Vec<StmtResult>, usize, usize, usize, Option<String>), RuntimeError> {
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
         let mut inside_results = Vec::new();
         let mut domain_check_count = 0;
         let mut skipped_domain = None;

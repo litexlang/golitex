@@ -421,7 +421,7 @@ impl Runtime {
     pub fn verify_or_fact(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&or_fact.clone().into())
@@ -548,10 +548,7 @@ impl Runtime {
             );
         }
 
-        if let Some(result) = self.try_verify_integer_discrete_split_or_builtin_rule(
-            or_fact,
-            &verify_state_for_children,
-        )? {
+        if let Some(result) = self.try_verify_integer_discrete_split_or_builtin_rule(or_fact)? {
             return Ok(result);
         }
 
@@ -614,7 +611,7 @@ impl Runtime {
     fn try_verify_or_by_classical_implication(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);
@@ -664,7 +661,7 @@ impl Runtime {
     fn try_verify_integer_successor_tail_or_from_lower_bound(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((subject, base)) = integer_successor_tail_or_pattern(or_fact) else {
             return Ok(None);
@@ -703,7 +700,7 @@ impl Runtime {
     fn try_verify_zero_product_or(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);

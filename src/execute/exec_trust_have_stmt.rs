@@ -56,7 +56,7 @@ impl Runtime {
             } else {
                 self.verify_fact_well_defined_and_store_and_infer_with_reason(
                     fact.clone(),
-                    &VerifyState::new(0, false),
+                    &UseContextVerifyState::new(0, false),
                     InferReason::TrustHave,
                 )
             }

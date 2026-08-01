@@ -191,6 +191,30 @@ forall k N_pos:
 }
 
 #[test]
+fn euclidean_remainder_accepts_a_known_natural_quotient_as_an_integer_leaf() {
+    let source_code = r#"
+have a N
+have d Z
+trust d = 3 * a
+d = 3 * a + 0
+d % 3 = 0
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "euclidean_remainder_accepts_a_known_natural_quotient_as_an_integer_leaf",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "Euclidean remainder uniqueness should accept N as a static subset of Z:\n{run_output}"
+    );
+    assert!(run_output
+        .contains("equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"));
+}
+
+#[test]
 fn direct_order_semantics_builtin_rules_cover_transitivity_bounds_and_integer_discreteness() {
     run_with_large_stack(
         "direct_order_semantics_builtin_rules_cover_transitivity_bounds_and_integer_discreteness",
@@ -285,6 +309,34 @@ forall x, n Z:
                     run_output
                 );
             }
+        },
+    );
+}
+
+#[test]
+fn integer_discrete_split_accepts_a_natural_subject_and_literal_base() {
+    run_with_large_stack(
+        "integer_discrete_split_accepts_a_natural_subject_and_literal_base",
+        || {
+            let source_code = r#"
+forall n N:
+    n <= 1 or n >= 1 + 1
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "integer_discrete_split_accepts_a_natural_subject_and_literal_base",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "integer discreteness should cover natural subjects and literal integer bases:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("or: integer discrete split x <= n or x >= n + 1"),
+                "missing integer-discreteness provenance:\n{run_output}"
+            );
         },
     );
 }

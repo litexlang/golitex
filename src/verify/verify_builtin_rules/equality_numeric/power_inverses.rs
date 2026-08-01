@@ -7,7 +7,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let zero_obj = Self::literal_zero_obj_for_abs_builtin();
         let target_base = if Self::obj_is_builtin_literal_zero(left) {
@@ -107,7 +107,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let zero = Self::literal_zero_obj_for_abs_builtin();
         let exponents = self.collect_known_equal_power_exponents_for_bases(left, right);
@@ -172,7 +172,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (abs, pow) = match (left, right) {
             (Obj::Abs(abs), Obj::Pow(pow)) => (abs, pow),
@@ -290,7 +290,7 @@ impl Runtime {
         negative_power: &Pow,
         quotient: &Div,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         if !Self::obj_is_builtin_literal_one(quotient.left.as_ref()) {
             return Ok(None);
@@ -377,7 +377,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let subgoals = match (left, right) {
             (Obj::Pow(negative_power), Obj::Div(quotient)) => self
@@ -428,7 +428,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (pow, root) = match (left, right) {
             (Obj::Pow(pow), root) => (pow, root),

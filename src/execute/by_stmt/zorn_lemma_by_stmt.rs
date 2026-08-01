@@ -31,15 +31,18 @@ impl Runtime {
             }
         }
 
-        self.verify_obj_well_defined_and_store_cache(&stmt.set, &VerifyState::new(0, false))
-            .map_err(|well_defined_error| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!("by zorn_lemma: set `{}` is not well-defined", stmt.set),
-                    Some(well_defined_error),
-                    vec![],
-                )
-            })?;
+        self.verify_obj_well_defined_and_store_cache(
+            &stmt.set,
+            &UseContextVerifyState::new(0, false),
+        )
+        .map_err(|well_defined_error| {
+            short_exec_error(
+                stmt.clone().into(),
+                format!("by zorn_lemma: set `{}` is not well-defined", stmt.set),
+                Some(well_defined_error),
+                vec![],
+            )
+        })?;
 
         let (inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
@@ -71,7 +74,10 @@ impl Runtime {
                     continue;
                 }
                 let result = rt
-                    .verify_fact_return_err_if_not_true(&fact, &VerifyState::new(0, false))
+                    .verify_fact_return_err_if_not_true(
+                        &fact,
+                        &UseContextVerifyState::new(0, false),
+                    )
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),

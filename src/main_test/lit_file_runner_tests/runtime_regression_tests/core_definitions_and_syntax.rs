@@ -16,7 +16,7 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
         "verify_atomic_fact_with_known_forall(",
         "verify_atomic_fact_using_builtin_or_prop_definition(",
         "verify_atomic_fact_with_strategy(",
-        "VerifyState::new(",
+        "UseContextVerifyState::new(",
     ];
     // Full verification is permitted only inside handlers reached explicitly
     // through `by thm`. Automatic builtin dispatch must stay atomic and must

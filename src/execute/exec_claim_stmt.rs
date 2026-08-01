@@ -17,7 +17,7 @@ impl Runtime {
             unreachable!("claim forall with iff is not supported");
         }
 
-        self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
+        self.verify_fact_well_defined(&stmt.fact, &UseContextVerifyState::new(0, false))
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -38,7 +38,7 @@ impl Runtime {
                 let body_exec_result = self.run_in_local_env(|rt| {
                     let assumption_infers = rt.forall_assume_params_and_dom_in_current_env(
                         forall_fact,
-                        &VerifyState::new(0, false),
+                        &UseContextVerifyState::new(0, false),
                     )?;
 
                     let mut inside_results = vec![];
@@ -68,7 +68,7 @@ impl Runtime {
                     for (then_index, then_fact) in forall_fact.then_facts.iter().enumerate() {
                         let mut result = rt.verify_exist_or_and_chain_atomic_fact(
                             then_fact,
-                            &VerifyState::new(0, false),
+                            &UseContextVerifyState::new(0, false),
                         )?;
                         if result.is_unknown() {
                             let then_goal = then_fact.clone().to_fact();
@@ -134,7 +134,7 @@ impl Runtime {
 
                     let target_result = rt.verify_fact_return_err_if_not_true(
                         &stmt.fact,
-                        &VerifyState::new(0, false),
+                        &UseContextVerifyState::new(0, false),
                     )?;
                     inside_results.push(target_result);
 

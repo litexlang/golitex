@@ -14,7 +14,7 @@ impl Runtime {
         let element = stmt.element.clone();
         let in_fact = InFact::new(element, set_obj, stmt.line_file.clone());
         let in_atomic: AtomicFact = in_fact.clone().into();
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
         let membership = self.verify_atomic_fact(&in_atomic, &verify_state)?;
         let stmt_name = enumerate_range_stmt_name(&stmt.range);
         if membership.is_unknown() {

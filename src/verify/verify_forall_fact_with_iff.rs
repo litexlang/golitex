@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_forall_fact_with_iff(
         &mut self,
         forall_iff: &ForallFactWithIff,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&forall_iff.clone().into())

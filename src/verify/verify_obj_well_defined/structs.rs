@@ -5,7 +5,7 @@ impl Runtime {
     pub(crate) fn struct_header_param_to_arg_map(
         &mut self,
         struct_obj: &StructObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(DefStructStmt, HashMap<String, Obj>), RuntimeError> {
         let struct_name = struct_obj.name.to_string();
         let def = self
@@ -112,7 +112,7 @@ impl Runtime {
     pub(crate) fn instantiated_struct_field_types(
         &mut self,
         struct_obj: &StructObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Vec<Obj>, RuntimeError> {
         let (def, param_to_arg_map) =
             self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
@@ -168,7 +168,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_struct_obj_well_defined(
         &mut self,
         struct_obj: &StructObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let (def, param_to_arg_map) =
             self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
@@ -229,7 +229,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_instantiated_template_obj_well_defined(
         &mut self,
         template_obj: &InstantiatedTemplateObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.materialize_instantiated_template_obj(template_obj, verify_state)
     }
@@ -237,7 +237,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_obj_as_struct_instance_with_field_access_well_defined(
         &mut self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_struct_obj_well_defined(&field_access.struct_obj, verify_state)?;
         self.struct_field_index(&field_access.struct_obj, &field_access.field_name)?;

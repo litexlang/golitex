@@ -123,7 +123,7 @@ impl Runtime {
         self.run_in_local_env(|rt| {
             rt.verify_exist_fact_well_defined(
                 exist_fact_in_have_obj_stmt,
-                &VerifyState::new(0, false),
+                &UseContextVerifyState::new(0, false),
             )
             .map_err(|well_defined_error| {
                 exec_stmt_error_with_stmt_and_cause(stmt.clone(), well_defined_error)
@@ -141,7 +141,7 @@ impl Runtime {
         stmt: Stmt,
         exist_fact_in_have_obj_stmt: &ExistFactEnum,
     ) -> Result<Vec<StmtResult>, RuntimeError> {
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
 
         let result = self
             .verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)
@@ -192,7 +192,7 @@ impl Runtime {
             .params_def_with_type()
             .param_defs_and_args_to_param_to_arg_map(new_obj_names_as_identifier_objs.as_slice());
 
-        let body_fact_verify_state = VerifyState::new(0, false);
+        let body_fact_verify_state = UseContextVerifyState::new(0, false);
         for fact in exist_fact_in_have_obj_stmt.facts().iter() {
             let instantiated_fact = self
                 .inst_exist_body_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)

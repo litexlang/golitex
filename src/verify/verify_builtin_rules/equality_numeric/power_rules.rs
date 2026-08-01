@@ -19,7 +19,7 @@ impl Runtime {
         base: &Obj,
         exponent: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let Obj::Pow(pow) = factor else {
             if !Self::obj_is_builtin_literal_one(exponent) {
@@ -59,7 +59,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let in_n_pos: AtomicFact =
             InFact::new(obj.clone(), StandardSet::NPos.into(), line_file).into();
@@ -73,7 +73,7 @@ impl Runtime {
         obj: &Obj,
         standard_set: StandardSet,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let in_set: AtomicFact =
             InFact::new(obj.clone(), standard_set.clone().into(), line_file.clone()).into();
@@ -127,7 +127,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         if self.obj_is_verified_in_standard_set_for_power_builtin(
             obj,
@@ -149,7 +149,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         if self.obj_is_verified_in_standard_set_for_power_builtin(
             obj,
@@ -178,7 +178,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         if self.obj_is_verified_in_standard_set_for_power_builtin(
             obj,
@@ -207,7 +207,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let nonzero: AtomicFact = NotEqualFact::new(
             obj.clone(),
@@ -225,7 +225,7 @@ impl Runtime {
         combined_power: &Pow,
         product: &Mul,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let Obj::Add(add_exponent) = combined_power.exponent.as_ref() else {
             return Ok(false);
@@ -363,7 +363,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let holds = match (left, right) {
             (Obj::Pow(pow), Obj::Mul(product)) => self
@@ -398,7 +398,7 @@ impl Runtime {
         nested_power: &Pow,
         combined_power: &Pow,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let Obj::Pow(inner_power) = nested_power.base.as_ref() else {
             return Ok(false);
@@ -519,7 +519,7 @@ impl Runtime {
         product: &Obj,
         expected: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         if self
             .verify_objs_are_equal_in_equality_builtin(
@@ -561,7 +561,7 @@ impl Runtime {
         nested_power: &Pow,
         base: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let one: Obj = Number::new("1".to_string()).into();
         let combined_power = Pow::new(base.clone(), one);
@@ -578,7 +578,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let holds = match (left, right) {
             (Obj::Pow(left_power), Obj::Pow(right_power)) => {
@@ -624,7 +624,7 @@ impl Runtime {
         combined_power: &Pow,
         product: &Mul,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let Obj::Mul(combined_base) = combined_power.base.as_ref() else {
             return Ok(false);
@@ -740,7 +740,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let holds = match (left, right) {
             (Obj::Pow(pow), Obj::Mul(product)) => self.power_product_rule_holds_one_direction(

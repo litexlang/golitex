@@ -17,16 +17,16 @@
 ///
 /// `list_set_membership_can_use_equality_builtin` lets selected builtin premises
 /// restrict list-set membership to reflexive or already-known element equality.
-pub struct VerifyState {
+pub struct UseContextVerifyState {
     pub round: u8,
     pub well_defined_already_verified: bool,
     pub equality_can_use_known_forall: bool,
     pub list_set_membership_can_use_equality_builtin: bool,
 }
 
-impl VerifyState {
+impl UseContextVerifyState {
     pub fn new(round: u8, well_defined_already_verified: bool) -> Self {
-        VerifyState {
+        UseContextVerifyState {
             round,
             well_defined_already_verified,
             equality_can_use_known_forall: true,

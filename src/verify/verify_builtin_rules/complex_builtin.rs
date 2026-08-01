@@ -10,7 +10,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some((expected, reason)) = native_i_normal_form(left) {
             if native_normal_form_matches(&expected, right) {
@@ -207,7 +207,7 @@ impl Runtime {
         application: &Obj,
         expected: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
         let (coordinate, is_real_part, arg) = match application {
             Obj::RealPart(real_part) => (RE, true, real_part.arg.as_ref()),
@@ -365,7 +365,7 @@ impl Runtime {
         application: &Obj,
         expected: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((reason, steps)) = self.native_complex_abs_equality_reason_and_steps(
             application,
@@ -390,7 +390,7 @@ impl Runtime {
         application: &Obj,
         expected: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
         let Obj::ComplexAbs(complex_abs) = application else {
             return Ok(None);
@@ -438,7 +438,7 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut steps = Vec::new();
         for obj in objs {

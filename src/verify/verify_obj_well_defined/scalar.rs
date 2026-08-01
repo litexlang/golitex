@@ -4,7 +4,7 @@ impl Runtime {
     pub(in crate::verify) fn require_obj_in_c(
         &mut self,
         obj: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let c_obj = StandardSet::C.into();
         let in_fact = InFact::new(obj.clone(), c_obj, default_line_file());
@@ -20,7 +20,7 @@ impl Runtime {
     pub(in crate::verify) fn require_obj_in_r(
         &mut self,
         obj: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         if let Obj::Abs(a) = obj {
             return self.require_obj_in_r(&a.arg, verify_state);
@@ -51,7 +51,7 @@ impl Runtime {
     pub(in crate::verify) fn require_obj_in_z(
         &mut self,
         obj: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let z_obj = StandardSet::Z.into();
         let element = obj.clone();
@@ -72,7 +72,7 @@ impl Runtime {
     pub(in crate::verify) fn require_obj_in_n(
         &mut self,
         obj: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let in_fact: AtomicFact =
             InFact::new(obj.clone(), StandardSet::N.into(), default_line_file()).into();
@@ -90,7 +90,7 @@ impl Runtime {
         &mut self,
         left: &Obj,
         right: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         err_detail: String,
     ) -> Result<(), RuntimeError> {
         let f: AtomicFact =
@@ -107,7 +107,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_add_well_defined(
         &mut self,
         add: &Add,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&add.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&add.right, verify_state)?;
@@ -119,7 +119,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_sub_well_defined(
         &mut self,
         sub: &Sub,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&sub.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&sub.right, verify_state)?;
@@ -131,7 +131,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_mul_well_defined(
         &mut self,
         mul: &Mul,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&mul.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&mul.right, verify_state)?;
@@ -143,7 +143,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_div_well_defined(
         &mut self,
         div: &Div,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&div.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&div.right, verify_state)?;
@@ -169,7 +169,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_mod_well_defined(
         &mut self,
         m: &Mod,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&m.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&m.right, verify_state)?;
@@ -196,7 +196,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_gcd_well_defined(
         &mut self,
         gcd: &Gcd,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&gcd.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&gcd.right, verify_state)?;
@@ -253,7 +253,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_abs_well_defined(
         &mut self,
         abs: &Abs,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&abs.arg, verify_state)?;
         self.require_obj_in_r(&abs.arg, verify_state)?;
@@ -263,7 +263,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_lcm_well_defined(
         &mut self,
         lcm: &Lcm,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&lcm.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&lcm.right, verify_state)?;
@@ -274,7 +274,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_floor_well_defined(
         &mut self,
         floor: &Floor,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&floor.arg, verify_state)?;
         self.require_obj_in_r(&floor.arg, verify_state)
@@ -283,7 +283,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_ceil_well_defined(
         &mut self,
         ceil: &Ceil,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&ceil.arg, verify_state)?;
         self.require_obj_in_r(&ceil.arg, verify_state)
@@ -292,7 +292,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_min_well_defined(
         &mut self,
         min: &Min,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&min.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&min.right, verify_state)?;
@@ -303,7 +303,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_max_well_defined(
         &mut self,
         max: &Max,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&max.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&max.right, verify_state)?;
@@ -314,7 +314,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_exp_well_defined(
         &mut self,
         exp: &Exp,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&exp.arg, verify_state)?;
         self.require_obj_in_r(&exp.arg, verify_state)
@@ -323,7 +323,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_ln_well_defined(
         &mut self,
         ln: &Ln,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&ln.arg, verify_state)?;
         self.require_obj_in_r(&ln.arg, verify_state)?;
@@ -349,7 +349,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_sign_well_defined(
         &mut self,
         sign: &Sign,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&sign.arg, verify_state)?;
         self.require_obj_in_r(&sign.arg, verify_state)
@@ -358,7 +358,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_factorial_well_defined(
         &mut self,
         factorial: &Factorial,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&factorial.arg, verify_state)?;
         self.require_obj_in_n(&factorial.arg, verify_state)
@@ -367,7 +367,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_sin_well_defined(
         &mut self,
         sin: &Sin,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&sin.arg, verify_state)?;
         self.require_obj_in_r(&sin.arg, verify_state)
@@ -376,7 +376,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_cos_well_defined(
         &mut self,
         cos: &Cos,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&cos.arg, verify_state)?;
         self.require_obj_in_r(&cos.arg, verify_state)
@@ -385,7 +385,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_tan_well_defined(
         &mut self,
         tan: &Tan,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&tan.arg, verify_state)?;
         self.require_obj_in_r(&tan.arg, verify_state)?;
@@ -408,7 +408,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_cot_well_defined(
         &mut self,
         cot: &Cot,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&cot.arg, verify_state)?;
         self.require_obj_in_r(&cot.arg, verify_state)?;
@@ -431,7 +431,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_real_part_well_defined(
         &mut self,
         real_part: &RealPart,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&real_part.arg, verify_state)?;
         self.require_obj_in_c(&real_part.arg, verify_state)?;
@@ -441,7 +441,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_imaginary_part_well_defined(
         &mut self,
         imaginary_part: &ImaginaryPart,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&imaginary_part.arg, verify_state)?;
         self.require_obj_in_c(&imaginary_part.arg, verify_state)?;
@@ -451,7 +451,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_complex_abs_well_defined(
         &mut self,
         complex_abs: &ComplexAbs,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&complex_abs.arg, verify_state)?;
         self.require_obj_in_c(&complex_abs.arg, verify_state)?;
@@ -461,7 +461,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_sqrt_well_defined(
         &mut self,
         sqrt: &Sqrt,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&sqrt.arg, verify_state)?;
         self.require_obj_in_r(&sqrt.arg, verify_state)?;
@@ -483,7 +483,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_log_well_defined(
         &mut self,
         log: &Log,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&log.base, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&log.arg, verify_state)?;
@@ -529,7 +529,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_pow_well_defined(
         &mut self,
         pow: &Pow,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&pow.base, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;

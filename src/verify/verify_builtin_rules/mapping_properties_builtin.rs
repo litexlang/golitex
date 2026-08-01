@@ -6,7 +6,7 @@ impl Runtime {
     pub(super) fn try_verify_finite_codomain_from_known_surjection(
         &mut self,
         target: &IsFiniteSetFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for property in self.known_function_property_facts(&[SURJECTIVE, BIJECTIVE]) {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
@@ -54,7 +54,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((function, source)) = finite_fn_range_size_equality_shape(left, right)
             .or_else(|| finite_fn_range_size_equality_shape(right, left))
@@ -109,7 +109,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::FiniteSetSize(left_size), Obj::FiniteSetSize(right_size)) = (left, right) else {
             return Ok(None);
@@ -178,7 +178,7 @@ impl Runtime {
     pub(super) fn try_verify_finite_set_size_codomain_le_domain_from_known_surjection(
         &mut self,
         target: &AtomicFact,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((smaller, larger, line_file)) = ordered_finite_set_sizes(target) else {
             return Ok(None);

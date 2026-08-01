@@ -6,7 +6,7 @@ impl Runtime {
     pub fn verify_fact_well_defined(
         &mut self,
         fact: &Fact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let verify_state = verify_state.without_known_forall_for_equality();
         let verify_state = &verify_state;
@@ -37,7 +37,7 @@ impl Runtime {
     pub fn verify_atomic_fact_well_defined(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
@@ -50,7 +50,7 @@ impl Runtime {
     fn verify_equal_fact_well_defined(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&equal_fact.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&equal_fact.right, verify_state)?;
@@ -60,7 +60,7 @@ impl Runtime {
     fn verify_non_equational_atomic_fact_well_defined(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         // 1. predicate is defined, expected args length is equal to actual args length
         let name_string = atomic_fact.key();
@@ -201,7 +201,7 @@ impl Runtime {
     pub fn verify_and_fact_well_defined(
         &mut self,
         and_fact: &AndFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         for fact in and_fact.facts.iter() {
             self.verify_atomic_fact_well_defined(fact, verify_state)?;
@@ -212,7 +212,7 @@ impl Runtime {
     pub fn verify_chain_fact_well_defined(
         &mut self,
         chain_fact: &ChainFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let facts = chain_fact.facts()?;
         for fact in facts.iter() {
@@ -224,7 +224,7 @@ impl Runtime {
     pub fn verify_or_fact_well_defined(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         for fact in or_fact.facts.iter() {
             self.verify_and_chain_atomic_fact_well_defined(fact, verify_state)?;
@@ -235,7 +235,7 @@ impl Runtime {
     fn verify_and_chain_atomic_fact_well_defined(
         &mut self,
         fact: &AndChainAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         match fact {
             AndChainAtomicFact::AtomicFact(a) => {
@@ -252,7 +252,7 @@ impl Runtime {
     pub fn verify_exist_fact_well_defined(
         &mut self,
         exist_fact: &ExistFactEnum,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let bindings = exist_fact.params_def_with_type().collect_param_bindings();
         let rename_map =
@@ -331,7 +331,7 @@ impl Runtime {
     pub fn verify_forall_fact_well_defined(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let bindings = forall_fact.params_def_with_type.collect_param_bindings();
         let rename_map =
@@ -349,7 +349,7 @@ impl Runtime {
     pub fn verify_forall_fact_params_and_dom_well_defined(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, verify_state)
@@ -359,7 +359,7 @@ impl Runtime {
     fn verify_forall_fact_params_and_dom_well_defined_inner(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         if let Err(e) = self.define_params_with_type(
             &forall_fact.params_def_with_type,
@@ -403,7 +403,7 @@ impl Runtime {
     fn verify_forall_fact_well_defined_inner(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, verify_state)?;
         for fact in forall_fact.then_facts.iter() {
@@ -429,7 +429,7 @@ impl Runtime {
     pub fn verify_or_and_chain_atomic_fact_well_defined(
         &mut self,
         fact: &OrAndChainAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         match fact {
             OrAndChainAtomicFact::AtomicFact(a) => {
@@ -449,7 +449,7 @@ impl Runtime {
     pub fn verify_exist_or_and_chain_atomic_fact_well_defined(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(a) => {
@@ -474,7 +474,7 @@ impl Runtime {
     pub fn verify_forall_fact_with_iff_well_defined(
         &mut self,
         forall_fact_with_iff: &ForallFactWithIff,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.verify_forall_fact_well_defined_inner(
@@ -491,7 +491,7 @@ impl Runtime {
     pub fn verify_not_forall_fact_well_defined(
         &mut self,
         not_forall: &NotForallFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_forall_fact_well_defined(&not_forall.forall_fact, verify_state)
     }

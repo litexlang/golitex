@@ -107,7 +107,7 @@ impl Runtime {
     pub(crate) fn unfold_known_fn_application_once(
         &mut self,
         application: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<Obj>, RuntimeError> {
         let Obj::FnObj(fn_obj) = application else {
             return Ok(None);
