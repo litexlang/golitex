@@ -25,8 +25,7 @@ impl Runtime {
         }
         let integer_fact: AtomicFact =
             InFact::new(arg.clone(), StandardSet::Z.into(), line_file.clone()).into();
-        let premise_result =
-            self.verify_cross_family_builtin_child(&integer_fact, builtin_state)?;
+        let premise_result = self.verify_builtin_rule_premise(&integer_fact, builtin_state)?;
         if premise_result.is_unknown() {
             return Ok(None);
         }
@@ -74,8 +73,7 @@ impl Runtime {
             premise_right.clone(),
             line_file.clone(),
         );
-        let premise_result =
-            self.verify_cross_family_builtin_child(&premise.into(), builtin_state)?;
+        let premise_result = self.verify_builtin_rule_premise(&premise.into(), builtin_state)?;
         if premise_result.is_unknown() {
             return Ok(None);
         }

@@ -102,7 +102,7 @@ impl Runtime {
                 if verify_result.is_unknown() {
                     if let ParamType::Obj(target_set) = current_type {
                         for source_set in self.known_sets_containing_obj(current_param_equal_to) {
-                            let set_equality = self.verify_atomic_fact_with_builtin_rules(
+                            let set_equality = self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
                                 &EqualFact::new(
                                     source_set,
                                     target_set.clone(),

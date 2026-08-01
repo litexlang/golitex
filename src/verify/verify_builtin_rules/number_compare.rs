@@ -64,8 +64,7 @@ impl Runtime {
             .into();
             let mut subgoals = Vec::new();
             for premise in [d_in_n_pos, left_divisible, right_divisible] {
-                let result =
-                    self.verify_cross_family_known_or_number_calculation(&premise, builtin_state)?;
+                let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
                 if result.is_unknown() {
                     subgoals.clear();
                     break;
@@ -715,9 +714,9 @@ impl Runtime {
             LessFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
         };
         if weak == parent_weak {
-            self.verify_same_family_builtin_child(&fact, builtin_state)
+            self.verify_builtin_rule_premise(&fact, builtin_state)
         } else {
-            self.verify_cross_family_known_or_number_calculation(&fact, builtin_state)
+            self.verify_builtin_rule_premise(&fact, builtin_state)
         }
     }
 
@@ -755,8 +754,7 @@ impl Runtime {
             _ => return Ok(None),
         };
         let in_n: AtomicFact = InFact::new(n, StandardSet::N.into(), line_file.clone()).into();
-        let in_n_result =
-            self.verify_cross_family_known_or_number_calculation(&in_n, builtin_state)?;
+        let in_n_result = self.verify_builtin_rule_premise(&in_n, builtin_state)?;
         if in_n_result.is_true() {
             return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -804,8 +802,7 @@ impl Runtime {
         };
         let in_n_pos: AtomicFact =
             InFact::new(n, StandardSet::NPos.into(), line_file.clone()).into();
-        let in_n_pos_result =
-            self.verify_cross_family_known_or_number_calculation(&in_n_pos, builtin_state)?;
+        let in_n_pos_result = self.verify_builtin_rule_premise(&in_n_pos, builtin_state)?;
         if in_n_pos_result.is_true() {
             return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -858,15 +855,13 @@ impl Runtime {
         let set = (*finite_set_size.set).clone();
 
         let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), line_file.clone()).into();
-        let finite_result =
-            self.verify_cross_family_known_or_number_calculation(&finite, builtin_state)?;
+        let finite_result = self.verify_builtin_rule_premise(&finite, builtin_state)?;
         if !finite_result.is_true() {
             return Ok(None);
         }
 
         let nonempty: AtomicFact = IsNonemptySetFact::new(set, line_file).into();
-        let nonempty_result =
-            self.verify_cross_family_known_or_number_calculation(&nonempty, builtin_state)?;
+        let nonempty_result = self.verify_builtin_rule_premise(&nonempty, builtin_state)?;
         if !nonempty_result.is_true() {
             return Ok(None);
         }
@@ -902,30 +897,68 @@ impl Runtime {
             return Ok(None);
         };
 
+        if let Obj::Intersect(intersection) = left_size.set.as_ref() {
+            let right_matches_left = verify_equality_by_they_are_the_same(
+                intersection.left.as_ref(),
+                right_size.set.as_ref(),
+            );
+            let right_matches_right = verify_equality_by_they_are_the_same(
+                intersection.right.as_ref(),
+                right_size.set.as_ref(),
+            );
+            if right_matches_left || right_matches_right {
+                let left_input: AtomicFact =
+                    IsFiniteSetFact::new(intersection.left.as_ref().clone(), line_file.clone())
+                        .into();
+                let right_input: AtomicFact =
+                    IsFiniteSetFact::new(intersection.right.as_ref().clone(), line_file.clone())
+                        .into();
+                let left_result = self.verify_builtin_rule_premise(&left_input, builtin_state)?;
+                let right_result = self.verify_builtin_rule_premise(&right_input, builtin_state)?;
+                if left_result.is_true() && right_result.is_true() {
+                    return Ok(Some(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                            atomic_fact.clone().into(),
+                            InferResult::new(),
+                            "finite_set_size_subset_le".to_string(),
+                            vec![left_result, right_result],
+                        )
+                        .into(),
+                    ));
+                }
+            }
+        }
+
         let subset: AtomicFact = SubsetFact::new(
             left_size.set.as_ref().clone(),
             right_size.set.as_ref().clone(),
             line_file.clone(),
         )
         .into();
-        let subset_result =
-            self.verify_cross_family_known_or_number_calculation(&subset, builtin_state)?;
+        let mut subset_result = self.verify_builtin_rule_premise(&subset, builtin_state)?;
+        if !subset_result.is_true() {
+            let superset: AtomicFact = SupersetFact::new(
+                right_size.set.as_ref().clone(),
+                left_size.set.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
+            subset_result = self.verify_known_non_forall_atomic_fact(&superset)?;
+        }
         if !subset_result.is_true() {
             return Ok(None);
         }
 
         let left_finite: AtomicFact =
             IsFiniteSetFact::new(left_size.set.as_ref().clone(), line_file.clone()).into();
-        let left_result =
-            self.verify_cross_family_known_or_number_calculation(&left_finite, builtin_state)?;
+        let left_result = self.verify_builtin_rule_premise(&left_finite, builtin_state)?;
         if !left_result.is_true() {
             return Ok(None);
         }
 
         let right_finite: AtomicFact =
             IsFiniteSetFact::new(right_size.set.as_ref().clone(), line_file).into();
-        let right_result =
-            self.verify_cross_family_known_or_number_calculation(&right_finite, builtin_state)?;
+        let right_result = self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
         if !right_result.is_true() {
             return Ok(None);
         }
@@ -987,14 +1020,12 @@ impl Runtime {
         }
 
         let left_finite: AtomicFact = IsFiniteSetFact::new(left_set, line_file.clone()).into();
-        let left_result =
-            self.verify_cross_family_known_or_number_calculation(&left_finite, builtin_state)?;
+        let left_result = self.verify_builtin_rule_premise(&left_finite, builtin_state)?;
         if !left_result.is_true() {
             return Ok(None);
         }
         let right_finite: AtomicFact = IsFiniteSetFact::new(right_set, line_file).into();
-        let right_result =
-            self.verify_cross_family_known_or_number_calculation(&right_finite, builtin_state)?;
+        let right_result = self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
         if !right_result.is_true() {
             return Ok(None);
         }
@@ -1048,8 +1079,7 @@ impl Runtime {
         let in_n: AtomicFact =
             InFact::new(n.clone(), StandardSet::N.into(), line_file.clone()).into();
         let nonzero: AtomicFact = NotEqualFact::new(n, zero_obj, line_file.clone()).into();
-        let in_n_result =
-            self.verify_cross_family_known_or_number_calculation(&in_n, builtin_state)?;
+        let in_n_result = self.verify_builtin_rule_premise(&in_n, builtin_state)?;
         if !in_n_result.is_true() {
             return Ok(None);
         }
@@ -1111,8 +1141,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let dividend_result =
-            self.verify_cross_family_known_or_number_calculation(&dividend_in_z, builtin_state)?;
+        let dividend_result = self.verify_builtin_rule_premise(&dividend_in_z, builtin_state)?;
         if !dividend_result.is_true() {
             return Ok(None);
         }
@@ -1123,8 +1152,7 @@ impl Runtime {
             line_file,
         )
         .into();
-        let modulus_result =
-            self.verify_cross_family_known_or_number_calculation(&modulus_in_n_pos, builtin_state)?;
+        let modulus_result = self.verify_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
         if !modulus_result.is_true() {
             return Ok(None);
         }
@@ -1180,13 +1208,11 @@ impl Runtime {
         let in_z: AtomicFact =
             InFact::new(n.clone(), StandardSet::Z.into(), line_file.clone()).into();
         let positive: AtomicFact = LessFact::new(zero_obj, n, line_file.clone()).into();
-        let in_z_result =
-            self.verify_cross_family_known_or_number_calculation(&in_z, builtin_state)?;
+        let in_z_result = self.verify_builtin_rule_premise(&in_z, builtin_state)?;
         if !in_z_result.is_true() {
             return Ok(None);
         }
-        let positive_result =
-            self.verify_cross_family_known_or_number_calculation(&positive, builtin_state)?;
+        let positive_result = self.verify_builtin_rule_premise(&positive, builtin_state)?;
         if !positive_result.is_true() {
             return Ok(None);
         }
@@ -1243,10 +1269,7 @@ impl Runtime {
                             f.line_file.clone(),
                         )
                         .into();
-                        let in_z_result = self.verify_cross_family_known_or_number_calculation(
-                            &in_z,
-                            builtin_state,
-                        )?;
+                        let in_z_result = self.verify_builtin_rule_premise(&in_z, builtin_state)?;
                         if !in_z_result.is_true() {
                             continue;
                         }
@@ -1486,7 +1509,7 @@ impl Runtime {
         )
         .into();
         let nonnegative_result =
-            self.verify_same_family_builtin_child(&nonnegative_arg, builtin_state)?;
+            self.verify_builtin_rule_premise(&nonnegative_arg, builtin_state)?;
         if !nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -1524,8 +1547,7 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let positive_result =
-            self.verify_same_family_builtin_child(&positive_arg, builtin_state)?;
+        let positive_result = self.verify_builtin_rule_premise(&positive_arg, builtin_state)?;
         if !positive_result.is_true() {
             return Ok(None);
         }
@@ -1596,16 +1618,7 @@ impl Runtime {
 
         let mut step_results = Vec::new();
         for subgoal in subgoals {
-            let same_family = if strict {
-                subgoal.key() == LESS
-            } else {
-                subgoal.key() == LESS_EQUAL
-            };
-            let result = if same_family {
-                self.verify_same_family_builtin_child(&subgoal, builtin_state)?
-            } else {
-                self.verify_cross_family_known_or_number_calculation(&subgoal, builtin_state)?
-            };
+            let result = self.verify_builtin_rule_premise(&subgoal, builtin_state)?;
             if !result.is_true() {
                 return Ok(None);
             }
@@ -1651,7 +1664,7 @@ impl Runtime {
                     let reverse: AtomicFact =
                         LessFact::new(x, negative_right, f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&reverse, builtin_state)?
+                        .verify_builtin_rule_premise(&reverse, builtin_state)?
                         .is_true()
                     {
                         return success("order: -x > y from x < -y");
@@ -1665,7 +1678,7 @@ impl Runtime {
                     let reverse: AtomicFact =
                         LessEqualFact::new(x, negative_right, f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&reverse, builtin_state)?
+                        .verify_builtin_rule_premise(&reverse, builtin_state)?
                         .is_true()
                     {
                         return success("order: -x >= y from x <= -y");
@@ -1679,7 +1692,7 @@ impl Runtime {
                     let reverse: AtomicFact =
                         GreaterFact::new(x, negative_right, f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&reverse, builtin_state)?
+                        .verify_builtin_rule_premise(&reverse, builtin_state)?
                         .is_true()
                     {
                         return success("order: -x < y from x > -y");
@@ -1693,7 +1706,7 @@ impl Runtime {
                     let reverse: AtomicFact =
                         GreaterEqualFact::new(x, negative_right, f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&reverse, builtin_state)?
+                        .verify_builtin_rule_premise(&reverse, builtin_state)?
                         .is_true()
                     {
                         return success("order: -x <= y from x >= -y");
@@ -1708,14 +1721,14 @@ impl Runtime {
                     let le: AtomicFact =
                         LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&le, builtin_state)?
+                        .verify_builtin_rule_premise(&le, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x >= 0 from x <= 0");
                     }
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&lt, builtin_state)?
+                        .verify_builtin_rule_premise(&lt, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x >= 0 from x < 0");
@@ -1727,7 +1740,7 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&lt, builtin_state)?
+                        .verify_builtin_rule_premise(&lt, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x > 0 from x < 0");
@@ -1740,14 +1753,14 @@ impl Runtime {
                     let ge: AtomicFact =
                         GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&ge, builtin_state)?
+                        .verify_builtin_rule_premise(&ge, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x <= 0 from x >= 0");
                     }
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&gt, builtin_state)?
+                        .verify_builtin_rule_premise(&gt, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x <= 0 from x > 0");
@@ -1759,7 +1772,7 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&gt, builtin_state)?
+                        .verify_builtin_rule_premise(&gt, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x < 0 from x > 0");
@@ -1772,14 +1785,14 @@ impl Runtime {
                     let le: AtomicFact =
                         LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_same_family_builtin_child(&le, builtin_state)?
+                        .verify_builtin_rule_premise(&le, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 <= (-1)*x from x <= 0");
                     }
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&lt, builtin_state)?
+                        .verify_builtin_rule_premise(&lt, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 <= (-1)*x from x < 0");
@@ -1791,7 +1804,7 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_same_family_builtin_child(&lt, builtin_state)?
+                        .verify_builtin_rule_premise(&lt, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 < (-1)*x from x < 0");
@@ -1804,14 +1817,14 @@ impl Runtime {
                     let ge: AtomicFact =
                         GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_same_family_builtin_child(&ge, builtin_state)?
+                        .verify_builtin_rule_premise(&ge, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 >= (-1)*x from x >= 0");
                     }
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_cross_family_known_or_number_calculation(&gt, builtin_state)?
+                        .verify_builtin_rule_premise(&gt, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 >= (-1)*x from x > 0");
@@ -1823,7 +1836,7 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_same_family_builtin_child(&gt, builtin_state)?
+                        .verify_builtin_rule_premise(&gt, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 > (-1)*x from x > 0");
@@ -1949,10 +1962,10 @@ impl Runtime {
                     .into();
 
                     let base_gt_one_result =
-                        self.verify_same_family_builtin_child(&base_gt_one, builtin_state)?;
+                        self.verify_builtin_rule_premise(&base_gt_one, builtin_state)?;
                     if base_gt_one_result.is_true() {
                         let args_result =
-                            self.verify_same_family_builtin_child(&forward_args, builtin_state)?;
+                            self.verify_builtin_rule_premise(&forward_args, builtin_state)?;
                         if args_result.is_true() {
                             return Ok(Some(StmtResult::from(
                                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1965,10 +1978,10 @@ impl Runtime {
                     }
 
                     let base_lt_one_result =
-                        self.verify_same_family_builtin_child(&base_lt_one, builtin_state)?;
+                        self.verify_builtin_rule_premise(&base_lt_one, builtin_state)?;
                     if base_lt_one_result.is_true() {
                         let args_result =
-                            self.verify_same_family_builtin_child(&reversed_args, builtin_state)?;
+                            self.verify_builtin_rule_premise(&reversed_args, builtin_state)?;
                         if args_result.is_true() {
                             return Ok(Some(StmtResult::from(
                                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1990,12 +2003,12 @@ impl Runtime {
                         LessFact::new(one.clone(), log.arg.as_ref().clone(), f.line_file.clone())
                             .into();
                     let base_gt_one_result =
-                        self.verify_same_family_builtin_child(&base_gt_one, builtin_state)?;
+                        self.verify_builtin_rule_premise(&base_gt_one, builtin_state)?;
                     if !base_gt_one_result.is_true() {
                         return Ok(None);
                     }
                     let arg_gt_one_result =
-                        self.verify_same_family_builtin_child(&arg_gt_one, builtin_state)?;
+                        self.verify_builtin_rule_premise(&arg_gt_one, builtin_state)?;
                     if !arg_gt_one_result.is_true() {
                         return Ok(None);
                     }
@@ -2021,17 +2034,17 @@ impl Runtime {
                     let arg_positive: AtomicFact =
                         LessFact::new(zero, log.arg.as_ref().clone(), f.line_file.clone()).into();
                     let base_gt_one_result =
-                        self.verify_same_family_builtin_child(&base_gt_one, builtin_state)?;
+                        self.verify_builtin_rule_premise(&base_gt_one, builtin_state)?;
                     if !base_gt_one_result.is_true() {
                         return Ok(None);
                     }
                     let arg_lt_one_result =
-                        self.verify_same_family_builtin_child(&arg_lt_one, builtin_state)?;
+                        self.verify_builtin_rule_premise(&arg_lt_one, builtin_state)?;
                     if !arg_lt_one_result.is_true() {
                         return Ok(None);
                     }
                     let arg_positive_result =
-                        self.verify_same_family_builtin_child(&arg_positive, builtin_state)?;
+                        self.verify_builtin_rule_premise(&arg_positive, builtin_state)?;
                     if !arg_positive_result.is_true() {
                         return Ok(None);
                     }
@@ -2211,7 +2224,7 @@ impl Runtime {
                     f.line_file.clone(),
                 )
                 .into();
-                let result = self.verify_same_family_builtin_child(&derived, builtin_state)?;
+                let result = self.verify_builtin_rule_premise(&derived, builtin_state)?;
                 if result.is_true() {
                     Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -2234,7 +2247,7 @@ impl Runtime {
                     f.line_file.clone(),
                 )
                 .into();
-                let result = self.verify_same_family_builtin_child(&derived, builtin_state)?;
+                let result = self.verify_builtin_rule_premise(&derived, builtin_state)?;
                 if result.is_true() {
                     Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -2523,8 +2536,7 @@ impl Runtime {
         };
         let base_neq_zero: AtomicFact = NotEqualFact::new(base, zero_obj, line_file.clone()).into();
 
-        let neq_result =
-            self.verify_cross_family_known_or_number_calculation(&base_neq_zero, builtin_state)?;
+        let neq_result = self.verify_builtin_rule_premise(&base_neq_zero, builtin_state)?;
         if !neq_result.is_true() {
             return Ok(None);
         }
@@ -2664,8 +2676,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let in_n_pos_result =
-            self.verify_cross_family_known_or_number_calculation(&in_n_pos, builtin_state)?;
+        let in_n_pos_result = self.verify_builtin_rule_premise(&in_n_pos, builtin_state)?;
         if !in_n_pos_result.is_true() {
             return Ok(None);
         }

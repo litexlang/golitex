@@ -312,7 +312,10 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )
                 .into();
-                let ret_check = rt.verify_atomic_fact_with_builtin_rules(&ret_nonempty_fact)?;
+                let ret_check = rt
+                    .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
+                        &ret_nonempty_fact,
+                    )?;
                 if ret_check.is_true() {
                     inside_results.push(ret_check);
                     return Ok(inside_results);

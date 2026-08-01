@@ -195,33 +195,40 @@ fn nested_call(name: &str, leaf: &str, depth: usize) -> String {
 }
 
 #[test]
-fn builtin_recursive_goal_budget_is_enforced_on_real_power_set_proofs() {
-    run_with_large_stack("builtin_recursive_power_set_budget", || {
-        let at_limit = format!("$is_finite_set({})", nested_call("power_set", "{1}", 64));
-        let (_, succeeded, output) = run_source(&at_limit, "power_set_depth_64", false);
+fn finite_set_strategy_is_structural_and_has_no_legacy_node_budget() {
+    run_with_large_stack("structural_power_set_strategy", || {
+        let deeply_nested = format!("$is_finite_set({})", nested_call("power_set", "{1}", 96));
+        let (_, succeeded, output) = run_source(&deeply_nested, "power_set_depth_96", true);
         assert!(
             succeeded,
-            "the sixty-fourth recursive builtin child should be allowed:\n{output}"
+            "strictly smaller finite-set strategy goals should not use the removed 64-node budget:\n{output}"
         );
-
-        let over_limit = format!("$is_finite_set({})", nested_call("power_set", "{1}", 65));
-        let (_, succeeded, output) = run_source(&over_limit, "power_set_depth_65", false);
-        assert!(
-            !succeeded,
-            "the sixty-fifth recursive builtin child should return Unknown:\n{output}"
-        );
+        assert!(output.contains("\"type\": \"builtin strategy\""));
     });
 }
 
 #[test]
-fn deeply_nested_sqrt_stays_within_the_builtin_recursion_budget() {
-    run_with_large_stack("deeply_nested_sqrt_builtin", || {
-        let nested_sqrt = nested_call("sqrt", "x", 24);
-        let source = format!("have x R\ntrust x >= 0\n{nested_sqrt} >= 0");
-        let (_, succeeded, output) = run_source(&source, "deeply_nested_sqrt_builtin", false);
-        assert!(
-            succeeded,
-            "nested square-root nonnegativity should stay automatic below the budget:\n{output}"
-        );
-    });
+fn a_builtin_rule_cannot_chain_through_another_semantic_rule() {
+    let implicit_chain = r#"
+have t R
+trust t > 0
+sqrt(t) != 0
+"#;
+    let (_, succeeded, output) = run_source(implicit_chain, "sqrt_two_rule_chain", false);
+    assert!(
+        !succeeded,
+        "sqrt(t) != 0 must not chain sqrt(t) > 0 and t > 0 automatically:\n{output}"
+    );
+
+    let explicit_middle = r#"
+have t R
+trust t > 0
+sqrt(t) > 0
+sqrt(t) != 0
+"#;
+    let (_, succeeded, output) = run_source(explicit_middle, "sqrt_explicit_middle", false);
+    assert!(
+        succeeded,
+        "an explicitly established intermediate fact should let the next one-layer rule run:\n{output}"
+    );
 }

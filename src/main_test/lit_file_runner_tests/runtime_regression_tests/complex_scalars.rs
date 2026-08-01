@@ -248,6 +248,8 @@ forall z, w C:
     re(z + i) = re(w + i)
     img(z + i) = img(w + i)
     =>:
+        z + i $in C
+        w + i $in C
         z + i = w + i
 "#;
         let (run_succeeded, run_output) = run_complex_source(

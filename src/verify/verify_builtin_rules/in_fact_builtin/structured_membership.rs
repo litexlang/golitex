@@ -36,7 +36,7 @@ impl Runtime {
                 )
                 .into()
             }
-            _ => self.verify_cross_family_builtin_child(&subset_fact, builtin_state)?,
+            _ => self.verify_builtin_rule_premise(&subset_fact, builtin_state)?,
         };
         if !verify_subset_result.is_true() {
             return Ok((StmtUnknown::new()).into());
@@ -70,7 +70,7 @@ impl Runtime {
             let element_in_base_fact =
                 InFact::new(element_obj, base_set.clone(), in_fact.line_file.clone()).into();
             let verify_one_element_result =
-                self.verify_same_family_builtin_child(&element_in_base_fact, builtin_state)?;
+                self.verify_builtin_rule_premise(&element_in_base_fact, builtin_state)?;
             if !verify_one_element_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -136,8 +136,7 @@ impl Runtime {
                 not_in_fact.line_file.clone(),
             )
             .into();
-            let known_result =
-                self.verify_cross_family_builtin_child(&not_equal_fact, builtin_state)?;
+            let known_result = self.verify_builtin_rule_premise(&not_equal_fact, builtin_state)?;
             let not_equal_fact_verify_result = if known_result.is_true() {
                 known_result
             } else {
@@ -400,7 +399,7 @@ impl Runtime {
         )
         .into();
         let index_in_n_pos_result =
-            self.verify_same_family_builtin_child(&index_in_n_pos, builtin_state)?;
+            self.verify_builtin_rule_premise(&index_in_n_pos, builtin_state)?;
         if !index_in_n_pos_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -410,7 +409,7 @@ impl Runtime {
         let index_in_range: AtomicFact =
             LessEqualFact::new(index_obj, list_len_obj, in_fact.line_file.clone()).into();
         let index_in_range_result =
-            self.verify_cross_family_builtin_child(&index_in_range, builtin_state)?;
+            self.verify_builtin_rule_premise(&index_in_range, builtin_state)?;
         if !index_in_range_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -423,8 +422,7 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let result =
-                self.verify_same_family_builtin_child(&element_in_target_set, builtin_state)?;
+            let result = self.verify_builtin_rule_premise(&element_in_target_set, builtin_state)?;
             if !result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -484,8 +482,7 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let result =
-                self.verify_same_family_builtin_child(&element_in_target_set, builtin_state)?;
+            let result = self.verify_builtin_rule_premise(&element_in_target_set, builtin_state)?;
             if !result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }

@@ -75,7 +75,7 @@ impl Runtime {
         )
         .into();
         let mut nonnegative_result =
-            self.verify_cross_family_known_or_number_calculation(&nonnegative, builtin_state)?;
+            self.verify_builtin_rule_premise(&nonnegative, builtin_state)?;
         if !nonnegative_result.is_true() {
             let positive: AtomicFact = LessFact::new(
                 Self::literal_zero_obj_for_abs_builtin(),
@@ -83,8 +83,7 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            nonnegative_result =
-                self.verify_cross_family_known_or_number_calculation(&positive, builtin_state)?;
+            nonnegative_result = self.verify_builtin_rule_premise(&positive, builtin_state)?;
         }
         if !nonnegative_result.is_true() {
             return Ok(None);
@@ -121,7 +120,7 @@ impl Runtime {
         )
         .into();
         let mut nonpositive_result =
-            self.verify_cross_family_known_or_number_calculation(&nonpositive, builtin_state)?;
+            self.verify_builtin_rule_premise(&nonpositive, builtin_state)?;
         if !nonpositive_result.is_true() {
             let negative: AtomicFact = LessFact::new(
                 arg.clone(),
@@ -129,8 +128,7 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            nonpositive_result =
-                self.verify_cross_family_known_or_number_calculation(&negative, builtin_state)?;
+            nonpositive_result = self.verify_builtin_rule_premise(&negative, builtin_state)?;
         }
         if !nonpositive_result.is_true() {
             return Ok(None);

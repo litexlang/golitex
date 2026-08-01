@@ -7,7 +7,13 @@ impl Runtime {
         verify_state: &VerifyState,
         post_process: bool,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut result = self.verify_atomic_fact_with_builtin_rules(atomic_fact)?;
+        let mut result = self
+            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(atomic_fact)?;
+        if result.is_true() {
+            return Ok(result);
+        }
+
+        result = self.verify_atomic_fact_with_builtin_strategy(atomic_fact)?;
         if result.is_true() {
             return Ok(result);
         }

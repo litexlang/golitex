@@ -3064,10 +3064,13 @@ sketch:
 ```
 
 ```litex
-forall X power_set(Z):
-    $is_finite_set(X)
-    =>:
-        finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
+thm finite_set_sum_pointwise_substitution_example:
+    ? forall X power_set(Z):
+        $is_finite_set(X)
+        =>:
+            finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
+    by thm finite_set_sum_substitution(finite_set_sum(X, fn(x X) Z {x + 0}), finite_set_sum(X, fn(x X) Z {x}))
+    finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
 ```
 
 ```litex
@@ -3161,10 +3164,14 @@ sketch:
 ```
 
 ```litex
-forall X power_set(Z):
-    $is_finite_set(X)
-    =>:
-        finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
+thm finite_set_product_pointwise_substitution_example:
+    ? forall X power_set(Z):
+        $is_finite_set(X)
+        =>:
+            finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
+    by def $fn_eq(fn(x X) Z {x + 0}, fn(x X) Z {x})
+    $fn_eq(fn(x X) Z {x + 0}, fn(x X) Z {x})
+    finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
 
 ## Reindex: same summand, parallel shift of both bounds, pointwise on the (rhs) range.
 sum(1, 3, fn(x Z) Z {x}) = sum(2, 4, fn(x Z) Z {x - 1})
@@ -3270,6 +3277,7 @@ symmetric difference.
 not 2 $in {1}
 2 $in set_minus({1, 2}, {1})
 $is_finite_set(set_diff({1, 2}, {2, 3}))
+{1, 2} $subset {1, 2, 3}
 {1, 2} $in power_set({1, 2, 3})
 ```
 
@@ -3326,6 +3334,7 @@ restriction explicit as `fn(x S) T {f(x)}`.
 have fn shift(x R) R = x + 1
 
 shift(2) $in fn_range(shift)
+by def fn_range(shift) $subset R
 fn_range(shift) $subset R
 
 have by preimage x from shift(2) $in fn_range(shift)
@@ -3337,6 +3346,7 @@ shift(2) = shift(x)
 have a finite_seq(R, 3) = [1, 2, 3]
 
 fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
+by def fn_range(fn(x 1...3) R {a(x)}) $subset R
 fn_range(fn(x 1...3) R {a(x)}) $subset R
 $is_finite_set(fn_range(fn(x 1...3) R {a(x)}))
 

@@ -444,7 +444,7 @@ impl Runtime {
         for obj in objs {
             let fact: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::C.into(), line_file.clone()).into();
-            let result = self.verify_cross_family_builtin_child(&fact, builtin_state)?;
+            let result = self.verify_builtin_rule_premise(&fact, builtin_state)?;
             if !result.is_true() {
                 return Ok(None);
             }

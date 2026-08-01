@@ -470,7 +470,10 @@ impl Runtime {
             equal_fact.line_file.clone(),
         )
         .into();
-        let power_result = self.verify_atomic_fact_with_builtin_rules(&power_in_r_pos)?;
+        let power_result = self
+            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
+                &power_in_r_pos,
+            )?;
         if !power_result.is_true() {
             return Ok(());
         }

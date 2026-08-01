@@ -2034,8 +2034,9 @@ later theorems or facts with transitive trust metadata.
 ### Reading verifier output
 
 Normal output should identify the statement, its result, nested proof results,
-and the reason a fact verified. A builtin route includes a rule description; a
-theorem route includes citation information. `-compact` reduces detail.
+and the reason a fact verified. A direct builtin route includes a rule
+description; structural recursion is labeled `builtin strategy`; a theorem
+route includes citation information. `-compact` reduces detail.
 `-detail` retains raw phases, requirements, instantiations, and inference
 effects useful for debugging.
 
@@ -2061,14 +2062,24 @@ Builtin verification rules are small mathematical patterns implemented by the
 checker. They close the current goal; they are different from inference, which
 stores useful consequences after a statement has already been accepted.
 
-One automatic builtin proof tree shares a single budget of 64 previously
-unknown recursive atomic subgoals. Each builtin premise first checks already
-known non-`forall` atomic facts. A premise in the same atomic predicate family
-may then recurse into the builtin dispatcher and consumes one unit of that
-shared budget; a cross-family premise must already be known. Failed branches do
-not refund the budget. Automatic builtin recursion never invokes the full
-verifier, known `forall` matching, concrete definitions, or strategies. Nested
-success evidence is retained from the deepest child back to the root result.
+An automatic builtin rule is deliberately one layer deep. Its premises may use
+already-known non-`forall` atomic facts and deterministic computation, but may
+not invoke a second builtin rule. `BuiltinRuleVerifyState` records this rule
+depth; there is no shared node counter or same-family/cross-family exception.
+
+Separate builtin strategies handle only strictly structural descent, such as
+arithmetic carrier trees, additive or multiplicative sign trees, finite and
+nonempty set constructors, set membership/containment constructors, and tuple
+coordinates. Every strategy layer first tries known non-`forall` facts and one
+fresh direct builtin rule for each immediate child, then repeats only its own
+strictly smaller structural pattern. It never enters known `forall` matching,
+definitions, user strategies, or the full verifier. Detailed output preserves
+the child proof tree and labels the outer route as `builtin strategy`.
+
+For an ordinary atomic goal the search order is: known non-`forall` fact,
+one-layer builtin rule, builtin strategy, known local `forall`, then a
+user-defined strategy. Consequently a semantic chain such as `sqrt(t) != 0`
+from only `t > 0` is not automatic: establish `sqrt(t) > 0` explicitly first.
 
 Rules that genuinely need a universal, existential, or compound premise are
 called explicitly through reserved builtin theorem names. Their handlers use

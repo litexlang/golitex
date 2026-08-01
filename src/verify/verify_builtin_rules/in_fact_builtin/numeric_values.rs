@@ -40,7 +40,7 @@ pub(super) fn not_in_fact_verified_by_builtin_rules_result(
     )
 }
 
-pub(super) fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
+pub(crate) fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
     in_fact: &InFact,
     evaluated_number: &Number,
     standard_set: &StandardSet,
@@ -129,7 +129,7 @@ pub(super) fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
     }
 }
 
-pub(super) fn builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
+pub(crate) fn builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
     not_in_fact: &NotInFact,
     evaluated_number: &Number,
     standard_set: &StandardSet,

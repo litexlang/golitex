@@ -67,7 +67,7 @@ impl Runtime {
             "-1" => LessFact::new((*sign.arg).clone(), zero, line_file.clone()).into(),
             _ => return Ok(None),
         };
-        let premise_result = self.verify_cross_family_builtin_child(&premise, builtin_state)?;
+        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
         if premise_result.is_unknown() {
             return Ok(None);
         }
@@ -201,7 +201,7 @@ impl Runtime {
             return Ok(None);
         };
         let _ = ln;
-        let premise_result = self.verify_cross_family_builtin_child(&premise, builtin_state)?;
+        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
         if premise_result.is_unknown() {
             return Ok(None);
         }

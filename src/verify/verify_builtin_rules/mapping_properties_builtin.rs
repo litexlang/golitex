@@ -23,8 +23,7 @@ impl Runtime {
 
             let domain_finite: AtomicFact =
                 IsFiniteSetFact::new(domain, target.line_file.clone()).into();
-            let domain_result =
-                self.verify_same_family_builtin_child(&domain_finite, builtin_state)?;
+            let domain_result = self.verify_builtin_rule_premise(&domain_finite, builtin_state)?;
             if !domain_result.is_true() {
                 continue;
             }

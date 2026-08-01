@@ -1088,6 +1088,7 @@ fn finite_power_set_has_builtin_finite_set_size_rules() {
     run_with_large_stack("finite_power_set_has_builtin_finite_set_size_rules", || {
         let source_code = r#"
 $is_finite_set(power_set({1, 2, 3}))
+$is_finite_set({1, 2, 3})
 finite_set_size(power_set({1, 2, 3})) = 2^finite_set_size({1, 2, 3})
 finite_set_size({1, 2, 3}) = 3
 2^finite_set_size({1, 2, 3}) = 2^3 = 8
@@ -1416,6 +1417,7 @@ have X nonempty_set
 trust forall! x X => {$is_nonempty_set(x)}
 have g fn(alpha I) X
 
+by thm general_cart_nonempty_by_choice_from_family(general_cart(I, X, g))
 $is_nonempty_set(general_cart(I, X, g))
 general_cart(I, X, g) = {f fn(t I)big_union(X): forall! alpha I => {f(alpha) $in g(alpha)}}
 have c general_cart(I, X, g)
@@ -1427,6 +1429,7 @@ have J set
 have h fn(beta J) X
 forall beta J:
     $is_nonempty_set(h(beta))
+by thm general_cart_nonempty_by_choice_from_pointwise(general_cart(J, X, h))
 $is_nonempty_set(general_cart(J, X, h))
 "#;
 

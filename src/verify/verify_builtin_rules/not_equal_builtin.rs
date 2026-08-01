@@ -276,7 +276,7 @@ impl Runtime {
         };
 
         let nonempty: AtomicFact = IsNonemptySetFact::new(set, line_file).into();
-        let sub = self.verify_cross_family_builtin_child(&nonempty, builtin_state)?;
+        let sub = self.verify_builtin_rule_premise(&nonempty, builtin_state)?;
         if !sub.is_true() {
             return Ok(None);
         }
@@ -396,7 +396,7 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let arg_nonzero: AtomicFact =
             NotEqualFact::new(abs.arg.as_ref().clone(), zero_obj, line_file.clone()).into();
-        let result = self.verify_same_family_builtin_child(&arg_nonzero, builtin_state)?;
+        let result = self.verify_builtin_rule_premise(&arg_nonzero, builtin_state)?;
         if !result.is_true() {
             return Ok(None);
         }
@@ -651,13 +651,13 @@ impl Runtime {
         };
         let in_n: AtomicFact =
             InFact::new(x.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let in_n_result = self.verify_cross_family_builtin_child(&in_n, builtin_state)?;
+        let in_n_result = self.verify_builtin_rule_premise(&in_n, builtin_state)?;
         if !in_n_result.is_true() {
             return Ok(None);
         }
         let ge: AtomicFact =
             GreaterEqualFact::new(x.clone(), one_obj.clone(), line_file.clone()).into();
-        let ge_result = self.verify_cross_family_builtin_child(&ge, builtin_state)?;
+        let ge_result = self.verify_builtin_rule_premise(&ge, builtin_state)?;
         if ge_result.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -669,7 +669,7 @@ impl Runtime {
             ));
         }
         let one_le: AtomicFact = LessEqualFact::new(one_obj, x, line_file.clone()).into();
-        let one_le_result = self.verify_cross_family_builtin_child(&one_le, builtin_state)?;
+        let one_le_result = self.verify_builtin_rule_premise(&one_le, builtin_state)?;
         if one_le_result.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -696,7 +696,7 @@ impl Runtime {
         for standard_set in [StandardSet::Z, StandardSet::N, StandardSet::NPos] {
             let in_set: AtomicFact =
                 InFact::new(obj.clone(), standard_set.into(), line_file.clone()).into();
-            let result = self.verify_cross_family_builtin_child(&in_set, builtin_state)?;
+            let result = self.verify_builtin_rule_premise(&in_set, builtin_state)?;
             if result.is_true() {
                 return Ok(true);
             }
@@ -728,7 +728,7 @@ impl Runtime {
 
         let base = pow.base.as_ref().clone();
         let base_neq_zero: AtomicFact = NotEqualFact::new(base, zero_obj, line_file.clone()).into();
-        let result = self.verify_same_family_builtin_child(&base_neq_zero, builtin_state)?;
+        let result = self.verify_builtin_rule_premise(&base_neq_zero, builtin_state)?;
         if result.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -774,13 +774,13 @@ impl Runtime {
             NotEqualFact::new(div.right.as_ref().clone(), zero_obj, line_file.clone()).into();
 
         let numerator_result =
-            self.verify_same_family_builtin_child(&numerator_nonzero, builtin_state)?;
+            self.verify_builtin_rule_premise(&numerator_nonzero, builtin_state)?;
         if !numerator_result.is_true() {
             return Ok(None);
         }
 
         let denominator_result =
-            self.verify_same_family_builtin_child(&denominator_nonzero, builtin_state)?;
+            self.verify_builtin_rule_premise(&denominator_nonzero, builtin_state)?;
         if !denominator_result.is_true() {
             return Ok(None);
         }
@@ -951,7 +951,7 @@ impl Runtime {
             ));
         }
 
-        let left_result = self.verify_same_family_builtin_child(&left_nonzero, builtin_state)?;
+        let left_result = self.verify_builtin_rule_premise(&left_nonzero, builtin_state)?;
         if left_result.is_true() {
             steps.push(left_result);
             return Ok(Some(
@@ -965,7 +965,7 @@ impl Runtime {
             ));
         }
 
-        let right_result = self.verify_same_family_builtin_child(&right_nonzero, builtin_state)?;
+        let right_result = self.verify_builtin_rule_premise(&right_nonzero, builtin_state)?;
         if right_result.is_true() {
             steps.push(right_result);
             return Ok(Some(
@@ -1050,7 +1050,7 @@ impl Runtime {
         // only a previously stored nonzero fact. Example: from `b != 0`,
         // prove `b * (7 / 5) != 0`.
         let verify_result =
-            self.verify_same_family_builtin_child(&operand_not_equal_zero_fact, builtin_state)?;
+            self.verify_builtin_rule_premise(&operand_not_equal_zero_fact, builtin_state)?;
         Ok(verify_result.is_true().then_some(verify_result))
     }
 
@@ -1090,14 +1090,13 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let zero_less_than_left =
             LessFact::new(zero_obj.clone(), left_operand.clone(), line_file.clone()).into();
-        let left_result =
-            self.verify_cross_family_builtin_child(&zero_less_than_left, builtin_state)?;
+        let left_result = self.verify_builtin_rule_premise(&zero_less_than_left, builtin_state)?;
         if !left_result.is_true() {
             return Ok(None);
         }
         let zero_less_than_right = LessFact::new(zero_obj, right_operand.clone(), line_file).into();
         let right_result =
-            self.verify_cross_family_builtin_child(&zero_less_than_right, builtin_state)?;
+            self.verify_builtin_rule_premise(&zero_less_than_right, builtin_state)?;
         if !right_result.is_true() {
             return Ok(None);
         }
@@ -1114,14 +1113,13 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let left_less_than_zero =
             LessFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into();
-        let left_result =
-            self.verify_cross_family_builtin_child(&left_less_than_zero, builtin_state)?;
+        let left_result = self.verify_builtin_rule_premise(&left_less_than_zero, builtin_state)?;
         if !left_result.is_true() {
             return Ok(None);
         }
         let right_less_than_zero = LessFact::new(right_operand.clone(), zero_obj, line_file).into();
         let right_result =
-            self.verify_cross_family_builtin_child(&right_less_than_zero, builtin_state)?;
+            self.verify_builtin_rule_premise(&right_less_than_zero, builtin_state)?;
         if !right_result.is_true() {
             return Ok(None);
         }
@@ -1140,20 +1138,17 @@ impl Runtime {
             LessFact::new(left_factor.clone(), zero_obj.clone(), line_file.clone()).into();
         let zero_less_than_right =
             LessFact::new(zero_obj.clone(), right_factor.clone(), line_file.clone()).into();
-        let first_left =
-            self.verify_cross_family_builtin_child(&left_less_than_zero, builtin_state)?;
-        let first_right =
-            self.verify_cross_family_builtin_child(&zero_less_than_right, builtin_state)?;
+        let first_left = self.verify_builtin_rule_premise(&left_less_than_zero, builtin_state)?;
+        let first_right = self.verify_builtin_rule_premise(&zero_less_than_right, builtin_state)?;
         if first_left.is_true() && first_right.is_true() {
             return Ok(Some(vec![first_left, first_right]));
         }
         let zero_less_than_left =
             LessFact::new(zero_obj.clone(), left_factor.clone(), line_file.clone()).into();
         let right_less_than_zero = LessFact::new(right_factor.clone(), zero_obj, line_file).into();
-        let second_left =
-            self.verify_cross_family_builtin_child(&zero_less_than_left, builtin_state)?;
+        let second_left = self.verify_builtin_rule_premise(&zero_less_than_left, builtin_state)?;
         let second_right =
-            self.verify_cross_family_builtin_child(&right_less_than_zero, builtin_state)?;
+            self.verify_builtin_rule_premise(&right_less_than_zero, builtin_state)?;
         if second_left.is_true() && second_right.is_true() {
             Ok(Some(vec![second_left, second_right]))
         } else {
@@ -1174,9 +1169,9 @@ impl Runtime {
         let subtrahend_less_than_zero =
             LessFact::new(subtrahend.clone(), zero_obj.clone(), line_file.clone()).into();
         let first_left =
-            self.verify_cross_family_builtin_child(&zero_less_than_minuend, builtin_state)?;
+            self.verify_builtin_rule_premise(&zero_less_than_minuend, builtin_state)?;
         let first_right =
-            self.verify_cross_family_builtin_child(&subtrahend_less_than_zero, builtin_state)?;
+            self.verify_builtin_rule_premise(&subtrahend_less_than_zero, builtin_state)?;
         if first_left.is_true() && first_right.is_true() {
             return Ok(Some(vec![first_left, first_right]));
         }
@@ -1185,9 +1180,9 @@ impl Runtime {
         let zero_less_than_subtrahend =
             LessFact::new(zero_obj, subtrahend.clone(), line_file).into();
         let second_left =
-            self.verify_cross_family_builtin_child(&minuend_less_than_zero, builtin_state)?;
+            self.verify_builtin_rule_premise(&minuend_less_than_zero, builtin_state)?;
         let second_right =
-            self.verify_cross_family_builtin_child(&zero_less_than_subtrahend, builtin_state)?;
+            self.verify_builtin_rule_premise(&zero_less_than_subtrahend, builtin_state)?;
         if second_left.is_true() && second_right.is_true() {
             Ok(Some(vec![second_left, second_right]))
         } else {
@@ -1277,7 +1272,7 @@ impl Runtime {
                 ).into();
 
                 let positive_result =
-                    self.verify_cross_family_builtin_child(&zero_lt_a, builtin_state)?;
+                    self.verify_builtin_rule_premise(&zero_lt_a, builtin_state)?;
                 if positive_result.is_true() {
                     Some(("not_equal_zero_operand_strictly_positive", vec![positive_result]))
                 } else {
@@ -1287,7 +1282,7 @@ impl Runtime {
                         line_file.clone(),
                     ).into();
                     let negative_result =
-                        self.verify_cross_family_builtin_child(&a_lt_0, builtin_state)?;
+                        self.verify_builtin_rule_premise(&a_lt_0, builtin_state)?;
                     if negative_result.is_true() {
                         Some(("not_equal_zero_operand_strictly_negative", vec![negative_result]))
                     } else {

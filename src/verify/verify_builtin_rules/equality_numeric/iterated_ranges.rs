@@ -132,7 +132,7 @@ impl Runtime {
             for dom_fact in dom_facts {
                 rt.store_fact_without_forall_coverage_check_and_infer(dom_fact)?;
             }
-            rt.verify_same_family_builtin_child(then_fact, builtin_state)
+            rt.verify_builtin_rule_premise(then_fact, builtin_state)
         })
     }
 

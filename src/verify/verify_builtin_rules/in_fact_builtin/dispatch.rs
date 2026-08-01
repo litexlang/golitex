@@ -731,7 +731,7 @@ impl Runtime {
                 for o in list.objs.iter() {
                     let f: AtomicFact =
                         InFact::new((**o).clone(), (*fs.set).clone(), lf.clone()).into();
-                    let result = self.verify_same_family_builtin_child(&f, builtin_state)?;
+                    let result = self.verify_builtin_rule_premise(&f, builtin_state)?;
                     if !result.is_true() {
                         return Ok((StmtUnknown::new()).into());
                     }
@@ -771,7 +771,7 @@ impl Runtime {
                     for o in row.iter() {
                         let f: AtomicFact =
                             InFact::new((**o).clone(), (*ms.set).clone(), lf.clone()).into();
-                        let result = self.verify_same_family_builtin_child(&f, builtin_state)?;
+                        let result = self.verify_builtin_rule_premise(&f, builtin_state)?;
                         if !result.is_true() {
                             return Ok((StmtUnknown::new()).into());
                         }
@@ -793,7 +793,7 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                self.verify_same_family_builtin_child(&expanded.into(), builtin_state)
+                self.verify_builtin_rule_premise(&expanded.into(), builtin_state)
             }
             (_, Obj::SeqSet(ss)) => {
                 let fn_set = self.seq_set_to_fn_set(ss, in_fact.line_file.clone());
@@ -802,7 +802,7 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                self.verify_same_family_builtin_child(&expanded.into(), builtin_state)
+                self.verify_builtin_rule_premise(&expanded.into(), builtin_state)
             }
             (_, Obj::MatrixSet(ms)) => {
                 let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
@@ -811,7 +811,7 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                self.verify_same_family_builtin_child(&expanded.into(), builtin_state)
+                self.verify_builtin_rule_premise(&expanded.into(), builtin_state)
             }
             (_, target_set_obj) => {
                 let finite_seq_literal_application_result = self

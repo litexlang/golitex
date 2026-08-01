@@ -42,7 +42,9 @@ fn infer_block_string(infer_result: &InferResult) -> String {
 
 fn verified_bys_display_line(item: &VerifiedBysEnum) -> String {
     match item {
-        VerifiedBysEnum::ByBuiltinRule(r) => r.msg.clone(),
+        VerifiedBysEnum::ByBuiltinRule(r) | VerifiedBysEnum::ByBuiltinStrategy(r) => {
+            r.msg.clone()
+        }
         VerifiedBysEnum::ByFact(r) => {
             if let Some(d) = &r.detail {
                 if !d.is_empty() {
@@ -57,6 +59,7 @@ fn verified_bys_display_line(item: &VerifiedBysEnum) -> String {
 fn verified_by_display_line(verified_by: &VerifiedByResult) -> String {
     match verified_by {
         VerifiedByResult::BuiltinRule(r) => r.msg.clone(),
+        VerifiedByResult::BuiltinStrategy(r) => r.msg.clone(),
         VerifiedByResult::Fact(r) => {
             if let Some(d) = &r.detail {
                 if !d.is_empty() {

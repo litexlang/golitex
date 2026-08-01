@@ -136,7 +136,7 @@ impl Runtime {
                 let freshness: AtomicFact =
                     NotInFact::new(inserted.clone(), smaller_set.clone(), line_file.clone()).into();
                 if !self
-                    .verify_cross_family_builtin_child(&freshness, builtin_state)?
+                    .verify_builtin_rule_premise(&freshness, builtin_state)?
                     .is_true()
                 {
                     continue;
@@ -239,7 +239,7 @@ impl Runtime {
             )
             .into();
             if !self
-                .verify_cross_family_builtin_child(&membership, builtin_state)?
+                .verify_builtin_rule_premise(&membership, builtin_state)?
                 .is_true()
             {
                 continue;
@@ -652,7 +652,7 @@ impl Runtime {
                 ParamType::Obj(set),
             )]);
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
-            rt.verify_same_family_builtin_child(then_fact, builtin_state)
+            rt.verify_builtin_rule_premise(then_fact, builtin_state)
         })
     }
 

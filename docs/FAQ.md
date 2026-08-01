@@ -226,13 +226,16 @@ write every bridge by hand: convert `x > y` to `y < x`, convert that to
 instead lets the user write the meaningful step while the verifier handles a
 bounded amount of common background reasoning.
 
-That bound is literal. One automatic builtin proof tree shares a counter for at
-most 64 previously unknown recursive atomic subgoals. A premise first checks
-known non-`forall` atomic facts. It may recurse through builtin rules only when
-it stays in the same atomic predicate family; a cross-family premise must
-already be known. The automatic builtin tree does not call known `forall`
-matching, concrete definitions, strategies, or the full verifier. Its nested
-proof results are returned all the way from a child rule to the root rule.
+That bound is structural rather than a node budget. A direct builtin rule is
+one layer deep: its premises may cite known non-`forall` atomic facts or use
+deterministic computation, but cannot run another builtin rule. Separate
+builtin strategies recurse only through a strictly smaller supported syntax
+tree—for example nested arithmetic carriers, sums, products, finite-set
+constructors, set membership, or tuple coordinates. Each strategy layer may
+try one fresh direct rule on its immediate children. Neither route calls known
+`forall` matching, concrete definitions, user strategies, or the full verifier.
+Detailed output distinguishes `builtin rule` from `builtin strategy` and
+returns nested child results to the root.
 
 When a rule needs a universal, existential, or compound premise, the proof uses
 an explicit reserved builtin theorem call such as

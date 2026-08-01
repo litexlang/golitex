@@ -1504,7 +1504,7 @@ forall x R_pos:
 }
 
 #[test]
-fn recursive_builtin_rule_results_are_nested_back_to_the_root() {
+fn builtin_strategy_results_are_nested_back_to_the_root() {
     let source_code = r#"
 have a, b, c, d R_pos
 (a + b) + (c + d) > 0
@@ -1524,8 +1524,8 @@ have a, b, c, d R_pos
         .last()
         .and_then(StmtResult::factual_success)
         .expect("the final order fact should have a factual result");
-    let VerifiedByResult::BuiltinRule(root_rule) = &root.verified_by else {
-        panic!("the root should be verified by a builtin rule: {root:?}");
+    let VerifiedByResult::BuiltinStrategy(root_rule) = &root.verified_by else {
+        panic!("the root should be verified by a builtin strategy: {root:?}");
     };
     assert_eq!(root_rule.subgoals.len(), 2);
 
@@ -1533,8 +1533,9 @@ have a, b, c, d R_pos
         let branch = branch
             .factual_success()
             .expect("each recursive branch should remain a factual result");
-        let VerifiedByResult::BuiltinRule(branch_rule) = &branch.verified_by else {
-            panic!("each branch should retain its builtin-rule evidence: {branch:?}");
+        let branch_rule = match &branch.verified_by {
+            VerifiedByResult::BuiltinRule(rule) | VerifiedByResult::BuiltinStrategy(rule) => rule,
+            _ => panic!("each branch should retain its builtin evidence: {branch:?}"),
         };
         assert!(
             !branch_rule.subgoals.is_empty(),

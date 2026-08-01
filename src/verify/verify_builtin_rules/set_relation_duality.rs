@@ -95,7 +95,7 @@ impl Runtime {
                 )
                 .into();
                 let ret_subset_result =
-                    self.verify_same_family_builtin_child(&ret_subset, builtin_state)?;
+                    self.verify_builtin_rule_premise(&ret_subset, builtin_state)?;
                 if ret_subset_result.is_true() {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

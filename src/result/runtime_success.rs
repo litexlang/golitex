@@ -251,6 +251,7 @@ pub struct FactVerifiedByKnownForallInVerifiedBys {
 #[derive(Debug)]
 pub enum VerifiedBysEnum {
     ByBuiltinRule(FactVerifiedByBuiltinRuleInVerifiedBys),
+    ByBuiltinStrategy(FactVerifiedByBuiltinRuleInVerifiedBys),
     ByFact(FactVerifiedByFactInVerifiedBys),
     ByKnownForall(FactVerifiedByKnownForallInVerifiedBys),
 }
@@ -258,6 +259,7 @@ pub enum VerifiedBysEnum {
 #[derive(Debug)]
 pub enum VerifiedByResult {
     BuiltinRule(VerifiedByBuiltinRuleResult),
+    BuiltinStrategy(VerifiedByBuiltinRuleResult),
     Fact(VerifiedByFactResult),
     KnownForallInstantiation(KnownForallInstantiationResult),
     VerifiedBys(VerifiedBysResult),
@@ -298,6 +300,18 @@ impl FactualStmtSuccess {
             step_results,
         );
         Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
+    }
+
+    pub fn new_with_verified_by_builtin_strategy_recording_stmt(
+        stmt: Fact,
+        strategy_label: String,
+        step_results: Vec<StmtResult>,
+    ) -> Self {
+        let verified_by = VerifiedByResult::BuiltinStrategy(VerifiedByBuiltinRuleResult {
+            msg: strategy_label,
+            subgoals: step_results,
+        });
+        Self::new_with_verified_by_builtin_rules(stmt, InferResult::new(), verified_by)
     }
 
     pub fn new_with_verified_by_builtin_rules_label_and_steps(
@@ -429,7 +443,9 @@ impl VerifiedByResult {
 
     pub fn tree_is_builtin_rules_only(&self) -> bool {
         match self {
-            VerifiedByResult::BuiltinRule(r) => !r.msg.is_empty(),
+            VerifiedByResult::BuiltinRule(r) | VerifiedByResult::BuiltinStrategy(r) => {
+                !r.msg.is_empty()
+            }
             VerifiedByResult::Fact(_) => false,
             VerifiedByResult::KnownForallInstantiation(_) => false,
             VerifiedByResult::VerifiedBys(w) => {
@@ -443,6 +459,14 @@ impl VerifiedByResult {
 impl VerifiedBysEnum {
     pub fn builtin_rule(msg: String, verify_what: Fact, subgoals: Vec<StmtResult>) -> Self {
         VerifiedBysEnum::ByBuiltinRule(FactVerifiedByBuiltinRuleInVerifiedBys {
+            msg,
+            verify_what,
+            subgoals,
+        })
+    }
+
+    pub fn builtin_strategy(msg: String, verify_what: Fact, subgoals: Vec<StmtResult>) -> Self {
+        VerifiedBysEnum::ByBuiltinStrategy(FactVerifiedByBuiltinRuleInVerifiedBys {
             msg,
             verify_what,
             subgoals,
@@ -481,6 +505,9 @@ impl VerifiedBysEnum {
             VerifiedByResult::BuiltinRule(r) => {
                 vec![Self::builtin_rule(r.msg, verify_what, r.subgoals)]
             }
+            VerifiedByResult::BuiltinStrategy(r) => {
+                vec![Self::builtin_strategy(r.msg, verify_what, r.subgoals)]
+            }
             VerifiedByResult::Fact(r) => {
                 vec![Self::cited_stmt(verify_what, *r.cite_what, r.detail)]
             }
@@ -499,7 +526,9 @@ impl VerifiedBysEnum {
 
     fn is_builtin_rule(&self) -> bool {
         match self {
-            VerifiedBysEnum::ByBuiltinRule(r) => !r.msg.is_empty(),
+            VerifiedBysEnum::ByBuiltinRule(r) | VerifiedBysEnum::ByBuiltinStrategy(r) => {
+                !r.msg.is_empty()
+            }
             VerifiedBysEnum::ByFact(_) | VerifiedBysEnum::ByKnownForall(_) => false,
         }
     }
