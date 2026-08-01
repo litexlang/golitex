@@ -19,9 +19,11 @@ mod set_membership;
 mod structured_membership;
 
 pub(crate) use general_cart::{general_cart_member_fn_set, general_cart_member_pointwise_fact};
-use numeric_values::{
+pub(crate) use numeric_values::{
     builtin_in_fact_result_for_evaluated_number_in_standard_set,
     builtin_not_in_fact_result_for_evaluated_number_in_standard_set,
+};
+use numeric_values::{
     not_in_fact_verified_by_builtin_rules_result, number_in_set_verified_by_builtin_rules_result,
     number_in_set_verified_by_builtin_rules_result_with_subgoals,
 };

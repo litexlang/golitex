@@ -144,7 +144,7 @@ impl Runtime {
                     )
                     .into();
                     let right_nonzero_result =
-                        self.verify_same_family_builtin_child(&right_nonzero, builtin_state)?;
+                        self.verify_builtin_rule_premise(&right_nonzero, builtin_state)?;
                     if right_nonzero_result.is_true() {
                         return Ok(Some(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -171,7 +171,7 @@ impl Runtime {
                     )
                     .into();
                     let left_nonzero_result =
-                        self.verify_same_family_builtin_child(&left_nonzero, builtin_state)?;
+                        self.verify_builtin_rule_premise(&left_nonzero, builtin_state)?;
                     if left_nonzero_result.is_true() {
                         return Ok(Some(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -347,7 +347,7 @@ impl Runtime {
         )
         .into();
         let modulus_result =
-            self.verify_cross_family_builtin_child(&modulus_at_least_two, builtin_state)?;
+            self.verify_builtin_rule_premise(&modulus_at_least_two, builtin_state)?;
         if !modulus_result.is_true() {
             return Ok(None);
         }
@@ -400,8 +400,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let dividend_result =
-            self.verify_cross_family_builtin_child(&dividend_in_z, builtin_state)?;
+        let dividend_result = self.verify_builtin_rule_premise(&dividend_in_z, builtin_state)?;
         if !dividend_result.is_true() {
             return Ok(None);
         }
@@ -412,8 +411,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let modulus_result =
-            self.verify_cross_family_builtin_child(&modulus_in_n_pos, builtin_state)?;
+        let modulus_result = self.verify_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
         if !modulus_result.is_true() {
             return Ok(None);
         }
@@ -474,15 +472,15 @@ impl Runtime {
                 LessFact::new(remainder.clone(), modulus.clone(), line_file.clone()).into();
 
             let dividend_result =
-                self.verify_cross_family_builtin_child(&dividend_in_z, builtin_state)?;
+                self.verify_builtin_rule_premise(&dividend_in_z, builtin_state)?;
             let divisor_result =
-                self.verify_cross_family_builtin_child(&divisor_in_n_pos, builtin_state)?;
+                self.verify_builtin_rule_premise(&divisor_in_n_pos, builtin_state)?;
             let quotient_result =
-                self.verify_cross_family_builtin_child(&quotient_in_z, builtin_state)?;
+                self.verify_builtin_rule_premise(&quotient_in_z, builtin_state)?;
             let remainder_result =
-                self.verify_cross_family_builtin_child(&remainder_in_n, builtin_state)?;
+                self.verify_builtin_rule_premise(&remainder_in_n, builtin_state)?;
             let bound_result =
-                self.verify_cross_family_builtin_child(&remainder_lt_modulus, builtin_state)?;
+                self.verify_builtin_rule_premise(&remainder_lt_modulus, builtin_state)?;
             let decomposition_result =
                 self.verify_objs_are_equal_known_only(dividend, &candidate, line_file.clone());
             if !dividend_result.is_true()

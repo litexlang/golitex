@@ -26,7 +26,7 @@ impl Runtime {
             )
             .into();
             let component_verify_result =
-                self.verify_same_family_builtin_child(&component_in_fact, builtin_state)?;
+                self.verify_builtin_rule_premise(&component_in_fact, builtin_state)?;
             if !component_verify_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }

@@ -122,22 +122,22 @@ impl Runtime {
                 NotEqualFact::new(exponent.clone(), zero.clone(), line_file.clone()).into();
 
             let left_positive_result =
-                self.verify_cross_family_builtin_child(&left_positive, builtin_state)?;
+                self.verify_builtin_rule_premise(&left_positive, builtin_state)?;
             if !left_positive_result.is_true() {
                 continue;
             }
             let right_positive_result =
-                self.verify_cross_family_builtin_child(&right_positive, builtin_state)?;
+                self.verify_builtin_rule_premise(&right_positive, builtin_state)?;
             if !right_positive_result.is_true() {
                 continue;
             }
             let exponent_in_z_result =
-                self.verify_cross_family_builtin_child(&exponent_in_z, builtin_state)?;
+                self.verify_builtin_rule_premise(&exponent_in_z, builtin_state)?;
             if !exponent_in_z_result.is_true() {
                 continue;
             }
             let exponent_nonzero_result =
-                self.verify_same_family_builtin_child(&exponent_nonzero, builtin_state)?;
+                self.verify_builtin_rule_premise(&exponent_nonzero, builtin_state)?;
             if !exponent_nonzero_result.is_true() {
                 continue;
             }
@@ -332,20 +332,23 @@ impl Runtime {
         )
         .into();
         let exponent_in_n_pos_result =
-            self.verify_cross_family_builtin_child(&exponent_in_n_pos, builtin_state)?;
+            self.verify_builtin_rule_premise(&exponent_in_n_pos, builtin_state)?;
         if !exponent_in_n_pos_result.is_true() {
             return Ok(None);
         }
 
-        let denominator_nonzero: AtomicFact = NotEqualFact::new(
-            quotient.right.as_ref().clone(),
+        // The reciprocal law's primitive domain condition is `a != 0`.
+        // Asking the premise verifier for `a^n != 0` here would require a
+        // second semantic builtin rule, which is deliberately outside the
+        // one-rule contract.
+        let base_nonzero: AtomicFact = NotEqualFact::new(
+            denominator_power.base.as_ref().clone(),
             Self::literal_zero_obj_for_abs_builtin(),
             line_file,
         )
         .into();
-        let denominator_nonzero_result =
-            self.verify_same_family_builtin_child(&denominator_nonzero, builtin_state)?;
-        if !denominator_nonzero_result.is_true() {
+        let base_nonzero_result = self.verify_builtin_rule_premise(&base_nonzero, builtin_state)?;
+        if !base_nonzero_result.is_true() {
             return Ok(None);
         }
 
@@ -363,7 +366,7 @@ impl Runtime {
             subgoals.push(exponent_result);
         }
         subgoals.push(exponent_in_n_pos_result);
-        subgoals.push(denominator_nonzero_result);
+        subgoals.push(base_nonzero_result);
         Ok(Some(subgoals))
     }
 
@@ -400,7 +403,7 @@ impl Runtime {
             left,
             right,
             line_file,
-            "equality: a^(-n) = 1 / a^n for n in N_pos and a^n != 0",
+            "equality: a^(-n) = 1 / a^n for n in N_pos and a != 0",
             subgoals,
         )))
     }
@@ -441,7 +444,7 @@ impl Runtime {
         let degree_in_n_pos: AtomicFact =
             InFact::new(degree.clone(), StandardSet::NPos.into(), line_file.clone()).into();
         let mut degree_result =
-            self.verify_cross_family_builtin_child(&degree_in_n_pos, builtin_state)?;
+            self.verify_builtin_rule_premise(&degree_in_n_pos, builtin_state)?;
         if !degree_result.is_true()
             && matches!(&degree, Obj::Number(number) if number_is_in_n_pos(number))
         {
@@ -463,7 +466,7 @@ impl Runtime {
         )
         .into();
         let root_nonnegative_result =
-            self.verify_cross_family_known_or_number_calculation(&root_nonnegative, builtin_state)?;
+            self.verify_builtin_rule_premise(&root_nonnegative, builtin_state)?;
         if !root_nonnegative_result.is_true() {
             return Ok(None);
         }

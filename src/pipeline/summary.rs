@@ -241,6 +241,12 @@ impl RunSummary {
                     self.visit_result(subgoal, depth + 1);
                 }
             }
+            VerifiedByResult::BuiltinStrategy(result) => {
+                bump_count(&mut self.proof_method_counts, "builtin strategy");
+                for subgoal in result.subgoals.iter() {
+                    self.visit_result(subgoal, depth + 1);
+                }
+            }
             VerifiedByResult::KnownForallInstantiation(result) => {
                 bump_count(&mut self.proof_method_counts, "known forall instantiation");
                 self.visit_known_forall_instantiation(result, depth);
@@ -269,6 +275,12 @@ impl RunSummary {
             VerifiedBysEnum::ByBuiltinRule(result) => {
                 bump_count(&mut self.proof_method_counts, "builtin rule");
                 bump_count(&mut self.builtin_rule_counts, result.msg.as_str());
+                for subgoal in result.subgoals.iter() {
+                    self.visit_result(subgoal, depth + 1);
+                }
+            }
+            VerifiedBysEnum::ByBuiltinStrategy(result) => {
+                bump_count(&mut self.proof_method_counts, "builtin strategy");
                 for subgoal in result.subgoals.iter() {
                     self.visit_result(subgoal, depth + 1);
                 }

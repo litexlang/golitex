@@ -389,6 +389,43 @@ impl Runtime {
             (o, Obj::Log(l)) => (l, o),
             _ => return Ok(None),
         };
+
+        // These are primitive log identities.  Reducing them through
+        // `a^1 = a` or `a^0 = 1` would consume a second semantic builtin
+        // rule, even though the remaining checks are only literal/shape
+        // matching.
+        if Self::obj_is_builtin_literal_one(other) {
+            let same_base_and_arg = self.verify_objs_are_equal_known_only(
+                log.base.as_ref(),
+                log.arg.as_ref(),
+                line_file.clone(),
+            );
+            if same_base_and_arg.is_true() {
+                let subgoals = equality_builtin_match_subgoals(
+                    log.base.as_ref(),
+                    log.arg.as_ref(),
+                    same_base_and_arg,
+                );
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                    left,
+                    right,
+                    line_file,
+                    "equality: log(a, a) = 1",
+                    subgoals,
+                )));
+            }
+        }
+        if Self::obj_is_builtin_literal_zero(other)
+            && Self::obj_is_builtin_literal_one(log.arg.as_ref())
+        {
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: log(a, 1) = 0",
+            )));
+        }
+
         let pow_obj: Obj = Pow::new((*log.base).clone(), other.clone()).into();
         let inner = self.verify_objs_are_equal_in_equality_builtin(
             &pow_obj,

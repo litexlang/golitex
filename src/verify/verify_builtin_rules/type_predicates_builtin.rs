@@ -79,8 +79,7 @@ impl Runtime {
                     closed_range.end.as_ref().clone(),
                     is_nonempty_set_fact.line_file.clone(),
                 );
-                let le_ok = self
-                    .verify_cross_family_known_or_number_calculation(&le.into(), builtin_state)?;
+                let le_ok = self.verify_builtin_rule_premise(&le.into(), builtin_state)?;
                 if le_ok.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -114,8 +113,7 @@ impl Runtime {
                     )
                     .into()
                 };
-                let order_ok = self
-                    .verify_cross_family_known_or_number_calculation(&order_fact, builtin_state)?;
+                let order_ok = self.verify_builtin_rule_premise(&order_fact, builtin_state)?;
                 if order_ok.is_true() {
                     let rule = match interval {
                         IntervalObj::LeftOpenRightOpen(_) => {
@@ -178,7 +176,7 @@ impl Runtime {
                 )
                 .into();
                 let left_result =
-                    self.verify_same_family_builtin_child(&left_nonempty, builtin_state)?;
+                    self.verify_builtin_rule_premise(&left_nonempty, builtin_state)?;
                 if left_result.is_true() {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -196,7 +194,7 @@ impl Runtime {
                 )
                 .into();
                 let right_result =
-                    self.verify_same_family_builtin_child(&right_nonempty, builtin_state)?;
+                    self.verify_builtin_rule_premise(&right_nonempty, builtin_state)?;
                 if right_result.is_true() {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -212,7 +210,7 @@ impl Runtime {
             }
             Obj::Cart(cart) => {
                 for arg_obj in &cart.args {
-                    let is_nonempty_set_result = self.verify_same_family_builtin_child(
+                    let is_nonempty_set_result = self.verify_builtin_rule_premise(
                         &IsNonemptySetFact::new(
                             *arg_obj.clone(),
                             is_nonempty_set_fact.line_file.clone(),
@@ -250,7 +248,7 @@ impl Runtime {
                 )
                 .into();
                 let ret_check =
-                    self.verify_same_family_builtin_child(&ret_nonempty_fact, builtin_state)?;
+                    self.verify_builtin_rule_premise(&ret_nonempty_fact, builtin_state)?;
                 if ret_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -271,7 +269,7 @@ impl Runtime {
                 )
                 .into();
                 let ret_check =
-                    self.verify_same_family_builtin_child(&ret_nonempty_fact, builtin_state)?;
+                    self.verify_builtin_rule_premise(&ret_nonempty_fact, builtin_state)?;
                 if ret_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -293,7 +291,7 @@ impl Runtime {
                 )
                 .into();
                 let codomain_check =
-                    self.verify_same_family_builtin_child(&codomain_nonempty, builtin_state)?;
+                    self.verify_builtin_rule_premise(&codomain_nonempty, builtin_state)?;
                 if codomain_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -314,7 +312,7 @@ impl Runtime {
                 )
                 .into();
                 let codomain_check =
-                    self.verify_same_family_builtin_child(&codomain_nonempty, builtin_state)?;
+                    self.verify_builtin_rule_premise(&codomain_nonempty, builtin_state)?;
                 if codomain_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -335,7 +333,7 @@ impl Runtime {
                 )
                 .into();
                 let codomain_check =
-                    self.verify_same_family_builtin_child(&codomain_nonempty, builtin_state)?;
+                    self.verify_builtin_rule_premise(&codomain_nonempty, builtin_state)?;
                 if codomain_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -365,7 +363,7 @@ impl Runtime {
                         IsNonemptySetFact::new(equal_set, is_nonempty_set_fact.line_file.clone())
                             .into();
                     let equal_result =
-                        self.verify_same_family_builtin_child(&equal_nonempty, builtin_state)?;
+                        self.verify_builtin_rule_premise(&equal_nonempty, builtin_state)?;
                     if equal_result.is_true() {
                         return Ok(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -393,7 +391,7 @@ impl Runtime {
         let line_file = is_nonempty_set_fact.line_file.clone();
         let finite: AtomicFact =
             IsFiniteSetFact::new(is_nonempty_set_fact.set.clone(), line_file.clone()).into();
-        let finite_result = self.verify_cross_family_builtin_child(&finite, builtin_state)?;
+        let finite_result = self.verify_builtin_rule_premise(&finite, builtin_state)?;
         if !finite_result.is_true() {
             return Ok(None);
         }
@@ -476,7 +474,7 @@ impl Runtime {
                 )
                 .into();
                 let domain_result =
-                    self.verify_same_family_builtin_child(&domain_finite, builtin_state)?;
+                    self.verify_builtin_rule_premise(&domain_finite, builtin_state)?;
                 if domain_result.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -504,13 +502,12 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result =
-                    self.verify_same_family_builtin_child(&left_finite, builtin_state)?;
+                let left_result = self.verify_builtin_rule_premise(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
                 let right_result =
-                    self.verify_same_family_builtin_child(&right_finite, builtin_state)?;
+                    self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
                 if !right_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -538,13 +535,12 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result =
-                    self.verify_same_family_builtin_child(&left_finite, builtin_state)?;
+                let left_result = self.verify_builtin_rule_premise(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
                 let right_result =
-                    self.verify_same_family_builtin_child(&right_finite, builtin_state)?;
+                    self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
                 if !right_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -566,8 +562,7 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result =
-                    self.verify_same_family_builtin_child(&left_finite, builtin_state)?;
+                let left_result = self.verify_builtin_rule_premise(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -595,13 +590,12 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result =
-                    self.verify_same_family_builtin_child(&left_finite, builtin_state)?;
+                let left_result = self.verify_builtin_rule_premise(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
                 let right_result =
-                    self.verify_same_family_builtin_child(&right_finite, builtin_state)?;
+                    self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
                 if !right_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -623,8 +617,7 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let base_result =
-                    self.verify_same_family_builtin_child(&base_finite, builtin_state)?;
+                let base_result = self.verify_builtin_rule_premise(&base_finite, builtin_state)?;
                 if !base_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -650,7 +643,7 @@ impl Runtime {
                     )
                     .into();
                     let factor_result =
-                        self.verify_same_family_builtin_child(&factor_finite, builtin_state)?;
+                        self.verify_builtin_rule_premise(&factor_finite, builtin_state)?;
                     if !factor_result.is_true() {
                         return Ok((StmtUnknown::new()).into());
                     }
@@ -686,7 +679,7 @@ impl Runtime {
             not_is_finite_set_fact.line_file.clone(),
         )
         .into();
-        let left_result = self.verify_same_family_builtin_child(&left_infinite, builtin_state)?;
+        let left_result = self.verify_builtin_rule_premise(&left_infinite, builtin_state)?;
         if !left_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -696,7 +689,7 @@ impl Runtime {
             not_is_finite_set_fact.line_file.clone(),
         )
         .into();
-        let right_result = self.verify_same_family_builtin_child(&right_finite, builtin_state)?;
+        let right_result = self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
         if !right_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -834,7 +827,7 @@ impl Runtime {
                 not_is_nonempty_set_fact.line_file.clone(),
             )
             .into();
-            let lt_ok = self.verify_cross_family_builtin_child(&lt, builtin_state)?;
+            let lt_ok = self.verify_builtin_rule_premise(&lt, builtin_state)?;
             if lt_ok.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -855,7 +848,7 @@ impl Runtime {
                 not_is_nonempty_set_fact.line_file.clone(),
             )
             .into();
-            let le_ok = self.verify_cross_family_builtin_child(&le, builtin_state)?;
+            let le_ok = self.verify_builtin_rule_premise(&le, builtin_state)?;
             if le_ok.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

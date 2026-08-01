@@ -7,7 +7,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_atomic_fact_with_builtin_rules(atomic_fact)
+        self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(atomic_fact)
     }
 
     /// If the fact string is in the known-facts cache, return the cached verification result.
@@ -104,7 +104,7 @@ impl Runtime {
         {
             return Ok(cached_result);
         }
-        self.verify_atomic_fact_with_builtin_rules(atomic_fact)
+        self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(atomic_fact)
     }
 
     pub(crate) fn verify_atomic_fact_by_known_atomic_or_builtin_only(
@@ -408,7 +408,11 @@ impl Runtime {
             seen.push(key);
             let in_r: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::R.into(), line_file.clone()).into();
-            let result = self.verify_atomic_fact_with_builtin_rules(&in_r)?;
+            let mut result =
+                self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&in_r)?;
+            if !result.is_true() {
+                result = self.verify_atomic_fact_with_builtin_strategy(&in_r)?;
+            }
             if result.is_true() {
                 steps.push(result);
                 continue;

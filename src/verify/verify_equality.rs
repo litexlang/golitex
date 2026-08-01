@@ -30,7 +30,15 @@ impl Runtime {
 
         let builtin_goal: AtomicFact =
             EqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
-        let mut result = self.verify_atomic_fact_with_builtin_rules(&builtin_goal)?;
+        let mut result = self
+            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
+                &builtin_goal,
+            )?;
+        if result.is_true() {
+            return Ok(result);
+        }
+
+        result = self.verify_atomic_fact_with_builtin_strategy(&builtin_goal)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -213,7 +221,8 @@ impl Runtime {
         line_file: LineFile,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let candidate: AtomicFact = EqualFact::new(left.clone(), right.clone(), line_file).into();
-        let result = self.verify_atomic_fact_with_builtin_rules(&candidate)?;
+        let result = self
+            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&candidate)?;
         Ok(result.is_true().then_some(result))
     }
 
@@ -262,7 +271,7 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let inner = self.verify_atomic_fact_with_builtin_rules(
+        let inner = self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
             &EqualFact::new(reduced.clone(), other_side.clone(), line_file.clone()).into(),
         )?;
         if !inner.is_true() {
@@ -1091,14 +1100,15 @@ impl Runtime {
         verify_state: &VerifyState,
         equality_line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut result = self.verify_atomic_fact_with_builtin_rules(
-            &EqualFact::new(
-                left_obj.clone(),
-                right_obj.clone(),
-                equality_line_file.clone(),
-            )
-            .into(),
-        )?;
+        let mut result = self
+            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
+                &EqualFact::new(
+                    left_obj.clone(),
+                    right_obj.clone(),
+                    equality_line_file.clone(),
+                )
+                .into(),
+            )?;
         if result.is_true() {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

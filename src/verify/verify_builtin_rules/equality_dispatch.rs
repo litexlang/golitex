@@ -165,7 +165,7 @@ impl Runtime {
             let projected_fact: AtomicFact =
                 EqualFact::new(projected, right.clone(), line_file.clone()).into();
             let projected_result =
-                self.verify_same_family_builtin_child(&projected_fact, builtin_state)?;
+                self.verify_builtin_rule_premise(&projected_fact, builtin_state)?;
             if projected_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -182,7 +182,7 @@ impl Runtime {
             let projected_fact: AtomicFact =
                 EqualFact::new(left.clone(), projected, line_file.clone()).into();
             let projected_result =
-                self.verify_same_family_builtin_child(&projected_fact, builtin_state)?;
+                self.verify_builtin_rule_premise(&projected_fact, builtin_state)?;
             if projected_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1170,8 +1170,7 @@ impl Runtime {
         {
             let subset_fact: AtomicFact =
                 SubsetFact::new(subset, container, line_file.clone()).into();
-            let subset_result =
-                self.verify_cross_family_builtin_child(&subset_fact, builtin_state)?;
+            let subset_result = self.verify_builtin_rule_premise(&subset_fact, builtin_state)?;
             if subset_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1225,14 +1224,13 @@ impl Runtime {
         };
 
         let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
-        let first_result = self.verify_cross_family_builtin_child(&first_finite, builtin_state)?;
+        let first_result = self.verify_builtin_rule_premise(&first_finite, builtin_state)?;
         if !first_result.is_true() {
             return Ok(None);
         }
 
         let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file.clone()).into();
-        let second_result =
-            self.verify_cross_family_builtin_child(&second_finite, builtin_state)?;
+        let second_result = self.verify_builtin_rule_premise(&second_finite, builtin_state)?;
         if !second_result.is_true() {
             return Ok(None);
         }
@@ -1367,20 +1365,20 @@ impl Runtime {
 
         let subset_fact: AtomicFact =
             SubsetFact::new(subset.clone(), container.clone(), line_file.clone()).into();
-        let subset_result = self.verify_cross_family_builtin_child(&subset_fact, builtin_state)?;
+        let subset_result = self.verify_builtin_rule_premise(&subset_fact, builtin_state)?;
         if !subset_result.is_true() {
             return Ok(None);
         }
         let container_finite: AtomicFact =
             IsFiniteSetFact::new(container, line_file.clone()).into();
         let container_result =
-            self.verify_cross_family_builtin_child(&container_finite, builtin_state)?;
+            self.verify_builtin_rule_premise(&container_finite, builtin_state)?;
         if !container_result.is_true() {
             return Ok(None);
         }
         let subset_finite: AtomicFact = IsFiniteSetFact::new(subset, line_file.clone()).into();
         let subset_finite_result =
-            self.verify_cross_family_builtin_child(&subset_finite, builtin_state)?;
+            self.verify_builtin_rule_premise(&subset_finite, builtin_state)?;
         if !subset_finite_result.is_true() {
             return Ok(None);
         }
@@ -1413,22 +1411,21 @@ impl Runtime {
 
         let start_in_n: AtomicFact =
             InFact::new(start.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let start_result = self.verify_cross_family_builtin_child(&start_in_n, builtin_state)?;
+        let start_result = self.verify_builtin_rule_premise(&start_in_n, builtin_state)?;
         if !start_result.is_true() {
             return Ok(None);
         }
 
         let end_in_n: AtomicFact =
             InFact::new(end.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let end_result = self.verify_cross_family_builtin_child(&end_in_n, builtin_state)?;
+        let end_result = self.verify_builtin_rule_premise(&end_in_n, builtin_state)?;
         if !end_result.is_true() {
             return Ok(None);
         }
 
         let endpoints_ordered: AtomicFact =
             LessEqualFact::new(start, end, line_file.clone()).into();
-        let order_result =
-            self.verify_cross_family_builtin_child(&endpoints_ordered, builtin_state)?;
+        let order_result = self.verify_builtin_rule_premise(&endpoints_ordered, builtin_state)?;
         if !order_result.is_true() {
             return Ok(None);
         }
@@ -1464,7 +1461,7 @@ impl Runtime {
         };
 
         let base_finite: AtomicFact = IsFiniteSetFact::new(base_set, line_file.clone()).into();
-        let base_result = self.verify_cross_family_builtin_child(&base_finite, builtin_state)?;
+        let base_result = self.verify_builtin_rule_premise(&base_finite, builtin_state)?;
         if !base_result.is_true() {
             return Ok(None);
         }
@@ -1891,13 +1888,12 @@ impl Runtime {
         builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
-        let first_result = self.verify_cross_family_builtin_child(&first_finite, builtin_state)?;
+        let first_result = self.verify_builtin_rule_premise(&first_finite, builtin_state)?;
         if !first_result.is_true() {
             return Ok(None);
         }
         let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file).into();
-        let second_result =
-            self.verify_cross_family_builtin_child(&second_finite, builtin_state)?;
+        let second_result = self.verify_builtin_rule_premise(&second_finite, builtin_state)?;
         if !second_result.is_true() {
             return Ok(None);
         }
@@ -2018,8 +2014,7 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let subset_result =
-                self.verify_cross_family_builtin_child(&subset_fact, builtin_state)?;
+            let subset_result = self.verify_builtin_rule_premise(&subset_fact, builtin_state)?;
             if !subset_result.is_true() {
                 continue;
             }
@@ -2065,7 +2060,7 @@ impl Runtime {
             let element_obj = element.as_ref().clone();
             let in_set: AtomicFact =
                 InFact::new(element_obj.clone(), set.clone(), line_file.clone()).into();
-            let in_result = self.verify_cross_family_builtin_child(&in_set, builtin_state)?;
+            let in_result = self.verify_builtin_rule_premise(&in_set, builtin_state)?;
             if in_result.is_true() {
                 kept.push(element_obj);
                 steps.push(in_result);
@@ -2074,8 +2069,7 @@ impl Runtime {
 
             let not_in_set: AtomicFact =
                 NotInFact::new(element_obj, set.clone(), line_file.clone()).into();
-            let not_in_result =
-                self.verify_cross_family_builtin_child(&not_in_set, builtin_state)?;
+            let not_in_result = self.verify_builtin_rule_premise(&not_in_set, builtin_state)?;
             if not_in_result.is_true() {
                 steps.push(not_in_result);
                 continue;
@@ -2369,8 +2363,7 @@ impl Runtime {
 
         let is_cart_fact: AtomicFact =
             IsCartFact::new(target_obj.clone(), line_file.clone()).into();
-        let is_cart_result =
-            self.verify_cross_family_builtin_child(&is_cart_fact, builtin_state)?;
+        let is_cart_result = self.verify_builtin_rule_premise(&is_cart_fact, builtin_state)?;
         if !is_cart_result.is_true() {
             return Ok(None);
         }
@@ -2379,8 +2372,7 @@ impl Runtime {
         let cart_dim_value_obj: Obj = Number::new(cart_obj.args.len().to_string()).into();
         let cart_dim_fact: AtomicFact =
             EqualFact::new(cart_dim_obj, cart_dim_value_obj, line_file.clone()).into();
-        let cart_dim_result =
-            self.verify_same_family_builtin_child(&cart_dim_fact, builtin_state)?;
+        let cart_dim_result = self.verify_builtin_rule_premise(&cart_dim_fact, builtin_state)?;
         if !cart_dim_result.is_true() {
             return Ok(None);
         }
@@ -2392,7 +2384,7 @@ impl Runtime {
             let projection_fact: AtomicFact =
                 EqualFact::new(projected_target, arg.as_ref().clone(), line_file.clone()).into();
             let projection_result =
-                self.verify_same_family_builtin_child(&projection_fact, builtin_state)?;
+                self.verify_builtin_rule_premise(&projection_fact, builtin_state)?;
             if !projection_result.is_true() {
                 return Ok(None);
             }
@@ -2424,7 +2416,7 @@ impl Runtime {
 
         let not_nonempty: AtomicFact =
             NotIsNonemptySetFact::new(set.clone(), line_file.clone()).into();
-        let mut sub = self.verify_cross_family_builtin_child(&not_nonempty, builtin_state)?;
+        let mut sub = self.verify_builtin_rule_premise(&not_nonempty, builtin_state)?;
         if !sub.is_true() {
             let empty_order: Option<AtomicFact> = match &set {
                 Obj::Range(range) => Some(
@@ -2484,14 +2476,14 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let result = self.verify_cross_family_builtin_child(&greater_equal, builtin_state)?;
+        let result = self.verify_builtin_rule_premise(&greater_equal, builtin_state)?;
         if result.is_true() {
             return Ok(Some(result));
         }
 
         let less_equal: AtomicFact =
             LessEqualFact::new(less_or_equal.clone(), greater_or_equal.clone(), line_file).into();
-        let result = self.verify_cross_family_builtin_child(&less_equal, builtin_state)?;
+        let result = self.verify_builtin_rule_premise(&less_equal, builtin_state)?;
         if result.is_true() {
             return Ok(Some(result));
         }
@@ -2562,7 +2554,7 @@ impl Runtime {
             line_file,
         )
         .into();
-        let result = self.verify_same_family_builtin_child(&not_zero, builtin_state)?;
+        let result = self.verify_builtin_rule_premise(&not_zero, builtin_state)?;
         if result.is_true() {
             return Ok(Some(result));
         }
@@ -2714,7 +2706,7 @@ impl Runtime {
             line_file,
         )
         .into();
-        self.verify_cross_family_builtin_child(&fact, builtin_state)
+        self.verify_builtin_rule_premise(&fact, builtin_state)
     }
 
     // General Cartesian product definition as a canonical set-builder.

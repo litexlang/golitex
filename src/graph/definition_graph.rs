@@ -1157,7 +1157,7 @@ impl DefinitionGraphBuilder {
         source_ids: &mut Vec<String>,
     ) {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) => {
+            VerifiedByResult::BuiltinRule(result) | VerifiedByResult::BuiltinStrategy(result) => {
                 for subgoal in result.subgoals.iter() {
                     self.collect_proof_source_ids_from_result(subgoal, source_ids);
                 }
@@ -1177,7 +1177,8 @@ impl DefinitionGraphBuilder {
             VerifiedByResult::VerifiedBys(result) => {
                 for item in result.cite_what.iter() {
                     match item {
-                        VerifiedBysEnum::ByBuiltinRule(result) => {
+                        VerifiedBysEnum::ByBuiltinRule(result)
+                        | VerifiedBysEnum::ByBuiltinStrategy(result) => {
                             for subgoal in result.subgoals.iter() {
                                 self.collect_proof_source_ids_from_result(subgoal, source_ids);
                             }

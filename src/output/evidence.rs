@@ -8,8 +8,10 @@ use super::fields::{
 use super::source::{source_ref_json_value, stmt_text_for_json};
 use super::store_facts::store_fact_json_values;
 
-fn verified_by_builtin_rule_value(
+fn verified_by_builtin_value(
     runtime: &Runtime,
+    proof_type: &str,
+    label_key: &str,
     rule: &str,
     verify_what: Option<&Fact>,
     subgoals: &[StmtResult],
@@ -20,9 +22,9 @@ fn verified_by_builtin_rule_value(
     let mut fields = vec![
         (
             "type".to_string(),
-            JsonValue::JsonString("builtin rule".to_string()),
+            JsonValue::JsonString(proof_type.to_string()),
         ),
-        ("rule".to_string(), JsonValue::JsonString(public_rule)),
+        (label_key.to_string(), JsonValue::JsonString(public_rule)),
     ];
     if let Some(vw) = verify_what {
         fields.push((
@@ -36,6 +38,42 @@ fn verified_by_builtin_rule_value(
     ));
     fields.push((JSON_KEY_STEPS.to_string(), JsonValue::Array(vec![])));
     JsonValue::Object(fields)
+}
+
+fn verified_by_builtin_rule_value(
+    runtime: &Runtime,
+    rule: &str,
+    verify_what: Option<&Fact>,
+    subgoals: &[StmtResult],
+    output_style: OutputStyle,
+) -> JsonValue {
+    verified_by_builtin_value(
+        runtime,
+        "builtin rule",
+        "rule",
+        rule,
+        verify_what,
+        subgoals,
+        output_style,
+    )
+}
+
+fn verified_by_builtin_strategy_value(
+    runtime: &Runtime,
+    strategy: &str,
+    verify_what: Option<&Fact>,
+    subgoals: &[StmtResult],
+    output_style: OutputStyle,
+) -> JsonValue {
+    verified_by_builtin_value(
+        runtime,
+        "builtin strategy",
+        "strategy",
+        strategy,
+        verify_what,
+        subgoals,
+        output_style,
+    )
 }
 
 /// Public `verification` field for one [`FactualStmtSuccess`] (builtin rule or citation).
@@ -77,6 +115,9 @@ fn verified_by_result_json_value(
     match verified_by {
         VerifiedByResult::BuiltinRule(r) => {
             verified_by_builtin_rule_value(runtime, &r.msg, None, &r.subgoals, output_style)
+        }
+        VerifiedByResult::BuiltinStrategy(r) => {
+            verified_by_builtin_strategy_value(runtime, &r.msg, None, &r.subgoals, output_style)
         }
         VerifiedByResult::Fact(r) => {
             let citation_type = citation_type_for_stmt(r.cite_what.as_ref());
@@ -357,6 +398,13 @@ fn verified_bys_enum_json_value(
 ) -> JsonValue {
     match item {
         VerifiedBysEnum::ByBuiltinRule(r) => verified_by_builtin_rule_value(
+            runtime,
+            &r.msg,
+            include_verify_what.then_some(&r.verify_what),
+            &r.subgoals,
+            output_style,
+        ),
+        VerifiedBysEnum::ByBuiltinStrategy(r) => verified_by_builtin_strategy_value(
             runtime,
             &r.msg,
             include_verify_what.then_some(&r.verify_what),
@@ -680,6 +728,7 @@ impl VerifiedBysEnum {
     fn verify_what(&self) -> &Fact {
         match self {
             VerifiedBysEnum::ByBuiltinRule(r) => &r.verify_what,
+            VerifiedBysEnum::ByBuiltinStrategy(r) => &r.verify_what,
             VerifiedBysEnum::ByFact(r) => &r.verify_what,
             VerifiedBysEnum::ByKnownForall(r) => &r.verify_what,
         }

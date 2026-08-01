@@ -72,7 +72,7 @@ impl Runtime {
         builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = EqualFact::new(left.clone(), right.clone(), line_file).into();
-        self.verify_same_family_builtin_child(&fact, builtin_state)
+        self.verify_builtin_rule_premise(&fact, builtin_state)
     }
 
     fn arg_pairs_share_known_equality_class(&self, pairs: &[(&Obj, &Obj)]) -> bool {

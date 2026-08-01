@@ -1,20 +1,23 @@
+#[derive(Clone, Copy)]
 pub struct BuiltinRuleVerifyState {
-    pub builtin_recursive_goal_count: u8,
+    builtin_rule_depth: u8,
 }
 
 impl BuiltinRuleVerifyState {
     pub fn new() -> Self {
         Self {
-            builtin_recursive_goal_count: 0,
+            builtin_rule_depth: 0,
         }
     }
 
-    pub fn try_enter_recursive_goal(&mut self) -> bool {
-        if self.builtin_recursive_goal_count >= 64 {
-            return false;
+    pub fn can_apply_builtin_rule(&self) -> bool {
+        self.builtin_rule_depth == 0
+    }
+
+    pub fn after_applying_builtin_rule(&self) -> Self {
+        Self {
+            builtin_rule_depth: self.builtin_rule_depth + 1,
         }
-        self.builtin_recursive_goal_count += 1;
-        true
     }
 }
 
@@ -23,21 +26,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn recursive_goal_budget_allows_the_sixty_fourth_child_and_rejects_the_sixty_fifth() {
-        let mut state = BuiltinRuleVerifyState::new();
-        for expected_count in 1..=64 {
-            assert!(state.try_enter_recursive_goal());
-            assert_eq!(state.builtin_recursive_goal_count, expected_count);
-        }
-        assert!(!state.try_enter_recursive_goal());
-        assert_eq!(state.builtin_recursive_goal_count, 64);
+    fn root_state_allows_one_builtin_rule() {
+        let state = BuiltinRuleVerifyState::new();
+        assert!(state.can_apply_builtin_rule());
     }
 
     #[test]
-    fn recursive_goal_budget_is_monotone_and_has_no_refund_operation() {
-        let mut state = BuiltinRuleVerifyState::new();
-        assert!(state.try_enter_recursive_goal());
-        assert!(state.try_enter_recursive_goal());
-        assert_eq!(state.builtin_recursive_goal_count, 2);
+    fn child_state_does_not_allow_another_builtin_rule() {
+        let root = BuiltinRuleVerifyState::new();
+        let child = root.after_applying_builtin_rule();
+        assert!(!child.can_apply_builtin_rule());
+        assert!(root.can_apply_builtin_rule());
     }
 }

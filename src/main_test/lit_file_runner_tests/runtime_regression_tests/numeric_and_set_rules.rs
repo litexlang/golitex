@@ -540,6 +540,8 @@ forall x, a, b R:
     b > 0
     x = a / b
     =>:
+        sqrt(b) > 0
+        sqrt(b) != 0
         sqrt(x) = sqrt(a) / sqrt(b)
 
 forall a, b R:
@@ -2428,23 +2430,24 @@ thm finite_set_extrema_have_defining_properties:
 }
 
 #[test]
-fn legacy_binary_max_and_min_are_not_builtins() {
+fn native_binary_max_and_min_calculate() {
     let source_code = r#"
 max(1, 2) = 2
+min(1, 2) = 1
 "#;
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("legacy_binary_max_and_min_are_not_builtins");
+    runtime.new_file_path_new_env_new_name_scope("native_binary_max_and_min_calculate");
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
-        !run_succeeded,
-        "the removed binary max builtin must not verify:\n{run_output}"
+        run_succeeded,
+        "native binary min/max should calculate on numeric literals:\n{run_output}"
     );
     assert!(
-        run_output.contains("function `max` not defined"),
-        "the failure should identify max as an ordinary undefined function:\n{run_output}"
+        run_output.contains("calculation"),
+        "native binary min/max should expose calculation provenance:\n{run_output}"
     );
 }
 

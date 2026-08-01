@@ -141,8 +141,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let nonnegative_result =
-            self.verify_cross_family_known_or_number_calculation(&nonnegative, builtin_state)?;
+        let nonnegative_result = self.verify_builtin_rule_premise(&nonnegative, builtin_state)?;
         if !nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -197,7 +196,7 @@ impl Runtime {
         )
         .into();
         let left_nonnegative_result =
-            self.verify_cross_family_known_or_number_calculation(&left_nonnegative, builtin_state)?;
+            self.verify_builtin_rule_premise(&left_nonnegative, builtin_state)?;
         if !left_nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -208,8 +207,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let right_nonnegative_result = self
-            .verify_cross_family_known_or_number_calculation(&right_nonnegative, builtin_state)?;
+        let right_nonnegative_result =
+            self.verify_builtin_rule_premise(&right_nonnegative, builtin_state)?;
         if !right_nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -270,10 +269,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let numerator_nonnegative_result = self.verify_cross_family_known_or_number_calculation(
-            &numerator_nonnegative,
-            builtin_state,
-        )?;
+        let numerator_nonnegative_result =
+            self.verify_builtin_rule_premise(&numerator_nonnegative, builtin_state)?;
         if !numerator_nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -284,10 +281,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let denominator_positive_result = self.verify_cross_family_known_or_number_calculation(
-            &denominator_positive,
-            builtin_state,
-        )?;
+        let denominator_positive_result =
+            self.verify_builtin_rule_premise(&denominator_positive, builtin_state)?;
         if !denominator_positive_result.is_true() {
             return Ok(None);
         }

@@ -168,17 +168,55 @@ impl Runtime {
         let (Obj::Mod(lm), Obj::Mod(rm)) = (left, right) else {
             return Ok(None);
         };
-        if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                lm.right.as_ref(),
-                rm.right.as_ref(),
-                line_file.clone(),
-                builtin_state,
-            )?
-            .is_true()
-        {
+        let modulus_result = self.verify_objs_are_equal_in_equality_builtin(
+            lm.right.as_ref(),
+            rm.right.as_ref(),
+            line_file.clone(),
+            builtin_state,
+        )?;
+        if !modulus_result.is_true() {
             return Ok(None);
         }
+
+        let is_reduced_operand = |original: &Obj, reduced: &Obj, modulus: &Obj| {
+            let Obj::Mod(remainder) = reduced else {
+                return false;
+            };
+            objs_equal_by_display_string(original, remainder.left.as_ref())
+                && objs_equal_by_display_string(modulus, remainder.right.as_ref())
+        };
+        let canonical_reduction_matches =
+            |unreduced: &Obj, reduced: &Obj, modulus: &Obj| match (unreduced, reduced) {
+                (Obj::Add(l), Obj::Add(r)) => {
+                    is_reduced_operand(l.left.as_ref(), r.left.as_ref(), modulus)
+                        && is_reduced_operand(l.right.as_ref(), r.right.as_ref(), modulus)
+                }
+                (Obj::Sub(l), Obj::Sub(r)) => {
+                    is_reduced_operand(l.left.as_ref(), r.left.as_ref(), modulus)
+                        && is_reduced_operand(l.right.as_ref(), r.right.as_ref(), modulus)
+                }
+                (Obj::Mul(l), Obj::Mul(r)) => {
+                    is_reduced_operand(l.left.as_ref(), r.left.as_ref(), modulus)
+                        && is_reduced_operand(l.right.as_ref(), r.right.as_ref(), modulus)
+                }
+                _ => false,
+            };
+        if canonical_reduction_matches(lm.left.as_ref(), rm.left.as_ref(), lm.right.as_ref())
+            || canonical_reduction_matches(rm.left.as_ref(), lm.left.as_ref(), rm.right.as_ref())
+        {
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                left,
+                right,
+                line_file,
+                "equality: integer congruence — reduce matching + / - / * operands modulo m",
+                equality_builtin_match_subgoals(
+                    lm.right.as_ref(),
+                    rm.right.as_ref(),
+                    modulus_result,
+                ),
+            )));
+        }
+
         let mut pair_ok = |a: &Obj, b: &Obj| -> Result<bool, RuntimeError> {
             let l: Obj = Mod::new(a.clone(), (*lm.right).clone()).into();
             let r: Obj = Mod::new(b.clone(), (*rm.right).clone()).into();
@@ -289,9 +327,9 @@ impl Runtime {
             )
             .into();
             let dividend_result =
-                self.verify_cross_family_builtin_child(&dividend_in_z, builtin_state)?;
+                self.verify_builtin_rule_premise(&dividend_in_z, builtin_state)?;
             let modulus_result =
-                self.verify_cross_family_builtin_child(&modulus_in_n_pos, builtin_state)?;
+                self.verify_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
             if !dividend_result.is_true() || !modulus_result.is_true() {
                 continue;
             }
@@ -396,11 +434,20 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let base_result = self.verify_cross_family_builtin_child(&base_in_z, builtin_state)?;
-            let exponent_result =
-                self.verify_cross_family_builtin_child(&exponent_in_n, builtin_state)?;
+            let base_result = self.verify_builtin_rule_premise(&base_in_z, builtin_state)?;
+            let mut exponent_result =
+                self.verify_builtin_rule_premise(&exponent_in_n, builtin_state)?;
+            if !exponent_result.is_true() {
+                let exponent_in_n_pos: AtomicFact = InFact::new(
+                    unreduced_power.exponent.as_ref().clone(),
+                    StandardSet::NPos.into(),
+                    line_file.clone(),
+                )
+                .into();
+                exponent_result = self.verify_known_non_forall_atomic_fact(&exponent_in_n_pos)?;
+            }
             let modulus_result =
-                self.verify_cross_family_builtin_child(&modulus_in_n_pos, builtin_state)?;
+                self.verify_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
             if !base_result.is_true() || !exponent_result.is_true() || !modulus_result.is_true() {
                 continue;
             }

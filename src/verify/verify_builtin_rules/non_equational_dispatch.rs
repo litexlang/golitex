@@ -6,9 +6,6 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(result) = self.verify_prime_fact_by_computation(atomic_fact) {
-            return Ok(result);
-        }
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(),
             AtomicFact::NotEqualFact(not_equal_fact) => {
@@ -73,6 +70,9 @@ impl Runtime {
                     not_is_nonempty_set_fact,
                     builtin_state,
                 ),
+            AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_) => Ok(self
+                .verify_prime_fact_by_computation(atomic_fact)
+                .unwrap_or_else(|| StmtUnknown::new().into())),
             _ => Ok((StmtUnknown::new()).into()),
         }
     }

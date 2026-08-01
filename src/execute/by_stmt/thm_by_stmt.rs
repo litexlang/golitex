@@ -324,8 +324,10 @@ impl Runtime {
                 .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
-                    let automatic_result =
-                        self.verify_atomic_fact_with_builtin_rules(&conclusion)?;
+                    let automatic_result = self
+                        .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
+                            &conclusion,
+                        )?;
                     if automatic_result.is_true() {
                         Some(automatic_result)
                     } else if matches!(
@@ -531,7 +533,10 @@ impl Runtime {
                 .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
-                    let automatic = self.verify_atomic_fact_with_builtin_rules(&conclusion)?;
+                    let automatic = self
+                        .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
+                            &conclusion,
+                        )?;
                     if automatic.is_true() {
                         Some(automatic)
                     } else {
@@ -801,21 +806,30 @@ impl Runtime {
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
                     let mut builtin_state = BuiltinRuleVerifyState::new();
-                    Some(
+                    let pointwise = self.try_verify_finite_set_sum_pointwise_equality(
+                        &stmt.args[0],
+                        &stmt.args[1],
+                        stmt.line_file.clone(),
+                        &mut builtin_state,
+                    )?;
+                    Some(if let Some(result) = pointwise {
+                        result
+                    } else {
                         self.try_verify_finite_set_sum_substitution(
                             &stmt.args[0],
                             &stmt.args[1],
                             stmt.line_file.clone(),
                             &mut builtin_state,
                         )?
-                        .unwrap_or_else(|| StmtUnknown::new().into()),
-                    )
+                        .unwrap_or_else(|| StmtUnknown::new().into())
+                    })
                 } else {
                     None
                 };
                 (
                     conclusion,
-                    "pullback summand agrees pointwise and the index map is bijective".to_string(),
+                    "summands agree pointwise on one index set, or by pullback along a bijection"
+                        .to_string(),
                     verification,
                     None,
                 )

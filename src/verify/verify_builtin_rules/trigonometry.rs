@@ -245,7 +245,7 @@ impl Runtime {
                 not_equal_fact.line_file.clone(),
             )
             .into();
-            let reduced_result = self.verify_same_family_builtin_child(&reduced, builtin_state)?;
+            let reduced_result = self.verify_builtin_rule_premise(&reduced, builtin_state)?;
             if reduced_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -266,7 +266,7 @@ impl Runtime {
         }
         let expanded: AtomicFact =
             NotEqualFact::new(left.obj, right.obj, not_equal_fact.line_file.clone()).into();
-        let expanded_result = self.verify_same_family_builtin_child(&expanded, builtin_state)?;
+        let expanded_result = self.verify_builtin_rule_premise(&expanded, builtin_state)?;
         if !expanded_result.is_true() {
             return Ok(None);
         }
@@ -790,49 +790,53 @@ fn shifted_trig_nonzero_reduction(obj: &Obj) -> Option<Obj> {
         Obj::Cos(x) => (x.arg.as_ref(), false),
         _ => return None,
     };
-    let (base, sign) = match arg {
+    if let Some(base) = negated_arg(arg) {
+        // sin(-x) only changes sign and cos(-x) does not; either way nonzeroness is unchanged.
+        return Some(if is_sin {
+            Sin::new(base).into()
+        } else {
+            Cos::new(base).into()
+        });
+    }
+    let base = match arg {
         Obj::Add(add) => {
             if obj_matches_scaled_pi(&add.right, 1, 1) || obj_matches_scaled_pi(&add.right, -1, 1) {
-                ((*add.left).clone(), -1)
+                (*add.left).clone()
             } else if obj_matches_scaled_pi(&add.left, 1, 1)
                 || obj_matches_scaled_pi(&add.left, -1, 1)
             {
-                ((*add.right).clone(), -1)
+                (*add.right).clone()
             } else if obj_matches_scaled_pi(&add.right, 2, 1)
                 || obj_matches_scaled_pi(&add.right, -2, 1)
             {
-                ((*add.left).clone(), 1)
+                (*add.left).clone()
             } else if obj_matches_scaled_pi(&add.left, 2, 1)
                 || obj_matches_scaled_pi(&add.left, -2, 1)
             {
-                ((*add.right).clone(), 1)
+                (*add.right).clone()
             } else {
                 return None;
             }
         }
         Obj::Sub(sub) => {
             if obj_matches_scaled_pi(&sub.right, 1, 1) || obj_matches_scaled_pi(&sub.right, -1, 1) {
-                ((*sub.left).clone(), -1)
+                (*sub.left).clone()
             } else if obj_matches_scaled_pi(&sub.right, 2, 1)
                 || obj_matches_scaled_pi(&sub.right, -2, 1)
             {
-                ((*sub.left).clone(), 1)
+                (*sub.left).clone()
             } else {
                 return None;
             }
         }
         _ => return None,
     };
-    let reduced: Obj = if is_sin {
+    // For a nonzero goal, the sign introduced by a pi shift is irrelevant.
+    Some(if is_sin {
         Sin::new(base).into()
     } else {
         Cos::new(base).into()
-    };
-    if sign == -1 {
-        Some(Mul::new(Number::new("-1".to_string()).into(), reduced).into())
-    } else {
-        Some(reduced)
-    }
+    })
 }
 
 fn obj_matches_scaled_pi(obj: &Obj, numerator: i64, denominator: i64) -> bool {

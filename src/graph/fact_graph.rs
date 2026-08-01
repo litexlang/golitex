@@ -406,7 +406,7 @@ impl FactGraphBuilder {
 
     fn collect_verified_by_nodes(&mut self, verified_by: &VerifiedByResult) {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) => {
+            VerifiedByResult::BuiltinRule(result) | VerifiedByResult::BuiltinStrategy(result) => {
                 for subgoal in &result.subgoals {
                     self.collect_result_nodes(subgoal);
                 }
@@ -436,7 +436,7 @@ impl FactGraphBuilder {
 
     fn collect_verified_bys_item_nodes(&mut self, item: &VerifiedBysEnum) {
         match item {
-            VerifiedBysEnum::ByBuiltinRule(result) => {
+            VerifiedBysEnum::ByBuiltinRule(result) | VerifiedBysEnum::ByBuiltinStrategy(result) => {
                 for subgoal in &result.subgoals {
                     self.collect_result_nodes(subgoal);
                 }
@@ -605,7 +605,7 @@ impl FactGraphBuilder {
 
     fn collect_verified_by_edges(&mut self, target_id: &str, verified_by: &VerifiedByResult) {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) => {
+            VerifiedByResult::BuiltinRule(result) | VerifiedByResult::BuiltinStrategy(result) => {
                 self.add_subgoal_edges(target_id, &result.subgoals);
             }
             VerifiedByResult::Fact(result) => {
@@ -632,7 +632,7 @@ impl FactGraphBuilder {
 
     fn add_verified_bys_item_edges(&mut self, target_id: &str, item: &VerifiedBysEnum) {
         match item {
-            VerifiedBysEnum::ByBuiltinRule(result) => {
+            VerifiedBysEnum::ByBuiltinRule(result) | VerifiedBysEnum::ByBuiltinStrategy(result) => {
                 self.add_subgoal_edges(target_id, &result.subgoals);
             }
             VerifiedBysEnum::ByFact(result) => {
@@ -737,7 +737,7 @@ impl FactGraphBuilder {
         verified_by: &VerifiedByResult,
     ) -> Vec<String> {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) => {
+            VerifiedByResult::BuiltinRule(result) | VerifiedByResult::BuiltinStrategy(result) => {
                 self.dependency_source_ids_from_results(&result.subgoals)
             }
             VerifiedByResult::Fact(result) => self
@@ -752,7 +752,8 @@ impl FactGraphBuilder {
                 let mut ids = vec![];
                 for item in &result.cite_what {
                     let mut item_ids = match item {
-                        VerifiedBysEnum::ByBuiltinRule(item) => {
+                        VerifiedBysEnum::ByBuiltinRule(item)
+                        | VerifiedBysEnum::ByBuiltinStrategy(item) => {
                             self.dependency_source_ids_from_results(&item.subgoals)
                         }
                         VerifiedBysEnum::ByFact(item) => self

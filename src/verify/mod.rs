@@ -8,6 +8,8 @@ mod verify_atomic_fact_with_known_forall;
 mod verify_atomic_fact_with_strategy;
 mod verify_builtin_rule;
 mod verify_builtin_rules;
+mod verify_builtin_strategies;
+mod verify_builtin_strategy;
 mod verify_by_syntax;
 mod verify_dispatch;
 mod verify_equality;

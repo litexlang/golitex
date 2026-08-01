@@ -96,12 +96,14 @@ $prime(18446744073709551557)
 not $prime(18446744073709551615)
 by def $prime(97)
 
-forall p N_pos:
-    2 <= p
-    forall d range(2, p):
-        p % d != 0
-    =>:
-        $prime(p)
+claim:
+    ? forall p N_pos:
+        2 <= p
+        forall d range(2, p):
+            p % d != 0
+        =>:
+            $prime(p)
+    by def $prime(p)
 
 forall p N_pos:
     $prime(p)

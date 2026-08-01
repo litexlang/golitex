@@ -137,22 +137,23 @@ Most proof obligations eventually ask for an atomic target. The public model is:
 ```text
 atomic target
   -> all objects are well-defined
-  -> match a known atomic fact, or
-  -> match a bounded builtin mathematical pattern, or
-  -> match the conclusion of a known forall and verify its premises
+  -> match a known non-forall atomic fact, or
+  -> try one builtin mathematical rule, or
+  -> run a strictly structural builtin strategy, or
+  -> match the conclusion of a known local forall and verify its premises, or
+  -> run a user-defined strategy
   -> true or unknown
 ```
 
-These are route families, not a promise about internal search priority.
-
 **Builtin mathematical patterns.** The target shape is matched against
 implemented arithmetic, equality, order, membership, set, function, and
-composite-object rules. One builtin DFS shares a 64-unknown-child budget. Each
-premise first checks known non-`forall` atomic facts; an unknown same-family
-premise may recurse into builtin dispatch, while an unknown cross-family
-premise returns `unknown`. This DFS does not enter the full verifier, known
-`forall` matching, definitions, or strategies, and its child result tree is
-returned to the root.
+composite-object rules. A builtin rule has depth one: its premises use known
+non-`forall` facts or deterministic computation and cannot invoke another
+rule. Builtin strategies are a separate route for strictly smaller structural
+children; each layer may try one fresh direct rule before repeating only that
+strategy. Neither route enters the full verifier, known `forall` matching,
+definitions, or user strategies, and the child result tree is returned to the
+root.
 
 **Known atomic facts.** Litex looks for the same predicate and truth value in
 the visible context. Arguments need not be textually identical: known

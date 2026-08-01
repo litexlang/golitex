@@ -64,7 +64,7 @@ impl Runtime {
         let in_n_pos: AtomicFact =
             InFact::new(obj.clone(), StandardSet::NPos.into(), line_file).into();
         Ok(self
-            .verify_cross_family_builtin_child(&in_n_pos, builtin_state)?
+            .verify_builtin_rule_premise(&in_n_pos, builtin_state)?
             .is_true())
     }
 
@@ -78,7 +78,7 @@ impl Runtime {
         let in_set: AtomicFact =
             InFact::new(obj.clone(), standard_set.clone().into(), line_file.clone()).into();
         if self
-            .verify_cross_family_builtin_child(&in_set, builtin_state)?
+            .verify_builtin_rule_premise(&in_set, builtin_state)?
             .is_true()
         {
             return Ok(true);
@@ -145,6 +145,64 @@ impl Runtime {
         )
     }
 
+    fn obj_is_verified_real_exponent_for_power_of_power(
+        &mut self,
+        obj: &Obj,
+        line_file: LineFile,
+        builtin_state: &mut BuiltinRuleVerifyState,
+    ) -> Result<bool, RuntimeError> {
+        if self.obj_is_verified_in_standard_set_for_power_builtin(
+            obj,
+            StandardSet::R,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(true);
+        }
+
+        let Obj::Div(div) = obj else {
+            return Ok(false);
+        };
+        if !Self::obj_is_builtin_literal_one(div.left.as_ref()) {
+            return Ok(false);
+        }
+        self.obj_is_verified_in_standard_set_for_power_builtin(
+            div.right.as_ref(),
+            StandardSet::RNz,
+            line_file,
+            builtin_state,
+        )
+    }
+
+    fn obj_is_verified_positive_real_base_for_power_of_power(
+        &mut self,
+        obj: &Obj,
+        line_file: LineFile,
+        builtin_state: &mut BuiltinRuleVerifyState,
+    ) -> Result<bool, RuntimeError> {
+        if self.obj_is_verified_in_standard_set_for_power_builtin(
+            obj,
+            StandardSet::RPos,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(true);
+        }
+        let in_r: AtomicFact =
+            InFact::new(obj.clone(), StandardSet::R.into(), line_file.clone()).into();
+        if !self
+            .verify_builtin_rule_premise(&in_r, builtin_state)?
+            .is_true()
+        {
+            return Ok(false);
+        }
+        let positive: AtomicFact =
+            LessFact::new(Number::new("0".to_string()).into(), obj.clone(), line_file).into();
+        Ok(self
+            .verify_known_non_forall_atomic_fact(&positive)?
+            .is_true())
+    }
+
     pub(super) fn obj_is_verified_nonzero_for_power_builtin(
         &mut self,
         obj: &Obj,
@@ -158,7 +216,7 @@ impl Runtime {
         )
         .into();
         Ok(self
-            .verify_same_family_builtin_child(&nonzero, builtin_state)?
+            .verify_builtin_rule_premise(&nonzero, builtin_state)?
             .is_true())
     }
 
@@ -362,34 +420,30 @@ impl Runtime {
             nested_power.exponent.as_ref().clone(),
         )
         .into();
-        if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                &multiplied_exponent,
-                combined_power.exponent.as_ref(),
-                line_file.clone(),
-                builtin_state,
-            )?
-            .is_true()
-        {
+        if !self.power_exponent_product_matches(
+            inner_power.exponent.as_ref(),
+            nested_power.exponent.as_ref(),
+            &multiplied_exponent,
+            combined_power.exponent.as_ref(),
+            line_file.clone(),
+            builtin_state,
+        )? {
             return Ok(false);
         }
 
         // Real-exponent power-of-power law requires a positive real base.
         // Example: `forall a R_pos, m, n R: (a^m)^n = a^(m*n)`.
-        let base_is_positive_real = self.obj_is_verified_in_standard_set_for_power_builtin(
+        let base_is_positive_real = self.obj_is_verified_positive_real_base_for_power_of_power(
             combined_power.base.as_ref(),
-            StandardSet::RPos,
             line_file.clone(),
             builtin_state,
         )?;
-        let exponents_are_real = self.obj_is_verified_in_standard_set_for_power_builtin(
+        let exponents_are_real = self.obj_is_verified_real_exponent_for_power_of_power(
             inner_power.exponent.as_ref(),
-            StandardSet::R,
             line_file.clone(),
             builtin_state,
-        )? && self.obj_is_verified_in_standard_set_for_power_builtin(
+        )? && self.obj_is_verified_real_exponent_for_power_of_power(
             nested_power.exponent.as_ref(),
-            StandardSet::R,
             line_file.clone(),
             builtin_state,
         )?;
@@ -456,6 +510,48 @@ impl Runtime {
             line_file,
             builtin_state,
         )
+    }
+
+    fn power_exponent_product_matches(
+        &mut self,
+        left_factor: &Obj,
+        right_factor: &Obj,
+        product: &Obj,
+        expected: &Obj,
+        line_file: LineFile,
+        builtin_state: &mut BuiltinRuleVerifyState,
+    ) -> Result<bool, RuntimeError> {
+        if self
+            .verify_objs_are_equal_in_equality_builtin(
+                product,
+                expected,
+                line_file.clone(),
+                builtin_state,
+            )?
+            .is_true()
+        {
+            return Ok(true);
+        }
+        if !Self::obj_is_builtin_literal_one(expected) {
+            return Ok(false);
+        }
+        fn reciprocal_base(factor: &Obj) -> Option<&Obj> {
+            let Obj::Div(div) = factor else {
+                return None;
+            };
+            Runtime::obj_is_builtin_literal_one(div.left.as_ref()).then_some(div.right.as_ref())
+        }
+        let base = if let Some(base) = reciprocal_base(right_factor) {
+            (left_factor.to_string() == base.to_string()).then_some(base)
+        } else if let Some(base) = reciprocal_base(left_factor) {
+            (right_factor.to_string() == base.to_string()).then_some(base)
+        } else {
+            None
+        };
+        let Some(base) = base else {
+            return Ok(false);
+        };
+        self.obj_is_verified_nonzero_for_power_builtin(base, line_file, builtin_state)
     }
 
     // A power of a power can equal the bare base when the exponents multiply to one.
@@ -584,12 +680,9 @@ impl Runtime {
                         line_file.clone(),
                         builtin_state,
                     )?;
-                    let combined_base_nonzero = self.obj_is_verified_nonzero_for_power_builtin(
-                        combined_power.base.as_ref(),
-                        line_file.clone(),
-                        builtin_state,
-                    )?;
-                    left_base_nonzero && right_base_nonzero && combined_base_nonzero
+                    // Nonzeroness of the product is a consequence of the two immediate
+                    // factor requirements, not a second builtin-rule premise.
+                    left_base_nonzero && right_base_nonzero
                 }
             };
 

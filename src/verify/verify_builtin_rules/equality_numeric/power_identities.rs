@@ -137,7 +137,7 @@ impl Runtime {
         )
         .into();
         let positive_result =
-            self.verify_cross_family_builtin_child(&positive_exponent, builtin_state)?;
+            self.verify_builtin_rule_premise(&positive_exponent, builtin_state)?;
         if !positive_result.is_true() {
             return Ok(None);
         }
