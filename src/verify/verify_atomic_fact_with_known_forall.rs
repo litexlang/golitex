@@ -8,7 +8,7 @@ impl Runtime {
     pub fn verify_atomic_fact_with_known_forall(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         known_forall_profile::record_entry();
         if let Some(fact_verified) =
@@ -121,7 +121,7 @@ impl Runtime {
     fn try_verify_with_fallback_known_forall_facts_in_envs(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
@@ -163,7 +163,7 @@ impl Runtime {
     fn try_verify_with_fallback_known_forall_facts_in_imported_modules(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         module_names: &[String],
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
@@ -204,7 +204,7 @@ impl Runtime {
     fn try_verify_with_known_forall_facts_in_envs(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let arg_shape_lookup_keys = atomic_fact_in_forall_lookup_arg_shape_keys(atomic_fact);
         if let Some(fact_verified) = self.try_verify_with_arg_shape_known_forall_facts_in_envs(
@@ -234,7 +234,7 @@ impl Runtime {
         atomic_fact_in_known_forall_fact: AtomicFact,
         forall_rc: Rc<KnownForallFactParamsAndDom>,
         given_atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         self.try_verify_known_forall_candidate_with_matching_fact(
             phase,
@@ -253,7 +253,7 @@ impl Runtime {
         forall_rc: Rc<KnownForallFactParamsAndDom>,
         matching_atomic_fact: &AtomicFact,
         given_atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         known_forall_profile::record_candidate_attempt(phase);
         let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
@@ -282,7 +282,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
         let envs_count = self.environment_count();
@@ -324,7 +324,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         arg_shape_lookup_keys: &[AtomicFactInForallArgShapeKey],
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.is_true());
         let envs_count = self.environment_count();
@@ -403,7 +403,7 @@ impl Runtime {
         lookup_key: &(AtomicFactKey, bool),
         arg_shape_key: &AtomicFactInForallArgShapeKey,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         phase: KnownForallSearchPhase,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let Some(bucket_count) = ({
@@ -452,7 +452,7 @@ impl Runtime {
         lookup_key: &(AtomicFactKey, bool),
         arg_shape_key: &AtomicFactInForallArgShapeKey,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         phase: KnownForallSearchPhase,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let module_local_identifiers =
@@ -520,7 +520,7 @@ impl Runtime {
         known_forall: &Rc<KnownForallFactParamsAndDom>,
         mut arg_map: HashMap<String, Obj>,
         given_atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         self.complete_known_forall_arg_map_from_known_dom_facts(
             known_forall.as_ref(),
@@ -1896,7 +1896,7 @@ impl Runtime {
                 return Ok(None);
             }
         }
-        let verify_state = VerifyState::new_with_final_round(false);
+        let verify_state = UseContextVerifyState::new_with_final_round(false);
         for value in merged.values() {
             if self
                 .verify_obj_well_defined_and_store_cache(value, &verify_state)
@@ -2005,7 +2005,7 @@ impl Runtime {
         if !self.merge_arg_match_map_into(&mut merged, ret_map) {
             return Ok(None);
         }
-        let verify_state = VerifyState::new_with_final_round(false);
+        let verify_state = UseContextVerifyState::new_with_final_round(false);
         for value in merged.values() {
             if self
                 .verify_obj_well_defined_and_store_cache(value, &verify_state)
@@ -2106,7 +2106,7 @@ impl Runtime {
             if !self.merge_arg_match_map_into(&mut merged, eq_map) {
                 return Ok(None);
             }
-            let verify_state = VerifyState::new_with_final_round(false);
+            let verify_state = UseContextVerifyState::new_with_final_round(false);
             for value in merged.values() {
                 if self
                     .verify_obj_well_defined_and_store_cache(value, &verify_state)
@@ -2120,7 +2120,7 @@ impl Runtime {
         if !self.merge_arg_match_map_into(&mut merged, eq_map) {
             return Ok(None);
         }
-        let verify_state = VerifyState::new_with_final_round(false);
+        let verify_state = UseContextVerifyState::new_with_final_round(false);
         for value in merged.values() {
             if self
                 .verify_obj_well_defined_and_store_cache(value, &verify_state)

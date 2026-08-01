@@ -208,6 +208,89 @@ fn finite_set_strategy_is_structural_and_has_no_legacy_node_budget() {
 }
 
 #[test]
+fn numeric_order_strategy_preserves_order_under_a_shared_subtraction() {
+    let source = r#"
+forall a, b, c R:
+    a <= b
+    =>:
+        a - c <= b - c
+
+forall a, b, c R:
+    a < b
+    =>:
+        a - c < b - c
+
+forall x R:
+    x + 3 <= 2
+    =>:
+        9 - 2 * (x + 3) >= 9 - 2 * 2
+
+forall r, s Q:
+    s + 3 >= r
+    s + r <= 3
+    =>:
+        ((s + r + r) - s) / 2 <= ((3 + (s + 3)) - s) / 2
+
+forall n N:
+    n >= 1 + 1
+    =>:
+        n^2 >= 2^2
+
+forall n Z:
+    n^2 >= 25
+    n - 4 >= 1
+    =>:
+        n^2 * (n - 4) >= 25 * 1
+"#;
+    let (_, succeeded, output) = run_source(source, "shared_subtraction_order", true);
+    assert!(
+        succeeded,
+        "shared subtraction should be a structural order strategy:\n{output}"
+    );
+    assert!(output.contains("\"type\": \"builtin strategy\""));
+}
+
+#[test]
+fn absolute_value_order_strategy_uses_square_comparison() {
+    let source = r#"
+forall x, y R:
+    (x + y)^2 <= 3^2
+    =>:
+        abs(x + y) <= abs(3)
+
+forall x, y R:
+    (x - y)^2 < 4^2
+    =>:
+        abs(x - y) < abs(4)
+"#;
+    let (_, succeeded, output) = run_source(source, "absolute_value_square_order", true);
+    assert!(
+        succeeded,
+        "absolute-value order should structurally reduce to real carriers and square order:\n{output}"
+    );
+    assert!(output.contains("\"type\": \"builtin strategy\""));
+    assert!(output.contains("numeric-order strategy: structurally smaller order goals"));
+}
+
+#[test]
+fn integer_interval_membership_strategy_normalizes_case_bounds() {
+    let source = r#"
+forall n Z:
+    n <= 1
+    n >= -2 + 1
+    =>:
+        n $in -1...1
+"#;
+    let (_, succeeded, output) = run_source(source, "integer_interval_membership", true);
+    assert!(
+        succeeded,
+        "integer interval membership should decompose into carrier and bound leaves:\n{output}"
+    );
+    assert!(output.contains("\"type\": \"builtin strategy\""));
+    assert!(output.contains("set-membership strategy: constructor membership decomposition"));
+}
+
+#[test]
 fn a_builtin_rule_cannot_chain_through_another_semantic_rule() {
     let implicit_chain = r#"
 have t R

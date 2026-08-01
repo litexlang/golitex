@@ -10,7 +10,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (side_nested, side_simple) in [(left, right), (right, left)] {
             let Obj::Mod(outer) = side_nested else {
@@ -71,7 +71,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Mod(lm), Obj::Mod(rm)) = (left, right) else {
             return Ok(None);
@@ -163,7 +163,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Mod(lm), Obj::Mod(rm)) = (left, right) else {
             return Ok(None);
@@ -262,7 +262,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (negative_side, complementary_side) in [(left, right), (right, left)] {
             let Obj::Mod(negative_mod) = negative_side else {
@@ -360,7 +360,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (unreduced_side, reduced_side) in [(left, right), (right, left)] {
             let Obj::Mod(unreduced_mod) = unreduced_side else {

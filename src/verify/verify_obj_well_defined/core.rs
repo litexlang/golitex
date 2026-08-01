@@ -56,7 +56,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_fn_obj_well_defined(
         &mut self,
         fn_obj: &FnObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let candidate_spaces = match fn_obj.head.as_ref() {
             FnObjHead::AnonymousFnLiteral(a) => {
@@ -205,7 +205,7 @@ impl Runtime {
         &mut self,
         fn_obj: &FnObj,
         mut space: FnSetSpace,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         for (i, args) in fn_obj.body.iter().enumerate() {
             self.verify_fn_obj_well_defined_against_fn_like_space(
@@ -283,7 +283,7 @@ impl Runtime {
         params_def_with_set: &ParamDefWithSet,
         dom_facts: &Vec<OrAndChainAtomicFact>,
         param_binding: ParamObjType,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let param_count = params_def_with_set.number_of_params();
         if args.len() != param_count {
@@ -356,7 +356,7 @@ impl Runtime {
         params_def_with_set: &ParamDefWithSet,
         args_as_obj: &Vec<Obj>,
         param_binding: ParamObjType,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         let mut arg_index: usize = 0;

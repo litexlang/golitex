@@ -5,7 +5,7 @@ impl Runtime {
     pub(crate) fn verify_abs_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -58,7 +58,7 @@ impl Runtime {
     pub(crate) fn verify_abs_order_strict_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -210,7 +210,7 @@ impl Runtime {
     fn verify_abs_order_subgoal(
         &mut self,
         fact: AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             AtomicFact::LessFact(_) | AtomicFact::LessEqualFact(_) => {
@@ -249,7 +249,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Abs(abs) = &f.left else {
             return Ok(None);
@@ -333,7 +333,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Abs(abs) = &f.left else {
             return Ok(None);
@@ -396,7 +396,7 @@ impl Runtime {
         &mut self,
         f: &LessFact,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if !obj_is_literal_zero(&f.left) {
             return Ok(None);
@@ -433,7 +433,7 @@ impl Runtime {
         line_file: &LineFile,
         atomic_fact: &AtomicFact,
         strict: bool,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Abs(abs) = left else {
             return Ok(None);
@@ -476,7 +476,7 @@ impl Runtime {
         line_file: &LineFile,
         atomic_fact: &AtomicFact,
         strict: bool,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let rule_suffix = if strict { " (strict)" } else { "" };
         let zero: Obj = Number::new("0".to_string()).into();

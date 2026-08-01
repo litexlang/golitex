@@ -22,7 +22,7 @@ impl Runtime {
     pub fn verify_order_atomic_fact_numeric_builtin_only(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Most rules in this dispatcher are facts about the real-number order.
         // The direct order-semantics rules above additionally handle integer
@@ -706,7 +706,7 @@ impl Runtime {
         weak: bool,
         parent_weak: bool,
         line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = if weak {
             LessEqualFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
@@ -724,7 +724,7 @@ impl Runtime {
     fn try_verify_order_nonnegative_from_membership_in_n(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
@@ -771,7 +771,7 @@ impl Runtime {
     fn try_verify_order_one_le_from_membership_in_n_pos(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
@@ -820,7 +820,7 @@ impl Runtime {
     fn try_verify_finite_nonempty_set_size_at_least_one(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (finite_set_size_obj, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
@@ -883,7 +883,7 @@ impl Runtime {
     fn try_verify_finite_set_size_subset_le(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (left_size, right_size, line_file) = match atomic_fact {
             AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right, fact.line_file.clone()),
@@ -980,7 +980,7 @@ impl Runtime {
     fn try_verify_finite_set_size_union_or_set_diff_le_sum(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (smaller, larger, line_file) = match atomic_fact {
             AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right, fact.line_file.clone()),
@@ -1046,7 +1046,7 @@ impl Runtime {
     fn try_verify_order_one_le_from_membership_in_n_and_nonzero(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
@@ -1102,7 +1102,7 @@ impl Runtime {
     fn try_verify_mod_remainder_bounds(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1175,7 +1175,7 @@ impl Runtime {
     fn try_verify_order_one_le_from_membership_in_z_and_positive(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
@@ -1230,7 +1230,7 @@ impl Runtime {
     fn try_verify_numeric_lower_bound_from_known_lower_bound(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1362,7 +1362,7 @@ impl Runtime {
     fn try_verify_numeric_upper_bound_from_known_upper_bound(
         &mut self,
         atomic_fact: &AtomicFact,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1488,7 +1488,7 @@ impl Runtime {
     fn verify_zero_le_sqrt_from_nonnegative_arg_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1527,7 +1527,7 @@ impl Runtime {
     fn verify_zero_lt_sqrt_from_positive_arg_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1565,7 +1565,7 @@ impl Runtime {
     fn verify_sqrt_monotonicity_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1598,7 +1598,7 @@ impl Runtime {
         line_file: LineFile,
         strict: bool,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Sqrt(left_sqrt), Obj::Sqrt(right_sqrt)) = (&left, &right) else {
             return Ok(None);
@@ -1644,7 +1644,7 @@ impl Runtime {
     fn try_verify_order_opposite_sign_mul_minus_one(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z: Obj = Number::new("0".to_string()).into();
         let success = |msg: &'static str| {
@@ -1852,7 +1852,7 @@ impl Runtime {
     fn verify_order_from_known_negated_complement(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (neg, left, right, line_file) = match atomic_fact {
             AtomicFact::GreaterFact(f) => (
@@ -1916,7 +1916,7 @@ impl Runtime {
     fn verify_log_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2067,7 +2067,7 @@ impl Runtime {
     fn verify_negated_order_from_known_equivalent_order(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (left, right, line_file) = match atomic_fact {
             AtomicFact::NotLessFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
@@ -2208,7 +2208,7 @@ impl Runtime {
     fn verify_zero_order_on_sub_from_two_sided_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2267,7 +2267,7 @@ impl Runtime {
     fn verify_zero_le_add_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2319,7 +2319,7 @@ impl Runtime {
     fn verify_zero_lt_add_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2366,7 +2366,7 @@ impl Runtime {
         }
 
         let strict_then_weak = |this: &mut Self,
-                                builtin_state: &mut BuiltinRuleVerifyState|
+                                builtin_state: &UseBuiltinRuleVerifyState|
          -> Result<Option<StmtResult>, RuntimeError> {
             let left_result = this.verify_zero_order_on_sub_expr(
                 zero,
@@ -2399,7 +2399,7 @@ impl Runtime {
             )))
         };
         let weak_then_strict = |this: &mut Self,
-                                builtin_state: &mut BuiltinRuleVerifyState|
+                                builtin_state: &UseBuiltinRuleVerifyState|
          -> Result<Option<StmtResult>, RuntimeError> {
             let left_result = this.verify_zero_order_on_sub_expr(
                 zero,
@@ -2441,7 +2441,7 @@ impl Runtime {
     pub(super) fn verify_zero_le_even_integer_pow_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2498,7 +2498,7 @@ impl Runtime {
     fn verify_zero_lt_even_integer_pow_from_base_nonzero_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2555,7 +2555,7 @@ impl Runtime {
     fn verify_zero_lt_pow_from_positive_base_real_exp_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2601,7 +2601,7 @@ impl Runtime {
     fn verify_zero_le_pow_from_positive_base_real_exp_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2648,7 +2648,7 @@ impl Runtime {
     fn verify_zero_le_pow_from_nonnegative_base_positive_integer_exp_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2692,7 +2692,7 @@ impl Runtime {
     fn verify_zero_le_pow_integer_exponent_from_nonneg_base_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2751,7 +2751,7 @@ impl Runtime {
     fn verify_zero_le_mul_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2803,7 +2803,7 @@ impl Runtime {
     fn verify_zero_lt_mul_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2855,7 +2855,7 @@ impl Runtime {
     fn verify_zero_le_div_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2907,7 +2907,7 @@ impl Runtime {
     fn verify_zero_lt_div_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);

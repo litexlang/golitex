@@ -10,7 +10,7 @@ impl Runtime {
         in_fact: &InFact,
         func: &Obj,
         target_set: StandardSet,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
         op: &str,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(Obj::StandardSet(ret_set)) = self.iterated_op_func_ret_set(func) else {
@@ -50,7 +50,7 @@ impl Runtime {
         in_fact: &InFact,
         sum: &SumOfFiniteSet,
         target_set: StandardSet,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(ret_set) = self.iterated_op_func_ret_set(sum.func.as_ref()) else {
             return Ok((StmtUnknown::new()).into());
@@ -99,7 +99,7 @@ impl Runtime {
         in_fact: &InFact,
         product: &ProductOfFiniteSet,
         target_set: StandardSet,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(ret_set) = self.iterated_op_func_ret_set(product.func.as_ref()) else {
             return Ok((StmtUnknown::new()).into());
@@ -136,7 +136,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         func: &Obj,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
         op: &str,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(ret_set) = self.iterated_op_func_ret_set(func) else {
@@ -161,7 +161,7 @@ impl Runtime {
         &mut self,
         fn_obj: &FnObj,
         in_fact: &InFact,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let typed_ret = match fn_obj.head.as_ref() {
             FnObjHead::AnonymousFnLiteral(a) => (*a.body.ret_set).clone(),
@@ -225,7 +225,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         add: &Add,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
@@ -263,7 +263,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         sub: &Sub,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
@@ -337,7 +337,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         mul: &Mul,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
@@ -375,7 +375,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         pow: &Pow,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
         base_set: StandardSet,
         reason: &str,
     ) -> Result<StmtResult, RuntimeError> {
@@ -421,7 +421,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         pow: &Pow,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let lf = in_fact.line_file.clone();
         let zero: Obj = Number::new("0".to_string()).into();
@@ -456,7 +456,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         add: &Add,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
@@ -534,7 +534,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         mul: &Mul,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
@@ -572,7 +572,7 @@ impl Runtime {
     pub(super) fn verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
@@ -631,7 +631,7 @@ impl Runtime {
     pub(super) fn verify_in_fact_standard_positive_by_zero_less_and_base_set(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
         base_set: StandardSet,
         rule_name: &str,
     ) -> Result<StmtResult, RuntimeError> {
@@ -665,7 +665,7 @@ impl Runtime {
     pub(super) fn verify_in_fact_n_by_nonnegative_integer(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
@@ -716,7 +716,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         closed_range: &ClosedRange,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
@@ -752,7 +752,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         range: &Range,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
@@ -784,7 +784,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         interval: &IntervalObj,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
@@ -835,7 +835,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         interval: &OneSideInfinityIntervalObj,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
@@ -934,7 +934,7 @@ impl Runtime {
         elem: &Obj,
         lower: &Obj,
         lf: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let weak: AtomicFact = LessEqualFact::new(lower.clone(), elem.clone(), lf.clone()).into();
         let weak_result = self.verify_known_interval_order_bound(&weak)?;
@@ -972,7 +972,7 @@ impl Runtime {
         elem: &Obj,
         upper: &Obj,
         lf: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let strict: AtomicFact = LessFact::new(elem.clone(), upper.clone(), lf.clone()).into();
         let strict_result = self.verify_known_interval_order_bound(&strict)?;
@@ -1010,7 +1010,7 @@ impl Runtime {
         elem: &Obj,
         upper: &Obj,
         lf: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let weak: AtomicFact = LessEqualFact::new(elem.clone(), upper.clone(), lf.clone()).into();
         let weak_result = self.verify_known_interval_order_bound(&weak)?;
@@ -1047,7 +1047,7 @@ impl Runtime {
     pub(super) fn verify_in_fact_arithmetic_expression_in_c(
         &mut self,
         in_fact: &InFact,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         Ok(number_in_set_verified_by_builtin_rules_result(
             in_fact,
@@ -1061,7 +1061,7 @@ impl Runtime {
     pub(super) fn verify_in_fact_arithmetic_expression_in_r(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let real: Obj = StandardSet::R.into();
         let lf = in_fact.line_file.clone();
@@ -1111,7 +1111,7 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut seen = Vec::new();
         let mut steps = Vec::new();
@@ -1131,11 +1131,67 @@ impl Runtime {
         Ok(Some(steps))
     }
 
+    pub(crate) fn verify_objects_are_known_integers_in_builtin_leaf(
+        &mut self,
+        objs: &[&Obj],
+        line_file: &LineFile,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let mut seen = Vec::new();
+        let mut steps = Vec::new();
+        for obj in objs {
+            let key = obj.to_string();
+            if seen.contains(&key) {
+                continue;
+            }
+            seen.push(key);
+
+            let in_z: AtomicFact =
+                InFact::new((*obj).clone(), StandardSet::Z.into(), line_file.clone()).into();
+            let direct_result = self.verify_builtin_rule_leaf(&in_z)?;
+            if direct_result.is_true() {
+                steps.push(direct_result);
+                continue;
+            }
+
+            let mut carrier_steps = None;
+            for source_set in self.known_sets_containing_obj(obj) {
+                let Obj::StandardSet(source_standard_set) = &source_set else {
+                    continue;
+                };
+                if !Self::standard_set_is_subset_eq(source_standard_set, &StandardSet::Z) {
+                    continue;
+                }
+                let source_membership: AtomicFact =
+                    InFact::new((*obj).clone(), source_set.clone(), line_file.clone()).into();
+                let source_result = self.verify_known_non_forall_atomic_fact(&source_membership)?;
+                if !source_result.is_true() {
+                    continue;
+                }
+                let subset_fact =
+                    SubsetFact::new(source_set, StandardSet::Z.into(), line_file.clone());
+                let subset_result =
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        subset_fact.into(),
+                        "standard_set_subset".to_string(),
+                        Vec::new(),
+                    )
+                    .into();
+                carrier_steps = Some(vec![source_result, subset_result]);
+                break;
+            }
+            let Some(mut carrier_steps) = carrier_steps else {
+                return Ok(None);
+            };
+            steps.append(&mut carrier_steps);
+        }
+        Ok(Some(steps))
+    }
+
     fn verify_one_object_is_known_real_in_builtin(
         &mut self,
         obj: &Obj,
         line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let in_r: AtomicFact =
             InFact::new(obj.clone(), StandardSet::R.into(), line_file.clone()).into();
@@ -1275,7 +1331,7 @@ impl Runtime {
     pub(super) fn verify_in_fact_arithmetic_expression_in_z(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
@@ -1364,7 +1420,7 @@ impl Runtime {
     pub(super) fn verify_in_fact_arithmetic_expression_in_q(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
@@ -1419,7 +1475,7 @@ impl Runtime {
     pub(super) fn verify_in_fact_arithmetic_expression_in_standard_negative_set(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
         target_negative_standard_set: StandardSet,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {

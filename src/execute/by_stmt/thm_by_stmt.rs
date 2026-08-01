@@ -15,7 +15,7 @@ impl Runtime {
             )
         })?;
 
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
         let arg_type_result = self
             .verify_args_satisfy_param_def_flat_types(
                 &thm.forall_fact.params_def_with_type,
@@ -292,7 +292,7 @@ impl Runtime {
             };
         }
 
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
         let (conclusion, requirement_role, verification, provenance): (
             AtomicFact,
             String,
@@ -805,12 +805,12 @@ impl Runtime {
                 .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
-                    let mut builtin_state = BuiltinRuleVerifyState::new();
+                    let builtin_state = UseBuiltinRuleVerifyState::new();
                     let pointwise = self.try_verify_finite_set_sum_pointwise_equality(
                         &stmt.args[0],
                         &stmt.args[1],
                         stmt.line_file.clone(),
-                        &mut builtin_state,
+                        &builtin_state,
                     )?;
                     Some(if let Some(result) = pointwise {
                         result
@@ -819,7 +819,7 @@ impl Runtime {
                             &stmt.args[0],
                             &stmt.args[1],
                             stmt.line_file.clone(),
-                            &mut builtin_state,
+                            &builtin_state,
                         )?
                         .unwrap_or_else(|| StmtUnknown::new().into())
                     })
@@ -851,13 +851,13 @@ impl Runtime {
                 .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
-                    let mut builtin_state = BuiltinRuleVerifyState::new();
+                    let builtin_state = UseBuiltinRuleVerifyState::new();
                     Some(
                         self.try_verify_sum_over_bijective_finite_set_enumerations(
                             &stmt.args[0],
                             &stmt.args[1],
                             stmt.line_file.clone(),
-                            &mut builtin_state,
+                            &builtin_state,
                         )?
                         .unwrap_or_else(|| StmtUnknown::new().into()),
                     )

@@ -6,7 +6,7 @@ impl Runtime {
         in_fact: &InFact,
         tuple: &Tuple,
         cart: &Cart,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if tuple.args.len() < 2 {
             return Ok((StmtUnknown::new()).into());
@@ -50,7 +50,7 @@ impl Runtime {
     pub(crate) fn try_verify_in_fact_by_symbolic_cart(
         &mut self,
         in_fact: &InFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let is_cart_fact: AtomicFact =
             IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();

@@ -51,7 +51,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (sign, selected) = match (left, right) {
             (Obj::Sign(sign), selected) | (selected, Obj::Sign(sign)) => (sign, selected),
@@ -125,7 +125,7 @@ impl Runtime {
     pub(super) fn try_verify_native_exp_sign_factorial_order(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((verified, subgoals)) =
             self.native_exp_sign_factorial_order_shape(atomic_fact, builtin_state)?
@@ -148,7 +148,7 @@ impl Runtime {
     fn native_exp_sign_factorial_order_shape(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<(bool, Vec<StmtResult>)>, RuntimeError> {
         let (left, right, strict) = match atomic_fact {
             AtomicFact::LessFact(f) => (&f.left, &f.right, true),

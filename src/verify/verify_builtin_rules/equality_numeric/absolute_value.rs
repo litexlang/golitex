@@ -58,7 +58,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (arg, other) = match (left, right) {
             (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
@@ -103,7 +103,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (arg, other) = match (left, right) {
             (Obj::Abs(abs), other) => (abs.arg.as_ref(), other),
@@ -211,7 +211,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Pow(left_pow), Obj::Pow(right_pow)) = (left, right) else {
             return Ok(None);
@@ -289,7 +289,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) =
             self.try_verify_abs_nonnegative_identity(left, right, line_file.clone(), builtin_state)?

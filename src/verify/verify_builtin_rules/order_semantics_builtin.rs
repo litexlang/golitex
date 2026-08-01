@@ -109,7 +109,7 @@ impl Runtime {
     pub(crate) fn try_verify_order_semantics_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(result) =
             self.try_verify_positive_even_integer_greater_than_one(atomic_fact, builtin_state)?
@@ -134,7 +134,7 @@ impl Runtime {
     fn try_verify_positive_even_integer_greater_than_one(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((left, integer, true)) = direct_positive_order_shape(atomic_fact) else {
             return Ok(None);
@@ -175,7 +175,7 @@ impl Runtime {
     fn try_verify_order_transitivity_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((target_left, target_right, target_is_strict)) =
             direct_positive_order_shape(atomic_fact)
@@ -225,10 +225,9 @@ impl Runtime {
                 )?;
                 let type_steps = match type_steps {
                     Some(steps) => Some(steps),
-                    None => self.verify_objects_are_known_integers(
+                    None => self.verify_objects_are_known_integers_in_builtin_leaf(
                         &[&target_left, &middle, &target_right],
                         &line_file,
-                        builtin_state,
                     )?,
                 };
                 let Some(mut steps) = type_steps else {
@@ -264,7 +263,7 @@ impl Runtime {
     fn try_verify_finite_set_extrema_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(fact)) =
             normalize_positive_order_atomic_fact(atomic_fact)
@@ -417,7 +416,7 @@ impl Runtime {
         set: &Obj,
         upper_bound: &Obj,
         line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         match set {
             Obj::ListSet(list_set) => {
@@ -473,7 +472,7 @@ impl Runtime {
         right: &Obj,
         upper_bound: &Obj,
         line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Some(mut steps) = self.verify_finite_set_members_are_at_most(
             left,
@@ -502,7 +501,7 @@ impl Runtime {
         set: &Obj,
         lower_bound: &Obj,
         line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         match set {
             Obj::ListSet(list_set) => {
@@ -558,7 +557,7 @@ impl Runtime {
         right: &Obj,
         lower_bound: &Obj,
         line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Some(mut steps) = self.verify_finite_set_members_are_at_least(
             left,
@@ -655,7 +654,7 @@ impl Runtime {
     fn try_verify_integer_successor_predecessor_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(fact)) =
             normalize_positive_order_atomic_fact(atomic_fact)
@@ -664,10 +663,9 @@ impl Runtime {
         };
 
         if let Some(predecessor) = obj_plus_one_base(&fact.left) {
-            let Some(mut steps) = self.verify_objects_are_known_integers(
+            let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
                 &[&predecessor, &fact.right],
                 &fact.line_file,
-                builtin_state,
             )?
             else {
                 return Ok(None);
@@ -689,10 +687,9 @@ impl Runtime {
         }
 
         if let Some(successor) = obj_minus_one_base(&fact.right) {
-            let Some(mut steps) = self.verify_objects_are_known_integers(
+            let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
                 &[&fact.left, &successor],
                 &fact.line_file,
-                builtin_state,
             )?
             else {
                 return Ok(None);
@@ -723,14 +720,11 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (subject, base) in [(left, right), (right, left)] {
-            let Some(mut steps) = self.verify_objects_are_known_integers(
-                &[subject, base],
-                &line_file,
-                builtin_state,
-            )?
+            let Some(mut steps) = self
+                .verify_objects_are_known_integers_in_builtin_leaf(&[subject, base], &line_file)?
             else {
                 continue;
             };
@@ -765,7 +759,6 @@ impl Runtime {
     pub(crate) fn try_verify_integer_discrete_split_or_builtin_rule(
         &mut self,
         or_fact: &OrFact,
-        _verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);
@@ -796,20 +789,13 @@ impl Runtime {
         } else {
             return Ok(None);
         };
-        let mut steps = Vec::new();
-        for obj in [&subject, &base] {
-            let in_z: AtomicFact = InFact::new(
-                obj.clone(),
-                StandardSet::Z.into(),
-                or_fact.line_file.clone(),
-            )
-            .into();
-            let result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_z)?;
-            if !result.is_true() {
-                return Ok(None);
-            }
-            steps.push(result);
-        }
+        let Some(steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
+            &[&subject, &base],
+            &or_fact.line_file,
+        )?
+        else {
+            return Ok(None);
+        };
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 or_fact.clone().into(),
@@ -818,24 +804,5 @@ impl Runtime {
             )
             .into(),
         ))
-    }
-
-    fn verify_objects_are_known_integers(
-        &mut self,
-        objs: &[&Obj],
-        line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
-        let mut steps = Vec::with_capacity(objs.len());
-        for obj in objs {
-            let in_z: AtomicFact =
-                InFact::new((*obj).clone(), StandardSet::Z.into(), line_file.clone()).into();
-            let result = self.verify_builtin_rule_premise(&in_z, builtin_state)?;
-            if result.is_unknown() {
-                return Ok(None);
-            }
-            steps.push(result);
-        }
-        Ok(Some(steps))
     }
 }

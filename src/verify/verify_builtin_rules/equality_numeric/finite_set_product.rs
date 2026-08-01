@@ -8,7 +8,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let empty_set: Obj = ListSet::new(vec![]).into();
         let one: Obj = Number::new("1".to_string()).into();
@@ -55,7 +55,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (product_side, other) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(p) = product_side else {
@@ -106,7 +106,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (union_side, product_side) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(union_product) = union_side else {
@@ -199,7 +199,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (full_side, product_side) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(full_product) = full_side else {
@@ -289,7 +289,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (finite_side, range_side) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(finite_product) = finite_side else {
@@ -351,7 +351,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (product_side, other) in [(left, right), (right, left)] {
             let Obj::ProductOfFiniteSet(p) = product_side else {
@@ -407,7 +407,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (left_product, right_product) = match (left, right) {
             (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => (l, r),
@@ -503,7 +503,7 @@ impl Runtime {
         right_func: &Obj,
         set: Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
@@ -526,7 +526,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         _line_file: LineFile,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<NestedFiniteSetSumCartesianShape>, RuntimeError> {
         let Obj::SumOfFiniteSet(outer_sum) = obj else {
             return Ok(None);
@@ -644,7 +644,7 @@ impl Runtime {
         param_binding: SymbolBinding,
         set: Obj,
         then_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
@@ -660,7 +660,7 @@ impl Runtime {
         &mut self,
         sum: &Sum,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<FiniteSetEnumerationSummand>, RuntimeError> {
         let af = match sum.func.as_ref() {
             Obj::AnonymousFn(af) => af,
@@ -784,7 +784,7 @@ impl Runtime {
         &mut self,
         shape: &FiniteSetEnumerationSummand,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         let enumerator: Obj = shape.enumerator_head.clone().into();
         if self.has_known_builtin_bijection(

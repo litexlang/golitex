@@ -8,7 +8,7 @@ impl Runtime {
         in_fact: &InFact,
         set_builder: &SetBuilder,
         power_set: &PowerSet,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
         let subset_fact: AtomicFact = SubsetFact::new(
@@ -60,7 +60,7 @@ impl Runtime {
         in_fact: &InFact,
         list_set: &ListSet,
         power_set: &PowerSet,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
         let mut infer_result = InferResult::new();
@@ -94,7 +94,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         list_set: &ListSet,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Check reflexive and already-known element equalities before invoking
         // the broader equality builtin search for list-set membership.
@@ -126,7 +126,7 @@ impl Runtime {
         &mut self,
         not_in_fact: &NotInFact,
         list_set: &ListSet,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let mut steps = Vec::with_capacity(list_set.list.len());
         for current_element_in_list_set in list_set.list.iter() {
@@ -307,7 +307,7 @@ impl Runtime {
         anon: &AnonymousFn,
         expected_fn_set: &FnSet,
         in_fact: &InFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let signature_from_anon = FnSet::new(
             anon.body.params_def_with_set.clone(),
@@ -377,7 +377,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         target_set_obj: &Obj,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::FnObj(fn_obj) = &in_fact.element else {
             return Ok((StmtUnknown::new()).into());
@@ -448,7 +448,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         target_set_obj: &Obj,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::StandardSet(_) = target_set_obj else {
             return Ok((StmtUnknown::new()).into());
@@ -544,7 +544,7 @@ impl Runtime {
     pub(super) fn verify_in_fact_by_known_list_set_carrier(
         &mut self,
         in_fact: &InFact,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::StandardSet(target_set) = &in_fact.set else {
             return Ok((StmtUnknown::new()).into());

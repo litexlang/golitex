@@ -4,7 +4,7 @@ impl Runtime {
     pub(crate) fn verify_non_equational_atomic_fact_with_builtin_rules_inner(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(),

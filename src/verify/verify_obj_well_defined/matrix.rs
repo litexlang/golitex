@@ -4,7 +4,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_interval_obj_well_defined(
         &mut self,
         x: &IntervalObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(x.start(), verify_state)?;
         self.verify_obj_well_defined_and_store_cache(x.end(), verify_state)?;
@@ -16,7 +16,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_one_side_infinity_interval_obj_well_defined(
         &mut self,
         x: &OneSideInfinityIntervalObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(x.start(), verify_state)?;
         self.require_obj_in_r(x.start(), verify_state)?;
@@ -26,7 +26,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_seq_set_well_defined(
         &mut self,
         x: &FiniteSeqSet,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.n, verify_state)?;
@@ -61,7 +61,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_seq_set_well_defined(
         &mut self,
         x: &SeqSet,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         let is_set_fact = IsSetFact::new((*x.set).clone(), default_line_file()).into();
@@ -80,7 +80,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_seq_list_obj_well_defined(
         &mut self,
         x: &FiniteSeqListObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         if x.objs.is_empty() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -98,7 +98,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_set_well_defined(
         &mut self,
         x: &MatrixSet,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.row_len, verify_state)?;
@@ -136,7 +136,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_list_obj_well_defined(
         &mut self,
         x: &MatrixListObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         if x.rows.is_empty() || x.rows[0].is_empty() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -170,7 +170,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_add_well_defined(
         &mut self,
         ma: &MatrixAdd,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&ma.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&ma.right, verify_state)?;
@@ -184,7 +184,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_sub_well_defined(
         &mut self,
         ms: &MatrixSub,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&ms.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&ms.right, verify_state)?;
@@ -198,7 +198,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_mul_well_defined(
         &mut self,
         mm: &MatrixMul,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&mm.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&mm.right, verify_state)?;
@@ -211,7 +211,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_scalar_mul_well_defined(
         &mut self,
         m: &MatrixScalarMul,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&m.scalar, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&m.matrix, verify_state)?;
@@ -231,7 +231,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_pow_well_defined(
         &mut self,
         m: &MatrixPow,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&m.base, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&m.exponent, verify_state)?;
@@ -262,7 +262,7 @@ impl Runtime {
     pub(crate) fn real_matrix_type(
         &mut self,
         obj: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         operator: &str,
     ) -> Result<MatrixSet, RuntimeError> {
         let result = match obj {

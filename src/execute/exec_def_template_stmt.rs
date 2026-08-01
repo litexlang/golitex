@@ -18,7 +18,7 @@ impl Runtime {
         &mut self,
         def_template_stmt: &DefTemplateStmt,
     ) -> Result<(), RuntimeError> {
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
         self.define_params_with_type(
             &def_template_stmt.template_arg_def,
             false,
@@ -40,7 +40,7 @@ impl Runtime {
     pub fn materialize_instantiated_template_obj(
         &mut self,
         template_obj: &InstantiatedTemplateObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let instance_name = template_obj.surface_name();
         if self.is_name_used_for_identifier(&instance_name) {

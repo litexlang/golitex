@@ -5,7 +5,7 @@ use crate::verify::{
     number_is_in_r_pos, number_is_in_z, number_is_in_z_neg, number_is_in_z_nz,
     verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same,
     verify_number_in_standard_set::is_integer_after_simplification, NumberCompareResult,
-    VerifyState,
+    UseContextVerifyState,
 };
 use std::collections::HashMap;
 

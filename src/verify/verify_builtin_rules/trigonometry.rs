@@ -166,7 +166,7 @@ impl Runtime {
     pub(crate) fn try_verify_trigonometric_order_bound(
         &mut self,
         atomic_fact: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
         else {
@@ -231,7 +231,7 @@ impl Runtime {
     pub(crate) fn try_verify_trigonometric_not_equal(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if first_trig_arg(&not_equal_fact.left).is_none()
             && first_trig_arg(&not_equal_fact.right).is_none()

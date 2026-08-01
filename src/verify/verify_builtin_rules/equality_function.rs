@@ -81,7 +81,7 @@ impl Runtime {
         application_side: &Obj,
         other_side: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::FnObj(fn_obj) = application_side else {
             return Ok(None);

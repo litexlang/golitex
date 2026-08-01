@@ -31,7 +31,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (x, y) = if Self::obj_is_builtin_literal_zero(left) {
             match right {
@@ -67,7 +67,7 @@ impl Runtime {
         target: &Obj,
         factor: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Do not call the full equality builtin here; that would re-enter zero-product
         // cancellation while this rule is already trying to match a factor.
@@ -103,7 +103,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let target = if Self::obj_is_builtin_literal_zero(left) {
             right
@@ -195,7 +195,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let pow = if Self::obj_is_builtin_literal_zero(left) {
             match right {
@@ -318,7 +318,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let modulus = if Self::obj_is_builtin_literal_one(left) {
             let Obj::Mod(mod_obj) = right else {
@@ -369,7 +369,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let target = if Self::obj_is_builtin_literal_zero(left) {
             right
@@ -433,7 +433,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (modulus, dividend, remainder) = match (left, right) {
             (Obj::Mod(mod_obj), remainder) => {
@@ -460,32 +460,29 @@ impl Runtime {
             }
 
             let quotient = product.right.as_ref();
-            let dividend_in_z: AtomicFact =
-                InFact::new(dividend.clone(), StandardSet::Z.into(), line_file.clone()).into();
             let divisor_in_n_pos: AtomicFact =
                 InFact::new(modulus.clone(), StandardSet::NPos.into(), line_file.clone()).into();
-            let quotient_in_z: AtomicFact =
-                InFact::new(quotient.clone(), StandardSet::Z.into(), line_file.clone()).into();
             let remainder_in_n: AtomicFact =
                 InFact::new(remainder.clone(), StandardSet::N.into(), line_file.clone()).into();
             let remainder_lt_modulus: AtomicFact =
                 LessFact::new(remainder.clone(), modulus.clone(), line_file.clone()).into();
 
-            let dividend_result =
-                self.verify_builtin_rule_premise(&dividend_in_z, builtin_state)?;
+            let Some(integer_steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
+                &[dividend, quotient],
+                &line_file,
+            )?
+            else {
+                continue;
+            };
             let divisor_result =
                 self.verify_builtin_rule_premise(&divisor_in_n_pos, builtin_state)?;
-            let quotient_result =
-                self.verify_builtin_rule_premise(&quotient_in_z, builtin_state)?;
             let remainder_result =
                 self.verify_builtin_rule_premise(&remainder_in_n, builtin_state)?;
             let bound_result =
                 self.verify_builtin_rule_premise(&remainder_lt_modulus, builtin_state)?;
             let decomposition_result =
                 self.verify_objs_are_equal_known_only(dividend, &candidate, line_file.clone());
-            if !dividend_result.is_true()
-                || !divisor_result.is_true()
-                || !quotient_result.is_true()
+            if !divisor_result.is_true()
                 || !remainder_result.is_true()
                 || !bound_result.is_true()
                 || !decomposition_result.is_true()
@@ -493,19 +490,19 @@ impl Runtime {
                 continue;
             }
 
+            let mut steps = integer_steps;
+            steps.extend([
+                divisor_result,
+                remainder_result,
+                bound_result,
+                decomposition_result,
+            ]);
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     EqualFact::new(left.clone(), right.clone(), line_file).into(),
                     "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
                         .to_string(),
-                    vec![
-                        dividend_result,
-                        divisor_result,
-                        quotient_result,
-                        remainder_result,
-                        bound_result,
-                        decomposition_result,
-                    ],
+                    steps,
                 )
                 .into(),
             ));

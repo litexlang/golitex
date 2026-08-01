@@ -4,7 +4,7 @@ impl Runtime {
     pub fn _verify_is_nonempty_set_fact_with_builtin_rules(
         &mut self,
         is_nonempty_set_fact: &IsNonemptySetFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Empty set rule: `$is_nonempty_set(S)` follows from `S != {}`.
         // Example: after `S != {}`, prove `$is_nonempty_set(S)`.
@@ -386,7 +386,7 @@ impl Runtime {
     fn try_verify_nonempty_finite_set_from_positive_finite_set_size(
         &mut self,
         is_nonempty_set_fact: &IsNonemptySetFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = is_nonempty_set_fact.line_file.clone();
         let finite: AtomicFact =
@@ -424,7 +424,7 @@ impl Runtime {
     pub fn _verify_is_finite_set_fact_with_builtin_rules(
         &mut self,
         is_finite_set_fact: &IsFiniteSetFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(result) = self
             .try_verify_finite_codomain_from_known_surjection(is_finite_set_fact, builtin_state)?
@@ -665,7 +665,7 @@ impl Runtime {
     pub fn _verify_not_is_finite_set_fact_with_builtin_rules(
         &mut self,
         not_is_finite_set_fact: &NotIsFiniteSetFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Removing a finite set from an infinite set leaves an infinite set.
         // Example: from `not $is_finite_set(X)` and `$is_finite_set(s)`, prove
@@ -708,7 +708,7 @@ impl Runtime {
     pub fn _verify_is_cart_fact_with_builtin_rules(
         &mut self,
         is_cart_fact: &IsCartFact,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match &is_cart_fact.set {
             Obj::Cart(_) => {
@@ -728,7 +728,7 @@ impl Runtime {
     pub fn _verify_is_tuple_fact_with_builtin_rules(
         &mut self,
         is_tuple_fact: &IsTupleFact,
-        _builtin_state: &mut BuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match &is_tuple_fact.set {
             Obj::Tuple(t) => {
@@ -768,7 +768,7 @@ impl Runtime {
     pub fn _verify_not_is_nonempty_set_fact_with_builtin_rules(
         &mut self,
         not_is_nonempty_set_fact: &NotIsNonemptySetFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Obj::ListSet(list_set) = &not_is_nonempty_set_fact.set {
             if list_set.list.is_empty() {
@@ -867,7 +867,7 @@ impl Runtime {
         &mut self,
         conclusion: &IsNonemptySetFact,
         pointwise: bool,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::GeneralCart(general_cart) = &conclusion.set else {
             return Ok(StmtUnknown::new().into());

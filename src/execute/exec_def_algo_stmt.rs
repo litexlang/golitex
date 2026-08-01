@@ -332,7 +332,7 @@ impl Runtime {
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_param_to_forall_obj: &HashMap<String, Obj>,
     ) -> Result<(), RuntimeError> {
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
         for algo_case in def_algo_stmt.cases.iter() {
             let case_forall_fact = self.forall_fact_for_def_algo_case(
                 algo_param_defs_with_type,
@@ -410,14 +410,17 @@ impl Runtime {
         )?
         .into();
 
-        self.verify_fact_return_err_if_not_true(&verification_fact, &VerifyState::new(0, false))
-            .map_err(|runtime_error| {
-                Self::def_algo_verify_exec_error_with_message_and_optional_cause(
-                    def_algo_stmt,
-                    "algo verify: default return does not equal the declared function".to_string(),
-                    Some(runtime_error),
-                )
-            })?;
+        self.verify_fact_return_err_if_not_true(
+            &verification_fact,
+            &UseContextVerifyState::new(0, false),
+        )
+        .map_err(|runtime_error| {
+            Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                def_algo_stmt,
+                "algo verify: default return does not equal the declared function".to_string(),
+                Some(runtime_error),
+            )
+        })?;
         Ok(())
     }
 
@@ -466,7 +469,7 @@ impl Runtime {
         )?
         .into();
 
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
         self.verify_fact_return_err_if_not_true(&coverage_forall_fact, &verify_state)
             .map_err(|runtime_error| {
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(

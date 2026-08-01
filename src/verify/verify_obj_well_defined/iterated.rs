@@ -4,7 +4,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_sum_obj_well_defined(
         &mut self,
         x: &Sum,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
@@ -31,7 +31,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_sum_obj_well_defined(
         &mut self,
         x: &SumOfFiniteSet,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         let finite_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
@@ -124,7 +124,7 @@ impl Runtime {
         &mut self,
         list_set: &ListSet,
         func: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(func) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -195,7 +195,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_product_obj_well_defined(
         &mut self,
         x: &ProductOfFiniteSet,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         let finite_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
@@ -247,7 +247,7 @@ impl Runtime {
         &mut self,
         list_set: &ListSet,
         func: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(func) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -318,7 +318,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_product_obj_well_defined(
         &mut self,
         x: &Product,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
@@ -362,7 +362,7 @@ impl Runtime {
         start: &Obj,
         end: &Obj,
         param_set: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         op: &str,
     ) -> Result<(), RuntimeError> {
         if let (Some(a_num), Some(b_num)) = (
@@ -443,7 +443,7 @@ impl Runtime {
         fs_body: FnSetBody,
         start: &Obj,
         end: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         op: &str,
     ) -> Result<(), RuntimeError> {
         if ParamGroupWithSet::number_of_params(&fs_body.params_def_with_set) != 1 {
@@ -560,7 +560,7 @@ impl Runtime {
         func: &Obj,
         start: &Obj,
         end: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         op: &str,
     ) -> Result<(), RuntimeError> {
         if let Some(af) = Self::summand_as_unary_anonymous_fn(func) {
@@ -635,7 +635,7 @@ impl Runtime {
         af: &AnonymousFn,
         start: &Obj,
         end: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         op: &str,
     ) -> Result<(), RuntimeError> {
         if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
@@ -741,7 +741,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_range_well_defined(
         &mut self,
         x: &Range,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
@@ -753,7 +753,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_closed_range_well_defined(
         &mut self,
         x: &ClosedRange,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
@@ -767,7 +767,7 @@ impl Runtime {
         op: &str,
         list_set: &ListSet,
         func: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let Some(anonymous) = Self::summand_as_unary_anonymous_fn(func) else {
             return Ok(());
@@ -807,7 +807,7 @@ impl Runtime {
         &mut self,
         op: &str,
         func: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let Some(anonymous) = Self::summand_as_unary_anonymous_fn(func) else {
             return Ok(());
@@ -873,7 +873,7 @@ impl Runtime {
         &mut self,
         domain: &Obj,
         return_set: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<bool, RuntimeError> {
         let subset_fact: AtomicFact =
             SubsetFact::new(domain.clone(), return_set.clone(), default_line_file()).into();

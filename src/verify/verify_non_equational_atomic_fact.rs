@@ -4,7 +4,7 @@ impl Runtime {
     pub fn verify_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         post_process: bool,
     ) -> Result<StmtResult, RuntimeError> {
         let mut result = self
@@ -51,7 +51,7 @@ impl Runtime {
     fn post_process_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         result: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         let result = self.builtin_post_process_non_equational_atomic_fact(
@@ -72,7 +72,7 @@ impl Runtime {
     fn builtin_post_process_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         result: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(transposed_fact) = atomic_fact.transposed_binary_order_equivalent() else {
@@ -116,7 +116,7 @@ impl Runtime {
     fn use_known_symmetric_prop(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         result: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         let AtomicFact::NormalAtomicFact(f) = atomic_fact else {

@@ -10,7 +10,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if verify_equality_by_they_are_the_same(left, right) {
             return Ok(factual_equal_success_by_builtin_reason(
@@ -1122,7 +1122,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // A symmetric difference is the union of its two asymmetric differences.
         // Example: `set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))`.
@@ -1213,7 +1213,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // Removing a finite subset counts the original set minus its overlap with the removed set.
         // Example: `finite_set_size(set_minus(S, T)) = finite_set_size(S) - finite_set_size(intersect(S, T))`.
@@ -1252,7 +1252,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((first_set, second_set)) = Self::finite_set_size_union_shape(left, right)
             .or_else(|| Self::finite_set_size_union_shape(right, left))
@@ -1286,7 +1286,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((first_set, second_set)) = Self::finite_set_size_partition_shape(left, right)
             .or_else(|| Self::finite_set_size_partition_shape(right, left))
@@ -1320,7 +1320,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((first_set, second_set)) = Self::finite_set_size_set_diff_shape(left, right)
             .or_else(|| Self::finite_set_size_set_diff_shape(right, left))
@@ -1354,7 +1354,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((container, subset)) =
             Self::finite_set_size_set_minus_of_subset_shape(left, right)
@@ -1401,7 +1401,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((start, end, closed)) = Self::finite_set_size_integer_range_shape(left, right)
             .or_else(|| Self::finite_set_size_integer_range_shape(right, left))
@@ -1450,7 +1450,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         // Cardinality of a finite power set is `2` to the cardinality of the base set.
         // Example: from `$is_finite_set(S)`, prove `finite_set_size(power_set(S)) = 2^finite_set_size(S)`.
@@ -1885,7 +1885,7 @@ impl Runtime {
         first_set: Obj,
         second_set: Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
         let first_result = self.verify_builtin_rule_premise(&first_finite, builtin_state)?;
@@ -1989,7 +1989,7 @@ impl Runtime {
         statement_left: &Obj,
         statement_right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (intersection_side, target_side) in [
             (statement_left, statement_right),
@@ -2042,7 +2042,7 @@ impl Runtime {
         intersection_side: &Obj,
         target_side: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::Intersect(intersection) = intersection_side else {
             return Ok(None);
@@ -2174,7 +2174,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (tuple_obj, target_obj) = match (left, right) {
             (target_obj, Obj::Tuple(tuple_obj)) => (tuple_obj, target_obj),
@@ -2234,7 +2234,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left_is_direct_symbol = matches!(
             left,
@@ -2349,7 +2349,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (cart_obj, target_obj) = match (left, right) {
             (target_obj, Obj::Cart(cart_obj)) => (cart_obj, target_obj),
@@ -2406,7 +2406,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let set = match (left, right) {
             (Obj::ListSet(list), set) if list.list.is_empty() => set.clone(),
@@ -2468,7 +2468,7 @@ impl Runtime {
         greater_or_equal: &Obj,
         less_or_equal: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let greater_equal: AtomicFact = GreaterEqualFact::new(
             greater_or_equal.clone(),
@@ -2500,7 +2500,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(mut steps) = self.verify_objects_are_known_reals_in_builtin(
             &[left, right],
@@ -2546,7 +2546,7 @@ impl Runtime {
         &mut self,
         denominator: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let not_zero: AtomicFact = NotEqualFact::new(
             denominator.clone(),
@@ -2569,7 +2569,7 @@ impl Runtime {
         target_left: &Obj,
         target_right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let division_obj: Obj = Div::new(dividend.clone(), denominator.clone()).into();
         if !self.objs_are_the_same_or_known_equal(&division_obj, quotient) {
@@ -2599,7 +2599,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (dividend, product) = match (left, right) {
             (dividend, Obj::Mul(product)) => (dividend, product),
@@ -2635,7 +2635,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (division, quotient) = match (left, right) {
             (Obj::Div(division), quotient) => (division, quotient),
@@ -2678,7 +2678,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) = self.try_verify_product_from_known_division(
             left,
@@ -2698,7 +2698,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = NormalAtomicFact::new(
             AtomicName::WithoutMod(prop_name.to_string()),
@@ -2716,7 +2716,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (general_cart_side, set_builder_side) in [(left, right), (right, left)] {
             let Obj::GeneralCart(general_cart) = general_cart_side else {
@@ -2750,7 +2750,7 @@ impl Runtime {
         general_cart: &GeneralCart,
         set_builder: &SetBuilder,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Obj::FnSet(fn_set) = set_builder.param_set.as_ref() else {
             return Ok(None);
@@ -2801,7 +2801,7 @@ impl Runtime {
         general_cart: &GeneralCart,
         set_builder: &SetBuilder,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
         if set_builder.facts.len() != 1 {
             return Ok(false);
@@ -2980,7 +2980,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let mut prop_names: Vec<String> = Vec::new();
         for env in self.iter_environments_from_top() {

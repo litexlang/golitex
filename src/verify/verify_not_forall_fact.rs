@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_not_forall_fact(
         &mut self,
         not_forall: &NotForallFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if !verify_state.well_defined_already_verified {
             self.verify_not_forall_fact_well_defined(not_forall, verify_state)?;

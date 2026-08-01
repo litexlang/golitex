@@ -12,7 +12,7 @@ impl Runtime {
             for param_def in params_def.iter() {
                 rt.define_params_with_set_in_scope(param_def, define_params_to_be_param_obj_type)?;
             }
-            rt.verify_obj_well_defined_and_store_cache(&obj, &VerifyState::new(0, false))
+            rt.verify_obj_well_defined_and_store_cache(&obj, &UseContextVerifyState::new(0, false))
         })
     }
 }

@@ -4,7 +4,7 @@ impl Runtime {
     pub fn verify_atomic_fact(
         &mut self,
         fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&fact.clone().into())

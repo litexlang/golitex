@@ -4,7 +4,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_power_set_well_defined(
         &mut self,
         x: &PowerSet,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         Ok(())
@@ -13,7 +13,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_general_cart_well_defined(
         &mut self,
         x: &GeneralCart,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.index_set, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.family_set, verify_state)?;
@@ -67,7 +67,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_obj_at_index_well_defined(
         &mut self,
         x: &ObjAtIndex,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.index, verify_state)?;

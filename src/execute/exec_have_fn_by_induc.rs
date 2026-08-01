@@ -68,15 +68,18 @@ impl Runtime {
                 .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
             rt.verify_obj_well_defined_and_store_cache(
                 &Obj::from(fn_set),
-                &VerifyState::new(0, false),
+                &UseContextVerifyState::new(0, false),
             )
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
             rt.define_have_fn_by_induc_current_params_and_domain(stmt)?;
-            rt.verify_obj_well_defined_and_store_cache(&stmt.measure, &VerifyState::new(0, false))
-                .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+            rt.verify_obj_well_defined_and_store_cache(
+                &stmt.measure,
+                &UseContextVerifyState::new(0, false),
+            )
+            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
             rt.verify_obj_well_defined_and_store_cache(
                 &stmt.lower_bound,
-                &VerifyState::new(0, false),
+                &UseContextVerifyState::new(0, false),
             )
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
             Ok(())
@@ -106,11 +109,14 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&stmt.measure, &VerifyState::new(0, false))
-            .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
+        self.verify_obj_well_defined_and_store_cache(
+            &stmt.measure,
+            &UseContextVerifyState::new(0, false),
+        )
+        .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         self.verify_obj_well_defined_and_store_cache(
             &stmt.lower_bound,
-            &VerifyState::new(0, false),
+            &UseContextVerifyState::new(0, false),
         )
         .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
@@ -121,7 +127,7 @@ impl Runtime {
             let integer_fact: AtomicFact =
                 InFact::new(obj.clone(), StandardSet::Z.into(), stmt.line_file.clone()).into();
             let result = self
-                .verify_atomic_fact(&integer_fact, &VerifyState::new(0, false))
+                .verify_atomic_fact(&integer_fact, &UseContextVerifyState::new(0, false))
                 .map_err(|e| {
                     short_exec_error(
                         stmt.clone().into(),
@@ -153,7 +159,7 @@ impl Runtime {
         )
         .into();
         let result = self
-            .verify_atomic_fact(&lower_fact, &VerifyState::new(0, false))
+            .verify_atomic_fact(&lower_fact, &UseContextVerifyState::new(0, false))
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         if result.is_unknown() {
             return Err(short_exec_error(
@@ -256,7 +262,7 @@ impl Runtime {
         let coverage_cases: Vec<AndChainAtomicFact> =
             cases.iter().map(|c| c.case_fact.clone()).collect();
         let coverage: Fact = OrFact::new(coverage_cases, stmt.line_file.clone()).into();
-        self.verify_fact_return_err_if_not_true(&coverage, &VerifyState::new(0, false))
+        self.verify_fact_return_err_if_not_true(&coverage, &UseContextVerifyState::new(0, false))
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -294,7 +300,7 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
         equal_to: &Obj,
     ) -> Result<(), RuntimeError> {
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
         self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 

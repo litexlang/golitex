@@ -45,7 +45,7 @@ impl Runtime {
         }
 
         let (inside_results, assumption_infer_result) = self.run_in_local_env(|rt| {
-            let verify_state = VerifyState::new(0, false);
+            let verify_state = UseContextVerifyState::new(0, false);
             let assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(&stmt.forall_fact, &verify_state)?;
             let verification_assumption_infer_result = assumption_infer_result.clone();

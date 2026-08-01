@@ -13,7 +13,7 @@ impl Runtime {
         let element = stmt.element.clone();
         let in_fact = InFact::new(element, set_obj, stmt.line_file.clone());
         let in_atomic: AtomicFact = in_fact.clone().into();
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
         let membership = self.verify_atomic_fact(&in_atomic, &verify_state)?;
         if membership.is_unknown() {
             return Err(short_exec_error(

@@ -60,6 +60,27 @@ impl Runtime {
                 lf.clone(),
             )
             .into()]],
+            Obj::Range(range) => vec![vec![
+                InFact::new(fact.element.clone(), StandardSet::Z.into(), lf.clone()).into(),
+                LessEqualFact::new(
+                    range.start.as_ref().clone(),
+                    fact.element.clone(),
+                    lf.clone(),
+                )
+                .into(),
+                LessFact::new(fact.element.clone(), range.end.as_ref().clone(), lf.clone()).into(),
+            ]],
+            Obj::ClosedRange(range) => vec![vec![
+                InFact::new(fact.element.clone(), StandardSet::Z.into(), lf.clone()).into(),
+                LessEqualFact::new(
+                    range.start.as_ref().clone(),
+                    fact.element.clone(),
+                    lf.clone(),
+                )
+                .into(),
+                LessEqualFact::new(fact.element.clone(), range.end.as_ref().clone(), lf.clone())
+                    .into(),
+            ]],
             _ => return Ok(StmtUnknown::new().into()),
         };
 

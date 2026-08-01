@@ -31,7 +31,7 @@ impl Runtime {
         let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall.clone()),
-            &VerifyState::new(0, false),
+            &UseContextVerifyState::new(0, false),
         )
         .map_err(|e| {
             short_exec_error(
@@ -51,7 +51,10 @@ impl Runtime {
         if stmt.prove_process.is_empty() {
             let forall_fact: Fact = stmt.forall.clone().into();
             let result = self
-                .verify_fact_return_err_if_not_true(&forall_fact, &VerifyState::new(0, false))
+                .verify_fact_return_err_if_not_true(
+                    &forall_fact,
+                    &UseContextVerifyState::new(0, false),
+                )
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
             Ok(vec![result])
         } else {
@@ -65,7 +68,7 @@ impl Runtime {
     ) -> Result<Vec<StmtResult>, RuntimeError> {
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall.clone()),
-            &VerifyState::new(0, false),
+            &UseContextVerifyState::new(0, false),
         )
         .map_err(|e| {
             short_exec_error(
@@ -89,7 +92,7 @@ impl Runtime {
             for dom_fact in stmt.forall.dom_facts.iter() {
                 rt.verify_well_defined_and_store_and_infer(
                     dom_fact.clone(),
-                    &VerifyState::new(0, false),
+                    &UseContextVerifyState::new(0, false),
                 )?;
             }
 
@@ -124,7 +127,7 @@ impl Runtime {
             for (then_index, then_fact) in stmt.forall.then_facts.iter().enumerate() {
                 let mut result = rt.verify_exist_or_and_chain_atomic_fact(
                     then_fact,
-                    &VerifyState::new(0, false),
+                    &UseContextVerifyState::new(0, false),
                 )?;
                 if result.is_unknown() {
                     let then_goal = then_fact.clone().to_fact();

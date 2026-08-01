@@ -25,7 +25,7 @@ impl Runtime {
         let keyword = stmt.keyword();
         self.verify_fact_well_defined(
             &Fact::ForallFact(stmt.forall_fact.clone()),
-            &VerifyState::new(0, false),
+            &UseContextVerifyState::new(0, false),
         )
         .map_err(|e| {
             short_exec_error(
@@ -63,7 +63,7 @@ impl Runtime {
             for dom_fact in stmt.forall_fact.dom_facts.iter() {
                 let mut dom_infers = rt.verify_well_defined_and_store_and_infer(
                     dom_fact.clone(),
-                    &VerifyState::new(0, false),
+                    &UseContextVerifyState::new(0, false),
                 )?;
                 dom_infers
                     .relabel_all_added_facts_with_store_reason(ForallFact::premise_store_reason());
@@ -98,7 +98,7 @@ impl Runtime {
             for (then_index, then_fact) in stmt.forall_fact.then_facts.iter().enumerate() {
                 let mut result = rt.verify_exist_or_and_chain_atomic_fact(
                     then_fact,
-                    &VerifyState::new(0, false),
+                    &UseContextVerifyState::new(0, false),
                 )?;
                 if result.is_unknown() {
                     let then_goal = then_fact.clone().to_fact();
@@ -158,7 +158,7 @@ impl Runtime {
 
         self.verify_well_defined_and_store_and_infer_with_reason(
             Fact::ForallFact(stmt.forall_fact.clone()),
-            &VerifyState::new(0, false),
+            &UseContextVerifyState::new(0, false),
             InferReason::Other(stmt.store_reason().to_string()),
         )
     }

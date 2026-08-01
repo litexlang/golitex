@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         union: &Union,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         for (side, side_name) in [
             (union.left.as_ref(), "left"),
@@ -41,7 +41,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         intersect: &Intersect,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let left_member_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -83,7 +83,7 @@ impl Runtime {
         &mut self,
         not_in_fact: &NotInFact,
         intersect: &Intersect,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         for (side, side_name) in [
             (intersect.left.as_ref(), "left"),
@@ -118,7 +118,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         set_minus: &SetMinus,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let left_member_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -162,7 +162,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         big_union: &BigUnion,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let exist_fact = self.big_union_membership_exist_fact(in_fact, big_union)?;
         let exist_result =
@@ -250,7 +250,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         replacement: &Replacement,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let exist_fact = self.replacement_membership_exist_fact(in_fact, replacement)?;
         let exist_result =
@@ -494,7 +494,7 @@ impl Runtime {
         in_fact: &InFact,
         fn_range: &FnRange,
         power_set: &PowerSet,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
             return Ok((StmtUnknown::new()).into());
@@ -544,7 +544,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         power_set: &PowerSet,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let subset_fact: AtomicFact = SubsetFact::new(
             in_fact.element.clone(),
@@ -593,7 +593,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         general_cart: &GeneralCart,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let fn_set_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -633,7 +633,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         set_builder: &SetBuilder,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let mut step_results = Vec::with_capacity(set_builder.facts.len() + 1);
 
@@ -703,7 +703,7 @@ impl Runtime {
     pub(crate) fn maybe_verify_in_fact_in_unfolded_user_defined_set(
         &mut self,
         in_fact: &InFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::InstantiatedTemplateObj(template_obj) = &in_fact.set {
             self.materialize_instantiated_template_obj(template_obj, verify_state)?;
@@ -744,7 +744,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         struct_obj: &StructObj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(
             &Obj::StructObj(struct_obj.clone()),
@@ -813,7 +813,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         finite_set_size: &FiniteSetSize,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let finite_fact =
             IsFiniteSetFact::new((*finite_set_size.set).clone(), in_fact.line_file.clone());
@@ -833,7 +833,7 @@ impl Runtime {
     pub(super) fn maybe_verify_in_fact_finite_set_extremum(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let source_set = match &in_fact.element {
             Obj::FiniteSetMax(extremum) => extremum.set.as_ref(),
@@ -901,7 +901,7 @@ impl Runtime {
         source_set: &Obj,
         standard_set: &Obj,
         line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         match source_set {
             Obj::ListSet(list_set) => {
@@ -974,7 +974,7 @@ impl Runtime {
         right: &Obj,
         standard_set: &Obj,
         line_file: &LineFile,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let Some(mut left_results) = self.verify_finite_set_extremum_source_in_standard_set(
             left,

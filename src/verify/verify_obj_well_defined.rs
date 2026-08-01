@@ -21,7 +21,7 @@ impl Runtime {
     pub fn verify_obj_well_defined_and_store_cache(
         &mut self,
         obj: &Obj,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let verify_state = verify_state.without_known_forall_for_equality();
         let verify_state = &verify_state;
@@ -181,7 +181,7 @@ impl Runtime {
     pub fn verify_param_type_well_defined(
         &mut self,
         param_type: &ParamType,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         match param_type {
             ParamType::Set(_) => Ok(()),

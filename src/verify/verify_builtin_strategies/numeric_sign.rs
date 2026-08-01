@@ -205,6 +205,98 @@ impl Runtime {
                 .into(),
             ]);
         }
+        // Subtracting the same real term preserves weak order.
+        // Example: from `a <= b`, prove `a - c <= b - c`.
+        if let (Obj::Sub(left), Obj::Sub(right)) = (&fact.left, &fact.right) {
+            if left.right.to_string() == right.right.to_string() {
+                alternatives.push(vec![LessEqualFact::new(
+                    left.left.as_ref().clone(),
+                    right.left.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into()]);
+            }
+            // With a shared minuend, subtraction reverses weak order in the subtractor.
+            // Example: from `c <= d`, prove `a - d <= a - c`.
+            if left.left.to_string() == right.left.to_string() {
+                alternatives.push(vec![LessEqualFact::new(
+                    right.right.as_ref().clone(),
+                    left.right.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into()]);
+            }
+        }
+        // Division by a shared positive term preserves weak order; division by a
+        // shared negative term reverses it. Example: `a <= b, 0 < c => a/c <= b/c`.
+        if let (Obj::Div(left), Obj::Div(right)) = (&fact.left, &fact.right) {
+            if left.right.to_string() == right.right.to_string() {
+                alternatives.push(vec![
+                    LessFact::new(zero.clone(), left.right.as_ref().clone(), lf.clone()).into(),
+                    LessEqualFact::new(
+                        left.left.as_ref().clone(),
+                        right.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                ]);
+                alternatives.push(vec![
+                    LessFact::new(left.right.as_ref().clone(), zero.clone(), lf.clone()).into(),
+                    LessEqualFact::new(
+                        right.left.as_ref().clone(),
+                        left.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                ]);
+            }
+        }
+        // Positive-integer powers preserve weak order on nonnegative bases.
+        // This is a strategy, rather than a direct-rule chain, so a normalized
+        // base comparison such as `2 <= n` may use one fresh direct rule.
+        // Example: from `n >= 1 + 1`, prove `n^2 >= 2^2`.
+        if let (Obj::Pow(left), Obj::Pow(right)) = (&fact.left, &fact.right) {
+            if left.exponent.to_string() == right.exponent.to_string() {
+                alternatives.push(vec![
+                    InFact::new(
+                        left.exponent.as_ref().clone(),
+                        StandardSet::NPos.into(),
+                        lf.clone(),
+                    )
+                    .into(),
+                    LessEqualFact::new(zero.clone(), left.base.as_ref().clone(), lf.clone()).into(),
+                    LessEqualFact::new(
+                        left.base.as_ref().clone(),
+                        right.base.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                ]);
+            }
+        }
+        // Absolute-value order is equivalent to square order on real operands.
+        // This belongs to the structural strategy layer: the outer `abs`
+        // constructors disappear, and each generated child receives one fresh
+        // direct-rule attempt. Example: from `x^2 <= y^2`, prove
+        // `abs(x) <= abs(y)`.
+        if let (Obj::Abs(left), Obj::Abs(right)) = (&fact.left, &fact.right) {
+            let two: Obj = Number::new("2".to_string()).into();
+            alternatives.push(vec![
+                InFact::new(left.arg.as_ref().clone(), StandardSet::R.into(), lf.clone()).into(),
+                InFact::new(
+                    right.arg.as_ref().clone(),
+                    StandardSet::R.into(),
+                    lf.clone(),
+                )
+                .into(),
+                LessEqualFact::new(
+                    Pow::new(left.arg.as_ref().clone(), two.clone()).into(),
+                    Pow::new(right.arg.as_ref().clone(), two).into(),
+                    lf.clone(),
+                )
+                .into(),
+            ]);
+        }
         if let Obj::Add(add) = &fact.right {
             alternatives.push(vec![
                 LessEqualFact::new(fact.left.clone(), add.left.as_ref().clone(), lf.clone()).into(),
@@ -277,6 +369,31 @@ impl Runtime {
                 }
             }
         }
+        // Componentwise multiplication is a constructor-removing strategy on
+        // nonnegative lower factors. If `0 <= a <= c` and `0 <= b <= d`, then
+        // `a*b <= c*d`. Try both deterministic pairings because multiplication
+        // may be written in either factor order.
+        if let (Obj::Mul(lower), Obj::Mul(upper)) = (&fact.left, &fact.right) {
+            for (upper_left, upper_right) in [
+                (upper.left.as_ref(), upper.right.as_ref()),
+                (upper.right.as_ref(), upper.left.as_ref()),
+            ] {
+                alternatives.push(vec![
+                    LessEqualFact::new(zero.clone(), lower.left.as_ref().clone(), lf.clone())
+                        .into(),
+                    LessEqualFact::new(zero.clone(), lower.right.as_ref().clone(), lf.clone())
+                        .into(),
+                    LessEqualFact::new(lower.left.as_ref().clone(), upper_left.clone(), lf.clone())
+                        .into(),
+                    LessEqualFact::new(
+                        lower.right.as_ref().clone(),
+                        upper_right.clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                ]);
+            }
+        }
         self.push_common_nonnegative_factor_alternatives(
             &fact.left,
             &fact.right,
@@ -342,6 +459,92 @@ impl Runtime {
                 };
                 alternatives.push(vec![left_order, right_order]);
             }
+        }
+        // Subtracting the same real term preserves strict order.
+        // Example: from `a < b`, prove `a - c < b - c`.
+        if let (Obj::Sub(left), Obj::Sub(right)) = (&fact.left, &fact.right) {
+            if left.right.to_string() == right.right.to_string() {
+                alternatives.push(vec![LessFact::new(
+                    left.left.as_ref().clone(),
+                    right.left.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into()]);
+            }
+            // With a shared minuend, subtraction reverses strict order in the subtractor.
+            // Example: from `c < d`, prove `a - d < a - c`.
+            if left.left.to_string() == right.left.to_string() {
+                alternatives.push(vec![LessFact::new(
+                    right.right.as_ref().clone(),
+                    left.right.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into()]);
+            }
+        }
+        // Division by a shared positive term preserves strict order; division by a
+        // shared negative term reverses it. Example: `a < b, 0 < c => a/c < b/c`.
+        if let (Obj::Div(left), Obj::Div(right)) = (&fact.left, &fact.right) {
+            if left.right.to_string() == right.right.to_string() {
+                alternatives.push(vec![
+                    LessFact::new(zero.clone(), left.right.as_ref().clone(), lf.clone()).into(),
+                    LessFact::new(
+                        left.left.as_ref().clone(),
+                        right.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                ]);
+                alternatives.push(vec![
+                    LessFact::new(left.right.as_ref().clone(), zero.clone(), lf.clone()).into(),
+                    LessFact::new(
+                        right.left.as_ref().clone(),
+                        left.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                ]);
+            }
+        }
+        // Positive-integer powers preserve strict order on nonnegative bases.
+        if let (Obj::Pow(left), Obj::Pow(right)) = (&fact.left, &fact.right) {
+            if left.exponent.to_string() == right.exponent.to_string() {
+                alternatives.push(vec![
+                    InFact::new(
+                        left.exponent.as_ref().clone(),
+                        StandardSet::NPos.into(),
+                        lf.clone(),
+                    )
+                    .into(),
+                    LessEqualFact::new(zero.clone(), left.base.as_ref().clone(), lf.clone()).into(),
+                    LessFact::new(
+                        left.base.as_ref().clone(),
+                        right.base.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                ]);
+            }
+        }
+        // Strict absolute-value order uses the same constructor-removing square
+        // comparison as the weak form.
+        if let (Obj::Abs(left), Obj::Abs(right)) = (&fact.left, &fact.right) {
+            let two: Obj = Number::new("2".to_string()).into();
+            alternatives.push(vec![
+                InFact::new(left.arg.as_ref().clone(), StandardSet::R.into(), lf.clone()).into(),
+                InFact::new(
+                    right.arg.as_ref().clone(),
+                    StandardSet::R.into(),
+                    lf.clone(),
+                )
+                .into(),
+                LessFact::new(
+                    Pow::new(left.arg.as_ref().clone(), two.clone()).into(),
+                    Pow::new(right.arg.as_ref().clone(), two).into(),
+                    lf.clone(),
+                )
+                .into(),
+            ]);
         }
         if let Obj::Add(add) = &fact.right {
             alternatives.push(vec![

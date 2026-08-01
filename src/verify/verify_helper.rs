@@ -5,7 +5,7 @@ impl Runtime {
     pub(crate) fn verify_non_equational_known_then_builtin_rules_only(
         &mut self,
         atomic_fact: &AtomicFact,
-        _verify_state: &VerifyState,
+        _verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(atomic_fact)
     }
@@ -54,7 +54,7 @@ impl Runtime {
                     .into();
                     self.verify_fact_well_defined_and_store_and_infer(
                         ret_nonempty,
-                        &VerifyState::new(2, false),
+                        &UseContextVerifyState::new(2, false),
                     )?;
                     Ok(())
                 }
@@ -66,15 +66,17 @@ impl Runtime {
                     .into();
                     self.verify_fact_well_defined_and_store_and_infer(
                         ret_nonempty,
-                        &VerifyState::new(2, false),
+                        &UseContextVerifyState::new(2, false),
                     )?;
                     Ok(())
                 }
                 _ => {
                     let nonempty_fact =
                         IsNonemptySetFact::new(param_set.clone(), default_line_file());
-                    let ret =
-                        self.verify_fact_full(&nonempty_fact.into(), &VerifyState::new(0, false))?;
+                    let ret = self.verify_fact_full(
+                        &nonempty_fact.into(),
+                        &UseContextVerifyState::new(0, false),
+                    )?;
                     if ret.is_unknown() {
                         return Err(RuntimeError::from(VerifyRuntimeError(
                             RuntimeErrorStruct::new_with_just_msg(
@@ -97,7 +99,7 @@ impl Runtime {
     pub(crate) fn verify_atomic_fact_restricted_known_builtin(
         &mut self,
         atomic_fact: &AtomicFact,
-        _verify_state: &VerifyState,
+        _verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&atomic_fact.clone().into())
@@ -110,7 +112,7 @@ impl Runtime {
     pub(crate) fn verify_atomic_fact_by_known_atomic_or_builtin_only(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
     }
@@ -118,7 +120,7 @@ impl Runtime {
     pub(crate) fn verify_atomic_fact_known_then_builtin_rules_only(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
     }
@@ -126,7 +128,7 @@ impl Runtime {
     pub(crate) fn verify_or_and_chain_atomic_fact_restricted_known_builtin(
         &mut self,
         fact: &OrAndChainAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
@@ -147,7 +149,7 @@ impl Runtime {
     pub(crate) fn verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
         &mut self,
         fact: &OrAndChainAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_or_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)
     }
@@ -155,7 +157,7 @@ impl Runtime {
     pub(crate) fn verify_and_chain_atomic_fact_restricted_known_builtin(
         &mut self,
         fact: &AndChainAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {
@@ -173,7 +175,7 @@ impl Runtime {
     pub(crate) fn verify_and_chain_atomic_fact_known_then_builtin_rules_only(
         &mut self,
         fact: &AndChainAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)
     }
@@ -181,7 +183,7 @@ impl Runtime {
     pub(crate) fn verify_and_fact_known_then_builtin_rules_only(
         &mut self,
         and_fact: &AndFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let mut steps = Vec::with_capacity(and_fact.facts.len());
         for atomic_fact in and_fact.facts.iter() {
@@ -205,7 +207,7 @@ impl Runtime {
     pub(crate) fn verify_chain_fact_known_then_builtin_rules_only(
         &mut self,
         chain_fact: &ChainFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let facts = chain_fact.facts()?;
         let and_fact = AndFact::new(facts, chain_fact.line_file.clone());
@@ -215,7 +217,7 @@ impl Runtime {
     pub(crate) fn verify_or_fact_known_then_builtin_rules_only(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&or_fact.clone().into())
@@ -248,7 +250,7 @@ impl Runtime {
         known_forall: &KnownForallFactParamsAndDom,
         arg_map: &HashMap<String, Obj>,
         goal: Fact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<
         Option<(
             Vec<KnownForallInstantiationItem>,
@@ -318,7 +320,7 @@ impl Runtime {
         known_forall: &KnownForallFactParamsAndDom,
         args_for_params: &Vec<Obj>,
         goal: &Fact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         requirements: &mut Vec<KnownForallRequirementResult>,
     ) -> Result<bool, RuntimeError> {
         let instantiated_types = self
@@ -396,7 +398,7 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
-        _verify_state: &VerifyState,
+        _verify_state: &UseContextVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut seen = Vec::new();
         let mut steps = Vec::new();

@@ -19,7 +19,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             let witness_stmt: Stmt = stmt.clone().into();
-            let verify_state_for_well_defined = VerifyState::new(0, false);
+            let verify_state_for_well_defined = UseContextVerifyState::new(0, false);
 
             let expected_param_count = stmt
                 .exist_fact_in_witness
@@ -151,7 +151,7 @@ impl Runtime {
                 None,
             )?;
 
-            let verify_state_for_proof_check = VerifyState::new(0, false);
+            let verify_state_for_proof_check = UseContextVerifyState::new(0, false);
             for internal_fact_template in instantiated_exist_fact.facts().iter() {
                 let internal_fact = internal_fact_template.clone().to_fact();
                 let verification_result = rt
@@ -256,7 +256,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             let witness_stmt: Stmt = stmt.clone().into();
-            let verify_state_for_well_defined = VerifyState::new(0, false);
+            let verify_state_for_well_defined = UseContextVerifyState::new(0, false);
 
             if let Err(well_defined_error) = rt
                 .verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state_for_well_defined)
@@ -324,7 +324,7 @@ impl Runtime {
 
             let membership_fact =
                 InFact::new(stmt.obj.clone(), stmt.set.clone(), stmt.line_file.clone()).into();
-            let verify_state_for_proof_check = VerifyState::new(0, false);
+            let verify_state_for_proof_check = UseContextVerifyState::new(0, false);
             let membership_result = rt
                 .verify_fact_return_err_if_not_true(&membership_fact, &verify_state_for_proof_check)
                 .map_err(|verify_error| {

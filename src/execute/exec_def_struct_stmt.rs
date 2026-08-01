@@ -15,7 +15,7 @@ impl Runtime {
         &mut self,
         def_struct_stmt: &DefStructStmt,
     ) -> Result<(), RuntimeError> {
-        let verify_state = VerifyState::new(0, false);
+        let verify_state = UseContextVerifyState::new(0, false);
 
         if let Some((param_def_with_type, dom_facts)) = &def_struct_stmt.param_def_with_dom {
             self.define_params_with_type(param_def_with_type, false, ParamObjType::DefHeader)?;

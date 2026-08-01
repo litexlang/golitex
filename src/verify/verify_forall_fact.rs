@@ -8,7 +8,7 @@ impl Runtime {
     pub(crate) fn forall_assume_params_and_dom_in_current_env(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<InferResult, RuntimeError> {
         let mut assumption_infer_result = self
             .define_params_with_type(
@@ -59,7 +59,7 @@ impl Runtime {
     pub(crate) fn forall_verify_then_facts_in_current_env(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         infer_result: &mut InferResult,
         assumption_infers: InferResult,
         by_cases_case_label: Option<&str>,
@@ -163,7 +163,7 @@ impl Runtime {
     pub fn verify_forall_fact(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&forall_fact.clone().into())

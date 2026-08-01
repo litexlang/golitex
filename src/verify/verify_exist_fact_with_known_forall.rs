@@ -9,7 +9,7 @@ impl Runtime {
     pub fn verify_exist_fact_with_known_forall(
         &mut self,
         exist_fact: &ExistFactEnum,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(fact_verified) =
             self.try_verify_exist_fact_with_known_forall_facts_in_envs(exist_fact, verify_state)?
@@ -95,7 +95,7 @@ impl Runtime {
     fn try_verify_exist_fact_with_known_forall_facts_in_envs(
         &mut self,
         exist_fact: &ExistFactEnum,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
@@ -139,7 +139,7 @@ impl Runtime {
         forall_arg_map: HashMap<String, Obj>,
         exist_arg_map: HashMap<String, Obj>,
         given_exist_fact: &ExistFactEnum,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
         if !exist_fact_in_known_forall.can_be_used_to_verify_goal(given_exist_fact) {
             return Ok(None);

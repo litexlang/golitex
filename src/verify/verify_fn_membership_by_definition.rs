@@ -18,7 +18,7 @@ impl Runtime {
         element: &Obj,
         expected_fn_set: &FnSet,
         in_fact: &InFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(flow) = self.build_fn_membership_proof_flow(element, expected_fn_set, in_fact)?
         else {
@@ -173,7 +173,7 @@ impl Runtime {
     fn verify_fn_membership_application_well_defined(
         &mut self,
         flow: &FnMembershipProofFlow,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         let stub = ForallFact::new(
             flow.forall_params.clone(),

@@ -7,7 +7,7 @@ impl Runtime {
     pub(crate) fn verify_builtin_function_property_by_definition(
         &mut self,
         fact: &NormalAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(definition_facts) = self.builtin_function_property_definition_facts(fact)? else {
             return Ok(None);
@@ -83,7 +83,7 @@ impl Runtime {
     pub(crate) fn verify_builtin_function_property_arg_types(
         &mut self,
         fact: &AtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((predicate, args)) = builtin_function_property_name_and_args(fact) else {
             return Ok(None);

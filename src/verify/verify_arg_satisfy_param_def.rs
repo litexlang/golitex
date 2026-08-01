@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         obj: Obj,
         param_type: &ParamType,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match param_type {
             ParamType::Obj(set_obj) => {
@@ -59,7 +59,7 @@ impl Runtime {
         &mut self,
         param_defs: &ParamDefWithType,
         args: &Vec<Obj>,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         to_inst_param_type: ParamObjType,
     ) -> Result<StmtResult, RuntimeError> {
         let instantiated_types =

@@ -9,19 +9,27 @@ impl Runtime {
         &mut self,
         goal: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
+        let leaf_result = self.verify_builtin_rule_leaf(goal)?;
+        if leaf_result.is_true() {
+            return Ok(leaf_result);
+        }
+
+        let builtin_state = UseBuiltinRuleVerifyState::new();
+        self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)
+    }
+
+    pub(crate) fn verify_builtin_rule_leaf(
+        &mut self,
+        goal: &AtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
         let known_result = self.verify_known_non_forall_atomic_fact(goal)?;
         if known_result.is_true() {
             return Ok(known_result);
         }
-
-        if let Some(computed_result) = self.verify_atomic_fact_by_builtin_computation(goal) {
-            if computed_result.is_true() {
-                return Ok(computed_result);
-            }
-        }
-
-        let builtin_state = BuiltinRuleVerifyState::new();
-        self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)
+        Ok(self
+            .verify_atomic_fact_by_builtin_computation(goal)
+            .filter(StmtResult::is_true)
+            .unwrap_or_else(|| StmtUnknown::new().into()))
     }
 
     pub(crate) fn verify_known_non_forall_atomic_fact(
@@ -41,16 +49,11 @@ impl Runtime {
     pub(crate) fn verify_builtin_rule_premise(
         &mut self,
         child: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let known_result = self.verify_known_non_forall_atomic_fact(child)?;
-        if known_result.is_true() {
-            return Ok(known_result);
-        }
-        if let Some(computed_result) = self.verify_atomic_fact_by_builtin_computation(child) {
-            if computed_result.is_true() {
-                return Ok(computed_result);
-            }
+        let leaf_result = self.verify_builtin_rule_leaf(child)?;
+        if leaf_result.is_true() {
+            return Ok(leaf_result);
         }
         if !builtin_state.can_apply_builtin_rule() {
             return Ok(StmtUnknown::new().into());
@@ -119,7 +122,7 @@ impl Runtime {
     pub(crate) fn verify_builtin_rule_premises(
         &mut self,
         children: &[AtomicFact],
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut results = Vec::with_capacity(children.len());
         for child in children {
@@ -135,7 +138,7 @@ impl Runtime {
     fn verify_atomic_fact_with_builtin_rules_inner(
         &mut self,
         goal: &AtomicFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match goal {
             AtomicFact::EqualFact(fact) => self.verify_equality_by_builtin_rules(
@@ -153,13 +156,13 @@ impl Runtime {
     fn verify_atomic_fact_with_one_builtin_rule(
         &mut self,
         goal: &AtomicFact,
-        builtin_state: &BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if !builtin_state.can_apply_builtin_rule() {
             return Ok(StmtUnknown::new().into());
         }
-        let mut child_state = builtin_state.after_applying_builtin_rule();
-        self.verify_atomic_fact_with_builtin_rules_inner(goal, &mut child_state)
+        let child_state = builtin_state.after_applying_builtin_rule();
+        self.verify_atomic_fact_with_builtin_rules_inner(goal, &child_state)
     }
 }
 
@@ -171,7 +174,7 @@ mod tests {
     #[test]
     fn raw_builtin_dispatch_has_only_the_single_rule_entry_point() {
         let source = include_str!("verify_builtin_rule.rs");
-        let full_verify_state_constructor = ["VerifyState", "::new("].concat();
+        let full_verify_state_constructor = ["UseContextVerifyState", "::new("].concat();
         let raw_dispatch = ["verify_atomic_fact_with_builtin_rules_", "inner("].concat();
         let creates_full_verify_state =
             source

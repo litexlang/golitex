@@ -293,7 +293,8 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let is_cart_fact: AtomicFact =
             IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();
-        let is_cart_result = self.verify_atomic_fact(&is_cart_fact, &VerifyState::new(0, false))?;
+        let is_cart_result =
+            self.verify_atomic_fact(&is_cart_fact, &UseContextVerifyState::new(0, false))?;
         if !is_cart_result.is_true() {
             return Ok(InferResult::new());
         }
@@ -610,8 +611,10 @@ impl Runtime {
                 if self.infer_rule_firing_cached(&firing_key) {
                     return Ok(InferResult::new());
                 }
-                let (def, header_map) =
-                    self.struct_header_param_to_arg_map(struct_obj, &VerifyState::new(0, false))?;
+                let (def, header_map) = self.struct_header_param_to_arg_map(
+                    struct_obj,
+                    &UseContextVerifyState::new(0, false),
+                )?;
                 let mut field_types = Vec::with_capacity(def.fields.len());
                 for (_, field_type) in def.fields.iter() {
                     field_types.push(self.inst_obj(
@@ -931,9 +934,10 @@ impl Runtime {
                 // If the set side is a one-layer user-defined set builder, unfold it
                 // for inference too. Example: `(3,4) $in circle(5)` infers
                 // `(3,4) $in cart(R,R)` and the instantiated circle equation.
-                if let Some(Obj::SetBuilder(set_builder)) =
-                    self.unfold_known_fn_application_once(set_obj, &VerifyState::new(0, false))?
-                {
+                if let Some(Obj::SetBuilder(set_builder)) = self.unfold_known_fn_application_once(
+                    set_obj,
+                    &UseContextVerifyState::new(0, false),
+                )? {
                     return self
                         .infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder);
                 }

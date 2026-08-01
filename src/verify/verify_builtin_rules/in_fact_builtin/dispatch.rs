@@ -4,7 +4,7 @@ impl Runtime {
     pub fn verify_not_in_fact_with_builtin_rules(
         &mut self,
         not_in_fact: &NotInFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Obj::StandardSet(standard_set) = &not_in_fact.set {
             if matches!(standard_set, StandardSet::Z) {
@@ -99,7 +99,7 @@ impl Runtime {
     pub fn verify_in_fact_with_builtin_rules(
         &mut self,
         in_fact: &InFact,
-        builtin_state: &mut BuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Obj::StandardSet(standard_set) = &in_fact.set {
             if !matches!(&in_fact.element, Obj::Number(_)) {

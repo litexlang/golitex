@@ -10,7 +10,7 @@ impl Runtime {
     pub fn verify_fact_full(
         &mut self,
         fact: &Fact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),
@@ -29,7 +29,7 @@ impl Runtime {
     pub fn verify_fact_return_err_if_not_true(
         &mut self,
         fact: &Fact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let result = self.verify_fact_full(fact, verify_state)?;
         let result = self.structured_unknown_result_for_failed_fact(fact, verify_state, result)?;
@@ -64,7 +64,7 @@ impl Runtime {
     pub(crate) fn structured_unknown_result_for_failed_fact(
         &mut self,
         fact: &Fact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
         result: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         if !result.is_unknown() || result.as_fact_unknown().is_some() {
@@ -120,7 +120,7 @@ impl Runtime {
     pub fn verify_exist_or_and_chain_atomic_fact(
         &mut self,
         exist_or_and_chain_atomic_fact: &ExistOrAndChainAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match exist_or_and_chain_atomic_fact {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
@@ -144,7 +144,7 @@ impl Runtime {
     pub fn verify_or_and_chain_atomic_fact(
         &mut self,
         or_and_chain_atomic_fact: &OrAndChainAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match or_and_chain_atomic_fact {
             OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
@@ -161,7 +161,7 @@ impl Runtime {
     pub fn verify_and_chain_atomic_fact(
         &mut self,
         and_chain_atomic_fact: &AndChainAtomicFact,
-        verify_state: &VerifyState,
+        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match and_chain_atomic_fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {
