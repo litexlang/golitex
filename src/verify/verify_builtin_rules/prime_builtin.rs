@@ -1,36 +1,31 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub(crate) fn verify_prime_fact_by_computation(
-        &self,
-        atomic_fact: &AtomicFact,
-    ) -> Option<StmtResult> {
+    pub(crate) fn verify_prime_fact_by_computation(&self, atomic_fact: &AtomicFact) -> StmtResult {
         let (fact_is_positive, predicate, args) = match atomic_fact {
             AtomicFact::NormalAtomicFact(f) => (true, &f.predicate, &f.body),
             AtomicFact::NotNormalAtomicFact(f) => (false, &f.predicate, &f.body),
-            _ => return None,
+            _ => return StmtUnknown::new().into(),
         };
         if !matches!(predicate, AtomicName::WithoutMod(name) if name == PRIME) || args.len() != 1 {
-            return None;
+            return StmtUnknown::new().into();
         }
 
         let Obj::Number(number) = self.resolve_obj(&args[0]) else {
-            return Some(StmtUnknown::new().into());
+            return StmtUnknown::new().into();
         };
         let Ok(value) = number.normalized_value.parse::<u64>() else {
-            return Some(StmtUnknown::new().into());
+            return StmtUnknown::new().into();
         };
         if is_prime_u64(value) != fact_is_positive {
-            return Some(StmtUnknown::new().into());
+            return StmtUnknown::new().into();
         }
-        Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                atomic_fact.clone().into(),
-                "deterministic primality computation for u64".to_string(),
-                Vec::new(),
-            )
-            .into(),
+        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            atomic_fact.clone().into(),
+            "deterministic primality computation for u64".to_string(),
+            Vec::new(),
         )
+        .into()
     }
 
     pub(crate) fn builtin_prime_definition_facts(

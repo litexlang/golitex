@@ -79,7 +79,6 @@ prop is_unit_distance_from_two(t R):
     abs(t - 2) = 1
 
 by def $is_unit_distance_from_two(3)
-$is_unit_distance_from_two(3)
 ```
 
 ### 5. Existential Facts Use Witnesses
@@ -184,7 +183,6 @@ trust forall X s:
     $is_nonempty_set(X)
 
 by thm general_cart_nonempty_by_choice_from_family(general_cart(I, s, g))
-$is_nonempty_set(general_cart(I, s, g))
 general_cart(I, s, g) = {f fn(t I)big_union(s): forall! alpha I => {f(alpha) $in g(alpha)}}
 
 have c general_cart(I, s, g)
@@ -408,7 +406,6 @@ sketch:
             2 % n != 0
 
     by def $Prime(2)
-    $Prime(2)
 
     claim:
         ? forall n N+:
@@ -418,10 +415,8 @@ sketch:
         1^n = 1
         1^(1^n) + 1 = 1^1 + 1 = 2
         by def $Prime(1^(1^n) + 1)
-        $Prime(1^(1^n) + 1)
 
     by def $superpowered(1)
-    $superpowered(1)
 
     by contra not $superpowered(2):
         $Prime(2^(2^5) + 1) # by $superpowered(2)
@@ -853,9 +848,7 @@ have fn circle(r R+) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^
 have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
 
 by thm defined_set_member((3, 4), circle(5))
-(3, 4) $in circle(5)
 by thm defined_set_member((2, 2), line(1, -1, 0))
-(2, 2) $in line(1, -1, 0)
 
 claim:
     ? forall a, b R:
@@ -863,7 +856,6 @@ claim:
         =>:
             (0, 0) $in line(a, b, 0)
     by thm defined_set_member((0, 0), line(a, b, 0))
-    (0, 0) $in line(a, b, 0)
 
 forall p cart(R, R):
     p $in circle(5)
@@ -1222,12 +1214,10 @@ claim:
         x = 8 * d
         8 * d = 2 * (4 * d)
     by def $can_be_divided_by_2(x)
-    $can_be_divided_by_2(x)
 
 witness exist d Z st {8 = 8 * d} from 1:
     8 = 8 * 1
 by def $can_be_divided_by_8(8)
-$can_be_divided_by_8(8)
 $can_be_divided_by_2(8)
 ```
 
@@ -1358,10 +1348,8 @@ thm thm_stored_forall:
             $thm_match_q(x)
     x = 1
     by def $thm_match_q(x)
-    $thm_match_q(x)
 
 by def $thm_match_p(1)
-$thm_match_p(1)
 $thm_match_q(1)
 
 ## The explicit theorem call remains available when theorem-instantiation
@@ -1618,8 +1606,6 @@ claim:
             B $proper_superset A
     by def A $proper_subset B
     by def B $proper_superset A
-    A $proper_subset B
-    B $proper_superset A
 
 forall A, B set:
     A $proper_subset B
@@ -1633,7 +1619,6 @@ claim:
         =>:
             A $proper_subset c
     by def A $proper_subset c
-    A $proper_subset c
 
 claim:
     ? forall A, B set:
@@ -2134,9 +2119,10 @@ forall x, a, b R:
     x >= 0
     a >= 0
     b > 0
-    sqrt(b) != 0
     x = a / b
     =>:
+        sqrt(b) > 0
+        sqrt(b) != 0
         sqrt(x) = sqrt(a) / sqrt(b)
 
 forall a, b R:
@@ -3031,7 +3017,6 @@ claim:
         =>:
             sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
     by thm sum_le_sum_from_pointwise(sum(1, 3, fn(x Z) R {f(x)}), sum(1, 3, fn(x Z) R {g(x)}))
-    sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
 
 ## Finite-sum triangle inequality.
 forall f fn(x Z) R:
@@ -3070,7 +3055,6 @@ thm finite_set_sum_pointwise_substitution_example:
         =>:
             finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
     by thm finite_set_sum_substitution(finite_set_sum(X, fn(x X) Z {x + 0}), finite_set_sum(X, fn(x X) Z {x}))
-    finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
 ```
 
 ```litex
@@ -3080,7 +3064,6 @@ thm finite_set_sum_substitution_example:
         =>:
             finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
     by thm finite_set_sum_substitution(finite_set_sum(X, f), finite_set_sum(Y, fn(y Y) R {f(g(y))}))
-    finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
 
 thm finite_set_sum_range_bridge_example:
     ? forall a fn(i1 Z) R, m, n Z:
@@ -3113,7 +3096,6 @@ thm finite_set_sum_monotone_example:
         =>:
             finite_set_sum(X, f) <= finite_set_sum(X, g)
     by thm finite_set_sum_le_from_pointwise(finite_set_sum(X, f), finite_set_sum(X, g))
-    finite_set_sum(X, f) <= finite_set_sum(X, g)
 
 thm finite_set_sum_triangle_example:
     ? forall X finite_set, f fn(x X) R:
@@ -3143,7 +3125,6 @@ thm finite_set_sum_enumeration_well_defined:
             \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
     \self_finite_set_sum<X, f, g> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))})
     by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}), sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))}))
-    sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}) = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))})
     \self_finite_set_sum<X, f, h> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))})
     \self_finite_set_sum<X, f, g> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}) = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))}) = \self_finite_set_sum<X, f, h>
 
@@ -3170,7 +3151,6 @@ thm finite_set_product_pointwise_substitution_example:
         =>:
             finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
     by def $fn_eq(fn(x X) Z {x + 0}, fn(x X) Z {x})
-    $fn_eq(fn(x X) Z {x + 0}, fn(x X) Z {x})
     finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
 
 ## Reindex: same summand, parallel shift of both bounds, pointwise on the (rhs) range.
@@ -3256,11 +3236,9 @@ builder is best read as ordinary set-comprehension notation.
 1 $in {1, 2, 3}
 $is_finite_set({1, 2})
 by thm set_builder_member(1, {x R: x > 0})
-1 $in {x R: x > 0}
 
 have positive_reals set = {x R: x > 0}
 by thm defined_set_member(1, positive_reals)
-1 $in positive_reals
 ```
 
 #### 4. Set Operations
@@ -3321,7 +3299,6 @@ shift $in fn(x R) R
 shift(2) = 3
 fn(x R) R {x + 1}(2) = 3
 by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
-$fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
 #### 8. Function Images
@@ -3335,7 +3312,6 @@ have fn shift(x R) R = x + 1
 
 shift(2) $in fn_range(shift)
 by def fn_range(shift) $subset R
-fn_range(shift) $subset R
 
 have by preimage x from shift(2) $in fn_range(shift)
 x $in R
@@ -3347,7 +3323,6 @@ have a finite_seq(R, 3) = [1, 2, 3]
 
 fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
 by def fn_range(fn(x 1...3) R {a(x)}) $subset R
-fn_range(fn(x 1...3) R {a(x)}) $subset R
 $is_finite_set(fn_range(fn(x 1...3) R {a(x)}))
 
 have by preimage k from fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
@@ -3416,7 +3391,6 @@ struct Point:
     y R
 
 by thm struct_member((1, 2), &Point)
-(1, 2) $in &Point
 have p &Point = (1, 2)
 &Point{p}.x = p[1]
 &Point{p}.x = 1
@@ -3752,7 +3726,6 @@ prop is_one(x R):
     x = 1
 
 by def $is_one(1)
-$is_one(1)
 
 abstract_prop related(x, y)
 trust $related(1, 1)
@@ -3843,7 +3816,6 @@ prop is_unit_pair(x R, y R):
 
 1 = 1
 by def $is_unit_pair(1, 1)
-$is_unit_pair(1, 1)
 ```
 
 `by def` is single-line in this preview: it accepts neither `:` nor an
@@ -4029,7 +4001,6 @@ have origin &Point = (0, 0)
 &Point{origin}.x = 0
 &Point{origin}.y = 0
 by def $lies_on_x_axis(origin)
-$lies_on_x_axis(origin)
 ```
 
 ### 2. A Small Algebraic Interface
@@ -4051,10 +4022,8 @@ struct PointedOperation<s nonempty_set>:
         $HasAdditiveIdentity(s, op, identity)
 
 by def $HasAdditiveIdentity(Z, fn(x, y Z) Z {x + y}, 0)
-$HasAdditiveIdentity(Z, fn(x, y Z) Z {x + y}, 0)
 
 by thm struct_member((fn(x, y Z) Z {x + y}, 0), &PointedOperation<Z>)
-(fn(x, y Z) Z {x + y}, 0) $in &PointedOperation<Z>
 ```
 
 ### 3. A Template Family
@@ -4133,7 +4102,6 @@ claim:
         exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
     witness exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)} from {c power_set(s): $is_left_coset(s, g, h, c)}:
         by def $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
-        $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
         claim:
             ? forall q1, q2 power_set(power_set(s)):
                 $is_group_quotient_set(s, g, h, q1)

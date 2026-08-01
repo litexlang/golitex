@@ -58,7 +58,8 @@ max(7, -2) = 7
 lcm(12, -18) = 36
 lcm(0, 0) = 0
 have fn apply_integer_map(f fn(t R) Z, x R) Z = f(x)
-apply_integer_map(fn(y R) Z {floor(y)}, 3.75) = 3
+by thm fn_set_member(fn(y R) Z {floor(y)}, fn(t R) Z)
+apply_integer_map(fn(y R) Z {floor(y)}, 3.75) = (fn(y R) Z {floor(y)})(3.75) = floor(3.75) = 3
 eval floor(-8.125)
 eval ceil(8.125)
 eval min(4, -9)

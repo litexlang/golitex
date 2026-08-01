@@ -1273,19 +1273,35 @@ fn by_definition_verification_value(
     inside_results: &[StmtResult],
     output_style: OutputStyle,
 ) -> JsonValue {
-    let parameter_type_check = inside_results
-        .first()
-        .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
-        .unwrap_or_else(|| JsonValue::Object(vec![]));
+    let has_parameter_type_check =
+        inside_results.len() == verification.definition_clauses.len() + 1;
+    let parameter_type_check = if has_parameter_type_check {
+        inside_results
+            .first()
+            .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
+            .unwrap_or_else(|| JsonValue::Object(vec![]))
+    } else {
+        JsonValue::Object(vec![])
+    };
+    let clause_results = if has_parameter_type_check {
+        &inside_results[1..]
+    } else {
+        inside_results
+    };
     let definition_clause_checks = verification
         .definition_clauses
         .iter()
-        .zip(inside_results.iter().skip(1))
+        .zip(clause_results.iter())
         .enumerate()
         .map(|(index, (statement, result))| {
             statement_check_value(
                 runtime,
-                format!("definition clause {}", index + 1).as_str(),
+                if has_parameter_type_check {
+                    format!("definition clause {}", index + 1)
+                } else {
+                    format!("builtin definition check {}", index + 1)
+                }
+                .as_str(),
                 statement,
                 result,
                 output_style,

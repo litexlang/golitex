@@ -26,12 +26,6 @@ impl Runtime {
             return Ok(result);
         }
 
-        if let Some(result) =
-            self.verify_resolved_numeric_not_equal_without_builtin_recursion(not_equal_fact)
-        {
-            return Ok(result);
-        }
-
         if let (Obj::ListSet(left_ls), Obj::ListSet(right_ls)) = (left_obj, right_obj) {
             if left_ls.list.len() != right_ls.list.len() {
                 return Ok(

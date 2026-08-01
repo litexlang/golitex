@@ -169,23 +169,7 @@ impl Runtime {
             let mut results = Vec::with_capacity(required.len());
             let mut complete = true;
             for child in required {
-                let direct = self
-                    .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
-                        &child,
-                    )?;
-                let result = if direct.is_true() {
-                    direct
-                } else {
-                    match &child {
-                        AtomicFact::InFact(fact) => {
-                            self.verify_set_membership_with_builtin_strategy(fact)?
-                        }
-                        AtomicFact::SubsetFact(fact) => {
-                            self.verify_subset_with_builtin_strategy(fact)?
-                        }
-                        _ => StmtUnknown::new().into(),
-                    }
-                };
+                let result = self.verify_builtin_strategy_child(&child)?;
                 if !result.is_true() {
                     complete = false;
                     break;

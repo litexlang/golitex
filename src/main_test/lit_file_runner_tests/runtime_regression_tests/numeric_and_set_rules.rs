@@ -1,26 +1,21 @@
 use super::*;
 
 #[test]
-fn real_order_reflexivity_and_strict_irreflexivity_are_builtin_rules() {
+fn real_order_reflexivity_and_strict_irreflexivity_use_number_computation() {
     run_with_large_stack(
-        "real_order_reflexivity_and_strict_irreflexivity_are_builtin_rules",
+        "real_order_reflexivity_and_strict_irreflexivity_use_number_computation",
         || {
             let source_code = r#"
-claim:
-    ? forall a R:
-        not a < a
-    by contra:
-        ? not a < a
-        a < a
-        impossible a < a
-
 forall a R:
-    a <= a
+        not a < a
+        a <= a
+        not a > a
+        a >= a
 "#;
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "real_order_reflexivity_and_strict_irreflexivity_are_builtin_rules",
+                "real_order_reflexivity_and_strict_irreflexivity_use_number_computation",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -31,9 +26,13 @@ forall a R:
                 "real-order reflexivity and strict irreflexivity should verify:\n{run_output}"
             );
             assert!(
-                run_output.contains("order: strict real order is irreflexive")
-                    && run_output.contains("order: weak real order is reflexive"),
-                "the result should expose both real-order rules:\n{run_output}"
+                run_output.contains("number comparison"),
+                "all normalized comparison spellings should use the same computation route:\n{run_output}"
+            );
+            assert!(
+                !run_output.contains("order: strict real order is irreflexive")
+                    && !run_output.contains("order: weak real order is reflexive"),
+                "comparison spellings must not create separate provenance paths:\n{run_output}"
             );
         },
     );
@@ -293,8 +292,6 @@ forall x, n Z:
                 "order: transitivity through a shared ordered numeric middle term",
                 "finite_set_max: every member is at most the maximum",
                 "finite_set_min: the minimum is at most every member",
-                "finite_set_max: least upper bound of a concrete finite-set expression",
-                "finite_set_min: greatest lower bound of a concrete finite-set expression",
                 "finite_set_max: every member is at most a known-equal maximum",
                 "finite_set_min: a known-equal minimum is at most every member",
                 "integer successor: a < b gives a + 1 <= b",
@@ -309,6 +306,10 @@ forall x, n Z:
                     run_output
                 );
             }
+            assert!(
+                run_output.matches("\"type\": \"builtin strategy\"").count() >= 2,
+                "finite-set upper/lower bounds should use the structural strategy route:\n{run_output}"
+            );
         },
     );
 }
@@ -1406,6 +1407,12 @@ forall x Q_nz, n, m Z:
     x^n != 0
     =>:
         (x^n)^m = x^(n * m)
+
+forall m N:
+    (-1)^(m + 1) = (-1)^m * (-1)^1
+
+forall m Z:
+    (-1)^(m + 1) = (-1)^m * (-1)^1
 
 8^(1/3) = 2
 "#;

@@ -888,18 +888,10 @@ impl Runtime {
         if exact.is_true() {
             return Ok(exact);
         }
-        if matches!(
-            self.verify_number_comparison_builtin_rule(bound),
-            Some(true)
-        ) {
-            return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    bound.clone().into(),
-                    "pure numeric interval-bound comparison".to_string(),
-                    Vec::new(),
-                )
-                .into(),
-            );
+        let computed =
+            self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(bound)?;
+        if computed.is_true() {
+            return Ok(computed);
         }
 
         let stronger: Option<AtomicFact> = match bound {
@@ -1147,7 +1139,8 @@ impl Runtime {
 
             let in_z: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::Z.into(), line_file.clone()).into();
-            let direct_result = self.verify_builtin_rule_leaf(&in_z)?;
+            let direct_result =
+                self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(&in_z)?;
             if direct_result.is_true() {
                 steps.push(direct_result);
                 continue;

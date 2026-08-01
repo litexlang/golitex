@@ -136,20 +136,8 @@ impl Runtime {
                 not_in_fact.line_file.clone(),
             )
             .into();
-            let known_result = self.verify_builtin_rule_premise(&not_equal_fact, builtin_state)?;
-            let not_equal_fact_verify_result = if known_result.is_true() {
-                known_result
-            } else {
-                let AtomicFact::NotEqualFact(not_equal_fact) = &not_equal_fact else {
-                    unreachable!("the constructed list exclusion premise is not-equal")
-                };
-                let Some(result) = self
-                    .verify_resolved_numeric_not_equal_without_builtin_recursion(not_equal_fact)
-                else {
-                    return Ok((StmtUnknown::new()).into());
-                };
-                result
-            };
+            let not_equal_fact_verify_result =
+                self.verify_builtin_rule_premise(&not_equal_fact, builtin_state)?;
             if !not_equal_fact_verify_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }

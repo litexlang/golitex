@@ -73,6 +73,10 @@ by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1}), f
         );
         assert!(output.contains("\"theorem_source\": \"builtin_rule\""));
         assert!(output.contains("\"requirement_checks\":"));
+        assert!(output.contains("\"role\": \"function signature matches the target function set\""));
+        assert!(!output.contains("\"role\": \"requirement\""));
+        assert!(!output
+            .contains("\"statement\": \"function signature matches the target function set\""));
         assert!(output.contains("\"provenance\": \"axiom_of_choice\""));
     });
 }
@@ -201,7 +205,7 @@ fn finite_set_strategy_is_structural_and_has_no_legacy_node_budget() {
         let (_, succeeded, output) = run_source(&deeply_nested, "power_set_depth_96", true);
         assert!(
             succeeded,
-            "strictly smaller finite-set strategy goals should not use the removed 64-node budget:\n{output}"
+            "strictly smaller finite-set strategy goals should keep descending structurally:\n{output}"
         );
         assert!(output.contains("\"type\": \"builtin strategy\""));
     });
@@ -288,6 +292,21 @@ forall n Z:
     );
     assert!(output.contains("\"type\": \"builtin strategy\""));
     assert!(output.contains("set-membership strategy: constructor membership decomposition"));
+}
+
+#[test]
+fn tuple_cart_membership_composes_with_numeric_carrier_strategy() {
+    let source = r#"
+forall x, y, z Z:
+    (x, y - z * x) $in cart(Z, Z)
+"#;
+    let (_, succeeded, output) = run_source(source, "tuple_cart_numeric_carrier", true);
+    assert!(
+        succeeded,
+        "tuple/cart membership should delegate arithmetic coordinates to the numeric-carrier strategy:\n{output}"
+    );
+    assert!(output.contains("set-membership strategy: constructor membership decomposition"));
+    assert!(output.contains("numeric-carrier strategy: structural closure in Z"));
 }
 
 #[test]

@@ -418,7 +418,6 @@ Litex exposes sets, membership, and set operations directly.
 2 $in set_minus({1, 2}, {1})
 
 by def {x R: 0 <= x} $subset R
-{x R: 0 <= x} $subset R
 ```
 
 | Form | Meaning |
@@ -468,7 +467,6 @@ trust forall! A S => {$is_nonempty_set(A)}
 have g fn(alpha I) S
 
 by thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
-$is_nonempty_set(general_cart(I, S, g))
 general_cart(I, S, g) = {f fn(t I) big_union(S): forall! alpha I => {f(alpha) $in g(alpha)}}
 ```
 
@@ -645,7 +643,6 @@ struct Point:
 
 have p cart(R, R) = (1, 2)
 by thm struct_member(p, &Point)
-p $in &Point
 p.x = 1
 ```
 
@@ -682,7 +679,6 @@ template<S set>:
 
 trust $marked(1)
 by thm defined_set_member(1, \marked_elements<R>)
-1 $in \marked_elements<R>
 ```
 
 Conversely, known membership in `\marked_elements<R>` exposes `$marked(1)`.
@@ -981,9 +977,7 @@ $is_finite_set({1, 2})
 
 1 $in {1, 2}
 by def {1} $subset {1, 2}
-{1} $subset {1, 2}
 by def {1, 2} $superset {1}
-{1, 2} $superset {1}
 ```
 
 | Positive form | Negative form | Meaning |
@@ -1025,9 +1019,7 @@ have fn f(x R) R = x
 have fn g(x R) R = x
 
 by def $fn_eq_in(f, g, R)
-$fn_eq_in(f, g, R)
 by def $fn_eq(f, g)
-$fn_eq(f, g)
 ```
 
 Mapping predicates describe standard function properties:
@@ -1062,7 +1054,6 @@ prop is_zero(x R):
     x = 0
 
 by def $is_zero(0)
-$is_zero(0)
 ```
 
 ```text
@@ -1133,9 +1124,7 @@ struct Point:
     y R
 
 by def $is_origin(0, 0)
-$is_origin(0, 0)
 by thm struct_member((0, 0), &Point)
-(0, 0) $in &Point
 ```
 
 An abstract declaration adds no instances:
@@ -2064,8 +2053,9 @@ stores useful consequences after a statement has already been accepted.
 
 An automatic builtin rule is deliberately one layer deep. Its premises may use
 already-known non-`forall` atomic facts and deterministic computation, but may
-not invoke a second builtin rule. `BuiltinRuleVerifyState` records this rule
-depth; there is no shared node counter or same-family/cross-family exception.
+not invoke a second builtin rule. A dedicated rule state records whether that
+single direct-rule layer has already been used; there is no shared node counter
+or same-family/cross-family exception.
 
 Separate builtin strategies handle only strictly structural descent, such as
 arithmetic carrier trees, additive or multiplicative sign trees, finite and
@@ -2077,9 +2067,10 @@ definitions, user strategies, or the full verifier. Detailed output preserves
 the child proof tree and labels the outer route as `builtin strategy`.
 
 For an ordinary atomic goal the search order is: known non-`forall` fact,
-one-layer builtin rule, builtin strategy, known local `forall`, then a
+one-layer builtin rule, builtin strategy, an applicable known `forall`, then a
 user-defined strategy. Consequently a semantic chain such as `sqrt(t) != 0`
-from only `t > 0` is not automatic: establish `sqrt(t) > 0` explicitly first.
+from only `t > 0` is not automatic: prove or cite the intermediate mathematical
+fact `sqrt(t) > 0` first.
 
 Rules that genuinely need a universal, existential, or compound premise are
 called explicitly through reserved builtin theorem names. Their handlers use
@@ -2293,7 +2284,6 @@ such as `0 < x` into membership in a positive-number set.
 
 ```litex
 by def {1} $subset {1, 2}
-{1} $subset {1, 2}
 
 forall B set, A power_set(B), x A:
     x $in B
@@ -2307,11 +2297,8 @@ claim:
             B $proper_superset A
     by def A $proper_subset B
     by def B $proper_superset A
-    A $proper_subset B
-    B $proper_superset A
 
 by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
-$fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
 `$fn_eq` and `$fn_eq_in` do not have ordinary negated atomic forms. The
@@ -2466,7 +2453,6 @@ The second line is `unknown`; `R` contains positive, zero, and negative values.
 
 ```litex
 by def {1} $subset {1, 2}
-{1} $subset {1, 2}
 
 forall x {1}:
     x $in {1, 2}

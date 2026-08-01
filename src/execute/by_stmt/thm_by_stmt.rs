@@ -888,8 +888,12 @@ impl Runtime {
                     vec![result],
                 ));
             }
-            requirement_facts.push(requirement_role.clone());
-            requirement_roles.push("requirement".to_string());
+            let verified_requirement = result
+                .factual_success()
+                .map(|success| success.stmt.to_string())
+                .unwrap_or_else(|| conclusion.to_string());
+            requirement_facts.push(verified_requirement);
+            requirement_roles.push(requirement_role.clone());
             inside_results.push(result);
         }
 

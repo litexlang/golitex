@@ -140,7 +140,7 @@ atomic target
   -> match a known non-forall atomic fact, or
   -> try one builtin mathematical rule, or
   -> run a strictly structural builtin strategy, or
-  -> match the conclusion of a known local forall and verify its premises, or
+  -> match the conclusion of an applicable known forall and verify its premises, or
   -> run a user-defined strategy
   -> true or unknown
 ```

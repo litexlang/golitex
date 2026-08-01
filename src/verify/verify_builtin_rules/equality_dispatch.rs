@@ -110,9 +110,7 @@ impl Runtime {
             return Ok(result);
         }
 
-        // Prefer exact modulo shapes before generic equality rewrites.  The
-        // congruence rule has two recursive residue premises; handling it here
-        // keeps both branches within the one shared DFS budget.
+        // Prefer exact modulo shapes before generic equality rewrites.
         if let Some(done) = self.try_verify_mod_nested_same_modulus_absorption(
             left,
             right,
@@ -2437,15 +2435,19 @@ impl Runtime {
                 ),
                 _ => None,
             };
-            if empty_order.as_ref().is_some_and(|order| {
-                self.verify_number_comparison_builtin_rule(order) == Some(true)
-            }) {
-                sub = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    not_nonempty.clone().into(),
-                    "integer interval emptiness by number comparison".to_string(),
-                    Vec::new(),
-                )
-                .into();
+            if let Some(empty_order) = empty_order {
+                let comparison = self
+                    .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(
+                        &empty_order,
+                    )?;
+                if comparison.is_true() {
+                    sub = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        not_nonempty.clone().into(),
+                        "integer interval emptiness by number comparison".to_string(),
+                        vec![comparison],
+                    )
+                    .into();
+                }
             }
         }
         if !sub.is_true() {
