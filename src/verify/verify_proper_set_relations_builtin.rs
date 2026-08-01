@@ -54,7 +54,7 @@ pub(crate) fn positive_proper_set_relation_definition_facts(
             SubsetFact::new(left.clone(), right.clone(), fact.line_file.clone()).into()
         }
         PROPER_SUPERSET => {
-            SupersetFact::new(left.clone(), right.clone(), fact.line_file.clone()).into()
+            SubsetFact::new(right.clone(), left.clone(), fact.line_file.clone()).into()
         }
         _ => return None,
     };

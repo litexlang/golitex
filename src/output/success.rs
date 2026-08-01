@@ -1198,16 +1198,34 @@ fn by_theorem_verification_value(
     inside_results: &[StmtResult],
     output_style: OutputStyle,
 ) -> JsonValue {
-    let parameter_type_check = inside_results
-        .first()
-        .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
-        .unwrap_or_else(|| JsonValue::Object(vec![]));
-    let domain_checks = verification
-        .domain_facts
+    let is_litex_theorem = verification.theorem_source == "litex";
+    let parameter_type_check = if is_litex_theorem {
+        inside_results
+            .first()
+            .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
+            .unwrap_or_else(|| JsonValue::Object(vec![]))
+    } else {
+        JsonValue::Object(vec![])
+    };
+    let domain_checks = if is_litex_theorem {
+        verification
+            .domain_facts
+            .iter()
+            .zip(inside_results.iter().skip(1))
+            .map(|(statement, result)| {
+                statement_check_value(runtime, "domain", statement, result, output_style)
+            })
+            .collect::<Vec<_>>()
+    } else {
+        vec![]
+    };
+    let requirement_checks = verification
+        .requirement_roles
         .iter()
-        .zip(inside_results.iter().skip(1))
-        .map(|(statement, result)| {
-            statement_check_value(runtime, "domain", statement, result, output_style)
+        .zip(verification.domain_facts.iter())
+        .zip(inside_results.iter())
+        .map(|((role, statement), result)| {
+            statement_check_value(runtime, role, statement, result, output_style)
         })
         .collect::<Vec<_>>();
 
@@ -1221,14 +1239,30 @@ fn by_theorem_verification_value(
             JsonValue::JsonString(verification.theorem.clone()),
         ),
         (
+            "theorem_source".to_string(),
+            JsonValue::JsonString(verification.theorem_source.clone()),
+        ),
+        (
             "arguments".to_string(),
             JsonValue::Array(string_items(&verification.arguments)),
         ),
         ("parameter_type_check".to_string(), parameter_type_check),
         ("domain_checks".to_string(), JsonValue::Array(domain_checks)),
         (
+            "requirement_checks".to_string(),
+            JsonValue::Array(requirement_checks),
+        ),
+        (
             "stored_then_facts".to_string(),
             JsonValue::Array(string_items(&verification.stored_then_facts)),
+        ),
+        (
+            "provenance".to_string(),
+            verification
+                .provenance
+                .as_ref()
+                .map(|value| JsonValue::JsonString(value.clone()))
+                .unwrap_or(JsonValue::Null),
         ),
     ])
 }

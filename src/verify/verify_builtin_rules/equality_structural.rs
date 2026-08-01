@@ -2,132 +2,8 @@ use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::{
     factual_equal_success_by_builtin_reason, verify_equality_by_they_are_the_same,
 };
-use std::rc::Rc;
 
 impl Runtime {
-    fn try_verify_equality_pair_by_the_same_then_calculation_then_fn_obj_same_head_known_args(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = left {
-            let projected = self.struct_field_access_projection(field_access)?;
-            return self
-                .try_verify_equality_pair_by_the_same_then_calculation_then_fn_obj_same_head_known_args(
-                    &projected,
-                    right,
-                    line_file,
-                    verify_state,
-                );
-        }
-        if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = right {
-            let projected = self.struct_field_access_projection(field_access)?;
-            return self
-                .try_verify_equality_pair_by_the_same_then_calculation_then_fn_obj_same_head_known_args(
-                    left,
-                    &projected,
-                    line_file,
-                    verify_state,
-                );
-        }
-        let (result, calculated_left, calculated_right) = self
-            .verify_equality_by_they_are_the_same_and_calculation(
-                left,
-                right,
-                line_file.clone(),
-                verify_state,
-            )?;
-        if result.is_true() {
-            return Ok(Some(result));
-        }
-        // Known-equality bridge for algebraic normalization. Example: from
-        // `a^2 + a * a + b = 0`, prove `0 = 2 * a^2 + b` by comparing the
-        // known candidate `a^2 + a * a + b` with `2 * a^2 + b`.
-        if objs_equal_by_rational_expression_evaluation(left, right)
-            || objs_equal_by_rational_expression_evaluation(&calculated_left, &calculated_right)
-        {
-            return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file.clone()).into(),
-                    "calculation and rational expression simplification".to_string(),
-                    Vec::new(),
-                )
-                .into(),
-            ));
-        }
-        if let Some(shape_result) =
-            self.try_verify_equal_by_same_shape_and_known_equality_args(left, right, line_file)
-        {
-            if shape_result.is_true() {
-                return Ok(Some(shape_result));
-            }
-        }
-        Ok(None)
-    }
-
-    pub fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &VerifyState,
-        known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
-        known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        match (known_objs_equal_to_left, known_objs_equal_to_right) {
-            (None, None) => Ok(None),
-            (Some(known_objs_equal_to_left), None) => {
-                for obj in known_objs_equal_to_left.iter() {
-                    if let Some(result) = self
-                        .try_verify_equality_pair_by_the_same_then_calculation_then_fn_obj_same_head_known_args(
-                            obj,
-                            right,
-                            line_file.clone(),
-                            verify_state,
-                        )?
-                    {
-                        return Ok(Some(result));
-                    }
-                }
-                Ok(None)
-            }
-            (None, Some(known_objs_equal_to_right)) => {
-                for obj in known_objs_equal_to_right.iter() {
-                    if let Some(result) = self
-                        .try_verify_equality_pair_by_the_same_then_calculation_then_fn_obj_same_head_known_args(
-                            left,
-                            obj,
-                            line_file.clone(),
-                            verify_state,
-                        )?
-                    {
-                        return Ok(Some(result));
-                    }
-                }
-                Ok(None)
-            }
-            (Some(known_objs_equal_to_left), Some(known_objs_equal_to_right)) => {
-                for obj1 in known_objs_equal_to_left.iter() {
-                    for obj2 in known_objs_equal_to_right.iter() {
-                        if let Some(result) = self
-                            .try_verify_equality_pair_by_the_same_then_calculation_then_fn_obj_same_head_known_args(
-                                obj1,
-                                obj2,
-                                line_file.clone(),
-                                verify_state,
-                            )?
-                        {
-                            return Ok(Some(result));
-                        }
-                    }
-                }
-                Ok(None)
-            }
-        }
-    }
-
     pub fn objs_have_same_known_equality_rc_in_some_env(&self, left: &Obj, right: &Obj) -> bool {
         let left_key = obj_equality_key(left);
         let right_key = obj_equality_key(right);
@@ -193,44 +69,10 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let verify_state = verify_state.without_known_forall_for_equality();
-        let verify_state = &verify_state;
-        let known_result = self.verify_objs_are_equal_known_only(left, right, line_file.clone());
-        if known_result.is_true() {
-            return Ok(known_result);
-        }
-        let builtin_result =
-            self.verify_equality_by_builtin_rules(left, right, line_file.clone(), verify_state)?;
-        if builtin_result.is_true() {
-            return Ok(builtin_result);
-        }
-        let known_equalities_result = self.verify_equality_with_known_equalities(
-            left,
-            right,
-            line_file.clone(),
-            verify_state,
-        )?;
-        if known_equalities_result.is_true() {
-            return Ok(known_equalities_result);
-        }
-        let same_shape_result = self
-            .verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
-                left,
-                right,
-                verify_state,
-                line_file.clone(),
-            )?;
-        if same_shape_result {
-            return Ok(factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
-                "equality builtin: same shape with equal arguments",
-            ));
-        }
-        Ok(StmtResult::Unknown(StmtUnknown::new()))
+        let fact: AtomicFact = EqualFact::new(left.clone(), right.clone(), line_file).into();
+        self.verify_same_family_builtin_child(&fact, builtin_state)
     }
 
     fn arg_pairs_share_known_equality_class(&self, pairs: &[(&Obj, &Obj)]) -> bool {
@@ -869,7 +711,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        _verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<(StmtResult, Obj, Obj), RuntimeError> {
         if verify_equality_by_they_are_the_same(left, right) {
             return Ok((

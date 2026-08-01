@@ -6,7 +6,7 @@ impl Runtime {
     pub(super) fn try_verify_finite_codomain_from_known_surjection(
         &mut self,
         target: &IsFiniteSetFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for property in self.known_function_property_facts(&[SURJECTIVE, BIJECTIVE]) {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
@@ -23,10 +23,8 @@ impl Runtime {
 
             let domain_finite: AtomicFact =
                 IsFiniteSetFact::new(domain, target.line_file.clone()).into();
-            let domain_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &domain_finite,
-                &verify_state.make_final_round_state(),
-            )?;
+            let domain_result =
+                self.verify_same_family_builtin_child(&domain_finite, builtin_state)?;
             if !domain_result.is_true() {
                 continue;
             }
@@ -57,7 +55,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((function, source)) = finite_fn_range_size_equality_shape(left, right)
             .or_else(|| finite_fn_range_size_equality_shape(right, left))
@@ -81,10 +79,7 @@ impl Runtime {
             }
 
             let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
-            let finite_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &domain_finite,
-                verify_state,
-            )?;
+            let finite_result = self.verify_known_or_structurally_finite_set(&domain_finite)?;
             if !finite_result.is_true() {
                 continue;
             }
@@ -115,7 +110,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::FiniteSetSize(left_size), Obj::FiniteSetSize(right_size)) = (left, right) else {
             return Ok(None);
@@ -155,10 +150,7 @@ impl Runtime {
                 };
 
             let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
-            let finite_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &domain_finite,
-                verify_state,
-            )?;
+            let finite_result = self.verify_known_or_structurally_finite_set(&domain_finite)?;
             if !finite_result.is_true() {
                 continue;
             }
@@ -187,7 +179,7 @@ impl Runtime {
     pub(super) fn try_verify_finite_set_size_codomain_le_domain_from_known_surjection(
         &mut self,
         target: &AtomicFact,
-        verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((smaller, larger, line_file)) = ordered_finite_set_sizes(target) else {
             return Ok(None);
@@ -206,10 +198,7 @@ impl Runtime {
             }
 
             let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
-            let finite_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &domain_finite,
-                verify_state,
-            )?;
+            let finite_result = self.verify_known_or_structurally_finite_set(&domain_finite)?;
             if !finite_result.is_true() {
                 continue;
             }
@@ -267,6 +256,30 @@ impl Runtime {
         false
     }
 
+    fn verify_known_or_structurally_finite_set(
+        &mut self,
+        fact: &AtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let known = self.verify_known_non_forall_atomic_fact(fact)?;
+        if known.is_true() {
+            return Ok(known);
+        }
+        let AtomicFact::IsFiniteSetFact(finite) = fact else {
+            return Ok(StmtUnknown::new().into());
+        };
+        if !set_is_structurally_finite(&finite.set) {
+            return Ok(StmtUnknown::new().into());
+        }
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                fact.clone().into(),
+                "literal/range finite-set structure".to_string(),
+                Vec::new(),
+            )
+            .into(),
+        )
+    }
+
     fn known_function_property_facts(&self, predicates: &[&str]) -> Vec<NormalAtomicFact> {
         let mut facts = Vec::new();
         for predicate in predicates {
@@ -288,6 +301,17 @@ impl Runtime {
         facts.sort_by_key(|fact| fact.to_string());
         facts.dedup_by(|left, right| left.to_string() == right.to_string());
         facts
+    }
+}
+
+fn set_is_structurally_finite(set: &Obj) -> bool {
+    match set {
+        Obj::ListSet(_) | Obj::Range(_) | Obj::ClosedRange(_) => true,
+        Obj::Union(union) => {
+            set_is_structurally_finite(union.left.as_ref())
+                && set_is_structurally_finite(union.right.as_ref())
+        }
+        _ => false,
     }
 }
 

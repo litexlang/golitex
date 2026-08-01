@@ -593,6 +593,11 @@ impl Runtime {
                     verify_state,
                 )
             }
+            Obj::SetBuilder(set_builder) => self.verify_set_elements_are_known_reals(
+                &set_builder.param_set,
+                operator_name,
+                verify_state,
+            ),
             _ => {
                 let real_subset: AtomicFact =
                     SubsetFact::new(set.clone(), StandardSet::R.into(), default_line_file()).into();

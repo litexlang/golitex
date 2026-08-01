@@ -417,6 +417,7 @@ Litex exposes sets, membership, and set operations directly.
 2 $in intersect({1, 2}, {2, 3})
 2 $in set_minus({1, 2}, {1})
 
+by def {x R: 0 <= x} $subset R
 {x R: 0 <= x} $subset R
 ```
 
@@ -466,12 +467,14 @@ have S nonempty_set
 trust forall! A S => {$is_nonempty_set(A)}
 have g fn(alpha I) S
 
+by thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
 $is_nonempty_set(general_cart(I, S, g))
 general_cart(I, S, g) = {f fn(t I) big_union(S): forall! alpha I => {f(alpha) $in g(alpha)}}
 ```
 
-The `trust` line makes the required factor-nonemptiness background explicit;
-the equality shows the canonical mathematical shape of the general product.
+The `trust` line makes the required factor-nonemptiness background explicit,
+and the named builtin theorem makes the axiom-of-choice step explicit. The
+equality shows the canonical mathematical shape of the general product.
 
 ### Functions, application, and range
 
@@ -589,6 +592,7 @@ struct Point:
     x R
     y R
 
+by thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
 
 &Point{p}.x = 1
@@ -607,6 +611,8 @@ struct TaggedPoint:
     point &Coordinates
     tag N
 
+by thm struct_member((1, 2), &Coordinates)
+by thm struct_member(((1, 2), 0), &TaggedPoint)
 have item &TaggedPoint = ((1, 2), 0)
 item.point.x $in R
 ```
@@ -638,6 +644,7 @@ struct Point:
     y R
 
 have p cart(R, R) = (1, 2)
+by thm struct_member(p, &Point)
 p $in &Point
 p.x = 1
 ```
@@ -674,12 +681,13 @@ template<S set>:
     have marked_elements power_set(S) = {x S: $marked(x)}
 
 trust $marked(1)
+by thm defined_set_member(1, \marked_elements<R>)
 1 $in \marked_elements<R>
 ```
 
 Conversely, known membership in `\marked_elements<R>` exposes `$marked(1)`.
-The verifier still requires the base-set membership and every defining fact;
-the alias does not invent membership.
+The explicit builtin theorem still requires the base-set membership and every
+defining fact; the alias does not invent membership.
 
 ```text
 template<S set>:
@@ -972,7 +980,9 @@ $is_nonempty_set({1})
 $is_finite_set({1, 2})
 
 1 $in {1, 2}
+by def {1} $subset {1, 2}
 {1} $subset {1, 2}
+by def {1, 2} $superset {1}
 {1, 2} $superset {1}
 ```
 
@@ -1014,7 +1024,9 @@ global equality after compatible function-space information is checked.
 have fn f(x R) R = x
 have fn g(x R) R = x
 
+by def $fn_eq_in(f, g, R)
 $fn_eq_in(f, g, R)
+by def $fn_eq(f, g)
 $fn_eq(f, g)
 ```
 
@@ -1049,6 +1061,7 @@ its name and parameter shape.
 prop is_zero(x R):
     x = 0
 
+by def $is_zero(0)
 $is_zero(0)
 ```
 
@@ -1119,7 +1132,9 @@ struct Point:
     x R
     y R
 
+by def $is_origin(0, 0)
 $is_origin(0, 0)
+by thm struct_member((0, 0), &Point)
 (0, 0) $in &Point
 ```
 
@@ -1251,7 +1266,7 @@ the domain, and each recursive measure is smaller but not below the bound.
 ```litex
 have fn countdown(n N) N by induc n from 0:
     case n = 0: 0
-    case n > 0: countdown(n - 1)
+    case n >= 1: countdown(n - 1)
 
 forall n N:
     countdown(n) $in N
@@ -1427,6 +1442,7 @@ strategy use_is_one:
         =>:
             $is_one(x)
     x = 1
+    by def $is_one(x)
 
 $is_one(1)
 stop strategy use_is_one
@@ -1630,9 +1646,11 @@ the route that succeeded or the point that failed.
 For an ordinary atomic fact, the main order is:
 
 1. Parse the statement and check every object for well-definedness.
-2. Try builtin mathematical rules.
-3. Try a known fact with the same predicate shape, using known equalities.
-4. Try an applicable known `forall` fact and verify its instantiated premises.
+2. Check an already known non-`forall` atomic fact with the same predicate
+   shape, using known equalities.
+3. Try bounded builtin mathematical rules.
+4. After builtin verification returns, try an applicable known `forall` fact
+   and verify its instantiated premises.
 5. Try registered predicate properties or enabled strategies where applicable.
 6. On success, store the fact and run builtin inference.
 
@@ -1693,16 +1711,18 @@ The second line is usually redundant if `by thm` already stored its
 conclusions. Keep an explicit restatement only when a verifier run shows that a
 bridge fact is needed.
 
-### Definition folding and `by def` (preview)
+### Explicit definitions and `by def` (preview)
 
-A concrete `prop` can normally fold and unfold through ordinary verification.
-`by def $P(args)` explicitly checks every instantiated clause when the
-dependency should be visible.
+Ordinary atomic verification does not prove a positive predicate by silently
+running its defining clauses backwards. Use `by def $P(args)` to instantiate a
+concrete `prop`, verify every clause with the full verifier, and store the
+positive predicate only after all clauses succeed. Once an accepted positive
+predicate is stored, forward inference may expose its positive defining
+consequences; that is a separate direction.
 
-Automatic positive-predicate inference exposes the clauses of `P` and
-recursively exposes any positive concrete predicates among those clauses.
-Inference uses cycle guards, so mutually recursive predicate definitions do
-not expand indefinitely.
+`by def` also names the mathematical-definition route for these builtin
+positive forms: subset, superset, proper subset, proper superset,
+`$injective`, `$surjective`, `$bijective`, `$fn_eq_in`, and `$fn_eq`.
 
 When a grouped universal law binds shared convenience variables, a conclusion
 may use only some of them. Litex stores the corresponding reduced universal
@@ -1739,9 +1759,8 @@ name witnesses from an already known existential. Use `have by preimage` to
 name a preimage from known range or replacement membership.
 
 `obtain` exposes each direct fact in the existential body. Positive concrete
-predicates among those facts recursively expose their positive clauses under
-the same cycle guards used by ordinary inference. Use `by def` when the
-definition step should be explicit in the proof.
+predicates among those facts may expose positive clauses through forward
+inference. Use `by def` to prove a predicate from its defining clauses.
 
 ```litex
 witness exist u R st {0 < u, u < 1} from 1 / 2:
@@ -2042,6 +2061,43 @@ Builtin verification rules are small mathematical patterns implemented by the
 checker. They close the current goal; they are different from inference, which
 stores useful consequences after a statement has already been accepted.
 
+One automatic builtin proof tree shares a single budget of 64 previously
+unknown recursive atomic subgoals. Each builtin premise first checks already
+known non-`forall` atomic facts. A premise in the same atomic predicate family
+may then recurse into the builtin dispatcher and consumes one unit of that
+shared budget; a cross-family premise must already be known. Failed branches do
+not refund the budget. Automatic builtin recursion never invokes the full
+verifier, known `forall` matching, concrete definitions, or strategies. Nested
+success evidence is retained from the deepest child back to the root result.
+
+Rules that genuinely need a universal, existential, or compound premise are
+called explicitly through reserved builtin theorem names. Their handlers use
+the ordinary full verifier for the requirement and store the conclusion only
+after it succeeds:
+
+| Explicit call | Conclusion shape |
+|---|---|
+| `by thm fn_set_member(f, F)` | `f $in F` |
+| `by thm set_builder_member(x, B)` | `x $in B` |
+| `by thm defined_set_member(x, S)` | `x $in S` after one stored set-valued definition |
+| `by thm struct_member(x, S)` | `x $in S` |
+| `by thm cart_member_from_coordinates(x, C)` | `x $in C` |
+| `by thm general_cart_member(x, G)` | `x $in G` |
+| `by thm general_cart_nonempty_by_choice_from_family(G)` | `$is_nonempty_set(G)` |
+| `by thm general_cart_nonempty_by_choice_from_pointwise(G)` | `$is_nonempty_set(G)` |
+| `by thm sum_le_sum_from_pointwise(L, R)` | `L <= R` |
+| `by thm finite_set_sum_le_from_pointwise(L, R)` | `L <= R` |
+| `by thm finite_set_summand_le_sum(L, R)` | `L <= R` |
+| `by thm tuple_equal_from_coordinates(L, R)` | `L = R` |
+| `by thm finite_set_sum_substitution(L, R)` | `L = R` |
+| `by thm sum_over_bijective_finite_set_enumerations(L, R)` | `L = R` |
+
+These names are bare global reserved names. They cannot be rebound by user
+objects, parameters, theorems, or axioms, and a qualified spelling is rejected.
+Detailed output marks the route with `"theorem_source": "builtin_rule"`, shows
+`requirement_checks`, and preserves `axiom_of_choice` provenance on the two
+general-cart nonemptiness interfaces.
+
 This section catalogues public rule families. It does not promise that every
 mathematically equivalent spelling is recognized. When a goal is `unknown`,
 write a smaller intermediate fact that exposes a supported shape.
@@ -2225,18 +2281,25 @@ This rule only answers membership goals; it does not rewrite an order goal
 such as `0 < x` into membership in a positive-number set.
 
 ```litex
+by def {1} $subset {1, 2}
 {1} $subset {1, 2}
 
 forall B set, A power_set(B), x A:
     x $in B
 
-forall A, B set:
-    A $subset B
-    A != B
-    =>:
-        A $proper_subset B
-        B $proper_superset A
+claim:
+    ? forall A, B set:
+        A $subset B
+        A != B
+        =>:
+            A $proper_subset B
+            B $proper_superset A
+    by def A $proper_subset B
+    by def B $proper_superset A
+    A $proper_subset B
+    B $proper_superset A
 
+by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
@@ -2391,6 +2454,7 @@ The second line is `unknown`; `R` contains positive, zero, and negative values.
 ### Subset, superset, and order inference
 
 ```litex
+by def {1} $subset {1, 2}
 {1} $subset {1, 2}
 
 forall x {1}:

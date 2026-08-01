@@ -226,6 +226,23 @@ write every bridge by hand: convert `x > y` to `y < x`, convert that to
 instead lets the user write the meaningful step while the verifier handles a
 bounded amount of common background reasoning.
 
+That bound is literal. One automatic builtin proof tree shares a counter for at
+most 64 previously unknown recursive atomic subgoals. A premise first checks
+known non-`forall` atomic facts. It may recurse through builtin rules only when
+it stays in the same atomic predicate family; a cross-family premise must
+already be known. The automatic builtin tree does not call known `forall`
+matching, concrete definitions, strategies, or the full verifier. Its nested
+proof results are returned all the way from a child rule to the root rule.
+
+When a rule needs a universal, existential, or compound premise, the proof uses
+an explicit reserved builtin theorem call such as
+`by thm set_builder_member(x, B)` or
+`by thm tuple_equal_from_coordinates(L, R)`. These calls check their
+requirements with the full verifier and commit no conclusion on failure.
+Mathematical definitions similarly use explicit `by def`; for example,
+`by def A $subset B` and `by def $injective(A, B, f)`. A bare positive concrete
+predicate is not proved by silently running its definition backwards.
+
 This convenience is also part of the trust boundary. Builtin objects, builtin
 facts, builtin statement behavior, and builtin verification rules all deserve
 tests, examples, and audit-friendly output. They are not hidden magic; they are
@@ -522,6 +539,7 @@ struct FirstQuadrant:
         x > 0
         y > 0
 
+by thm struct_member((1, 2), &FirstQuadrant)
 have p &FirstQuadrant = (1, 2)
 p.x = 1
 p.y = &FirstQuadrant{p}.y

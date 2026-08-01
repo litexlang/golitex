@@ -8,7 +8,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let square_sum = if Self::obj_is_builtin_literal_zero(left) {
             right
@@ -20,10 +20,10 @@ impl Runtime {
         let Some((first_base, second_base)) = square_sum_bases(square_sum) else {
             return Ok(None);
         };
-        let Some(mut steps) = self.verify_objects_are_known_reals(
+        let Some(mut steps) = self.verify_objects_are_known_reals_in_builtin(
             &[&first_base, &second_base],
             &line_file,
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
@@ -57,7 +57,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let target = if Self::obj_is_builtin_literal_zero(left) {
             right
@@ -83,10 +83,10 @@ impl Runtime {
                 let Some((first_base, second_base)) = square_sum_bases(&square_sum) else {
                     continue;
                 };
-                let Some(mut steps) = self.verify_objects_are_known_reals(
+                let Some(mut steps) = self.verify_objects_are_known_reals_in_builtin(
                     &[&first_base, &second_base],
                     &line_file,
-                    verify_state,
+                    builtin_state,
                 )?
                 else {
                     continue;
@@ -100,13 +100,13 @@ impl Runtime {
                     target,
                     &first_base,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 let second_matches = self.verify_zero_product_factor_matches_target(
                     target,
                     &second_base,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !first_matches.is_true() && !second_matches.is_true() {
                     continue;

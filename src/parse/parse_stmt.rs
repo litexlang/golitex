@@ -193,15 +193,13 @@ mod parse_stmt_diagnostic_tests {
         };
         assert!(error.msg.contains("unexpected indent"), "{}", error.msg);
 
-        for source_code in ["by def not $P(1)", "by def $in(1, R)", "by def 1 = 1"] {
-            let message = parse_one_stmt_error_message(source_code);
-            assert!(
-                message.contains("expects one positive concrete prop fact"),
-                "{}: {}",
-                source_code,
-                message
-            );
-        }
+        let message = parse_one_stmt_error_message("by def not $P(1)");
+        assert!(
+            message.contains("expects one positive atomic fact"),
+            "{message}"
+        );
+        assert!(parse_one_stmt("by def $in(1, R)").is_ok());
+        assert!(parse_one_stmt("by def 1 = 1").is_ok());
     }
 
     #[test]

@@ -10,7 +10,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some((expected, reason)) = native_i_normal_form(left) {
             if native_normal_form_matches(&expected, right) {
@@ -31,7 +31,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(Some(complex_equality_result_with_steps(
                 left, right, line_file, &reason, steps,
@@ -41,7 +41,7 @@ impl Runtime {
             right,
             left,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(Some(complex_equality_result_with_steps(
                 left, right, line_file, &reason, steps,
@@ -52,7 +52,7 @@ impl Runtime {
             left,
             right,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(Some(result));
         }
@@ -60,7 +60,7 @@ impl Runtime {
             right,
             left,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(Some(complex_equality_result_with_steps(
                 left, right, line_file, &reason, steps,
@@ -81,7 +81,7 @@ impl Runtime {
                 self.verify_objs_are_equal_known_only(&complex_abs, &zero, line_file.clone());
             if known_zero.is_true() {
                 let Some(mut steps) =
-                    self.verify_objects_are_known_complex(&[z], &line_file, verify_state)?
+                    self.verify_objects_are_known_complex(&[z], &line_file, builtin_state)?
                 else {
                     return Ok(None);
                 };
@@ -99,7 +99,7 @@ impl Runtime {
         let (z, expected) = native_reconstruction_pair(left);
         if verify_equality_by_they_are_the_same(&expected, right) {
             let Some(steps) =
-                self.verify_objects_are_known_complex(&[z], &line_file, verify_state)?
+                self.verify_objects_are_known_complex(&[z], &line_file, builtin_state)?
             else {
                 return Ok(None);
             };
@@ -114,7 +114,7 @@ impl Runtime {
         let (z, expected) = native_reconstruction_pair(right);
         if verify_equality_by_they_are_the_same(&expected, left) {
             let Some(steps) =
-                self.verify_objects_are_known_complex(&[z], &line_file, verify_state)?
+                self.verify_objects_are_known_complex(&[z], &line_file, builtin_state)?
             else {
                 return Ok(None);
             };
@@ -128,7 +128,7 @@ impl Runtime {
         }
 
         let Some(mut steps) =
-            self.verify_objects_are_known_complex(&[left, right], &line_file, verify_state)?
+            self.verify_objects_are_known_complex(&[left, right], &line_file, builtin_state)?
         else {
             return Ok(None);
         };
@@ -207,7 +207,7 @@ impl Runtime {
         application: &Obj,
         expected: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
         let (coordinate, is_real_part, arg) = match application {
             Obj::RealPart(real_part) => (RE, true, real_part.arg.as_ref()),
@@ -232,10 +232,10 @@ impl Runtime {
                 imaginary_part.clone()
             };
             if verify_equality_by_they_are_the_same(&target, expected) {
-                let Some(steps) = self.verify_objects_are_known_reals(
+                let Some(steps) = self.verify_objects_are_known_reals_in_builtin(
                     &[real_part, imaginary_part],
                     &line_file,
-                    verify_state,
+                    builtin_state,
                 )?
                 else {
                     return Ok(None);
@@ -249,7 +249,7 @@ impl Runtime {
 
         if verify_equality_by_they_are_the_same(arg, expected) && is_real_part {
             let Some(steps) =
-                self.verify_objects_are_known_reals(&[arg], &line_file, verify_state)?
+                self.verify_objects_are_known_reals_in_builtin(&[arg], &line_file, builtin_state)?
             else {
                 return Ok(None);
             };
@@ -257,7 +257,7 @@ impl Runtime {
         }
         if obj_is_literal_zero(expected) && !is_real_part {
             let Some(steps) =
-                self.verify_objects_are_known_reals(&[arg], &line_file, verify_state)?
+                self.verify_objects_are_known_reals_in_builtin(&[arg], &line_file, builtin_state)?
             else {
                 return Ok(None);
             };
@@ -310,7 +310,7 @@ impl Runtime {
                     _ => unreachable!(),
                 };
                 let Some(steps) =
-                    self.verify_objects_are_known_complex(&operands, &line_file, verify_state)?
+                    self.verify_objects_are_known_complex(&operands, &line_file, builtin_state)?
                 else {
                     return Ok(None);
                 };
@@ -345,7 +345,7 @@ impl Runtime {
                 let Some(steps) = self.verify_objects_are_known_complex(
                     &[mul.left.as_ref(), mul.right.as_ref()],
                     &line_file,
-                    verify_state,
+                    builtin_state,
                 )?
                 else {
                     return Ok(None);
@@ -365,13 +365,13 @@ impl Runtime {
         application: &Obj,
         expected: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((reason, steps)) = self.native_complex_abs_equality_reason_and_steps(
             application,
             expected,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?
         else {
             return Ok(None);
@@ -390,7 +390,7 @@ impl Runtime {
         application: &Obj,
         expected: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
         let Obj::ComplexAbs(complex_abs) = application else {
             return Ok(None);
@@ -403,7 +403,7 @@ impl Runtime {
         let real_abs: Obj = Abs::new(arg.clone()).into();
         if verify_equality_by_they_are_the_same(&real_abs, expected) {
             let Some(steps) =
-                self.verify_objects_are_known_reals(&[arg], &line_file, verify_state)?
+                self.verify_objects_are_known_reals_in_builtin(&[arg], &line_file, builtin_state)?
             else {
                 return Ok(None);
             };
@@ -438,14 +438,13 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut steps = Vec::new();
         for obj in objs {
             let fact: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::C.into(), line_file.clone()).into();
-            let result =
-                self.verify_non_equational_known_then_builtin_rules_only(&fact, verify_state)?;
+            let result = self.verify_cross_family_builtin_child(&fact, builtin_state)?;
             if !result.is_true() {
                 return Ok(None);
             }

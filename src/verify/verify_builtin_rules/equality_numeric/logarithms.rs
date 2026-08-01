@@ -7,7 +7,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
@@ -20,14 +20,14 @@ impl Runtime {
                 p.base.as_ref(),
                 log.base.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if base_ok.is_true() {
                 let exp_ok = self.verify_objs_are_equal_in_equality_builtin(
                     p.exponent.as_ref(),
                     other,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if exp_ok.is_true() {
                     let mut subgoals = equality_builtin_match_subgoals(
@@ -60,7 +60,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
@@ -76,7 +76,7 @@ impl Runtime {
             other,
             &expected,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if inner.is_true() {
             let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
@@ -97,7 +97,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
@@ -115,7 +115,7 @@ impl Runtime {
                 other,
                 &expected,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if inner.is_true() {
                 let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
@@ -137,7 +137,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
@@ -156,7 +156,7 @@ impl Runtime {
                 other,
                 &expected,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if inner.is_true() {
                 let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
@@ -178,7 +178,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
@@ -195,7 +195,7 @@ impl Runtime {
             other,
             &expected,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if inner.is_true() {
             let subgoals = equality_builtin_match_subgoals(other, &expected, inner);
@@ -216,25 +216,25 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(done) =
-            self.try_verify_log_base_power_rule(left, right, line_file.clone(), verify_state)?
+            self.try_verify_log_base_power_rule(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_log_arg_power_rule(left, right, line_file.clone(), verify_state)?
+            self.try_verify_log_arg_power_rule(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_log_product_rule(left, right, line_file.clone(), verify_state)?
+            self.try_verify_log_product_rule(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
         if let Some(done) =
-            self.try_verify_log_quotient_rule(left, right, line_file.clone(), verify_state)?
+            self.try_verify_log_quotient_rule(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
@@ -248,7 +248,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
@@ -263,7 +263,7 @@ impl Runtime {
             d.left.as_ref(),
             &one,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !one_ok.is_true() {
             return Ok(None);
@@ -287,7 +287,7 @@ impl Runtime {
                 other,
                 &expected,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if ok.is_true() {
                 let mut subgoals = equality_builtin_match_subgoals(d.left.as_ref(), &one, one_ok);
@@ -312,7 +312,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (log_ab, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
@@ -330,7 +330,7 @@ impl Runtime {
             log_cb.base.as_ref(),
             log_ca.base.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !base_ok.is_true() {
             return Ok(None);
@@ -339,7 +339,7 @@ impl Runtime {
             log_cb.arg.as_ref(),
             log_ab.arg.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !arg_ok.is_true() {
             return Ok(None);
@@ -348,7 +348,7 @@ impl Runtime {
             log_ca.arg.as_ref(),
             log_ab.base.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !inner_ok.is_true() {
             return Ok(None);
@@ -382,7 +382,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (log, other) = match (left, right) {
             (Obj::Log(l), o) => (l, o),
@@ -394,7 +394,7 @@ impl Runtime {
             &pow_obj,
             log.arg.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if inner.is_true() {
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
@@ -415,7 +415,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        _verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (pow, other) = match (left, right) {
             (Obj::Pow(p), o) => (p, o),

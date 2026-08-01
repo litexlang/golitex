@@ -159,9 +159,12 @@ pub struct ByChoiceVerificationResult {
 #[derive(Clone, Debug)]
 pub struct ByTheoremVerificationResult {
     pub theorem: String,
+    pub theorem_source: String,
     pub arguments: Vec<String>,
     pub domain_facts: Vec<String>,
+    pub requirement_roles: Vec<String>,
     pub stored_then_facts: Vec<String>,
+    pub provenance: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -923,9 +926,31 @@ impl ByTheoremVerificationResult {
     ) -> Self {
         ByTheoremVerificationResult {
             theorem,
+            theorem_source: "litex".to_string(),
             arguments,
             domain_facts,
+            requirement_roles: vec![],
             stored_then_facts,
+            provenance: None,
+        }
+    }
+
+    pub fn new_builtin(
+        theorem: String,
+        arguments: Vec<String>,
+        requirement_facts: Vec<String>,
+        requirement_roles: Vec<String>,
+        stored_then_facts: Vec<String>,
+        provenance: Option<String>,
+    ) -> Self {
+        ByTheoremVerificationResult {
+            theorem,
+            theorem_source: "builtin_rule".to_string(),
+            arguments,
+            domain_facts: requirement_facts,
+            requirement_roles,
+            stored_then_facts,
+            provenance,
         }
     }
 }

@@ -4,7 +4,7 @@ impl Runtime {
     pub fn _verify_is_nonempty_set_fact_with_builtin_rules(
         &mut self,
         is_nonempty_set_fact: &IsNonemptySetFact,
-        _verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Empty set rule: `$is_nonempty_set(S)` follows from `S != {}`.
         // Example: after `S != {}`, prove `$is_nonempty_set(S)`.
@@ -31,7 +31,7 @@ impl Runtime {
 
         if let Some(result) = self.try_verify_nonempty_finite_set_from_positive_finite_set_size(
             is_nonempty_set_fact,
-            _verify_state,
+            builtin_state,
         )? {
             return Ok(result);
         }
@@ -79,10 +79,8 @@ impl Runtime {
                     closed_range.end.as_ref().clone(),
                     is_nonempty_set_fact.line_file.clone(),
                 );
-                let le_ok = self.verify_non_equational_known_then_builtin_rules_only(
-                    &le.into(),
-                    _verify_state,
-                )?;
+                let le_ok = self
+                    .verify_cross_family_known_or_number_calculation(&le.into(), builtin_state)?;
                 if le_ok.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -116,10 +114,8 @@ impl Runtime {
                     )
                     .into()
                 };
-                let order_ok = self.verify_non_equational_known_then_builtin_rules_only(
-                    &order_fact,
-                    _verify_state,
-                )?;
+                let order_ok = self
+                    .verify_cross_family_known_or_number_calculation(&order_fact, builtin_state)?;
                 if order_ok.is_true() {
                     let rule = match interval {
                         IntervalObj::LeftOpenRightOpen(_) => {
@@ -181,10 +177,8 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &left_nonempty,
-                    _verify_state,
-                )?;
+                let left_result =
+                    self.verify_same_family_builtin_child(&left_nonempty, builtin_state)?;
                 if left_result.is_true() {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -201,10 +195,8 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let right_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &right_nonempty,
-                    _verify_state,
-                )?;
+                let right_result =
+                    self.verify_same_family_builtin_child(&right_nonempty, builtin_state)?;
                 if right_result.is_true() {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -220,15 +212,14 @@ impl Runtime {
             }
             Obj::Cart(cart) => {
                 for arg_obj in &cart.args {
-                    let is_nonempty_set_result = self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &IsNonemptySetFact::new(
-                                *arg_obj.clone(),
-                                is_nonempty_set_fact.line_file.clone(),
-                            )
-                            .into(),
-                            _verify_state,
-                        )?;
+                    let is_nonempty_set_result = self.verify_same_family_builtin_child(
+                        &IsNonemptySetFact::new(
+                            *arg_obj.clone(),
+                            is_nonempty_set_fact.line_file.clone(),
+                        )
+                        .into(),
+                        builtin_state,
+                    )?;
 
                     if is_nonempty_set_result.is_unknown() {
                         return Ok((StmtUnknown::new()).into());
@@ -258,10 +249,8 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let ret_check = self.verify_non_equational_known_then_builtin_rules_only(
-                    &ret_nonempty_fact,
-                    _verify_state,
-                )?;
+                let ret_check =
+                    self.verify_same_family_builtin_child(&ret_nonempty_fact, builtin_state)?;
                 if ret_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -281,10 +270,8 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let ret_check = self.verify_non_equational_known_then_builtin_rules_only(
-                    &ret_nonempty_fact,
-                    _verify_state,
-                )?;
+                let ret_check =
+                    self.verify_same_family_builtin_child(&ret_nonempty_fact, builtin_state)?;
                 if ret_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -298,62 +285,15 @@ impl Runtime {
                     Ok((StmtUnknown::new()).into())
                 }
             }
-            // Axiom of choice for an indexed family: if every factor selected by `g`
-            // is nonempty, then `general_cart(I, s, g)` is nonempty.
-            // Example: from `forall X s: $is_nonempty_set(X)`, prove
-            // `$is_nonempty_set(general_cart(I, s, g))`.
-            // Also accepts the pointwise form `forall alpha I: $is_nonempty_set(g(alpha))`.
-            Obj::GeneralCart(general_cart) => {
-                let global_fact = general_cart_global_family_nonempty_fact(
-                    self,
-                    general_cart,
-                    is_nonempty_set_fact,
-                );
-                let global_result = self.verify_fact_full(&global_fact, _verify_state)?;
-                if global_result.is_true() {
-                    return Ok(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            is_nonempty_set_fact.clone().into(),
-                            "axiom_of_choice: general_cart is nonempty when every set in the family set is nonempty"
-                                .to_string(),
-                            vec![global_result],
-                        )
-                        .into(),
-                    );
-                }
-
-                let Some(pointwise_fact) = general_cart_pointwise_family_nonempty_fact(
-                    self,
-                    general_cart,
-                    is_nonempty_set_fact,
-                )?
-                else {
-                    return Ok((StmtUnknown::new()).into());
-                };
-                let pointwise_result = self.verify_fact_full(&pointwise_fact, _verify_state)?;
-                if pointwise_result.is_true() {
-                    return Ok(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                            is_nonempty_set_fact.clone().into(),
-                            "axiom_of_choice: general_cart is nonempty when every indexed factor is nonempty"
-                                .to_string(),
-                            vec![pointwise_result],
-                        )
-                        .into(),
-                    );
-                }
-                Ok((StmtUnknown::new()).into())
-            }
+            Obj::GeneralCart(_) => Ok((StmtUnknown::new()).into()),
             Obj::FiniteSeqSet(fs) => {
                 let codomain_nonempty = IsNonemptySetFact::new(
                     (*fs.set).clone(),
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let codomain_check = self.verify_non_equational_known_then_builtin_rules_only(
-                    &codomain_nonempty,
-                    _verify_state,
-                )?;
+                let codomain_check =
+                    self.verify_same_family_builtin_child(&codomain_nonempty, builtin_state)?;
                 if codomain_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -373,10 +313,8 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let codomain_check = self.verify_non_equational_known_then_builtin_rules_only(
-                    &codomain_nonempty,
-                    _verify_state,
-                )?;
+                let codomain_check =
+                    self.verify_same_family_builtin_child(&codomain_nonempty, builtin_state)?;
                 if codomain_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -396,10 +334,8 @@ impl Runtime {
                     is_nonempty_set_fact.line_file.clone(),
                 )
                 .into();
-                let codomain_check = self.verify_non_equational_known_then_builtin_rules_only(
-                    &codomain_nonempty,
-                    _verify_state,
-                )?;
+                let codomain_check =
+                    self.verify_same_family_builtin_child(&codomain_nonempty, builtin_state)?;
                 if codomain_check.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -413,44 +349,7 @@ impl Runtime {
                     Ok((StmtUnknown::new()).into())
                 }
             }
-            // A struct without filters is nonempty when every field type is nonempty.
-            // Example: `struct Point: x R, y R` makes `&Point` nonempty from `R` and `R`.
-            Obj::StructObj(struct_obj) => {
-                let (def, param_to_arg_map) =
-                    self.struct_header_param_to_arg_map(struct_obj, _verify_state)?;
-                if !def.equivalent_facts.is_empty() {
-                    return Ok((StmtUnknown::new()).into());
-                }
-
-                let mut step_results = Vec::with_capacity(def.fields.len());
-                for (_, field_type) in def.fields.iter() {
-                    let instantiated_field_type =
-                        self.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
-                    let field_nonempty: AtomicFact = IsNonemptySetFact::new(
-                        instantiated_field_type,
-                        is_nonempty_set_fact.line_file.clone(),
-                    )
-                    .into();
-                    let field_result = self.verify_non_equational_known_then_builtin_rules_only(
-                        &field_nonempty,
-                        _verify_state,
-                    )?;
-                    if !field_result.is_true() {
-                        return Ok((StmtUnknown::new()).into());
-                    }
-                    step_results.push(field_result);
-                }
-
-                Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        is_nonempty_set_fact.clone().into(),
-                        "struct_without_equivalent_facts_is_nonempty_when_all_field_types_are_nonempty"
-                            .to_string(),
-                        step_results,
-                    ))
-                    .into(),
-                )
-            }
+            Obj::StructObj(_) => Ok((StmtUnknown::new()).into()),
             _ => {
                 // Equality alias rule: a set alias is nonempty when it is already known equal
                 // to a structural set whose nonemptiness is verified by builtin rules.
@@ -465,10 +364,8 @@ impl Runtime {
                     let equal_nonempty: AtomicFact =
                         IsNonemptySetFact::new(equal_set, is_nonempty_set_fact.line_file.clone())
                             .into();
-                    let equal_result = self.verify_non_equational_known_then_builtin_rules_only(
-                        &equal_nonempty,
-                        _verify_state,
-                    )?;
+                    let equal_result =
+                        self.verify_same_family_builtin_child(&equal_nonempty, builtin_state)?;
                     if equal_result.is_true() {
                         return Ok(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -491,13 +388,12 @@ impl Runtime {
     fn try_verify_nonempty_finite_set_from_positive_finite_set_size(
         &mut self,
         is_nonempty_set_fact: &IsNonemptySetFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = is_nonempty_set_fact.line_file.clone();
         let finite: AtomicFact =
             IsFiniteSetFact::new(is_nonempty_set_fact.set.clone(), line_file.clone()).into();
-        let finite_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&finite, verify_state)?;
+        let finite_result = self.verify_cross_family_builtin_child(&finite, builtin_state)?;
         if !finite_result.is_true() {
             return Ok(None);
         }
@@ -530,15 +426,12 @@ impl Runtime {
     pub fn _verify_is_finite_set_fact_with_builtin_rules(
         &mut self,
         is_finite_set_fact: &IsFiniteSetFact,
-        _verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if _verify_state.is_round_0() {
-            if let Some(result) = self.try_verify_finite_codomain_from_known_surjection(
-                is_finite_set_fact,
-                _verify_state,
-            )? {
-                return Ok(result);
-            }
+        if let Some(result) = self
+            .try_verify_finite_codomain_from_known_surjection(is_finite_set_fact, builtin_state)?
+        {
+            return Ok(result);
         }
         match &is_finite_set_fact.set {
             Obj::ListSet(_) => Ok(
@@ -582,10 +475,8 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let domain_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &domain_finite,
-                    _verify_state,
-                )?;
+                let domain_result =
+                    self.verify_same_family_builtin_child(&domain_finite, builtin_state)?;
                 if domain_result.is_true() {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -613,17 +504,13 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &left_finite,
-                    _verify_state,
-                )?;
+                let left_result =
+                    self.verify_same_family_builtin_child(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
-                let right_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &right_finite,
-                    _verify_state,
-                )?;
+                let right_result =
+                    self.verify_same_family_builtin_child(&right_finite, builtin_state)?;
                 if !right_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -651,17 +538,13 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &left_finite,
-                    _verify_state,
-                )?;
+                let left_result =
+                    self.verify_same_family_builtin_child(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
-                let right_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &right_finite,
-                    _verify_state,
-                )?;
+                let right_result =
+                    self.verify_same_family_builtin_child(&right_finite, builtin_state)?;
                 if !right_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -683,10 +566,8 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &left_finite,
-                    _verify_state,
-                )?;
+                let left_result =
+                    self.verify_same_family_builtin_child(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -714,17 +595,13 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &left_finite,
-                    _verify_state,
-                )?;
+                let left_result =
+                    self.verify_same_family_builtin_child(&left_finite, builtin_state)?;
                 if !left_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
-                let right_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &right_finite,
-                    _verify_state,
-                )?;
+                let right_result =
+                    self.verify_same_family_builtin_child(&right_finite, builtin_state)?;
                 if !right_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -746,10 +623,8 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let base_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &base_finite,
-                    _verify_state,
-                )?;
+                let base_result =
+                    self.verify_same_family_builtin_child(&base_finite, builtin_state)?;
                 if !base_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -774,10 +649,8 @@ impl Runtime {
                         is_finite_set_fact.line_file.clone(),
                     )
                     .into();
-                    let factor_result = self.verify_non_equational_known_then_builtin_rules_only(
-                        &factor_finite,
-                        _verify_state,
-                    )?;
+                    let factor_result =
+                        self.verify_same_family_builtin_child(&factor_finite, builtin_state)?;
                     if !factor_result.is_true() {
                         return Ok((StmtUnknown::new()).into());
                     }
@@ -799,7 +672,7 @@ impl Runtime {
     pub fn _verify_not_is_finite_set_fact_with_builtin_rules(
         &mut self,
         not_is_finite_set_fact: &NotIsFiniteSetFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Removing a finite set from an infinite set leaves an infinite set.
         // Example: from `not $is_finite_set(X)` and `$is_finite_set(s)`, prove
@@ -813,8 +686,7 @@ impl Runtime {
             not_is_finite_set_fact.line_file.clone(),
         )
         .into();
-        let left_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&left_infinite, verify_state)?;
+        let left_result = self.verify_same_family_builtin_child(&left_infinite, builtin_state)?;
         if !left_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -824,8 +696,7 @@ impl Runtime {
             not_is_finite_set_fact.line_file.clone(),
         )
         .into();
-        let right_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&right_finite, verify_state)?;
+        let right_result = self.verify_same_family_builtin_child(&right_finite, builtin_state)?;
         if !right_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -844,7 +715,7 @@ impl Runtime {
     pub fn _verify_is_cart_fact_with_builtin_rules(
         &mut self,
         is_cart_fact: &IsCartFact,
-        _verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match &is_cart_fact.set {
             Obj::Cart(_) => {
@@ -864,7 +735,7 @@ impl Runtime {
     pub fn _verify_is_tuple_fact_with_builtin_rules(
         &mut self,
         is_tuple_fact: &IsTupleFact,
-        _verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match &is_tuple_fact.set {
             Obj::Tuple(t) => {
@@ -904,7 +775,7 @@ impl Runtime {
     pub fn _verify_not_is_nonempty_set_fact_with_builtin_rules(
         &mut self,
         not_is_nonempty_set_fact: &NotIsNonemptySetFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Obj::ListSet(list_set) = &not_is_nonempty_set_fact.set {
             if list_set.list.is_empty() {
@@ -963,8 +834,7 @@ impl Runtime {
                 not_is_nonempty_set_fact.line_file.clone(),
             )
             .into();
-            let lt_ok =
-                self.verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?;
+            let lt_ok = self.verify_cross_family_builtin_child(&lt, builtin_state)?;
             if lt_ok.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -985,8 +855,7 @@ impl Runtime {
                 not_is_nonempty_set_fact.line_file.clone(),
             )
             .into();
-            let le_ok =
-                self.verify_non_equational_known_then_builtin_rules_only(&le, verify_state)?;
+            let le_ok = self.verify_cross_family_builtin_child(&le, builtin_state)?;
             if le_ok.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -999,6 +868,44 @@ impl Runtime {
             }
         }
         Ok((StmtUnknown::new()).into())
+    }
+
+    pub(crate) fn verify_general_cart_nonempty_by_choice_explicit(
+        &mut self,
+        conclusion: &IsNonemptySetFact,
+        pointwise: bool,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let Obj::GeneralCart(general_cart) = &conclusion.set else {
+            return Ok(StmtUnknown::new().into());
+        };
+        let requirement = if pointwise {
+            let Some(requirement) =
+                general_cart_pointwise_family_nonempty_fact(self, general_cart, conclusion)?
+            else {
+                return Ok(StmtUnknown::new().into());
+            };
+            requirement
+        } else {
+            general_cart_global_family_nonempty_fact(self, general_cart, conclusion)
+        };
+        let requirement_result = self.verify_fact_full(&requirement, verify_state)?;
+        if !requirement_result.is_true() {
+            return Ok(StmtUnknown::new().into());
+        }
+        let label = if pointwise {
+            "axiom_of_choice: general_cart is nonempty when every indexed factor is nonempty"
+        } else {
+            "axiom_of_choice: general_cart is nonempty when every set in the family set is nonempty"
+        };
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                conclusion.clone().into(),
+                label.to_string(),
+                vec![requirement_result],
+            )
+            .into(),
+        )
     }
 }
 

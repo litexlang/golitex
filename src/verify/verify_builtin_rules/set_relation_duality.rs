@@ -5,7 +5,7 @@ impl Runtime {
     pub fn verify_subset_fact_with_builtin_rules(
         &mut self,
         subset_fact: &SubsetFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Fundamental set containments follow directly from membership definitions.
         // Examples: `intersect(A, B) $subset A`, `A $subset union(A, B)`.
@@ -94,10 +94,8 @@ impl Runtime {
                     subset_fact.line_file.clone(),
                 )
                 .into();
-                let ret_subset_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &ret_subset,
-                    verify_state,
-                )?;
+                let ret_subset_result =
+                    self.verify_same_family_builtin_child(&ret_subset, builtin_state)?;
                 if ret_subset_result.is_true() {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -137,7 +135,7 @@ impl Runtime {
     pub fn verify_superset_fact_with_builtin_rules(
         &mut self,
         superset_fact: &SupersetFact,
-        _verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Standard number sets form a fixed inclusion chain. Example: `R $supset N`.
         if let (Obj::StandardSet(left), Obj::StandardSet(right)) =
@@ -196,7 +194,7 @@ impl Runtime {
     pub fn verify_not_subset_fact_with_builtin_rules(
         &mut self,
         not_subset_fact: &NotSubsetFact,
-        _verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let converted_not_superset_fact = NotSupersetFact::new(
             not_subset_fact.right.clone(),
@@ -225,7 +223,7 @@ impl Runtime {
     pub fn verify_not_superset_fact_with_builtin_rules(
         &mut self,
         not_superset_fact: &NotSupersetFact,
-        _verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let converted_not_subset_fact = NotSubsetFact::new(
             not_superset_fact.right.clone(),

@@ -1,10 +1,15 @@
 # Proper containment is containment together with inequality.
-forall A, B set:
-    A $subset B
-    A != B
-    =>:
-        A $proper_subset B
-        B $proper_superset A
+claim:
+    ? forall A, B set:
+        A $subset B
+        A != B
+        =>:
+            A $proper_subset B
+            B $proper_superset A
+    by def A $proper_subset B
+    by def B $proper_superset A
+    A $proper_subset B
+    B $proper_superset A
 
 # A positive proper relation exposes both parts of its definition.
 forall A, B set:
@@ -13,24 +18,42 @@ forall A, B set:
         A $subset B
         A != B
 
-# Negated proper containment means failed containment or equality.
-forall A, B set:
-    not A $subset B
-    =>:
-        not A $proper_subset B
+# Negative facts continue to use ordinary contradiction proofs.
+claim:
+    ? forall A, B set:
+        not A $subset B
+        =>:
+            not A $proper_subset B
+    by contra:
+        ? not A $proper_subset B
+        A $proper_subset B
+        A $subset B
+        impossible not A $subset B
 
-forall A, B set:
-    A = B
-    =>:
-        not A $proper_subset B
+claim:
+    ? forall A, B set:
+        A = B
+        =>:
+            not A $proper_subset B
+    by contra:
+        ? not A $proper_subset B
+        A $proper_subset B
+        A != B
+        impossible A = B
 
 # A same-direction chain is strict when at least one edge is strict.
-forall A, B, c set:
-    A $subset B $proper_subset c
-    =>:
-        A $proper_subset c
+claim:
+    ? forall A, B, c set:
+        A $subset B $proper_subset c
+        =>:
+            A $proper_subset c
+    by def A $proper_subset c
+    A $proper_subset c
 
-forall A, B, c set:
-    A $proper_superset B $superset c
-    =>:
-        A $proper_superset c
+claim:
+    ? forall A, B, c set:
+        A $proper_superset B $superset c
+        =>:
+            A $proper_superset c
+    by def A $proper_superset c
+    A $proper_superset c

@@ -1,4 +1,5 @@
 use super::*;
+use crate::verify::number_is_in_n_pos;
 
 impl Runtime {
     pub(crate) fn try_verify_base_zero_from_known_positive_power_zero(
@@ -6,7 +7,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let zero_obj = Self::literal_zero_obj_for_abs_builtin();
         let target_base = if Self::obj_is_builtin_literal_zero(left) {
@@ -36,7 +37,7 @@ impl Runtime {
                     target_base,
                     pow.base.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !base_result.is_true() {
                     continue;
@@ -44,7 +45,7 @@ impl Runtime {
                 let exponent_result = self.obj_is_verified_in_n_pos(
                     pow.exponent.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?;
                 if !exponent_result {
                     continue;
@@ -106,7 +107,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let zero = Self::literal_zero_obj_for_abs_builtin();
         let exponents = self.collect_known_equal_power_exponents_for_bases(left, right);
@@ -120,32 +121,23 @@ impl Runtime {
             let exponent_nonzero: AtomicFact =
                 NotEqualFact::new(exponent.clone(), zero.clone(), line_file.clone()).into();
 
-            let left_positive_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &left_positive,
-                verify_state,
-            )?;
+            let left_positive_result =
+                self.verify_cross_family_builtin_child(&left_positive, builtin_state)?;
             if !left_positive_result.is_true() {
                 continue;
             }
-            let right_positive_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &right_positive,
-                verify_state,
-            )?;
+            let right_positive_result =
+                self.verify_cross_family_builtin_child(&right_positive, builtin_state)?;
             if !right_positive_result.is_true() {
                 continue;
             }
-            let exponent_in_z_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &exponent_in_z,
-                verify_state,
-            )?;
+            let exponent_in_z_result =
+                self.verify_cross_family_builtin_child(&exponent_in_z, builtin_state)?;
             if !exponent_in_z_result.is_true() {
                 continue;
             }
-            let exponent_nonzero_result = self
-                .verify_non_equational_known_then_builtin_rules_only(
-                    &exponent_nonzero,
-                    verify_state,
-                )?;
+            let exponent_nonzero_result =
+                self.verify_same_family_builtin_child(&exponent_nonzero, builtin_state)?;
             if !exponent_nonzero_result.is_true() {
                 continue;
             }
@@ -180,7 +172,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (abs, pow) = match (left, right) {
             (Obj::Abs(abs), Obj::Pow(pow)) => (abs, pow),
@@ -198,7 +190,7 @@ impl Runtime {
                 inner_pow.base.as_ref(),
                 abs_base.arg.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -209,7 +201,7 @@ impl Runtime {
                 inner_pow.exponent.as_ref(),
                 pow.exponent.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -219,7 +211,7 @@ impl Runtime {
             inner_pow.base.as_ref(),
             StandardSet::R,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !base_in_r {
             return Ok(None);
@@ -227,7 +219,7 @@ impl Runtime {
         if self.obj_is_verified_in_n_pos(
             inner_pow.exponent.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(Some(factual_equal_success_by_builtin_reason(
                 left,
@@ -243,7 +235,7 @@ impl Runtime {
             inner_pow.exponent.as_ref(),
             StandardSet::N,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if exponent_in_n {
             return Ok(Some(factual_equal_success_by_builtin_reason(
@@ -259,14 +251,14 @@ impl Runtime {
         if !self.obj_is_verified_integer_exponent_for_power_builtin(
             inner_pow.exponent.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(None);
         }
         if !self.obj_is_verified_nonzero_for_power_builtin(
             inner_pow.base.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )? {
             return Ok(None);
         }
@@ -298,7 +290,7 @@ impl Runtime {
         negative_power: &Pow,
         quotient: &Div,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         if !Self::obj_is_builtin_literal_one(quotient.left.as_ref()) {
             return Ok(None);
@@ -317,7 +309,7 @@ impl Runtime {
             negative_power.base.as_ref(),
             denominator_power.base.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !base_result.is_true() {
             return Ok(None);
@@ -327,7 +319,7 @@ impl Runtime {
             &positive_exponent,
             denominator_power.exponent.as_ref(),
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !exponent_result.is_true() {
             return Ok(None);
@@ -339,10 +331,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let exponent_in_n_pos_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &exponent_in_n_pos,
-            verify_state,
-        )?;
+        let exponent_in_n_pos_result =
+            self.verify_cross_family_builtin_child(&exponent_in_n_pos, builtin_state)?;
         if !exponent_in_n_pos_result.is_true() {
             return Ok(None);
         }
@@ -353,10 +343,8 @@ impl Runtime {
             line_file,
         )
         .into();
-        let denominator_nonzero_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &denominator_nonzero,
-            verify_state,
-        )?;
+        let denominator_nonzero_result =
+            self.verify_same_family_builtin_child(&denominator_nonzero, builtin_state)?;
         if !denominator_nonzero_result.is_true() {
             return Ok(None);
         }
@@ -386,7 +374,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let subgoals = match (left, right) {
             (Obj::Pow(negative_power), Obj::Div(quotient)) => self
@@ -394,14 +382,14 @@ impl Runtime {
                     negative_power,
                     quotient,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?,
             (Obj::Div(quotient), Obj::Pow(negative_power)) => self
                 .power_inverse_rule_holds_one_direction(
                     negative_power,
                     quotient,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?,
             _ => None,
         };
@@ -437,7 +425,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (pow, root) = match (left, right) {
             (Obj::Pow(pow), root) => (pow, root),
@@ -452,8 +440,18 @@ impl Runtime {
 
         let degree_in_n_pos: AtomicFact =
             InFact::new(degree.clone(), StandardSet::NPos.into(), line_file.clone()).into();
-        let degree_result = self
-            .verify_non_equational_known_then_builtin_rules_only(&degree_in_n_pos, verify_state)?;
+        let mut degree_result =
+            self.verify_cross_family_builtin_child(&degree_in_n_pos, builtin_state)?;
+        if !degree_result.is_true()
+            && matches!(&degree, Obj::Number(number) if number_is_in_n_pos(number))
+        {
+            degree_result = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                degree_in_n_pos.clone().into(),
+                "number in N_pos".to_string(),
+                Vec::new(),
+            )
+            .into();
+        }
         if !degree_result.is_true() {
             return Ok(None);
         }
@@ -464,8 +462,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let root_nonnegative_result = self
-            .verify_non_equational_known_then_builtin_rules_only(&root_nonnegative, verify_state)?;
+        let root_nonnegative_result =
+            self.verify_cross_family_known_or_number_calculation(&root_nonnegative, builtin_state)?;
         if !root_nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -475,7 +473,7 @@ impl Runtime {
             pow.base.as_ref(),
             &root_power,
             line_file.clone(),
-            verify_state,
+            builtin_state,
         )?;
         if !inverse_result.is_true() {
             return Ok(None);

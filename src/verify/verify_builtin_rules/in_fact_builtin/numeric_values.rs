@@ -13,6 +13,20 @@ pub(super) fn number_in_set_verified_by_builtin_rules_result(
     )
 }
 
+pub(super) fn number_in_set_verified_by_builtin_rules_result_with_subgoals(
+    in_fact: &InFact,
+    reason: &str,
+    subgoals: Vec<StmtResult>,
+) -> StmtResult {
+    StmtResult::from(
+        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            in_fact.clone().into(),
+            reason.to_string(),
+            subgoals,
+        ),
+    )
+}
+
 pub(super) fn not_in_fact_verified_by_builtin_rules_result(
     not_in_fact: &NotInFact,
     reason: &str,

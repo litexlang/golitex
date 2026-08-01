@@ -69,12 +69,13 @@ forall n N:
     factorial(n + 1) = (n + 1) * factorial(n)
 
 forall n N:
-    n > 0
+    n >= 1
     =>:
         factorial(n) = n * factorial(n - 1)
 
 # Native objects remain usable inside first-class function literals.
 have fn apply_real_map(f fn(t R) R, x R) R = f(x)
+by thm fn_set_member(fn(y R) R {exp(y)}, fn(t R) R)
 apply_real_map(fn(y R) R {exp(y)}, 0) = 1
 
 eval exp(0)

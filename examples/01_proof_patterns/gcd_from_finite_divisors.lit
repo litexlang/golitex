@@ -43,6 +43,7 @@ thm common_divisor_set_is_finite_and_nonempty:
                     by thm positive_divisor_le_abs(d, a)
                     d <= abs(a)
                     d $in closed_range(1, abs(a))
+                by def c $subset closed_range(1, abs(a))
                 c $subset closed_range(1, abs(a))
                 by thm basics::subset_of_finite_set_is_finite(c, closed_range(1, abs(a)))
                 $is_finite_set(c)
@@ -57,6 +58,7 @@ thm common_divisor_set_is_finite_and_nonempty:
                     by thm positive_divisor_le_abs(d, b)
                     d <= abs(b)
                     d $in closed_range(1, abs(b))
+                by def c $subset closed_range(1, abs(b))
                 c $subset closed_range(1, abs(b))
                 by thm basics::subset_of_finite_set_is_finite(c, closed_range(1, abs(b)))
                 $is_finite_set(c)
@@ -64,10 +66,13 @@ thm common_divisor_set_is_finite_and_nonempty:
         1 $in N+
         witness exist k Z st {a = 1 * k} from a:
             a = 1 * a
+        by def $basics::divides(1, a)
         $basics::divides(1, a)
         witness exist k Z st {b = 1 * k} from b:
             b = 1 * b
+        by def $basics::divides(1, b)
         $basics::divides(1, b)
+        by thm set_builder_member(1, {d N+: $basics::divides(d, a), $basics::divides(d, b)})
         1 $in {d N+: $basics::divides(d, a), $basics::divides(d, b)}
         1 $in c
     $is_finite_set({d N+: $basics::divides(d, a), $basics::divides(d, b)})
@@ -98,6 +103,7 @@ thm gcd_from_finite_divisors_eq_native:
     by def $basics::divides(gcd(a, b), b)
     $basics::divides(gcd(a, b), a)
     $basics::divides(gcd(a, b), b)
+    by thm set_builder_member(gcd(a, b), {d N+: $basics::divides(d, a), $basics::divides(d, b)})
     gcd(a, b) $in {d N+: $basics::divides(d, a), $basics::divides(d, b)}
     gcd(a, b) <= finite_set_max({d N+: $basics::divides(d, a), $basics::divides(d, b)})
     gcd(a, b) <= gcd_from_finite_divisors(a, b)

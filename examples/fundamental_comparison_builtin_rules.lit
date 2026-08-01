@@ -53,11 +53,19 @@ forall a, b R:
     =>:
         a = 0 or b = 0
 
-forall a, b, c R:
-    0 < c
-    c * a <= b or a * c <= b
-    =>:
-        a <= b / c
+claim:
+    ? forall a, b, c R:
+        0 < c
+        c * a <= b or a * c <= b
+        =>:
+            a <= b / c
+    by cases:
+        ? a <= b / c
+        case c * a <= b:
+            a <= b / c
+        case a * c <= b:
+            a <= b / c
+    a <= b / c
 
 forall a, b, c R:
     0 < c

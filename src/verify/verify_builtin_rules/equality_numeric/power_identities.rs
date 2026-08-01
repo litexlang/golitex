@@ -8,7 +8,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (pow, other) = match (left, right) {
             (Obj::Pow(p), other) => (p, other),
@@ -23,7 +23,7 @@ impl Runtime {
                 pow.base.as_ref(),
                 other,
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -111,7 +111,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let pow = if Self::obj_is_builtin_literal_zero(left) {
             match right {
@@ -136,10 +136,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let positive_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &positive_exponent,
-            verify_state,
-        )?;
+        let positive_result =
+            self.verify_cross_family_builtin_child(&positive_exponent, builtin_state)?;
         if !positive_result.is_true() {
             return Ok(None);
         }

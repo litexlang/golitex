@@ -9,7 +9,35 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match param_type {
             ParamType::Obj(set_obj) => {
-                let fact = InFact::new(obj, set_obj.clone(), default_line_file()).into();
+                let fact: AtomicFact =
+                    InFact::new(obj.clone(), set_obj.clone(), default_line_file()).into();
+                if let Obj::AnonymousFn(anonymous_fn) = &obj {
+                    let expected_fn_set = match set_obj {
+                        Obj::FnSet(fn_set) => Some(fn_set.clone()),
+                        Obj::FiniteSeqSet(set) => {
+                            Some(self.finite_seq_set_to_fn_set(set, default_line_file()))
+                        }
+                        Obj::SeqSet(set) => Some(self.seq_set_to_fn_set(set, default_line_file())),
+                        Obj::MatrixSet(set) => {
+                            Some(self.matrix_set_to_fn_set(set, default_line_file()))
+                        }
+                        _ => None,
+                    };
+                    if let Some(expected_fn_set) = expected_fn_set {
+                        self.verify_atomic_fact_well_defined(&fact, verify_state)?;
+                        let in_fact = InFact::new(
+                            obj.clone(),
+                            expected_fn_set.clone().into(),
+                            default_line_file(),
+                        );
+                        return self.verify_in_fact_anonymous_fn_signature_matches_fn_set(
+                            anonymous_fn,
+                            &expected_fn_set,
+                            &in_fact,
+                            verify_state,
+                        );
+                    }
+                }
                 self.verify_atomic_fact(&fact, verify_state)
             }
             ParamType::Set(_) => {

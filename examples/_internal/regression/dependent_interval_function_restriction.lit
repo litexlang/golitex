@@ -12,5 +12,9 @@ thm closed_interval_restriction_value:
         '[u, v] $subset '[a, b]
         =>:
             fn(x '[u, v]) R {f(x)}(y) = f(y)
+    '[a, b] $subset R
+    '[u, v] $subset R
+    '[a, b] $in power_set(R)
+    '[u, v] $in power_set(R)
     by thm anonymous_restriction_value('[a, b], '[u, v], f, y)
     fn(x '[u, v]) R {f(x)}(y) = f(y)

@@ -120,16 +120,6 @@ fn by_def_rejects_non_concrete_or_empty_definitions() {
                 "by def $P(1)",
                 "concrete prop definition `P` was not found",
             ),
-            (
-                "builtin",
-                "have fn builtin_identity(x {1}) {1} = x\nby def $injective({1}, {1}, builtin_identity)",
-                "is a builtin predicate; write the fact directly to verify its builtin definition",
-            ),
-            (
-                "proper_subset_builtin",
-                "by def $proper_subset({1}, {1, 2})",
-                "is a builtin predicate; write the fact directly to verify its builtin definition",
-            ),
         ];
 
         for (label, source_code, expected) in cases {
@@ -141,6 +131,40 @@ fn by_def_rejects_non_concrete_or_empty_definitions() {
             assert!(!run_succeeded, "{} should fail:\n{}", label, run_output);
             assert!(run_output.contains(expected), "{}:\n{}", label, run_output);
         }
+    });
+}
+
+#[test]
+fn by_def_accepts_explicit_builtin_definitions() {
+    run_with_large_stack("by_def_builtin_definitions", || {
+        let source_code = r#"
+by def {1} $subset {1, 2}
+by def {1, 2} $superset {1}
+by def $proper_subset({1}, {1, 2})
+by def {1, 2} $proper_superset {1}
+
+have fn singleton_identity(x {1}) {1} = x
+by def $injective({1}, {1}, singleton_identity)
+trust forall y {1}:
+    exist x {1} st {y = singleton_identity(x)}
+by def $surjective({1}, {1}, singleton_identity)
+by def $bijective({1}, {1}, singleton_identity)
+
+have fn real_identity(x R) R = x
+have fn second_real_identity(x R) R = x
+by def $fn_eq_in(real_identity, second_real_identity, R)
+by def $fn_eq(real_identity, second_real_identity)
+"#;
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("by_def_builtin_definitions");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            run_succeeded,
+            "builtin definitions should verify explicitly:\n{run_output}"
+        );
+        assert!(run_output.contains("proof by definition"));
     });
 }
 

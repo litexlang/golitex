@@ -166,7 +166,7 @@ impl Runtime {
     pub(crate) fn try_verify_trigonometric_order_bound(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
         else {
@@ -184,7 +184,7 @@ impl Runtime {
             )
             .into();
             let Some(nonnegative_result) =
-                self.verify_zero_le_even_integer_pow_builtin_rule(&nonnegative, verify_state)?
+                self.verify_zero_le_even_integer_pow_builtin_rule(&nonnegative, builtin_state)?
             else {
                 return Ok(None);
             };
@@ -212,7 +212,7 @@ impl Runtime {
         )
         .into();
         let Some(square_bound_result) =
-            self.try_verify_trigonometric_order_bound(&square_bound, verify_state)?
+            self.try_verify_trigonometric_order_bound(&square_bound, builtin_state)?
         else {
             return Ok(None);
         };
@@ -231,7 +231,7 @@ impl Runtime {
     pub(crate) fn try_verify_trigonometric_not_equal(
         &mut self,
         not_equal_fact: &NotEqualFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if first_trig_arg(&not_equal_fact.left).is_none()
             && first_trig_arg(&not_equal_fact.right).is_none()
@@ -245,8 +245,7 @@ impl Runtime {
                 not_equal_fact.line_file.clone(),
             )
             .into();
-            let reduced_result =
-                self.verify_non_equational_atomic_fact(&reduced, verify_state, false)?;
+            let reduced_result = self.verify_same_family_builtin_child(&reduced, builtin_state)?;
             if reduced_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -267,8 +266,7 @@ impl Runtime {
         }
         let expanded: AtomicFact =
             NotEqualFact::new(left.obj, right.obj, not_equal_fact.line_file.clone()).into();
-        let expanded_result =
-            self.verify_non_equational_atomic_fact(&expanded, verify_state, false)?;
+        let expanded_result = self.verify_same_family_builtin_child(&expanded, builtin_state)?;
         if !expanded_result.is_true() {
             return Ok(None);
         }

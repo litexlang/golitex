@@ -708,11 +708,12 @@ impl Runtime {
                 Ok(ByThmStmt::new(s.name.clone(), args, line_file.clone()).into())
             }
             Stmt::By(ByStmt::ByDefStmt(s)) => {
-                let mut args = Vec::with_capacity(s.fact.body.len());
-                for arg in s.fact.body.iter() {
-                    args.push(self.inst_obj(arg, param_to_arg_map, ParamObjType::DefHeader)?);
-                }
-                let fact = NormalAtomicFact::new(s.fact.predicate.clone(), args, line_file.clone());
+                let fact = self.inst_atomic_fact(
+                    &s.fact,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file),
+                )?;
                 Ok(ByDefStmt::new(fact, line_file.clone()).into())
             }
             Stmt::By(ByStmt::ByCasesStmt(s)) => {

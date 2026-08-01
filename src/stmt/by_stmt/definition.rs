@@ -3,12 +3,12 @@ use std::fmt;
 
 #[derive(Clone)]
 pub struct ByDefStmt {
-    pub fact: NormalAtomicFact,
+    pub fact: AtomicFact,
     pub line_file: LineFile,
 }
 
 impl ByDefStmt {
-    pub fn new(fact: NormalAtomicFact, line_file: LineFile) -> Self {
+    pub fn new(fact: AtomicFact, line_file: LineFile) -> Self {
         ByDefStmt { fact, line_file }
     }
 

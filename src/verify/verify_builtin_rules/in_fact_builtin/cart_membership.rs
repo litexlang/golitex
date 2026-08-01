@@ -6,7 +6,7 @@ impl Runtime {
         in_fact: &InFact,
         tuple: &Tuple,
         cart: &Cart,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if tuple.args.len() < 2 {
             return Ok((StmtUnknown::new()).into());
@@ -15,6 +15,7 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
 
+        let mut component_results = Vec::with_capacity(tuple.args.len());
         for component_index in 0..tuple.args.len() {
             let tuple_component_obj = (*tuple.args[component_index]).clone();
             let cart_component_obj = (*cart.args[component_index]).clone();
@@ -24,20 +25,19 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let component_verify_result = self.verify_atomic_fact_known_then_builtin_rules_only(
-                &component_in_fact,
-                verify_state,
-            )?;
+            let component_verify_result =
+                self.verify_same_family_builtin_child(&component_in_fact, builtin_state)?;
             if !component_verify_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
+            component_results.push(component_verify_result);
         }
 
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "tuple in cart: each component is in the corresponding cart factor".to_string(),
-                Vec::new(),
+                component_results,
             ))
             .into(),
         )
@@ -47,23 +47,21 @@ impl Runtime {
     // dimension and every coordinate's factor membership prove membership.
     // Example: `$is_cart(C)`, `tuple_dim(p) = cart_dim(C)`, and
     // `forall i closed_range(1, cart_dim(C)): p[i] $in proj(C, i)` imply `p $in C`.
-    pub(super) fn try_verify_in_fact_by_symbolic_cart(
+    pub(crate) fn try_verify_in_fact_by_symbolic_cart(
         &mut self,
         in_fact: &InFact,
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let is_cart_fact: AtomicFact =
             IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();
-        let is_cart_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&is_cart_fact, verify_state)?;
+        let is_cart_result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
         if !is_cart_result.is_true() {
             return Ok(None);
         }
 
         let is_tuple_fact: AtomicFact =
             IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
-        let is_tuple_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&is_tuple_fact, verify_state)?;
+        let is_tuple_result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
         if !is_tuple_result.is_true() {
             return Ok(None);
         }
@@ -74,8 +72,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let tuple_dim_result =
-            self.verify_atomic_fact_known_then_builtin_rules_only(&tuple_dim_fact, verify_state)?;
+        let tuple_dim_result = self.verify_atomic_fact(&tuple_dim_fact, verify_state)?;
         if !tuple_dim_result.is_true() {
             return Ok(None);
         }

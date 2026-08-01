@@ -417,7 +417,7 @@ pub use crate::symbol::{
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;
 pub(crate) use crate::verify::nested_obj_binder_normalized_fact_key;
-pub use crate::verify::VerifyState;
+pub use crate::verify::{BuiltinRuleVerifyState, VerifyState};
 
 pub use crate::cli::run_cli;
 pub use crate::common::defaults::default_line_file;
@@ -442,6 +442,7 @@ pub use crate::common::helper::vec_to_string_with_sep;
 pub use crate::common::is_valid_litex_name::is_valid_litex_name;
 pub use crate::common::keywords::is_builtin_identifier_name;
 pub use crate::common::keywords::is_builtin_predicate;
+pub use crate::common::keywords::is_builtin_theorem_name;
 pub use crate::common::keywords::is_comparison_str;
 pub use crate::common::keywords::is_key_symbol_or_keyword;
 pub use crate::common::keywords::is_keyword;

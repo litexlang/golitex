@@ -2,85 +2,43 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_by_def_stmt(&mut self, stmt: &ByDefStmt) -> Result<StmtResult, RuntimeError> {
-        let predicate_name = stmt.fact.predicate.to_string();
-        if predicate_name == PRIME {
-            if stmt.fact.body.len() != 1 {
+        let verify_state = VerifyState::new(0, false);
+        if explicit_builtin_definition_supported(&stmt.fact) {
+            self.verify_atomic_fact_well_defined(&stmt.fact, &verify_state)?;
+            let result = self
+                .verify_explicit_builtin_definition(&stmt.fact, &verify_state)?
+                .unwrap_or_else(|| StmtUnknown::new().into());
+            if result.is_unknown() {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by def `prime`: expected 1 argument, got {}",
-                        stmt.fact.body.len()
+                        "by def `{}`: builtin definition requirements are not verified",
+                        stmt.fact.key()
                     ),
                     None,
-                    vec![],
+                    vec![result],
                 ));
             }
-            let target_atomic: AtomicFact = stmt.fact.clone().into();
-            self.verify_atomic_fact_well_defined(&target_atomic, &VerifyState::new(0, false))?;
-            let definition_facts = self
-                .builtin_prime_definition_facts(&stmt.fact)?
-                .expect("prime fact has a builtin definition");
-            let mut inside_results = Vec::new();
-            let instantiated_clauses = definition_facts
-                .iter()
-                .map(|fact| fact.to_string())
-                .collect::<Vec<_>>();
-            let computed = self.verify_prime_fact_by_computation(&target_atomic);
-            if computed.as_ref().is_some_and(StmtResult::is_true) {
-                inside_results.push(computed.expect("checked as present"));
-            } else {
-                for (index, fact) in definition_facts.into_iter().enumerate() {
-                    let result = self.verify_fact_full(&fact, &VerifyState::new(0, false))?;
-                    if result.is_unknown() {
-                        return Err(short_exec_error(
-                            stmt.clone().into(),
-                            format!(
-                                "by def `prime`: definition clause {} is not verified: `{}`",
-                                index + 1,
-                                fact
-                            ),
-                            None,
-                            vec![result],
-                        ));
-                    }
-                    inside_results.push(result);
-                }
-            }
-            let target_fact: Fact = stmt.fact.clone().into();
-            let infer_result = self.run_in_local_env_and_commit(|rt| {
-                rt.store_trusted_fact_and_infer_with_reason(
-                    target_fact.clone(),
-                    InferReason::Other(ByDefStmt::store_reason().to_string()),
-                )
-            })?;
-            let by_verification = ByDefinitionVerificationResult::new(
-                predicate_name,
-                stmt.fact.body.iter().map(|arg| arg.to_string()).collect(),
-                instantiated_clauses,
-                target_fact.to_string(),
+            return self.finish_by_def_stmt(
+                stmt,
+                stmt.fact.key(),
+                vec![format!("builtin definition of `{}`", stmt.fact)],
+                vec![result],
             );
-            return Ok(NonFactualStmtSuccess::new_with_by_verification(
-                stmt.clone().into(),
-                infer_result,
-                inside_results,
-                by_verification.into(),
-            )
-            .into());
         }
-        if matches!(
-            predicate_name.as_str(),
-            INJECTIVE | SURJECTIVE | BIJECTIVE | PROPER_SUBSET | PROPER_SUPERSET
-        ) {
+
+        let AtomicFact::NormalAtomicFact(normal_fact) = &stmt.fact else {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 format!(
-                    "by def: `{}` is a builtin predicate; write the fact directly to verify its builtin definition",
-                    predicate_name
+                    "by def: `{}` has no supported builtin definition",
+                    stmt.fact
                 ),
                 None,
                 vec![],
             ));
-        }
+        };
+        let predicate_name = normal_fact.predicate.to_string();
         if self
             .get_abstract_prop_definition_by_name(&predicate_name)
             .is_some()
@@ -120,25 +78,25 @@ impl Runtime {
             ));
         }
         let expected_argument_count = definition.params_def_with_type.number_of_params();
-        if stmt.fact.body.len() != expected_argument_count {
+        if normal_fact.body.len() != expected_argument_count {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 format!(
                     "by def `{}`: expected {} argument(s), got {}",
                     predicate_name,
                     expected_argument_count,
-                    stmt.fact.body.len()
+                    normal_fact.body.len()
                 ),
                 None,
                 vec![],
             ));
         }
+        self.verify_atomic_fact_well_defined(&stmt.fact, &verify_state)?;
 
-        let verify_state = VerifyState::new(0, false);
         let (parameter_type_check, clause_checks) = self
             .run_in_local_env(|rt| {
                 rt.verify_normal_atomic_fact_definition_clauses(
-                    &stmt.fact,
+                    normal_fact,
                     &definition,
                     &verify_state,
                 )
@@ -190,6 +148,54 @@ impl Runtime {
             inside_results.push(clause_result);
         }
 
+        self.finish_by_def_stmt(stmt, predicate_name, instantiated_clauses, inside_results)
+    }
+
+    pub(crate) fn exec_by_def_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByDefStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.finish_by_def_stmt(stmt, stmt.fact.key(), vec![], vec![])
+    }
+
+    fn verify_explicit_builtin_definition(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        match fact {
+            AtomicFact::SubsetFact(_) | AtomicFact::SupersetFact(_) => {
+                self.verify_atomic_fact_using_builtin_or_prop_definition(fact, verify_state)
+            }
+            AtomicFact::FnEqualInFact(fact) => Ok(Some(
+                self.verify_fn_equal_in_fact_with_builtin_rules(fact, verify_state)?,
+            )),
+            AtomicFact::FnEqualFact(fact) => Ok(Some(
+                self.verify_fn_equal_fact_with_builtin_rules(fact, verify_state)?,
+            )),
+            AtomicFact::NormalAtomicFact(fact) => match fact.predicate.to_string().as_str() {
+                PRIME => self.verify_prime_fact_by_definition(&fact.clone().into(), verify_state),
+                INJECTIVE | SURJECTIVE | BIJECTIVE => {
+                    self.verify_builtin_function_property_by_definition(fact, verify_state)
+                }
+                PROPER_SUBSET | PROPER_SUPERSET => self
+                    .verify_builtin_proper_set_relation_by_definition(
+                        &fact.clone().into(),
+                        verify_state,
+                    ),
+                _ => Ok(None),
+            },
+            _ => Ok(None),
+        }
+    }
+
+    fn finish_by_def_stmt(
+        &mut self,
+        stmt: &ByDefStmt,
+        definition_name: String,
+        definition_clauses: Vec<String>,
+        inside_results: Vec<StmtResult>,
+    ) -> Result<StmtResult, RuntimeError> {
         let target_fact: Fact = stmt.fact.clone().into();
         let infer_result = self.run_in_local_env_and_commit(|rt| {
             rt.store_trusted_fact_and_infer_with_reason(
@@ -197,11 +203,10 @@ impl Runtime {
                 InferReason::Other(ByDefStmt::store_reason().to_string()),
             )
         })?;
-
         let by_verification = ByDefinitionVerificationResult::new(
-            predicate_name,
-            stmt.fact.body.iter().map(|arg| arg.to_string()).collect(),
-            instantiated_clauses,
+            definition_name,
+            stmt.fact.args().iter().map(|arg| arg.to_string()).collect(),
+            definition_clauses,
             target_fact.to_string(),
         );
         Ok(NonFactualStmtSuccess::new_with_by_verification(
@@ -212,30 +217,18 @@ impl Runtime {
         )
         .into())
     }
+}
 
-    pub(crate) fn exec_by_def_stmt_affect_environment_only(
-        &mut self,
-        stmt: &ByDefStmt,
-    ) -> Result<StmtResult, RuntimeError> {
-        let target_fact: Fact = stmt.fact.clone().into();
-        let infer_result = self.run_in_local_env_and_commit(|rt| {
-            rt.store_trusted_fact_and_infer_with_reason(
-                target_fact.clone(),
-                InferReason::Other(ByDefStmt::store_reason().to_string()),
-            )
-        })?;
-        let by_verification = ByDefinitionVerificationResult::new(
-            stmt.fact.predicate.to_string(),
-            stmt.fact.body.iter().map(|arg| arg.to_string()).collect(),
-            vec![],
-            target_fact.to_string(),
-        );
-        Ok(NonFactualStmtSuccess::new_with_by_verification(
-            stmt.clone().into(),
-            infer_result,
-            vec![],
-            by_verification.into(),
-        )
-        .into())
+fn explicit_builtin_definition_supported(fact: &AtomicFact) -> bool {
+    match fact {
+        AtomicFact::SubsetFact(_)
+        | AtomicFact::SupersetFact(_)
+        | AtomicFact::FnEqualInFact(_)
+        | AtomicFact::FnEqualFact(_) => true,
+        AtomicFact::NormalAtomicFact(fact) => matches!(
+            fact.predicate.to_string().as_str(),
+            PRIME | INJECTIVE | SURJECTIVE | BIJECTIVE | PROPER_SUBSET | PROPER_SUPERSET
+        ),
+        _ => false,
     }
 }

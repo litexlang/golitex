@@ -22,7 +22,7 @@ impl Runtime {
     pub fn verify_order_atomic_fact_numeric_builtin_only(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Most rules in this dispatcher are facts about the real-number order.
         // The direct order-semantics rules above additionally handle integer
@@ -65,7 +65,7 @@ impl Runtime {
             let mut subgoals = Vec::new();
             for premise in [d_in_n_pos, left_divisible, right_divisible] {
                 let result =
-                    self.verify_atomic_fact_restricted_known_builtin(&premise, verify_state)?;
+                    self.verify_cross_family_known_or_number_calculation(&premise, builtin_state)?;
                 if result.is_unknown() {
                     subgoals.clear();
                     break;
@@ -84,16 +84,96 @@ impl Runtime {
             }
         }
         if self
-            .verify_objects_are_known_reals(&[&left, &right], &line_file, verify_state)?
+            .verify_objects_are_known_reals_in_builtin(&[&left, &right], &line_file, builtin_state)?
             .is_none()
         {
             return Ok(StmtUnknown::new().into());
+        }
+        // Dispatch exact recursive cone shapes before generic order semantics.
+        // A generic matcher may explore unsuccessful alternatives, and the
+        // shared DFS budget intentionally does not roll those attempts back.
+        if let Some(result) = self
+            .verify_zero_le_add_from_known_atomic_facts_builtin_rule(atomic_fact, builtin_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self
+            .verify_zero_lt_add_from_known_atomic_facts_builtin_rule(atomic_fact, builtin_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_zero_le_even_integer_pow_builtin_rule(atomic_fact, builtin_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_zero_lt_even_integer_pow_from_base_nonzero_builtin_rule(
+            atomic_fact,
+            builtin_state,
+        )? {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_zero_lt_pow_from_positive_base_real_exp_builtin_rule(
+            atomic_fact,
+            builtin_state,
+        )? {
+            return Ok(result);
+        }
+        if let Some(result) = self
+            .verify_zero_le_pow_from_nonnegative_base_positive_integer_exp_builtin_rule(
+                atomic_fact,
+                builtin_state,
+            )?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self
+            .verify_zero_le_pow_integer_exponent_from_nonneg_base_builtin_rule(
+                atomic_fact,
+                builtin_state,
+            )?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_zero_le_pow_from_positive_base_real_exp_builtin_rule(
+            atomic_fact,
+            builtin_state,
+        )? {
+            return Ok(result);
+        }
+        if let Some(result) = self
+            .verify_zero_le_mul_from_known_atomic_facts_builtin_rule(atomic_fact, builtin_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self
+            .verify_zero_lt_mul_from_known_atomic_facts_builtin_rule(atomic_fact, builtin_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self
+            .verify_zero_le_div_from_known_atomic_facts_builtin_rule(atomic_fact, builtin_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self
+            .verify_zero_lt_div_from_known_atomic_facts_builtin_rule(atomic_fact, builtin_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) = self.verify_abs_order_builtin_rule(atomic_fact, builtin_state)? {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.verify_abs_order_strict_builtin_rule(atomic_fact, builtin_state)?
+        {
+            return Ok(result);
         }
         if let Some(result) = self.try_verify_native_rounding_extrema_order(atomic_fact) {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_native_exp_sign_factorial_order(atomic_fact, verify_state)?
+            self.try_verify_native_exp_sign_factorial_order(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
@@ -101,12 +181,12 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_trigonometric_order_bound(atomic_fact, verify_state)?
+            self.try_verify_trigonometric_order_bound(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_order_semantics_builtin_rule(atomic_fact, verify_state)?
+            self.try_verify_order_semantics_builtin_rule(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
@@ -137,98 +217,95 @@ impl Runtime {
             }
         }
         if let Some(result) =
-            self.try_verify_finite_nonempty_set_size_at_least_one(atomic_fact, verify_state)?
+            self.try_verify_finite_nonempty_set_size_at_least_one(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_finite_set_size_subset_le(atomic_fact, verify_state)?
+            self.try_verify_finite_set_size_subset_le(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
         if let Some(result) = self
             .try_verify_finite_set_size_codomain_le_domain_from_known_surjection(
                 atomic_fact,
-                verify_state,
+                builtin_state,
             )?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_finite_set_size_union_or_set_diff_le_sum(atomic_fact, verify_state)?
+            self.try_verify_finite_set_size_union_or_set_diff_le_sum(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, verify_state)?
+            self.try_verify_order_nonnegative_from_membership_in_n(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_order_one_le_from_membership_in_n_pos(atomic_fact, verify_state)?
+            self.try_verify_order_one_le_from_membership_in_n_pos(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
         if let Some(result) = self
-            .try_verify_order_one_le_from_membership_in_n_and_nonzero(atomic_fact, verify_state)?
+            .try_verify_order_one_le_from_membership_in_n_and_nonzero(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
         if let Some(result) = self
-            .try_verify_order_one_le_from_membership_in_z_and_positive(atomic_fact, verify_state)?
+            .try_verify_order_one_le_from_membership_in_z_and_positive(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_numeric_lower_bound_from_known_lower_bound(atomic_fact, verify_state)?
+            self.try_verify_numeric_lower_bound_from_known_lower_bound(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_numeric_upper_bound_from_known_upper_bound(atomic_fact, verify_state)?
+            self.try_verify_numeric_upper_bound_from_known_upper_bound(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_mod_remainder_bounds(atomic_fact, verify_state)? {
+        if let Some(result) = self.try_verify_mod_remainder_bounds(atomic_fact, builtin_state)? {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, verify_state)?
+            self.try_verify_order_opposite_sign_mul_minus_one(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
-        if let Some(result) = self.verify_order_from_known_negated_complement(atomic_fact)? {
+        if let Some(result) =
+            self.verify_order_from_known_negated_complement(atomic_fact, builtin_state)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.verify_negated_order_from_known_equivalent_order(atomic_fact)? {
-            return Ok(result);
-        }
-        if let Some(result) = self.verify_order_algebra_structural_builtin_rule(atomic_fact)? {
+        if let Some(result) =
+            self.verify_negated_order_from_known_equivalent_order(atomic_fact, builtin_state)?
+        {
             return Ok(result);
         }
         if let Some(result) = self.verify_zero_le_abs_builtin_rule(atomic_fact)? {
             return Ok(result);
         }
         if let Some(result) =
-            self.verify_zero_le_sqrt_from_nonnegative_arg_builtin_rule(atomic_fact)?
+            self.verify_zero_le_sqrt_from_nonnegative_arg_builtin_rule(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
         if let Some(result) =
-            self.verify_zero_lt_sqrt_from_positive_arg_builtin_rule(atomic_fact)?
+            self.verify_zero_lt_sqrt_from_positive_arg_builtin_rule(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
-        if let Some(result) = self.verify_sqrt_monotonicity_builtin_rule(atomic_fact)? {
+        if let Some(result) =
+            self.verify_sqrt_monotonicity_builtin_rule(atomic_fact, builtin_state)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.verify_log_order_builtin_rule(atomic_fact)? {
-            return Ok(result);
-        }
-        if let Some(result) = self.verify_abs_order_builtin_rule(atomic_fact)? {
-            return Ok(result);
-        }
-        if let Some(result) = self.verify_abs_order_strict_builtin_rule(atomic_fact)? {
+        if let Some(result) = self.verify_log_order_builtin_rule(atomic_fact, builtin_state)? {
             return Ok(result);
         }
         if let Some(result) =
@@ -236,70 +313,18 @@ impl Runtime {
         {
             return Ok(result);
         }
-        if let Some(result) =
-            self.verify_zero_order_on_sub_from_two_sided_order_builtin_rule(atomic_fact)?
-        {
+        if let Some(result) = self.verify_zero_order_on_sub_from_two_sided_order_builtin_rule(
+            atomic_fact,
+            builtin_state,
+        )? {
             return Ok(result);
         }
+        // Exact zero-cone shapes above must run before the general algebraic
+        // dispatcher.  General rewrites can legitimately explore and fail,
+        // consuming the shared DFS budget; a structural sum or power should
+        // therefore take its direct recursive rule first.
         if let Some(result) =
-            self.verify_zero_le_add_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_lt_add_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_le_even_integer_pow_builtin_rule(atomic_fact, verify_state)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_lt_even_integer_pow_from_base_nonzero_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_lt_pow_from_positive_base_real_exp_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_le_pow_from_positive_base_real_exp_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) = self
-            .verify_zero_le_pow_from_nonnegative_base_positive_integer_exp_builtin_rule(
-                atomic_fact,
-            )?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_le_pow_integer_exponent_from_nonneg_base_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_le_mul_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_lt_mul_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_le_div_from_known_atomic_facts_builtin_rule(atomic_fact)?
-        {
-            return Ok(result);
-        }
-        if let Some(result) =
-            self.verify_zero_lt_div_from_known_atomic_facts_builtin_rule(atomic_fact)?
+            self.verify_order_algebra_structural_builtin_rule(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
@@ -675,49 +700,32 @@ pub fn compare_number_strings(
 }
 
 impl Runtime {
-    /// Sub-goals inside numeric builtins: known env + builtin rules only.
-    /// Do not call [`Runtime::verify_non_equational_atomic_fact`] here: its forall / definition
-    /// round can recurse with outer goals (e.g. `b in R` for `0 <= a^b`, or order lemmas).
-    pub(crate) fn verify_non_equational_known_then_builtin_rules_only(
-        &mut self,
-        atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        let r = self.verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)?;
-        if r.is_true() {
-            return Ok(r);
-        }
-        self.verify_non_equational_atomic_fact_with_restricted_builtin_rules(
-            atomic_fact,
-            verify_state,
-        )
-    }
-
     fn verify_zero_order_on_sub_expr(
         &mut self,
         zero: &Obj,
         sub_expr: &Obj,
         weak: bool,
+        parent_weak: bool,
         line_file: &LineFile,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = if weak {
             LessEqualFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
         } else {
             LessFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
         };
-        let mut result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fact)?;
-        if !result.is_true() {
-            result = self
-                .verify_order_atomic_fact_numeric_builtin_only(&fact, &VerifyState::new(0, true))?;
+        if weak == parent_weak {
+            self.verify_same_family_builtin_child(&fact, builtin_state)
+        } else {
+            self.verify_cross_family_known_or_number_calculation(&fact, builtin_state)
         }
-        Ok(result)
     }
 
     /// `n >= 0` / `0 <= n` from known `n $in N` (e.g. `forall n N:` domain).
     fn try_verify_order_nonnegative_from_membership_in_n(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
@@ -747,15 +755,14 @@ impl Runtime {
             _ => return Ok(None),
         };
         let in_n: AtomicFact = InFact::new(n, StandardSet::N.into(), line_file.clone()).into();
-        if self
-            .verify_non_equational_known_then_builtin_rules_only(&in_n, verify_state)?
-            .is_true()
-        {
+        let in_n_result =
+            self.verify_cross_family_known_or_number_calculation(&in_n, builtin_state)?;
+        if in_n_result.is_true() {
             return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     "n >= 0 from n $in N".to_string(),
-                    Vec::new(),
+                    vec![in_n_result],
                 ),
             )));
         }
@@ -766,7 +773,7 @@ impl Runtime {
     fn try_verify_order_one_le_from_membership_in_n_pos(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
@@ -797,15 +804,14 @@ impl Runtime {
         };
         let in_n_pos: AtomicFact =
             InFact::new(n, StandardSet::NPos.into(), line_file.clone()).into();
-        if self
-            .verify_non_equational_known_then_builtin_rules_only(&in_n_pos, verify_state)?
-            .is_true()
-        {
+        let in_n_pos_result =
+            self.verify_cross_family_known_or_number_calculation(&in_n_pos, builtin_state)?;
+        if in_n_pos_result.is_true() {
             return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
                     "n >= 1 from n $in N_pos".to_string(),
-                    Vec::new(),
+                    vec![in_n_pos_result],
                 ),
             )));
         }
@@ -817,7 +823,7 @@ impl Runtime {
     fn try_verify_finite_nonempty_set_size_at_least_one(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (finite_set_size_obj, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
@@ -853,14 +859,14 @@ impl Runtime {
 
         let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), line_file.clone()).into();
         let finite_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&finite, verify_state)?;
+            self.verify_cross_family_known_or_number_calculation(&finite, builtin_state)?;
         if !finite_result.is_true() {
             return Ok(None);
         }
 
         let nonempty: AtomicFact = IsNonemptySetFact::new(set, line_file).into();
         let nonempty_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&nonempty, verify_state)?;
+            self.verify_cross_family_known_or_number_calculation(&nonempty, builtin_state)?;
         if !nonempty_result.is_true() {
             return Ok(None);
         }
@@ -882,7 +888,7 @@ impl Runtime {
     fn try_verify_finite_set_size_subset_le(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (left_size, right_size, line_file) = match atomic_fact {
             AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right, fact.line_file.clone()),
@@ -903,7 +909,7 @@ impl Runtime {
         )
         .into();
         let subset_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&subset, verify_state)?;
+            self.verify_cross_family_known_or_number_calculation(&subset, builtin_state)?;
         if !subset_result.is_true() {
             return Ok(None);
         }
@@ -911,7 +917,7 @@ impl Runtime {
         let left_finite: AtomicFact =
             IsFiniteSetFact::new(left_size.set.as_ref().clone(), line_file.clone()).into();
         let left_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&left_finite, verify_state)?;
+            self.verify_cross_family_known_or_number_calculation(&left_finite, builtin_state)?;
         if !left_result.is_true() {
             return Ok(None);
         }
@@ -919,7 +925,7 @@ impl Runtime {
         let right_finite: AtomicFact =
             IsFiniteSetFact::new(right_size.set.as_ref().clone(), line_file).into();
         let right_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&right_finite, verify_state)?;
+            self.verify_cross_family_known_or_number_calculation(&right_finite, builtin_state)?;
         if !right_result.is_true() {
             return Ok(None);
         }
@@ -941,7 +947,7 @@ impl Runtime {
     fn try_verify_finite_set_size_union_or_set_diff_le_sum(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (smaller, larger, line_file) = match atomic_fact {
             AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right, fact.line_file.clone()),
@@ -982,13 +988,13 @@ impl Runtime {
 
         let left_finite: AtomicFact = IsFiniteSetFact::new(left_set, line_file.clone()).into();
         let left_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&left_finite, verify_state)?;
+            self.verify_cross_family_known_or_number_calculation(&left_finite, builtin_state)?;
         if !left_result.is_true() {
             return Ok(None);
         }
         let right_finite: AtomicFact = IsFiniteSetFact::new(right_set, line_file).into();
         let right_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&right_finite, verify_state)?;
+            self.verify_cross_family_known_or_number_calculation(&right_finite, builtin_state)?;
         if !right_result.is_true() {
             return Ok(None);
         }
@@ -1009,7 +1015,7 @@ impl Runtime {
     fn try_verify_order_one_le_from_membership_in_n_and_nonzero(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
@@ -1042,23 +1048,21 @@ impl Runtime {
         let in_n: AtomicFact =
             InFact::new(n.clone(), StandardSet::N.into(), line_file.clone()).into();
         let nonzero: AtomicFact = NotEqualFact::new(n, zero_obj, line_file.clone()).into();
-        if !self
-            .verify_non_equational_known_then_builtin_rules_only(&in_n, verify_state)?
-            .is_true()
-        {
+        let in_n_result =
+            self.verify_cross_family_known_or_number_calculation(&in_n, builtin_state)?;
+        if !in_n_result.is_true() {
             return Ok(None);
         }
-        if !self
-            .verify_non_equational_atomic_fact_with_known_atomic_facts(&nonzero)?
-            .is_true()
-        {
+        let nonzero_result =
+            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&nonzero)?;
+        if !nonzero_result.is_true() {
             return Ok(None);
         }
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "1 <= n from n $in N and n != 0".to_string(),
-                Vec::new(),
+                vec![in_n_result, nonzero_result],
             ),
         )))
     }
@@ -1068,7 +1072,7 @@ impl Runtime {
     fn try_verify_mod_remainder_bounds(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1108,7 +1112,7 @@ impl Runtime {
         )
         .into();
         let dividend_result =
-            self.verify_non_equational_known_then_builtin_rules_only(&dividend_in_z, verify_state)?;
+            self.verify_cross_family_known_or_number_calculation(&dividend_in_z, builtin_state)?;
         if !dividend_result.is_true() {
             return Ok(None);
         }
@@ -1119,8 +1123,8 @@ impl Runtime {
             line_file,
         )
         .into();
-        let modulus_result = self
-            .verify_non_equational_known_then_builtin_rules_only(&modulus_in_n_pos, verify_state)?;
+        let modulus_result =
+            self.verify_cross_family_known_or_number_calculation(&modulus_in_n_pos, builtin_state)?;
         if !modulus_result.is_true() {
             return Ok(None);
         }
@@ -1143,7 +1147,7 @@ impl Runtime {
     fn try_verify_order_one_le_from_membership_in_z_and_positive(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
@@ -1176,23 +1180,21 @@ impl Runtime {
         let in_z: AtomicFact =
             InFact::new(n.clone(), StandardSet::Z.into(), line_file.clone()).into();
         let positive: AtomicFact = LessFact::new(zero_obj, n, line_file.clone()).into();
-        if !self
-            .verify_non_equational_known_then_builtin_rules_only(&in_z, verify_state)?
-            .is_true()
-        {
+        let in_z_result =
+            self.verify_cross_family_known_or_number_calculation(&in_z, builtin_state)?;
+        if !in_z_result.is_true() {
             return Ok(None);
         }
-        if !self
-            .verify_non_equational_known_then_builtin_rules_only(&positive, verify_state)?
-            .is_true()
-        {
+        let positive_result =
+            self.verify_cross_family_known_or_number_calculation(&positive, builtin_state)?;
+        if !positive_result.is_true() {
             return Ok(None);
         }
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "1 <= n from n $in Z and 0 < n".to_string(),
-                Vec::new(),
+                vec![in_z_result, positive_result],
             ),
         )))
     }
@@ -1202,7 +1204,7 @@ impl Runtime {
     fn try_verify_numeric_lower_bound_from_known_lower_bound(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1241,11 +1243,10 @@ impl Runtime {
                             f.line_file.clone(),
                         )
                         .into();
-                        let in_z_result = self
-                            .verify_non_equational_known_then_builtin_rules_only(
-                                &in_z,
-                                verify_state,
-                            )?;
+                        let in_z_result = self.verify_cross_family_known_or_number_calculation(
+                            &in_z,
+                            builtin_state,
+                        )?;
                         if !in_z_result.is_true() {
                             continue;
                         }
@@ -1338,7 +1339,7 @@ impl Runtime {
     fn try_verify_numeric_upper_bound_from_known_upper_bound(
         &mut self,
         atomic_fact: &AtomicFact,
-        _verify_state: &VerifyState,
+        _builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1464,6 +1465,7 @@ impl Runtime {
     fn verify_zero_le_sqrt_from_nonnegative_arg_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1483,10 +1485,8 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let nonnegative_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &nonnegative_arg,
-            &VerifyState::new(0, true),
-        )?;
+        let nonnegative_result =
+            self.verify_same_family_builtin_child(&nonnegative_arg, builtin_state)?;
         if !nonnegative_result.is_true() {
             return Ok(None);
         }
@@ -1504,6 +1504,7 @@ impl Runtime {
     fn verify_zero_lt_sqrt_from_positive_arg_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1523,10 +1524,8 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let positive_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &positive_arg,
-            &VerifyState::new(0, true),
-        )?;
+        let positive_result =
+            self.verify_same_family_builtin_child(&positive_arg, builtin_state)?;
         if !positive_result.is_true() {
             return Ok(None);
         }
@@ -1544,6 +1543,7 @@ impl Runtime {
     fn verify_sqrt_monotonicity_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -1555,6 +1555,7 @@ impl Runtime {
                 f.line_file.clone(),
                 false,
                 atomic_fact,
+                builtin_state,
             ),
             AtomicFact::LessFact(f) => self.try_verify_sqrt_monotonicity(
                 f.left.clone(),
@@ -1562,6 +1563,7 @@ impl Runtime {
                 f.line_file.clone(),
                 true,
                 atomic_fact,
+                builtin_state,
             ),
             _ => Ok(None),
         }
@@ -1574,6 +1576,7 @@ impl Runtime {
         line_file: LineFile,
         strict: bool,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Sqrt(left_sqrt), Obj::Sqrt(right_sqrt)) = (&left, &right) else {
             return Ok(None);
@@ -1593,10 +1596,16 @@ impl Runtime {
 
         let mut step_results = Vec::new();
         for subgoal in subgoals {
-            let result = self.verify_non_equational_known_then_builtin_rules_only(
-                &subgoal,
-                &VerifyState::new(0, true),
-            )?;
+            let same_family = if strict {
+                subgoal.key() == LESS
+            } else {
+                subgoal.key() == LESS_EQUAL
+            };
+            let result = if same_family {
+                self.verify_same_family_builtin_child(&subgoal, builtin_state)?
+            } else {
+                self.verify_cross_family_known_or_number_calculation(&subgoal, builtin_state)?
+            };
             if !result.is_true() {
                 return Ok(None);
             }
@@ -1622,7 +1631,7 @@ impl Runtime {
     fn try_verify_order_opposite_sign_mul_minus_one(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z: Obj = Number::new("0".to_string()).into();
         let success = |msg: &'static str| {
@@ -1642,10 +1651,7 @@ impl Runtime {
                     let reverse: AtomicFact =
                         LessFact::new(x, negative_right, f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &reverse,
-                            verify_state,
-                        )?
+                        .verify_cross_family_known_or_number_calculation(&reverse, builtin_state)?
                         .is_true()
                     {
                         return success("order: -x > y from x < -y");
@@ -1659,10 +1665,7 @@ impl Runtime {
                     let reverse: AtomicFact =
                         LessEqualFact::new(x, negative_right, f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &reverse,
-                            verify_state,
-                        )?
+                        .verify_cross_family_known_or_number_calculation(&reverse, builtin_state)?
                         .is_true()
                     {
                         return success("order: -x >= y from x <= -y");
@@ -1676,10 +1679,7 @@ impl Runtime {
                     let reverse: AtomicFact =
                         GreaterFact::new(x, negative_right, f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &reverse,
-                            verify_state,
-                        )?
+                        .verify_cross_family_known_or_number_calculation(&reverse, builtin_state)?
                         .is_true()
                     {
                         return success("order: -x < y from x > -y");
@@ -1693,10 +1693,7 @@ impl Runtime {
                     let reverse: AtomicFact =
                         GreaterEqualFact::new(x, negative_right, f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &reverse,
-                            verify_state,
-                        )?
+                        .verify_cross_family_known_or_number_calculation(&reverse, builtin_state)?
                         .is_true()
                     {
                         return success("order: -x <= y from x >= -y");
@@ -1711,14 +1708,14 @@ impl Runtime {
                     let le: AtomicFact =
                         LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&le, verify_state)?
+                        .verify_cross_family_known_or_number_calculation(&le, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x >= 0 from x <= 0");
                     }
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?
+                        .verify_cross_family_known_or_number_calculation(&lt, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x >= 0 from x < 0");
@@ -1730,7 +1727,7 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?
+                        .verify_cross_family_known_or_number_calculation(&lt, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x > 0 from x < 0");
@@ -1743,14 +1740,14 @@ impl Runtime {
                     let ge: AtomicFact =
                         GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&ge, verify_state)?
+                        .verify_cross_family_known_or_number_calculation(&ge, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x <= 0 from x >= 0");
                     }
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&gt, verify_state)?
+                        .verify_cross_family_known_or_number_calculation(&gt, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x <= 0 from x > 0");
@@ -1762,7 +1759,7 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&gt, verify_state)?
+                        .verify_cross_family_known_or_number_calculation(&gt, builtin_state)?
                         .is_true()
                     {
                         return success("order: (-1)*x < 0 from x > 0");
@@ -1775,14 +1772,14 @@ impl Runtime {
                     let le: AtomicFact =
                         LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&le, verify_state)?
+                        .verify_same_family_builtin_child(&le, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 <= (-1)*x from x <= 0");
                     }
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?
+                        .verify_cross_family_known_or_number_calculation(&lt, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 <= (-1)*x from x < 0");
@@ -1794,7 +1791,7 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&lt, verify_state)?
+                        .verify_same_family_builtin_child(&lt, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 < (-1)*x from x < 0");
@@ -1807,14 +1804,14 @@ impl Runtime {
                     let ge: AtomicFact =
                         GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&ge, verify_state)?
+                        .verify_same_family_builtin_child(&ge, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 >= (-1)*x from x >= 0");
                     }
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&gt, verify_state)?
+                        .verify_cross_family_known_or_number_calculation(&gt, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 >= (-1)*x from x > 0");
@@ -1826,7 +1823,7 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
                     if self
-                        .verify_non_equational_known_then_builtin_rules_only(&gt, verify_state)?
+                        .verify_same_family_builtin_child(&gt, builtin_state)?
                         .is_true()
                     {
                         return success("order: 0 > (-1)*x from x > 0");
@@ -1842,6 +1839,7 @@ impl Runtime {
     fn verify_order_from_known_negated_complement(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (neg, left, right, line_file) = match atomic_fact {
             AtomicFact::GreaterFact(f) => (
@@ -1871,9 +1869,11 @@ impl Runtime {
             ),
             _ => return Ok(None),
         };
-        let verify_state = VerifyState::new(0, true);
-        let Some(mut steps) =
-            self.verify_objects_are_known_reals(&[&left, &right], &line_file, &verify_state)?
+        let Some(mut steps) = self.verify_objects_are_known_reals_in_builtin(
+            &[&left, &right],
+            &line_file,
+            builtin_state,
+        )?
         else {
             return Ok(None);
         };
@@ -1903,13 +1903,13 @@ impl Runtime {
     fn verify_log_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
         let one = Self::literal_one_obj();
         let zero = Self::literal_zero_obj();
-        let verify_state = VerifyState::new(0, true);
 
         if let AtomicFact::LessFact(f) = &norm {
             match (&f.left, &f.right) {
@@ -1948,17 +1948,11 @@ impl Runtime {
                     )
                     .into();
 
-                    let base_gt_one_result = self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &base_gt_one,
-                            &verify_state,
-                        )?;
+                    let base_gt_one_result =
+                        self.verify_same_family_builtin_child(&base_gt_one, builtin_state)?;
                     if base_gt_one_result.is_true() {
-                        let args_result = self
-                            .verify_non_equational_known_then_builtin_rules_only(
-                                &forward_args,
-                                &verify_state,
-                            )?;
+                        let args_result =
+                            self.verify_same_family_builtin_child(&forward_args, builtin_state)?;
                         if args_result.is_true() {
                             return Ok(Some(StmtResult::from(
                                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1970,17 +1964,11 @@ impl Runtime {
                         }
                     }
 
-                    let base_lt_one_result = self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &base_lt_one,
-                            &verify_state,
-                        )?;
+                    let base_lt_one_result =
+                        self.verify_same_family_builtin_child(&base_lt_one, builtin_state)?;
                     if base_lt_one_result.is_true() {
-                        let args_result = self
-                            .verify_non_equational_known_then_builtin_rules_only(
-                                &reversed_args,
-                                &verify_state,
-                            )?;
+                        let args_result =
+                            self.verify_same_family_builtin_child(&reversed_args, builtin_state)?;
                         if args_result.is_true() {
                             return Ok(Some(StmtResult::from(
                                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -2001,19 +1989,13 @@ impl Runtime {
                     let arg_gt_one: AtomicFact =
                         LessFact::new(one.clone(), log.arg.as_ref().clone(), f.line_file.clone())
                             .into();
-                    let base_gt_one_result = self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &base_gt_one,
-                            &verify_state,
-                        )?;
+                    let base_gt_one_result =
+                        self.verify_same_family_builtin_child(&base_gt_one, builtin_state)?;
                     if !base_gt_one_result.is_true() {
                         return Ok(None);
                     }
-                    let arg_gt_one_result = self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &arg_gt_one,
-                            &verify_state,
-                        )?;
+                    let arg_gt_one_result =
+                        self.verify_same_family_builtin_child(&arg_gt_one, builtin_state)?;
                     if !arg_gt_one_result.is_true() {
                         return Ok(None);
                     }
@@ -2038,27 +2020,18 @@ impl Runtime {
                     .into();
                     let arg_positive: AtomicFact =
                         LessFact::new(zero, log.arg.as_ref().clone(), f.line_file.clone()).into();
-                    let base_gt_one_result = self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &base_gt_one,
-                            &verify_state,
-                        )?;
+                    let base_gt_one_result =
+                        self.verify_same_family_builtin_child(&base_gt_one, builtin_state)?;
                     if !base_gt_one_result.is_true() {
                         return Ok(None);
                     }
-                    let arg_lt_one_result = self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &arg_lt_one,
-                            &verify_state,
-                        )?;
+                    let arg_lt_one_result =
+                        self.verify_same_family_builtin_child(&arg_lt_one, builtin_state)?;
                     if !arg_lt_one_result.is_true() {
                         return Ok(None);
                     }
-                    let arg_positive_result = self
-                        .verify_non_equational_known_then_builtin_rules_only(
-                            &arg_positive,
-                            &verify_state,
-                        )?;
+                    let arg_positive_result =
+                        self.verify_same_family_builtin_child(&arg_positive, builtin_state)?;
                     if !arg_positive_result.is_true() {
                         return Ok(None);
                     }
@@ -2081,6 +2054,7 @@ impl Runtime {
     fn verify_negated_order_from_known_equivalent_order(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (left, right, line_file) = match atomic_fact {
             AtomicFact::NotLessFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
@@ -2093,9 +2067,11 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        let verify_state = VerifyState::new(0, true);
-        let Some(mut steps) =
-            self.verify_objects_are_known_reals(&[&left, &right], &line_file, &verify_state)?
+        let Some(mut steps) = self.verify_objects_are_known_reals_in_builtin(
+            &[&left, &right],
+            &line_file,
+            builtin_state,
+        )?
         else {
             return Ok(None);
         };
@@ -2219,6 +2195,7 @@ impl Runtime {
     fn verify_zero_order_on_sub_from_two_sided_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2234,14 +2211,7 @@ impl Runtime {
                     f.line_file.clone(),
                 )
                 .into();
-                let mut result =
-                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&derived)?;
-                if !result.is_true() {
-                    result = self.verify_order_atomic_fact_numeric_builtin_only(
-                        &derived,
-                        &VerifyState::new(0, true),
-                    )?;
-                }
+                let result = self.verify_same_family_builtin_child(&derived, builtin_state)?;
                 if result.is_true() {
                     Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -2264,14 +2234,7 @@ impl Runtime {
                     f.line_file.clone(),
                 )
                 .into();
-                let mut result =
-                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&derived)?;
-                if !result.is_true() {
-                    result = self.verify_order_atomic_fact_numeric_builtin_only(
-                        &derived,
-                        &VerifyState::new(0, true),
-                    )?;
-                }
+                let result = self.verify_same_family_builtin_child(&derived, builtin_state)?;
                 if result.is_true() {
                     Ok(Some(StmtResult::from(
                         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -2291,6 +2254,7 @@ impl Runtime {
     fn verify_zero_le_add_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2307,13 +2271,25 @@ impl Runtime {
 
         let zero = &less_equal_fact.left;
         let line_file = &less_equal_fact.line_file;
-        let left_verify_result =
-            self.verify_zero_order_on_sub_expr(zero, add_obj.left.as_ref(), true, line_file)?;
+        let left_verify_result = self.verify_zero_order_on_sub_expr(
+            zero,
+            add_obj.left.as_ref(),
+            true,
+            true,
+            line_file,
+            builtin_state,
+        )?;
         if !left_verify_result.is_true() {
             return Ok(None);
         }
-        let right_verify_result =
-            self.verify_zero_order_on_sub_expr(zero, add_obj.right.as_ref(), true, line_file)?;
+        let right_verify_result = self.verify_zero_order_on_sub_expr(
+            zero,
+            add_obj.right.as_ref(),
+            true,
+            true,
+            line_file,
+            builtin_state,
+        )?;
         if !right_verify_result.is_true() {
             return Ok(None);
         }
@@ -2330,6 +2306,7 @@ impl Runtime {
     fn verify_zero_lt_add_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2347,14 +2324,56 @@ impl Runtime {
         let zero = &less_fact.left;
         let line_file = &less_fact.line_file;
 
-        let strict_then_weak = |this: &mut Self| -> Result<Option<StmtResult>, RuntimeError> {
-            let left_result =
-                this.verify_zero_order_on_sub_expr(zero, add_obj.left.as_ref(), false, line_file)?;
+        let left_strict = self.verify_zero_order_on_sub_expr(
+            zero,
+            add_obj.left.as_ref(),
+            false,
+            false,
+            line_file,
+            builtin_state,
+        )?;
+        if left_strict.is_true() {
+            let right_strict = self.verify_zero_order_on_sub_expr(
+                zero,
+                add_obj.right.as_ref(),
+                false,
+                false,
+                line_file,
+                builtin_state,
+            )?;
+            if right_strict.is_true() {
+                return Ok(Some(StmtResult::from(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "0 < a + b from 0 < a and 0 < b".to_string(),
+                        vec![left_strict, right_strict],
+                    ),
+                )));
+            }
+        }
+
+        let strict_then_weak = |this: &mut Self,
+                                builtin_state: &mut BuiltinRuleVerifyState|
+         -> Result<Option<StmtResult>, RuntimeError> {
+            let left_result = this.verify_zero_order_on_sub_expr(
+                zero,
+                add_obj.left.as_ref(),
+                false,
+                false,
+                line_file,
+                builtin_state,
+            )?;
             if !left_result.is_true() {
                 return Ok(None);
             }
-            let right_result =
-                this.verify_zero_order_on_sub_expr(zero, add_obj.right.as_ref(), true, line_file)?;
+            let right_result = this.verify_zero_order_on_sub_expr(
+                zero,
+                add_obj.right.as_ref(),
+                true,
+                false,
+                line_file,
+                builtin_state,
+            )?;
             if !right_result.is_true() {
                 return Ok(None);
             }
@@ -2366,14 +2385,28 @@ impl Runtime {
                 ),
             )))
         };
-        let weak_then_strict = |this: &mut Self| -> Result<Option<StmtResult>, RuntimeError> {
-            let left_result =
-                this.verify_zero_order_on_sub_expr(zero, add_obj.left.as_ref(), true, line_file)?;
+        let weak_then_strict = |this: &mut Self,
+                                builtin_state: &mut BuiltinRuleVerifyState|
+         -> Result<Option<StmtResult>, RuntimeError> {
+            let left_result = this.verify_zero_order_on_sub_expr(
+                zero,
+                add_obj.left.as_ref(),
+                true,
+                false,
+                line_file,
+                builtin_state,
+            )?;
             if !left_result.is_true() {
                 return Ok(None);
             }
-            let right_result =
-                this.verify_zero_order_on_sub_expr(zero, add_obj.right.as_ref(), false, line_file)?;
+            let right_result = this.verify_zero_order_on_sub_expr(
+                zero,
+                add_obj.right.as_ref(),
+                false,
+                false,
+                line_file,
+                builtin_state,
+            )?;
             if !right_result.is_true() {
                 return Ok(None);
             }
@@ -2386,16 +2419,16 @@ impl Runtime {
             )))
         };
 
-        if let Some(success) = strict_then_weak(self)? {
+        if let Some(success) = strict_then_weak(self, builtin_state)? {
             return Ok(Some(success));
         }
-        weak_then_strict(self)
+        weak_then_strict(self, builtin_state)
     }
 
     pub(super) fn verify_zero_le_even_integer_pow_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2425,8 +2458,11 @@ impl Runtime {
         if !is_equal_factors_mul && !is_even_pow {
             return Ok(None);
         }
-        let Some(steps) =
-            self.verify_objects_are_known_reals(&[base], &less_equal_fact.line_file, verify_state)?
+        let Some(steps) = self.verify_objects_are_known_reals_in_builtin(
+            &[base],
+            &less_equal_fact.line_file,
+            builtin_state,
+        )?
         else {
             return Ok(None);
         };
@@ -2449,6 +2485,7 @@ impl Runtime {
     fn verify_zero_lt_even_integer_pow_from_base_nonzero_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2479,16 +2516,15 @@ impl Runtime {
             _ => return Ok(None),
         };
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let verify_state = VerifyState::new(0, true);
         let Some(mut steps) =
-            self.verify_objects_are_known_reals(&[&base], &line_file, &verify_state)?
+            self.verify_objects_are_known_reals_in_builtin(&[&base], &line_file, builtin_state)?
         else {
             return Ok(None);
         };
         let base_neq_zero: AtomicFact = NotEqualFact::new(base, zero_obj, line_file.clone()).into();
 
-        let neq_result = self
-            .verify_non_equational_known_then_builtin_rules_only(&base_neq_zero, &verify_state)?;
+        let neq_result =
+            self.verify_cross_family_known_or_number_calculation(&base_neq_zero, builtin_state)?;
         if !neq_result.is_true() {
             return Ok(None);
         }
@@ -2507,6 +2543,7 @@ impl Runtime {
     fn verify_zero_lt_pow_from_positive_base_real_exp_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2523,28 +2560,26 @@ impl Runtime {
         let zero = &less_fact.left;
         let line_file = &less_fact.line_file;
         let base = pow_obj.base.as_ref();
-        let base_result = self.verify_zero_order_on_sub_expr(zero, base, false, line_file)?;
+        let base_result =
+            self.verify_zero_order_on_sub_expr(zero, base, false, false, line_file, builtin_state)?;
         if !base_result.is_true() {
             return Ok(None);
         }
-        let in_r: AtomicFact = InFact::new(
-            (*pow_obj.exponent).clone(),
-            StandardSet::R.into(),
-            line_file.clone(),
-        )
-        .into();
-        let in_r_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &in_r,
-            &VerifyState::new(0, true),
-        )?;
-        if !in_r_result.is_true() {
+        let Some(mut exponent_steps) = self.verify_objects_are_known_reals_in_builtin(
+            &[pow_obj.exponent.as_ref()],
+            line_file,
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
+        };
+        let mut steps = vec![base_result];
+        steps.append(&mut exponent_steps);
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a^b from 0 < a and b in R".to_string(),
-                vec![base_result, in_r_result],
+                steps,
             ),
         )))
     }
@@ -2554,6 +2589,7 @@ impl Runtime {
     fn verify_zero_le_pow_from_positive_base_real_exp_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2570,28 +2606,26 @@ impl Runtime {
         let zero = &less_equal_fact.left;
         let line_file = &less_equal_fact.line_file;
         let base = pow_obj.base.as_ref();
-        let base_result = self.verify_zero_order_on_sub_expr(zero, base, false, line_file)?;
+        let base_result =
+            self.verify_zero_order_on_sub_expr(zero, base, false, true, line_file, builtin_state)?;
         if !base_result.is_true() {
             return Ok(None);
         }
-        let in_r: AtomicFact = InFact::new(
-            (*pow_obj.exponent).clone(),
-            StandardSet::R.into(),
-            line_file.clone(),
-        )
-        .into();
-        let in_r_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &in_r,
-            &VerifyState::new(0, true),
-        )?;
-        if !in_r_result.is_true() {
+        let Some(mut exponent_steps) = self.verify_objects_are_known_reals_in_builtin(
+            &[pow_obj.exponent.as_ref()],
+            line_file,
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
+        };
+        let mut steps = vec![base_result];
+        steps.append(&mut exponent_steps);
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a^b from 0 < a and b in R".to_string(),
-                vec![base_result, in_r_result],
+                steps,
             ),
         )))
     }
@@ -2602,6 +2636,7 @@ impl Runtime {
     fn verify_zero_le_pow_from_nonnegative_base_positive_integer_exp_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2618,7 +2653,8 @@ impl Runtime {
         let zero = &less_equal_fact.left;
         let line_file = &less_equal_fact.line_file;
         let base = pow_obj.base.as_ref();
-        let base_result = self.verify_zero_order_on_sub_expr(zero, base, true, line_file)?;
+        let base_result =
+            self.verify_zero_order_on_sub_expr(zero, base, true, true, line_file, builtin_state)?;
         if !base_result.is_true() {
             return Ok(None);
         }
@@ -2628,10 +2664,8 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let in_n_pos_result = self.verify_non_equational_known_then_builtin_rules_only(
-            &in_n_pos,
-            &VerifyState::new(0, true),
-        )?;
+        let in_n_pos_result =
+            self.verify_cross_family_known_or_number_calculation(&in_n_pos, builtin_state)?;
         if !in_n_pos_result.is_true() {
             return Ok(None);
         }
@@ -2647,6 +2681,7 @@ impl Runtime {
     fn verify_zero_le_pow_integer_exponent_from_nonneg_base_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2673,12 +2708,16 @@ impl Runtime {
 
         let exponent_vs_zero = compare_normalized_number_str_to_zero(&exp_num.normalized_value);
         let base_result = match exponent_vs_zero {
-            NumberCompareResult::Less => {
-                self.verify_zero_order_on_sub_expr(zero, base, false, line_file)?
-            }
-            NumberCompareResult::Equal | NumberCompareResult::Greater => {
-                self.verify_zero_order_on_sub_expr(zero, base, true, line_file)?
-            }
+            NumberCompareResult::Less => self.verify_zero_order_on_sub_expr(
+                zero,
+                base,
+                false,
+                true,
+                line_file,
+                builtin_state,
+            )?,
+            NumberCompareResult::Equal | NumberCompareResult::Greater => self
+                .verify_zero_order_on_sub_expr(zero, base, true, true, line_file, builtin_state)?,
         };
         if !base_result.is_true() {
             return Ok(None);
@@ -2701,6 +2740,7 @@ impl Runtime {
     fn verify_zero_le_mul_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2717,13 +2757,25 @@ impl Runtime {
 
         let zero = &less_equal_fact.left;
         let line_file = &less_equal_fact.line_file;
-        let left_verify_result =
-            self.verify_zero_order_on_sub_expr(zero, mul_obj.left.as_ref(), true, line_file)?;
+        let left_verify_result = self.verify_zero_order_on_sub_expr(
+            zero,
+            mul_obj.left.as_ref(),
+            true,
+            true,
+            line_file,
+            builtin_state,
+        )?;
         if !left_verify_result.is_true() {
             return Ok(None);
         }
-        let right_verify_result =
-            self.verify_zero_order_on_sub_expr(zero, mul_obj.right.as_ref(), true, line_file)?;
+        let right_verify_result = self.verify_zero_order_on_sub_expr(
+            zero,
+            mul_obj.right.as_ref(),
+            true,
+            true,
+            line_file,
+            builtin_state,
+        )?;
         if !right_verify_result.is_true() {
             return Ok(None);
         }
@@ -2740,6 +2792,7 @@ impl Runtime {
     fn verify_zero_lt_mul_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2756,13 +2809,25 @@ impl Runtime {
 
         let zero = &less_fact.left;
         let line_file = &less_fact.line_file;
-        let left_verify_result =
-            self.verify_zero_order_on_sub_expr(zero, mul_obj.left.as_ref(), false, line_file)?;
+        let left_verify_result = self.verify_zero_order_on_sub_expr(
+            zero,
+            mul_obj.left.as_ref(),
+            false,
+            false,
+            line_file,
+            builtin_state,
+        )?;
         if !left_verify_result.is_true() {
             return Ok(None);
         }
-        let right_verify_result =
-            self.verify_zero_order_on_sub_expr(zero, mul_obj.right.as_ref(), false, line_file)?;
+        let right_verify_result = self.verify_zero_order_on_sub_expr(
+            zero,
+            mul_obj.right.as_ref(),
+            false,
+            false,
+            line_file,
+            builtin_state,
+        )?;
         if !right_verify_result.is_true() {
             return Ok(None);
         }
@@ -2779,6 +2844,7 @@ impl Runtime {
     fn verify_zero_le_div_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2795,13 +2861,25 @@ impl Runtime {
 
         let zero = &less_equal_fact.left;
         let line_file = &less_equal_fact.line_file;
-        let numer_result =
-            self.verify_zero_order_on_sub_expr(zero, div_obj.left.as_ref(), true, line_file)?;
+        let numer_result = self.verify_zero_order_on_sub_expr(
+            zero,
+            div_obj.left.as_ref(),
+            true,
+            true,
+            line_file,
+            builtin_state,
+        )?;
         if !numer_result.is_true() {
             return Ok(None);
         }
-        let denom_result =
-            self.verify_zero_order_on_sub_expr(zero, div_obj.right.as_ref(), false, line_file)?;
+        let denom_result = self.verify_zero_order_on_sub_expr(
+            zero,
+            div_obj.right.as_ref(),
+            false,
+            true,
+            line_file,
+            builtin_state,
+        )?;
         if !denom_result.is_true() {
             return Ok(None);
         }
@@ -2818,6 +2896,7 @@ impl Runtime {
     fn verify_zero_lt_div_from_known_atomic_facts_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2834,13 +2913,25 @@ impl Runtime {
 
         let zero = &less_fact.left;
         let line_file = &less_fact.line_file;
-        let numer_result =
-            self.verify_zero_order_on_sub_expr(zero, div_obj.left.as_ref(), false, line_file)?;
+        let numer_result = self.verify_zero_order_on_sub_expr(
+            zero,
+            div_obj.left.as_ref(),
+            false,
+            false,
+            line_file,
+            builtin_state,
+        )?;
         if !numer_result.is_true() {
             return Ok(None);
         }
-        let denom_result =
-            self.verify_zero_order_on_sub_expr(zero, div_obj.right.as_ref(), false, line_file)?;
+        let denom_result = self.verify_zero_order_on_sub_expr(
+            zero,
+            div_obj.right.as_ref(),
+            false,
+            false,
+            line_file,
+            builtin_state,
+        )?;
         if !denom_result.is_true() {
             return Ok(None);
         }

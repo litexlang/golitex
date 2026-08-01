@@ -10,7 +10,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (side_nested, side_simple) in [(left, right), (right, left)] {
             let Obj::Mod(outer) = side_nested else {
@@ -27,7 +27,7 @@ impl Runtime {
                     outer.right.as_ref(),
                     inner.right.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -38,7 +38,7 @@ impl Runtime {
                     outer.right.as_ref(),
                     simple.right.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -49,7 +49,7 @@ impl Runtime {
                     inner.left.as_ref(),
                     simple.left.as_ref(),
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -71,7 +71,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Mod(lm), Obj::Mod(rm)) = (left, right) else {
             return Ok(None);
@@ -81,7 +81,7 @@ impl Runtime {
                 lm.right.as_ref(),
                 rm.right.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -95,7 +95,7 @@ impl Runtime {
                     r_inner.right.as_ref(),
                     modulus,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -106,7 +106,7 @@ impl Runtime {
                         &lhs,
                         &rhs,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -126,7 +126,7 @@ impl Runtime {
                     l_inner.right.as_ref(),
                     modulus,
                     line_file.clone(),
-                    verify_state,
+                    builtin_state,
                 )?
                 .is_true()
             {
@@ -137,7 +137,7 @@ impl Runtime {
                         &lhs,
                         &rhs,
                         line_file.clone(),
-                        verify_state,
+                        builtin_state,
                     )?
                     .is_true()
                 {
@@ -163,7 +163,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Mod(lm), Obj::Mod(rm)) = (left, right) else {
             return Ok(None);
@@ -173,7 +173,7 @@ impl Runtime {
                 lm.right.as_ref(),
                 rm.right.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?
             .is_true()
         {
@@ -183,7 +183,12 @@ impl Runtime {
             let l: Obj = Mod::new(a.clone(), (*lm.right).clone()).into();
             let r: Obj = Mod::new(b.clone(), (*rm.right).clone()).into();
             Ok(self
-                .verify_objs_are_equal_in_equality_builtin(&l, &r, line_file.clone(), verify_state)?
+                .verify_objs_are_equal_in_equality_builtin(
+                    &l,
+                    &r,
+                    line_file.clone(),
+                    builtin_state,
+                )?
                 .is_true())
         };
         let ok = match (lm.left.as_ref(), rm.left.as_ref()) {
@@ -219,7 +224,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (negative_side, complementary_side) in [(left, right), (right, left)] {
             let Obj::Mod(negative_mod) = negative_side else {
@@ -242,7 +247,7 @@ impl Runtime {
                 negative_mod.right.as_ref(),
                 complementary_mod.right.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !modulus_matches.is_true() {
                 continue;
@@ -251,7 +256,7 @@ impl Runtime {
                 complementary_sub.left.as_ref(),
                 negative_mod.right.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !complement_starts_at_modulus.is_true() {
                 continue;
@@ -260,7 +265,7 @@ impl Runtime {
                 inner_remainder.right.as_ref(),
                 negative_mod.right.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !inner_modulus_matches.is_true() {
                 continue;
@@ -269,7 +274,7 @@ impl Runtime {
                 dividend,
                 inner_remainder.left.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !dividend_matches.is_true() {
                 continue;
@@ -283,14 +288,10 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let dividend_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &dividend_in_z,
-                verify_state,
-            )?;
-            let modulus_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &modulus_in_n_pos,
-                verify_state,
-            )?;
+            let dividend_result =
+                self.verify_cross_family_builtin_child(&dividend_in_z, builtin_state)?;
+            let modulus_result =
+                self.verify_cross_family_builtin_child(&modulus_in_n_pos, builtin_state)?;
             if !dividend_result.is_true() || !modulus_result.is_true() {
                 continue;
             }
@@ -321,7 +322,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        verify_state: &VerifyState,
+        builtin_state: &mut BuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (unreduced_side, reduced_side) in [(left, right), (right, left)] {
             let Obj::Mod(unreduced_mod) = unreduced_side else {
@@ -344,7 +345,7 @@ impl Runtime {
                 unreduced_mod.right.as_ref(),
                 reduced_mod.right.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !outer_modulus_matches.is_true() {
                 continue;
@@ -353,7 +354,7 @@ impl Runtime {
                 unreduced_mod.right.as_ref(),
                 inner_remainder.right.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !inner_modulus_matches.is_true() {
                 continue;
@@ -362,7 +363,7 @@ impl Runtime {
                 unreduced_power.base.as_ref(),
                 inner_remainder.left.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !base_matches.is_true() {
                 continue;
@@ -371,7 +372,7 @@ impl Runtime {
                 unreduced_power.exponent.as_ref(),
                 reduced_power.exponent.as_ref(),
                 line_file.clone(),
-                verify_state,
+                builtin_state,
             )?;
             if !exponent_matches.is_true() {
                 continue;
@@ -395,16 +396,11 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let base_result =
-                self.verify_non_equational_known_then_builtin_rules_only(&base_in_z, verify_state)?;
-            let exponent_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &exponent_in_n,
-                verify_state,
-            )?;
-            let modulus_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &modulus_in_n_pos,
-                verify_state,
-            )?;
+            let base_result = self.verify_cross_family_builtin_child(&base_in_z, builtin_state)?;
+            let exponent_result =
+                self.verify_cross_family_builtin_child(&exponent_in_n, builtin_state)?;
+            let modulus_result =
+                self.verify_cross_family_builtin_child(&modulus_in_n_pos, builtin_state)?;
             if !base_result.is_true() || !exponent_result.is_true() || !modulus_result.is_true() {
                 continue;
             }

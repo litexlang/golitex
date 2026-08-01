@@ -1,4 +1,3 @@
-use crate::infer::obj_eligible_for_known_objs_in_fn_sets;
 use crate::prelude::*;
 use crate::verify::{
     compare_normalized_number_str_to_zero, number_is_in_n, number_is_in_n_pos, number_is_in_q_neg,
@@ -24,4 +23,5 @@ use numeric_values::{
     builtin_in_fact_result_for_evaluated_number_in_standard_set,
     builtin_not_in_fact_result_for_evaluated_number_in_standard_set,
     not_in_fact_verified_by_builtin_rules_result, number_in_set_verified_by_builtin_rules_result,
+    number_in_set_verified_by_builtin_rules_result_with_subgoals,
 };
