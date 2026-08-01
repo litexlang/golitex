@@ -9,7 +9,8 @@ impl Runtime {
         &mut self,
         goal: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let leaf_result = self.verify_builtin_rule_leaf(goal)?;
+        let leaf_result =
+            self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
         if leaf_result.is_true() {
             return Ok(leaf_result);
         }
@@ -18,7 +19,7 @@ impl Runtime {
         self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)
     }
 
-    pub(crate) fn verify_builtin_rule_leaf(
+    pub(crate) fn verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(
         &mut self,
         goal: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
@@ -26,10 +27,7 @@ impl Runtime {
         if known_result.is_true() {
             return Ok(known_result);
         }
-        Ok(self
-            .verify_atomic_fact_by_builtin_computation(goal)
-            .filter(StmtResult::is_true)
-            .unwrap_or_else(|| StmtUnknown::new().into()))
+        Ok(self.verify_atomic_fact_by_builtin_computation(goal))
     }
 
     pub(crate) fn verify_known_non_forall_atomic_fact(
@@ -51,7 +49,8 @@ impl Runtime {
         child: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let leaf_result = self.verify_builtin_rule_leaf(child)?;
+        let leaf_result =
+            self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(child)?;
         if leaf_result.is_true() {
             return Ok(leaf_result);
         }
@@ -61,39 +60,39 @@ impl Runtime {
         self.verify_atomic_fact_with_one_builtin_rule(child, builtin_state)
     }
 
-    fn verify_atomic_fact_by_builtin_computation(&self, fact: &AtomicFact) -> Option<StmtResult> {
+    fn verify_atomic_fact_by_builtin_computation(&self, fact: &AtomicFact) -> StmtResult {
         match fact {
             AtomicFact::InFact(fact) => {
                 let Obj::StandardSet(set) = &fact.set else {
-                    return None;
+                    return StmtUnknown::new().into();
                 };
-                let number = fact
+                let Some(number) = fact
                     .element
                     .evaluate_to_normalized_decimal_number()
                     .or_else(|| match self.resolve_obj(&fact.element) {
                         Obj::Number(number) => Some(number),
                         _ => None,
-                    })?;
-                Some(builtin_in_fact_result_for_evaluated_number_in_standard_set(
-                    fact, &number, set,
-                ))
+                    })
+                else {
+                    return StmtUnknown::new().into();
+                };
+                builtin_in_fact_result_for_evaluated_number_in_standard_set(fact, &number, set)
             }
             AtomicFact::NotInFact(fact) => {
                 let Obj::StandardSet(set) = &fact.set else {
-                    return None;
+                    return StmtUnknown::new().into();
                 };
-                let number = fact
+                let Some(number) = fact
                     .element
                     .evaluate_to_normalized_decimal_number()
                     .or_else(|| match self.resolve_obj(&fact.element) {
                         Obj::Number(number) => Some(number),
                         _ => None,
-                    })?;
-                Some(
-                    builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
-                        fact, &number, set,
-                    ),
-                )
+                    })
+                else {
+                    return StmtUnknown::new().into();
+                };
+                builtin_not_in_fact_result_for_evaluated_number_in_standard_set(fact, &number, set)
             }
             AtomicFact::NotLessFact(_)
             | AtomicFact::NotGreaterFact(_)
@@ -103,19 +102,23 @@ impl Runtime {
             | AtomicFact::GreaterFact(_)
             | AtomicFact::LessEqualFact(_)
             | AtomicFact::GreaterEqualFact(_) => {
-                (self.verify_number_comparison_builtin_rule(fact) == Some(true)).then(|| {
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        fact.clone().into(),
-                        "number comparison".to_string(),
-                        Vec::new(),
-                    )
-                    .into()
-                })
+                if self.verify_number_comparison_builtin_rule(fact) != Some(true) {
+                    return StmtUnknown::new().into();
+                }
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    fact.clone().into(),
+                    "number comparison".to_string(),
+                    Vec::new(),
+                )
+                .into()
             }
+            AtomicFact::NotEqualFact(fact) => self
+                .verify_resolved_numeric_not_equal_without_builtin_recursion(fact)
+                .unwrap_or_else(|| StmtUnknown::new().into()),
             AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_) => {
                 self.verify_prime_fact_by_computation(fact)
             }
-            _ => None,
+            _ => StmtUnknown::new().into(),
         }
     }
 
@@ -208,6 +211,25 @@ mod tests {
                 path.display()
             );
         });
+    }
+
+    #[test]
+    fn computation_matchers_are_not_repeated_in_the_direct_dispatchers() {
+        let non_equational = include_str!("verify_builtin_rules/non_equational_dispatch.rs");
+        assert!(!non_equational.contains("verify_prime_fact_by_computation"));
+
+        let numeric_order = include_str!("verify_builtin_rules/number_compare.rs");
+        assert_eq!(
+            numeric_order
+                .matches("verify_number_comparison_builtin_rule(")
+                .count(),
+            1,
+            "number comparison computation must only be defined here, not called again by the direct rule dispatcher"
+        );
+
+        let extrema = include_str!("verify_builtin_rules/order_semantics_builtin.rs");
+        assert!(!extrema.contains("verify_finite_set_members_are_at_most"));
+        assert!(!extrema.contains("verify_finite_set_members_are_at_least"));
     }
 
     fn visit_rust_files(dir: &Path, f: &mut impl FnMut(&Path, &str)) {

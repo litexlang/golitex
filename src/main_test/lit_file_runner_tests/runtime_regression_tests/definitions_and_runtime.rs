@@ -165,6 +165,8 @@ by def $fn_eq(real_identity, second_real_identity)
             "builtin definitions should verify explicitly:\n{run_output}"
         );
         assert!(run_output.contains("proof by definition"));
+        assert!(run_output.contains("\"role\": \"builtin definition check 1\""));
+        assert!(!run_output.contains("builtin definition of `"));
     });
 }
 
@@ -204,8 +206,10 @@ prop holds_for_all(n N):
     forall s set:
         n = n
 
-forall s set, n N:
-    $holds_for_all(n)
+claim:
+    ? forall s set, n N:
+        $holds_for_all(n)
+    by def $holds_for_all(n)
 "#;
 
         let mut runtime = Runtime::new();
@@ -252,7 +256,7 @@ fn known_set_equality_transports_across_alpha_equivalent_set_builders() {
     run_with_large_stack("set_builder_equality_alpha_transport", || {
         let source_code = r#"
 by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
-    2 $in {b N: b % 2 = 0}
+    by thm set_builder_member(2, {b N: b % 2 = 0})
     2 $in {c N: c % 4 = 0}
     impossible 2 % 4 = 0
 "#;
@@ -594,7 +598,7 @@ fn unicode_prop_name_works() {
         let source_code = r#"
 prop 是一(x R):
     x = 1
-$是一(1)
+by def $是一(1)
 "#;
 
         let mut runtime = Runtime::new();
@@ -731,7 +735,7 @@ thm use_target_thm:
         =>:
             $target_thm_prop(x)
 
-    x = 1
+    by def $target_thm_prop(x)
 
 by thm use_target_thm(1)
 $target_thm_prop(1)
@@ -878,6 +882,8 @@ strategy use_target_strategy:
         =>:
             $target_strategy_prop(x)
 
+    by def $target_strategy_prop(x)
+
 use strategy use_target_strategy
 stop strategy use_target_strategy
 "#;
@@ -921,6 +927,8 @@ strategy use_target_strategy:
         x = 1
         =>:
             $target_strategy_prop(x)
+
+    by def $target_strategy_prop(x)
 
 by strategy use_target_strategy
 "#;

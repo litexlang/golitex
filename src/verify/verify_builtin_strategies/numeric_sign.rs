@@ -130,12 +130,7 @@ impl Runtime {
         } else {
             LessFact::new(zero, obj.clone(), line_file.clone()).into()
         };
-        let direct =
-            self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&child)?;
-        if direct.is_true() {
-            return Ok(direct);
-        }
-        self.verify_additive_sign_with_builtin_strategy(&child)
+        self.verify_builtin_strategy_child(&child)
     }
 
     fn verify_structural_order_strategy(
@@ -157,6 +152,83 @@ impl Runtime {
         let one: Obj = Number::new("1".to_string()).into();
         let lf = fact.line_file.clone();
         let mut alternatives: Vec<Vec<AtomicFact>> = Vec::new();
+
+        if let Obj::FiniteSetMax(maximum) = &fact.left {
+            if let Obj::ListSet(elements) = maximum.set.as_ref() {
+                if !elements.list.is_empty() {
+                    alternatives.push(
+                        elements
+                            .list
+                            .iter()
+                            .map(|element| {
+                                LessEqualFact::new(
+                                    element.as_ref().clone(),
+                                    fact.right.clone(),
+                                    lf.clone(),
+                                )
+                                .into()
+                            })
+                            .collect(),
+                    );
+                }
+            } else if let Some(parts) = Self::finite_set_constructor_children(maximum.set.as_ref())
+            {
+                let mut required = Vec::with_capacity(parts.len() * 3);
+                for part in parts {
+                    required
+                        .push(IsFiniteSetFact::new(part.clone(), fact.line_file.clone()).into());
+                    required
+                        .push(IsNonemptySetFact::new(part.clone(), fact.line_file.clone()).into());
+                    required.push(
+                        LessEqualFact::new(
+                            FiniteSetMax::new(part).into(),
+                            fact.right.clone(),
+                            fact.line_file.clone(),
+                        )
+                        .into(),
+                    );
+                }
+                alternatives.push(required);
+            }
+        }
+        if let Obj::FiniteSetMin(minimum) = &fact.right {
+            if let Obj::ListSet(elements) = minimum.set.as_ref() {
+                if !elements.list.is_empty() {
+                    alternatives.push(
+                        elements
+                            .list
+                            .iter()
+                            .map(|element| {
+                                LessEqualFact::new(
+                                    fact.left.clone(),
+                                    element.as_ref().clone(),
+                                    lf.clone(),
+                                )
+                                .into()
+                            })
+                            .collect(),
+                    );
+                }
+            } else if let Some(parts) = Self::finite_set_constructor_children(minimum.set.as_ref())
+            {
+                let mut required = Vec::with_capacity(parts.len() * 3);
+                for part in parts {
+                    required
+                        .push(IsFiniteSetFact::new(part.clone(), fact.line_file.clone()).into());
+                    required
+                        .push(IsNonemptySetFact::new(part.clone(), fact.line_file.clone()).into());
+                    required.push(
+                        LessEqualFact::new(
+                            fact.left.clone(),
+                            FiniteSetMin::new(part).into(),
+                            fact.line_file.clone(),
+                        )
+                        .into(),
+                    );
+                }
+                alternatives.push(required);
+            }
+        }
 
         if fact.left.to_string() == "0" {
             if let Obj::Mul(product) = &fact.right {
@@ -595,6 +667,22 @@ impl Runtime {
         self.verify_order_strategy_alternatives(alternatives)
     }
 
+    fn finite_set_constructor_children(set: &Obj) -> Option<Vec<Obj>> {
+        match set {
+            Obj::Union(union) => Some(vec![
+                union.left.as_ref().clone(),
+                union.right.as_ref().clone(),
+            ]),
+            Obj::Intersect(intersect) => Some(vec![intersect.left.as_ref().clone()]),
+            Obj::SetMinus(set_minus) => Some(vec![set_minus.left.as_ref().clone()]),
+            Obj::SetDiff(set_diff) => Some(vec![
+                set_diff.left.as_ref().clone(),
+                set_diff.right.as_ref().clone(),
+            ]),
+            _ => None,
+        }
+    }
+
     fn push_common_nonnegative_factor_alternatives(
         &self,
         left: &Obj,
@@ -639,15 +727,7 @@ impl Runtime {
             let mut results = Vec::with_capacity(required.len());
             let mut complete = true;
             for child in required {
-                let direct = self
-                    .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
-                        &child,
-                    )?;
-                let result = if direct.is_true() {
-                    direct
-                } else {
-                    self.verify_additive_sign_with_builtin_strategy(&child)?
-                };
+                let result = self.verify_builtin_strategy_child(&child)?;
                 if !result.is_true() {
                     complete = false;
                     break;

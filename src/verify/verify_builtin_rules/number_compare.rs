@@ -3,9 +3,6 @@ use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
 
 impl Runtime {
-    // Keep the caller's recursive verification state. In particular, finite-set
-    // cardinality order rules can ask the non-equational dispatcher to verify
-    // set facts again; resetting to round 0 here would erase that boundary.
     // The nonnegative / positive cone under field operations is checked here on normalized
     // `0 <=` / `0 <` goals (possibly after `normalize_positive_order_atomic_fact`):
     // - Chained `+`: `0 <= a + b + …` from `0 <=` on each peeled summand; `0 < a + b + …` from
@@ -88,9 +85,7 @@ impl Runtime {
         {
             return Ok(StmtUnknown::new().into());
         }
-        // Dispatch exact recursive cone shapes before generic order semantics.
-        // A generic matcher may explore unsuccessful alternatives, and the
-        // shared DFS budget intentionally does not roll those attempts back.
+        // Dispatch exact cone shapes before the generic order semantics.
         if let Some(result) = self
             .verify_zero_le_add_from_known_atomic_facts_builtin_rule(atomic_fact, builtin_state)?
         {
@@ -191,29 +186,6 @@ impl Runtime {
         }
         if let Some(result) = self.try_verify_native_complex_abs_nonnegative(atomic_fact) {
             return Ok(result);
-        }
-        // Real-order reflexivity and strict irreflexivity.
-        // Example: `a R` proves `a <= a` and `not a < a`.
-        if verify_equality_by_they_are_the_same(&left, &right) {
-            let reason = match atomic_fact {
-                AtomicFact::LessEqualFact(_) | AtomicFact::GreaterEqualFact(_) => {
-                    "order: weak real order is reflexive"
-                }
-                AtomicFact::NotLessFact(_) | AtomicFact::NotGreaterFact(_) => {
-                    "order: strict real order is irreflexive"
-                }
-                _ => "",
-            };
-            if !reason.is_empty() {
-                return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        atomic_fact.clone().into(),
-                        reason.to_string(),
-                        Vec::new(),
-                    )
-                    .into(),
-                );
-            }
         }
         if let Some(result) =
             self.try_verify_finite_nonempty_set_size_at_least_one(atomic_fact, builtin_state)?
@@ -318,10 +290,6 @@ impl Runtime {
         )? {
             return Ok(result);
         }
-        // Exact zero-cone shapes above must run before the general algebraic
-        // dispatcher.  General rewrites can legitimately explore and fail,
-        // consuming the shared DFS budget; a structural sum or power should
-        // therefore take its direct recursive rule first.
         if let Some(result) =
             self.verify_order_algebra_structural_builtin_rule(atomic_fact, builtin_state)?
         {
@@ -414,23 +382,19 @@ impl Runtime {
                 ));
             }
         }
-        if let Some(true) = self.verify_number_comparison_builtin_rule(atomic_fact) {
-            Ok(StmtResult::from(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    atomic_fact.clone().into(),
-                    "number comparison".to_string(),
-                    Vec::new(),
-                ),
-            ))
-        } else {
-            Ok(StmtResult::Unknown(StmtUnknown::new()))
-        }
+        Ok(StmtResult::Unknown(StmtUnknown::new()))
     }
 
-    pub fn verify_number_comparison_builtin_rule(&self, atomic_fact: &AtomicFact) -> Option<bool> {
+    pub(in crate::verify) fn verify_number_comparison_builtin_rule(
+        &self,
+        atomic_fact: &AtomicFact,
+    ) -> Option<bool> {
         let normalized = normalize_positive_order_atomic_fact(atomic_fact)?;
         match normalized {
             AtomicFact::LessFact(less_fact) => {
+                if verify_equality_by_they_are_the_same(&less_fact.left, &less_fact.right) {
+                    return Some(false);
+                }
                 if let Some(calculated_number_string_pair) =
                     self.calculate_obj_pair_to_number_strings(&less_fact.left, &less_fact.right)
                 {
@@ -449,6 +413,12 @@ impl Runtime {
                 )
             }
             AtomicFact::LessEqualFact(less_equal_fact) => {
+                if verify_equality_by_they_are_the_same(
+                    &less_equal_fact.left,
+                    &less_equal_fact.right,
+                ) {
+                    return Some(true);
+                }
                 if let Some(calculated_number_string_pair) = self
                     .calculate_obj_pair_to_number_strings(
                         &less_equal_fact.left,

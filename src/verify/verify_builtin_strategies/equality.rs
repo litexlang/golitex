@@ -5,7 +5,61 @@ impl Runtime {
         &mut self,
         fact: &EqualFact,
     ) -> Result<StmtResult, RuntimeError> {
+        let extrema = self.verify_extremum_equality_with_builtin_strategy(fact)?;
+        if extrema.is_true() {
+            return Ok(extrema);
+        }
         self.verify_mod_congruence_with_builtin_strategy(fact)
+    }
+
+    // Choosing a concrete finite-set extremum is an antisymmetry strategy: prove
+    // the two immediate weak-order goals independently, each with a fresh direct
+    // builtin-rule boundary.  Restricting the shape avoids turning every unknown
+    // equality into an open-ended order search.
+    fn verify_extremum_equality_with_builtin_strategy(
+        &mut self,
+        fact: &EqualFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let has_extremum = matches!(
+            (&fact.left, &fact.right),
+            (Obj::FiniteSetMax(_) | Obj::FiniteSetMin(_), _)
+                | (_, Obj::FiniteSetMax(_) | Obj::FiniteSetMin(_))
+        );
+        if !has_extremum {
+            return Ok(StmtUnknown::new().into());
+        }
+
+        let required: [AtomicFact; 2] = [
+            LessEqualFact::new(
+                fact.left.clone(),
+                fact.right.clone(),
+                fact.line_file.clone(),
+            )
+            .into(),
+            LessEqualFact::new(
+                fact.right.clone(),
+                fact.left.clone(),
+                fact.line_file.clone(),
+            )
+            .into(),
+        ];
+        let mut steps = Vec::with_capacity(required.len());
+        for child in &required {
+            let result = self.verify_builtin_strategy_child(child)?;
+            if !result.is_true() {
+                return Ok(StmtUnknown::new().into());
+            }
+            steps.push(result);
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                fact.clone().into(),
+                "finite-extremum equality strategy: prove both weak-order directions".to_string(),
+                steps,
+            )
+            .into(),
+        )
     }
 
     // Congruence is structural: a binary expression modulo `m` is reduced by

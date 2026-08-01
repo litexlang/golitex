@@ -3,11 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_by_def_stmt(&mut self, stmt: &ByDefStmt) -> Result<StmtResult, RuntimeError> {
         let verify_state = UseContextVerifyState::new(0, false);
-        if explicit_builtin_definition_supported(&stmt.fact) {
-            self.verify_atomic_fact_well_defined(&stmt.fact, &verify_state)?;
-            let result = self
-                .verify_explicit_builtin_definition(&stmt.fact, &verify_state)?
-                .unwrap_or_else(|| StmtUnknown::new().into());
+        if let Some(result) = self.verify_explicit_builtin_definition(&stmt.fact, &verify_state)? {
             if result.is_unknown() {
                 return Err(short_exec_error(
                     stmt.clone().into(),
@@ -19,10 +15,14 @@ impl Runtime {
                     vec![result],
                 ));
             }
+            let checked_definition = result
+                .factual_success()
+                .map(|success| success.stmt.to_string())
+                .unwrap_or_else(|| stmt.fact.to_string());
             return self.finish_by_def_stmt(
                 stmt,
                 stmt.fact.key(),
-                vec![format!("builtin definition of `{}`", stmt.fact)],
+                vec![checked_definition],
                 vec![result],
             );
         }
@@ -165,24 +165,38 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         match fact {
             AtomicFact::SubsetFact(_) | AtomicFact::SupersetFact(_) => {
+                self.verify_atomic_fact_well_defined(fact, verify_state)?;
                 self.verify_atomic_fact_using_builtin_or_prop_definition(fact, verify_state)
             }
-            AtomicFact::FnEqualInFact(fact) => Ok(Some(
-                self.verify_fn_equal_in_fact_with_builtin_rules(fact, verify_state)?,
-            )),
-            AtomicFact::FnEqualFact(fact) => Ok(Some(
-                self.verify_fn_equal_fact_with_builtin_rules(fact, verify_state)?,
-            )),
+            AtomicFact::FnEqualInFact(fn_equal_in) => {
+                self.verify_atomic_fact_well_defined(fact, verify_state)?;
+                Ok(Some(self.verify_fn_equal_in_fact_with_builtin_rules(
+                    fn_equal_in,
+                    verify_state,
+                )?))
+            }
+            AtomicFact::FnEqualFact(fn_equal) => {
+                self.verify_atomic_fact_well_defined(fact, verify_state)?;
+                Ok(Some(self.verify_fn_equal_fact_with_builtin_rules(
+                    fn_equal,
+                    verify_state,
+                )?))
+            }
             AtomicFact::NormalAtomicFact(fact) => match fact.predicate.to_string().as_str() {
-                PRIME => self.verify_prime_fact_by_definition(&fact.clone().into(), verify_state),
+                PRIME => {
+                    let atomic: AtomicFact = fact.clone().into();
+                    self.verify_atomic_fact_well_defined(&atomic, verify_state)?;
+                    self.verify_prime_fact_by_definition(&atomic, verify_state)
+                }
                 INJECTIVE | SURJECTIVE | BIJECTIVE => {
+                    self.verify_atomic_fact_well_defined(&fact.clone().into(), verify_state)?;
                     self.verify_builtin_function_property_by_definition(fact, verify_state)
                 }
-                PROPER_SUBSET | PROPER_SUPERSET => self
-                    .verify_builtin_proper_set_relation_by_definition(
-                        &fact.clone().into(),
-                        verify_state,
-                    ),
+                PROPER_SUBSET | PROPER_SUPERSET => {
+                    let atomic: AtomicFact = fact.clone().into();
+                    self.verify_atomic_fact_well_defined(&atomic, verify_state)?;
+                    self.verify_builtin_proper_set_relation_by_definition(&atomic, verify_state)
+                }
                 _ => Ok(None),
             },
             _ => Ok(None),
@@ -216,19 +230,5 @@ impl Runtime {
             by_verification.into(),
         )
         .into())
-    }
-}
-
-fn explicit_builtin_definition_supported(fact: &AtomicFact) -> bool {
-    match fact {
-        AtomicFact::SubsetFact(_)
-        | AtomicFact::SupersetFact(_)
-        | AtomicFact::FnEqualInFact(_)
-        | AtomicFact::FnEqualFact(_) => true,
-        AtomicFact::NormalAtomicFact(fact) => matches!(
-            fact.predicate.to_string().as_str(),
-            PRIME | INJECTIVE | SURJECTIVE | BIJECTIVE | PROPER_SUBSET | PROPER_SUPERSET
-        ),
-        _ => false,
     }
 }

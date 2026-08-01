@@ -1,9 +1,4 @@
 use super::*;
-use crate::verify::{
-    number_is_in_n, number_is_in_n_pos, number_is_in_q_neg, number_is_in_q_nz, number_is_in_q_pos,
-    number_is_in_r_neg, number_is_in_r_nz, number_is_in_r_pos, number_is_in_z, number_is_in_z_neg,
-    number_is_in_z_nz,
-};
 
 impl Runtime {
     pub(super) fn obj_is_builtin_literal_two(obj: &Obj) -> bool {
@@ -82,26 +77,6 @@ impl Runtime {
             .is_true()
         {
             return Ok(true);
-        }
-
-        if let Obj::Number(number) = obj {
-            let is_member = match &standard_set {
-                StandardSet::C | StandardSet::R | StandardSet::Q => true,
-                StandardSet::RPos => number_is_in_r_pos(number),
-                StandardSet::RNeg => number_is_in_r_neg(number),
-                StandardSet::RNz => number_is_in_r_nz(number),
-                StandardSet::QPos => number_is_in_q_pos(number),
-                StandardSet::QNeg => number_is_in_q_neg(number),
-                StandardSet::QNz => number_is_in_q_nz(number),
-                StandardSet::Z => number_is_in_z(number),
-                StandardSet::ZNeg => number_is_in_z_neg(number),
-                StandardSet::ZNz => number_is_in_z_nz(number),
-                StandardSet::N => number_is_in_n(number),
-                StandardSet::NPos => number_is_in_n_pos(number),
-            };
-            if is_member {
-                return Ok(true);
-            }
         }
 
         for known_set in self.known_sets_containing_obj(obj) {
