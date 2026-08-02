@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::{
-    factual_equal_success_by_builtin_reason, verify_equality_by_they_are_the_same,
+    factual_equal_success_by_builtin_reason, factual_equal_success_by_builtin_reason_with_subgoals,
+    verify_equality_by_they_are_the_same,
 };
 
 impl Runtime {
@@ -11,7 +12,30 @@ impl Runtime {
             .contains(&right_key)
     }
 
-    pub fn verify_objs_are_equal_known_only(
+    pub fn verify_objs_are_equal_by_known_equality(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> StmtResult {
+        let direct_result =
+            self.verify_objs_are_equal_directly_known_only(left, right, line_file.clone());
+        if direct_result.is_true() {
+            return direct_result;
+        }
+
+        if let Some(componentwise_result) =
+            self.try_verify_equality_by_corresponding_known_equalities(left, right, line_file)
+        {
+            if componentwise_result.is_true() {
+                return componentwise_result;
+            }
+        }
+
+        StmtResult::Unknown(StmtUnknown::new())
+    }
+
+    fn verify_objs_are_equal_directly_known_only(
         &self,
         left: &Obj,
         right: &Obj,
@@ -96,7 +120,7 @@ impl Runtime {
         })
     }
 
-    pub fn try_verify_equal_by_same_shape_and_known_equality_args(
+    fn try_verify_equality_by_corresponding_known_equalities(
         &self,
         left: &Obj,
         right: &Obj,
@@ -137,7 +161,7 @@ impl Runtime {
                     || left_access.struct_obj.name != right_access.struct_obj.name
                     || left_access.struct_obj.params.len() != right_access.struct_obj.params.len()
                     || self
-                        .verify_objs_are_equal_known_only(
+                        .verify_objs_are_equal_directly_known_only(
                             left_access.obj.as_ref(),
                             right_access.obj.as_ref(),
                             line_file.clone(),
@@ -150,7 +174,7 @@ impl Runtime {
                         .zip(right_access.struct_obj.params.iter())
                         .all(|(left_param, right_param)| {
                             !self
-                                .verify_objs_are_equal_known_only(
+                                .verify_objs_are_equal_directly_known_only(
                                     left_param,
                                     right_param,
                                     line_file.clone(),
@@ -166,30 +190,53 @@ impl Runtime {
                 }
             }
             (Obj::FnObj(left_fn), Obj::FnObj(right_fn)) => {
-                let left_head_obj = left_fn.head.as_ref().clone().into();
-                let right_head_obj = right_fn.head.as_ref().clone().into();
-                let heads_match =
-                    verify_equality_by_they_are_the_same(&left_head_obj, &right_head_obj)
-                        || self
-                            .try_verify_equal_by_same_shape_and_known_equality_args(
-                                &left_head_obj,
-                                &right_head_obj,
-                                line_file.clone(),
-                            )
-                            .is_some_and(|result| result.is_true());
-                if !heads_match {
-                    return Some((StmtUnknown::new()).into());
-                }
-                if left_fn.body.len() != right_fn.body.len() {
-                    return Some((StmtUnknown::new()).into());
-                }
-                for (left_group, right_group) in left_fn.body.iter().zip(right_fn.body.iter()) {
-                    if !self.boxed_obj_vecs_share_known_equality_class(left_group, right_group) {
+                let mut remaining_left_group_count = left_fn.body.len();
+                let mut remaining_right_group_count = right_fn.body.len();
+                let mut argument_steps = Vec::new();
+
+                while remaining_left_group_count > 0 && remaining_right_group_count > 0 {
+                    let left_group = &left_fn.body[remaining_left_group_count - 1];
+                    let right_group = &right_fn.body[remaining_right_group_count - 1];
+                    if left_group.len() != right_group.len() {
                         return Some((StmtUnknown::new()).into());
                     }
+                    for (left_arg, right_arg) in left_group.iter().zip(right_group.iter()) {
+                        if verify_equality_by_they_are_the_same(left_arg, right_arg) {
+                            continue;
+                        }
+                        let result = self.verify_objs_are_equal_directly_known_only(
+                            left_arg,
+                            right_arg,
+                            line_file.clone(),
+                        );
+                        if !result.is_true() {
+                            return Some((StmtUnknown::new()).into());
+                        }
+                        argument_steps.push(result);
+                    }
+                    remaining_left_group_count -= 1;
+                    remaining_right_group_count -= 1;
                 }
-                Some(factual_equal_success_by_builtin_reason(
-                    left, right, line_file, reason,
+
+                let remaining_left_obj = left_fn.prefix_obj(remaining_left_group_count);
+                let remaining_right_obj = right_fn.prefix_obj(remaining_right_group_count);
+                let mut steps = Vec::new();
+                if !verify_equality_by_they_are_the_same(&remaining_left_obj, &remaining_right_obj)
+                {
+                    let function_part_result = self.verify_objs_are_equal_directly_known_only(
+                        &remaining_left_obj,
+                        &remaining_right_obj,
+                        line_file.clone(),
+                    );
+                    if !function_part_result.is_true() {
+                        return Some((StmtUnknown::new()).into());
+                    }
+                    steps.push(function_part_result);
+                }
+                steps.append(&mut argument_steps);
+
+                Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                    left, right, line_file, reason, steps,
                 ))
             }
             (Obj::Add(l), Obj::Add(r)) => {

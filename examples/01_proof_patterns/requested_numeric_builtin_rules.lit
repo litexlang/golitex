@@ -23,6 +23,20 @@ forall n Z, k N+:
 forall n Z, m Z:
     n >= m or n <= m - 1
 
+# Adjacent integer bounds can switch between weak and strict form directly.
+forall m, n Z:
+    =>:
+        m <= n
+    <=>:
+        m < n + 1
+
+# Both explicit bounds isolate the successor as the only integer point.
+forall x, n Z:
+    n < x
+    x <= n + 1
+    =>:
+        x = n + 1
+
 forall n Z, m N+, k N+:
     m $in N
     n ^ m % k = ((n % k) ^ m) % k
@@ -48,6 +62,9 @@ predecessor_count(1) = predecessor_count(0) = 0
 
 # The strictly positive variant requires the stronger bound n > 1.
 forall n N+:
+    n - 1 $in N
+
+forall n N+:
     n > 1
     =>:
         n - 1 $in N+
@@ -58,3 +75,29 @@ have fn positive_predecessor_count(n N+) N+ by induc n from 1:
 
 positive_predecessor_count(1) = 1
 positive_predecessor_count(2) = positive_predecessor_count(1) = 1
+
+# Finite sums respect a proved pointwise equality on their shared integer
+# range; the functions need not be equal outside that range.
+scratch:
+    have f fn(f_index Z) Z
+    have g fn(g_index Z) Z
+    axiom f_g_agree_on_range:
+        ? forall point_index Z:
+            1 <= point_index
+            point_index <= 3
+            =>:
+                f(point_index) = g(point_index)
+    sum(1, 3, fn(left_index Z) Z {f(left_index)}) = sum(1, 3, fn(right_index Z) Z {g(right_index)})
+
+# A translated finite sum may likewise use an already-proved pointwise
+# equality on the target range.
+scratch:
+    have f fn(f_index Z) Z
+    have g fn(g_index Z) Z
+    axiom shifted_terms_agree_on_range:
+        ? forall target_index Z:
+            0 <= target_index
+            target_index <= 2
+            =>:
+                f((target_index + 1) - 1) = g(target_index)
+    sum(1, 3, fn(source_index Z) Z {f(source_index - 1)}) = sum(0, 2, fn(target_index Z) Z {g(target_index)})

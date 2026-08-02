@@ -12,7 +12,7 @@ impl Runtime {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
                 continue;
             };
-            let codomain_match = self.verify_objs_are_equal_known_only(
+            let codomain_match = self.verify_objs_are_equal_by_known_equality(
                 &codomain,
                 &target.set,
                 target.line_file.clone(),
@@ -67,8 +67,8 @@ impl Runtime {
                 continue;
             };
             let domain_match =
-                self.verify_objs_are_equal_known_only(&domain, &source, line_file.clone());
-            let function_match = self.verify_objs_are_equal_known_only(
+                self.verify_objs_are_equal_by_known_equality(&domain, &source, line_file.clone());
+            let function_match = self.verify_objs_are_equal_by_known_equality(
                 &candidate_function,
                 &function,
                 line_file.clone(),
@@ -119,22 +119,22 @@ impl Runtime {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
                 continue;
             };
-            let direct_domain = self.verify_objs_are_equal_known_only(
+            let direct_domain = self.verify_objs_are_equal_by_known_equality(
                 &domain,
                 left_size.set.as_ref(),
                 line_file.clone(),
             );
-            let direct_codomain = self.verify_objs_are_equal_known_only(
+            let direct_codomain = self.verify_objs_are_equal_by_known_equality(
                 &codomain,
                 right_size.set.as_ref(),
                 line_file.clone(),
             );
-            let reverse_domain = self.verify_objs_are_equal_known_only(
+            let reverse_domain = self.verify_objs_are_equal_by_known_equality(
                 &domain,
                 right_size.set.as_ref(),
                 line_file.clone(),
             );
-            let reverse_codomain = self.verify_objs_are_equal_known_only(
+            let reverse_codomain = self.verify_objs_are_equal_by_known_equality(
                 &codomain,
                 left_size.set.as_ref(),
                 line_file.clone(),
@@ -189,9 +189,9 @@ impl Runtime {
                 continue;
             };
             let codomain_match =
-                self.verify_objs_are_equal_known_only(&codomain, &smaller, line_file.clone());
+                self.verify_objs_are_equal_by_known_equality(&codomain, &smaller, line_file.clone());
             let domain_match =
-                self.verify_objs_are_equal_known_only(&domain, &larger, line_file.clone());
+                self.verify_objs_are_equal_by_known_equality(&domain, &larger, line_file.clone());
             if !codomain_match.is_true() || !domain_match.is_true() {
                 continue;
             }
@@ -237,13 +237,13 @@ impl Runtime {
                 continue;
             };
             let domain_match =
-                self.verify_objs_are_equal_known_only(&candidate_domain, domain, line_file.clone());
-            let codomain_match = self.verify_objs_are_equal_known_only(
+                self.verify_objs_are_equal_by_known_equality(&candidate_domain, domain, line_file.clone());
+            let codomain_match = self.verify_objs_are_equal_by_known_equality(
                 &candidate_codomain,
                 codomain,
                 line_file.clone(),
             );
-            let function_match = self.verify_objs_are_equal_known_only(
+            let function_match = self.verify_objs_are_equal_by_known_equality(
                 &candidate_function,
                 function,
                 line_file.clone(),

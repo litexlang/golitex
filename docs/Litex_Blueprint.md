@@ -73,6 +73,10 @@ The declaration `mul : Carrier → Carrier → Carrier` uses a functional-progra
 
 Lean uses type theory and explicit proof construction to make the group definition and proof rigorous. As a mainstream formal language, Lean is famous for its solidness and community effort. But could a formal language allow the user to enter the mathematical definition and facts while the system fills in some routine proof steps? Much of the text above follows the proof assistant's construction pattern rather than the presentation normally found in a textbook.
 
+6. Let relevance to a Goal be decided later
+
+Must every correct auxiliary fact be written in response to an active Goal? Could a well-defined, verified fact enter the current context first, so that several mathematical branches can be developed independently and combined only when the larger theorem becomes clear?
+
 ### Litex: Structures, Local Facts, and Conclusions in Mathematical Order
 
 The following Litex snippet has been verified with the Litex runner.
@@ -98,7 +102,7 @@ forall s nonempty_set, G &Group<s>, identity s:
         identity = G.mul(G.one, identity) = G.one
 ```
 
-This example shows concretely how Litex pursues the five goals above.
+This example shows concretely how Litex pursues the six goals above.
 
 1. Write facts before orchestrating a proof script
 
@@ -119,6 +123,12 @@ Binary multiplication is declared as `mul fn(x, y s) s` and applied in the famil
 5. Derive rigor from a checkable process, and remain a familiar appearance
 
 The snippet is accepted by the Litex runner not merely because it resembles a correct textbook proof. The checker must still verify that `G.one`, `identity`, and every multiplication lie in the appropriate set; that the structure laws can be instantiated with the current arguments; and that the two equality steps are each supported by established facts. What is omitted is the user's manual naming and proof-script orchestration, not the checks themselves. The trusted boundary still includes the Litex checker, its builtin and inference rules, and any explicitly introduced `trust` assumptions.
+
+6. Let relevance to a Goal be decided later
+
+The structure laws are accepted and stored as facts when the `Group` concept is defined; they do not need to be introduced as steps under the later identity-uniqueness Goal. The final statement can then combine whichever verified facts have become relevant. Litex is fact-first in this organizational sense: it asks whether the next fact is valid in the current context, while the larger Goal may be stated later.
+
+Lean also permits auxiliary `have` facts, local lemmas, and independent top-level theorems. The distinction is not that Lean forbids unrelated truths. Inside a Lean theorem, those constructions are organized under an expected type and elaborate as part of the proof term for the pending Goal. Litex can accept a fact itself as the complete next step without requiring it to advance an active Goal. This relaxes only relevance to the current Goal: well-definedness, justification, and scope are still enforced, and a fact depending on local assumptions cannot escape their scope.
 
 ## How Litex Pursues These Goals
 
@@ -153,6 +163,12 @@ This does not mean that Litex never needs structured proofs. Existence, contradi
 A textbook-like surface does not lower the standard of checking. Every fact receives a result such as `true`, `unknown`, or `error`. The checking process distinguishes whether an expression is well-defined, whether the current context is sufficient, and which builtin rule, known fact, or universally quantified fact supports the conclusion. A `trust` statement remains an explicitly injected assumption rather than a proof, and builtin and inference rules remain part of the trusted computing base.
 
 Litex is therefore not a replacement for Lean, Coq, or Isabelle. It tests a complementary interface: can a smaller, readable, fact-oriented, set-theoretic surface make it inexpensive enough for students, domain researchers, and AI agents to produce, check, and repair useful formal mathematical data? Success must be demonstrated through runnable examples, recorded failures, tests, rule audits, and independent checking—not by how natural the syntax appears.
+
+### 6. Let Relevance to a Goal Be Decided Later
+
+Litex does not require every useful fact to be written in response to an active Goal. If a statement is well-defined and justified in the current scope, the checker can accept it, store it, run the applicable inference, and make the enlarged context available to later statements. A fact may support the next line, a theorem much later, or simply stand as an independent checked result. Several branches of a mathematical development can therefore be built before the author decides how they should converge.
+
+Lean's ordinary theorem-proof interaction is goal-directed: local terms and tactics are elaborated under the expected type of the theorem being constructed. Lean can certainly express auxiliary and independent facts, but local work inside a theorem remains organized by its pending Goal and proof-term structure. Litex tests a different default workflow: first ask whether the next fact is valid in the current context; decide later which larger Goal it serves. This changes proof organization, not the standard of correctness. Scope, well-definedness, and mathematical justification remain mandatory.
 
 ## Next Steps
 

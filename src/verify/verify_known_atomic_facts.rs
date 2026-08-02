@@ -486,15 +486,8 @@ impl Runtime {
         line_file: LineFile,
     ) -> bool {
         if self
-            .verify_objs_are_equal_known_only(known_arg, given_arg, line_file.clone())
+            .verify_objs_are_equal_by_known_equality(known_arg, given_arg, line_file.clone())
             .is_true()
-            || self
-                .try_verify_equal_by_same_shape_and_known_equality_args(
-                    known_arg,
-                    given_arg,
-                    line_file.clone(),
-                )
-                .is_some_and(|result| result.is_true())
         {
             return true;
         }
@@ -508,19 +501,12 @@ impl Runtime {
         // Example: A = {a} and a = b let membership in A imply membership in {b}.
         known_candidates.iter().any(|known_candidate| {
             given_candidates.iter().any(|given_candidate| {
-                self.verify_objs_are_equal_known_only(
+                self.verify_objs_are_equal_by_known_equality(
                     known_candidate,
                     given_candidate,
                     line_file.clone(),
                 )
                 .is_true()
-                    || self
-                        .try_verify_equal_by_same_shape_and_known_equality_args(
-                            known_candidate,
-                            given_candidate,
-                            line_file.clone(),
-                        )
-                        .is_some_and(|result| result.is_true())
             })
         })
     }

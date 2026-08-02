@@ -740,7 +740,7 @@ impl Runtime {
             Mul::new(second_factor.clone(), first_factor.clone()).into(),
         ] {
             let product_zero_result =
-                self.verify_objs_are_equal_known_only(&product, &zero, line_file.clone());
+                self.verify_objs_are_equal_by_known_equality(&product, &zero, line_file.clone());
             if product_zero_result.is_true() {
                 steps.push(product_zero_result);
                 return Ok(Some(

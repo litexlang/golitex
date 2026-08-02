@@ -915,7 +915,137 @@ impl Runtime {
             }
         }
 
+        // A finite nonempty subset of N has a greatest element. Keep this bounded fallback after
+        // the established existential strategies so inspecting an unrelated existential cannot
+        // perturb their inference order. The rule accepts a user proposition whose concrete
+        // definition is exactly membership plus the universal upper-bound property.
+        if let Some(result) =
+            self.verify_finite_nonempty_natural_set_has_maximum(exist_fact, verify_state)?
+        {
+            return Ok(result);
+        }
+
         Ok(StmtUnknown::new().into())
+    }
+
+    fn verify_finite_nonempty_natural_set_has_maximum(
+        &mut self,
+        exist_fact: &ExistFactEnum,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let ExistFactEnum::ExistFact(body) = exist_fact else {
+            return Ok(None);
+        };
+        let groups = &body.params_def_with_type.groups;
+        if groups.len() != 1 || groups[0].params.len() != 1 {
+            return Ok(None);
+        }
+        let ParamType::Obj(witness_carrier) = &groups[0].param_type else {
+            return Ok(None);
+        };
+        if witness_carrier.to_string() != StandardSet::N.to_string() {
+            return Ok(None);
+        }
+        let witness = obj_for_bound_param_in_scope(&groups[0].params[0], ParamObjType::Exist);
+        let [ExistBodyFact::AtomicFact(AtomicFact::NormalAtomicFact(maximum_prop))] =
+            body.facts.as_slice()
+        else {
+            return Ok(None);
+        };
+        let Some(definition) =
+            self.get_active_prop_definition_by_name(&maximum_prop.predicate.to_string())
+        else {
+            return Ok(None);
+        };
+        if definition.iff_facts.len() != 2 {
+            return Ok(None);
+        }
+        let param_to_arg_map = definition
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(maximum_prop.body.as_slice());
+        let member_clause = self.inst_fact(
+            &definition.iff_facts[0],
+            &param_to_arg_map,
+            ParamObjType::DefHeader,
+            None,
+        )?;
+        let upper_bound_clause = self.inst_fact(
+            &definition.iff_facts[1],
+            &param_to_arg_map,
+            ParamObjType::DefHeader,
+            None,
+        )?;
+        let Fact::AtomicFact(AtomicFact::InFact(member)) = member_clause else {
+            return Ok(None);
+        };
+        if member.element.to_string() != witness.to_string() {
+            return Ok(None);
+        }
+        let Fact::ForallFact(upper_bound) = upper_bound_clause else {
+            return Ok(None);
+        };
+        let upper_groups = &upper_bound.params_def_with_type.groups;
+        if upper_groups.len() != 1 || upper_groups[0].params.len() != 1 {
+            return Ok(None);
+        }
+        let ParamType::Obj(upper_carrier) = &upper_groups[0].param_type else {
+            return Ok(None);
+        };
+        if upper_carrier.to_string() != StandardSet::N.to_string()
+            || upper_bound.dom_facts.len() != 1
+            || upper_bound.then_facts.len() != 1
+        {
+            return Ok(None);
+        }
+        let Fact::AtomicFact(AtomicFact::InFact(domain_member)) = &upper_bound.dom_facts[0] else {
+            return Ok(None);
+        };
+        let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::LessEqualFact(bound)) =
+            &upper_bound.then_facts[0]
+        else {
+            return Ok(None);
+        };
+        let upper_param =
+            obj_for_bound_param_in_scope(&upper_groups[0].params[0], ParamObjType::Forall);
+        if domain_member.element.to_string() != upper_param.to_string()
+            || domain_member.set.to_string() != member.set.to_string()
+            || bound.left.to_string() != upper_param.to_string()
+            || bound.right.to_string() != witness.to_string()
+        {
+            return Ok(None);
+        }
+
+        let line_file = exist_fact.line_file();
+        let prerequisites = [
+            AtomicFact::from(IsFiniteSetFact::new(member.set.clone(), line_file.clone())),
+            AtomicFact::from(IsNonemptySetFact::new(
+                member.set.clone(),
+                line_file.clone(),
+            )),
+            AtomicFact::from(SubsetFact::new(
+                member.set.clone(),
+                StandardSet::N.into(),
+                line_file,
+            )),
+        ];
+        let mut steps = Vec::with_capacity(prerequisites.len());
+        for prerequisite in prerequisites {
+            let result = self
+                .verify_non_equational_known_then_builtin_rules_only(&prerequisite, verify_state)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            steps.push(result);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                exist_fact.clone().into(),
+                "finite nonempty natural set has a greatest member".to_string(),
+                steps,
+            )
+            .into(),
+        ))
     }
 
     pub(crate) fn build_exist_unique_uniqueness_forall_fact(

@@ -1,6 +1,73 @@
 use super::*;
 
 impl Runtime {
+    // Odd powers of minus one are minus one.
+    // Example: `m $in N` proves `(-1)^(2*m+1) = -1`.
+    pub(crate) fn try_verify_minus_one_odd_natural_power(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let is_minus_one = |obj: &Obj| match obj {
+            Obj::Number(number) => number.normalized_value == "-1",
+            Obj::Mul(mul) => {
+                (Self::obj_is_builtin_literal_neg_one(mul.left.as_ref())
+                    && Self::obj_is_builtin_literal_one(mul.right.as_ref()))
+                    || (Self::obj_is_builtin_literal_one(mul.left.as_ref())
+                        && Self::obj_is_builtin_literal_neg_one(mul.right.as_ref()))
+            }
+            _ => false,
+        };
+        let pow = if is_minus_one(right) {
+            match left {
+                Obj::Pow(pow) => pow,
+                _ => return Ok(None),
+            }
+        } else if is_minus_one(left) {
+            match right {
+                Obj::Pow(pow) => pow,
+                _ => return Ok(None),
+            }
+        } else {
+            return Ok(None);
+        };
+        if !is_minus_one(pow.base.as_ref()) {
+            return Ok(None);
+        }
+        let Obj::Add(exponent_sum) = pow.exponent.as_ref() else {
+            return Ok(None);
+        };
+        if !Self::obj_is_builtin_literal_one(exponent_sum.right.as_ref()) {
+            return Ok(None);
+        }
+        let Obj::Mul(even_part) = exponent_sum.left.as_ref() else {
+            return Ok(None);
+        };
+        let m = if Self::obj_is_builtin_literal_two(even_part.left.as_ref()) {
+            even_part.right.as_ref()
+        } else if Self::obj_is_builtin_literal_two(even_part.right.as_ref()) {
+            even_part.left.as_ref()
+        } else {
+            return Ok(None);
+        };
+        let m_in_n: AtomicFact =
+            InFact::new(m.clone(), StandardSet::N.into(), line_file.clone()).into();
+        let m_result = self.verify_builtin_rule_premise(&m_in_n, builtin_state)?;
+        if !m_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "equality: (-1)^(2*m+1) = -1 for m in N".to_string(),
+                vec![m_result],
+            )
+            .into(),
+        ))
+    }
+
     // First power identity: `a^1 = a`.
     // Example: `forall a Z: a^1 = a`.
     pub(crate) fn try_verify_pow_one_identity(

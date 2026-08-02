@@ -1,6 +1,128 @@
 use super::*;
 
 #[test]
+fn typed_have_admits_literal_dependent_struct_constructor() {
+    let source_code = r#"
+struct SizedList<X set, n N>:
+    length N
+    entries fn(k N_pos: k <= n) X
+    <=>:
+        length = n
+
+template<X nonempty_set, n N, x X>:
+    have repeated &SizedList<X, n> = (n, fn(k N_pos: k <= n) X {x})
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "typed_have_admits_literal_dependent_struct_constructor",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "typed tuple returns should check immediate dependent fields and laws:\n{}",
+        run_output
+    );
+
+    let invalid_source = r#"
+struct SizedList<X set, n N>:
+    length N
+    entries fn(k N_pos: k <= n) X
+    <=>:
+        length = n
+
+have invalid &SizedList<R, 2> = (3, fn(k N_pos: k <= 2) R {k})
+"#;
+    let mut invalid_runtime = Runtime::new();
+    invalid_runtime.new_file_path_new_env_new_name_scope(
+        "typed_have_rejects_struct_constructor_with_false_law",
+    );
+    let (stmt_results, runtime_error) = run_source_code(invalid_source, &mut invalid_runtime);
+    let (run_succeeded, _) =
+        render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "typed tuple admission must reject a constructor whose structure law is false"
+    );
+}
+
+#[test]
+fn direct_literal_tuple_membership_checks_dependent_struct_constructor() {
+    let source_code = r#"
+struct SizedList<X set, n N>:
+    length N
+    entries fn(k N_pos: k <= n) X
+    <=>:
+        length = n
+
+(2, fn(k N_pos: k <= 2) R {k}) $in &SizedList<R, 2>
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "direct_literal_tuple_membership_checks_dependent_struct_constructor",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "direct tuple membership should verify dependent fields and laws:\n{}",
+        run_output
+    );
+
+    let invalid_source = r#"
+struct SizedList<X set, n N>:
+    length N
+    entries fn(k N_pos: k <= n) X
+    <=>:
+        length = n
+
+(3, fn(k N_pos: k <= 2) R {k}) $in &SizedList<R, 2>
+"#;
+    let mut invalid_runtime = Runtime::new();
+    invalid_runtime.new_file_path_new_env_new_name_scope(
+        "direct_literal_tuple_membership_rejects_false_struct_law",
+    );
+    let (stmt_results, runtime_error) = run_source_code(invalid_source, &mut invalid_runtime);
+    let (run_succeeded, _) =
+        render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "direct tuple membership must reject a false dependent structure law"
+    );
+}
+
+#[test]
+fn named_struct_field_projects_through_one_checked_tuple_constructor() {
+    let source_code = r#"
+struct Pair:
+    first R
+    second R
+
+have pair_value &Pair = (1, 2)
+have selected_second R = &Pair{pair_value}.second
+selected_second = 2
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "named_struct_field_projects_through_one_checked_tuple_constructor",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "one checked tuple constructor should expose its named structure field:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn obtain_from_exist_unique_preserves_uniqueness_for_struct_members() {
     let source_code = r#"
 struct BoxedReal:
@@ -1018,6 +1140,53 @@ have right_half_plane set = {p &Point: p.x >= 0}
                 run_output
             );
         },
+    );
+}
+
+#[test]
+fn by_def_packages_an_exact_known_universal_clause_with_bounded_type_checks() {
+    let source_code = r#"
+prop maps_into(A set, f fn(n N) A, S power_set(A)):
+    forall n N:
+        f(n) $in S
+
+trust have f fn(n N) R
+trust forall index N:
+    f(index) $in {0}
+by def $maps_into(R, f, {0})
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "by_def_packages_an_exact_known_universal_clause_with_bounded_type_checks",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "an exact universal definition clause should package directly:\n{run_output}"
+    );
+}
+
+#[test]
+fn by_def_does_not_package_a_missing_universal_clause() {
+    let source_code = r#"
+prop maps_into(A set, f fn(n N) A, S power_set(A)):
+    forall n N:
+        f(n) $in S
+
+trust have f fn(n N) R
+by def $maps_into(R, f, {0})
+"#;
+    let mut runtime = Runtime::new();
+    runtime
+        .new_file_path_new_env_new_name_scope("by_def_does_not_package_a_missing_universal_clause");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "definition folding must not invent a missing universal premise:\n{run_output}"
     );
 }
 

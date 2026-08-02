@@ -42,6 +42,10 @@ pub struct Runtime {
     pub(crate) active_atomic_fact_inferences: HashSet<FactString>,
     /// Objects currently being checked for well-definedness.
     pub(crate) active_well_defined_objects: HashSet<ObjString>,
+    /// Named set-membership goals currently being unfolded to set builders.
+    pub(crate) active_set_builder_membership_unfolds: HashSet<FactString>,
+    /// Prevents structural child equality checks from reopening the root candidate graph.
+    pub(crate) known_equality_candidate_replay_depth: usize,
     pub(crate) symbol_id_allocator: Rc<SymbolIdAllocator>,
     pub(crate) template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
     /// Parser-only notation metadata. A source binder written as `a &Struct`
@@ -71,6 +75,8 @@ impl Runtime {
             active_arg_match_bindings: vec![],
             active_atomic_fact_inferences: HashSet::new(),
             active_well_defined_objects: HashSet::new(),
+            active_set_builder_membership_unfolds: HashSet::new(),
+            known_equality_candidate_replay_depth: 0,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
             default_struct_views: HashMap::new(),

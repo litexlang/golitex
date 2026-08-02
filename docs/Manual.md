@@ -564,6 +564,18 @@ product(1, 3, fn(i1 Z) Z {i1}) = product(1, 2, fn(i1 Z) Z {i1}) * fn(i1 Z) Z {i1
 | `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]` | Bounded real intervals |
 | `'(a,)`, `'[a,)`, `'(,b)`, `'(,b]` | Real rays |
 
+Integer ranges are always subsets of `Z` (and its standard supersets). If the
+lower endpoint is known in `N` or `N+`, the range is also a subset of that
+carrier. A set-builder over any finite base is finite, so a finite, nonempty
+filtered integer range can feed `finite_set_min` or `finite_set_max` without a
+separate trust boundary.
+
+Finite sums also respect proved pointwise equality on their closed index
+range. This applies both to sums with the same bounds and to integer-shifted
+bounds: prove the corresponding guarded `forall` for the shared or target
+range, then state the aggregate equality. A common anonymous summand carrier
+such as `N+` is preserved while checking the pointwise premise.
+
 The operations still require suitable domains:
 
 ```text
@@ -1021,6 +1033,11 @@ have fn g(x R) R = x
 by def $fn_eq_in(f, g, R)
 by def $fn_eq(f, g)
 ```
+
+For named functions with alpha-equivalent declared function carriers, a bare
+`$fn_eq(f, g)` can also consume the exact already-known pointwise `forall`
+directly. It does not synthesize pointwise equalities or bridge different
+domain or return carriers.
 
 Mapping predicates describe standard function properties:
 
@@ -1638,10 +1655,12 @@ For an ordinary atomic fact, the main order is:
 2. Check an already known non-`forall` atomic fact with the same predicate
    shape, using known equalities.
 3. Try bounded builtin mathematical rules.
-4. After builtin verification returns, try an applicable known `forall` fact
+4. At outer round 0, try the target's concrete definition with the full
+   verifier.
+5. Try an applicable known `forall` fact
    and verify its instantiated premises.
-5. Try registered predicate properties or enabled strategies where applicable.
-6. On success, store the fact and run builtin inference.
+6. Try registered predicate properties or enabled strategies where applicable.
+7. On success, store the fact and run builtin inference.
 
 ```litex
 abstract_prop P(x)
@@ -1702,12 +1721,17 @@ bridge fact is needed.
 
 ### Explicit definitions and `by def` (preview)
 
-Ordinary atomic verification does not prove a positive predicate by silently
-running its defining clauses backwards. Use `by def $P(args)` to instantiate a
-concrete `prop`, verify every clause with the full verifier, and store the
-positive predicate only after all clauses succeed. Once an accepted positive
-predicate is stored, forward inference may expose its positive defining
-consequences; that is a separate direction.
+At the outer verification round, an ordinary positive concrete predicate may
+be proved from its definition before Litex tries known `forall` facts or user
+strategies. Litex instantiates the `prop`, verifies every clause with the full
+verifier, and accepts the positive predicate only after all clauses succeed.
+This includes packaging an exact existential clause already established by a
+`witness`. Once an accepted positive predicate is stored, forward inference may
+also expose its positive defining consequences; that is the other direction.
+
+Use `by def $P(args)` when the proof should request and record the definition
+route explicitly. Unlike ordinary atomic verification, explicit `by def`
+rechecks the definition even if the target predicate is already known.
 
 `by def` also names the mathematical-definition route for these builtin
 positive forms: subset, superset, proper subset, proper superset,
@@ -1721,8 +1745,9 @@ For example, a clause using only `a` and `x` inside
 is nonempty. It does not make this projection across an empty or unresolved
 omitted domain.
 
-Automatic positive inference does not manufacture witnesses for existential
-definition clauses such as basis, span, and linear combination.
+Automatic definition verification does not manufacture witnesses for
+existential clauses such as basis, span, and linear combination. It can package
+the predicate after the required existential fact has already been proved.
 
 ```litex
 prop is_unit_pair(x, y R):
@@ -1749,7 +1774,8 @@ name a preimage from known range or replacement membership.
 
 `obtain` exposes each direct fact in the existential body. Positive concrete
 predicates among those facts may expose positive clauses through forward
-inference. Use `by def` to prove a predicate from its defining clauses.
+inference. Conversely, already proved defining clauses may automatically close
+a positive concrete predicate; use `by def` to request that route explicitly.
 
 ```litex
 witness exist u R st {0 < u, u < 1} from 1 / 2:
@@ -2060,7 +2086,8 @@ or same-family/cross-family exception.
 Separate builtin strategies handle only strictly structural descent, such as
 arithmetic carrier trees, additive or multiplicative sign trees, finite and
 nonempty set constructors, set membership/containment constructors, and tuple
-coordinates. Every strategy layer first tries known non-`forall` facts and one
+coordinates. Finite-product congruence likewise descends to one factor
+equality at a fresh member of the common finite set. Every strategy layer first tries known non-`forall` facts and one
 fresh direct builtin rule for each immediate child, then repeats only its own
 strictly smaller structural pattern. It never enters known `forall` matching,
 definitions, user strategies, or the full verifier. Detailed output preserves
@@ -2068,16 +2095,47 @@ the child proof tree and labels the outer route as `builtin strategy`.
 
 For an ordinary atomic goal the search order is: known non-`forall` fact,
 one-layer builtin rule, builtin strategy, an applicable known `forall`, then a
-user-defined strategy. Consequently a semantic chain such as `sqrt(t) != 0`
-from only `t > 0` is not automatic: prove or cite the intermediate mathematical
-fact `sqrt(t) > 0` first.
+user-defined strategy. A multi-step semantic implication is not automatic
+unless it has its own reviewed direct rule. For example, `sqrt(t) != 0` now has
+the dedicated direct premise `t > 0`; the weaker `t >= 0` does not trigger it.
 
 Direct rules may package a fixed elementary implication when all of their
 premises are already known. In particular, `n $in N` together with `n > 0`
 proves `n - 1 $in N`. This lets a recursive `have fn` over `N` call itself at
 `n - 1` inside its positive branch without adding a source-level carrier lemma.
-The parallel strict-positive rule uses the stronger premises `n $in N+` and
-`n > 1` to prove `n - 1 $in N+`.
+An already positive-natural `n $in N+` also directly proves `n - 1 $in N`.
+The parallel strict-positive result uses the stronger bound `n > 1` to prove
+`n - 1 $in N+`.
+
+Several definition-facing strategies are intentionally one layer deep. A
+literal tuple can be checked as a dependent struct constructor field by field,
+and a callable struct field can project through one checked tuple/function or
+template constructor. Membership in a literal set builder, in a set builder
+returned by one checked function/template application, or in a named set with
+one exact indexed set-builder equality unfolds only that one definition and
+verifies its base carrier plus atomic predicate obligations. The exact index
+avoids an environment-wide alias scan.
+
+Integer discreteness includes both singleton endpoint orientations. For known
+integers, `n <= x` with `x < n + 1` proves `x = n`, while `n < x` with
+`x <= n + 1` proves `x = n + 1`. Both bounds are required.
+
+An exact known pointwise `forall` can package `$fn_eq(f, g)` when the declared
+function carriers are alpha-equivalent. This route does not reconstruct
+dependent mutual membership and does not apply across mismatched carriers.
+
+Known-equality replay of a checked function body remains bounded to one step
+against a simple arithmetic expression. Componentwise congruence does not use
+that replay path: known-only equality first tries direct lookup/calculation,
+then compares every corresponding argument of matching constructors using
+already-known equality.
+For function applications it aligns argument groups from right to left, then
+checks the remaining function prefixes. Thus several arguments may change in
+one equality, and `f(a, b) = g(1, 2)(a, b)` is accepted exactly when the paired
+arguments and the remaining equality `f = g(1, 2)` are already known.
+
+For nonzero facts, a known strict premise `x > 0` proves `sqrt(x) != 0`.
+Nonnegativity alone is deliberately insufficient because `sqrt(0) = 0`.
 
 Rules that genuinely need a universal, existential, or compound premise are
 called explicitly through reserved builtin theorem names. Their handlers use
@@ -2122,7 +2180,7 @@ write a smaller intermediate fact that exposes a supported shape.
 | Membership | Standard number sets, displayed sets, ranges, intervals, products, and function values |
 | Set relations | Set shape, nonemptiness, finiteness, subset and proper subset patterns |
 | Functions | Application equations, pointwise equality, global function equality, mapping properties |
-| Finite aggregates | Sizes, extrema, indexed sums/products, finite-set sums/products |
+| Finite aggregates | Sizes, extrema, indexed sums/products, finite-set sums/products, pointwise product distribution, and bijective reindexing |
 | Modular arithmetic | Concrete remainders and standard congruence-preserving operations |
 | Structured objects | Tuples, Cartesian products, sequences, matrices, structs, and templates |
 
@@ -2205,7 +2263,17 @@ forall a, b, c, d R:
     =>:
         a + c <= b + d
         a - d <= b - c
+
+forall m, n Z:
+    =>:
+        m <= n
+    <=>:
+        m < n + 1
 ```
+
+The last equivalence is an integer-adjacency rule: a strict bound immediately
+below the successor `n + 1` is the same as the weak bound at `n`. It requires
+both compared objects to be known integers.
 
 Sign conditions matter:
 
@@ -2557,3 +2625,16 @@ reaches `unknown` or `error`.
 The language implementation is the final source of truth when this manual and
 the runner disagree. Such disagreement is a documentation or diagnostic bug
 to fix, not a reason to reinterpret a failed example silently.
+
+### Bounded maximum existence and definition packaging
+
+Litex recognizes the standard maximum-existence shape for a finite nonempty
+subset of `N`. The concrete predicate must state both that the witness belongs
+to the set and that every natural member is at most the witness. The rule does
+not fire without finite, nonempty, and natural-carrier evidence.
+
+When `by def` folds a concrete proposition, it first checks argument types and
+exact already-known definition clauses through bounded known/builtin routes.
+Only a missing clause falls back to ordinary proof search. This keeps large
+contexts responsive without weakening the requirement that every concrete
+definition clause be proved.

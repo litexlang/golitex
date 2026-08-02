@@ -395,7 +395,7 @@ impl Runtime {
         // rule, even though the remaining checks are only literal/shape
         // matching.
         if Self::obj_is_builtin_literal_one(other) {
-            let same_base_and_arg = self.verify_objs_are_equal_known_only(
+            let same_base_and_arg = self.verify_objs_are_equal_by_known_equality(
                 log.base.as_ref(),
                 log.arg.as_ref(),
                 line_file.clone(),
@@ -460,7 +460,7 @@ impl Runtime {
             _ => return Ok(None),
         };
         let expected_log: Obj = Log::new((*pow.base).clone(), other.clone()).into();
-        let exponent_ok = self.verify_objs_are_equal_known_only(
+        let exponent_ok = self.verify_objs_are_equal_by_known_equality(
             pow.exponent.as_ref(),
             &expected_log,
             line_file.clone(),

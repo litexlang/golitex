@@ -148,7 +148,17 @@ impl Runtime {
                 }
             }
             for struct_value in struct_values {
-                let Obj::Tuple(tuple) = struct_value else {
+                // Most structure values are already literal tuples. Project
+                // those immediately; only a non-tuple callable constructor can
+                // benefit from the one checked-constructor unfold below.
+                let constructor = match struct_value {
+                    Obj::Tuple(tuple) => Some(Obj::Tuple(tuple)),
+                    Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_) => {
+                        self.unfold_known_fn_application_once(&struct_value, verify_state)?
+                    }
+                    _ => None,
+                };
+                let Some(Obj::Tuple(tuple)) = constructor else {
                     continue;
                 };
                 let Some(field_value) = tuple.args.get(index - 1) else {

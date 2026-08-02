@@ -11,6 +11,15 @@ impl Runtime {
             AtomicFact::NotEqualFact(not_equal_fact) => {
                 self._verify_not_equal_fact_with_builtin_rules(not_equal_fact, builtin_state)
             }
+            AtomicFact::FnEqualFact(fn_equal_fact) => self.verify_fn_equal_fact_with_builtin_rules(
+                fn_equal_fact,
+                &UseContextVerifyState::new_with_final_round(false),
+            ),
+            AtomicFact::FnEqualInFact(fn_equal_in_fact) => self
+                .verify_fn_equal_in_fact_with_builtin_rules(
+                    fn_equal_in_fact,
+                    &UseContextVerifyState::new_with_final_round(false),
+                ),
             AtomicFact::InFact(in_fact) => {
                 self.verify_in_fact_with_builtin_rules(in_fact, builtin_state)
             }

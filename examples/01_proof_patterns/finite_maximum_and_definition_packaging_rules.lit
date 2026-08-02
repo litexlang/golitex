@@ -1,0 +1,43 @@
+# A finite nonempty subset of N has a greatest member, including when the
+# maximum property is presented through a concrete user proposition.
+prop is_greatest_natural_member(S power_set(N), maximum N):
+    maximum $in S
+    forall n N:
+        n $in S
+        =>:
+            n <= maximum
+
+$is_finite_set({1, 3})
+$is_nonempty_set({1, 3})
+{1, 3} $subset N
+exist maximum N st {$is_greatest_natural_member({1, 3}, maximum)}
+
+# `by def` consumes an already proved exact universal clause through a bounded
+# cache/type route instead of reopening unrelated theorem search.
+prop maps_into(A set, f fn(n N) A, S power_set(A)):
+    forall n N:
+        f(n) $in S
+
+have identity fn(n N) N = fn(n N) N {n}
+claim:
+    ? forall index N:
+        identity(index) $in N
+    identity(index) = index
+    index $in N
+by def $maps_into(N, identity, N)
+
+# Integer ranges preserve a natural carrier when their lower endpoint is
+# natural. Filtering such a finite range stays finite, so its minimum can be
+# exposed directly as an N-valued function.
+forall upper N:
+    closed_range(0, upper) $subset N
+    range(0, upper) $subset N
+    $is_finite_set({n closed_range(0, upper): n = upper})
+
+claim:
+    ? forall upper N:
+        $is_nonempty_set({n closed_range(0, upper): n = upper})
+    upper $in {n closed_range(0, upper): n = upper}
+    witness $is_nonempty_set({n closed_range(0, upper): n = upper}) from upper
+
+have fn selected_natural(upper N) N = finite_set_min({n closed_range(0, upper): n = upper})

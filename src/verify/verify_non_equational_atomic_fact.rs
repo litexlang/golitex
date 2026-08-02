@@ -21,6 +21,12 @@ impl Runtime {
         if verify_state.is_round_0() {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
 
+            if let Some(verified_by_definition) =
+                self.verify_atomic_fact_using_builtin_or_prop_definition(atomic_fact, verify_state)?
+            {
+                return Ok(verified_by_definition);
+            }
+
             result = self
                 .verify_atomic_fact_with_known_forall(atomic_fact, &verify_state_add_one_round)?;
             if result.is_true() {

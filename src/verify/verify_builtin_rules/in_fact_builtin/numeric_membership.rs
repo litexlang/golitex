@@ -175,7 +175,7 @@ impl Runtime {
         };
         let target = &in_fact.set;
         let ret_matches = self
-            .verify_objs_are_equal_known_only(target, &typed_ret, in_fact.line_file.clone())
+            .verify_objs_are_equal_by_known_equality(target, &typed_ret, in_fact.line_file.clone())
             .is_true();
         let ret_matches_alpha_renamed_fn_set =
             if let (Obj::FnSet(typed_fn_set), Obj::FnSet(target_fn_set)) = (&typed_ret, target) {
@@ -274,10 +274,25 @@ impl Runtime {
         }
 
         // A positive natural has a natural predecessor.
-        // Example: `n $in N`, `n > 0` => `n - 1 $in N`.
+        // Examples: `n $in N_pos` => `n - 1 $in N`, or
+        // `n $in N`, `n > 0` => `n - 1 $in N`.
         if matches!(sub.right.as_ref(), Obj::Number(number) if number.normalized_value == "1") {
             let lf = in_fact.line_file.clone();
             let left = sub.left.as_ref().clone();
+            let left_in_n_pos: AtomicFact =
+                InFact::new(left.clone(), StandardSet::NPos.into(), lf.clone()).into();
+            let positive_natural_result =
+                self.verify_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
+            if positive_natural_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "N: n - 1 from n in N_pos".to_string(),
+                        vec![positive_natural_result],
+                    )
+                    .into(),
+                );
+            }
             let left_in_n: AtomicFact =
                 InFact::new(left.clone(), StandardSet::N.into(), lf.clone()).into();
             let left_positive: AtomicFact =
@@ -489,11 +504,23 @@ impl Runtime {
         let left = sub.left.as_ref().clone();
         let left_in_n_pos: AtomicFact =
             InFact::new(left.clone(), StandardSet::NPos.into(), lf.clone()).into();
-        let left_greater_than_one: AtomicFact =
-            GreaterFact::new(left, Number::new("1".to_string()).into(), lf).into();
+        let left_greater_than_one: AtomicFact = GreaterFact::new(
+            left.clone(),
+            Number::new("1".to_string()).into(),
+            lf.clone(),
+        )
+        .into();
+        let two_le_left: AtomicFact =
+            LessEqualFact::new(Number::new("2".to_string()).into(), left, lf).into();
         let membership_result = self.verify_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
-        let bound_result =
+        let mut bound_result =
             self.verify_builtin_rule_premise(&left_greater_than_one, builtin_state)?;
+        if !bound_result.is_true() {
+            // Over naturals, the common induction premise `2 <= n` is the
+            // discrete spelling of `n > 1`; accept it directly so a caller
+            // does not need a second builtin-order step.
+            bound_result = self.verify_builtin_rule_premise(&two_le_left, builtin_state)?;
+        }
         if !membership_result.is_true() || !bound_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }

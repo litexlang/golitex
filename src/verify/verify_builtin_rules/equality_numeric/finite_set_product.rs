@@ -413,17 +413,61 @@ impl Runtime {
             (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => (l, r),
             _ => return Ok(None),
         };
-        if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                left_product.set.as_ref(),
-                right_product.set.as_ref(),
-                line_file.clone(),
-                builtin_state,
-            )?
-            .is_true()
+        if !objs_equal_by_display_string(left_product.set.as_ref(), right_product.set.as_ref())
+            && !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    left_product.set.as_ref(),
+                    right_product.set.as_ref(),
+                    line_file.clone(),
+                    builtin_state,
+                )?
+                .is_true()
         {
             return Ok(None);
         }
+
+        // A stored pointwise function equality is already the exact premise of product
+        // congruence. Equal representatives cover named functions and their defining lambdas.
+        let mut left_candidates = vec![left_product.func.as_ref().clone()];
+        left_candidates
+            .extend(self.get_all_obj_representatives_equal_to_given(left_product.func.as_ref()));
+        let mut right_candidates = vec![right_product.func.as_ref().clone()];
+        right_candidates
+            .extend(self.get_all_obj_representatives_equal_to_given(right_product.func.as_ref()));
+        for left_func in &left_candidates {
+            for right_func in &right_candidates {
+                for (first, second) in [
+                    (left_func.clone(), right_func.clone()),
+                    (right_func.clone(), left_func.clone()),
+                ] {
+                    let fn_eq_in: AtomicFact = FnEqualInFact::new(
+                        first,
+                        second,
+                        left_product.set.as_ref().clone(),
+                        line_file.clone(),
+                    )
+                    .into();
+                    let fn_eq_result = self
+                        .verify_fact_from_cache_using_display_string(&fn_eq_in.clone().into())
+                        .unwrap_or(
+                            self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+                                &fn_eq_in,
+                            )?,
+                        );
+                    if fn_eq_result.is_true() {
+                        return Ok(Some(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                                "equality: finite-set products from known fn_eq_in".to_string(),
+                                vec![fn_eq_result],
+                            )
+                            .into(),
+                        ));
+                    }
+                }
+            }
+        }
+
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
         let Some(left_inst) =
@@ -449,6 +493,160 @@ impl Runtime {
                 right,
                 line_file,
                 "equality: finite-set products from pointwise equality on the finite set",
+            )));
+        }
+        Ok(None)
+    }
+
+    // Finite-set products distribute over pointwise multiplication on the same finite set.
+    // Example: `finite_set_product(X, fn(x X) Z {f(x) * g(x)}) =
+    // finite_set_product(X, f) * finite_set_product(X, g)`.
+    pub(crate) fn try_verify_finite_set_product_mul(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (product_side, multiplied_side) in [(left, right), (right, left)] {
+            let Obj::ProductOfFiniteSet(product) = product_side else {
+                continue;
+            };
+            let Obj::Mul(multiplied) = multiplied_side else {
+                continue;
+            };
+            let (Obj::ProductOfFiniteSet(first), Obj::ProductOfFiniteSet(second)) =
+                (multiplied.left.as_ref(), multiplied.right.as_ref())
+            else {
+                continue;
+            };
+            let first_set_result = self.verify_objs_are_equal_in_equality_builtin(
+                product.set.as_ref(),
+                first.set.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?;
+            if !first_set_result.is_true() {
+                continue;
+            }
+            let second_set_result = self.verify_objs_are_equal_in_equality_builtin(
+                product.set.as_ref(),
+                second.set.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?;
+            if !second_set_result.is_true() {
+                continue;
+            }
+
+            let x_name = self.generate_random_unused_name();
+            let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+            let Some(product_at_x) =
+                self.instantiate_unary_function_at(product.func.as_ref(), &x_obj)?
+            else {
+                continue;
+            };
+            let Some(first_at_x) =
+                self.instantiate_unary_function_at(first.func.as_ref(), &x_obj)?
+            else {
+                continue;
+            };
+            let Some(second_at_x) =
+                self.instantiate_unary_function_at(second.func.as_ref(), &x_obj)?
+            else {
+                continue;
+            };
+            let expected: Obj = Mul::new(first_at_x, second_at_x).into();
+            let pointwise_fact: AtomicFact =
+                EqualFact::new(product_at_x, expected, line_file.clone()).into();
+            let pointwise_result = self
+                .verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                    x_binding,
+                    product.set.as_ref().clone(),
+                    &pointwise_fact,
+                    builtin_state,
+                )?;
+            if !pointwise_result.is_true() {
+                continue;
+            }
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: finite-set product distributes over pointwise multiplication",
+            )));
+        }
+        Ok(None)
+    }
+
+    // Finite-set products may be reindexed along a known bijection.
+    // Example: `$bijective(Y, X, g)` proves
+    // `finite_set_product(X, f) = finite_set_product(Y, fn(y Y) Z {f(g(y))})`.
+    pub(crate) fn try_verify_finite_set_product_substitution(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (source_side, pullback_side) in [(left, right), (right, left)] {
+            let (Obj::ProductOfFiniteSet(source), Obj::ProductOfFiniteSet(pullback)) =
+                (source_side, pullback_side)
+            else {
+                continue;
+            };
+
+            let y_name = self.generate_random_unused_name();
+            let (y_binding, y_obj) = self.fresh_bound_param(y_name, ParamObjType::Forall)?;
+            let Some(pullback_at_y) =
+                self.instantiate_unary_function_at(pullback.func.as_ref(), &y_obj)?
+            else {
+                continue;
+            };
+            let Some(map_y) =
+                Self::unary_application_arg_matching_callable(&pullback_at_y, source.func.as_ref())
+            else {
+                continue;
+            };
+            let Some(source_at_map_y) =
+                self.instantiate_unary_function_at(source.func.as_ref(), &map_y)?
+            else {
+                continue;
+            };
+            let pointwise_fact: AtomicFact =
+                EqualFact::new(pullback_at_y, source_at_map_y, line_file.clone()).into();
+            let pointwise_result = self
+                .verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                    y_binding,
+                    pullback.set.as_ref().clone(),
+                    &pointwise_fact,
+                    builtin_state,
+                )?;
+            if !pointwise_result.is_true() {
+                continue;
+            }
+
+            let known_bijection = match &map_y {
+                Obj::FnObj(map_call) => {
+                    let map: Obj = map_call.head.as_ref().clone().into();
+                    self.has_known_builtin_bijection(
+                        pullback.set.as_ref(),
+                        source.set.as_ref(),
+                        &map,
+                        line_file.clone(),
+                    )
+                }
+                _ => false,
+            };
+            if !known_bijection {
+                continue;
+            }
+
+            return Ok(Some(factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "equality: finite-set product substitution along a bijection",
             )));
         }
         Ok(None)

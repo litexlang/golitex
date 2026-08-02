@@ -289,7 +289,7 @@ impl Runtime {
         }
         for maximum in self.known_equal_finite_set_max_candidates(&fact.right) {
             let maximum_obj: Obj = maximum.clone().into();
-            let equality_result = self.verify_objs_are_equal_known_only(
+            let equality_result = self.verify_objs_are_equal_by_known_equality(
                 &fact.right,
                 &maximum_obj,
                 fact.line_file.clone(),
@@ -339,7 +339,7 @@ impl Runtime {
         }
         for minimum in self.known_equal_finite_set_min_candidates(&fact.left) {
             let minimum_obj: Obj = minimum.clone().into();
-            let equality_result = self.verify_objs_are_equal_known_only(
+            let equality_result = self.verify_objs_are_equal_by_known_equality(
                 &fact.left,
                 &minimum_obj,
                 fact.line_file.clone(),
@@ -451,6 +451,32 @@ impl Runtime {
             return Ok(None);
         };
 
+        // Integer adjacency removes one successor from a strict upper bound.
+        // Example: `a < b + 1` => `a <= b` for integers `a` and `b`.
+        if let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
+            &[&fact.left, &fact.right],
+            &fact.line_file,
+        )? {
+            let strict: AtomicFact = LessFact::new(
+                fact.left.clone(),
+                obj_plus_one(&fact.right),
+                fact.line_file.clone(),
+            )
+            .into();
+            let strict_result = self.verify_builtin_rule_premise(&strict, builtin_state)?;
+            if strict_result.is_true() {
+                steps.push(strict_result);
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "integer adjacency: a < b + 1 gives a <= b".to_string(),
+                        steps,
+                    )
+                    .into(),
+                ));
+            }
+        }
+
         if let Some(predecessor) = obj_plus_one_base(&fact.left) {
             let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
                 &[&predecessor, &fact.right],
@@ -535,6 +561,41 @@ impl Runtime {
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     EqualFact::new(left.clone(), right.clone(), line_file).into(),
                     "integer singleton interval: n <= x < n + 1 gives x = n".to_string(),
+                    steps,
+                )
+                .into(),
+            ));
+        }
+
+        // The adjacent singleton interval has the successor as its only integer point.
+        // Example: `n < x`, `x <= n + 1` => `x = n + 1`.
+        for (subject, successor) in [(left, right), (right, left)] {
+            let Some(base) = obj_plus_one_base(successor) else {
+                continue;
+            };
+            let Some(mut steps) = self
+                .verify_objects_are_known_integers_in_builtin_leaf(&[subject, &base], &line_file)?
+            else {
+                continue;
+            };
+            let lower: AtomicFact = LessFact::new(base, subject.clone(), line_file.clone()).into();
+            let upper: AtomicFact =
+                LessEqualFact::new(subject.clone(), successor.clone(), line_file.clone()).into();
+            let lower_result = self.verify_builtin_rule_premise(&lower, builtin_state)?;
+            if lower_result.is_unknown() {
+                continue;
+            }
+            let upper_result = self.verify_builtin_rule_premise(&upper, builtin_state)?;
+            if upper_result.is_unknown() {
+                continue;
+            }
+            steps.push(lower_result);
+            steps.push(upper_result);
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "integer successor singleton interval: n < x <= n + 1 gives x = n + 1"
+                        .to_string(),
                     steps,
                 )
                 .into(),

@@ -196,7 +196,7 @@ forall s nonempty_set, G &Group<s>, identity s:
         identity = G.mul(G.one, identity) = G.one
 ```
 
-This comparison motivates five questions that guide Litex:
+This comparison motivates six questions that guide Litex:
 
 1. **Write facts before orchestrating a proof script.** Can users state the
    mathematical facts in their natural order instead of first organizing them
@@ -211,6 +211,9 @@ This comparison motivates five questions that guide Litex:
    order?
 5. **Derive rigor from a checkable process, and retain a familiar appearance.** Can routine orchestration be omitted from the surface while
    every object, fact, instantiation, and dependency is still checked?
+6. **Let relevance to a Goal be decided later.** Can a well-defined, verified
+   fact enter the current context without having to advance an active Goal, so
+   mathematical branches can be developed first and combined later?
 
 Litex should not promise to “omit proof.” Its intended promise is both stricter
 and more modest: let users first write the mathematical facts they actually

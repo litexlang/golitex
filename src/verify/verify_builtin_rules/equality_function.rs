@@ -17,10 +17,10 @@ impl Runtime {
         };
         let one: Obj = Number::new("1".to_string()).into();
         if !self
-            .verify_objs_are_equal_known_only(&power.exponent, &one, line_file.clone())
+            .verify_objs_are_equal_by_known_equality(&power.exponent, &one, line_file.clone())
             .is_unknown()
             && !self
-                .verify_objs_are_equal_known_only(&power.base, other_side, line_file.clone())
+                .verify_objs_are_equal_by_known_equality(&power.base, other_side, line_file.clone())
                 .is_unknown()
         {
             return Some(factual_equal_success_by_builtin_reason(
@@ -35,12 +35,12 @@ impl Runtime {
             return None;
         };
         let predecessor = if !self
-            .verify_objs_are_equal_known_only(&exponent.right, &one, line_file.clone())
+            .verify_objs_are_equal_by_known_equality(&exponent.right, &one, line_file.clone())
             .is_unknown()
         {
             exponent.left.as_ref()
         } else if !self
-            .verify_objs_are_equal_known_only(&exponent.left, &one, line_file.clone())
+            .verify_objs_are_equal_by_known_equality(&exponent.left, &one, line_file.clone())
             .is_unknown()
         {
             exponent.right.as_ref()
@@ -59,7 +59,7 @@ impl Runtime {
             (predecessor, previous_power.exponent.as_ref()),
         ];
         if pairs.iter().any(|(left, right)| {
-            self.verify_objs_are_equal_known_only(left, right, line_file.clone())
+            self.verify_objs_are_equal_by_known_equality(left, right, line_file.clone())
                 .is_unknown()
         }) {
             return None;

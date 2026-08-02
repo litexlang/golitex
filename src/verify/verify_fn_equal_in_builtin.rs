@@ -79,6 +79,43 @@ impl Runtime {
             None => return Ok(StmtUnknown::new().into()),
         };
 
+        // Function extensionality may consume an already checked pointwise forall directly
+        // when both declared function carriers are alpha-equivalent. This exact indexed route
+        // runs before reconstructing mutual membership, which can otherwise reopen dependent
+        // set definitions. Example: `forall x X: f(x) = g(x)` proves `$fn_eq(f, g)` for
+        // `f, g fn(x X) Y`, but not for functions with different domains or return carriers.
+        if self.fn_sets_are_alpha_equivalent_for_fn_eq(&left_t, &right_t)? {
+            let clause = fn_set_to_fn_set_clause(&left_t);
+            let (param_def, dom_facts, layers) =
+                forall_binders_dom_and_curried_layers_from_fn_set_clause(self, &clause)?;
+            let left_ap = match build_curried_fn_value_apply_for_fn_eq(&f.left, &layers) {
+                Some(o) => o,
+                None => return Ok(StmtUnknown::new().into()),
+            };
+            let right_ap = match build_curried_fn_value_apply_for_fn_eq(&f.right, &layers) {
+                Some(o) => o,
+                None => return Ok(StmtUnknown::new().into()),
+            };
+            let pointwise = ForallFact::new(
+                param_def,
+                dom_facts,
+                vec![EqualFact::new(left_ap, right_ap, f.line_file.clone()).into()],
+                f.line_file.clone(),
+            )?;
+            let pointwise_result = self.verify_forall_fact(&pointwise, verify_state)?;
+            if pointwise_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        f.clone().into(),
+                        "fn_eq: exact known pointwise forall over alpha-equivalent function carriers"
+                            .to_string(),
+                        vec![pointwise_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
         let in_left: AtomicFact = InFact::new(
             f.left.clone(),
             Obj::FnSet(right_t.clone()),
@@ -163,6 +200,29 @@ impl Runtime {
                 self.verify_in_fact_element_in_fn_set_by_stored_definition(value, expected, in_fact)
             }
         }
+    }
+
+    fn fn_sets_are_alpha_equivalent_for_fn_eq(
+        &mut self,
+        left: &FnSet,
+        right: &FnSet,
+    ) -> Result<bool, RuntimeError> {
+        let left_obj: Obj = left.clone().into();
+        let right_obj: Obj = right.clone().into();
+        if objs_equal_with_nested_binder_alpha_equivalence(&left_obj, &right_obj) {
+            return Ok(true);
+        }
+        let left_names = ParamGroupWithSet::collect_param_names(&left.body.params_def_with_set);
+        let right_names = ParamGroupWithSet::collect_param_names(&right.body.params_def_with_set);
+        if left_names.len() != right_names.len() {
+            return Ok(false);
+        }
+        let shared_names = self.generate_random_unused_names(left_names.len());
+        let left_normalized =
+            self.fn_set_alpha_renamed_for_display_compare(&left.body, &shared_names)?;
+        let right_normalized =
+            self.fn_set_alpha_renamed_for_display_compare(&right.body, &shared_names)?;
+        Ok(left_normalized.to_string() == right_normalized.to_string())
     }
 }
 

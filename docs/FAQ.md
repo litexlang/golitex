@@ -231,17 +231,49 @@ one layer deep: its premises may cite known non-`forall` atomic facts or use
 deterministic computation, but cannot run another builtin rule. Separate
 builtin strategies recurse only through a strictly smaller supported syntax
 tree—for example nested arithmetic carriers, sums, products, finite-set
-constructors, set membership, or tuple coordinates. Each strategy layer may
+constructors, finite-product pointwise congruence, set membership, or tuple coordinates. Each strategy layer may
 try one fresh direct rule on its immediate children. Neither route calls known
 `forall` matching, concrete definitions, user strategies, or the full verifier.
 Detailed output distinguishes `builtin rule` from `builtin strategy` and
 returns nested child results to the root.
 
+For finite products, the direct rules also recognize pointwise multiplication
+and a pullback along an already-known bijection. They do not search for or
+construct the bijection.
+
+For finite sums, a guarded pointwise equality on a closed integer range can
+justify equality of the corresponding sums. Integer-shift reindexing can use
+the same kind of guarded fact after translating the bounds. Neither rule
+invents a bijection or assumes equality outside the stated range.
+
 Some common one-step implications are direct rules themselves. For example,
 known facts `n $in N` and `n > 0` directly establish `n - 1 $in N`; the rule
 does not need to derive an intermediate `1 <= n` through a second builtin call.
-For a strictly positive result carrier, `n $in N+` and `n > 1` directly prove
-`n - 1 $in N+`.
+Known `n $in N+` also directly establishes `n - 1 $in N`. For a strictly
+positive result carrier, add `n > 1` to prove `n - 1 $in N+`.
+Likewise, known integers `a`, `b` and `a < b + 1` directly establish
+`a <= b`; this is the discrete adjacency bridge behind the familiar
+equivalence `a <= b <=> a < b + 1`.
+
+Constructor and definition strategies remain local. They can check a dependent
+tuple as a struct, project a callable field through one checked constructor,
+or unfold one literal/checked/template set builder or one exact indexed named
+builder for membership. They do not scan all local aliases. Equality replay can
+unfold one checked body against simple arithmetic. Separately, known-only
+equality first tries its original direct lookup/calculation path, then compares
+every corresponding argument of matching constructors through already-known
+equalities. Function applications align
+from the final argument group backwards, so `f(a, b) = g(1, 2)(a, b)` reduces
+to the known function-part equality `f = g(1, 2)` together with the
+corresponding argument equalities.
+
+For integers, the checker also recognizes the two exact singleton intervals:
+`n <= x < n + 1` closes `x = n`, and `n < x <= n + 1` closes
+`x = n + 1`. An exact known pointwise universal packages `$fn_eq(f, g)` only
+when the declared function carriers are alpha-equivalent.
+
+A strict positive premise also proves a square root is nonzero:
+`x > 0 => sqrt(x) != 0`. Merely knowing `x >= 0` does not trigger that rule.
 
 When a rule needs a universal, existential, or compound premise, the proof uses
 an explicit reserved builtin theorem call such as
@@ -249,8 +281,10 @@ an explicit reserved builtin theorem call such as
 `by thm tuple_equal_from_coordinates(L, R)`. These calls check their
 requirements with the full verifier and commit no conclusion on failure.
 Mathematical definitions similarly use explicit `by def`; for example,
-`by def A $subset B` and `by def $injective(A, B, f)`. A bare positive concrete
-predicate is not proved by silently running its definition backwards.
+`by def A $subset B` and `by def $injective(A, B, f)`. At the outer verification
+round, a bare positive concrete predicate can also be proved from its defining
+clauses before known `forall` matching and user strategies. `by def` remains
+useful when that proof route and its output should be explicit.
 
 This convenience is also part of the trust boundary. Builtin objects, builtin
 facts, builtin statement behavior, and builtin verification rules all deserve
@@ -870,6 +904,11 @@ This is one reason Litex proofs can stay close to ordinary mathematical prose.
 The user states the meaningful structural fact once, and the checker records
 the small consequences that a human reader would normally keep in mind.
 
+For example, `closed_range(0, n) $subset N` follows directly when `n $in N`,
+and `{k closed_range(0, n): P(k)}` is finite because it only filters a finite
+base. If that filtered set is also proved nonempty, its finite minimum can be
+used with the inherited natural-number carrier.
+
 ## Why does `obtain ... from exist` name witnesses explicitly?
 
 An existential fact says that some object exists. A later proof often needs to
@@ -964,3 +1003,16 @@ predicate goal. The strategy can also be stopped and re-enabled, so this form
 of automation remains local and controllable. In serious files, a strategy
 should be backed by a real checked proof or by clearly marked proof debt, just
 like any other reusable proof route.
+
+## Why can definition folding stay fast in a large context?
+
+For a concrete proposition, ordinary folding and explicit `by def` know the
+exact clauses they must prove. Litex therefore checks directly stored argument
+carriers and exact cached clauses first. It opens broader proof search only when
+that bounded route does not establish a requirement. This is not a shortcut
+around the definition: a missing universal or existential clause still makes
+the fold fail.
+
+The same bounded-design principle applies to the builtin greatest-member rule.
+It proves only the standard maximum-existence shape for a finite nonempty
+subset of `N`; dropping finiteness or nonemptiness leaves the goal unknown.

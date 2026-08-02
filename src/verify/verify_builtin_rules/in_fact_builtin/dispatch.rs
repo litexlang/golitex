@@ -729,7 +729,7 @@ impl Runtime {
                 let lf = in_fact.line_file.clone();
                 let len_obj: Obj = Number::new(list.objs.len().to_string()).into();
                 let length_result =
-                    self.verify_objs_are_equal_known_only(&len_obj, fs.n.as_ref(), lf.clone());
+                    self.verify_objs_are_equal_by_known_equality(&len_obj, fs.n.as_ref(), lf.clone());
                 if !length_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -754,7 +754,7 @@ impl Runtime {
             (Obj::MatrixListObj(list), Obj::MatrixSet(ms)) => {
                 let lf = in_fact.line_file.clone();
                 let n_rows_obj: Obj = Number::new(list.rows.len().to_string()).into();
-                let row_count_result = self.verify_objs_are_equal_known_only(
+                let row_count_result = self.verify_objs_are_equal_by_known_equality(
                     &n_rows_obj,
                     ms.row_len.as_ref(),
                     lf.clone(),
@@ -765,7 +765,7 @@ impl Runtime {
                 let mut subgoals = vec![row_count_result];
                 for row in list.rows.iter() {
                     let n_col_obj: Obj = Number::new(row.len().to_string()).into();
-                    let column_count_result = self.verify_objs_are_equal_known_only(
+                    let column_count_result = self.verify_objs_are_equal_by_known_equality(
                         &n_col_obj,
                         ms.col_len.as_ref(),
                         lf.clone(),

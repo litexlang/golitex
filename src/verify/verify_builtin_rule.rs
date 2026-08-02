@@ -27,6 +27,7 @@ impl Runtime {
         if known_result.is_true() {
             return Ok(known_result);
         }
+
         Ok(self.verify_atomic_fact_by_builtin_computation(goal))
     }
 
@@ -35,7 +36,7 @@ impl Runtime {
         goal: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
         match goal {
-            AtomicFact::EqualFact(fact) => Ok(self.verify_objs_are_equal_known_only(
+            AtomicFact::EqualFact(fact) => Ok(self.verify_objs_are_equal_by_known_equality(
                 &fact.left,
                 &fact.right,
                 fact.line_file.clone(),
@@ -230,6 +231,44 @@ mod tests {
         let extrema = include_str!("verify_builtin_rules/order_semantics_builtin.rs");
         assert!(!extrema.contains("verify_finite_set_members_are_at_most"));
         assert!(!extrema.contains("verify_finite_set_members_are_at_least"));
+    }
+
+    #[test]
+    fn componentwise_known_equality_is_part_of_known_only_equality() {
+        let common_leaf = include_str!("verify_builtin_rule.rs");
+        let common_leaf_impl = common_leaf
+            .split("#[cfg(test)]")
+            .next()
+            .expect("builtin rule implementation must precede its tests");
+        let known_fact_index = common_leaf_impl
+            .find("verify_known_non_forall_atomic_fact(goal)?")
+            .expect("common equality leaf must first check known non-forall facts");
+        let computation_index = common_leaf_impl
+            .find("verify_atomic_fact_by_builtin_computation(goal)")
+            .expect("common equality leaf must finish with builtin computation");
+        assert!(known_fact_index < computation_index);
+        assert!(!common_leaf_impl.contains("try_verify_equality_by_corresponding_known_equalities"));
+
+        let equality_structural = include_str!("verify_builtin_rules/equality_structural.rs");
+        let direct_index = equality_structural
+            .find("verify_objs_are_equal_directly_known_only(left, right")
+            .expect("known-only equality must first try direct known equality");
+        let componentwise_index = equality_structural
+            .find("try_verify_equality_by_corresponding_known_equalities(left, right")
+            .expect("known-only equality must then try componentwise known equality");
+        assert!(direct_index < componentwise_index);
+        assert_eq!(
+            equality_structural
+                .matches("verify_objs_are_equal_known_only(")
+                .count(),
+            1,
+            "componentwise equality must use the direct known-only step for its children"
+        );
+
+        let equality_dispatch = include_str!("verify_builtin_rules/equality_dispatch.rs");
+        assert!(
+            !equality_dispatch.contains("try_verify_equality_by_corresponding_known_equalities")
+        );
     }
 
     fn visit_rust_files(dir: &Path, f: &mut impl FnMut(&Path, &str)) {

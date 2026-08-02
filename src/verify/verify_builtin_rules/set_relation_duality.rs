@@ -56,6 +56,50 @@ impl Runtime {
             }
         }
 
+        // Integer ranges inherit their numeric carrier from their integer
+        // elements.  For N/N+, a verified lower endpoint is sufficient because
+        // every range element is an integer at least that endpoint.
+        // Examples: `closed_range(0, n) $subset N` and
+        // `range(1, n) $subset N+`.
+        let integer_range_start = match &subset_fact.left {
+            Obj::Range(range) => Some(range.start.as_ref()),
+            Obj::ClosedRange(range) => Some(range.start.as_ref()),
+            _ => None,
+        };
+        if let (Some(start), Obj::StandardSet(target)) = (integer_range_start, &subset_fact.right) {
+            let range_carrier_requirement = match target {
+                StandardSet::N => Some(Some(StandardSet::N)),
+                StandardSet::NPos => Some(Some(StandardSet::NPos)),
+                _ if Self::standard_set_is_subset_eq(&StandardSet::Z, target) => Some(None),
+                _ => None,
+            };
+            if let Some(required_start_set) = range_carrier_requirement {
+                let mut dependencies = Vec::new();
+                if let Some(required_start_set) = required_start_set {
+                    let start_membership: AtomicFact = InFact::new(
+                        start.clone(),
+                        required_start_set.into(),
+                        subset_fact.line_file.clone(),
+                    )
+                    .into();
+                    let result =
+                        self.verify_builtin_rule_premise(&start_membership, builtin_state)?;
+                    if !result.is_true() {
+                        return Ok((StmtUnknown::new()).into());
+                    }
+                    dependencies.push(result);
+                }
+                return Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        subset_fact.clone().into(),
+                        "integer range is contained in its standard numeric carrier".to_string(),
+                        dependencies,
+                    ))
+                    .into(),
+                );
+            }
+        }
+
         // Every set is a subset of itself, including alpha-equivalent function
         // sets such as `fn(x X) X $subset fn(y X) X`.
         if objs_equal_with_nested_binder_alpha_equivalence(&subset_fact.left, &subset_fact.right) {
@@ -94,8 +138,19 @@ impl Runtime {
                     subset_fact.line_file.clone(),
                 )
                 .into();
-                let ret_subset_result =
-                    self.verify_builtin_rule_premise(&ret_subset, builtin_state)?;
+                let ret_subset_result = if objs_equal_with_nested_binder_alpha_equivalence(
+                    body.ret_set.as_ref(),
+                    &subset_fact.right,
+                ) {
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        ret_subset.clone().into(),
+                        "structural subset".to_string(),
+                        Vec::new(),
+                    )
+                    .into()
+                } else {
+                    self.verify_builtin_rule_premise(&ret_subset, builtin_state)?
+                };
                 if ret_subset_result.is_true() {
                     return Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

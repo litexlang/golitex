@@ -71,7 +71,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         // Do not call the full equality builtin here; that would re-enter zero-product
         // cancellation while this rule is already trying to match a factor.
-        let known_result = self.verify_objs_are_equal_known_only(target, factor, line_file.clone());
+        let known_result = self.verify_objs_are_equal_by_known_equality(target, factor, line_file.clone());
         if known_result.is_true() {
             return Ok(known_result);
         }
@@ -85,14 +85,6 @@ impl Runtime {
             )?;
         if calculation_result.is_true() {
             return Ok(calculation_result);
-        }
-
-        if let Some(shape_result) =
-            self.try_verify_equal_by_same_shape_and_known_equality_args(target, factor, line_file)
-        {
-            if shape_result.is_true() {
-                return Ok(shape_result);
-            }
         }
 
         Ok(StmtResult::Unknown(StmtUnknown::new()))
@@ -481,7 +473,7 @@ impl Runtime {
             let bound_result =
                 self.verify_builtin_rule_premise(&remainder_lt_modulus, builtin_state)?;
             let decomposition_result =
-                self.verify_objs_are_equal_known_only(dividend, &candidate, line_file.clone());
+                self.verify_objs_are_equal_by_known_equality(dividend, &candidate, line_file.clone());
             if !divisor_result.is_true()
                 || !remainder_result.is_true()
                 || !bound_result.is_true()
