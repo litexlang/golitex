@@ -4,4 +4,3 @@ prop is_unit_pair(x R, y R):
 
 1 = 1
 by def $is_unit_pair(1, 1)
-$is_unit_pair(1, 1)

@@ -155,6 +155,13 @@ strategy. Neither route enters the full verifier, known `forall` matching,
 definitions, or user strategies, and the child result tree is returned to the
 root.
 
+A direct rule may consume several already-known premises for one fixed
+mathematical implication. The natural-predecessor rule, for example, consumes
+`n $in N` and `n > 0` to prove `n - 1 $in N`; it does not recursively derive
+another order fact first.
+The strict-positive variant consumes `n $in N+` and `n > 1` to prove
+`n - 1 $in N+`.
+
 **Known atomic facts.** Litex looks for the same predicate and truth value in
 the visible context. Arguments need not be textually identical: known
 equalities can make two arguments match. For example, a known `$P(a)` may close

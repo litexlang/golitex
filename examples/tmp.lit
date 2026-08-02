@@ -1,14 +1,8 @@
-have fn s(x R: x > 0) R = x
+# A positive natural has a natural predecessor, so recursive calls at n - 1
+# are well-defined without a source-level bridge.
+have fn predecessor_count(n N) N by induc n from 0:
+    case n = 0: 0
+    case n > 0: predecessor_count(n - 1)
 
-s(1) = s(1)
-
-forall x R:
-    x > 0
-    =>:
-        s(x) = s(x)
-
-forall x R:
-    x = -1
-    x > 0
-    =>:
-        s(-1) = s(-1)
+predecessor_count(0) = 0
+predecessor_count(1) = predecessor_count(0) = 0

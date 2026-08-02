@@ -2072,6 +2072,13 @@ user-defined strategy. Consequently a semantic chain such as `sqrt(t) != 0`
 from only `t > 0` is not automatic: prove or cite the intermediate mathematical
 fact `sqrt(t) > 0` first.
 
+Direct rules may package a fixed elementary implication when all of their
+premises are already known. In particular, `n $in N` together with `n > 0`
+proves `n - 1 $in N`. This lets a recursive `have fn` over `N` call itself at
+`n - 1` inside its positive branch without adding a source-level carrier lemma.
+The parallel strict-positive rule uses the stronger premises `n $in N+` and
+`n > 1` to prove `n - 1 $in N+`.
+
 Rules that genuinely need a universal, existential, or compound premise are
 called explicitly through reserved builtin theorem names. Their handlers use
 the ordinary full verifier for the requirement and store the conclusion only

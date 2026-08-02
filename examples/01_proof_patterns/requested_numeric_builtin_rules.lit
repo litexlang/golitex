@@ -31,3 +31,30 @@ forall i1 N+:
     i1 % 2 = 0
     =>:
         i1 > 1
+
+# A positive natural has a natural predecessor. This direct carrier rule also
+# makes the recursive call below well-defined without a source-level lemma.
+forall n N:
+    n > 0
+    =>:
+        n - 1 $in N
+
+have fn predecessor_count(n N) N by induc n from 0:
+    case n = 0: 0
+    case n > 0: predecessor_count(n - 1)
+
+predecessor_count(0) = 0
+predecessor_count(1) = predecessor_count(0) = 0
+
+# The strictly positive variant requires the stronger bound n > 1.
+forall n N+:
+    n > 1
+    =>:
+        n - 1 $in N+
+
+have fn positive_predecessor_count(n N+) N+ by induc n from 1:
+    case n = 1: 1
+    case n > 1: positive_predecessor_count(n - 1)
+
+positive_predecessor_count(1) = 1
+positive_predecessor_count(2) = positive_predecessor_count(1) = 1

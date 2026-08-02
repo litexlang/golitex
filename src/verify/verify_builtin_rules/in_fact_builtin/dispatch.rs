@@ -352,6 +352,12 @@ impl Runtime {
             (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_add_in_n_pos_from_n_pos_and_n(in_fact, add, builtin_state)
             }
+            (Obj::Sub(sub), Obj::StandardSet(StandardSet::NPos)) => self
+                .verify_in_fact_sub_in_n_pos_from_n_pos_and_greater_than_one(
+                    in_fact,
+                    sub,
+                    builtin_state,
+                ),
             (Obj::Mul(mul), Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_mul_in_n_pos_from_factors_in_n_pos(in_fact, mul, builtin_state)
             }
