@@ -805,6 +805,18 @@ impl FnObj {
             body,
         }
     }
+
+    pub(crate) fn prefix_obj(&self, number_of_body_groups_to_keep: usize) -> Obj {
+        if number_of_body_groups_to_keep == 0 {
+            return self.head.as_ref().clone().into();
+        }
+
+        FnObj::new(
+            self.head.as_ref().clone(),
+            self.body[..number_of_body_groups_to_keep].to_vec(),
+        )
+        .into()
+    }
 }
 
 impl Number {

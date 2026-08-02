@@ -1,6 +1,125 @@
 use super::*;
 
 impl Runtime {
+    /// `sum(s,e,f) = sum(s,e,g)` when `f(x) = g(x)` is known for every integer
+    /// `x` in the shared closed range. Example: after proving
+    /// `forall x Z: s <= x, x <= e => f(x) = g(x)`, the two sums are equal.
+    pub(crate) fn try_verify_sum_pointwise_congruence(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (Obj::Sum(left_sum), Obj::Sum(right_sum)) = (left, right) else {
+            return Ok(None);
+        };
+
+        if !self
+            .verify_objs_are_equal_in_equality_builtin(
+                left_sum.start.as_ref(),
+                right_sum.start.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?
+            .is_true()
+            || !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    left_sum.end.as_ref(),
+                    right_sum.end.as_ref(),
+                    line_file.clone(),
+                    builtin_state,
+                )?
+                .is_true()
+        {
+            return Ok(None);
+        }
+
+        let unary_param_set = |func: &Obj| -> Option<Obj> {
+            let af = match func {
+                Obj::AnonymousFn(af) => af,
+                Obj::FnObj(fo) if fo.body.is_empty() => match fo.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(af) => af.as_ref(),
+                    _ => return None,
+                },
+                _ => return None,
+            };
+            if af.body.params_def_with_set.number_of_params() != 1
+                || af.body.params_def_with_set.len() != 1
+            {
+                return None;
+            }
+            Some(af.body.params_def_with_set.as_slice()[0].set_obj().clone())
+        };
+        let index_param_set = match (
+            unary_param_set(left_sum.func.as_ref()),
+            unary_param_set(right_sum.func.as_ref()),
+        ) {
+            (Some(left_set), Some(right_set))
+                if self
+                    .verify_objs_are_equal_in_equality_builtin(
+                        &left_set,
+                        &right_set,
+                        line_file.clone(),
+                        builtin_state,
+                    )?
+                    .is_true() =>
+            {
+                left_set
+            }
+            _ => StandardSet::Z.into(),
+        };
+
+        let x_name = self.generate_random_unused_name();
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let Some(left_value) =
+            self.instantiate_unary_anonymous_summand_at(left_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(right_value) =
+            self.instantiate_unary_anonymous_summand_at(right_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+
+        let pointwise_fact: AtomicFact =
+            EqualFact::new(left_value, right_value, line_file.clone()).into();
+        let lower_bound: Fact =
+            LessEqualFact::new((*left_sum.start).clone(), x_obj.clone(), line_file.clone()).into();
+        let upper_bound: Fact =
+            LessEqualFact::new(x_obj, (*left_sum.end).clone(), line_file.clone()).into();
+
+        let pointwise_result = self.run_in_local_env(|rt| {
+            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![x_binding],
+                ParamType::Obj(index_param_set),
+            )]);
+            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.store_fact_without_forall_coverage_check_and_infer(lower_bound)?;
+            rt.store_fact_without_forall_coverage_check_and_infer(upper_bound)?;
+
+            let known_forall_result = rt.verify_atomic_fact_with_known_forall(
+                &pointwise_fact,
+                &UseContextVerifyState::new(0, true),
+            )?;
+            if known_forall_result.is_true() {
+                return Ok(known_forall_result);
+            }
+            rt.verify_builtin_rule_premise(&pointwise_fact, builtin_state)
+        })?;
+        if !pointwise_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: finite sums are congruent from pointwise equality on the shared integer range",
+        )))
+    }
+
     /// `sum(s,e,f) = sum(s,e,g) + sum(s,e,h)` when for all integer `x` with `s <= x <= e`,
     /// `f(x) = g(x) + h(x)` (summands are unary anonymous `fn` bodies, instantiated at `x`).
     pub(crate) fn try_verify_sum_additivity(
@@ -67,7 +186,7 @@ impl Runtime {
         let dom_hi: Fact =
             LessEqualFact::new(x_obj.clone(), (*sum_m.end).clone(), line_file.clone()).into();
 
-        let r = self.verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+        let r = self.verify_integer_pointwise_atomic_fact_by_known_forall_or_builtin(
             x_binding,
             vec![dom_lo, dom_hi],
             &then_fact,
@@ -116,7 +235,7 @@ impl Runtime {
         )?))
     }
 
-    pub(crate) fn verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+    pub(crate) fn verify_integer_pointwise_atomic_fact_by_known_forall_or_builtin(
         &mut self,
         param_binding: SymbolBinding,
         dom_facts: Vec<Fact>,
@@ -131,6 +250,13 @@ impl Runtime {
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
             for dom_fact in dom_facts {
                 rt.store_fact_without_forall_coverage_check_and_infer(dom_fact)?;
+            }
+            let known_forall_result = rt.verify_atomic_fact_with_known_forall(
+                then_fact,
+                &UseContextVerifyState::new(0, true),
+            )?;
+            if known_forall_result.is_true() {
+                return Ok(known_forall_result);
             }
             rt.verify_builtin_rule_premise(then_fact, builtin_state)
         })
@@ -770,7 +896,22 @@ impl Runtime {
             }
             let y_name = self.generate_random_unused_name();
             let (y_binding, y_obj) = self.fresh_bound_param(y_name, ParamObjType::Forall)?;
-            let index_for_left = Sub::new(y_obj.clone(), k.clone()).into();
+            let normalized_k = evaluate_obj_to_exact_rational_obj_for_eval(&k).unwrap_or(k);
+            let index_for_left = match &normalized_k {
+                Obj::Number(number) => match number.normalized_value.parse::<i128>() {
+                    Ok(0) => y_obj.clone(),
+                    Ok(value) if value < 0 => Add::new(
+                        y_obj.clone(),
+                        Number::new(value.unsigned_abs().to_string()).into(),
+                    )
+                    .into(),
+                    Ok(value) => {
+                        Sub::new(y_obj.clone(), Number::new(value.to_string()).into()).into()
+                    }
+                    Err(_) => Sub::new(y_obj.clone(), normalized_k.clone()).into(),
+                },
+                _ => Sub::new(y_obj.clone(), normalized_k.clone()).into(),
+            };
             let Some(at_l) =
                 self.instantiate_unary_anonymous_summand_at(l_sum.func.as_ref(), &index_for_left)?
             else {
@@ -786,7 +927,7 @@ impl Runtime {
                 LessEqualFact::new((*r_sum.start).clone(), y_obj.clone(), line_file.clone()).into();
             let dom_hi: Fact =
                 LessEqualFact::new(y_obj.clone(), (*r_sum.end).clone(), line_file.clone()).into();
-            let r = self.verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+            let r = self.verify_integer_pointwise_atomic_fact_by_known_forall_or_builtin(
                 y_binding,
                 vec![dom_lo, dom_hi],
                 &then_fact,
@@ -932,7 +1073,7 @@ impl Runtime {
                 let dom_hi: Fact =
                     LessEqualFact::new(x_obj.clone(), (*sum.end).clone(), line_file.clone()).into();
                 let pointwise_result = self
-                    .verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                    .verify_integer_pointwise_atomic_fact_by_known_forall_or_builtin(
                         x_binding,
                         vec![dom_lo, dom_hi],
                         &pointwise_fact,

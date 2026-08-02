@@ -31,9 +31,9 @@ impl Runtime {
 
         let zero = Self::literal_zero_obj_for_abs_builtin();
         let first_zero =
-            self.verify_objs_are_equal_known_only(&first_base, &zero, line_file.clone());
+            self.verify_objs_are_equal_by_known_equality(&first_base, &zero, line_file.clone());
         let second_zero =
-            self.verify_objs_are_equal_known_only(&second_base, &zero, line_file.clone());
+            self.verify_objs_are_equal_by_known_equality(&second_base, &zero, line_file.clone());
         if !first_zero.is_true() || !second_zero.is_true() {
             return Ok(None);
         }
@@ -92,7 +92,7 @@ impl Runtime {
                     continue;
                 };
                 let sum_zero =
-                    self.verify_objs_are_equal_known_only(&square_sum, &zero, line_file.clone());
+                    self.verify_objs_are_equal_by_known_equality(&square_sum, &zero, line_file.clone());
                 if !sum_zero.is_true() {
                     continue;
                 }

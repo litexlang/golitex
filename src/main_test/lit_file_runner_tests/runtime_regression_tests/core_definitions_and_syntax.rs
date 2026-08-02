@@ -806,6 +806,39 @@ claim:
 }
 
 #[test]
+fn fn_eq_consumes_exact_pointwise_forall_before_dependent_membership_replay() {
+    run_with_large_stack(
+        "fn_eq_consumes_exact_pointwise_forall_before_dependent_membership_replay",
+        || {
+            let source_code = r#"
+claim:
+    ? forall X, Y nonempty_set, f, g fn(x X) Y:
+        forall x X:
+            f(x) = g(x)
+        =>:
+            $fn_eq(f, g)
+    forall x X:
+        f(x) = g(x)
+    $fn_eq(f, g)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "fn_eq_consumes_exact_pointwise_forall_before_dependent_membership_replay",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "an exact pointwise forall over the same declared function carrier should prove fn_eq:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn have_fn_by_cases_rejects_active_parameter_name_and_keeps_outer_singleton_domain() {
     run_with_large_stack(
         "have_fn_by_cases_rejects_active_parameter_name_and_keeps_outer_singleton_domain",

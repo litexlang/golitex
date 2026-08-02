@@ -306,7 +306,7 @@ impl Runtime {
                     ),
                 ));
             }
-            let equal_result = self.verify_objs_are_equal_known_only(
+            let equal_result = self.verify_objs_are_equal_by_known_equality(
                 &less_equal_fact.left,
                 &less_equal_fact.right,
                 less_equal_fact.line_file.clone(),
@@ -348,7 +348,7 @@ impl Runtime {
                     ),
                 ));
             }
-            let equal_result = self.verify_objs_are_equal_known_only(
+            let equal_result = self.verify_objs_are_equal_by_known_equality(
                 &greater_equal_fact.left,
                 &greater_equal_fact.right,
                 greater_equal_fact.line_file.clone(),
@@ -1897,7 +1897,7 @@ impl Runtime {
         if let AtomicFact::LessFact(f) = &norm {
             match (&f.left, &f.right) {
                 (Obj::Log(left_log), Obj::Log(right_log)) => {
-                    let same_base = self.verify_objs_are_equal_known_only(
+                    let same_base = self.verify_objs_are_equal_by_known_equality(
                         left_log.base.as_ref(),
                         right_log.base.as_ref(),
                         f.line_file.clone(),

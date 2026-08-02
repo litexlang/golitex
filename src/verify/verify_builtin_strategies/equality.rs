@@ -9,7 +9,70 @@ impl Runtime {
         if extrema.is_true() {
             return Ok(extrema);
         }
+        let finite_product =
+            self.verify_finite_set_product_pointwise_equality_with_builtin_strategy(fact)?;
+        if finite_product.is_true() {
+            return Ok(finite_product);
+        }
         self.verify_mod_congruence_with_builtin_strategy(fact)
+    }
+
+    // Pointwise finite-product congruence is structural: reduce the product equality to one
+    // factor equality under a fresh member of the common finite set. Example:
+    // `forall x X: f(x) = g(x)` proves `finite_set_product(X, f) = finite_set_product(X, g)`.
+    fn verify_finite_set_product_pointwise_equality_with_builtin_strategy(
+        &mut self,
+        fact: &EqualFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let (Obj::ProductOfFiniteSet(left), Obj::ProductOfFiniteSet(right)) =
+            (&fact.left, &fact.right)
+        else {
+            return Ok(StmtUnknown::new().into());
+        };
+        let set_goal: AtomicFact = EqualFact::new(
+            left.set.as_ref().clone(),
+            right.set.as_ref().clone(),
+            fact.line_file.clone(),
+        )
+        .into();
+        let set_result = self.verify_builtin_strategy_child(&set_goal)?;
+        if !set_result.is_true() {
+            return Ok(StmtUnknown::new().into());
+        }
+
+        let x_name = self.generate_random_unused_name();
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let Some(left_at_x) = self.instantiate_unary_function_at(left.func.as_ref(), &x_obj)?
+        else {
+            return Ok(StmtUnknown::new().into());
+        };
+        let Some(right_at_x) = self.instantiate_unary_function_at(right.func.as_ref(), &x_obj)?
+        else {
+            return Ok(StmtUnknown::new().into());
+        };
+        let pointwise_goal: AtomicFact =
+            EqualFact::new(left_at_x, right_at_x, fact.line_file.clone()).into();
+        let pointwise_result = self.run_in_local_env(|rt| {
+            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                vec![x_binding],
+                ParamType::Obj(left.set.as_ref().clone()),
+            )]);
+            rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
+            rt.verify_builtin_strategy_child(&pointwise_goal)
+        })?;
+        if !pointwise_result.is_true() {
+            return Ok(StmtUnknown::new().into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                fact.clone().into(),
+                "finite-set product congruence strategy: prove pointwise factor equality"
+                    .to_string(),
+                vec![set_result, pointwise_result],
+            )
+            .into(),
+        )
     }
 
     // Choosing a concrete finite-set extremum is an antisymmetry strategy: prove

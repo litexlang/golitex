@@ -1,6 +1,136 @@
 use super::*;
 
 #[test]
+fn known_equality_candidate_replays_checked_function_bodies_structurally() {
+    let source_code = r#"
+have fn left(k N_pos) R = k
+have fn right(k N_pos) R = k + 1
+have fn combined(k N_pos) R = left(k) + right(k)
+
+have value R = 1 + 2
+value = combined(1)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "known_equality_candidate_replays_checked_function_bodies_structurally",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "a known equality candidate should compare corresponding constructor arguments after one checked-function replay:\n{}",
+        run_output
+    );
+
+    let invalid_source = r#"
+have fn guarded(k N_pos: 2 <= k) R = k
+guarded(1) = 1
+"#;
+    let mut invalid_runtime = Runtime::new();
+    invalid_runtime
+        .new_file_path_new_env_new_name_scope("known_function_replay_does_not_bypass_domain_facts");
+    let (stmt_results, runtime_error) = run_source_code(invalid_source, &mut invalid_runtime);
+    let (run_succeeded, _) =
+        render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "checked-function replay must not bypass the function's domain facts"
+    );
+
+    let one_argument_source = r#"
+trust have f fn(x, y R) R
+trust have a R
+trust a = 1
+have selected R = f(a, 0)
+selected = f(1, 0)
+"#;
+    let mut one_argument_runtime = Runtime::new();
+    one_argument_runtime.new_file_path_new_env_new_name_scope(
+        "known_candidate_congruence_replaces_one_argument_under_same_head",
+    );
+    let (stmt_results, runtime_error) =
+        run_source_code(one_argument_source, &mut one_argument_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&one_argument_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "one directly known-equal argument should be transported under the same function head:\n{}",
+        run_output
+    );
+
+    let two_argument_source = r#"
+trust have f fn(x, y R) R
+trust have a, b R
+trust a = 1
+trust b = 2
+have selected R = f(a, b)
+selected = f(1, 2)
+"#;
+    let mut two_argument_runtime = Runtime::new();
+    two_argument_runtime.new_file_path_new_env_new_name_scope(
+        "known_candidate_congruence_replaces_all_corresponding_arguments",
+    );
+    let (stmt_results, runtime_error) =
+        run_source_code(two_argument_source, &mut two_argument_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&two_argument_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "all corresponding arguments should be compared through their known equalities:\n{}",
+        run_output
+    );
+
+    let missing_argument_equality_source = r#"
+trust have f fn(x, y R) R
+trust have a, b R
+trust a = 1
+f(a, b) = f(1, 2)
+"#;
+    let mut missing_argument_equality_runtime = Runtime::new();
+    missing_argument_equality_runtime.new_file_path_new_env_new_name_scope(
+        "known_congruence_requires_every_corresponding_argument_equality",
+    );
+    let (stmt_results, runtime_error) = run_source_code(
+        missing_argument_equality_source,
+        &mut missing_argument_equality_runtime,
+    );
+    let (run_succeeded, run_output) = render_run_source_code_output(
+        &missing_argument_equality_runtime,
+        &stmt_results,
+        &runtime_error,
+        false,
+    );
+    assert!(
+        !run_succeeded,
+        "componentwise congruence must fail when one paired argument equality is missing:\n{}",
+        run_output
+    );
+
+    let curried_source = r#"
+trust have f fn(x, y R) R
+trust have g fn(m, n R) fn(u, v R) R
+trust have a, b R
+trust a = 3
+trust b = 4
+trust f = g(1, 2)
+f(a, b) = g(1, 2)(3, 4)
+"#;
+    let mut curried_runtime = Runtime::new();
+    curried_runtime
+        .new_file_path_new_env_new_name_scope("known_congruence_aligns_curried_applications");
+    let (stmt_results, runtime_error) = run_source_code(curried_source, &mut curried_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&curried_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "curried applications should align trailing argument groups and compare the remaining function parts:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn cart_valued_function_membership_does_not_reenter_projection_well_definedness() {
     run_with_large_stack(
         "cart_valued_function_membership_does_not_reenter_projection_well_definedness",
@@ -1518,6 +1648,48 @@ forall p cart(R, R):
 }
 
 #[test]
+fn exactly_indexed_named_set_builder_unfolds_for_membership() {
+    let source_code = r#"
+have nonnegative_reals power_set(R) = {x R: x >= 0}
+1 $in nonnegative_reals
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "exactly_indexed_named_set_builder_unfolds_for_membership",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "a named set with an exact set-builder index should unfold one membership layer:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn exactly_indexed_named_set_builder_keeps_predicate_obligation() {
+    let source_code = r#"
+have positive_reals power_set(R) = {x R: x > 0}
+0 $in positive_reals
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "exactly_indexed_named_set_builder_keeps_predicate_obligation",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "named set-builder membership must not bypass its defining predicate:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn template_set_valued_have_fn_application_unfolds_for_membership() {
     let source_code = r#"
 template<s set>:
@@ -2302,6 +2474,19 @@ sketch:
     trust $is_finite_set(X)
     finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
 
+forall X finite_set, f, g fn(x X) Z:
+    finite_set_product(X, fn(x X) Z {f(x) * g(x)}) = finite_set_product(X, f) * finite_set_product(X, g)
+
+forall X finite_set, f, g fn(x X) Z:
+    $fn_eq_in(f, g, X)
+    =>:
+        finite_set_product(X, f) = finite_set_product(X, g)
+
+forall X, Y finite_set, f fn(x X) Z, g fn(y Y) X:
+    $bijective(Y, X, g)
+    =>:
+        finite_set_product(X, f) = finite_set_product(Y, fn(y Y) Z {f(g(y))})
+
 thm finite_set_product_fresh_insertion:
     ? forall x Z, S finite_set:
         S $subset Z
@@ -2328,6 +2513,12 @@ thm finite_set_product_remove_member:
         run_succeeded,
         "finite_set_product core rules should verify:\n{}",
         run_output
+    );
+    assert!(
+        run_output
+            .contains("equality: finite-set product distributes over pointwise multiplication")
+            && run_output.contains("equality: finite-set product substitution along a bijection"),
+        "finite-set product algebra and reindexing should expose builtin provenance:\n{run_output}"
     );
 }
 

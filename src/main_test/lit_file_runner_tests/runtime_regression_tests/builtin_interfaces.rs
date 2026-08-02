@@ -165,16 +165,33 @@ by thm local_reflexivity(1)
 }
 
 #[test]
-fn positive_builtin_definitions_require_explicit_by_def() {
+fn positive_concrete_definitions_fold_implicitly_and_by_def_rechecks() {
     let definition = r#"
 prop positive(x R):
     x > 0
 $positive(1)
 "#;
-    let (_, succeeded, output) = run_source(definition, "implicit_definition_disabled", false);
+    let (_, succeeded, output) = run_source(definition, "implicit_definition_enabled", false);
+    assert!(
+        succeeded,
+        "a positive concrete prop should fold from all checked clauses:\n{output}"
+    );
+    assert!(output.contains("cite prop def"));
+
+    let missing_clause = r#"
+prop positive_and_large(x R):
+    x > 0
+    x > 2
+$positive_and_large(1)
+"#;
+    let (_, succeeded, output) = run_source(
+        missing_clause,
+        "implicit_definition_keeps_all_clauses",
+        false,
+    );
     assert!(
         !succeeded,
-        "a positive prop must not fold implicitly:\n{output}"
+        "implicit concrete-prop folding must verify every clause:\n{output}"
     );
 
     let explicit = r#"
@@ -310,27 +327,27 @@ forall x, y, z Z:
 }
 
 #[test]
-fn a_builtin_rule_cannot_chain_through_another_semantic_rule() {
-    let implicit_chain = r#"
+fn direct_sqrt_nonzero_rule_consumes_only_a_strict_positive_premise() {
+    let direct = r#"
 have t R
 trust t > 0
 sqrt(t) != 0
 "#;
-    let (_, succeeded, output) = run_source(implicit_chain, "sqrt_two_rule_chain", false);
-    assert!(
-        !succeeded,
-        "sqrt(t) != 0 must not chain sqrt(t) > 0 and t > 0 automatically:\n{output}"
-    );
-
-    let explicit_middle = r#"
-have t R
-trust t > 0
-sqrt(t) > 0
-sqrt(t) != 0
-"#;
-    let (_, succeeded, output) = run_source(explicit_middle, "sqrt_explicit_middle", false);
+    let (_, succeeded, output) = run_source(direct, "sqrt_direct_nonzero", false);
     assert!(
         succeeded,
-        "an explicitly established intermediate fact should let the next one-layer rule run:\n{output}"
+        "sqrt(t) != 0 should consume the direct strict premise t > 0:\n{output}"
+    );
+    assert!(output.contains("sqrt(x) != 0 from x > 0"));
+
+    let weak_premise = r#"
+have t R
+trust t >= 0
+sqrt(t) != 0
+"#;
+    let (_, succeeded, output) = run_source(weak_premise, "sqrt_weak_nonzero", false);
+    assert!(
+        !succeeded,
+        "nonnegativity alone must not prove a square root nonzero:\n{output}"
     );
 }

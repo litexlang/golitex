@@ -376,7 +376,7 @@ impl Runtime {
 
         let real: Obj = StandardSet::R.into();
         if self
-            .verify_objs_are_equal_known_only(&result.set, &real, default_line_file())
+            .verify_objs_are_equal_by_known_equality(&result.set, &real, default_line_file())
             .is_unknown()
         {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -397,7 +397,7 @@ impl Runtime {
         operator: &str,
     ) -> Result<(), RuntimeError> {
         if self
-            .verify_objs_are_equal_known_only(left, right, default_line_file())
+            .verify_objs_are_equal_by_known_equality(left, right, default_line_file())
             .is_unknown()
         {
             return Err(RuntimeError::from(WellDefinedRuntimeError(

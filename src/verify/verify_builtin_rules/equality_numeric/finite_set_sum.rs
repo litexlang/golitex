@@ -180,7 +180,7 @@ impl Runtime {
                 let dom_hi: Fact =
                     LessEqualFact::new(x_obj, (*range_sum.end).clone(), line_file.clone()).into();
                 let pointwise_result = self
-                    .verify_integer_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+                    .verify_integer_pointwise_atomic_fact_by_known_forall_or_builtin(
                         x_binding,
                         vec![dom_lo, dom_hi],
                         &pointwise_fact,

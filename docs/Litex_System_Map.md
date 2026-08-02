@@ -140,6 +140,7 @@ atomic target
   -> match a known non-forall atomic fact, or
   -> try one builtin mathematical rule, or
   -> run a strictly structural builtin strategy, or
+  -> verify a concrete definition at outer round 0, or
   -> match the conclusion of an applicable known forall and verify its premises, or
   -> run a user-defined strategy
   -> true or unknown
@@ -155,12 +156,51 @@ strategy. Neither route enters the full verifier, known `forall` matching,
 definitions, or user strategies, and the child result tree is returned to the
 root.
 
+Finite-product equality uses this split directly: pointwise congruence is a
+structural strategy, while pointwise multiplication and substitution along an
+already-known bijection are narrow direct rules.
+
 A direct rule may consume several already-known premises for one fixed
 mathematical implication. The natural-predecessor rule, for example, consumes
 `n $in N` and `n > 0` to prove `n - 1 $in N`; it does not recursively derive
 another order fact first.
-The strict-positive variant consumes `n $in N+` and `n > 1` to prove
+Known `n $in N+` directly proves the natural result `n - 1 $in N`. The
+strict-positive result additionally consumes `n > 1` to prove
 `n - 1 $in N+`.
+Finite-range aggregation follows the same bounded design. Equality of two
+`sum` objects with common bounds may consume a guarded pointwise equality on
+that exact integer range. Integer-shift reindexing may consume the analogous
+guarded equality on the target range; it normalizes a constant bound shift but
+does not search for arbitrary reindexing maps.
+Integer adjacency is another direct one-step rule: known integer objects and
+`a < b + 1` prove `a <= b`, without recursively deriving an intermediate
+shifted comparison.
+Integer `range` and `closed_range` objects likewise expose a direct standard
+carrier edge: they lie in `Z`, and a lower endpoint already in `N` or `N+`
+proves the corresponding natural subset. The finite-set strategy treats a
+set-builder as a filtered subset of its base, so finiteness recurses only to
+that base.
+
+Definition-facing structural strategies are also bounded: dependent tuple
+constructors are checked field by field; callable struct fields project through
+one checked constructor; and set-builder membership unfolds one literal, one
+checked function/template definition, or one exact indexed named-builder
+equality. The indexed route does not scan the environment for approximate
+aliases.
+
+For known integers, the two singleton-interval rules retain both explicit
+bounds: `n <= x < n + 1` gives `x = n`, and `n < x <= n + 1` gives
+`x = n + 1`. Function extensionality can consume an exact cached pointwise
+universal only when both declared function carriers are alpha-equivalent.
+
+Known equality candidates may replay one checked function body against simple
+arithmetic. Componentwise congruence is earlier and more general: known-only
+equality first tries direct lookup/calculation, then matching constructors
+compare all corresponding arguments using known equality. Function applications
+align trailing argument groups and then compare their remaining function prefixes,
+so the two sides need not have the same number of curried application groups.
+The nonzero rules also include `x > 0 => sqrt(x) != 0`, but not the invalid
+weakening from `x >= 0`.
 
 **Known atomic facts.** Litex looks for the same predicate and truth value in
 the visible context. Arguments need not be textually identical: known
@@ -168,11 +208,12 @@ equalities can make two arguments match. For example, a known `$P(a)` may close
 `$P(b)` when the context also establishes `a = b`.
 
 **Concrete definitions.** A concrete `prop` gives Litex defining clauses for
-the predicate. The proof-producing direction is explicit:
-`by def $P(args)` instantiates the definition, verifies all clauses with the
-full verifier, and only then stores `$P(args)`. Supported builtin definitions
-use the same statement, including `by def A $subset B` and
-`by def $injective(A, B, f)`.
+the predicate. At outer round 0, ordinary atomic verification instantiates the
+definition and verifies all clauses with the full verifier before known
+`forall` matching or user strategies. `by def $P(args)` requests the same
+mathematical direction explicitly and rechecks it even when `$P(args)` is
+already known. Supported builtin definitions use the same statement, including
+`by def A $subset B` and `by def $injective(A, B, f)`.
 
 **Known universal facts.** Suppose the context contains:
 
@@ -187,7 +228,8 @@ To prove `B(t)`, Litex matches the conclusion and obtains the substitution
 `x := t`. It then checks the parameter domain and verifies `A(t)`. Those
 premises are ordinary full-verifier goals and can use builtin rules, known
 facts, or other known universal facts. A mathematical-definition step is
-written explicitly with `by def`.
+tried earlier for an ordinary positive concrete predicate, or may be requested
+explicitly with `by def`.
 
 For a grouped universal declaration, each positive conclusion is also stored
 over just the parameters it uses when the omitted parameter types are
@@ -332,3 +374,11 @@ search and scheduling details are not part of the author contract and may
 change without changing Litex source meaning. A kernel-level manual should
 document deeper mechanisms separately when their design and disclosure
 boundary are settled.
+
+Finite-natural maximum existence is a shape-restricted existential builtin:
+it recognizes a concrete definition consisting of witness membership and one
+universal upper-bound clause, then requires direct finite, nonempty, and
+subset-of-`N` premises. Concrete proposition folding similarly tries bounded
+argument-type evidence and exact cached definition clauses before any broader
+search. Both routes are intentionally local; neither scans arbitrary
+proposition definitions for approximate matches.

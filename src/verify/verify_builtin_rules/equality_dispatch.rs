@@ -87,14 +87,13 @@ impl Runtime {
         {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_equal_by_same_shape_and_known_equality_args(
+        if let Some(result) = self.try_verify_minus_one_odd_natural_power(
             left,
             right,
             line_file.clone(),
-        ) {
-            if result.is_true() {
-                return Ok(result);
-            }
+            builtin_state,
+        )? {
+            return Ok(result);
         }
         if let Some(result) =
             self.try_verify_indexed_fn_set_definition_equality(left, right, line_file.clone())?
@@ -161,9 +160,15 @@ impl Runtime {
         if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = left {
             let projected = self.struct_field_access_projection(field_access)?;
             let projected_fact: AtomicFact =
-                EqualFact::new(projected, right.clone(), line_file.clone()).into();
-            let projected_result =
-                self.verify_builtin_rule_premise(&projected_fact, builtin_state)?;
+                EqualFact::new(projected.clone(), right.clone(), line_file.clone()).into();
+            let projected_result = match self.try_verify_projection_from_known_tuple_equality(
+                &projected,
+                right,
+                line_file.clone(),
+            )? {
+                Some(result) => result,
+                None => self.verify_builtin_rule_premise(&projected_fact, builtin_state)?,
+            };
             if projected_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -178,9 +183,15 @@ impl Runtime {
         if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = right {
             let projected = self.struct_field_access_projection(field_access)?;
             let projected_fact: AtomicFact =
-                EqualFact::new(left.clone(), projected, line_file.clone()).into();
-            let projected_result =
-                self.verify_builtin_rule_premise(&projected_fact, builtin_state)?;
+                EqualFact::new(left.clone(), projected.clone(), line_file.clone()).into();
+            let projected_result = match self.try_verify_projection_from_known_tuple_equality(
+                left,
+                &projected,
+                line_file.clone(),
+            )? {
+                Some(result) => result,
+                None => self.verify_builtin_rule_premise(&projected_fact, builtin_state)?,
+            };
             if projected_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -611,6 +622,12 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_sum_pointwise_congruence(left, right, line_file.clone(), builtin_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_sum_additivity(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
@@ -826,6 +843,21 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) =
+            self.try_verify_finite_set_product_mul(left, right, line_file.clone(), builtin_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_product_substitution(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
         // Empty set rule: `S = {}` follows from `not $is_nonempty_set(S)`.
         // This replaces the old common fact `S = {} <=> not $is_nonempty_set(S)`.
         // Example: after `not $is_nonempty_set(S)`, prove `S = {}`.
@@ -972,7 +1004,7 @@ impl Runtime {
             for equal_obj in equal_objs.iter() {
                 if let Some(component) = Self::component_at_index(equal_obj, index) {
                     if self
-                        .verify_objs_are_equal_known_only(&component, other_side, line_file.clone())
+                        .verify_objs_are_equal_by_known_equality(&component, other_side, line_file.clone())
                         .is_true()
                     {
                         return Ok(Some(
@@ -2125,7 +2157,7 @@ impl Runtime {
 
         let candidate_sum_1: Obj =
             Add::new(target_a.clone(), subtraction.right.as_ref().clone()).into();
-        let known_sum_1 = self.verify_objs_are_equal_known_only(
+        let known_sum_1 = self.verify_objs_are_equal_by_known_equality(
             &candidate_sum_1,
             subtraction.left.as_ref(),
             line_file.clone(),
@@ -2144,7 +2176,7 @@ impl Runtime {
 
         let candidate_sum_2: Obj =
             Add::new(subtraction.right.as_ref().clone(), target_a.clone()).into();
-        let known_sum_2 = self.verify_objs_are_equal_known_only(
+        let known_sum_2 = self.verify_objs_are_equal_by_known_equality(
             &candidate_sum_2,
             subtraction.left.as_ref(),
             line_file.clone(),

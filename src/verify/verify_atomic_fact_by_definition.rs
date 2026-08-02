@@ -1,6 +1,38 @@
 use crate::prelude::*;
 
 impl Runtime {
+    fn verify_definition_clause_from_known_cache(
+        &mut self,
+        clause: &Fact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) = self.verify_fact_from_cache_using_display_string(clause) {
+            return Ok(Some(result));
+        }
+        match clause {
+            Fact::ForallFact(forall_fact) => {
+                let key = self.alpha_normalized_forall_cache_key(forall_fact)?;
+                let (known, source) = self.cache_known_facts_contains(&key);
+                if !known {
+                    return Ok(None);
+                }
+                Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_known_fact(
+                        clause.clone(),
+                        VerifiedByResult::cached_fact(clause.clone(), source),
+                        Vec::new(),
+                    )
+                    .into(),
+                ))
+            }
+            Fact::ExistFact(exist_fact) => {
+                let result =
+                    self.verify_exist_fact_with_known_exist_fact(exist_fact, exist_fact)?;
+                Ok(result.is_true().then_some(result))
+            }
+            _ => Ok(None),
+        }
+    }
+
     pub(crate) fn verify_prime_fact_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -218,50 +250,105 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
     ) -> Result<(StmtResult, Vec<(Fact, StmtResult)>), RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
+        let full_param_type_result = self.verify_args_satisfy_param_def_flat_types(
+            &definition.params_def_with_type,
+            &normal_atomic_fact.body,
+            verify_state,
+            ParamObjType::DefHeader,
+        );
+        let map_param_type_error = |_| {
+            RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                format!("failed to verify parameter types for {}", predicate_name),
+                normal_atomic_fact.line_file.clone(),
+                None,
+                vec![],
+            )))
+        };
+
+        // Preserve the original order and all inference side effects whenever ordinary parameter
+        // verification succeeds. The bounded cache route is only a liveness fallback.
+        if matches!(&full_param_type_result, Ok(result) if !result.is_unknown()) {
+            let args_param_types = full_param_type_result.map_err(map_param_type_error)?;
+            let param_to_arg_map = definition
+                .params_def_with_type
+                .param_defs_and_args_to_param_to_arg_map(normal_atomic_fact.body.as_slice());
+            let mut clause_checks = Vec::with_capacity(definition.iff_facts.len());
+            for iff_fact in definition.iff_facts.iter() {
+                let instantiated_iff_fact = self
+                    .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader, None)
+                    .map_err(|e| {
+                        RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                            Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                            String::new(),
+                            normal_atomic_fact.line_file.clone(),
+                            Some(e),
+                            vec![],
+                        )))
+                    })?;
+                let clause_result = self.verify_fact_full(&instantiated_iff_fact, verify_state)?;
+                let clause_is_unknown = clause_result.is_unknown();
+                clause_checks.push((instantiated_iff_fact, clause_result));
+                if clause_is_unknown {
+                    break;
+                }
+            }
+            return Ok((args_param_types, clause_checks));
+        }
+
+        // Only one exact quantified definition clause may use the fallback. Atomic and
+        // multi-clause definitions keep the old unknown/error result without any cache probe.
+        if definition.iff_facts.len() != 1 {
+            let result = full_param_type_result.map_err(map_param_type_error)?;
+            return Ok((result, vec![]));
+        }
+        let param_to_arg_map = definition
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(normal_atomic_fact.body.as_slice());
+        let instantiated_clause = self
+            .inst_fact(
+                &definition.iff_facts[0],
+                &param_to_arg_map,
+                ParamObjType::DefHeader,
+                None,
+            )
+            .map_err(|e| {
+                RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
+                    Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                    String::new(),
+                    normal_atomic_fact.line_file.clone(),
+                    Some(e),
+                    vec![],
+                )))
+            })?;
+        if !matches!(
+            instantiated_clause,
+            Fact::ForallFact(_) | Fact::ExistFact(_)
+        ) {
+            let result = full_param_type_result.map_err(map_param_type_error)?;
+            return Ok((result, vec![]));
+        }
+        let Some(cached_clause_result) =
+            self.verify_definition_clause_from_known_cache(&instantiated_clause)?
+        else {
+            let result = full_param_type_result.map_err(map_param_type_error)?;
+            return Ok((result, vec![]));
+        };
         let args_param_types = self
-            .verify_args_satisfy_param_def_flat_types(
+            .verify_args_satisfy_param_def_known_or_builtin_only(
                 &definition.params_def_with_type,
                 &normal_atomic_fact.body,
                 verify_state,
                 ParamObjType::DefHeader,
             )
-            .map_err(|_| {
-                RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                    Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
-                    format!("failed to verify parameter types for {}", predicate_name),
-                    normal_atomic_fact.line_file.clone(),
-                    None,
-                    vec![],
-                )))
-            })?;
+            .map_err(map_param_type_error)?;
         if args_param_types.is_unknown() {
             return Ok((args_param_types, vec![]));
         }
-
-        let param_to_arg_map = definition
-            .params_def_with_type
-            .param_defs_and_args_to_param_to_arg_map(normal_atomic_fact.body.as_slice());
-        let mut clause_checks = Vec::with_capacity(definition.iff_facts.len());
-        for iff_fact in definition.iff_facts.iter() {
-            let instantiated_iff_fact = self
-                .inst_fact(iff_fact, &param_to_arg_map, ParamObjType::DefHeader, None)
-                .map_err(|e| {
-                    RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
-                        String::new(),
-                        normal_atomic_fact.line_file.clone(),
-                        Some(e),
-                        vec![],
-                    )))
-                })?;
-            let clause_result = self.verify_fact_full(&instantiated_iff_fact, verify_state)?;
-            let clause_is_unknown = clause_result.is_unknown();
-            clause_checks.push((instantiated_iff_fact, clause_result));
-            if clause_is_unknown {
-                break;
-            }
-        }
-        Ok((args_param_types, clause_checks))
+        Ok((
+            args_param_types,
+            vec![(instantiated_clause, cached_clause_result)],
+        ))
     }
 
     fn verify_builtin_fact_with_their_definition(

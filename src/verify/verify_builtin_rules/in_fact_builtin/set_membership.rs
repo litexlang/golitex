@@ -705,6 +705,24 @@ impl Runtime {
         in_fact: &InFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let goal_key = in_fact.to_string();
+        if !self
+            .active_set_builder_membership_unfolds
+            .insert(goal_key.clone())
+        {
+            return Ok(None);
+        }
+        let result =
+            self.maybe_verify_in_fact_in_unfolded_user_defined_set_once(in_fact, verify_state);
+        self.active_set_builder_membership_unfolds.remove(&goal_key);
+        result
+    }
+
+    fn maybe_verify_in_fact_in_unfolded_user_defined_set_once(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::InstantiatedTemplateObj(template_obj) = &in_fact.set {
             self.materialize_instantiated_template_obj(template_obj, verify_state)?;
         }
@@ -755,7 +773,35 @@ impl Runtime {
         let cart_obj: Obj = Cart::new(field_types).into();
         let cart_membership: AtomicFact =
             InFact::new(in_fact.element.clone(), cart_obj, in_fact.line_file.clone()).into();
-        let cart_result = self.verify_atomic_fact(&cart_membership, verify_state)?;
+        let cart_result = if let Obj::Tuple(tuple) = &in_fact.element {
+            if tuple.args.len() != def.fields.len() {
+                return Ok((StmtUnknown::new()).into());
+            }
+            let instantiated_field_types =
+                self.instantiated_struct_field_types(struct_obj, verify_state)?;
+            let mut field_results = Vec::with_capacity(tuple.args.len());
+            for (field_value, field_type) in tuple.args.iter().zip(instantiated_field_types.iter())
+            {
+                let field_result = self.verify_obj_satisfies_param_type(
+                    field_value.as_ref().clone(),
+                    &ParamType::Obj(field_type.clone()),
+                    verify_state,
+                )?;
+                if !field_result.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                field_results.push(field_result);
+            }
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                cart_membership.into(),
+                "dependent struct constructor: each literal tuple field has its instantiated carrier"
+                    .to_string(),
+                field_results,
+            )
+            .into()
+        } else {
+            self.verify_atomic_fact(&cart_membership, verify_state)?
+        };
         if !cart_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }

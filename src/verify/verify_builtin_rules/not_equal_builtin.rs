@@ -64,6 +64,12 @@ impl Runtime {
         }
 
         if let Some(verified_result) =
+            self.try_verify_sqrt_not_equal_zero_from_positive_arg(not_equal_fact, builtin_state)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
             self.try_verify_sub_not_equal_zero_from_operand_not_equal(not_equal_fact)?
         {
             return Ok(verified_result);
@@ -401,6 +407,47 @@ impl Runtime {
                 InferResult::new(),
                 "abs_not_equal_zero_from_arg_nonzero".to_string(),
                 vec![result],
+            )
+            .into(),
+        ))
+    }
+
+    // The principal square root is nonzero when its real argument is strictly
+    // positive. Example: `0 < x` proves `sqrt(x) != 0`; the strict premise is
+    // essential because `sqrt(0) = 0`.
+    fn try_verify_sqrt_not_equal_zero_from_positive_arg(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = not_equal_fact.line_file.clone();
+        let sqrt = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (Obj::Sqrt(sqrt), right)
+                if self.obj_represents_zero_for_not_equal_builtin_rules(right) =>
+            {
+                sqrt
+            }
+            (left, Obj::Sqrt(sqrt))
+                if self.obj_represents_zero_for_not_equal_builtin_rules(left) =>
+            {
+                sqrt
+            }
+            _ => return Ok(None),
+        };
+
+        let zero: Obj = Number::new("0".to_string()).into();
+        let positive: AtomicFact =
+            GreaterFact::new(sqrt.arg.as_ref().clone(), zero, line_file.clone()).into();
+        let positive_result = self.verify_builtin_rule_premise(&positive, builtin_state)?;
+        if !positive_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                not_equal_fact.clone().into(),
+                "sqrt(x) != 0 from x > 0".to_string(),
+                vec![positive_result],
             )
             .into(),
         ))

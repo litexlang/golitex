@@ -1,0 +1,15 @@
+# Finite products respect pointwise multiplication and bijective reindexing.
+
+forall X finite_set, f, g fn(x X) Z:
+    finite_set_product(X, fn(x X) Z {f(x) * g(x)}) = finite_set_product(X, f) * finite_set_product(X, g)
+
+forall X, Y finite_set, f fn(x X) Z, reindex fn(y Y) X:
+    $bijective(Y, X, reindex)
+    =>:
+        finite_set_product(X, f) = finite_set_product(Y, fn(y Y) Z {f(reindex(y))})
+
+# Congruence descends to one pointwise factor equality with a fresh rule boundary.
+forall X finite_set:
+    X $subset Z
+    =>:
+        finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})

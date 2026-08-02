@@ -1,6 +1,92 @@
 use super::*;
 
 #[test]
+fn finite_sum_pointwise_congruence_uses_a_range_guarded_forall() {
+    let source_code = r#"
+have f fn(f_index Z) Z
+have g fn(g_index Z) Z
+
+axiom f_g_agree_on_range:
+    ? forall point_index Z:
+        1 <= point_index
+        point_index <= 3
+        =>:
+            f(point_index) = g(point_index)
+
+sum(1, 3, fn(left_index Z) Z {f(left_index)}) = sum(1, 3, fn(right_index Z) Z {g(right_index)})
+
+have positive_f fn(positive_f_index N+) Z
+have positive_g fn(positive_g_index N+) Z
+have lower_bound N+
+axiom lower_bound_le_three:
+    ? forall:
+        lower_bound <= 3
+axiom positive_f_g_agree_on_range:
+    ? forall positive_index N+:
+        lower_bound <= positive_index
+        positive_index <= 3
+        =>:
+            positive_f(positive_index) = positive_g(positive_index)
+sum(lower_bound, 3, fn(positive_left_index N+) Z {positive_f(positive_left_index)}) = sum(lower_bound, 3, fn(positive_right_index N+) Z {positive_g(positive_right_index)})
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "finite_sum_pointwise_congruence_uses_a_range_guarded_forall",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "range-guarded pointwise equality should imply equality of finite sums:\n{run_output}"
+    );
+    assert!(
+        run_output.contains(
+            "equality: finite sums are congruent from pointwise equality on the shared integer range"
+        ),
+        "the result should expose the finite-sum congruence rule:\n{run_output}"
+    );
+}
+
+#[test]
+fn finite_sum_shift_reindex_uses_a_range_guarded_forall() {
+    let source_code = r#"
+have f fn(f_index Z) Z
+have g fn(g_index Z) Z
+
+axiom shifted_terms_agree_on_range:
+    ? forall target_index Z:
+        0 <= target_index
+        target_index <= 2
+        =>:
+            f((target_index + 1) - 1) = g(target_index)
+
+sum(1, 3, fn(source_index Z) Z {f(source_index - 1)}) = sum(0, 2, fn(target_index Z) Z {g(target_index)})
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "finite_sum_shift_reindex_uses_a_range_guarded_forall",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "range-guarded pointwise equality should justify shifted finite-sum reindexing:\n{run_output}"
+    );
+    assert!(
+        run_output.contains(
+            "equality: sum reindexing (integer shift) from pointwise equality on the range"
+        ),
+        "the result should expose the finite-sum shift rule:\n{run_output}"
+    );
+}
+
+#[test]
 fn real_order_reflexivity_and_strict_irreflexivity_use_number_computation() {
     run_with_large_stack(
         "real_order_reflexivity_and_strict_irreflexivity_use_number_computation",
@@ -19,7 +105,7 @@ forall a R:
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
 
             assert!(
                 run_succeeded,
@@ -265,6 +351,17 @@ forall a, b Z:
         a + 1 <= b
         a <= b - 1
 
+forall a, b Z:
+    a < b + 1
+    =>:
+        a <= b
+
+forall a, b Z:
+    =>:
+        a <= b
+    <=>:
+        a < b + 1
+
 forall x, n Z:
     x <= n or x >= n + 1
 
@@ -273,6 +370,12 @@ forall x, n Z:
     x < n + 1
     =>:
         x = n
+
+forall x, n Z:
+    n < x
+    x <= n + 1
+    =>:
+        x = n + 1
 "#;
 
             let mut runtime = Runtime::new();
@@ -296,8 +399,10 @@ forall x, n Z:
                 "finite_set_min: a known-equal minimum is at most every member",
                 "integer successor: a < b gives a + 1 <= b",
                 "integer predecessor: a < b gives a <= b - 1",
+                "integer adjacency: a < b + 1 gives a <= b",
                 "or: integer discrete split x <= n or x >= n + 1",
                 "integer singleton interval: n <= x < n + 1 gives x = n",
+                "integer successor singleton interval: n < x <= n + 1 gives x = n + 1",
             ] {
                 assert!(
                     run_output.contains(rule),
@@ -312,6 +417,40 @@ forall x, n Z:
             );
         },
     );
+}
+
+#[test]
+fn integer_successor_singleton_interval_requires_both_bounds() {
+    for (name, source_code) in [
+        (
+            "successor_singleton_missing_strict_lower_bound",
+            r#"
+forall x, n Z:
+    x <= n + 1
+    =>:
+        x = n + 1
+"#,
+        ),
+        (
+            "successor_singleton_missing_weak_upper_bound",
+            r#"
+forall x, n Z:
+    n < x
+    =>:
+        x = n + 1
+"#,
+        ),
+    ] {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(name);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            !run_succeeded,
+            "{name} must not prove the successor endpoint without both bounds:\n{run_output}"
+        );
+    }
 }
 
 #[test]
@@ -361,7 +500,15 @@ predecessor_count(0) = 0
 predecessor_count(1) = predecessor_count(0) = 0
 
 forall n N_pos:
+    n - 1 $in N
+
+forall n N_pos:
     n > 1
+    =>:
+        n - 1 $in N_pos
+
+forall n N_pos:
+    2 <= n
     =>:
         n - 1 $in N_pos
 
@@ -371,6 +518,19 @@ have fn positive_predecessor_count(n N_pos) N_pos by induc n from 1:
 
 positive_predecessor_count(1) = 1
 positive_predecessor_count(2) = positive_predecessor_count(1) = 1
+
+have fn hanoi_moves_predecessor_probe(n N) N by induc n from 0:
+    case n = 0: 0
+    case n > 0: 2 * hanoi_moves_predecessor_probe(n - 1) + 1
+
+have fn shifted_hanoi_moves_predecessor_probe(n N) N = hanoi_moves_predecessor_probe(n) + 1
+
+thm shifted_hanoi_recurrence_predecessor_probe:
+    ? forall n N_pos:
+        shifted_hanoi_moves_predecessor_probe(n) = 2 * shifted_hanoi_moves_predecessor_probe(n - 1)
+    hanoi_moves_predecessor_probe(n) = 2 * hanoi_moves_predecessor_probe(n - 1) + 1
+    shifted_hanoi_moves_predecessor_probe(n - 1) = hanoi_moves_predecessor_probe(n - 1) + 1
+    shifted_hanoi_moves_predecessor_probe(n) = hanoi_moves_predecessor_probe(n) + 1 = 2 * hanoi_moves_predecessor_probe(n - 1) + 1 + 1 = 2 * (hanoi_moves_predecessor_probe(n - 1) + 1) = 2 * shifted_hanoi_moves_predecessor_probe(n - 1)
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
@@ -389,6 +549,10 @@ positive_predecessor_count(2) = positive_predecessor_count(1) = 1
                 "missing positive natural predecessor provenance:\n{run_output}"
             );
             assert!(
+                run_output.contains("N: n - 1 from n in N_pos"),
+                "missing positive-natural-to-natural predecessor provenance:\n{run_output}"
+            );
+            assert!(
                 run_output.contains("N_pos: n - 1 from n in N_pos and n > 1"),
                 "missing strictly positive predecessor provenance:\n{run_output}"
             );
@@ -401,6 +565,10 @@ positive_predecessor_count(2) = positive_predecessor_count(1) = 1
                 (
                     "positive_natural_predecessor_need_not_be_positive",
                     "forall n N:\n    n > 0\n    =>:\n        n - 1 $in N_pos",
+                ),
+                (
+                    "positive_natural_predecessor_requires_greater_than_one_to_stay_positive",
+                    "forall n N_pos:\n    n - 1 $in N_pos",
                 ),
             ] {
                 let mut boundary_runtime = Runtime::new();
@@ -416,6 +584,69 @@ positive_predecessor_count(2) = positive_predecessor_count(1) = 1
                 assert!(
                     !boundary_succeeded,
                     "{name} must stay outside the builtin boundary:\n{boundary_output}"
+                );
+            }
+        },
+    );
+}
+
+#[test]
+fn number_theory_for_beginners_migration_builtin_patterns() {
+    run_with_large_stack(
+        "number_theory_for_beginners_migration_builtin_patterns",
+        || {
+            let source_code = r#"
+forall z, q Z:
+    z - q $in Z
+
+forall gap Z:
+    gap > 0
+    =>:
+        gap $in N_pos
+
+forall G set, L fn(x G) power_set(G):
+    fn_range(L) $subset power_set(G)
+
+forall m N:
+    (-1) ^ (2 * m + 1) = -1
+
+forall m Z:
+    m < 0
+    =>:
+        m <= -1
+
+i $in C
+re(1) = 1
+re(i) = 0
+img(1) = 0
+img(i) = 1
+re(1 + i) = re(1) + re(i)
+re(1 + i) = 1
+img(1 + i) = img(1) + img(i)
+img(1 + i) = 1
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "number_theory_for_beginners_migration_builtin_patterns",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "Number Theory for Beginners migration patterns should verify:\n{run_output}"
+            );
+            for rule in [
+                "N_pos: 0 < x and x in Z",
+                "function range subset codomain",
+                "equality: (-1)^(2*m+1) = -1 for m in N",
+                "integer adjacency: a < b + 1 gives a <= b",
+                "re: coordinate of complex sum or difference",
+                "img: coordinate of complex sum or difference",
+            ] {
+                assert!(
+                    run_output.contains(rule),
+                    "missing migration builtin provenance `{rule}`:\n{run_output}"
                 );
             }
         },
@@ -623,6 +854,7 @@ sqrt(4) = 2
 sqrt(452) = sqrt(4 * 113)
 sqrt(452) = sqrt(4 * 113) = sqrt(4) * sqrt(113) = 2 * sqrt(113)
 sqrt(2) $in R
+sqrt(2) != 0
 sqrt(3) / 2 $in R
 
 forall x R:
@@ -654,6 +886,17 @@ forall x, a, b R:
             run_succeeded,
             "sqrt_core_builtin_rules failed:\n{}",
             run_output
+        );
+
+        let mut invalid_runtime = Runtime::new();
+        invalid_runtime
+            .new_file_path_new_env_new_name_scope("sqrt_zero_is_not_incorrectly_proved_nonzero");
+        let (stmt_results, runtime_error) = run_source_code("sqrt(0) != 0", &mut invalid_runtime);
+        let (run_succeeded, _) =
+            render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            !run_succeeded,
+            "the sqrt nonzero rule must require a strictly positive argument"
         );
     });
 }
@@ -2607,5 +2850,166 @@ forall a, b Z:
     assert!(
         run_succeeded,
         "gcd should be well-defined from the known non-all-zero disjunction:\n{run_output}"
+    );
+}
+
+#[test]
+fn finite_nonempty_natural_set_has_a_builtin_greatest_member() {
+    let source_code = r#"
+prop is_greatest_natural_member(S power_set(N), maximum N):
+    maximum $in S
+    forall n N:
+        n $in S
+        =>:
+            n <= maximum
+
+forall S power_set(N):
+    $is_finite_set(S)
+    $is_nonempty_set(S)
+    =>:
+        exist maximum N st {$is_greatest_natural_member(S, maximum)}
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "finite_nonempty_natural_set_has_a_builtin_greatest_member",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "a finite nonempty natural set should have a greatest member:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("finite nonempty natural set has a greatest member"),
+        "the proof should expose the bounded maximum-existence rule:\n{run_output}"
+    );
+}
+
+#[test]
+fn greatest_natural_member_rule_requires_finite_and_nonempty_premises() {
+    for (name, source_code) in [
+        (
+            "greatest_natural_member_without_finiteness",
+            r#"
+prop is_greatest_natural_member(S power_set(N), maximum N):
+    maximum $in S
+    forall n N:
+        n $in S
+        =>:
+            n <= maximum
+
+forall S power_set(N):
+    $is_nonempty_set(S)
+    =>:
+        exist maximum N st {$is_greatest_natural_member(S, maximum)}
+"#,
+        ),
+        (
+            "greatest_natural_member_without_nonemptiness",
+            r#"
+prop is_greatest_natural_member(S power_set(N), maximum N):
+    maximum $in S
+    forall n N:
+        n $in S
+        =>:
+            n <= maximum
+
+forall S power_set(N):
+    $is_finite_set(S)
+    =>:
+        exist maximum N st {$is_greatest_natural_member(S, maximum)}
+"#,
+        ),
+    ] {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(name);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            !run_succeeded,
+            "the greatest-member rule must reject a missing boundary premise ({name}):\n{run_output}"
+        );
+    }
+}
+
+#[test]
+fn integer_ranges_inherit_natural_carriers_from_their_lower_endpoint() {
+    let source_code = r#"
+forall upper N:
+    closed_range(0, upper) $subset N
+    range(0, upper) $subset N
+
+forall upper N+:
+    closed_range(1, upper) $subset N+
+    range(1, upper) $subset N+
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "integer_ranges_inherit_natural_carriers_from_their_lower_endpoint",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "integer ranges with natural lower endpoints should preserve that carrier:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("integer range is contained in its standard numeric carrier"),
+        "the proof should expose the integer-range carrier rule:\n{run_output}"
+    );
+}
+
+#[test]
+fn integer_range_natural_carrier_rule_rejects_a_negative_lower_endpoint() {
+    let source_code = r#"
+closed_range(-2, 2) $subset N
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "integer_range_natural_carrier_rule_rejects_a_negative_lower_endpoint",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "a negative lower endpoint must not imply a natural carrier:\n{run_output}"
+    );
+}
+
+#[test]
+fn set_builder_over_a_finite_integer_range_is_finite() {
+    let source_code = r#"
+forall upper N:
+    $is_finite_set({n closed_range(0, upper): n = upper})
+
+claim:
+    ? forall upper N:
+        $is_nonempty_set({n closed_range(0, upper): n = upper})
+    upper $in {n closed_range(0, upper): n = upper}
+    witness $is_nonempty_set({n closed_range(0, upper): n = upper}) from upper
+
+have fn selected_natural(upper N) N = finite_set_min({n closed_range(0, upper): n = upper})
+"#;
+    let mut runtime = Runtime::new();
+    runtime
+        .new_file_path_new_env_new_name_scope("set_builder_over_a_finite_integer_range_is_finite");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "filtering a finite integer range should stay finite:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("\"type\": \"builtin strategy\""),
+        "the proof should expose the structural finiteness route:\n{run_output}"
     );
 }

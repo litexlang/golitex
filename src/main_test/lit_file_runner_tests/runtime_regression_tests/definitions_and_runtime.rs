@@ -1,6 +1,64 @@
 use super::*;
 
 #[test]
+fn ordinary_atomic_verification_uses_a_concrete_prop_definition() {
+    run_with_large_stack("automatic_prop_definition", || {
+        let source_code = r#"
+prop unit_pair(x R, y R):
+    x = 1
+    y = 1
+
+$unit_pair(1, 1)
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("automatic_prop_definition");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "ordinary atomic verification should use the concrete definition:\n{}",
+            run_output
+        );
+        assert!(runtime.cache_known_facts_contains("$unit_pair(1, 1)").0);
+    });
+}
+
+#[test]
+fn witnessed_definition_clause_automatically_packages_the_concrete_prop() {
+    run_with_large_stack("automatic_existential_definition_packaging", || {
+        let source_code = r#"
+prop even(n N):
+    exist k N st {n = 2 * k}
+
+thm even_mul:
+    ? forall m, n N:
+        $even(n)
+        =>:
+            $even(m * n)
+    obtain k from exist k N st {n = 2 * k}
+    witness exist l N st {m * n = 2 * l} from m * k:
+        m * n = m * (2 * k) = 2 * (m * k)
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("automatic_existential_definition_packaging");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "an exact witnessed definition clause should package its concrete prop:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("$even(m * n)"));
+    });
+}
+
+#[test]
 fn by_def_strictly_checks_and_stores_a_concrete_prop() {
     run_with_large_stack("by_def_strict_success", || {
         let source_code = r#"

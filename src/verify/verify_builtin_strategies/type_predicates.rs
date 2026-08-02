@@ -37,6 +37,18 @@ impl Runtime {
                 child_results.push(result);
                 "finite-set strategy: power set of a finite set"
             }
+            Obj::SetBuilder(set_builder) => {
+                let child = IsFiniteSetFact::new(
+                    set_builder.param_set.as_ref().clone(),
+                    fact.line_file.clone(),
+                );
+                let result = self.verify_is_finite_set_strategy_child(&child)?;
+                if !result.is_true() {
+                    return Ok(StmtUnknown::new().into());
+                }
+                child_results.push(result);
+                "finite-set strategy: set-builder over a finite base"
+            }
             Obj::Union(union) => {
                 for set in [union.left.as_ref(), union.right.as_ref()] {
                     let child = IsFiniteSetFact::new(set.clone(), fact.line_file.clone());

@@ -137,17 +137,27 @@ impl Runtime {
         let left_string = obj_equality_key(left);
         let right_string = obj_equality_key(right);
 
-        let known_pairs =
-            self.collect_known_equality_pairs_from_envs(&left_string, &right_string, left, right);
-        for (known_left, known_right) in known_pairs {
-            if let Some(result) = self.try_verify_known_equality_candidates_with_builtin_root(
+        if verify_state.round == 0 && self.known_equality_candidate_replay_depth == 0 {
+            let known_pairs = self.collect_known_equality_pairs_from_envs(
+                &left_string,
+                &right_string,
                 left,
                 right,
-                line_file.clone(),
-                known_left.as_ref(),
-                known_right.as_ref(),
-            )? {
-                return Ok(result);
+            );
+            for (known_left, known_right) in known_pairs {
+                self.known_equality_candidate_replay_depth += 1;
+                let candidate_result = self.try_verify_known_equality_candidates_with_builtin_root(
+                    left,
+                    right,
+                    line_file.clone(),
+                    verify_state,
+                    known_left.as_ref(),
+                    known_right.as_ref(),
+                );
+                self.known_equality_candidate_replay_depth -= 1;
+                if let Some(result) = candidate_result? {
+                    return Ok(result);
+                }
             }
         }
 
@@ -168,6 +178,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
+        verify_state: &UseContextVerifyState,
         known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
         known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -179,6 +190,7 @@ impl Runtime {
                         candidate,
                         right,
                         line_file.clone(),
+                        verify_state,
                     )? {
                         return Ok(Some(result));
                     }
@@ -191,6 +203,7 @@ impl Runtime {
                         left,
                         candidate,
                         line_file.clone(),
+                        verify_state,
                     )? {
                         return Ok(Some(result));
                     }
@@ -204,6 +217,7 @@ impl Runtime {
                             left_candidate,
                             right_candidate,
                             line_file.clone(),
+                            verify_state,
                         )? {
                             return Ok(Some(result));
                         }
@@ -219,11 +233,101 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
+        verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let candidate: AtomicFact = EqualFact::new(left.clone(), right.clone(), line_file).into();
-        let result = self
-            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&candidate)?;
-        Ok(result.is_true().then_some(result))
+        let candidate: AtomicFact =
+            EqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+        let leaf_result = self
+            .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(&candidate)?;
+        if leaf_result.is_true() {
+            return Ok(Some(leaf_result));
+        }
+
+        let structural_state = verify_state.new_state_with_round_increased();
+
+        // A named object may be equal to one explicit structure field. Replay that single
+        // constructor-decreasing projection with a fresh builtin root. The field rule itself
+        // reads only the exact known tuple constructor and does not enumerate other equality
+        // candidates. Example: `selected = &Pair{pair}.second`, `pair = (a, b)` proves
+        // `selected = b`.
+        if matches!(left, Obj::ObjAsStructInstanceWithFieldAccess(_))
+            || matches!(right, Obj::ObjAsStructInstanceWithFieldAccess(_))
+        {
+            let field_result = self
+                .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
+                    &candidate,
+                )?;
+            if field_result.is_true() {
+                return Ok(Some(field_result));
+            }
+        }
+
+        // A direct builtin replay is useful for small arithmetic representatives such as
+        // `0 + q = p`, but unsafe for unreduced function applications: resolving those can
+        // repeatedly duplicate stored bodies. Function-shaped candidates use the checked
+        // one-step structural path below instead.
+        if is_plain_native_arithmetic_candidate(left) && is_plain_native_arithmetic_candidate(right)
+        {
+            let direct_result = self
+                .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
+                    &candidate,
+                )?;
+            if direct_result.is_true() {
+                return Ok(Some(direct_result));
+            }
+        }
+
+        if !could_match_after_one_checked_function_unfold(left, right) {
+            return Ok(None);
+        }
+
+        // Candidate replay is deliberately one structural step. Child argument
+        // comparisons use a later round, so they cannot enumerate and expand
+        // the same known-equality candidates without a decreasing boundary.
+        let mut pairs = Vec::new();
+        if matches!(left, Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_)) {
+            if let Some(reduced_left) =
+                self.unfold_known_fn_application_once(left, &structural_state)?
+            {
+                pairs.push((reduced_left, right.clone()));
+            }
+        }
+        if matches!(right, Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_)) {
+            if let Some(reduced_right) =
+                self.unfold_known_fn_application_once(right, &structural_state)?
+            {
+                pairs.push((left.clone(), reduced_right));
+            }
+        }
+
+        for (candidate_left, candidate_right) in pairs {
+            if !same_arithmetic_shape_with_immediate_fn_application(
+                &candidate_left,
+                &candidate_right,
+            ) {
+                continue;
+            }
+
+            let structurally_equal = self
+                .verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
+                    &candidate_left,
+                    &candidate_right,
+                    &structural_state,
+                    line_file.clone(),
+                )?;
+            if structurally_equal {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        candidate.clone().into(),
+                        "known equality candidate with one-step structural function replay"
+                            .to_string(),
+                        Vec::new(),
+                    )
+                    .into(),
+                ));
+            }
+        }
+        Ok(None)
     }
 
     /// Stored `have fn` body (`KnownFnInfo.equal_to`): unfold one application and compare.
@@ -523,8 +627,8 @@ impl Runtime {
             remaining_right_group_count -= 1;
         }
 
-        let remaining_left_obj = fn_obj_prefix_to_obj(left_fn_obj, remaining_left_group_count);
-        let remaining_right_obj = fn_obj_prefix_to_obj(right_fn_obj, remaining_right_group_count);
+        let remaining_left_obj = left_fn_obj.prefix_obj(remaining_left_group_count);
+        let remaining_right_obj = right_fn_obj.prefix_obj(remaining_right_group_count);
         let remaining_equality_result = self
             .verify_two_objs_equal_by_builtin_rules_and_known_equalities(
                 &remaining_left_obj,
@@ -1214,21 +1318,6 @@ fn known_equality_class_across_environments(
     }
 }
 
-fn fn_obj_prefix_to_obj(fn_obj: &FnObj, number_of_body_groups_to_keep: usize) -> Obj {
-    if number_of_body_groups_to_keep == 0 {
-        return fn_obj.head.as_ref().clone().into();
-    }
-
-    let mut kept_body_groups: Vec<Vec<Box<Obj>>> = Vec::new();
-    let mut current_group_index = 0;
-    while current_group_index < number_of_body_groups_to_keep {
-        kept_body_groups.push(fn_obj.body[current_group_index].clone());
-        current_group_index += 1;
-    }
-
-    FnObj::new(fn_obj.head.as_ref().clone(), kept_body_groups).into()
-}
-
 fn same_shape_and_equal_args_reason(left_obj: &Obj, right_obj: &Obj) -> String {
     match (left_obj, right_obj) {
         (Obj::FnObj(_), Obj::FnObj(_)) => {
@@ -1236,5 +1325,100 @@ fn same_shape_and_equal_args_reason(left_obj: &Obj, right_obj: &Obj) -> String {
                 .to_string()
         }
         _ => "the corresponding builtin-object arguments are equal one by one".to_string(),
+    }
+}
+
+fn same_arithmetic_shape_with_immediate_fn_application(left: &Obj, right: &Obj) -> bool {
+    let has_fn_application = |left_arg: &Obj, right_arg: &Obj| {
+        matches!(left_arg, Obj::FnObj(_)) || matches!(right_arg, Obj::FnObj(_))
+    };
+    match (left, right) {
+        (Obj::Add(left), Obj::Add(right)) => {
+            has_fn_application(left.left.as_ref(), right.left.as_ref())
+                || has_fn_application(left.right.as_ref(), right.right.as_ref())
+        }
+        (Obj::Sub(left), Obj::Sub(right)) => {
+            has_fn_application(left.left.as_ref(), right.left.as_ref())
+                || has_fn_application(left.right.as_ref(), right.right.as_ref())
+        }
+        (Obj::Mul(left), Obj::Mul(right)) => {
+            has_fn_application(left.left.as_ref(), right.left.as_ref())
+                || has_fn_application(left.right.as_ref(), right.right.as_ref())
+        }
+        (Obj::Div(left), Obj::Div(right)) => {
+            has_fn_application(left.left.as_ref(), right.left.as_ref())
+                || has_fn_application(left.right.as_ref(), right.right.as_ref())
+        }
+        (Obj::FnObj(left), Obj::FnObj(right))
+            if left.head.to_string() == right.head.to_string()
+                && left.body.len() == right.body.len() =>
+        {
+            left.body
+                .iter()
+                .zip(right.body.iter())
+                .any(|(left_group, right_group)| {
+                    left_group.len() == right_group.len()
+                        && left_group
+                            .iter()
+                            .zip(right_group.iter())
+                            .any(|(left_arg, right_arg)| {
+                                has_fn_application(left_arg.as_ref(), right_arg.as_ref())
+                            })
+                })
+        }
+        _ => false,
+    }
+}
+
+fn could_match_after_one_checked_function_unfold(left: &Obj, right: &Obj) -> bool {
+    let is_replayable_function =
+        |obj: &Obj| matches!(obj, Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_));
+    let is_plain_arithmetic = |obj: &Obj| {
+        let immediate_args_have_function = |left: &Obj, right: &Obj| {
+            matches!(left, Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_))
+                || matches!(right, Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_))
+        };
+        match obj {
+            Obj::Add(op) => !immediate_args_have_function(op.left.as_ref(), op.right.as_ref()),
+            Obj::Sub(op) => !immediate_args_have_function(op.left.as_ref(), op.right.as_ref()),
+            Obj::Mul(op) => !immediate_args_have_function(op.left.as_ref(), op.right.as_ref()),
+            Obj::Div(op) => !immediate_args_have_function(op.left.as_ref(), op.right.as_ref()),
+            _ => false,
+        }
+    };
+    (is_replayable_function(left) && is_plain_arithmetic(right))
+        || (is_replayable_function(right) && is_plain_arithmetic(left))
+}
+
+fn is_plain_native_arithmetic_candidate(obj: &Obj) -> bool {
+    match obj {
+        Obj::Atom(_)
+        | Obj::Number(_)
+        | Obj::ImaginaryUnit(_)
+        | Obj::EulerNumber(_)
+        | Obj::Pi(_)
+        | Obj::StandardSet(_)
+        | Obj::FiniteSetSize(_) => true,
+        Obj::Add(op) => {
+            is_plain_native_arithmetic_candidate(op.left.as_ref())
+                && is_plain_native_arithmetic_candidate(op.right.as_ref())
+        }
+        Obj::Sub(op) => {
+            is_plain_native_arithmetic_candidate(op.left.as_ref())
+                && is_plain_native_arithmetic_candidate(op.right.as_ref())
+        }
+        Obj::Mul(op) => {
+            is_plain_native_arithmetic_candidate(op.left.as_ref())
+                && is_plain_native_arithmetic_candidate(op.right.as_ref())
+        }
+        Obj::Div(op) => {
+            is_plain_native_arithmetic_candidate(op.left.as_ref())
+                && is_plain_native_arithmetic_candidate(op.right.as_ref())
+        }
+        Obj::Pow(op) => {
+            is_plain_native_arithmetic_candidate(op.base.as_ref())
+                && is_plain_native_arithmetic_candidate(op.exponent.as_ref())
+        }
+        _ => false,
     }
 }

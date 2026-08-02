@@ -77,8 +77,11 @@ impl Runtime {
         };
         if let Some(z) = candidate {
             let complex_abs: Obj = ComplexAbs::new(z.clone()).into();
-            let known_zero =
-                self.verify_objs_are_equal_known_only(&complex_abs, &zero, line_file.clone());
+            let known_zero = self.verify_objs_are_equal_by_known_equality(
+                &complex_abs,
+                &zero,
+                line_file.clone(),
+            );
             if known_zero.is_true() {
                 let Some(mut steps) =
                     self.verify_objects_are_known_complex(&[z], &line_file, builtin_state)?
@@ -140,12 +143,12 @@ impl Runtime {
         let left_img: Obj = ImaginaryPart::new(left.clone()).into();
         let right_img: Obj = ImaginaryPart::new(right.clone()).into();
         let re_result =
-            self.verify_objs_are_equal_known_only(&left_re, &right_re, line_file.clone());
+            self.verify_objs_are_equal_by_known_equality(&left_re, &right_re, line_file.clone());
         if !re_result.is_true() {
             return Ok(None);
         }
         let img_result =
-            self.verify_objs_are_equal_known_only(&left_img, &right_img, line_file.clone());
+            self.verify_objs_are_equal_by_known_equality(&left_img, &right_img, line_file.clone());
         if !img_result.is_true() {
             return Ok(None);
         }
@@ -274,7 +277,8 @@ impl Runtime {
             _ => None,
         };
         if let Some(expected_arg) = expected_coordinate_arg {
-            let known = self.verify_objs_are_equal_known_only(arg, expected_arg, line_file.clone());
+            let known =
+                self.verify_objs_are_equal_by_known_equality(arg, expected_arg, line_file.clone());
             if known.is_true() {
                 return Ok(Some((
                     format!("{coordinate}: coordinates respect complex equality"),
@@ -423,7 +427,8 @@ impl Runtime {
 
         if obj_is_literal_zero(expected) {
             let zero: Obj = Number::new("0".to_string()).into();
-            let arg_zero = self.verify_objs_are_equal_known_only(arg, &zero, line_file.clone());
+            let arg_zero =
+                self.verify_objs_are_equal_by_known_equality(arg, &zero, line_file.clone());
             if arg_zero.is_true() {
                 return Ok(Some((
                     "complex modulus is zero when its argument is zero".to_string(),

@@ -456,6 +456,28 @@ impl Runtime {
                 ))
                 .into(),
             ),
+            // A set-builder only filters its parameter set, so a finite base
+            // always gives a finite result.
+            // Example: `$is_finite_set({n closed_range(0, k): P(n)})`.
+            Obj::SetBuilder(set_builder) => {
+                let base_finite: AtomicFact = IsFiniteSetFact::new(
+                    set_builder.param_set.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
+                let base_result = self.verify_builtin_rule_premise(&base_finite, builtin_state)?;
+                if !base_result.is_true() {
+                    return Ok((StmtUnknown::new()).into());
+                }
+                Ok(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_finite_set_fact.clone().into(),
+                        "set-builder over a finite base is finite".to_string(),
+                        vec![base_result],
+                    ))
+                    .into(),
+                )
+            }
             // The image of a finite unary domain under a function is finite.
             // Example: from `a fn(x 1...3) R`, prove `$is_finite_set(fn_range(a))`.
             Obj::FnRange(fn_range) => {
@@ -786,7 +808,7 @@ impl Runtime {
         // Example: `finite_set_size(S) = 0` => `not $is_nonempty_set(S)`.
         let finite_set_size: Obj = FiniteSetSize::new(not_is_nonempty_set_fact.set.clone()).into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let size_zero_result = self.verify_objs_are_equal_known_only(
+        let size_zero_result = self.verify_objs_are_equal_by_known_equality(
             &finite_set_size,
             &zero,
             not_is_nonempty_set_fact.line_file.clone(),

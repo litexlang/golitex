@@ -348,22 +348,22 @@ impl Runtime {
                         let actual = self.real_matrix_type(element, &verify_state, "operator")?;
                         let real: Obj = StandardSet::R.into();
                         let steps = vec![
-                            self.verify_objs_are_equal_known_only(
+                            self.verify_objs_are_equal_by_known_equality(
                                 &actual.set,
                                 &expected.set,
                                 stmt.line_file.clone(),
                             ),
-                            self.verify_objs_are_equal_known_only(
+                            self.verify_objs_are_equal_by_known_equality(
                                 &expected.set,
                                 &real,
                                 stmt.line_file.clone(),
                             ),
-                            self.verify_objs_are_equal_known_only(
+                            self.verify_objs_are_equal_by_known_equality(
                                 &actual.row_len,
                                 &expected.row_len,
                                 stmt.line_file.clone(),
                             ),
-                            self.verify_objs_are_equal_known_only(
+                            self.verify_objs_are_equal_by_known_equality(
                                 &actual.col_len,
                                 &expected.col_len,
                                 stmt.line_file.clone(),

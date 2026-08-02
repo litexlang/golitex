@@ -117,13 +117,13 @@ impl Runtime {
             return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
         };
         let domain_result =
-            self.verify_objs_are_equal_known_only(param_group.set_obj(), &domain, fact.line_file());
+            self.verify_objs_are_equal_by_known_equality(param_group.set_obj(), &domain, fact.line_file());
         if domain_result.is_unknown() {
             return Ok(Some(domain_result));
         }
         infer_result.new_infer_result_inside(domain_result.infer_result());
 
-        let codomain_result = self.verify_objs_are_equal_known_only(
+        let codomain_result = self.verify_objs_are_equal_by_known_equality(
             function_body.ret_set.as_ref(),
             &codomain,
             fact.line_file(),
