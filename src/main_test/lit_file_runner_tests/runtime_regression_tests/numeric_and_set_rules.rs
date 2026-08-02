@@ -343,6 +343,86 @@ forall n N:
 }
 
 #[test]
+fn positive_natural_predecessor_is_natural_in_recursive_definitions() {
+    run_with_large_stack(
+        "positive_natural_predecessor_is_natural_in_recursive_definitions",
+        || {
+            let source_code = r#"
+forall n N:
+    n > 0
+    =>:
+        n - 1 $in N
+
+have fn predecessor_count(n N) N by induc n from 0:
+    case n = 0: 0
+    case n > 0: predecessor_count(n - 1)
+
+predecessor_count(0) = 0
+predecessor_count(1) = predecessor_count(0) = 0
+
+forall n N_pos:
+    n > 1
+    =>:
+        n - 1 $in N_pos
+
+have fn positive_predecessor_count(n N_pos) N_pos by induc n from 1:
+    case n = 1: 1
+    case n > 1: positive_predecessor_count(n - 1)
+
+positive_predecessor_count(1) = 1
+positive_predecessor_count(2) = positive_predecessor_count(1) = 1
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "positive_natural_predecessor_is_natural_in_recursive_definitions",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "positive natural predecessor builtin rule failed:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("N: n - 1 from n in N and n > 0"),
+                "missing positive natural predecessor provenance:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("N_pos: n - 1 from n in N_pos and n > 1"),
+                "missing strictly positive predecessor provenance:\n{run_output}"
+            );
+
+            for (name, invalid_source) in [
+                (
+                    "zero_does_not_have_a_natural_predecessor",
+                    "forall n N:\n    n - 1 $in N",
+                ),
+                (
+                    "positive_natural_predecessor_need_not_be_positive",
+                    "forall n N:\n    n > 0\n    =>:\n        n - 1 $in N_pos",
+                ),
+            ] {
+                let mut boundary_runtime = Runtime::new();
+                boundary_runtime.new_file_path_new_env_new_name_scope(name);
+                let (boundary_results, boundary_error) =
+                    run_source_code(invalid_source, &mut boundary_runtime);
+                let (boundary_succeeded, boundary_output) = render_run_source_code_output(
+                    &boundary_runtime,
+                    &boundary_results,
+                    &boundary_error,
+                    false,
+                );
+                assert!(
+                    !boundary_succeeded,
+                    "{name} must stay outside the builtin boundary:\n{boundary_output}"
+                );
+            }
+        },
+    );
+}
+
+#[test]
 fn set_minus_membership_excludes_the_removed_set() {
     run_with_large_stack("set_minus_membership_excludes_the_removed_set", || {
         let source_code = r#"

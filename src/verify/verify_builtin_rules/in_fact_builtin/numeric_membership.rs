@@ -273,6 +273,30 @@ impl Runtime {
             ));
         }
 
+        // A positive natural has a natural predecessor.
+        // Example: `n $in N`, `n > 0` => `n - 1 $in N`.
+        if matches!(sub.right.as_ref(), Obj::Number(number) if number.normalized_value == "1") {
+            let lf = in_fact.line_file.clone();
+            let left = sub.left.as_ref().clone();
+            let left_in_n: AtomicFact =
+                InFact::new(left.clone(), StandardSet::N.into(), lf.clone()).into();
+            let left_positive: AtomicFact =
+                GreaterFact::new(left, Number::new("0".to_string()).into(), lf).into();
+            let membership_result = self.verify_builtin_rule_premise(&left_in_n, builtin_state)?;
+            let positive_result =
+                self.verify_builtin_rule_premise(&left_positive, builtin_state)?;
+            if membership_result.is_true() && positive_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "N: n - 1 from n in N and n > 0".to_string(),
+                        vec![membership_result, positive_result],
+                    )
+                    .into(),
+                );
+            }
+        }
+
         let lf = in_fact.line_file.clone();
         let z: Obj = StandardSet::Z.into();
         let left_in_z: AtomicFact =
@@ -444,6 +468,41 @@ impl Runtime {
                 in_fact.clone().into(),
                 "R_pos: a^x from 0 < a and x in R".to_string(),
                 vec![base_result, exponent_result],
+            )
+            .into(),
+        )
+    }
+
+    // A positive natural greater than one has a positive natural predecessor.
+    // Example: `n $in N_pos`, `n > 1` => `n - 1 $in N_pos`.
+    pub(super) fn verify_in_fact_sub_in_n_pos_from_n_pos_and_greater_than_one(
+        &mut self,
+        in_fact: &InFact,
+        sub: &Sub,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if !matches!(sub.right.as_ref(), Obj::Number(number) if number.normalized_value == "1") {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let lf = in_fact.line_file.clone();
+        let left = sub.left.as_ref().clone();
+        let left_in_n_pos: AtomicFact =
+            InFact::new(left.clone(), StandardSet::NPos.into(), lf.clone()).into();
+        let left_greater_than_one: AtomicFact =
+            GreaterFact::new(left, Number::new("1".to_string()).into(), lf).into();
+        let membership_result = self.verify_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
+        let bound_result =
+            self.verify_builtin_rule_premise(&left_greater_than_one, builtin_state)?;
+        if !membership_result.is_true() || !bound_result.is_true() {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "N_pos: n - 1 from n in N_pos and n > 1".to_string(),
+                vec![membership_result, bound_result],
             )
             .into(),
         )

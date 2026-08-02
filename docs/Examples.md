@@ -291,12 +291,10 @@ sketch:
 ```
 
 ```litex
-sketch:
-    have a Z
-    a <= a + 10
-    have x closed_range(a, a + 10)
-
-    by closed_range as cases: x $in a...a + 10
+claim:
+    ? forall a Z, x closed_range(a, a + 2):
+        x = a or x = a + 1 or x = a + 2
+    by closed_range as cases: x $in a...a + 2
 ```
 
 ### 7. Enumerating A Finite Set

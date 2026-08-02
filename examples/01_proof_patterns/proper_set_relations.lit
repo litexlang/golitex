@@ -8,8 +8,6 @@ claim:
             B $proper_superset A
     by def A $proper_subset B
     by def B $proper_superset A
-    A $proper_subset B
-    B $proper_superset A
 
 # A positive proper relation exposes both parts of its definition.
 forall A, B set:
@@ -48,7 +46,6 @@ claim:
         =>:
             A $proper_subset c
     by def A $proper_subset c
-    A $proper_subset c
 
 claim:
     ? forall A, B, c set:
@@ -56,4 +53,3 @@ claim:
         =>:
             A $proper_superset c
     by def A $proper_superset c
-    A $proper_superset c

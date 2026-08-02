@@ -237,6 +237,12 @@ try one fresh direct rule on its immediate children. Neither route calls known
 Detailed output distinguishes `builtin rule` from `builtin strategy` and
 returns nested child results to the root.
 
+Some common one-step implications are direct rules themselves. For example,
+known facts `n $in N` and `n > 0` directly establish `n - 1 $in N`; the rule
+does not need to derive an intermediate `1 <= n` through a second builtin call.
+For a strictly positive result carrier, `n $in N+` and `n > 1` directly prove
+`n - 1 $in N+`.
+
 When a rule needs a universal, existential, or compound premise, the proof uses
 an explicit reserved builtin theorem call such as
 `by thm set_builder_member(x, B)` or
