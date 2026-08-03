@@ -17,6 +17,25 @@ impl Runtime {
         let result = match atomic_fact {
             // Equality: numeric bindings, cart/tuple/seq/matrix structure, `0 = a - b` => `a = b`.
             AtomicFact::EqualFact(equal_fact) => self.infer_equal_fact(equal_fact),
+            // A stored global function equality is ordinary object equality.
+            // Example: `$fn_eq(f, g)` infers `f = g`, which then supports congruence.
+            AtomicFact::FnEqualFact(fn_equal_fact) => {
+                let source_fact: Fact = fn_equal_fact.clone().into();
+                let inferred_equality: AtomicFact = EqualFact::new(
+                    fn_equal_fact.left.clone(),
+                    fn_equal_fact.right.clone(),
+                    fn_equal_fact.line_file.clone(),
+                )
+                .into();
+                let reason = InferReason::InferRule(InferRuleReason::new(
+                    Some(source_fact),
+                    "fn_eq implies ordinary equality".to_string(),
+                ));
+                self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    inferred_equality,
+                    reason.store_reason(),
+                )
+            }
             // Membership `x $in S`: unfold `S` (list, set builder, intervals, standard sets, …).
             AtomicFact::InFact(in_fact) => self.infer_in_fact(in_fact),
             // A Cartesian product has at least two coordinates.
@@ -44,5 +63,37 @@ impl Runtime {
 
         self.active_atomic_fact_inferences.remove(&fact_key);
         result
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fn_eq_infers_ordinary_equality_for_known_congruence() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("fn_eq_infers_ordinary_equality");
+
+        let f: Obj = Identifier::new("f".to_string()).into();
+        let g: Obj = Identifier::new("g".to_string()).into();
+        let line_file = default_line_file();
+        let fn_eq: AtomicFact = FnEqualFact::new(f.clone(), g.clone(), line_file.clone()).into();
+        let ordinary_equality: Fact =
+            EqualFact::new(f.clone(), g.clone(), line_file.clone()).into();
+
+        let infer_result = runtime
+            .store_atomic_fact_without_well_defined_verified_and_infer(fn_eq)
+            .expect("store fn_eq and infer ordinary equality");
+        assert!(infer_result.contains_added_fact(&ordinary_equality));
+        assert!(runtime
+            .verify_objs_are_equal_by_known_equality(&f, &g, line_file.clone())
+            .is_true());
+
+        let left_power_set: Obj = PowerSet::new(f).into();
+        let right_power_set: Obj = PowerSet::new(g).into();
+        assert!(runtime
+            .verify_objs_are_equal_by_known_equality(&left_power_set, &right_power_set, line_file,)
+            .is_true());
     }
 }

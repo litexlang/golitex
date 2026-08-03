@@ -280,12 +280,14 @@ mod tests {
 
         let equality = include_str!("verify_equality.rs");
         let full_equality_impl = equality
-            .split("pub fn verify_objs_are_equal(")
+            .split("pub fn verify_equal_fact(")
             .nth(1)
             .expect("full equality implementation must exist")
-            .split("fn try_verify_function_equality_from_known_fn_eq(")
+            .split("pub(crate) fn verify_equality_with_known_equalities(")
             .next()
-            .expect("function-equality bridge must follow full equality");
+            .expect("known-equality replay must follow full equality");
+        assert!(!full_equality_impl.contains("FnEqualFact"));
+        assert!(!full_equality_impl.contains("EqualFact::new("));
         let round_zero_index = full_equality_impl
             .find("if verify_state.is_round_0()")
             .expect("structural equality must be restricted to round zero");

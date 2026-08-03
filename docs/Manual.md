@@ -1034,6 +1034,11 @@ by def $fn_eq_in(f, g, R)
 by def $fn_eq(f, g)
 ```
 
+Once a verified `$fn_eq(f, g)` is stored, forward inference also stores the
+ordinary equality `f = g`. Normal known-equality congruence can therefore reuse
+it inside a larger object, such as `power_set(f) = power_set(g)`. The local
+predicate `$fn_eq_in(f, g, S)` does not imply global equality.
+
 For named functions with alpha-equivalent declared function carriers, a bare
 `$fn_eq(f, g)` can also consume the exact already-known pointwise `forall`
 directly. It does not synthesize pointwise equalities or bridge different
@@ -2125,6 +2130,9 @@ integers, `n <= x` with `x < n + 1` proves `x = n`, while `n < x` with
 An exact known pointwise `forall` can package `$fn_eq(f, g)` when the declared
 function carriers are alpha-equivalent. This route does not reconstruct
 dependent mutual membership and does not apply across mismatched carriers.
+After the resulting `$fn_eq(f, g)` is stored, inference materializes `f = g` in
+the ordinary known-equality class; equality verification does not separately
+scan for `$fn_eq` facts.
 
 Known-equality replay of a checked function body remains bounded to one step
 against a simple arithmetic expression. Known-only equality first checks object
@@ -2472,6 +2480,7 @@ tuple_dim(t) = 2
 Typical consequences include:
 
 - `u - v = 0` gives `u = v` when meaningful;
+- `$fn_eq(f, g)` gives the ordinary equality `f = g`;
 - an equality to a concrete number enables later numeric substitution;
 - supported simple linear equalities record a solved value;
 - equality to a tuple or product records its shape and dimension;
