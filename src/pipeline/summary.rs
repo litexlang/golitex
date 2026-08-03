@@ -139,6 +139,7 @@ impl RunSummary {
                 self.abstract_prop_definitions += 1;
                 self.abstract_interfaces += 1;
             }
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(_)) => {}
             Stmt::DefInterfaceStmt(_) => {
                 self.abstract_interfaces += 1;
             }
@@ -496,6 +497,11 @@ impl EnvironmentSummary {
             environment.defined_templates.len(),
         );
         summary.add_field_counts(
+            "defined_settings",
+            environment.defined_settings.len(),
+            environment.defined_settings.len(),
+        );
+        summary.add_field_counts(
             "defined_thm_stmts",
             environment.defined_thm_stmts.len(),
             environment.defined_thm_stmts.len(),
@@ -734,6 +740,8 @@ impl EnvironmentSummary {
             .insert("structs".to_string(), environment.defined_structs.len());
         self.category_counts
             .insert("templates".to_string(), environment.defined_templates.len());
+        self.category_counts
+            .insert("settings".to_string(), environment.defined_settings.len());
         self.category_counts
             .insert("theorems".to_string(), environment.defined_thm_stmts.len());
         self.category_counts.insert(

@@ -42,6 +42,12 @@ impl DefTemplateStmt {
     }
 }
 
+impl DefSettingStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "DefSettingStmt".to_string()
+    }
+}
+
 impl ImportStmt {
     pub fn stmt_type_name(&self) -> String {
         "ImportStmt".to_string()
@@ -355,6 +361,12 @@ impl DefAlgoStmt {
 impl DefTemplateStmt {
     pub fn output_type_string() -> String {
         "template definition".to_string()
+    }
+}
+
+impl DefSettingStmt {
+    pub fn output_type_string() -> String {
+        "setting definition".to_string()
     }
 }
 

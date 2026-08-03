@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 #[derive(Debug)]
 pub enum DefInterfaceStmtResult {
+    DefSettingStmt(NonFactualStmtSuccess),
     DefTemplateStmt(NonFactualStmtSuccess),
     DefStructStmt(NonFactualStmtSuccess),
 }
@@ -9,6 +10,9 @@ pub enum DefInterfaceStmtResult {
 impl DefInterfaceStmtResult {
     pub fn new(success: NonFactualStmtSuccess) -> Self {
         match &success.stmt {
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(_)) => {
+                DefInterfaceStmtResult::DefSettingStmt(success)
+            }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(_)) => {
                 DefInterfaceStmtResult::DefTemplateStmt(success)
             }
@@ -21,21 +25,24 @@ impl DefInterfaceStmtResult {
 
     pub fn success(&self) -> &NonFactualStmtSuccess {
         match self {
-            DefInterfaceStmtResult::DefTemplateStmt(success)
+            DefInterfaceStmtResult::DefSettingStmt(success)
+            | DefInterfaceStmtResult::DefTemplateStmt(success)
             | DefInterfaceStmtResult::DefStructStmt(success) => success,
         }
     }
 
     pub fn success_mut(&mut self) -> &mut NonFactualStmtSuccess {
         match self {
-            DefInterfaceStmtResult::DefTemplateStmt(success)
+            DefInterfaceStmtResult::DefSettingStmt(success)
+            | DefInterfaceStmtResult::DefTemplateStmt(success)
             | DefInterfaceStmtResult::DefStructStmt(success) => success,
         }
     }
 
     pub fn into_success(self) -> NonFactualStmtSuccess {
         match self {
-            DefInterfaceStmtResult::DefTemplateStmt(success)
+            DefInterfaceStmtResult::DefSettingStmt(success)
+            | DefInterfaceStmtResult::DefTemplateStmt(success)
             | DefInterfaceStmtResult::DefStructStmt(success) => success,
         }
     }

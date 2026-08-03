@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "target": "scripts/Euclidean_Geometry/book_zero.lit",
+  "session_command": "target/release/litex -compact -session -before scripts/Euclidean_Geometry/book_zero.lit",
+  "proof_spine": [
+    "Introduce the concrete real coordinate plane and its vector operations",
+    "Define line and circle point sets and their classification relations",
+    "Expose squared-distance congruence and minimal checked use probes"
+  ],
+  "setup_attempts": [
+    {
+      "result": "failed",
+      "verifier_evidence": "configured folder contains unexported Litex module path `proof_journals`",
+      "diagnosis": "Machine artifacts cannot be a direct child directory of a configured module.",
+      "next_change": "Store the journal in the repository-root proof_journals directory."
+    }
+  ],
+  "blocks": [],
+  "materialization": {
+    "block_ids": [],
+    "file_gate_command": "",
+    "file_gate_result": "not_run"
+  }
+}

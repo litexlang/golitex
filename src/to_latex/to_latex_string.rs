@@ -2294,6 +2294,9 @@ impl Stmt {
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(x)) => {
+                latex_texttt_escape(&x.to_string())
+            }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),

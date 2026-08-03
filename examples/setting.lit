@@ -1,0 +1,14 @@
+setting PairedElements:
+    X, Y nonempty_set
+    x X
+    y Y
+    x = x
+
+forall [PairedElements]:
+    y = y
+
+forall [PairedElements], z X:
+    z = z
+
+forall [PairedElements]:
+    x = x

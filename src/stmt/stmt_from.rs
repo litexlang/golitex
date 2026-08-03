@@ -114,6 +114,12 @@ impl From<DefTemplateStmt> for Stmt {
     }
 }
 
+impl From<DefSettingStmt> for Stmt {
+    fn from(v: DefSettingStmt) -> Self {
+        DefInterfaceStmt::DefSettingStmt(v).into()
+    }
+}
+
 impl From<DefAlgoStmt> for Stmt {
     fn from(v: DefAlgoStmt) -> Self {
         Stmt::DefAlgoStmt(v)

@@ -167,6 +167,7 @@ impl DefPredicateStmt {
 impl DefInterfaceStmt {
     pub fn line_file(&self) -> LineFile {
         match self {
+            DefInterfaceStmt::DefSettingStmt(stmt) => stmt.line_file.clone(),
             DefInterfaceStmt::DefTemplateStmt(stmt) => stmt.line_file.clone(),
             DefInterfaceStmt::DefStructStmt(stmt) => stmt.line_file.clone(),
         }
@@ -174,6 +175,7 @@ impl DefInterfaceStmt {
 
     pub fn stmt_type_name(&self) -> String {
         match self {
+            DefInterfaceStmt::DefSettingStmt(stmt) => stmt.stmt_type_name(),
             DefInterfaceStmt::DefTemplateStmt(stmt) => stmt.stmt_type_name(),
             DefInterfaceStmt::DefStructStmt(stmt) => stmt.stmt_type_name(),
         }
@@ -181,6 +183,7 @@ impl DefInterfaceStmt {
 
     pub fn output_type_string(&self) -> String {
         match self {
+            DefInterfaceStmt::DefSettingStmt(_) => DefSettingStmt::output_type_string(),
             DefInterfaceStmt::DefTemplateStmt(_) => DefTemplateStmt::output_type_string(),
             DefInterfaceStmt::DefStructStmt(_) => DefStructStmt::output_type_string(),
         }

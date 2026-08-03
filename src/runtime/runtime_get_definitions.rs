@@ -1,6 +1,35 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub fn get_setting_definition_by_name(&self, setting_name: &str) -> Option<DefSettingStmt> {
+        if let Some((module_name, local_name)) = split_module_qualified_name(setting_name) {
+            if self.is_current_parse_module(module_name) {
+                return self
+                    .get_setting_definition_by_name_in_current_envs(local_name)
+                    .cloned();
+            }
+            return self
+                .imported_module_environments(module_name)
+                .into_iter()
+                .find_map(|environment| environment.defined_settings.get(local_name).cloned());
+        }
+
+        self.get_setting_definition_by_name_in_current_envs(setting_name)
+            .cloned()
+    }
+
+    fn get_setting_definition_by_name_in_current_envs(
+        &self,
+        setting_name: &str,
+    ) -> Option<&DefSettingStmt> {
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_settings.get(setting_name) {
+                return Some(definition);
+            }
+        }
+        None
+    }
+
     pub fn get_prop_definition_by_name(&self, predicate_name: &str) -> Option<DefPropStmt> {
         if let Some((module_name, local_name)) = split_module_qualified_name(predicate_name) {
             if self.is_current_parse_module(module_name) {

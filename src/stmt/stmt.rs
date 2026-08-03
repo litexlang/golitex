@@ -48,6 +48,7 @@ pub enum DefPredicateStmt {
 
 #[derive(Clone)]
 pub enum DefInterfaceStmt {
+    DefSettingStmt(DefSettingStmt),
     DefTemplateStmt(DefTemplateStmt),
     DefStructStmt(DefStructStmt),
 }

@@ -68,6 +68,7 @@ impl fmt::Display for DefPredicateStmt {
 impl fmt::Display for DefInterfaceStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
+            DefInterfaceStmt::DefSettingStmt(x) => write!(f, "{}", x),
             DefInterfaceStmt::DefTemplateStmt(x) => write!(f, "{}", x),
             DefInterfaceStmt::DefStructStmt(x) => write!(f, "{}", x),
         }

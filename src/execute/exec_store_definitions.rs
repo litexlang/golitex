@@ -1,6 +1,21 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub fn store_def_setting(
+        &mut self,
+        def_setting_stmt: &DefSettingStmt,
+    ) -> Result<(), RuntimeError> {
+        let name = def_setting_stmt.name.clone();
+        if self.top_level_env().defined_settings.contains_key(&name) {
+            return Err(name_already_used_error(&name, "setting"));
+        }
+        self.register_declared_symbol(&name, SymbolRole::Setting)?;
+        self.top_level_env()
+            .defined_settings
+            .insert(name, def_setting_stmt.clone());
+        Ok(())
+    }
+
     pub fn store_def_prop(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), RuntimeError> {
         let name = def_prop_stmt.name.clone();
         let env = self.top_level_env();

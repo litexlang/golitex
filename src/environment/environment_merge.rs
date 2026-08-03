@@ -77,6 +77,13 @@ impl Environment {
             self.defined_templates.insert(name.clone(), stmt.clone());
         }
 
+        for (name, stmt) in child.defined_settings.iter() {
+            if self.defined_settings.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "setting"));
+            }
+            self.defined_settings.insert(name.clone(), stmt.clone());
+        }
+
         for (name, stmt) in child.defined_thm_stmts.iter() {
             if self.defined_thm_stmts.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "thm"));
@@ -192,6 +199,7 @@ impl Environment {
             defined_algorithms: _,
             defined_structs: _,
             defined_templates: _,
+            defined_settings: _,
             defined_thm_stmts: _,
             defined_strategy_stmts: _,
             known_equality: _,
@@ -424,6 +432,11 @@ impl Environment {
         for name in child.defined_templates.keys() {
             if self.defined_templates.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "template"));
+            }
+        }
+        for name in child.defined_settings.keys() {
+            if self.defined_settings.contains_key(name) {
+                return Err(merge_name_conflict_error(name, "setting"));
             }
         }
         for name in child.defined_thm_stmts.keys() {
