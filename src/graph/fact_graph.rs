@@ -431,6 +431,9 @@ impl FactGraphBuilder {
                     self.collect_result_nodes(proved.result.as_ref());
                 }
             }
+            VerifiedByResult::StatementMemo(source) => {
+                self.collect_verified_by_nodes(&source.verified_by);
+            }
         }
     }
 
@@ -449,6 +452,9 @@ impl FactGraphBuilder {
                 for requirement in &result.result.requirements {
                     self.add_requirement_source_nodes(requirement.result.as_ref());
                 }
+            }
+            VerifiedBysEnum::ByStatementMemo(_, source) => {
+                self.collect_verified_by_nodes(&source.verified_by);
             }
         }
     }
@@ -627,6 +633,9 @@ impl FactGraphBuilder {
                     }
                 }
             }
+            VerifiedByResult::StatementMemo(source) => {
+                self.collect_verified_by_edges(target_id, &source.verified_by);
+            }
         }
     }
 
@@ -640,6 +649,9 @@ impl FactGraphBuilder {
             }
             VerifiedBysEnum::ByKnownForall(result) => {
                 self.add_known_forall_edges(target_id, &result.result);
+            }
+            VerifiedBysEnum::ByStatementMemo(_, source) => {
+                self.collect_verified_by_edges(target_id, &source.verified_by);
             }
         }
     }
@@ -764,6 +776,9 @@ impl FactGraphBuilder {
                             .add_cited_stmt_node(item.result.cite_what.as_ref())
                             .into_iter()
                             .collect(),
+                        VerifiedBysEnum::ByStatementMemo(_, source) => {
+                            self.dependency_source_ids_from_verified_by(&source.verified_by)
+                        }
                     };
                     ids.append(&mut item_ids);
                 }
@@ -776,6 +791,9 @@ impl FactGraphBuilder {
                 .iter()
                 .flat_map(|proved| self.dependency_source_ids_from_result(proved.result.as_ref()))
                 .collect(),
+            VerifiedByResult::StatementMemo(source) => {
+                self.dependency_source_ids_from_verified_by(&source.verified_by)
+            }
         }
     }
 

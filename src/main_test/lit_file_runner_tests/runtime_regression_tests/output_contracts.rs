@@ -1524,7 +1524,7 @@ have a, b, c, d R_pos
         .last()
         .and_then(StmtResult::factual_success)
         .expect("the final order fact should have a factual result");
-    let VerifiedByResult::BuiltinStrategy(root_rule) = &root.verified_by else {
+    let VerifiedByResult::BuiltinStrategy(root_rule) = root.underlying_verified_by() else {
         panic!("the root should be verified by a builtin strategy: {root:?}");
     };
     assert_eq!(root_rule.subgoals.len(), 2);
@@ -1533,7 +1533,7 @@ have a, b, c, d R_pos
         let branch = branch
             .factual_success()
             .expect("each recursive branch should remain a factual result");
-        let branch_rule = match &branch.verified_by {
+        let branch_rule = match branch.underlying_verified_by() {
             VerifiedByResult::BuiltinRule(rule) | VerifiedByResult::BuiltinStrategy(rule) => rule,
             _ => panic!("each branch should retain its builtin evidence: {branch:?}"),
         };

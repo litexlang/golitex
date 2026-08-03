@@ -709,7 +709,7 @@ fn obj_contains_division(obj: &Obj) -> bool {
 
 fn first_builtin_message(result: &StmtResult) -> Option<&str> {
     if let Some(success) = result.factual_success() {
-        if let VerifiedByResult::BuiltinRule(builtin) = &success.verified_by {
+        if let VerifiedByResult::BuiltinRule(builtin) = success.underlying_verified_by() {
             return Some(builtin.msg.as_str());
         }
     }

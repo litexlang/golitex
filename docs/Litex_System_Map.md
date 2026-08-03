@@ -147,6 +147,16 @@ atomic target
   -> true or unknown
 ```
 
+Within one statement, Litex reuses an exact successful atomic subgoal if that
+same subgoal is requested again. This memo follows the ordinary environment
+scope: a proof from a parent scope is valid inside a child, while a proof that
+depends on child assumptions disappears when that child closes. It is cleared
+at the end of the statement, including an `unknown` or error exit. A memo hit
+reuses the original proof evidence only; it does not store the temporary fact,
+rerun inference, or make the fact available to the next statement. The
+statement's explicit commit and ordinary forward inference remain the only
+ways its documented facts enter the continuing context.
+
 **Builtin mathematical patterns.** The target shape is matched against
 implemented arithmetic, equality, order, membership, set, function, and
 composite-object rules. A builtin rule has depth one: its premises use known

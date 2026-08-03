@@ -28,21 +28,23 @@ impl Runtime {
             return Ok(known_result);
         }
 
-        Ok(self.verify_atomic_fact_by_builtin_computation(goal))
+        let result = self.verify_atomic_fact_by_builtin_computation(goal);
+        Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
     }
 
     pub(crate) fn verify_known_non_forall_atomic_fact(
         &mut self,
         goal: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        match goal {
+        let result = match goal {
             AtomicFact::EqualFact(fact) => Ok(self.verify_objs_are_equal_by_known_equality(
                 &fact.left,
                 &fact.right,
                 fact.line_file.clone(),
             )),
             _ => self.verify_non_equational_atomic_fact_with_known_atomic_facts(goal),
-        }
+        }?;
+        Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
     }
 
     pub(crate) fn verify_builtin_rule_premise(
@@ -169,7 +171,8 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         }
         let child_state = builtin_state.after_applying_builtin_rule();
-        self.verify_atomic_fact_with_builtin_rules_inner(goal, &child_state)
+        let result = self.verify_atomic_fact_with_builtin_rules_inner(goal, &child_state)?;
+        Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
     }
 }
 

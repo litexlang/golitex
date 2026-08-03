@@ -222,6 +222,7 @@ impl Environment {
             cache_well_defined_obj,
             cache_known_fact,
             cache_infer_rule_firing,
+            statement_verified_atomic_facts: _,
             used_strategy_stmts,
             stopped_strategy_stmts,
         } = child;

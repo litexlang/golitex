@@ -17,7 +17,11 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        match atomic_fact {
+        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(atomic_fact) {
+            return Ok(memoized_result);
+        }
+
+        let result = match atomic_fact {
             AtomicFact::EqualFact(fact) => self.verify_equality_with_builtin_strategy(fact),
             AtomicFact::InFact(fact) => {
                 let numeric = self.verify_numeric_carrier_with_builtin_strategy(fact)?;
@@ -53,6 +57,7 @@ impl Runtime {
                 self.verify_additive_sign_with_builtin_strategy(atomic_fact)
             }
             _ => Ok(StmtUnknown::new().into()),
-        }
+        }?;
+        Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
     }
 }
