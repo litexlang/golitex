@@ -485,10 +485,7 @@ impl Runtime {
         given_arg: &Obj,
         line_file: LineFile,
     ) -> bool {
-        if self
-            .verify_objs_are_equal_by_known_equality(known_arg, given_arg, line_file.clone())
-            .is_true()
-        {
+        if self.objs_are_congruent_by_known_equalities(known_arg, given_arg, line_file.clone()) {
             return true;
         }
 
@@ -501,12 +498,11 @@ impl Runtime {
         // Example: A = {a} and a = b let membership in A imply membership in {b}.
         known_candidates.iter().any(|known_candidate| {
             given_candidates.iter().any(|given_candidate| {
-                self.verify_objs_are_equal_by_known_equality(
+                self.objs_are_congruent_by_known_equalities(
                     known_candidate,
                     given_candidate,
                     line_file.clone(),
                 )
-                .is_true()
             })
         })
     }

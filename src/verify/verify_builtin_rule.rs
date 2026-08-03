@@ -237,7 +237,7 @@ mod tests {
     }
 
     #[test]
-    fn componentwise_known_equality_is_part_of_known_only_equality() {
+    fn structural_equality_reuses_one_shape_matcher() {
         let common_leaf = include_str!("verify_builtin_rule.rs");
         let common_leaf_impl = common_leaf
             .split("#[cfg(test)]")
@@ -253,24 +253,58 @@ mod tests {
         assert!(!common_leaf_impl.contains("try_verify_equality_by_corresponding_known_equalities"));
 
         let equality_structural = include_str!("verify_builtin_rules/equality_structural.rs");
-        let direct_index = equality_structural
-            .find("verify_objs_are_equal_directly_known_only(left, right")
-            .expect("known-only equality must first try direct known equality");
-        let componentwise_index = equality_structural
-            .find("try_verify_equality_by_corresponding_known_equalities(left, right")
-            .expect("known-only equality must then try componentwise known equality");
-        assert!(direct_index < componentwise_index);
-        let componentwise_impl = equality_structural
-            .split("fn try_verify_equality_by_corresponding_known_equalities(")
+        let known_only_impl = equality_structural
+            .split("pub fn verify_objs_are_equal_by_known_equality(")
             .nth(1)
-            .expect("componentwise known equality implementation must exist");
-        assert!(componentwise_impl.contains("verify_objs_are_equal_directly_known_only("));
-        assert!(!componentwise_impl.contains("verify_objs_are_equal_by_known_equality("));
+            .expect("known-only equality implementation must exist")
+            .split("fn verify_objs_are_equal_directly_known_only(")
+            .next()
+            .expect("direct known-only implementation must follow the public entry");
+        assert!(known_only_impl.contains("verify_objs_are_equal_directly_known_only("));
+        assert!(known_only_impl.contains("same_shape_and_corresponding_args_match("));
+        assert!(
+            !equality_structural.contains("try_verify_equality_by_corresponding_known_equalities")
+        );
+        assert_eq!(
+            equality_structural
+                .matches("fn same_shape_and_corresponding_args_match")
+                .count(),
+            1,
+            "constructor decomposition must have one implementation",
+        );
 
         let equality_dispatch = include_str!("verify_builtin_rules/equality_dispatch.rs");
         assert!(
             !equality_dispatch.contains("try_verify_equality_by_corresponding_known_equalities")
         );
+
+        let equality = include_str!("verify_equality.rs");
+        let full_equality_impl = equality
+            .split("pub fn verify_objs_are_equal(")
+            .nth(1)
+            .expect("full equality implementation must exist")
+            .split("fn try_verify_function_equality_from_known_fn_eq(")
+            .next()
+            .expect("function-equality bridge must follow full equality");
+        let round_zero_index = full_equality_impl
+            .find("if verify_state.is_round_0()")
+            .expect("structural equality must be restricted to round zero");
+        let structural_index = full_equality_impl
+            .find(
+                "verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively",
+            )
+            .expect("full equality must contain the structural equality route");
+        assert!(round_zero_index < structural_index);
+        let recursive_structural_impl = equality
+            .split(
+                "pub(crate) fn verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(",
+            )
+            .nth(1)
+            .expect("recursive structural equality implementation must exist")
+            .split("fn verify_two_objs_equal_by_builtin_rules_and_known_equalities(")
+            .next()
+            .expect("recursive child verifier must follow structural equality");
+        assert!(recursive_structural_impl.contains("same_shape_and_corresponding_args_match("));
     }
 
     fn visit_rust_files(dir: &Path, f: &mut impl FnMut(&Path, &str)) {

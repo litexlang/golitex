@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::{
-    factual_equal_success_by_builtin_reason, factual_equal_success_by_builtin_reason_with_subgoals,
-    verify_equality_by_they_are_the_same,
+    factual_equal_success_by_builtin_reason, verify_equality_by_they_are_the_same,
 };
 
 impl Runtime {
@@ -24,12 +23,24 @@ impl Runtime {
             return direct_result;
         }
 
-        if let Some(componentwise_result) =
-            self.try_verify_equality_by_corresponding_known_equalities(left, right, line_file)
-        {
-            if componentwise_result.is_true() {
-                return componentwise_result;
-            }
+        let componentwise_result: Result<bool, ()> = Self::same_shape_and_corresponding_args_match(
+            left,
+            right,
+            &mut |left_arg, right_arg| {
+                Ok(self.objs_are_congruent_by_known_equalities(
+                    left_arg,
+                    right_arg,
+                    line_file.clone(),
+                ))
+            },
+        );
+        if componentwise_result.expect("known-equality comparison is infallible") {
+            return factual_equal_success_by_builtin_reason(
+                left,
+                right,
+                line_file,
+                "same shape and corresponding arguments are known equal",
+            );
         }
 
         StmtResult::Unknown(StmtUnknown::new())
@@ -88,6 +99,274 @@ impl Runtime {
         StmtResult::Unknown(StmtUnknown::new())
     }
 
+    pub(crate) fn objs_are_congruent_by_known_equalities(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> bool {
+        if self
+            .verify_objs_are_equal_directly_known_only(left, right, line_file.clone())
+            .is_true()
+        {
+            return true;
+        }
+
+        let result: Result<bool, ()> = Self::same_shape_and_corresponding_args_match(
+            left,
+            right,
+            &mut |left_arg, right_arg| {
+                Ok(self.objs_are_congruent_by_known_equalities(
+                    left_arg,
+                    right_arg,
+                    line_file.clone(),
+                ))
+            },
+        );
+        result.expect("known-equality comparison is infallible")
+    }
+
+    pub(crate) fn same_shape_and_corresponding_args_match<E>(
+        left: &Obj,
+        right: &Obj,
+        compare: &mut impl FnMut(&Obj, &Obj) -> Result<bool, E>,
+    ) -> Result<bool, E> {
+        macro_rules! compare_pairs {
+            ($(($left_arg:expr, $right_arg:expr)),+ $(,)?) => {{
+                $(
+                    if !compare($left_arg, $right_arg)? {
+                        return Ok(false);
+                    }
+                )+
+                Ok(true)
+            }};
+        }
+
+        macro_rules! compare_slices {
+            ($left_values:expr, $right_values:expr) => {{
+                if $left_values.len() != $right_values.len() {
+                    return Ok(false);
+                }
+                for (left_value, right_value) in $left_values.iter().zip($right_values.iter()) {
+                    if !compare(left_value, right_value)? {
+                        return Ok(false);
+                    }
+                }
+                Ok(true)
+            }};
+        }
+
+        match (left, right) {
+            (Obj::StructObj(left), Obj::StructObj(right)) => {
+                if left.name != right.name {
+                    return Ok(false);
+                }
+                compare_slices!(left.params, right.params)
+            }
+            (
+                Obj::ObjAsStructInstanceWithFieldAccess(left),
+                Obj::ObjAsStructInstanceWithFieldAccess(right),
+            ) => {
+                if left.field_name != right.field_name
+                    || left.struct_obj.name != right.struct_obj.name
+                    || left.struct_obj.params.len() != right.struct_obj.params.len()
+                {
+                    return Ok(false);
+                }
+                if !compare(left.obj.as_ref(), right.obj.as_ref())? {
+                    return Ok(false);
+                }
+                compare_slices!(left.struct_obj.params, right.struct_obj.params)
+            }
+            (Obj::FnObj(left), Obj::FnObj(right)) => {
+                let mut left_group_count = left.body.len();
+                let mut right_group_count = right.body.len();
+                while left_group_count > 0 && right_group_count > 0 {
+                    let left_group = &left.body[left_group_count - 1];
+                    let right_group = &right.body[right_group_count - 1];
+                    if left_group.len() != right_group.len() {
+                        return Ok(false);
+                    }
+                    for (left_arg, right_arg) in left_group.iter().zip(right_group.iter()) {
+                        if !compare(left_arg, right_arg)? {
+                            return Ok(false);
+                        }
+                    }
+                    left_group_count -= 1;
+                    right_group_count -= 1;
+                }
+                let left_prefix = left.prefix_obj(left_group_count);
+                let right_prefix = right.prefix_obj(right_group_count);
+                compare(&left_prefix, &right_prefix)
+            }
+            (Obj::Add(left), Obj::Add(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::Sub(left), Obj::Sub(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::Mul(left), Obj::Mul(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::Div(left), Obj::Div(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::Mod(left), Obj::Mod(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::Gcd(left), Obj::Gcd(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::Lcm(left), Obj::Lcm(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::Min(left), Obj::Min(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::Max(left), Obj::Max(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::Pow(left), Obj::Pow(right)) => {
+                compare_pairs!((&left.base, &right.base), (&left.exponent, &right.exponent),)
+            }
+            (Obj::Log(left), Obj::Log(right)) => {
+                compare_pairs!((&left.base, &right.base), (&left.arg, &right.arg),)
+            }
+            (Obj::Abs(left), Obj::Abs(right)) => compare(&left.arg, &right.arg),
+            (Obj::Floor(left), Obj::Floor(right)) => compare(&left.arg, &right.arg),
+            (Obj::Ceil(left), Obj::Ceil(right)) => compare(&left.arg, &right.arg),
+            (Obj::Exp(left), Obj::Exp(right)) => compare(&left.arg, &right.arg),
+            (Obj::Ln(left), Obj::Ln(right)) => compare(&left.arg, &right.arg),
+            (Obj::Sign(left), Obj::Sign(right)) => compare(&left.arg, &right.arg),
+            (Obj::Factorial(left), Obj::Factorial(right)) => compare(&left.arg, &right.arg),
+            (Obj::Sin(left), Obj::Sin(right)) => compare(&left.arg, &right.arg),
+            (Obj::Cos(left), Obj::Cos(right)) => compare(&left.arg, &right.arg),
+            (Obj::Tan(left), Obj::Tan(right)) => compare(&left.arg, &right.arg),
+            (Obj::Cot(left), Obj::Cot(right)) => compare(&left.arg, &right.arg),
+            (Obj::Sqrt(left), Obj::Sqrt(right)) => compare(&left.arg, &right.arg),
+            (Obj::MatrixAdd(left), Obj::MatrixAdd(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::MatrixSub(left), Obj::MatrixSub(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::MatrixMul(left), Obj::MatrixMul(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::MatrixScalarMul(left), Obj::MatrixScalarMul(right)) => {
+                compare_pairs!((&left.scalar, &right.scalar), (&left.matrix, &right.matrix),)
+            }
+            (Obj::MatrixPow(left), Obj::MatrixPow(right)) => {
+                compare_pairs!((&left.base, &right.base), (&left.exponent, &right.exponent),)
+            }
+            (Obj::Union(left), Obj::Union(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::Intersect(left), Obj::Intersect(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::SetMinus(left), Obj::SetMinus(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::SetDiff(left), Obj::SetDiff(right)) => {
+                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
+            }
+            (Obj::BigUnion(left), Obj::BigUnion(right)) => compare(&left.left, &right.left),
+            (Obj::BigIntersect(left), Obj::BigIntersect(right)) => compare(&left.left, &right.left),
+            (Obj::PowerSet(left), Obj::PowerSet(right)) => compare(&left.set, &right.set),
+            (Obj::CartDim(left), Obj::CartDim(right)) => compare(&left.set, &right.set),
+            (Obj::TupleDim(left), Obj::TupleDim(right)) => compare(&left.arg, &right.arg),
+            (Obj::FiniteSetSize(left), Obj::FiniteSetSize(right)) => compare(&left.set, &right.set),
+            (Obj::FiniteSetMax(left), Obj::FiniteSetMax(right)) => compare(&left.set, &right.set),
+            (Obj::FiniteSetMin(left), Obj::FiniteSetMin(right)) => compare(&left.set, &right.set),
+            (Obj::FnRange(left), Obj::FnRange(right)) => compare(&left.function, &right.function),
+            (Obj::Replacement(left), Obj::Replacement(right)) => {
+                if left.prop_name.to_string() != right.prop_name.to_string() {
+                    return Ok(false);
+                }
+                compare(&left.source_set, &right.source_set)
+            }
+            (Obj::Range(left), Obj::Range(right)) => {
+                compare_pairs!((&left.start, &right.start), (&left.end, &right.end),)
+            }
+            (Obj::Sum(left), Obj::Sum(right)) => compare_pairs!(
+                (&left.start, &right.start),
+                (&left.end, &right.end),
+                (left.func.as_ref(), right.func.as_ref()),
+            ),
+            (Obj::SumOfFiniteSet(left), Obj::SumOfFiniteSet(right)) => compare_pairs!(
+                (left.set.as_ref(), right.set.as_ref()),
+                (left.func.as_ref(), right.func.as_ref()),
+            ),
+            (Obj::ProductOfFiniteSet(left), Obj::ProductOfFiniteSet(right)) => compare_pairs!(
+                (left.set.as_ref(), right.set.as_ref()),
+                (left.func.as_ref(), right.func.as_ref()),
+            ),
+            (Obj::Product(left), Obj::Product(right)) => compare_pairs!(
+                (&left.start, &right.start),
+                (&left.end, &right.end),
+                (left.func.as_ref(), right.func.as_ref()),
+            ),
+            (Obj::ClosedRange(left), Obj::ClosedRange(right)) => {
+                compare_pairs!((&left.start, &right.start), (&left.end, &right.end),)
+            }
+            (Obj::IntervalObj(left), Obj::IntervalObj(right)) => {
+                if left.left_closed() != right.left_closed()
+                    || left.right_closed() != right.right_closed()
+                {
+                    return Ok(false);
+                }
+                compare_pairs!((left.start(), right.start()), (left.end(), right.end()),)
+            }
+            (Obj::OneSideInfinityIntervalObj(left), Obj::OneSideInfinityIntervalObj(right)) => {
+                if !left.same_kind_as(right) {
+                    return Ok(false);
+                }
+                compare(left.start(), right.start())
+            }
+            (Obj::FiniteSeqSet(left), Obj::FiniteSeqSet(right)) => {
+                compare_pairs!((&left.set, &right.set), (&left.n, &right.n),)
+            }
+            (Obj::SeqSet(left), Obj::SeqSet(right)) => {
+                compare(left.set.as_ref(), right.set.as_ref())
+            }
+            (Obj::FiniteSeqListObj(left), Obj::FiniteSeqListObj(right)) => {
+                compare_slices!(left.objs, right.objs)
+            }
+            (Obj::MatrixSet(left), Obj::MatrixSet(right)) => compare_pairs!(
+                (&left.set, &right.set),
+                (&left.row_len, &right.row_len),
+                (&left.col_len, &right.col_len),
+            ),
+            (Obj::MatrixListObj(left), Obj::MatrixListObj(right)) => {
+                if left.rows.len() != right.rows.len() {
+                    return Ok(false);
+                }
+                for (left_row, right_row) in left.rows.iter().zip(right.rows.iter()) {
+                    if left_row.len() != right_row.len() {
+                        return Ok(false);
+                    }
+                    for (left_cell, right_cell) in left_row.iter().zip(right_row.iter()) {
+                        if !compare(left_cell, right_cell)? {
+                            return Ok(false);
+                        }
+                    }
+                }
+                Ok(true)
+            }
+            (Obj::Proj(left), Obj::Proj(right)) => {
+                compare_pairs!((&left.set, &right.set), (&left.dim, &right.dim),)
+            }
+            (Obj::ObjAtIndex(left), Obj::ObjAtIndex(right)) => {
+                compare_pairs!((&left.obj, &right.obj), (&left.index, &right.index),)
+            }
+            (Obj::Tuple(left), Obj::Tuple(right)) => compare_slices!(left.args, right.args),
+            (Obj::ListSet(left), Obj::ListSet(right)) => compare_slices!(left.list, right.list),
+            (Obj::Cart(left), Obj::Cart(right)) => compare_slices!(left.args, right.args),
+            _ => Ok(false),
+        }
+    }
+
     pub fn verify_objs_are_equal_in_equality_builtin(
         &mut self,
         left: &Obj,
@@ -97,660 +376,6 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = EqualFact::new(left.clone(), right.clone(), line_file).into();
         self.verify_builtin_rule_premise(&fact, builtin_state)
-    }
-
-    fn arg_pairs_share_known_equality_class(&self, pairs: &[(&Obj, &Obj)]) -> bool {
-        pairs.iter().all(|(a, b)| {
-            verify_equality_by_they_are_the_same(a, b)
-                || self.objs_have_same_known_equality_rc_in_some_env(a, b)
-        })
-    }
-
-    fn boxed_obj_vecs_share_known_equality_class(
-        &self,
-        left: &[Box<Obj>],
-        right: &[Box<Obj>],
-    ) -> bool {
-        if left.len() != right.len() {
-            return false;
-        }
-        left.iter().zip(right.iter()).all(|(a, b)| {
-            verify_equality_by_they_are_the_same(a, b)
-                || self.objs_have_same_known_equality_rc_in_some_env(a, b)
-        })
-    }
-
-    fn try_verify_equality_by_corresponding_known_equalities(
-        &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-    ) -> Option<StmtResult> {
-        let reason = "same shape and paired args share known equality class";
-        match (left, right) {
-            (Obj::StructObj(left_struct), Obj::StructObj(right_struct)) => {
-                if left_struct.name != right_struct.name
-                    || left_struct.params.len() != right_struct.params.len()
-                {
-                    return Some((StmtUnknown::new()).into());
-                }
-                if left_struct
-                    .params
-                    .iter()
-                    .zip(right_struct.params.iter())
-                    .all(|(left_param, right_param)| {
-                        verify_equality_by_they_are_the_same(left_param, right_param)
-                            || self.objs_have_same_known_equality_rc_in_some_env(
-                                left_param,
-                                right_param,
-                            )
-                    })
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (
-                Obj::ObjAsStructInstanceWithFieldAccess(left_access),
-                Obj::ObjAsStructInstanceWithFieldAccess(right_access),
-            ) => {
-                if left_access.field_name != right_access.field_name
-                    || left_access.struct_obj.name != right_access.struct_obj.name
-                    || left_access.struct_obj.params.len() != right_access.struct_obj.params.len()
-                    || self
-                        .verify_objs_are_equal_directly_known_only(
-                            left_access.obj.as_ref(),
-                            right_access.obj.as_ref(),
-                            line_file.clone(),
-                        )
-                        .is_unknown()
-                    || !left_access
-                        .struct_obj
-                        .params
-                        .iter()
-                        .zip(right_access.struct_obj.params.iter())
-                        .all(|(left_param, right_param)| {
-                            !self
-                                .verify_objs_are_equal_directly_known_only(
-                                    left_param,
-                                    right_param,
-                                    line_file.clone(),
-                                )
-                                .is_unknown()
-                        })
-                {
-                    Some((StmtUnknown::new()).into())
-                } else {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                }
-            }
-            (Obj::FnObj(left_fn), Obj::FnObj(right_fn)) => {
-                let mut remaining_left_group_count = left_fn.body.len();
-                let mut remaining_right_group_count = right_fn.body.len();
-                let mut argument_steps = Vec::new();
-
-                while remaining_left_group_count > 0 && remaining_right_group_count > 0 {
-                    let left_group = &left_fn.body[remaining_left_group_count - 1];
-                    let right_group = &right_fn.body[remaining_right_group_count - 1];
-                    if left_group.len() != right_group.len() {
-                        return Some((StmtUnknown::new()).into());
-                    }
-                    for (left_arg, right_arg) in left_group.iter().zip(right_group.iter()) {
-                        if verify_equality_by_they_are_the_same(left_arg, right_arg) {
-                            continue;
-                        }
-                        let result = self.verify_objs_are_equal_directly_known_only(
-                            left_arg,
-                            right_arg,
-                            line_file.clone(),
-                        );
-                        if !result.is_true() {
-                            return Some((StmtUnknown::new()).into());
-                        }
-                        argument_steps.push(result);
-                    }
-                    remaining_left_group_count -= 1;
-                    remaining_right_group_count -= 1;
-                }
-
-                let remaining_left_obj = left_fn.prefix_obj(remaining_left_group_count);
-                let remaining_right_obj = right_fn.prefix_obj(remaining_right_group_count);
-                let mut steps = Vec::new();
-                if !verify_equality_by_they_are_the_same(&remaining_left_obj, &remaining_right_obj)
-                {
-                    let function_part_result = self.verify_objs_are_equal_directly_known_only(
-                        &remaining_left_obj,
-                        &remaining_right_obj,
-                        line_file.clone(),
-                    );
-                    if !function_part_result.is_true() {
-                        return Some((StmtUnknown::new()).into());
-                    }
-                    steps.push(function_part_result);
-                }
-                steps.append(&mut argument_steps);
-
-                Some(factual_equal_success_by_builtin_reason_with_subgoals(
-                    left, right, line_file, reason, steps,
-                ))
-            }
-            (Obj::Add(l), Obj::Add(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::MatrixAdd(l), Obj::MatrixAdd(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::MatrixSub(l), Obj::MatrixSub(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::MatrixMul(l), Obj::MatrixMul(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::MatrixScalarMul(l), Obj::MatrixScalarMul(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.scalar, &r.scalar),
-                    (&l.matrix, &r.matrix),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::MatrixPow(l), Obj::MatrixPow(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.base, &r.base),
-                    (&l.exponent, &r.exponent),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Sub(l), Obj::Sub(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Mul(l), Obj::Mul(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Div(l), Obj::Div(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Mod(l), Obj::Mod(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Gcd(l), Obj::Gcd(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Pow(l), Obj::Pow(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.base, &r.base),
-                    (&l.exponent, &r.exponent),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Log(l), Obj::Log(r)) => {
-                if self
-                    .arg_pairs_share_known_equality_class(&[(&l.base, &r.base), (&l.arg, &r.arg)])
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Exp(l), Obj::Exp(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.arg, &r.arg) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Ln(l), Obj::Ln(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.arg, &r.arg) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Sign(l), Obj::Sign(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.arg, &r.arg) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Factorial(l), Obj::Factorial(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.arg, &r.arg) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Union(l), Obj::Union(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Intersect(l), Obj::Intersect(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::SetMinus(l), Obj::SetMinus(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::SetDiff(l), Obj::SetDiff(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.left, &r.left),
-                    (&l.right, &r.right),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::BigUnion(l), Obj::BigUnion(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.left, &r.left) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::BigIntersect(l), Obj::BigIntersect(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.left, &r.left) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::PowerSet(l), Obj::PowerSet(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::CartDim(l), Obj::CartDim(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::TupleDim(l), Obj::TupleDim(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.arg, &r.arg) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::FiniteSetSize(l), Obj::FiniteSetSize(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::FiniteSetMax(l), Obj::FiniteSetMax(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::FiniteSetMin(l), Obj::FiniteSetMin(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.set, &r.set) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::FnRange(l), Obj::FnRange(r)) => {
-                if self.objs_have_same_known_equality_rc_in_some_env(&l.function, &r.function) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Range(l), Obj::Range(r)) => {
-                if self
-                    .arg_pairs_share_known_equality_class(&[(&l.start, &r.start), (&l.end, &r.end)])
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Replacement(l), Obj::Replacement(r)) => {
-                if l.prop_name.to_string() == r.prop_name.to_string()
-                    && self
-                        .objs_have_same_known_equality_rc_in_some_env(&l.source_set, &r.source_set)
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Sum(l), Obj::Sum(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.start, &r.start),
-                    (&l.end, &r.end),
-                    (&l.func, &r.func),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::SumOfFiniteSet(l), Obj::SumOfFiniteSet(r)) => {
-                if self
-                    .arg_pairs_share_known_equality_class(&[(&l.set, &r.set), (&l.func, &r.func)])
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => {
-                if self
-                    .arg_pairs_share_known_equality_class(&[(&l.set, &r.set), (&l.func, &r.func)])
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Product(l), Obj::Product(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.start, &r.start),
-                    (&l.end, &r.end),
-                    (&l.func, &r.func),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::ClosedRange(l), Obj::ClosedRange(r)) => {
-                if self
-                    .arg_pairs_share_known_equality_class(&[(&l.start, &r.start), (&l.end, &r.end)])
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::IntervalObj(l), Obj::IntervalObj(r)) => {
-                if l.left_closed() == r.left_closed()
-                    && l.right_closed() == r.right_closed()
-                    && self.arg_pairs_share_known_equality_class(&[
-                        (&l.interval_struct().start, &r.interval_struct().start),
-                        (&l.interval_struct().end, &r.interval_struct().end),
-                    ])
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::OneSideInfinityIntervalObj(l), Obj::OneSideInfinityIntervalObj(r)) => {
-                if l.same_kind_as(r)
-                    && self.arg_pairs_share_known_equality_class(&[(
-                        &l.interval_struct().start,
-                        &r.interval_struct().start,
-                    )])
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::FiniteSeqSet(l), Obj::FiniteSeqSet(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[(&l.set, &r.set), (&l.n, &r.n)]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::SeqSet(l), Obj::SeqSet(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[(&l.set, &r.set)]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::MatrixSet(l), Obj::MatrixSet(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[
-                    (&l.set, &r.set),
-                    (&l.row_len, &r.row_len),
-                    (&l.col_len, &r.col_len),
-                ]) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Proj(l), Obj::Proj(r)) => {
-                if self.arg_pairs_share_known_equality_class(&[(&l.set, &r.set), (&l.dim, &r.dim)])
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::ObjAtIndex(l), Obj::ObjAtIndex(r)) => {
-                if self
-                    .arg_pairs_share_known_equality_class(&[(&l.obj, &r.obj), (&l.index, &r.index)])
-                {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Tuple(l), Obj::Tuple(r)) => {
-                if self.boxed_obj_vecs_share_known_equality_class(&l.args, &r.args) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::ListSet(l), Obj::ListSet(r)) => {
-                if self.boxed_obj_vecs_share_known_equality_class(&l.list, &r.list) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            (Obj::Cart(l), Obj::Cart(r)) => {
-                if self.boxed_obj_vecs_share_known_equality_class(&l.args, &r.args) {
-                    Some(factual_equal_success_by_builtin_reason(
-                        left, right, line_file, reason,
-                    ))
-                } else {
-                    Some((StmtUnknown::new()).into())
-                }
-            }
-            _ => None,
-        }
     }
 
     pub fn verify_equality_by_they_are_the_same_and_calculation(

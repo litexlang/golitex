@@ -1655,12 +1655,14 @@ For an ordinary atomic fact, the main order is:
 2. Check an already known non-`forall` atomic fact with the same predicate
    shape, using known equalities.
 3. Try bounded builtin mathematical rules.
-4. At outer round 0, try the target's concrete definition with the full
+4. For an equality at outer round 0, compare matching object constructors by
+   recursively proving their corresponding arguments equal.
+5. At outer round 0, try the target's concrete definition with the full
    verifier.
-5. Try an applicable known `forall` fact
+6. Try an applicable known `forall` fact
    and verify its instantiated premises.
-6. Try registered predicate properties or enabled strategies where applicable.
-7. On success, store the fact and run builtin inference.
+7. Try registered predicate properties or enabled strategies where applicable.
+8. On success, store the fact and run builtin inference.
 
 ```litex
 abstract_prop P(x)
@@ -2125,14 +2127,18 @@ function carriers are alpha-equivalent. This route does not reconstruct
 dependent mutual membership and does not apply across mismatched carriers.
 
 Known-equality replay of a checked function body remains bounded to one step
-against a simple arithmetic expression. Componentwise congruence does not use
-that replay path: known-only equality first tries direct lookup/calculation,
-then compares every corresponding argument of matching constructors using
-already-known equality.
-For function applications it aligns argument groups from right to left, then
-checks the remaining function prefixes. Thus several arguments may change in
-one equality, and `f(a, b) = g(1, 2)(a, b)` is accepted exactly when the paired
-arguments and the remaining equality `f = g(1, 2)` are already known.
+against a simple arithmetic expression. Known-only equality first checks object
+identity, direct lookup/calculation, and already stored equality classes. It
+then reuses one central constructor matcher for componentwise congruence, with
+every leaf restricted to those same known equalities. At outer round 0, the full
+equality route reuses that matcher while recursively allowing bounded builtin
+and known-equality child proofs. Function applications align argument groups
+from right to left and then compare the remaining function prefixes. Thus
+several arguments may change in one equality, and
+`f(a, b) = g(1, 2)(a, b)` is accepted exactly when the paired arguments and the
+remaining equality `f = g(1, 2)` can be proved. A non-equality fact lookup may
+transport through known-only congruence, but it does not launch the fuller
+child-proof route implicitly.
 
 For nonzero facts, a known strict premise `x > 0` proves `sqrt(x) != 0`.
 Nonnegativity alone is deliberately insufficient because `sqrt(0) = 0`.

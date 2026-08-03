@@ -140,6 +140,7 @@ atomic target
   -> match a known non-forall atomic fact, or
   -> try one builtin mathematical rule, or
   -> run a strictly structural builtin strategy, or
+  -> for equality at outer round 0, recursively compare matching object constructors, or
   -> verify a concrete definition at outer round 0, or
   -> match the conclusion of an applicable known forall and verify its premises, or
   -> run a user-defined strategy
@@ -194,11 +195,15 @@ bounds: `n <= x < n + 1` gives `x = n`, and `n < x <= n + 1` gives
 universal only when both declared function carriers are alpha-equivalent.
 
 Known equality candidates may replay one checked function body against simple
-arithmetic. Componentwise congruence is earlier and more general: known-only
-equality first tries direct lookup/calculation, then matching constructors
-compare all corresponding arguments using known equality. Function applications
-align trailing argument groups and then compare their remaining function prefixes,
-so the two sides need not have the same number of curried application groups.
+arithmetic. Known-only equality first checks identity, direct lookup/calculation,
+or an already stored equality class, then reuses one central constructor matcher
+for congruence whose leaves must be known equalities. At outer round 0, the full
+equality route reuses that matcher while recursively allowing bounded builtin
+and known-equality child proofs. Function applications align trailing argument
+groups and then compare their remaining function prefixes, so the two sides
+need not have the same number of curried application groups. Other atomic-fact
+lookup may use known-only congruence for transport, but does not start the fuller
+child-proof route.
 The nonzero rules also include `x > 0 => sqrt(x) != 0`, but not the invalid
 weakening from `x >= 0`.
 
