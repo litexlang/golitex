@@ -29,6 +29,11 @@ impl Runtime {
                 if let Some(replacement) = param_to_arg_map.get(&symbol.substitution_key()) {
                     return Ok(replacement.clone());
                 }
+                if param_obj_type == ParamObjType::FnSet {
+                    if let Some(replacement) = param_to_arg_map.get(symbol.display_name()) {
+                        return Ok(replacement.clone());
+                    }
+                }
             }
             match param_obj_type {
                 ParamObjType::AlphaRename => {
@@ -1482,11 +1487,20 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(ObjAtIndex::new(
-            self.inst_obj(&obj_at_index.obj, param_to_arg_map, param_obj_type)?,
-            self.inst_obj(&obj_at_index.index, param_to_arg_map, param_obj_type)?,
-        )
-        .into())
+        let instantiated_obj =
+            self.inst_obj(&obj_at_index.obj, param_to_arg_map, param_obj_type)?;
+        let instantiated_index =
+            self.inst_obj(&obj_at_index.index, param_to_arg_map, param_obj_type)?;
+        if let Obj::Tuple(tuple) = &instantiated_obj {
+            if let Some(index) = instantiated_index.evaluate_to_normalized_decimal_number() {
+                if let Ok(one_based) = index.normalized_value.parse::<usize>() {
+                    if one_based >= 1 && one_based <= tuple.args.len() {
+                        return Ok(tuple.args[one_based - 1].as_ref().clone());
+                    }
+                }
+            }
+        }
+        Ok(ObjAtIndex::new(instantiated_obj, instantiated_index).into())
     }
 
     pub fn inst_standard_set(&self, standard_set: &StandardSet) -> Result<Obj, RuntimeError> {

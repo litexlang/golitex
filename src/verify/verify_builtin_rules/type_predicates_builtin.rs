@@ -711,7 +711,19 @@ impl Runtime {
             not_is_finite_set_fact.line_file.clone(),
         )
         .into();
-        let right_result = self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
+        let mut right_result = self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
+        if !right_result.is_true()
+            && matches!(
+                set_minus.right.as_ref(),
+                Obj::ListSet(_) | Obj::Range(_) | Obj::ClosedRange(_)
+            )
+        {
+            let AtomicFact::IsFiniteSetFact(right_finite_fact) = &right_finite else {
+                unreachable!()
+            };
+            right_result = self
+                ._verify_is_finite_set_fact_with_builtin_rules(right_finite_fact, builtin_state)?;
+        }
         if !right_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }

@@ -52,6 +52,12 @@ impl Runtime {
         }
 
         if let Some(verified_result) =
+            self.try_verify_not_equal_from_known_positive_lower_bound(not_equal_fact)?
+        {
+            return Ok(verified_result);
+        }
+
+        if let Some(verified_result) =
             self.try_verify_not_equal_from_membership_contradiction(not_equal_fact)?
         {
             return Ok(verified_result);
@@ -323,6 +329,78 @@ impl Runtime {
                         InferResult::new(),
                         "not_equal_from_known_strict_order".to_string(),
                         steps,
+                    )
+                    .into(),
+                ));
+            }
+        }
+        Ok(None)
+    }
+
+    // A weak lower bound that is itself in a positive numeric carrier keeps
+    // the bounded value away from zero. This stays leaf-only so it remains
+    // available during anonymous-function well-definedness checks.
+    // Example: `a R_pos`, `a <= x` implies `x != 0` (in particular for
+    // `x` bound by a closed interval `[a, b]`).
+    fn try_verify_not_equal_from_known_positive_lower_bound(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let target = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (target, zero) if self.obj_represents_zero_for_not_equal_builtin_rules(zero) => {
+                target.clone()
+            }
+            (zero, target) if self.obj_represents_zero_for_not_equal_builtin_rules(zero) => {
+                target.clone()
+            }
+            _ => return Ok(None),
+        };
+
+        let mut known_orders = Vec::new();
+        for environment in self.iter_environments_from_top() {
+            for known_facts_map in environment.known_atomic_facts_with_2_args.values() {
+                for known_fact in known_facts_map.values() {
+                    if let Some(normalized) =
+                        super::normalize_positive_order_atomic_fact(known_fact)
+                    {
+                        known_orders.push(normalized);
+                    }
+                }
+            }
+        }
+
+        for order in known_orders {
+            let (lower, upper) = match &order {
+                AtomicFact::LessFact(f) => (&f.left, &f.right),
+                AtomicFact::LessEqualFact(f) => (&f.left, &f.right),
+                _ => continue,
+            };
+            if upper.to_string() != target.to_string() {
+                continue;
+            }
+
+            for positive_set in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
+                let positive_membership: AtomicFact = InFact::new(
+                    lower.clone(),
+                    positive_set.into(),
+                    not_equal_fact.line_file.clone(),
+                )
+                .into();
+                let positive_result =
+                    self.verify_known_non_forall_atomic_fact(&positive_membership)?;
+                if !positive_result.is_true() {
+                    continue;
+                }
+                let order_result = self.verify_known_non_forall_atomic_fact(&order)?;
+                if !order_result.is_true() {
+                    continue;
+                }
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "not_equal_from_known_positive_lower_bound".to_string(),
+                        vec![positive_result, order_result],
                     )
                     .into(),
                 ));
@@ -734,6 +812,23 @@ impl Runtime {
             return Ok(is_integer_after_simplification(exp_num));
         }
 
+        // Preserve the immediate integer carrier through subtraction without
+        // asking the builtin engine to chain a separate `n - 1 $in Z` fact.
+        // This is needed while checking an induction hypothesis such as
+        // `a^(n - 1) != 0`: the hypothesis must be well-defined before its
+        // proof body can state the intermediate carrier fact.
+        if let Obj::Sub(sub) = obj {
+            return Ok(self.obj_is_verified_integer_exponent_for_not_equal_builtin(
+                sub.left.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )? && self.obj_is_verified_integer_exponent_for_not_equal_builtin(
+                sub.right.as_ref(),
+                line_file,
+                builtin_state,
+            )?);
+        }
+
         for standard_set in [StandardSet::Z, StandardSet::N, StandardSet::NPos] {
             let in_set: AtomicFact =
                 InFact::new(obj.clone(), standard_set.into(), line_file.clone()).into();
@@ -768,7 +863,8 @@ impl Runtime {
         }
 
         let base = pow.base.as_ref().clone();
-        let base_neq_zero: AtomicFact = NotEqualFact::new(base, zero_obj, line_file.clone()).into();
+        let base_neq_zero: AtomicFact =
+            NotEqualFact::new(base.clone(), zero_obj, line_file.clone()).into();
         let result = self.verify_builtin_rule_premise(&base_neq_zero, builtin_state)?;
         if result.is_true() {
             return Ok(Some(
@@ -780,6 +876,27 @@ impl Runtime {
                 )
                 .into(),
             ));
+        }
+
+        // A known positive numeric carrier makes the power base nonzero in
+        // this same rule.  Do not spend another builtin layer converting the
+        // carrier to `base != 0` while checking a division's well-definedness.
+        // Example: `n N_pos` implies `n^2 != 0`.
+        for positive_set in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
+            let positive_membership: AtomicFact =
+                InFact::new(base.clone(), positive_set.into(), line_file.clone()).into();
+            let positive_result = self.verify_known_non_forall_atomic_fact(&positive_membership)?;
+            if positive_result.is_true() {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "not_equal_pow_from_positive_base_carrier".to_string(),
+                        vec![positive_result],
+                    )
+                    .into(),
+                ));
+            }
         }
         Ok(None)
     }

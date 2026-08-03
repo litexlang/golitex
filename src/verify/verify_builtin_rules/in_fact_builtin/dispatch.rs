@@ -101,6 +101,29 @@ impl Runtime {
         in_fact: &InFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Obj::FnSet(fn_set) = &in_fact.set {
+            if let Some(result) = self.verify_in_fact_element_in_fn_set_by_pointwise_values(
+                &in_fact.element,
+                fn_set,
+                in_fact,
+                &UseContextVerifyState::new(0, true),
+            )? {
+                return Ok(result);
+            }
+        }
+        if let Obj::GeneralCart(general_cart) = &in_fact.set {
+            let result = self.verify_in_fact_in_general_cart_by_defining_facts(
+                in_fact,
+                general_cart,
+                &UseContextVerifyState::new(0, true),
+            )?;
+            if result.is_true() {
+                return Ok(result);
+            }
+        }
+        if let Some(result) = self.try_verify_set_builder_membership_alias_transport(in_fact)? {
+            return Ok(result);
+        }
         if let Obj::StandardSet(standard_set) = &in_fact.set {
             if !matches!(&in_fact.element, Obj::Number(_)) {
                 if let Some(evaluated_number) =
@@ -133,6 +156,11 @@ impl Runtime {
         let direct_superset_result = self.verify_in_fact_by_known_direct_superset(in_fact)?;
         if direct_superset_result.is_true() {
             return Ok(direct_superset_result);
+        }
+        if let Some(result) =
+            self.verify_refined_integer_carrier_from_known_sign(in_fact, builtin_state)?
+        {
+            return Ok(result);
         }
         if let Some(result) =
             self.maybe_verify_in_fact_finite_set_extremum(in_fact, builtin_state)?
@@ -351,6 +379,36 @@ impl Runtime {
             }
             (Obj::Add(add), Obj::StandardSet(StandardSet::NPos)) => {
                 self.verify_in_fact_add_in_n_pos_from_n_pos_and_n(in_fact, add, builtin_state)
+            }
+            (Obj::Abs(abs), Obj::StandardSet(StandardSet::NPos)) => {
+                let mut evidence = None;
+                for source_carrier in [StandardSet::NPos, StandardSet::ZNeg, StandardSet::ZNz] {
+                    let source_membership: AtomicFact = InFact::new(
+                        abs.arg.as_ref().clone(),
+                        source_carrier.into(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
+                    let result =
+                        self.verify_builtin_rule_premise(&source_membership, builtin_state)?;
+                    if result.is_true() {
+                        evidence = Some(result);
+                        break;
+                    }
+                }
+                if let Some(evidence) = evidence {
+                    Ok(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            in_fact.clone().into(),
+                            "absolute value of a known nonzero integer is a positive natural"
+                                .to_string(),
+                            vec![evidence],
+                        )
+                        .into(),
+                    )
+                } else {
+                    Ok((StmtUnknown::new()).into())
+                }
             }
             (Obj::Sub(sub), Obj::StandardSet(StandardSet::NPos)) => self
                 .verify_in_fact_sub_in_n_pos_from_n_pos_and_greater_than_one(
@@ -728,8 +786,11 @@ impl Runtime {
             (Obj::FiniteSeqListObj(list), Obj::FiniteSeqSet(fs)) => {
                 let lf = in_fact.line_file.clone();
                 let len_obj: Obj = Number::new(list.objs.len().to_string()).into();
-                let length_result =
-                    self.verify_objs_are_equal_by_known_equality(&len_obj, fs.n.as_ref(), lf.clone());
+                let length_result = self.verify_objs_are_equal_by_known_equality(
+                    &len_obj,
+                    fs.n.as_ref(),
+                    lf.clone(),
+                );
                 if !length_result.is_true() {
                     return Ok((StmtUnknown::new()).into());
                 }
@@ -820,6 +881,15 @@ impl Runtime {
                 self.verify_builtin_rule_premise(&expanded.into(), builtin_state)
             }
             (_, target_set_obj) => {
+                let literal_tuple_projection_result = self
+                    .verify_in_fact_literal_tuple_projection_in_set(
+                        in_fact,
+                        target_set_obj,
+                        builtin_state,
+                    )?;
+                if literal_tuple_projection_result.is_true() {
+                    return Ok(literal_tuple_projection_result);
+                }
                 let finite_seq_literal_application_result = self
                     .verify_in_fact_finite_seq_literal_application_in_set(
                         in_fact,

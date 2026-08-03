@@ -93,6 +93,25 @@ impl Runtime {
                 LessEqualFact::new(fact.element.clone(), range.end.as_ref().clone(), lf.clone())
                     .into(),
             ]],
+            // Real interval membership structurally decomposes into the real
+            // carrier and its two endpoint bounds. Each smaller child may use
+            // one direct rule or another constructor-decreasing strategy.
+            // Example: `r R_pos` implies `c in (c-r, c+r)`.
+            Obj::IntervalObj(interval) => vec![vec![
+                InFact::new(fact.element.clone(), StandardSet::R.into(), lf.clone()).into(),
+                if interval.left_closed() {
+                    LessEqualFact::new(interval.start().clone(), fact.element.clone(), lf.clone())
+                        .into()
+                } else {
+                    LessFact::new(interval.start().clone(), fact.element.clone(), lf.clone()).into()
+                },
+                if interval.right_closed() {
+                    LessEqualFact::new(fact.element.clone(), interval.end().clone(), lf.clone())
+                        .into()
+                } else {
+                    LessFact::new(fact.element.clone(), interval.end().clone(), lf.clone()).into()
+                },
+            ]],
             _ => return Ok(StmtUnknown::new().into()),
         };
 
@@ -123,10 +142,11 @@ impl Runtime {
         self.verify_in_fact_by_struct_obj(fact, struct_obj, &final_state)
     }
 
-    // Fold one literal or one-layer defined set builder. The strategy is
-    // intentionally restricted to atomic defining facts, and each obligation
-    // is verified as an independent strategy child. This prevents a defined
-    // membership goal from recursively re-entering the same raw builtin rule.
+    // Fold one literal or one-layer defined set builder. Atomic predicates,
+    // conjunctions, and comparison chains are verified without unfolding a
+    // second set builder. Example: known `0 <= x and x <= 1` introduces
+    // `x in {y R: 0 <= y and y <= 1}`. Disjunctions and quantified predicates
+    // remain outside this bounded constructor strategy.
     fn verify_one_layer_set_builder_membership_with_builtin_strategy(
         &mut self,
         fact: &InFact,
@@ -146,6 +166,9 @@ impl Runtime {
         &mut self,
         fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) = self.try_verify_set_builder_membership_alias_transport(fact)? {
+            return Ok(result);
+        }
         // Most membership goals target a carrier parameter or a native set
         // constructor and cannot possibly unfold to a set builder. Avoid a
         // definition lookup for those overwhelmingly common cases.
@@ -198,14 +221,34 @@ impl Runtime {
                 ParamObjType::SetBuilder,
                 Some(&fact.line_file),
             )?;
-            let ExistBodyFact::AtomicFact(atomic) = instantiated else {
+            if !matches!(
+                instantiated,
+                ExistBodyFact::AtomicFact(_)
+                    | ExistBodyFact::AndFact(_)
+                    | ExistBodyFact::ChainFact(_)
+            ) {
                 return Ok(StmtUnknown::new().into());
-            };
+            }
             // A set-builder predicate may itself be a checked proposition whose
-            // body is already known (for example an existential witness). Use
-            // the final context round so that one proposition fold is allowed
-            // without reopening known-forall or unbounded strategy search.
-            let result = self.verify_atomic_fact(&atomic, &final_state)?;
+            // body is already known (for example an existential witness). Try
+            // the restricted final round first, then fold exactly one named
+            // proposition definition without reopening general proof search.
+            let mut result =
+                self.verify_fact_full(&instantiated.clone().to_fact(), &final_state)?;
+            if !result.is_true() {
+                if let ExistBodyFact::AtomicFact(atomic_fact) = &instantiated {
+                    if matches!(atomic_fact, AtomicFact::NormalAtomicFact(_)) {
+                        if let Some(definition_result) = self
+                            .verify_atomic_fact_using_builtin_or_prop_definition(
+                                atomic_fact,
+                                &final_state,
+                            )?
+                        {
+                            result = definition_result;
+                        }
+                    }
+                }
+            }
             if !result.is_true() {
                 return Ok(StmtUnknown::new().into());
             }

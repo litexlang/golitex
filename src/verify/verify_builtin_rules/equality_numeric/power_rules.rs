@@ -104,6 +104,32 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<bool, RuntimeError> {
+        if let Obj::Number(number) = obj {
+            return Ok(is_integer_after_simplification(number));
+        }
+
+        // Integer arithmetic remains an integer exponent even when its carrier
+        // has not been materialized as a separate fact. Keeping this structural
+        // check inside the power rule avoids a forbidden second builtin hop in
+        // induction hypotheses such as `2^(n - 1)`.
+        let integer_operands = match obj {
+            Obj::Add(add) => Some((add.left.as_ref(), add.right.as_ref())),
+            Obj::Sub(sub) => Some((sub.left.as_ref(), sub.right.as_ref())),
+            Obj::Mul(mul) => Some((mul.left.as_ref(), mul.right.as_ref())),
+            _ => None,
+        };
+        if let Some((left, right)) = integer_operands {
+            return Ok(self.obj_is_verified_integer_exponent_for_power_builtin(
+                left,
+                line_file.clone(),
+                builtin_state,
+            )? && self.obj_is_verified_integer_exponent_for_power_builtin(
+                right,
+                line_file,
+                builtin_state,
+            )?);
+        }
+
         if self.obj_is_verified_in_standard_set_for_power_builtin(
             obj,
             StandardSet::Z,

@@ -21,6 +21,15 @@ forall A, B set, x set:
     =>:
         not x $in intersect(A, B)
 
+# One literal set-builder layer may package a known conjunction. Each
+# conjunct must already be available; the strategy does not invent bounds.
+
+forall x R:
+    0 <= x
+    x <= 1
+    =>:
+        x $in {y R: 0 <= y and y <= 1}
+
 # Membership lifts on demand through one directly known containing set.
 
 forall B set, A power_set(B), x A:

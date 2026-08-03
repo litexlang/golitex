@@ -495,6 +495,20 @@ impl Runtime {
                     LessFact::new(product.right.as_ref().clone(), zero.clone(), lf.clone()).into(),
                 ]);
             }
+            // A quotient is positive when numerator and denominator have the
+            // same strict sign.  This strategy removes the outer division;
+            // each sign child gets a fresh direct-rule/strategy attempt.
+            // Example: `a > b` implies `(a-b)/2 > 0`.
+            if let Obj::Div(quotient) = &fact.right {
+                alternatives.push(vec![
+                    LessFact::new(zero.clone(), quotient.left.as_ref().clone(), lf.clone()).into(),
+                    LessFact::new(zero.clone(), quotient.right.as_ref().clone(), lf.clone()).into(),
+                ]);
+                alternatives.push(vec![
+                    LessFact::new(quotient.left.as_ref().clone(), zero.clone(), lf.clone()).into(),
+                    LessFact::new(quotient.right.as_ref().clone(), zero.clone(), lf.clone()).into(),
+                ]);
+            }
         }
 
         if let (Obj::Add(left), Obj::Add(right)) = (&fact.left, &fact.right) {

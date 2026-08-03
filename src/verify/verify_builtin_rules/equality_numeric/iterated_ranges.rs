@@ -1,6 +1,55 @@
 use super::*;
 
+fn direct_additive_range_shift(base: &Obj, translated: &Obj) -> Option<Obj> {
+    let Obj::Add(add) = translated else {
+        return None;
+    };
+    if add.left.to_string() == base.to_string() {
+        return Some(add.right.as_ref().clone());
+    }
+    if add.right.to_string() == base.to_string() {
+        return Some(add.left.as_ref().clone());
+    }
+    None
+}
+
 impl Runtime {
+    /// A finite integer-range sum of the literal zero function is zero.
+    pub(crate) fn try_verify_literal_zero_range_sum_is_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let sum = if Self::obj_is_builtin_literal_zero(left) {
+            match right {
+                Obj::Sum(sum) => sum,
+                _ => return Ok(None),
+            }
+        } else if Self::obj_is_builtin_literal_zero(right) {
+            match left {
+                Obj::Sum(sum) => sum,
+                _ => return Ok(None),
+            }
+        } else {
+            return Ok(None);
+        };
+        let probe: Obj = Number::new("1".to_string()).into();
+        let Some(value) = self.instantiate_unary_anonymous_summand_at(sum.func.as_ref(), &probe)?
+        else {
+            return Ok(None);
+        };
+        if !Self::obj_is_builtin_literal_zero(&value) {
+            return Ok(None);
+        }
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: a finite range sum of the literal zero function is zero",
+        )))
+    }
+
     /// `sum(s,e,f) = sum(s,e,g)` when `f(x) = g(x)` is known for every integer
     /// `x` in the shared closed range. Example: after proving
     /// `forall x Z: s <= x, x <= e => f(x) = g(x)`, the two sums are equal.
@@ -881,8 +930,17 @@ impl Runtime {
             let (Obj::Sum(l_sum), Obj::Sum(r_sum)) = (l_obj, r_obj) else {
                 continue;
             };
-            let k: Obj = Sub::new((*r_sum.start).clone(), (*l_sum.start).clone()).into();
-            let k_end = Sub::new((*r_sum.end).clone(), (*l_sum.end).clone()).into();
+            let direct_start_shift =
+                direct_additive_range_shift(l_sum.start.as_ref(), r_sum.start.as_ref());
+            let direct_end_shift =
+                direct_additive_range_shift(l_sum.end.as_ref(), r_sum.end.as_ref());
+            let (k, k_end) = match (direct_start_shift, direct_end_shift) {
+                (Some(start_shift), Some(end_shift)) => (start_shift, end_shift),
+                _ => (
+                    Sub::new((*r_sum.start).clone(), (*l_sum.start).clone()).into(),
+                    Sub::new((*r_sum.end).clone(), (*l_sum.end).clone()).into(),
+                ),
+            };
             if !self
                 .verify_objs_are_equal_in_equality_builtin(
                     &k,

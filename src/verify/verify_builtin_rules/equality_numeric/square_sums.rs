@@ -91,8 +91,11 @@ impl Runtime {
                 else {
                     continue;
                 };
-                let sum_zero =
-                    self.verify_objs_are_equal_by_known_equality(&square_sum, &zero, line_file.clone());
+                let sum_zero = self.verify_objs_are_equal_by_known_equality(
+                    &square_sum,
+                    &zero,
+                    line_file.clone(),
+                );
                 if !sum_zero.is_true() {
                     continue;
                 }

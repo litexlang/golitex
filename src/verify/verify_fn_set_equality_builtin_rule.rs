@@ -179,8 +179,11 @@ impl Runtime {
                     Some(e),
                 )
             })?;
-        let ret_equal_result =
-            self.verify_objs_are_equal_by_known_equality(&source_ret_set, &target_ret_set, line_file);
+        let ret_equal_result = self.verify_objs_are_equal_by_known_equality(
+            &source_ret_set,
+            &target_ret_set,
+            line_file,
+        );
         Ok(ret_equal_result.is_true())
     }
 

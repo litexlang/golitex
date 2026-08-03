@@ -25,6 +25,11 @@ pub(crate) fn obj_eligible_for_known_objs_in_fn_sets(obj: &Obj) -> bool {
 /// registered under exact bound-symbol identity rather than display spelling.
 fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
     match element {
+        Obj::Atom(AtomObj::Identifier(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::IdentifierWithMod(p)) => vec![
+            p.name.clone(),
+            format!("{}{}{}", p.mod_name, MOD_SIGN, p.name),
+        ],
         Obj::Atom(AtomObj::Forall(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::Exist(p)) => vec![p.name.clone()],
         Obj::Atom(AtomObj::Def(p)) => vec![p.name.clone()],
@@ -48,9 +53,10 @@ impl Runtime {
             Entry::Occupied(mut o) => {
                 let info = o.get_mut();
                 if let Some((b, lf)) = body {
-                    // A later type-only membership must not detach an existing definition body
-                    // from the signature whose parameters it cites.
-                    if equal_to.is_some() || info.equal_to.is_none() || info.fn_set.is_none() {
+                    // Once a defining RHS is paired with a signature, later
+                    // registrations must not replace only that signature: its
+                    // parameter bindings are the substitution keys used by the RHS.
+                    if info.equal_to.is_none() || info.fn_set.is_none() {
                         info.fn_set = Some((b, lf));
                     }
                 }
@@ -291,11 +297,22 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
     ) -> Result<InferResult, RuntimeError> {
+        // Literal carts are handled by the dedicated `Obj::Cart` branch.  The
+        // symbolic fallback requires either an exact stored `$is_cart(C)` fact
+        // (the representation used by `have cart C ...`) or concrete Cartesian
+        // metadata.  Restricting this lookup to known non-forall facts prevents
+        // an unrelated dependent set parameter from being misclassified by a
+        // theorem/forall search while preserving generic symbolic carts.
         let is_cart_fact: AtomicFact =
             IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();
-        let is_cart_result =
-            self.verify_atomic_fact(&is_cart_fact, &UseContextVerifyState::new(0, false))?;
-        if !is_cart_result.is_true() {
+        let is_known_symbolic_cart = self
+            .verify_known_non_forall_atomic_fact(&is_cart_fact)?
+            .is_true();
+        if !is_known_symbolic_cart
+            && self
+                .get_object_equal_to_cart(&in_fact.set.to_string())
+                .is_none()
+        {
             return Ok(InferResult::new());
         }
 

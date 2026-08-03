@@ -1,3 +1,4 @@
+use super::finite_set_product::FiniteSetEnumerationSummand;
 use super::*;
 
 impl Runtime {
@@ -233,6 +234,14 @@ impl Runtime {
                 continue;
             }
             let c = (*af.equal_to).clone();
+            if Self::obj_is_builtin_literal_zero(&c) && Self::obj_is_builtin_literal_zero(other) {
+                return Ok(Some(factual_equal_success_by_builtin_reason(
+                    left,
+                    right,
+                    line_file,
+                    "equality: finite-set sum of the literal zero function is zero",
+                )));
+            }
             let finite_set_size: Obj = FiniteSetSize::new((*s.set).clone()).into();
             let m1: Obj = Mul::new(finite_set_size.clone(), c.clone()).into();
             let m2: Obj = Mul::new(c, finite_set_size).into();
@@ -366,19 +375,33 @@ impl Runtime {
                 continue;
             }
 
-            let known_bijection = match &map_y {
+            let uniquely_covers_target = match &map_y {
                 Obj::FnObj(map_call) => {
                     let map: Obj = map_call.head.as_ref().clone().into();
-                    self.has_known_builtin_bijection(
+                    if self.has_known_builtin_bijection(
                         pullback_sum.set.as_ref(),
                         source_sum.set.as_ref(),
                         &map,
                         line_file.clone(),
-                    )
+                    ) {
+                        true
+                    } else {
+                        let shape = FiniteSetEnumerationSummand {
+                            outer_function: source_sum.func.as_ref().clone(),
+                            enumerator_head: map_call.head.as_ref().clone(),
+                            index_set: pullback_sum.set.as_ref().clone(),
+                            target_set: source_sum.set.as_ref().clone(),
+                        };
+                        self.verify_unique_preimage_enumerator_fact(
+                            &shape,
+                            line_file.clone(),
+                            builtin_state,
+                        )?
+                    }
                 }
                 _ => false,
             };
-            if !known_bijection {
+            if !uniquely_covers_target {
                 continue;
             }
 

@@ -144,6 +144,9 @@ impl Runtime {
         goal: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) = self.try_verify_atomic_fact_from_known_set_builder_membership(goal)? {
+            return Ok(result);
+        }
         match goal {
             AtomicFact::EqualFact(fact) => self.verify_equality_by_builtin_rules(
                 &fact.left,
@@ -257,13 +260,12 @@ mod tests {
             .find("try_verify_equality_by_corresponding_known_equalities(left, right")
             .expect("known-only equality must then try componentwise known equality");
         assert!(direct_index < componentwise_index);
-        assert_eq!(
-            equality_structural
-                .matches("verify_objs_are_equal_known_only(")
-                .count(),
-            1,
-            "componentwise equality must use the direct known-only step for its children"
-        );
+        let componentwise_impl = equality_structural
+            .split("fn try_verify_equality_by_corresponding_known_equalities(")
+            .nth(1)
+            .expect("componentwise known equality implementation must exist");
+        assert!(componentwise_impl.contains("verify_objs_are_equal_directly_known_only("));
+        assert!(!componentwise_impl.contains("verify_objs_are_equal_by_known_equality("));
 
         let equality_dispatch = include_str!("verify_builtin_rules/equality_dispatch.rs");
         assert!(

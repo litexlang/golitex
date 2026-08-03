@@ -64,6 +64,18 @@ predecessor_count(1) = predecessor_count(0) = 0
 forall n N+:
     n - 1 $in N
 
+# Integer-valued arithmetic expressions remain valid exponents for the
+# nonzero-power rule, including before an induction hypothesis is stored.
+forall n N+:
+    2^(n - 1) != 0
+    2^(n - 1 + 1) = 2^(n - 1) * 2^1
+    0^(1 / n) = 0
+
+forall a fn(a_index Z) R, m, n, k Z:
+    m <= n
+    =>:
+        sum(m, n, fn(left_index Z) R {a(left_index)}) = sum(m + k, n + k, fn(right_index Z) R {a(right_index - k)})
+
 forall n N+:
     n > 1
     =>:
@@ -78,26 +90,24 @@ positive_predecessor_count(2) = positive_predecessor_count(1) = 1
 
 # Finite sums respect a proved pointwise equality on their shared integer
 # range; the functions need not be equal outside that range.
-scratch:
-    have f fn(f_index Z) Z
-    have g fn(g_index Z) Z
-    axiom f_g_agree_on_range:
-        ? forall point_index Z:
-            1 <= point_index
-            point_index <= 3
-            =>:
-                f(point_index) = g(point_index)
-    sum(1, 3, fn(left_index Z) Z {f(left_index)}) = sum(1, 3, fn(right_index Z) Z {g(right_index)})
+have pointwise_f fn(f_index Z) Z
+have pointwise_g fn(g_index Z) Z
+axiom pointwise_f_g_agree_on_range:
+    ? forall point_index Z:
+        1 <= point_index
+        point_index <= 3
+        =>:
+            pointwise_f(point_index) = pointwise_g(point_index)
+sum(1, 3, fn(left_index Z) Z {pointwise_f(left_index)}) = sum(1, 3, fn(right_index Z) Z {pointwise_g(right_index)})
 
 # A translated finite sum may likewise use an already-proved pointwise
 # equality on the target range.
-scratch:
-    have f fn(f_index Z) Z
-    have g fn(g_index Z) Z
-    axiom shifted_terms_agree_on_range:
-        ? forall target_index Z:
-            0 <= target_index
-            target_index <= 2
-            =>:
-                f((target_index + 1) - 1) = g(target_index)
-    sum(1, 3, fn(source_index Z) Z {f(source_index - 1)}) = sum(0, 2, fn(target_index Z) Z {g(target_index)})
+have shifted_f fn(f_index Z) Z
+have shifted_g fn(g_index Z) Z
+axiom shifted_terms_agree_on_range:
+    ? forall target_index Z:
+        0 <= target_index
+        target_index <= 2
+        =>:
+            shifted_f((target_index + 1) - 1) = shifted_g(target_index)
+sum(1, 3, fn(source_index Z) Z {shifted_f(source_index - 1)}) = sum(0, 2, fn(target_index Z) Z {shifted_g(target_index)})

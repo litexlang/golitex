@@ -1342,7 +1342,7 @@ impl Runtime {
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
             rt.store_fact_without_forall_coverage_check_and_infer(dom_lo)?;
             rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
-            rt.verify_atomic_fact(&pointwise_fact, verify_state)
+            rt.verify_atomic_fact(&pointwise_fact, &UseContextVerifyState::new(0, true))
         })?;
         if !pointwise_result.is_true() {
             return Ok(None);
@@ -1498,6 +1498,29 @@ impl Runtime {
         let lf = &f.line_file;
         let z = Self::literal_zero_obj();
         let one = Self::literal_one_obj();
+        let structural_state = UseContextVerifyState::new(0, true);
+
+        if let Some(result) = self.try_less_equal_sum_pointwise_on_same_integer_range(
+            f,
+            atomic_fact,
+            &structural_state,
+        )? {
+            return Ok(Some(result));
+        }
+        if let Some(result) = self.try_less_equal_finite_set_sum_pointwise_on_same_set(
+            f,
+            atomic_fact,
+            &structural_state,
+        )? {
+            return Ok(Some(result));
+        }
+        if let Some(result) = self.try_less_equal_finite_set_summand_nonnegative_sum(
+            f,
+            atomic_fact,
+            &structural_state,
+        )? {
+            return Ok(Some(result));
+        }
 
         // Prefer the exact same-denominator rule before the more general
         // denominator-moving rules below.  The latter may explore a harder

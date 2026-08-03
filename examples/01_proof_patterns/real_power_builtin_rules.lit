@@ -9,3 +9,13 @@ forall x R, n N+:
     x > 0
     =>:
         (x^(1 / n))^n = x^((1 / n) * n) = x^1 = x
+
+# A positive-natural base remains nonzero after an integer power, so its
+# reciprocal is well-defined even inside a predicate definition.
+prop has_reciprocal_square_value(u fn(n N+) R):
+    forall n N+:
+        u(n) = 1 / n^2
+
+prop reciprocal_is_defined_on_positive_closed_interval(a, b R+):
+    forall x '[a, b]:
+        1 / x $in R

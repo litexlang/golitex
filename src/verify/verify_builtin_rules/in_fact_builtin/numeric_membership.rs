@@ -1,6 +1,59 @@
 use super::*;
 
 impl Runtime {
+    pub(super) fn verify_refined_integer_carrier_from_known_sign(
+        &mut self,
+        in_fact: &InFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::StandardSet(target) = &in_fact.set else {
+            return Ok(None);
+        };
+        let zero: Obj = Number::new("0".to_string()).into();
+        let sign_fact: AtomicFact = match target {
+            StandardSet::NPos => {
+                GreaterFact::new(in_fact.element.clone(), zero, in_fact.line_file.clone()).into()
+            }
+            StandardSet::ZNeg => {
+                LessFact::new(in_fact.element.clone(), zero, in_fact.line_file.clone()).into()
+            }
+            _ => return Ok(None),
+        };
+        let sign_result = self.verify_builtin_rule_premise(&sign_fact, builtin_state)?;
+        if !sign_result.is_true() {
+            return Ok(None);
+        }
+
+        for source_set in self.known_sets_containing_obj(&in_fact.element) {
+            let Obj::StandardSet(source_carrier) = &source_set else {
+                continue;
+            };
+            if !Self::standard_set_is_subset_eq(source_carrier, &StandardSet::Z) {
+                continue;
+            }
+            let source_membership: AtomicFact = InFact::new(
+                in_fact.element.clone(),
+                source_set,
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let source_result = self.verify_known_non_forall_atomic_fact(&source_membership)?;
+            if !source_result.is_true() {
+                continue;
+            }
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    in_fact.clone().into(),
+                    "refined integer carrier from known integer membership and strict sign"
+                        .to_string(),
+                    vec![source_result, sign_result],
+                )
+                .into(),
+            ));
+        }
+        Ok(None)
+    }
+
     // A nonempty integer-range sum/product inherits the narrowest standard scalar carrier
     // declared by its iterand. The anonymous-function checker separately verifies the body
     // against that declaration.
@@ -1232,6 +1285,52 @@ impl Runtime {
                 continue;
             }
 
+            // Integer expressions are closed under addition, subtraction,
+            // and multiplication. Recurse only through these strictly smaller
+            // syntax nodes so order rules can recognize composite endpoints
+            // without opening general builtin proof search.
+            let integer_operands: Option<[&Obj; 2]> = match obj {
+                Obj::Add(add) => Some([add.left.as_ref(), add.right.as_ref()]),
+                Obj::Sub(sub) => Some([sub.left.as_ref(), sub.right.as_ref()]),
+                Obj::Mul(mul) => Some([mul.left.as_ref(), mul.right.as_ref()]),
+                _ => None,
+            };
+            if let Some(integer_operands) = integer_operands {
+                if let Some(operator_steps) = self
+                    .verify_objects_are_known_integers_in_builtin_leaf(
+                        &integer_operands,
+                        line_file,
+                    )?
+                {
+                    steps.push(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            in_z.clone().into(),
+                            "integer expression closure under +, -, and *".to_string(),
+                            operator_steps,
+                        )
+                        .into(),
+                    );
+                    continue;
+                }
+            }
+
+            // `finite_set_size(S)` is intrinsically natural when `S` is
+            // finite. Integer-discreteness rules use this restricted leaf
+            // checker, so expose that native carrier here without reopening
+            // general builtin recursion.
+            if let Obj::FiniteSetSize(finite_set_size) = obj {
+                let in_n = InFact::new((*obj).clone(), StandardSet::N.into(), line_file.clone());
+                let finite_size_result = self.verify_finite_set_size_in_standard_number_set(
+                    &in_n,
+                    finite_set_size,
+                    &UseBuiltinRuleVerifyState::new(),
+                )?;
+                if finite_size_result.is_true() {
+                    steps.push(finite_size_result);
+                    continue;
+                }
+            }
+
             let mut carrier_steps = None;
             for source_set in self.known_sets_containing_obj(obj) {
                 let Obj::StandardSet(source_standard_set) = &source_set else {
@@ -1568,6 +1667,42 @@ impl Runtime {
             Obj::Mul(mul) => mul,
             _ => return Ok((StmtUnknown::new()).into()),
         };
+        let is_literal_neg_one =
+            |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "-1");
+        let negated = if is_literal_neg_one(mul.left.as_ref()) {
+            Some(mul.right.as_ref())
+        } else if is_literal_neg_one(mul.right.as_ref()) {
+            Some(mul.left.as_ref())
+        } else {
+            None
+        };
+        if let Some(negated) = negated {
+            let positive_carrier = match target_negative_standard_set {
+                StandardSet::ZNeg => StandardSet::NPos,
+                StandardSet::QNeg => StandardSet::QPos,
+                StandardSet::RNeg => StandardSet::RPos,
+                _ => return Ok((StmtUnknown::new()).into()),
+            };
+            let positive_membership: AtomicFact = InFact::new(
+                negated.clone(),
+                positive_carrier.into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let positive_result =
+                self.verify_builtin_rule_premise(&positive_membership, builtin_state)?;
+            if positive_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "negation maps a positive scalar into the matching negative carrier"
+                            .to_string(),
+                        vec![positive_result],
+                    )
+                    .into(),
+                );
+            }
+        }
         let product_in_r_fact = InFact::new(
             in_fact.element.clone(),
             StandardSet::R.into(),

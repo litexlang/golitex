@@ -220,24 +220,35 @@ impl Runtime {
         }
     }
 
-    // Absolute value bounds: x <= abs(x) and -x <= abs(x).
+    // Absolute value bounds: -abs(x) <= x <= abs(x), and -x <= abs(x).
     // Example: `forall x R: x <= abs(x)`.
     fn try_verify_abs_basic_lower_bound(
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let Obj::Abs(abs) = &f.right else {
-            return Ok(None);
-        };
-        if !objs_equal(&f.left, abs.arg.as_ref()) && !obj_is_negation_of(&f.left, abs.arg.as_ref())
-        {
+        if let Obj::Abs(abs) = &f.right {
+            if objs_equal(&f.left, abs.arg.as_ref())
+                || obj_is_negation_of(&f.left, abs.arg.as_ref())
+            {
+                return Ok(Some(StmtResult::from(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "abs: x <= abs(x) and -x <= abs(x)".to_string(),
+                        Vec::new(),
+                    ),
+                )));
+            }
+        }
+
+        let abs_right: Obj = Abs::new(f.right.clone()).into();
+        if !obj_is_negation_of(&f.left, &abs_right) {
             return Ok(None);
         }
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
-                "abs: x <= abs(x) and -x <= abs(x)".to_string(),
+                "abs: -abs(x) <= x".to_string(),
                 Vec::new(),
             ),
         )))
@@ -442,18 +453,28 @@ impl Runtime {
         let arg_le_bound = abs_order_subgoal(arg.clone(), right.clone(), line_file.clone(), strict);
         let neg_arg_le_bound =
             abs_order_subgoal(neg_obj(arg), right.clone(), line_file.clone(), strict);
+        let neg_bound_le_arg =
+            abs_order_subgoal(neg_obj(right), arg.clone(), line_file.clone(), strict);
         let r1 = self.verify_abs_order_subgoal(arg_le_bound, builtin_state)?;
         if !r1.is_true() {
             return Ok(None);
         }
-        let r2 = self.verify_abs_order_subgoal(neg_arg_le_bound, builtin_state)?;
+        // Accept either common spelling of the lower side of the sandwich:
+        // `-x < b` or, equivalently, `-b < x`. Checking the latter directly
+        // avoids requiring a second order-algebra builtin hop.
+        let direct_lower = self.verify_abs_order_subgoal(neg_bound_le_arg, builtin_state)?;
+        let r2 = if direct_lower.is_true() {
+            direct_lower
+        } else {
+            self.verify_abs_order_subgoal(neg_arg_le_bound, builtin_state)?
+        };
         if !r2.is_true() {
             return Ok(None);
         }
         let rule = if strict {
-            "abs: abs(x) < b from x < b and -x < b"
+            "abs: abs(x) < b from -b < x < b"
         } else {
-            "abs: abs(x) <= b from x <= b and -x <= b"
+            "abs: abs(x) <= b from -b <= x <= b"
         };
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
