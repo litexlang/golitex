@@ -514,7 +514,7 @@ impl Runtime {
         identifiers
     }
 
-    fn verify_args_satisfy_forall_requirements(
+    pub(crate) fn verify_args_satisfy_forall_requirements(
         &mut self,
         atomic_fact_in_known_forall_fact: &AtomicFact,
         known_forall: &Rc<KnownForallFactParamsAndDom>,
@@ -643,7 +643,7 @@ impl Runtime {
         candidates
     }
 
-    fn match_atomic_fact_args_against_known_forall_ordered_args(
+    pub(crate) fn match_atomic_fact_args_against_known_forall_ordered_args(
         &mut self,
         atomic_fact_in_known_forall: &AtomicFact,
         given_fact: &AtomicFact,

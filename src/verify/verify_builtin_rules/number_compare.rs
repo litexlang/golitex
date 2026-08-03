@@ -1048,8 +1048,18 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let in_n: AtomicFact =
             InFact::new(n.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let nonzero: AtomicFact = NotEqualFact::new(n, zero_obj, line_file.clone()).into();
-        let in_n_result = self.verify_builtin_rule_premise(&in_n, builtin_state)?;
+        let nonzero: AtomicFact = NotEqualFact::new(n.clone(), zero_obj, line_file.clone()).into();
+        let mut in_n_result = self.verify_builtin_rule_premise(&in_n, builtin_state)?;
+        if !in_n_result.is_true() {
+            if let Obj::FiniteSetSize(finite_set_size) = &n {
+                let in_n_fact = InFact::new(n.clone(), StandardSet::N.into(), line_file.clone());
+                in_n_result = self.verify_finite_set_size_in_standard_number_set(
+                    &in_n_fact,
+                    finite_set_size,
+                    builtin_state,
+                )?;
+            }
+        }
         if !in_n_result.is_true() {
             return Ok(None);
         }

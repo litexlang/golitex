@@ -451,6 +451,36 @@ impl Runtime {
             return Ok(None);
         };
 
+        // A positive integer difference is at least one.
+        // Example: `a < b` gives `b - a >= 1` for integer `a` and `b`.
+        if obj_is_literal_one(&fact.left) {
+            if let Obj::Sub(difference) = &fact.right {
+                if let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
+                    &[difference.left.as_ref(), difference.right.as_ref()],
+                    &fact.line_file,
+                )? {
+                    let strict: AtomicFact = LessFact::new(
+                        difference.right.as_ref().clone(),
+                        difference.left.as_ref().clone(),
+                        fact.line_file.clone(),
+                    )
+                    .into();
+                    let strict_result = self.verify_builtin_rule_premise(&strict, builtin_state)?;
+                    if strict_result.is_true() {
+                        steps.push(strict_result);
+                        return Ok(Some(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                atomic_fact.clone().into(),
+                                "integer difference: a < b gives b - a >= 1".to_string(),
+                                steps,
+                            )
+                            .into(),
+                        ));
+                    }
+                }
+            }
+        }
+
         // Integer adjacency removes one successor from a strict upper bound.
         // Example: `a < b + 1` => `a <= b` for integers `a` and `b`.
         if let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(

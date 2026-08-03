@@ -188,8 +188,11 @@ impl Runtime {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
                 continue;
             };
-            let codomain_match =
-                self.verify_objs_are_equal_by_known_equality(&codomain, &smaller, line_file.clone());
+            let codomain_match = self.verify_objs_are_equal_by_known_equality(
+                &codomain,
+                &smaller,
+                line_file.clone(),
+            );
             let domain_match =
                 self.verify_objs_are_equal_by_known_equality(&domain, &larger, line_file.clone());
             if !codomain_match.is_true() || !domain_match.is_true() {
@@ -236,8 +239,11 @@ impl Runtime {
             else {
                 continue;
             };
-            let domain_match =
-                self.verify_objs_are_equal_by_known_equality(&candidate_domain, domain, line_file.clone());
+            let domain_match = self.verify_objs_are_equal_by_known_equality(
+                &candidate_domain,
+                domain,
+                line_file.clone(),
+            );
             let codomain_match = self.verify_objs_are_equal_by_known_equality(
                 &candidate_codomain,
                 codomain,

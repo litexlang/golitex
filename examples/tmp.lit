@@ -6,3 +6,13 @@ have fn predecessor_count(n N) N by induc n from 0:
 
 predecessor_count(0) = 0
 predecessor_count(1) = predecessor_count(0) = 0
+
+# The maximum of a concrete finite family of positive naturals is positive.
+forall n1, n2 N+:
+    finite_set_max(union({n1}, {n2})) $in N
+    finite_set_max(union({n1}, {n2})) $in R
+    finite_set_max(union({n1}, {n2})) $in N+
+
+# A positive radius puts its center strictly inside the symmetric interval.
+forall center R, radius R+:
+    center $in '(center - radius, center + radius)

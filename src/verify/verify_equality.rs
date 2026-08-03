@@ -370,11 +370,29 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let Some(reduced) =
-            self.unfold_known_fn_application_once(application_side, verify_state)?
-        else {
-            return Ok(None);
+        let reduced = match self.unfold_known_fn_application_once(application_side, verify_state)? {
+            Some(reduced) => reduced,
+            None => {
+                let Some(set_builder) =
+                    self.get_obj_equal_to_set_builder(&application_side.to_string())
+                else {
+                    return Ok(None);
+                };
+                set_builder.into()
+            }
         };
+        if objs_equal_with_nested_binder_alpha_equivalence(&reduced, other_side) {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(statement_left.clone(), statement_right.clone(), line_file)
+                        .into(),
+                    "one user-defined function unfolding, modulo bound-variable renaming"
+                        .to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ));
+        }
         let inner = self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
             &EqualFact::new(reduced.clone(), other_side.clone(), line_file.clone()).into(),
         )?;

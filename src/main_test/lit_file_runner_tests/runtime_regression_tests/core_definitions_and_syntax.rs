@@ -610,6 +610,135 @@ have tuple real_tuple for i1 <= n, real_tuple[i1] = R
 }
 
 #[test]
+fn literal_cart_member_reconstructs_only_its_canonical_coordinate_tuple() {
+    run_with_large_stack(
+        "literal_cart_member_reconstructs_only_its_canonical_coordinate_tuple",
+        || {
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "literal_cart_member_reconstructs_only_its_canonical_coordinate_tuple",
+            );
+            let (stmt_results, runtime_error) = run_source_code(
+                r#"
+forall A, B set, p cart(A, B):
+    p = (p[1], p[2])
+"#,
+                &mut runtime,
+            );
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "literal cart member reconstruction failed:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("tuple reconstruction from known Cartesian-product membership"),
+                "tuple reconstruction provenance is missing:\n{run_output}"
+            );
+
+            let mut negative_runtime = Runtime::new();
+            negative_runtime.new_file_path_new_env_new_name_scope(
+                "literal_cart_member_does_not_swap_its_coordinates",
+            );
+            let (negative_results, negative_error) = run_source_code(
+                r#"
+forall A, B set, p cart(A, B):
+    p = (p[2], p[1])
+"#,
+                &mut negative_runtime,
+            );
+            let (negative_succeeded, negative_output) = render_run_source_code_output(
+                &negative_runtime,
+                &negative_results,
+                &negative_error,
+                false,
+            );
+            assert!(
+                !negative_succeeded,
+                "tuple reconstruction must not swap coordinates:\n{negative_output}"
+            );
+        },
+    );
+}
+
+#[test]
+fn anonymous_function_beta_reduction_computes_literal_tuple_projections() {
+    run_with_large_stack(
+        "anonymous_function_beta_reduction_computes_literal_tuple_projections",
+        || {
+            let source_code = r#"
+forall A, B set, a A, b B:
+    fn(p cart(A, B)) A {p[1]}((a, b)) = a
+    fn(p cart(A, B)) B {p[2]}((a, b)) = b
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_function_beta_reduction_computes_literal_tuple_projections",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "beta reduction should compute literal tuple projections:\n{run_output}"
+            );
+
+            let mut negative_runtime = Runtime::new();
+            negative_runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_function_beta_reduction_does_not_swap_tuple_projections",
+            );
+            let (negative_results, negative_error) = run_source_code(
+                r#"
+forall A set, a, b A:
+    fn(p cart(A, A)) A {p[1]}((a, b)) = b
+"#,
+                &mut negative_runtime,
+            );
+            let (negative_succeeded, negative_output) = render_run_source_code_output(
+                &negative_runtime,
+                &negative_results,
+                &negative_error,
+                false,
+            );
+            assert!(
+                !negative_succeeded,
+                "beta reduction must preserve projection order:\n{negative_output}"
+            );
+        },
+    );
+}
+
+#[test]
+fn dependent_set_membership_does_not_materialize_a_symbolic_cart_view() {
+    run_with_large_stack(
+        "dependent_set_membership_does_not_materialize_a_symbolic_cart_view",
+        || {
+            let source_code = r#"
+forall family power_set(power_set(R)), container power_set(R), member family:
+    member $subset container
+    =>:
+        member $subset container
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "dependent_set_membership_does_not_materialize_a_symbolic_cart_view",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "dependent set membership should remain set-valued, not cart-valued:\n{run_output}"
+            );
+            assert!(
+                !run_output.contains("cart_dim(member)"),
+                "dependent set membership must not materialize symbolic cart coordinates:\n{run_output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn have_tuple_and_have_cart_reject_bad_symbolic_definitions() {
     run_with_large_stack(
         "have_tuple_and_have_cart_reject_bad_symbolic_definitions",
@@ -2092,5 +2221,168 @@ by def $marked_eventually_equivalence(1)
         run_succeeded,
         "template set-builder membership should package into both equivalence directions:\n{}",
         run_output
+    );
+}
+
+#[test]
+fn literal_set_builder_membership_packages_known_conjunction_only() {
+    let positive_source = r#"
+forall x R:
+    0 <= x
+    x <= 1
+    =>:
+        x $in {y R: 0 <= y and y <= 1}
+"#;
+    let mut positive_runtime = Runtime::new();
+    positive_runtime.new_file_path_new_env_new_name_scope(
+        "literal_set_builder_membership_packages_known_conjunction",
+    );
+    let (positive_results, positive_error) =
+        run_source_code(positive_source, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "known set-builder conjuncts should introduce membership:\n{}",
+        positive_output
+    );
+
+    let negative_source = r#"
+forall x R:
+    0 <= x
+    =>:
+        x $in {y R: 0 <= y and y <= 1}
+"#;
+    let mut negative_runtime = Runtime::new();
+    negative_runtime.new_file_path_new_env_new_name_scope(
+        "literal_set_builder_membership_rejects_missing_conjunct",
+    );
+    let (negative_results, negative_error) =
+        run_source_code(negative_source, &mut negative_runtime);
+    let (negative_succeeded, _) =
+        render_run_source_code_output(&negative_runtime, &negative_results, &negative_error, false);
+    assert!(
+        !negative_succeeded,
+        "set-builder membership must not invent a missing conjunct"
+    );
+}
+
+#[test]
+fn set_builder_membership_folds_one_known_predicate_definition() {
+    let positive_source = r#"
+prop is_doubled(n N):
+    exist k N st {n = 2 * k}
+
+claim:
+    ? forall n N:
+        2 * n $in {m N: $is_doubled(m)}
+    witness exist k N st {2 * n = 2 * k} from n
+    2 * n $in {m N: $is_doubled(m)}
+"#;
+    let mut positive_runtime = Runtime::new();
+    positive_runtime.new_file_path_new_env_new_name_scope(
+        "set_builder_membership_folds_one_known_predicate_definition",
+    );
+    let (positive_results, positive_error) =
+        run_source_code(positive_source, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "a proved predicate body should introduce one-layer set-builder membership:\n{}",
+        positive_output
+    );
+
+    let negative_source = r#"
+prop is_doubled(n N):
+    exist k N st {n = 2 * k}
+
+have n N
+n $in {m N: $is_doubled(m)}
+"#;
+    let mut negative_runtime = Runtime::new();
+    negative_runtime.new_file_path_new_env_new_name_scope(
+        "set_builder_membership_rejects_unproved_predicate_definition",
+    );
+    let (negative_results, negative_error) =
+        run_source_code(negative_source, &mut negative_runtime);
+    let (negative_succeeded, _) =
+        render_run_source_code_output(&negative_runtime, &negative_results, &negative_error, false);
+    assert!(
+        !negative_succeeded,
+        "set-builder membership must not invent an unproved predicate body"
+    );
+}
+
+#[test]
+fn known_set_builder_alias_membership_eliminates_to_its_predicate() {
+    let positive_source = r#"
+have fn above(a R) power_set(R) = {x R: x > a}
+forall a R:
+    above(a) = {z R: z > a}
+have y R
+trust y $in above(0)
+y $in {x R: x > 0}
+y > 0
+have fn pick(a R) R = a
+trust forall a R:
+    pick(a) $in above(a)
+forall a R:
+    pick(a) $in {x R: x > a}
+"#;
+    let mut positive_runtime = Runtime::new();
+    positive_runtime.new_file_path_new_env_new_name_scope(
+        "known_set_builder_alias_membership_eliminates_to_its_predicate",
+    );
+    let (positive_results, positive_error) =
+        run_source_code(positive_source, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "membership in a set-builder alias should expose its defining predicate:\n{}",
+        positive_output
+    );
+
+    let negative_source = r#"
+have fn above(a R) power_set(R) = {x R: x > a}
+have y R
+trust y $in above(0)
+y $in {x R: x < 0}
+"#;
+    let mut negative_runtime = Runtime::new();
+    negative_runtime.new_file_path_new_env_new_name_scope(
+        "set_builder_alias_membership_does_not_invent_other_facts",
+    );
+    let (negative_results, negative_error) =
+        run_source_code(negative_source, &mut negative_runtime);
+    let (negative_succeeded, _) =
+        render_run_source_code_output(&negative_runtime, &negative_results, &negative_error, false);
+    assert!(
+        !negative_succeeded,
+        "set-builder alias transport must require the same unfolded builder"
+    );
+
+    let wrong_definition_equality_source = r#"
+have fn above(a R) power_set(R) = {x R: x > a}
+above(0) = {z R: z < 0}
+"#;
+    let mut wrong_definition_equality_runtime = Runtime::new();
+    wrong_definition_equality_runtime.new_file_path_new_env_new_name_scope(
+        "set_builder_definition_equality_requires_the_same_predicate",
+    );
+    let (wrong_equality_results, wrong_equality_error) = run_source_code(
+        wrong_definition_equality_source,
+        &mut wrong_definition_equality_runtime,
+    );
+    let (wrong_equality_succeeded, _) = render_run_source_code_output(
+        &wrong_definition_equality_runtime,
+        &wrong_equality_results,
+        &wrong_equality_error,
+        false,
+    );
+    assert!(
+        !wrong_equality_succeeded,
+        "definition unfolding must not identify set-builders with different predicates"
     );
 }

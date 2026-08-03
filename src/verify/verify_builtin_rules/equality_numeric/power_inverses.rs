@@ -144,8 +144,11 @@ impl Runtime {
 
             let left_power: Obj = Pow::new(left.clone(), exponent.clone()).into();
             let right_power: Obj = Pow::new(right.clone(), exponent).into();
-            let power_equal_result =
-                self.verify_objs_are_equal_by_known_equality(&left_power, &right_power, line_file.clone());
+            let power_equal_result = self.verify_objs_are_equal_by_known_equality(
+                &left_power,
+                &right_power,
+                line_file.clone(),
+            );
             if !power_equal_result.is_true() {
                 continue;
             }

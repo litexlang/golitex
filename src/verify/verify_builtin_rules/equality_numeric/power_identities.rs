@@ -1,6 +1,34 @@
 use super::*;
 
 impl Runtime {
+    fn verify_direct_positive_real_power_operand(
+        &mut self,
+        obj: &Obj,
+        line_file: &LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let positive: AtomicFact = GreaterFact::new(
+            obj.clone(),
+            Self::literal_zero_obj_for_abs_builtin(),
+            line_file.clone(),
+        )
+        .into();
+        let positive_result = self.verify_builtin_rule_premise(&positive, builtin_state)?;
+        if positive_result.is_true() {
+            return Ok(Some(positive_result));
+        }
+
+        for carrier in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
+            let membership: AtomicFact =
+                InFact::new(obj.clone(), carrier.into(), line_file.clone()).into();
+            let membership_result = self.verify_builtin_rule_premise(&membership, builtin_state)?;
+            if membership_result.is_true() {
+                return Ok(Some(membership_result));
+            }
+        }
+        Ok(None)
+    }
+
     // Odd powers of minus one are minus one.
     // Example: `m $in N` proves `(-1)^(2*m+1) = -1`.
     pub(crate) fn try_verify_minus_one_odd_natural_power(
@@ -205,15 +233,41 @@ impl Runtime {
         .into();
         let positive_result =
             self.verify_builtin_rule_premise(&positive_exponent, builtin_state)?;
-        if !positive_result.is_true() {
-            return Ok(None);
+        let mut positive_steps = Vec::new();
+        if positive_result.is_true() {
+            positive_steps.push(positive_result);
+        } else {
+            // Keep reciprocal positivity inside this one power identity rule:
+            // direct positivity (or a direct positive carrier) of numerator
+            // and denominator entails positivity of their quotient. This lets
+            // `n $in N_pos` justify `0^(1/n) = 0` without a second builtin hop.
+            let Obj::Div(div) = pow.exponent.as_ref() else {
+                return Ok(None);
+            };
+            let Some(numerator_step) = self.verify_direct_positive_real_power_operand(
+                div.left.as_ref(),
+                &line_file,
+                builtin_state,
+            )?
+            else {
+                return Ok(None);
+            };
+            let Some(denominator_step) = self.verify_direct_positive_real_power_operand(
+                div.right.as_ref(),
+                &line_file,
+                builtin_state,
+            )?
+            else {
+                return Ok(None);
+            };
+            positive_steps.extend([numerator_step, denominator_step]);
         }
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "equality: 0^x = 0 for x > 0".to_string(),
-                vec![positive_result],
+                positive_steps,
             )
             .into(),
         ))

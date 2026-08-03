@@ -71,7 +71,8 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         // Do not call the full equality builtin here; that would re-enter zero-product
         // cancellation while this rule is already trying to match a factor.
-        let known_result = self.verify_objs_are_equal_by_known_equality(target, factor, line_file.clone());
+        let known_result =
+            self.verify_objs_are_equal_by_known_equality(target, factor, line_file.clone());
         if known_result.is_true() {
             return Ok(known_result);
         }
@@ -472,8 +473,11 @@ impl Runtime {
                 self.verify_builtin_rule_premise(&remainder_in_n, builtin_state)?;
             let bound_result =
                 self.verify_builtin_rule_premise(&remainder_lt_modulus, builtin_state)?;
-            let decomposition_result =
-                self.verify_objs_are_equal_by_known_equality(dividend, &candidate, line_file.clone());
+            let decomposition_result = self.verify_objs_are_equal_by_known_equality(
+                dividend,
+                &candidate,
+                line_file.clone(),
+            );
             if !divisor_result.is_true()
                 || !remainder_result.is_true()
                 || !bound_result.is_true()

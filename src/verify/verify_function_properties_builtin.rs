@@ -116,8 +116,11 @@ impl Runtime {
         let Some(param_group) = function_body.params_def_with_set.first() else {
             return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
         };
-        let domain_result =
-            self.verify_objs_are_equal_by_known_equality(param_group.set_obj(), &domain, fact.line_file());
+        let domain_result = self.verify_objs_are_equal_by_known_equality(
+            param_group.set_obj(),
+            &domain,
+            fact.line_file(),
+        );
         if domain_result.is_unknown() {
             return Ok(Some(domain_result));
         }

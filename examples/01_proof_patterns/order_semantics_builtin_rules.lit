@@ -48,6 +48,17 @@ forall a, b, c R:
 have n1 R = 1
 have n2 R = 2
 have selected_max R = finite_set_max({n1, n2})
+
+# Structural sign reasoning removes a quotient, then proves the numerator and
+# denominator signs independently.
+forall a, b R:
+    a > b
+    =>:
+        (a - b) / 2 $in R+
+
+# A positive radius places the center in its symmetric open interval.
+forall center R, radius R+:
+    center $in '(center - radius, center + radius)
 selected_max >= n1
 selected_max >= n2
 

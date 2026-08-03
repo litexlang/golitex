@@ -3,6 +3,7 @@ use crate::verify::verify_equality_by_builtin_rules::{
     factual_equal_success_by_builtin_reason, factual_equal_success_by_builtin_reason_with_subgoals,
     verify_equality_by_they_are_the_same,
 };
+use std::rc::Rc;
 
 impl Runtime {
     pub fn verify_equality_by_builtin_rules(
@@ -98,6 +99,13 @@ impl Runtime {
         if let Some(result) =
             self.try_verify_indexed_fn_set_definition_equality(left, right, line_file.clone())?
         {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_tuple_reconstruction_from_known_cart_membership(
+            left,
+            right,
+            line_file.clone(),
+        )? {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_cart_equality_from_dim_and_projections(
@@ -622,6 +630,12 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_literal_zero_range_sum_is_zero(left, right, line_file.clone())?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_sum_pointwise_congruence(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(done);
@@ -783,6 +797,15 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_sum_over_bijective_finite_set_enumerations(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) =
             self.try_verify_finite_set_product_empty(left, right, line_file.clone(), builtin_state)?
         {
@@ -855,6 +878,13 @@ impl Runtime {
             line_file.clone(),
             builtin_state,
         )? {
+            return Ok(done);
+        }
+
+        // A finite set with zero cardinality is empty.
+        if let Some(done) =
+            self.try_verify_empty_finite_set_from_size_zero(left, right, line_file.clone())?
+        {
             return Ok(done);
         }
 
@@ -967,6 +997,57 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
+    // A member of a literal Cartesian product is the tuple of its own
+    // coordinates. This is intentionally narrower than general tuple
+    // extensionality: it uses one exact known cart-membership fact and only
+    // accepts the canonical projection list `(p[1], ..., p[n])`.
+    fn try_verify_tuple_reconstruction_from_known_cart_membership(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (target, tuple) = match (left, right) {
+            (target, Obj::Tuple(tuple)) if !matches!(target, Obj::Tuple(_)) => (target, tuple),
+            (Obj::Tuple(tuple), target) if !matches!(target, Obj::Tuple(_)) => (target, tuple),
+            _ => return Ok(None),
+        };
+
+        for (index, component) in tuple.args.iter().enumerate() {
+            let expected: Obj =
+                ObjAtIndex::new(target.clone(), Number::new((index + 1).to_string()).into()).into();
+            if !verify_equality_by_they_are_the_same(component.as_ref(), &expected) {
+                return Ok(None);
+            }
+        }
+
+        for owner_set in self.known_sets_containing_obj(target) {
+            let Obj::Cart(cart) = &owner_set else {
+                continue;
+            };
+            if cart.args.len() != tuple.args.len() {
+                continue;
+            }
+            let membership: AtomicFact =
+                InFact::new(target.clone(), owner_set, line_file.clone()).into();
+            let membership_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&membership)?;
+            if !membership_result.is_true() {
+                continue;
+            }
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "tuple reconstruction from known Cartesian-product membership".to_string(),
+                    vec![membership_result],
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
+    }
+
     fn try_verify_projection_from_known_tuple_equality(
         &mut self,
         left: &Obj,
@@ -1004,7 +1085,11 @@ impl Runtime {
             for equal_obj in equal_objs.iter() {
                 if let Some(component) = Self::component_at_index(equal_obj, index) {
                     if self
-                        .verify_objs_are_equal_by_known_equality(&component, other_side, line_file.clone())
+                        .verify_objs_are_equal_by_known_equality(
+                            &component,
+                            other_side,
+                            line_file.clone(),
+                        )
                         .is_true()
                     {
                         return Ok(Some(
@@ -1915,15 +2000,16 @@ impl Runtime {
         first_set: Obj,
         second_set: Obj,
         line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
+        _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let type_state = UseContextVerifyState::new(0, true);
         let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
-        let first_result = self.verify_builtin_rule_premise(&first_finite, builtin_state)?;
+        let first_result = self.verify_atomic_fact(&first_finite, &type_state)?;
         if !first_result.is_true() {
             return Ok(None);
         }
         let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file).into();
-        let second_result = self.verify_builtin_rule_premise(&second_finite, builtin_state)?;
+        let second_result = self.verify_atomic_fact(&second_finite, &type_state)?;
         if !second_result.is_true() {
             return Ok(None);
         }
@@ -2413,8 +2499,15 @@ impl Runtime {
             let projected_target: Obj = Proj::new(target_obj.clone(), index_obj).into();
             let projection_fact: AtomicFact =
                 EqualFact::new(projected_target, arg.as_ref().clone(), line_file.clone()).into();
-            let projection_result =
+            let mut projection_result =
                 self.verify_builtin_rule_premise(&projection_fact, builtin_state)?;
+            if !projection_result.is_true() {
+                if let Some(known_forall_result) =
+                    self.verify_exact_cart_projection_from_known_forall(&projection_fact)?
+                {
+                    projection_result = known_forall_result;
+                }
+            }
             if !projection_result.is_true() {
                 return Ok(None);
             }
@@ -2429,6 +2522,57 @@ impl Runtime {
             )
             .into(),
         ))
+    }
+
+    fn verify_exact_cart_projection_from_known_forall(
+        &mut self,
+        goal: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let lookup_key = (goal.key(), goal.is_true());
+        let candidates: Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> = self
+            .iter_environments_from_top()
+            .flat_map(|environment| {
+                environment
+                    .known_atomic_facts_in_forall_facts
+                    .get(&lookup_key)
+                    .into_iter()
+                    .flat_map(|facts| facts.iter())
+                    .chain(
+                        environment
+                            .known_atomic_facts_in_forall_facts_by_arg_shape
+                            .get(&lookup_key)
+                            .into_iter()
+                            .flat_map(|shape_map| shape_map.values())
+                            .flat_map(|facts| facts.iter()),
+                    )
+            })
+            .cloned()
+            .collect();
+        // We have already selected the exact stored forall that can prove this
+        // projection. Its domain requirements may use known facts and builtin
+        // computation, but must not start another equality/forall search and
+        // recursively re-enter cart extensionality.
+        let verify_state = UseContextVerifyState::new(0, true).without_known_forall_for_equality();
+        for (pattern, forall_context) in candidates {
+            let Some(arg_map) = self.match_atomic_fact_args_against_known_forall_ordered_args(
+                &pattern,
+                goal,
+                &forall_context.params_def,
+            )?
+            else {
+                continue;
+            };
+            if let Some(success) = self.verify_args_satisfy_forall_requirements(
+                &pattern,
+                &forall_context,
+                arg_map,
+                goal,
+                &verify_state,
+            )? {
+                return Ok(Some(success.into()));
+            }
+        }
+        Ok(None)
     }
 
     fn try_verify_empty_set_equality_from_not_nonempty(
@@ -2492,6 +2636,36 @@ impl Runtime {
                 InferResult::new(),
                 "empty_set_equality_from_not_nonempty".to_string(),
                 vec![sub],
+            )
+            .into(),
+        ))
+    }
+
+    fn try_verify_empty_finite_set_from_size_zero(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let set = match (left, right) {
+            (Obj::ListSet(list), set) if list.list.is_empty() => set.clone(),
+            (set, Obj::ListSet(list)) if list.list.is_empty() => set.clone(),
+            _ => return Ok(None),
+        };
+        let size: Obj = FiniteSetSize::new(set).into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let size_zero =
+            self.verify_objs_are_equal_by_known_equality(&size, &zero, line_file.clone());
+        if !size_zero.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                InferResult::new(),
+                "finite_set_size_zero_implies_empty_set".to_string(),
+                vec![size_zero],
             )
             .into(),
         ))

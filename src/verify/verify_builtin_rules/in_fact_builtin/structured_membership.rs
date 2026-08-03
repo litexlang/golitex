@@ -1,6 +1,76 @@
 use super::*;
 
 impl Runtime {
+    pub(super) fn verify_in_fact_literal_tuple_projection_in_set(
+        &mut self,
+        in_fact: &InFact,
+        target_set_obj: &Obj,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let (tuple, index) = match &in_fact.element {
+            Obj::Proj(projection) => {
+                let Obj::Tuple(tuple) = projection.set.as_ref() else {
+                    return Ok(StmtUnknown::new().into());
+                };
+                (tuple, projection.dim.as_ref())
+            }
+            Obj::ObjAtIndex(obj_at_index) => {
+                let Obj::Tuple(tuple) = obj_at_index.obj.as_ref() else {
+                    return Ok(StmtUnknown::new().into());
+                };
+                (tuple, obj_at_index.index.as_ref())
+            }
+            _ => return Ok(StmtUnknown::new().into()),
+        };
+        let Some(index_number) = self.resolve_obj_to_number(index) else {
+            return Ok(StmtUnknown::new().into());
+        };
+        let Ok(one_based_index) = index_number.normalized_value.parse::<usize>() else {
+            return Ok(StmtUnknown::new().into());
+        };
+        if one_based_index == 0 || one_based_index > tuple.args.len() {
+            return Ok(StmtUnknown::new().into());
+        }
+
+        let selected = tuple.args[one_based_index - 1].as_ref().clone();
+        let selected_membership: AtomicFact = InFact::new(
+            selected.clone(),
+            target_set_obj.clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let mut selected_result =
+            self.verify_builtin_rule_premise(&selected_membership, builtin_state)?;
+        if !selected_result.is_true() && matches!(target_set_obj, Obj::StandardSet(StandardSet::R))
+        {
+            if let Some(real_steps) = self.verify_objects_are_known_reals_in_builtin(
+                &[&selected],
+                &in_fact.line_file,
+                builtin_state,
+            )? {
+                selected_result =
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        selected_membership.clone().into(),
+                        "selected literal tuple component has a real carrier".to_string(),
+                        real_steps,
+                    )
+                    .into();
+            }
+        }
+        if !selected_result.is_true() {
+            return Ok(StmtUnknown::new().into());
+        }
+
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "literal tuple projection inherits the selected component carrier".to_string(),
+                vec![selected_result],
+            )
+            .into(),
+        )
+    }
+
     // `{x S : …} ⊆ S` always. If `S ⊆ T` then `{x S : …} ⊆ T`, so `{x S : …} ∈ 𝒫(T)`.
     // Example: from `N $subset Z`, deduce `{x N: x = x} $in power_set(Z)` once that subset is known.
     pub(super) fn verify_in_fact_set_builder_in_power_set_via_param_subset(

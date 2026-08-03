@@ -1017,9 +1017,10 @@ impl Runtime {
             vec![ExistFactEnum::ExistUniqueFact(exist_body).into()],
             line_file,
         )?;
-        let _fact: Fact = forall_fact.into();
+        let fact: Fact = forall_fact.into();
+        let result = self.verify_fact_full(&fact, &UseContextVerifyState::new(0, true))?;
         let _ = builtin_state;
-        Ok(false)
+        Ok(result.is_true())
     }
 
     pub(super) fn set_for_unary_param(

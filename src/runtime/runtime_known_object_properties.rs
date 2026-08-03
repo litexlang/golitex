@@ -176,14 +176,18 @@ impl Runtime {
         if let FnObjHead::InstantiatedTemplateObj(template_obj) = fn_obj.head.as_ref() {
             self.materialize_instantiated_template_obj(template_obj, verify_state)?;
         }
-        let key = match fn_obj.head.as_ref() {
-            FnObjHead::Identifier(i) => i.to_string(),
-            FnObjHead::IdentifierWithMod(i) => i.to_string(),
-            FnObjHead::InstantiatedTemplateObj(i) => i.to_string(),
+        let keys = match fn_obj.head.as_ref() {
+            FnObjHead::Identifier(i) => vec![i.to_string(), i.name.clone()],
+            FnObjHead::IdentifierWithMod(i) => vec![
+                i.to_string(),
+                format!("{}{}{}", i.mod_name, MOD_SIGN, i.name),
+            ],
+            FnObjHead::InstantiatedTemplateObj(i) => vec![i.to_string()],
             _ => return Ok(None),
         };
-        let Some((fn_set_body, equal_to_expr, _)) =
-            self.get_known_fn_body_and_equal_to_for_key(key.as_str())
+        let Some((fn_set_body, equal_to_expr, _)) = keys
+            .iter()
+            .find_map(|key| self.get_known_fn_body_and_equal_to_for_key(key))
         else {
             return Ok(None);
         };
@@ -201,35 +205,37 @@ impl Runtime {
         let param_to_arg_map =
             ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
 
-        let param_membership_facts =
-            ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
-                self,
-                param_defs,
-                &args,
-                ParamObjType::FnSet,
-            )?;
-        for param_membership_fact in param_membership_facts.iter() {
-            let result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
-                param_membership_fact,
-                verify_state,
-            )?;
-            if !result.is_true() {
-                return Ok(None);
+        if !verify_state.well_defined_already_verified {
+            let param_membership_facts =
+                ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
+                    self,
+                    param_defs,
+                    &args,
+                    ParamObjType::FnSet,
+                )?;
+            for param_membership_fact in param_membership_facts.iter() {
+                let result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
+                    param_membership_fact,
+                    verify_state,
+                )?;
+                if !result.is_true() {
+                    return Ok(None);
+                }
             }
-        }
-        for dom_fact in fn_set_body.dom_facts.iter() {
-            let instantiated_dom_fact = self.inst_or_and_chain_atomic_fact(
-                dom_fact,
-                &param_to_arg_map,
-                ParamObjType::FnSet,
-                None,
-            )?;
-            let result = self.verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
-                &instantiated_dom_fact,
-                verify_state,
-            )?;
-            if !result.is_true() {
-                return Ok(None);
+            for dom_fact in fn_set_body.dom_facts.iter() {
+                let instantiated_dom_fact = self.inst_or_and_chain_atomic_fact(
+                    dom_fact,
+                    &param_to_arg_map,
+                    ParamObjType::FnSet,
+                    None,
+                )?;
+                let result = self.verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
+                    &instantiated_dom_fact,
+                    verify_state,
+                )?;
+                if !result.is_true() {
+                    return Ok(None);
+                }
             }
         }
 
@@ -367,6 +373,18 @@ impl Runtime {
             }
         }
         if let Some((module_name, local_name)) = split_module_qualified_key(name) {
+            if self.is_current_parse_module(module_name) {
+                for env in self.iter_environments_from_top() {
+                    if let Some((set_builder, _)) = env
+                        .known_objs_equal_to_set_builder
+                        .get(local_name)
+                        .or_else(|| env.known_objs_equal_to_set_builder.get(name))
+                    {
+                        return Some(set_builder.clone());
+                    }
+                }
+                return None;
+            }
             for env in self.imported_module_environments(module_name) {
                 if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(local_name)
                 {

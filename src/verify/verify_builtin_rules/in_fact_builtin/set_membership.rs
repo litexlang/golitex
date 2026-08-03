@@ -1,6 +1,350 @@
 use super::*;
+use std::rc::Rc;
 
 impl Runtime {
+    fn unfold_set_builder_alias_without_transport_reentry(
+        &mut self,
+        obj: &Obj,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        if self.active_set_builder_forall_transport {
+            return Ok(None);
+        }
+        self.active_set_builder_forall_transport = true;
+        let result = self.unfold_known_fn_application_once(obj, verify_state);
+        self.active_set_builder_forall_transport = false;
+        result
+    }
+
+    pub(crate) fn try_verify_set_builder_membership_alias_transport(
+        &mut self,
+        goal: &InFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::SetBuilder(goal_builder) = &goal.set else {
+            return Ok(None);
+        };
+        let memberships: Vec<InFact> = self
+            .iter_environments_from_top()
+            .flat_map(|environment| environment.known_owner_sets.values())
+            .flat_map(|owner_sets| owner_sets.values())
+            .filter(|membership| {
+                verify_equality_by_they_are_the_same(&membership.element, &goal.element)
+            })
+            .cloned()
+            .collect();
+        let final_state = UseContextVerifyState::new_with_final_round(true);
+
+        for membership in memberships {
+            let unfolded = match &membership.set {
+                Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
+                _ => match self.unfold_set_builder_alias_without_transport_reentry(
+                    &membership.set,
+                    &final_state,
+                )? {
+                    Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
+                    _ => self.get_obj_equal_to_set_builder(&membership.set.to_string()),
+                },
+            };
+            let Some(unfolded) = unfolded else {
+                continue;
+            };
+            let unfolded_obj: Obj = unfolded.into();
+            let goal_obj: Obj = goal_builder.clone().into();
+            if !objs_equal_with_nested_binder_alpha_equivalence(&unfolded_obj, &goal_obj) {
+                continue;
+            }
+
+            let membership_result = Self::stmt_result_for_indexed_fact(
+                membership.clone().into(),
+                "known membership in an equal one-layer set-builder alias",
+            );
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    goal.clone().into(),
+                    "set-builder membership transport through one unfolded alias".to_string(),
+                    vec![membership_result],
+                )
+                .into(),
+            ));
+        }
+
+        if self.active_set_builder_forall_transport {
+            return Ok(None);
+        }
+        let forall_memberships: Vec<(InFact, Rc<KnownForallFactParamsAndDom>)> = self
+            .iter_environments_from_top()
+            .flat_map(|environment| {
+                environment
+                    .known_atomic_facts_in_forall_facts
+                    .values()
+                    .flat_map(|facts| facts.iter())
+                    .chain(
+                        environment
+                            .known_atomic_facts_in_forall_facts_by_arg_shape
+                            .values()
+                            .flat_map(|shape_map| shape_map.values())
+                            .flat_map(|facts| facts.iter()),
+                    )
+            })
+            .filter_map(|(fact, params)| match fact {
+                AtomicFact::InFact(member) => Some((member.clone(), params.clone())),
+                _ => None,
+            })
+            .collect();
+        let zero: Obj = Number::new("0".to_string()).into();
+        for (membership_pattern, forall_context) in forall_memberships {
+            let pattern_match: AtomicFact = EqualFact::new(
+                membership_pattern.element.clone(),
+                zero.clone(),
+                goal.line_file.clone(),
+            )
+            .into();
+            let goal_match: AtomicFact =
+                EqualFact::new(goal.element.clone(), zero.clone(), goal.line_file.clone()).into();
+            let arg_map = self.match_atomic_fact_args_against_known_forall_ordered_args(
+                &pattern_match,
+                &goal_match,
+                &forall_context.params_def,
+            )?;
+            let Some(arg_map) = arg_map else {
+                continue;
+            };
+            let membership_pattern_atomic: AtomicFact = membership_pattern.clone().into();
+            let instantiated = self.inst_atomic_fact(
+                &membership_pattern_atomic,
+                &arg_map,
+                ParamObjType::Forall,
+                Some(&goal.line_file),
+            )?;
+            let AtomicFact::InFact(instantiated_membership) = &instantiated else {
+                unreachable!()
+            };
+            let unfolded = self.unfold_set_builder_alias_without_transport_reentry(
+                &instantiated_membership.set,
+                &final_state,
+            )?;
+            let instantiated_builder = match unfolded {
+                Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
+                _ => self.get_obj_equal_to_set_builder(&instantiated_membership.set.to_string()),
+            };
+            let Some(instantiated_builder) = instantiated_builder else {
+                continue;
+            };
+            let instantiated_builder_obj: Obj = instantiated_builder.into();
+            let goal_builder_obj: Obj = goal_builder.clone().into();
+            if !objs_equal_with_nested_binder_alpha_equivalence(
+                &instantiated_builder_obj,
+                &goal_builder_obj,
+            ) {
+                continue;
+            }
+            let requirement_state = UseContextVerifyState::new_with_final_round(true)
+                .without_known_forall_for_equality();
+            self.active_set_builder_forall_transport = true;
+            let membership_result = self.verify_args_satisfy_forall_requirements(
+                &membership_pattern_atomic,
+                &forall_context,
+                arg_map,
+                &instantiated,
+                &requirement_state,
+            );
+            self.active_set_builder_forall_transport = false;
+            let Some(membership_success) = membership_result? else {
+                continue;
+            };
+            let membership_result: StmtResult = membership_success.into();
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    goal.clone().into(),
+                    "set-builder membership transport from a known universal alias membership"
+                        .to_string(),
+                    vec![membership_result],
+                )
+                .into(),
+            ));
+        }
+        Ok(None)
+    }
+
+    pub(crate) fn try_verify_atomic_fact_from_known_set_builder_membership(
+        &mut self,
+        goal: &AtomicFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !matches!(goal, AtomicFact::InFact(_)) && !self.active_set_builder_forall_transport {
+            let forall_memberships: Vec<(InFact, Rc<KnownForallFactParamsAndDom>)> = self
+                .iter_environments_from_top()
+                .flat_map(|environment| {
+                    environment
+                        .known_atomic_facts_in_forall_facts
+                        .values()
+                        .flat_map(|facts| facts.iter())
+                        .chain(
+                            environment
+                                .known_atomic_facts_in_forall_facts_by_arg_shape
+                                .values()
+                                .flat_map(|shape_map| shape_map.values())
+                                .flat_map(|facts| facts.iter()),
+                        )
+                })
+                .filter_map(|(fact, params)| match fact {
+                    AtomicFact::InFact(member) => Some((member.clone(), params.clone())),
+                    _ => None,
+                })
+                .collect();
+            for (membership_pattern, forall_context) in forall_memberships {
+                let set_builder = match &membership_pattern.set {
+                    Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
+                    _ => match self.unfold_set_builder_alias_without_transport_reentry(
+                        &membership_pattern.set,
+                        &UseContextVerifyState::new_with_final_round(true),
+                    )? {
+                        Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
+                        _ => None,
+                    },
+                };
+                let Some(set_builder) = set_builder else {
+                    continue;
+                };
+                let mut element_substitution = std::collections::HashMap::new();
+                insert_symbol_substitution(
+                    &mut element_substitution,
+                    &set_builder.param_binding,
+                    membership_pattern.element.clone(),
+                );
+                for defining_fact in &set_builder.facts {
+                    let instantiated_pattern = self.inst_exist_body_fact(
+                        defining_fact,
+                        &element_substitution,
+                        ParamObjType::SetBuilder,
+                        Some(&goal.line_file()),
+                    )?;
+                    let ExistBodyFact::AtomicFact(atomic_pattern) = instantiated_pattern else {
+                        continue;
+                    };
+                    let Some(arg_map) = self
+                        .match_atomic_fact_args_against_known_forall_ordered_args(
+                            &atomic_pattern,
+                            goal,
+                            &forall_context.params_def,
+                        )?
+                    else {
+                        continue;
+                    };
+                    let membership_pattern_atomic: AtomicFact = membership_pattern.clone().into();
+                    let instantiated_membership = self.inst_atomic_fact(
+                        &membership_pattern_atomic,
+                        &arg_map,
+                        ParamObjType::Forall,
+                        Some(&goal.line_file()),
+                    )?;
+                    let requirement_state = UseContextVerifyState::new_with_final_round(true)
+                        .without_known_forall_for_equality();
+                    self.active_set_builder_forall_transport = true;
+                    let membership_result = self.verify_args_satisfy_forall_requirements(
+                        &membership_pattern_atomic,
+                        &forall_context,
+                        arg_map,
+                        &instantiated_membership,
+                        &requirement_state,
+                    );
+                    self.active_set_builder_forall_transport = false;
+                    let Some(membership_success) = membership_result? else {
+                        continue;
+                    };
+                    let membership_result: StmtResult = membership_success.into();
+                    return Ok(Some(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                            goal.clone().into(),
+                            "universal set-builder membership eliminates to its defining fact"
+                                .to_string(),
+                            vec![membership_result],
+                        )
+                        .into(),
+                    ));
+                }
+            }
+        }
+        let mut memberships: Vec<InFact> = self
+            .iter_environments_from_top()
+            .flat_map(|environment| {
+                environment
+                    .known_atomic_facts_with_2_args
+                    .values()
+                    .flat_map(|facts| facts.values())
+            })
+            .filter_map(|fact| match fact {
+                AtomicFact::InFact(member) => Some(member.clone()),
+                _ => None,
+            })
+            .collect();
+        for environment in self.iter_environments_from_top() {
+            for owner_sets in environment.known_owner_sets.values() {
+                for membership in owner_sets.values() {
+                    if !memberships
+                        .iter()
+                        .any(|known| known.to_string() == membership.to_string())
+                    {
+                        memberships.push(membership.clone());
+                    }
+                }
+            }
+        }
+        let final_state = UseContextVerifyState::new_with_final_round(false);
+
+        for membership in memberships {
+            let set_builder = match &membership.set {
+                Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
+                _ => match self.unfold_set_builder_alias_without_transport_reentry(
+                    &membership.set,
+                    &final_state,
+                )? {
+                    Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
+                    _ => self.get_obj_equal_to_set_builder(&membership.set.to_string()),
+                },
+            };
+            let Some(set_builder) = set_builder else {
+                continue;
+            };
+
+            let mut substitutions = std::collections::HashMap::new();
+            insert_symbol_substitution(
+                &mut substitutions,
+                &set_builder.param_binding,
+                membership.element.clone(),
+            );
+            for defining_fact in &set_builder.facts {
+                let instantiated = self.inst_exist_body_fact(
+                    defining_fact,
+                    &substitutions,
+                    ParamObjType::SetBuilder,
+                    Some(&goal.line_file()),
+                )?;
+                let ExistBodyFact::AtomicFact(instantiated_atomic) = instantiated else {
+                    continue;
+                };
+                if instantiated_atomic.to_string() != goal.to_string() {
+                    continue;
+                }
+
+                let membership_atomic: AtomicFact = membership.clone().into();
+                let membership_result = Self::stmt_result_for_indexed_fact(
+                    membership_atomic,
+                    "known membership in a set-builder or its one-layer alias",
+                );
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        goal.clone().into(),
+                        "set-builder membership eliminates to its instantiated defining fact"
+                            .to_string(),
+                        vec![membership_result],
+                    )
+                    .into(),
+                ));
+            }
+        }
+        Ok(None)
+    }
+
     // Binary-union introduction: a member of either side is in the union.
     // Example: `x $in A` proves `x $in union(A, B)`.
     pub(super) fn verify_in_fact_in_union_by_member_of_either_side(
@@ -855,7 +1199,7 @@ impl Runtime {
 
     // The cardinality of a finite set is a natural number, hence also an integer, rational, and real.
     // Example: if `A finite_set`, then `finite_set_size(A) $in N` and `finite_set_size(A) $in R`.
-    pub(super) fn verify_finite_set_size_in_standard_number_set(
+    pub(crate) fn verify_finite_set_size_in_standard_number_set(
         &mut self,
         in_fact: &InFact,
         finite_set_size: &FiniteSetSize,
@@ -907,19 +1251,11 @@ impl Runtime {
             return Ok(Some((StmtUnknown::new()).into()));
         }
 
-        let source_member: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            source_set.clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let source_member_result =
-            self.verify_builtin_rule_premise(&source_member, builtin_state)?;
-        if !source_member_result.is_true() {
-            return Ok(Some((StmtUnknown::new()).into()));
-        }
-
-        let Some(mut type_results) = self.verify_finite_set_extremum_source_in_standard_set(
+        // A finite-set extremum is already defined as a member of its source.
+        // Check the source carrier structurally in this same direct rule instead
+        // of spending a second builtin-rule layer on `finite_set_max(S) $in S`.
+        // Example: `n1, n2 N+` implies `finite_set_max({n1, n2}) $in N+`.
+        let Some(type_results) = self.verify_finite_set_extremum_source_in_standard_set(
             source_set,
             &in_fact.set,
             &in_fact.line_file,
@@ -929,14 +1265,11 @@ impl Runtime {
             return Ok(Some((StmtUnknown::new()).into()));
         };
 
-        let mut dependencies = vec![source_member_result];
-        dependencies.append(&mut type_results);
-
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
                 "finite-set extremum: member of a standard numeric superset".to_string(),
-                dependencies,
+                type_results,
             )
             .into(),
         ))

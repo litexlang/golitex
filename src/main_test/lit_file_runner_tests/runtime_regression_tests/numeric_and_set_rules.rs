@@ -131,6 +131,11 @@ forall X set, s finite_set:
     not $is_finite_set(X)
     =>:
         not $is_finite_set(set_minus(X, s))
+
+forall X set, a N:
+    not $is_finite_set(X)
+    =>:
+        not $is_finite_set(set_minus(X, closed_range(0, a)))
 "#;
 
     let mut runtime = Runtime::new();
@@ -350,11 +355,22 @@ forall a, b Z:
     =>:
         a + 1 <= b
         a <= b - 1
+        b - a >= 1
+
+forall s finite_set, t N:
+    t < finite_set_size(s)
+    =>:
+        t + 1 <= finite_set_size(s)
 
 forall a, b Z:
     a < b + 1
     =>:
         a <= b
+
+forall m, n Z:
+    m < n + 1
+    =>:
+        m <= (n + 1) - 1
 
 forall a, b Z:
     =>:
@@ -399,6 +415,7 @@ forall x, n Z:
                 "finite_set_min: a known-equal minimum is at most every member",
                 "integer successor: a < b gives a + 1 <= b",
                 "integer predecessor: a < b gives a <= b - 1",
+                "integer difference: a < b gives b - a >= 1",
                 "integer adjacency: a < b + 1 gives a <= b",
                 "or: integer discrete split x <= n or x >= n + 1",
                 "integer singleton interval: n <= x < n + 1 gives x = n",
@@ -792,6 +809,9 @@ forall a N, n N:
 
 forall a N_pos, n N:
     a^n $in N_pos
+
+forall n N_pos:
+    0^(1/n) = 0
 "#;
 
             let mut runtime = Runtime::new();
@@ -1325,6 +1345,45 @@ phi(a) $in R
 }
 
 #[test]
+fn symmetric_interval_center_membership_uses_positive_radius() {
+    let positive_source = r#"
+forall center R, radius R_pos:
+    center $in '(center - radius, center + radius)
+"#;
+    let mut positive_runtime = Runtime::new();
+    positive_runtime.isolated = true;
+    positive_runtime.new_file_path_new_env_new_name_scope(
+        "symmetric_interval_center_membership_uses_positive_radius",
+    );
+    let (positive_results, positive_error) =
+        run_source_code(positive_source, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "a center should lie in its positive-radius open interval:\n{positive_output}"
+    );
+
+    let unrestricted_radius = r#"
+forall center, radius R:
+    center $in '(center - radius, center + radius)
+"#;
+    let mut boundary_runtime = Runtime::new();
+    boundary_runtime.isolated = true;
+    boundary_runtime.new_file_path_new_env_new_name_scope(
+        "symmetric_interval_center_membership_rejects_unrestricted_radius",
+    );
+    let (boundary_results, boundary_error) =
+        run_source_code(unrestricted_radius, &mut boundary_runtime);
+    let (boundary_succeeded, boundary_output) =
+        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+    assert!(
+        !boundary_succeeded,
+        "an unrestricted radius must not justify open-interval membership:\n{boundary_output}"
+    );
+}
+
+#[test]
 fn real_interval_nonempty_and_well_defined_rules() {
     let source_code = r#"
 have empty_like set = '[1, 0]
@@ -1450,6 +1509,48 @@ forall x, y R:
                 run_output
             );
         },
+    );
+}
+
+#[test]
+fn absolute_value_upper_bound_accepts_direct_two_sided_sandwich_only() {
+    let positive_source = r#"
+have x R
+have epsilon R_pos
+trust -epsilon < x
+trust x < epsilon
+abs(x) < epsilon
+"#;
+    let mut positive_runtime = Runtime::new();
+    positive_runtime.new_file_path_new_env_new_name_scope(
+        "absolute_value_upper_bound_accepts_direct_two_sided_sandwich",
+    );
+    let (positive_results, positive_error) =
+        run_source_code(positive_source, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "a direct two-sided sandwich should prove the absolute-value bound:\n{positive_output}"
+    );
+
+    let negative_source = r#"
+have x R
+have epsilon R_pos
+trust x < epsilon
+abs(x) < epsilon
+"#;
+    let mut negative_runtime = Runtime::new();
+    negative_runtime.new_file_path_new_env_new_name_scope(
+        "absolute_value_upper_bound_requires_both_sides_of_sandwich",
+    );
+    let (negative_results, negative_error) =
+        run_source_code(negative_source, &mut negative_runtime);
+    let (negative_succeeded, negative_output) =
+        render_run_source_code_output(&negative_runtime, &negative_results, &negative_error, false);
+    assert!(
+        !negative_succeeded,
+        "one upper side alone must not prove an absolute-value bound:\n{negative_output}"
     );
 }
 
@@ -2812,6 +2913,174 @@ thm finite_set_extrema_have_defining_properties:
 }
 
 #[test]
+fn finite_set_extrema_inherit_positive_natural_carriers_in_one_rule() {
+    let positive_source = r#"
+forall n1, n2 N_pos:
+    finite_set_max(union({n1}, {n2})) $in N_pos
+"#;
+    let mut positive_runtime = Runtime::new();
+    positive_runtime.isolated = true;
+    positive_runtime.new_file_path_new_env_new_name_scope(
+        "finite_set_extrema_inherit_positive_natural_carriers_in_one_rule",
+    );
+    let (positive_results, positive_error) =
+        run_source_code(positive_source, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "a maximum of positive naturals should inherit N_pos directly:\n{positive_output}"
+    );
+    assert!(
+        positive_output.contains("finite-set extremum: member of a standard numeric superset"),
+        "missing finite-set extremum carrier provenance:\n{positive_output}"
+    );
+
+    let nonpositive_boundary = r#"
+forall n N:
+    finite_set_max({n}) $in N_pos
+"#;
+    let mut boundary_runtime = Runtime::new();
+    boundary_runtime.isolated = true;
+    boundary_runtime.new_file_path_new_env_new_name_scope(
+        "finite_set_extrema_do_not_invent_positive_natural_carriers",
+    );
+    let (boundary_results, boundary_error) =
+        run_source_code(nonpositive_boundary, &mut boundary_runtime);
+    let (boundary_succeeded, boundary_output) =
+        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+    assert!(
+        !boundary_succeeded,
+        "a merely natural singleton maximum must not be promoted to N_pos:\n{boundary_output}"
+    );
+}
+
+#[test]
+fn positive_quotient_strategy_descends_through_a_positive_difference() {
+    let positive_source = r#"
+forall a, b R:
+    a > b
+    =>:
+        (a - b) / 2 $in R_pos
+"#;
+    let mut positive_runtime = Runtime::new();
+    positive_runtime.isolated = true;
+    positive_runtime.new_file_path_new_env_new_name_scope(
+        "positive_quotient_strategy_descends_through_a_positive_difference",
+    );
+    let (positive_results, positive_error) =
+        run_source_code(positive_source, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "a positive difference divided by a positive constant should be positive:\n{positive_output}"
+    );
+
+    let negative_denominator = r#"
+forall a, b R:
+    a > b
+    =>:
+        (a - b) / (-2) $in R_pos
+"#;
+    let mut boundary_runtime = Runtime::new();
+    boundary_runtime.isolated = true;
+    boundary_runtime.new_file_path_new_env_new_name_scope(
+        "positive_quotient_strategy_rejects_a_negative_denominator",
+    );
+    let (boundary_results, boundary_error) =
+        run_source_code(negative_denominator, &mut boundary_runtime);
+    let (boundary_succeeded, boundary_output) =
+        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+    assert!(
+        !boundary_succeeded,
+        "a positive numerator over a negative denominator must not be positive:\n{boundary_output}"
+    );
+}
+
+#[test]
+fn positive_base_power_is_nonzero_during_definition_well_definedness() {
+    let positive_source = r#"
+prop has_positive_index_reciprocal_square(u fn(n N_pos) R):
+    forall n N_pos:
+        u(n) = 1 / n^2
+"#;
+    let mut positive_runtime = Runtime::new();
+    positive_runtime.isolated = true;
+    positive_runtime.new_file_path_new_env_new_name_scope(
+        "positive_base_power_is_nonzero_during_definition_well_definedness",
+    );
+    let (positive_results, positive_error) =
+        run_source_code(positive_source, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "a positive-natural base power should be nonzero while defining a reciprocal:\n{positive_output}"
+    );
+
+    let natural_boundary = r#"
+prop has_natural_index_reciprocal_square(u fn(n N) R):
+    forall n N:
+        u(n) = 1 / n^2
+"#;
+    let mut boundary_runtime = Runtime::new();
+    boundary_runtime.isolated = true;
+    boundary_runtime.new_file_path_new_env_new_name_scope(
+        "natural_base_power_may_be_zero_during_definition_well_definedness",
+    );
+    let (boundary_results, boundary_error) =
+        run_source_code(natural_boundary, &mut boundary_runtime);
+    let (boundary_succeeded, boundary_output) =
+        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+    assert!(
+        !boundary_succeeded,
+        "an arbitrary natural base may be zero and must not justify a reciprocal:\n{boundary_output}"
+    );
+}
+
+#[test]
+fn positive_interval_lower_bound_keeps_reciprocal_well_defined() {
+    let positive_interval = r#"
+prop reciprocal_on_positive_interval(a, b R+):
+    forall x '[a, b]:
+        1 / x $in R
+"#;
+    let mut positive_runtime = Runtime::new();
+    positive_runtime.isolated = true;
+    positive_runtime.new_file_path_new_env_new_name_scope(
+        "positive_interval_lower_bound_keeps_reciprocal_well_defined",
+    );
+    let (positive_results, positive_error) =
+        run_source_code(positive_interval, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "a value above a positive interval endpoint should be nonzero:\n{positive_output}"
+    );
+
+    let interval_crossing_zero = r#"
+prop reciprocal_on_arbitrary_interval(a, b R):
+    forall x '[a, b]:
+        1 / x $in R
+"#;
+    let mut boundary_runtime = Runtime::new();
+    boundary_runtime.isolated = true;
+    boundary_runtime.new_file_path_new_env_new_name_scope(
+        "arbitrary_interval_lower_bound_does_not_prove_nonzero",
+    );
+    let (boundary_results, boundary_error) =
+        run_source_code(interval_crossing_zero, &mut boundary_runtime);
+    let (boundary_succeeded, boundary_output) =
+        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+    assert!(
+        !boundary_succeeded,
+        "an interval with an unrestricted endpoint may contain zero:\n{boundary_output}"
+    );
+}
+
+#[test]
 fn native_binary_max_and_min_calculate() {
     let source_code = r#"
 max(1, 2) = 2
@@ -2980,6 +3249,245 @@ closed_range(-2, 2) $subset N
     assert!(
         !run_succeeded,
         "a negative lower endpoint must not imply a natural carrier:\n{run_output}"
+    );
+}
+
+#[test]
+fn negation_maps_known_positive_scalars_to_negative_carriers() {
+    let source_code = r#"
+forall n N+:
+    -n $in Z-
+
+forall q Q+:
+    -q $in Q-
+
+forall r R+:
+    -r $in R-
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "negation_maps_known_positive_scalars_to_negative_carriers",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "negation of positive scalars should preserve the matching negative carrier:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("negation maps a positive scalar into the matching negative carrier"),
+        "negative-carrier provenance is missing:\n{run_output}"
+    );
+}
+
+#[test]
+fn negation_does_not_make_a_merely_nonnegative_integer_strictly_negative() {
+    let source_code = r#"
+forall n N:
+    -n $in Z-
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "negation_does_not_make_a_merely_nonnegative_integer_strictly_negative",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "negation of a possibly-zero natural must not imply Z-:\n{run_output}"
+    );
+}
+
+#[test]
+fn absolute_value_of_a_known_nonzero_integer_is_positive_natural() {
+    let source_code = r#"
+forall z Z_nz:
+    abs(z) $in N+
+
+forall z Z-:
+    abs(z) $in N+
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "absolute_value_of_a_known_nonzero_integer_is_positive_natural",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "absolute value should map nonzero integers to N+:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("absolute value of a known nonzero integer is a positive natural"),
+        "absolute-value carrier provenance is missing:\n{run_output}"
+    );
+}
+
+#[test]
+fn absolute_value_of_a_merely_natural_number_need_not_be_positive() {
+    let source_code = r#"
+forall n N:
+    abs(n) $in N+
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "absolute_value_of_a_merely_natural_number_need_not_be_positive",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "abs(0) prevents promotion from N to N+:\n{run_output}"
+    );
+}
+
+#[test]
+fn strict_sign_refines_known_integer_carriers() {
+    let source_code = r#"
+forall z Z_nz:
+    z > 0
+    =>:
+        z $in N+
+
+forall z Z_nz:
+    z < 0
+    =>:
+        z $in Z-
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("strict_sign_refines_known_integer_carriers");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "strict sign should refine a known integer carrier:\n{run_output}"
+    );
+    assert!(
+        run_output
+            .contains("refined integer carrier from known integer membership and strict sign"),
+        "refined integer-carrier provenance is missing:\n{run_output}"
+    );
+}
+
+#[test]
+fn integer_membership_without_a_strict_sign_does_not_imply_n_pos() {
+    let source_code = r#"
+forall z Z:
+    z $in N+
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "integer_membership_without_a_strict_sign_does_not_imply_n_pos",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "integer membership alone must not imply N+:\n{run_output}"
+    );
+}
+
+#[test]
+fn literal_cart_subsets_are_componentwise() {
+    let source_code = r#"
+forall A1, A2, B1, B2 set:
+    A1 $subset B1
+    A2 $subset B2
+    =>:
+        cart(A1, A2) $subset cart(B1, B2)
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("literal_cart_subsets_are_componentwise");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "componentwise cart subset should verify:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("Cartesian-product subset from componentwise subsets"),
+        "componentwise cart subset provenance is missing:\n{run_output}"
+    );
+}
+
+#[test]
+fn literal_cart_subset_requires_every_component_subset() {
+    let source_code = r#"
+forall A1, A2, B1, B2 set:
+    A1 $subset B1
+    =>:
+        cart(A1, A2) $subset cart(B1, B2)
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "literal_cart_subset_requires_every_component_subset",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "cart subset must require every component subset:\n{run_output}"
+    );
+}
+
+#[test]
+fn union_and_literal_finite_set_subset_introduction_use_known_leaves() {
+    let source_code = r#"
+forall T set, x T:
+    {x} $subset T
+
+forall A, B, T set:
+    A $subset T
+    B $subset T
+    =>:
+        union(A, B) $subset T
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "union_and_literal_finite_set_subset_introduction_use_known_leaves",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "set-constructor subset introduction should verify:\n{run_output}"
+    );
+    for rule in [
+        "literal finite-set subset from member facts",
+        "union subset from both operand subsets",
+    ] {
+        assert!(
+            run_output.contains(rule),
+            "set-constructor subset provenance `{rule}` is missing:\n{run_output}"
+        );
+    }
+}
+
+#[test]
+fn union_subset_requires_both_operand_subsets() {
+    let source_code = r#"
+forall A, B, T set:
+    A $subset T
+    =>:
+        union(A, B) $subset T
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("union_subset_requires_both_operand_subsets");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "union subset must require both operand subsets:\n{run_output}"
     );
 }
 
