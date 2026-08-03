@@ -259,13 +259,17 @@ Constructor and definition strategies remain local. They can check a dependent
 tuple as a struct, project a callable field through one checked constructor,
 or unfold one literal/checked/template set builder or one exact indexed named
 builder for membership. They do not scan all local aliases. Equality replay can
-unfold one checked body against simple arithmetic. Separately, known-only
-equality first tries its original direct lookup/calculation path, then compares
-every corresponding argument of matching constructors through already-known
-equalities. Function applications align
+unfold one checked body against simple arithmetic. Known-only equality first
+checks identity, direct lookup/calculation, or an already stored equality
+class, then applies structural congruence using only those same known-equality
+leaves. Separately, at outer round 0, a full equality goal reuses the same
+constructor matcher while allowing each corresponding child equality to use
+the bounded builtin/equality verifier. Function applications align
 from the final argument group backwards, so `f(a, b) = g(1, 2)(a, b)` reduces
-to the known function-part equality `f = g(1, 2)` together with the
-corresponding argument equalities.
+to the function-part equality `f = g(1, 2)` together with the corresponding
+argument equalities. Known-fact lookup can transport another predicate through
+the known-only congruence route, but it does not launch the fuller child-proof
+route implicitly.
 
 For integers, the checker also recognizes the two exact singleton intervals:
 `n <= x < n + 1` closes `x = n`, and `n < x <= n + 1` closes

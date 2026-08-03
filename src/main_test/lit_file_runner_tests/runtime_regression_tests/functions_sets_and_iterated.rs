@@ -131,6 +131,30 @@ f(a, b) = g(1, 2)(3, 4)
 }
 
 #[test]
+fn structural_known_congruence_compares_interval_endpoints() {
+    let source_code = r#"
+have a, b, c, d R
+trust a = c
+trust b = d
+'(a, b] = '(c, d]
+'(,a] = '(,c]
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "structural_known_congruence_compares_interval_endpoints",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "bounded intervals and rays should share the central known-congruence route:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn cart_valued_function_membership_does_not_reenter_projection_well_definedness() {
     run_with_large_stack(
         "cart_valued_function_membership_does_not_reenter_projection_well_definedness",
