@@ -177,6 +177,47 @@ pub struct DefTemplateStmt {
     pub line_file: LineFile,
 }
 
+/// A named abbreviation for a repeated `forall` parameter/domain prefix.
+///
+/// A setting is elaboration-only: using it produces an ordinary [`ForallFact`]
+/// whose binders are freshly alpha-renamed at every use site.
+#[derive(Clone)]
+pub struct DefSettingStmt {
+    pub name: String,
+    pub param_def: ParamDefWithType,
+    pub dom_facts: Vec<Fact>,
+    pub line_file: LineFile,
+}
+
+impl DefSettingStmt {
+    pub fn new(
+        name: String,
+        param_def: ParamDefWithType,
+        dom_facts: Vec<Fact>,
+        line_file: LineFile,
+    ) -> Self {
+        Self {
+            name,
+            param_def,
+            dom_facts,
+            line_file,
+        }
+    }
+}
+
+impl fmt::Display for DefSettingStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{} {}{}", SETTING, self.name, COLON)?;
+        for group in self.param_def.iter() {
+            write!(f, "\n    {}", group)?;
+        }
+        for fact in &self.dom_facts {
+            write!(f, "\n    {}", fact)?;
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone)]
 pub enum TemplateDefEnum {
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),

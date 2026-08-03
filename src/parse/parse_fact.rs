@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn parse_fact(&mut self, tb: &mut TokenBlock) -> Result<Fact, RuntimeError> {
@@ -317,45 +318,134 @@ impl Runtime {
     ) -> Result<Fact, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(FORALL)?;
-            let mut groups: Vec<ParamGroupWithParamType> = vec![];
-            while tb.current()? != COLON {
-                groups.push(
-                    this.parse_param_def_with_param_type_and_skip_comma(tb, ParamObjType::Forall)?,
-                );
-            }
-            let param_def = ParamDefWithType::new(groups);
-            let forall_param_names = param_def.collect_param_names();
-            this.register_collected_param_names_for_def_parse(
-                &forall_param_names,
-                tb.line_file.clone(),
-            )?;
-            tb.skip_token(COLON)?;
-
-            let last_is_equiv = {
-                let last_body = tb.body.last().ok_or_else(|| {
-                    RuntimeError::from(ParseRuntimeError(
+            let setting_prefix = if tb.current_token_is_equal_to(LEFT_BRACKET) {
+                tb.skip_token(LEFT_BRACKET)?;
+                if tb.current_token_is_equal_to(RIGHT_BRACKET) {
+                    return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "Expected body".to_string(),
+                            "forall setting reference cannot be empty".to_string(),
                             tb.line_file.clone(),
                         ),
-                    ))
-                })?;
-                last_body.current()? == EQUIVALENT_SIGN
-            };
-            let fact_result = if last_is_equiv {
-                this.parse_forall_with_iff(tb, param_def)
+                    )));
+                }
+                let setting_name = this.parse_module_qualified_reference_name(tb)?.to_string();
+                tb.skip_token(RIGHT_BRACKET)?;
+                if !tb.current_token_is_equal_to(COLON) {
+                    tb.skip_token(COMMA).map_err(|_| {
+                        RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file(
+                                "expected `,` or `:` after forall setting reference".to_string(),
+                                tb.line_file.clone(),
+                            ),
+                        ))
+                    })?;
+                }
+                let setting = this
+                    .get_setting_definition_by_name(&setting_name)
+                    .ok_or_else(|| {
+                        RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file(
+                                format!("unknown setting `{}`", setting_name),
+                                tb.line_file.clone(),
+                            ),
+                        ))
+                    })?;
+                this.fresh_setting_forall_prefix(&setting, tb.line_file.clone())?
             } else {
-                this.parse_forall(tb, param_def)
+                ForallFact::new(
+                    ParamDefWithType::new(Vec::new()),
+                    Vec::new(),
+                    Vec::new(),
+                    tb.line_file.clone(),
+                )?
             };
-            this.end_parsing_scope(ParamObjType::Forall, &forall_param_names);
-            fact_result
+
+            let setting_bindings = setting_prefix
+                .params_def_with_type
+                .collect_param_bindings();
+            this.parse_in_existing_free_param_scope(
+                ParamObjType::Forall,
+                &setting_bindings,
+                tb.line_file.clone(),
+                |this| {
+                    let mut groups = setting_prefix.params_def_with_type.groups.clone();
+                    let mut explicit_param_names = Vec::new();
+                    while tb.current()? != COLON {
+                        let group = this.parse_param_def_with_param_type_and_skip_comma(
+                            tb,
+                            ParamObjType::Forall,
+                        )?;
+                        explicit_param_names.extend(
+                            group
+                                .params
+                                .iter()
+                                .map(|binding| binding.name().to_string()),
+                        );
+                        groups.push(group);
+                    }
+                    let param_def = ParamDefWithType::new(groups);
+                    let forall_param_names = param_def.collect_param_names();
+                    this.register_collected_param_names_for_def_parse(
+                        &forall_param_names,
+                        tb.line_file.clone(),
+                    )?;
+                    tb.skip_token(COLON)?;
+
+                    let last_is_equiv = {
+                        let last_body = tb.body.last().ok_or_else(|| {
+                            RuntimeError::from(ParseRuntimeError(
+                                RuntimeErrorStruct::new_with_msg_and_line_file(
+                                    "Expected body".to_string(),
+                                    tb.line_file.clone(),
+                                ),
+                            ))
+                        })?;
+                        last_body.current()? == EQUIVALENT_SIGN
+                    };
+                    let initial_dom_facts = setting_prefix.dom_facts.clone();
+                    let fact_result = if last_is_equiv {
+                        this.parse_forall_with_iff(tb, param_def, initial_dom_facts)
+                    } else {
+                        this.parse_forall(tb, param_def, initial_dom_facts)
+                    };
+                    this.end_parsing_scope(ParamObjType::Forall, &explicit_param_names);
+                    fact_result
+                },
+            )
         })
+    }
+
+    fn fresh_setting_forall_prefix(
+        &self,
+        setting: &DefSettingStmt,
+        use_line_file: LineFile,
+    ) -> Result<ForallFact, RuntimeError> {
+        let skeleton = ForallFact::new(
+            setting.param_def.clone(),
+            setting.dom_facts.clone(),
+            Vec::new(),
+            setting.line_file.clone(),
+        )?;
+        let mut rename_map: HashMap<String, Obj> = HashMap::new();
+        for source_binding in setting.param_def.collect_param_bindings() {
+            let fresh_binding =
+                self.allocate_local_symbol_binding(source_binding.name().to_string())?;
+            insert_symbol_substitution(
+                &mut rename_map,
+                &source_binding,
+                ForallFreeParamObj::new(&fresh_binding).into(),
+            );
+        }
+        let mut fresh = self.alpha_rename_forall_fact(&skeleton, &rename_map)?;
+        fresh.line_file = use_line_file;
+        Ok(fresh)
     }
 
     fn parse_forall_with_iff(
         &mut self,
         tb: &mut TokenBlock,
         param_def: ParamDefWithType,
+        mut dom_facts: Vec<Fact>,
     ) -> Result<Fact, RuntimeError> {
         if tb.body.len() < 2 {
             return Err(RuntimeError::from(ParseRuntimeError(
@@ -366,7 +456,6 @@ impl Runtime {
             )));
         }
 
-        let mut dom_facts: Vec<Fact> = Vec::new();
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         let mut iff_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
@@ -411,6 +500,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
         param_def: ParamDefWithType,
+        mut initial_dom_facts: Vec<Fact>,
     ) -> Result<Fact, RuntimeError> {
         let last_body = tb.body.last().ok_or_else(|| {
             RuntimeError::from(ParseRuntimeError(
@@ -421,10 +511,9 @@ impl Runtime {
             ))
         })?;
         if last_body.current()? == RIGHT_ARROW {
-            let mut dom_facts: Vec<Fact> = vec![];
             let n = tb.body.len();
             for block in tb.body.iter_mut().take(n - 1) {
-                dom_facts.push(self.parse_fact(block)?);
+                initial_dom_facts.push(self.parse_fact(block)?);
             }
             let last = tb.body.last_mut().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
@@ -439,13 +528,25 @@ impl Runtime {
             for block in last.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone())?.into())
+            Ok(ForallFact::new(
+                param_def,
+                initial_dom_facts,
+                then_facts,
+                tb.line_file.clone(),
+            )?
+            .into())
         } else {
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in tb.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(ForallFact::new(param_def, vec![], then_facts, tb.line_file.clone())?.into())
+            Ok(ForallFact::new(
+                param_def,
+                initial_dom_facts,
+                then_facts,
+                tb.line_file.clone(),
+            )?
+            .into())
         }
     }
 

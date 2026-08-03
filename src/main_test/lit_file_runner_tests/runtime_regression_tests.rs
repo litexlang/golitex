@@ -92,5 +92,6 @@ mod output_contracts;
 mod proof_control_and_choice;
 mod proper_set_relations;
 mod sequence_semantics;
+mod setting_syntax;
 mod structural_definitions;
 mod trusted_prefix;

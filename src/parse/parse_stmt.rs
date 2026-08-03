@@ -70,6 +70,7 @@ impl Runtime {
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
             TEMPLATE => self.parse_def_template_stmt(tb),
+            SETTING => self.parse_def_setting_stmt(tb),
             ALGO => Err(parse_stmt_error(
                 tb,
                 "algorithm implementations must use `have algo for f(...)`",

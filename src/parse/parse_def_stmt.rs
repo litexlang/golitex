@@ -1,6 +1,85 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub fn parse_def_setting_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(SETTING)?;
+        let name = tb.advance()?;
+        self.validate_name(&name, tb.line_file.clone())?;
+        tb.skip_token(COLON)?;
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "setting header expects `setting Name:`".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        if tb.body.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "setting expects at least one parameter line".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+
+        self.run_in_local_parsing_time_name_scope(|this| {
+            let mut groups = Vec::new();
+            let mut dom_facts = Vec::new();
+            let mut saw_fact = false;
+
+            for block in tb.body.iter_mut() {
+                let saved_parse_context = this.current_parse_context().clone();
+                let mut probe = block.clone();
+                let parsed_group = if probe.body.is_empty() {
+                    this.parse_param_def_with_param_type_and_skip_comma(
+                        &mut probe,
+                        ParamObjType::Forall,
+                    )
+                    .ok()
+                    .filter(|_| probe.exceed_end_of_head())
+                } else {
+                    None
+                };
+
+                if let Some(group) = parsed_group {
+                    if saw_fact {
+                        return Err(RuntimeError::from(ParseRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_line_file(
+                                "setting parameter lines must come before common-condition facts"
+                                    .to_string(),
+                                block.line_file.clone(),
+                            ),
+                        )));
+                    }
+                    groups.push(group);
+                    continue;
+                }
+
+                *this.current_parse_context_mut() = saved_parse_context;
+                saw_fact = true;
+                dom_facts.push(this.parse_fact(block)?);
+            }
+
+            if groups.is_empty() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "setting expects at least one parameter line before its facts".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+
+            Ok(DefSettingStmt::new(
+                name,
+                ParamDefWithType::new(groups),
+                dom_facts,
+                tb.line_file.clone(),
+            )
+            .into())
+        })
+    }
+
     pub fn parse_def_template_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(TEMPLATE)?;
         if !tb.current_token_is_equal_to(LESS) {

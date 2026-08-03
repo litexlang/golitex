@@ -917,6 +917,43 @@ x = 2
 
 The last line is an `error` because the bound `x` no longer exists.
 
+#### Named universal settings
+
+`setting` gives a name to a parameter prefix and its shared assumptions. It is
+useful when a chapter repeatedly quantifies over the same mathematical
+objects:
+
+```litex
+setting EqualPair:
+    X nonempty_set
+    x, y X
+    x = y
+
+forall [EqualPair], z X:
+    z = z
+```
+
+This elaborates to the ordinary fact:
+
+```litex
+forall X nonempty_set, x, y X, z X:
+    x = y
+    =>:
+        z = z
+```
+
+Parameter lines must precede shared-assumption lines in a `setting`. The
+setting does not introduce global objects and does not assert its assumptions;
+it only abbreviates the corresponding `forall` prefix. Every use allocates
+fresh binders, even when the same setting is used several times. Extra
+parameters require a comma after the closing bracket.
+
+The first version supports settings in block `forall [Name]` headers, including
+goal and `not forall` blocks because they use the same universal parser. It does
+not expand inside `forall!`, definition headers, template headers, or object
+expressions. A module-qualified setting may be referenced as
+`forall [Module::Name]:`.
+
 `forall!` is the one-line form used inside braced fact bodies:
 
 ```litex
@@ -1574,7 +1611,7 @@ The claim is `unknown` because the target was never established.
 | Family | Public forms |
 |---|---|
 | Facts and binders | bare fact; `have`; `trust have`; `obtain`; `have by preimage` |
-| Definitions | `prop`; `abstract_prop`; `struct`; `template`; all `have fn` forms; symbolic tuple/cart/sequence/matrix forms |
+| Definitions | `prop`; `abstract_prop`; `struct`; `template`; `setting`; all `have fn` forms; symbolic tuple/cart/sequence/matrix forms |
 | Proof interfaces | `claim`; `thm`; `axiom`; `by thm`; `sketch`; `try`; `trust` |
 | Proof control | `witness`; `by cases`; `by contra`; `by def`; enumeration; induction; `by for`; `by extension` |
 | Predicate properties | `by reflexive_prop`; `by transitive_prop`; `by symmetric_prop`; `by antisymmetric_prop` |
@@ -1600,6 +1637,7 @@ explanation; this index does not repeat its examples.
 | Multiple names in one domain | `x, y R` | [Universal facts](#universal-facts) |
 | Domain condition | `x R: x != 0` | [Domain obligations](#domain-obligations) |
 | Parameterized definition | `template<S set, x S>:` | [Templates](#templates) |
+| Named universal prefix | `setting Name: ...`, then `forall [Name], ...:` | [Named universal settings](#named-universal-settings) |
 | Struct parameter | `struct Group<S nonempty_set>:` | [Struct objects](#struct-objects-and-explicit-or-default-view-field-access-preview) |
 
 ### Object syntax index
@@ -1620,7 +1658,7 @@ explanation; this index does not repeat its examples.
 | Atomic | equality, order, membership, set relations, named predicates | [Atomic facts](#atomic-facts) |
 | Compound | `and`, relation chains, `or` | [Conjunctions, chains, and disjunctions](#conjunctions-chains-and-disjunctions) |
 | Existential | `exist`, `exist!`, `not exist` | [Existential facts](#existential-facts) |
-| Universal | `forall`, `forall!`, `forall ... <=>:`, `not forall` | [Universal facts](#universal-facts) |
+| Universal | `forall`, `forall [Setting]`, `forall!`, `forall ... <=>:`, `not forall` | [Universal facts](#universal-facts) |
 | Function predicates | `$fn_eq_in`, `$fn_eq`, mapping properties | [Function predicates](#function-predicates) |
 
 ### Statement syntax index

@@ -35,6 +35,7 @@ pub struct Environment {
     pub defined_algorithms: HashMap<AlgoName, DefAlgoStmt>,
     pub defined_structs: HashMap<StructName, DefStructStmt>,
     pub defined_templates: HashMap<TemplateName, DefTemplateStmt>,
+    pub defined_settings: HashMap<String, DefSettingStmt>,
     pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
     pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
 
@@ -156,6 +157,7 @@ impl Environment {
             defined_algorithms: algorithms,
             defined_structs: structs,
             defined_templates: templates,
+            defined_settings: HashMap::new(),
             defined_thm_stmts,
             defined_strategy_stmts: HashMap::new(),
             known_equality,
@@ -201,6 +203,7 @@ impl fmt::Display for Environment {
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
         write!(f, "    structs: {:?}\n", self.defined_structs.len())?;
         write!(f, "    templates: {:?}\n", self.defined_templates.len())?;
+        write!(f, "    settings: {:?}\n", self.defined_settings.len())?;
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
         write!(
             f,

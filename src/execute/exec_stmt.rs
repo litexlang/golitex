@@ -81,6 +81,11 @@ impl Runtime {
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(d)) => {
                 self.exec_def_template_stmt(d)
             }
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(s)) => {
+                self.store_def_setting(s)
+                    .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
+                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
+            }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(s)) => {
                 self.exec_def_struct_stmt(s)
             }
@@ -202,6 +207,11 @@ impl Runtime {
             }
             Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) => {
                 self.store_def_template(s)
+                    .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
+                Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
+            }
+            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(s)) => {
+                self.store_def_setting(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
                 Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())
             }
