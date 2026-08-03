@@ -7,6 +7,10 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(atomic_fact) {
+            return Ok(memoized_result);
+        }
+
         let Some(strategy_name) = self.active_strategy_name_for_atomic_fact(atomic_fact) else {
             return Ok(StmtUnknown::new().into());
         };
@@ -31,13 +35,14 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         };
 
-        self.verify_atomic_fact_with_strategy_args(
+        let result = self.verify_atomic_fact_with_strategy_args(
             atomic_fact,
             &strategy,
             &strategy_name,
             arg_map,
             verify_state,
-        )
+        )?;
+        Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
     }
 
     fn active_strategy_name_for_atomic_fact(

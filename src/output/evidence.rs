@@ -97,7 +97,7 @@ pub(crate) fn factual_success_forall_proof_fields(
     x: &FactualStmtSuccess,
     output_style: OutputStyle,
 ) -> Vec<(String, JsonValue)> {
-    match &x.verified_by {
+    match x.underlying_verified_by() {
         VerifiedByResult::ForallProof(proof) => {
             forall_proof_top_level_fields(runtime, proof, output_style)
         }
@@ -155,6 +155,13 @@ fn verified_by_result_json_value(
         VerifiedByResult::ForallProof(proof) => {
             JsonValue::Object(forall_proof_top_level_fields(runtime, proof, output_style))
         }
+        VerifiedByResult::StatementMemo(source) => verified_by_result_json_value(
+            runtime,
+            &source.verified_by,
+            current_line_file,
+            verify_goal,
+            output_style,
+        ),
     }
 }
 
@@ -440,6 +447,13 @@ fn verified_bys_enum_json_value(
             include_verify_what.then_some(&r.verify_what),
             output_style,
         ),
+        VerifiedBysEnum::ByStatementMemo(verify_what, source) => verified_by_result_json_value(
+            runtime,
+            &source.verified_by,
+            current_line_file,
+            include_verify_what.then_some(verify_what),
+            output_style,
+        ),
     }
 }
 
@@ -546,20 +560,15 @@ fn folded_builtin_steps_value(
     if output_style.is_detailed() || items.len() < 2 {
         return None;
     }
-    let first_rule = match items.first()? {
-        VerifiedBysEnum::ByBuiltinRule(r) => r.msg.as_str(),
-        _ => return None,
-    };
-    if items
-        .iter()
-        .any(|item| matches!(item, VerifiedBysEnum::ByBuiltinRule(r) if !r.subgoals.is_empty()))
-    {
+    let first_rule = verified_bys_item_builtin_rule(items.first()?)?;
+    if items.iter().any(|item| {
+        verified_bys_item_builtin_rule(item).is_none_or(|(_, subgoals)| !subgoals.is_empty())
+    }) {
         return None;
     }
-    if !items
-        .iter()
-        .all(|item| matches!(item, VerifiedBysEnum::ByBuiltinRule(r) if r.msg == first_rule))
-    {
+    if !items.iter().all(|item| {
+        verified_bys_item_builtin_rule(item).is_some_and(|(msg, _)| msg == first_rule.0)
+    }) {
         return None;
     }
 
@@ -575,9 +584,20 @@ fn folded_builtin_steps_value(
         ("facts".to_string(), JsonValue::Array(facts)),
         (
             JSON_KEY_VERIFICATION.to_string(),
-            verified_by_builtin_rule_value(runtime, first_rule, None, &[], output_style),
+            verified_by_builtin_rule_value(runtime, first_rule.0, None, &[], output_style),
         ),
     ]))
+}
+
+fn verified_bys_item_builtin_rule(item: &VerifiedBysEnum) -> Option<(&str, &[StmtResult])> {
+    match item {
+        VerifiedBysEnum::ByBuiltinRule(rule) => Some((rule.msg.as_str(), &rule.subgoals)),
+        VerifiedBysEnum::ByStatementMemo(_, source) => match source.underlying_verified_by() {
+            VerifiedByResult::BuiltinRule(rule) => Some((rule.msg.as_str(), &rule.subgoals)),
+            _ => None,
+        },
+        _ => None,
+    }
 }
 
 fn known_forall_instantiation_json_value(
@@ -731,6 +751,7 @@ impl VerifiedBysEnum {
             VerifiedBysEnum::ByBuiltinStrategy(r) => &r.verify_what,
             VerifiedBysEnum::ByFact(r) => &r.verify_what,
             VerifiedBysEnum::ByKnownForall(r) => &r.verify_what,
+            VerifiedBysEnum::ByStatementMemo(verify_what, _) => verify_what,
         }
     }
 }

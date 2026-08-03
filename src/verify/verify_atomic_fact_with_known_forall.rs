@@ -10,12 +10,17 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(atomic_fact) {
+            return Ok(memoized_result);
+        }
+
         known_forall_profile::record_entry();
         if let Some(fact_verified) =
             self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
         {
             known_forall_profile::record_success();
-            return Ok((fact_verified).into());
+            let result = fact_verified.into();
+            return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
         }
 
         if let Some(resolved_fact) = self.resolved_atomic_fact_for_lookup(atomic_fact) {
@@ -24,7 +29,8 @@ impl Runtime {
             {
                 fact_verified.stmt = atomic_fact.clone().into();
                 known_forall_profile::record_success();
-                return Ok(fact_verified.into());
+                let result = fact_verified.into();
+                return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
             }
         }
 
@@ -40,7 +46,8 @@ impl Runtime {
                 verify_state,
             )? {
                 known_forall_profile::record_success();
-                return Ok((fact_verified).into());
+                let result = fact_verified.into();
+                return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
             }
 
             known_forall_profile::record_unknown();

@@ -1805,5 +1805,5 @@ fn statement_environment_effect(kind: &str, stmt: &Stmt) -> JsonValue {
 }
 
 fn factual_success_is_forall_proof(x: &FactualStmtSuccess) -> bool {
-    matches!(x.verified_by, VerifiedByResult::ForallProof(_))
+    matches!(x.underlying_verified_by(), VerifiedByResult::ForallProof(_))
 }

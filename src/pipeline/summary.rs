@@ -267,6 +267,9 @@ impl RunSummary {
             VerifiedByResult::Fact(_) => {
                 bump_count(&mut self.proof_method_counts, "known fact");
             }
+            VerifiedByResult::StatementMemo(source) => {
+                self.visit_verified_by(&source.verified_by, depth);
+            }
         }
     }
 
@@ -291,6 +294,9 @@ impl RunSummary {
             }
             VerifiedBysEnum::ByFact(_) => {
                 bump_count(&mut self.proof_method_counts, "known fact");
+            }
+            VerifiedBysEnum::ByStatementMemo(_, source) => {
+                self.visit_verified_by(&source.verified_by, depth);
             }
         }
     }

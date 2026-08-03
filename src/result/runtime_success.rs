@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use std::fmt;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct NonFactualStmtSuccess {
@@ -254,6 +255,8 @@ pub enum VerifiedBysEnum {
     ByBuiltinStrategy(FactVerifiedByBuiltinRuleInVerifiedBys),
     ByFact(FactVerifiedByFactInVerifiedBys),
     ByKnownForall(FactVerifiedByKnownForallInVerifiedBys),
+    /// Internal proof sharing; output and dependency analysis expose the source proof.
+    ByStatementMemo(Fact, Rc<FactualStmtSuccess>),
 }
 
 #[derive(Debug)]
@@ -264,6 +267,8 @@ pub enum VerifiedByResult {
     KnownForallInstantiation(KnownForallInstantiationResult),
     VerifiedBys(VerifiedBysResult),
     ForallProof(ForallProofResult),
+    /// Internal proof sharing; this is not a user-visible verification method.
+    StatementMemo(Rc<FactualStmtSuccess>),
 }
 
 #[derive(Debug)]
@@ -356,8 +361,30 @@ impl FactualStmtSuccess {
         )
     }
 
+    pub fn new_with_statement_memo(
+        stmt: Fact,
+        infers: InferResult,
+        source: Rc<FactualStmtSuccess>,
+    ) -> Self {
+        Self::new_with_verified_by_builtin_rules(
+            stmt,
+            infers,
+            VerifiedByResult::StatementMemo(source),
+        )
+    }
+
     pub fn is_verified_by_builtin_rules_only(&self) -> bool {
         self.verified_by.tree_is_builtin_rules_only()
+    }
+
+    pub(crate) fn underlying_verified_by(&self) -> &VerifiedByResult {
+        let mut success = self;
+        loop {
+            match &success.verified_by {
+                VerifiedByResult::StatementMemo(source) => success = source,
+                verified_by => return verified_by,
+            }
+        }
     }
 }
 
@@ -452,6 +479,7 @@ impl VerifiedByResult {
                 !w.cite_what.is_empty() && w.cite_what.iter().all(|b| b.is_builtin_rule())
             }
             VerifiedByResult::ForallProof(_) => false,
+            VerifiedByResult::StatementMemo(source) => source.is_verified_by_builtin_rules_only(),
         }
     }
 }
@@ -521,6 +549,9 @@ impl VerifiedBysEnum {
                     Some("forall proof".to_string()),
                 )]
             }
+            VerifiedByResult::StatementMemo(source) => {
+                vec![VerifiedBysEnum::ByStatementMemo(verify_what, source)]
+            }
         }
     }
 
@@ -530,6 +561,9 @@ impl VerifiedBysEnum {
                 !r.msg.is_empty()
             }
             VerifiedBysEnum::ByFact(_) | VerifiedBysEnum::ByKnownForall(_) => false,
+            VerifiedBysEnum::ByStatementMemo(_, source) => {
+                source.is_verified_by_builtin_rules_only()
+            }
         }
     }
 }

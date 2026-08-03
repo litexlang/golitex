@@ -82,6 +82,8 @@ pub struct Environment {
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
     pub cache_known_fact: HashMap<FactString, LineFile>,
     pub cache_infer_rule_firing: HashMap<String, ()>,
+    /// Successful atomic subgoals reusable only while the current statement executes.
+    pub statement_verified_atomic_facts: HashMap<FactString, Rc<FactualStmtSuccess>>,
 
     pub used_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
     pub stopped_strategy_stmts: HashMap<(PropName, bool), StrategyName>,
@@ -184,6 +186,7 @@ impl Environment {
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
             cache_infer_rule_firing: HashMap::new(),
+            statement_verified_atomic_facts: HashMap::new(),
             used_strategy_stmts: HashMap::new(),
             stopped_strategy_stmts: HashMap::new(),
         }

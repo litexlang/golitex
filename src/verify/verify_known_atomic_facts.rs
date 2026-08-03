@@ -5,6 +5,10 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(atomic_fact) {
+            return Ok(memoized_result);
+        }
+
         let result = if atomic_fact.number_of_args() == 1 {
             self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(atomic_fact)?
         } else if atomic_fact.number_of_args() == 2 {
@@ -15,11 +19,7 @@ impl Runtime {
             )?
         };
 
-        if result.is_true() {
-            return Ok(result);
-        }
-
-        Ok(result)
+        Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(

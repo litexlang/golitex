@@ -1197,6 +1197,9 @@ impl DefinitionGraphBuilder {
                                 );
                             }
                         }
+                        VerifiedBysEnum::ByStatementMemo(_, source) => {
+                            self.collect_verified_by_source_ids(&source.verified_by, source_ids);
+                        }
                     }
                 }
             }
@@ -1204,6 +1207,9 @@ impl DefinitionGraphBuilder {
                 for proved in result.proves.iter() {
                     self.collect_proof_source_ids_from_result(proved.result.as_ref(), source_ids);
                 }
+            }
+            VerifiedByResult::StatementMemo(source) => {
+                self.collect_verified_by_source_ids(&source.verified_by, source_ids);
             }
         }
     }

@@ -2,13 +2,16 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
+        self.clear_statement_verified_atomic_facts();
         let trusted = self.current_execution_is_trusted_file();
         let result = if trusted {
             self.exec_stmt_affect_environment_only(stmt)
         } else {
             self.exec_stmt_verified(stmt)
         };
-        self.finish_statement_execution(result, trusted)
+        let result = self.finish_statement_execution(result, trusted);
+        self.clear_statement_verified_atomic_facts();
+        result
     }
 
     pub(crate) fn finish_statement_execution(

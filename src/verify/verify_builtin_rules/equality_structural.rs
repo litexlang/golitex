@@ -17,6 +17,12 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
     ) -> StmtResult {
+        let goal: AtomicFact =
+            EqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(&goal) {
+            return memoized_result;
+        }
+
         let direct_result =
             self.verify_objs_are_equal_directly_known_only(left, right, line_file.clone());
         if direct_result.is_true() {

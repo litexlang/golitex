@@ -30,11 +30,12 @@ impl Runtime {
 
         let next_verify_state = verify_state.with_well_defined_already_verified();
 
-        match fact {
+        let result = match fact {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact(equal_fact, &next_verify_state)
             }
             _ => self.verify_non_equational_atomic_fact(fact, &next_verify_state, true),
-        }
+        }?;
+        Ok(self.remember_successful_atomic_fact_for_statement(fact, result))
     }
 }
