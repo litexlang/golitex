@@ -1,18 +1,12 @@
-# A positive natural has a natural predecessor, so recursive calls at n - 1
-# are well-defined without a source-level bridge.
-have fn predecessor_count(n N) N by induc n from 0:
-    case n = 0: 0
-    case n > 0: predecessor_count(n - 1)
+prop even(n N):
+    exist k N st {n = 2 * k}
 
-predecessor_count(0) = 0
-predecessor_count(1) = predecessor_count(0) = 0
-
-# The maximum of a concrete finite family of positive naturals is positive.
-forall n1, n2 N+:
-    finite_set_max(union({n1}, {n2})) $in N
-    finite_set_max(union({n1}, {n2})) $in R
-    finite_set_max(union({n1}, {n2})) $in N+
-
-# A positive radius puts its center strictly inside the symmetric interval.
-forall center R, radius R+:
-    center $in '(center - radius, center + radius)
+thm even_mul:
+    ? forall m, n N:
+        $even(n)
+        =>:
+            $even(m * n)
+    obtain k from exist k N st {n = 2 * k}
+    witness exist l N st {m * n = 2 * l} from m * k:
+        m * n = m * (2 * k) = 2 * (m * k)
+    by def $even(m * n)

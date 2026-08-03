@@ -275,6 +275,10 @@ For integers, the checker also recognizes the two exact singleton intervals:
 `n <= x < n + 1` closes `x = n`, and `n < x <= n + 1` closes
 `x = n + 1`. An exact known pointwise universal packages `$fn_eq(f, g)` only
 when the declared function carriers are alpha-equivalent.
+Once that global function-equality fact is stored, inference stores `f = g` in
+the ordinary equality class, so constructor congruence can also prove facts
+such as `power_set(f) = power_set(g)`. `$fn_eq_in` does not trigger this global
+inference.
 
 A strict positive premise also proves a square root is nonzero:
 `x > 0 => sqrt(x) != 0`. Merely knowing `x >= 0` does not trigger that rule.

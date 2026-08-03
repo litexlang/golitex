@@ -7,29 +7,7 @@ impl Runtime {
         equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_objs_are_equal(
-            &equal_fact.left,
-            &equal_fact.right,
-            equal_fact.line_file.clone(),
-            verify_state,
-        )
-    }
-
-    pub fn verify_objs_are_equal(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        if let Some(done) =
-            self.try_verify_function_equality_from_known_fn_eq(left, right, line_file.clone())?
-        {
-            return Ok(done);
-        }
-
-        let builtin_goal: AtomicFact =
-            EqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+        let builtin_goal: AtomicFact = equal_fact.clone().into();
         let mut result = self
             .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
                 &builtin_goal,
@@ -44,9 +22,9 @@ impl Runtime {
         }
 
         result = self.verify_equality_with_known_equalities(
-            left,
-            right,
-            line_file.clone(),
+            &equal_fact.left,
+            &equal_fact.right,
+            equal_fact.line_file.clone(),
             verify_state,
         )?;
         if result.is_true() {
@@ -56,16 +34,16 @@ impl Runtime {
         if verify_state.is_round_0() {
             let verified_by_arg_to_arg = self
                 .verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
-                    left,
-                    right,
+                    &equal_fact.left,
+                    &equal_fact.right,
                     verify_state,
-                    line_file.clone(),
+                    equal_fact.line_file.clone(),
                 )?;
             if verified_by_arg_to_arg {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        EqualFact::new(left.clone(), right.clone(), line_file.clone()).into(),
-                        same_shape_and_equal_args_reason(left, right),
+                        equal_fact.clone().into(),
+                        same_shape_and_equal_args_reason(&equal_fact.left, &equal_fact.right),
                         Vec::new(),
                     ))
                     .into(),
@@ -75,58 +53,14 @@ impl Runtime {
 
         if verify_state.is_round_0() && verify_state.equality_can_use_known_forall {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
-            result = self.verify_atomic_fact_with_known_forall(
-                &EqualFact::new(left.clone(), right.clone(), line_file.clone()).into(),
-                &verify_state_add_one_round,
-            )?;
+            result = self
+                .verify_atomic_fact_with_known_forall(&builtin_goal, &verify_state_add_one_round)?;
             if result.is_true() {
                 return Ok(result);
             }
         }
 
         Ok((StmtUnknown::new()).into())
-    }
-
-    // Function extensionality bridge from an already proved `$fn_eq`.
-    // Example: after `$fn_eq(f, g)`, prove the ordinary equality `f = g`.
-    fn try_verify_function_equality_from_known_fn_eq(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let direct = FnEqualFact::new(left.clone(), right.clone(), line_file.clone());
-        if let Some(done) =
-            self.try_verify_function_equality_from_one_known_fn_eq(left, right, &direct)?
-        {
-            return Ok(Some(done));
-        }
-
-        let reversed = FnEqualFact::new(right.clone(), left.clone(), line_file.clone());
-        self.try_verify_function_equality_from_one_known_fn_eq(left, right, &reversed)
-    }
-
-    fn try_verify_function_equality_from_one_known_fn_eq(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        fn_eq_fact: &FnEqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let fn_eq_atomic: AtomicFact = fn_eq_fact.clone().into();
-        let fn_eq_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fn_eq_atomic)?;
-        if !fn_eq_result.is_true() {
-            return Ok(None);
-        }
-
-        Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), fn_eq_fact.line_file.clone()).into(),
-                "function equality from known fn_eq".to_string(),
-                vec![fn_eq_result],
-            )
-            .into(),
-        ))
     }
 
     pub(crate) fn verify_equality_with_known_equalities(
@@ -523,17 +457,6 @@ impl Runtime {
         // Iterated operators such as sum/product compare their summand
         // functions extensionally. Example:
         // `sum(1, n, fn(x Z) Z {f(x)}) = sum(1, n, fn(y Z) Z {f(y)})`.
-        if self
-            .try_verify_function_equality_from_known_fn_eq(
-                left_func,
-                right_func,
-                equality_line_file.clone(),
-            )?
-            .is_some()
-        {
-            return Ok(true);
-        }
-
         self.verify_unary_objs_are_equal_when_their_only_args_are_equal(
             left_func,
             right_func,
@@ -830,25 +753,16 @@ mod tests {
             StructObj::new(AtomicName::WithoutMod("Box".to_string()), vec![union_ab]).into();
         let right: Obj =
             StructObj::new(AtomicName::WithoutMod("Box".to_string()), vec![union_ba]).into();
+        let equal_fact = EqualFact::new(left.clone(), right.clone(), default_line_file());
         assert!(runtime
             .verify_objs_are_equal_by_known_equality(&left, &right, default_line_file())
             .is_unknown());
         assert!(runtime
-            .verify_objs_are_equal(
-                &left,
-                &right,
-                default_line_file(),
-                &UseContextVerifyState::new(1, true),
-            )
+            .verify_equal_fact(&equal_fact, &UseContextVerifyState::new(1, true))
             .expect("later-round equality verification")
             .is_unknown());
         assert!(runtime
-            .verify_objs_are_equal(
-                &left,
-                &right,
-                default_line_file(),
-                &UseContextVerifyState::new(0, true),
-            )
+            .verify_equal_fact(&equal_fact, &UseContextVerifyState::new(0, true))
             .expect("outer-round equality verification")
             .is_true());
     }

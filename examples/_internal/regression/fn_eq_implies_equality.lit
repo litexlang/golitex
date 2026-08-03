@@ -5,6 +5,8 @@ thm fn_eq_implies_equality_regression:
         =>:
             $fn_eq(f, g)
             f = g
+            power_set(f) = power_set(g)
     by def $fn_eq(f, g)
     $fn_eq(f, g)
     f = g
+    power_set(f) = power_set(g)

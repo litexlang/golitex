@@ -193,6 +193,10 @@ For known integers, the two singleton-interval rules retain both explicit
 bounds: `n <= x < n + 1` gives `x = n`, and `n < x <= n + 1` gives
 `x = n + 1`. Function extensionality can consume an exact cached pointwise
 universal only when both declared function carriers are alpha-equivalent.
+When a verified `$fn_eq(f, g)` is stored, atomic inference stores the ordinary
+equality `f = g`. Later root and nested equality checks use the normal equality
+class and constructor congruence; the equality verifier does not run a separate
+`$fn_eq` lookup.
 
 Known equality candidates may replay one checked function body against simple
 arithmetic. Known-only equality first checks identity, direct lookup/calculation,
