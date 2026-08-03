@@ -15,17 +15,17 @@
 # in the endpoints and avoids separate min and max operations.
 have fn real_closed_segment(a, b R) power_set(R) = {x R: (x - a) * (x - b) <= 0}
 
-prop real_continuity_control(f fn(x R) R, x R, epsilon, delta R_pos):
+prop real_continuity_control(f fn(x R) R, x R, epsilon, delta R+):
     forall y R:
         abs(y - x) < delta
         =>:
             abs(f(y) - f(x)) < epsilon
 
 prop is_continuous_real_function(f fn(x R) R):
-    forall x R, epsilon R_pos:
-        exist delta R_pos st {$real_continuity_control(f, x, epsilon, delta)}
+    forall x R, epsilon R+:
+        exist delta R+ st {$real_continuity_control(f, x, epsilon, delta)}
 
-prop real_derivative_control(f fn(x R) R, x, L R, epsilon, delta R_pos):
+prop real_derivative_control(f fn(x R) R, x, L R, epsilon, delta R+):
     forall y R:
         y != x
         abs(y - x) < delta
@@ -33,8 +33,8 @@ prop real_derivative_control(f fn(x R) R, x, L R, epsilon, delta R_pos):
             abs((f(y) - f(x)) / (y - x) - L) < epsilon
 
 prop has_real_derivative_at(f fn(x R) R, x, L R):
-    forall epsilon R_pos:
-        exist delta R_pos st {$real_derivative_control(f, x, L, epsilon, delta)}
+    forall epsilon R+:
+        exist delta R+ st {$real_derivative_control(f, x, L, epsilon, delta)}
 
 prop has_derivative_on_segment(f, fprime fn(x R) R, a, b R):
     forall x real_closed_segment(a, b):
@@ -82,7 +82,7 @@ thm measurable_empty:
         $is_measurable_space_on(X, M)
         =>:
             $is_measurable_set(X, M, {})
-    $is_measurable_set(X, M, {})
+    by def $is_measurable_set(X, M, {})
 
 thm measurable_universe:
     ? forall X set, M power_set(power_set(X)):
@@ -101,7 +101,7 @@ thm measurable_universe:
             x $in set_minus(X, {})
     set_minus(X, {}) $in M
     X $in M
-    $is_measurable_set(X, M, X)
+    by def $is_measurable_set(X, M, X)
 
 thm measurable_complement:
     ? forall X set, M power_set(power_set(X)), S power_set(X):
@@ -109,7 +109,7 @@ thm measurable_complement:
         $is_measurable_set(X, M, S)
         =>:
             $is_measurable_set(X, M, set_minus(X, S))
-    $is_measurable_set(X, M, set_minus(X, S))
+    by def $is_measurable_set(X, M, set_minus(X, S))
 
 # The closure theorems keep the membership set builders visible for their
 # elementwise proofs; the named symbolic countable-set templates also unfold.
@@ -119,7 +119,7 @@ thm measurable_countable_union:
         $is_measurable_sequence(X, M, A)
         =>:
             $is_measurable_set(X, M, {x X: $_member_of_countable_union(X, A, x)})
-    $is_measurable_set(X, M, {x X: $_member_of_countable_union(X, A, x)})
+    by def $is_measurable_set(X, M, {x X: $_member_of_countable_union(X, A, x)})
 
 thm measurable_countable_intersection:
     ? forall X set, M power_set(power_set(X)), A fn(n N) power_set(X):
@@ -144,7 +144,7 @@ thm measurable_countable_intersection:
                         y $in set_minus(X, A(n))
                     claim forall! y set_minus(X, A(n)) => {y $in {q X: not q $in A(n)}}:
                         not y $in A(n)
-                        y $in {q X: not q $in A(n)}
+                        by thm set_builder_member(y, {q X: not q $in A(n)})
             {y X: not y $in A(n)} $in M
             (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n) = {y X: not y $in A(n)}
             (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n) $in M
@@ -180,17 +180,17 @@ thm measurable_countable_intersection:
                     ? x1 $in A(n)
                     x1 $in X
                     A(n) $in power_set(X)
-                    x1 $in {y X: not y $in A(n)}
+                    by thm set_builder_member(x1, {y X: not y $in A(n)})
                     (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n) = {y X: not y $in A(n)}
                     x1 $in (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n)
                     witness exist j N st {x1 $in (fn(k N) power_set(X) {{y X: not y $in A(k)}})(j)} from n
                     by def $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x1)
-                    x1 $in {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)}
+                    by thm set_builder_member(x1, {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)})
                     impossible not x1 $in {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)}
             by def $_member_of_countable_intersection(X, A, x1)
-            x1 $in {x X: $_member_of_countable_intersection(X, A, x)}
+            by thm set_builder_member(x1, {x X: $_member_of_countable_intersection(X, A, x)})
     {x X: $_member_of_countable_intersection(X, A, x)} $in M
-    $is_measurable_set(X, M, {x X: $_member_of_countable_intersection(X, A, x)})
+    by def $is_measurable_set(X, M, {x X: $_member_of_countable_intersection(X, A, x)})
 
 # ---------------------------------------------------------------------------
 # Section 13.3 — Countably Additive Measure Candidates
@@ -233,5 +233,124 @@ prop holds_almost_everywhere(X, V set, M \MeasurableSpace<X>, zero V, mu fn(Tset
 template<X, V set, M \MeasurableSpace<X>, zero V, mu fn(Tset power_set(X)) V>:
     have ae_large_sets power_set(power_set(X)) = {P power_set(X): $holds_almost_everywhere(X, V, M, zero, mu, P)}
 
+thm ae_large_sets_member:
+    ? forall X, V set, M \MeasurableSpace<X>, zero V, mu fn(Tset power_set(X)) V, P power_set(X):
+        $holds_almost_everywhere(X, V, M, zero, mu, P)
+        =>:
+            P $in \ae_large_sets<X, V, M, zero, mu>
+    by thm set_builder_member(P, {candidate power_set(X): $holds_almost_everywhere(X, V, M, zero, mu, candidate)})
+    \ae_large_sets<X, V, M, zero, mu> = {candidate power_set(X): $holds_almost_everywhere(X, V, M, zero, mu, candidate)}
+    P $in \ae_large_sets<X, V, M, zero, mu>
+
+thm ae_large_sets_holds:
+    ? forall X, V set, M \MeasurableSpace<X>, zero V, mu fn(Tset power_set(X)) V, P \ae_large_sets<X, V, M, zero, mu>:
+        $holds_almost_everywhere(X, V, M, zero, mu, P)
+    P $in \ae_large_sets<X, V, M, zero, mu>
+    \ae_large_sets<X, V, M, zero, mu> = {candidate power_set(X): $holds_almost_everywhere(X, V, M, zero, mu, candidate)}
+    P $in {candidate power_set(X): $holds_almost_everywhere(X, V, M, zero, mu, candidate)}
+    $holds_almost_everywhere(X, V, M, zero, mu, P)
+
 prop eventually_in_filter(X set, F power_set(power_set(X)), P power_set(X)):
     P $in F
+
+thm eventually_in_filter_member:
+    ? forall X set, F power_set(power_set(X)), P power_set(X):
+        $eventually_in_filter(X, F, P)
+        =>:
+            P $in F
+    P $in F
+
+prop almost_everywhere_eventually_equivalence(X, V set, M \MeasurableSpace<X>, zero V, mu fn(Tset power_set(X)) V, P power_set(X)):
+    not $holds_almost_everywhere(X, V, M, zero, mu, P) or $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
+    not $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P) or $holds_almost_everywhere(X, V, M, zero, mu, P)
+
+# MIL low-prerequisite C13 S02: the source's almost-everywhere notation is
+# definitionally eventual truth in the ae family.
+thm almost_everywhere_iff_eventually:
+    ? forall X, V set, M \MeasurableSpace<X>, zero V, mu fn(Tset power_set(X)) V, P power_set(X):
+        $almost_everywhere_eventually_equivalence(X, V, M, zero, mu, P)
+    claim:
+        ? not $holds_almost_everywhere(X, V, M, zero, mu, P) or $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
+        $holds_almost_everywhere(X, V, M, zero, mu, P) or not $holds_almost_everywhere(X, V, M, zero, mu, P)
+        by cases:
+            ? not $holds_almost_everywhere(X, V, M, zero, mu, P) or $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
+            case $holds_almost_everywhere(X, V, M, zero, mu, P):
+                by thm ae_large_sets_member(X, V, M, zero, mu, P)
+                by def $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
+                not $holds_almost_everywhere(X, V, M, zero, mu, P) or $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
+            case not $holds_almost_everywhere(X, V, M, zero, mu, P):
+                not $holds_almost_everywhere(X, V, M, zero, mu, P) or $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
+    claim:
+        ? not $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P) or $holds_almost_everywhere(X, V, M, zero, mu, P)
+        $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P) or not $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
+        by cases:
+            ? not $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P) or $holds_almost_everywhere(X, V, M, zero, mu, P)
+            case $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P):
+                by thm eventually_in_filter_member(X, \ae_large_sets<X, V, M, zero, mu>, P)
+                by thm ae_large_sets_holds(X, V, M, zero, mu, P)
+                not $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P) or $holds_almost_everywhere(X, V, M, zero, mu, P)
+            case not $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P):
+                not $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P) or $holds_almost_everywhere(X, V, M, zero, mu, P)
+    by def $almost_everywhere_eventually_equivalence(X, V, M, zero, mu, P)
+
+# ---------------------------------------------------------------------------
+# Resumed MIL C13 S01 source slice
+# ---------------------------------------------------------------------------
+
+# Source-library objects needed by the elementary integration examples.
+# proof_debt: construct oriented interval integration, whole-line integration,
+# logarithm, and total reciprocal from the real-analysis library.
+trust have oriented_interval_integral fn(integrand fn(argument R) R, left, right R) R
+trust have whole_real_integral fn(integrand fn(argument R) R) R
+trust have real_log fn(x R) R
+trust have real_reciprocal fn(x R) R
+
+prop is_interval_integrable(f fn(x R) R, a, b R)
+
+have fn real_convolution(f, g fn(argument R) R, x R) R = whole_real_integral(fn(t R) R {f(t) * g(x - t)})
+
+# MIL30 ITEM 26 — oriented interval integral of the identity.
+# proof_debt: construction of the interval integral and the antiderivative
+# calculation.
+thm oriented_interval_integral_identity:
+    ? forall a, b R:
+        oriented_interval_integral(fn(x R) R {x}, a, b) = (b^2 - a^2) / 2
+    trust oriented_interval_integral(fn(x R) R {x}, a, b) = (b^2 - a^2) / 2
+
+# MIL30 ITEM 27 — oriented interval integral of the reciprocal.
+# proof_debt: reciprocal/logarithm derivative and the no-zero interval
+# argument.
+thm oriented_interval_integral_reciprocal:
+    ? forall a, b R:
+        not 0 $in real_closed_segment(a, b)
+        a != 0
+        =>:
+            oriented_interval_integral(real_reciprocal, a, b) = real_log(b / a)
+    trust oriented_interval_integral(real_reciprocal, a, b) = real_log(b / a)
+
+# MIL30 ITEM 28 — first fundamental theorem of calculus.
+# proof_debt: continuity implies interval integrability and differentiation of
+# the variable-upper-endpoint integral.
+thm fundamental_theorem_of_calculus_first:
+    ? forall f fn(x R) R, a, b R:
+        $is_continuous_real_function(f)
+        =>:
+            chap12::real_deriv(fn(u R) R {oriented_interval_integral(f, a, u)}, b) = f(b)
+    trust chap12::real_deriv(fn(u R) R {oriented_interval_integral(f, a, u)}, b) = f(b)
+
+# MIL30 ITEM 29 — second fundamental theorem of calculus.
+# proof_debt: oriented interval integral foundation and endpoint bookkeeping.
+thm fundamental_theorem_of_calculus_second:
+    ? forall f, fprime fn(x R) R, a, b R:
+        $has_derivative_on_segment(f, fprime, a, b)
+        $is_interval_integrable(fprime, a, b)
+        =>:
+            oriented_interval_integral(fprime, a, b) = f(b) - f(a)
+    trust oriented_interval_integral(fprime, a, b) = f(b) - f(a)
+
+# MIL30 ITEM 30 — real convolution is the whole-line integral of translated
+# products.
+thm real_convolution_formula:
+    ? forall f, g fn(argument R) R, x R:
+        real_convolution(f, g, x) = whole_real_integral(fn(t R) R {f(t) * g(x - t)})
+    real_convolution(f, g, x) = whole_real_integral(fn(t R) R {f(t) * g(x - t)})

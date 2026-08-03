@@ -107,8 +107,57 @@ struct AdditiveCommutativeGroup<s nonempty_set>:
     <=>:
         $is_additive_commutative_group(s, add, zero, neg)
 
+# Source instance: every Ring3 has commutative addition. Chapter 2's canonical
+# Ring already exposes this law through its flat additive-group interface.
+thm ring_add_comm:
+    ? forall Carrier nonempty_set, ring &chap2::Ring<Carrier>, x, y Carrier:
+        &chap2::Ring<Carrier>{ring}.add(x, y) = &chap2::Ring<Carrier>{ring}.add(y, x)
+    &chap2::Ring<Carrier>{ring}.add(x, y) = &chap2::Ring<Carrier>{ring}.add(y, x)
+
 # Source instance Ring₃ ℤ. Chapter 2 owns the canonical flat Ring interface,
 # so this hierarchy example constructs that record instead of redeclaring it.
+thm integer_ring_laws:
+    ? forall anchor {0}:
+        $chap2::is_ring(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
+    claim:
+        ? forall x, y, z Z:
+            fn(a, b Z) Z {a + b}(fn(a, b Z) Z {a + b}(x, y), z) = fn(a, b Z) Z {a + b}(x, fn(a, b Z) Z {a + b}(y, z))
+            fn(a, b Z) Z {a + b}(x, y) = fn(a, b Z) Z {a + b}(y, x)
+        fn(a, b Z) Z {a + b}(fn(a, b Z) Z {a + b}(x, y), z) = (x + y) + z = x + (y + z) = fn(a, b Z) Z {a + b}(x, fn(a, b Z) Z {a + b}(y, z))
+        fn(a, b Z) Z {a + b}(x, y) = x + y = y + x = fn(a, b Z) Z {a + b}(y, x)
+    claim:
+        ? forall x Z:
+            fn(a, b Z) Z {a + b}(0, x) = x
+            fn(a, b Z) Z {a + b}(x, 0) = x
+            fn(a Z) Z {-a}(x) + x = 0
+        fn(a, b Z) Z {a + b}(0, x) = 0 + x = x
+        fn(a, b Z) Z {a + b}(x, 0) = x + 0 = x
+        fn(a Z) Z {-a}(x) + x = -x + x = 0
+    by def $chap2::is_additive_commutative_group(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x})
+    claim:
+        ? forall x, y, z Z:
+            fn(a, b Z) Z {a * b}(fn(a, b Z) Z {a * b}(x, y), z) = fn(a, b Z) Z {a * b}(x, fn(a, b Z) Z {a * b}(y, z))
+            fn(a, b Z) Z {a * b}(x, fn(a, b Z) Z {a + b}(y, z)) = fn(a, b Z) Z {a + b}(fn(a, b Z) Z {a * b}(x, y), fn(a, b Z) Z {a * b}(x, z))
+            fn(a, b Z) Z {a * b}(fn(a, b Z) Z {a + b}(x, y), z) = fn(a, b Z) Z {a + b}(fn(a, b Z) Z {a * b}(x, z), fn(a, b Z) Z {a * b}(y, z))
+        fn(a, b Z) Z {a * b}(fn(a, b Z) Z {a * b}(x, y), z) = (x * y) * z = x * (y * z) = fn(a, b Z) Z {a * b}(x, fn(a, b Z) Z {a * b}(y, z))
+        fn(a, b Z) Z {a * b}(x, fn(a, b Z) Z {a + b}(y, z)) = x * (y + z) = x * y + x * z = fn(a, b Z) Z {a + b}(fn(a, b Z) Z {a * b}(x, y), fn(a, b Z) Z {a * b}(x, z))
+        fn(a, b Z) Z {a * b}(fn(a, b Z) Z {a + b}(x, y), z) = (x + y) * z = x * z + y * z = fn(a, b Z) Z {a + b}(fn(a, b Z) Z {a * b}(x, z), fn(a, b Z) Z {a * b}(y, z))
+    claim:
+        ? forall x Z:
+            fn(a, b Z) Z {a * b}(1, x) = x
+            fn(a, b Z) Z {a * b}(x, 1) = x
+        fn(a, b Z) Z {a * b}(1, x) = 1 * x = x
+        fn(a, b Z) Z {a * b}(x, 1) = x * 1 = x
+    by def $chap2::is_ring(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
+
+by thm integer_ring_laws(0)
+by thm fn_set_member(fn(x, y Z) Z {x + y}, fn(x, y Z) Z)
+0 $in Z
+by thm fn_set_member(fn(x Z) Z {-x}, fn(x Z) Z)
+by thm fn_set_member(fn(x, y Z) Z {x * y}, fn(x, y Z) Z)
+1 $in Z
+by thm cart_member_from_coordinates((fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1), cart(fn(x, y Z) Z, Z, fn(x Z) Z, fn(x, y Z) Z, Z))
+by thm struct_member((fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1), &chap2::Ring<Z>)
 have integer_ring &chap2::Ring<Z> = (fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
 
 # The source's LE1/Preorder1/PartialOrder1/OrderedCommMonoid1 block is an
@@ -139,6 +188,42 @@ struct Module<Scalar, M nonempty_set>:
     <=>:
         $is_module(Scalar, M, scalar_add, scalar_zero, scalar_neg, scalar_mul, scalar_one, add, zero, neg, smul)
 
+# Source selfModule. The object reuses the ring operations and takes scalar
+# multiplication to be multiplication. Proof debt is the exact structure
+# membership bridge; the underlying ring laws are already stored in ring.
+trust forall Carrier nonempty_set, ring &chap2::Ring<Carrier>:
+    (&chap2::Ring<Carrier>{ring}.add, &chap2::Ring<Carrier>{ring}.zero, &chap2::Ring<Carrier>{ring}.neg, &chap2::Ring<Carrier>{ring}.mul, &chap2::Ring<Carrier>{ring}.one, &chap2::Ring<Carrier>{ring}.add, &chap2::Ring<Carrier>{ring}.zero, &chap2::Ring<Carrier>{ring}.neg, &chap2::Ring<Carrier>{ring}.mul) $in &Module<Carrier, Carrier>
+
+template<Carrier nonempty_set, ring &chap2::Ring<Carrier>>:
+    have self_module &Module<Carrier, Carrier> = (&chap2::Ring<Carrier>{ring}.add, &chap2::Ring<Carrier>{ring}.zero, &chap2::Ring<Carrier>{ring}.neg, &chap2::Ring<Carrier>{ring}.mul, &chap2::Ring<Carrier>{ring}.one, &chap2::Ring<Carrier>{ring}.add, &chap2::Ring<Carrier>{ring}.zero, &chap2::Ring<Carrier>{ring}.neg, &chap2::Ring<Carrier>{ring}.mul)
+
+# Source definitions nsmul1 and zsmul1. Litex has no generic recursive
+# function constructor over an arbitrary additive carrier, so the two callable
+# selections and their computation equations are explicit proof debt.
+template<Carrier nonempty_set, group &AdditiveCommutativeGroup<Carrier>>:
+    trust have additive_nsmul fn(n N, x Carrier) Carrier
+
+trust forall Carrier nonempty_set, group &AdditiveCommutativeGroup<Carrier>, x Carrier:
+    \additive_nsmul<Carrier, group>(0, x) = &AdditiveCommutativeGroup<Carrier>{group}.zero
+trust forall Carrier nonempty_set, group &AdditiveCommutativeGroup<Carrier>, n N, x Carrier:
+    \additive_nsmul<Carrier, group>(n + 1, x) = &AdditiveCommutativeGroup<Carrier>{group}.add(x, \additive_nsmul<Carrier, group>(n, x))
+
+template<Carrier nonempty_set, group &AdditiveCommutativeGroup<Carrier>>:
+    trust have additive_zsmul fn(n Z, x Carrier) Carrier
+
+trust forall Carrier nonempty_set, group &AdditiveCommutativeGroup<Carrier>, n N, x Carrier:
+    \additive_zsmul<Carrier, group>(n, x) = \additive_nsmul<Carrier, group>(n, x)
+trust forall Carrier nonempty_set, group &AdditiveCommutativeGroup<Carrier>, n N, x Carrier:
+    \additive_zsmul<Carrier, group>(-(n + 1), x) = &AdditiveCommutativeGroup<Carrier>{group}.neg(\additive_nsmul<Carrier, group>(n + 1, x))
+
+# Source abGrpModule. The integer action remains callable; its module-law
+# package is localized proof debt around the selected recursive action.
+trust forall Carrier nonempty_set, group &AdditiveCommutativeGroup<Carrier>:
+    (fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1, &AdditiveCommutativeGroup<Carrier>{group}.add, &AdditiveCommutativeGroup<Carrier>{group}.zero, &AdditiveCommutativeGroup<Carrier>{group}.neg, \additive_zsmul<Carrier, group>) $in &Module<Z, Carrier>
+
+template<Carrier nonempty_set, group &AdditiveCommutativeGroup<Carrier>>:
+    have integer_module &Module<Z, Carrier> = (fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1, &AdditiveCommutativeGroup<Carrier>{group}.add, &AdditiveCommutativeGroup<Carrier>{group}.zero, &AdditiveCommutativeGroup<Carrier>{group}.neg, \additive_zsmul<Carrier, group>)
+
 # AddMonoid4 makes the natural scalar function a customizable data field.
 struct AdditiveMonoidWithNSmul<s nonempty_set>:
     add fn(x, y s) s
@@ -156,7 +241,42 @@ struct AdditiveMonoidWithNSmul<s nonempty_set>:
 
 # Source instance AddMonoid4 Z. Integer addition, zero, and multiplication by
 # a natural scalar satisfy the customized scalar laws directly.
+thm integer_additive_monoid_with_nsmul_closed:
+    ? forall anchor {0}:
+        (fn(x, y Z) Z {x + y}, 0, fn(n N, x Z) Z {n * x}) $in &AdditiveMonoidWithNSmul<Z>
+    claim:
+        ? forall x, y, z Z:
+            fn(a, b Z) Z {a + b}(fn(a, b Z) Z {a + b}(x, y), z) = fn(a, b Z) Z {a + b}(x, fn(a, b Z) Z {a + b}(y, z))
+        fn(a, b Z) Z {a + b}(fn(a, b Z) Z {a + b}(x, y), z) = (x + y) + z = x + (y + z) = fn(a, b Z) Z {a + b}(x, fn(a, b Z) Z {a + b}(y, z))
+    claim:
+        ? forall x Z:
+            fn(a, b Z) Z {a + b}(0, x) = x
+            fn(a, b Z) Z {a + b}(x, 0) = x
+            fn(n N, a Z) Z {n * a}(0, x) = 0
+        fn(a, b Z) Z {a + b}(0, x) = 0 + x = x
+        fn(a, b Z) Z {a + b}(x, 0) = x + 0 = x
+        fn(n N, a Z) Z {n * a}(0, x) = 0 * x = 0
+    claim:
+        ? forall n N, x Z:
+            fn(k N, a Z) Z {k * a}(n + 1, x) = fn(a, b Z) Z {a + b}(x, fn(k N, a Z) Z {k * a}(n, x))
+        fn(k N, a Z) Z {k * a}(n + 1, x) = (n + 1) * x = x + n * x = fn(a, b Z) Z {a + b}(x, fn(k N, a Z) Z {k * a}(n, x))
+    by thm fn_set_member(fn(x, y Z) Z {x + y}, fn(x, y Z) Z)
+    0 $in Z
+    by thm fn_set_member(fn(n N, x Z) Z {n * x}, fn(n N, x Z) Z)
+    by thm cart_member_from_coordinates((fn(x, y Z) Z {x + y}, 0, fn(n N, x Z) Z {n * x}), cart(fn(x, y Z) Z, Z, fn(n N, x Z) Z))
+    by thm struct_member((fn(x, y Z) Z {x + y}, 0, fn(n N, x Z) Z {n * x}), &AdditiveMonoidWithNSmul<Z>)
+
+by thm integer_additive_monoid_with_nsmul_closed(0)
 have integer_additive_monoid_with_nsmul &AdditiveMonoidWithNSmul<Z> = (fn(x, y Z) Z {x + y}, 0, fn(n N, x Z) Z {n * x})
+
+# Source product instance for AddMonoid4. Addition, zero, and natural scalar
+# multiplication are componentwise. The structure is kept as a callable
+# parameterized object; its coordinatewise law package remains explicit debt.
+trust forall A, B nonempty_set, left &AdditiveMonoidWithNSmul<A>, right &AdditiveMonoidWithNSmul<B>:
+    (fn(p, q cart(A, B)) cart(A, B) {(&AdditiveMonoidWithNSmul<A>{left}.add(p[1], q[1]), &AdditiveMonoidWithNSmul<B>{right}.add(p[2], q[2]))}, (&AdditiveMonoidWithNSmul<A>{left}.zero, &AdditiveMonoidWithNSmul<B>{right}.zero), fn(n N, p cart(A, B)) cart(A, B) {(&AdditiveMonoidWithNSmul<A>{left}.nsmul(n, p[1]), &AdditiveMonoidWithNSmul<B>{right}.nsmul(n, p[2]))}) $in &AdditiveMonoidWithNSmul<cart(A, B)>
+
+template<A, B nonempty_set, left &AdditiveMonoidWithNSmul<A>, right &AdditiveMonoidWithNSmul<B>>:
+    have product_additive_monoid_with_nsmul &AdditiveMonoidWithNSmul<cart(A, B)> = (fn(p, q cart(A, B)) cart(A, B) {(&AdditiveMonoidWithNSmul<A>{left}.add(p[1], q[1]), &AdditiveMonoidWithNSmul<B>{right}.add(p[2], q[2]))}, (&AdditiveMonoidWithNSmul<A>{left}.zero, &AdditiveMonoidWithNSmul<B>{right}.zero), fn(n N, p cart(A, B)) cart(A, B) {(&AdditiveMonoidWithNSmul<A>{left}.nsmul(n, p[1]), &AdditiveMonoidWithNSmul<B>{right}.nsmul(n, p[2]))})
 
 # 8.2 Morphisms
 
@@ -234,10 +354,15 @@ thm _inherited_submonoid_tuple_is_monoid:
         y $in M
         z $in M
         (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})((fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(x, y), z) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(x, y), z) = &Monoid<M>{monoid}.mul(x, &Monoid<M>{monoid}.mul(y, z)) = (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(x, (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(y, z))
+    by def $is_semigroup(carrier, fn(x, y carrier) carrier {&Monoid<M>{monoid}.mul(x, y)})
     forall x carrier:
         x $in M
         (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(&Monoid<M>{monoid}.one, x) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.one, x) = x
         (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(x, &Monoid<M>{monoid}.one) = &Monoid<M>{monoid}.mul(x, &Monoid<M>{monoid}.one) = x
+    by thm fn_set_member(fn(x, y carrier) carrier {&Monoid<M>{monoid}.mul(x, y)}, fn(x, y carrier) carrier)
+    &Monoid<M>{monoid}.one $in carrier
+    by thm cart_member_from_coordinates((fn(x, y carrier) carrier {&Monoid<M>{monoid}.mul(x, y)}, &Monoid<M>{monoid}.one), cart(fn(x, y carrier) carrier, carrier))
+    by thm struct_member((fn(x, y carrier) carrier {&Monoid<M>{monoid}.mul(x, y)}, &Monoid<M>{monoid}.one), &Monoid<carrier>)
 
 # Source SubMonoid1Monoid instance. The explicit nonempty guard remains a
 # template premise; submonoid_carrier_nonempty proves it is available.
@@ -252,10 +377,20 @@ thm submonoid_intersection_closed:
             $is_submonoid(M, monoid, {x M: x $in left and x $in right})
     &Monoid<M>{monoid}.one $in left
     &Monoid<M>{monoid}.one $in right
+    by thm set_builder_member(&Monoid<M>{monoid}.one, {x M: x $in left and x $in right})
     &Monoid<M>{monoid}.one $in {x M: x $in left and x $in right}
-    forall x, y {x M: x $in left and x $in right}:
+    claim:
+        ? forall x, y {x M: x $in left and x $in right}:
+            &Monoid<M>{monoid}.mul(x, y) $in {z M: z $in left and z $in right}
+        x $in left
+        x $in right
+        y $in left
+        y $in right
+        &Monoid<M>{monoid}.mul(x, y) $in left
+        &Monoid<M>{monoid}.mul(x, y) $in right
+        by thm set_builder_member(&Monoid<M>{monoid}.mul(x, y), {z M: z $in left and z $in right})
         &Monoid<M>{monoid}.mul(x, y) $in {z M: z $in left and z $in right}
-    $is_submonoid(M, monoid, {x M: x $in left and x $in right})
+    by def $is_submonoid(M, monoid, {x M: x $in left and x $in right})
 
 # Source Submonoid.Setoid. The relation is correctly a prop because its
 # candidate elements x and y are explicit parameters.
@@ -278,6 +413,7 @@ thm fraction_relation_reflexive:
         =>:
             $submonoid_fraction_equiv(M, monoid, carrier, x, x)
     witness exist w, z M st {w $in carrier, z $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(x, z)} from &Monoid<M>{monoid}.one, &Monoid<M>{monoid}.one
+    by def $submonoid_fraction_equiv(M, monoid, carrier, x, x)
 
 thm fraction_relation_symmetric:
     ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x, y M:
@@ -286,6 +422,7 @@ thm fraction_relation_symmetric:
             $submonoid_fraction_equiv(M, monoid, carrier, y, x)
     obtain w, z from exist w, z M st {w $in carrier, z $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(y, z)}
     witness exist w2, z2 M st {w2 $in carrier, z2 $in carrier, &Monoid<M>{monoid}.mul(y, w2) = &Monoid<M>{monoid}.mul(x, z2)} from z, w
+    by def $submonoid_fraction_equiv(M, monoid, carrier, y, x)
 
 thm fraction_relation_transitive:
     ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x, y, z M:
@@ -317,8 +454,58 @@ thm fraction_relation_transitive:
     by thm function_substitution(M, M, fn(q M) M {&Monoid<M>{monoid}.mul(z, q)}, &Monoid<M>{monoid}.mul(z_num, y_num), &Monoid<M>{monoid}.mul(y_num, z_num))
     &Monoid<M>{monoid}.mul(x, left_den) = &Monoid<M>{monoid}.mul(x, &Monoid<M>{monoid}.mul(x_den, y_den)) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(x, x_den), y_den) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(y, y_num), y_den) = &Monoid<M>{monoid}.mul(y, &Monoid<M>{monoid}.mul(y_num, y_den)) = &Monoid<M>{monoid}.mul(y, &Monoid<M>{monoid}.mul(y_den, y_num)) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(y, y_den), y_num) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(z, z_num), y_num) = &Monoid<M>{monoid}.mul(z, &Monoid<M>{monoid}.mul(z_num, y_num)) = &Monoid<M>{monoid}.mul(z, &Monoid<M>{monoid}.mul(y_num, z_num)) = &Monoid<M>{monoid}.mul(z, right_num)
     witness exist w, q M st {w $in carrier, q $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(z, q)} from left_den, right_num
+    by def $submonoid_fraction_equiv(M, monoid, carrier, x, z)
 
 # Source quotient constructor. The represented-class carrier becomes a genuine
 # quotient only for a commutative monoid and a submonoid carrier.
 template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid)>:
     have fraction_quotient power_set(power_set(M)) = {CarrierC power_set(M): $is_fraction_class(M, monoid, carrier, CarrierC)}
+
+# Source QuotientMonoid.mk. The class-membership bridge is localized proof
+# debt because the verifier does not fold the existential is_fraction_class
+# witness back into membership in the quotient set.
+trust forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x M:
+    $is_submonoid(M, monoid, carrier)
+    $monoid_is_commutative(M, monoid)
+    =>:
+        \fraction_class<M, monoid, carrier>(x) $in \fraction_quotient<M, monoid, carrier>
+
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid)>:
+    have fn fraction_quotient_mk(x M) \fraction_quotient<M, monoid, carrier> = \fraction_class<M, monoid, carrier>(x)
+
+thm fraction_quotient_nonempty:
+    ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M):
+        $is_submonoid(M, monoid, carrier)
+        $monoid_is_commutative(M, monoid)
+        =>:
+            $is_nonempty_set(\fraction_quotient<M, monoid, carrier>)
+    witness $is_nonempty_set(\fraction_quotient<M, monoid, carrier>) from \fraction_class<M, monoid, carrier>(&Monoid<M>{monoid}.one):
+        \fraction_class<M, monoid, carrier>(&Monoid<M>{monoid}.one) $in \fraction_quotient<M, monoid, carrier>
+
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid)>:
+    have fraction_quotient_carrier nonempty_set = \fraction_quotient<M, monoid, carrier>
+
+# Quotient.map2 becomes a selected callable on classes. Its representative
+# equation is the exact well-definedness interface needed by clients.
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid)>:
+    trust have fraction_quotient_mul fn(left, right \fraction_quotient_carrier<M, monoid, carrier>) \fraction_quotient_carrier<M, monoid, carrier>
+
+trust forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x, y M:
+    $is_submonoid(M, monoid, carrier)
+    $monoid_is_commutative(M, monoid)
+    =>:
+        \fraction_quotient_mul<M, monoid, carrier>(\fraction_quotient_mk<M, monoid, carrier>(x), \fraction_quotient_mk<M, monoid, carrier>(y)) = \fraction_quotient_mk<M, monoid, carrier>(&Monoid<M>{monoid}.mul(x, y))
+
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid)>:
+    have fraction_quotient_one \fraction_quotient_carrier<M, monoid, carrier> = \fraction_quotient_mk<M, monoid, carrier>(&Monoid<M>{monoid}.one)
+
+# Proof debt: quotient associativity and identity follow by representatives,
+# but require the missing quotient eliminator/congruence support.
+trust forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M):
+    $is_submonoid(M, monoid, carrier)
+    $monoid_is_commutative(M, monoid)
+    =>:
+        (\fraction_quotient_mul<M, monoid, carrier>, \fraction_quotient_one<M, monoid, carrier>) $in &Monoid<\fraction_quotient_carrier<M, monoid, carrier>>
+
+template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $monoid_is_commutative(M, monoid)>:
+    have fraction_quotient_monoid &Monoid<\fraction_quotient_carrier<M, monoid, carrier>> = (\fraction_quotient_mul<M, monoid, carrier>, \fraction_quotient_one<M, monoid, carrier>)

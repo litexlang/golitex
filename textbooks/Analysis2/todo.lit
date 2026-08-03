@@ -2,7 +2,7 @@
 #
 # This file is comment-only and is not exported by litex.config.
 #
-# Chapter 1 currently has 25 explicit trust statements. The ordered project
+# Chapter 1 currently has 26 explicit trust statements. The ordered project
 # runner succeeds, so these are mathematics-completeness boundaries rather
 # than runner failures.
 #
@@ -22,9 +22,11 @@
 # 1.4.5: construct a convergent subsequence by choosing a point in each 1/n
 # ball; the converse is checked. 1.4.12 retains the completeness and
 # closed-subspace proof debt; Lemma 1.4.9 is checked.
-# 1.5.5-1.5.10: prove compactness consequences, finite-dimensional
-# Heine--Borel, the open-cover theorem, nested compact intersection, and the
-# finite compact-set closure properties.
+# 1.5.5-1.5.10: prove the remaining compactness consequences, the reverse
+# finite-dimensional Heine--Borel direction, the open-cover theorem, nested
+# compact intersection, and finite-union/finite-set compactness. The forward
+# Heine--Borel direction and compact-subset closedness are checked derivations
+# from Corollary 1.5.6 and therefore retain its indirect trust boundary.
 #
 # Chapter 2, Section 2.1 — Theorem 2.1.4
 # The three continuity characterizations are stated through four reusable
@@ -104,25 +106,36 @@
 # periodic convolution, Fejer approximation, Fourier convergence, absolute
 # convergence, and Plancherel. The periodic, character, trigonometric
 # polynomial, inner-product, convolution, and convergence relations themselves
-# are concrete.
+# are concrete. Fourier coefficient coordinates, their symmetric partial-sum
+# family, the absolute-summability hypothesis, and the Plancherel energy
+# sequence are now tied together explicitly; their analytic proofs remain
+# trusted.
 #
 # Chapter 6
 # 6.1.13-6.8.1: prove matrix representation, uniqueness and calculus laws for
 # total derivatives, continuous-partial and Clairaut theorems, contraction
 # mapping, the quantitative invertible-linear-map estimate, and the inverse
 # and implicit function theorems. Finite coordinate spaces, linearity,
-# matrices, derivatives, contractions, and fixed points are concrete.
+# matrices, derivatives, contractions, fixed points, and the hypotheses and
+# conclusions of the small-identity-perturbation lemma are concrete. Replace
+# the remaining analytic proof debts in the local neighborhood, inverse-law,
+# inverse-derivative, implicit graph, and implicit-derivative interfaces.
 #
 # Chapter 7
 # 7.1.1-7.5.10: construct Lebesgue measure from the displayed outer-measure
 # relation and prove the outer-measure, Caratheodory measurability,
 # countable-additivity, Borel, and measurable-function theorems. Open boxes,
 # covers, outer-measure values, measurable sets, and measurable functions are
-# concrete.
+# concrete. The finite and countable nonadditivity counterexamples now state
+# their disjoint families, member values, union values, and failed equalities;
+# formalize their choice-based constructions and add an extended-nonnegative
+# value carrier for the cases involving positive infinity.
 #
 # Chapter 8
 # 8.1.3-8.5.1: prove simple-function algebra and presentation independence,
 # the nonnegative integral laws, monotone convergence, Fatou, almost-everywhere
 # invariance, signed-integral laws, dominated convergence, Riemann
 # compatibility, and Fubini. Simple, nonnegative, signed, upper, and lower
-# integral relations are concrete.
+# integral relations are concrete. Tonelli, dominated convergence, and the
+# upper/lower common-value criterion now have complete source-facing
+# hypotheses and conclusions; only their proof steps remain trusted.

@@ -69,7 +69,7 @@ sketch:
                 obtain k from exist k Z st {n = 2 * k + n % 2}
                 witness exist l Z st {n = 2 * l} from k:
                     n = 2 * k + 0 = 2 * k
-                $even(n)
+                by def $even(n)
                 $even(n) or $odd(n)
             case n % 2 = 1:
                 witness exist q Z st {n = 2 * q + n % 2} from basics::integer_quotient(n, 2):
@@ -77,7 +77,7 @@ sketch:
                 obtain k from exist k Z st {n = 2 * k + n % 2}
                 witness exist l Z st {n = 2 * l + 1} from k:
                     n = 2 * k + 1
-                $odd(n)
+                by def $odd(n)
                 $even(n) or $odd(n)
 
 # This example is a useful reminder: induction is not always the shortest proof.
@@ -109,7 +109,7 @@ prop mod_eq(a Z, b Z, d Z):
 
 sketch:
     prop congruence_power_rule(a Z, b Z, d Z):
-        forall n N_pos:
+        forall n N+:
             $mod_eq(a^n, b^n, d)
 
     # At the base exponent the original congruence is the claim itself. In the
@@ -126,7 +126,7 @@ sketch:
             d != 0
             witness exist q Z st {a^1 - b^1 = d * q} from k:
                 a^1 - b^1 = a - b = d * k
-            $mod_eq(a^1, b^1, d)
+            by def $mod_eq(a^1, b^1, d)
 
             claim:
                 ? forall m Z:
@@ -137,9 +137,13 @@ sketch:
                 obtain x from exist x Z st {a^m - b^m = d * x}
                 obtain y from exist y Z st {a - b = d * y}
                 d != 0
+                m $in N+
+                a^(m + 1) = a^m * a
+                b^(m + 1) = b^m * b
                 witness exist q Z st {a^(m + 1) - b^(m + 1) = d * q} from x * a + b^m * y:
                     a^(m + 1) - b^(m + 1) = a^m * a - b^m * b = (a^m - b^m) * a + b^m * (a - b) = d * x * a + b^m * (d * y) = d * (x * a + b^m * y)
-                $mod_eq(a^(m + 1), b^(m + 1), d)
+                by def $mod_eq(a^(m + 1), b^(m + 1), d)
+        by def $congruence_power_rule(a, b, d)
 
 # 6.1.4
 
@@ -162,9 +166,9 @@ sketch:
             15 != 0
             witness exist k Z st {4^0 - 1 = 15 * k} from 0:
                 4^0 - 1 = 1 - 1 = 15 * 0
-            $mod_eq(4^0, 1, 15)
+            by def $mod_eq(4^0, 1, 15)
             $mod_eq(4^0, 1, 15) or $mod_eq(4^0, 4, 15)
-            $residue_is_one_or_four(0)
+            by def $residue_is_one_or_four(0)
 
             claim:
                 ? forall m Z:
@@ -179,14 +183,16 @@ sketch:
                         obtain x from exist x Z st {4^m - 1 = 15 * x}
                         witness exist q Z st {4^(m + 1) - 4 = 15 * q} from 4 * x:
                             4^(m + 1) - 4 = 4^m * 4 - 4 = 4 * (4^m - 1) = 4 * (15 * x) = 15 * (4 * x)
-                        $mod_eq(4^(m + 1), 4, 15)
+                        by def $mod_eq(4^(m + 1), 4, 15)
                         $mod_eq(4^(m + 1), 1, 15) or $mod_eq(4^(m + 1), 4, 15)
+                        by def $residue_is_one_or_four(m + 1)
                     case $mod_eq(4^m, 4, 15):
                         obtain x from exist x Z st {4^m - 4 = 15 * x}
                         witness exist q Z st {4^(m + 1) - 1 = 15 * q} from 4 * x + 1:
                             4^(m + 1) - 1 = 4^m * 4 - 1 = 4 * (4^m - 4) + 15 = 4 * (15 * x) + 15 = 15 * (4 * x + 1)
-                        $mod_eq(4^(m + 1), 1, 15)
+                        by def $mod_eq(4^(m + 1), 1, 15)
                         $mod_eq(4^(m + 1), 1, 15) or $mod_eq(4^(m + 1), 4, 15)
+                        by def $residue_is_one_or_four(m + 1)
 
     claim:
         ? forall n N:
@@ -257,6 +263,7 @@ sketch:
                 m^2 - 2 * m - 1 >= 4 * m - 2 * m - 1 = 2 * m - 1 >= 2 * 4 - 1 = 7 > 0
                 2 * m^2 = (m^2 - 2 * m - 1) + (m + 1)^2 >= 0 + (m + 1)^2 = (m + 1)^2
                 2^(m + 1) = 2^m * 2^1 = 2 * 2^m >= 2 * m^2 >= (m + 1)^2
+        by def $sufficiently_large_power_bound(4)
 
     claim:
         ? exist N0 Z st {$sufficiently_large_power_bound(N0)}
@@ -292,6 +299,7 @@ claim:
         ? $odd(a(n))
         witness exist k Z st {a(0) = 2 * k + 1} from 1:
             a(0) = 3 = 2 * 1 + 1
+        by def $odd(a(0))
 
         claim:
             ? forall m Z:
@@ -302,6 +310,7 @@ claim:
             obtain k from exist k Z st {a(m) = 2 * k + 1}
             witness exist l Z st {a(m + 1) = 2 * l + 1} from 2 * k^2 + 2 * k - 1:
                 a(m + 1) = a(m)^2 - 2 = (2 * k + 1)^2 - 2 = 4 * k^2 + 4 * k + 1 - 2 = 4 * k^2 + 4 * k - 1 = 2 * (2 * k^2 + 2 * k - 1) + 1
+            by def $odd(a(m + 1))
 
 # This is the main pattern in the sequence examples: prove the formula at the
 # initial index, then use the recurrence to rewrite the next term.
@@ -325,7 +334,7 @@ claim:
         4 != 0
         witness exist k Z st {x(0) - 1 = 4 * k} from 1:
             x(0) - 1 = 5 - 1 = 4 = 4 * 1
-        $mod_eq(x(0), 1, 4)
+        by def $mod_eq(x(0), 1, 4)
 
         claim:
             ? forall m Z:
@@ -338,7 +347,7 @@ claim:
             x(m + 1) = 2 * x(m) - 1
             witness exist l Z st {x(m + 1) - 1 = 4 * l} from 2 * k:
                 x(m + 1) - 1 = (2 * x(m) - 1) - 1 = 2 * x(m) - 2 = 2 * (x(m) - 1) = 2 * (4 * k) = 4 * (2 * k)
-            $mod_eq(x(m + 1), 1, 4)
+            by def $mod_eq(x(m + 1), 1, 4)
 
 # 6.2.3 Example
 
@@ -365,6 +374,8 @@ claim:
                 =>:
                     x(m + 1) = 2^((m + 1) + 2) + 1
             x(m + 1) = 2 * x(m) - 1
+            m + 2 $in N+
+            2^1 * 2^(m + 2) = 2^(1 + (m + 2))
             2 * x(m) - 1 = 2 * (2^(m + 2) + 1) - 1 = 2 * 2^(m + 2) + 2 * 1 - 1 = 2^1 * 2^(m + 2) + 1 = 2^(1 + (m + 2)) + 1 = 2^(m + 3) + 1
             2^(m + 3) + 1 = 2^((m + 1) + 2) + 1
             x(m + 1) = 2^((m + 1) + 2) + 1
@@ -439,7 +450,7 @@ sketch:
                 by contra:
                     ? $divides(d, f(0))
                     impossible d <= 0
-            $factorial_divisible(f, 0)
+            by def $factorial_divisible(f, 0)
 
             claim:
                 ? forall m Z:
@@ -461,11 +472,13 @@ sketch:
                             obtain c from exist c Z st {f(m) = d * c}
                             witness exist q Z st {f(m + 1) = d * q} from (m + 1) * c:
                                 f(m + 1) = (m + 1) * f(m) = (m + 1) * (d * c) = d * ((m + 1) * c)
+                            by def $divides(d, f(m + 1))
                         case d >= m + 1:
                             d = m + 1
                             witness exist q Z st {f(m + 1) = d * q} from f(m):
                                 f(m + 1) = (m + 1) * f(m) = d * f(m)
-                $factorial_divisible(f, m + 1)
+                            by def $divides(d, f(m + 1))
+                by def $factorial_divisible(f, m + 1)
 
 # 6.2.6 Example
 
@@ -540,6 +553,7 @@ sketch:
             m >= 0
             =>:
                 2^(m + 1) + (-1)^(m + 1) + 2 * (2^m + (-1)^m) = 2^(m + 2) + (-1)^(m + 2)
+        m $in N
         2^(m + 1) = 2^m * 2^1 = 2 * 2^m
         (-1)^(m + 1) = (-1)^m * (-1)^1 = -((-1)^m)
         2^(m + 2) = 2^m * 2^2 = 4 * 2^m
@@ -569,9 +583,9 @@ sketch:
             2^1 + (-1)^1 = 2 + (-1) = 1
             2^(0 + 1) + (-1)^(0 + 1) = 2^1 + (-1)^1 = 1
             a(0 + 1) = a(1) = 1 = 2^(0 + 1) + (-1)^(0 + 1)
-            $seq_formula(a, 0)
-            $seq_formula(a, 0 + 1)
-            $seq_formula_pair(a, 0)
+            by def $seq_formula(a, 0)
+            by def $seq_formula(a, 0 + 1)
+            by def $seq_formula_pair(a, 0)
 
             claim:
                 ? forall m Z:
@@ -580,6 +594,7 @@ sketch:
                     =>:
                         $seq_formula_pair(a, m + 1)
                 m >= 0
+                m $in N
                 $seq_formula_pair(a, m)
                 $seq_formula(a, m)
                 a(m) = 2^m + (-1)^m
@@ -597,8 +612,8 @@ sketch:
                 2^(m + 2) + (-1)^(m + 2) = 2^m * 2^2 + (-1)^m * (-1)^2 = 4 * 2^m + (-1)^m
                 2^(m + 1) + (-1)^(m + 1) + 2 * (2^m + (-1)^m) = 4 * 2^m + (-1)^m = 2^(m + 2) + (-1)^(m + 2)
                 a((m + 1) + 1) = 2^(m + 2) + (-1)^(m + 2) = 2^((m + 1) + 1) + (-1)^((m + 1) + 1)
-                $seq_formula(a, (m + 1) + 1)
-                $seq_formula_pair(a, m + 1)
+                by def $seq_formula(a, (m + 1) + 1)
+                by def $seq_formula_pair(a, m + 1)
 
     claim:
         ? forall a fn(n Z: n >= 0) Z, n Z:
@@ -656,9 +671,14 @@ sketch:
                 6 != 0
                 witness exist k Z st {a(1) - 1 = 6 * k} from 0:
                     a(1) - 1 = 1 - 1 = 0 = 6 * 0
+                by def $mod_eq(a(1), 1, 6)
                 a(1 + 1) = a(2) = a(0 + 2) = a(0 + 1) + 2 * a(0) = a(1) + 2 * a(0) = 1 + 2 * 2 = 5
                 witness exist l Z st {a(1 + 1) - 5 = 6 * l} from 0:
                     a(1 + 1) - 5 = 5 - 5 = 0 = 6 * 0
+                by def $mod_eq(a(1 + 1), 5, 6)
+                by def $seq_mod_pair_15(a, 1)
+                $seq_mod_pair_15(a, 1) or $seq_mod_pair_51(a, 1)
+                by def $seq_mod_pair(a, 1)
 
             claim:
                 ? forall m Z:
@@ -686,6 +706,10 @@ sketch:
                         6 != 0
                         witness exist t Z st {a((m + 1) + 1) - 1 = 6 * t} from l + 2 * k + 1:
                             a((m + 1) + 1) - 1 = a(m + 1) + 2 * a(m) - 1 = (a(m + 1) - 5) + 2 * (a(m) - 1) + 6 = 6 * l + 2 * (6 * k) + 6 = 6 * (l + 2 * k + 1)
+                        by def $mod_eq(a((m + 1) + 1), 1, 6)
+                        by def $seq_mod_pair_51(a, m + 1)
+                        $seq_mod_pair_15(a, m + 1) or $seq_mod_pair_51(a, m + 1)
+                        by def $seq_mod_pair(a, m + 1)
                     case $seq_mod_pair_51(a, m):
                         $mod_eq(a(m), 5, 6)
                         $mod_eq(a(m + 1), 1, 6)
@@ -697,6 +721,10 @@ sketch:
                         6 != 0
                         witness exist t Z st {a((m + 1) + 1) - 5 = 6 * t} from l + 2 * k + 1:
                             a((m + 1) + 1) - 5 = a(m + 1) + 2 * a(m) - 5 = (a(m + 1) - 1) + 2 * (a(m) - 5) + 6 = 6 * l + 2 * (6 * k) + 6 = 6 * (l + 2 * k + 1)
+                        by def $mod_eq(a((m + 1) + 1), 5, 6)
+                        by def $seq_mod_pair_15(a, m + 1)
+                        $seq_mod_pair_15(a, m + 1) or $seq_mod_pair_51(a, m + 1)
+                        by def $seq_mod_pair(a, m + 1)
 
     claim:
         ? forall a fn(n Z: n >= 0) Z, n Z:
@@ -754,11 +782,11 @@ sketch:
                 ? $fib_bound_pair(Fibonacci, 0)
                 0 >= 0
                 Fibonacci(0) = 1 = 2^0
-                $fib_bound(Fibonacci, 0)
+                by def $fib_bound(Fibonacci, 0)
                 0 + 1 >= 0
                 Fibonacci(0 + 1) = Fibonacci(1) = 1 <= 2^1
-                $fib_bound(Fibonacci, 0 + 1)
-                $fib_bound_pair(Fibonacci, 0)
+                by def $fib_bound(Fibonacci, 0 + 1)
+                by def $fib_bound_pair(Fibonacci, 0)
 
             claim:
                 ? forall m Z:
@@ -783,8 +811,8 @@ sketch:
                 2^m <= 2 * 2^m = 2^1 * 2^m = 2^(1 + m) = 2^(m + 1)
                 Fibonacci(m + 1) + Fibonacci(m) <= 2^(m + 1) + 2^m <= 2^(m + 1) + 2^(m + 1) = 2 * 2^(m + 1) = 2^1 * 2^(m + 1) = 2^(1 + (m + 1)) = 2^(m + 2)
                 Fibonacci((m + 1) + 1) <= 2^(m + 2) = 2^((m + 1) + 1)
-                $fib_bound(Fibonacci, (m + 1) + 1)
-                $fib_bound_pair(Fibonacci, m + 1)
+                by def $fib_bound(Fibonacci, (m + 1) + 1)
+                by def $fib_bound_pair(Fibonacci, m + 1)
 
     claim:
         ? forall Fibonacci fn(n Z: n >= 0) Z, n Z:
@@ -842,7 +870,7 @@ sketch:
                 0 >= 0
                 (-1)^0 = 1
                 Fibonacci(0 + 1)^2 - Fibonacci(0 + 1) * Fibonacci(0) - Fibonacci(0)^2 = Fibonacci(1)^2 - Fibonacci(1) * Fibonacci(0) - Fibonacci(0)^2 = 1^2 - 1 * 1 - 1^2 = -1 = -1 * 1 = -((-1)^0)
-                $cassini(Fibonacci, 0)
+                by def $cassini(Fibonacci, 0)
 
             claim:
                 ? forall m Z:
@@ -862,7 +890,7 @@ sketch:
                 Fibonacci((m + 1) + 1) = Fibonacci(m + 2) = Fibonacci(m + 1) + Fibonacci(m)
                 Fibonacci((m + 1) + 1)^2 - Fibonacci((m + 1) + 1) * Fibonacci(m + 1) - Fibonacci(m + 1)^2 = (Fibonacci(m + 1) + Fibonacci(m))^2 - (Fibonacci(m + 1) + Fibonacci(m)) * Fibonacci(m + 1) - Fibonacci(m + 1)^2
                 (Fibonacci(m + 1) + Fibonacci(m))^2 - (Fibonacci(m + 1) + Fibonacci(m)) * Fibonacci(m + 1) - Fibonacci(m + 1)^2 = -((-1)^(m + 1))
-                $cassini(Fibonacci, m + 1)
+                by def $cassini(Fibonacci, m + 1)
 
 # 6.3.5 Example
 
@@ -907,11 +935,11 @@ sketch:
                 d(2) = d(0 + 2) = 3 * d(0 + 1) + 5 * d(0) = 3 * d(1) + 5 * d(0) = 3 * 1 + 5 * 3 = 18
                 d(3) = d(1 + 2) = 3 * d(1 + 1) + 5 * d(1) = 3 * d(2) + 5 * d(1) = 3 * 18 + 5 * 1 = 59
                 d(4) = d(2 + 2) = 3 * d(2 + 1) + 5 * d(2) = 3 * d(3) + 5 * d(2) = 3 * 59 + 5 * 18 = 267 >= 256 = 4^4
-                $d_bound(d, 4)
+                by def $d_bound(d, 4)
                 4 + 1 >= 4
                 d(4 + 1) = d(5) = d(3 + 2) = 3 * d(3 + 1) + 5 * d(3) = 3 * d(4) + 5 * d(3) = 3 * 267 + 5 * 59 = 1096 >= 1024 = 4^5 = 4^(4 + 1)
-                $d_bound(d, 4 + 1)
-                $d_bound_pair(d, 4)
+                by def $d_bound(d, 4 + 1)
+                by def $d_bound_pair(d, 4)
 
             claim:
                 ? forall m Z:
@@ -937,8 +965,8 @@ sketch:
                 3 * d(m + 1) + 5 * d(m) >= 3 * 4^(m + 1) + 5 * 4^m = 3 * (4 * 4^m) + 5 * 4^m = 12 * 4^m + 5 * 4^m = 17 * 4^m
                 17 * 4^m >= 16 * 4^m = 4^2 * 4^m = 4^(2 + m) = 4^(m + 2)
                 d((m + 1) + 1) = 3 * d(m + 1) + 5 * d(m) >= 3 * 4^(m + 1) + 5 * 4^m = 17 * 4^m >= 16 * 4^m = 4^(m + 2) = 4^((m + 1) + 1)
-                $d_bound(d, (m + 1) + 1)
-                $d_bound_pair(d, m + 1)
+                by def $d_bound(d, (m + 1) + 1)
+                by def $d_bound_pair(d, m + 1)
 
     claim:
         ? forall d fn(n Z: n >= 0) Z:
@@ -959,6 +987,7 @@ sketch:
                     $d_bound_pair(d, n)
                     $d_bound(d, n)
                     d(n) >= 4^n
+            by def $sufficiently_large_d_bound(d, 4)
         witness exist N0 Z st {$sufficiently_large_d_bound(d, N0)} from 4:
             $sufficiently_large_d_bound(d, 4)
 
@@ -1018,6 +1047,7 @@ claim:
                     fib(k + 1) = fib(1) = 1 <= 2 = 2^1 = 2^(k + 1)
                 case k >= 1:
                     k - 1 >= 0
+                    k - 1 $in N
                     k - 1 <= k
                     fib(k - 1) <= 2^(k - 1)
                     fib(k) <= 2^k
@@ -1041,35 +1071,36 @@ sketch:
         exist c Z st {b = a * c}
 
     # This no-small-divisor formulation is convenient for the strong-induction split below.
-    prop prime_by_trial_division(a N_pos):
+    prop prime_by_trial_division(a N+):
         2 <= a
-        forall b N_pos:
+        forall b N+:
             2 <= b < a
             =>:
                 a % b != 0
 
     claim:
-        ? forall a N_pos:
+        ? forall a N+:
             2 <= a
             =>:
-                exist p N_pos st {$prime(p), a % p = 0}
+                exist p N+ st {$prime(p), a % p = 0}
         by strong_induc x from 2:
-            ? exist p N_pos st {$prime(p), x % p = 0}
+            ? exist p N+ st {$prime(p), x % p = 0}
 
             claim:
-                ? forall b N_pos:
+                ? forall b N+:
                     2 <= b < 2
                     =>:
                         2 % b != 0
                 by contra:
                     ? 2 % b != 0
                     impossible b < 2
-            $prime(2)
+            by def $prime_by_trial_division(2)
+            by def $prime(2)
             witness exist t Z st {2 = t * 2} from 1
             0 < 2
             2 = 2 * 1 + 0
             2 % 2 = 0
-            witness exist p N_pos st {$prime(p), 2 % p = 0} from 2
+            witness exist p N+ st {$prime(p), 2 % p = 0} from 2
 
             claim:
                 ? forall n Z:
@@ -1078,28 +1109,30 @@ sketch:
                         2 <= m
                         m <= n
                         =>:
-                            exist p N_pos st {$prime(p), m % p = 0}
+                            exist p N+ st {$prime(p), m % p = 0}
                     =>:
-                        exist p N_pos st {$prime(p), (n + 1) % p = 0}
+                        exist p N+ st {$prime(p), (n + 1) % p = 0}
 
-                by cases exist p N_pos st {$prime(p), (n + 1) % p = 0}:
+                by cases exist p N+ st {$prime(p), (n + 1) % p = 0}:
                     case $prime(n + 1):
+                        n + 1 $in N+
                         witness exist t Z st {n + 1 = t * (n + 1)} from 1
                         0 < n + 1
                         n + 1 = (n + 1) * 1 + 0
                         (n + 1) % (n + 1) = 0
-                        witness exist p N_pos st {$prime(p), (n + 1) % p = 0} from n + 1
+                        witness exist p N+ st {$prime(p), (n + 1) % p = 0} from n + 1
                     case not $prime(n + 1):
                         by contra:
-                            ? not forall b N_pos:
+                            ? not forall b N+:
                                 2 <= b < n + 1
                                 =>:
                                     (n + 1) % b != 0
                             2 <= n + 1
-                            $prime(n + 1)
+                            by def $prime_by_trial_division(n + 1)
+                            by def $prime(n + 1)
                             impossible $prime(n + 1)
 
-                        obtain c from exist b N_pos st {2 <= b < n + 1, not (n + 1) % b != 0}
+                        obtain c from exist b N+ st {2 <= b < n + 1, not (n + 1) % b != 0}
 
                         2 <= c < n + 1
 
@@ -1112,7 +1145,7 @@ sketch:
                             case c >= n + 1:
                                 impossible c < n + 1
 
-                        obtain d from exist p N_pos st {$prime(p), c % p = 0}
+                        obtain d from exist p N+ st {$prime(p), c % p = 0}
 
                         witness exist q Z st {n + 1 = c * q + (n + 1) % c} from basics::integer_quotient(n + 1, c):
                             n + 1 = c * basics::integer_quotient(n + 1, c) + (n + 1) % c
@@ -1133,15 +1166,15 @@ sketch:
                         0 < d
                         n + 1 = d * (e1 * f) + 0
                         (n + 1) % d = 0
-                        witness exist p N_pos st {$prime(p), (n + 1) % p = 0} from d:
+                        witness exist p N+ st {$prime(p), (n + 1) % p = 0} from d:
                             (n + 1) % d = 0
 
     claim:
         ? forall n N:
             n >= 2
             =>:
-                exist p N_pos st {$prime(p), $dvdN(p, n)}
-        obtain p from exist p N_pos st {$prime(p), n % p = 0}
+                exist p N+ st {$prime(p), $dvdN(p, n)}
+        obtain p from exist p N+ st {$prime(p), n % p = 0}
         p != 0
         witness exist q Z st {n = p * q + n % p} from basics::integer_quotient(n, p):
             n = p * basics::integer_quotient(n, p) + n % p
@@ -1149,8 +1182,8 @@ sketch:
         n = p * k + n % p = p * k = k * p
         witness exist c Z st {n = p * c} from k:
             n = k * p = p * k
-        $dvdN(p, n)
-        witness exist prime_factor N_pos st {$prime(prime_factor), $dvdN(prime_factor, n)} from p
+        by def $dvdN(p, n)
+        witness exist prime_factor N+ st {$prime(prime_factor), $dvdN(prime_factor, n)} from p
 
 # 6.5 Pascal's Triangle
 
@@ -1171,8 +1204,8 @@ sketch:
 # termination checking becomes visible. In Litex documentation, the important
 # lesson is that the recursive definition needs a visible decreasing measure.
 
-# The examples below use `factorial(n)` instead of postfix `n!`. First define
-# Pascal's triangle and factorial by decreasing measures. Then prove the standard
+# The examples below use native `factorial(n)` instead of postfix `n!`. First
+# define Pascal's triangle by a decreasing measure. Then prove the standard
 # identity
 
 # ```text
@@ -1200,10 +1233,6 @@ sketch:
     pascal(0, 3) = 1
     pascal(2, 0) = 1
     pascal(1, 1) = pascal(0, 1) + pascal(1, 0)
-
-    have fn factorial(n Z: n >= 0) R by induc n from 0:
-        case n = 0: 1
-        case n > 0: n * factorial(n - 1)
 
     factorial(0) = 1
     factorial(3) = 3 * factorial(2)
@@ -1263,7 +1292,7 @@ sketch:
                     case a > 0:
                         a + b > 0
                         impossible a + b = 0
-            $pascal_factorial_formula_on_sum(0)
+            by def $pascal_factorial_formula_on_sum(0)
 
             claim:
                 ? forall step_s Z:
@@ -1324,7 +1353,7 @@ sketch:
                                     a * factorial(a + b - 1) + b * factorial(a + b - 1) = (a + b) * factorial(a + b - 1)
                                     (a + b) * factorial(a + b - 1) = factorial(a + b)
                                     pascal(a, b) * factorial(a) * factorial(b) = factorial(a + b)
-                $pascal_factorial_formula_on_sum(step_s + 1)
+                by def $pascal_factorial_formula_on_sum(step_s + 1)
 
     claim:
         ? forall a, b Z:
@@ -1505,7 +1534,7 @@ sketch:
                                 fdiv(n, d) = 0
                                 fmod(n, d) + d * fdiv(n, d) = n + d * 0 = n
 
-    $fmod_add_fdiv_at_measure(0)
+    by def $fmod_add_fdiv_at_measure(0)
 
     claim:
         ? forall m Z:
@@ -1529,6 +1558,7 @@ sketch:
                 case n * d < 0:
                     abs(2 * (n + d) - d) >= 0
                     abs(2 * (n + d) - d) < abs(2 * n - d) = m + 1
+                    abs(2 * (n + d) - d) $in N
                     abs(2 * (n + d) - d) <= m or abs(2 * (n + d) - d) >= m + 1
                     by cases:
                         ? abs(2 * (n + d) - d) <= m
@@ -1549,6 +1579,7 @@ sketch:
                         case 0 < d * (n - d):
                             abs(2 * (n - d) - d) >= 0
                             abs(2 * (n - d) - d) < abs(2 * n - d) = m + 1
+                            abs(2 * (n - d) - d) $in N
                             abs(2 * (n - d) - d) <= m or abs(2 * (n - d) - d) >= m + 1
                             by cases:
                                 ? abs(2 * (n - d) - d) <= m
@@ -1575,7 +1606,7 @@ sketch:
                                     fdiv(n, d) = 0
                                     fmod(n, d) + d * fdiv(n, d) = n + d * 0 = n
 
-        $fmod_add_fdiv_at_measure(m + 1)
+        by def $fmod_add_fdiv_at_measure(m + 1)
 
     by strong_induc m from 0:
         ? $fmod_add_fdiv_at_measure(m)
@@ -1694,7 +1725,7 @@ sketch:
                                 0 <= fmod(a, b)
                                 abs(fmod(a, b)) = fmod(a, b) = a < b = abs(b)
 
-    $fmod_bound_at_measure(0)
+    by def $fmod_bound_at_measure(0)
 
     claim:
         ? forall m Z:
@@ -1719,6 +1750,7 @@ sketch:
                 case a * b < 0:
                     abs(2 * (a + b) - b) >= 0
                     abs(2 * (a + b) - b) < abs(2 * a - b) = m + 1
+                    abs(2 * (a + b) - b) $in N
                     abs(2 * (a + b) - b) <= m or abs(2 * (a + b) - b) >= m + 1
                     by cases:
                         ? abs(2 * (a + b) - b) <= m
@@ -1742,6 +1774,7 @@ sketch:
                         case 0 < b * (a - b):
                             abs(2 * (a - b) - b) >= 0
                             abs(2 * (a - b) - b) < abs(2 * a - b) = m + 1
+                            abs(2 * (a - b) - b) $in N
                             abs(2 * (a - b) - b) <= m or abs(2 * (a - b) - b) >= m + 1
                             by cases:
                                 ? abs(2 * (a - b) - b) <= m
@@ -1791,7 +1824,7 @@ sketch:
                                     0 <= fmod(a, b)
                                     abs(fmod(a, b)) = fmod(a, b) = a < b = abs(b)
 
-        $fmod_bound_at_measure(m + 1)
+        by def $fmod_bound_at_measure(m + 1)
 
     by strong_induc m from 0:
         ? $fmod_bound_at_measure(m)
@@ -1880,7 +1913,7 @@ sketch:
                 euclidean_gcd(a, b) = -a
                 egcd_l(a, b) * a + egcd_r(a, b) * b = -1 * a + 0 * b = -a = euclidean_gcd(a, b)
 
-    $egcd_identity_at_measure(0)
+    by def $egcd_identity_at_measure(0)
 
     claim:
         ? forall m Z:
@@ -1904,6 +1937,7 @@ sketch:
                 case 0 < b:
                     abs(fmod(a, b)) >= 0
                     abs(fmod(a, b)) < abs(b) = m + 1
+                    abs(fmod(a, b)) $in N
                     abs(fmod(a, b)) <= m or abs(fmod(a, b)) >= m + 1
                     by cases:
                         ? abs(fmod(a, b)) <= m
@@ -1935,6 +1969,7 @@ sketch:
                         case b < 0:
                             abs(fmod(a, -b)) >= 0
                             abs(fmod(a, -b)) < abs(b) = m + 1
+                            abs(fmod(a, -b)) $in N
                             abs(fmod(a, -b)) <= m or abs(fmod(a, -b)) >= m + 1
                             by cases:
                                 ? abs(fmod(a, -b)) <= m
@@ -1977,7 +2012,7 @@ sketch:
                                     euclidean_gcd(a, b) = -a
                                     egcd_l(a, b) * a + egcd_r(a, b) * b = -1 * a + 0 * b = -a = euclidean_gcd(a, b)
 
-        $egcd_identity_at_measure(m + 1)
+        by def $egcd_identity_at_measure(m + 1)
 
     by strong_induc m from 0:
         ? $egcd_identity_at_measure(m)

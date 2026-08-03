@@ -131,9 +131,9 @@ sketch:
         by cases:
             ? $is_even_and_odd(n) or $is_even_and_multiple_of_three(n)
             case $is_odd(n):
-                $is_even_and_odd(n)
+                by def $is_even_and_odd(n)
             case $is_multiple_of_three(n):
-                $is_even_and_multiple_of_three(n)
+                by def $is_even_and_multiple_of_three(n)
 
     claim:
         ? forall n N:
@@ -151,10 +151,10 @@ sketch:
             ? $is_odd_or_multiple_of_three(n)
             case $is_even_and_odd(n):
                 $is_odd(n)
-                $is_odd_or_multiple_of_three(n)
+                by def $is_odd_or_multiple_of_three(n)
             case $is_even_and_multiple_of_three(n):
                 $is_multiple_of_three(n)
-                $is_odd_or_multiple_of_three(n)
+                by def $is_odd_or_multiple_of_three(n)
 
 # 5.1.6
 
@@ -230,6 +230,7 @@ sketch:
         by contra not $is_square_two(a):
             witness exist n N st {$is_square_two(n)} from a:
                 $is_square_two(a)
+            by def $some_square_two()
             impossible $some_square_two()
 
     claim:
@@ -272,19 +273,19 @@ sketch:
 # As a useful example, define primality by saying directly that there are no
 # divisors between `2` and `x - 1`.
 
-prop Prime(x N_pos):
+prop Prime(x N+):
     2 <= x
     forall y range(2, x):
         x % y != 0
 
 # For a concrete number, `by for` proves the bounded universal condition, and
-# then the definition of `Prime` can be unfolded directly.
+# then `by def` explicitly introduces the corresponding `Prime` fact.
 
 by for:
     ? forall n range(2, 17):
         17 % n != 0
 
-$Prime(17)
+by def $Prime(17)
 
 # Now we can use this finite-checking pattern inside the logic problem.
 
@@ -295,22 +296,22 @@ $Prime(17)
 # predicate above.
 
 sketch:
-    prop superpowered(k N_pos):
-        forall n N_pos:
+    prop superpowered(k N+):
+        forall n N+:
             $Prime(k ^ (k ^ n) + 1)
 
     by for:
         ? forall n range(2, 2):
             2 % n != 0
 
-    $Prime(2)
+    by def $Prime(2)
 
-    forall n N_pos:
+    forall n N+:
         1^n = 1
         1^(1^n) + 1 = 1^1 + 1 = 2
         $Prime(1^(1^n) + 1)
 
-    $superpowered(1)
+    by def $superpowered(1)
 
     by contra not $superpowered(2):
         $Prime(2^(2^5) + 1)
@@ -318,14 +319,15 @@ sketch:
         impossible (2^(2^5) + 1) % 641 = 0
 
     claim:
-        ? exist k N_pos st {$superpowered(k) and not $superpowered(k + 1)}
-        witness exist k N_pos st {$superpowered(k) and not $superpowered(k + 1)} from 1:
+        ? exist k N+ st {$superpowered(k) and not $superpowered(k + 1)}
+        witness exist k N+ st {$superpowered(k) and not $superpowered(k + 1)} from 1:
             $superpowered(1)
             not $superpowered(1 + 1)
             $superpowered(1) and not $superpowered(1 + 1)
 
 # The first `by for` block proves `2` is prime. The identity `1^n = 1` is builtin,
-# so `$superpowered(1)` follows by reducing `1^(1^n) + 1` to `2`. The proof of
+# so the body for `$superpowered(1)` follows by reducing `1^(1^n) + 1` to `2`,
+# and `by def` introduces the named fact. The proof of
 # `not $superpowered(2)` uses Euler's factor `641`: if `2` were superpowered, then
 # `2^(2^5) + 1` would be prime, but it is divisible by `641`. The final claim
 # packages these two facts into an existential statement.
@@ -392,11 +394,11 @@ sketch:
                 not $is_odd(n)
         by contra not $is_even(n):
             $is_even(n)
-            $is_even_or_odd(n)
+            by def $is_even_or_odd(n)
             impossible $is_even_or_odd(n)
         by contra not $is_odd(n):
             $is_odd(n)
-            $is_even_or_odd(n)
+            by def $is_even_or_odd(n)
             impossible $is_even_or_odd(n)
 
     claim:
@@ -446,7 +448,7 @@ claim:
             not $is_even(n) or not $is_odd(n)
         case $is_even(n):
             by contra not $is_odd(n):
-                $is_even_and_odd(n)
+                by def $is_even_and_odd(n)
                 impossible $is_even_and_odd(n)
             not $is_even(n) or not $is_odd(n)
 
@@ -465,6 +467,7 @@ sketch:
         by contra not $is_square_two(a):
             witness exist n N st {$is_square_two(n)} from a:
                 $is_square_two(a)
+            by def $some_square_two_again()
             impossible $some_square_two_again()
 
     claim:

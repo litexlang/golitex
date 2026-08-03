@@ -148,6 +148,8 @@ prop are_isomorphic(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSp
 # Result 3.70. Finite-dimensional spaces over the same scalar field are
 # isomorphic exactly when their dimensions agree.
 prop isomorphic_iff_equal_dimension_statement(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>):
+    $chap2c::admits_basis_length(s, VSet, V)
+    $chap2c::admits_basis_length(s, WSet, W)
     forall:
         =>:
             $are_isomorphic(s, VSet, WSet, V, W)
@@ -163,7 +165,7 @@ axiom dimension_characterizes_isomorphism:
 # Result 3.71. Once bases are fixed, the matrix-formation map is an
 # isomorphism from L(VSet,WSet) onto the m-by-n matrix carrier.
 axiom linear_maps_and_matrices_are_isomorphic:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N_pos, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, m>:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, m>:
         $chap2b::is_basis(s, VSet, V, n, v)
         $chap2b::is_basis(s, WSet, W, m, w)
         =>:
@@ -174,82 +176,80 @@ axiom dimension_of_linear_map_space:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         $chap2a::is_finite_dimensional(s, WSet, W)
+        V.scalars = W.scalars
+        $is_nonempty_set(\chap3a::linear_map_space<s, VSet, WSet, V, W>)
+        $chap2c::admits_basis_length(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>)
         =>:
             \chap2c::dimension<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>> = \chap2c::dimension<s, VSet, V> * \chap2c::dimension<s, WSet, W>
 # Definition 3.73. The matrix of a vector is its coordinate column with
 # respect to the displayed basis.
-prop is_matrix_of_vector(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos, basis &chap1a::FiniteList<VSet, n>, v VSet, A matrix(s, n, 1)):
+prop is_matrix_of_vector(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, basis &chap1a::FiniteList<VSet, n>, v VSet, A matrix(s, n, 1)):
     $chap2b::is_basis(s, VSet, V, n, basis)
     v = \chap2a::linear_combination_value<s, VSet, V, n>(\chap3c::matrix_column_coefficients<s, n, 1>(A, 1), basis)
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos>:
-    trust have matrix_of_vector fn(basis &chap1a::FiniteList<VSet, n>, v VSet) matrix(s, n, 1):
-        $is_matrix_of_vector(s, VSet, V, n, basis, v, matrix_of_vector(basis, v))
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+>:
+    trust have matrix_of_vector fn(basis &chap1a::FiniteList<VSet, n>, v VSet) matrix(s, n, 1)
 # Example 3.74 is comment-only: coordinate columns for a polynomial and for a
 # vector in F^n illustrate the definition.
 # Result 3.75. The kth column of M(T) is M(T(v_k)).
 axiom matrix_column_of_linear_map:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N_pos, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, m>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, k N_pos:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, m>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, k N+:
         $chap2b::is_basis(s, VSet, V, n, v)
         $chap2b::is_basis(s, WSet, W, m, w)
         k <= n
         =>:
-            \chap3c::matrix_column<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k) = fn(j N_pos: j <= m) s {\chap3d::matrix_of_vector<s, WSet, W, m>(w, T(v.entries(k)))(j, 1)}
+            \chap3c::matrix_column<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k) = fn(j N+: j <= m) s {\chap3d::matrix_of_vector<s, WSet, W, m>(w, T(v.entries(k)))(j, 1)}
 # Result 3.76. Coordinate columns turn a linear map into matrix multiplication.
 axiom linear_maps_act_like_matrix_multiplication:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N_pos, vbasis &chap1a::FiniteList<VSet, n>, wbasis &chap1a::FiniteList<WSet, m>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, v VSet:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, vbasis &chap1a::FiniteList<VSet, n>, wbasis &chap1a::FiniteList<WSet, m>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, v VSet:
         $chap2b::is_basis(s, VSet, V, n, vbasis)
         $chap2b::is_basis(s, WSet, W, m, wbasis)
         =>:
             \chap3d::matrix_of_vector<s, WSet, W, m>(wbasis, T(v)) = \chap3c::matrix_mul<s, V.scalars, m, n, 1>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T), \chap3d::matrix_of_vector<s, VSet, V, n>(vbasis, v))
 # Result 3.78. The dimension of range T equals the column rank of M(T).
 axiom dimension_of_range_equals_column_rank:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N_pos, vbasis &chap1a::FiniteList<VSet, n>, wbasis &chap1a::FiniteList<WSet, m>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, vbasis &chap1a::FiniteList<VSet, n>, wbasis &chap1a::FiniteList<WSet, m>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2b::is_basis(s, VSet, V, n, vbasis)
         $chap2b::is_basis(s, WSet, W, m, wbasis)
+        $chap1c::is_subspace(s, WSet, W, \chap3b::range_of<VSet, WSet>(T))
+        $chap2c::admits_basis_length(s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>)
         =>:
             \chap2c::dimension<s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>> = \chap3c::column_rank<s, V.scalars, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T))
 # Definition 3.79. I_n has scalar one on the diagonal and zero elsewhere.
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    trust have identity_matrix matrix(s, n, n):
-        forall j, k N_pos:
-            j <= n
-            k <= n
-            j = k
-            =>:
-                identity_matrix(j, k) = scalars.one
-        forall j, k N_pos:
-            j <= n
-            k <= n
-            j != k
-            =>:
-                identity_matrix(j, k) = scalars.zero
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn identity_matrix_entry(j, k N+) s by cases:
+        case j = k: scalars.one
+        case j != k: scalars.zero
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have identity_matrix matrix(s, n, n) = fn(j, k N+: j <= n, k <= n) s {\identity_matrix_entry<s, scalars, n>(j, k)}
 # Definition 3.80. B is an inverse of square A when AB=BA=I; invertibility is
 # existence, and inverse_matrix selects the unique B.
-prop is_inverse_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A, B matrix(s, n, n)):
+prop is_inverse_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A, B matrix(s, n, n)):
     \chap3c::matrix_mul<s, scalars, n, n, n>(A, B) = \identity_matrix<s, scalars, n>
     \chap3c::matrix_mul<s, scalars, n, n, n>(B, A) = \identity_matrix<s, scalars, n>
 
-prop is_invertible_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A matrix(s, n, n)):
+prop is_invertible_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A matrix(s, n, n)):
     exist B matrix(s, n, n) st {$is_inverse_matrix(s, scalars, n, A, B)}
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    trust have inverse_matrix fn(A matrix(s, n, n): $is_invertible_matrix(s, scalars, n, A)) matrix(s, n, n):
-        $is_inverse_matrix(s, scalars, n, A, inverse_matrix(A))
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    trust have inverse_matrix fn(A matrix(s, n, n): $is_invertible_matrix(s, scalars, n, A)) matrix(s, n, n)
 # Result 3.81. The explicit-basis matrix of ST is the corresponding product.
 axiom matrix_of_product_with_explicit_bases:
-    ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, m, n, p N_pos, u &chap1a::FiniteList<USet, m>, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, p>, T \chap3a::linear_map_space<s, USet, VSet, U, V>, S \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+    ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, m, n, p N+, u &chap1a::FiniteList<USet, m>, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, p>, T \chap3a::linear_map_space<s, USet, VSet, U, V>, S \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2b::is_basis(s, USet, U, m, u)
         $chap2b::is_basis(s, VSet, V, n, v)
         $chap2b::is_basis(s, WSet, W, p, w)
+        \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T) $in \chap3a::linear_map_space<s, USet, WSet, U, W>
         =>:
             \chap3c::matrix_of_linear_map<s, USet, WSet, U, W, m, p>(u, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)) = \chap3c::matrix_mul<s, V.scalars, p, n, m>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, p>(v, w, S), \chap3c::matrix_of_linear_map<s, USet, VSet, U, V, m, n>(u, v, T))
 # Result 3.82. The two change-of-coordinate matrices for opposite basis orders
 # are mutual inverses.
 axiom identity_map_between_two_bases:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos, u, v &chap1a::FiniteList<VSet, n>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, u, v &chap1a::FiniteList<VSet, n>:
         $chap2b::is_basis(s, VSet, V, n, u)
         $chap2b::is_basis(s, VSet, V, n, v)
+        \chap3a::identity_linear_map<s, VSet, V> $in \chap3a::linear_map_space<s, VSet, VSet, V, V>
         =>:
             $is_inverse_matrix(s, V.scalars, n, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, u, \chap3a::identity_linear_map<s, VSet, V>))
 # Example 3.83 is comment-only: the source computes the two coordinate-change
@@ -257,15 +257,21 @@ axiom identity_map_between_two_bases:
 # Result 3.84. If C changes u-coordinates to v-coordinates, then
 # M(T,u)=C^-1 M(T,v) C.
 axiom change_of_basis_formula:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos, u, v &chap1a::FiniteList<VSet, n>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, u, v &chap1a::FiniteList<VSet, n>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>:
         $chap2b::is_basis(s, VSet, V, n, u)
         $chap2b::is_basis(s, VSet, V, n, v)
+        \chap3a::identity_linear_map<s, VSet, V> $in \chap3a::linear_map_space<s, VSet, VSet, V, V>
+        $is_invertible_matrix(s, V.scalars, n, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>))
         =>:
             \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, u, T) = \chap3c::matrix_mul<s, V.scalars, n, n, n>(\inverse_matrix<s, V.scalars, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>)), \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, v, T), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>)))
 # Result 3.86. With one basis fixed, the matrix of T^-1 is M(T)^-1.
-axiom matrix_of_inverse_equals_inverse_of_matrix:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos, basis &chap1a::FiniteList<VSet, n>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>:
+# Source handling: the original leaves this proof to an exercise. The exact
+# omitted result remains visible here as an explicit proof boundary.
+thm matrix_of_inverse_equals_inverse_of_matrix:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, basis &chap1a::FiniteList<VSet, n>, T, S \chap3a::linear_map_space<s, VSet, VSet, V, V>:
         $chap2b::is_basis(s, VSet, V, n, basis)
-        $is_invertible_linear_map(s, VSet, VSet, V, V, T)
+        $is_inverse_linear_map(s, VSet, VSet, V, V, T, S)
+        $is_invertible_matrix(s, V.scalars, n, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T))
         =>:
-            \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \inverse_linear_map<s, VSet, VSet, V, V>(T)) = \inverse_matrix<s, V.scalars, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T))
+            \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, S) = \inverse_matrix<s, V.scalars, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T))
+    trust \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, S) = \inverse_matrix<s, V.scalars, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T))

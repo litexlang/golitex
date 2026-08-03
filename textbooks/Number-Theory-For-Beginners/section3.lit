@@ -59,42 +59,42 @@ thm bezout_pair_has_gcd_one:
             $section2::is_gcd_Z(a, b, 1)
     witness exist u Z st {a = 1 * u} from a:
         a = 1 * a
-    $section1::divides_Z(1, a)
+    by def $section1::divides_Z(1, a)
     witness exist v Z st {b = 1 * v} from b:
         b = 1 * b
-    $section1::divides_Z(1, b)
+    by def $section1::divides_Z(1, b)
     claim:
-        ? forall e Z:
-            e > 0
-            $section1::divides_Z(e, a)
-            $section1::divides_Z(e, b)
+        ? forall exp_e Z:
+            exp_e > 0
+            $section1::divides_Z(exp_e, a)
+            $section1::divides_Z(exp_e, b)
             =>:
-                $section1::divides_Z(e, 1)
-        obtain p from exist p Z st {a = e * p}
-        obtain q from exist q Z st {b = e * q}
-        witness exist t Z st {1 = e * t} from p * x + q * y:
-            1 = a * x + b * y = (e * p) * x + (e * q) * y = e * (p * x + q * y)
-        $section1::divides_Z(e, 1)
+                $section1::divides_Z(exp_e, 1)
+        obtain p from exist p Z st {a = exp_e * p}
+        obtain q from exist q Z st {b = exp_e * q}
+        witness exist t Z st {1 = exp_e * t} from p * x + q * y:
+            1 = a * x + b * y = (exp_e * p) * x + (exp_e * q) * y = exp_e * (p * x + q * y)
+        by def $section1::divides_Z(exp_e, 1)
     witness exist u, v Z st {1 = a * u + b * v} from x, y:
         1 = a * x + b * y
-    $section2::is_gcd_Z(a, b, 1)
+    by def $section2::is_gcd_Z(a, b, 1)
 
 # This is the source's direct reverse endpoint, recorded separately from the
 # gcd-characterization proof above: any positive common divisor divides the
 # displayed Bézout combination and hence divides 1.
 thm positive_common_divisor_of_bezout_pair_is_one:
-    ? forall a, b, x, y, e Z:
-        e > 0
-        $section1::divides_Z(e, a)
-        $section1::divides_Z(e, b)
+    ? forall a, b, x, y, exp_e Z:
+        exp_e > 0
+        $section1::divides_Z(exp_e, a)
+        $section1::divides_Z(exp_e, b)
         a * x + b * y = 1
         =>:
-            e = 1
-    by thm section1::divides_Z_linear_combination(e, a, b, x, y)
+            exp_e = 1
+    by thm section1::divides_Z_linear_combination(exp_e, a, b, x, y)
     x * a + y * b = a * x + b * y = 1
-    $section1::divides_Z(e, 1)
-    by thm section1::positive_divisor_of_one_is_one(e)
-    e = 1
+    $section1::divides_Z(exp_e, 1)
+    by thm section1::positive_divisor_of_one_is_one(exp_e)
+    exp_e = 1
 
 thm theorem_III_1_bezout_implies_relprime_pair:
     ? forall a, b Z:
@@ -104,7 +104,7 @@ thm theorem_III_1_bezout_implies_relprime_pair:
     obtain x, y from exist x, y Z st {a * x + b * y = 1}
     by thm bezout_pair_has_gcd_one(a, b, x, y)
     section2::gcd_Z(a, b) = 1
-    $relatively_prime_Z(a, b)
+    by def $relatively_prime_Z(a, b)
 
 """
 Corollary. If d is the gcd of a,b,...,c, then a/d,b/d,...,c/d are mutually
@@ -152,7 +152,7 @@ thm theorem_III_2_euclid_lemma:
     c = a * (c * x + u * y)
     witness exist t Z st {c = a * t} from c * x + u * y:
         c = a * (c * x + u * y)
-    $section1::divides_Z(a, c)
+    by def $section1::divides_Z(a, c)
 
 """
 Corollary 1. If a is prime to b and to c, then a is prime to bc.
@@ -177,7 +177,7 @@ thm theorem_III_2_corollary_1:
 # Finite products are introduced here, before the later prime-factorization
 # chapter uses them.  The recursive value is the reusable interface; the
 # finite-set enumeration theorem below remains a separate source-level debt.
-have fn finite_product_from_one(a fn(i N_pos) Z, n N) Z by induc n from 0:
+have fn finite_product_from_one(a fn(idx_i N+) Z, n Z: n >= 0) Z by induc n from 0:
     case n = 0: 1
     case n > 0: finite_product_from_one(a, n - 1) * a(n)
 
@@ -185,17 +185,17 @@ have fn finite_product_from_one(a fn(i N_pos) Z, n N) Z by induc n from 0:
 # the last indexed factor multiplies the preceding finite product by that
 # factor.
 thm finite_product_from_one_successor:
-    ? forall a fn(i N_pos) Z, n N:
+    ? forall a fn(idx_i N+) Z, n N:
         finite_product_from_one(a, n + 1) = finite_product_from_one(a, n) * a(n + 1)
     finite_product_from_one(a, n + 1) = finite_product_from_one(a, (n + 1) - 1) * a(n + 1) = finite_product_from_one(a, n) * a(n + 1)
 
 # Prepending a head value shifts every old factor one position to the right.
 # This is the product law used when factorization induction adjoins a prime.
 thm finite_product_from_one_prepend:
-    ? forall z Z, f fn(i N_pos) Z, g fn(j N_pos) Z, n N:
+    ? forall z Z, f fn(idx_i N+) Z, g fn(j N+) Z, n N:
         g(1) = z
-        forall i N_pos:
-            g(i + 1) = f(i)
+        forall idx_i N+:
+            g(idx_i + 1) = f(idx_i)
         =>:
             finite_product_from_one(g, n + 1) = z * finite_product_from_one(f, n)
     by induc n from 0:
@@ -228,7 +228,7 @@ thm relatively_prime_Z_one:
     by thm theorem_III_1_bezout_implies_relprime_pair(a, 1)
     $relatively_prime_Z(a, 1)
 
-# Induct over finite subsets of the given A.  The carrier keeps each inserted
+# Induct over finite subsets of the given A. The carrier keeps each inserted
 # factor inside the original hypothesis, so Corollary 1 supplies the step.
 thm theorem_III_2_corollary_2:
     ? forall a Z, A finite_set, p Z:
@@ -239,20 +239,83 @@ thm theorem_III_2_corollary_2:
             $relatively_prime_Z(a, x)
         =>:
             $relatively_prime_Z(a, p)
-    by induc P in A:
-        ? $relatively_prime_Z(a, finite_set_product(P, fn(x P) Z {x}))
-        ? from P = {}:
-            by thm relatively_prime_Z_one(a)
-            $relatively_prime_Z(a, 1)
-            finite_set_product({}, fn(x {}) Z {x}) = 1
-            $relatively_prime_Z(a, finite_set_product({}, fn(x {}) Z {x}))
+    prop finite_product_relprime(B finite_set):
+        forall q Z:
+            B $subset Z
+            $finite_product_of_integer_set(B, q)
+            forall x B:
+                x $in Z
+                $relatively_prime_Z(a, x)
+            =>:
+                $relatively_prime_Z(a, q)
+    by induc B:
+        ? $finite_product_relprime(B)
+        ? from B = {}:
+            claim:
+                ? forall q Z:
+                    {} $subset Z
+                    $finite_product_of_integer_set({}, q)
+                    forall x {}:
+                        x $in Z
+                        $relatively_prime_Z(a, x)
+                    =>:
+                        $relatively_prime_Z(a, q)
+                q = finite_set_product({}, fn(x {}) Z {x}) = 1
+                by thm relatively_prime_Z_one(a)
+                $relatively_prime_Z(a, q)
+            by def $finite_product_relprime({})
         ? induc z, S:
-            $relatively_prime_Z(a, finite_set_product(S, fn(x S) Z {x}))
-            $relatively_prime_Z(a, z)
-            finite_set_product(union({z}, S), fn(x union({z}, S)) Z {x}) = finite_set_product(S, fn(x S) Z {x}) * z
-            by thm theorem_III_2_corollary_1(a, finite_set_product(S, fn(x S) Z {x}), z)
-            $relatively_prime_Z(a, finite_set_product(S, fn(x S) Z {x}) * z)
-            $relatively_prime_Z(a, finite_set_product(union({z}, S), fn(x union({z}, S)) Z {x}))
-    $relatively_prime_Z(a, finite_set_product(A, fn(x A) Z {x}))
-    p = finite_set_product(A, fn(x A) Z {x})
+            $finite_product_relprime(S)
+            claim:
+                ? forall q Z:
+                    union({z}, S) $subset Z
+                    $finite_product_of_integer_set(union({z}, S), q)
+                    forall x union({z}, S):
+                        x $in Z
+                        $relatively_prime_Z(a, x)
+                    =>:
+                        $relatively_prime_Z(a, q)
+                S $subset union({z}, S)
+                claim:
+                    ? forall x S:
+                        x $in Z
+                    x $in union({z}, S)
+                    x $in Z
+                by def S $subset Z
+                z $in union({z}, S)
+                z $in Z
+                $relatively_prime_Z(a, z)
+                have r Z = finite_set_product(S, fn(x S) Z {x})
+                claim:
+                    ? forall r0 Z:
+                        S $subset Z
+                        $finite_product_of_integer_set(S, r0)
+                        forall x S:
+                            x $in Z
+                            $relatively_prime_Z(a, x)
+                        =>:
+                            $relatively_prime_Z(a, r0)
+                claim:
+                    ? forall x S:
+                        x $in Z
+                        $relatively_prime_Z(a, x)
+                    x $in union({z}, S)
+                    x $in Z
+                    $relatively_prime_Z(a, x)
+                by def $finite_product_of_integer_set(S, r)
+                $relatively_prime_Z(a, r)
+                q = finite_set_product(union({z}, S), fn(x union({z}, S)) Z {x}) = finite_set_product(S, fn(x S) Z {x}) * z = r * z
+                by thm theorem_III_2_corollary_1(a, r, z)
+                $relatively_prime_Z(a, q)
+            by def $finite_product_relprime(union({z}, S))
+    $finite_product_relprime(A)
+    claim:
+        ? forall q Z:
+            A $subset Z
+            $finite_product_of_integer_set(A, q)
+            forall x A:
+                x $in Z
+                $relatively_prime_Z(a, x)
+            =>:
+                $relatively_prime_Z(a, q)
     $relatively_prime_Z(a, p)

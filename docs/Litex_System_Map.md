@@ -159,7 +159,26 @@ ways its documented facts enter the continuing context.
 
 **Builtin mathematical patterns.** The target shape is matched against
 implemented arithmetic, equality, order, membership, set, function, and
-composite-object rules. A builtin rule has depth one: its premises use known
+composite-object rules.
+
+Conceptually, builtin rules and builtin strategies mirror the two corresponding
+user-facing proof mechanisms:
+
+```text
+builtin rule       <-> known forall fact
+builtin strategy   <-> user-defined strategy
+```
+
+A builtin rule is the kernel-provided form of a universal fact application: it
+matches one target and asks for the fixed premises of that mathematical step.
+A builtin strategy is the kernel-provided form of a user strategy: it
+structurally transforms a target and may continue layer by layer while the
+strategy shape still applies. They differ from their user-defined counterparts
+mainly in where they are implemented, not in their proof role. This symmetry is
+the design guide for recursion, failure, and proof-chain reporting; builtin
+automation should not acquire symbol-specific control-flow exceptions.
+
+A builtin rule has depth one: its premises use known
 non-`forall` facts or deterministic computation and cannot invoke another
 rule. Builtin strategies are a separate route for strictly smaller structural
 children; each layer may try one fresh direct rule before repeating only that
@@ -217,7 +236,10 @@ and known-equality child proofs. Function applications align trailing argument
 groups and then compare their remaining function prefixes, so the two sides
 need not have the same number of curried application groups. Other atomic-fact
 lookup may use known-only congruence for transport, but does not start the fuller
-child-proof route.
+child-proof route. One-step function unfolding is best-effort: a template
+candidate captured under an already closed local binder scope is skipped when
+it can no longer be materialized, while a direct ill-defined template use is
+still rejected by the ordinary well-definedness check.
 The nonzero rules also include `x > 0 => sqrt(x) != 0`, but not the invalid
 weakening from `x >= 0`.
 

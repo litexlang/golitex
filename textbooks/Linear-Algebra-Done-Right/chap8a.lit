@@ -32,6 +32,7 @@ axiom equality_in_sequence_of_null_spaces:
             $null_space_equality_propagates_statement(s, VSet, V, T, m)
 
 prop null_spaces_stabilize_at_dimension_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>):
+    $chap2c::admits_basis_length(s, VSet, V)
     forall k N:
         \chap2c::dimension<s, VSet, V> <= k
         =>:
@@ -45,6 +46,7 @@ axiom null_spaces_stop_growing:
             $null_spaces_stabilize_at_dimension_statement(s, VSet, V, T)
 
 prop power_null_range_direct_sum_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>):
+    $chap2c::admits_basis_length(s, VSet, V)
     $chap1c::is_direct_sum_pair(s, VSet, V, \power_null_space<s, VSet, V>(T, \chap2c::dimension<s, VSet, V>), \power_range<s, VSet, V>(T, \chap2c::dimension<s, VSet, V>))
     \chap1c::subspace_sum_pair<s, VSet, V>(\power_null_space<s, VSet, V>(T, \chap2c::dimension<s, VSet, V>), \power_range<s, VSet, V>(T, \chap2c::dimension<s, VSet, V>)) = VSet
 # Result 8.4. Stabilization makes the null/range intersection zero; rank-nullity
@@ -69,9 +71,10 @@ sketch:
 prop is_generalized_eigenvector(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s, v VSet):
     $chap5a::is_eigenvalue(s, VSet, V, T, lambda)
     v != V.zero
-    exist k N_pos st {\chap5a::operator_power<s, VSet, V>(\chap5a::operator_minus_scalar_identity<s, VSet, V>(T, lambda), k)(v) = V.zero}
+    exist k N+ st {\chap5a::operator_power<s, VSet, V>(\chap5a::operator_minus_scalar_identity<s, VSet, V>(T, lambda), k)(v) = V.zero}
 
 prop is_generalized_eigenvector_at_dimension(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s, v VSet):
+    $chap2c::admits_basis_length(s, VSet, V)
     $chap5a::is_eigenvalue(s, VSet, V, T, lambda)
     v != V.zero
     \chap5a::operator_power<s, VSet, V>(\chap5a::operator_minus_scalar_identity<s, VSet, V>(T, lambda), \chap2c::dimension<s, VSet, V>)(v) = V.zero
@@ -89,20 +92,21 @@ axiom generalized_eigenvector_dimension_criterion:
         =>:
             $generalized_eigenvector_dimension_criterion_statement(s, VSet, V, T, lambda, v)
 
-prop is_generalized_eigenvector_basis(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>, n N_pos, basis &chap1a::FiniteList<VSet, n>):
-    $chap2b::is_basis(&chap1a::Complex, VSet, V, n, basis)
-    forall k N_pos:
+prop is_generalized_eigenvector_basis(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>, n N+, basis &chap1a::FiniteList<VSet, n>):
+    $chap2b::is_basis(C, VSet, V.general, n, basis)
+    forall k N+:
         k <= n
         =>:
-            exist lambda &chap1a::Complex st {$is_generalized_eigenvector(&chap1a::Complex, VSet, V, T, lambda, basis.entries(k))}
+            exist lambda C st {$is_generalized_eigenvector(C, VSet, V.general, T, lambda, basis.entries(k))}
 # Result 8.9. Induct on dimension: split at null/range of a stable shifted
 # power, use the induction hypothesis on the invariant range, and adjoin bases.
 axiom basis_of_generalized_eigenvectors:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        \chap2c::dimension<&chap1a::Complex, VSet, V> > 0
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        $chap2c::admits_basis_length(C, VSet, V.general)
+        \chap2c::dimension<C, VSet, V.general> > 0
         =>:
-            exist n N_pos, basis &chap1a::FiniteList<VSet, n> st {$is_generalized_eigenvector_basis(VSet, V, T, n, basis)}
+            exist n N+, basis &chap1a::FiniteList<VSet, n> st {$is_generalized_eigenvector_basis(VSet, V, T, n, basis)}
 # Example 8.10. The standard basis vectors are generalized eigenvectors for
 # the displayed operator: the first two correspond to 0 and the third to 5.
 sketch:
@@ -123,9 +127,9 @@ axiom generalized_eigenvector_has_unique_eigenvalue:
         =>:
             alpha = lambda
 
-prop is_distinct_generalized_eigenvector_list(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N_pos, vectors &chap1a::FiniteList<VSet, n>, eigenvalues &chap1a::FiniteList<s, n>):
+prop is_distinct_generalized_eigenvector_list(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N+, vectors &chap1a::FiniteList<VSet, n>, eigenvalues &chap1a::FiniteList<s, n>):
     $chap5a::has_distinct_entries(s, n, eigenvalues)
-    forall k N_pos:
+    forall k N+:
         k <= n
         =>:
             $is_generalized_eigenvector(s, VSet, V, T, eigenvalues.entries(k), vectors.entries(k))
@@ -133,14 +137,14 @@ prop is_distinct_generalized_eigenvector_list(s nonempty_set, VSet nonempty_set,
 # keeps every earlier transformed vector nonzero with its original eigenvalue,
 # contradicting minimality.
 axiom generalized_eigenvectors_for_distinct_eigenvalues_are_independent:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N_pos, vectors &chap1a::FiniteList<VSet, n>, eigenvalues &chap1a::FiniteList<s, n>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N+, vectors &chap1a::FiniteList<VSet, n>, eigenvalues &chap1a::FiniteList<s, n>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         $is_distinct_generalized_eigenvector_list(s, VSet, V, T, n, vectors, eigenvalues)
         =>:
             $chap2a::is_linearly_independent(s, VSet, V, n, vectors)
 # Definition 8.14. Nilpotence is the existence of a positive zero power.
 prop is_nilpotent(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>):
-    exist k N_pos st {\chap5a::operator_power<s, VSet, V>(T, k) = \chap3a::zero_linear_map<s, VSet, VSet, V, V>}
+    exist k N+ st {\chap5a::operator_power<s, VSet, V>(T, k) = \chap3a::zero_linear_map<s, VSet, VSet, V, V>}
 # Example 8.15. The first displayed map squares to zero; the source's second
 # matrix cubes to zero.
 sketch:
@@ -174,25 +178,32 @@ axiom eigenvalues_of_nilpotent_operator:
             $nilpotent_eigenvalue_statement(s, VSet, V, T)
 
 axiom complex_operator_with_only_zero_eigenvalue_is_nilpotent:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        \chap2c::dimension<&chap1a::Complex, VSet, V> > 0
-        forall lambda &chap1a::Complex:
-            $chap5a::is_eigenvalue(&chap1a::Complex, VSet, V, T, lambda)
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        $chap2c::admits_basis_length(C, VSet, V.general)
+        \chap2c::dimension<C, VSet, V.general> > 0
+        forall lambda C:
+            $chap5a::is_eigenvalue(C, VSet, V.general, T, lambda)
             =>:
-                lambda = chap1a::complex_zero
+                lambda = 0
         =>:
-            $is_nilpotent(&chap1a::Complex, VSet, V, T)
+            $is_nilpotent(C, VSet, V.general, T)
 
-prop is_coordinate_power_polynomial(s nonempty_set, scalars &chap1a::ScalarSystem<s>, p \chap2a::polynomial_space<s, scalars>, m N_pos):
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>>:
+    have fn coordinate_power(z s, m N) s by induc m from 0:
+        case m = 0: scalars.one
+        case m > 0: scalars.mul(coordinate_power(z, m - 1), z)
+
+prop is_coordinate_power_polynomial(s nonempty_set, scalars &chap1a::ScalarSystem<s>, p \chap2a::polynomial_space<s, scalars>, m N+):
     forall z s:
-        p(z) = z^m
+        \chap4::polynomial_eval<s, scalars>(p, z) = \coordinate_power<s, scalars>(z, m)
 
 prop minimal_polynomial_is_coordinate_power(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>):
-    exist m N_pos st {$is_coordinate_power_polynomial(s, V.scalars, \chap5b::minimal_polynomial<s, VSet, V>(T), m)}
+    $chap2a::is_finite_dimensional(s, VSet, V)
+    exist m N+ st {$is_coordinate_power_polynomial(s, V.scalars, \chap5b::minimal_polynomial<s, VSet, V>(T), m)}
 
-prop is_strictly_upper_triangular_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A matrix(s, n, n)):
-    forall row, column N_pos:
+prop is_strictly_upper_triangular_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A matrix(s, n, n)):
+    forall row, column N+:
         row <= n
         column <= n
         column <= row
@@ -200,7 +211,7 @@ prop is_strictly_upper_triangular_matrix(s nonempty_set, scalars &chap1a::Scalar
             A(row, column) = scalars.zero
 
 prop has_strictly_upper_triangular_matrix(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>):
-    exist n N_pos, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $is_strictly_upper_triangular_matrix(s, V.scalars, n, \chap5c::matrix_of_operator<s, VSet, V, n>(basis, T))}
+    exist n N+, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $is_strictly_upper_triangular_matrix(s, V.scalars, n, \chap5c::matrix_of_operator<s, VSet, V, n>(basis, T))}
 # Result 8.18. Nilpotence makes the minimal polynomial divide z^n; a coordinate
 # power has only zero roots and triangularizes with zero diagonal; a strictly
 # upper-triangular n-by-n matrix has nth power zero.

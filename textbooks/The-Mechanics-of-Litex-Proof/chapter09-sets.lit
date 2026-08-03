@@ -40,12 +40,13 @@
 # in the form `{x S: condition}`. To prove membership, prove the defining
 # condition:
 
-1 $in {n Z : n <= 3}
+by thm set_builder_member(1, {n Z : n <= 3})
 
 # The set builder `{n Z : n <= 3}` means "the set of integers `n` such that
-# `n <= 3`." A membership claim of the form `xxx $in {n Z : condition}` is checked
-# by substituting `xxx` for the free variable `n` in the condition, then verifying
-# the resulting fact. In the example above, Litex checks `1 <= 3`.
+# `n <= 3`. For an explicit membership introduction, the builtin theorem
+# `set_builder_member` substitutes the candidate for the free variable `n` and
+# verifies the resulting fact. In the example above, it checks `1 <= 3` and then
+# stores the membership conclusion.
 
 # Litex does not ask the user to unfold an encoding before writing the membership
 # fact.
@@ -60,10 +61,19 @@ not 4 $in {1, 2, 3}
 forall a {1, 2, 3}:
     a = 1 or a = 2 or a = 3
 
-forall a R:
-    a = 1 or a = 2 or a = 3
-    =>:
-        a $in {1, 2, 3}
+claim:
+    ? forall a R:
+        a = 1 or a = 2 or a = 3
+        =>:
+            a $in {1, 2, 3}
+    by cases:
+        ? a $in {1, 2, 3}
+        case a = 1:
+            do_nothing
+        case a = 2:
+            do_nothing
+        case a = 3:
+            do_nothing
 
 # When an object belongs to a finite displayed set, Litex can use the finite list
 # of possibilities. The command `by enumerate finite_set` is for this kind of
@@ -123,8 +133,8 @@ by enumerate finite_set:
 # {x N: $dvdN(4, x)} $subset {x N: $dvdN(2, x)}
 # ```
 
-# `subset` is a builtin predicate. `a $subset b` can be verified by
-# `forall! x a => {x $in b}`.
+# `subset` is a builtin predicate. Prove `forall! x a => {x $in b}`, then use
+# `by def a $subset b` to introduce the positive subset fact explicitly.
 
 # > Braced sets such as `{x N: $dvdN(2, x)}` and `{1, 2}` can be used as ordinary
 # > objects like `1` and `R`. This is useful for writing mathematical proofs
@@ -235,7 +245,7 @@ by contra:
 # of `2`, but not a multiple of `4`.
 
 by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
-    2 $in {a N: a % 2 = 0}
+    by thm set_builder_member(2, {a N: a % 2 = 0})
     2 $in {a N: a % 4 = 0}
     impossible 2 % 4 = 0
 
@@ -298,6 +308,7 @@ sketch:
         obtain b from exist a Z st {5 * x = 8 * a}
         witness exist c Z st {x = 8 * c} from 5 * b - 3 * x:
             x = 25 * x - 24 * x = 5 * (5 * x) - 3 * (8 * x) = 5 * (8 * b) - 3 * (8 * x) = 8 * (5 * b - 3 * x)
+        by def $multiple8(x)
 
     claim:
         ? forall x Z:
@@ -307,6 +318,7 @@ sketch:
         obtain b from exist a Z st {x = 8 * a}
         witness exist c Z st {5 * x = 8 * c} from 5 * b:
             5 * x = 5 * (8 * b) = 8 * (5 * b)
+        by def $multiple8(5 * x)
 
 # 9.1.8 Finite Sets As Listed Alternatives
 
@@ -332,9 +344,9 @@ by extension:
 
         by cases a $in {x R: x^2 - x - 2 = 0}:
             case a = -1:
-                do_nothing
+                by thm set_builder_member(a, {x R: x^2 - x - 2 = 0})
             case a = 2:
-                do_nothing
+                by thm set_builder_member(a, {x R: x^2 - x - 2 = 0})
 
 # Lean Example as comparison:
 
@@ -364,11 +376,12 @@ by extension:
 
 # 9.1.9. Example
 
-by enumerate finite_set:
+claim:
     ? forall t {1, 3, 6}:
         t $in {x Q: x < 10}
+    by thm set_builder_member(t, {x Q: x < 10})
 
-{1, 3, 6} $subset {x Q: x < 10}
+by def {1, 3, 6} $subset {x Q: x < 10}
 
 # Lean Example as comparison:
 
@@ -416,11 +429,11 @@ by extension:
 
         by cases y $in union({x R: x < 0}, {x R: x > 0}):
             case y < 0:
-                y $in {x R: x < 0}
+                by thm set_builder_member(y, {x R: x < 0})
             case y = 0:
                 impossible y != 0
             case y > 0:
-                y $in {x R: x > 0}
+                by thm set_builder_member(y, {x R: x > 0})
 
     claim:
         ? forall y union({x R: x < 0}, {x R: x > 0}):
@@ -428,9 +441,9 @@ by extension:
 
         by cases y $in {x R: x != 0}:
             case y $in {x R: x < 0}:
-                do_nothing
+                by thm set_builder_member(y, {x R: x != 0})
             case y $in {x R: x > 0}:
-                do_nothing
+                by thm set_builder_member(y, {x R: x != 0})
 
 # This example is the basic pattern for union proofs: one direction splits the
 # union assumption into cases, and the other direction proves that the target
@@ -539,9 +552,9 @@ claim forall! x intersect({-2, 3}, {y Q: y^2 = 9}) => {x $in {a Q: 0 < a}}:
         case x = 3:
             do_nothing
 
-    3 $in {a Q: 0 < a}
+    by thm set_builder_member(3, {a Q: 0 < a})
 
-intersect({-2, 3}, {y Q: y^2 = 9}) $subset {a Q: 0 < a}
+by def intersect({-2, 3}, {y Q: y^2 = 9}) $subset {a Q: 0 < a}
 
 # This is the standard intersection-subset proof: use one side of the
 # intersection to get a short list of candidates, and use the other side to
@@ -614,10 +627,11 @@ by extension set_minus(Z, {n Z: n % 2 = 0}) = {n Z: n % 2 = 1}:
         x % 2 = 0 or x % 2 = 1
         by cases x % 2 = 1:
             case x % 2 = 0:
-                x $in {n Z: n % 2 = 0}
+                by thm set_builder_member(x, {n Z: n % 2 = 0})
                 impossible x $in {n Z: n % 2 = 0}
             case x % 2 = 1:
                 do_nothing
+        by thm set_builder_member(x, {n Z: n % 2 = 1})
     claim forall! x {n Z: n % 2 = 1} => {x $in set_minus(Z, {n Z: n % 2 = 0})}:
         x $in Z
         x % 2 = 1
@@ -650,6 +664,7 @@ claim:
     by enumerate finite_set:
         ? forall x {}:
             x $in s
+    by def {} $subset s
 
 # Now we prove that the intersection of two sets of numbers that are congruent to 1 and 2 modulo 5 is the empty set.
 
@@ -712,7 +727,14 @@ claim:
     ? forall s set:
         s = {x s: 0 = 0}
     by extension s = {x s: 0 = 0}:
-        do_nothing
+        claim:
+            ? forall element s:
+                element $in {x s: 0 = 0}
+            by thm set_builder_member(element, {x s: 0 = 0})
+        claim:
+            ? forall element {x s: 0 = 0}:
+                element $in s
+            element $in s
 
 # Here is an example of proving that the union of two sets of real numbers is the
 # set of all real numbers.
@@ -725,12 +747,12 @@ by extension union({x R: -1 < x}, {x R: x < 1}) = R:
         by cases a $in union({x R: -1 < x}, {x R: x < 1}):
             case a < -1:
                 a < -1 < 1
-                a $in {x R: x < 1}
+                by thm set_builder_member(a, {x R: x < 1})
             case a = -1:
-                -1 $in {x R: x < 1}
+                by thm set_builder_member(-1, {x R: x < 1})
                 a $in {x R: x < 1}
             case a > -1:
-                do_nothing
+                by thm set_builder_member(a, {x R: -1 < x})
 
     claim:
         ? forall a union({x R: -1 < x}, {x R: x < 1}):
@@ -955,7 +977,7 @@ sketch:
                 x $in Z
                 (x - 1) + 1 = x
                 (x - 1) +1 $in a
-                x - 1 $in {n Z: n + 1 $in a}
+                by thm set_builder_member(x - 1, {n Z: n + 1 $in a})
                 {n Z: n + 1 $in a} = q(a)
                 x - 1 $in q(a)
                 x - 1 $in q(b)
@@ -969,7 +991,7 @@ sketch:
                 y $in Z
                 (y - 1) + 1 = y
                 (y - 1) + 1 $in b
-                y - 1 $in {n Z: n + 1 $in b}
+                by thm set_builder_member(y - 1, {n Z: n + 1 $in b})
                 {n Z: n + 1 $in b} = q(b)
                 y - 1 $in q(b)
                 y - 1 $in q(a)
@@ -979,7 +1001,7 @@ sketch:
                 y $in a
                 y $in b
 
-    $injective_from_power_set_Z_to_power_set_Z(q)
+    by def $injective_from_power_set_Z_to_power_set_Z(q)
 
 # The predicate `injective_from_power_set_Z_to_power_set_Z` says exactly what
 # injective means for functions from `power_set(Z)` to `power_set(Z)`: if two
@@ -1043,7 +1065,7 @@ sketch:
                 a $in {x X: not x $in f(x)}
                 not a $in f(a)
                 impossible a $in f(a)
-            a $in {x X: not x $in f(x)}
+            by thm set_builder_member(a, {x X: not x $in f(x)})
             a $in f(a)
             impossible a $in f(a)
 
@@ -1110,7 +1132,9 @@ sketch:
 # Litex knowledge points
 
 # 1. Set-builder membership is a pattern. To prove `x $in {n S: P(n)}`, prove
-#    that `x $in S` and that `P(x)` holds.
+#    that `x $in S` and that `P(x)` holds, then invoke
+#    `by thm set_builder_member(x, {n S: P(n)})`. Once membership is known,
+#    Litex still exposes the base and defining condition automatically.
 
 # 2. Set equality is extensional. The proof is not about how two set expressions
 #    are written, but about whether they have exactly the same elements.
@@ -1130,6 +1154,14 @@ sketch:
 #    `claim` opens local proof environments, `by contra` proves negations by
 #    contradiction, `by cases` splits membership alternatives, and `witness` or
 #    `have by exist` handles existential information.
+
+# The direction of automation matters throughout the chapter. Set constructors
+# automatically eliminate known memberships into their immediate consequences,
+# and structural strategies combine already-known constructor facts. Introducing
+# a set-builder member whose predicate needs full verification is explicit. The
+# same source-level distinction appears for positive subset and user-proposition
+# facts: prove their bodies first, then cross the definition boundary with
+# `by def`.
 
 # 7. The chapter's larger examples show why sets matter as first-class objects:
 #    they support ordinary finite reasoning, extensional equality, power-set

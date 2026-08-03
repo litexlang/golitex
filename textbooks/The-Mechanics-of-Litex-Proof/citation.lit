@@ -12,7 +12,7 @@ thm gcd_positive:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
-            gcd(a, b) $in N_pos
+            gcd(a, b) $in N+
     by thm basics::gcd_positive(a, b)
 
 thm gcd_divides_left:
@@ -23,6 +23,7 @@ thm gcd_divides_left:
     by thm basics::gcd_divides_left(a, b)
     obtain k from exist k Z st {a = gcd(a, b) * k}
     witness exist t Z st {a = gcd(a, b) * t} from k
+    by def $divides(gcd(a, b), a)
 
 thm gcd_divides_right:
     ? forall a, b Z:
@@ -32,9 +33,10 @@ thm gcd_divides_right:
     by thm basics::gcd_divides_right(a, b)
     obtain k from exist k Z st {b = gcd(a, b) * k}
     witness exist t Z st {b = gcd(a, b) * t} from k
+    by def $divides(gcd(a, b), b)
 
 thm common_divisor_le_gcd:
-    ? forall a, b Z, d N_pos:
+    ? forall a, b Z, d N+:
         a != 0 or b != 0
         $divides(d, a)
         $divides(d, b)
@@ -66,7 +68,7 @@ thm bezout_identity:
     by thm basics::bezout_identity(a, b)
 
 thm gcd_of_prime_is_one_or_prime:
-    ? forall a Z, p N_pos:
+    ? forall a Z, p N+:
         $prime(p)
         =>:
             gcd(a, p) = 1 or gcd(a, p) = p

@@ -30,9 +30,15 @@ Lean or a Lean-kernel certificate.
 
 Chapter 2's reusable algebra core is now carried by checked
 `AdditiveCommutativeGroup<s>`, `Group<s>`, flat `Ring<s>`, and
-`Lattice<s>` values. A ring
+`Lattice<s>` values, together with the residual
+`is_distributive_lattice(s,lattice)` law property. The lattice API includes
+checked transitivity, commutativity, associativity, absorption, and the two
+directions showing that either distributive law implies its order dual. A ring
 exposes `add`, `zero`, `neg`, `mul`, and `one` directly, while its structure
-body composes the reusable additive-group law predicate. Chapter 8 reuses that
+body composes the reusable additive-group law predicate. The same chapter
+defines generic strict comparison by non-strict comparison plus inequality,
+checks the three ordered-ring inequalities, and exposes the foundational
+metric laws and distance nonnegativity used again in Chapter 11. Chapter 8 reuses that
 canonical `Ring`, keeps its stronger two-sided group experiment under the
 distinct name `TwoSidedGroup`, and gives `Module` direct scalar and vector
 operations. Chapters 7, 9, 10, and 12 continue the same flat-data rule for
@@ -62,16 +68,42 @@ source-line counts between the two systems.
 
 ## Evidence and limits
 
-All 14 configured public `.lit` files passed individual release `-f` gates on
-2026-07-29. Every exported chapter is free of user `trust`, `know`, `axiom`,
-`abstract_prop`, and `sketch` directives.
+All 14 configured draft `.lit` files passed a unified release `-f` runner gate
+with semantic `ok=true` on 2026-08-02 after the forced-trust cleanup. Chapters
+3–13 contain
+localized `trust` debt. Chapter 4 retains four
+template computation equations for Schröder–Bernstein. Chapters 5 and 6 retain
+the explicit inductive/recursive, multiplicity, counting, and structural-proof
+interfaces completed in the current low-dependency translation wave. Chapter
+7 retains permutation-record extensionality and Gaussian ring/Euclidean-domain
+proofs. Chapter 8 retains generic scalar recursion, module/product law
+packages, and quotient well-definedness/monoid laws. Chapters 9 and 10 expose
+the resumed algebra and linear-algebra interfaces; their free/presented,
+finite-group, quotient, polynomial, matrix, basis, and finite-dimensional
+proofs retain localized trust debt. Chapter 11 has no executable `trust` or
+`axiom`: its filter, compactness, Baire, compact-subsequence, and finite-
+subcover theorem bodies check. Closed-unit-interval compactness, compact
+continuous extrema, and dense continuous extension remain explicit
+non-executable proof goals, so zero trust is not presented as proof of those
+three source claims.
+Chapters 12 and 13 additionally expose the basic norm and continuous-linear-map
+examples, callable operator norm, the real-scalar Banach–Steinhaus statement
+and checked proof assembly, selected Fréchet derivative, and the AE/eventually
+interface, whose definitional equivalence is checked; their remaining
+construction and proof boundaries are explicit. The Banach–Steinhaus assembly
+uses the checked Chapter 11 closed-cover Baire theorem but still depends on
+localized trusted closed-level-set, completeness-transport, recentering, and
+shell interfaces.
+These boundaries retain
+source-facing callable objects instead of substituting proposition wrappers;
+declarations depending on them are translated, not checkable.
 
 Completion is tracked by original book section and named mathematical family.
 The former declaration registry was retired because its one-to-one matching
 treated collapsed examples and existing but unregistered Litex interfaces as
 untranslated. It must not be used as a mathematical completion percentage.
 The current section inventory and work order are maintained in
-[`scripts/mathematics_in_litex/PLAN.md`](../../scripts/mathematics_in_litex/PLAN.md).
+[`scripts/mathematics_in_litex/PLAN.md`](../../mathematics_in_litex/PLAN.md).
 
 At the Litex source-module level, this project has no configured `std` import
 and no cite module. The small shared number-theory layer is ordinary checked
@@ -102,6 +134,17 @@ definition-expanded lambdas or set builders because those forms expose the
 pointwise mathematics directly, not because named template unfolding is still
 blocked.
 
+The current Chapter 9 polynomial surface has checked finite-support
+constructions for `polynomial_X`, `polynomial_C`, pointwise `polynomial_add`,
+finite Cauchy-convolution multiplication, recursive power, finite evaluation,
+and the displayed `X - r` root theorem. Natural degree is executable; its
+conditional multiplication law remains a localized trust boundary. Chapter 10
+has a checked coordinatewise product vector space, checked pairing and
+copairing linearity, a checked singleton-supported `direct_sum_single`, checked
+finite-sum matrix multiplication, and a checked identity matrix. The universal
+direct-sum lift, quotient structures, determinant and inverse constructions,
+and basis selections remain visibly trusted.
+
 The current Litex-to-Lean bridge supports only a limited trust-free arithmetic
 subset. This thirteen-chapter project is not currently compiled to Lean.
 Within the supported subset, trusted or unsupported forms must not be
@@ -117,14 +160,16 @@ From the `golitex` repository root:
 RUST_MIN_STACK=8388608 target/release/litex -compact -r scripts/textbooks_drafts/Mathematics-In-Lean-Derived-Litex-Corpus
 ~~~
 
-The full project acceptance gate is:
+The full project strict gate is:
 
 ~~~sh
 RUST_MIN_STACK=8388608 target/release/litex -compact -strict -r scripts/textbooks_drafts/Mathematics-In-Lean-Derived-Litex-Corpus
 ~~~
 
-This release gate passed on 2026-07-28 without user trust directives. Run it
-again after any chapter edit before publishing the draft.
+This release gate passed on 2026-07-28 before the current localized trust
+boundaries were introduced. It is expected to reject the current Chapter 4–8
+trust debts until they are discharged; the ordinary project runner remains
+the current executable checkpoint.
 
 The project exports only `chap1` through `chap13` in source order. It has no
 `[import std]` section and no cite export. Cross-chapter objects, functions,
@@ -133,27 +178,76 @@ predicates, and theorems use explicit module qualification.
 ## Corpus map
 
 - `chap1`–`chap5`: introductory functions and facts; basic algebra and logic;
-  sets/functions; and elementary number theory.
-- `chap6`: finite counting, list/tree/formula interfaces, checked list
-  induction consequences, and the callable Boolean valuation update.
-- `chap7`–`chap9`: records, indexed-simplex midpoint, Gaussian integers,
-  checked integer ring and natural-scalar objects, inherited submonoids,
-  groups, rings, ideals, polynomials, square expansion, and integer units.
-- `chap10`: vector spaces, linear maps, subspaces and quotients, eigen data,
-  matrices, bases, and dimension.
+  uniqueness of real sequence limits;
+  sets/functions, including a checked callable choice-with-default inverse and
+  typed binary and indexed image/preimage operations and laws, its
+  injective/left-inverse and surjective/right-inverse characterizations,
+  plus the complete callable Schröder–Bernstein construction and bijection
+  theorem relative to the four explicit computation-equation trusts; and
+  elementary number theory.
+- `chap6`: finite counting, callable list operations, independent binary-tree
+  and propositional-formula carriers with recursive interfaces, and the
+  callable Boolean valuation update.
+- `chap7`–`chap9`: records, indexed-simplex midpoint, a callable permutation
+  group, Gaussian commutative-ring and Euclidean-domain objects, checked
+  integer ring and natural-scalar objects, callable self/integer modules,
+  inherited submonoids, a callable fraction quotient monoid, groups, rings,
+  ideals, callable free/presented and quotient groups, finite-group and action
+  statements, callable unit structures, checked representative-independent
+  quotient-ring operations and commutative-ring laws, CRT maps,
+  polynomials, square expansion, and integer units.
+- `chap10`: vector spaces; linear maps with checked zero preservation,
+  pointwise addition, scalar multiplication, scalar endomorphisms, and
+  composition; typed endomorphism composition and subtraction of a scalar
+  endomorphism; checked image, preimage, kernel, and range subspace closure;
+  checked intersection, top, and bottom subspaces; the map/comap subset
+  adjunction; checked span closure and its full subset adjunction; quotients;
+  a typed and surjective canonical quotient projection; injective-kernel and
+  surjective-range characterizations; eigen data together with the checked
+  typed eigenspace/kernel identity for `phi - a • id`; matrices; bases; and
+  dimension; callable linear-equivalence inverses, binary and indexed product
+  and direct-sum interfaces, inherited-subspace and quotient structures,
+  internal decompositions and quotient lifts, polynomial evaluation on
+  endomorphisms, minimal/characteristic polynomials, Cayley–Hamilton, general
+  matrices, coordinates, change of basis, and selected finite bases.
 - `chap11`: filters, metric spaces, topological spaces, compactness, filter
   limit composition, eventuality laws, continuous composition, the forward
-  pairwise-to-anchored Cauchy bridge, and complete-space convergence. The
-  source coinduced-topology composition equivalence remains deferred.
-- `chap12`: elementary and normed-space differential calculus.
-- `chap13`: analytic epsilon vocabulary, measurable spaces and their closure
-  laws, generic countably additive measure candidates, and almost-everywhere
-  relations. ENNReal and integration theory are deferred in `todo.lit`.
+  and reverse Cauchy bridges, complete-space and geometric-step convergence,
+  promoted principal/map/comap filters, real-limit algebra, compact uniform
+  continuity and extrema, continuous distance and quadratic composition,
+  closed-limit and compact interval/closedness interfaces, the Baire statement, induced/coinduced topology
+  interfaces and comparison, changed-topology continuity, homogeneous product
+  topology, separation and neighborhood bases, dense extension, sequential
+  closure, cluster points, filter compactness, convergent subsequences,
+  mapped cluster points, compact images, and finite indexed subcovers. The
+  chapter has zero executable trust/axiom declarations. Three foundational
+  source claims remain explicitly unproved goals: real closed-unit-interval
+  compactness, compact continuous extrema, and dense continuous extension.
+- `chap12`: relational and selected real derivatives, explicit sine and pi
+  background, sum and power examples, local extrema, Rolle, mean value,
+  real normed spaces and named norm laws, callable continuous linear maps and
+  operator norm, pointwise and uniformly bounded operator families, the
+  real-scalar Banach–Steinhaus theorem with its Baire/shell proof spine,
+  asymptotic relations, and selected Fréchet-derivative interfaces.
+  Elementary selected-derivative and analysis-library proofs remain localized
+  trust debt.
+
+Recursive positive-prop projection now checks norm nonnegativity, the norm
+triangle inequality, and the additivity and scalar-compatibility projections
+of continuous real-linear maps directly from their existing law packages.
+Sound projection from grouped universal conclusions also checks scalar norm
+compatibility. Classical implication packaging checks the zero-norm iff
+wrapper directly from its two norm-law directions.
+- `chap13`: measurable spaces and generic countably additive set functions,
+  almost-everywhere truth and its eventuality interface,
+  callable oriented and whole-line real integrals, logarithm and reciprocal
+  background, both fundamental theorems, and callable real convolution.
+  Integral construction and theorem proofs remain localized trust debt.
 
 `math_collections.md` records the cross-chapter mathematical interfaces. The
-source manifest, status ledgers, extraction tools, and unfinished notes live
-in `scripts/mathematics_in_litex/` so that working artifacts remain outside
-the final module.
+single section-based plan, concrete development blockers, and solved problem
+notes live in `scripts/mathematics_in_litex/` so that working artifacts remain
+outside the final module.
 
 ## Modeling and trust boundary
 

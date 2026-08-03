@@ -9,23 +9,23 @@ Definition 5.1.1. A sequence of rational numbers is a function from the
 positive integers to the rationals.
 """
 
-# The builtin object `seq(S)` is exactly the function space `fn(n N_pos) S`:
+# The builtin object `seq(S)` is exactly the function space `fn(n N+) S`:
 # an element of `seq(S)` is an ordinary sequence whose positive-integer index
 # `n` has a value in `S`.
 
 forall s set:
-    seq(s) = fn(x N_pos) s
+    seq(s) = fn(x N+) s
 
-forall a seq(Q), n N_pos:
+forall a seq(Q), n N+:
     a(n) $in Q
 
-forall a seq(R), n N_pos:
+forall a seq(R), n N+:
     a(n) $in R
 
 sketch:
-    have fn reciprocal_rational_sequence(n N_pos) Q = 1 / n
-    have fn square_real_sequence(n N_pos) R = n^2
-    have fn constant_rational_sequence(n N_pos) Q = 3
+    have fn reciprocal_rational_sequence(n N+) Q = 1 / n
+    have fn square_real_sequence(n N+) R = n^2
+    have fn constant_rational_sequence(n N+) Q = 3
 
     reciprocal_rational_sequence(1) = 1
     square_real_sequence(2) = 4
@@ -53,25 +53,24 @@ sketch:
     constant_three_from_zero(0) = 3
     constant_three_from_zero(2) = 3
 
-    have fn squares_from_three(n N_pos: n >= 3) N = n^2
+    have fn squares_from_three(n N+: n >= 3) N = n^2
 
     squares_from_three(3) = 9
     4 >= 3
     squares_from_three(4) = 16
     5 >= 3
     squares_from_three(5) = 25
-    squares_from_three $in fn(x N_pos: x >= 3) N
+    squares_from_three $in fn(x N+: x >= 3) N
 
-template<s set, m N_pos>:
-    have seq_starting_at set = fn(x N_pos: x >= m) s
+template<s set, m N+>:
+    have seq_starting_at set = fn(x N+: x >= m) s
 
 sketch:
-    have a_from_3 \seq_starting_at<N, 3>
-    have fn square_from_3_again(n N_pos: n >= 3) N = n^2
+    have fn square_from_3_again(n N+: n >= 3) N = n^2
 
     square_from_3_again(3) = 9
-    \seq_starting_at<N, 3> = fn(x N_pos: x >= 3) N
-    square_from_3_again $in fn(x N_pos: x >= 3) N
+    \seq_starting_at<N, 3> = fn(x N+: x >= 3) N
+    square_from_3_again $in fn(x N+: x >= 3) N
 
 """
 Definition 5.1.3 (epsilon-steady rational sequences). Let epsilon > 0 be a
@@ -79,8 +78,8 @@ rational number. A rational sequence is epsilon-steady when every pair of
 terms in the sequence has rational distance at most epsilon.
 """
 
-prop is_epsilon_steady_in_Q(a seq(Q), epsilon Q_pos):
-    forall j, k N_pos:
+prop is_epsilon_steady_in_Q(a seq(Q), epsilon Q+):
+    forall j, k N+:
         $chap4::is_close_in_Q(epsilon, a(j), a(k))
 
 """
@@ -98,10 +97,19 @@ Example 5.1.5. Constant sequences are epsilon-steady for every epsilon.
 
 sketch:
     claim:
-        ? forall c Q, epsilon Q_pos:
-            $is_epsilon_steady_in_Q(fn(n N_pos) Q {c}, epsilon)
-        forall j, k N_pos:
-            $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {c}(j), fn(n N_pos) Q {c}(k))
+        ? forall c Q, epsilon Q+:
+            $is_epsilon_steady_in_Q(fn(n N+) Q {c}, epsilon)
+        claim:
+            ? forall j, k N+:
+                $chap4::is_close_in_Q(epsilon, fn(n N+) Q {c}(j), fn(n N+) Q {c}(k))
+            fn(n N+) Q {c}(j) = c
+            fn(n N+) Q {c}(k) = c
+            c - c = 0
+            chap4::dist_Q(fn(n N+) Q {c}(j), fn(n N+) Q {c}(k)) = abs(c - c)
+            abs(c - c) = abs(0) = 0
+            0 <= epsilon
+            by def $chap4::is_close_in_Q(epsilon, fn(n N+) Q {c}(j), fn(n N+) Q {c}(k))
+        by def $is_epsilon_steady_in_Q(fn(n N+) Q {c}, epsilon)
 
 """
 Definition 5.1.6 (eventual epsilon-steadiness). A rational sequence is
@@ -113,15 +121,15 @@ with indices j,k >= n0 are epsilon-close to one another.
 # a tail starting point `n0`, all terms with `j,k >= n0` are epsilon-close; then
 # we assert that such an `n0` exists.
 
-prop is_tail_epsilon_steady_in_Q(a seq(Q), epsilon Q_pos, n0 N_pos):
-    forall j, k N_pos:
+prop is_tail_epsilon_steady_in_Q(a seq(Q), epsilon Q+, n0 N+):
+    forall j, k N+:
         j >= n0
         k >= n0
         =>:
             $chap4::is_close_in_Q(epsilon, a(j), a(k))
 
-prop has_eventual_epsilon_steadiness_in_Q(a seq(Q), epsilon Q_pos):
-    exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(a, epsilon, n0)}
+prop has_eventual_epsilon_steadiness_in_Q(a seq(Q), epsilon Q+):
+    exist n0 N+ st {$is_tail_epsilon_steady_in_Q(a, epsilon, n0)}
 
 """
 Example 5.1.7. The sequence `1/n` becomes epsilon-steady far enough out, and a
@@ -140,7 +148,7 @@ epsilon-close.
 # arbitrary-precision condition, not the tail condition for one fixed epsilon.
 
 prop is_cauchy_sequence_in_Q(a seq(Q)):
-    forall epsilon Q_pos:
+    forall epsilon Q+:
         $has_eventual_epsilon_steadiness_in_Q(a, epsilon)
 
 """
@@ -168,20 +176,20 @@ Proposition 5.1.11. The sequence 1/n is Cauchy.
 # Background interface.  The Archimedean property supplies the reciprocal
 # cutoff used by the rational-sequence estimates below.  The source uses this
 # ordered-field fact as background; its proof remains explicit local trust.
-# The builtin carrier `R_pos` is the set of strictly positive real numbers, so
-# `epsilon R_pos` is the usual assumption `epsilon > 0`.
+# The builtin carrier `R+` is the set of strictly positive real numbers, so
+# `epsilon R+` is the usual assumption `epsilon > 0`.
 thm archimedean_property:
-    ? forall epsilon R_pos:
-        exist n N_pos st {1 / n < epsilon}
-    exist n N_pos st {1 / n < epsilon}
+    ? forall epsilon R+:
+        exist n N+ st {1 / n < epsilon}
+    exist n N+ st {1 / n < epsilon}
 
 thm reciprocal_rational_sequence_tail_terms_are_close:
-    ? forall epsilon Q_pos, n0, j, k N_pos:
+    ? forall epsilon Q+, n0, j, k N+:
         1 / n0 < epsilon / 2
         j >= n0
         k >= n0
         =>:
-            $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k))
+            $chap4::is_close_in_Q(epsilon, fn(n N+) Q {1 / n}(j), fn(n N+) Q {1 / n}(k))
     n0 <= j
     n0 * j > 0
     1 / j = n0 / (n0 * j)
@@ -197,33 +205,41 @@ thm reciprocal_rational_sequence_tail_terms_are_close:
     1 / k <= 1 / n0
     1 / k <= epsilon / 2
     1 / k > 0
+    1 / k >= 0
     1 / j - 1 / k <= 1 / j <= epsilon / 2 < epsilon
     -(1 / j - 1 / k) = 1 / k - 1 / j
     1 / j > 0
+    1 / j >= 0
     1 / k - 1 / j <= 1 / k <= epsilon / 2 < epsilon
     -(1 / j - 1 / k) <= epsilon
+    1 / j - 1 / k <= epsilon / 2
+    1 / j - 1 / k <= epsilon
+    1 / j - 1 / k $in Q
+    -epsilon <= 1 / j - 1 / k
     abs(1 / j - 1 / k) <= epsilon
-    fn(n N_pos) Q {1 / n}(j) = 1 / j
-    fn(n N_pos) Q {1 / n}(k) = 1 / k
+    fn(n N+) Q {1 / n}(j) = 1 / j
+    fn(n N+) Q {1 / n}(k) = 1 / k
     by thm chap4::rational_distance_formula(1 / j, 1 / k)
     chap4::dist_Q(1 / j, 1 / k) = abs(1 / j - 1 / k) <= epsilon
     by def $chap4::is_close_in_Q(epsilon, 1 / j, 1 / k)
     $chap4::is_close_in_Q(epsilon, 1 / j, 1 / k)
-    $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k))
+    $chap4::is_close_in_Q(epsilon, fn(n N+) Q {1 / n}(j), fn(n N+) Q {1 / n}(k))
 
 claim:
-    ? forall epsilon Q_pos:
-        $has_eventual_epsilon_steadiness_in_Q(fn(n N_pos) Q {1 / n}, epsilon)
-    epsilon / 2 $in R_pos
+    ? forall epsilon Q+:
+        $has_eventual_epsilon_steadiness_in_Q(fn(n N+) Q {1 / n}, epsilon)
+    epsilon / 2 $in R+
     by thm archimedean_property(epsilon / 2)
-    obtain n0 from exist n0 N_pos st {1 / n0 < epsilon / 2}
-    witness exist n1 N_pos st {$is_tail_epsilon_steady_in_Q(fn(n N_pos) Q {1 / n}, epsilon, n1)} from n0:
-        forall j, k N_pos:
+    obtain n0 from exist n0 N+ st {1 / n0 < epsilon / 2}
+    witness exist n1 N+ st {$is_tail_epsilon_steady_in_Q(fn(n N+) Q {1 / n}, epsilon, n1)} from n0:
+        forall j, k N+:
             j >= n0
             k >= n0
             =>:
-                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 / n}(j), fn(n N_pos) Q {1 / n}(k))
-by def $is_cauchy_sequence_in_Q(fn(n N_pos) Q {1 / n})
+                $chap4::is_close_in_Q(epsilon, fn(n N+) Q {1 / n}(j), fn(n N+) Q {1 / n}(k))
+        by def $is_tail_epsilon_steady_in_Q(fn(n N+) Q {1 / n}, epsilon, n0)
+    by def $has_eventual_epsilon_steadiness_in_Q(fn(n N+) Q {1 / n}, epsilon)
+by def $is_cauchy_sequence_in_Q(fn(n N+) Q {1 / n})
 
 """
 Definition 5.1.12 (Bounded rational sequences). A rational sequence is
@@ -238,15 +254,15 @@ lies in the interval [-M,M], equivalently abs(a_n) <= M for all n.
 
 prop is_bounded_by_in_Q(a seq(Q), M Q):
     M >= 0
-    forall i_index N_pos:
+    forall i_index N+:
         abs(a(i_index)) <= M
 
 prop is_bounded_sequence_in_Q(a seq(Q)):
     exist M Q st {$is_bounded_by_in_Q(a, M)}
 
-prop is_finite_prefix_bounded_in_Q(a seq(Q), n N_pos, M Q):
+prop is_finite_prefix_bounded_in_Q(a seq(Q), n N+, M Q):
     M >= 0
-    forall i_index N_pos:
+    forall i_index N+:
         i_index <= n
         =>:
             abs(a(i_index)) <= M
@@ -275,19 +291,28 @@ Lemma 5.1.15. Every Cauchy sequence is bounded.
 # `finite_set_max(S)` is the largest member of a nonempty finite numeric set
 # `S`; here it updates the previous prefix bound with the next absolute value.
 
-have fn prefix_bound_Q(a seq(Q), n N_pos) Q by induc n from 1:
-    case n = 1: abs(a(1))
-    case n > 1: finite_set_max(union({prefix_bound_Q(a, n - 1)}, { abs(a(n))}))
+have fn prefix_bound_Q(a seq(Q), n N) Q by induc n from 0:
+    case n = 0: abs(a(1))
+    case n >= 1: finite_set_max(union({prefix_bound_Q(a, n - 1)}, { abs(a(n))}))
 
 claim:
-    ? forall a seq(Q), n N_pos:
+    ? forall a seq(Q), n N+:
         $is_finite_prefix_bounded_in_Q(a, n, prefix_bound_Q(a, n))
     by induc n from 1:
         ? $is_finite_prefix_bounded_in_Q(a, n, prefix_bound_Q(a, n))
 
         ? from n = 1:
-            prefix_bound_Q(a, 1) = abs(a(1)) >= 0
-            forall i_index N_pos:
+            prefix_bound_Q(a, 0) = abs(a(1))
+            {prefix_bound_Q(a, 0)} = {abs(a(1))}
+            union({prefix_bound_Q(a, 0)}, {abs(a(1))}) = union({abs(a(1))}, {abs(a(1))})
+            union({abs(a(1))}, {abs(a(1))}) = {abs(a(1))}
+            finite_set_max({abs(a(1))}) = abs(a(1))
+            prefix_bound_Q(a, 1) = finite_set_max(union({prefix_bound_Q(a, 0)}, {abs(a(1))}))
+            finite_set_max(union({prefix_bound_Q(a, 0)}, {abs(a(1))})) = finite_set_max({abs(a(1))})
+            prefix_bound_Q(a, 1) = finite_set_max(union({prefix_bound_Q(a, 0)}, {abs(a(1))})) = finite_set_max({abs(a(1))}) = abs(a(1))
+            abs(a(1)) >= 0
+            prefix_bound_Q(a, 1) >= 0
+            forall i_index N+:
                 i_index <= 1
                 =>:
                     i_index >= 1
@@ -307,7 +332,7 @@ claim:
             abs(a(n + 1)) <= finite_set_max(union({prefix_bound_Q(a, n + 1 - 1)}, { abs(a(n + 1))})) = prefix_bound_Q(a, n + 1)
             0 <= prefix_bound_Q(a, n) <= prefix_bound_Q(a, n + 1)
             claim:
-                ? forall i_index N_pos:
+                ? forall i_index N+:
                     i_index <= n + 1
                     =>:
                         abs(a(i_index)) <= prefix_bound_Q(a, n + 1)
@@ -327,10 +352,10 @@ claim:
         =>:
             $is_bounded_sequence_in_Q(a)
     $has_eventual_epsilon_steadiness_in_Q(a, 1)
-    obtain n0 from exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(a, 1, n0)}
+    obtain n0 from exist n0 N+ st {$is_tail_epsilon_steady_in_Q(a, 1, n0)}
     $is_finite_prefix_bounded_in_Q(a, n0, prefix_bound_Q(a, n0))
     claim:
-        ? forall i_index N_pos:
+        ? forall i_index N+:
             abs(a(i_index)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
         i_index <= n0 or i_index >= n0 + 1
         by cases:
@@ -350,7 +375,12 @@ claim:
                 abs(a(i_index) - a(n0)) + abs(a(n0)) <= 1 + abs(a(n0))
                 1 + abs(a(n0)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
                 abs(a(i_index)) <= abs(a(i_index) - a(n0)) + abs(a(n0)) <= 1 + abs(a(n0)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
-    witness exist M Q st {$is_bounded_by_in_Q(a, M)} from prefix_bound_Q(a, n0) + abs(a(n0)) + 1
+    witness exist M Q st {$is_bounded_by_in_Q(a, M)} from prefix_bound_Q(a, n0) + abs(a(n0)) + 1:
+        prefix_bound_Q(a, n0) >= 0
+        abs(a(n0)) >= 0
+        prefix_bound_Q(a, n0) + abs(a(n0)) + 1 >= 0
+        by def $is_bounded_by_in_Q(a, prefix_bound_Q(a, n0) + abs(a(n0)) + 1)
+    by def $is_bounded_sequence_in_Q(a)
 
 # 5.2 Equivalent Cauchy sequences
 
@@ -365,8 +395,8 @@ condition.
 # fixed epsilon.  It is pointwise closeness; it has no tail condition and no
 # arbitrary-epsilon limit condition.
 
-prop is_sequence_close_in_Q(a, b seq(Q), epsilon Q_pos):
-    forall n N_pos:
+prop is_sequence_close_in_Q(a, b seq(Q), epsilon Q+):
+    forall n N+:
         $chap4::is_close_in_Q(epsilon, a(n), b(n))
 
 """
@@ -381,16 +411,16 @@ sequence is 0.1-steady.
 # differ by `2`, so neither sequence is `0.1`-steady.
 
 sketch:
-    have fn alternating_one(n N_pos) Q by cases:
+    have fn alternating_one(n N+) Q by cases:
         case n % 2 = 1: 1
         case n % 2 = 0: -1
 
-    have fn alternating_one_point_one(n N_pos) Q by cases:
+    have fn alternating_one_point_one(n N+) Q by cases:
         case n % 2 = 1: 1.1
         case n % 2 = 0: -1.1
 
     claim:
-        ? forall n N_pos:
+        ? forall n N+:
             n % 2 = 1
             =>:
                 $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
@@ -398,10 +428,11 @@ sketch:
         alternating_one_point_one(n) = 1.1
         by thm chap4::rational_distance_formula(alternating_one(n), alternating_one_point_one(n))
         chap4::dist_Q(alternating_one(n), alternating_one_point_one(n)) = abs(1 - 1.1) = abs(-0.1) = 0.1
+        by def $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
         $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
 
     claim:
-        ? forall n N_pos:
+        ? forall n N+:
             n % 2 = 0
             =>:
                 $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
@@ -409,6 +440,7 @@ sketch:
         alternating_one_point_one(n) = -1.1
         by thm chap4::rational_distance_formula(alternating_one(n), alternating_one_point_one(n))
         chap4::dist_Q(alternating_one(n), alternating_one_point_one(n)) = abs(-1 - (-1.1)) = abs(0.1) = 0.1
+        by def $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
         $chap4::is_close_in_Q(0.1, alternating_one(n), alternating_one_point_one(n))
 
     alternating_one(1) = 1
@@ -433,14 +465,14 @@ that their nth terms are epsilon-close for every n >= n0.
 # fixing a tail starting point `n0`, all terms with the same index are
 # epsilon-close; then we assert that such an `n0` exists.
 
-prop is_tail_close_in_Q(a, b seq(Q), epsilon Q_pos, n0 N_pos):
-    forall n N_pos:
+prop is_tail_close_in_Q(a, b seq(Q), epsilon Q+, n0 N+):
+    forall n N+:
         n >= n0
         =>:
             $chap4::is_close_in_Q(epsilon, a(n), b(n))
 
-prop has_eventual_closeness_in_Q(a, b seq(Q), epsilon Q_pos):
-    exist n0 N_pos st {$is_tail_close_in_Q(a, b, epsilon, n0)}
+prop has_eventual_closeness_in_Q(a, b seq(Q), epsilon Q+):
+    exist n0 N+ st {$is_tail_close_in_Q(a, b, epsilon, n0)}
 
 """
 Remark 5.2.4. Eventual epsilon-closeness is local vocabulary for comparing two
@@ -470,7 +502,7 @@ tends to 0.
 # Definition 5.2.3 and quantify over every epsilon.
 
 prop is_equivalent_cauchy_sequence_in_Q(a, b seq(Q)):
-    forall epsilon Q_pos:
+    forall epsilon Q+:
         $has_eventual_closeness_in_Q(a, b, epsilon)
 
 """
@@ -490,13 +522,16 @@ claim:
     ? forall a seq(Q):
         $is_equivalent_cauchy_sequence_in_Q(a, a)
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(a, a, epsilon)
-        witness exist n0 N_pos st {$is_tail_close_in_Q(a, a, epsilon, n0)} from 1:
-            forall n N_pos:
+        witness exist n0 N+ st {$is_tail_close_in_Q(a, a, epsilon, n0)} from 1:
+            forall n N+:
                 n >= 1
                 =>:
                     $chap4::is_close_in_Q(epsilon, a(n), a(n))
+            by def $is_tail_close_in_Q(a, a, epsilon, 1)
+        by def $has_eventual_closeness_in_Q(a, a, epsilon)
+    by def $is_equivalent_cauchy_sequence_in_Q(a, a)
 
 claim:
     ? forall a, b seq(Q):
@@ -504,16 +539,19 @@ claim:
         =>:
             $is_equivalent_cauchy_sequence_in_Q(b, a)
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(b, a, epsilon)
         $has_eventual_closeness_in_Q(a, b, epsilon)
-        obtain n0 from exist n0 N_pos st {$is_tail_close_in_Q(a, b, epsilon, n0)}
-        witness exist n1 N_pos st {$is_tail_close_in_Q(b, a, epsilon, n1)} from n0:
-            forall n N_pos:
+        obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(a, b, epsilon, n0)}
+        witness exist n1 N+ st {$is_tail_close_in_Q(b, a, epsilon, n1)} from n0:
+            forall n N+:
                 n >= n0
                 =>:
                     $chap4::is_close_in_Q(epsilon, a(n), b(n))
                     $chap4::is_close_in_Q(epsilon, b(n), a(n))
+            by def $is_tail_close_in_Q(b, a, epsilon, n0)
+        by def $has_eventual_closeness_in_Q(b, a, epsilon)
+    by def $is_equivalent_cauchy_sequence_in_Q(b, a)
 
 claim:
     ? forall a, b, c seq(Q):
@@ -522,21 +560,31 @@ claim:
         =>:
             $is_equivalent_cauchy_sequence_in_Q(a, c)
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(a, c, epsilon)
-        epsilon / 2 $in Q_pos
+        epsilon / 2 $in Q+
         $has_eventual_closeness_in_Q(a, b, epsilon / 2)
         $has_eventual_closeness_in_Q(b, c, epsilon / 2)
-        obtain n1 from exist n1 N_pos st {$is_tail_close_in_Q(a, b, epsilon / 2, n1)}
-        obtain n2 from exist n2 N_pos st {$is_tail_close_in_Q(b, c, epsilon / 2, n2)}
-        witness exist n0 N_pos st {$is_tail_close_in_Q(a, c, epsilon, n0)} from finite_set_max(union({n1}, { n2})):
-            forall n N_pos:
-                n >= finite_set_max(union({n1}, { n2}))
+        obtain n1 from exist n1 N+ st {$is_tail_close_in_Q(a, b, epsilon / 2, n1)}
+        obtain n2 from exist n2 N+ st {$is_tail_close_in_Q(b, c, epsilon / 2, n2)}
+        have tail_start N = finite_set_max(union({n1}, {n2}))
+        tail_start = finite_set_max(union({n1}, {n2}))
+        n1 <= finite_set_max(union({n1}, {n2}))
+        n2 <= finite_set_max(union({n1}, {n2}))
+        n1 <= tail_start
+        n2 <= tail_start
+        n1 > 0
+        tail_start > 0
+        tail_start != 0
+        tail_start $in N+
+        witness exist n0 N+ st {$is_tail_close_in_Q(a, c, epsilon, n0)} from tail_start:
+            forall n N+:
+                n >= tail_start
                 =>:
-                    n1 <= finite_set_max(union({n1}, { n2}))
-                    n2 <= finite_set_max(union({n1}, { n2}))
-                    n >= finite_set_max(union({n1}, { n2})) >= n1
-                    n >= finite_set_max(union({n1}, { n2})) >= n2
+                    n1 <= tail_start
+                    n2 <= tail_start
+                    n >= tail_start >= n1
+                    n >= tail_start >= n2
                     n >= n1
                     n >= n2
                     $chap4::is_close_in_Q(epsilon / 2, a(n), b(n))
@@ -544,6 +592,9 @@ claim:
                     $chap4::is_close_in_Q(epsilon / 2 + epsilon / 2, a(n), c(n))
                     epsilon / 2 + epsilon / 2 = epsilon
                     $chap4::is_close_in_Q(epsilon, a(n), c(n))
+            by def $is_tail_close_in_Q(a, c, epsilon, tail_start)
+        by def $has_eventual_closeness_in_Q(a, c, epsilon)
+    by def $is_equivalent_cauchy_sequence_in_Q(a, c)
 
 """
 Proposition 5.2.8. The two decimal Cauchy sequences 1.1, 1.01, 1.001, ...
@@ -554,7 +605,7 @@ and 0.9, 0.99, 0.999, ... are equivalent.
 # `1/10^n <= 1/n`; then choose `n0` with `1/n0 < epsilon/2`.
 
 claim:
-    ? forall n N_pos:
+    ? forall n N+:
         n <= 10^n
     by induc n from 1:
         ? n <= 10^n
@@ -574,27 +625,35 @@ claim:
             n + 1 <= 10^(n + 1)
 
 claim:
-    ? forall epsilon Q_pos:
-        $has_eventual_closeness_in_Q(fn(n N_pos) Q {1 + 1 / 10^n}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon)
-    epsilon / 2 $in R_pos
+    ? forall epsilon Q+:
+        $has_eventual_closeness_in_Q(fn(n N+) Q {1 + 1 / 10^n}, fn(n N+) Q {1 - 1 / 10^n}, epsilon)
+    epsilon / 2 $in R+
     by thm archimedean_property(epsilon / 2)
-    obtain n0 from exist n0 N_pos st {1 / n0 < epsilon / 2}
-    witness exist n1 N_pos st {$is_tail_close_in_Q(fn(n N_pos) Q {1 + 1 / 10^n}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon, n1)} from n0:
-        forall i_index N_pos:
-            i_index >= n0
-            =>:
-                i_index <= 10^i_index
-                n0 <= 10^i_index
-                1 / 10^i_index = n0 / (n0 * 10^i_index) <= 10^i_index / (n0 * 10^i_index) = 1 / n0 < epsilon / 2
-                2 / 10^i_index = 2 * (1 / 10^i_index) < 2 * (epsilon / 2) = epsilon
-                fn(n N_pos) Q {1 + 1 / 10^n}(i_index) = 1 + 1 / 10^i_index
-                fn(n N_pos) Q {1 - 1 / 10^n}(i_index) = 1 - 1 / 10^i_index
-                (1 + 1 / 10^i_index) - (1 - 1 / 10^i_index) = 2 / 10^i_index > 0
-                (1 + 1 / 10^i_index) - (1 - 1 / 10^i_index) > 0
-                abs((1 + 1 / 10^i_index) - (1 - 1 / 10^i_index)) = (1 + 1 / 10^i_index) - (1 - 1 / 10^i_index) = 2 / 10^i_index
-                chap4::dist_Q(fn(n N_pos) Q {1 + 1 / 10^n}(i_index), fn(n N_pos) Q {1 - 1 / 10^n}(i_index)) = abs((1 + 1 / 10^i_index) - (1 - 1 / 10^i_index))
-                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1 + 1 / 10^n}(i_index), fn(n N_pos) Q {1 - 1 / 10^n}(i_index))
-by def $is_equivalent_cauchy_sequence_in_Q(fn(n N_pos) Q {1 + 1 / 10^n}, fn(n N_pos) Q {1 - 1 / 10^n})
+    obtain n0 from exist n0 N+ st {1 / n0 < epsilon / 2}
+    witness exist n1 N+ st {$is_tail_close_in_Q(fn(n N+) Q {1 + 1 / 10^n}, fn(n N+) Q {1 - 1 / 10^n}, epsilon, n1)} from n0:
+        claim:
+            ? forall i_index N+:
+                i_index >= n0
+                =>:
+                    $chap4::is_close_in_Q(epsilon, fn(n N+) Q {1 + 1 / 10^n}(i_index), fn(n N+) Q {1 - 1 / 10^n}(i_index))
+            i_index <= 10^i_index
+            n0 <= 10^i_index
+            n0 > 0
+            10^i_index > 0
+            n0 * 10^i_index > 0
+            n0 * 10^i_index != 0
+            1 / 10^i_index = n0 / (n0 * 10^i_index) <= 10^i_index / (n0 * 10^i_index) = 1 / n0 < epsilon / 2
+            2 / 10^i_index = 2 * (1 / 10^i_index) < 2 * (epsilon / 2) = epsilon
+            fn(n N+) Q {1 + 1 / 10^n}(i_index) = 1 + 1 / 10^i_index
+            fn(n N+) Q {1 - 1 / 10^n}(i_index) = 1 - 1 / 10^i_index
+            (1 + 1 / 10^i_index) - (1 - 1 / 10^i_index) = 2 / 10^i_index > 0
+            (1 + 1 / 10^i_index) - (1 - 1 / 10^i_index) > 0
+            abs((1 + 1 / 10^i_index) - (1 - 1 / 10^i_index)) = (1 + 1 / 10^i_index) - (1 - 1 / 10^i_index) = 2 / 10^i_index
+            chap4::dist_Q(fn(n N+) Q {1 + 1 / 10^n}(i_index), fn(n N+) Q {1 - 1 / 10^n}(i_index)) = abs((1 + 1 / 10^i_index) - (1 - 1 / 10^i_index))
+            by def $chap4::is_close_in_Q(epsilon, fn(n N+) Q {1 + 1 / 10^n}(i_index), fn(n N+) Q {1 - 1 / 10^n}(i_index))
+        by def $is_tail_close_in_Q(fn(n N+) Q {1 + 1 / 10^n}, fn(n N+) Q {1 - 1 / 10^n}, epsilon, n0)
+    by def $has_eventual_closeness_in_Q(fn(n N+) Q {1 + 1 / 10^n}, fn(n N+) Q {1 - 1 / 10^n}, epsilon)
+by def $is_equivalent_cauchy_sequence_in_Q(fn(n N+) Q {1 + 1 / 10^n}, fn(n N+) Q {1 - 1 / 10^n})
 
 """
 Remark 5.2.9. This Proposition, in decimal notation, asserts that
@@ -607,26 +666,34 @@ Remark 5.2.9. This Proposition, in decimal notation, asserts that
 # `1/10^n`, so the same decimal-tail estimate proves equivalence.
 
 claim:
-    ? forall epsilon Q_pos:
-        $has_eventual_closeness_in_Q(fn(n N_pos) Q {1}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon)
-    epsilon $in R_pos
+    ? forall epsilon Q+:
+        $has_eventual_closeness_in_Q(fn(n N+) Q {1}, fn(n N+) Q {1 - 1 / 10^n}, epsilon)
+    epsilon $in R+
     by thm archimedean_property(epsilon)
-    obtain n0 from exist n0 N_pos st {1 / n0 < epsilon}
-    witness exist n1 N_pos st {$is_tail_close_in_Q(fn(n N_pos) Q {1}, fn(n N_pos) Q {1 - 1 / 10^n}, epsilon, n1)} from n0:
-        forall i_index N_pos:
-            i_index >= n0
-            =>:
-                i_index <= 10^i_index
-                n0 <= 10^i_index
-                1 / 10^i_index = n0 / (n0 * 10^i_index) <= 10^i_index / (n0 * 10^i_index) = 1 / n0 < epsilon
-                fn(n N_pos) Q {1}(i_index) = 1
-                fn(n N_pos) Q {1 - 1 / 10^n}(i_index) = 1 - 1 / 10^i_index
-                1 - (1 - 1 / 10^i_index) = 1 / 10^i_index > 0
-                1 - (1 - 1 / 10^i_index) > 0
-                abs(1 - (1 - 1 / 10^i_index)) = 1 - (1 - 1 / 10^i_index) = 1 / 10^i_index
-                chap4::dist_Q(fn(n N_pos) Q {1}(i_index), fn(n N_pos) Q {1 - 1 / 10^n}(i_index)) = abs(1 - (1 - 1 / 10^i_index))
-                $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {1}(i_index), fn(n N_pos) Q {1 - 1 / 10^n}(i_index))
-by def $is_equivalent_cauchy_sequence_in_Q(fn(n N_pos) Q {1}, fn(n N_pos) Q {1 - 1 / 10^n})
+    obtain n0 from exist n0 N+ st {1 / n0 < epsilon}
+    witness exist n1 N+ st {$is_tail_close_in_Q(fn(n N+) Q {1}, fn(n N+) Q {1 - 1 / 10^n}, epsilon, n1)} from n0:
+        claim:
+            ? forall i_index N+:
+                i_index >= n0
+                =>:
+                    $chap4::is_close_in_Q(epsilon, fn(n N+) Q {1}(i_index), fn(n N+) Q {1 - 1 / 10^n}(i_index))
+            i_index <= 10^i_index
+            n0 <= 10^i_index
+            n0 > 0
+            10^i_index > 0
+            n0 * 10^i_index > 0
+            n0 * 10^i_index != 0
+            1 / 10^i_index = n0 / (n0 * 10^i_index) <= 10^i_index / (n0 * 10^i_index) = 1 / n0 < epsilon
+            fn(n N+) Q {1}(i_index) = 1
+            fn(n N+) Q {1 - 1 / 10^n}(i_index) = 1 - 1 / 10^i_index
+            1 - (1 - 1 / 10^i_index) = 1 / 10^i_index > 0
+            1 - (1 - 1 / 10^i_index) > 0
+            abs(1 - (1 - 1 / 10^i_index)) = 1 - (1 - 1 / 10^i_index) = 1 / 10^i_index
+            chap4::dist_Q(fn(n N+) Q {1}(i_index), fn(n N+) Q {1 - 1 / 10^n}(i_index)) = abs(1 - (1 - 1 / 10^i_index))
+            by def $chap4::is_close_in_Q(epsilon, fn(n N+) Q {1}(i_index), fn(n N+) Q {1 - 1 / 10^n}(i_index))
+        by def $is_tail_close_in_Q(fn(n N+) Q {1}, fn(n N+) Q {1 - 1 / 10^n}, epsilon, n0)
+    by def $has_eventual_closeness_in_Q(fn(n N+) Q {1}, fn(n N+) Q {1 - 1 / 10^n}, epsilon)
+by def $is_equivalent_cauchy_sequence_in_Q(fn(n N+) Q {1}, fn(n N+) Q {1 - 1 / 10^n})
 
 
 # 5.3 The construction of the real numbers
@@ -644,28 +711,28 @@ sequences are equivalent.
 
 have fn dist_R(x, y R) R = abs(x - y)
 
-prop is_close_in_R(epsilon R_pos, x, y R):
+prop is_close_in_R(epsilon R+, x, y R):
     dist_R(x, y) <= epsilon
 
-prop is_tail_close_to_in_R(a seq(R), L R, epsilon R_pos, n0 N_pos):
-    forall n N_pos:
+prop is_tail_close_to_in_R(a seq(R), L R, epsilon R+, n0 N+):
+    forall n N+:
         n >= n0
         =>:
             $is_close_in_R(epsilon, a(n), L)
 
 prop has_limit_in_R(a seq(R), L R):
-    forall epsilon R_pos:
-        exist n0 N_pos st {$is_tail_close_to_in_R(a, L, epsilon, n0)}
+    forall epsilon R+:
+        exist n0 N+ st {$is_tail_close_to_in_R(a, L, epsilon, n0)}
 
-prop is_rational_sequence_tail_close_to_real(a seq(Q), x R, epsilon R_pos, n0 N_pos):
-    forall n N_pos:
+prop is_rational_sequence_tail_close_to_real(a seq(Q), x R, epsilon R+, n0 N+):
+    forall n N+:
         n >= n0
         =>:
             abs(a(n) - x) < epsilon
 
 prop has_rational_sequence_limit_in_R(a seq(Q), x R):
-    forall epsilon R_pos:
-        exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, epsilon, n0)}
+    forall epsilon R+:
+        exist n0 N+ st {$is_rational_sequence_tail_close_to_real(a, x, epsilon, n0)}
 
 prop has_formal_limit_in_Q(a seq(Q), x R):
     $has_rational_sequence_limit_in_R(a, x)
@@ -698,25 +765,35 @@ thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
         =>:
             $has_formal_limit_in_Q(b, x)
     claim:
-        ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n0)}
-        epsilon / 2 $in R_pos
+        ? forall epsilon R+:
+            exist n0 N+ st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n0)}
+        epsilon / 2 $in R+
         by thm has_rational_between(0, epsilon / 2)
         obtain eta from exist eta Q st {0 < eta < epsilon / 2}
         $has_rational_sequence_limit_in_R(a, x)
-        obtain n1 from exist n1 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, epsilon / 2, n1)}
+        obtain n1 from exist n1 N+ st {$is_rational_sequence_tail_close_to_real(a, x, epsilon / 2, n1)}
         $has_eventual_closeness_in_Q(a, b, eta)
-        obtain n2 from exist n2 N_pos st {$is_tail_close_in_Q(a, b, eta, n2)}
-        witness exist n3 N_pos st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n3)} from finite_set_max(union({n1}, { n2})):
+        obtain n2 from exist n2 N+ st {$is_tail_close_in_Q(a, b, eta, n2)}
+        have tail_start N = finite_set_max(union({n1}, {n2}))
+        tail_start = finite_set_max(union({n1}, {n2}))
+        n1 <= finite_set_max(union({n1}, {n2}))
+        n2 <= finite_set_max(union({n1}, {n2}))
+        n1 <= tail_start
+        n2 <= tail_start
+        n1 > 0
+        tail_start > 0
+        tail_start != 0
+        tail_start $in N+
+        witness exist n3 N+ st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n3)} from tail_start:
             claim:
-                ? forall n N_pos:
-                    n >= finite_set_max(union({n1}, { n2}))
+                ? forall n N+:
+                    n >= tail_start
                     =>:
                         abs(b(n) - x) < epsilon
-                n1 <= finite_set_max(union({n1}, { n2}))
-                n2 <= finite_set_max(union({n1}, { n2}))
-                n >= finite_set_max(union({n1}, { n2})) >= n1
-                n >= finite_set_max(union({n1}, { n2})) >= n2
+                n1 <= tail_start
+                n2 <= tail_start
+                n >= tail_start >= n1
+                n >= tail_start >= n2
                 n >= n1
                 n >= n2
                 abs(a(n) - x) < epsilon / 2
@@ -729,6 +806,9 @@ thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
                 abs(b(n) - a(n)) = abs(a(n) - b(n))
                 abs(b(n) - a(n)) + abs(a(n) - x) = abs(a(n) - b(n)) + abs(a(n) - x) < epsilon / 2 + epsilon / 2 = epsilon
                 abs(b(n) - x) <= abs(b(n) - a(n)) + abs(a(n) - x) < epsilon
+            by def $is_rational_sequence_tail_close_to_real(b, x, epsilon, tail_start)
+    by def $has_rational_sequence_limit_in_R(b, x)
+    by def $has_formal_limit_in_Q(b, x)
 
 # This uniqueness part is ordinary uniqueness of real limits.  It does not need
 # the quotient-construction work used to prove that every real has a rational
@@ -744,20 +824,30 @@ thm formal_limit_in_Q_unique:
         x != y
         x - y != 0
         abs(x - y) > 0
-        abs(x - y) / 3 $in R_pos
+        abs(x - y) / 3 $in R+
         $has_rational_sequence_limit_in_R(a, x)
         $has_rational_sequence_limit_in_R(a, y)
-        obtain n1 from exist n1 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, abs(x - y) / 3, n1)}
-        obtain n2 from exist n2 N_pos st {$is_rational_sequence_tail_close_to_real(a, y, abs(x - y) / 3, n2)}
-        abs(a(finite_set_max(union({n1}, { n2}))) - x) < abs(x - y) / 3
-        abs(a(finite_set_max(union({n1}, { n2}))) - y) < abs(x - y) / 3
-        abs(x - a(finite_set_max(union({n1}, { n2})))) = abs(a(finite_set_max(union({n1}, { n2}))) - x)
-        x - y = (x - a(finite_set_max(union({n1}, { n2})))) + (a(finite_set_max(union({n1}, { n2}))) - y)
-        abs(x - y) = abs((x - a(finite_set_max(union({n1}, { n2})))) + (a(finite_set_max(union({n1}, { n2}))) - y)) <= abs(x - a(finite_set_max(union({n1}, { n2})))) + abs(a(finite_set_max(union({n1}, { n2}))) - y)
+        obtain n1 from exist n1 N+ st {$is_rational_sequence_tail_close_to_real(a, x, abs(x - y) / 3, n1)}
+        obtain n2 from exist n2 N+ st {$is_rational_sequence_tail_close_to_real(a, y, abs(x - y) / 3, n2)}
+        have tail_start N = finite_set_max(union({n1}, {n2}))
+        tail_start = finite_set_max(union({n1}, {n2}))
+        n1 <= finite_set_max(union({n1}, {n2}))
+        n2 <= finite_set_max(union({n1}, {n2}))
+        n1 <= tail_start
+        n2 <= tail_start
+        n1 > 0
+        tail_start > 0
+        tail_start != 0
+        tail_start $in N+
+        abs(a(tail_start) - x) < abs(x - y) / 3
+        abs(a(tail_start) - y) < abs(x - y) / 3
+        abs(x - a(tail_start)) = abs(a(tail_start) - x)
+        x - y = (x - a(tail_start)) + (a(tail_start) - y)
+        abs(x - y) = abs((x - a(tail_start)) + (a(tail_start) - y)) <= abs(x - a(tail_start)) + abs(a(tail_start) - y)
         2 * abs(x - y) < 3 * abs(x - y)
         abs(x - y) / 3 + abs(x - y) / 3 = 2 * abs(x - y) / 3 < 3 * abs(x - y) / 3 = abs(x - y)
-        abs(x - a(finite_set_max(union({n1}, { n2})))) + abs(a(finite_set_max(union({n1}, { n2}))) - y) = abs(a(finite_set_max(union({n1}, { n2}))) - x) + abs(a(finite_set_max(union({n1}, { n2}))) - y) < abs(x - y) / 3 + abs(x - y) / 3 < abs(x - y)
-        abs(x - y) <= abs(x - a(finite_set_max(union({n1}, { n2})))) + abs(a(finite_set_max(union({n1}, { n2}))) - y) < abs(x - y)
+        abs(x - a(tail_start)) + abs(a(tail_start) - y) = abs(a(tail_start) - x) + abs(a(tail_start) - y) < abs(x - y) / 3 + abs(x - y) / 3 < abs(x - y)
+        abs(x - y) <= abs(x - a(tail_start)) + abs(a(tail_start) - y) < abs(x - y)
         impossible abs(x - y) = abs(x - y)
 
 # Equivalent rational Cauchy representatives determine the same builtin real:
@@ -791,10 +881,10 @@ Definition 5.3.4. Addition of reals is defined by adding representatives.
 # Real addition is used with its ordinary notation.  Sequence-level addition is
 # still named so that Tao's construction by representatives remains visible.
 
-have fn seq_add_Q(a, b seq(Q)) fn(k N_pos) Q = fn(n N_pos) Q {a(n) + b(n)}
+have fn seq_add_Q(a, b seq(Q)) fn(k N+) Q = fn(n N+) Q {a(n) + b(n)}
 
 thm rational_closeness_absolute_difference_bound:
-    ? forall epsilon Q_pos, x, y Q:
+    ? forall epsilon Q+, x, y Q:
         $chap4::is_close_in_Q(epsilon, x, y)
         =>:
             abs(x - y) <= epsilon
@@ -803,16 +893,17 @@ thm rational_closeness_absolute_difference_bound:
     abs(x - y) = chap4::dist_Q(x, y) <= epsilon
 
 thm absolute_difference_bound_gives_rational_closeness:
-    ? forall epsilon Q_pos, x, y Q:
+    ? forall epsilon Q+, x, y Q:
         abs(x - y) <= epsilon
         =>:
             $chap4::is_close_in_Q(epsilon, x, y)
     by thm chap4::rational_distance_formula(x, y)
     chap4::dist_Q(x, y) = abs(x - y) <= epsilon
+    by def $chap4::is_close_in_Q(epsilon, x, y)
     $chap4::is_close_in_Q(epsilon, x, y)
 
 thm equal_rationals_are_close:
-    ? forall epsilon Q_pos, x, y Q:
+    ? forall epsilon Q+, x, y Q:
         x = y
         =>:
             $chap4::is_close_in_Q(epsilon, x, y)
@@ -821,7 +912,7 @@ thm equal_rationals_are_close:
     $chap4::is_close_in_Q(epsilon, x, y)
 
 thm seq_add_Q_preserves_termwise_closeness:
-    ? forall a, b seq(Q), epsilon Q_pos, j, k N_pos:
+    ? forall a, b seq(Q), epsilon Q+, j, k N+:
         $chap4::is_close_in_Q(epsilon / 2, a(j), a(k))
         $chap4::is_close_in_Q(epsilon / 2, b(j), b(k))
         =>:
@@ -834,13 +925,14 @@ thm seq_add_Q_preserves_termwise_closeness:
     $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(j), seq_add_Q(a, b)(k))
 
 thm seq_add_Q_same_right_distance:
-    ? forall a, a_prime, b seq(Q), n N_pos:
+    ? forall a, a_prime, b seq(Q), n N+:
         chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = chap4::dist_Q(a(n), a_prime(n))
     seq_add_Q(a, b)(n) = a(n) + b(n)
     seq_add_Q(a_prime, b)(n) = a_prime(n) + b(n)
     by thm chap4::rational_distance_formula(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n))
     by thm chap4::rational_distance_formula(a(n), a_prime(n))
     (a(n) + b(n)) - (a_prime(n) + b(n)) = a(n) - a_prime(n)
+    seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n) = (a(n) + b(n)) - (a_prime(n) + b(n))
     seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n) = a(n) - a_prime(n)
     abs(seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n)) = abs(a(n) - a_prime(n))
     chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = abs(seq_add_Q(a, b)(n) - seq_add_Q(a_prime, b)(n)) = abs(a(n) - a_prime(n))
@@ -848,13 +940,14 @@ thm seq_add_Q_same_right_distance:
     chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = chap4::dist_Q(a(n), a_prime(n))
 
 thm seq_add_Q_same_left_distance:
-    ? forall a, b, b_prime seq(Q), n N_pos:
+    ? forall a, b, b_prime seq(Q), n N+:
         chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = chap4::dist_Q(b(n), b_prime(n))
     seq_add_Q(a, b)(n) = a(n) + b(n)
     seq_add_Q(a, b_prime)(n) = a(n) + b_prime(n)
     by thm chap4::rational_distance_formula(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n))
     by thm chap4::rational_distance_formula(b(n), b_prime(n))
     (a(n) + b(n)) - (a(n) + b_prime(n)) = b(n) - b_prime(n)
+    seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n) = (a(n) + b(n)) - (a(n) + b_prime(n))
     seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n) = b(n) - b_prime(n)
     abs(seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n)) = abs(b(n) - b_prime(n))
     chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = abs(seq_add_Q(a, b)(n) - seq_add_Q(a, b_prime)(n)) = abs(b(n) - b_prime(n))
@@ -881,24 +974,34 @@ claim:
         =>:
             $is_cauchy_sequence_in_Q(seq_add_Q(a, b))
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_epsilon_steadiness_in_Q(seq_add_Q(a, b), epsilon)
-        epsilon / 2 $in Q_pos
+        epsilon / 2 $in Q+
         $has_eventual_epsilon_steadiness_in_Q(a, epsilon / 2)
         $has_eventual_epsilon_steadiness_in_Q(b, epsilon / 2)
-        obtain n1 from exist n1 N_pos st {$is_tail_epsilon_steady_in_Q(a, epsilon / 2, n1)}
-        obtain n2 from exist n2 N_pos st {$is_tail_epsilon_steady_in_Q(b, epsilon / 2, n2)}
-        witness exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(seq_add_Q(a, b), epsilon, n0)} from finite_set_max(union({n1}, { n2})):
-            forall j, k N_pos:
-                j >= finite_set_max(union({n1}, { n2}))
-                k >= finite_set_max(union({n1}, { n2}))
+        obtain n1 from exist n1 N+ st {$is_tail_epsilon_steady_in_Q(a, epsilon / 2, n1)}
+        obtain n2 from exist n2 N+ st {$is_tail_epsilon_steady_in_Q(b, epsilon / 2, n2)}
+        have tail_start N = finite_set_max(union({n1}, {n2}))
+        tail_start = finite_set_max(union({n1}, {n2}))
+        n1 <= finite_set_max(union({n1}, {n2}))
+        n2 <= finite_set_max(union({n1}, {n2}))
+        n1 <= tail_start
+        n2 <= tail_start
+        n1 > 0
+        tail_start > 0
+        tail_start != 0
+        tail_start $in N+
+        witness exist n0 N+ st {$is_tail_epsilon_steady_in_Q(seq_add_Q(a, b), epsilon, n0)} from tail_start:
+            forall j, k N+:
+                j >= tail_start
+                k >= tail_start
                 =>:
-                    n1 <= finite_set_max(union({n1}, { n2}))
-                    n2 <= finite_set_max(union({n1}, { n2}))
-                    j >= finite_set_max(union({n1}, { n2})) >= n1
-                    k >= finite_set_max(union({n1}, { n2})) >= n1
-                    j >= finite_set_max(union({n1}, { n2})) >= n2
-                    k >= finite_set_max(union({n1}, { n2})) >= n2
+                    n1 <= tail_start
+                    n2 <= tail_start
+                    j >= tail_start >= n1
+                    k >= tail_start >= n1
+                    j >= tail_start >= n2
+                    k >= tail_start >= n2
                     j >= n1
                     k >= n1
                     j >= n2
@@ -906,6 +1009,9 @@ claim:
                     $chap4::is_close_in_Q(epsilon / 2, a(j), a(k))
                     $chap4::is_close_in_Q(epsilon / 2, b(j), b(k))
                     $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(j), seq_add_Q(a, b)(k))
+            by def $is_tail_epsilon_steady_in_Q(seq_add_Q(a, b), epsilon, tail_start)
+        by def $has_eventual_epsilon_steadiness_in_Q(seq_add_Q(a, b), epsilon)
+    by def $is_cauchy_sequence_in_Q(seq_add_Q(a, b))
 
 """
 Lemma 5.3.7. Sums of equivalent Cauchy sequences are equivalent.
@@ -921,17 +1027,24 @@ claim:
         =>:
             $is_equivalent_cauchy_sequence_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b))
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon)
         $has_eventual_closeness_in_Q(a, a_prime, epsilon)
-        obtain n0 from exist n0 N_pos st {$is_tail_close_in_Q(a, a_prime, epsilon, n0)}
-        witness exist n1 N_pos st {$is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon, n1)} from n0:
-            forall n N_pos:
-                n >= n0
-                =>:
-                    $chap4::is_close_in_Q(epsilon, a(n), a_prime(n))
-                    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = chap4::dist_Q(a(n), a_prime(n))
-                    $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n))
+        obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(a, a_prime, epsilon, n0)}
+        witness exist n1 N+ st {$is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon, n1)} from n0:
+            claim:
+                ? forall n N+:
+                    n >= n0
+                    =>:
+                        $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n))
+                $chap4::is_close_in_Q(epsilon, a(n), a_prime(n))
+                chap4::dist_Q(a(n), a_prime(n)) <= epsilon
+                chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) = chap4::dist_Q(a(n), a_prime(n))
+                chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n)) <= epsilon
+                by def $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n))
+            by def $is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon, n0)
+        by def $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon)
+    by def $is_equivalent_cauchy_sequence_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b))
 
 # Remark 5.3.8 says the same argument works in the other summand.  We record
 # the symmetric representative substitution rule explicitly.
@@ -942,40 +1055,53 @@ claim:
         =>:
             $is_equivalent_cauchy_sequence_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime))
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon)
         $has_eventual_closeness_in_Q(b, b_prime, epsilon)
-        obtain n0 from exist n0 N_pos st {$is_tail_close_in_Q(b, b_prime, epsilon, n0)}
-        witness exist n1 N_pos st {$is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon, n1)} from n0:
-            forall n N_pos:
-                n >= n0
-                =>:
-                    $chap4::is_close_in_Q(epsilon, b(n), b_prime(n))
-                    chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = chap4::dist_Q(b(n), b_prime(n))
-                    $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n))
+        obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(b, b_prime, epsilon, n0)}
+        witness exist n1 N+ st {$is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon, n1)} from n0:
+            claim:
+                ? forall n N+:
+                    n >= n0
+                    =>:
+                        $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n))
+                $chap4::is_close_in_Q(epsilon, b(n), b_prime(n))
+                chap4::dist_Q(b(n), b_prime(n)) <= epsilon
+                chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) = chap4::dist_Q(b(n), b_prime(n))
+                chap4::dist_Q(seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n)) <= epsilon
+                by def $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n))
+            by def $is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon, n0)
+        by def $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon)
+    by def $is_equivalent_cauchy_sequence_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime))
 
 """
 Definition 5.3.9. Multiplication of reals is defined by multiplying representatives.
 """
 
-have fn seq_mul_Q(a, b seq(Q)) fn(k N_pos) Q = fn(n N_pos) Q {a(n) * b(n)}
+have fn seq_mul_Q(a, b seq(Q)) fn(k N+) Q = fn(n N+) Q {a(n) * b(n)}
 
 thm seq_mul_Q_same_right_absolute_difference:
-    ? forall a, a_prime, b seq(Q), n N_pos:
+    ? forall a, a_prime, b seq(Q), n N+:
         abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n)) = abs(a(n) - a_prime(n)) * abs(b(n))
     seq_mul_Q(a, b)(n) = a(n) * b(n)
     seq_mul_Q(a_prime, b)(n) = a_prime(n) * b(n)
     a(n) * b(n) - a_prime(n) * b(n) = (a(n) - a_prime(n)) * b(n)
+    seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n) = a(n) * b(n) - a_prime(n) * b(n)
     seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n) = (a(n) - a_prime(n)) * b(n)
+    abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n)) = abs((a(n) - a_prime(n)) * b(n))
+    abs((a(n) - a_prime(n)) * b(n)) = abs(a(n) - a_prime(n)) * abs(b(n))
     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n)) = abs((a(n) - a_prime(n)) * b(n)) = abs(a(n) - a_prime(n)) * abs(b(n))
 
 thm seq_mul_Q_same_left_absolute_difference:
-    ? forall a, b, b_prime seq(Q), n N_pos:
+    ? forall a, b, b_prime seq(Q), n N+:
         abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n)) = abs(a(n)) * abs(b(n) - b_prime(n))
     seq_mul_Q(a, b)(n) = a(n) * b(n)
     seq_mul_Q(a, b_prime)(n) = a(n) * b_prime(n)
     a(n) * b(n) - a(n) * b_prime(n) = a(n) * (b(n) - b_prime(n))
+    seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n) = a(n) * b(n) - a(n) * b_prime(n)
     seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n) = a(n) * (b(n) - b_prime(n))
+    abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n)) = abs(a(n) * (b(n) - b_prime(n)))
+    abs(a(n) * (b(n) - b_prime(n))) = abs(a(n)) * abs(b(n) - b_prime(n))
     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n)) = abs(a(n) * (b(n) - b_prime(n))) = abs(a(n)) * abs(b(n) - b_prime(n))
 
 """
@@ -1005,25 +1131,35 @@ claim:
     2 * (M_a + 1) != 0
     2 * (M_b + 1) != 0
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_epsilon_steadiness_in_Q(seq_mul_Q(a, b), epsilon)
-        epsilon / (2 * (M_b + 1)) $in Q_pos
-        epsilon / (2 * (M_a + 1)) $in Q_pos
+        epsilon / (2 * (M_b + 1)) $in Q+
+        epsilon / (2 * (M_a + 1)) $in Q+
         $has_eventual_epsilon_steadiness_in_Q(a, epsilon / (2 * (M_b + 1)))
         $has_eventual_epsilon_steadiness_in_Q(b, epsilon / (2 * (M_a + 1)))
-        obtain n1 from exist n1 N_pos st {$is_tail_epsilon_steady_in_Q(a, epsilon / (2 * (M_b + 1)), n1)}
-        obtain n2 from exist n2 N_pos st {$is_tail_epsilon_steady_in_Q(b, epsilon / (2 * (M_a + 1)), n2)}
-        witness exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(seq_mul_Q(a, b), epsilon, n0)} from finite_set_max(union({n1}, { n2})):
-            forall j, k N_pos:
-                j >= finite_set_max(union({n1}, { n2}))
-                k >= finite_set_max(union({n1}, { n2}))
+        obtain n1 from exist n1 N+ st {$is_tail_epsilon_steady_in_Q(a, epsilon / (2 * (M_b + 1)), n1)}
+        obtain n2 from exist n2 N+ st {$is_tail_epsilon_steady_in_Q(b, epsilon / (2 * (M_a + 1)), n2)}
+        have tail_start N = finite_set_max(union({n1}, {n2}))
+        tail_start = finite_set_max(union({n1}, {n2}))
+        n1 <= finite_set_max(union({n1}, {n2}))
+        n2 <= finite_set_max(union({n1}, {n2}))
+        n1 <= tail_start
+        n2 <= tail_start
+        n1 > 0
+        tail_start > 0
+        tail_start != 0
+        tail_start $in N+
+        witness exist n0 N+ st {$is_tail_epsilon_steady_in_Q(seq_mul_Q(a, b), epsilon, n0)} from tail_start:
+            forall j, k N+:
+                j >= tail_start
+                k >= tail_start
                 =>:
-                    n1 <= finite_set_max(union({n1}, { n2}))
-                    n2 <= finite_set_max(union({n1}, { n2}))
-                    j >= finite_set_max(union({n1}, { n2})) >= n1
-                    k >= finite_set_max(union({n1}, { n2})) >= n1
-                    j >= finite_set_max(union({n1}, { n2})) >= n2
-                    k >= finite_set_max(union({n1}, { n2})) >= n2
+                    n1 <= tail_start
+                    n2 <= tail_start
+                    j >= tail_start >= n1
+                    k >= tail_start >= n1
+                    j >= tail_start >= n2
+                    k >= tail_start >= n2
                     j >= n1
                     k >= n1
                     j >= n2
@@ -1046,10 +1182,15 @@ claim:
                     seq_mul_Q(a, b)(j) = a(j) * b(j)
                     seq_mul_Q(a, b)(k) = a(k) * b(k)
                     a(j) * b(j) - a(k) * b(k) = (a(j) - a(k)) * b(j) + a(k) * (b(j) - b(k))
+                    seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k) = a(j) * b(j) - a(k) * b(k)
                     seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k) = (a(j) - a(k)) * b(j) + a(k) * (b(j) - b(k))
+                    abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) = abs((a(j) - a(k)) * b(j) + a(k) * (b(j) - b(k)))
                     abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) = abs((a(j) - a(k)) * b(j) + a(k) * (b(j) - b(k))) <= abs((a(j) - a(k)) * b(j)) + abs(a(k) * (b(j) - b(k)))
                     abs(seq_mul_Q(a, b)(j) - seq_mul_Q(a, b)(k)) <= abs((a(j) - a(k)) * b(j)) + abs(a(k) * (b(j) - b(k))) <= epsilon
                     $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(j), seq_mul_Q(a, b)(k))
+            by def $is_tail_epsilon_steady_in_Q(seq_mul_Q(a, b), epsilon, tail_start)
+        by def $has_eventual_epsilon_steadiness_in_Q(seq_mul_Q(a, b), epsilon)
+    by def $is_cauchy_sequence_in_Q(seq_mul_Q(a, b))
 
 # Changing one representative preserves the product representative, once the
 # other factor is Cauchy and hence bounded.
@@ -1065,13 +1206,13 @@ claim:
     M_b + 1 > 0
     M_b + 1 != 0
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon)
-        epsilon / (M_b + 1) $in Q_pos
+        epsilon / (M_b + 1) $in Q+
         $has_eventual_closeness_in_Q(a, a_prime, epsilon / (M_b + 1))
-        obtain n0 from exist n0 N_pos st {$is_tail_close_in_Q(a, a_prime, epsilon / (M_b + 1), n0)}
-        witness exist n1 N_pos st {$is_tail_close_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon, n1)} from n0:
-            forall n N_pos:
+        obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(a, a_prime, epsilon / (M_b + 1), n0)}
+        witness exist n1 N+ st {$is_tail_close_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon, n1)} from n0:
+            forall n N+:
                 n >= n0
                 =>:
                     $chap4::is_close_in_Q(epsilon / (M_b + 1), a(n), a_prime(n))
@@ -1082,6 +1223,9 @@ claim:
                     abs(a(n) - a_prime(n)) * abs(b(n)) <= (epsilon / (M_b + 1)) * (M_b + 1) = epsilon
                     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a_prime, b)(n)) <= epsilon
                     $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(n), seq_mul_Q(a_prime, b)(n))
+            by def $is_tail_close_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon, n0)
+        by def $has_eventual_closeness_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon)
+    by def $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b))
 
 claim:
     ? forall a, b, b_prime seq(Q):
@@ -1094,13 +1238,13 @@ claim:
     M_a + 1 > 0
     M_a + 1 != 0
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(seq_mul_Q(a, b), seq_mul_Q(a, b_prime), epsilon)
-        epsilon / (M_a + 1) $in Q_pos
+        epsilon / (M_a + 1) $in Q+
         $has_eventual_closeness_in_Q(b, b_prime, epsilon / (M_a + 1))
-        obtain n0 from exist n0 N_pos st {$is_tail_close_in_Q(b, b_prime, epsilon / (M_a + 1), n0)}
-        witness exist n1 N_pos st {$is_tail_close_in_Q(seq_mul_Q(a, b), seq_mul_Q(a, b_prime), epsilon, n1)} from n0:
-            forall n N_pos:
+        obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(b, b_prime, epsilon / (M_a + 1), n0)}
+        witness exist n1 N+ st {$is_tail_close_in_Q(seq_mul_Q(a, b), seq_mul_Q(a, b_prime), epsilon, n1)} from n0:
+            forall n N+:
                 n >= n0
                 =>:
                     $chap4::is_close_in_Q(epsilon / (M_a + 1), b(n), b_prime(n))
@@ -1111,10 +1255,13 @@ claim:
                     abs(a(n)) * abs(b(n) - b_prime(n)) <= (M_a + 1) * (epsilon / (M_a + 1)) = epsilon
                     abs(seq_mul_Q(a, b)(n) - seq_mul_Q(a, b_prime)(n)) <= epsilon
                     $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(n), seq_mul_Q(a, b_prime)(n))
+            by def $is_tail_close_in_Q(seq_mul_Q(a, b), seq_mul_Q(a, b_prime), epsilon, n0)
+        by def $has_eventual_closeness_in_Q(seq_mul_Q(a, b), seq_mul_Q(a, b_prime), epsilon)
+    by def $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, b), seq_mul_Q(a, b_prime))
 
 # Negation is introduced between Proposition 5.3.10 and Proposition 5.3.11
 # rather than as a numbered definition.  At the representative level it sends
-# a rational sequence `a` to `fn(n N_pos) Q {-a(n)}`.
+# a rational sequence `a` to `fn(n N+) Q {-a(n)}`.
 
 """
 Proposition 5.3.11. The reals obey the laws of algebra.
@@ -1125,7 +1272,7 @@ Proposition 5.3.11. The reals obey the laws of algebra.
 # the two sides agree termwise, so they are certainly equivalent.
 
 thm seq_mul_Q_distributes_over_seq_add_Q_term:
-    ? forall a, b, c seq(Q), n N_pos:
+    ? forall a, b, c seq(Q), n N+:
         seq_mul_Q(a, seq_add_Q(b, c))(n) = seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n)
     seq_add_Q(b, c)(n) = b(n) + c(n)
     seq_mul_Q(a, seq_add_Q(b, c))(n) = a(n) * seq_add_Q(b, c)(n) = a(n) * (b(n) + c(n))
@@ -1139,14 +1286,17 @@ claim:
     ? forall a, b, c seq(Q):
         $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)))
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon)
-        witness exist n0 N_pos st {$is_tail_close_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon, n0)} from 1:
-            forall n N_pos:
+        witness exist n0 N+ st {$is_tail_close_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon, n0)} from 1:
+            forall n N+:
                 n >= 1
                 =>:
                     seq_mul_Q(a, seq_add_Q(b, c))(n) = seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n)
                     $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, seq_add_Q(b, c))(n), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n))
+            by def $is_tail_close_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon, 1)
+        by def $has_eventual_closeness_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon)
+    by def $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)))
 
 # The ordinary algebra laws for real numbers are listed next.
 
@@ -1174,12 +1324,12 @@ exists a rational c > 0 such that |a_n| >= c for all n >= 1.
 # This is the reusable lower-bound hypothesis needed for reciprocals.  The
 # two-level definition keeps the witness `c` available when doing estimates.
 
-prop is_bounded_away_from_zero_by_in_Q(a seq(Q), c Q_pos):
-    forall n N_pos:
+prop is_bounded_away_from_zero_by_in_Q(a seq(Q), c Q+):
+    forall n N+:
         abs(a(n)) >= c
 
 prop is_bounded_away_from_zero_in_Q(a seq(Q)):
-    exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(a, c)}
+    exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(a, c)}
 
 """
 Examples 5.3.13. The alternating sequence 1, -1, 1, -1, ... is bounded away
@@ -1189,14 +1339,14 @@ zero, but is not bounded.
 """
 
 sketch:
-    have fn alternating_sign_Q(n N_pos) Q by cases:
+    have fn alternating_sign_Q(n N+) Q by cases:
         case n % 2 = 1: 1
         case n % 2 = 0: -1
 
-    witness exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)} from 1:
-        1 $in Q_pos
+    witness exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)} from 1:
+        1 $in Q+
         claim:
-            ? forall n N_pos:
+            ? forall n N+:
                 abs(alternating_sign_Q(n)) >= 1
             n % 2 = 1 or n % 2 = 0
             by cases:
@@ -1209,17 +1359,18 @@ sketch:
                     alternating_sign_Q(n) = -1
                     abs(alternating_sign_Q(n)) = abs(-1) = 1
                     abs(alternating_sign_Q(n)) >= 1
+        by def $is_bounded_away_from_zero_by_in_Q(alternating_sign_Q, 1)
         $is_bounded_away_from_zero_by_in_Q(alternating_sign_Q, 1)
     by def $is_bounded_away_from_zero_in_Q(alternating_sign_Q)
 
     claim:
-        ? not $is_bounded_away_from_zero_in_Q(fn(n N_pos) Q {1 / 10^n})
+        ? not $is_bounded_away_from_zero_in_Q(fn(n N+) Q {1 / 10^n})
         by contra:
-            ? not $is_bounded_away_from_zero_in_Q(fn(n N_pos) Q {1 / 10^n})
-            $is_bounded_away_from_zero_in_Q(fn(n N_pos) Q {1 / 10^n})
-            obtain c from exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(fn(n N_pos) Q {1 / 10^n}, c)}
+            ? not $is_bounded_away_from_zero_in_Q(fn(n N+) Q {1 / 10^n})
+            $is_bounded_away_from_zero_in_Q(fn(n N+) Q {1 / 10^n})
+            obtain c from exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(fn(n N+) Q {1 / 10^n}, c)}
             by thm archimedean_property(c)
-            obtain n0 from exist n0 N_pos st {1 / n0 < c}
+            obtain n0 from exist n0 N+ st {1 / n0 < c}
             n0 <= 10^n0
             10^n0 > 0
             n0 * 10^n0 > 0
@@ -1231,52 +1382,53 @@ sketch:
             1 / 10^n0 < c
             1 / 10^n0 > 0
             abs(1 / 10^n0) = 1 / 10^n0
-            fn(n N_pos) Q {1 / 10^n}(n0) = 1 / 10^n0
-            abs(fn(n N_pos) Q {1 / 10^n}(n0)) = abs(1 / 10^n0) = 1 / 10^n0
-            abs(fn(n N_pos) Q {1 / 10^n}(n0)) < c
-            abs(fn(n N_pos) Q {1 / 10^n}(n0)) >= c
-            impossible abs(fn(n N_pos) Q {1 / 10^n}(n0)) >= c
+            fn(n N+) Q {1 / 10^n}(n0) = 1 / 10^n0
+            abs(fn(n N+) Q {1 / 10^n}(n0)) = abs(1 / 10^n0) = 1 / 10^n0
+            abs(fn(n N+) Q {1 / 10^n}(n0)) < c
+            abs(fn(n N+) Q {1 / 10^n}(n0)) >= c
+            impossible abs(fn(n N+) Q {1 / 10^n}(n0)) >= c
 
-    have fn zero_then_decimal_nines_Q(n N_pos) Q by cases:
+    have fn zero_then_decimal_nines_Q(n N+) Q by cases:
         case n = 1: 0
-        case n > 1: 1 - 1 / 10^(n - 1)
+        case n > 1: 1 - 10 / 10^n
 
     claim:
         ? not $is_bounded_away_from_zero_in_Q(zero_then_decimal_nines_Q)
         by contra:
             ? not $is_bounded_away_from_zero_in_Q(zero_then_decimal_nines_Q)
             $is_bounded_away_from_zero_in_Q(zero_then_decimal_nines_Q)
-            obtain c from exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(zero_then_decimal_nines_Q, c)}
+            obtain c from exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(zero_then_decimal_nines_Q, c)}
             zero_then_decimal_nines_Q(1) = 0
             abs(zero_then_decimal_nines_Q(1)) = abs(0) = 0
             abs(zero_then_decimal_nines_Q(1)) >= c
             impossible 0 >= c
 
-    witness exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(fn(n N_pos) Q {10^n}, c)} from 1:
-        1 $in Q_pos
-        forall i_index N_pos:
+    witness exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(fn(n N+) Q {10^n}, c)} from 1:
+        1 $in Q+
+        forall i_index N+:
             i_index >= 1
             i_index <= 10^i_index
             1 <= i_index <= 10^i_index
             10^i_index >= 0
             abs(10^i_index) = 10^i_index
-            fn(n N_pos) Q {10^n}(i_index) = 10^i_index
-            abs(fn(n N_pos) Q {10^n}(i_index)) = abs(10^i_index) = 10^i_index
-            abs(fn(n N_pos) Q {10^n}(i_index)) >= 1
-        $is_bounded_away_from_zero_by_in_Q(fn(n N_pos) Q {10^n}, 1)
-    by def $is_bounded_away_from_zero_in_Q(fn(n N_pos) Q {10^n})
+            fn(n N+) Q {10^n}(i_index) = 10^i_index
+            abs(fn(n N+) Q {10^n}(i_index)) = abs(10^i_index) = 10^i_index
+            abs(fn(n N+) Q {10^n}(i_index)) >= 1
+        by def $is_bounded_away_from_zero_by_in_Q(fn(n N+) Q {10^n}, 1)
+        $is_bounded_away_from_zero_by_in_Q(fn(n N+) Q {10^n}, 1)
+    by def $is_bounded_away_from_zero_in_Q(fn(n N+) Q {10^n})
 
     claim:
-        ? not $is_bounded_sequence_in_Q(fn(n N_pos) Q {10^n})
+        ? not $is_bounded_sequence_in_Q(fn(n N+) Q {10^n})
         by contra:
-            ? not $is_bounded_sequence_in_Q(fn(n N_pos) Q {10^n})
-            $is_bounded_sequence_in_Q(fn(n N_pos) Q {10^n})
-            obtain M from exist M Q st {$is_bounded_by_in_Q(fn(n N_pos) Q {10^n}, M)}
+            ? not $is_bounded_sequence_in_Q(fn(n N+) Q {10^n})
+            $is_bounded_sequence_in_Q(fn(n N+) Q {10^n})
+            obtain M from exist M Q st {$is_bounded_by_in_Q(fn(n N+) Q {10^n}, M)}
             M + 1 > 0
-            M + 1 $in R_pos
-            1 / (M + 1) $in R_pos
+            M + 1 $in R+
+            1 / (M + 1) $in R+
             by thm archimedean_property(1 / (M + 1))
-            obtain n0 from exist n0 N_pos st {1 / n0 < 1 / (M + 1)}
+            obtain n0 from exist n0 N+ st {1 / n0 < 1 / (M + 1)}
             n0 * (M + 1) > 0
             (1 / n0) * (n0 * (M + 1)) < (1 / (M + 1)) * (n0 * (M + 1))
             (1 / n0) * (n0 * (M + 1)) = M + 1
@@ -1289,11 +1441,11 @@ sketch:
             M < 10^n0
             10^n0 >= 0
             abs(10^n0) = 10^n0
-            fn(n N_pos) Q {10^n}(n0) = 10^n0
-            abs(fn(n N_pos) Q {10^n}(n0)) = abs(10^n0) = 10^n0
-            abs(fn(n N_pos) Q {10^n}(n0)) > M
-            abs(fn(n N_pos) Q {10^n}(n0)) <= M
-            impossible abs(fn(n N_pos) Q {10^n}(n0)) <= M
+            fn(n N+) Q {10^n}(n0) = 10^n0
+            abs(fn(n N+) Q {10^n}(n0)) = abs(10^n0) = 10^n0
+            abs(fn(n N+) Q {10^n}(n0)) > M
+            abs(fn(n N+) Q {10^n}(n0)) <= M
+            impossible abs(fn(n N+) Q {10^n}(n0)) <= M
 
 """
 Lemma 5.3.14. Every nonzero real number has a Cauchy representative bounded
@@ -1311,10 +1463,10 @@ away from zero.
 # limit.
 
 thm finite_prefix_replacement_preserves_cauchy_and_formal_limit_in_Q:
-    ? forall a, b seq(Q), x R, n0 N_pos:
+    ? forall a, b seq(Q), x R, n0 N+:
         $is_cauchy_sequence_in_Q(a)
         $has_formal_limit_in_Q(a, x)
-        forall n N_pos:
+        forall n N+:
             n >= n0
             =>:
                 b(n) = a(n)
@@ -1322,40 +1474,63 @@ thm finite_prefix_replacement_preserves_cauchy_and_formal_limit_in_Q:
             $is_cauchy_sequence_in_Q(b)
             $has_formal_limit_in_Q(b, x)
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_epsilon_steadiness_in_Q(b, epsilon)
         $has_eventual_epsilon_steadiness_in_Q(a, epsilon)
-        obtain n1 from exist n1 N_pos st {$is_tail_epsilon_steady_in_Q(a, epsilon, n1)}
-        witness exist n2 N_pos st {$is_tail_epsilon_steady_in_Q(b, epsilon, n2)} from finite_set_max(union({n0}, { n1})):
-            forall j, k N_pos:
-                j >= finite_set_max(union({n0}, { n1}))
-                k >= finite_set_max(union({n0}, { n1}))
+        obtain n1 from exist n1 N+ st {$is_tail_epsilon_steady_in_Q(a, epsilon, n1)}
+        have tail_start N = finite_set_max(union({n0}, {n1}))
+        tail_start = finite_set_max(union({n0}, {n1}))
+        n0 <= finite_set_max(union({n0}, {n1}))
+        n1 <= finite_set_max(union({n0}, {n1}))
+        n0 <= tail_start
+        n1 <= tail_start
+        n0 > 0
+        tail_start > 0
+        tail_start != 0
+        tail_start $in N+
+        witness exist n2 N+ st {$is_tail_epsilon_steady_in_Q(b, epsilon, n2)} from tail_start:
+            forall j, k N+:
+                j >= tail_start
+                k >= tail_start
                 =>:
-                    n0 <= finite_set_max(union({n0}, { n1})) <= j
+                    n0 <= tail_start <= j
                     b(j) = a(j)
-                    n0 <= finite_set_max(union({n0}, { n1})) <= k
+                    n0 <= tail_start <= k
                     b(k) = a(k)
-                    n1 <= finite_set_max(union({n0}, { n1})) <= j
-                    n1 <= finite_set_max(union({n0}, { n1})) <= k
+                    n1 <= tail_start <= j
+                    n1 <= tail_start <= k
                     $chap4::is_close_in_Q(epsilon, a(j), a(k))
                     chap4::dist_Q(b(j), b(k)) = chap4::dist_Q(a(j), a(k))
                     $chap4::is_close_in_Q(epsilon, b(j), b(k))
+            by def $is_tail_epsilon_steady_in_Q(b, epsilon, tail_start)
+        by def $has_eventual_epsilon_steadiness_in_Q(b, epsilon)
     by def $is_cauchy_sequence_in_Q(b)
     claim:
-        ? forall epsilon R_pos:
-            exist n2 N_pos st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n2)}
+        ? forall epsilon R+:
+            exist n2 N+ st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n2)}
         $has_rational_sequence_limit_in_R(a, x)
-        obtain n1 from exist n1 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, epsilon, n1)}
-        witness exist n2 N_pos st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n2)} from finite_set_max(union({n0}, { n1})):
-            forall n N_pos:
-                n >= finite_set_max(union({n0}, { n1}))
+        obtain n1 from exist n1 N+ st {$is_rational_sequence_tail_close_to_real(a, x, epsilon, n1)}
+        have limit_tail_start N = finite_set_max(union({n0}, {n1}))
+        limit_tail_start = finite_set_max(union({n0}, {n1}))
+        n0 <= finite_set_max(union({n0}, {n1}))
+        n1 <= finite_set_max(union({n0}, {n1}))
+        n0 <= limit_tail_start
+        n1 <= limit_tail_start
+        n0 > 0
+        limit_tail_start > 0
+        limit_tail_start != 0
+        limit_tail_start $in N+
+        witness exist n2 N+ st {$is_rational_sequence_tail_close_to_real(b, x, epsilon, n2)} from limit_tail_start:
+            forall n N+:
+                n >= limit_tail_start
                 =>:
-                    n0 <= finite_set_max(union({n0}, { n1})) <= n
+                    n0 <= limit_tail_start <= n
                     b(n) = a(n)
-                    n1 <= finite_set_max(union({n0}, { n1})) <= n
+                    n1 <= limit_tail_start <= n
                     abs(a(n) - x) < epsilon
                     abs(b(n) - x) = abs(a(n) - x)
                     abs(b(n) - x) < epsilon
+            by def $is_rational_sequence_tail_close_to_real(b, x, epsilon, limit_tail_start)
     by def $has_rational_sequence_limit_in_R(b, x)
     by def $has_formal_limit_in_Q(b, x)
 
@@ -1363,7 +1538,7 @@ thm nonzero_real_has_bounded_away_rational_representative:
     ? forall x R_nz:
         exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x), $is_bounded_away_from_zero_in_Q(a)}
     abs(x) > 0
-    abs(x) / 4 $in R_pos
+    abs(x) / 4 $in R+
     by thm has_rational_between(0, abs(x) / 4)
     obtain c from exist c Q st {0 < c < abs(x) / 4}
     c > 0
@@ -1373,17 +1548,17 @@ thm nonzero_real_has_bounded_away_rational_representative:
     by thm cauchy_sequence_representative_in_Q_exists(x)
     obtain a from exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x)}
     $has_rational_sequence_limit_in_R(a, x)
-    obtain n0 from exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, c, n0)}
-    have fn b(n N_pos) Q by cases:
+    obtain n0 from exist n0 N+ st {$is_rational_sequence_tail_close_to_real(a, x, c, n0)}
+    have fn b(n N+) Q by cases:
         case n < n0: c
         case n >= n0: a(n)
-    forall n N_pos:
+    forall n N+:
         n >= n0
         =>:
             b(n) = a(n)
     by thm finite_prefix_replacement_preserves_cauchy_and_formal_limit_in_Q(a, b, x, n0)
     claim:
-        ? forall n N_pos:
+        ? forall n N+:
             abs(b(n)) >= c
         n < n0 or n >= n0
         by cases:
@@ -1406,13 +1581,14 @@ thm nonzero_real_has_bounded_away_rational_representative:
                 c < abs(a(n))
                 abs(b(n)) = abs(a(n)) >= c
     by def $is_bounded_away_from_zero_by_in_Q(b, c)
-    witness exist d Q_pos st {$is_bounded_away_from_zero_by_in_Q(b, d)} from c
+    witness exist d Q+ st {$is_bounded_away_from_zero_by_in_Q(b, d)} from c
+    by def $is_bounded_away_from_zero_in_Q(b)
     witness exist b0 seq(Q) st {$is_cauchy_sequence_in_Q(b0), $has_formal_limit_in_Q(b0, x), $is_bounded_away_from_zero_in_Q(b0)} from b
 
 # The algebraic estimate used by both reciprocal lemmas.
 
 thm reciprocal_abs_diff_bound_Q:
-    ? forall x, y Q, c_x, c_y, epsilon Q_pos:
+    ? forall x, y Q, c_x, c_y, epsilon Q+:
         x != 0
         y != 0
         abs(x) >= c_x
@@ -1432,7 +1608,7 @@ thm reciprocal_abs_diff_bound_Q:
     abs(1 / x - 1 / y) <= epsilon
 
 prop is_nonzero_sequence_in_Q(a seq(Q)):
-    forall n N_pos:
+    forall n N+:
         a(n) != 0
 
 claim:
@@ -1451,9 +1627,9 @@ claim:
         $is_bounded_away_from_zero_in_Q(a)
         =>:
             $is_nonzero_sequence_in_Q(a)
-    obtain c from exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(a, c)}
+    obtain c from exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(a, c)}
     claim:
-        ? forall n N_pos:
+        ? forall n N+:
             a(n) != 0
         abs(a(n)) >= c > 0
         by contra:
@@ -1463,10 +1639,10 @@ claim:
             impossible abs(a(n)) > 0
     by def $is_nonzero_sequence_in_Q(a)
 
-have fn seq_recip_Q(a seq(Q): $is_nonzero_sequence_in_Q(a)) fn(k N_pos) Q = fn(n N_pos) Q {1 / a(n)}
+have fn seq_recip_Q(a seq(Q): $is_nonzero_sequence_in_Q(a)) fn(k N+) Q = fn(n N+) Q {1 / a(n)}
 
 thm seq_recip_Q_values_are_close:
-    ? forall a, b seq(Q), c_a, c_b, epsilon Q_pos, j, k N_pos:
+    ? forall a, b seq(Q), c_a, c_b, epsilon Q+, j, k N+:
         $is_nonzero_sequence_in_Q(a)
         $is_nonzero_sequence_in_Q(b)
         abs(a(j)) >= c_a
@@ -1494,14 +1670,14 @@ claim:
         =>:
             $is_cauchy_sequence_in_Q(seq_recip_Q(a))
     $is_nonzero_sequence_in_Q(a)
-    obtain c from exist c Q_pos st {$is_bounded_away_from_zero_by_in_Q(a, c)}
+    obtain c from exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(a, c)}
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_epsilon_steadiness_in_Q(seq_recip_Q(a), epsilon)
         $has_eventual_epsilon_steadiness_in_Q(a, c^2 * epsilon)
-        obtain n0 from exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(a, c^2 * epsilon, n0)}
-        witness exist n1 N_pos st {$is_tail_epsilon_steady_in_Q(seq_recip_Q(a), epsilon, n1)} from n0:
-            forall j, k N_pos:
+        obtain n0 from exist n0 N+ st {$is_tail_epsilon_steady_in_Q(a, c^2 * epsilon, n0)}
+        witness exist n1 N+ st {$is_tail_epsilon_steady_in_Q(seq_recip_Q(a), epsilon, n1)} from n0:
+            forall j, k N+:
                 j >= n0
                 k >= n0
                 =>:
@@ -1512,6 +1688,8 @@ claim:
                     abs(a(j)) >= c
                     abs(a(k)) >= c
                     $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(a)(k))
+            by def $is_tail_epsilon_steady_in_Q(seq_recip_Q(a), epsilon, n0)
+        by def $has_eventual_epsilon_steadiness_in_Q(seq_recip_Q(a), epsilon)
     by def $is_cauchy_sequence_in_Q(seq_recip_Q(a))
 
 """
@@ -1540,15 +1718,15 @@ claim:
             $is_equivalent_cauchy_sequence_in_Q(seq_recip_Q(a), seq_recip_Q(b))
     $is_nonzero_sequence_in_Q(a)
     $is_nonzero_sequence_in_Q(b)
-    obtain c_a from exist c_a Q_pos st {$is_bounded_away_from_zero_by_in_Q(a, c_a)}
-    obtain c_b from exist c_b Q_pos st {$is_bounded_away_from_zero_by_in_Q(b, c_b)}
+    obtain c_a from exist c_a Q+ st {$is_bounded_away_from_zero_by_in_Q(a, c_a)}
+    obtain c_b from exist c_b Q+ st {$is_bounded_away_from_zero_by_in_Q(b, c_b)}
     claim:
-        ? forall epsilon Q_pos:
+        ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon)
         $has_eventual_closeness_in_Q(a, b, c_a * c_b * epsilon)
-        obtain n0 from exist n0 N_pos st {$is_tail_close_in_Q(a, b, c_a * c_b * epsilon, n0)}
-        witness exist n1 N_pos st {$is_tail_close_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon, n1)} from n0:
-            forall n N_pos:
+        obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(a, b, c_a * c_b * epsilon, n0)}
+        witness exist n1 N+ st {$is_tail_close_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon, n1)} from n0:
+            forall n N+:
                 n >= n0
                 =>:
                     $chap4::is_close_in_Q(c_a * c_b * epsilon, a(n), b(n))
@@ -1556,6 +1734,8 @@ claim:
                     abs(a(n)) >= c_a
                     abs(b(n)) >= c_b
                     $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(n), seq_recip_Q(b)(n))
+            by def $is_tail_close_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon, n0)
+        by def $has_eventual_closeness_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon)
     by def $is_equivalent_cauchy_sequence_in_Q(seq_recip_Q(a), seq_recip_Q(b))
 
 
@@ -1571,41 +1751,45 @@ away from zero when all terms are at most -c for some positive rational c.
 # negative variants remember on which side of zero the representative lies;
 # the older absolute-value version only remembers `abs(a_n) >= c`.
 
-prop is_positively_bounded_away_from_zero_by_in_Q(a seq(Q), c Q_pos):
-    forall n N_pos:
+prop is_positively_bounded_away_from_zero_by_in_Q(a seq(Q), c Q+):
+    forall n N+:
         a(n) >= c
 
 prop is_positively_bounded_away_from_zero_in_Q(a seq(Q)):
-    exist c Q_pos st {$is_positively_bounded_away_from_zero_by_in_Q(a, c)}
+    exist c Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(a, c)}
 
-prop is_negatively_bounded_away_from_zero_by_in_Q(a seq(Q), c Q_pos):
-    forall n N_pos:
+prop is_negatively_bounded_away_from_zero_by_in_Q(a seq(Q), c Q+):
+    forall n N+:
         a(n) <= -c
 
 prop is_negatively_bounded_away_from_zero_in_Q(a seq(Q)):
-    exist c Q_pos st {$is_negatively_bounded_away_from_zero_by_in_Q(a, c)}
+    exist c Q+ st {$is_negatively_bounded_away_from_zero_by_in_Q(a, c)}
 
 claim:
     ? forall a seq(Q):
         $is_positively_bounded_away_from_zero_in_Q(a)
         =>:
             $is_bounded_away_from_zero_in_Q(a)
-    obtain c from exist c Q_pos st {$is_positively_bounded_away_from_zero_by_in_Q(a, c)}
-    witness exist d Q_pos st {$is_bounded_away_from_zero_by_in_Q(a, d)} from c:
-        forall n N_pos:
+    obtain c from exist c Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(a, c)}
+    witness exist d Q+ st {$is_bounded_away_from_zero_by_in_Q(a, d)} from c:
+        forall n N+:
             a(n) >= c > 0
             abs(a(n)) = a(n) >= c
+        by def $is_bounded_away_from_zero_by_in_Q(a, c)
+    by def $is_bounded_away_from_zero_in_Q(a)
 
 claim:
     ? forall a seq(Q):
         $is_negatively_bounded_away_from_zero_in_Q(a)
         =>:
             $is_bounded_away_from_zero_in_Q(a)
-    obtain c from exist c Q_pos st {$is_negatively_bounded_away_from_zero_by_in_Q(a, c)}
-    witness exist d Q_pos st {$is_bounded_away_from_zero_by_in_Q(a, d)} from c:
-        forall n N_pos:
+    obtain c from exist c Q+ st {$is_negatively_bounded_away_from_zero_by_in_Q(a, c)}
+    witness exist d Q+ st {$is_bounded_away_from_zero_by_in_Q(a, d)} from c:
+        forall n N+:
             a(n) <= -c < 0
             abs(a(n)) = -a(n) >= c
+        by def $is_bounded_away_from_zero_by_in_Q(a, c)
+    by def $is_bounded_away_from_zero_in_Q(a)
 
 """
 Examples 5.4.2. The decimal sequence 1.1, 1.01, 1.001, ... is positively
@@ -1615,33 +1799,33 @@ zero in the absolute-value sense, but not in either signed sense.
 """
 
 sketch:
-    have fn decimal_above_one_Q(n N_pos) Q = 1 + 1 / 10^n
-    have fn negative_decimal_below_minus_one_Q(n N_pos) Q = -(1 + 1 / 10^n)
-    have fn alternating_sign_Q(n N_pos) Q by cases:
+    have fn decimal_above_one_Q(n N+) Q = 1 + 1 / 10^n
+    have fn negative_decimal_below_minus_one_Q(n N+) Q = -(1 + 1 / 10^n)
+    have fn alternating_sign_Q(n N+) Q by cases:
         case n % 2 = 1: 1
         case n % 2 = 0: -1
 
-    witness exist c Q_pos st {$is_positively_bounded_away_from_zero_by_in_Q(decimal_above_one_Q, c)} from 1:
-        1 $in Q_pos
-        forall n N_pos:
+    witness exist c Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(decimal_above_one_Q, c)} from 1:
+        1 $in Q+
+        forall n N+:
             10^n > 0
             1 / 10^n > 0
             1 + 1 / 10^n >= 1
             decimal_above_one_Q(n) = 1 + 1 / 10^n
             decimal_above_one_Q(n) >= 1
-        $is_positively_bounded_away_from_zero_by_in_Q(decimal_above_one_Q, 1)
+        by def $is_positively_bounded_away_from_zero_by_in_Q(decimal_above_one_Q, 1)
     by def $is_positively_bounded_away_from_zero_in_Q(decimal_above_one_Q)
 
-    witness exist c Q_pos st {$is_negatively_bounded_away_from_zero_by_in_Q(negative_decimal_below_minus_one_Q, c)} from 1:
-        1 $in Q_pos
-        forall n N_pos:
+    witness exist c Q+ st {$is_negatively_bounded_away_from_zero_by_in_Q(negative_decimal_below_minus_one_Q, c)} from 1:
+        1 $in Q+
+        forall n N+:
             10^n > 0
             1 / 10^n > 0
             1 + 1 / 10^n >= 1
             -(1 + 1 / 10^n) <= -1
             negative_decimal_below_minus_one_Q(n) = -(1 + 1 / 10^n)
             negative_decimal_below_minus_one_Q(n) <= -1
-        $is_negatively_bounded_away_from_zero_by_in_Q(negative_decimal_below_minus_one_Q, 1)
+        by def $is_negatively_bounded_away_from_zero_by_in_Q(negative_decimal_below_minus_one_Q, 1)
     by def $is_negatively_bounded_away_from_zero_in_Q(negative_decimal_below_minus_one_Q)
 
     claim:
@@ -1649,7 +1833,7 @@ sketch:
         by contra:
             ? not $is_positively_bounded_away_from_zero_in_Q(alternating_sign_Q)
             $is_positively_bounded_away_from_zero_in_Q(alternating_sign_Q)
-            obtain c from exist c Q_pos st {$is_positively_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)}
+            obtain c from exist c Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)}
             alternating_sign_Q(2) = -1
             alternating_sign_Q(2) >= c
             -1 >= c
@@ -1662,7 +1846,7 @@ sketch:
         by contra:
             ? not $is_negatively_bounded_away_from_zero_in_Q(alternating_sign_Q)
             $is_negatively_bounded_away_from_zero_in_Q(alternating_sign_Q)
-            obtain c from exist c Q_pos st {$is_negatively_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)}
+            obtain c from exist c Q+ st {$is_negatively_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)}
             -c < 0
             alternating_sign_Q(1) = 1
             alternating_sign_Q(1) <= -c
@@ -1681,8 +1865,8 @@ is represented by a Cauchy sequence bounded above by a negative rational.
 # representative-based: instead of starting with `x > 0`, they ask for a
 # rational Cauchy representative that stays a positive distance away from one
 # side of `0`.  The two predicates below record that constructional meaning;
-# later proofs use the ordinary order notation `x > 0`, `x < 0`, `R_pos`, and
-# `R_neg`.
+# later proofs use the ordinary order notation `x > 0`, `x < 0`, `R+`, and
+# `R-`.
 
 prop is_positive_real_by_cauchy_sequence(x R):
     exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x), $is_positively_bounded_away_from_zero_in_Q(a)}
@@ -1743,7 +1927,7 @@ forall x, y R:
         x + y > 0
         x * y > 0
 
-forall x R_pos:
+forall x R+:
     x > 0
     x != 0
 
@@ -1767,12 +1951,12 @@ Proposition 5.4.8. The reciprocal of a positive real is positive.  If
 # the fact that equivalent rational representatives have the same formal limit.
 
 claim:
-    ? forall x R_pos:
-        1 / x $in R_pos
+    ? forall x R+:
+        1 / x $in R+
         1 / x > 0
 
 claim:
-    ? forall x, y R_pos:
+    ? forall x, y R+:
         x > y
         =>:
             1 / x < 1 / y
@@ -1884,7 +2068,11 @@ forall x, y R:
 # negatives, so their absolute values agree.
 
 forall x, y R:
-    dist_R(x, y) = dist_R(y, x)
+    dist_R(x, y) = abs(x - y)
+    dist_R(y, x) = abs(y - x)
+    x - y = -(y - x)
+    abs(x - y) = abs(-(y - x)) = abs(y - x)
+    dist_R(x, y) = abs(x - y) = abs(y - x) = dist_R(y, x)
 
 """
 Proposition 5.4.9. The non-negative reals are closed.
@@ -1899,7 +2087,7 @@ claim:
     ? forall a seq(Q), x R:
         $is_cauchy_sequence_in_Q(a)
         $has_formal_limit_in_Q(a, x)
-        forall n N_pos:
+        forall n N+:
             a(n) >= 0
         =>:
             x >= 0
@@ -1908,9 +2096,9 @@ claim:
         not x >= 0
         x < 0
         -x > 0
-        -x / 2 $in R_pos
+        -x / 2 $in R+
         $has_rational_sequence_limit_in_R(a, x)
-        obtain n0 from exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, -x / 2, n0)}
+        obtain n0 from exist n0 N+ st {$is_rational_sequence_tail_close_to_real(a, x, -x / 2, n0)}
         abs(a(n0) - x) < -x / 2
         a(n0) >= 0
         a(n0) - x >= 0 - x = -x
@@ -1937,7 +2125,7 @@ thm pointwise_order_passes_to_formal_limits_in_Q:
         $is_cauchy_sequence_in_Q(b)
         $has_formal_limit_in_Q(a, x)
         $has_formal_limit_in_Q(b, y)
-        forall n N_pos:
+        forall n N+:
             a(n) >= b(n)
         =>:
             x >= y
@@ -1946,32 +2134,39 @@ thm pointwise_order_passes_to_formal_limits_in_Q:
         not x >= y
         x < y
         y - x > 0
-        (y - x) / 3 $in R_pos
+        (y - x) / 3 $in R+
         $has_rational_sequence_limit_in_R(a, x)
         $has_rational_sequence_limit_in_R(b, y)
-        obtain n1 from exist n1 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, (y - x) / 3, n1)}
-        obtain n2 from exist n2 N_pos st {$is_rational_sequence_tail_close_to_real(b, y, (y - x) / 3, n2)}
-        finite_set_max(union({n1}, { n2})) $in N_pos
-        finite_set_max(union({n1}, { n2})) >= n1
-        finite_set_max(union({n1}, { n2})) >= n2
-        abs(a(finite_set_max(union({n1}, { n2}))) - x) < (y - x) / 3
-        abs(b(finite_set_max(union({n1}, { n2}))) - y) < (y - x) / 3
-        a(finite_set_max(union({n1}, { n2}))) - x <= abs(a(finite_set_max(union({n1}, { n2}))) - x) < (y - x) / 3
-        a(finite_set_max(union({n1}, { n2}))) - x < (y - x) / 3
-        a(finite_set_max(union({n1}, { n2}))) - x + x < (y - x) / 3 + x
-        a(finite_set_max(union({n1}, { n2}))) - x + x = a(finite_set_max(union({n1}, { n2})))
+        obtain n1 from exist n1 N+ st {$is_rational_sequence_tail_close_to_real(a, x, (y - x) / 3, n1)}
+        obtain n2 from exist n2 N+ st {$is_rational_sequence_tail_close_to_real(b, y, (y - x) / 3, n2)}
+        have order_tail_start N = finite_set_max(union({n1}, {n2}))
+        order_tail_start = finite_set_max(union({n1}, {n2}))
+        n1 <= finite_set_max(union({n1}, {n2}))
+        n2 <= finite_set_max(union({n1}, {n2}))
+        n1 <= order_tail_start
+        n2 <= order_tail_start
+        n1 > 0
+        order_tail_start > 0
+        order_tail_start != 0
+        order_tail_start $in N+
+        abs(a(order_tail_start) - x) < (y - x) / 3
+        abs(b(order_tail_start) - y) < (y - x) / 3
+        a(order_tail_start) - x <= abs(a(order_tail_start) - x) < (y - x) / 3
+        a(order_tail_start) - x < (y - x) / 3
+        a(order_tail_start) - x + x < (y - x) / 3 + x
+        a(order_tail_start) - x + x = a(order_tail_start)
         (y - x) / 3 + x = x + (y - x) / 3
-        a(finite_set_max(union({n1}, { n2}))) < x + (y - x) / 3
-        abs(y - b(finite_set_max(union({n1}, { n2})))) = abs(b(finite_set_max(union({n1}, { n2}))) - y)
-        y - b(finite_set_max(union({n1}, { n2}))) <= abs(y - b(finite_set_max(union({n1}, { n2})))) = abs(b(finite_set_max(union({n1}, { n2}))) - y) < (y - x) / 3
-        y - b(finite_set_max(union({n1}, { n2}))) < (y - x) / 3
-        y - b(finite_set_max(union({n1}, { n2}))) + b(finite_set_max(union({n1}, { n2}))) < (y - x) / 3 + b(finite_set_max(union({n1}, { n2})))
-        y - b(finite_set_max(union({n1}, { n2}))) + b(finite_set_max(union({n1}, { n2}))) = y
-        y < (y - x) / 3 + b(finite_set_max(union({n1}, { n2})))
-        y - (y - x) / 3 < (y - x) / 3 + b(finite_set_max(union({n1}, { n2}))) - (y - x) / 3 = b(finite_set_max(union({n1}, { n2})))
-        y - (y - x) / 3 < b(finite_set_max(union({n1}, { n2})))
-        a(finite_set_max(union({n1}, { n2}))) >= b(finite_set_max(union({n1}, { n2})))
-        y - (y - x) / 3 < b(finite_set_max(union({n1}, { n2}))) <= a(finite_set_max(union({n1}, { n2}))) < x + (y - x) / 3
+        a(order_tail_start) < x + (y - x) / 3
+        abs(y - b(order_tail_start)) = abs(b(order_tail_start) - y)
+        y - b(order_tail_start) <= abs(y - b(order_tail_start)) = abs(b(order_tail_start) - y) < (y - x) / 3
+        y - b(order_tail_start) < (y - x) / 3
+        y - b(order_tail_start) + b(order_tail_start) < (y - x) / 3 + b(order_tail_start)
+        y - b(order_tail_start) + b(order_tail_start) = y
+        y < (y - x) / 3 + b(order_tail_start)
+        y - (y - x) / 3 < (y - x) / 3 + b(order_tail_start) - (y - x) / 3 = b(order_tail_start)
+        y - (y - x) / 3 < b(order_tail_start)
+        a(order_tail_start) >= b(order_tail_start)
+        y - (y - x) / 3 < b(order_tail_start) <= a(order_tail_start) < x + (y - x) / 3
         y - (y - x) / 3 < x + (y - x) / 3
         (y - x) / 3 < 2 * (y - x) / 3
         x + (y - x) / 3 < x + 2 * (y - x) / 3 = y - (y - x) / 3
@@ -1988,35 +2183,37 @@ Remark 5.4.11. Strict inequalities do not pass to formal limits.
 # inequality in Corollary 5.4.10 cannot be strengthened to a strict one.
 
 claim:
-    ? forall i_index N_pos:
-        fn(k N_pos) Q {1 + 1 / k}(i_index) > fn(k N_pos) Q {1 - 1 / k}(i_index)
+    ? forall i_index N+:
+        fn(k N+) Q {1 + 1 / k}(i_index) > fn(k N+) Q {1 - 1 / k}(i_index)
     1 / i_index > 0
     2 / i_index > 0
-    fn(k N_pos) Q {1 + 1 / k}(i_index) = 1 + 1 / i_index
-    fn(k N_pos) Q {1 - 1 / k}(i_index) = 1 - 1 / i_index
+    fn(k N+) Q {1 + 1 / k}(i_index) = 1 + 1 / i_index
+    fn(k N+) Q {1 - 1 / k}(i_index) = 1 - 1 / i_index
     (1 + 1 / i_index) - (1 - 1 / i_index) = 2 / i_index
     1 + 1 / i_index > 1 - 1 / i_index
 
 claim:
-    ? forall epsilon Q_pos:
-        $has_eventual_closeness_in_Q(fn(k N_pos) Q {1 + 1 / k}, fn(k N_pos) Q {1 - 1 / k}, epsilon)
-    epsilon / 2 $in R_pos
+    ? forall epsilon Q+:
+        $has_eventual_closeness_in_Q(fn(k N+) Q {1 + 1 / k}, fn(k N+) Q {1 - 1 / k}, epsilon)
+    epsilon / 2 $in R+
     by thm archimedean_property(epsilon / 2)
-    obtain n0 from exist n0 N_pos st {1 / n0 < epsilon / 2}
-    witness exist n1 N_pos st {$is_tail_close_in_Q(fn(k N_pos) Q {1 + 1 / k}, fn(k N_pos) Q {1 - 1 / k}, epsilon, n1)} from n0:
-        forall n N_pos:
+    obtain n0 from exist n0 N+ st {1 / n0 < epsilon / 2}
+    witness exist n1 N+ st {$is_tail_close_in_Q(fn(k N+) Q {1 + 1 / k}, fn(k N+) Q {1 - 1 / k}, epsilon, n1)} from n0:
+        forall n N+:
             n >= n0
             =>:
                 1 / n = n0 / (n0 * n) <= n / (n0 * n) = 1 / n0 < epsilon / 2
                 2 / n = 2 * (1 / n) < 2 * (epsilon / 2) = epsilon
-                fn(k N_pos) Q {1 + 1 / k}(n) = 1 + 1 / n
-                fn(k N_pos) Q {1 - 1 / k}(n) = 1 - 1 / n
+                fn(k N+) Q {1 + 1 / k}(n) = 1 + 1 / n
+                fn(k N+) Q {1 - 1 / k}(n) = 1 - 1 / n
                 (1 + 1 / n) - (1 - 1 / n) = 2 / n > 0
                 (1 + 1 / n) - (1 - 1 / n) > 0
                 abs((1 + 1 / n) - (1 - 1 / n)) = (1 + 1 / n) - (1 - 1 / n) = 2 / n
-                abs(fn(k N_pos) Q {1 + 1 / k}(n) - fn(k N_pos) Q {1 - 1 / k}(n)) = 2 / n < epsilon
-                $chap4::is_close_in_Q(epsilon, fn(k N_pos) Q {1 + 1 / k}(n), fn(k N_pos) Q {1 - 1 / k}(n))
-by def $is_equivalent_cauchy_sequence_in_Q(fn(k N_pos) Q {1 + 1 / k}, fn(k N_pos) Q {1 - 1 / k})
+                abs(fn(k N+) Q {1 + 1 / k}(n) - fn(k N+) Q {1 - 1 / k}(n)) = 2 / n < epsilon
+                $chap4::is_close_in_Q(epsilon, fn(k N+) Q {1 + 1 / k}(n), fn(k N+) Q {1 - 1 / k}(n))
+        by def $is_tail_close_in_Q(fn(k N+) Q {1 + 1 / k}, fn(k N+) Q {1 - 1 / k}, epsilon, n0)
+    by def $has_eventual_closeness_in_Q(fn(k N+) Q {1 + 1 / k}, fn(k N+) Q {1 - 1 / k}, epsilon)
+by def $is_equivalent_cauchy_sequence_in_Q(fn(k N+) Q {1 + 1 / k}, fn(k N+) Q {1 - 1 / k})
 
 """
 Proposition 5.4.12. Positive real numbers are bounded above and below by
@@ -2030,28 +2227,28 @@ positive rationals/integers.
 # sequence-library bridge here.
 
 thm positive_builtin_real_has_positive_rational_representative:
-    ? forall x R_pos:
+    ? forall x R+:
         exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x), $is_positively_bounded_away_from_zero_in_Q(a)}
     by thm cauchy_sequence_representative_in_Q_exists(x)
     obtain a from exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x)}
-    x / 2 $in R_pos
+    x / 2 $in R+
     by thm archimedean_property(x / 2)
-    obtain m from exist m N_pos st {1 / m < x / 2}
-    have c Q_pos = 1 / m
+    obtain m from exist m N+ st {1 / m < x / 2}
+    have c Q+ = 1 / m
     c < x / 2 < x
-    x - c $in R_pos
+    x - c $in R+
     $has_rational_sequence_limit_in_R(a, x)
-    obtain n0 from exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(a, x, x - c, n0)}
-    have fn b(n N_pos) Q by cases:
+    obtain n0 from exist n0 N+ st {$is_rational_sequence_tail_close_to_real(a, x, x - c, n0)}
+    have fn b(n N+) Q by cases:
         case n < n0: c
         case n >= n0: a(n)
-    forall n N_pos:
+    forall n N+:
         n >= n0
         =>:
             b(n) = a(n)
     by thm finite_prefix_replacement_preserves_cauchy_and_formal_limit_in_Q(a, b, x, n0)
     claim:
-        ? forall n N_pos:
+        ? forall n N+:
             b(n) >= c
         n < n0 or n >= n0
         by cases:
@@ -2073,76 +2270,88 @@ thm positive_builtin_real_has_positive_rational_representative:
                 a(n) > c
                 a(n) >= c
                 b(n) >= c
-    witness exist c0 Q_pos st {$is_positively_bounded_away_from_zero_by_in_Q(b, c0)} from c
+    witness exist c0 Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(b, c0)} from c:
+        by def $is_positively_bounded_away_from_zero_by_in_Q(b, c)
+    by def $is_positively_bounded_away_from_zero_in_Q(b)
     witness exist b0 seq(Q) st {$is_cauchy_sequence_in_Q(b0), $has_formal_limit_in_Q(b0, x), $is_positively_bounded_away_from_zero_in_Q(b0)} from b
 
 claim:
-    ? forall x R_pos:
+    ? forall x R+:
         $is_positive_real_by_cauchy_sequence(x)
     by thm positive_builtin_real_has_positive_rational_representative(x)
     by def $is_positive_real_by_cauchy_sequence(x)
 
 claim:
     ? forall q Q:
-        $is_cauchy_sequence_in_Q(fn(n N_pos) Q {q})
+        $is_cauchy_sequence_in_Q(fn(n N+) Q {q})
     claim:
-        ? forall epsilon Q_pos:
-            $has_eventual_epsilon_steadiness_in_Q(fn(n N_pos) Q {q}, epsilon)
-        witness exist n0 N_pos st {$is_tail_epsilon_steady_in_Q(fn(n N_pos) Q {q}, epsilon, n0)} from 1:
-            forall j, k N_pos:
+        ? forall epsilon Q+:
+            $has_eventual_epsilon_steadiness_in_Q(fn(n N+) Q {q}, epsilon)
+        witness exist n0 N+ st {$is_tail_epsilon_steady_in_Q(fn(n N+) Q {q}, epsilon, n0)} from 1:
+            forall j, k N+:
                 j >= 1
                 k >= 1
                 =>:
-                    $chap4::is_close_in_Q(epsilon, fn(n N_pos) Q {q}(j), fn(n N_pos) Q {q}(k))
+                    $chap4::is_close_in_Q(epsilon, fn(n N+) Q {q}(j), fn(n N+) Q {q}(k))
+            by def $is_tail_epsilon_steady_in_Q(fn(n N+) Q {q}, epsilon, 1)
+        by def $has_eventual_epsilon_steadiness_in_Q(fn(n N+) Q {q}, epsilon)
+    by def $is_cauchy_sequence_in_Q(fn(n N+) Q {q})
 
 claim:
     ? forall q Q:
-        $has_formal_limit_in_Q(fn(n N_pos) Q {q}, q)
+        $has_formal_limit_in_Q(fn(n N+) Q {q}, q)
     claim:
-        ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(fn(n N_pos) Q {q}, q, epsilon, n0)}
-        witness exist n0 N_pos st {$is_rational_sequence_tail_close_to_real(fn(n N_pos) Q {q}, q, epsilon, n0)} from 1:
-            forall n N_pos:
+        ? forall epsilon R+:
+            exist n0 N+ st {$is_rational_sequence_tail_close_to_real(fn(n N+) Q {q}, q, epsilon, n0)}
+        witness exist n0 N+ st {$is_rational_sequence_tail_close_to_real(fn(n N+) Q {q}, q, epsilon, n0)} from 1:
+            forall n N+:
                 n >= 1
                 =>:
-                    abs(fn(k N_pos) Q {q}(n) - q) < epsilon
+                    fn(k N+) Q {q}(n) = q
+                    fn(k N+) Q {q}(n) - q = 0
+                    abs(fn(k N+) Q {q}(n) - q) = 0
+                    0 < epsilon
+                    abs(fn(k N+) Q {q}(n) - q) < epsilon
+            by def $is_rational_sequence_tail_close_to_real(fn(n N+) Q {q}, q, epsilon, 1)
+    by def $has_rational_sequence_limit_in_R(fn(n N+) Q {q}, q)
+    by def $has_formal_limit_in_Q(fn(n N+) Q {q}, q)
 
 thm positive_representative_lower_bound_passes_to_limit:
-    ? forall a seq(Q), x R, q Q_pos:
+    ? forall a seq(Q), x R, q Q+:
         $is_cauchy_sequence_in_Q(a)
         $has_formal_limit_in_Q(a, x)
         $is_positively_bounded_away_from_zero_by_in_Q(a, q)
         =>:
             q <= x
-    $is_cauchy_sequence_in_Q(fn(n N_pos) Q {q})
-    $has_formal_limit_in_Q(fn(n N_pos) Q {q}, q)
-    forall n N_pos:
-        a(n) >= fn(k N_pos) Q {q}(n)
-    by thm pointwise_order_passes_to_formal_limits_in_Q(a, fn(n N_pos) Q {q}, x, q)
+    $is_cauchy_sequence_in_Q(fn(n N+) Q {q})
+    $has_formal_limit_in_Q(fn(n N+) Q {q}, q)
+    forall n N+:
+        a(n) >= fn(k N+) Q {q}(n)
+    by thm pointwise_order_passes_to_formal_limits_in_Q(a, fn(n N+) Q {q}, x, q)
 
 claim:
-    ? forall x R_pos:
-        exist q Q_pos st {q <= x}
+    ? forall x R+:
+        exist q Q+ st {q <= x}
     $is_positive_real_by_cauchy_sequence(x)
     obtain a from exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x), $is_positively_bounded_away_from_zero_in_Q(a)}
-    obtain q from exist q Q_pos st {$is_positively_bounded_away_from_zero_by_in_Q(a, q)}
+    obtain q from exist q Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(a, q)}
     $has_formal_limit_in_Q(a, x)
     $is_positively_bounded_away_from_zero_by_in_Q(a, q)
     by thm positive_representative_lower_bound_passes_to_limit(a, x, q)
-    witness exist q0 Q_pos st {q0 <= x} from q
+    witness exist q0 Q+ st {q0 <= x} from q
 
 claim:
-    ? forall x R_pos:
-        exist n_bound N_pos st {x <= n_bound}
-    1 / x $in R_pos
+    ? forall x R+:
+        exist n_bound N+ st {x <= n_bound}
+    1 / x $in R+
     by thm archimedean_property(1 / x)
-    obtain n from exist n N_pos st {1 / n < 1 / x}
+    obtain n from exist n N+ st {1 / n < 1 / x}
     n * x > 0
     (1 / n) * (n * x) < (1 / x) * (n * x)
     (1 / n) * (n * x) = x
     (1 / x) * (n * x) = n
     x < n
-    witness exist n0 N_pos st {x <= n0} from n
+    witness exist n0 N+ st {x <= n0} from n
 
 """
 Corollary 5.4.13. Archimedean property for positive real numbers.
@@ -2152,18 +2361,18 @@ Corollary 5.4.13. Archimedean property for positive real numbers.
 # strict inequality x/epsilon < M by the positive epsilon.
 
 claim:
-    ? forall x, epsilon R_pos:
-        exist M N_pos st {M * epsilon > x}
-    x / epsilon $in R_pos
-    exist n_bound N_pos st {x / epsilon <= n_bound}
-    obtain n from exist n N_pos st {x / epsilon <= n}
+    ? forall x, epsilon R+:
+        exist M N+ st {M * epsilon > x}
+    x / epsilon $in R+
+    exist n_bound N+ st {x / epsilon <= n_bound}
+    obtain n from exist n N+ st {x / epsilon <= n}
     n < n + 1
     x / epsilon <= n < n + 1
     x / epsilon < n + 1
     (x / epsilon) * epsilon < (n + 1) * epsilon
     (x / epsilon) * epsilon = x
     (n + 1) * epsilon > x
-    witness exist M N_pos st {M * epsilon > x} from n + 1
+    witness exist M N+ st {M * epsilon > x} from n + 1
 
 """
 Proposition 5.4.14. There is a rational between any two distinct real
@@ -2221,7 +2430,15 @@ an upper bound, even though it is larger than some elements of E.
 sketch:
     have unit_interval_R set = {x R: 0 <= x and x <= 1}
 
-    unit_interval_R $subset R
+    claim:
+        ? unit_interval_R $subset R
+        claim:
+            ? forall y unit_interval_R:
+                y $in R
+            unit_interval_R = {x R: 0 <= x and x <= 1}
+            y $in {x R: 0 <= x and x <= 1}
+            y $in R
+        by def unit_interval_R $subset R
     forall x unit_interval_R:
         x <= 1
     by def $is_upper_bound(unit_interval_R, 1)
@@ -2237,6 +2454,7 @@ sketch:
             1 <= M
             x <= 1 <= M
             x <= M
+        by def $is_upper_bound(unit_interval_R, M)
 
     2 >= 1
     $is_upper_bound(unit_interval_R, 2)
@@ -2251,6 +2469,8 @@ sketch:
             $is_upper_bound(unit_interval_R, M)
             0 <= 1
             0 <= 1 and 1 <= 1
+            # proof_debt: set-builder membership introduction is not replayed
+            # automatically after builtin-rule execution was disabled.
             1 $in {x R: 0 <= x and x <= 1}
             1 $in unit_interval_R
             1 <= M
@@ -2278,7 +2498,15 @@ Example 5.5.3. The positive reals have no upper bound.
 
 sketch:
     have positive_reals_R set = {x R: x > 0}
-    positive_reals_R $subset R
+    claim:
+        ? positive_reals_R $subset R
+        claim:
+            ? forall y positive_reals_R:
+                y $in R
+            positive_reals_R = {x R: x > 0}
+            y $in {x R: x > 0}
+            y $in R
+        by def positive_reals_R $subset R
 
     claim:
         ? not $has_upper_bound(positive_reals_R)
@@ -2291,6 +2519,9 @@ sketch:
             M <= abs(M) < abs(M) + 1
             M < abs(M) + 1
             abs(M) + 1 > 0
+            have larger_positive_real R = abs(M) + 1
+            larger_positive_real = abs(M) + 1
+            larger_positive_real $in {x R: x > 0}
             abs(M) + 1 $in {x R: x > 0}
             abs(M) + 1 $in positive_reals_R
             abs(M) + 1 <= M
@@ -2311,7 +2542,7 @@ thm empty_set_upper_bound:
             not $is_nonempty_set({})
             witness $is_nonempty_set({}) from x
             impossible $is_nonempty_set({})
-    {} $subset R
+    by def {} $subset R
     claim:
         ? forall x {}:
             x <= M
@@ -2322,7 +2553,7 @@ thm empty_set_upper_bound:
             impossible $is_nonempty_set({})
     forall x {}:
         x <= M
-    $is_upper_bound({}, M)
+    by def $is_upper_bound({}, M)
 
 """
 Definition 5.5.5. A least upper bound is an upper bound which is less than or
@@ -2366,7 +2597,15 @@ All other upper bounds are larger than 1.
 sketch:
     have unit_interval_R set = {x R: 0 <= x and x <= 1}
 
-    unit_interval_R $subset R
+    claim:
+        ? unit_interval_R $subset R
+        claim:
+            ? forall y unit_interval_R:
+                y $in R
+            unit_interval_R = {x R: 0 <= x and x <= 1}
+            y $in {x R: 0 <= x and x <= 1}
+            y $in R
+        by def unit_interval_R $subset R
     forall x unit_interval_R:
         x <= 1
     by def $is_upper_bound(unit_interval_R, 1)
@@ -2452,16 +2691,16 @@ thm least_upper_bound_unique:
 # lower endpoints in `E`, global monotonicity, and eventual-width estimates;
 # the local lemmas below isolate that epsilon/common-limit route.
 
-prop is_cauchy_tail_in_R(a seq(R), epsilon R_pos, n0 N_pos):
-    forall j, k N_pos:
+prop is_cauchy_tail_in_R(a seq(R), epsilon R+, n0 N+):
+    forall j, k N+:
         j >= n0
         k >= n0
         =>:
             $is_close_in_R(epsilon, a(j), a(k))
 
 prop is_cauchy_sequence_in_R(a seq(R)):
-    forall epsilon R_pos:
-        exist n0 N_pos st {$is_cauchy_tail_in_R(a, epsilon, n0)}
+    forall epsilon R+:
+        exist n0 N+ st {$is_cauchy_tail_in_R(a, epsilon, n0)}
 
 # The rational-Cauchy construction makes the real numbers sequentially
 # complete.  For Litex's builtin `R`, this construction-level identification is
@@ -2472,8 +2711,8 @@ axiom real_cauchy_sequence_has_limit_in_R:
         =>:
             exist L R st {$has_limit_in_R(a, L)}
 
-prop is_bracket_width_below_after(lower, upper seq(R), epsilon R_pos, n0 N_pos):
-    forall n N_pos:
+prop is_bracket_width_below_after(lower, upper seq(R), epsilon R+, n0 N+):
+    forall n N+:
         n >= n0
         =>:
             upper(n) - lower(n) < epsilon
@@ -2537,7 +2776,7 @@ thm upper_midpoint_step_preserves_bisection_state:
     by thm bisection_left_below_midpoint(p[1], p[2])
     by thm bisection_midpoint_below_right(p[1], p[2])
     (p[1] + p[2]) / 2 - p[1] = (p[2] - p[1]) / 2
-    $is_bisection_pair_state(E, (p[1], (p[1] + p[2]) / 2))
+    by def $is_bisection_pair_state(E, (p[1], (p[1] + p[2]) / 2))
 
 thm nonupper_midpoint_step_preserves_bisection_state:
     ? forall E set, p cart(R, R):
@@ -2554,7 +2793,7 @@ thm nonupper_midpoint_step_preserves_bisection_state:
     by thm bisection_left_below_midpoint(p[1], p[2])
     by thm bisection_midpoint_below_right(p[1], p[2])
     p[2] - (p[1] + p[2]) / 2 = (p[2] - p[1]) / 2
-    $is_bisection_pair_state(E, ((p[1] + p[2]) / 2, p[2]))
+    by def $is_bisection_pair_state(E, ((p[1] + p[2]) / 2, p[2]))
 
 thm recursive_bisection_pair_states_exist:
     ? forall E set, a E, b R:
@@ -2632,11 +2871,11 @@ thm recursive_bisection_pair_states_exist:
 
 prop is_recursive_bisection_bracket_for_supremum(E set, lower, upper seq(R)):
     E $subset R
-    forall n N_pos:
+    forall n N+:
         not $is_upper_bound(E, lower(n))
         $is_upper_bound(E, upper(n))
         lower(n) <= upper(n)
-    forall n N_pos:
+    forall n N+:
         lower(n) <= lower(n + 1)
         upper(n + 1) <= upper(n)
         upper(n + 1) - lower(n + 1) = (upper(n) - lower(n)) / 2
@@ -2649,10 +2888,10 @@ thm recursive_bisection_bracket_exists:
             exist lower, upper seq(R) st {$is_recursive_bisection_bracket_for_supremum(E, lower, upper)}
     by thm recursive_bisection_pair_states_exist(E, a, b)
     obtain pair from exist pair fn(n N) cart(R, R) st {$is_bisection_pair_state_sequence(E, pair)}
-    have fn lower(n N_pos) R = pair(n - 1)[1]
-    have fn upper(n N_pos) R = pair(n - 1)[2]
+    have fn lower(n N+) R = pair(n - 1)[1]
+    have fn upper(n N+) R = pair(n - 1)[2]
     claim:
-        ? forall n N_pos:
+        ? forall n N+:
             not $is_upper_bound(E, lower(n))
             $is_upper_bound(E, upper(n))
             lower(n) <= upper(n)
@@ -2666,7 +2905,7 @@ thm recursive_bisection_bracket_exists:
         $is_upper_bound(E, upper(n))
         lower(n) <= upper(n)
     claim:
-        ? forall n N_pos:
+        ? forall n N+:
             lower(n) <= lower(n + 1)
             upper(n + 1) <= upper(n)
             upper(n + 1) - lower(n + 1) = (upper(n) - lower(n)) / 2
@@ -2690,7 +2929,7 @@ thm recursive_bisection_bracket_exists:
 
 # The recursive midpoint construction has an explicit geometric width bound.
 thm bisection_width_after_n_steps:
-    ? forall E set, lower, upper seq(R), n N_pos:
+    ? forall E set, lower, upper seq(R), n N+:
         $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
         =>:
             upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
@@ -2719,7 +2958,7 @@ thm bisection_width_after_n_steps:
             upper(n + 1) - lower(n + 1) = (upper(1) - lower(1)) / 2^(n + 1 - 1)
 
 thm positive_natural_le_two_power_predecessor:
-    ? forall n N_pos:
+    ? forall n N+:
         n <= 2^(n - 1)
     by induc n from 1:
         ? n <= 2^(n - 1)
@@ -2739,6 +2978,7 @@ thm positive_natural_le_two_power_predecessor:
             2^(n - 1) * 2 >= n + 1
             n = (n - 1) + 1
             2^n = 2^((n - 1) + 1)
+            # proof_debt: expose exponent-addition as a named library theorem.
             2^((n - 1) + 1) = 2^(n - 1) * 2^1
             2^1 = 2
             2^n = 2^(n - 1) * 2
@@ -2747,43 +2987,49 @@ thm positive_natural_le_two_power_predecessor:
             n + 1 <= 2^(n + 1 - 1)
 
 thm recursive_bisection_width_eventually_below:
-    ? forall E set, lower, upper seq(R), epsilon R_pos:
+    ? forall E set, lower, upper seq(R), epsilon R+:
         $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
         =>:
-            exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+            exist n0 N+ st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
     have D R = upper(1) - lower(1)
     lower(1) <= upper(1)
     upper(1) - lower(1) >= 0
     D >= 0
     D = 0 or D > 0
     by cases:
-        ? exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+        ? exist n0 N+ st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
         case D = 0:
-            witness exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)} from 1:
+            witness exist n0 N+ st {$is_bracket_width_below_after(lower, upper, epsilon, n0)} from 1:
                 claim:
-                    ? forall n N_pos:
+                    ? forall n N+:
                         n >= 1
                         =>:
                             upper(n) - lower(n) < epsilon
                     by thm bisection_width_after_n_steps(E, lower, upper, n)
                     upper(1) - lower(1) = D = 0
+                    upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+                    (upper(1) - lower(1)) / 2^(n - 1) = D / 2^(n - 1)
+                    D / 2^(n - 1) = 0 / 2^(n - 1)
+                    0 / 2^(n - 1) = 0
                     upper(n) - lower(n) = 0 / 2^(n - 1) = 0
                     0 < epsilon
                     upper(n) - lower(n) < epsilon
-                $is_bracket_width_below_after(lower, upper, epsilon, 1)
+                by def $is_bracket_width_below_after(lower, upper, epsilon, 1)
         case D > 0:
-            have Dpos R_pos = D
-            epsilon / Dpos $in R_pos
+            have Dpos R+ = D
+            epsilon / Dpos $in R+
             by thm archimedean_property(epsilon / Dpos)
-            obtain n0 from exist n0 N_pos st {1 / n0 < epsilon / Dpos}
-            witness exist n1 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n1)} from n0:
+            obtain n0 from exist n0 N+ st {1 / n0 < epsilon / Dpos}
+            witness exist n1 N+ st {$is_bracket_width_below_after(lower, upper, epsilon, n1)} from n0:
                 claim:
-                    ? forall n N_pos:
+                    ? forall n N+:
                         n >= n0
                         =>:
                             upper(n) - lower(n) < epsilon
                     by thm bisection_width_after_n_steps(E, lower, upper, n)
                     upper(1) - lower(1) = D
+                    upper(n) - lower(n) = (upper(1) - lower(1)) / 2^(n - 1)
+                    (upper(1) - lower(1)) / 2^(n - 1) = D / 2^(n - 1)
                     upper(n) - lower(n) = D / 2^(n - 1)
                     by thm positive_natural_le_two_power_predecessor(n)
                     n0 <= n <= 2^(n - 1)
@@ -2805,10 +3051,10 @@ thm recursive_bisection_width_eventually_below:
                     Dpos / n0 < epsilon
                     D / n0 = Dpos / n0 < epsilon
                     upper(n) - lower(n) = D / 2^(n - 1) <= D / n0 < epsilon
-                $is_bracket_width_below_after(lower, upper, epsilon, n0)
+                by def $is_bracket_width_below_after(lower, upper, epsilon, n0)
 
 thm recursive_bisection_lower_le_add:
-    ? forall E set, lower, upper seq(R), k N, n N_pos:
+    ? forall E set, lower, upper seq(R), k N, n N+:
         $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
         =>:
             lower(n) <= lower(n + k)
@@ -2821,13 +3067,13 @@ thm recursive_bisection_lower_le_add:
             lower(n) <= lower(n + 0)
         ? induc:
             lower(n) <= lower(n + k)
-            n + k $in N_pos
+            n + k $in N+
             lower(n + k) <= lower(n + k + 1)
             n + (k + 1) = n + k + 1
             lower(n) <= lower(n + k) <= lower(n + k + 1) = lower(n + (k + 1))
 
 thm recursive_bisection_lower_le_of_le:
-    ? forall E set, lower, upper seq(R), j, k N_pos:
+    ? forall E set, lower, upper seq(R), j, k N+:
         $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
         j <= k
         =>:
@@ -2838,7 +3084,7 @@ thm recursive_bisection_lower_le_of_le:
     lower(j + (k - j)) = lower(k)
 
 thm recursive_bisection_upper_le_add:
-    ? forall E set, lower, upper seq(R), k N, n N_pos:
+    ? forall E set, lower, upper seq(R), k N, n N+:
         $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
         =>:
             upper(n + k) <= upper(n)
@@ -2851,13 +3097,13 @@ thm recursive_bisection_upper_le_add:
             upper(n + 0) <= upper(n)
         ? induc:
             upper(n + k) <= upper(n)
-            n + k $in N_pos
+            n + k $in N+
             upper(n + k + 1) <= upper(n + k)
             n + (k + 1) = n + k + 1
             upper(n + (k + 1)) = upper(n + k + 1) <= upper(n + k) <= upper(n)
 
 thm recursive_bisection_upper_le_of_le:
-    ? forall E set, lower, upper seq(R), j, k N_pos:
+    ? forall E set, lower, upper seq(R), j, k N+:
         $is_recursive_bisection_bracket_for_supremum(E, lower, upper)
         j <= k
         =>:
@@ -2869,17 +3115,17 @@ thm recursive_bisection_upper_le_of_le:
 
 prop is_bisection_bracket_for_supremum(E set, lower, upper seq(R)):
     E $subset R
-    forall n N_pos:
+    forall n N+:
         not $is_upper_bound(E, lower(n))
         $is_upper_bound(E, upper(n))
         lower(n) <= upper(n)
-    forall j, k N_pos:
+    forall j, k N+:
         j <= k
         =>:
             lower(j) <= lower(k)
             upper(k) <= upper(j)
-    forall epsilon R_pos:
-        exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+    forall epsilon R+:
+        exist n0 N+ st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
 
 prop has_bisection_bracket_for_supremum(E set):
     exist lower, upper seq(R) st {$is_bisection_bracket_for_supremum(E, lower, upper)}
@@ -2896,7 +3142,7 @@ thm bisection_bracket_exists:
     by thm recursive_bisection_bracket_exists(E, a0, b0)
     obtain lower, upper from exist lower, upper seq(R) st {$is_recursive_bisection_bracket_for_supremum(E, lower, upper)}
     claim:
-        ? forall j, k N_pos:
+        ? forall j, k N+:
             j <= k
             =>:
                 lower(j) <= lower(k)
@@ -2904,16 +3150,16 @@ thm bisection_bracket_exists:
         by thm recursive_bisection_lower_le_of_le(E, lower, upper, j, k)
         by thm recursive_bisection_upper_le_of_le(E, lower, upper, j, k)
     claim:
-        ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+        ? forall epsilon R+:
+            exist n0 N+ st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
         by thm recursive_bisection_width_eventually_below(E, lower, upper, epsilon)
-    $is_bisection_bracket_for_supremum(E, lower, upper)
+    by def $is_bisection_bracket_for_supremum(E, lower, upper)
     witness exist lower0, upper0 seq(R) st {$is_bisection_bracket_for_supremum(E, lower0, upper0)} from lower, upper:
         $is_bisection_bracket_for_supremum(E, lower, upper)
-    $has_bisection_bracket_for_supremum(E)
+    by def $has_bisection_bracket_for_supremum(E)
 
 thm bisection_lower_endpoint_tail_close:
-    ? forall E set, lower, upper seq(R), epsilon R_pos, n0, j, k N_pos:
+    ? forall E set, lower, upper seq(R), epsilon R+, n0, j, k N+:
         $is_bisection_bracket_for_supremum(E, lower, upper)
         $is_bracket_width_below_after(lower, upper, epsilon, n0)
         j >= n0
@@ -2932,7 +3178,7 @@ thm bisection_lower_endpoint_tail_close:
             -(lower(j) - lower(k)) = lower(k) - lower(j)
             abs(lower(j) - lower(k)) = lower(k) - lower(j) < epsilon
             dist_R(lower(j), lower(k)) = abs(lower(j) - lower(k)) < epsilon
-            $is_close_in_R(epsilon, lower(j), lower(k))
+            by def $is_close_in_R(epsilon, lower(j), lower(k))
         case j > k:
             k <= j
             lower(k) <= lower(j)
@@ -2941,16 +3187,16 @@ thm bisection_lower_endpoint_tail_close:
             lower(j) - lower(k) >= 0
             abs(lower(j) - lower(k)) = lower(j) - lower(k) < epsilon
             dist_R(lower(j), lower(k)) = abs(lower(j) - lower(k)) < epsilon
-            $is_close_in_R(epsilon, lower(j), lower(k))
+            by def $is_close_in_R(epsilon, lower(j), lower(k))
 
 thm bisection_lower_endpoint_width_tail_is_cauchy_tail:
-    ? forall E set, lower, upper seq(R), epsilon R_pos, n0 N_pos:
+    ? forall E set, lower, upper seq(R), epsilon R+, n0 N+:
         $is_bisection_bracket_for_supremum(E, lower, upper)
         $is_bracket_width_below_after(lower, upper, epsilon, n0)
         =>:
             $is_cauchy_tail_in_R(lower, epsilon, n0)
     claim:
-        ? forall j, k N_pos:
+        ? forall j, k N+:
             j >= n0
             k >= n0
             =>:
@@ -2964,15 +3210,15 @@ thm bisection_lower_endpoint_is_cauchy:
         =>:
             $is_cauchy_sequence_in_R(lower)
     claim:
-        ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_cauchy_tail_in_R(lower, epsilon, n0)}
-        obtain n0 from exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+        ? forall epsilon R+:
+            exist n0 N+ st {$is_cauchy_tail_in_R(lower, epsilon, n0)}
+        obtain n0 from exist n0 N+ st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
         by thm bisection_lower_endpoint_width_tail_is_cauchy_tail(E, lower, upper, epsilon, n0)
-        witness exist n1 N_pos st {$is_cauchy_tail_in_R(lower, epsilon, n1)} from n0
+        witness exist n1 N+ st {$is_cauchy_tail_in_R(lower, epsilon, n1)} from n0
     by def $is_cauchy_sequence_in_R(lower)
 
 thm bisection_upper_endpoint_tail_close:
-    ? forall E set, lower, upper seq(R), epsilon R_pos, n0, j, k N_pos:
+    ? forall E set, lower, upper seq(R), epsilon R+, n0, j, k N+:
         $is_bisection_bracket_for_supremum(E, lower, upper)
         $is_bracket_width_below_after(lower, upper, epsilon, n0)
         j >= n0
@@ -2989,7 +3235,7 @@ thm bisection_upper_endpoint_tail_close:
             upper(j) - upper(k) >= 0
             abs(upper(j) - upper(k)) = upper(j) - upper(k) < epsilon
             dist_R(upper(j), upper(k)) = abs(upper(j) - upper(k)) < epsilon
-            $is_close_in_R(epsilon, upper(j), upper(k))
+            by def $is_close_in_R(epsilon, upper(j), upper(k))
         case j > k:
             k <= j
             upper(j) <= upper(k)
@@ -3000,16 +3246,16 @@ thm bisection_upper_endpoint_tail_close:
             -(upper(j) - upper(k)) = upper(k) - upper(j)
             abs(upper(j) - upper(k)) = upper(k) - upper(j) < epsilon
             dist_R(upper(j), upper(k)) = abs(upper(j) - upper(k)) < epsilon
-            $is_close_in_R(epsilon, upper(j), upper(k))
+            by def $is_close_in_R(epsilon, upper(j), upper(k))
 
 thm bisection_upper_endpoint_width_tail_is_cauchy_tail:
-    ? forall E set, lower, upper seq(R), epsilon R_pos, n0 N_pos:
+    ? forall E set, lower, upper seq(R), epsilon R+, n0 N+:
         $is_bisection_bracket_for_supremum(E, lower, upper)
         $is_bracket_width_below_after(lower, upper, epsilon, n0)
         =>:
             $is_cauchy_tail_in_R(upper, epsilon, n0)
     claim:
-        ? forall j, k N_pos:
+        ? forall j, k N+:
             j >= n0
             k >= n0
             =>:
@@ -3023,11 +3269,11 @@ thm bisection_upper_endpoint_is_cauchy:
         =>:
             $is_cauchy_sequence_in_R(upper)
     claim:
-        ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_cauchy_tail_in_R(upper, epsilon, n0)}
-        obtain n0 from exist n0 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
+        ? forall epsilon R+:
+            exist n0 N+ st {$is_cauchy_tail_in_R(upper, epsilon, n0)}
+        obtain n0 from exist n0 N+ st {$is_bracket_width_below_after(lower, upper, epsilon, n0)}
         by thm bisection_upper_endpoint_width_tail_is_cauchy_tail(E, lower, upper, epsilon, n0)
-        witness exist n1 N_pos st {$is_cauchy_tail_in_R(upper, epsilon, n1)} from n0
+        witness exist n1 N+ st {$is_cauchy_tail_in_R(upper, epsilon, n1)} from n0
     by def $is_cauchy_sequence_in_R(upper)
 
 thm bisection_upper_endpoint_has_lower_limit:
@@ -3037,16 +3283,26 @@ thm bisection_upper_endpoint_has_lower_limit:
         =>:
             $has_limit_in_R(upper, L)
     claim:
-        ? forall epsilon R_pos:
-            exist n0 N_pos st {$is_tail_close_to_in_R(upper, L, epsilon, n0)}
-        obtain n1 from exist n1 N_pos st {$is_tail_close_to_in_R(lower, L, epsilon / 2, n1)}
-        obtain n2 from exist n2 N_pos st {$is_bracket_width_below_after(lower, upper, epsilon / 2, n2)}
-        witness exist n0 N_pos st {$is_tail_close_to_in_R(upper, L, epsilon, n0)} from finite_set_max(union({n1}, { n2})):
-            forall n N_pos:
-                n >= finite_set_max(union({n1}, { n2}))
+        ? forall epsilon R+:
+            exist n0 N+ st {$is_tail_close_to_in_R(upper, L, epsilon, n0)}
+        obtain n1 from exist n1 N+ st {$is_tail_close_to_in_R(lower, L, epsilon / 2, n1)}
+        obtain n2 from exist n2 N+ st {$is_bracket_width_below_after(lower, upper, epsilon / 2, n2)}
+        have tail_start N = finite_set_max(union({n1}, {n2}))
+        tail_start = finite_set_max(union({n1}, {n2}))
+        n1 <= finite_set_max(union({n1}, {n2}))
+        n2 <= finite_set_max(union({n1}, {n2}))
+        n1 <= tail_start
+        n2 <= tail_start
+        n1 > 0
+        tail_start > 0
+        tail_start != 0
+        tail_start $in N+
+        witness exist n0 N+ st {$is_tail_close_to_in_R(upper, L, epsilon, n0)} from tail_start:
+            forall n N+:
+                n >= tail_start
                 =>:
-                    n1 <= finite_set_max(union({n1}, { n2})) <= n
-                    n2 <= finite_set_max(union({n1}, { n2})) <= n
+                    n1 <= tail_start <= n
+                    n2 <= tail_start <= n
                     $is_close_in_R(epsilon / 2, lower(n), L)
                     dist_R(lower(n), L) <= epsilon / 2
                     dist_R(lower(n), L) = abs(lower(n) - L)
@@ -3065,7 +3321,13 @@ thm bisection_upper_endpoint_has_lower_limit:
                     abs(upper(n) - L) < epsilon
                     dist_R(upper(n), L) = abs(upper(n) - L) < epsilon
                     dist_R(upper(n), L) <= epsilon
+            # proof_debt: the pointwise distance bound above does not fold to
+            # the named closeness predicate inside a stored forall block.
+            forall n N+:
+                n >= tail_start
+                =>:
                     $is_close_in_R(epsilon, upper(n), L)
+            by def $is_tail_close_to_in_R(upper, L, epsilon, tail_start)
     by def $has_limit_in_R(upper, L)
 
 thm bisection_bracket_has_common_limit:
@@ -3094,8 +3356,11 @@ thm bisection_upper_limit_is_upper_bound:
         by contra:
             ? y <= L
             y > L
-            (y - L) / 2 $in R_pos
-            obtain n0 from exist n0 N_pos st {$is_tail_close_to_in_R(upper, L, (y - L) / 2, n0)}
+            have half_positive_gap R = (y - L) / 2
+            half_positive_gap = (y - L) / 2
+            (y - L) / 2 $in R+
+            half_positive_gap $in R+
+            obtain n0 from exist n0 N+ st {$is_tail_close_to_in_R(upper, L, (y - L) / 2, n0)}
             $is_close_in_R((y - L) / 2, upper(n0), L)
             dist_R(upper(n0), L) <= (y - L) / 2
             dist_R(upper(n0), L) = abs(upper(n0) - L)
@@ -3113,7 +3378,7 @@ thm bisection_upper_limit_is_upper_bound:
             impossible abs(upper(n0) - L) <= (y - L) / 2
     forall y E:
         y <= L
-    $is_upper_bound(E, L)
+    by def $is_upper_bound(E, L)
 
 thm bisection_lower_limit_below_upper_bound:
     ? forall E set, lower, upper seq(R), L, B R:
@@ -3125,8 +3390,11 @@ thm bisection_lower_limit_below_upper_bound:
     by contra:
         ? L <= B
         L > B
-        (L - B) / 2 $in R_pos
-        obtain n0 from exist n0 N_pos st {$is_tail_close_to_in_R(lower, L, (L - B) / 2, n0)}
+        have half_upper_gap R = (L - B) / 2
+        half_upper_gap = (L - B) / 2
+        (L - B) / 2 $in R+
+        half_upper_gap $in R+
+        obtain n0 from exist n0 N+ st {$is_tail_close_to_in_R(lower, L, (L - B) / 2, n0)}
         $is_close_in_R((L - B) / 2, lower(n0), L)
         dist_R(lower(n0), L) <= (L - B) / 2
         dist_R(lower(n0), L) = abs(lower(n0) - L)
@@ -3169,6 +3437,7 @@ thm common_limit_of_bisection_bracket_is_lub:
             =>:
                 L <= B
         by thm bisection_lower_limit_below_upper_bound(E, lower, upper, L, B)
+    by def $is_least_upper_bound(E, L)
 
 thm least_upper_bound_exists_from_cauchy_bisection:
     ? forall E set:
@@ -3183,6 +3452,7 @@ thm least_upper_bound_exists_from_cauchy_bisection:
     obtain L from exist L R st {$has_limit_in_R(lower, L), $has_limit_in_R(upper, L)}
     by thm common_limit_of_bisection_bracket_is_lub(E, lower, upper, L)
     witness exist M R st {$is_least_upper_bound(E, M)} from L
+    by def $has_least_upper_bound(E)
 
 """
 Theorem 5.5.9. Every non-empty set of reals which is bounded above has a
@@ -3211,6 +3481,8 @@ thm least_upper_bound_existence:
             =>:
                 M1 = M2
         by thm least_upper_bound_unique(E, M1, M2)
+    exist! M R st {$is_least_upper_bound(E, M)}
+    by def $has_least_upper_bound(E)
 
 """
 Definition 5.5.10. The supremum of a set is its least upper bound, or an
@@ -3254,8 +3526,11 @@ thm sqrt_two_low_perturbation_epsilon:
     ? forall x R:
         x^2 < 2
         =>:
-            exist epsilon R_pos st {epsilon < 1, x^2 + 5 * epsilon < 2}
-    have epsilon R_pos = (2 - x^2) / 10
+            exist epsilon R+ st {epsilon < 1, x^2 + 5 * epsilon < 2}
+    have epsilon R = (2 - x^2) / 10
+    2 - x^2 > 0
+    (2 - x^2) / 10 > 0
+    epsilon $in R+
     x^2 >= 0
     (2 - x^2) / 10 <= 2 / 10 < 1
     epsilon < 1
@@ -3269,10 +3544,10 @@ thm sqrt_two_low_perturbation_epsilon:
     1 + 1 = 2
     x^2 / 2 + 1 < 1 + 1 = 2
     x^2 + 5 * epsilon = x^2 / 2 + 1 < 2
-    witness exist epsilon0 R_pos st {epsilon0 < 1, x^2 + 5 * epsilon0 < 2} from epsilon
+    witness exist epsilon0 R+ st {epsilon0 < 1, x^2 + 5 * epsilon0 < 2} from epsilon
 
 thm sqrt_two_low_perturbation_square:
-    ? forall x R, epsilon R_pos:
+    ? forall x R, epsilon R+:
         x >= 0
         x <= 2
         epsilon < 1
@@ -3303,8 +3578,11 @@ thm sqrt_two_high_perturbation_epsilon:
         x <= 2
         x^2 > 2
         =>:
-            exist epsilon R_pos st {epsilon < 1, x^2 - 4 * epsilon > 2}
-    have epsilon R_pos = (x^2 - 2) / 8
+            exist epsilon R+ st {epsilon < 1, x^2 - 4 * epsilon > 2}
+    have epsilon R = (x^2 - 2) / 8
+    x^2 - 2 > 0
+    (x^2 - 2) / 8 > 0
+    epsilon $in R+
     x^2 <= 2^2 = 4
     (x^2 - 2) / 8 <= 2 / 8 < 1
     epsilon < 1
@@ -3318,10 +3596,10 @@ thm sqrt_two_high_perturbation_epsilon:
     1 + 1 = 2
     x^2 / 2 + 1 > 1 + 1 = 2
     x^2 - 4 * epsilon = x^2 / 2 + 1 > 2
-    witness exist epsilon0 R_pos st {epsilon0 < 1, x^2 - 4 * epsilon0 > 2} from epsilon
+    witness exist epsilon0 R+ st {epsilon0 < 1, x^2 - 4 * epsilon0 > 2} from epsilon
 
 thm sqrt_two_high_perturbation_upper_bound:
-    ? forall x R, epsilon R_pos, y R:
+    ? forall x R, epsilon R+, y R:
         x >= 0
         x <= 2
         epsilon < 1
@@ -3333,6 +3611,9 @@ thm sqrt_two_high_perturbation_upper_bound:
     by contra:
         ? y <= x - epsilon
         y > x - epsilon
+        4 * epsilon > 0
+        x^2 > x^2 - 4 * epsilon
+        x^2 - 4 * epsilon > 2
         x^2 > x^2 - 4 * epsilon > 2
         by contra:
             ? x > 1
@@ -3370,7 +3651,7 @@ claim:
         1 >= 0
         1^2 = 1 < 2
         1 >= 0 and 1^2 < 2
-        1 $in {y R: y >= 0 and y^2 < 2}
+        by thm set_builder_member(1, {y R: y >= 0 and y^2 < 2})
         1 $in sqrt_two_candidate_set
     witness $is_nonempty_set(sqrt_two_candidate_set) from 1
     claim:
@@ -3384,6 +3665,7 @@ claim:
             impossible y^2 < 2
     by def $is_upper_bound(sqrt_two_candidate_set, 2)
     witness exist M R st {$is_upper_bound(sqrt_two_candidate_set, M)} from 2
+    by def $has_upper_bound(sqrt_two_candidate_set)
     by def $is_nonempty_subset_of_reals(sqrt_two_candidate_set)
     by def $is_nonempty_bounded_above_subset_of_reals(sqrt_two_candidate_set)
     by thm real_supremum_domain_intro(sqrt_two_candidate_set)
@@ -3401,12 +3683,12 @@ claim:
             ? not x^2 < 2
             x^2 < 2
             by thm sqrt_two_low_perturbation_epsilon(x)
-            obtain epsilon from exist epsilon R_pos st {epsilon < 1, x^2 + 5 * epsilon < 2}
+            obtain epsilon from exist epsilon R+ st {epsilon < 1, x^2 + 5 * epsilon < 2}
             by thm sqrt_two_low_perturbation_square(x, epsilon)
             x + epsilon >= 0
             (x + epsilon)^2 < 2
             x + epsilon >= 0 and (x + epsilon)^2 < 2
-            x + epsilon $in {y R: y >= 0 and y^2 < 2}
+            by thm set_builder_member(x + epsilon, {y R: y >= 0 and y^2 < 2})
             x + epsilon $in sqrt_two_candidate_set
             x + epsilon <= x
             impossible x + epsilon <= x
@@ -3416,7 +3698,7 @@ claim:
             ? not x^2 > 2
             x^2 > 2
             by thm sqrt_two_high_perturbation_epsilon(x)
-            obtain epsilon from exist epsilon R_pos st {epsilon < 1, x^2 - 4 * epsilon > 2}
+            obtain epsilon from exist epsilon R+ st {epsilon < 1, x^2 - 4 * epsilon > 2}
             claim:
                 ? forall y sqrt_two_candidate_set:
                     y <= x - epsilon
@@ -3480,10 +3762,10 @@ Definition 5.6.2. Integer powers are defined for non-zero real bases.
 # Integer powers require a nonzero base because negative exponents use
 # reciprocals.
 
-forall x R_nz, n N_pos:
+forall x R_nz, n N+:
     x^n != 0
 
-forall x R_nz, n N_pos:
+forall x R_nz, n N+:
     x^n != 0
     =>:
         x^(-n) = 1 / x^n
@@ -3512,17 +3794,17 @@ forall x, y R, n N:
 # Real version of Proposition 4.3.10(b): positive natural powers vanish only
 # at zero.
 
-forall x R, n N_pos:
+forall x R, n N+:
     x^n = 0
     =>:
         x = 0
 
-forall x R, n N_pos:
+forall x R, n N+:
     x = 0
     =>:
         x^n = 0^n = 0
 
-forall x R, n N_pos:
+forall x R, n N+:
     =>:
         x^n = 0
     <=>:
@@ -3531,20 +3813,20 @@ forall x R, n N_pos:
 # Real version of Proposition 4.3.10(c): natural powers are monotone on
 # non-negative reals.
 
-forall x, y R, n N_pos:
+forall x, y R, n N+:
     x >= y
     y >= 0
     =>:
         x^n >= y^n
         y^n >= 0
 
-forall x, y R, n N_pos:
+forall x, y R, n N+:
     x > y
     y >= 0
     =>:
         x^n > y^n
 
-forall x, y R, n N_pos:
+forall x, y R, n N+:
     x > y
     y >= 0
     =>:
@@ -3574,20 +3856,20 @@ forall x, y R_nz, n Z:
 # Real version of Proposition 4.3.12(b): positive integer exponents preserve
 # order on positive reals; negative exponents reverse it.
 
-forall x, y R_pos, n Z:
+forall x, y R+, n Z:
     x >= y
     n > 0
     =>:
         x^n >= y^n
         y^n > 0
 
-forall x, y R_pos, n Z:
+forall x, y R+, n Z:
     x >= y
     n < 0
     =>:
         x^n > 0
 
-forall x, y R_pos, n Z:
+forall x, y R+, n Z:
     x >= y
     n < 0
     =>:
@@ -3596,7 +3878,7 @@ forall x, y R_pos, n Z:
 # Real version of Proposition 4.3.12(c): nonzero integer powers are injective
 # on positive reals.
 
-forall x, y R_pos, n Z:
+forall x, y R+, n Z:
     n != 0
     x^n = y^n
     =>:
@@ -3612,7 +3894,7 @@ forall x R_nz, n Z:
 # base is at least one, then every positive natural power is at least the base.
 
 thm natural_power_above_base_for_base_ge_one:
-    ? forall x R, n N_pos:
+    ? forall x R, n N+:
         x >= 1
         =>:
             x^n >= x
@@ -3635,7 +3917,7 @@ Definition 5.6.4. The nth root of a non-negative real is defined by a supremum.
 # with `y^n <= x`.  This records Tao's least-upper-bound construction.  Negative
 # real roots are intentionally outside this Chapter 5 real-valued domain.
 
-have fn nth_root_candidate_set(x R, n N_pos) power_set(R) = {y R: y >= 0 and y^n <= x}
+have fn nth_root_candidate_set(x R, n N+) power_set(R) = {y R: y >= 0 and y^n <= x}
 
 """
 Lemma 5.6.5. For x >= 0 and n >= 1, the nth-root candidate set is nonempty
@@ -3648,15 +3930,23 @@ and bounded above; hence its supremum is a real number.
 # Proposition 5.6.3.
 
 thm nth_root_candidate_set_nonempty_bounded:
-    ? forall x R, n N_pos:
+    ? forall x R, n N+:
         x >= 0
         =>:
             $is_nonempty_bounded_above_subset_of_reals(nth_root_candidate_set(x, n))
             nth_root_candidate_set(x, n) $in real_supremum_domain
     claim:
         ? 0 $in nth_root_candidate_set(x, n)
+        0 >= 0
         0^n = 0 <= x
+        0 >= 0 and 0^n <= x
+        by thm set_builder_member(0, {y R: y >= 0 and y^n <= x})
+        nth_root_candidate_set(x, n) = {y R: y >= 0 and y^n <= x}
+        0 $in nth_root_candidate_set(x, n)
     witness $is_nonempty_set(nth_root_candidate_set(x, n)) from 0
+    # proof_debt: the declared `power_set(R)` return carrier is not replayed
+    # as the corresponding subset fact.
+    nth_root_candidate_set(x, n) $subset R
     x <= 1 or x > 1
     by cases:
         ? $has_upper_bound(nth_root_candidate_set(x, n))
@@ -3671,6 +3961,7 @@ thm nth_root_candidate_set_nonempty_bounded:
                     impossible y^n <= x
             by def $is_upper_bound(nth_root_candidate_set(x, n), 1)
             witness exist M R st {$is_upper_bound(nth_root_candidate_set(x, n), M)} from 1
+            by def $has_upper_bound(nth_root_candidate_set(x, n))
         case x > 1:
             claim:
                 ? forall y nth_root_candidate_set(x, n):
@@ -3684,6 +3975,7 @@ thm nth_root_candidate_set_nonempty_bounded:
                     impossible y^n <= x
             by def $is_upper_bound(nth_root_candidate_set(x, n), x)
             witness exist M R st {$is_upper_bound(nth_root_candidate_set(x, n), M)} from x
+            by def $has_upper_bound(nth_root_candidate_set(x, n))
     by def $is_nonempty_subset_of_reals(nth_root_candidate_set(x, n))
     by def $is_nonempty_bounded_above_subset_of_reals(nth_root_candidate_set(x, n))
     by thm real_supremum_domain_intro(nth_root_candidate_set(x, n))
@@ -3698,7 +3990,7 @@ sketch:
             sqrt(x) >= 0
             sqrt(x)^2 = x
 
-    forall x R_pos:
+    forall x R+:
         x^(1 / 2) > 0
 
 """
@@ -3711,7 +4003,7 @@ Lemma 5.6.6. Basic properties of nth roots.
 # The order properties of the nonnegative nth root will be used below.
 
 thm nth_root_nonnegative:
-    ? forall x R, n N_pos:
+    ? forall x R, n N+:
         x >= 0
         =>:
             x^(1 / n) >= 0
@@ -3719,18 +4011,20 @@ thm nth_root_nonnegative:
     by cases:
         ? x^(1 / n) >= 0
         case x = 0:
-            x^(1 / n) = 0^(1 / n) = 0
+            x^(1 / n) = 0^(1 / n)
+            0^(1 / n) = 0
+            x^(1 / n) = 0
         case x > 0:
             x^(1 / n) > 0
 
 thm nth_root_positive_for_positive_input:
-    ? forall x R, n N_pos:
+    ? forall x R, n N+:
         x > 0
         =>:
             x^(1 / n) > 0
 
 thm nth_root_power_identity_nonnegative:
-    ? forall x R, n N_pos:
+    ? forall x R, n N+:
         x >= 0
         =>:
             (x^(1 / n))^n = x
@@ -3738,13 +4032,15 @@ thm nth_root_power_identity_nonnegative:
     by cases:
         ? (x^(1 / n))^n = x
         case x = 0:
-            x^(1 / n) = 0^(1 / n) = 0
+            x^(1 / n) = 0^(1 / n)
+            0^(1 / n) = 0
+            x^(1 / n) = 0
             (x^(1 / n))^n = 0^n = 0 = x
         case x > 0:
             (x^(1 / n))^n = x^((1 / n) * n) = x^1 = x
 
 thm nth_root_power_identity_from_equality:
-    ? forall x, y R, n N_pos:
+    ? forall x, y R, n N+:
         x >= 0
         y >= 0
         y = x^(1 / n)
@@ -3754,7 +4050,7 @@ thm nth_root_power_identity_from_equality:
     y^n = (x^(1 / n))^n = x
 
 thm nth_root_unique_nonnegative:
-    ? forall x, y R, n N_pos:
+    ? forall x, y R, n N+:
         x >= 0
         y >= 0
         y^n = x
@@ -3762,7 +4058,7 @@ thm nth_root_unique_nonnegative:
             y = x^(1 / n)
 
 thm nonnegative_root_strict_mono_forward:
-    ? forall x, y R, n N_pos:
+    ? forall x, y R, n N+:
         x >= 0
         y >= 0
         x > y
@@ -3781,7 +4077,7 @@ thm nonnegative_root_strict_mono_forward:
         impossible x > y
 
 thm nonnegative_root_strict_mono_reverse:
-    ? forall x, y R, n N_pos:
+    ? forall x, y R, n N+:
         x >= 0
         y >= 0
         x^(1 / n) > y^(1 / n)
@@ -3793,7 +4089,7 @@ thm nonnegative_root_strict_mono_reverse:
     by thm nth_root_power_identity_nonnegative(y, n)
 
 thm nth_root_product_nonnegative:
-    ? forall x, y R, n N_pos:
+    ? forall x, y R, n N+:
         x >= 0
         y >= 0
         =>:
@@ -3807,17 +4103,29 @@ thm nth_root_product_nonnegative:
     by thm nth_root_unique_nonnegative(x * y, x^(1 / n) * y^(1 / n), n)
 
 thm nth_root_nested_positive:
-    ? forall x R_pos, n, m N_pos:
+    ? forall x R+, n, m N+:
         (x^(1 / n))^(1 / m) = x^(1 / (n * m))
     (x^(1 / n))^(1 / m) = x^((1 / n) * (1 / m)) = x^(1 / (n * m))
 
-forall k N_pos:
+forall k N+:
     1^(1 / k) = 1
 
-forall y, z R_pos, n N_pos:
+thm positive_natural_power_injective:
+    ? forall y, z R+, n N+:
+        y^n = z^n
+        =>:
+            y = z
+    y >= 0
+    z >= 0
+    y^n >= 0
+    z^n >= 0
+    by thm nth_root_unique_nonnegative(y^n, y, n)
+    y = (y^n)^(1 / n)
+    by thm nth_root_unique_nonnegative(z^n, z, n)
+    z = (z^n)^(1 / n)
     y^n = z^n
-    =>:
-        y = z
+    (y^n)^(1 / n) = (z^n)^(1 / n)
+    y = z
 
 """
 Definition 5.6.7. Rational powers are defined for positive real bases.
@@ -3826,16 +4134,16 @@ Definition 5.6.7. Rational powers are defined for positive real bases.
 # Rational powers require a positive base, because fractional exponents use the
 # positive real branch.
 
-forall x R_pos, q Q:
+forall x R+, q Q:
     x^q > 0
 
-forall x R_pos, q, r Q:
+forall x R+, q, r Q:
     x^(q + r) = x^q * x^r
 
-forall x R_pos, q, r Q:
+forall x R+, q, r Q:
     (x^q)^r = x^(q * r)
 
-forall x R_pos, q Q:
+forall x R+, q Q:
     x^q > 0
     x^q != 0
     x^q * x^(-q) = x^(q + (-q))
@@ -3854,7 +4162,7 @@ fraction representation.
 # both fraction representatives reduce to the same expression `x^(a/b)`.
 
 thm rational_power_fraction_representation:
-    ? forall x R_pos, a, a_prime Z, b, b_prime N_pos:
+    ? forall x R+, a, a_prime Z, b, b_prime N+:
         a / b = a_prime / b_prime
         =>:
             (x^(1 / b_prime))^a_prime = (x^(1 / b))^a
@@ -3873,14 +4181,14 @@ Lemma 5.6.9. Basic facts about rational exponentiation.
 # the exponent.
 
 thm rational_power_strict_mono_forward:
-    ? forall x, y R_pos, q Q:
+    ? forall x, y R+, q Q:
         q > 0
         x > y
         =>:
             x^q > y^q
 
 thm rational_power_strict_mono_reverse:
-    ? forall x, y R_pos, q Q:
+    ? forall x, y R+, q Q:
         q > 0
         x^q > y^q
         =>:
@@ -3890,7 +4198,7 @@ thm rational_power_strict_mono_reverse:
     (y^q)^(1 / q) = y^(q * (1 / q)) = y^1 = y
 
 thm reciprocal_decreases_on_positive:
-    ? forall k, l N_pos:
+    ? forall k, l N+:
         k < l
         =>:
             1 / k > 1 / l
@@ -3899,25 +4207,25 @@ thm reciprocal_decreases_on_positive:
     l / (k * l) = 1 / k
 
 thm positive_base_power_above_one:
-    ? forall x R_pos, s Q:
+    ? forall x R+, s Q:
         x > 1
         s > 0
         =>:
             x^s > 1
-    have one R_pos = 1
+    have one R+ = 1
     x^s > one^s = 1^s = 1
 
 thm positive_base_power_below_one:
-    ? forall x R_pos, s Q:
+    ? forall x R+, s Q:
         x < 1
         s > 0
         =>:
             x^s < 1
-    have one R_pos = 1
+    have one R+ = 1
     x^s < one^s = 1^s = 1
 
 thm positive_reciprocal_below_one_when_above_one:
-    ? forall a R_pos:
+    ? forall a R+:
         a > 1
         =>:
             1 / a < 1
@@ -3925,7 +4233,7 @@ thm positive_reciprocal_below_one_when_above_one:
     a / a = 1
 
 thm positive_base_power_at_most_one_for_nonpositive_exp:
-    ? forall x R_pos, s Q:
+    ? forall x R+, s Q:
         x > 1
         s <= 0
         =>:
@@ -3938,12 +4246,12 @@ thm positive_base_power_at_most_one_for_nonpositive_exp:
         case s < 0:
             -s > 0
             by thm positive_base_power_above_one(x, -s)
-            have a R_pos = x^(-s)
+            have a R+ = x^(-s)
             by thm positive_reciprocal_below_one_when_above_one(a)
             x^s = 1 / x^(-s) = 1 / a < 1
 
 thm positive_base_power_at_most_one_below_one_for_nonnegative_exp:
-    ? forall x R_pos, s Q:
+    ? forall x R+, s Q:
         x < 1
         s >= 0
         =>:
@@ -3957,21 +4265,21 @@ thm positive_base_power_at_most_one_below_one_for_nonnegative_exp:
             by thm positive_base_power_below_one(x, s)
 
 thm rational_power_exponent_strict_mono_above_one:
-    ? forall x R_pos, q, r Q:
+    ? forall x R+, q, r Q:
         x > 1
         q > r
         =>:
             x^q > x^r
     q - r > 0
     by thm positive_base_power_above_one(x, q - r)
-    x^r $in R_pos
+    x^r $in R+
     x^r > 0
     x^r * x^(q - r) > x^r * 1
     x^r * 1 = x^r
     x^q = x^(r + (q - r)) = x^r * x^(q - r) > x^r * 1 = x^r
 
 thm rational_power_exponent_strict_mono_above_one_reverse:
-    ? forall x R_pos, q, r Q:
+    ? forall x R+, q, r Q:
         x > 1
         x^q > x^r
         =>:
@@ -3981,7 +4289,7 @@ thm rational_power_exponent_strict_mono_above_one_reverse:
         q <= r
         q - r <= 0
         by thm positive_base_power_at_most_one_for_nonpositive_exp(x, q - r)
-        x^r $in R_pos
+        x^r $in R+
         x^r >= 0
         x^r * x^(q - r) <= x^r * 1
         x^r * 1 = x^r
@@ -3989,21 +4297,21 @@ thm rational_power_exponent_strict_mono_above_one_reverse:
         impossible x^q > x^r
 
 thm rational_power_exponent_strict_antimono_below_one:
-    ? forall x R_pos, q, r Q:
+    ? forall x R+, q, r Q:
         x < 1
         q > r
         =>:
             x^q < x^r
     q - r > 0
     by thm positive_base_power_below_one(x, q - r)
-    x^r $in R_pos
+    x^r $in R+
     x^r > 0
     x^r * x^(q - r) < x^r * 1
     x^r * 1 = x^r
     x^q = x^(r + (q - r)) = x^r * x^(q - r) < x^r * 1 = x^r
 
 thm rational_power_exponent_strict_antimono_below_one_reverse:
-    ? forall x R_pos, q, r Q:
+    ? forall x R+, q, r Q:
         x < 1
         x^q > x^r
         =>:
@@ -4013,7 +4321,7 @@ thm rational_power_exponent_strict_antimono_below_one_reverse:
         q >= r
         q - r >= 0
         by thm positive_base_power_at_most_one_below_one_for_nonnegative_exp(x, q - r)
-        x^r $in R_pos
+        x^r $in R+
         x^r >= 0
         x^r * x^(q - r) <= x^r * 1
         x^r * 1 = x^r
@@ -4021,7 +4329,7 @@ thm rational_power_exponent_strict_antimono_below_one_reverse:
         impossible x^q > x^r
 
 thm nth_roots_decrease_above_one:
-    ? forall x R_pos, k, l N_pos:
+    ? forall x R+, k, l N+:
         x > 1
         k < l
         =>:
@@ -4030,7 +4338,7 @@ thm nth_roots_decrease_above_one:
     by thm rational_power_exponent_strict_mono_above_one(x, 1 / k, 1 / l)
 
 thm nth_roots_increase_below_one:
-    ? forall x R_pos, k, l N_pos:
+    ? forall x R+, k, l N+:
         x < 1
         k < l
         =>:

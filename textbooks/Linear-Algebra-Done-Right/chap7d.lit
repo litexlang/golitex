@@ -10,19 +10,19 @@ prop is_isometry(s nonempty_set, V, W nonempty_set, Vinner &chap6a::InnerProduct
 # Example 7.45 uses Parseval twice after sending one orthonormal basis to an
 # orthonormal list; that calculation is subsumed by Result 7.49 below.
 template<V, W set, n N>:
-    have fn linear_map_image_list(S fn(v V) W, vectors &chap1a::FiniteList<V, n>) &chap1a::FiniteList<W, n> = (n, fn(k N_pos: k <= n) W {S(vectors.entries(k))})
+    have fn linear_map_image_list(S fn(v V) W, vectors &chap1a::FiniteList<V, n>) &chap1a::FiniteList<W, n> = (n, fn(k N+: k <= n) W {S(vectors.entries(k))})
 
-template<s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos>:
-    have fn coordinate_inner_product(x, y finite_seq(s, n)) s = \chap3b::scalar_finite_sum<s, scalar_geometry.scalars, n>(fn(k N_pos: k <= n) s {scalar_geometry.scalars.mul(x(k), scalar_geometry.conjugate(y(k)))})
+template<s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+>:
+    have fn coordinate_inner_product(x, y finite_seq(s, n)) s = \chap3b::scalar_finite_sum<s, scalar_geometry.scalars, n>(fn(k N+: k <= n) s {scalar_geometry.scalars.mul(x(k), scalar_geometry.conjugate(y(k)))})
 
-prop are_matrix_columns_orthonormal(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, m, n N_pos, A matrix(s, m, n)):
-    forall j, k N_pos:
+prop are_matrix_columns_orthonormal(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, m, n N+, A matrix(s, m, n)):
+    forall j, k N+:
         j <= n
         k <= n
         j = k
         =>:
             \coordinate_inner_product<s, scalar_geometry, m>(\chap3c::matrix_column<s, m, n>(A, j), \chap3c::matrix_column<s, m, n>(A, k)) = scalar_geometry.scalars.one
-    forall j, k N_pos:
+    forall j, k N+:
         j <= n
         k <= n
         j != k
@@ -36,8 +36,9 @@ prop preserves_inner_products(s nonempty_set, V, W nonempty_set, Vinner &chap6a:
 # Result 7.49. The source proof is the cycle: a zero quadratic form gives
 # S* S=I; move S through the inner product; inspect one orthonormal basis;
 # translate those vectors into matrix columns; then apply Parseval backwards.
-prop isometry_characterizations_statement(s nonempty_set, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, Winner &chap6a::InnerProductSpace<s, W>, n, m N_pos, domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>, S \chap3a::linear_map_space<s, V, W, Vinner.vector_space, Winner.vector_space>):
+prop isometry_characterizations_statement(s nonempty_set, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, Winner &chap6a::InnerProductSpace<s, W>, n, m N+, domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>, S \chap3a::linear_map_space<s, V, W, Vinner.vector_space, Winner.vector_space>):
     $chap2a::is_finite_dimensional(s, V, Vinner.vector_space)
+    \chap7a::adjoint<s, V, W, Vinner, Winner>(S) $in \chap3a::linear_map_space<s, W, V, Winner.vector_space, Vinner.vector_space>
     forall:
         =>:
             $is_isometry(s, V, W, Vinner, Winner, S)
@@ -60,7 +61,7 @@ prop isometry_characterizations_statement(s nonempty_set, V, W nonempty_set, Vin
             $are_matrix_columns_orthonormal(s, Vinner.scalar_geometry, m, n, \chap3c::matrix_of_linear_map<s, V, W, Vinner.vector_space, Winner.vector_space, n, m>(domain_basis, codomain_basis, S))
 
 axiom characterizations_of_isometries:
-    ? forall s nonempty_set, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, Winner &chap6a::InnerProductSpace<s, W>, n, m N_pos, domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>, S \chap3a::linear_map_space<s, V, W, Vinner.vector_space, Winner.vector_space>:
+    ? forall s nonempty_set, V, W nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, Winner &chap6a::InnerProductSpace<s, W>, n, m N+, domain_basis &chap1a::FiniteList<V, n>, codomain_basis &chap1a::FiniteList<W, m>, S \chap3a::linear_map_space<s, V, W, Vinner.vector_space, Winner.vector_space>:
         $chap2a::is_finite_dimensional(s, V, Vinner.vector_space)
         $chap2a::is_finite_dimensional(s, W, Winner.vector_space)
         $chap6b::is_orthonormal_basis(s, V, Vinner, n, domain_basis)
@@ -77,21 +78,23 @@ prop is_unitary_operator(s nonempty_set, V nonempty_set, Vinner &chap6a::InnerPr
 # corresponding operator unitary.
 prop has_adjoint_two_sided_identity(s nonempty_set, V nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, S \chap3a::linear_map_space<s, V, V, Vinner.vector_space, Vinner.vector_space>):
     $chap2a::is_finite_dimensional(s, V, Vinner.vector_space)
+    \chap7a::adjoint<s, V, V, Vinner, Vinner>(S) $in \chap3a::linear_map_space<s, V, V, Vinner.vector_space, Vinner.vector_space>
     \chap3a::linear_map_compose<s, V, V, V, Vinner.vector_space, Vinner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, V, V, Vinner, Vinner>(S), S) = \chap3a::identity_linear_map<s, V, Vinner.vector_space>
     \chap3a::linear_map_compose<s, V, V, V, Vinner.vector_space, Vinner.vector_space, Vinner.vector_space>(S, \chap7a::adjoint<s, V, V, Vinner, Vinner>(S)) = \chap3a::identity_linear_map<s, V, Vinner.vector_space>
 
 prop adjoint_is_inverse(s nonempty_set, V nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, S \chap3a::linear_map_space<s, V, V, Vinner.vector_space, Vinner.vector_space>):
     $chap2a::is_finite_dimensional(s, V, Vinner.vector_space)
+    \chap7a::adjoint<s, V, V, Vinner, Vinner>(S) $in \chap3a::linear_map_space<s, V, V, Vinner.vector_space, Vinner.vector_space>
     $chap3d::is_inverse_linear_map(s, V, V, Vinner.vector_space, Vinner.vector_space, S, \chap7a::adjoint<s, V, V, Vinner, Vinner>(S))
 
-prop are_matrix_rows_orthonormal(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, m, n N_pos, A matrix(s, m, n)):
-    forall j, k N_pos:
+prop are_matrix_rows_orthonormal(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, m, n N+, A matrix(s, m, n)):
+    forall j, k N+:
         j <= m
         k <= m
         j = k
         =>:
             \coordinate_inner_product<s, scalar_geometry, n>(\chap3c::matrix_row<s, m, n>(A, j), \chap3c::matrix_row<s, m, n>(A, k)) = scalar_geometry.scalars.one
-    forall j, k N_pos:
+    forall j, k N+:
         j <= m
         k <= m
         j != k
@@ -99,8 +102,9 @@ prop are_matrix_rows_orthonormal(s nonempty_set, scalar_geometry &chap6a::InnerP
             \coordinate_inner_product<s, scalar_geometry, n>(\chap3c::matrix_row<s, m, n>(A, j), \chap3c::matrix_row<s, m, n>(A, k)) = scalar_geometry.scalars.zero
 # Result 7.53. Follow the source's six-condition cycle; each adjacent iff is
 # one mathematical edge rather than an expanded inverse/associativity proof.
-prop unitary_operator_characterizations_statement(s nonempty_set, V nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, n N_pos, basis &chap1a::FiniteList<V, n>, S \chap3a::linear_map_space<s, V, V, Vinner.vector_space, Vinner.vector_space>):
+prop unitary_operator_characterizations_statement(s nonempty_set, V nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, n N+, basis &chap1a::FiniteList<V, n>, S \chap3a::linear_map_space<s, V, V, Vinner.vector_space, Vinner.vector_space>):
     $chap2a::is_finite_dimensional(s, V, Vinner.vector_space)
+    \chap7a::adjoint<s, V, V, Vinner, Vinner>(S) $in \chap3a::linear_map_space<s, V, V, Vinner.vector_space, Vinner.vector_space>
     forall:
         =>:
             $is_unitary_operator(s, V, Vinner, S)
@@ -128,7 +132,7 @@ prop unitary_operator_characterizations_statement(s nonempty_set, V nonempty_set
             $is_unitary_operator(s, V, Vinner, \chap7a::adjoint<s, V, V, Vinner, Vinner>(S))
 
 axiom characterizations_of_unitary_operators:
-    ? forall s nonempty_set, V nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, n N_pos, basis &chap1a::FiniteList<V, n>, S \chap3a::linear_map_space<s, V, V, Vinner.vector_space, Vinner.vector_space>:
+    ? forall s nonempty_set, V nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, n N+, basis &chap1a::FiniteList<V, n>, S \chap3a::linear_map_space<s, V, V, Vinner.vector_space, Vinner.vector_space>:
         $chap2a::is_finite_dimensional(s, V, Vinner.vector_space)
         $chap6b::is_orthonormal_basis(s, V, Vinner, n, basis)
         =>:
@@ -141,6 +145,9 @@ thm eigenvalues_of_unitary_operators_have_absolute_value_one:
         $chap5a::is_eigenvalue(s, V, Vinner.vector_space, S, lambda)
         =>:
             Vinner.scalar_geometry.absolute_value(lambda) = 1
+    by def $is_unitary_operator(s, V, Vinner, S)
+    $is_isometry(s, V, V, Vinner, Vinner, S)
+    by def $is_isometry(s, V, V, Vinner, Vinner, S)
     obtain v from exist v V st {v != &chap1b::VectorSpace<s, V>{Vinner.vector_space}.zero, S(v) = &chap1b::VectorSpace<s, V>{Vinner.vector_space}.smul(lambda, v)}
     by thm chap6a::basic_properties_of_the_norm(s, V, Vinner, v)
     \chap6a::norm<s, V>(Vinner, &chap1b::VectorSpace<s, V>{Vinner.vector_space}.smul(lambda, v)) = Vinner.scalar_geometry.absolute_value(lambda) * \chap6a::norm<s, V>(Vinner, v)
@@ -149,50 +156,50 @@ thm eigenvalues_of_unitary_operators_have_absolute_value_one:
     \chap6a::norm<s, V>(Vinner, v) != 0
     Vinner.scalar_geometry.absolute_value(lambda) = \chap6a::norm<s, V>(Vinner, v) / \chap6a::norm<s, V>(Vinner, v) = 1
 
-prop has_only_unit_modulus_entries(n N, eigenvalues &chap1a::FiniteList<&chap1a::Complex, n>):
-    forall k N_pos:
+prop has_only_unit_modulus_entries(n N, eigenvalues &chap1a::FiniteList<C, n>):
+    forall k N+:
         k <= n
         =>:
             chap4::complex_absolute_value(eigenvalues.entries(k)) = 1
 
-prop has_unitary_complex_spectral_data(V nonempty_set, Vinner &chap6a::InnerProductSpace<&chap1a::Complex, V>, S \chap3a::linear_map_space<&chap1a::Complex, V, V, Vinner.vector_space, Vinner.vector_space>):
-    exist n N, basis &chap1a::FiniteList<V, n>, eigenvalues &chap1a::FiniteList<&chap1a::Complex, n> st {$chap6b::is_orthonormal_basis(&chap1a::Complex, V, Vinner, n, basis), $chap5a::lists_corresponding_eigenpairs(&chap1a::Complex, V, Vinner.vector_space, S, n, eigenvalues, basis), $has_only_unit_modulus_entries(n, eigenvalues)}
+prop has_unitary_complex_spectral_data(V nonempty_set, Vinner &chap6a::CInnerProductSpace<V>, S \chap3a::linear_map_space<C, V, V, Vinner.vector_space.general, Vinner.vector_space.general>):
+    exist n N, basis &chap1a::FiniteList<V, n>, eigenvalues &chap1a::FiniteList<C, n> st {$chap6b::is_orthonormal_basis(C, V, Vinner.general, n, basis), $chap5a::lists_corresponding_eigenpairs(C, V, Vinner.vector_space.general, S, n, eigenvalues, basis), $has_only_unit_modulus_entries(n, eigenvalues)}
 # Result 7.55. Unitary implies normal, so the complex spectral theorem gives
 # an orthonormal eigenbasis and 7.54 gives unit-modulus eigenvalues. Conversely,
 # those eigenvalues rescale an orthonormal basis without changing it.
-prop unitary_complex_spectral_description_statement(V nonempty_set, Vinner &chap6a::InnerProductSpace<&chap1a::Complex, V>, S \chap3a::linear_map_space<&chap1a::Complex, V, V, Vinner.vector_space, Vinner.vector_space>):
+prop unitary_complex_spectral_description_statement(V nonempty_set, Vinner &chap6a::CInnerProductSpace<V>, S \chap3a::linear_map_space<C, V, V, Vinner.vector_space.general, Vinner.vector_space.general>):
     forall:
         =>:
-            $is_unitary_operator(&chap1a::Complex, V, Vinner, S)
+            $is_unitary_operator(C, V, Vinner.general, S)
         <=>:
             $has_unitary_complex_spectral_data(V, Vinner, S)
 
 axiom description_of_unitary_operators_on_complex_inner_product_spaces:
-    ? forall V nonempty_set, Vinner &chap6a::InnerProductSpace<&chap1a::Complex, V>, S \chap3a::linear_map_space<&chap1a::Complex, V, V, Vinner.vector_space, Vinner.vector_space>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, V, Vinner.vector_space)
+    ? forall V nonempty_set, Vinner &chap6a::CInnerProductSpace<V>, S \chap3a::linear_map_space<C, V, V, Vinner.vector_space.general, Vinner.vector_space.general>:
+        $chap2a::is_finite_dimensional(C, V, Vinner.vector_space.general)
         =>:
             $unitary_complex_spectral_description_statement(V, Vinner, S)
 # Definition 7.56. A square matrix is unitary exactly when its columns are
 # orthonormal in the coordinate inner product.
-prop is_unitary_matrix(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, Qm matrix(s, n, n)):
+prop is_unitary_matrix(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, Qm matrix(s, n, n)):
     $are_matrix_columns_orthonormal(s, scalar_geometry, n, n, Qm)
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    have fn matrix_vector_product(A matrix(s, n, n), x finite_seq(s, n)) finite_seq(s, n) = fn(j N_pos: j <= n) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(k N_pos: k <= n) s {scalars.mul(A(j, k), x(k))})}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn matrix_vector_product(A matrix(s, n, n), x finite_seq(s, n)) finite_seq(s, n) = fn(j N+: j <= n) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(k N+: k <= n) s {scalars.mul(A(j, k), x(k))})}
 
-template<s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos>:
-    have fn coordinate_norm(x finite_seq(s, n)) R = sqrt(scalar_geometry.real_part(\coordinate_inner_product<s, scalar_geometry, n>(x, x)))
+template<s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+>:
+    have fn coordinate_norm(x finite_seq(s, n)) R = sqrt(abs(scalar_geometry.real_part(\coordinate_inner_product<s, scalar_geometry, n>(x, x))))
 
-prop matrix_preserves_coordinate_norm(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, Qm matrix(s, n, n)):
+prop matrix_preserves_coordinate_norm(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, Qm matrix(s, n, n)):
     forall x finite_seq(s, n):
         \coordinate_norm<s, scalar_geometry, n>(\matrix_vector_product<s, scalar_geometry.scalars, n>(Qm, x)) = \coordinate_norm<s, scalar_geometry, n>(x)
 
-prop has_unitary_matrix_identities(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, Qm matrix(s, n, n)):
+prop has_unitary_matrix_identities(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, Qm matrix(s, n, n)):
     \chap3c::matrix_mul<s, scalar_geometry.scalars, n, n, n>(\chap7a::conjugate_transpose<s, scalar_geometry, n, n>(Qm), Qm) = \chap3d::identity_matrix<s, scalar_geometry.scalars, n>
     \chap3c::matrix_mul<s, scalar_geometry.scalars, n, n, n>(Qm, \chap7a::conjugate_transpose<s, scalar_geometry, n, n>(Qm)) = \chap3d::identity_matrix<s, scalar_geometry.scalars, n>
 # Result 7.57. Columns, rows, norm preservation, and the two conjugate-
 # transpose identities are four views of the same coordinate isometry.
-prop unitary_matrix_characterizations_statement(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, Qm matrix(s, n, n)):
+prop unitary_matrix_characterizations_statement(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, Qm matrix(s, n, n)):
     forall:
         =>:
             $is_unitary_matrix(s, scalar_geometry, n, Qm)
@@ -210,28 +217,28 @@ prop unitary_matrix_characterizations_statement(s nonempty_set, scalar_geometry 
             $has_unitary_matrix_identities(s, scalar_geometry, n, Qm)
 
 axiom characterizations_of_unitary_matrices:
-    ? forall s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, Qm matrix(s, n, n):
+    ? forall s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, Qm matrix(s, n, n):
         $unitary_matrix_characterizations_statement(s, scalar_geometry, n, Qm)
 
-template<s set, n N_pos>:
-    have fn matrix_columns(A matrix(s, n, n)) &chap1a::FiniteList<finite_seq(s, n), n> = (n, fn(k N_pos: k <= n) finite_seq(s, n) {\chap3c::matrix_column<s, n, n>(A, k)})
+template<s set, n N+>:
+    have fn matrix_columns(A matrix(s, n, n)) &chap1a::FiniteList<finite_seq(s, n), n> = (n, fn(k N+: k <= n) finite_seq(s, n) {\chap3c::matrix_column<s, n, n>(A, k)})
 
-prop has_linearly_independent_columns(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A matrix(s, n, n)):
-    $chap2a::is_linearly_independent(s, scalars, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n, \matrix_columns<s, n>(A))
+prop has_linearly_independent_columns(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A matrix(s, n, n)):
+    $chap2a::is_linearly_independent(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n, \matrix_columns<s, n>(A))
 
-prop has_positive_real_diagonal(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, Rm matrix(s, n, n)):
-    forall k N_pos:
+prop has_positive_real_diagonal(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, Rm matrix(s, n, n)):
+    forall k N+:
         k <= n
         =>:
             exist r R st {r > 0, Rm(k, k) = scalar_geometry.real_embed(r)}
 
-prop is_qr_factorization(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, A, Qm, Rm matrix(s, n, n)):
+prop is_qr_factorization(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, A, Qm, Rm matrix(s, n, n)):
     $is_unitary_matrix(s, scalar_geometry, n, Qm)
     $chap5c::is_upper_triangular_matrix(s, scalar_geometry.scalars, n, Rm)
     $has_positive_real_diagonal(s, scalar_geometry, n, Rm)
     A = \chap3c::matrix_mul<s, scalar_geometry.scalars, n, n, n>(Qm, Rm)
 
-prop has_unique_qr_factorization(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, A matrix(s, n, n)):
+prop has_unique_qr_factorization(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, A matrix(s, n, n)):
     exist Qm, Rm matrix(s, n, n) st {$is_qr_factorization(s, scalar_geometry, n, A, Qm, Rm)}
     forall Q1, R1, Q2, R2 matrix(s, n, n):
         $is_qr_factorization(s, scalar_geometry, n, A, Q1, R1)
@@ -243,12 +250,18 @@ prop has_unique_qr_factorization(s nonempty_set, scalar_geometry &chap6a::InnerP
 # coefficients give the upper-triangular R. Positive diagonal normalization
 # makes the Gram-Schmidt list, hence both factors, unique.
 axiom qr_factorization:
-    ? forall s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, A matrix(s, n, n):
+    ? forall s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, A matrix(s, n, n):
         $has_linearly_independent_columns(s, scalar_geometry.scalars, n, A)
         =>:
             $has_unique_qr_factorization(s, scalar_geometry, n, A)
-# Example 7.60 follows that construction for the displayed real 3-by-3
-# matrix. Its arithmetic is retained as explanatory source prose.
+# Example 7.60. The displayed Gram-Schmidt columns have unit norm and are
+# orthogonal; these are the scalar calculations behind the matrix Q.
+sketch:
+    sqrt(10)^2 = 10
+    sqrt(10) != 0
+    (1 / sqrt(10))^2 + (3 / sqrt(10))^2 = 10 / sqrt(10)^2 = 1
+    (-3 / sqrt(10))^2 + (1 / sqrt(10))^2 = 10 / sqrt(10)^2 = 1
+    (1 / sqrt(10)) * (-3 / sqrt(10)) + (3 / sqrt(10)) * (1 / sqrt(10)) = 0
 prop has_strictly_positive_quadratic_form(s nonempty_set, V nonempty_set, Vinner &chap6a::InnerProductSpace<s, V>, T \chap3a::linear_map_space<s, V, V, Vinner.vector_space, Vinner.vector_space>):
     forall v V:
         v != &chap1b::VectorSpace<s, V>{Vinner.vector_space}.zero
@@ -273,14 +286,14 @@ axiom positive_invertible_operator:
             $positive_invertible_characterization_statement(s, V, Vinner, T)
 # Definition 7.62. Positive definiteness is conjugate symmetry together with
 # strict positivity of the quadratic form on every nonzero coordinate vector.
-prop is_positive_definite_matrix(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, B matrix(s, n, n)):
+prop is_positive_definite_matrix(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, B matrix(s, n, n)):
     \chap7a::conjugate_transpose<s, scalar_geometry, n, n>(B) = B
     forall x finite_seq(s, n):
         x != \chap1a::coordinate_zero<s, scalar_geometry.scalars, n>
         =>:
             scalar_geometry.real_part(\coordinate_inner_product<s, scalar_geometry, n>(\matrix_vector_product<s, scalar_geometry.scalars, n>(B, x), x)) > 0
 
-prop is_cholesky_factorization(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, B, Rm matrix(s, n, n)):
+prop is_cholesky_factorization(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, B, Rm matrix(s, n, n)):
     $chap5c::is_upper_triangular_matrix(s, scalar_geometry.scalars, n, Rm)
     $has_positive_real_diagonal(s, scalar_geometry, n, Rm)
     B = \chap3c::matrix_mul<s, scalar_geometry.scalars, n, n, n>(\chap7a::conjugate_transpose<s, scalar_geometry, n, n>(Rm), Rm)
@@ -288,7 +301,7 @@ prop is_cholesky_factorization(s nonempty_set, scalar_geometry &chap6a::InnerPro
 # B=R*R. Any second factor gives a second normalized QR factorization of A,
 # so QR uniqueness gives equality.
 axiom cholesky_factorization:
-    ? forall s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, B matrix(s, n, n):
+    ? forall s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, B matrix(s, n, n):
         $is_positive_definite_matrix(s, scalar_geometry, n, B)
         =>:
             exist! Rm matrix(s, n, n) st {$is_cholesky_factorization(s, scalar_geometry, n, B, Rm)}

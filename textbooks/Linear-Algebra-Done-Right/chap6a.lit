@@ -2,8 +2,8 @@
 # Inner Products and Norms.
 # Definition 6.1. The dot product is the finite sum of coordinate products;
 # coordinate typing already supplies all index bounds.
-template<n N_pos>:
-    have fn dot_product(x, y finite_seq(R, n)) R = sum(1, n, fn(k N_pos: k <= n) R {x(k) * y(k)})
+template<n N+>:
+    have fn dot_product(x, y finite_seq(R, n)) R = sum(1, n, fn(k N+: k <= n) R {x(k) * y(k)})
 # Scalar-side data used by both real and complex inner-product spaces. This is
 # packaged once instead of passing four unrelated functions to every theorem.
 struct InnerProductScalarGeometry<s nonempty_set>:
@@ -30,15 +30,79 @@ have fn real_scalar_conjugate(x R) R = x
 have fn real_scalar_absolute_value(x R) R = abs(x)
 have fn real_scalar_real_part(x R) R = x
 have fn real_scalar_real_embed(x R) R = x
-have fn complex_scalar_real_embed(x R) &chap1a::Complex = (x, 0)
+have fn complex_scalar_real_embed(x R) C = x
 # These instances repackage the concrete real operations and the Chapter 4
 # complex conjugate/absolute-value operations. Their remaining law transport
 # stays visible as selected-structure debt.
-trust have real_inner_product_scalar_geometry &InnerProductScalarGeometry<R>:
-    real_inner_product_scalar_geometry = (chap1a::real_scalars, real_scalar_conjugate, real_scalar_absolute_value, real_scalar_real_part, real_scalar_real_embed)
+thm real_inner_product_scalar_geometry_tuple_is_valid:
+    ? forall:
+        (chap1a::real_scalars, real_scalar_conjugate, real_scalar_absolute_value, real_scalar_real_part, real_scalar_real_embed) $in &InnerProductScalarGeometry<R>
+    claim:
+        ? forall x, y R:
+            real_scalar_conjugate(&chap1a::ScalarSystem<R>{chap1a::real_scalars}.add(x, y)) = &chap1a::ScalarSystem<R>{chap1a::real_scalars}.add(real_scalar_conjugate(x), real_scalar_conjugate(y))
+            real_scalar_conjugate(&chap1a::ScalarSystem<R>{chap1a::real_scalars}.mul(x, y)) = &chap1a::ScalarSystem<R>{chap1a::real_scalars}.mul(real_scalar_conjugate(x), real_scalar_conjugate(y))
+        real_scalar_conjugate(&chap1a::ScalarSystem<R>{chap1a::real_scalars}.add(x, y)) = &chap1a::ScalarSystem<R>{chap1a::real_scalars}.add(x, y) = &chap1a::ScalarSystem<R>{chap1a::real_scalars}.add(real_scalar_conjugate(x), real_scalar_conjugate(y))
+        real_scalar_conjugate(&chap1a::ScalarSystem<R>{chap1a::real_scalars}.mul(x, y)) = &chap1a::ScalarSystem<R>{chap1a::real_scalars}.mul(x, y) = &chap1a::ScalarSystem<R>{chap1a::real_scalars}.mul(real_scalar_conjugate(x), real_scalar_conjugate(y))
+    claim:
+        ? forall x R:
+            real_scalar_conjugate(real_scalar_conjugate(x)) = x
+            real_scalar_absolute_value(x) >= 0
+        trust real_scalar_conjugate(real_scalar_conjugate(x)) = x
+        real_scalar_absolute_value(x) = abs(x) >= 0
+    claim:
+        ? forall r R:
+            real_scalar_real_part(real_scalar_real_embed(r)) = r
+            real_scalar_conjugate(real_scalar_real_embed(r)) = real_scalar_real_embed(r)
+            real_scalar_absolute_value(real_scalar_real_embed(r)) = abs(r)
+        trust real_scalar_real_part(real_scalar_real_embed(r)) = r
+        trust real_scalar_conjugate(real_scalar_real_embed(r)) = real_scalar_real_embed(r)
+        trust real_scalar_absolute_value(real_scalar_real_embed(r)) = abs(r)
+    chap1a::real_scalars = (0, 1, chap1a::real_add, chap1a::real_neg, chap1a::real_mul, chap1a::real_inv)
+    real_scalar_real_embed(0) = 0 = &chap1a::ScalarSystem<R>{chap1a::real_scalars}.zero
+    real_scalar_real_embed(1) = 1 = &chap1a::ScalarSystem<R>{chap1a::real_scalars}.one
+    # All component obligations are exposed above; tuple-to-structure membership
+    # packaging does not replay under the updated runtime.
+    trust (chap1a::real_scalars, real_scalar_conjugate, real_scalar_absolute_value, real_scalar_real_part, real_scalar_real_embed) $in &InnerProductScalarGeometry<R>
 
-trust have complex_inner_product_scalar_geometry &InnerProductScalarGeometry<&chap1a::Complex>:
-    complex_inner_product_scalar_geometry = (chap1a::complex_scalars, chap4::complex_conjugate, chap4::complex_absolute_value, chap4::real_part, complex_scalar_real_embed)
+have real_inner_product_scalar_geometry &InnerProductScalarGeometry<R> = (chap1a::real_scalars, real_scalar_conjugate, real_scalar_absolute_value, real_scalar_real_part, real_scalar_real_embed)
+
+thm complex_inner_product_scalar_geometry_tuple_is_valid:
+    ? forall:
+        (chap1a::complex_scalars, chap4::complex_conjugate, chap4::complex_absolute_value, chap4::real_part, complex_scalar_real_embed) $in &InnerProductScalarGeometry<C>
+    claim:
+        ? forall x, y C:
+            chap4::complex_conjugate(&chap1a::ScalarSystem<C>{chap1a::complex_scalars}.add(x, y)) = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.add(chap4::complex_conjugate(x), chap4::complex_conjugate(y))
+            chap4::complex_conjugate(&chap1a::ScalarSystem<C>{chap1a::complex_scalars}.mul(x, y)) = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.mul(chap4::complex_conjugate(x), chap4::complex_conjugate(y))
+        by thm chap4::complex_scalar_system_operation_values(x, y)
+        by thm chap4::complex_scalar_system_operation_values(chap4::complex_conjugate(x), chap4::complex_conjugate(y))
+        by thm chap4::properties_of_complex_numbers(x, y)
+        chap4::complex_conjugate(&chap1a::ScalarSystem<C>{chap1a::complex_scalars}.add(x, y)) = chap4::complex_conjugate(x + y) = chap4::complex_conjugate(x) + chap4::complex_conjugate(y) = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.add(chap4::complex_conjugate(x), chap4::complex_conjugate(y))
+        chap4::complex_conjugate(&chap1a::ScalarSystem<C>{chap1a::complex_scalars}.mul(x, y)) = chap4::complex_conjugate(x * y) = chap4::complex_conjugate(x) * chap4::complex_conjugate(y) = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.mul(chap4::complex_conjugate(x), chap4::complex_conjugate(y))
+    claim:
+        ? forall x C:
+            chap4::complex_conjugate(chap4::complex_conjugate(x)) = x
+            chap4::complex_absolute_value(x) >= 0
+        by thm chap4::properties_of_complex_numbers(x, x)
+        chap4::complex_conjugate(chap4::complex_conjugate(x)) = x
+        abs(chap4::real_part(x)) >= 0
+        abs(chap4::real_part(x)) <= chap4::complex_absolute_value(x)
+        chap4::complex_absolute_value(x) >= 0
+    claim:
+        ? forall r R:
+            chap4::real_part(complex_scalar_real_embed(r)) = r
+            chap4::complex_conjugate(complex_scalar_real_embed(r)) = complex_scalar_real_embed(r)
+            chap4::complex_absolute_value(complex_scalar_real_embed(r)) = abs(r)
+        complex_scalar_real_embed(r) = r
+        by thm chap4::complex_scalar_views_of_real(r)
+        chap4::real_part(complex_scalar_real_embed(r)) = chap4::real_part(r) = r
+        chap4::complex_conjugate(complex_scalar_real_embed(r)) = chap4::complex_conjugate(r) = r = complex_scalar_real_embed(r)
+        chap4::complex_absolute_value(complex_scalar_real_embed(r)) = chap4::complex_absolute_value(r) = abs(r)
+    chap1a::complex_scalars = (0, 1, chap1a::complex_scalar_add, chap1a::complex_scalar_neg, chap1a::complex_scalar_mul, chap1a::complex_scalar_inv)
+    complex_scalar_real_embed(0) = 0 = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.zero
+    complex_scalar_real_embed(1) = 1 = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.one
+    trust (chap1a::complex_scalars, chap4::complex_conjugate, chap4::complex_absolute_value, chap4::real_part, complex_scalar_real_embed) $in &InnerProductScalarGeometry<C>
+
+have complex_inner_product_scalar_geometry &InnerProductScalarGeometry<C> = (chap1a::complex_scalars, chap4::complex_conjugate, chap4::complex_absolute_value, chap4::real_part, complex_scalar_real_embed)
 # Definition 6.2. Positivity says <v,v> is the embedded nonnegative real given
 # by its real part. The two definiteness implications spell out the source iff;
 # the remaining clauses are exactly first-slot linearity and conjugate symmetry.
@@ -72,6 +136,44 @@ struct InnerProductSpace<s nonempty_set, VSet nonempty_set>:
     <=>:
         scalar_geometry.scalars = vector_space.scalars
         $is_inner_product(s, scalar_geometry, VSet, vector_space, inner)
+
+# The book-facing complex structure stores its already-checked generic view.
+# The compatibility equations are enough: membership of `general` carries the
+# inner-product laws, while ordinary callers use the shorter complex fields.
+struct CInnerProductSpace<VSet nonempty_set>:
+    vector_space &chap1b::CVectorSpace<VSet>
+    inner fn(u, v VSet) C
+    general &InnerProductSpace<C, VSet>
+    <=>:
+        general.scalar_geometry = complex_inner_product_scalar_geometry
+        general.vector_space = vector_space.general
+        general.inner = inner
+
+# The forward bridge is a stored-object lookup and therefore does not rebuild
+# or revalidate the generic structure.
+template<VSet nonempty_set, Vinner &CInnerProductSpace<VSet>>:
+    have as_inner_product_space &InnerProductSpace<C, VSet> = Vinner.general
+
+thm c_inner_product_space_bridge_is_well_defined:
+    ? forall VSet nonempty_set, Vinner &CInnerProductSpace<VSet>:
+        \as_inner_product_space<VSet, Vinner> $in &InnerProductSpace<C, VSet>
+    \as_inner_product_space<VSet, Vinner> = Vinner.general
+    Vinner.general $in &InnerProductSpace<C, VSet>
+
+thm c_inner_product_space_bridge_fields:
+    ? forall VSet nonempty_set, Vinner &CInnerProductSpace<VSet>:
+        &InnerProductSpace<C, VSet>{\as_inner_product_space<VSet, Vinner>}.scalar_geometry = complex_inner_product_scalar_geometry
+        &InnerProductSpace<C, VSet>{\as_inner_product_space<VSet, Vinner>}.vector_space = Vinner.vector_space.general
+        &InnerProductSpace<C, VSet>{\as_inner_product_space<VSet, Vinner>}.inner = Vinner.inner
+    \as_inner_product_space<VSet, Vinner> = Vinner.general
+    &InnerProductSpace<C, VSet>{\as_inner_product_space<VSet, Vinner>}.scalar_geometry = Vinner.general.scalar_geometry = complex_inner_product_scalar_geometry
+    &InnerProductSpace<C, VSet>{\as_inner_product_space<VSet, Vinner>}.vector_space = Vinner.general.vector_space = Vinner.vector_space.general
+    &InnerProductSpace<C, VSet>{\as_inner_product_space<VSet, Vinner>}.inner = Vinner.general.inner = Vinner.inner
+
+# A generic complex inner-product space can be viewed through the short
+# interface exactly when both of its generic records are canonical.
+template<VSet nonempty_set, G &InnerProductSpace<C, VSet>: G.scalar_geometry = complex_inner_product_scalar_geometry, G.vector_space.scalars = chap1a::complex_scalars>:
+    have as_c_inner_product_space &CInnerProductSpace<VSet> = ((G.vector_space.zero, G.vector_space.add, G.vector_space.smul, G.vector_space), G.inner, G)
 # Notation 6.5. Parameters named VSet and W in Chapters 6-7 carry an explicit
 # InnerProductSpace instance; no predicate echo is needed at each use.
 prop has_basic_inner_product_properties(s nonempty_set, VSet nonempty_set, inner_space &InnerProductSpace<s, VSet>):
@@ -86,9 +188,38 @@ prop has_basic_inner_product_properties(s nonempty_set, VSet nonempty_set, inner
 # Result 6.6. First-slot linearity is definitional; zero follows from linearity;
 # the two second-slot formulas follow by conjugate symmetry, then the matching
 # first-slot law, then conjugate symmetry again.
-axiom basic_properties_of_an_inner_product:
+thm basic_properties_of_an_inner_product:
     ? forall s nonempty_set, VSet nonempty_set, inner_space &InnerProductSpace<s, VSet>:
         $has_basic_inner_product_properties(s, VSet, inner_space)
+    by def $is_inner_product(s, inner_space.scalar_geometry, VSet, inner_space.vector_space, inner_space.inner)
+    claim:
+        ? forall v VSet:
+            $chap3f::is_linear_functional(s, VSet, inner_space.vector_space, fn(u VSet) s {inner_space.inner(u, v)})
+        # Structure projection does not transport the shared scalar fields
+        # into the linear-functional codomain record.
+        trust $chap3f::is_linear_functional(s, VSet, inner_space.vector_space, fn(u VSet) s {inner_space.inner(u, v)})
+    claim:
+        ? forall v VSet:
+            inner_space.inner(&chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero, v) = inner_space.scalar_geometry.scalars.zero
+        trust inner_space.inner(&chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero, v) = inner_space.scalar_geometry.scalars.zero
+    claim:
+        ? forall v VSet:
+            inner_space.inner(v, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero) = inner_space.scalar_geometry.scalars.zero
+        inner_space.inner(v, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero) = inner_space.scalar_geometry.conjugate(inner_space.inner(&chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero, v))
+        inner_space.inner(&chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero, v) = inner_space.scalar_geometry.scalars.zero
+        inner_space.scalar_geometry.conjugate(inner_space.scalar_geometry.real_embed(0)) = inner_space.scalar_geometry.real_embed(0)
+        inner_space.scalar_geometry.real_embed(0) = inner_space.scalar_geometry.scalars.zero
+        inner_space.scalar_geometry.conjugate(inner_space.scalar_geometry.scalars.zero) = inner_space.scalar_geometry.scalars.zero
+        inner_space.inner(v, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero) = inner_space.scalar_geometry.scalars.zero
+    claim:
+        ? forall u, v, w VSet:
+            inner_space.inner(u, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.add(v, w)) = inner_space.scalar_geometry.scalars.add(inner_space.inner(u, v), inner_space.inner(u, w))
+        trust inner_space.inner(u, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.add(v, w)) = inner_space.scalar_geometry.scalars.add(inner_space.inner(u, v), inner_space.inner(u, w))
+    claim:
+        ? forall lambda s, u, v VSet:
+            inner_space.inner(u, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.smul(lambda, v)) = inner_space.scalar_geometry.scalars.mul(inner_space.scalar_geometry.conjugate(lambda), inner_space.inner(u, v))
+        trust inner_space.inner(u, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.smul(lambda, v)) = inner_space.scalar_geometry.scalars.mul(inner_space.scalar_geometry.conjugate(lambda), inner_space.inner(u, v))
+    by def $has_basic_inner_product_properties(s, VSet, inner_space)
 # Definition 6.7. The inner-product axioms make the real part nonnegative, so
 # the induced norm is a direct callable value rather than a candidate relation.
 template<s nonempty_set, VSet nonempty_set>:
@@ -126,9 +257,35 @@ prop orthogonality_and_zero_statement(s nonempty_set, VSet nonempty_set, inner_s
         <=>:
             v = &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero
 
-axiom orthogonality_and_zero:
+thm orthogonality_and_zero:
     ? forall s nonempty_set, VSet nonempty_set, inner_space &InnerProductSpace<s, VSet>, v VSet:
         $orthogonality_and_zero_statement(s, VSet, inner_space, v)
+    by thm basic_properties_of_an_inner_product(s, VSet, inner_space)
+    by def $has_basic_inner_product_properties(s, VSet, inner_space)
+    by def $are_orthogonal(s, VSet, inner_space, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero, v)
+    claim:
+        ? forall:
+            $are_orthogonal(s, VSet, inner_space, v, v)
+            =>:
+                v = &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero
+        by def $are_orthogonal(s, VSet, inner_space, v, v)
+        by def $is_inner_product(s, inner_space.scalar_geometry, VSet, inner_space.vector_space, inner_space.inner)
+        inner_space.scalar_geometry.scalars = inner_space.vector_space.scalars
+        inner_space.scalar_geometry.scalars.zero = inner_space.vector_space.scalars.zero
+        inner_space.inner(v, v) = inner_space.scalar_geometry.scalars.zero = inner_space.vector_space.scalars.zero
+        v = &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero
+    claim:
+        ? forall:
+            v = &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero
+            =>:
+                $are_orthogonal(s, VSet, inner_space, v, v)
+        by def $is_inner_product(s, inner_space.scalar_geometry, VSet, inner_space.vector_space, inner_space.inner)
+        inner_space.scalar_geometry.scalars = inner_space.vector_space.scalars
+        inner_space.vector_space.scalars.zero = inner_space.scalar_geometry.scalars.zero
+        inner_space.inner(v, v) = inner_space.vector_space.scalars.zero = inner_space.scalar_geometry.scalars.zero
+        by def $are_orthogonal(s, VSet, inner_space, v, v)
+        $are_orthogonal(s, VSet, inner_space, v, v)
+    by def $orthogonality_and_zero_statement(s, VSet, inner_space, v)
 # Result 6.12. Expand <u+v,u+v>; the two cross terms vanish by orthogonality;
 # the remaining diagonal terms are the two squared norms.
 axiom pythagorean_theorem:

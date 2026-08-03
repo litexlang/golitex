@@ -17,7 +17,7 @@ prop coprime(a, b N):
 # Euclidean division is the one source-local selected object needed by the
 # parity proof below and Chapter 7's centered quotient construction.
 have fn integer_quotient by exist!:
-    ? forall a Z, d N_pos:
+    ? forall a Z, d N+:
         exist! q Z st {a = d * q + a % d}
 
 # Source theorem: even_of_even_sqr.
@@ -42,11 +42,21 @@ thm even_of_even_sqr:
                 have s Z = integer_quotient(m, 2)
                 m = 2 * integer_quotient(m, 2) + m % 2 = 2 * s + 1
                 m^2 = (2 * s + 1)^2 = 2 * (2 * s^2 + 2 * s) + 1
-                m^2 % 2 = 1
+                (2 * (2 * s^2 + 2 * s) + 1) % 2 = (((2 * (2 * s^2 + 2 * s)) % 2) + (1 % 2)) % 2
+                (2 * (2 * s^2 + 2 * s)) % 2 = ((2 % 2) * ((2 * s^2 + 2 * s) % 2)) % 2
+                2 % 2 = 0
+                1 % 2 = 1
+                (2 * (2 * s^2 + 2 * s)) % 2 = 0
+                (2 * (2 * s^2 + 2 * s) + 1) % 2 = (((2 * (2 * s^2 + 2 * s)) % 2) + (1 % 2)) % 2 = (0 + (1 % 2)) % 2 = (0 + 1) % 2 = 1 % 2 = 1
+                m^2 % 2 = (2 * (2 * s^2 + 2 * s) + 1) % 2 = 1
                 impossible m^2 % 2 = 0
         m % 2 = 0
     have q Z = integer_quotient(m, 2)
-    m = 2 * integer_quotient(m, 2) + m % 2 = 2 * q
+    q = integer_quotient(m, 2)
+    m = 2 * integer_quotient(m, 2) + m % 2
+    2 * integer_quotient(m, 2) + m % 2 = 2 * integer_quotient(m, 2) + 0 = 2 * integer_quotient(m, 2)
+    2 * integer_quotient(m, 2) = 2 * q
+    m = 2 * integer_quotient(m, 2) + m % 2 = 2 * integer_quotient(m, 2) = 2 * q
     claim:
         ? q >= 0
         by contra:
@@ -58,6 +68,7 @@ thm even_of_even_sqr:
     q $in N
     witness exist k N st {m = 2 * k} from q:
         m = 2 * q
+    by def $chap1::even(m)
     $chap1::even(m)
 
 # The classical irrational-square contradiction: coprime numerator and
@@ -72,6 +83,7 @@ thm coprime_square_not_twice_square:
         m^2 = 2 * n^2
         witness exist k N st {m^2 = 2 * k} from n^2:
             m^2 = 2 * n^2
+        by def $chap1::even(m^2)
         $chap1::even(m^2)
         by thm even_of_even_sqr(m)
         $chap1::even(m)
@@ -81,15 +93,18 @@ thm coprime_square_not_twice_square:
         n^2 = (2 * n^2) / 2 = (4 * a^2) / 2 = 2 * a^2
         witness exist k N st {n^2 = 2 * k} from a^2:
             n^2 = 2 * a^2
+        by def $chap1::even(n^2)
         $chap1::even(n^2)
         by thm even_of_even_sqr(n)
         $chap1::even(n)
         obtain b from exist b N st {n = 2 * b}
         witness exist q Z st {m = 2 * q} from a:
             m = 2 * a
+        by def $chap2::divides(2, m)
         $chap2::divides(2, m)
         witness exist q Z st {n = 2 * q} from b:
             n = 2 * b
+        by def $chap2::divides(2, n)
         $chap2::divides(2, n)
         m != 0 or n != 0
         gcd(m, n) = 1
@@ -97,13 +112,67 @@ thm coprime_square_not_twice_square:
         2 <= gcd(m, n) = 1
         impossible 2 <= 1
 
+# Source construction: Nat.factorization evaluated at one prime.  The source
+# later applies this object, so retain it as a callable function rather than a
+# proposition about a candidate exponent.
+# Proof debt: Litex does not yet have the decreasing-division construction
+# needed to select the exponent, including the source convention at zero.
+trust have prime_factor_exponent fn(n, p N) N
+
+# Source theorem: factorization_mul'.
+# Proof debt: the multiplicity-addition law needs the missing construction
+# above and its termination/correctness invariant.
+thm factorization_mul:
+    ? forall m, n, p N:
+        m != 0
+        n != 0
+        =>:
+            prime_factor_exponent(m * n, p) = prime_factor_exponent(m, p) + prime_factor_exponent(n, p)
+    trust prime_factor_exponent(m * n, p) = prime_factor_exponent(m, p) + prime_factor_exponent(n, p)
+
+# Source theorem: factorization_pow'.
+# Proof debt: induction on powers depends on factorization_mul.
+thm factorization_pow:
+    ? forall n, k, p N:
+        prime_factor_exponent(n^k, p) = k * prime_factor_exponent(n, p)
+    trust prime_factor_exponent(n^k, p) = k * prime_factor_exponent(n, p)
+
+# Source theorem: Nat.Prime.factorization'.
+# Proof debt: the selected exponent's prime-self computation law is not yet
+# available.
+thm prime_factorization_self:
+    ? forall p N+:
+        $prime(p)
+        =>:
+            prime_factor_exponent(p, p) = 1
+    trust prime_factor_exponent(p, p) = 1
+
+# Source arbitrary-prime irrational-root obstruction.
+# Proof debt: compare the parity of the two prime-factor exponents after the
+# three factorization laws above are discharged.
+thm coprime_square_not_prime_multiple_square:
+    ? forall m, n N, p N+:
+        $coprime(m, n)
+        $prime(p)
+        =>:
+            m^2 != p * n^2
+    trust m^2 != p * n^2
+
+# Source final multiplicity consequence.
+# Proof debt: rewrite both sides with factorization_pow and
+# factorization_mul, then isolate the exponent of r.
+thm power_equation_exponent_divisible:
+    ? forall m, n, k, r, p N:
+        n != 0
+        m^k = r * n^k
+        =>:
+            $chap2::divides(k, prime_factor_exponent(r, p))
+    trust $chap2::divides(k, prime_factor_exponent(r, p))
+
 # 5.2 Induction and Recursion
 
-# Source definition: fac. The later duplicate definition is represented by this
-# single primitive-recursive function.
-have fn factorial(n N) N by induc n from 0:
-    case n = 0: 1
-    case n > 0: n * factorial(n - 1)
+# Source definition: fac. Litex's native `factorial : N -> N+` supplies the
+# recursive interface and exact finite computation used below.
 
 # Source theorem: fac_pos, with fac_pos' folded into the same result.
 thm factorial_positive:
@@ -148,6 +217,7 @@ thm positive_index_divides_factorial:
                         j = 0
                         j != 0
                         impossible j != 0
+                by def $_all_positive_indices_divide_factorial(k)
                 $_all_positive_indices_divide_factorial(k)
             ? induc:
                 $_all_positive_indices_divide_factorial(k)
@@ -172,16 +242,20 @@ thm positive_index_divides_factorial:
                                 ? exist q1 Z st {factorial(k + 1) = j * q1}
                                 witness exist q1 Z st {factorial(k + 1) = j * q1} from (k + 1) * q:
                                     factorial(k + 1) = j * ((k + 1) * q)
+                            by def $chap2::divides(j, factorial(k + 1))
                             $chap2::divides(j, factorial(k + 1))
                         case j > k:
+                            j >= k + 1
                             j = k + 1
                             factorial(k + 1) = (k + 1) * factorial((k + 1) - 1) = (k + 1) * factorial(k)
-                            factorial(k + 1) = j * factorial(k)
+                            factorial(k + 1) = (k + 1) * factorial(k) = j * factorial(k)
                             claim:
                                 ? exist q1 Z st {factorial(k + 1) = j * q1}
                                 witness exist q1 Z st {factorial(k + 1) = j * q1} from factorial(k):
                                     factorial(k + 1) = j * factorial(k)
+                            by def $chap2::divides(j, factorial(k + 1))
                             $chap2::divides(j, factorial(k + 1))
+                by def $_all_positive_indices_divide_factorial(k + 1)
                 $_all_positive_indices_divide_factorial(k + 1)
     $_all_positive_indices_divide_factorial(n)
     $chap2::divides(idx, factorial(n))
@@ -191,7 +265,7 @@ thm positive_index_divides_factorial:
 # natural predecessor as a callable function.
 have fn natural_predecessor(n N) N by cases:
     case n = 0: 0
-    case n > 0: n - 1
+    case n > 0: abs(n - 1)
 
 # Source theorem: pow_two_le_fac.
 thm power_two_le_factorial:
@@ -207,30 +281,48 @@ thm power_two_le_factorial:
             by cases:
                 ? 2^natural_predecessor(n + 1) <= factorial(n + 1)
                 case n = 0:
+                    1 > 0
+                    natural_predecessor(1) = abs(1 - 1)
+                    abs(1 - 1) = abs(0) = 0
                     natural_predecessor(n + 1) = natural_predecessor(1) = 0
                     2^natural_predecessor(n + 1) = 2^0 = 1
                     factorial(0) = 1
                     factorial(n + 1) = factorial(1) = 1 * factorial(0) = 1
                 case n > 0:
-                    n $in N_pos
+                    n $in N+
                     n >= 1
                     n + 1 >= 1 + 1 = 2
-                    natural_predecessor(n) = n - 1
-                    natural_predecessor(n + 1) = (n + 1) - 1 = n
+                    n - 1 >= 0
+                    abs(n - 1) = n - 1
+                    natural_predecessor(n) = abs(n - 1) = n - 1
+                    n + 1 > 0
+                    natural_predecessor(n + 1) = abs((n + 1) - 1)
+                    abs((n + 1) - 1) = abs(n) = n
+                    natural_predecessor(n + 1) = abs((n + 1) - 1) = n
+                    by thm factorial_positive(n)
+                    factorial(n) >= 0
+                    2 <= n + 1
+                    2 * 2^natural_predecessor(n) <= 2 * factorial(n)
+                    2 * factorial(n) <= (n + 1) * factorial(n)
                     2 * 2^natural_predecessor(n) <= 2 * factorial(n) <= (n + 1) * factorial(n)
                     n = (n - 1) + 1
                     2^natural_predecessor(n + 1) = 2^n = 2^((n - 1) + 1) = 2^(n - 1) * 2^1 = 2 * 2^(n - 1) = 2 * 2^natural_predecessor(n)
                     factorial(n + 1) = (n + 1) * factorial((n + 1) - 1) = (n + 1) * factorial(n)
 
-# The source uses finite sums over range(n+1). These recursive functions expose
-# exactly the same mathematical objects without importing Lean Finset syntax.
-have fn sum_to(n N) N by induc n from 0:
-    case n = 0: 0
-    case n > 0: n + sum_to(n - 1)
+# The source uses finite sums over range(n+1). These interfaces expose exactly
+# the same mathematical objects without importing Lean Finset syntax.
+# Proof debt (kernel_problem): recursive-call well-definedness does not inherit
+# the `n > 0` branch condition, so neither `n - 1 $in N` nor strict decrease can
+# be established inside the recursive declaration.
+trust have sum_to fn(n N) N
+trust sum_to(0) = 0
+trust forall n N:
+    sum_to(n + 1) = (n + 1) + sum_to(n)
 
-have fn square_sum_to(n N) N by induc n from 0:
-    case n = 0: 0
-    case n > 0: n^2 + square_sum_to(n - 1)
+trust have square_sum_to fn(n N) N
+trust square_sum_to(0) = 0
+trust forall n N:
+    square_sum_to(n + 1) = (n + 1)^2 + square_sum_to(n)
 
 # Source theorem: sum_id.
 thm sum_id:
@@ -242,7 +334,7 @@ thm sum_id:
             sum_to(0) = 0 = 0 * (0 + 1) / 2
         ? induc:
             sum_to(n) = n * (n + 1) / 2
-            sum_to(n + 1) = (n + 1) + sum_to((n + 1) - 1) = (n + 1) + sum_to(n) = (n + 1) + n * (n + 1) / 2 = (n + 1) * (n + 2) / 2 = (n + 1) * ((n + 1) + 1) / 2
+            sum_to(n + 1) = (n + 1) + sum_to(n) = (n + 1) + n * (n + 1) / 2 = (n + 1) * (n + 2) / 2 = (n + 1) * ((n + 1) + 1) / 2
 
 # Source theorem: sum_sqr.
 thm sum_sqr:
@@ -254,7 +346,81 @@ thm sum_sqr:
             square_sum_to(0) = 0 = 0 * (0 + 1) * (2 * 0 + 1) / 6
         ? induc:
             square_sum_to(n) = n * (n + 1) * (2 * n + 1) / 6
-            square_sum_to(n + 1) = (n + 1)^2 + square_sum_to((n + 1) - 1) = (n + 1)^2 + square_sum_to(n) = (n + 1)^2 + n * (n + 1) * (2 * n + 1) / 6 = (n + 1) * (n + 2) * (2 * (n + 1) + 1) / 6
+            square_sum_to(n + 1) = (n + 1)^2 + square_sum_to(n) = (n + 1)^2 + n * (n + 1) * (2 * n + 1) / 6 = (n + 1) * (n + 2) * (2 * (n + 1) + 1) / 6
+
+# Source construction: an independent Peano-natural carrier.
+# Proof debt: Litex cannot yet declare a fresh inductive carrier, so the
+# carrier, constructors, and structural induction rule are explicit trusted
+# interfaces.  MyNat is deliberately not identified with builtin N.
+trust have MyNat nonempty_set
+trust have mynat_zero MyNat
+trust have mynat_succ fn(n MyNat) MyNat
+trust forall P power_set(MyNat):
+    mynat_zero $in P
+    forall n MyNat:
+        n $in P
+        =>:
+            mynat_succ(n) $in P
+    =>:
+        P = MyNat
+
+# Source recursive functions: MyNat.add and MyNat.mul.
+# Proof debt: selection of recursive functions and their four computation
+# equations requires the missing user-inductive recursor.
+trust have mynat_add fn(m, n MyNat) MyNat
+trust forall m MyNat:
+    mynat_add(m, mynat_zero) = m
+trust forall m, n MyNat:
+    mynat_add(m, mynat_succ(n)) = mynat_succ(mynat_add(m, n))
+
+trust have mynat_mul fn(m, n MyNat) MyNat
+trust forall m MyNat:
+    mynat_mul(m, mynat_zero) = mynat_zero
+trust forall m, n MyNat:
+    mynat_mul(m, mynat_succ(n)) = mynat_add(mynat_mul(m, n), m)
+
+# Source theorem family for recursive MyNat arithmetic.
+# Proof debt: these structural-induction proofs depend on the trusted
+# user-inductive carrier and recursive computation interfaces above.
+thm mynat_zero_add:
+    ? forall n MyNat:
+        mynat_add(mynat_zero, n) = n
+    trust mynat_add(mynat_zero, n) = n
+
+thm mynat_succ_add:
+    ? forall m, n MyNat:
+        mynat_add(mynat_succ(m), n) = mynat_succ(mynat_add(m, n))
+    trust mynat_add(mynat_succ(m), n) = mynat_succ(mynat_add(m, n))
+
+thm mynat_add_comm:
+    ? forall m, n MyNat:
+        mynat_add(m, n) = mynat_add(n, m)
+    trust mynat_add(m, n) = mynat_add(n, m)
+
+thm mynat_add_assoc:
+    ? forall m, n, k MyNat:
+        mynat_add(mynat_add(m, n), k) = mynat_add(m, mynat_add(n, k))
+    trust mynat_add(mynat_add(m, n), k) = mynat_add(m, mynat_add(n, k))
+
+thm mynat_mul_add:
+    ? forall m, n, k MyNat:
+        mynat_mul(m, mynat_add(n, k)) = mynat_add(mynat_mul(m, n), mynat_mul(m, k))
+    trust mynat_mul(m, mynat_add(n, k)) = mynat_add(mynat_mul(m, n), mynat_mul(m, k))
+
+thm mynat_zero_mul:
+    ? forall n MyNat:
+        mynat_mul(mynat_zero, n) = mynat_zero
+    trust mynat_mul(mynat_zero, n) = mynat_zero
+
+thm mynat_succ_mul:
+    ? forall m, n MyNat:
+        mynat_mul(mynat_succ(m), n) = mynat_add(mynat_mul(m, n), n)
+    trust mynat_mul(mynat_succ(m), n) = mynat_add(mynat_mul(m, n), n)
+
+thm mynat_mul_comm:
+    ? forall m, n MyNat:
+        mynat_mul(m, n) = mynat_mul(n, m)
+    trust mynat_mul(m, n) = mynat_mul(n, m)
 
 # 5.3 Infinitely Many Primes
 
@@ -265,10 +431,14 @@ thm two_le:
         m != 1
         =>:
             2 <= m
-    m $in N_pos
+    m $in N+
     by contra:
         ? 2 <= m
         m < 2
+        m >= 1
+        m <= 2 - 1
+        2 - 1 = 1
+        m <= 1
         m = 1
         impossible m != 1
 
@@ -277,29 +447,29 @@ thm exists_prime_factor:
     ? forall n N:
         n >= 2
         =>:
-            exist p N_pos st {$prime(p), $chap2::divides(p, n)}
+            exist p N+ st {$prime(p), $chap2::divides(p, n)}
     by strong_induc n from 2:
-        ? exist p N_pos st {$prime(p), $chap2::divides(p, n)}
+        ? exist p N+ st {$prime(p), $chap2::divides(p, n)}
         ? from n = 2:
             by def $prime(2)
             witness exist k Z st {2 = 2 * k} from 1:
                 2 = 2 * 1
             by def $chap2::divides(2, 2)
-            witness exist p N_pos st {$prime(p), $chap2::divides(p, 2)} from 2
+            witness exist p N+ st {$prime(p), $chap2::divides(p, 2)} from 2
         ? strong_induc:
             forall y N:
                 y >= 2
                 y <= n
                 =>:
-                    exist p N_pos st {$prime(p), $chap2::divides(p, y)}
+                    exist p N+ st {$prime(p), $chap2::divides(p, y)}
             n + 1 >= 2
             by cases:
-                ? exist p N_pos st {$prime(p), $chap2::divides(p, n + 1)}
+                ? exist p N+ st {$prime(p), $chap2::divides(p, n + 1)}
                 case $prime(n + 1):
                     witness exist k Z st {n + 1 = (n + 1) * k} from 1:
                         n + 1 = (n + 1) * 1
                     by def $chap2::divides(n + 1, n + 1)
-                    witness exist p N_pos st {$prime(p), $chap2::divides(p, n + 1)} from n + 1
+                    witness exist p N+ st {$prime(p), $chap2::divides(p, n + 1)} from n + 1
                 case not $prime(n + 1):
                     claim:
                         ? exist d range(2, n + 1) st {(n + 1) % d = 0}
@@ -313,24 +483,24 @@ thm exists_prime_factor:
                     obtain k from exist k Z st {n + 1 = d * k}
                     by def $chap2::divides(d, n + 1)
                     d <= (n + 1) - 1 = n
-                    obtain p from exist p N_pos st {$prime(p), $chap2::divides(p, d)}
+                    obtain p from exist p N+ st {$prime(p), $chap2::divides(p, d)}
                     obtain a from exist a Z st {d = p * a}
                     obtain b from exist b Z st {n + 1 = d * b}
                     witness exist factor Z st {n + 1 = p * factor} from a * b:
                         n + 1 = d * b = p * a * b = p * (a * b)
                     by def $chap2::divides(p, n + 1)
-                    witness exist q N_pos st {$prime(q), $chap2::divides(q, n + 1)} from p
+                    witness exist q N+ st {$prime(q), $chap2::divides(q, n + 1)} from p
 
 # Source theorem: primes_infinite. This keeps Euclid's route: choose a prime
 # divisor of n!+1 and show it is larger than n.
 thm primes_infinite:
     ? forall n N:
-        exist p N_pos st {p > n, $prime(p)}
+        exist p N+ st {p > n, $prime(p)}
     by thm factorial_positive(n)
     factorial(n) >= 1
     factorial(n) + 1 >= 1 + 1 = 2
     by thm exists_prime_factor(factorial(n) + 1)
-    obtain p from exist p N_pos st {$prime(p), $chap2::divides(p, factorial(n) + 1)}
+    obtain p from exist p N+ st {$prime(p), $chap2::divides(p, factorial(n) + 1)}
     claim:
         ? p > n
         by contra:
@@ -342,12 +512,13 @@ thm primes_infinite:
             obtain b from exist b Z st {factorial(n) + 1 = p * b}
             witness exist q Z st {1 = p * q} from b - a:
                 1 = (factorial(n) + 1) - factorial(n) = p * b - p * a = p * (b - a)
+            by def $chap2::divides(p, 1)
             $chap2::divides(p, 1)
             by thm chap2::_positive_divisor_le_abs(p, 1)
             p <= abs(1) = 1
             p >= 2
             impossible p <= 1
-    witness exist q N_pos st {q > n, $prime(q)} from p:
+    witness exist q N+ st {q > n, $prime(q)} from p:
         p > n
         $prime(p)
 
@@ -357,6 +528,10 @@ thm mod_4_eq_3_factor:
         (m * n) % 4 = 3
         =>:
             m % 4 = 3 or n % 4 = 3
+    m $in Z
+    n $in Z
+    4 $in N+
+    4 > 0
     m % 4 >= 0
     m % 4 < 4
     n % 4 >= 0
@@ -430,12 +605,25 @@ thm two_le_of_mod_4_eq_3:
             n = 1
             n % 4 = 1 % 4 = 1
             impossible n % 4 = 3
-    n $in N_pos
-    by contra:
-        ? 2 <= n
-        n < 2
-        n = 1
-        impossible n != 1
+    by thm two_le(n)
+
+# Source theorem: exists_prime_factor_mod_4_eq_3.
+# Proof debt: strong induction must split a nonprime factorization and retain
+# the factor whose residue is 3 modulo 4.
+thm exists_prime_factor_mod_4_eq_3:
+    ? forall n N:
+        n % 4 = 3
+        =>:
+            exist p N+ st {$prime(p), $chap2::divides(p, n), p % 4 = 3}
+    trust exist p N+ st {$prime(p), $chap2::divides(p, n), p % 4 = 3}
+
+# Source theorem: primes_mod_4_eq_3_infinite.
+# Proof debt: apply the preceding factor theorem to the Euclid-style number
+# formed from the finite product of all currently bounded such primes.
+thm primes_mod_4_eq_3_infinite:
+    ? forall n N:
+        exist p N+ st {p > n, $prime(p), p % 4 = 3}
+    trust exist p N+ st {p > n, $prime(p), p % 4 = 3}
 
 # 5.4 More Induction
 
@@ -454,6 +642,8 @@ thm fib_add_two:
 # Source definitions: phi and phi'. The public second name avoids punctuation.
 have phi R = (1 + sqrt(5)) / 2
 have phi_conjugate R = (1 - sqrt(5)) / 2
+sqrt(5) > 0
+sqrt(5) != 0
 
 # Source theorem: fib_eq, Binet's formula.
 thm fib_eq:
@@ -476,8 +666,12 @@ thm fib_eq:
         phi^(k + 2) = phi^k * phi^2 = phi^k * (phi + 1) = phi^k * phi + phi^k * 1 = phi^k * phi^1 + phi^k = phi^(k + 1) + phi^k
         phi_conjugate^(k + 2) = phi_conjugate^k * phi_conjugate^2 = phi_conjugate^k * (phi_conjugate + 1) = phi_conjugate^k * phi_conjugate + phi_conjugate^k * 1 = phi_conjugate^k * phi_conjugate^1 + phi_conjugate^k = phi_conjugate^(k + 1) + phi_conjugate^k
         binet(k + 2) = (phi^(k + 2) - phi_conjugate^(k + 2)) / sqrt(5)
-        binet(k + 2) = ((phi^(k + 1) + phi^k) - (phi_conjugate^(k + 1) + phi_conjugate^k)) / sqrt(5)
-        binet(k + 2) = (phi^k - phi_conjugate^k) / sqrt(5) + (phi^(k + 1) - phi_conjugate^(k + 1)) / sqrt(5) = binet(k) + binet(k + 1)
+        phi^(k + 2) - phi_conjugate^(k + 2) = (phi^(k + 1) + phi^k) - phi_conjugate^(k + 2)
+        (phi^(k + 1) + phi^k) - phi_conjugate^(k + 2) = (phi^(k + 1) + phi^k) - (phi_conjugate^(k + 1) + phi_conjugate^k)
+        phi^(k + 2) - phi_conjugate^(k + 2) = (phi^(k + 1) + phi^k) - phi_conjugate^(k + 2) = (phi^(k + 1) + phi^k) - (phi_conjugate^(k + 1) + phi_conjugate^k)
+        (phi^(k + 2) - phi_conjugate^(k + 2)) / sqrt(5) = ((phi^(k + 1) + phi^k) - (phi_conjugate^(k + 1) + phi_conjugate^k)) / sqrt(5)
+        binet(k + 2) = (phi^(k + 2) - phi_conjugate^(k + 2)) / sqrt(5) = ((phi^(k + 1) + phi^k) - (phi_conjugate^(k + 1) + phi_conjugate^k)) / sqrt(5)
+        binet(k + 2) = ((phi^(k + 1) + phi^k) - (phi_conjugate^(k + 1) + phi_conjugate^k)) / sqrt(5) = (phi^k - phi_conjugate^k) / sqrt(5) + (phi^(k + 1) - phi_conjugate^(k + 1)) / sqrt(5) = binet(k) + binet(k + 1)
     prop _fibonacci_binet_pair(k N):
         fibonacci(k) = binet(k)
         fibonacci(k + 1) = binet(k + 1)
@@ -489,6 +683,7 @@ thm fib_eq:
             ? from k = 0:
                 fibonacci(0) = 0 = binet(0)
                 fibonacci(0 + 1) = fibonacci(1) = 1 = binet(1) = binet(0 + 1)
+                by def $_fibonacci_binet_pair(0)
                 $_fibonacci_binet_pair(0)
                 $_fibonacci_binet_pair(k)
             ? induc:
@@ -499,13 +694,14 @@ thm fib_eq:
                 fibonacci(k + 2) = fibonacci(k) + fibonacci(k + 1) = binet(k) + binet(k + 1) = binet(k + 2)
                 fibonacci((k + 1) + 1) = fibonacci(k + 2) = binet(k + 2) = binet((k + 1) + 1)
                 fibonacci(k + 1) = binet(k + 1)
+                by def $_fibonacci_binet_pair(k + 1)
                 $_fibonacci_binet_pair(k + 1)
     $_fibonacci_binet_pair(n)
     fibonacci(n) = binet(n) = (phi^n - phi_conjugate^n) / sqrt(5)
 
 # Adding the first positive input to the second does not change their gcd.
 thm _gcd_add_right_for_fibonacci:
-    ? forall a N_pos, b N:
+    ? forall a N+, b N:
         gcd(a, b) = gcd(a, a + b)
     a != 0
     a != 0 or b != 0
@@ -519,6 +715,7 @@ thm _gcd_add_right_for_fibonacci:
     obtain r from exist r Z st {b = gcd(a, b) * r}
     witness exist s Z st {a + b = gcd(a, b) * s} from q + r:
         a + b = gcd(a, b) * q + gcd(a, b) * r = gcd(a, b) * (q + r)
+    by def $chap2::divides(gcd(a, b), a + b)
     by thm chap2::common_divisor_le_gcd(a, a + b, gcd(a, b))
     gcd(a, b) <= gcd(a, a + b)
 
@@ -529,6 +726,7 @@ thm _gcd_add_right_for_fibonacci:
     obtain v from exist v Z st {a + b = gcd(a, a + b) * v}
     witness exist s Z st {b = gcd(a, a + b) * s} from v - u:
         b = (a + b) - a = gcd(a, a + b) * v - gcd(a, a + b) * u = gcd(a, a + b) * (v - u)
+    by def $chap2::divides(gcd(a, a + b), b)
     by thm chap2::common_divisor_le_gcd(a, b, gcd(a, a + b))
     gcd(a, a + b) <= gcd(a, b)
     gcd(a, b) = gcd(a, a + b)
@@ -562,6 +760,7 @@ thm fib_coprime_fib_succ:
             by thm chap2::gcd_euclidean_base(1)
             gcd(1, 0) = abs(1) = 1
             gcd(fibonacci(n), fibonacci(n + 1)) = gcd(0, 1) = 1
+            by def $coprime(fibonacci(n), fibonacci(n + 1))
             $coprime(fibonacci(n), fibonacci(n + 1))
         ? induc:
             $coprime(fibonacci(n), fibonacci(n + 1))
@@ -569,7 +768,7 @@ thm fib_coprime_fib_succ:
             gcd(fibonacci(n), fibonacci(n + 1)) = 1
             by thm _fibonacci_successor_positive(n)
             fibonacci(n + 1) > 0
-            fibonacci(n + 1) $in N_pos
+            fibonacci(n + 1) $in N+
             fibonacci(n + 1) != 0
             n + 2 >= 2
             fibonacci(n + 2) = fibonacci((n + 2) - 2) + fibonacci((n + 2) - 1) = fibonacci(n) + fibonacci(n + 1) = fibonacci(n + 1) + fibonacci(n)
@@ -582,13 +781,18 @@ thm fib_coprime_fib_succ:
             gcd(fibonacci(n + 1), fibonacci(n)) = gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n))
             gcd(fibonacci(n + 1), fibonacci((n + 1) + 1)) = gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n)) = 1
             fibonacci(n + 1) != 0 or fibonacci((n + 1) + 1) != 0
+            by def $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
             $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
 
 # Source definition: fib'. This tail-recursive state machine is a callable
 # construction, not merely a second proof script.
-have fn fibonacci_fast_aux(n, x, y N) N by induc n from 0:
-    case n = 0: x
-    case n > 0: fibonacci_fast_aux(n - 1, y, x + y)
+# Proof debt (kernel_problem): recursive-call well-definedness does not inherit
+# the `n > 0` branch condition needed to type the predecessor argument.
+trust have fibonacci_fast_aux fn(n, x, y N) N
+trust forall x, y N:
+    fibonacci_fast_aux(0, x, y) = x
+trust forall n, x, y N:
+    fibonacci_fast_aux(n + 1, x, y) = fibonacci_fast_aux(n, y, x + y)
 
 have fn fibonacci_fast(n N) N = fibonacci_fast_aux(n, 0, 1)
 
@@ -611,6 +815,7 @@ thm fibonacci_fast_aux_eq:
                     ? forall j N:
                         fibonacci_fast_aux(k, fibonacci(j), fibonacci(j + 1)) = fibonacci(k + j)
                     fibonacci_fast_aux(k, fibonacci(j), fibonacci(j + 1)) = fibonacci(j) = fibonacci(k + j)
+                by def $_fibonacci_fast_invariant(k)
                 $_fibonacci_fast_invariant(k)
             ? induc:
                 $_fibonacci_fast_invariant(k)
@@ -624,9 +829,10 @@ thm fibonacci_fast_aux_eq:
                     fibonacci(j + 2) = fibonacci((j + 1) + 1)
                     fibonacci(j) + fibonacci(j + 1) = fibonacci((j + 1) + 1)
                     fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci((j + 1) + 1))
-                    fibonacci_fast_aux(k + 1, fibonacci(j), fibonacci(j + 1)) = fibonacci_fast_aux((k + 1) - 1, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1))
+                    fibonacci_fast_aux(k + 1, fibonacci(j), fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1))
                     fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci((j + 1) + 1)) = fibonacci(k + (j + 1))
                     fibonacci(k + (j + 1)) = fibonacci((k + 1) + j)
+                by def $_fibonacci_fast_invariant(k + 1)
                 $_fibonacci_fast_invariant(k + 1)
     $_fibonacci_fast_invariant(n)
     fibonacci_fast_aux(n, fibonacci(m), fibonacci(m + 1)) = fibonacci(n + m)
@@ -664,6 +870,7 @@ thm fib_add:
                     fibonacci(k + 1) = fibonacci(1) = 1
                     fibonacci(j + k + 1) = fibonacci(j + 1)
                     fibonacci(j) * fibonacci(k) + fibonacci(j + 1) * fibonacci(k + 1) = fibonacci(j) * 0 + fibonacci(j + 1) * 1 = fibonacci(j + 1)
+                by def $_fibonacci_addition_at(k)
                 $_fibonacci_addition_at(k)
             ? induc:
                 $_fibonacci_addition_at(k)
@@ -681,9 +888,18 @@ thm fib_add:
                     fibonacci(j + 1) * fibonacci(k) + fibonacci((j + 1) + 1) * fibonacci(k + 1) = fibonacci(j + 1) * fibonacci(k) + (fibonacci(j) + fibonacci(j + 1)) * fibonacci(k + 1)
                     fibonacci(j + 1) * fibonacci(k) + (fibonacci(j) + fibonacci(j + 1)) * fibonacci(k + 1) = fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * (fibonacci(k) + fibonacci(k + 1))
                     fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * (fibonacci(k) + fibonacci(k + 1)) = fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * fibonacci((k + 1) + 1)
+                by def $_fibonacci_addition_at(k + 1)
                 $_fibonacci_addition_at(k + 1)
     $_fibonacci_addition_at(n)
     fibonacci(m + n + 1) = fibonacci(m) * fibonacci(n) + fibonacci(m + 1) * fibonacci(n + 1)
+
+# Source exercise: the sum of two consecutive Fibonacci squares.
+thm fibonacci_consecutive_square_sum:
+    ? forall n N:
+        fibonacci(n)^2 + fibonacci(n + 1)^2 = fibonacci(2 * n + 1)
+    by thm fib_add(n, n)
+    fibonacci(n + n + 1) = fibonacci(n) * fibonacci(n) + fibonacci(n + 1) * fibonacci(n + 1)
+    fibonacci(n)^2 + fibonacci(n + 1)^2 = fibonacci(n) * fibonacci(n) + fibonacci(n + 1) * fibonacci(n + 1) = fibonacci(n + n + 1) = fibonacci(2 * n + 1)
 
 # Source theorem ne_one_iff_exists_prime_dvd, represented by its two factual
 # directions because Litex theorem goals are implication-shaped.
@@ -691,40 +907,35 @@ thm ne_one_iff_exists_prime_dvd_forward:
     ? forall n N:
         n != 1
         =>:
-            exist p N_pos st {$prime(p), $chap2::divides(p, n)}
+            exist p N+ st {$prime(p), $chap2::divides(p, n)}
     claim:
         ? forall:
             n != 1
             =>:
-                exist p N_pos st {$prime(p), $chap2::divides(p, n)}
+                exist p N+ st {$prime(p), $chap2::divides(p, n)}
         n = 0 or n != 0
         by cases:
-            ? exist p N_pos st {$prime(p), $chap2::divides(p, n)}
+            ? exist p N+ st {$prime(p), $chap2::divides(p, n)}
             case n = 0:
-                witness exist p N_pos st {$prime(p), $chap2::divides(p, n)} from 2:
+                witness exist p N+ st {$prime(p), $chap2::divides(p, n)} from 2:
                     $prime(2)
                     witness exist q Z st {n = 2 * q} from 0:
                         n = 0 = 2 * 0
+                    by def $chap2::divides(2, n)
                     $chap2::divides(2, n)
             case n != 0:
-                n $in N_pos
-                claim:
-                    ? 2 <= n
-                    by contra:
-                        ? 2 <= n
-                        n < 2
-                        n = 1
-                        impossible n != 1
+                n $in N+
+                by thm two_le(n)
                 by thm exists_prime_factor(n)
-                exist p N_pos st {$prime(p), $chap2::divides(p, n)}
-    exist p N_pos st {$prime(p), $chap2::divides(p, n)}
+                exist p N+ st {$prime(p), $chap2::divides(p, n)}
+    exist p N+ st {$prime(p), $chap2::divides(p, n)}
 
 thm ne_one_iff_exists_prime_dvd_reverse:
     ? forall n N:
-        exist p N_pos st {$prime(p), $chap2::divides(p, n)}
+        exist p N+ st {$prime(p), $chap2::divides(p, n)}
         =>:
             n != 1
-    obtain p from exist p N_pos st {$prime(p), $chap2::divides(p, n)}
+    obtain p from exist p N+ st {$prime(p), $chap2::divides(p, n)}
     by contra:
         ? n != 1
         n = 1
@@ -733,3 +944,14 @@ thm ne_one_iff_exists_prime_dvd_reverse:
         p <= abs(n) = 1
         p >= 2
         impossible p <= 1
+
+# The two source case-split proofs collapse to this arithmetic fact.
+# proof_debt: expose positivity of natural factors from a positive product.
+thm natural_factors_positive_of_product_one:
+    ? forall m, n N:
+        n * m = 1
+        =>:
+            n > 0
+            m > 0
+    trust n > 0
+    trust m > 0

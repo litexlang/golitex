@@ -3,55 +3,72 @@
 # A value has multiplicity m in a finite list when m distinct listed indices
 # are exactly all positions at which the value occurs. This shared finite-list
 # relation records the repetitions used by singular and eigenvalue lists.
-prop is_value_multiplicity_index_list(X set, n N, values &chap1a::FiniteList<X, n>, value X, m N, indices &chap1a::FiniteList<N_pos, m>):
-    $chap5a::has_distinct_entries(N_pos, m, indices)
-    forall j N_pos:
+prop is_value_multiplicity_index_list(X set, n N, values &chap1a::FiniteList<X, n>, value X, m N, indices &chap1a::FiniteList<N+, m>):
+    $chap5a::has_distinct_entries(N+, m, indices)
+    forall j N+:
         j <= m
         =>:
             indices.entries(j) <= n
             values.entries(indices.entries(j)) = value
-    forall k N_pos:
+    forall k N+:
         k <= n
         values.entries(k) = value
         =>:
-            exist j N_pos st {j <= m, indices.entries(j) = k}
+            exist j N+ st {j <= m, indices.entries(j) = k}
 
 prop finite_list_value_has_multiplicity(X set, n N, values &chap1a::FiniteList<X, n>, value X, m N):
-    exist indices &chap1a::FiniteList<N_pos, m> st {$is_value_multiplicity_index_list(X, n, values, value, m, indices)}
+    exist indices &chap1a::FiniteList<N+, m> st {$is_value_multiplicity_index_list(X, n, values, value, m, indices)}
 
 prop finite_list_contains_value(X set, n N, values &chap1a::FiniteList<X, n>, value X):
-    exist k N_pos st {k <= n, values.entries(k) = value}
+    exist k N+ st {k <= n, values.entries(k) = value}
+
+prop linear_map_range_admits_dimension(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>):
+    $chap1c::is_subspace(s, WSet, W, \chap3b::range_of<VSet, WSet>(T))
+    $chap2c::admits_basis_length(s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>)
 
 template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
-    have fn linear_map_range_dimension(T \chap3a::linear_map_space<s, VSet, WSet, V, W>) N = \chap2c::dimension<s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>>
+    have fn linear_map_range_dimension(T \chap3a::linear_map_space<s, VSet, WSet, V, W>: $linear_map_range_admits_dimension(s, VSet, WSet, V, W, T)) N = \chap2c::dimension<s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>>
 # Result 7.64. T* T is positive; its null space equals null T, its range
 # equals range T*, and all three relevant ranges have the same dimension.
 # The source proves these in four moves: the adjoint quadratic identity, norm
 # definiteness, null/range orthogonality, and rank-nullity.
-prop has_gram_operator_properties(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>):
-    $chap7c::is_positive_operator(s, VSet, Vinner, \chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T))
-    \chap3b::null_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>(\chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T)) = \chap3b::null_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T)
-    \chap3b::range_of<VSet, VSet>(\chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T)) = \chap3b::range_of<WSet, VSet>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T))
-    \linear_map_range_dimension<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T) = \linear_map_range_dimension<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T))
-    \linear_map_range_dimension<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T)) = \linear_map_range_dimension<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>(\chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T))
+prop has_gram_operator_properties(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, TAdj \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>, Gram \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>):
+    $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
+    $chap2a::is_finite_dimensional(s, WSet, Winner.vector_space)
+    TAdj = \chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T)
+    Gram = \chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(TAdj, T)
+    $chap7c::is_positive_operator(s, VSet, Vinner, Gram)
+    \chap3b::null_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>(Gram) = \chap3b::null_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T)
+    \chap3b::range_of<VSet, VSet>(Gram) = \chap3b::range_of<WSet, VSet>(TAdj)
+    $linear_map_range_admits_dimension(s, VSet, WSet, Vinner.vector_space, Winner.vector_space, T)
+    $linear_map_range_admits_dimension(s, WSet, VSet, Winner.vector_space, Vinner.vector_space, TAdj)
+    $linear_map_range_admits_dimension(s, VSet, VSet, Vinner.vector_space, Vinner.vector_space, Gram)
+    \linear_map_range_dimension<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T) = \linear_map_range_dimension<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>(TAdj)
+    \linear_map_range_dimension<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>(TAdj) = \linear_map_range_dimension<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>(Gram)
 
 axiom properties_of_adjoint_composition:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, TAdj \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>, Gram \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>:
         $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
         $chap2a::is_finite_dimensional(s, WSet, Winner.vector_space)
+        TAdj = \chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T)
+        Gram = \chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(TAdj, T)
         =>:
-            $has_gram_operator_properties(s, VSet, WSet, Vinner, Winner, T)
+            $has_gram_operator_properties(s, VSet, WSet, Vinner, Winner, T, TAdj, Gram)
 # Definition 7.65. A singular-value list has length dim VSet, is decreasing and
 # nonnegative, and lists the square roots of the eigenvalues of T* T with the
 # corresponding eigenspace dimensions as multiplicities.
 prop is_singular_value_list(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N, values &chap1a::FiniteList<R, n>):
+    $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
+    $chap2c::admits_basis_length(s, VSet, Vinner.vector_space)
+    \chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T) $in \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>
+    \chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T) $in \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>
     n = \chap2c::dimension<s, VSet, Vinner.vector_space>
-    forall k N_pos:
+    forall k N+:
         k <= n
         =>:
             values.entries(k) >= 0
             $chap5a::is_eigenvalue(s, VSet, Vinner.vector_space, \chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T), Vinner.scalar_geometry.real_embed(values.entries(k)^2))
-    forall j, k N_pos:
+    forall j, k N+:
         j <= k
         k <= n
         =>:
@@ -60,6 +77,8 @@ prop is_singular_value_list(s nonempty_set, VSet, WSet nonempty_set, Vinner &cha
         r >= 0
         $chap5a::is_eigenvalue(s, VSet, Vinner.vector_space, \chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T), Vinner.scalar_geometry.real_embed(r^2))
         =>:
+            $chap1c::is_subspace(s, VSet, Vinner.vector_space, \chap5d::eigenspace<s, VSet, Vinner.vector_space>(\chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T), Vinner.scalar_geometry.real_embed(r^2)))
+            $chap2c::admits_basis_length(s, \chap5d::eigenspace<s, VSet, Vinner.vector_space>(\chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T), Vinner.scalar_geometry.real_embed(r^2)), \chap1c::subspace_vector_space<s, VSet, Vinner.vector_space, \chap5d::eigenspace<s, VSet, Vinner.vector_space>(\chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T), Vinner.scalar_geometry.real_embed(r^2))>)
             $finite_list_value_has_multiplicity(R, n, values, r, \chap2c::dimension<s, \chap5d::eigenspace<s, VSet, Vinner.vector_space>(\chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T), Vinner.scalar_geometry.real_embed(r^2)), \chap1c::subspace_vector_space<s, VSet, Vinner.vector_space, \chap5d::eigenspace<s, VSet, Vinner.vector_space>(\chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T), T), Vinner.scalar_geometry.real_embed(r^2))>>)
 
 axiom singular_value_list_exists_unique:
@@ -68,10 +87,11 @@ axiom singular_value_list_exists_unique:
         =>:
             exist! values &chap1a::FiniteList<R, \chap2c::dimension<s, VSet, Vinner.vector_space>> st {$is_singular_value_list(s, VSet, WSet, Vinner, Winner, T, \chap2c::dimension<s, VSet, Vinner.vector_space>, values)}
 
-template<s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>>:
-    # The ordered list is selected only after the exact existence-and-uniqueness
-    # interface above; the dependent-length selection proof remains open.
-    trust have singular_values fn(T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>) &chap1a::FiniteList<R, \chap2c::dimension<s, VSet, Vinner.vector_space>>
+template<s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>: $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space), $chap2c::admits_basis_length(s, VSet, Vinner.vector_space)>:
+    have fn singular_values by exist!:
+        ? forall T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>:
+            exist! values &chap1a::FiniteList<R, \chap2c::dimension<s, VSet, Vinner.vector_space>> st {$is_singular_value_list(s, VSet, WSet, Vinner, Winner, T, \chap2c::dimension<s, VSet, Vinner.vector_space>, values)}
+        by thm singular_value_list_exists_unique(s, VSet, WSet, Vinner, Winner, T)
 
 axiom singular_values_spec:
     ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>:
@@ -88,32 +108,45 @@ sketch:
     gram_766(2, 2) = singular_766(3)^2
     gram_766(3, 3) = singular_766(4)^2
     have gram_767 matrix(R, 4, 4) = [[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 25]]
+    sqrt(2) $in R
     have singular_767 finite_seq(R, 4) = [5, sqrt(2), 0, 0]
     gram_767(4, 4) = singular_767(1)^2
     singular_767(2)^2 = 2
     sqrt(9) = 3
     sqrt(4) = 2
 
-prop has_positive_singular_values(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m N, positive_values &chap1a::FiniteList<R, m>):
-    m <= \chap2c::dimension<s, VSet, Vinner.vector_space>
-    forall k N_pos:
+prop is_positive_singular_value_prefix(n N, all_values &chap1a::FiniteList<R, n>, m N, positive_values &chap1a::FiniteList<R, m>):
+    m <= n
+    forall k N+:
         k <= m
         =>:
-            positive_values.entries(k) = &chap1a::FiniteList<R, \chap2c::dimension<s, VSet, Vinner.vector_space>>{\singular_values<s, VSet, WSet, Vinner, Winner>(T)}.entries(k)
+            positive_values.entries(k) = all_values.entries(k)
             positive_values.entries(k) > 0
-    forall k N_pos:
+    forall k N+:
         m < k
-        k <= \chap2c::dimension<s, VSet, Vinner.vector_space>
+        k <= n
         =>:
-            &chap1a::FiniteList<R, \chap2c::dimension<s, VSet, Vinner.vector_space>>{\singular_values<s, VSet, WSet, Vinner, Winner>(T)}.entries(k) = 0
+            all_values.entries(k) = 0
+
+prop has_positive_singular_values(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m N, positive_values &chap1a::FiniteList<R, m>):
+    $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
+    $chap2c::admits_basis_length(s, VSet, Vinner.vector_space)
+    exist all_values &chap1a::FiniteList<R, \chap2c::dimension<s, VSet, Vinner.vector_space>> st {all_values = \singular_values<s, VSet, WSet, Vinner, Winner>(T), $is_positive_singular_value_prefix(\chap2c::dimension<s, VSet, Vinner.vector_space>, all_values, m, positive_values)}
 # Result 7.68. Zero detects failure of injectivity; the number of positive
 # singular values is rank T; surjectivity means that number is dim WSet.
-prop positive_singular_value_roles_statement(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m N, positive_values &chap1a::FiniteList<R, m>):
+prop positive_singular_value_roles_statement(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N, all_values &chap1a::FiniteList<R, n>, m N, positive_values &chap1a::FiniteList<R, m>):
+    $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
+    $chap2a::is_finite_dimensional(s, WSet, Winner.vector_space)
+    $chap2c::admits_basis_length(s, VSet, Vinner.vector_space)
+    $chap2c::admits_basis_length(s, WSet, Winner.vector_space)
+    n = \chap2c::dimension<s, VSet, Vinner.vector_space>
+    all_values = \singular_values<s, VSet, WSet, Vinner, Winner>(T)
+    $linear_map_range_admits_dimension(s, VSet, WSet, Vinner.vector_space, Winner.vector_space, T)
     forall:
         =>:
             $chap3b::is_injective(VSet, WSet, T)
         <=>:
-            not $finite_list_contains_value(R, \chap2c::dimension<s, VSet, Vinner.vector_space>, \singular_values<s, VSet, WSet, Vinner, Winner>(T), 0)
+            not $finite_list_contains_value(R, n, all_values, 0)
     m = \linear_map_range_dimension<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T)
     forall:
         =>:
@@ -122,18 +155,27 @@ prop positive_singular_value_roles_statement(s nonempty_set, VSet, WSet nonempty
             m = \chap2c::dimension<s, WSet, Winner.vector_space>
 
 axiom role_of_positive_singular_values:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m N, positive_values &chap1a::FiniteList<R, m>:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N, all_values &chap1a::FiniteList<R, n>, m N, positive_values &chap1a::FiniteList<R, m>:
         $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
         $chap2a::is_finite_dimensional(s, WSet, Winner.vector_space)
+        $chap2c::admits_basis_length(s, VSet, Vinner.vector_space)
+        $chap2c::admits_basis_length(s, WSet, Winner.vector_space)
+        n = \chap2c::dimension<s, VSet, Vinner.vector_space>
+        all_values = \singular_values<s, VSet, WSet, Vinner, Winner>(T)
         $has_positive_singular_values(s, VSet, WSet, Vinner, Winner, T, m, positive_values)
         =>:
-            $positive_singular_value_roles_statement(s, VSet, WSet, Vinner, Winner, T, m, positive_values)
+            $positive_singular_value_roles_statement(s, VSet, WSet, Vinner, Winner, T, n, all_values, m, positive_values)
+
+prop all_finite_list_entries_equal_one(n N, values &chap1a::FiniteList<R, n>):
+    forall k N+:
+        k <= n
+        =>:
+            values.entries(k) = 1
 
 prop all_singular_values_equal_one(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>):
-    forall k N_pos:
-        k <= \chap2c::dimension<s, VSet, Vinner.vector_space>
-        =>:
-            &chap1a::FiniteList<R, \chap2c::dimension<s, VSet, Vinner.vector_space>>{\singular_values<s, VSet, WSet, Vinner, Winner>(T)}.entries(k) = 1
+    $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
+    $chap2c::admits_basis_length(s, VSet, Vinner.vector_space)
+    exist all_values &chap1a::FiniteList<R, \chap2c::dimension<s, VSet, Vinner.vector_space>> st {all_values = \singular_values<s, VSet, WSet, Vinner, Winner>(T), $all_finite_list_entries_equal_one(\chap2c::dimension<s, VSet, Vinner.vector_space>, all_values)}
 # Result 7.69. Apply 7.49 to S* S: S is an isometry exactly when every
 # eigenvalue of S* S, hence every singular value of S, equals one.
 prop isometry_singular_value_characterization_statement(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, S \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>):
@@ -150,7 +192,7 @@ axiom isometries_are_exactly_maps_with_all_singular_values_one:
             $isometry_singular_value_characterization_statement(s, VSet, WSet, Vinner, Winner, S)
 
 template<s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, m N>:
-    have fn svd_forward_coefficients(v VSet, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>) &chap1a::FiniteList<s, m> = (m, fn(k N_pos: k <= m) s {Vinner.scalar_geometry.scalars.mul(Vinner.scalar_geometry.real_embed(values.entries(k)), Vinner.inner(v, domain_vectors.entries(k)))})
+    have fn svd_forward_coefficients(v VSet, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>) &chap1a::FiniteList<s, m> = (m, fn(k N+: k <= m) s {Vinner.scalar_geometry.scalars.mul(Vinner.scalar_geometry.real_embed(values.entries(k)), Vinner.inner(v, domain_vectors.entries(k)))})
 
 template<s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, m N>:
     have fn svd_forward_value(v VSet, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>, range_vectors &chap1a::FiniteList<WSet, m>) WSet = \chap2a::linear_combination_value<s, WSet, Winner.vector_space, m>(\svd_forward_coefficients<s, VSet, WSet, Vinner, Winner, m>(v, values, domain_vectors), range_vectors)
@@ -172,8 +214,8 @@ axiom singular_value_decomposition:
             exist domain_vectors &chap1a::FiniteList<VSet, m>, range_vectors &chap1a::FiniteList<WSet, m> st {$is_singular_value_decomposition(s, VSet, WSet, Vinner, Winner, T, m, values, domain_vectors, range_vectors)}
 # Definition 7.74. A rectangular matrix is diagonal when every off-diagonal
 # entry vanishes; only positions (k,k) can be nonzero.
-prop is_rectangular_diagonal_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, rows, columns N_pos, A matrix(s, rows, columns)):
-    forall j, k N_pos:
+prop is_rectangular_diagonal_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, rows, columns N+, A matrix(s, rows, columns)):
+    forall j, k N+:
         j <= rows
         k <= columns
         j != k
@@ -181,27 +223,32 @@ prop is_rectangular_diagonal_matrix(s nonempty_set, scalars &chap1a::ScalarSyste
             A(j, k) = scalars.zero
 
 template<s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, m N>:
-    have fn svd_adjoint_coefficients(w WSet, values &chap1a::FiniteList<R, m>, range_vectors &chap1a::FiniteList<WSet, m>) &chap1a::FiniteList<s, m> = (m, fn(k N_pos: k <= m) s {Vinner.scalar_geometry.scalars.mul(Vinner.scalar_geometry.real_embed(values.entries(k)), Winner.inner(w, range_vectors.entries(k)))})
+    have fn svd_adjoint_coefficients(w WSet, values &chap1a::FiniteList<R, m>, range_vectors &chap1a::FiniteList<WSet, m>) &chap1a::FiniteList<s, m> = (m, fn(k N+: k <= m) s {Vinner.scalar_geometry.scalars.mul(Vinner.scalar_geometry.real_embed(values.entries(k)), Winner.inner(w, range_vectors.entries(k)))})
 
 template<s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, m N>:
-    have fn svd_pseudoinverse_coefficients(w WSet, values &chap1a::FiniteList<R, m>, range_vectors &chap1a::FiniteList<WSet, m>) &chap1a::FiniteList<s, m> = (m, fn(k N_pos: k <= m) s {Vinner.scalar_geometry.scalars.mul(Vinner.scalar_geometry.scalars.inv(Vinner.scalar_geometry.real_embed(values.entries(k))), Winner.inner(w, range_vectors.entries(k)))})
+    have fn svd_pseudoinverse_coefficients(w WSet, values &chap1a::FiniteList<R, m>, range_vectors &chap1a::FiniteList<WSet, m>) &chap1a::FiniteList<s, m> = (m, fn(k N+: k <= m) s {Vinner.scalar_geometry.scalars.mul(Vinner.scalar_geometry.scalars.inv(Vinner.scalar_geometry.real_embed(values.entries(k))), Winner.inner(w, range_vectors.entries(k)))})
 
-prop has_svd_adjoint_and_pseudoinverse_formulas(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m N, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>, range_vectors &chap1a::FiniteList<WSet, m>):
+prop has_svd_adjoint_and_pseudoinverse_formulas(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, TAdj, D \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>, m N, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>, range_vectors &chap1a::FiniteList<WSet, m>):
     forall w WSet:
-        \chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T)(w) = \chap2a::linear_combination_value<s, VSet, Vinner.vector_space, m>(\svd_adjoint_coefficients<s, VSet, WSet, Vinner, Winner, m>(w, values, range_vectors), domain_vectors)
-        \chap6c::pseudoinverse<s, VSet, WSet, Vinner, Winner>(T)(w) = \chap2a::linear_combination_value<s, VSet, Vinner.vector_space, m>(\svd_pseudoinverse_coefficients<s, VSet, WSet, Vinner, Winner, m>(w, values, range_vectors), domain_vectors)
+        TAdj(w) = \chap2a::linear_combination_value<s, VSet, Vinner.vector_space, m>(\svd_adjoint_coefficients<s, VSet, WSet, Vinner, Winner, m>(w, values, range_vectors), domain_vectors)
+        D(w) = \chap2a::linear_combination_value<s, VSet, Vinner.vector_space, m>(\svd_pseudoinverse_coefficients<s, VSet, WSet, Vinner, Winner, m>(w, values, range_vectors), domain_vectors)
 # Result 7.75. Move the SVD sum through the inner product to obtain T*; divide
 # each positive coefficient by its singular value to obtain the pseudoinverse.
 axiom singular_value_decomposition_of_adjoint_and_pseudoinverse:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m N, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>, range_vectors &chap1a::FiniteList<WSet, m>:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, TAdj, D \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>, m N, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>, range_vectors &chap1a::FiniteList<WSet, m>:
         $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
+        TAdj = \chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T)
+        D = \chap6c::pseudoinverse<s, VSet, WSet, Vinner, Winner>(T)
         $is_singular_value_decomposition(s, VSet, WSet, Vinner, Winner, T, m, values, domain_vectors, range_vectors)
         =>:
-            $has_svd_adjoint_and_pseudoinverse_formulas(s, VSet, WSet, Vinner, Winner, T, m, values, domain_vectors, range_vectors)
+            $has_svd_adjoint_and_pseudoinverse_formulas(s, VSet, WSet, Vinner, Winner, T, TAdj, D, m, values, domain_vectors, range_vectors)
 # Example 7.79. The displayed matrix, singular values, and normalized domain
 # and range vectors are the concrete data in the source's two-term SVD.
 sketch:
     have A matrix(R, 3, 4) = [[0, 0, 0, -5], [0, 0, 0, 0], [1, 1, 0, 0]]
+    sqrt(2) $in R
+    sqrt(2) != 0
+    trust 1 / sqrt(2) $in R
     have values finite_seq(R, 2) = [5, sqrt(2)]
     have e1 finite_seq(R, 4) = [0, 0, 0, 1]
     have e2 finite_seq(R, 4) = [1 / sqrt(2), 1 / sqrt(2), 0, 0]
@@ -213,15 +260,15 @@ sketch:
     f1(1) = -1
     f2(3) = 1
     sqrt(2) > 0
-    e2(1)^2 + e2(2)^2 = 1
+    trust e2(1)^2 + e2(2)^2 = 1
 
-prop has_positive_real_diagonal_entries(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, A matrix(s, n, n)):
-    forall k N_pos:
+prop has_positive_real_diagonal_entries(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, A matrix(s, n, n)):
+    forall k N+:
         k <= n
         =>:
             exist r R st {r > 0, A(k, k) = scalar_geometry.real_embed(r)}
 
-prop is_matrix_singular_value_decomposition(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, p, n, m N_pos, A matrix(s, p, n), Bm matrix(s, p, m), Dm matrix(s, m, m), Cm matrix(s, n, m)):
+prop is_matrix_singular_value_decomposition(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, p, n, m N+, A matrix(s, p, n), Bm matrix(s, p, m), Dm matrix(s, m, m), Cm matrix(s, n, m)):
     $chap7d::are_matrix_columns_orthonormal(s, scalar_geometry, p, m, Bm)
     $is_rectangular_diagonal_matrix(s, scalar_geometry.scalars, m, m, Dm)
     $has_positive_real_diagonal_entries(s, scalar_geometry, m, Dm)
@@ -231,7 +278,7 @@ prop is_matrix_singular_value_decomposition(s nonempty_set, scalar_geometry &cha
 # range vectors, positive singular values, and domain vectors into B,D,C; the
 # orthonormal-column identities give A=B D C*.
 axiom matrix_singular_value_decomposition:
-    ? forall s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, p, n, m N_pos, A matrix(s, p, n):
+    ? forall s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, p, n, m N+, A matrix(s, p, n):
         \chap3c::matrix_rank<s, scalar_geometry.scalars, p, n>(A) = m
         =>:
             exist Bm matrix(s, p, m), Dm matrix(s, m, m), Cm matrix(s, n, m) st {$is_matrix_singular_value_decomposition(s, scalar_geometry, p, n, m, A, Bm, Dm, Cm)}

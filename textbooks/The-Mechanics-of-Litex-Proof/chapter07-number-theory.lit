@@ -16,7 +16,7 @@
 # The first example in Macbeth's chapter is Euclid's theorem: there are infinitely
 # many primes. In Litex, the proof can be written in the same forward order as the
 # mathematical idea. Take the factorial-like product
-# `product(1, a, fn(x N_pos) N_pos {x})`, then take a prime factor `k` of this product plus
+# `product(1, a, fn(x N+) N+ {x})`, then take a prime factor `k` of this product plus
 # one. If `k <= a`, then `k` divides the product. But `k` also divides the product
 # plus one, so the same remainder would have to be both `0` and `1`, a
 # contradiction. Therefore `k > a`.
@@ -32,74 +32,81 @@
 # keep the final Euclid proof focused on its contradiction argument.
 
 claim:
-    ? forall a N_pos:
-        product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
+    ? forall a N+:
+        product(1, a, fn(x N+) N+ {x}) % a = 0 and a <= product(1, a, fn(x N+) N+ {x})
 
     by induc a from 1:
-        ? product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
+        ? product(1, a, fn(x N+) N+ {x}) % a = 0 and a <= product(1, a, fn(x N+) N+ {x})
 
-        product(1, 1, fn(x N_pos) N_pos {x}) = 1
-        1 <= product(1, 1, fn(x N_pos) N_pos {x})
+        product(1, 1, fn(x N+) N+ {x}) = 1
+        1 <= product(1, 1, fn(x N+) N+ {x})
 
         claim:
             ? forall k Z:
                 k >= 1
-                product(1, k, fn(x N_pos) N_pos {x}) % k = 0 and k <= product(1, k, fn(x N_pos) N_pos {x})
+                product(1, k, fn(x N+) N+ {x}) % k = 0 and k <= product(1, k, fn(x N+) N+ {x})
                 =>:
-                    product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N_pos) N_pos {x})
+                    product(1, k + 1, fn(x N+) N+ {x}) % (k + 1) = 0 and k + 1 <= product(1, k + 1, fn(x N+) N+ {x})
 
-            witness exist quotient Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = (k + 1) * quotient + 0} from product(1, k, fn(x N_pos) N_pos {x}):
-                product(1, k + 1, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * (k + 1) = (k + 1) * product(1, k, fn(x N_pos) N_pos {x}) = (k + 1) * product(1, k, fn(x N_pos) N_pos {x}) + 0
-            obtain quotient_value from exist quotient Z st {product(1, k + 1, fn(x N_pos) N_pos {x}) = (k + 1) * quotient + 0}
-            product(1, k + 1, fn(x N_pos) N_pos {x}) = (k + 1) * quotient_value + 0
-            product(1, k + 1, fn(x N_pos) N_pos {x}) % (k + 1) = 0
-            product(1, k, fn(x N_pos) N_pos {x}) >= 1
-            k + 1 = (k + 1) * 1 <= (k + 1) * product(1, k, fn(x N_pos) N_pos {x}) = product(1, k + 1, fn(x N_pos) N_pos {x})
+            have prefix_product N+ = product(1, k, fn(x N+) N+ {x})
+            have next_product N+ = product(1, k + 1, fn(x N+) N+ {x})
+            k + 1 $in N+
+            witness exist quotient Z st {next_product = (k + 1) * quotient + 0} from prefix_product:
+                next_product = product(1, k + 1, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * (k + 1) = prefix_product * (k + 1) = (k + 1) * prefix_product = (k + 1) * prefix_product + 0
+            obtain quotient_value from exist quotient Z st {next_product = (k + 1) * quotient + 0}
+            next_product = (k + 1) * quotient_value + 0
+            next_product % (k + 1) = 0
+            product(1, k + 1, fn(x N+) N+ {x}) % (k + 1) = next_product % (k + 1) = 0
+            prefix_product >= 1
+            next_product = product(1, k + 1, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * (k + 1) = prefix_product * (k + 1) = (k + 1) * prefix_product
+            k + 1 = (k + 1) * 1 <= (k + 1) * prefix_product = next_product = product(1, k + 1, fn(x N+) N+ {x})
 
 claim:
-    ? forall a, k N_pos:
+    ? forall a, k N+:
         k <= a
         =>:
-            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
+            product(1, a, fn(x N+) N+ {x}) % k = 0
 
     by cases:
-        ? product(1, a, fn(x N_pos) N_pos {x}) % k = 0
+        ? product(1, a, fn(x N+) N+ {x}) % k = 0
         case k = a:
-            product(1, a, fn(x N_pos) N_pos {x}) % a = 0
-            product(1, a, fn(x N_pos) N_pos {x}) % k = product(1, a, fn(x N_pos) N_pos {x}) % a = 0
+            product(1, a, fn(x N+) N+ {x}) % a = 0
+            product(1, a, fn(x N+) N+ {x}) % k = product(1, a, fn(x N+) N+ {x}) % a = 0
         case k < a:
             k + 1 <= a
-            product(1, a, fn(x N_pos) N_pos {x}) = product(1, k, fn(x N_pos) N_pos {x}) * product(k + 1, a, fn(x N_pos) N_pos {x})
-            have prefix_product Z = product(1, k, fn(x N_pos) N_pos {x})
-            have suffix_product Z = product(k + 1, a, fn(x N_pos) N_pos {x})
-            prefix_product % k = product(1, k, fn(x N_pos) N_pos {x}) % k = 0
+            product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x})
+            have prefix_product Z = product(1, k, fn(x N+) N+ {x})
+            have suffix_product Z = product(k + 1, a, fn(x N+) N+ {x})
+            have whole_product N+ = product(1, a, fn(x N+) N+ {x})
+            prefix_product % k = product(1, k, fn(x N+) N+ {x}) % k = 0
             witness exist q Z st {prefix_product = k * q + prefix_product % k} from basics::integer_quotient(prefix_product, k):
                 prefix_product = k * basics::integer_quotient(prefix_product, k) + prefix_product % k
             obtain r from exist q Z st {prefix_product = k * q + prefix_product % k}
             prefix_product = k * r + prefix_product % k = k * r = r * k
-            witness exist t Z st {product(1, a, fn(x N_pos) N_pos {x}) = t * k} from r * suffix_product:
-                product(1, a, fn(x N_pos) N_pos {x}) = prefix_product * suffix_product = (r * k) * suffix_product = (r * suffix_product) * k
-            obtain whole_quotient from exist t Z st {product(1, a, fn(x N_pos) N_pos {x}) = t * k}
-            product(1, a, fn(x N_pos) N_pos {x}) = whole_quotient * k = k * whole_quotient = k * whole_quotient + 0
-            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
+            witness exist t Z st {whole_product = t * k} from r * suffix_product:
+                whole_product = product(1, a, fn(x N+) N+ {x}) = prefix_product * suffix_product = (r * k) * suffix_product = (r * suffix_product) * k
+            obtain whole_quotient from exist t Z st {whole_product = t * k}
+            whole_product = whole_quotient * k = k * whole_quotient = k * whole_quotient + 0
+            whole_product % k = 0
+            product(1, a, fn(x N+) N+ {x}) % k = whole_product % k = 0
 
 claim:
-    ? forall a N_pos:
-        a <= product(1, a, fn(x N_pos) N_pos {x})
+    ? forall a N+:
+        a <= product(1, a, fn(x N+) N+ {x})
 
-    product(1, a, fn(x N_pos) N_pos {x}) % a = 0 and a <= product(1, a, fn(x N_pos) N_pos {x})
+    product(1, a, fn(x N+) N+ {x}) % a = 0 and a <= product(1, a, fn(x N+) N+ {x})
 
 claim:
-    ? forall a N_pos:
+    ? forall a N+:
         2 <= a
         =>:
-            exist k N_pos st {$prime(k), a % k = 0}
+            exist k N+ st {$prime(k), a % k = 0}
 
     by strong_induc x from 2:
-        ? exist k N_pos st {$prime(k), x % k = 0}
+        ? exist k N+ st {$prime(k), x % k = 0}
 
         claim:
-            ? forall b N_pos:
+            ? forall b N+:
                 2 <= b < 2
                 =>:
                     2 % b != 0
@@ -111,7 +118,7 @@ claim:
         0 < 2
         2 = 2 * 1 + 0
         2 % 2 = 0
-        witness exist k N_pos st {$prime(k), 2 % k = 0} from 2
+        witness exist k N+ st {$prime(k), 2 % k = 0} from 2
 
         claim:
             ? forall n Z:
@@ -120,28 +127,29 @@ claim:
                     2 <= m
                     m <= n
                     =>:
-                        exist k N_pos st {$prime(k), m % k = 0}
+                        exist k N+ st {$prime(k), m % k = 0}
                 =>:
-                    exist k N_pos st {$prime(k), (n + 1) % k = 0}
+                    exist k N+ st {$prime(k), (n + 1) % k = 0}
 
-            by cases exist k N_pos st {$prime(k), (n + 1) % k = 0}:
+            by cases exist k N+ st {$prime(k), (n + 1) % k = 0}:
                 case $prime(n+1):
                     witness exist t Z st {n + 1 = t * (n + 1)} from 1
                     0 < n + 1
+                    n + 1 $in N+
                     n + 1 = (n + 1) * 1 + 0
                     (n + 1) % (n + 1) = 0
-                    witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from n+1
+                    witness exist k N+ st {$prime(k), (n + 1) % k = 0} from n+1
                 case not $prime(n+1):
                     by contra:
-                        ? not forall b N_pos:
+                        ? not forall b N+:
                             2 <= b < n + 1
                             =>:
                                 (n + 1) % b != 0
                         2 <= n + 1
-                        $prime(n+1)
+                        by def $prime(n + 1)
                         impossible $prime(n+1)
 
-                    obtain c from exist b N_pos st {2 <= b < n+1, not (n + 1) % b != 0}
+                    obtain c from exist b N+ st {2 <= b < n+1, not (n + 1) % b != 0}
 
                     2 <= c < n+1
 
@@ -154,7 +162,7 @@ claim:
                         case c >= n + 1:
                             impossible c < n + 1
 
-                    obtain d from exist k N_pos st {$prime(k), c % k = 0}
+                    obtain d from exist k N+ st {$prime(k), c % k = 0}
 
                     witness exist q Z st {n + 1 = c * q + (n + 1) % c} from basics::integer_quotient(n + 1, c):
                         n + 1 = c * basics::integer_quotient(n + 1, c) + (n + 1) % c
@@ -175,27 +183,27 @@ claim:
                     0 < d
                     n + 1 = d * (e1 * f) + 0
                     (n + 1) % d = 0
-                    witness exist k N_pos st {$prime(k), (n + 1) % k = 0} from d:
+                    witness exist k N+ st {$prime(k), (n + 1) % k = 0} from d:
                         (n + 1) % d = 0
 
 # With these facts in the context, the whole proof body is the following 11 lines:
 
-claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
-    2 <= a <= product(1, a, fn(x N_pos) N_pos {x}) <= product(1, a, fn(x N_pos) N_pos {x}) + 1
-    obtain k from exist k N_pos st {$prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
+claim forall! a N+: 2 <= a => {exist k N+ st {k > a, $prime(k)}}:
+    2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1
+    obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}
     by cases k > a:
         case k <= a:
-            product(1, a, fn(x N_pos) N_pos {x}) % k = 0
+            product(1, a, fn(x N+) N+ {x}) % k = 0
             2 <= k
-            (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k
+            (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k
             1 % k = 1
             (0 + 1) % k = 1 % k = 1
-            (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            0 = (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 1
+            (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
+            0 = (product(1, a, fn(x N+) N+ {x}) + 1) % k = 1
             impossible 0 = 1
         case k > a:
             do_nothing
-    witness exist prime_larger N_pos st {prime_larger > a, $prime(prime_larger)} from k
+    witness exist prime_larger N+ st {prime_larger > a, $prime(prime_larger)} from k
 
 # For comparison, here is the same proof body next to the Lean version from the
 # original chapter. The Litex side is the complete forward proof body after the
@@ -208,18 +216,18 @@ claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
 #   </tr>
 #   <tr>
 #     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
-# <pre style="margin: 0; white-space: pre-wrap"><code>claim forall! a N_pos: 2 <= a => {exist k N_pos st {k > a, $prime(k)}}:
-#     2 <= a <= product(1, a, fn(x N_pos) N_pos {x}) <= product(1, a, fn(x N_pos) N_pos {x}) + 1
-#     obtain k from exist k N_pos st {$prime(k), (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0}
+# <pre style="margin: 0; white-space: pre-wrap"><code>claim forall! a N+: 2 <= a => {exist k N+ st {k > a, $prime(k)}}:
+#     2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1
+#     obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}
 #     by cases k > a:
 #         case k <= a:
-#             product(1, a, fn(x N_pos) N_pos {x}) % k = 0
+#             product(1, a, fn(x N+) N+ {x}) % k = 0
 #             1 % k = 1
-#             (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = (product(1, a, fn(x N_pos) N_pos {x}) % k + 1 % k) % k = (0 + 1) % k = 1
-#             impossible (product(1, a, fn(x N_pos) N_pos {x}) + 1) % k = 0
+#             (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
+#             impossible (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0
 #         case k > a:
 #             do_nothing
-#     witness exist k N_pos st {k > a, $prime(k)} from k</code></pre>
+#     witness exist k N+ st {k > a, $prime(k)} from k</code></pre>
 #     </td>
 #     <td style="border: 1px solid black; padding: 4px; vertical-align: top; overflow-wrap: anywhere; word-break: break-word">
 # <pre style="margin: 0; white-space: pre-wrap"><code>example (N : ℕ) : ∃ p ≥ N, Prime p := by
@@ -322,6 +330,7 @@ claim:
     obtain z from exist z Z st {a * b = d * z}
     witness exist k Z st {b = d * k} from u * z + b * v:
         b = b * 1 = b * (u * a + v * d) = u * (a * b) + b * v * d = u * (d * z) + b * v * d = d * (u * z + b * v)
+    by def $citation::divides(d, b)
 
 # 7.3 Gauss's and Euclid's Lemmas
 
@@ -362,7 +371,7 @@ sketch:
             b = b * 1 = b * (u * a + v * d) = u * (a * b) + b * v * d = u * (d * z) + b * v * d = d * (u * z + b * v)
 
     claim:
-        ? forall a, b N, p N_pos:
+        ? forall a, b N, p N+:
             $prime(p)
             $citation::divides(p, a * b)
             =>:
@@ -374,28 +383,28 @@ sketch:
         by thm citation::gcd_positive(a, p)
         1 <= gcd(a, p)
         by thm citation::gcd_divides_right(a, p)
-        $citation::divides(gcd(a, p), p)
         by thm citation::gcd_of_prime_is_one_or_prime(a, p)
-        gcd(a, p) = 1 or gcd(a, p) = p
         by cases:
             ? $citation::divides(p, a) or $citation::divides(p, b)
             case gcd(a, p) = 1:
+                by def $gcd_eq_one(a, p)
                 by thm bezout_of_coprime(a, p)
                 obtain u, v from exist u Z, v Z st {1 = u * a + v * p}
                 obtain z from exist z Z st {a * b = p * z}
                 witness exist k Z st {b = p * k} from u * z + b * v:
                     b = b * 1 = b * (u * a + v * p) = u * (a * b) + b * v * p = u * (p * z) + b * v * p = p * (u * z + b * v)
+                by def $citation::divides(p, b)
                 $citation::divides(p, a) or $citation::divides(p, b)
             case gcd(a, p) = p:
                 by thm citation::gcd_divides_left(a, p)
-                $citation::divides(gcd(a, p), a)
                 obtain q from exist q Z st {a = gcd(a, p) * q}
                 witness exist k Z st {a = p * k} from q:
                     a = gcd(a, p) * q = p * q
+                by def $citation::divides(p, a)
                 $citation::divides(p, a) or $citation::divides(p, b)
 
     prop euclid_lemma_pow_at(k Z):
-        forall a N, p N_pos:
+        forall a N, p N+:
             k >= 1
             $prime(p)
             $citation::divides(p, a ^ k)
@@ -407,7 +416,7 @@ sketch:
 
         ? from k = 1:
             claim:
-                ? forall a N, p N_pos:
+                ? forall a N, p N+:
                     k >= 1
                     $prime(p)
                     $citation::divides(p, a ^ k)
@@ -417,18 +426,18 @@ sketch:
                 a ^ k = a ^ 1 = a
                 $citation::divides(p, a)
 
-            $euclid_lemma_pow_at(k)
+            by def $euclid_lemma_pow_at(k)
 
         ? induc:
             claim:
-                ? forall a N, p N_pos:
+                ? forall a N, p N+:
                     k + 1 >= 1
                     $prime(p)
                     $citation::divides(p, a ^ (k + 1))
                     =>:
                         $citation::divides(p, a)
 
-                k $in N_pos
+                k $in N+
                 a ^ k $in N
                 a ^ (k + 1) = a ^ k * a
                 $citation::divides(p, a ^ k * a)
@@ -440,10 +449,10 @@ sketch:
                     case $citation::divides(p, a):
                         $citation::divides(p, a)
 
-            $euclid_lemma_pow_at(k + 1)
+            by def $euclid_lemma_pow_at(k + 1)
 
     claim:
-        ? forall a, k N, p N_pos:
+        ? forall a, k N, p N+:
             1 <= k
             $prime(p)
             $citation::divides(p, a ^ k)
@@ -477,43 +486,45 @@ sketch:
         ? forall a Q:
             a > 0
             =>:
-                exist p, q N_pos st {a = p / q, gcd(p, q) = 1}
+                exist p, q N+ st {a = p / q, gcd(p, q) = 1}
         by thm basics::rational_has_unique_reduced_fraction(a)
-        obtain p, q from exist! p Z, q N_pos st {a = p / q, $basics::is_reduced_fraction(p, q)}
+        obtain p, q from exist! p Z, q N+ st {a = p / q, $basics::is_reduced_fraction(p, q)}
         q > 0
         a * q = (p / q) * q = p
         a * q > 0
         p > 0
-        p $in N_pos
+        p $in N+
         by thm citation::gcd_positive(p, q)
         by thm citation::gcd_divides_left(p, q)
         by thm citation::gcd_divides_right(p, q)
         obtain x from exist x Z st {p = gcd(p, q) * x}
         obtain y from exist y Z st {q = gcd(p, q) * y}
+        gcd(p, q) * x = gcd(p, q) * x + 0
+        gcd(p, q) * y = gcd(p, q) * y + 0
         p = gcd(p, q) * x + 0
         q = gcd(p, q) * y + 0
         p % gcd(p, q) = 0
         q % gcd(p, q) = 0
         $basics::is_reduced_fraction(p, q)
         gcd(p, q) = 1
-        witness exist r, s N_pos st {a = r / s, gcd(r, s) = 1} from p, q:
+        witness exist r, s N+ st {a = r / s, gcd(r, s) = 1} from p, q:
             a = p / q
             gcd(p, q) = 1
 
     claim:
-        ? forall a, k N_pos:
+        ? forall a, k N+:
             $prime(a)
             k^2 % a = 0
             =>:
                 k % a = 0
         by thm citation::gcd_of_prime_is_one_or_prime(k, a)
-        gcd(k, a) = 1 or gcd(k, a) = a
         by cases:
             ? k % a = 0
             case gcd(k, a) = 1:
                 by contra:
                     ? k % a = 0
                     k % a != 0
+                    by def $gcd_eq_one(k, a)
                     by thm bezout_of_coprime(k, a)
                     obtain x, y from exist x Z, y Z st {1 = x * k + y * a}
                     witness exist q Z st {k^2 = a * q + k^2 % a} from basics::integer_quotient(k^2, a):
@@ -543,10 +554,14 @@ sketch:
         by for:
             ? forall d range(2, 2):
                 2 % d != 0
-        $prime(2)
+        by def $prime(2)
 
     by contra not 2^(1/2) $in Q:
-        obtain p, q from exist p, q N_pos st {2^(1/2) = p / q, gcd(p, q) = 1}
+        obtain p, q from exist p, q N+ st {2^(1/2) = p / q, gcd(p, q) = 1}
+        0 < q^2
+        q^2 != 0
+        p^2 $in Z
+        q^2 $in Z
         (2^(1 / 2))^2 = 2^(1 / 2 * 2)
         p^2 / q^2 = (p/q)^2 = (2^(1/2))^2 = 2^(1/2 * 2) = 2^(1) = 2
         p^2 = 2 * q^2
@@ -559,20 +574,21 @@ sketch:
             p = 2 * basics::integer_quotient(p, 2) + p % 2
         obtain c from exist quotient_p Z st {p = 2 * quotient_p + p % 2}
         p = 2 * c + p % 2 = 2 * c
-        q^2 = p^2 / 2 = (2 * c)^2 / 2 = 4 * c^2 / 2 = 2 * c^2
+        q^2 = (2 * q^2) / 2 = p^2 / 2 = (2 * c)^2 / 2 = 4 * c^2 / 2 = 2 * c^2
         witness exist k Z st {q^2 = 2 * k} from c^2
+        c^2 $in Z
         0 < 2
         q^2 = 2 * c^2 + 0
         q^2 % 2= 0
         q % 2 = 0
         witness exist t Z st {p = 2 * t} from c
-        $citation::divides(2, p)
+        by def $citation::divides(2, p)
         witness exist t Z st {q = 2 * t + q % 2} from basics::integer_quotient(q, 2):
             q = 2 * basics::integer_quotient(q, 2) + q % 2
         obtain d from exist t Z st {q = 2 * t + q % 2}
         q = 2 * d + q % 2 = 2 * d
         witness exist t Z st {q = 2 * t} from d
-        $citation::divides(2, q)
+        by def $citation::divides(2, q)
         by thm citation::common_divisor_le_gcd(p, q, 2)
         2 <= gcd(p, q) = 1
         impossible 2 <= 1
@@ -589,6 +605,12 @@ sketch:
 # - reducing irrationality of `sqrt(2)` to divisibility facts about squares and a
 #   lowest-terms fraction.
 
+# The implementation also makes two proof-engineering boundaries visible. A
+# theorem or positive mathematical predicate is crossed explicitly with `by thm`
+# or `by def`; it is not rediscovered by automatic atomic search. And when a
+# later remainder rule consumes an integer as a known leaf, the relevant carrier
+# fact is stated explicitly even if an earlier witness was locally type-checked.
+#
 # The Litex style is to name the number-theoretic concepts that matter, state the
 # exact facts needed about them, and then let the proof read as the standard
 # mathematical argument. Long background developments can be kept in earlier

@@ -195,7 +195,7 @@ sketch:
             x2 + 1 = q_shift(x2) = q_shift(x1) = x1 + 1
             x1 = x1 + 1 - 1 = x2 + 1 - 1 = x2
 
-    $injective_fn(R, R, q_shift)
+    by def $injective_fn(R, R, q_shift)
 
 # Equivalently, you can use `forall` to prove this statement without defining the specific function.
 
@@ -211,6 +211,7 @@ claim:
             f(x1) = x1 + 1
             f(x2) = x2 + 1
             x1 = x1 + 1 - 1 = f(x1) - 1 = f(x2) - 1 = x2 + 1 - 1 = x2
+    by def $injective_fn(R, R, f)
 
 # Equivalently, you can use anonymous function to define the function.
 
@@ -219,7 +220,7 @@ forall x1, x2 R:
     =>:
         x1 = (x1 + 1) - 1 = fn(x R) R {x + 1}(x1) - 1 = fn(x R) R {x + 1}(x2) - 1 = (x2 + 1) - 1 = x2
 
-$injective_fn(R, R, fn(x R) R {x + 1})
+by def $injective_fn(R, R, fn(x R) R {x + 1})
 
 # 8.1.4 Example: `x |-> x^2` On `R` Is Not Injective
 
@@ -275,7 +276,7 @@ sketch:
         witness exist x Q st {y = s(x)} from a:
             y = 3 * ((y - 2) / 3) + 2 = 3 * a + 2 = s(a)
 
-    $surjective_fn(Q, Q, s)
+    by def $surjective_fn(Q, Q, s)
 
 # 8.1.7 Example: `x |-> x^2` On `R` Is Not Surjective
 
@@ -438,7 +439,7 @@ sketch:
                     case x2 = 3:
                         x1 = 3 = x2
 
-    $injective_fn({1, 2, 3}, {1, 2, 3}, g_cycle_inj)
+    by def $injective_fn({1, 2, 3}, {1, 2, 3}, g_cycle_inj)
 
 # 8.1.11 Example: The Same Finite Function Is Surjective
 
@@ -474,7 +475,7 @@ sketch:
                 witness exist x {1, 2, 3} st {y = g_cycle_surj(x)} from 2:
                     y = 3 = g_cycle_surj(2)
 
-    $surjective_fn({1, 2, 3}, {1, 2, 3}, g_cycle_surj)
+    by def $surjective_fn({1, 2, 3}, {1, 2, 3}, g_cycle_surj)
 
 # 8.1.12 Example: `x |-> x^3` On `R` Is Injective
 
@@ -555,6 +556,7 @@ sketch:
     have fn p_affine(x R) R = 2 * x - 5
 
     forall y R:
+        (y + 5) / 2 $in R
         p_affine((y + 5) / 2) = 2 * ((y + 5) / 2) - 5
 
     claim:
@@ -564,18 +566,21 @@ sketch:
                 x1 = x2
 
         x1 = ((2 * x1 - 5) + 5) / 2 = (p_affine(x1) + 5) / 2 = (p_affine(x2) + 5) / 2 = ((2 * x2 - 5) + 5) / 2 = x2
+    by def $injective_fn(R, R, p_affine)
 
     claim:
         ? forall y R:
             exist x R st {y = p_affine(x)}
 
+        (y + 5) / 2 $in R
         witness exist x R st {y = p_affine(x)} from (y + 5) / 2:
             2 * ((y + 5) / 2) = y + 5
             2 * ((y + 5) / 2) - 5 = y
             p_affine((y + 5) / 2) = 2 * ((y + 5) / 2) - 5
             y = p_affine((y + 5) / 2)
 
-    $bijective_fn(R, R, p_affine)
+    by def $surjective_fn(R, R, p_affine)
+    by def $bijective_fn(R, R, p_affine)
 
 # 8.2.3 Example: `a(t) = t^3 - t` Is Not Bijective
 
@@ -696,7 +701,7 @@ claim:
 
         exist! unique_input S st {y = f(unique_input)}
 
-    $exist_unique_preimage(S, T, f)
+    by def $exist_unique_preimage(S, T, f)
 
 claim:
     ? forall S, T set, f fn(x S) T:
@@ -711,7 +716,7 @@ claim:
         exist! x S st {y = f(x)}
         exist x S st {y = f(x)}
 
-    $surjective_fn(S, T, f)
+    by def $surjective_fn(S, T, f)
 
     claim:
         ? forall x1, x2 S:
@@ -731,8 +736,8 @@ claim:
         f(x1) = f(x2)
         x1 = x2
 
-    $injective_fn(S, T, f)
-    $bijective_fn(S, T, f)
+    by def $injective_fn(S, T, f)
+    by def $bijective_fn(S, T, f)
 
 # 8.3 Composition And Inverses
 
@@ -771,7 +776,9 @@ sketch:
     claim:
         ? forall x R:
             gf_R(x) = h_lin_R(x)
-        gf_R(x) = 2 * (x + 3) = 2 * x + 6 = h_lin_R(x)
+        f_add3_R(x) = x + 3
+        g_times2_R(f_add3_R(x)) = 2 * f_add3_R(x)
+        gf_R(x) = g_times2_R(f_add3_R(x)) = 2 * f_add3_R(x) = 2 * (x + 3) = 2 * x + 6 = h_lin_R(x)
 
 # 8.3.3 Identity Function
 
@@ -810,7 +817,9 @@ sketch:
     claim:
         ? forall x R:
             ss_R(x) = id_R_reflect(x)
-        ss_R(x) = 5 - (5 - x) = x = id_R_reflect(x)
+        s_reflect_R(x) = 5 - x
+        s_reflect_R(s_reflect_R(x)) = 5 - s_reflect_R(x)
+        ss_R(x) = s_reflect_R(s_reflect_R(x)) = 5 - s_reflect_R(x) = 5 - (5 - x) = x = id_R_reflect(x)
 
 # 8.3.5 Inverse Functions
 
@@ -980,6 +989,7 @@ sketch:
 
         g $in fn(y T) S
 
+        by def $is_inverse(S, T, f, g)
         witness exist h fn(y T) S st {$is_inverse(S, T, f, h)} from g
 
     claim:
@@ -996,7 +1006,7 @@ sketch:
 
             x1 = g(f(x1)) = g(f(x2)) = x2
 
-        $injective_fn(S, T, f)
+        by def $injective_fn(S, T, f)
 
         claim:
             ? forall y T:
@@ -1004,8 +1014,8 @@ sketch:
 
             witness exist x S st {y = f(x)} from g(y)
 
-        $surjective_fn(S, T, f)
-        $bijective_fn(S, T, f)
+        by def $surjective_fn(S, T, f)
+        by def $bijective_fn(S, T, f)
 
     claim:
         ? forall S, T set, f fn(x S) T:
@@ -1024,7 +1034,7 @@ sketch:
 
             x1 = g(f(x1)) = g(f(x2)) = x2
 
-        $injective_fn(S, T, f)
+        by def $injective_fn(S, T, f)
 
         claim:
             ? forall y T:
@@ -1032,8 +1042,8 @@ sketch:
 
             witness exist x S st {y = f(x)} from g(y)
 
-        $surjective_fn(S, T, f)
-        $bijective_fn(S, T, f)
+        by def $surjective_fn(S, T, f)
+        by def $bijective_fn(S, T, f)
 
     claim:
         ? forall S, T set, f fn(x S) T:
@@ -1042,7 +1052,7 @@ sketch:
                 $has_inverse(S, T, f)
 
         exist h fn(y T) S st {$is_inverse(S, T, f, h)}
-        $has_inverse(S, T, f)
+        by def $has_inverse(S, T, f)
 
     forall S, T set, f fn(x S) T:
         =>:
@@ -1119,7 +1129,7 @@ sketch:
             m1 + 1 = q_Z_pair(m1)[1] = q_Z_pair(m2)[1] = m2 + 1
             m1 = (m1 + 1) - 1 = (m2 + 1) - 1 = m2
 
-        $injective_fn(Z, cart(Z, Z), q_Z_pair)
+        by def $injective_fn(Z, cart(Z, Z), q_Z_pair)
 
     claim:
         ? not $surjective_fn(Z, cart(Z, Z), q_Z_pair)
@@ -1191,13 +1201,17 @@ sketch:
         ? forall t cart(Z, Z):
             Finv_Z2(F_Z2(t)) = t
         F_Z2(t) = (t[1] + t[2], t[1] + 2 * t[2])
-        Finv_Z2(F_Z2(t)) = (2 * (t[1] + t[2]) - (t[1] + 2 * t[2]), (t[1] + 2 * t[2]) - (t[1] + t[2])) = (t[1], t[2]) = t
+        Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)[1] - F_Z2(t)[2], F_Z2(t)[2] - F_Z2(t)[1])
+        by thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+        Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)[1] - F_Z2(t)[2], F_Z2(t)[2] - F_Z2(t)[1]) = (2 * (t[1] + t[2]) - (t[1] + 2 * t[2]), (t[1] + 2 * t[2]) - (t[1] + t[2])) = (t[1], t[2]) = t
 
     claim:
         ? forall s cart(Z, Z):
             F_Z2(Finv_Z2(s)) = s
         Finv_Z2(s) = (2 * s[1] - s[2], s[2] - s[1])
-        F_Z2(Finv_Z2(s)) = (2 * s[1] - s[2] + (s[2] - s[1]), 2 * s[1] - s[2] + 2 * (s[2] - s[1])) = (s[1], s[2]) = s
+        F_Z2(Finv_Z2(s)) = (Finv_Z2(s)[1] + Finv_Z2(s)[2], Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2])
+        by thm tuple_equal_from_coordinates(s, (s[1], s[2]))
+        F_Z2(Finv_Z2(s)) = (Finv_Z2(s)[1] + Finv_Z2(s)[2], Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2]) = (2 * s[1] - s[2] + (s[2] - s[1]), 2 * s[1] - s[2] + 2 * (s[2] - s[1])) = (s[1], s[2]) = s
 
     claim:
         ? $injective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
@@ -1207,7 +1221,7 @@ sketch:
                 =>:
                     u = v
             u = Finv_Z2(F_Z2(u)) = Finv_Z2(F_Z2(v)) = v
-        $injective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
+        by def $injective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
 
     claim:
         ? $surjective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
@@ -1216,9 +1230,9 @@ sketch:
                 exist x cart(Z, Z) st {y = F_Z2(x)}
             witness exist x cart(Z, Z) st {y = F_Z2(x)} from Finv_Z2(y):
                 y = F_Z2(Finv_Z2(y))
-        $surjective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
+        by def $surjective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
 
-    $bijective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
+    by def $bijective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
 
 # 8.4.3 Example: Same Formula Over `R^2` And `Z^2`
 
@@ -1252,13 +1266,17 @@ sketch:
         ? forall t cart(R, R):
             Finv_R2(F_R2(t)) = t
         F_R2(t) = (t[1] + t[2], t[1] - t[2])
-        Finv_R2(F_R2(t)) = ((t[1] + t[2] + (t[1] - t[2])) / 2, ((t[1] + t[2]) - (t[1] - t[2])) / 2) = (t[1], t[2]) = t
+        Finv_R2(F_R2(t)) = ((F_R2(t)[1] + F_R2(t)[2]) / 2, (F_R2(t)[1] - F_R2(t)[2]) / 2)
+        by thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+        Finv_R2(F_R2(t)) = ((F_R2(t)[1] + F_R2(t)[2]) / 2, (F_R2(t)[1] - F_R2(t)[2]) / 2) = ((t[1] + t[2] + (t[1] - t[2])) / 2, ((t[1] + t[2]) - (t[1] - t[2])) / 2) = (t[1], t[2]) = t
 
     claim:
         ? forall s cart(R, R):
             F_R2(Finv_R2(s)) = s
         Finv_R2(s) = ((s[1] + s[2]) / 2, (s[1] - s[2]) / 2)
-        F_R2(Finv_R2(s)) = ((s[1] + s[2]) / 2 + (s[1] - s[2]) / 2, (s[1] + s[2]) / 2 - (s[1] - s[2]) / 2) = (s[1], s[2]) = s
+        F_R2(Finv_R2(s)) = (Finv_R2(s)[1] + Finv_R2(s)[2], Finv_R2(s)[1] - Finv_R2(s)[2])
+        by thm tuple_equal_from_coordinates(s, (s[1], s[2]))
+        F_R2(Finv_R2(s)) = (Finv_R2(s)[1] + Finv_R2(s)[2], Finv_R2(s)[1] - Finv_R2(s)[2]) = ((s[1] + s[2]) / 2 + (s[1] - s[2]) / 2, (s[1] + s[2]) / 2 - (s[1] - s[2]) / 2) = (s[1], s[2]) = s
 
     claim:
         ? $injective_fn(cart(R, R), cart(R, R), F_R2)
@@ -1268,7 +1286,7 @@ sketch:
                 =>:
                     u = v
             u = Finv_R2(F_R2(u)) = Finv_R2(F_R2(v)) = v
-        $injective_fn(cart(R, R), cart(R, R), F_R2)
+        by def $injective_fn(cart(R, R), cart(R, R), F_R2)
 
     claim:
         ? $surjective_fn(cart(R, R), cart(R, R), F_R2)
@@ -1277,9 +1295,9 @@ sketch:
                 exist x cart(R, R) st {y = F_R2(x)}
             witness exist x cart(R, R) st {y = F_R2(x)} from Finv_R2(y):
                 y = F_R2(Finv_R2(y))
-        $surjective_fn(cart(R, R), cart(R, R), F_R2)
+        by def $surjective_fn(cart(R, R), cart(R, R), F_R2)
 
-    $bijective_fn(cart(R, R), cart(R, R), F_R2)
+    by def $bijective_fn(cart(R, R), cart(R, R), F_R2)
 
 # Over `Z^2`, however, the same formula is not always integer-valued. In fact the
 # map from `Z^2` to `Z^2` is not surjective. The pair `(0, 1)` is not hit. If
@@ -1338,11 +1356,11 @@ sketch:
             u[2] = rho_R3(u)[3] = rho_R3(v)[3] = v[2]
             u[1] + u[2] = rho_R3(u)[1] = rho_R3(v)[1] = v[1] + v[2]
             u[1] = (u[1] + u[2]) - u[2] = (v[1] + v[2]) - v[2] = v[1]
-            u = (u[1], u[2])
+            by thm tuple_equal_from_coordinates(u, (u[1], u[2]))
             (u[1], u[2]) = (v[1], v[2])
-            v = (v[1], v[2])
+            by thm tuple_equal_from_coordinates(v, (v[1], v[2]))
             u = v
-        $injective_fn(cart(R, R), cart(R, R, R), rho_R3)
+        by def $injective_fn(cart(R, R), cart(R, R, R), rho_R3)
 
 # 8.4.5 Example: Addition From `R^2` To `R`
 
@@ -1400,7 +1418,7 @@ sketch:
                 exist p cart(R, R) st {a = add_R2(p)}
             witness exist p cart(R, R) st {a = add_R2(p)} from (a, 0):
                 a = a + 0 = add_R2((a, 0))
-        $surjective_fn(cart(R, R), R, add_R2)
+        by def $surjective_fn(cart(R, R), R, add_R2)
 
 # 8.4.6 Example: `5m + 8n` From `Z^2` To `Z`
 
@@ -1455,7 +1473,7 @@ sketch:
                 exist u cart(Z, Z) st {a = Z_lin58(u)}
             witness exist u cart(Z, Z) st {a = Z_lin58(u)} from (-3 * a, 2 * a):
                 a = 5 * (-3 * a) + 8 * (2 * a) = Z_lin58((-3 * a, 2 * a))
-        $surjective_fn(cart(Z, Z), Z, Z_lin58)
+        by def $surjective_fn(cart(Z, Z), Z, Z_lin58)
 
 # 8.4.7 Example: `5m + 10n` From `Z^2` To `Z`
 
@@ -1548,8 +1566,10 @@ sketch:
         ? forall t cart(R, R):
             swap_swap_R2(t) = id_R2(t)
         swap_R2(t) = (t[2], t[1])
-        swap_swap_R2(t) = (t[1], t[2])
+        swap_R2(swap_R2(t)) = (swap_R2(t)[2], swap_R2(t)[1])
+        swap_swap_R2(t) = swap_R2(swap_R2(t)) = (swap_R2(t)[2], swap_R2(t)[1]) = (t[1], t[2])
         id_R2(t) = t
+        by thm tuple_equal_from_coordinates(t, (t[1], t[2]))
         swap_swap_R2(t) = (t[1], t[2]) = t = id_R2(t)
 
 # 8.4.9 Example: A Bijection From `N^2` To `N`
@@ -1600,7 +1620,13 @@ sketch:
                 (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
                 n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
         have quotient Z = basics::integer_quotient(n * (n + 1), 2)
-        n * (n + 1) = 2 * basics::integer_quotient(n * (n + 1), 2) + n * (n + 1) % 2 = 2 * quotient
+        n * (n + 1) = 2 * basics::integer_quotient(n * (n + 1), 2) + n * (n + 1) % 2
+        2 * basics::integer_quotient(n * (n + 1), 2) + n * (n + 1) % 2 = 2 * quotient + n * (n + 1) % 2 = 2 * quotient + 0 = 2 * quotient
+        n * (n + 1) = 2 * quotient
+        quotient = (2 * quotient) / 2 = n * (n + 1) / 2
+        0 <= n * (n + 1)
+        2 * 0 = 0 <= n * (n + 1)
+        n * (n + 1) / 2 >= 0
         quotient = n * (n + 1) / 2 >= 0
         quotient $in N
         have r N = quotient
@@ -1611,6 +1637,8 @@ sketch:
             2 * y1 = n * (n + 1)
             2 * y2 = n * (n + 1)
             =>:
+                y1 = (2 * y1) / 2 = n * (n + 1) / 2
+                y2 = (2 * y2) / 2 = n * (n + 1) / 2
                 y1 = n * (n + 1) / 2 = y2
         exist! y N st {2 * y = n * (n + 1)}
 
@@ -1680,6 +1708,8 @@ sketch:
             ? not v[1] < u[1]
             diagonal_index(v) < diagonal_index(u)
             impossible diagonal_index(u) = diagonal_index(v)
+        u[1] >= v[1]
+        v[1] >= u[1]
         u[1] = v[1]
 
     have fn cauchy_pair(t cart(N, N)) N = tri(t[1] + t[2]) + t[2]
@@ -1709,6 +1739,8 @@ sketch:
         u[2] = v[2]
         t1[2] = u[2] = v[2] = t2[2]
         t1[1] = (t1[1] + t1[2]) - t1[2] = u[1] - u[2] = v[1] - v[2] = (t2[1] + t2[2]) - t2[2] = t2[1]
+        by thm tuple_equal_from_coordinates(t1, (t1[1], t1[2]))
+        by thm tuple_equal_from_coordinates(t2, (t2[1], t2[2]))
         t1 = (t1[1], t1[2]) = (t2[1], t2[2]) = t2
 
     claim:
@@ -1738,7 +1770,7 @@ sketch:
             tri(0 + 1) = tri(0) + 0 + 1 = 1
             0 < 1 = tri(0 + 1)
             witness exist s N st {$triangular_interval(0, s)} from 0:
-                $triangular_interval(0, 0)
+                by def $triangular_interval(0, 0)
 
         ? induc:
             obtain s from exist s N st {$triangular_interval(n, s)}
@@ -1747,12 +1779,12 @@ sketch:
                 case n + 1 < tri(s + 1):
                     tri(s) <= n <= n + 1
                     witness exist t N st {$triangular_interval(n + 1, t)} from s:
-                        $triangular_interval(n + 1, s)
+                        by def $triangular_interval(n + 1, s)
                 case n + 1 >= tri(s + 1):
                     tri((s + 1) + 1) = tri(s + 1) + (s + 1) + 1 = tri(s + 1) + s + 2
                     n + 1 < n + 2 <= tri(s + 1) + s + 2 = tri((s + 1) + 1)
                     witness exist t N st {$triangular_interval(n + 1, t)} from s + 1:
-                        $triangular_interval(n + 1, s + 1)
+                        by def $triangular_interval(n + 1, s + 1)
 
     claim:
         ? forall n N:
@@ -1767,9 +1799,14 @@ sketch:
         witness exist t cart(N, N) st {n = cauchy_pair(t)} from p:
             n = cauchy_pair(p)
 
+    by def $injective_fn(cart(N, N), N, cauchy_pair)
+    by def $surjective_fn(cart(N, N), N, cauchy_pair)
+    by def $bijective_fn(cart(N, N), N, cauchy_pair)
+
     claim:
         ? $exist_bijection(cart(N, N), N)
         witness exist f fn(x cart(N, N)) N st {$bijective_fn(cart(N, N), N, f)} from cauchy_pair
+        by def $exist_bijection(cart(N, N), N)
 
 # Summary
 
@@ -1788,3 +1825,11 @@ sketch:
 # The final bijection from `cart(N, N)` to `N` shows these tools working together:
 # define the function, prove its local algebraic facts, then use those facts to
 # establish injectivity and surjectivity.
+
+# The proof boundary is deliberately visible. Positive properties such as
+# injectivity and surjectivity are introduced with `by def` after their defining
+# bodies have been proved. Nested function applications are unfolded one function
+# at a time, with the immediate argument carrier available first. Reconstructing
+# a tuple from all of its coordinates is an object theorem, so the chapter invokes
+# `by thm tuple_equal_from_coordinates(...)` explicitly rather than treating tuple
+# extensionality as an automatic equality rule.

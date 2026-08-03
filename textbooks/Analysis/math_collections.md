@@ -128,7 +128,7 @@ A caller uses a sequence as a function, for example `a(n)`.
 
 ~~~litex
 prop has_limit(a seq(R), L R):
-    forall epsilon R_pos:
+    forall epsilon R+:
         $has_eventual_closeness_to(a, L, epsilon)
 
 prop is_convergent_sequence(a seq(R)):
@@ -178,7 +178,7 @@ thm seq_add_converges_to:
         $has_limit(a, x)
         $has_limit(b, y)
         =>:
-            $has_limit(fn(i N_pos) R {a(i) + b(i)}, x + y)
+            $has_limit(fn(i N+) R {a(i) + b(i)}, x + y)
 ~~~
 
 Limit laws are theorems consuming the earlier relation and function
@@ -214,8 +214,8 @@ source-facing theorem about the constant rational approximation:
 
 ~~~litex
 thm real_power_agrees_with_rational_power:
-    ? forall x R_pos, q Q:
-        $has_limit(rational_power_approx_seq(x, fn(n N_pos) R {q}), x^q)
+    ? forall x R+, q Q:
+        $has_limit(rational_power_approx_seq(x, fn(n N+) R {q}), x^q)
 ~~~
 
 This is a theorem rather than a new function or predicate: `x^q` is already
@@ -254,9 +254,9 @@ lemma.
 | `is_countably_infinite(X)` | Cardinality property, hence `prop` | A Chapter 3 bijection `N -> X`; supplies an enumeration. |
 | `is_at_most_countable(X)` | Existence property, hence `prop` | An injection `X -> N`; closed under subsets, images, and countable unions. |
 | `is_uncountable(X)` | Cardinality property, hence `prop` | Infinite but not countably infinite; the checked bridge shows this excludes an injection into `N`. |
-| Countable enumeration | Relation on a displayed function, hence `prop is_countable_enumeration` | A bijection `N_pos -> X`; turns a set-indexed family into a Chapter 7 sequence. |
+| Countable enumeration | Relation on a displayed function, hence `prop is_countable_enumeration` | A bijection `N+ -> X`; turns a set-indexed family into a Chapter 7 sequence. |
 | Countable-set series terms | Formula-defined function, hence `template` plus `have fn` | Applies `f` after an enumeration; feeds Chapter 7 convergence and sum predicates. |
-| At-most-countable convergence and sum | Finite/enumerated alternatives, hence paired `prop` interfaces | Finite carriers use `finite_set_sum`; countably infinite carriers use a bijection `N_pos -> X`. |
+| At-most-countable convergence and sum | Finite/enumerated alternatives, hence paired `prop` interfaces | Finite carriers use `finite_set_sum`; countably infinite carriers use a bijection `N+ -> X`. |
 | Absolute summability and set-series sum | Properties of a displayed family and candidate sum, hence `prop` | Finite absolute subsum bounds and countable support; used by Fubini and rearrangement results. |
 | Infinite Cartesian product | Set of choice functions, hence a `template`-generated set with a membership `prop` | Coordinate membership; supplies the statement of the axiom of choice. |
 | Choice function | Displayed function satisfying a relation, hence `prop` | Pointwise existence plus the explicit choice axiom; used for selections and right inverses. |
@@ -345,7 +345,7 @@ the support is the countable union of the finite level sets
 transporting both finite absolute subsums and the enumerated nonzero support.
 
 The strict countable-series representation deliberately remains a bijection
-`N_pos -> X`, so it represents countably infinite carriers only.  The broader
+`N+ -> X`, so it represents countably infinite carriers only.  The broader
 interfaces `is_absolutely_convergent_at_most_countable_set_series` and
 `has_at_most_countable_set_series_sum` add the mathematically separate finite
 branch; the latter identifies the value with `finite_set_sum`.  Arbitrary-set
@@ -596,8 +596,8 @@ function, not a new tangent-line object:
 prop has_newton_approximation_at(
     X power_set(R), f fn(x X) R, x0 X, L R
 ):
-    forall epsilon R_pos:
-        exist delta R_pos st {
+    forall epsilon R+:
+        exist delta R+ st {
             forall x X:
                 abs(x - x0) <= delta
                 =>:

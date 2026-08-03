@@ -344,20 +344,24 @@ forall A, B set, x A:
     =>:
         x $in B
 
-forall A, B set:
-    forall x A:
-        x $in B
-    =>:
-        A $subset B
+claim:
+    ? forall A, B set:
+        forall x A:
+            x $in B
+        =>:
+            A $subset B
+    by def A $subset B
 
 forall A set:
     A $subset A
 
-forall A, B, set_C set:
-    A $subset B
-    B $subset set_C
-    =>:
-        A $subset set_C
+claim:
+    ? forall A, B, set_C set:
+        A $subset B
+        B $subset set_C
+        =>:
+            A $subset set_C
+    by def A $subset set_C
 
 claim:
     ? forall A, B set:
@@ -476,19 +480,21 @@ subset {x in A : P(x)}.
 """
 
 # Specification can be written in Litex as set comprehension, for example
-# `{n N: n < 4}`.  When `n $in {k N: k < 4}` appears as a condition, Litex
-# automatically unfolds that membership into the ambient type and predicate:
-# here, `n $in N` and `n < 4`.
+# `{n N: n < 4}`.  Known membership automatically unfolds into the ambient
+# type and predicate.  The reverse direction uses the explicit builtin theorem
+# `set_builder_member` after those two clauses are known.
 
 sketch:
     forall n N:
         n $in {k N: k < 4}
         =>:
             n < 4
-    forall n N:
-        n < 4
-        =>:
-            n $in {k N: k < 4}
+    claim:
+        ? forall n N:
+            n < 4
+            =>:
+                n $in {k N: k < 4}
+        by thm set_builder_member(n, {k N: k < 4})
 """
 Example 3.1.22. If S = {1, 2, 3, 4, 5}, then {n in S : n < 4} is
 {1, 2, 3}; the predicates n < 7 and n < 1 give S and the empty set.
@@ -498,9 +504,9 @@ Example 3.1.22. If S = {1, 2, 3, 4, 5}, then {n in S : n < 4} is
 # ambient set or type, then state the filtering condition.
 
 sketch:
-    1 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
-    2 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
-    3 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
+    by thm set_builder_member(1, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
+    by thm set_builder_member(2, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
+    by thm set_builder_member(3, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
 
     by contra:
         ? not 4 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
@@ -510,7 +516,7 @@ sketch:
         ? not 5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
         impossible 5 < 4
 
-    5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 7}
+    by thm set_builder_member(5, {n N: n $in {1, 2, 3, 4, 5} and n < 7})
 
     by contra:
         ? not 1 $in {n N: n $in {1, 2, 3, 4, 5} and n < 1}
@@ -564,12 +570,44 @@ sketch:
     2 $in intersect({1, 2, 4}, {2, 3, 4})
     4 $in intersect({1, 2, 4}, {2, 3, 4})
     $is_finite_set(intersect({1, 2, 4}, {2, 3, 4}))
+    $is_finite_set({1, 2, 4})
+    by def intersect({1, 2, 4}, {2, 3, 4}) $subset {1, 2, 4}
     finite_set_size(intersect({1, 2, 4}, {2, 3, 4})) <= finite_set_size({1, 2, 4})
-    intersect({1, 2, 4}, {2, 3, 4}) = {2, 4}
+    by extension intersect({1, 2, 4}, {2, 3, 4}) = {2, 4}:
+        claim:
+            ? forall x intersect({1, 2, 4}, {2, 3, 4}):
+                x $in {2, 4}
+            x $in {1, 2, 4}
+            x $in {2, 3, 4}
+            x = 1 or x = 2 or x = 4
+            by cases:
+                ? x $in {2, 4}
+                case x = 1:
+                    1 $in {2, 3, 4}
+                    impossible not 1 $in {2, 3, 4}
+                case x = 2:
+                    x $in {2, 4}
+                case x = 4:
+                    x $in {2, 4}
+        by enumerate finite_set:
+            ? forall y {2, 4}:
+                y $in intersect({1, 2, 4}, {2, 3, 4})
     finite_set_size(intersect({1, 2, 4}, {2, 3, 4})) = finite_set_size({2, 4}) = 2
     not 1 $in {2, 4}
     not 1 $in intersect({1, 2, 4}, {2, 3, 4})
-    intersect({1}, {2}) = {}
+    by extension intersect({1}, {2}) = {}:
+        claim:
+            ? forall x intersect({1}, {2}):
+                x $in {}
+            x $in {1}
+            x $in {2}
+            x = 1
+            x = 2
+            by contra:
+                ? x $in {}
+                impossible 1 = 2
+        forall y {}:
+            y $in intersect({1}, {2})
 
 """
 Definition 3.1.27 (Difference sets). An element is in A minus B iff it is in A
@@ -599,6 +637,8 @@ forall A, B set, x set:
 # The finite-deletion cardinality bound is a kernel builtin rule.
 
 $is_finite_set(set_minus({1, 2, 3}, {2}))
+$is_finite_set({1, 2, 3})
+by def set_minus({1, 2, 3}, {2}) $subset {1, 2, 3}
 finite_set_size(set_minus({1, 2, 3}, {2})) <= finite_set_size({1, 2, 3})
 
 forall A, B set:
@@ -792,7 +832,8 @@ claim:
         U $in {U}
         by regularity_axiom({U})
         obtain x from exist x {U} st {intersect(x, {U}) = {}}
-        intersect(U, {U}) = {}
+        x = U
+        intersect(U, {U}) = intersect(x, {U}) = {}
         U $in intersect(U, {U})
         U $in {}
         impossible not U $in {}
@@ -803,8 +844,8 @@ sketch:
         3 $in {1, 2}
         impossible not 3 $in {1, 2}
 
-    2 $in {n N: n < 4}
-    2 $in {n N: n + 1 < 5}
+    by thm set_builder_member(2, {n N: n < 4})
+    by thm set_builder_member(2, {n N: n + 1 < 5})
 
     by contra:
         ? not 5 $in {n N: n < 4}
@@ -836,6 +877,7 @@ sketch:
         ? forall x X_example:
             exist! y Y_example st {$P_example(x, y)}
         witness exist! y Y_example st {$P_example(x, y)} from x:
+            by def $P_example(x, x)
             forall y1, y2 Y_example:
                 $P_example(x, y1)
                 $P_example(x, y2)
@@ -866,14 +908,14 @@ sketch:
         increment_from_relation(2 * n + 3) = (2 * n + 3) + 1 = 2 * n + 4
 
     have fn increment_N(n N) N = n + 1
-    have fn succ(n N) N_pos = n + 1
+    have fn succ(n N) N+ = n + 1
 
     increment_N(4) = 5
     increment_N(2 * 3 + 3) = 10
     succ(0) = 1
 
     have fn pred_pos_from_relation by exist!:
-        ? forall a N_pos:
+        ? forall a N+:
             exist! b N st {b + 1 = a}
         witness exist b N st {b + 1 = a} from a - 1
         forall b1, b2 N:
@@ -882,7 +924,7 @@ sketch:
             =>:
                 b1 = (b1 + 1) - 1 = a - 1 = (b2 + 1) - 1 = b2
 
-    have fn pred_pos(n N_pos) N = n - 1
+    have fn pred_pos(n N+) N = n - 1
 
     pred_pos(1) = 0
     pred_pos(4) = 3
@@ -984,9 +1026,9 @@ sketch:
     have fn poly2(x R) R = (x + 1)^2
 
     forall x R:
-        poly1(x) = poly2(x)
+        poly1(x) = x^2 + 2 * x + 1 = (x + 1)^2 = poly2(x)
 
-    $fn_eq(poly1, poly2)
+    by def $fn_eq(poly1, poly2)
 
 """
 Example 3.3.8. The functions x |-> x^2+2x+1 and x |-> (x+1)^2 are equal on
@@ -1000,13 +1042,13 @@ on all of R; function equality depends on the chosen domain.
 # definition is given explicitly when absolute value is introduced in Chapter 4.
 
 sketch:
-    have fn id_on_N_pos(x N_pos) R = x
-    have fn abs_on_N_pos(x N_pos) R = abs(x)
+    have fn id_on_N_pos(x N+) R = x
+    have fn abs_on_N_pos(x N+) R = abs(x)
 
-    forall x N_pos:
+    forall x N+:
         abs_on_N_pos(x) = abs(x) = x = id_on_N_pos(x)
 
-    $fn_eq(id_on_N_pos, abs_on_N_pos)
+    by def $fn_eq(id_on_N_pos, abs_on_N_pos)
 
     have fn id_R(x R) R = x
     have fn abs_R(x R) R = abs(x)
@@ -1032,7 +1074,7 @@ sketch:
     forall x {}:
         empty_to_N(x) = empty_to_N_alt(x)
 
-    $fn_eq(empty_to_N, empty_to_N_alt)
+    by def $fn_eq(empty_to_N, empty_to_N_alt)
 
 
 
@@ -1070,11 +1112,15 @@ Lemma 3.3.12. Composition is associative: f o (g o h) = (f o g) o h.
 # parenthesizations, both sides are `f(g(h(x)))` for every `x`.
 
 sketch:
-    forall X0, Y0, Z0, W0 set, f fn(z Z0) W0, g fn(y Y0) Z0, h fn(x X0) Y0:
-        $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {fn(u Y0) W0 {f(g(u))}(h(t))})
+    claim:
+        ? forall X0, Y0, Z0, W0 set, f fn(z Z0) W0, g fn(y Y0) Z0, h fn(x X0) Y0:
+            $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {fn(u Y0) W0 {f(g(u))}(h(t))})
+        by def $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {fn(u Y0) W0 {f(g(u))}(h(t))})
 
-    forall X0, Y0, Z0, W0 set, f fn(z Z0) W0, g fn(y Y0) Z0, h fn(x X0) Y0:
-        $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {f(fn(u X0) Z0 {g(h(u))}(t))})
+    claim:
+        ? forall X0, Y0, Z0, W0 set, f fn(z Z0) W0, g fn(y Y0) Z0, h fn(x X0) Y0:
+            $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {f(fn(u X0) Z0 {g(h(u))}(t))})
+        by def $fn_eq(fn(t X0) W0 {f(g(h(t)))}, fn(t X0) W0 {f(fn(u X0) Z0 {g(h(u))}(t))})
 
 """
 Remark 3.3.13. In g o f, the right-hand function f is applied first.
@@ -1257,45 +1303,48 @@ sketch:
             witness exist x {0, 1, 2} st {y = finite_bijection(x)} from 2
     by def $is_surjective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
 
-    $is_bijective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
+    by def $is_bijective_fn({0, 1, 2}, {3, 4, 5}, finite_bijection)
 
 """
-Example 3.3.22. The successor formula is a bijection N->N_pos, but the same
+Example 3.3.22. The successor formula is a bijection N->N+, but the same
 formula is not a bijection N->N because 0 is not hit.
 """
 
-# Successor as `N -> N_pos` is a bijection; the same formula `n+1`, viewed as
+# Successor as `N -> N+` is a bijection; the same formula `n+1`, viewed as
 # `N -> N`, is not onto because `0` has no preimage.  This is exactly the
 # domain/range dependence emphasized by the example.
 
 sketch:
-    have fn succ(n N) N_pos = n + 1
+    have fn succ_bijection(n N) N+ = n + 1
+    forall n N:
+        succ_bijection(n) = n + 1
 
     forall x1, x2 N:
-        succ(x1) = succ(x2)
+        succ_bijection(x1) = succ_bijection(x2)
         =>:
-            x1 = (x1 + 1) - 1 = succ(x1) - 1 = succ(x2) - 1 = (x2 + 1) - 1 = x2
-    by def $is_injective_fn(N, N_pos, succ)
+            x1 = (x1 + 1) - 1 = succ_bijection(x1) - 1 = succ_bijection(x2) - 1 = (x2 + 1) - 1 = x2
+    by def $is_injective_fn(N, N+, succ_bijection)
 
     claim:
-        ? forall y N_pos:
-            exist x N st {y = succ(x)}
-        witness exist x N st {y = succ(x)} from y - 1
-    by def $is_surjective_fn(N, N_pos, succ)
+        ? forall y N+:
+            exist x N st {y = succ_bijection(x)}
+        witness exist x N st {y = succ_bijection(x)} from y - 1:
+            y = (y - 1) + 1 = succ_bijection(y - 1)
+    by def $is_surjective_fn(N, N+, succ_bijection)
 
-    $is_bijective_fn(N, N_pos, succ)
+    by def $is_bijective_fn(N, N+, succ_bijection)
 
     have fn succ_to_N(n N) N = n + 1
 
     0 $in N
-    not 0 $in N_pos
+    not 0 $in N+
 
     by contra:
         ? not exist x N st {succ_to_N(x) = 0}
         obtain k from exist x N st {succ_to_N(x) = 0}
-        k + 1 $in N_pos
+        k + 1 $in N+
         0 = succ_to_N(k) = k + 1
-        impossible 0 $in N_pos
+        impossible 0 $in N+
 
     by contra:
         ? not $is_surjective_fn(N, N, succ_to_N)
@@ -1425,7 +1474,7 @@ sketch:
     witness exist x {1, 2, 3} st {x $in N, double_nat(1) = double_nat(x)} from 1
     by def $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, double_nat(1))
     \restricted_image<N, N, double_nat, {1, 2, 3}> = {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
-    double_nat(1) $in {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
+    by thm set_builder_member(double_nat(1), {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)})
     double_nat(1) $in \restricted_image<N, N, double_nat, {1, 2, 3}>
 
     claim:
@@ -1616,8 +1665,23 @@ sketch:
                         z = -2
                         z $in {-2, -1, 0, 1, 2}
 
-    by enumerate finite_set:
+    by cases:
         ? forall z {-2, -1, 0, 1, 2}:
+            square_Z(z) $in {0, 1, 4}
+        case z = -2:
+            square_Z(z) = 4
+            square_Z(z) $in {0, 1, 4}
+        case z = -1:
+            square_Z(z) = 1
+            square_Z(z) $in {0, 1, 4}
+        case z = 0:
+            square_Z(z) = 0
+            square_Z(z) $in {0, 1, 4}
+        case z = 1:
+            square_Z(z) = 1
+            square_Z(z) $in {0, 1, 4}
+        case z = 2:
+            square_Z(z) = 4
             square_Z(z) $in {0, 1, 4}
     by def $is_inverse_image_of(Z, Z, square_Z, {0, 1, 4}, {-2, -1, 0, 1, 2})
 
@@ -1779,7 +1843,7 @@ sketch:
     witness exist i_index {1, 2, 3} st {2 $in A(i_index)} from 1
     by def $is_in_indexed_union({1, 2, 3}, N, A, 2)
     \indexed_union<{1, 2, 3}, N, A> = {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)}
-    2 $in {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)}
+    by thm set_builder_member(2, {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)})
     2 $in \indexed_union<{1, 2, 3}, N, A>
 
 """
@@ -1818,7 +1882,7 @@ sketch:
             3 $in A(i_index)
     by def $is_in_indexed_intersection({1, 2, 3}, N, A, 3)
     \indexed_intersection<{1, 2, 3}, N, A> = {z N: $is_in_indexed_intersection({1, 2, 3}, N, A, z)}
-    3 $in {z N: $is_in_indexed_intersection({1, 2, 3}, N, A, z)}
+    by thm set_builder_member(3, {z N: $is_in_indexed_intersection({1, 2, 3}, N, A, z)})
     3 $in \indexed_intersection<{1, 2, 3}, N, A>
 
 """
@@ -2026,7 +2090,7 @@ sketch:
     cart_add_two_inputs(2, 3) = 5
 
     forall x, y N:
-        cart_add_on_pair((x, y)) = cart_add_two_inputs(x, y)
+        cart_add_on_pair((x, y)) = (x, y)[1] + (x, y)[2] = x + y = cart_add_two_inputs(x, y)
 
 
 """
@@ -2224,9 +2288,9 @@ sketch:
                 y = 5 = shift_0_to_3(2)
     by def $is_surjective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
 
-    $is_bijective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
+    by def $is_bijective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
     witness exist f fn(x {0, 1, 2}) {3, 4, 5} st {$is_bijective_fn({0, 1, 2}, {3, 4, 5}, f)} from shift_0_to_3
-    $has_equal_cardinality({0, 1, 2}, {3, 4, 5})
+    by def $has_equal_cardinality({0, 1, 2}, {3, 4, 5})
 
 """
 Remark 3.6.3. The natural numbers have equal cardinality with the even natural
@@ -2250,7 +2314,7 @@ sketch:
             2 * n $in even_N
         witness exist k N st {2 * n = 2 * k} from n
         by def $is_even_nat(2 * n)
-        2 * n $in {m N: $is_even_nat(m)}
+        by thm set_builder_member(2 * n, {m N: $is_even_nat(m)})
         2 * n $in even_N
 
     have fn double_to_even(n N) even_N = 2 * n
@@ -2276,9 +2340,9 @@ sketch:
             y = double_to_even(k)
     by def $is_surjective_fn(N, even_N, double_to_even)
 
-    $is_bijective_fn(N, even_N, double_to_even)
+    by def $is_bijective_fn(N, even_N, double_to_even)
     witness exist f fn(x N) even_N st {$is_bijective_fn(N, even_N, f)} from double_to_even
-    $has_equal_cardinality(N, even_N)
+    by def $has_equal_cardinality(N, even_N)
 
     by contra:
         ? not 1 $in even_N
@@ -2314,8 +2378,9 @@ sketch:
                 id_X(y) = y
                 y = id_X(y)
         by def $is_surjective_fn(X, X, id_X)
-        $is_bijective_fn(X, X, id_X)
+        by def $is_bijective_fn(X, X, id_X)
         witness exist f fn(x X) X st {$is_bijective_fn(X, X, f)} from id_X
+        by def $has_equal_cardinality(X, X)
 
 """
 Definition 3.6.5. A set has cardinality n when it has equal cardinality with a
@@ -2378,9 +2443,9 @@ sketch:
                 y = 4 = shift_zero_to_one(3)
     by def $is_surjective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
 
-    $is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
+    by def $is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
     witness exist f fn(x {0, 1, 2, 3}) {1, 2, 3, 4} st {$is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, f)} from shift_zero_to_one
-    $has_equal_cardinality({0, 1, 2, 3}, {1, 2, 3, 4})
+    by def $has_equal_cardinality({0, 1, 2, 3}, {1, 2, 3, 4})
 
 """
 Example 3.6.7. Listed finite sets with distinct entries have the expected
@@ -2488,8 +2553,9 @@ sketch:
     by contra:
         ? not $is_finite_set(N)
         finite_set_size(N) $in N
+        $is_finite_set(0...finite_set_size(N))
         finite_set_size(0...finite_set_size(N)) = finite_set_size(N) - 0 + 1 = finite_set_size(N) + 1
-        0...finite_set_size(N) $subset N
+        by def 0...finite_set_size(N) $subset N
         finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
         finite_set_size(N) + 1 <= finite_set_size(N)
         impossible finite_set_size(N) + 1 <= finite_set_size(N)
@@ -2540,7 +2606,22 @@ sketch:
             finite_set_size(intersect(X, Y)) = finite_set_size({}) = 0
             finite_set_size(union(X, Y)) = finite_set_size(X) + finite_set_size(Y) - finite_set_size(intersect(X, Y)) = finite_set_size(X) + finite_set_size(Y)
 
-    intersect({1, 2}, {3}) = {}
+    by extension intersect({1, 2}, {3}) = {}:
+        claim:
+            ? forall x intersect({1, 2}, {3}):
+                x $in {}
+            x $in {1, 2}
+            x $in {3}
+            x = 1 or x = 2
+            x = 3
+            by cases:
+                ? x $in {}
+                case x = 1:
+                    impossible 1 = 3
+                case x = 2:
+                    impossible 2 = 3
+        forall y {}:
+            y $in intersect({1, 2}, {3})
     finite_set_size(union({1, 2}, {3})) = finite_set_size({1, 2}) + finite_set_size({3}) = finite_set_size({1, 2}) + 1 = 3
 
     claim:

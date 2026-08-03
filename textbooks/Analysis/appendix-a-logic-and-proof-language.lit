@@ -80,7 +80,7 @@ relation `x > y` on real numbers.
 prop larger_than(x, y R):
     x > y
 
-$larger_than(3, 2)
+by def $larger_than(3, 2)
 
 """
 Compound factual statements use logical connectives.  In Litex, `and` requires
@@ -208,7 +208,7 @@ thm integer_product_successor_even:
                     n * (n + 1) = n * (2 * m)
                     n * (2 * m) = 2 * (n * m)
                     n * (n + 1) = 2 * (n * m)
-    $is_even(n * (n + 1))
+    by def $is_even(n * (n + 1))
 
 """
 Corollary A.2.5. A specific large integer also has even product with its
@@ -218,7 +218,7 @@ general theorem already handles both cases.
 
 have some_number Z = (253 + 142) * 123 - (423 + 198) * 342 + 538 - 213
 by thm integer_product_successor_even(some_number)
-$is_even(some_number * (some_number + 1))
+by def $is_even(some_number * (some_number + 1))
 
 """
 Proposition A.2.6. A positive real number satisfying `sin(x) = 1` is at least
@@ -368,9 +368,9 @@ positive real number `delta` such that `2*delta < epsilon`.
 # The universal variable is arbitrary, while the witness may depend on it.
 # Choosing `delta = epsilon/3` gives the strict inequality directly.
 thm positive_epsilon_has_smaller_delta:
-    ? forall epsilon R_pos:
-        exist delta R_pos st {2 * delta < epsilon}
-    witness exist delta R_pos st {2 * delta < epsilon} from epsilon / 3:
+    ? forall epsilon R+:
+        exist delta R+ st {2 * delta < epsilon}
+    witness exist delta R+ st {2 * delta < epsilon} from epsilon / 3:
         epsilon / 3 > 0
         2 * epsilon / 3 < 3 * epsilon / 3
         3 * epsilon / 3 = epsilon
@@ -419,9 +419,9 @@ if `x = y`, then `2*x = 2*y`, `sin(x) = sin(y)`, and `x + z = y + z`.
 
 Equality may be substituted through operations and functions.  Tao gives
 examples such as `2x = 2y`, `sin(x) = sin(y)`, and `x+z = y+z`.  This appendix
-does not import the trigonometry module just to mention `sin`; the generic
-function statement below is the same substitution principle for any real-valued
-function, including `sin` once that function is in scope.
+does not need a trigonometry import because native `sin` is always in scope.
+The generic function statement below records the same substitution principle
+for every real-valued function.
 """
 
 thm equality_substitution_for_real_operations:
@@ -499,8 +499,8 @@ thm modular_remainder_equality_example:
     12 % 10 = 2
     2 % 10 = 2
     12 % 10 = 2 % 10
-    $has_same_remainder_mod_10(12, 2)
+    by def $has_same_remainder_mod_10(12, 2)
     (12 + 5) % 10 = 17 % 10 = 7
     (2 + 5) % 10 = 7 % 10 = 7
     (12 + 5) % 10 = (2 + 5) % 10
-    $has_same_remainder_mod_10(12 + 5, 2 + 5)
+    by def $has_same_remainder_mod_10(12 + 5, 2 + 5)

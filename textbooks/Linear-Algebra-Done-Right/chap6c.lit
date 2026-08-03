@@ -46,6 +46,10 @@ axiom dimension_of_orthogonal_complement:
     ? forall s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, U power_set(VSet):
         $chap2a::is_finite_dimensional(s, VSet, inner_space.vector_space)
         $chap1c::is_subspace(s, VSet, inner_space.vector_space, U)
+        $chap1c::is_subspace(s, VSet, inner_space.vector_space, \orthogonal_complement<s, VSet>(inner_space, U))
+        $chap2c::admits_basis_length(s, VSet, inner_space.vector_space)
+        $chap2c::admits_basis_length(s, U, \chap1c::subspace_vector_space<s, VSet, inner_space.vector_space, U>)
+        $chap2c::admits_basis_length(s, \orthogonal_complement<s, VSet>(inner_space, U), \chap1c::subspace_vector_space<s, VSet, inner_space.vector_space, \orthogonal_complement<s, VSet>(inner_space, U)>)
         =>:
             \chap2c::dimension<s, \orthogonal_complement<s, VSet>(inner_space, U), \chap1c::subspace_vector_space<s, VSet, inner_space.vector_space, \orthogonal_complement<s, VSet>(inner_space, U)>> = \chap2c::dimension<s, VSet, inner_space.vector_space> - \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, VSet, inner_space.vector_space, U>>
 # Result 6.52. One inclusion is definitional; decompose a vector in the double
@@ -100,7 +104,7 @@ axiom orthogonal_projection_spec:
 
 prop is_orthonormal_basis_of_subspace(s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, U power_set(VSet), m N, basis &chap1a::FiniteList<VSet, m>):
     $chap6b::is_orthonormal(s, VSet, inner_space, m, basis)
-    \chap2a::span<s, VSet, inner_space.vector_space, m>(basis) = U
+    \chap2a::span<s, VSet, inner_space.vector_space, m, basis> = U
 
 prop has_orthogonal_projection_properties(s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, U power_set(VSet), P fn(v VSet) VSet):
     $is_orthogonal_projection_of(s, VSet, inner_space, U, P)
@@ -121,10 +125,11 @@ prop has_orthogonal_projection_properties(s nonempty_set, VSet nonempty_set, inn
 # Result 6.57. Read each clause from the unique U plus U-perp decomposition;
 # Pythagoras gives the norm bound and orthonormal coordinates give the formula.
 axiom properties_of_orthogonal_projection:
-    ? forall s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, U power_set(VSet):
+    ? forall s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, U power_set(VSet), P fn(v VSet) VSet:
         $is_finite_dimensional_subspace(s, VSet, inner_space.vector_space, U)
+        P = \orthogonal_projection<s, VSet, inner_space, U>
         =>:
-            $has_orthogonal_projection_properties(s, VSet, inner_space, U, fn(v VSet) VSet {\orthogonal_projection<s, VSet, inner_space, U>(v)})
+            $has_orthogonal_projection_properties(s, VSet, inner_space, U, P)
 
 template<s nonempty_set, VSet nonempty_set>:
     have fn riesz_functional(inner_space &chap6a::InnerProductSpace<s, VSet>, v VSet) fn(x VSet) s = fn(u VSet) s {inner_space.inner(u, v)}
@@ -146,20 +151,21 @@ axiom riesz_representation_revisited:
         =>:
             $riesz_correspondence_is_bijection(s, VSet, inner_space)
 
-prop projection_minimizes_distance_statement(s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, U power_set(VSet), v VSet, u U):
-    \chap6a::norm<s, VSet>(inner_space, \chap1b::vector_sub<s, VSet, inner_space.vector_space>(v, \orthogonal_projection<s, VSet, inner_space, U>(v))) <= \chap6a::norm<s, VSet>(inner_space, \chap1b::vector_sub<s, VSet, inner_space.vector_space>(v, u))
+prop projection_minimizes_distance_statement(s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, U power_set(VSet), P fn(v VSet) VSet, v VSet, u U):
+    \chap6a::norm<s, VSet>(inner_space, \chap1b::vector_sub<s, VSet, inner_space.vector_space>(v, P(v))) <= \chap6a::norm<s, VSet>(inner_space, \chap1b::vector_sub<s, VSet, inner_space.vector_space>(v, u))
     forall:
         =>:
-            \chap6a::norm<s, VSet>(inner_space, \chap1b::vector_sub<s, VSet, inner_space.vector_space>(v, \orthogonal_projection<s, VSet, inner_space, U>(v))) = \chap6a::norm<s, VSet>(inner_space, \chap1b::vector_sub<s, VSet, inner_space.vector_space>(v, u))
+            \chap6a::norm<s, VSet>(inner_space, \chap1b::vector_sub<s, VSet, inner_space.vector_space>(v, P(v))) = \chap6a::norm<s, VSet>(inner_space, \chap1b::vector_sub<s, VSet, inner_space.vector_space>(v, u))
         <=>:
-            u = \orthogonal_projection<s, VSet, inner_space, U>(v)
+            u = P(v)
 # Result 6.61. Split v-u into its U-perp projection error and its U component;
 # Pythagoras gives the inequality and definiteness gives the equality case.
 axiom minimizing_distance_to_a_subspace:
-    ? forall s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, U power_set(VSet), v VSet, u U:
+    ? forall s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, U power_set(VSet), P fn(v VSet) VSet, v VSet, u U:
         $is_finite_dimensional_subspace(s, VSet, inner_space.vector_space, U)
+        P = \orthogonal_projection<s, VSet, inner_space, U>
         =>:
-            $projection_minimizes_distance_statement(s, VSet, inner_space, U, v, u)
+            $projection_minimizes_distance_statement(s, VSet, inner_space, U, P, v, u)
 
 prop null_complement_restriction_is_bijection(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>):
     $chap3b::is_injective(\orthogonal_complement<s, VSet>(Vinner, \chap3b::null_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T)), \chap3b::range_of<VSet, WSet>(T), fn(x \orthogonal_complement<s, VSet>(Vinner, \chap3b::null_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T))) \chap3b::range_of<VSet, WSet>(T) {T(x)})
@@ -196,52 +202,64 @@ axiom pseudoinverse_spec:
         =>:
             $is_pseudoinverse_of(s, VSet, WSet, Vinner, Winner, T, \pseudoinverse<s, VSet, WSet, Vinner, Winner>(T))
 
-prop has_pseudoinverse_algebraic_properties(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>):
-    forall:
-        $chap3d::is_invertible_linear_map(s, VSet, WSet, Vinner.vector_space, Winner.vector_space, T)
+prop has_pseudoinverse_algebraic_properties(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, D \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>):
+    forall S fn(w WSet) VSet:
+        $chap3d::is_inverse_linear_map(s, VSet, WSet, Vinner.vector_space, Winner.vector_space, T, S)
         =>:
-            \pseudoinverse<s, VSet, WSet, Vinner, Winner>(T) = \chap3d::inverse_linear_map<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T)
-    $is_orthogonal_projection_of(s, WSet, Winner, \chap3b::range_of<VSet, WSet>(T), \chap3a::linear_map_compose<s, WSet, VSet, WSet, Winner.vector_space, Vinner.vector_space, Winner.vector_space>(T, \pseudoinverse<s, VSet, WSet, Vinner, Winner>(T)))
-    $is_orthogonal_projection_of(s, VSet, Vinner, \orthogonal_complement<s, VSet>(Vinner, \chap3b::null_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T)), \chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(\pseudoinverse<s, VSet, WSet, Vinner, Winner>(T), T))
+            D = S
+    $is_orthogonal_projection_of(s, WSet, Winner, \chap3b::range_of<VSet, WSet>(T), \chap3a::linear_map_compose<s, WSet, VSet, WSet, Winner.vector_space, Vinner.vector_space, Winner.vector_space>(T, D))
+    $is_orthogonal_projection_of(s, VSet, Vinner, \orthogonal_complement<s, VSet>(Vinner, \chap3b::null_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T)), \chap3a::linear_map_compose<s, VSet, WSet, VSet, Vinner.vector_space, Winner.vector_space, Vinner.vector_space>(D, T))
 # Result 6.69. Invertibility collapses null/range to 0/WSet. On range and its
 # complement, the two composites are exactly the corresponding projections.
 axiom algebraic_properties_of_pseudoinverse:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, D \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>:
         $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
+        D = \pseudoinverse<s, VSet, WSet, Vinner, Winner>(T)
         =>:
-            $has_pseudoinverse_algebraic_properties(s, VSet, WSet, Vinner, Winner, T)
+            $has_pseudoinverse_algebraic_properties(s, VSet, WSet, Vinner, Winner, T, D)
 
 prop is_pseudoinverse_solution(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T fn(v VSet) WSet, D fn(w WSet) VSet, w WSet, v VSet):
     exist z \chap3b::null_space<s, VSet, WSet, V, W>(T) st {v = V.add(D(w), z)}
 
-prop pseudoinverse_residual_equality_iff(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, w WSet, v VSet):
+prop pseudoinverse_residual_equality_iff(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, D \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>, w WSet, v VSet):
     forall:
         =>:
-            \chap6a::norm<s, WSet>(Winner, \chap1b::vector_sub<s, WSet, Winner.vector_space>(T(\pseudoinverse<s, VSet, WSet, Vinner, Winner>(T)(w)), w)) = \chap6a::norm<s, WSet>(Winner, \chap1b::vector_sub<s, WSet, Winner.vector_space>(T(v), w))
+            \chap6a::norm<s, WSet>(Winner, \chap1b::vector_sub<s, WSet, Winner.vector_space>(T(D(w)), w)) = \chap6a::norm<s, WSet>(Winner, \chap1b::vector_sub<s, WSet, Winner.vector_space>(T(v), w))
         <=>:
-            $is_pseudoinverse_solution(s, VSet, WSet, Vinner.vector_space, Winner.vector_space, T, \pseudoinverse<s, VSet, WSet, Vinner, Winner>(T), w, v)
+            $is_pseudoinverse_solution(s, VSet, WSet, Vinner.vector_space, Winner.vector_space, T, D, w, v)
 
-prop pseudoinverse_norm_equality_iff(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, w WSet, v VSet):
+prop pseudoinverse_norm_equality_iff(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, D \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>, w WSet, v VSet):
     forall:
         =>:
-            \chap6a::norm<s, VSet>(Vinner, \pseudoinverse<s, VSet, WSet, Vinner, Winner>(T)(w)) = \chap6a::norm<s, VSet>(Vinner, v)
+            \chap6a::norm<s, VSet>(Vinner, D(w)) = \chap6a::norm<s, VSet>(Vinner, v)
         <=>:
-            v = \pseudoinverse<s, VSet, WSet, Vinner, Winner>(T)(w)
+            v = D(w)
 
-prop has_pseudoinverse_best_solution_properties(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, w WSet):
+prop has_pseudoinverse_best_solution_properties(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, D \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>, w WSet):
     forall v VSet:
-        \chap6a::norm<s, WSet>(Winner, \chap1b::vector_sub<s, WSet, Winner.vector_space>(T(\pseudoinverse<s, VSet, WSet, Vinner, Winner>(T)(w)), w)) <= \chap6a::norm<s, WSet>(Winner, \chap1b::vector_sub<s, WSet, Winner.vector_space>(T(v), w))
-        $pseudoinverse_residual_equality_iff(s, VSet, WSet, Vinner, Winner, T, w, v)
+        \chap6a::norm<s, WSet>(Winner, \chap1b::vector_sub<s, WSet, Winner.vector_space>(T(D(w)), w)) <= \chap6a::norm<s, WSet>(Winner, \chap1b::vector_sub<s, WSet, Winner.vector_space>(T(v), w))
+        $pseudoinverse_residual_equality_iff(s, VSet, WSet, Vinner, Winner, T, D, w, v)
     forall v VSet:
-        $is_pseudoinverse_solution(s, VSet, WSet, Vinner.vector_space, Winner.vector_space, T, \pseudoinverse<s, VSet, WSet, Vinner, Winner>(T), w, v)
+        $is_pseudoinverse_solution(s, VSet, WSet, Vinner.vector_space, Winner.vector_space, T, D, w, v)
         =>:
-            \chap6a::norm<s, VSet>(Vinner, \pseudoinverse<s, VSet, WSet, Vinner, Winner>(T)(w)) <= \chap6a::norm<s, VSet>(Vinner, v)
-            $pseudoinverse_norm_equality_iff(s, VSet, WSet, Vinner, Winner, T, w, v)
+            \chap6a::norm<s, VSet>(Vinner, D(w)) <= \chap6a::norm<s, VSet>(Vinner, v)
+            $pseudoinverse_norm_equality_iff(s, VSet, WSet, Vinner, Winner, T, D, w, v)
 # Result 6.70. Split the residual into range and range-perpendicular pieces for
 # the best fit; split any best-fit solution into null and null-perpendicular
 # pieces for the minimum norm. Pythagoras supplies both equality cases.
 axiom pseudoinverse_provides_best_solution:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, w WSet:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, D \chap3a::linear_map_space<s, WSet, VSet, Winner.vector_space, Vinner.vector_space>, w WSet:
         $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
+        D = \pseudoinverse<s, VSet, WSet, Vinner, Winner>(T)
         =>:
-            $has_pseudoinverse_best_solution_properties(s, VSet, WSet, Vinner, Winner, T, w)
+            $has_pseudoinverse_best_solution_properties(s, VSet, WSet, Vinner, Winner, T, D, w)
+
+# Example 6.71. The source obtains this pseudoinverse by solving four linear
+# equations for a,b,c,d. Substituting the displayed formulas below verifies all
+# four equations, including the two orthogonality conditions.
+sketch:
+    forall x, y R:
+        (5 * x - 2 * y) / 11 + (5 * x - 2 * y) / 11 + (x + 4 * y) / 11 = x
+        2 * ((x + 4 * y) / 11) + (-2 * x + 3 * y) / 11 = y
+        -(5 * x - 2 * y) / 11 + (5 * x - 2 * y) / 11 = 0
+        -(5 * x - 2 * y) / 11 + (x + 4 * y) / 11 - 2 * ((-2 * x + 3 * y) / 11) = 0
