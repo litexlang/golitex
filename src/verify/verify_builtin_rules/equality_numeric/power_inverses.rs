@@ -54,7 +54,7 @@ impl Runtime {
                     left,
                     right,
                     line_file,
-                    "equality: a = 0 from a^n = 0 and n in N_pos",
+                    "equality: a = 0 from a^n = 0 and n in N+",
                 )));
             }
         }
@@ -228,7 +228,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: abs(a^n) = abs(a)^n for n in N_pos",
+                "equality: abs(a^n) = abs(a)^n for n in N+",
             )));
         }
 
@@ -250,7 +250,7 @@ impl Runtime {
         }
 
         // Integer powers of a nonzero base preserve the absolute-value power law.
-        // Example: `forall a R_nz, n Z: abs(a^n) = abs(a)^n`.
+        // Example: `forall a R*, n Z: abs(a^n) = abs(a)^n`.
         if !self.obj_is_verified_integer_exponent_for_power_builtin(
             inner_pow.exponent.as_ref(),
             line_file.clone(),
@@ -374,7 +374,7 @@ impl Runtime {
     }
 
     // Negative integer powers are reciprocals of the corresponding positive powers.
-    // Example: for `x != 0` and `n in N_pos`, prove `x^(-n) = 1 / x^n`.
+    // Example: for `x != 0` and `n in N+`, prove `x^(-n) = 1 / x^n`.
     pub(crate) fn try_verify_power_inverse_rule(
         &mut self,
         left: &Obj,
@@ -406,7 +406,7 @@ impl Runtime {
             left,
             right,
             line_file,
-            "equality: a^(-n) = 1 / a^n for n in N_pos and a != 0",
+            "equality: a^(-n) = 1 / a^n for n in N+ and a != 0",
             subgoals,
         )))
     }
@@ -425,7 +425,7 @@ impl Runtime {
 
     // Principal nth-root equality: `x^(1/n) = z` follows from `x = z^n`,
     // with `n` a positive integer and `z >= 0`.
-    // Example: `8^(1/3) = 2`, since `3 $in N_pos`, `0 <= 2`, and `8 = 2^3`.
+    // Example: `8^(1/3) = 2`, since `3 $in N+`, `0 <= 2`, and `8 = 2^3`.
     pub(crate) fn try_verify_pow_reciprocal_exponent_equals_root_by_power(
         &mut self,
         left: &Obj,
@@ -453,7 +453,7 @@ impl Runtime {
         {
             degree_result = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 degree_in_n_pos.clone().into(),
-                "number in N_pos".to_string(),
+                "number in N+".to_string(),
                 Vec::new(),
             )
             .into();
@@ -489,7 +489,7 @@ impl Runtime {
             left,
             right,
             line_file,
-            "equality: x^(1/n) = z from x = z^n, n in N_pos, and z >= 0",
+            "equality: x^(1/n) = z from x = z^n, n in N+, and z >= 0",
             vec![degree_result, root_nonnegative_result, inverse_result],
         )))
     }

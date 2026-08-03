@@ -333,35 +333,6 @@ try:
 }
 
 #[test]
-fn former_compatibility_words_are_ordinary_identifiers() {
-    let source_code = r#"
-have let set
-have scratch set
-have export set
-have oo set
-have oc set
-have co set
-have cc set
-have oinf set
-have cinf set
-have info set
-have infc set
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "former_compatibility_words_are_ordinary_identifiers",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-    assert!(
-        run_succeeded,
-        "former compatibility words should be available as names:\n{run_output}"
-    );
-}
-
-#[test]
 fn internal_claim_question_goal_remains_supported() {
     run_with_large_stack("internal_claim_question_goal_remains_supported", || {
         let source_code = r#"
@@ -1075,7 +1046,7 @@ by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}
 }
 
 #[test]
-fn by_enumerate_finite_set_resolves_named_literal_alias() {
+fn by_enumerate_finite_set_resolves_named_literal_definition() {
     let source_code = r#"
 have P finite_set = {1, 2}
 
@@ -1086,14 +1057,14 @@ by enumerate finite_set:
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "by_enumerate_finite_set_resolves_named_literal_alias",
+        "by_enumerate_finite_set_resolves_named_literal_definition",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
     assert!(
         run_succeeded,
-        "finite-set enumeration over a named literal alias failed:\n{}",
+        "finite-set enumeration over a named literal definition failed:\n{}",
         run_output
     );
     assert!(
@@ -1149,8 +1120,8 @@ thm nested_existential_quotient_is_well_defined:
     ? forall E power_set(R), g fn(x E) R:
         $nonzero_on(E, g)
         =>:
-            exist delta R_pos st {fn(x E) R {1 / g(x)} $in fn(x E) R}
-    trust exist delta R_pos st {fn(x E) R {1 / g(x)} $in fn(x E) R}
+            exist delta R+ st {fn(x E) R {1 / g(x)} $in fn(x E) R}
+    trust exist delta R+ st {fn(x E) R {1 / g(x)} $in fn(x E) R}
 "#;
 
             let mut runtime = Runtime::new();

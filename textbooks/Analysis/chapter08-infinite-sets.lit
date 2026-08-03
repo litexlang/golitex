@@ -1855,11 +1855,11 @@ claim:
     by def $chap3::is_injective_fn(N, Z-, negative_integer_enum)
 
 claim:
-    ? $chap3::is_surjective_fn(N, Z_neg, negative_integer_enum)
+    ? $chap3::is_surjective_fn(N, Z-, negative_integer_enum)
     claim:
-        ? forall y Z_neg:
+        ? forall y Z-:
             exist n N st {y = negative_integer_enum(n)}
-        abs(y) $in N_pos
+        abs(y) $in N+
         abs(y) - 1 $in N
         negative_integer_enum(abs(y) - 1) = -((abs(y) - 1) + 1) = -abs(y) = y
         y = negative_integer_enum(abs(y) - 1)
@@ -1871,20 +1871,20 @@ by def $chap3::has_equal_cardinality(N, Z-)
 by def $is_countably_infinite(Z-)
 
 claim:
-    ? union(N+, Z-) = Z_nz
+    ? union(N+, Z-) = Z*
     by extension:
-        ? union(N+, Z-) = Z_nz
+        ? union(N+, Z-) = Z*
         claim:
             ? forall x union(N+, Z-):
-                x $in Z_nz
+                x $in Z*
             by cases:
-                ? x $in Z_nz
+                ? x $in Z*
                 case x $in N+:
-                    x $in Z_nz
+                    x $in Z*
                 case x $in Z-:
-                    x $in Z_nz
+                    x $in Z*
         claim:
-            ? forall x Z_nz:
+            ? forall x Z*:
                 x $in union(N+, Z-)
             by cases:
                 ? x $in union(N+, Z-)
@@ -1902,16 +1902,16 @@ claim:
 
 by thm union_of_two_countable_sets_is_countable(N+, Z-)
 
-forall p cart(Z, Z_nz):
+forall p cart(Z, Z*):
     p[1] / p[2] $in Q
 
-have fn rational_quotient(p cart(Z, Z_nz)) Q = p[1] / p[2]
+have fn rational_quotient(p cart(Z, Z*)) Q = p[1] / p[2]
 
 claim:
     ? forall q Q:
-        exist p cart(Z, Z_nz) st {q = rational_quotient(p)}
-    obtain a, b from exist a Z, b Z_nz st {q = a / b}
-    witness exist p0 cart(Z, Z_nz) st {q = rational_quotient(p0)} from (a, b)
+        exist p cart(Z, Z*) st {q = rational_quotient(p)}
+    obtain a, b from exist a Z, b Z* st {q = a / b}
+    witness exist p0 cart(Z, Z*) st {q = rational_quotient(p0)} from (a, b)
 
 claim:
     ? fn_range(rational_quotient) = Q
@@ -1920,12 +1920,12 @@ claim:
         claim:
             ? forall q Q:
                 q $in fn_range(rational_quotient)
-            obtain p from exist p cart(Z, Z_nz) st {q = rational_quotient(p)}
+            obtain p from exist p cart(Z, Z*) st {q = rational_quotient(p)}
             rational_quotient(p) $in fn_range(rational_quotient)
 
 by thm integers_are_countable()
-by thm product_of_countable_sets_is_countable(Z, Z_nz)
-by thm countable_image_is_at_most_countable(cart(Z, Z_nz), Q, rational_quotient)
+by thm product_of_countable_sets_is_countable(Z, Z*)
+by thm countable_image_is_at_most_countable(cart(Z, Z*), Q, rational_quotient)
 
 
 have fn natural_to_rational(n N) Q = n
@@ -2685,15 +2685,15 @@ thm row_partial_sums_bounded_by_finite_double_bound:
         ? forall k N+:
             chap7::partial_sum(row, k) <= L
         claim:
-            ? cart({n}, closed_range(1, k)) $subset cart(N_pos, N_pos)
+            ? cart({n}, closed_range(1, k)) $subset cart(N+, N+)
             forall p cart({n}, closed_range(1, k)):
                 p[1] $in {n}
                 p[1] = n
                 p[2] $in closed_range(1, k)
-                p[2] $in N_pos
-                (p[1], p[2]) $in cart(N_pos, N_pos)
+                p[2] $in N+
+                (p[1], p[2]) $in cart(N+, N+)
                 p = (p[1], p[2])
-                p $in cart(N_pos, N_pos)
+                p $in cart(N+, N+)
         have fn rect(p cart({n}, closed_range(1, k))) R = f(p)
         finite_set_sum(cart({n}, closed_range(1, k)), fn(p cart({n}, closed_range(1, k))) R {f(p)}) <= L
         claim:
@@ -3045,7 +3045,7 @@ thm finite_double_subsum_below_row_first_sum:
             finite_set_max(row_support) $in R
             finite_set_max(row_support) = K
             raw_row(p) <= finite_set_max(row_support) = K
-            p $in cart(N_pos, N_pos)
+            p $in cart(N+, N+)
             raw_row(p) = positive_pair_first(p) = p[1]
             p[1] >= 1
             p[1] <= K

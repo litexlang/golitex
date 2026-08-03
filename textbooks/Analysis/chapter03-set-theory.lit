@@ -1042,13 +1042,13 @@ on all of R; function equality depends on the chosen domain.
 # definition is given explicitly when absolute value is introduced in Chapter 4.
 
 sketch:
-    have fn id_on_N_pos(x N+) R = x
-    have fn abs_on_N_pos(x N+) R = abs(x)
+    have fn id_on_positive_naturals(x N+) R = x
+    have fn abs_on_positive_naturals(x N+) R = abs(x)
 
     forall x N+:
-        abs_on_N_pos(x) = abs(x) = x = id_on_N_pos(x)
+        abs_on_positive_naturals(x) = abs(x) = x = id_on_positive_naturals(x)
 
-    by def $fn_eq(id_on_N_pos, abs_on_N_pos)
+    by def $fn_eq(id_on_positive_naturals, abs_on_positive_naturals)
 
     have fn id_R(x R) R = x
     have fn abs_R(x R) R = abs(x)

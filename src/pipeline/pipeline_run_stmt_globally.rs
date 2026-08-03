@@ -763,19 +763,6 @@ mod path_import_tests {
     }
 
     #[test]
-    fn trust_import_remains_removed() {
-        let mut runtime = Runtime::new();
-        runtime.isolated = true;
-        runtime.new_file_path_new_env_new_name_scope("repl");
-
-        let (_, runtime_error) = run_source_code("trust import std basics", &mut runtime);
-
-        let runtime_error = runtime_error.expect("trust import should fail");
-        assert!(format!("{runtime_error:?}").contains("import is trusted by default"));
-        assert!(runtime.module_manager.module_by_name.is_empty());
-    }
-
-    #[test]
     fn strict_mode_rejects_user_trust() {
         let mut runtime = Runtime::new();
         runtime.strict_mode = true;

@@ -34,16 +34,6 @@ pub const MATRIX_MUL: &str = "'*";
 pub const MATRIX_SCALAR_MUL: &str = "*'";
 /// Matrix power. Example: `A '^ n`.
 pub const MATRIX_POW: &str = "'^";
-/// Removed matrix addition spelling; retained only to give a migration error.
-pub const LEGACY_MATRIX_ADD: &str = "++";
-/// Removed matrix subtraction spelling; retained only to give a migration error.
-pub const LEGACY_MATRIX_SUB: &str = "--";
-/// Removed matrix multiplication spelling; retained only to give a migration error.
-pub const LEGACY_MATRIX_MUL: &str = "**";
-/// Removed scalar-matrix multiplication spelling; retained only to give a migration error.
-pub const LEGACY_MATRIX_SCALAR_MUL: &str = "*.";
-/// Removed matrix power spelling; retained only to give a migration error.
-pub const LEGACY_MATRIX_POW: &str = "^^";
 pub const LEFT_BRACE: &str = "(";
 pub const RIGHT_BRACE: &str = ")";
 pub const COMMA: &str = ",";
@@ -78,8 +68,7 @@ pub const INTERVAL_LITERAL_PREFIX: &str = "'";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
-pub const N_POS: &str = "N_pos";
-/// Preview compact spellings for strict positive and negative standard sets.
+/// Mathematical spellings for signed and nonzero standard sets.
 pub const COMPACT_N_POS: &str = "N+";
 pub const COMPACT_Z_POS: &str = "Z+";
 pub const COMPACT_Q_POS: &str = "Q+";
@@ -87,6 +76,9 @@ pub const COMPACT_R_POS: &str = "R+";
 pub const COMPACT_Z_NEG: &str = "Z-";
 pub const COMPACT_Q_NEG: &str = "Q-";
 pub const COMPACT_R_NEG: &str = "R-";
+pub const COMPACT_Z_NZ: &str = "Z*";
+pub const COMPACT_Q_NZ: &str = "Q*";
+pub const COMPACT_R_NZ: &str = "R*";
 pub const N: &str = "N";
 pub const Q: &str = "Q";
 pub const Z: &str = "Z";
@@ -175,7 +167,6 @@ pub const CASE: &str = "case";
 pub const TRUST: &str = "trust";
 pub const IMPORT: &str = "import";
 pub const STD: &str = "std";
-pub const LOCAL: &str = "local";
 pub const AS: &str = "as";
 pub const HAVE: &str = "have";
 pub const OBTAIN: &str = "obtain";
@@ -194,14 +185,6 @@ pub const TAN: &str = "tan";
 pub const COT: &str = "cot";
 pub const SQRT: &str = "sqrt";
 pub const LOG: &str = "log";
-pub const Q_POS: &str = "Q_pos";
-pub const R_POS: &str = "R_pos";
-pub const Q_NEG: &str = "Q_neg";
-pub const Z_NEG: &str = "Z_neg";
-pub const R_NEG: &str = "R_neg";
-pub const Q_NZ: &str = "Q_nz";
-pub const Z_NZ: &str = "Z_nz";
-pub const R_NZ: &str = "R_nz";
 pub const STRUCT: &str = "struct";
 pub const TEMPLATE: &str = "template";
 pub const STRATEGY: &str = "strategy";
@@ -235,6 +218,9 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         COMPACT_Z_NEG,
         COMPACT_Q_NEG,
         COMPACT_R_NEG,
+        COMPACT_Z_NZ,
+        COMPACT_Q_NZ,
+        COMPACT_R_NZ,
         ADD,
         SUB,
         MUL,
@@ -246,11 +232,6 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         MATRIX_SCALAR_MUL,
         MATRIX_ADD,
         MATRIX_SUB,
-        LEGACY_MATRIX_POW,
-        LEGACY_MATRIX_MUL,
-        LEGACY_MATRIX_SCALAR_MUL,
-        LEGACY_MATRIX_ADD,
-        LEGACY_MATRIX_SUB,
         DOT_DOT_DOT,
         LEFT_BRACE,
         RIGHT_BRACE,
@@ -287,7 +268,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         SET,
         NONEMPTY_SET,
         FINITE_SET,
-        N_POS,
         N,
         Q,
         Z,
@@ -357,7 +337,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TRUST,
         IMPORT,
         STD,
-        LOCAL,
         AS,
         ENUMERATE,
         HAVE,
@@ -385,14 +364,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         COT,
         SQRT,
         LOG,
-        Q_POS,
-        R_POS,
-        Q_NEG,
-        Z_NEG,
-        R_NEG,
-        Q_NZ,
-        Z_NZ,
-        R_NZ,
         STRUCT,
         TEMPLATE,
         SETTING,
@@ -507,15 +478,16 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == MATRIX_MUL
         || atom_name == MATRIX_SCALAR_MUL
         || atom_name == MATRIX_POW
-        || atom_name == Q_POS
-        || atom_name == R_POS
-        || atom_name == Q_NEG
-        || atom_name == Z_NEG
-        || atom_name == R_NEG
-        || atom_name == Q_NZ
-        || atom_name == Z_NZ
-        || atom_name == R_NZ
-        || atom_name == N_POS
+        || atom_name == COMPACT_N_POS
+        || atom_name == COMPACT_Z_POS
+        || atom_name == COMPACT_Q_POS
+        || atom_name == COMPACT_R_POS
+        || atom_name == COMPACT_Z_NEG
+        || atom_name == COMPACT_Q_NEG
+        || atom_name == COMPACT_R_NEG
+        || atom_name == COMPACT_Z_NZ
+        || atom_name == COMPACT_Q_NZ
+        || atom_name == COMPACT_R_NZ
         || atom_name == N
         || atom_name == Q
         || atom_name == Z

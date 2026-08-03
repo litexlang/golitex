@@ -341,7 +341,7 @@ impl Runtime {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
                         fact.clone().into(),
-                        "numeric-carrier strategy: structural closure in N_pos".to_string(),
+                        "numeric-carrier strategy: structural closure in N+".to_string(),
                         children,
                     )
                     .into(),

@@ -394,7 +394,7 @@ impl Runtime {
         if in_n_pos_result.is_unknown() {
             return Err(short_exec_error(
                 stmt,
-                format!("{} needs {} $in N_pos", mismatch_msg, bound),
+                format!("{} needs {} $in N+", mismatch_msg, bound),
                 None,
                 vec![in_n_pos_result],
             ));

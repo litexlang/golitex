@@ -349,7 +349,7 @@ impl Runtime {
             }
             Obj::StructObj(_) => Ok((StmtUnknown::new()).into()),
             _ => {
-                // Equality alias rule: a set alias is nonempty when it is already known equal
+                // Equality transport: a named set is nonempty when it is already known equal
                 // to a structural set whose nonemptiness is verified by builtin rules.
                 // Example: from `T = fn(i closed_range(1, 3)) R`, prove `$is_nonempty_set(T)`.
                 for equal_set in self

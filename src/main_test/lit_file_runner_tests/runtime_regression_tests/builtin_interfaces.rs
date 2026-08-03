@@ -18,7 +18,7 @@ fn all_explicit_builtin_theorem_interfaces_succeed() {
 by thm fn_set_member(fn(x R) R {x}, fn(y R) R)
 by thm set_builder_member(1, {x R: x > 0})
 
-have fn circle(r R_pos) power_set(cart(R, R)) = {x cart(R, R): x[1] ^ 2 + x[2] ^ 2 = r ^ 2}
+have fn circle(r R+) power_set(cart(R, R)) = {x cart(R, R): x[1] ^ 2 + x[2] ^ 2 = r ^ 2}
 by thm defined_set_member((3, 4), circle(5))
 
 struct Point:

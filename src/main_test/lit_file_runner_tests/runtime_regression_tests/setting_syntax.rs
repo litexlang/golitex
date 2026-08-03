@@ -52,7 +52,9 @@ forall [OneElement]:
     runtime.exec_stmt(&setting_stmt).expect("store setting");
     let first = runtime.parse_stmt(&mut blocks[1]).expect("parse first use");
     runtime.exec_stmt(&first).expect("execute first use");
-    let second = runtime.parse_stmt(&mut blocks[2]).expect("parse second use");
+    let second = runtime
+        .parse_stmt(&mut blocks[2])
+        .expect("parse second use");
 
     let Stmt::Fact(Fact::ForallFact(first)) = first else {
         panic!("expected first forall");
@@ -72,10 +74,7 @@ forall [OneElement]:
 #[test]
 fn setting_reports_unknown_collision_order_and_duplicate_errors() {
     let cases = [
-        (
-            "forall [Missing]:\n    1 = 1",
-            "unknown setting `Missing`",
-        ),
+        ("forall [Missing]:\n    1 = 1", "unknown setting `Missing`"),
         (
             "setting S:\n    X nonempty_set\nforall [S], X nonempty_set:\n    1 = 1",
             "already active",
@@ -88,10 +87,7 @@ fn setting_reports_unknown_collision_order_and_duplicate_errors() {
             "setting S:\n    X nonempty_set\nsetting S:\n    Y nonempty_set",
             "already used",
         ),
-        (
-            "setting Empty:",
-            "missing body",
-        ),
+        ("setting Empty:", "missing body"),
     ];
 
     for (index, (source, expected)) in cases.iter().enumerate() {

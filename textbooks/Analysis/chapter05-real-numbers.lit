@@ -1312,8 +1312,8 @@ forall x R:
     x * 1 = x
     x + (-x) = 0
 
-# R_nz represents the set of nonzero real numbers.
-forall x R_nz:
+# R* represents the set of nonzero real numbers.
+forall x R*:
     x * (1 / x) = 1
 
 """
@@ -1535,7 +1535,7 @@ thm finite_prefix_replacement_preserves_cauchy_and_formal_limit_in_Q:
     by def $has_formal_limit_in_Q(b, x)
 
 thm nonzero_real_has_bounded_away_rational_representative:
-    ? forall x R_nz:
+    ? forall x R*:
         exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x), $is_bounded_away_from_zero_in_Q(a)}
     abs(x) > 0
     abs(x) / 4 $in R+
@@ -1701,7 +1701,7 @@ reciprocal of a bounded-away-from-zero Cauchy representative.
 # sequence-side construction above explains why the reciprocal is well-defined
 # from a bounded-away-from-zero Cauchy representative.
 
-forall x R_nz:
+forall x R*:
     1 / x $in R
 
 """
@@ -3762,10 +3762,10 @@ Definition 5.6.2. Integer powers are defined for non-zero real bases.
 # Integer powers require a nonzero base because negative exponents use
 # reciprocals.
 
-forall x R_nz, n N+:
+forall x R*, n N+:
     x^n != 0
 
-forall x R_nz, n N+:
+forall x R*, n N+:
     x^n != 0
     =>:
         x^(-n) = 1 / x^n
@@ -3841,16 +3841,16 @@ forall x R, n N:
 # Real version of Proposition 4.3.12(a): integer-exponent algebra laws for
 # nonzero bases.
 
-forall x R_nz, n, m Z:
+forall x R*, n, m Z:
     x^n * x^m = x^(n + m)
 
-forall x R_nz, n Z:
+forall x R*, n Z:
     x^n != 0
 
-forall x R_nz, n, m Z:
+forall x R*, n, m Z:
     (x^n)^m = x^(n * m)
 
-forall x, y R_nz, n Z:
+forall x, y R*, n Z:
     (x * y)^n = x^n * y^n
 
 # Real version of Proposition 4.3.12(b): positive integer exponents preserve
@@ -3887,7 +3887,7 @@ forall x, y R+, n Z:
 # Real version of Proposition 4.3.12(d): absolute value commutes with integer
 # powers of a nonzero real.
 
-forall x R_nz, n Z:
+forall x R*, n Z:
     abs(x^n) = abs(x)^n
 
 # A small power-growth estimate used in the proof of Lemma 5.6.5: if the

@@ -274,8 +274,8 @@ impl Runtime {
             // Example: `\Matrix<F, field, m, n> = fn(i, j) F` accepts an
             // anonymous row-column function as a `matrix_add` return value.
             let representative_kind = match &return_set_representative {
-                Obj::FnSet(_) => "function-space alias",
-                Obj::SetBuilder(_) => "set-builder alias",
+                Obj::FnSet(_) => "equal function-space representative",
+                Obj::SetBuilder(_) => "equal set-builder representative",
                 _ => continue,
             };
             let representative_result = self.verify_obj_satisfies_param_type(

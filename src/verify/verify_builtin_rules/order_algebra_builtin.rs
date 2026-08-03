@@ -182,7 +182,7 @@ impl Runtime {
         integer > 0
     }
 
-    // k in N_pos and k % 2 = 0, or k is a positive even literal.
+    // k in N+ and k % 2 = 0, or k is a positive even literal.
     fn verify_even_exponent_in_n_pos_subgoal(
         &mut self,
         exp: &Obj,
@@ -210,7 +210,7 @@ impl Runtime {
         Ok(None)
     }
 
-    // k in N_pos and k % 2 = 1, or k is a positive odd literal.
+    // k in N+ and k % 2 = 1, or k is a positive odd literal.
     fn verify_odd_exponent_in_n_pos_subgoal(
         &mut self,
         exp: &Obj,
@@ -388,8 +388,8 @@ impl Runtime {
         candidates
     }
 
-    // a <= b from 0 <= a, 0 <= b, a^n <= b^n, and n in N_pos.
-    // Example: from `0 <= x`, `0 <= y`, `m $in N_pos`, and `x^m <= y^m`, prove `x <= y`.
+    // a <= b from 0 <= a, 0 <= b, a^n <= b^n, and n in N+.
+    // Example: from `0 <= x`, `0 <= y`, `m $in N+`, and `x^m <= y^m`, prove `x <= y`.
     fn try_base_le_from_pow_le_same_positive_integer_exponent_nonnegative_base(
         &mut self,
         f: &LessEqualFact,
@@ -427,7 +427,7 @@ impl Runtime {
                 return Ok(Some(StmtResult::from(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
-                        "a <= b from 0 <= a, 0 <= b, a^n <= b^n, and n in N_pos".to_string(),
+                        "a <= b from 0 <= a, 0 <= b, a^n <= b^n, and n in N+".to_string(),
                         vec![exponent_result, left_result, right_result, power_le_result],
                     ),
                 )));
@@ -572,7 +572,7 @@ impl Runtime {
         )))
     }
 
-    // a^k <= b^k from abs(a) <= abs(b) when k in N_pos and k % 2 = 0.
+    // a^k <= b^k from abs(a) <= abs(b) when k in N+ and k % 2 = 0.
     // Example: `forall x, y R: abs(x) <= abs(y) => x^2 <= y^2`.
     fn try_pow_le_even_exponent_from_abs_le(
         &mut self,
@@ -607,13 +607,13 @@ impl Runtime {
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
-                "a^k <= b^k from abs(a) <= abs(b) and even k in N_pos".to_string(),
+                "a^k <= b^k from abs(a) <= abs(b) and even k in N+".to_string(),
                 step_results,
             ),
         )))
     }
 
-    // a^k < b^k from abs(a) < abs(b) when k in N_pos and k % 2 = 0.
+    // a^k < b^k from abs(a) < abs(b) when k in N+ and k % 2 = 0.
     fn try_pow_lt_even_exponent_from_abs_lt(
         &mut self,
         left_pow: &Pow,
@@ -647,7 +647,7 @@ impl Runtime {
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
-                "a^k < b^k from abs(a) < abs(b) and even k in N_pos".to_string(),
+                "a^k < b^k from abs(a) < abs(b) and even k in N+".to_string(),
                 step_results,
             ),
         )))
@@ -706,7 +706,7 @@ impl Runtime {
             return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
-                    "abs(x) <= abs(y) from x^k <= y^k and even k in N_pos".to_string(),
+                    "abs(x) <= abs(y) from x^k <= y^k and even k in N+".to_string(),
                     steps,
                 ),
             )));
@@ -1258,8 +1258,8 @@ impl Runtime {
 
     // Finite sum monotonicity on a shared range, using the summand's unary
     // parameter set when it is explicit.
-    // Example: from `forall i N_pos: m <= i <= n => f(i) <= g(i)`, prove
-    // `sum(m, n, fn(i N_pos) R {f(i)}) <= sum(m, n, fn(i N_pos) R {g(i)})`.
+    // Example: from `forall i N+: m <= i <= n => f(i) <= g(i)`, prove
+    // `sum(m, n, fn(i N+) R {f(i)}) <= sum(m, n, fn(i N+) R {g(i)})`.
     pub(crate) fn try_less_equal_sum_pointwise_on_same_integer_range(
         &mut self,
         f: &LessEqualFact,

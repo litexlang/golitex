@@ -50,7 +50,7 @@ fn native_gcd_symbolic_contract_is_available() {
 forall a, b Z:
     a != 0 or b != 0
     =>:
-        gcd(a, b) $in N_pos
+        gcd(a, b) $in N+
 
 forall a, b Z:
     a != 0 or b != 0
@@ -58,7 +58,7 @@ forall a, b Z:
         a % gcd(a, b) = 0
         b % gcd(a, b) = 0
 
-forall a, b Z, d N_pos:
+forall a, b Z, d N+:
     a != 0 or b != 0
     a % d = 0
     b % d = 0
@@ -75,7 +75,7 @@ fn native_gcd_rejects_all_zero_and_missing_domain_evidence() {
         ("gcd_all_zero", "gcd(0, 0) = 0"),
         (
             "gcd_symbolic_without_nonzero",
-            "forall a, b Z:\n    gcd(a, b) $in N_pos",
+            "forall a, b Z:\n    gcd(a, b) $in N+",
         ),
     ] {
         assert_source_fails(source, label);
@@ -97,7 +97,7 @@ not $prime(18446744073709551615)
 by def $prime(97)
 
 claim:
-    ? forall p N_pos:
+    ? forall p N+:
         2 <= p
         forall d range(2, p):
             p % d != 0
@@ -105,7 +105,7 @@ claim:
             $prime(p)
     by def $prime(p)
 
-forall p N_pos:
+forall p N+:
     $prime(p)
     =>:
         2 <= p

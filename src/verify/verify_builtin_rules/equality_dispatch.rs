@@ -3131,7 +3131,7 @@ impl Runtime {
     }
 
     // Sequence-shaped spaces are exactly their corresponding function spaces.
-    // Example: `matrix(R, 2, 3) = fn(i, j N_pos: i <= 2, j <= 3) R`.
+    // Example: `matrix(R, 2, 3) = fn(i, j N+: i <= 2, j <= 3) R`.
     fn try_verify_indexed_fn_set_definition_equality(
         &mut self,
         left: &Obj,

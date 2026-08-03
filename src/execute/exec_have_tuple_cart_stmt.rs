@@ -184,7 +184,7 @@ impl Runtime {
         if in_n_pos_result.is_unknown() {
             return Err(short_exec_error(
                 stmt,
-                format!("have tuple/cart needs {} $in N_pos", dimension),
+                format!("have tuple/cart needs {} $in N+", dimension),
                 None,
                 vec![in_n_pos_result],
             ));

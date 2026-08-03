@@ -425,7 +425,7 @@ by def {x R: 0 <= x} $subset R
 | `N`, `Z`, `Q`, `R`, `C` | Standard number sets |
 | `N+`, `Z+`, `Q+`, `R+` | Strictly positive standard subsets; `Z+` is the same set as `N+` |
 | `Z-`, `Q-`, `R-` | Strictly negative standard subsets |
-| `Q_nz`, `Z_nz`, `R_nz` | Nonzero standard subsets |
+| `Z*`, `Q*`, `R*` | Nonzero standard subsets |
 | `{a, b, ...}` | Displayed finite set |
 | `{x S: facts}` | Set comprehension over `S` |
 | `union(A, B)`, `intersect(A, B)` | Binary union and intersection |
@@ -435,19 +435,20 @@ by def {x R: 0 <= x} $subset R
 | `replacement(P, A)` | Replacement set defined by a functional predicate `P` |
 | `general_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` |
 
-The sign suffix must be adjacent to its base. Verifier output may use an
-internal normalized name for the same set.
+The suffix must be adjacent to its base. These compact forms are canonical;
+the verifier prints the same spelling.
 
 ```litex
 have n N+
 n $in N+
 have z Z-
 z $in Z-
+have x R*
+x $in R*
 ```
 
-The signs are strict: `+` means greater than zero and `-` means less than zero.
-Nonzero sets keep the explicit spellings `Z_nz`, `Q_nz`, and `R_nz`; there is
-no `*` suffix.
+The signs are strict: `+` means greater than zero, `-` means less than zero,
+and `*` means nonzero.
 
 Set-builder conditions are facts, not arbitrary statements:
 
@@ -660,7 +661,7 @@ p.x = 1
 
 The last line is a parse `error`. Bind `p &Point` or write
 `&Point{p}.x` explicitly. Chained notation follows only a field declared
-directly as `&Struct<...>`; it does not follow a set alias or search known
+directly as `&Struct<...>`; it does not follow a named set definition or search known
 membership facts for a possible view.
 
 ### Template instances
@@ -695,7 +696,7 @@ by thm defined_set_member(1, \marked_elements<R>)
 
 Conversely, known membership in `\marked_elements<R>` exposes `$marked(1)`.
 The explicit builtin theorem still requires the base-set membership and every
-defining fact; the alias does not invent membership.
+defining fact; the named definition does not invent membership.
 
 ```text
 template<S set>:
@@ -1497,13 +1498,7 @@ stop strategy use_is_one
 use strategy use_is_one
 ```
 
-Strategies are not invoked with `by strategy`:
-
-```text
-by strategy use_is_one
-```
-
-This is a parse `error`; activation uses `use strategy name`.
+Activate a strategy with `use strategy name`.
 
 ### Modules and manifests (preview)
 
@@ -2159,7 +2154,7 @@ template constructor. Membership in a literal set builder, in a set builder
 returned by one checked function/template application, or in a named set with
 one exact indexed set-builder equality unfolds only that one definition and
 verifies its base carrier plus atomic predicate obligations. The exact index
-avoids an environment-wide alias scan.
+avoids an environment-wide named-definition scan.
 
 Integer discreteness includes both singleton endpoint orientations. For known
 integers, `n <= x` with `x < n + 1` proves `x = n`, while `n < x` with
@@ -2629,7 +2624,6 @@ change:
 - native symbolic real trigonometry `sin`, `cos`, `tan`, and `cot`;
 - native `floor`, `ceil`, binary `min`/`max`, and integer `lcm`;
 - native real `exp`/`ln`, real `sign`, and natural `factorial`;
-- compact strict-sign suffixes such as `N+` and `R-`;
 - `struct`, struct view objects, and default-view field access;
 - proper subset and proper superset relations;
 - injective, surjective, and bijective mapping predicates;
@@ -2654,18 +2648,6 @@ change:
 
 Strict mode reduces user-supplied trust; it does not turn the Litex checker and
 its builtin rules into a separately verified small kernel.
-
-### Removed or unsupported spellings
-
-| Spelling | Current replacement or explanation |
-|---|---|
-| `alias prop new <=> old` | Define a concrete `prop` explicitly. |
-| `lemma name:` | Use `thm name:`. |
-| `by struct` | Not part of the current struct surface. |
-| Bare template instance `T<A>` | Current syntax is `\T<A>`. |
-| `[requires]`, `[run]` | Project dependencies and order come from imports and ordered exports. |
-| `local import`, `trust import` | Use manifests, or ordinary `import` only in an isolated session. |
-| `by strategy name` | Use `use strategy name`. |
 
 ### Documentation and test contract
 

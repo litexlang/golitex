@@ -3,9 +3,9 @@ use super::*;
 #[test]
 fn known_equality_candidate_replays_checked_function_bodies_structurally() {
     let source_code = r#"
-have fn left(k N_pos) R = k
-have fn right(k N_pos) R = k + 1
-have fn combined(k N_pos) R = left(k) + right(k)
+have fn left(k N+) R = k
+have fn right(k N+) R = k + 1
+have fn combined(k N+) R = left(k) + right(k)
 
 have value R = 1 + 2
 value = combined(1)
@@ -25,7 +25,7 @@ value = combined(1)
     );
 
     let invalid_source = r#"
-have fn guarded(k N_pos: 2 <= k) R = k
+have fn guarded(k N+: 2 <= k) R = k
 guarded(1) = 1
 "#;
     let mut invalid_runtime = Runtime::new();
@@ -442,7 +442,7 @@ fn membership_builtin_does_not_rewrite_positive_order_goals() {
         "membership_builtin_does_not_rewrite_positive_order_goals",
         || {
             let order_only_source = r#"
-forall A power_set(R_pos), x A:
+forall A power_set(R+), x A:
     0 < x
 "#;
             let mut order_only_runtime = Runtime::new();
@@ -464,8 +464,8 @@ forall A power_set(R_pos), x A:
             );
 
             let explicit_membership_source = r#"
-forall A power_set(R_pos), x A:
-    x $in R_pos
+forall A power_set(R+), x A:
+    x $in R+
     0 < x
 "#;
             let mut explicit_runtime = Runtime::new();
@@ -482,7 +482,7 @@ forall A power_set(R_pos), x A:
             );
             assert!(
                 run_succeeded,
-                "an explicit accepted R_pos membership may still trigger existing order inference:\n{}",
+                "an explicit accepted R+ membership may still trigger existing order inference:\n{}",
                 run_output
             );
         },
@@ -756,51 +756,56 @@ trust S $subset T
 }
 
 #[test]
-fn restricted_membership_builtin_uses_equality_aliases_and_ignores_negative_facts() {
+fn restricted_membership_builtin_uses_equal_sets_and_ignores_negative_facts() {
     run_with_large_stack(
-        "restricted_membership_builtin_uses_equality_aliases_and_ignores_negative_facts",
+        "restricted_membership_builtin_uses_equal_sets_and_ignores_negative_facts",
         || {
-            let alias_source = r#"
-have x, y, A, A_alias, B, B_alias set
+            let equal_sets_source = r#"
+have x, y, A, A_equal, B, B_equal set
 trust x = y
-trust A = A_alias
-trust B = B_alias
+trust A = A_equal
+trust B = B_equal
 trust x $in A
 trust A $subset B
 "#;
-            let mut alias_runtime = Runtime::new();
-            alias_runtime.new_file_path_new_env_new_name_scope(
-                "restricted_membership_builtin_uses_equality_aliases",
+            let mut equal_sets_runtime = Runtime::new();
+            equal_sets_runtime.new_file_path_new_env_new_name_scope(
+                "restricted_membership_builtin_uses_equal_sets",
             );
-            let (stmt_results, runtime_error) = run_source_code(alias_source, &mut alias_runtime);
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&alias_runtime, &stmt_results, &runtime_error, false);
+            let (stmt_results, runtime_error) =
+                run_source_code(equal_sets_source, &mut equal_sets_runtime);
+            let (run_succeeded, run_output) = render_run_source_code_output(
+                &equal_sets_runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
             assert!(
                 run_succeeded,
-                "could not establish the equality-alias source facts:\n{}",
+                "could not establish the equal-set source facts:\n{}",
                 run_output
             );
 
-            let y_symbol = alias_runtime
+            let y_symbol = equal_sets_runtime
                 .resolved_identifier_symbol("y")
                 .expect("y should have a runtime symbol");
-            let b_alias_symbol = alias_runtime
-                .resolved_identifier_symbol("B_alias")
-                .expect("B_alias should have a runtime symbol");
-            let alias_target: AtomicFact = InFact::new(
+            let b_equal_symbol = equal_sets_runtime
+                .resolved_identifier_symbol("B_equal")
+                .expect("B_equal should have a runtime symbol");
+            let equal_set_target: AtomicFact = InFact::new(
                 Identifier::new_bound("y".to_string(), y_symbol).into(),
-                Identifier::new_bound("B_alias".to_string(), b_alias_symbol).into(),
+                Identifier::new_bound("B_equal".to_string(), b_equal_symbol).into(),
                 default_line_file(),
             )
             .into();
-            let alias_result = alias_runtime
+            let equal_set_result = equal_sets_runtime
                 .verify_atomic_fact_restricted_known_builtin(
-                    &alias_target,
+                    &equal_set_target,
                     &UseContextVerifyState::new(0, false),
                 )
-                .expect("equality-alias membership verification should not error");
+                .expect("equal-set membership verification should not error");
             assert!(
-                alias_result.is_true(),
+                equal_set_result.is_true(),
                 "equal elements and equal endpoint sets should share the direct membership edge"
             );
 
@@ -1068,7 +1073,7 @@ fn set_builder_parameter_inherits_known_numeric_carrier() {
 claim:
     ? forall E power_set(R), x0 R:
         0 = 0
-    have fn filtered_points(n N_pos) power_set(E) = {y E: abs(y - x0) < 1 / n}
+    have fn filtered_points(n N+) power_set(E) = {y E: abs(y - x0) < 1 / n}
     0 = 0
 "#;
 
@@ -1097,7 +1102,7 @@ fn set_builder_parameter_does_not_invent_numeric_carrier() {
 claim:
     ? forall E set, x0 R:
         0 = 0
-    have fn filtered_points(n N_pos) power_set(E) = {y E: abs(y - x0) < 1 / n}
+    have fn filtered_points(n N+) power_set(E) = {y E: abs(y - x0) < 1 / n}
     0 = 0
 "#;
 
@@ -1179,9 +1184,9 @@ claim:
 }
 
 #[test]
-fn template_function_space_alias_accepts_anonymous_function_return() {
+fn template_named_function_space_accepts_anonymous_function_return() {
     run_with_large_stack(
-        "template_function_space_alias_accepts_anonymous_function_return",
+        "template_named_function_space_accepts_anonymous_function_return",
         || {
             let source_code = r#"
 template<S set>:
@@ -1196,7 +1201,7 @@ forall S set, f \FunctionCarrier<S>:
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "template_function_space_alias_accepts_anonymous_function_return",
+                "template_named_function_space_accepts_anonymous_function_return",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1204,7 +1209,7 @@ forall S set, f \FunctionCarrier<S>:
 
             assert!(
                 run_succeeded,
-                "template function-space aliases should accept matching anonymous returns:\n{}",
+                "template named function spaces should accept matching anonymous returns:\n{}",
                 run_output
             );
         },
@@ -1593,9 +1598,9 @@ fn(x N) R {x} = fn(x R) R {x}
 #[test]
 fn curried_have_fn_equal_unfolds_pointwise() {
     let source_code = r#"
-have fn seq_add(a, b seq(R)) fn(k N_pos) R = fn(n N_pos) R {a(n) + b(n)}
+have fn seq_add(a, b seq(R)) fn(k N+) R = fn(n N+) R {a(n) + b(n)}
 
-forall a, b seq(R), k N_pos:
+forall a, b seq(R), k N+:
     seq_add(a, b)(k) = a(k) + b(k)
 "#;
 
@@ -1615,7 +1620,7 @@ forall a, b seq(R), k N_pos:
 #[test]
 fn fn_application_returning_fn_set_verifies_sequence_membership() {
     let source_code = r#"
-have fn seq_add(a, b seq(R)) fn(k N_pos) R = fn(n N_pos) R {a(n) + b(n)}
+have fn seq_add(a, b seq(R)) fn(k N+) R = fn(n N+) R {a(n) + b(n)}
 
 forall a, b seq(R):
     seq_add(a, b) $in seq(R)
@@ -1639,7 +1644,7 @@ forall a, b seq(R):
 #[test]
 fn set_valued_have_fn_application_unfolds_for_membership() {
     let source_code = r#"
-have fn circle(r R_pos) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
+have fn circle(r R+) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
 have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
 
 (3, 4) $in circle(5)
@@ -1856,16 +1861,16 @@ thm finite_series_comparison_test:
     sum(m, n, fn(i1 Z) R {a(i1)}) <= sum(m, n, fn(i1 Z) R {b(i1)})
 
 thm finite_series_comparison_n_pos_index_test:
-    ? forall a, b fn(i1 N_pos) R, m, n N_pos:
+    ? forall a, b fn(i1 N+) R, m, n N+:
         m <= n
-        forall i1 N_pos:
+        forall i1 N+:
             m <= i1 <= n
             =>:
                 a(i1) <= b(i1)
         =>:
-            sum(m, n, fn(i1 N_pos) R {a(i1)}) <= sum(m, n, fn(i1 N_pos) R {b(i1)})
+            sum(m, n, fn(i1 N+) R {a(i1)}) <= sum(m, n, fn(i1 N+) R {b(i1)})
 
-    sum(m, n, fn(i1 N_pos) R {a(i1)}) <= sum(m, n, fn(i1 N_pos) R {b(i1)})
+    sum(m, n, fn(i1 N+) R {a(i1)}) <= sum(m, n, fn(i1 N+) R {b(i1)})
 
 thm finite_series_triangle_test:
     ? forall a fn(i1 Z) R, m, n Z:
@@ -1959,7 +1964,7 @@ fn nested_iterated_operator_with_positive_index_is_well_defined() {
         "nested_iterated_operator_with_positive_index_is_well_defined_large_stack",
         || {
             let source_code = r#"
-eval sum(1, 3, fn(x N_pos) N_pos {sum(1, x, fn(y N_pos) N_pos {x + y})})
+eval sum(1, 3, fn(x N+) N+ {sum(1, x, fn(y N+) N+ {x + y})})
 "#;
 
             let mut runtime = Runtime::new();
@@ -2289,7 +2294,7 @@ finite_set_sum(1...3, fn(x Z) Z {x}) = sum(1, 3, fn(x Z) Z {x})
 have P finite_set = {1, 2}
 finite_set_sum(P, fn(x P) R {x}) = 3
 finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z
-finite_set_sum({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
+finite_set_sum({1, 2}, fn(x N+) N+ {x}) $in N+
 
 sketch:
     have X finite_set
@@ -2485,8 +2490,8 @@ finite_set_product({2, 3, 4}, fn(x Z) Z {x}) = 2 * 3 * 4
 finite_set_product({}, fn(x Z) Z {x}) = 1
 finite_set_product(1...3, fn(x Z) Z {x}) = product(1, 3, fn(x Z) Z {x})
 finite_set_product({1, 2}, fn(x Z) Z {x}) $in Z
-finite_set_product({1, 2}, fn(x N_pos) N_pos {x}) $in N_pos
-finite_set_product({}, fn(x N_pos) N_pos {x}) $in N_pos
+finite_set_product({1, 2}, fn(x N+) N+ {x}) $in N+
+finite_set_product({}, fn(x N+) N+ {x}) $in N+
 
 sketch:
     have X finite_set
@@ -2552,7 +2557,7 @@ fn dependent_fn_param_set_uses_previous_arg() {
         "dependent_fn_param_set_uses_previous_arg_large_stack",
         || {
             let source_code = r#"
-have f fn(n N_pos, x closed_range(1, n)) R
+have f fn(n N+, x closed_range(1, n)) R
 f(3, 2) = f(3, 2)
 "#;
 

@@ -35,7 +35,7 @@ impl Runtime {
                     if !matches!(&g.param_type, ParamType::Obj(_)) {
                         return Err(RuntimeError::from(ParseRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "by enumerate finite_set: each forall parameter type must be a displayed finite set or a named set alias"
+                                "by enumerate finite_set: each forall parameter type must be a displayed finite set or a named finite-set definition"
                                     .to_string(),
                                 forall_fact.line_file.clone(),
                             ),
@@ -81,7 +81,7 @@ impl Runtime {
     }
 
     /// `by enumerate finite_set:` then a `?` goal with a single `forall`
-    /// (displayed list-set or named-alias parameters, optional dom / `=>:`).
+    /// (displayed list-set or named finite-set parameters, optional dom / `=>:`).
     fn parse_by_enumerate_finite_set_stmt_forall_in_question_goal(
         &mut self,
         tb: &mut TokenBlock,
@@ -118,7 +118,7 @@ impl Runtime {
             if !matches!(&g.param_type, ParamType::Obj(_)) {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by enumerate finite_set: each forall parameter type must be a displayed finite set or a named set alias"
+                        "by enumerate finite_set: each forall parameter type must be a displayed finite set or a named finite-set definition"
                             .to_string(),
                         forall_fact.line_file.clone(),
                     ),

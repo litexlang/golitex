@@ -9,7 +9,7 @@ fn recursive_function_induction_requires_an_integer_valued_measure() {
                 (
                     "dense_real_measure",
                     r#"
-have fn dense(x R_pos) N by induc x from 0:
+have fn dense(x R+) N by induc x from 0:
     case x > 0: dense(x / 2) + 1
 "#,
                     "the measure must be provably integer-valued",
@@ -17,7 +17,7 @@ have fn dense(x R_pos) N by induc x from 0:
                 (
                     "fractional_measure",
                     r#"
-have fn half_rank(n N_pos) N by induc n / 2 from 0:
+have fn half_rank(n N+) N by induc n / 2 from 0:
     case n > 0: 0
 "#,
                     "the measure must be provably integer-valued",
@@ -25,7 +25,7 @@ have fn half_rank(n N_pos) N by induc n / 2 from 0:
                 (
                     "fractional_lower_bound",
                     r#"
-have fn fractional_start(n N_pos) N by induc n from 1 / 2:
+have fn fractional_start(n N+) N by induc n from 1 / 2:
     case n > 0: 0
 "#,
                     "the lower bound must be provably integer-valued",
@@ -819,7 +819,7 @@ not $q(1) or $p(1)
 }
 
 #[test]
-fn template_set_builder_alias_does_not_invent_membership_definition() {
+fn template_set_builder_definition_does_not_invent_membership_definition() {
     let source_code = r#"
 abstract_prop marked(x)
 
@@ -830,10 +830,10 @@ template<T set>:
 "#;
 
     let (run_succeeded, run_output) =
-        run_kernel_soundness_source(source_code, "template_set_builder_alias_soundness");
+        run_kernel_soundness_source(source_code, "template_set_builder_definition_soundness");
     assert!(
         !run_succeeded,
-        "a set-builder alias must still require its defining membership fact:\n{}",
+        "a set-builder definition must still require its defining membership fact:\n{}",
         run_output
     );
 }

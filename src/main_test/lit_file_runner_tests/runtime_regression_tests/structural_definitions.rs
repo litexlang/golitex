@@ -5,12 +5,12 @@ fn typed_have_admits_literal_dependent_struct_constructor() {
     let source_code = r#"
 struct SizedList<X set, n N>:
     length N
-    entries fn(k N_pos: k <= n) X
+    entries fn(k N+: k <= n) X
     <=>:
         length = n
 
 template<X nonempty_set, n N, x X>:
-    have repeated &SizedList<X, n> = (n, fn(k N_pos: k <= n) X {x})
+    have repeated &SizedList<X, n> = (n, fn(k N+: k <= n) X {x})
 "#;
 
     let mut runtime = Runtime::new();
@@ -30,11 +30,11 @@ template<X nonempty_set, n N, x X>:
     let invalid_source = r#"
 struct SizedList<X set, n N>:
     length N
-    entries fn(k N_pos: k <= n) X
+    entries fn(k N+: k <= n) X
     <=>:
         length = n
 
-have invalid &SizedList<R, 2> = (3, fn(k N_pos: k <= 2) R {k})
+have invalid &SizedList<R, 2> = (3, fn(k N+: k <= 2) R {k})
 "#;
     let mut invalid_runtime = Runtime::new();
     invalid_runtime.new_file_path_new_env_new_name_scope(
@@ -54,11 +54,11 @@ fn direct_literal_tuple_membership_checks_dependent_struct_constructor() {
     let source_code = r#"
 struct SizedList<X set, n N>:
     length N
-    entries fn(k N_pos: k <= n) X
+    entries fn(k N+: k <= n) X
     <=>:
         length = n
 
-(2, fn(k N_pos: k <= 2) R {k}) $in &SizedList<R, 2>
+(2, fn(k N+: k <= 2) R {k}) $in &SizedList<R, 2>
 "#;
 
     let mut runtime = Runtime::new();
@@ -77,11 +77,11 @@ struct SizedList<X set, n N>:
     let invalid_source = r#"
 struct SizedList<X set, n N>:
     length N
-    entries fn(k N_pos: k <= n) X
+    entries fn(k N+: k <= n) X
     <=>:
         length = n
 
-(3, fn(k N_pos: k <= 2) R {k}) $in &SizedList<R, 2>
+(3, fn(k N+: k <= 2) R {k}) $in &SizedList<R, 2>
 "#;
     let mut invalid_runtime = Runtime::new();
     invalid_runtime.new_file_path_new_env_new_name_scope(
@@ -259,7 +259,7 @@ fn template_application_still_checks_its_header() {
     for (case_name, application, expected_output) in cases {
         let source_code = format!(
             r#"
-template<S set, n N_pos: 2 <= n>:
+template<S set, n N+: 2 <= n>:
     have guarded set = S
 
 {}
@@ -288,7 +288,7 @@ template<S set, n N_pos: 2 <= n>:
     }
 
     let source_code = r#"
-template<S set, n N_pos: 2 <= n>:
+template<S set, n N+: 2 <= n>:
     have guarded set = S
 
 \guarded<R, 2> = R
@@ -308,7 +308,7 @@ template<S set, n N_pos: 2 <= n>:
 }
 
 #[test]
-fn preverified_template_set_builder_alias_still_unfolds() {
+fn preverified_template_set_builder_definition_still_unfolds() {
     let source_code = r#"
 abstract_prop marked(x)
 
@@ -321,14 +321,16 @@ $marked(x)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("preverified_template_set_builder_alias_unfolds");
+    runtime.new_file_path_new_env_new_name_scope(
+        "preverified_template_set_builder_definition_unfolds",
+    );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "a preverified template instance must still register its set-builder alias:\n{}",
+        "a preverified template instance must still register its set-builder definition:\n{}",
         run_output
     );
 }
@@ -500,7 +502,7 @@ trust (1, 2) $in &Pair<R>
 }
 
 #[test]
-fn cached_membership_can_use_a_later_set_builder_alias() {
+fn cached_membership_can_use_a_later_set_builder_definition() {
     let source_code = r#"
 abstract_prop marked(x)
 have x R
@@ -512,15 +514,16 @@ $marked(x)
 "#;
 
     let mut runtime = Runtime::new();
-    runtime
-        .new_file_path_new_env_new_name_scope("cached_membership_can_use_later_set_builder_alias");
+    runtime.new_file_path_new_env_new_name_scope(
+        "cached_membership_can_use_later_set_builder_definition",
+    );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
 
     assert!(
         run_succeeded,
-        "a cached membership must be reconsidered after a new alias appears:\n{}",
+        "a cached membership must be reconsidered after a new definition appears:\n{}",
         run_output
     );
 }
@@ -1033,9 +1036,9 @@ point.x.value = 1
 }
 
 #[test]
-fn chained_field_access_does_not_follow_aliases_or_known_memberships() {
+fn chained_field_access_does_not_follow_named_definitions_or_known_memberships() {
     run_with_large_stack(
-        "chained_field_access_does_not_follow_aliases_or_known_memberships",
+        "chained_field_access_does_not_follow_named_definitions_or_known_memberships",
         || {
             let source_code = r#"
 struct Point:
@@ -1055,7 +1058,7 @@ holder.point.x = 1
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "chained_field_access_does_not_follow_aliases_or_known_memberships",
+                "chained_field_access_does_not_follow_named_definitions_or_known_memberships",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1063,7 +1066,7 @@ holder.point.x = 1
 
             assert!(
                 !run_succeeded,
-                "an alias and known membership must not choose an implicit intermediate view:\n{}",
+                "a named definition and known membership must not choose an implicit intermediate view:\n{}",
                 run_output
             );
             assert!(
@@ -1219,39 +1222,6 @@ struct PointHolder:
             run_output
         );
     });
-}
-
-#[test]
-fn legacy_double_ampersand_struct_binding_is_rejected_with_migration_hint() {
-    let source_code = r#"
-struct Point:
-    x R
-    y R
-
-claim:
-    ? forall p &&Point:
-        p.x = &Point{p}.x
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "legacy_double_ampersand_struct_binding_is_rejected_with_migration_hint",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        !run_succeeded,
-        "legacy `&&Point` binding syntax should be rejected:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("`&&Struct` has been removed")
-            && run_output.contains("write `&Struct` in a binding type"),
-        "legacy syntax should report the direct `&&Point` to `&Point` migration:\n{}",
-        run_output
-    );
 }
 
 #[test]
@@ -1679,7 +1649,7 @@ forall S nonempty_set, marker, seed, x S:
 }
 
 #[test]
-fn set_alias_to_fn_set_is_nonempty_and_registers_function_type() {
+fn named_set_equal_to_fn_set_is_nonempty_and_registers_function_type() {
     let source_code = r#"
 have T set = fn(i1 closed_range(1, 3), j closed_range(1, 3), k closed_range(1, 3)) R
 have A T
@@ -1688,7 +1658,7 @@ A(1, 2, 3) $in R
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "set_alias_to_fn_set_is_nonempty_and_registers_function_type",
+        "named_set_equal_to_fn_set_is_nonempty_and_registers_function_type",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -1696,15 +1666,15 @@ A(1, 2, 3) $in R
 
     assert!(
         run_succeeded,
-        "set_alias_to_fn_set_is_nonempty_and_registers_function_type failed:\n{}",
+        "named_set_equal_to_fn_set_is_nonempty_and_registers_function_type failed:\n{}",
         run_output
     );
 }
 
 #[test]
-fn template_set_alias_to_fn_set_is_nonempty_and_registers_function_type() {
+fn template_named_set_equal_to_fn_set_is_nonempty_and_registers_function_type() {
     let source_code = r#"
-template<S set, n N_pos>:
+template<S set, n N+>:
     have tensor3 set = fn(i1 closed_range(1, n), j closed_range(1, n), k closed_range(1, n)) S
 
 have A \tensor3<R, 3>
@@ -1713,7 +1683,7 @@ A(1, 2, 3) $in R
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "template_set_alias_to_fn_set_is_nonempty_and_registers_function_type",
+        "template_named_set_equal_to_fn_set_is_nonempty_and_registers_function_type",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -1721,7 +1691,7 @@ A(1, 2, 3) $in R
 
     assert!(
         run_succeeded,
-        "template_set_alias_to_fn_set_is_nonempty_and_registers_function_type failed:\n{}",
+        "template_named_set_equal_to_fn_set_is_nonempty_and_registers_function_type failed:\n{}",
         run_output
     );
 }
@@ -1818,8 +1788,8 @@ exist a, b R st {b <= a}
 #[test]
 fn archimedean_reciprocal_bound_is_a_builtin_rule() {
     let source_code = r#"
-forall epsilon R_pos:
-    exist n N_pos st {1 / n < epsilon}
+forall epsilon R+:
+    exist n N+ st {1 / n < epsilon}
 "#;
 
     let mut runtime = Runtime::new();
@@ -1965,12 +1935,12 @@ forall x R:
 #[test]
 fn positive_real_powers_reflect_order_as_builtin_rules() {
     let source_code = r#"
-forall a, b, q R_pos:
+forall a, b, q R+:
     a^q < b^q
     =>:
         a < b
 
-forall a, b, q R_pos:
+forall a, b, q R+:
     a^q <= b^q
     =>:
         a <= b
@@ -2001,7 +1971,7 @@ forall a, b, q R_pos:
 fn rational_integer_ratio_representation_is_a_builtin_rule() {
     let source_code = r#"
 forall q Q:
-    exist a Z, b Z_nz st {q = a / b}
+    exist a Z, b Z* st {q = a / b}
 "#;
 
     let mut runtime = Runtime::new();
@@ -2027,7 +1997,7 @@ forall q Q:
 #[test]
 fn rational_integer_ratio_representation_requires_a_rational_target() {
     let source_code = r#"
-exist a Z, b Z_nz st {sqrt(2) = a / b}
+exist a Z, b Z* st {sqrt(2) = a / b}
 "#;
 
     let mut runtime = Runtime::new();
@@ -2049,13 +2019,13 @@ exist a Z, b Z_nz st {sqrt(2) = a / b}
 fn rational_reduced_fraction_representations_are_builtin_rules() {
     let source_code = r#"
 forall a Q:
-    exist p Z, q N_pos st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}
+    exist p Z, q N+ st {a = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 1}}
 
 forall a Q:
-    exist p Z, q N_pos st {p / q = a, forall! z N_pos: 0 = q % z and 0 = p % z => {1 = z}}
+    exist p Z, q N+ st {p / q = a, forall! z N+: 0 = q % z and 0 = p % z => {1 = z}}
 
 forall a Q:
-    exist! p Z, q N_pos st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}
+    exist! p Z, q N+ st {a = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 1}}
 "#;
 
     let mut runtime = Runtime::new();
@@ -2096,21 +2066,21 @@ fn rational_reduced_fraction_builtin_rejects_nearby_shapes() {
                 (
                     "irrational_target",
                     r#"
-exist p Z, q N_pos st {sqrt(2) = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}
+exist p Z, q N+ st {sqrt(2) = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 1}}
 "#,
                 ),
                 (
                     "wrong_unique_reducedness_conclusion",
                     r#"
 forall a Q:
-    exist! p Z, q N_pos st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 2}}
+    exist! p Z, q N+ st {a = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 2}}
 "#,
                 ),
                 (
                     "wrong_witness_carriers",
                     r#"
 forall a Q:
-    exist p N, q Z_nz st {a = p / q, forall! z N_pos: p % z = 0 and q % z = 0 => {z = 1}}
+    exist p N, q Z* st {a = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 1}}
 "#,
                 ),
             ] {
@@ -2858,22 +2828,22 @@ fn distinct_template_struct_memberships_expand_distinct_field_views() {
         "distinct_template_struct_memberships_expand_distinct_field_views",
         || {
             let source_code = r#"
-struct Family<U nonempty_set, m N_pos>:
+struct Family<U nonempty_set, m N+>:
     carriers finite_seq(power_set(U), m)
     zeros finite_seq(U, m)
 
-prop is_family(U nonempty_set, m N_pos, family &Family<U, m>):
-    forall k N_pos:
+prop is_family(U nonempty_set, m N+, family &Family<U, m>):
+    forall k N+:
         k <= m
         =>:
             $is_nonempty_set(family.carriers(k))
             family.zeros(k) $in family.carriers(k)
 
-prop is_dual_family(U nonempty_set, m N_pos, original &Family<U, m>, dual &Family<fn(u U) R, m>):
+prop is_dual_family(U nonempty_set, m N+, original &Family<U, m>, dual &Family<fn(u U) R, m>):
     $is_family(U, m, original)
     $is_family(fn(u U) R, m, dual)
 
-template<U nonempty_set, m N_pos, original &Family<U, m>: $is_family(U, m, original)>:
+template<U nonempty_set, m N+, original &Family<U, m>: $is_family(U, m, original)>:
     trust have selected_family &Family<fn(u U) R, m>:
         $is_dual_family(U, m, original, selected_family)
 

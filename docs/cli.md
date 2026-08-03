@@ -389,7 +389,7 @@ Use `litex.config` to organize a folder tree:
   under `[export]`;
 - declare external module folders under `[import]` and installed packages under
   `[import std]`, only in the top-level module;
-- cite earlier entries with their full folder/file aliases, such as
+- cite earlier entries with their canonical export path, such as
   `Part2::chap7::name` or `basics::name`.
 
 A configured folder may contain only `litex.config` and the direct children
@@ -404,9 +404,9 @@ Running a registered file follows the same prefix and stops after that file.
 `litex -f` requires the file's direct parent to have `litex.config`; use
 `litex -isolated -f` for a standalone file.
 
-There is no `[requires]` or `[run]`. A `module` with exactly one `.lit` export
-may write `[module]` then `flatten = true`; its public interface omits that
-file alias. `std/basics` uses this form, so `[import std] basics` exposes
+Dependency order is the recursive `[export]` order. A `module` with exactly
+one `.lit` export may write `[module]` then `flatten = true`; its public
+interface omits that export-name segment. `std/basics` uses this form, so `[import std] basics` exposes
 `basics::name`. Source-level `import` is reserved for isolated runtimes; module
 source uses its manifest instead.
 

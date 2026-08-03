@@ -28,8 +28,8 @@ thm subset_of_finite_set_is_finite:
 # This interface is independent of finite extrema and remains here because the
 # Mechanics number-theory citation currently uses it.
 # A reduced fraction has no positive common divisor other than 1.
-prop is_reduced_fraction(a Z, b N_pos):
-    forall k N_pos:
+prop is_reduced_fraction(a Z, b N+):
+    forall k N+:
         a % k = 0
         b % k = 0
         =>:
@@ -39,8 +39,8 @@ prop is_reduced_fraction(a Z, b N_pos):
 # positive denominator. Example: `by thm rational_has_unique_reduced_fraction(q)`.
 thm rational_has_unique_reduced_fraction:
     ? forall q Q:
-        exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
-    trust exist! a Z, b N_pos st {q = a / b, $is_reduced_fraction(a, b)}
+        exist! a Z, b N+ st {q = a / b, $is_reduced_fraction(a, b)}
+    trust exist! a Z, b N+ st {q = a / b, $is_reduced_fraction(a, b)}
 
 # ---------------------------------------------------------------------------
 # Finite-set indexing
@@ -214,13 +214,13 @@ thm finite_set_has_bijective_index:
 # These are general number-theory interfaces that can later move together into
 # std/basics. Textbook-specific consequences stay in Chapter 7.
 
-prop prime_by_trial_division(p N_pos):
+prop prime_by_trial_division(p N+):
     2 <= p
     forall d range(2, p):
         p % d != 0
 
 thm prime_implies_prime_by_trial_division:
-    ? forall p N_pos:
+    ? forall p N+:
         $prime(p)
         =>:
             $prime_by_trial_division(p)
@@ -228,7 +228,7 @@ thm prime_implies_prime_by_trial_division:
     by def $prime(p)
 
 thm prime_by_trial_division_implies_prime:
-    ? forall p N_pos:
+    ? forall p N+:
         $prime_by_trial_division(p)
         =>:
             $prime(p)
@@ -238,7 +238,7 @@ thm prime_by_trial_division_implies_prime:
 # The Euclidean quotient is an ordinary source-defined selection. The kernel
 # verifies only the narrow unique-existence fact used by this declaration.
 have fn integer_quotient by exist!:
-    ? forall a Z, d N_pos:
+    ? forall a Z, d N+:
         exist! q Z st {a = d * q + a % d}
 
 prop divides(a Z, b Z):
@@ -247,7 +247,7 @@ prop divides(a Z, b Z):
 # A positive divisor of a nonzero integer is at most its absolute value.
 # This is proof machinery for the Euclidean and prime-related theorems below.
 thm _positive_divisor_le_abs:
-    ? forall d N_pos, a Z:
+    ? forall d N+, a Z:
         $divides(d, a)
         a != 0
         =>:
@@ -259,7 +259,7 @@ thm _positive_divisor_le_abs:
         a = d * k = d * 0 = 0
         impossible a != 0
     abs(k) > 0
-    abs(k) $in N_pos
+    abs(k) $in N+
     d * 1 <= d * abs(k)
     abs(d) = d
     abs(a) = abs(d * k) = abs(d) * abs(k) = d * abs(k)
@@ -278,11 +278,11 @@ thm gcd_comm:
                 b != 0 or a != 0
             case b != 0:
                 b != 0 or a != 0
-    gcd(a, b) $in N_pos
+    gcd(a, b) $in N+
     a % gcd(a, b) = 0
     b % gcd(a, b) = 0
     gcd(a, b) <= gcd(b, a)
-    gcd(b, a) $in N_pos
+    gcd(b, a) $in N+
     b % gcd(b, a) = 0
     a % gcd(b, a) = 0
     gcd(b, a) <= gcd(a, b)
@@ -292,15 +292,15 @@ thm gcd_positive:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
-            gcd(a, b) $in N_pos
-    gcd(a, b) $in N_pos
+            gcd(a, b) $in N+
+    gcd(a, b) $in N+
 
 thm gcd_divides_left:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
             $divides(gcd(a, b), a)
-    gcd(a, b) $in N_pos
+    gcd(a, b) $in N+
     a % gcd(a, b) = 0
     witness exist k Z st {a = gcd(a, b) * k} from integer_quotient(a, gcd(a, b)):
         a = gcd(a, b) * integer_quotient(a, gcd(a, b)) + a % gcd(a, b) = gcd(a, b) * integer_quotient(a, gcd(a, b))
@@ -310,13 +310,13 @@ thm gcd_divides_right:
         a != 0 or b != 0
         =>:
             $divides(gcd(a, b), b)
-    gcd(a, b) $in N_pos
+    gcd(a, b) $in N+
     b % gcd(a, b) = 0
     witness exist k Z st {b = gcd(a, b) * k} from integer_quotient(b, gcd(a, b)):
         b = gcd(a, b) * integer_quotient(b, gcd(a, b)) + b % gcd(a, b) = gcd(a, b) * integer_quotient(b, gcd(a, b))
 
 thm common_divisor_le_gcd:
-    ? forall a, b Z, d N_pos:
+    ? forall a, b Z, d N+:
         a != 0 or b != 0
         $divides(d, a)
         $divides(d, b)
@@ -338,7 +338,7 @@ thm gcd_euclidean_base:
     by thm _positive_divisor_le_abs(gcd(a, 0), a)
     gcd(a, 0) <= abs(a)
     abs(a) > 0
-    abs(a) $in N_pos
+    abs(a) $in N+
     by cases:
         ? $divides(abs(a), a)
         case a >= 0:
@@ -365,7 +365,7 @@ thm gcd_euclidean_step:
             gcd(a, b) = gcd(b, a % abs(b))
 
     claim:
-        ? forall d N_pos, z Z:
+        ? forall d N+, z Z:
             $divides(d, z)
             =>:
                 $divides(d, abs(z))
@@ -418,7 +418,7 @@ thm _euclidean_remainder_abs_lt_abs:
         =>:
             abs(u % abs(v)) < abs(v)
     abs(v) > 0
-    abs(v) $in N_pos
+    abs(v) $in N+
     u % abs(v) >= 0
     abs(u % abs(v)) = u % abs(v)
     u % abs(v) < abs(v)
@@ -502,7 +502,7 @@ thm bezout_identity:
                 impossible m + 1 > 0
             have r Z = u % abs(v)
             abs(v) > 0
-            abs(v) $in N_pos
+            abs(v) $in N+
             r = u % abs(v)
             u % abs(v) >= 0
             r = u % abs(v) >= 0
@@ -611,9 +611,9 @@ thm bezout_identity:
 # positive and the reducedness condition is `gcd(p, d) = 1`.
 thm rational_has_reduced_fraction:
     ? forall q Q:
-        exist p Z, d N_pos st {q = p / d, gcd(p, d) = 1}
-    obtain a, b from exist a Z, b Z_nz st {q = a / b}
-    have g N_pos = gcd(a, b)
+        exist p Z, d N+ st {q = p / d, gcd(p, d) = 1}
+    obtain a, b from exist a Z, b Z* st {q = a / b}
+    have g N+ = gcd(a, b)
     g = gcd(a, b)
     by thm gcd_divides_left(a, b)
     $divides(g, a)
@@ -644,12 +644,12 @@ thm rational_has_reduced_fraction:
         case d < 0:
             d > 0 or d < 0
     by cases:
-        ? exist p0 Z, d0 N_pos st {q = p0 / d0, gcd(p0, d0) = 1}
+        ? exist p0 Z, d0 N+ st {q = p0 / d0, gcd(p0, d0) = 1}
         case d > 0:
-            d $in N_pos
+            d $in N+
             claim:
                 ? gcd(p, d) = 1
-                have h N_pos = gcd(p, d)
+                have h N+ = gcd(p, d)
                 h = gcd(p, d)
                 by thm gcd_divides_left(p, d)
                 $divides(h, p)
@@ -680,7 +680,7 @@ thm rational_has_reduced_fraction:
                         impossible 1 <= 0
                 h = gcd(p, d)
                 gcd(p, d) = 1
-            witness exist p0 Z, d0 N_pos st {q = p0 / d0, gcd(p0, d0) = 1} from p, d:
+            witness exist p0 Z, d0 N+ st {q = p0 / d0, gcd(p0, d0) = 1} from p, d:
                 q = a / b = (g * p) / (g * d) = p / d
                 gcd(p, d) = 1
         case d < 0:
@@ -692,10 +692,10 @@ thm rational_has_reduced_fraction:
             d = -d0
             -d > 0
             d0 = -d > 0
-            d0 $in N_pos
+            d0 $in N+
             claim:
                 ? gcd(p0, d0) = 1
-                have h N_pos = gcd(p0, d0)
+                have h N+ = gcd(p0, d0)
                 h = gcd(p0, d0)
                 by thm gcd_divides_left(p0, d0)
                 $divides(h, p0)
@@ -735,7 +735,7 @@ thm rational_has_reduced_fraction:
                         impossible 1 <= 0
                 h = gcd(p0, d0)
                 gcd(p0, d0) = 1
-            witness exist p1 Z, d1 N_pos st {q = p1 / d1, gcd(p1, d1) = 1} from p0, d0:
+            witness exist p1 Z, d1 N+ st {q = p1 / d1, gcd(p1, d1) = 1} from p0, d0:
                 q = a / b = (g * p) / (g * d) = p / d
                 p / d = (-p) / (-d)
                 (-p) / (-d) = p0 / d0
@@ -743,7 +743,7 @@ thm rational_has_reduced_fraction:
                 gcd(p0, d0) = 1
 
 thm gcd_of_prime_is_one_or_prime:
-    ? forall a Z, p N_pos:
+    ? forall a Z, p N+:
         $prime(p)
         =>:
             gcd(a, p) = 1 or gcd(a, p) = p

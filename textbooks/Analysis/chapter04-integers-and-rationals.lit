@@ -373,10 +373,10 @@ Two quotients a//b and c//d are equal iff ad = cb.
 # representatives are equal exactly when their cross-products agree.
 # Litex carrier suffixes record the same restrictions: `_nz` means nonzero,
 # while `_pos` and `_neg` mean strictly positive and strictly negative.  Thus
-# `Z_nz` below is the set of nonzero integers.
+# `Z*` below is the set of nonzero integers.
 
 thm rational_equality_gives_cross_products:
-    ? forall a Z, b Z_nz, c Z, d Z_nz:
+    ? forall a Z, b Z*, c Z, d Z*:
         a / b = c / d
         =>:
             a * d = c * b
@@ -385,7 +385,7 @@ thm rational_equality_gives_cross_products:
     a * d = (a / b) * (b * d) = (c / d) * (b * d) = c * b
 
 thm cross_products_give_rational_equality:
-    ? forall a Z, b Z_nz, c Z, d Z_nz:
+    ? forall a Z, b Z*, c Z, d Z*:
         a * d = c * b
         =>:
             a / b = c / d
@@ -394,7 +394,7 @@ thm cross_products_give_rational_equality:
     b * d != 0
     a / b = (a * d) / (b * d) = (c * b) / (b * d) = c / d
 
-forall a Z, b Z_nz, c Z, d Z_nz:
+forall a Z, b Z*, c Z, d Z*:
     =>:
         a / b = c / d
     <=>:
@@ -405,7 +405,7 @@ forall a Z, b Z_nz, c Z, d Z_nz:
 # used later in the proof idea for irrationality of sqrt(2).
 
 forall q Q:
-    exist a Z, b Z_nz st {q = a / b}
+    exist a Z, b Z* st {q = a / b}
 
 """
 Definition 4.2.2. Rational addition, multiplication, and negation.
@@ -414,10 +414,10 @@ Definition 4.2.2. Rational addition, multiplication, and negation.
 # Definition 4.2.2 gives addition, multiplication, and negation by formulas
 # on quotient representatives.
 
-forall b, d Z_nz:
+forall b, d Z*:
     b * d != 0
 
-forall a Z, b Z_nz, c Z, d Z_nz:
+forall a Z, b Z*, c Z, d Z*:
     (a / b) + (c / d) = (a * d + b * c) / (b * d)
     (a / b) * (c / d) = (a * c) / (b * d)
     -(a / b) = (-a) / b
@@ -431,7 +431,7 @@ Lemma 4.2.3. These operations are well-defined.
 # unchanged.
 
 thm rational_operations_respect_left_representative:
-    ? forall a Z, b Z_nz, a1 Z, b1 Z_nz, c Z, d Z_nz:
+    ? forall a Z, b Z*, a1 Z, b1 Z*, c Z, d Z*:
         a * b1 = a1 * b
         =>:
             (a / b) + (c / d) = (a1 / b1) + (c / d)
@@ -444,7 +444,7 @@ thm rational_operations_respect_left_representative:
     -(a / b) = -(a1 / b1)
 
 thm rational_operations_respect_right_representative:
-    ? forall a Z, b Z_nz, c Z, d Z_nz, c1 Z, d1 Z_nz:
+    ? forall a Z, b Z*, c Z, d Z*, c1 Z, d1 Z*:
         c * d1 = c1 * d
         =>:
             (a / b) + (c / d) = (a / b) + (c1 / d1)
@@ -485,7 +485,7 @@ forall a, b Z:
 # nonzero numerator and denominator is nonzero.
 
 thm rational_quotient_zero_has_zero_numerator:
-    ? forall a Z, b Z_nz:
+    ? forall a Z, b Z*:
         a / b = 0
         =>:
             a = 0
@@ -495,23 +495,23 @@ thm rational_quotient_zero_has_zero_numerator:
     a * 1 = 0 * b
     a = a * 1 = 0 * b = 0
 
-forall a Z, b Z_nz:
+forall a Z, b Z*:
     a = 0
     =>:
         a / b = 0
 
-forall a Z, b Z_nz:
+forall a Z, b Z*:
     =>:
         a / b = 0
     <=>:
         a = 0
 
-forall a Z_nz, b Z_nz:
+forall a Z*, b Z*:
     a / b != 0
 
 # The reciprocal of a nonzero quotient swaps numerator and denominator.
 
-forall a Z_nz, b Z_nz:
+forall a Z*, b Z*:
     1 / (a / b) = b / a
 
 """
@@ -534,10 +534,10 @@ forall x, y, z Q:
     x * (y + z) = x * y + x * z
     (y + z) * x = y * x + z * x
 
-# The builtin carrier `Q_nz` is the set of nonzero rational numbers, exactly
+# The builtin carrier `Q*` is the set of nonzero rational numbers, exactly
 # the domain on which the reciprocal `1/x` is defined.
 
-forall x Q_nz:
+forall x Q*:
     x * (1 / x) = 1
     (1 / x) * x = 1
 
@@ -1216,10 +1216,10 @@ Definition 4.3.11. Exponentiation to a negative number.
 # Definition 4.3.11 defines negative powers as reciprocals of positive powers:
 # for nonzero `x` and positive `n`, `x^(-n) = 1/x^n`.
 
-forall x Q_nz, n N+:
+forall x Q*, n N+:
     x^n != 0
 
-forall x Q_nz, n N+:
+forall x Q*, n N+:
     x^(-n) = 1 / x^n
 
 """
@@ -1229,19 +1229,19 @@ Proposition 4.3.12. Properties of exponentiation, II.
 # Proposition 4.3.12(a): the exponent laws extend to integer exponents when
 # the rational base is nonzero.
 
-forall x Q_nz, n, m Z:
+forall x Q*, n, m Z:
     x^n * x^m = x^(n + m)
 
 # A nonzero base has only nonzero integer powers; this supplies the
 # nonzero inner base needed for the power-of-a-power law.
 
-forall x Q_nz, n Z:
+forall x Q*, n Z:
     x^n != 0
 
-forall x Q_nz, n, m Z:
+forall x Q*, n, m Z:
     (x^n)^m = x^(n * m)
 
-forall x, y Q_nz, n Z:
+forall x, y Q*, n Z:
     (x * y)^n = x^n * y^n
 
 
@@ -1274,7 +1274,7 @@ forall x, y Q+, n Z:
 # Proposition 4.3.12(d): absolute value commutes with integer powers of a
 # nonzero rational.
 
-forall x Q_nz, n Z:
+forall x Q*, n Z:
     abs(x^n) = abs(x)^n
 
 # Proposition 4.4.1 uses the standard fact that every rational admits an
@@ -1285,7 +1285,7 @@ forall x Q_nz, n Z:
 thm rational_has_positive_denominator_representation:
     ? forall x Q:
         exist a0 Z, b0 N+ st {x = a0 / b0}
-    obtain a, b from exist a Z, b Z_nz st {x = a / b}
+    obtain a, b from exist a Z, b Z* st {x = a / b}
     b > 0 or b = 0 or b < 0
     by cases:
         ? exist a0 Z, b0 N+ st {x = a0 / b0}

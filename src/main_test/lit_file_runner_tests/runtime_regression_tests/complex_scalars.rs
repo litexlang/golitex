@@ -138,8 +138,8 @@ product(1, 2, fn(k Z) C {k + i}) $in C
 finite_set_sum({1, 2}, fn(k Z) C {k + i}) $in C
 finite_set_product({1, 2}, fn(k Z) C {k + i}) $in C
 
-forall n N_pos:
-    sum(1, n, fn(k N_pos: k <= n) C {i}) $in C
+forall n N+:
+    sum(1, n, fn(k N+: k <= n) C {i}) $in C
 
 finite_set_sum({}, fn(k Z) C {k + i}) = 0
 finite_set_product({}, fn(k Z) C {k + i}) = 1
@@ -313,7 +313,7 @@ fn native_complex_names_are_hard_reserved_in_binding_positions() {
                     ("function parameter", format!("have fn f({name} R) R = 0")),
                     (
                         "indexed binder",
-                        format!("have n N_pos = 1\nhave tuple t for {name} <= n, t[{name}] = 0"),
+                        format!("have n N+ = 1\nhave tuple t for {name} <= n, t[{name}] = 0"),
                     ),
                     ("struct field", format!("struct Bad:\n    {name} R")),
                 ];

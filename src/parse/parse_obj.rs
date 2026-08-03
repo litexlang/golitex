@@ -64,18 +64,6 @@ impl Runtime {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
-        let operator = tb.current()?;
-        if let Some(replacement) = legacy_matrix_operator_replacement(operator) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!(
-                        "matrix operator `{}` has been replaced by `{}`",
-                        operator, replacement
-                    ),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
         if tb.current_token_is_equal_to(POW) {
             tb.skip()?;
             let right = self.parse_obj_hierarchy3(tb)?; // Right associative: the right side may contain another `^`.
@@ -1900,14 +1888,6 @@ impl Runtime {
 
     pub fn parse_struct_view_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         tb.skip_token(STRUCT_VIEW_PREFIX)?;
-        if tb.current_token_is_equal_to(STRUCT_VIEW_PREFIX) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "`&&Struct` has been removed; write `&Struct` in a binding type".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
         let struct_obj = self.parse_struct_obj_after_prefix(tb)?;
 
         if tb.exceed_end_of_head() || tb.current()? != LEFT_CURLY_BRACE {
@@ -2225,37 +2205,21 @@ fn validate_module_path_segment_for_parse(
 // Maps a built-in one-token standard-set symbol to Obj::StandardSet; see reclassify_atom_as_free_param_obj.
 fn standard_set_from_bare_identifier_name(name: &str) -> Option<Obj> {
     match name {
-        N_POS | COMPACT_N_POS | COMPACT_Z_POS => Some(StandardSet::NPos.into()),
+        COMPACT_N_POS | COMPACT_Z_POS => Some(StandardSet::NPos.into()),
         N => Some(StandardSet::N.into()),
         Q => Some(StandardSet::Q.into()),
         Z => Some(StandardSet::Z.into()),
         R => Some(StandardSet::R.into()),
         C => Some(StandardSet::C.into()),
-        Q_POS | COMPACT_Q_POS => Some(StandardSet::QPos.into()),
-        R_POS | COMPACT_R_POS => Some(StandardSet::RPos.into()),
-        Q_NEG | COMPACT_Q_NEG => Some(StandardSet::QNeg.into()),
-        Z_NEG | COMPACT_Z_NEG => Some(StandardSet::ZNeg.into()),
-        R_NEG | COMPACT_R_NEG => Some(StandardSet::RNeg.into()),
-        Q_NZ => Some(StandardSet::QNz.into()),
-        Z_NZ => Some(StandardSet::ZNz.into()),
-        R_NZ => Some(StandardSet::RNz.into()),
+        COMPACT_Q_POS => Some(StandardSet::QPos.into()),
+        COMPACT_R_POS => Some(StandardSet::RPos.into()),
+        COMPACT_Q_NEG => Some(StandardSet::QNeg.into()),
+        COMPACT_Z_NEG => Some(StandardSet::ZNeg.into()),
+        COMPACT_R_NEG => Some(StandardSet::RNeg.into()),
+        COMPACT_Q_NZ => Some(StandardSet::QNz.into()),
+        COMPACT_Z_NZ => Some(StandardSet::ZNz.into()),
+        COMPACT_R_NZ => Some(StandardSet::RNz.into()),
         _ => None,
-    }
-}
-
-fn legacy_matrix_operator_replacement(operator: &str) -> Option<&'static str> {
-    if operator == LEGACY_MATRIX_ADD {
-        Some(MATRIX_ADD)
-    } else if operator == LEGACY_MATRIX_SUB {
-        Some(MATRIX_SUB)
-    } else if operator == LEGACY_MATRIX_MUL {
-        Some(MATRIX_MUL)
-    } else if operator == LEGACY_MATRIX_SCALAR_MUL {
-        Some(MATRIX_SCALAR_MUL)
-    } else if operator == LEGACY_MATRIX_POW {
-        Some(MATRIX_POW)
-    } else {
-        None
     }
 }
 
@@ -2354,7 +2318,7 @@ mod module_qualification_parse_tests {
     fn parses_comma_separated_set_builder_facts() {
         let mut rt = Runtime::new();
 
-        let obj = parse_one_obj_line_with_runtime(&mut rt, "{d N_pos: d > 0, d < 2}");
+        let obj = parse_one_obj_line_with_runtime(&mut rt, "{d N+: d > 0, d < 2}");
         let Obj::SetBuilder(set_builder) = obj else {
             panic!("expected set builder");
         };
@@ -2736,34 +2700,6 @@ mod matrix_operator_parse_tests {
         let interval = parse_obj_line("'(0, 1)").expect("interval literal should still parse");
         assert_eq!(interval.kind(), ObjKind::IntervalObj);
         assert_eq!(interval.to_string(), "'(0, 1)");
-    }
-
-    #[test]
-    fn legacy_matrix_operators_report_their_replacements() {
-        let cases = [
-            ("A ++ B", "++", "'+"),
-            ("A -- B", "--", "'-"),
-            ("A ** B", "**", "'*"),
-            ("3 *. A", "*.", "*'"),
-            ("A ^^ 2", "^^", "'^"),
-        ];
-
-        for (source, legacy, replacement) in cases {
-            let error = match parse_obj_line(source) {
-                Ok(obj) => panic!("legacy operator should be rejected, parsed {obj}"),
-                Err(error) => error,
-            };
-            let RuntimeError::ParseError(error) = error else {
-                panic!("expected parse error for {source}");
-            };
-            assert_eq!(
-                error.msg,
-                format!(
-                    "matrix operator `{}` has been replaced by `{}`",
-                    legacy, replacement
-                )
-            );
-        }
     }
 
     #[test]

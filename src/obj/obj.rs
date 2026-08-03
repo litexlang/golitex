@@ -503,14 +503,14 @@ pub struct ClosedRange {
     pub end: Box<Obj>,
 }
 
-/// Set of functions `fn(x N_pos: x <= n) s` (Lit surface syntax: keyword `finite_seq(s, n)`).
+/// Set of functions `fn(x N+: x <= n) s` (Lit surface syntax: keyword `finite_seq(s, n)`).
 #[derive(Clone)]
 pub struct FiniteSeqSet {
     pub set: Box<Obj>,
     pub n: Box<Obj>,
 }
 
-/// `seq(s)` — functions `fn(x N_pos) s` (no length bound; surface: keyword `seq(s)`).
+/// `seq(s)` — functions `fn(x N+) s` (no length bound; surface: keyword `seq(s)`).
 #[derive(Clone)]
 pub struct SeqSet {
     pub set: Box<Obj>,

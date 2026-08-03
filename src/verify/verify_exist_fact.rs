@@ -608,8 +608,8 @@ impl Runtime {
         }
 
         // Every rational has one unique reduced integer fraction with a positive
-        // denominator. Example: `exist! p Z, q N_pos st {a = p / q, forall! z
-        // N_pos: p % z = 0 and q % z = 0 => {z = 1}}` for `a Q`.
+        // denominator. Example: `exist! p Z, q N+ st {a = p / q, forall! z
+        // N+: p % z = 0 and q % z = 0 => {z = 1}}` for `a Q`.
         if let Some(rational) = rational_reduced_fraction_exist_fact_non_witness_operand(exist_fact)
         {
             let in_q: AtomicFact =
@@ -660,7 +660,7 @@ impl Runtime {
         }
 
         // Every rational is represented by an integer numerator and a nonzero
-        // integer denominator. Example: `exist a Z, b Z_nz st {q = a / b}`
+        // integer denominator. Example: `exist a Z, b Z* st {q = a / b}`
         // for `q Q`.
         if let Some(rational) = rational_integer_ratio_exist_fact_non_witness_operand(exist_fact) {
             let in_q: AtomicFact = InFact::new(
@@ -684,7 +684,7 @@ impl Runtime {
         }
 
         // Euclidean division by a positive integer determines a unique integer quotient.
-        // Example: a Z, d N_pos => exist! q Z st {a = d * q + a % d}.
+        // Example: a Z, d N+ => exist! q Z st {a = d * q + a % d}.
         if let Some((dividend, divisor)) = euclidean_quotient_exist_unique_operands(exist_fact) {
             let dividend_in_z: AtomicFact =
                 InFact::new(dividend, StandardSet::Z.into(), exist_fact.line_file()).into();
@@ -773,7 +773,7 @@ impl Runtime {
         }
 
         // Every positive real has a reciprocal positive-natural bound.
-        // Example: `exist n N_pos st {1 / n < epsilon}` for `epsilon $in R_pos`.
+        // Example: `exist n N+ st {1 / n < epsilon}` for `epsilon $in R+`.
         if let Some(bound) = archimedean_reciprocal_bound_non_witness_operand(exist_fact) {
             let positive_bound: AtomicFact = InFact::new(
                 bound.clone(),

@@ -50,7 +50,7 @@ impl Runtime {
         if n_ok.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "finite_seq_set: length argument {} is not verified in N_pos",
+                    "finite_seq_set: length argument {} is not verified in N+",
                     x.n
                 )),
             )));
@@ -124,7 +124,7 @@ impl Runtime {
             if ok.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
-                        "matrix: {} argument {} is not verified in N_pos",
+                        "matrix: {} argument {} is not verified in N+",
                         label, len_obj
                     )),
                 )));
@@ -247,7 +247,7 @@ impl Runtime {
         if ok.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "matrix {}: exponent {} is not verified in N_pos",
+                    "matrix {}: exponent {} is not verified in N+",
                     MATRIX_POW, m.exponent
                 )),
             )));

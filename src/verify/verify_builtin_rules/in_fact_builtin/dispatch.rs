@@ -121,7 +121,9 @@ impl Runtime {
                 return Ok(result);
             }
         }
-        if let Some(result) = self.try_verify_set_builder_membership_alias_transport(in_fact)? {
+        if let Some(result) =
+            self.try_verify_set_builder_membership_definition_transport(in_fact)?
+        {
             return Ok(result);
         }
         if let Obj::StandardSet(standard_set) = &in_fact.set {
@@ -180,7 +182,7 @@ impl Runtime {
             ));
         }
         // Euler's number and pi are primitive positive real constants.
-        // Example: `e $in R_pos`, `pi $in R`, and therefore both are also in `C`.
+        // Example: `e $in R+`, `pi $in R`, and therefore both are also in `C`.
         if matches!(&in_fact.element, Obj::EulerNumber(_) | Obj::Pi(_))
             && matches!(
                 &in_fact.set,
@@ -425,7 +427,7 @@ impl Runtime {
                     pow,
                     builtin_state,
                     StandardSet::NPos,
-                    "N_pos: a^k from a in N_pos and k in N",
+                    "N+: a^k from a in N+ and k in N",
                 ),
             (
                 Obj::Gcd(_),
@@ -550,14 +552,14 @@ impl Runtime {
                     in_fact,
                     builtin_state,
                     StandardSet::Q,
-                    "Q_pos: 0 < x and x in Q",
+                    "Q+: 0 < x and x in Q",
                 ),
             (_, Obj::StandardSet(StandardSet::RPos)) => self
                 .verify_in_fact_standard_positive_by_zero_less_and_base_set(
                     in_fact,
                     builtin_state,
                     StandardSet::R,
-                    "R_pos: 0 < x and x in R",
+                    "R+: 0 < x and x in R",
                 ),
             (_, Obj::ClosedRange(closed_range)) => self
                 .verify_in_fact_closed_range_by_order_bounds(in_fact, closed_range, builtin_state),

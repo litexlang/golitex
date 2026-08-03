@@ -240,7 +240,7 @@ fn run_definition_graph_on_source(
 /// Render the definition inventory retained by the active environment.
 ///
 /// Unlike the relation graph, this projection starts from environment tables,
-/// so aliases and reusable interfaces appear as the definitions later code can
+/// so named definitions and reusable interfaces appear as the definitions later code can
 /// actually resolve.
 pub fn render_definition_graph_from_stmt_results(
     target_kind: &str,

@@ -44,8 +44,8 @@ pub struct Runtime {
     pub(crate) active_well_defined_objects: HashSet<ObjString>,
     /// Named set-membership goals currently being unfolded to set builders.
     pub(crate) active_set_builder_membership_unfolds: HashSet<FactString>,
-    /// Prevents set-builder alias transport from recursively selecting itself
-    /// while unfolding an alias or checking a chosen theorem's requirements.
+    /// Prevents set-builder definition transport from recursively selecting itself
+    /// while unfolding a named definition or checking a chosen theorem's requirements.
     pub(crate) active_set_builder_forall_transport: bool,
     /// Prevents structural child equality checks from reopening the root candidate graph.
     pub(crate) known_equality_candidate_replay_depth: usize,

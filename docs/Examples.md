@@ -1016,17 +1016,17 @@ forall x, y R, n N+:
 forall x R, n N:
     abs(x^n) = abs(x)^n
 
-forall x Q_nz, n, m Z:
+forall x Q*, n, m Z:
     x^n * x^m = x^(n + m)
 
-forall x R_nz, n Z:
+forall x R*, n Z:
     x^n != 0
     abs(x^n) = abs(x)^n
 
-forall x R_nz, n N+:
+forall x R*, n N+:
     x^(-n) = 1 / x^n
 
-forall x, y R_nz, n Z:
+forall x, y R*, n Z:
     (x * y)^n = x^n * y^n
 
 forall x, y R+, n Z:
@@ -2356,7 +2356,7 @@ forall a, b, c, d, e1, f, g, h, i1, j, k, l, m, n, o R:
 - Purpose: Shows division and reciprocal simplification.
 
 ```litex
-forall a, b, c R_nz:
+forall a, b, c R*:
     a / (b / c) = a * c / b
     (a / b) / c = a / (b * c)
 
@@ -2597,7 +2597,7 @@ Mod: congruence under a common modulus (+, -, *) plus nested mod absorption (see
 sketch:
     have X Z
     have Y Z
-    have m Z_nz
+    have m Z*
     (X + Y) % m = ((X % m) + (Y % m)) % m
     (X - Y) % m = ((X % m) - (Y % m)) % m
     (X * Y) % m = ((X % m) * (Y % m)) % m
@@ -2607,7 +2607,7 @@ sketch:
 sketch:
     have b Z
     have c Z
-    have d Z_nz
+    have d Z*
     (b * c) % d = ((b % d) * (c % d)) % d
 ```
 
@@ -2616,7 +2616,7 @@ sketch:
     have a Z
     have b Z
     have c Z
-    have d Z_nz
+    have d Z*
     (a + b * c) % d = ((a % d) + ((b % d) * (c % d)) % d) % d
 
 forall m Z:
@@ -2849,14 +2849,14 @@ forall x, y R+, q Q:
     =>:
         x^q > y^q
 
-forall x R_nz, n Z:
+forall x R*, n Z:
     x^n != 0
     abs(x^n) = abs(x)^n
 
-forall x R_nz, n N+:
+forall x R*, n N+:
     x^(-n) = 1 / x^n
 
-forall x, y R_nz, n Z:
+forall x, y R*, n Z:
     (x * y)^n = x^n * y^n
 
 forall x, y R+, n Z:
@@ -2916,7 +2916,7 @@ rn $in R-
 ```
 
 The suffix must be adjacent: `N +` is not a compact type. Nonzero sets continue
-to use `Z_nz`, `Q_nz`, and `R_nz`.
+to use `Z*`, `Q*`, and `R*`.
 
 ```litex
 have u, v R, c Z
@@ -2936,7 +2936,7 @@ c $in Z
 -1 $in R-
 -1.1 $in Q-
 -1 $in Z-
-1 $in Q_nz
+1 $in Q*
 
 1 + 1 $in N
 
@@ -2953,8 +2953,8 @@ c $in Z
 0 - 3 $in R-
 
 -2 * 2.5 $in R-
-7 - 3 $in Q_nz
-10 - 10 + 1 $in Q_nz
+7 - 3 $in Q*
+10 - 10 + 1 $in Q*
 
 3 - 1 $in Q+
 1 + 0.5 $in Q+
@@ -3217,11 +3217,11 @@ name common subsets like positive or nonzero numbers.
 1 $in N+
 1 $in R+
 -1 $in Z-
-1 $in Z_nz
+1 $in Z*
 1 / 6 $in Q
 6 / 3 $in Z
 not 1 / 6 $in Z
-not 0 $in Q_nz
+not 0 $in Q*
 ```
 
 #### 3. Finite Sets And Set Builders

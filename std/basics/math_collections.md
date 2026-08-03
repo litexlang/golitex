@@ -81,7 +81,7 @@ value as an ordinary source function:
 <!-- litex:skip-test -->
 ```litex
 have fn integer_quotient by exist!:
-    ? forall a Z, d N_pos:
+    ? forall a Z, d N+:
         exist! q Z st {a = d * q + a % d}
 ```
 
@@ -101,7 +101,7 @@ function:
 
 <!-- litex:skip-test -->
 ```litex
-prop prime_by_trial_division(p N_pos):
+prop prime_by_trial_division(p N+):
     2 <= p
     forall d range(2, p):
         p % d != 0
@@ -133,7 +133,7 @@ existence theorem is:
 ```litex
 thm rational_has_reduced_fraction:
     ? forall q Q:
-        exist p Z, d N_pos st {q = p / d, gcd(p, d) = 1}
+        exist p Z, d N+ st {q = p / d, gcd(p, d) = 1}
 ```
 
 Using a positive denominator is preferable to an unrestricted nonzero integer
